@@ -1,0 +1,6 @@
+# Cargo configuration for tui-vfx workspace
+
+[alias]
+# Run xtask build tooling: `cargo xtask <command>`
+# Example: `cargo xtask docs generate`
+xtask = "run --package xtask --"

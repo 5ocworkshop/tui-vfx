@@ -1,0 +1,44 @@
+# <FILE>crates/tui-vfx-compositor/Cargo.toml</FILE> - <DESC>Manifest for tui-vfx-compositor library</DESC>
+# <VERS>VERSION: 0.4.2</VERS>
+# <WCTX>Release readiness metadata update</WCTX>
+# <CLOG>Add workspace keywords and categories</CLOG>
+
+[package]
+name = "tui-vfx-compositor"
+description = "Framework-agnostic cell compositor for tui-vfx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+
+[dependencies]
+# L0 foundation types (Color, Style, Cell, Rect, Modifiers, Grid)
+tui-vfx-types.workspace = true
+# Small vector for inline allocation (no heap for ≤N effects)
+smallvec.workspace = true
+# Logic/Math dependencies
+rand.workspace = true
+rand_chacha = "0.3"
+# Serialization
+serde.workspace = true
+# Introspection protocol
+tui-vfx-core.workspace = true
+# Style primitives for shaders
+tui-vfx-style.workspace = true
+# Shadow rendering
+tui-vfx-shadow.workspace = true
+# Signal generators for wave-based samplers
+mixed-signals.workspace = true
+# Debug logging
+tui-vfx-debug.workspace = true
+lazy_static = "1.4"
+
+[dev-dependencies]
+serde_json = "1.0"
+
+# <FILE>crates/tui-vfx-compositor/Cargo.toml - <DESC>Manifest for tui-vfx-compositor library</DESC>
+# <VERS>END OF VERSION: 0.4.2</VERS>

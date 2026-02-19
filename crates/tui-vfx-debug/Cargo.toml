@@ -1,0 +1,26 @@
+# <FILE>crates/tui-vfx-debug/Cargo.toml</FILE> - <DESC>Centralized debug logger</DESC>
+# <VERS>VERSION: 0.1.2</VERS>
+# <WCTX>Release readiness metadata update</WCTX>
+# <CLOG>Add workspace keywords and categories</CLOG>
+
+[package]
+name = "tui-vfx-debug"
+description = "Centralized debug logger for tui-vfx ecosystem"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+
+[dependencies]
+colored = "2.1"
+chrono = "0.4"
+lazy_static = "1.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# <FILE>crates/tui-vfx-debug/Cargo.toml</FILE> - <DESC>Centralized debug logger</DESC>
+# <VERS>END OF VERSION: 0.1.2</VERS>

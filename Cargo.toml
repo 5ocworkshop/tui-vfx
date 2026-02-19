@@ -1,0 +1,43 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/tui-vfx",
+    "crates/tui-vfx-types",
+    "crates/tui-vfx-core",
+    "crates/tui-vfx-core-macros",
+    "crates/tui-vfx-geometry",
+    "crates/tui-vfx-compositor",
+    "crates/tui-vfx-style",
+    "crates/tui-vfx-content",
+    "crates/tui-vfx-shadow",
+    "crates/tui-vfx-debug",
+    "xtask",
+]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.86.0"
+license = "MIT"
+repository = "https://github.com/5ocworkshop/tui-vfx"
+keywords = ["tui", "terminal", "effects", "animation"]
+categories = ["command-line-interface", "graphics"]
+
+[workspace.dependencies]
+# Internal crates
+tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.2.0" }
+tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.2.0" }
+tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.2.0" }
+tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.2.0" }
+tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.2.0" }
+tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.2.0" }
+tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.2.0" }
+tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.2.0" }
+tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.2.0" }
+
+# External dependencies (preserve versions from source crates)
+mixed-signals = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rand = "0.8"
+smallvec = "1.11"

@@ -1,0 +1,3272 @@
+{
+  "constraints": {
+    "conflicts": [
+      {
+        "a": "Crt_sampler",
+        "b": "Ripple",
+        "reason": "Both distort coordinates, visual chaos"
+      },
+      {
+        "a": "RigidShake",
+        "b": "SubCellShake",
+        "reason": "Competing shake effects"
+      }
+    ],
+    "performance_notes": [
+      {
+        "effect": "StochasticSparkle",
+        "note": "Lower speed (0.1-0.3) for smoother animation"
+      },
+      {
+        "effect": "BrailleDust",
+        "note": "Balance density vs hz for performance"
+      },
+      {
+        "effect": "multiple_filters",
+        "note": "Filters applied sequentially, each has cost"
+      }
+    ],
+    "terminal_compatibility": [
+      {
+        "effect": "Braille_shadow",
+        "note": "Font-dependent rendering quality"
+      },
+      {
+        "effect": "BrailleDust",
+        "note": "Requires braille font support"
+      }
+    ]
+  },
+  "effects": {
+    "content": {
+      "Dissolve": {
+        "ai_hint": "Pixel dissolve text transition.\nreplacement: character used for dissolve. pattern: dissolve pattern.\ndirection: dissolve direction. seed: randomization seed.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Dissolve",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Space",
+            "doc": "What character to use for dissolved positions.",
+            "name": "replacement",
+            "ty": "DissolveReplacement"
+          },
+          {
+            "default": "Random",
+            "doc": "Pattern controlling dissolve order.",
+            "name": "pattern",
+            "ty": "DissolvePattern"
+          },
+          {
+            "default": "LeftToRight",
+            "doc": "Direction for sequential dissolve patterns.",
+            "name": "direction",
+            "ty": "DissolveDirection"
+          },
+          {
+            "default": "0",
+            "doc": "Seed for random dissolve pattern.",
+            "name": "seed",
+            "ty": "u64"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Character-level dissolve effect",
+        "rustdoc_summary": "Character-level dissolve effect",
+        "use_cases": [
+          "transition",
+          "fade",
+          "pixel"
+        ]
+      },
+      "GlitchShift": {
+        "ai_hint": "Glitch-style text distortion with horizontal shifts.\nshift_amount: column displacement size.\nglitch_start, glitch_end: time window for glitching. seed: randomization seed.",
+        "complexity": "moderate",
+        "energy": "intense",
+        "name": "GlitchShift",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "4",
+            "doc": "Number of characters to shift right (typically 4-6).",
+            "name": "shift_amount",
+            "ty": "u8"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Progress value when glitch starts (0.0-1.0).",
+            "name": "glitch_start",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Progress value when glitch ends (0.0-1.0).",
+            "name": "glitch_end",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "42",
+            "doc": "Seed for deterministic behavior.",
+            "name": "seed",
+            "ty": "u64"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Horizontal shift glitch effect",
+        "rustdoc_summary": "Horizontal shift glitch effect",
+        "use_cases": [
+          "glitch",
+          "error",
+          "cyberpunk"
+        ]
+      },
+      "Marquee": {
+        "ai_hint": "Scrolling text ticker effect.\nspeed: scroll rate. width: visible window width.\nText scrolls horizontally through the window.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Marquee",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Scroll speed.",
+            "name": "speed",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "20",
+            "doc": "Viewport width in characters.",
+            "name": "width",
+            "ty": "u16"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Scrolling marquee text",
+        "rustdoc_summary": "Scrolling marquee text",
+        "use_cases": [
+          "scrolling",
+          "ticker",
+          "news"
+        ]
+      },
+      "Mirror": {
+        "ai_hint": "Mirror/flip text horizontally or vertically.\naxis: Horizontal or Vertical mirroring.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Mirror",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Horizontal",
+            "doc": "Axis to mirror around (horizontal or vertical).",
+            "name": "axis",
+            "ty": "MirrorAxis"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Mirror/reverse text effect",
+        "rustdoc_summary": "Mirror/reverse text effect",
+        "use_cases": [
+          "effect",
+          "playful",
+          "reflection"
+        ]
+      },
+      "Morph": {
+        "ai_hint": "Character morphing/blending between text states.\nsource: starting text. progression: morph progression style.\ndirection: forward or reverse. seed: randomization seed.",
+        "complexity": "advanced",
+        "energy": "moderate",
+        "name": "Morph",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "",
+            "doc": "Source text to morph from (target is the normal content).",
+            "name": "source",
+            "ty": "String"
+          },
+          {
+            "default": "Linear",
+            "doc": "How characters transition between states.",
+            "name": "progression",
+            "ty": "MorphProgression"
+          },
+          {
+            "default": "LeftToRight",
+            "doc": "Direction of the morph animation.",
+            "name": "direction",
+            "ty": "MorphDirection"
+          },
+          {
+            "default": "0",
+            "doc": "Seed for scatter progression pattern.",
+            "name": "seed",
+            "ty": "u64"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Text morphing transition",
+        "rustdoc_summary": "Text morphing transition",
+        "use_cases": [
+          "transition",
+          "smooth",
+          "creative"
+        ]
+      },
+      "Numeric": {
+        "ai_hint": "Number transition animations for dashboards.\nformat: numeric format string for output.\nSmoothly animates between numeric values.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Numeric",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "{}",
+            "doc": "Format string for number display.",
+            "name": "format",
+            "ty": "String"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Numeric formatting effect",
+        "rustdoc_summary": "Numeric formatting effect",
+        "use_cases": [
+          "data",
+          "counter",
+          "dashboard"
+        ]
+      },
+      "Odometer": {
+        "ai_hint": "Odometer-style digit rolling animation.\nDigits roll vertically like mechanical counter.\nRetro/mechanical aesthetic for counters and scores.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "Odometer",
+        "pairs_with": [],
+        "parameters": [],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Vertical scrolling digit counter",
+        "rustdoc_summary": "Vertical scrolling digit counter",
+        "use_cases": [
+          "counter",
+          "retro",
+          "mechanical"
+        ]
+      },
+      "Redact": {
+        "ai_hint": "Redaction/censoring effect with █ blocks.\nsymbol: character used for redaction masking.\nCovers text with blocks, can reveal progressively.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Redact",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "█",
+            "doc": "Symbol used for redacted characters.",
+            "name": "symbol",
+            "ty": "char"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Text redaction/censorship effect",
+        "rustdoc_summary": "Text redaction/censorship effect",
+        "use_cases": [
+          "censorship",
+          "reveal",
+          "dramatic"
+        ]
+      },
+      "Scramble": {
+        "ai_hint": "Random character scrambling that resolves to final text.\nresolve_pace: how quickly characters settle. charset: character set to cycle.\nseed: randomization seed for deterministic effects.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "Scramble",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "How quickly characters resolve (higher = faster stabilization).",
+            "name": "resolve_pace",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Alphanumeric",
+            "doc": "Character set for scrambled display.",
+            "name": "charset",
+            "ty": "ScrambleCharset"
+          },
+          {
+            "default": "42",
+            "doc": "Seed for deterministic scramble patterns.",
+            "name": "seed",
+            "ty": "u64"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Character scramble/decode effect",
+        "rustdoc_summary": "Character scramble/decode effect",
+        "use_cases": [
+          "decrypt",
+          "reveal",
+          "tech"
+        ]
+      },
+      "ScrambleGlitchShift": {
+        "ai_hint": "Combined scramble + glitch shift for maximum chaos.\nresolve_pace: scramble settle rate. charset: scramble character set.\nscramble_seed: scramble randomness. shift_amount: horizontal displacement.\nglitch_start, glitch_end: glitch time window.",
+        "complexity": "advanced",
+        "energy": "intense",
+        "name": "ScrambleGlitchShift",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "How quickly characters resolve.",
+            "name": "resolve_pace",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Alphanumeric",
+            "doc": "Character set for scrambled display.",
+            "name": "charset",
+            "ty": "ScrambleCharset"
+          },
+          {
+            "default": "42",
+            "doc": "Seed for scramble pattern.",
+            "name": "scramble_seed",
+            "ty": "u64"
+          },
+          {
+            "default": "4",
+            "doc": "Number of characters to shift right.",
+            "name": "shift_amount",
+            "ty": "u8"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Progress value when glitch starts.",
+            "name": "glitch_start",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Progress value when glitch ends.",
+            "name": "glitch_end",
+            "ty": "SignalOrFloat"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Combined scramble and glitch shift effect",
+        "rustdoc_summary": "Combined scramble and glitch shift effect",
+        "use_cases": [
+          "glitch",
+          "decrypt",
+          "dramatic"
+        ]
+      },
+      "SlideShift": {
+        "ai_hint": "Sliding text with row jump after passing a column span.\nstart_col, end_col: horizontal window. start_row: initial row.\nshift_col, shift_width: barrier span. row_shift: rows to jump.\nline_mode, flow_mode: line handling and flow direction.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "SlideShift",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0",
+            "doc": "Starting column offset (in cells).",
+            "name": "start_col",
+            "ty": "i16"
+          },
+          {
+            "default": "0",
+            "doc": "Ending column offset (in cells).",
+            "name": "end_col",
+            "ty": "i16"
+          },
+          {
+            "default": "0",
+            "doc": "Base row offset (in lines).",
+            "name": "start_row",
+            "ty": "i16"
+          },
+          {
+            "default": "0",
+            "doc": "Starting column of the shift barrier.",
+            "name": "shift_col",
+            "ty": "i16"
+          },
+          {
+            "default": "1",
+            "doc": "Width of the shift barrier in cells (≥ 1).",
+            "name": "shift_width",
+            "ty": "u16"
+          },
+          {
+            "default": "0",
+            "doc": "Row delta applied after crossing the barrier (negative = up).",
+            "name": "row_shift",
+            "ty": "i16"
+          },
+          {
+            "default": "Block",
+            "doc": "How horizontal shift applies across multi-line text.",
+            "name": "line_mode",
+            "ty": "SlideShiftLineMode"
+          },
+          {
+            "default": "StayShifted",
+            "doc": "Whether to stay shifted or flow back after clearing the barrier.",
+            "name": "flow_mode",
+            "ty": "SlideShiftFlowMode"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Sliding text with row jumps",
+        "rustdoc_summary": "Sliding text with row jumps",
+        "use_cases": [
+          "transition",
+          "slide",
+          "animation"
+        ]
+      },
+      "SplitFlap": {
+        "ai_hint": "Split-flap display effect like airport departure boards.\nspeed: flip speed. cascade: stagger between characters.\nCharacters flip through alphabet to reach target.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "SplitFlap",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Flip animation speed.",
+            "name": "speed",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Cascade delay between characters (0 = simultaneous, higher = wave).",
+            "name": "cascade",
+            "ty": "SignalOrFloat"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Airport/train station split-flap display",
+        "rustdoc_summary": "Airport/train station split-flap display",
+        "use_cases": [
+          "retro",
+          "airport",
+          "mechanical"
+        ]
+      },
+      "Typewriter": {
+        "ai_hint": "Character-by-character text reveal.\nspeed_variance: jitter in per-character timing for organic typing.\nReveals text progressively based on t parameter.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Typewriter",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Speed variation for organic typing feel (0.0 = steady, higher = more variable).",
+            "name": "speed_variance",
+            "ty": "SignalOrFloat"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Classic typewriter reveal effect",
+        "rustdoc_summary": "Classic typewriter reveal effect",
+        "use_cases": [
+          "reveal",
+          "typing",
+          "narrative"
+        ]
+      },
+      "WrapIndicator": {
+        "ai_hint": "Prefix/suffix symbols appear progressively with progress.\nProgress 0.0: \"Item\" → 0.5: \"» Item\" → 1.0: \"» Item «\"\nprefix/suffix strings, characters appear one at a time. Ideal for hover indicators.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "WrapIndicator",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "» ",
+            "doc": "Prefix to prepend (e.g., \"» \").",
+            "name": "prefix",
+            "ty": "String"
+          },
+          {
+            "default": " «",
+            "doc": "Suffix to append (e.g., \" «\").",
+            "name": "suffix",
+            "ty": "String"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Prefix/suffix wrapper for indicators",
+        "rustdoc_summary": "Prefix/suffix wrapper for indicators",
+        "use_cases": [
+          "hover",
+          "selection",
+          "emphasis"
+        ]
+      }
+    },
+    "filters": {
+      "BracketEmphasis": {
+        "ai_hint": "Brackets fade in at content edges based on progress. left/right chars default [ ]. Fades from bg_color to color.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "BracketEmphasis",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "[",
+            "doc": "Left bracket character",
+            "name": "left",
+            "ty": "char"
+          },
+          {
+            "default": "]",
+            "doc": "Right bracket character",
+            "name": "right",
+            "ty": "char"
+          },
+          {
+            "default": "0",
+            "doc": "Progress (0.0 = invisible, 1.0 = fully visible)",
+            "name": "progress",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Brackets that appear around content based on progress",
+        "rustdoc_summary": "Brackets that appear around content based on progress",
+        "use_cases": [
+          "hover",
+          "selection",
+          "emphasis"
+        ]
+      },
+      "BrailleDust": {
+        "ai_hint": "Animated braille particles for ambient texture.\ndensity: particle coverage (0.05=sparse, 0.2=dense).\nhz: animation speed/update rate.\nseed: randomization seed. color: particle color.\npattern: SingleDot (subtle), OneToTwoDots, OneToThreeDots, OneToFourDots (visible).\nRequires braille font support.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "BrailleDust",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.03",
+            "doc": "Fraction of empty cells to fill (0.0 - 1.0)",
+            "name": "density",
+            "ty": "f32"
+          },
+          {
+            "default": "8",
+            "doc": "Pattern changes per second (1.0 = once/sec, 8.0 = 8 times/sec)",
+            "name": "hz",
+            "ty": "f32"
+          },
+          {
+            "default": "42",
+            "doc": "Random seed for deterministic patterns",
+            "name": "seed",
+            "ty": "u64"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Stochastic braille dust for frosted glass texture",
+        "rustdoc_summary": "Stochastic braille dust for frosted glass texture",
+        "use_cases": [
+          "ambient",
+          "texture",
+          "premium"
+        ]
+      },
+      "ColorBridgedShade": {
+        "ai_hint": "Maps opacity to shade characters (░▒▓█) with color bridging.\nfg_color, bg_color: endpoint colors for shading transitions.\nSmooth color transitions at shade boundaries.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "ColorBridgedShade",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.5",
+            "doc": "Target opacity (0.0 = transparent, 1.0 = opaque)",
+            "name": "opacity",
+            "ty": "f32"
+          },
+          {
+            "default": "White",
+            "doc": "Foreground/fill color",
+            "name": "fg_color",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "Black",
+            "doc": "Background color (shows through at low opacity)",
+            "name": "bg_color",
+            "ty": "ColorConfig"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Color-bridged shade for smooth opacity rendering",
+        "rustdoc_summary": "Color-bridged shade for smooth opacity rendering",
+        "use_cases": [
+          "opacity",
+          "fade",
+          "subtle"
+        ]
+      },
+      "Crt": {
+        "ai_hint": "CRT monitor post-processing effect.\nscanline_strength: intensity of horizontal scanlines (0.2-0.4 typical).\nglow: phosphor glow amount around bright pixels.\nPairs well with Crt sampler for full retro effect.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "Crt",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Strength of scanline effect, can be signal-driven",
+            "name": "scanline_strength",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Phosphor glow amount, can be signal-driven",
+            "name": "glow",
+            "ty": "SignalOrFloat"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "CRT monitor post-processing effect",
+        "rustdoc_summary": "CRT monitor post-processing effect",
+        "use_cases": [
+          "retro",
+          "gaming",
+          "nostalgic"
+        ]
+      },
+      "Dim": {
+        "ai_hint": "Darken output uniformly.\nfactor: 0.0=black, 1.0=unchanged (0.5 typical for dimming).\napply_to: Foreground, Background, or Both.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Dim",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Dimming factor (0.0 = black, 1.0 = no change), can be static or signal-driven",
+            "name": "factor",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Both",
+            "doc": "Which color component to dim",
+            "name": "apply_to",
+            "ty": "ApplyTo"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Dim/darken the output",
+        "rustdoc_summary": "Dim/darken the output",
+        "use_cases": [
+          "background",
+          "inactive",
+          "subtle"
+        ]
+      },
+      "DotIndicator": {
+        "ai_hint": "Dot/bullet fades in adjacent to content.\nprogress: 0.0-1.0 fade amount. indicator_char default •, position Left/Right.\nFor list selection and navigation.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "DotIndicator",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "•",
+            "doc": "Indicator character (default: •)",
+            "name": "indicator_char",
+            "ty": "char"
+          },
+          {
+            "default": "Left",
+            "doc": "Position (Left or Right)",
+            "name": "position",
+            "ty": "HoverBarPosition"
+          },
+          {
+            "default": "0",
+            "doc": "Progress (0.0 = invisible, 1.0 = fully visible)",
+            "name": "progress",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Simple dot/bullet indicator adjacent to content",
+        "rustdoc_summary": "Simple dot/bullet indicator adjacent to content",
+        "use_cases": [
+          "selection",
+          "navigation",
+          "indicator"
+        ]
+      },
+      "GlistenSweep": {
+        "ai_hint": "Diagonal 45-degree highlight sweep for polished hover feedback.\nboost: brightness increase (default 40, 0-255).\nband_width: glisten width as fraction of diagonal (0.2 typical).\nspeed: animation rate (0.5 default, 0=manual progress only).\nprogress: 0.0=inactive, 1.0=fully visible.\npowerline_mode: true to handle powerline separators safely (bg on text, fg on separators).\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nCreates premium \"shine\" effect for buttons and cards on hover.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "GlistenSweep",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "40",
+            "doc": "Highlight color boost (added to existing colors)",
+            "name": "boost",
+            "ty": "u8"
+          },
+          {
+            "default": "0.2",
+            "doc": "Width of the glisten band (0.0-1.0, relative to diagonal)",
+            "name": "band_width",
+            "ty": "f32"
+          },
+          {
+            "default": "0.5",
+            "doc": "Animation speed (0 = use progress only)",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Hover progress (0.0 = not hovered, 1.0 = fully hovered)",
+            "name": "progress",
+            "ty": "f32"
+          },
+          {
+            "default": "false",
+            "doc": "Smart powerline mode: bg on text, fg only on separator glyphs",
+            "name": "powerline_mode",
+            "ty": "bool"
+          },
+          {
+            "default": "false",
+            "doc": "When true AND powerline_mode is true, also boost separator backgrounds.\nUse when powerline has continuous background (not terminal bg).",
+            "name": "boost_separator_bg",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Diagonal glisten sweep effect",
+        "rustdoc_summary": "Diagonal glisten sweep effect",
+        "use_cases": [
+          "hover",
+          "shine",
+          "premium"
+        ]
+      },
+      "Greyscale": {
+        "ai_hint": "Desaturate output using BT.601 luminance formula.\nstrength: desaturation amount (0.0=color, 1.0=full greyscale).\napply_to: Foreground, Background, or Both.\nIdeal for disabled/inactive states.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Greyscale",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Strength of the greyscale effect (0.0 = no effect, 1.0 = full greyscale)",
+            "name": "strength",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Both",
+            "doc": "Which color component to desaturate",
+            "name": "apply_to",
+            "ty": "ApplyTo"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Greyscale/desaturate filter using BT.601 luminance",
+        "rustdoc_summary": "Greyscale/desaturate filter using BT.601 luminance",
+        "use_cases": [
+          "disabled",
+          "inactive",
+          "dramatic"
+        ]
+      },
+      "HoverBar": {
+        "ai_hint": "Progress-driven partial bar using ▏▎▍▌▋▊▉█ with fg/bg inversion.\nbase_eighths: width at rest (0-8), max_eighths: width at full (0-16, spans 2 cells).\nposition: Left/Right, margin_width default 2. Ideal for list selection.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "HoverBar",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "4",
+            "doc": "Base width at rest (0.0 progress), in eighths (0-8)",
+            "name": "base_eighths",
+            "ty": "u8"
+          },
+          {
+            "default": "12",
+            "doc": "Maximum width when fully active (1.0 progress), in eighths (0-16)",
+            "name": "max_eighths",
+            "ty": "u8"
+          },
+          {
+            "default": "Left",
+            "doc": "Position relative to content",
+            "name": "position",
+            "ty": "HoverBarPosition"
+          },
+          {
+            "default": "0",
+            "doc": "Animation progress (0.0 = rest, 1.0 = fully active)",
+            "name": "progress",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Progress-driven partial bar indicator for hover states",
+        "rustdoc_summary": "Progress-driven partial bar indicator for hover states",
+        "use_cases": [
+          "hover",
+          "selection",
+          "indicator"
+        ]
+      },
+      "InterlaceCurtain": {
+        "ai_hint": "Scanline/interlace dimming effect.\ndensity: row spacing (1.0=every other row). dim_factor: per-row darkening amount.\nscroll_speed: animates the scanlines.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "InterlaceCurtain",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "Controls row spacing (1.0 = every other row, 0.5 = every 4th row)",
+            "name": "density",
+            "ty": "f32"
+          },
+          {
+            "default": "0.3",
+            "doc": "Dimming factor applied to affected rows (0.0 = no dimming, 1.0 = black)",
+            "name": "dim_factor",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Scroll speed for animation (0.0 = static)",
+            "name": "scroll_speed",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Scanline/interlace effect for backdrop dimming",
+        "rustdoc_summary": "Scanline/interlace effect for backdrop dimming",
+        "use_cases": [
+          "retro",
+          "loading",
+          "effect"
+        ]
+      },
+      "Invert": {
+        "ai_hint": "Color inversion (negative) effect.\napply_to: Foreground, Background, or Both.\nCreates high-contrast selection or dramatic effect.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Invert",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Both",
+            "doc": "Which color component to invert",
+            "name": "apply_to",
+            "ty": "ApplyTo"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Invert colors",
+        "rustdoc_summary": "Invert colors",
+        "use_cases": [
+          "highlight",
+          "dramatic",
+          "selection"
+        ]
+      },
+      "KittScanner": {
+        "ai_hint": "Horizontal ping-pong scanner (KITT/Larson scanner) effect.\nboost: brightness increase (default 50).\nband_width: scanner column width (0.15 default, 0.0-0.5).\nbps: beats per second for ping-pong cycle (1.0 = 2 second full cycle).\nprogress: 0.0=inactive, 1.0=fully active.\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nFull-height scanning column with smooth ping-pong motion.\nClassic Knight Rider aesthetic for retro sci-fi hover states.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "KittScanner",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "50",
+            "doc": "Brightness boost added to cells under the scanner",
+            "name": "boost",
+            "ty": "u8"
+          },
+          {
+            "default": "0.15",
+            "doc": "Width of the scanner band (0.0-0.5 of total width)",
+            "name": "band_width",
+            "ty": "f32"
+          },
+          {
+            "default": "1 Hz",
+            "doc": "Beats per second for ping-pong cycle",
+            "name": "bps",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Animation progress (0.0 = inactive, 1.0 = fully active)",
+            "name": "progress",
+            "ty": "f32"
+          },
+          {
+            "default": "Both",
+            "doc": "Which color component to boost (ignored if powerline_mode is true)",
+            "name": "apply_to",
+            "ty": "ApplyTo"
+          },
+          {
+            "default": "false",
+            "doc": "Smart powerline mode: bg on text, fg only on separator glyphs",
+            "name": "powerline_mode",
+            "ty": "bool"
+          },
+          {
+            "default": "false",
+            "doc": "When true AND powerline_mode is true, also boost separator backgrounds.\nUse when powerline has continuous background (not terminal bg).",
+            "name": "boost_separator_bg",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Horizontal ping-pong scanner effect (KITT/Larson)",
+        "rustdoc_summary": "Horizontal ping-pong scanner effect (KITT/Larson)",
+        "use_cases": [
+          "hover",
+          "retro",
+          "sci-fi"
+        ]
+      },
+      "MotionBlur": {
+        "ai_hint": "Directional blur trail.\ndirection: Left/Right/Up/Down. trail_length: number of trailing cells.\nopacity_decay: controls falloff sharpness.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "MotionBlur",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.5",
+            "doc": "Length of the blur trail as fraction of dimension (0.0 - 1.0)",
+            "name": "trail_length",
+            "ty": "f32"
+          },
+          {
+            "default": "1.5",
+            "doc": "Opacity decay exponent (higher = sharper falloff)",
+            "name": "opacity_decay",
+            "ty": "f32"
+          },
+          {
+            "default": "Left",
+            "doc": "Direction of motion blur trail",
+            "name": "direction",
+            "ty": "MotionBlurDirection"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Motion blur trail effect with directional dimming",
+        "rustdoc_summary": "Motion blur trail effect with directional dimming",
+        "use_cases": [
+          "movement",
+          "speed",
+          "dynamic"
+        ]
+      },
+      "None": {
+        "ai_hint": "No filter effect, passthrough output. Use to disable filtering.",
+        "complexity": "",
+        "energy": "calm",
+        "name": "None",
+        "pairs_with": [],
+        "parameters": [],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "No filter effect",
+        "rustdoc_summary": "No filter effect",
+        "use_cases": [
+          "none",
+          "baseline",
+          "passthrough"
+        ]
+      },
+      "PatternFill": {
+        "ai_hint": "Background texture patterns.\npattern: Single (char), Checkerboard (char_a, char_b), HorizontalLines, VerticalLines.\ncolor: pattern color. only_empty: only fill empty cells.\nSee PatternType variants for full options.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "PatternFill",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Single { char: '.' }",
+            "doc": "The pattern type to apply",
+            "name": "pattern",
+            "ty": "PatternType"
+          },
+          {
+            "default": "None",
+            "doc": "Optional color for pattern characters",
+            "name": "color",
+            "ty": "Option<ColorConfig>"
+          },
+          {
+            "default": "false",
+            "doc": "If true, only fill cells that are empty (whitespace)",
+            "name": "only_empty",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Pattern fill effect for background textures",
+        "rustdoc_summary": "Pattern fill effect for background textures",
+        "use_cases": [
+          "texture",
+          "background",
+          "decoration"
+        ]
+      },
+      "PillButton": {
+        "ai_hint": "Pill-shaped button with gradient edges and optional glisten.\nbutton_color: main button fill color.\nbg_color: background for gradient fade at edges.\nedge_width: cells for gradient transition (default 3).\nglisten: enable shimmer effect on hover (default true).\nprogress: hover state (0.0=rest, 1.0=fully hovered).\nCreates no-border button with smooth bg→button→bg gradient.\nBrightens on hover, adds moving glisten when progress>0.5.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "PillButton",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "3",
+            "doc": "Width of gradient edge in cells",
+            "name": "edge_width",
+            "ty": "u16"
+          },
+          {
+            "default": "true",
+            "doc": "Enable glisten effect on hover",
+            "name": "glisten",
+            "ty": "bool"
+          },
+          {
+            "default": "0",
+            "doc": "Hover progress (0.0 = not hovered, 1.0 = fully hovered)",
+            "name": "progress",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Pill-shaped button with gradient edges",
+        "rustdoc_summary": "Pill-shaped button with gradient edges",
+        "use_cases": [
+          "button",
+          "hover",
+          "premium"
+        ]
+      },
+      "RigidShake": {
+        "ai_hint": "Ketchup bottle damped oscillation. Multiple diminishing shakes then pause.\nIMPORTANT: Apply to area INCLUDING margin cells (margin_width default 2).\nKey params: shake_period=0.29s, num_shakes=4, pause_duration=0.52s, max_eighths=12 (1.5 cells).\ndamping array controls amplitude decay (e.g., [1.0, 0.7, 0.45, 0.25]).\nPairs with RigidShakeStyle for synchronized text italic.",
+        "complexity": "advanced",
+        "energy": "intense",
+        "name": "RigidShake",
+        "pairs_with": [
+          "RigidShakeStyle"
+        ],
+        "parameters": [
+          {
+            "default": "0.29s",
+            "doc": "Duration of one back-and-forth shake in seconds",
+            "name": "shake_period",
+            "ty": "f32"
+          },
+          {
+            "default": "4",
+            "doc": "Number of shakes before pause (max 8)",
+            "name": "num_shakes",
+            "ty": "u8"
+          },
+          {
+            "default": "0.52s",
+            "doc": "Duration of pause between shake cycles in seconds",
+            "name": "pause_duration",
+            "ty": "f32"
+          },
+          {
+            "default": "12",
+            "doc": "Maximum extension in eighths of a cell (max 16 for 2 cells)",
+            "name": "max_eighths",
+            "ty": "u8"
+          }
+        ],
+        "premium": true,
+        "requires": [
+          "margin_cells"
+        ],
+        "rustdoc_description": "Rigid body shake filter with damped oscillation",
+        "rustdoc_summary": "Rigid body shake filter with damped oscillation",
+        "use_cases": [
+          "error",
+          "attention",
+          "tactile-feedback",
+          "notification"
+        ]
+      },
+      "ShadeScanner": {
+        "ai_hint": "Ping-pong scanner that dims text with shade overlay (░).\nshade_color: overlay color (default rgb(40,40,45)).\nbps: beats per second for ping-pong cycle.\nprogress: 0.0=inactive, 1.0=fully active.\nText left of scanner position gets progressively dimmed.\nCreates wave of dimming that washes over and retreats.\nRetro terminal aesthetic with dramatic reveal/dim effect.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "ShadeScanner",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Gray",
+            "doc": "Shade color (the dimming overlay color)",
+            "name": "shade_color",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "1 Hz",
+            "doc": "Beats per second for ping-pong cycle",
+            "name": "bps",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Animation progress (0.0 = inactive, 1.0 = fully active)",
+            "name": "progress",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Ping-pong scanner that dims text with shade overlay",
+        "rustdoc_summary": "Ping-pong scanner that dims text with shade overlay",
+        "use_cases": [
+          "hover",
+          "reveal",
+          "retro"
+        ]
+      },
+      "SubCellShake": {
+        "ai_hint": "Physical edge vibration using ▏▎▍▌▋▊▉ partial blocks.\nSimulates tactile feedback like incorrect password shake.\namplitude: shake intensity. frequency: oscillation rate.\nseed: randomization. edge_only: true limits to widget borders.\nfilled_color, bg_color: vibration colors.\nBest for error/rejection feedback, button press responses.",
+        "complexity": "moderate",
+        "energy": "intense",
+        "name": "SubCellShake",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "2",
+            "doc": "Maximum offset in eighths of a cell (1-4 recommended)",
+            "name": "amplitude",
+            "ty": "u8"
+          },
+          {
+            "default": "8",
+            "doc": "Shake frequency (cycles per second)",
+            "name": "frequency",
+            "ty": "f32"
+          },
+          {
+            "default": "42",
+            "doc": "Random seed for pattern variation",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "false",
+            "doc": "If true, only shake edge cells (left and right borders)",
+            "name": "edge_only",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Sub-cell shake using partial vertical blocks",
+        "rustdoc_summary": "Sub-cell shake using partial vertical blocks",
+        "use_cases": [
+          "error",
+          "tactile",
+          "feedback"
+        ]
+      },
+      "SubPixelBar": {
+        "ai_hint": "High-resolution progress bar with 8x cell precision.\nUses ▏▎▍▌▋▊▉█ (horizontal) or ▁▂▃▄▅▆▇█ (vertical) partial blocks.\nprogress: 0.0-1.0 fill amount.\ndirection: Horizontal or Vertical.\nfilled_color, unfilled_color: bar colors.\nanimated: true cycles progress automatically with t parameter.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "SubPixelBar",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.5",
+            "doc": "Progress value (0.0 = empty, 1.0 = full)",
+            "name": "progress",
+            "ty": "f32"
+          },
+          {
+            "default": "Horizontal",
+            "doc": "Fill direction",
+            "name": "direction",
+            "ty": "SubPixelBarDirection"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Sub-pixel progress bar with 8x resolution",
+        "rustdoc_summary": "Sub-pixel progress bar with 8x resolution",
+        "use_cases": [
+          "loading",
+          "progress",
+          "indicator"
+        ]
+      },
+      "Tint": {
+        "ai_hint": "Apply color overlay/tint.\ncolor: tint color to apply.\nstrength: blend intensity (0.0=none, 1.0=full tint).\napply_to: Foreground, Background, or Both.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Tint",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "White",
+            "doc": "The tint color",
+            "name": "color",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Strength of the tint (0.0 = no effect, 1.0 = full replacement), can be signal-driven",
+            "name": "strength",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Both",
+            "doc": "Which color component to tint",
+            "name": "apply_to",
+            "ty": "ApplyTo"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Apply a color tint",
+        "rustdoc_summary": "Apply a color tint",
+        "use_cases": [
+          "mood",
+          "branding",
+          "overlay"
+        ]
+      },
+      "UnderlineWipe": {
+        "ai_hint": "Underline wipes in based on progress.\ndirection: WipeDirection, line_char default ▁, row_offset from bottom.\ngradient: enable gradient fade. glisten: add highlight sweep for hover polish.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "UnderlineWipe",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "LeftToRight",
+            "doc": "Wipe direction",
+            "name": "direction",
+            "ty": "WipeDirection"
+          },
+          {
+            "default": "0",
+            "doc": "Progress (0.0 = none, 1.0 = full width)",
+            "name": "progress",
+            "ty": "f32"
+          },
+          {
+            "default": "true",
+            "doc": "Enable gradient from bg_color to color along wipe direction",
+            "name": "gradient",
+            "ty": "bool"
+          },
+          {
+            "default": "true",
+            "doc": "Enable glisten/shimmer effect on the line",
+            "name": "glisten",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Horizontal underline that wipes in based on progress",
+        "rustdoc_summary": "Horizontal underline that wipes in based on progress",
+        "use_cases": [
+          "hover",
+          "link",
+          "indicator"
+        ]
+      },
+      "Vignette": {
+        "ai_hint": "Edge darkening that draws focus to center.\nstrength: intensity of darkening at edges.\nradius: how far vignette extends from edges (signal-driven).\nCinematic focus effect for premium surfaces.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Vignette",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Strength of the vignette effect, can be signal-driven",
+            "name": "strength",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Radius where vignette starts (0.0 = center, 1.0 = edges), can be signal-driven",
+            "name": "radius",
+            "ty": "SignalOrFloat"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Vignette darkening around edges",
+        "rustdoc_summary": "Vignette darkening around edges",
+        "use_cases": [
+          "focus",
+          "cinematic",
+          "premium"
+        ]
+      }
+    },
+    "masks": {
+      "Blinds": {
+        "ai_hint": "Venetian blinds effect for professional presentations.\norientation: Horizontal or Vertical slats.\ncount: number of blind slats.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Blinds",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Horizontal",
+            "doc": "Orientation of the blinds.\n\n- `Horizontal`: Slats run left-right, open top-to-bottom\n- `Vertical`: Slats run top-bottom, open left-to-right",
+            "name": "orientation",
+            "ty": "Orientation"
+          },
+          {
+            "default": "8",
+            "doc": "Number of blind slats.\n\nMore blinds = thinner slats, faster-feeling transition.",
+            "name": "count",
+            "ty": "u16"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Venetian blinds effect",
+        "rustdoc_summary": "Venetian blinds effect",
+        "use_cases": [
+          "transition",
+          "presentation"
+        ]
+      },
+      "Cellular": {
+        "ai_hint": "Organic cellular pattern reveal.\npattern: Voronoi (natural/organic), Hexagonal (tech/futuristic), Organic (irregular).\nseed: randomization seed. cell_count: number of cells in pattern.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "Cellular",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Voronoi",
+            "doc": "The cellular pattern algorithm.",
+            "name": "pattern",
+            "ty": "CellularPattern"
+          },
+          {
+            "default": "0",
+            "doc": "Random seed for reproducible patterns.",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "16",
+            "doc": "Number of cells in the pattern.\n\nHigher values = smaller cells, finer granularity.\nDefault: 16",
+            "name": "cell_count",
+            "ty": "u16"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Cellular/organic pattern reveal",
+        "rustdoc_summary": "Cellular/organic pattern reveal",
+        "use_cases": [
+          "transition",
+          "organic",
+          "creative"
+        ]
+      },
+      "Checkers": {
+        "ai_hint": "Checkerboard pattern reveal.\ncell_size: size of checker squares.\nRetro TV/game aesthetic, pairs well with CRT effects.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Checkers",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "2",
+            "doc": "Size of each checker cell in terminal cells.\n\nLarger values create bigger, more visible checkers.",
+            "name": "cell_size",
+            "ty": "u16"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Checkerboard pattern reveal",
+        "rustdoc_summary": "Checkerboard pattern reveal",
+        "use_cases": [
+          "transition",
+          "retro",
+          "playful"
+        ]
+      },
+      "Diamond": {
+        "ai_hint": "Diamond shape expanding from center.\nsoft_edge: blur at diamond boundary for smoother reveal.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Diamond",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "true",
+            "doc": "Enable soft edge blending at the diamond boundary.",
+            "name": "soft_edge",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Diamond-shaped expand from center",
+        "rustdoc_summary": "Diamond-shaped expand from center",
+        "use_cases": [
+          "transition",
+          "dramatic"
+        ]
+      },
+      "Dissolve": {
+        "ai_hint": "Random pixel dissolve transition.\nseed: randomization seed for consistent patterns.\nchunk_size: 1-2 for subtle shimmer, 4+ for retro/pixelated look.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Dissolve",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0",
+            "doc": "Random seed for deterministic, reproducible dissolve patterns.",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "1",
+            "doc": "Size of dissolve chunks in cells.\n\n- `1`: Single-pixel dissolve (finest grain)\n- `2-3`: Subtle chunking\n- `4+`: Visible blocks (retro/pixelated aesthetic)",
+            "name": "chunk_size",
+            "ty": "u8"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Random pixel dissolve effect",
+        "rustdoc_summary": "Random pixel dissolve effect",
+        "use_cases": [
+          "transition",
+          "dream-sequence",
+          "magical"
+        ]
+      },
+      "Iris": {
+        "ai_hint": "Spotlight/iris reveal expanding from center.\nshape: Circle (smooth), Diamond (angular), Box (rectangular).\nsoft_edge: blur transition at iris boundary.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Iris",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Circle",
+            "doc": "Shape of the iris aperture.",
+            "name": "shape",
+            "ty": "IrisShape"
+          },
+          {
+            "default": "true",
+            "doc": "Enable soft edge blending at the iris boundary.",
+            "name": "soft_edge",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Iris/spotlight reveal from center",
+        "rustdoc_summary": "Iris/spotlight reveal from center",
+        "use_cases": [
+          "transition",
+          "dramatic",
+          "spotlight"
+        ]
+      },
+      "NoiseDither": {
+        "ai_hint": "Dithered noise pattern transition.\nseed: randomization seed for consistent patterns.\nmatrix: Bayer4 (subtle 4x4 dither), Bayer8 (more visible 8x8 dither).",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "NoiseDither",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0",
+            "doc": "Random seed for pattern variation.",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "Bayer4",
+            "doc": "Dither matrix size.\n\nLarger matrices produce smoother but less distinctive patterns.",
+            "name": "matrix",
+            "ty": "DitherMatrix"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Dithered noise pattern reveal",
+        "rustdoc_summary": "Dithered noise pattern reveal",
+        "use_cases": [
+          "transition",
+          "retro",
+          "subtle"
+        ]
+      },
+      "None": {
+        "ai_hint": "No mask effect, fully visible passthrough. Use to disable masking.",
+        "complexity": "",
+        "energy": "calm",
+        "name": "None",
+        "pairs_with": [],
+        "parameters": [],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "No mask applied — content is fully visible",
+        "rustdoc_summary": "No mask applied — content is fully visible",
+        "use_cases": [
+          "none",
+          "baseline",
+          "passthrough"
+        ]
+      },
+      "PathReveal": {
+        "ai_hint": "Path-based reveal following a geometric trajectory.\npath: Spiral (playful inward/outward), Radial (dramatic sweep).\nsoft_edge: blur at reveal boundary.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "PathReveal",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Spiral { rotations: 2.5, direction: Clockwise }",
+            "doc": "The path pattern defining the reveal animation.",
+            "name": "path",
+            "ty": "RevealPathType"
+          },
+          {
+            "default": "true",
+            "doc": "Enable soft edge blending along the path.",
+            "name": "soft_edge",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Path-based reveal (spiral, radial sweep)",
+        "rustdoc_summary": "Path-based reveal (spiral, radial sweep)",
+        "use_cases": [
+          "transition",
+          "creative",
+          "animated"
+        ]
+      },
+      "Radial": {
+        "ai_hint": "Radial expansion from configurable origin point.\norigin: Center, TopLeft, TopRight, BottomLeft, BottomRight, Custom(x,y).\nsoft_edge: blur at radial boundary.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Radial",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Center",
+            "doc": "Origin point for the radial expansion.",
+            "name": "origin",
+            "ty": "RadialOrigin"
+          },
+          {
+            "default": "true",
+            "doc": "Enable soft edge blending at the radial boundary.",
+            "name": "soft_edge",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Radial reveal expanding from configurable origin",
+        "rustdoc_summary": "Radial reveal expanding from configurable origin",
+        "use_cases": [
+          "transition",
+          "dramatic",
+          "reveal"
+        ]
+      },
+      "Wipe": {
+        "ai_hint": "Classic film-style linear reveal/hide.\nreveal/hide: WipeDirection (16 variants - cardinal, diagonal, aliases, center-out).\nsoft_edge: blur transition (0.1-0.2 for smooth, 0 for hard edge).",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Wipe",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "false",
+            "doc": "Enable soft edge blending at the wipe boundary.\n\nWhen `true`, adds a gradient at the transition edge for a smoother look.\nRecommended value: use `true` for polished transitions.",
+            "name": "soft_edge",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Linear wipe reveal/hide from one edge to another",
+        "rustdoc_summary": "Linear wipe reveal/hide from one edge to another",
+        "use_cases": [
+          "transition",
+          "reveal",
+          "cinematic"
+        ]
+      }
+    },
+    "samplers": {
+      "Crt": {
+        "ai_hint": "CRT monitor scanlines and barrel curvature distortion.\nscanline_strength: intensity of horizontal lines.\njitter: random scanline displacement amount.\ncurvature: barrel distortion (0=flat, 0.1-0.2 typical).\nPairs with Crt filter for full retro CRT aesthetic.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "Crt",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Strength of scanline effect (0.0 = none, 1.0 = maximum).",
+            "name": "scanline_strength",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Amount of horizontal jitter.",
+            "name": "jitter",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Screen curvature (barrel distortion) amount.",
+            "name": "curvature",
+            "ty": "SignalOrFloat"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "CRT monitor effect with scanlines and curvature",
+        "rustdoc_summary": "CRT monitor effect with scanlines and curvature",
+        "use_cases": [
+          "retro",
+          "gaming",
+          "nostalgic"
+        ]
+      },
+      "CrtJitter": {
+        "ai_hint": "CRT crash/jitter effect simulating failing monitor.\nintensity: jitter displacement amount.\nspeed_hz: jitter frequency in Hz.\ndecay_ms: how quickly jitter settles after trigger.\nFor error states or retro malfunction aesthetics.",
+        "complexity": "moderate",
+        "energy": "intense",
+        "name": "CrtJitter",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Intensity of the jitter effect.",
+            "name": "intensity",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Jitter frequency in Hz.",
+            "name": "speed_hz",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "1000ms",
+            "doc": "Decay time in milliseconds.\n\nThe jitter effect fades out over this duration.",
+            "name": "decay_ms",
+            "ty": "u64"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "CRT crash/jitter effect with decay",
+        "rustdoc_summary": "CRT crash/jitter effect with decay",
+        "use_cases": [
+          "glitch",
+          "error",
+          "retro"
+        ]
+      },
+      "FaultLine": {
+        "ai_hint": "Fault line displacement like tectonic shift.\nseed: randomization seed for fault placement.\nintensity: displacement amount.\nsplit_bias: tendency to split horizontally vs vertically.\nEarthquake/glitch effect for errors or dramatic moments.",
+        "complexity": "moderate",
+        "energy": "intense",
+        "name": "FaultLine",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0",
+            "doc": "Seed for deterministic randomness.",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Intensity of the fault displacement.",
+            "name": "intensity",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "0",
+            "doc": "Bias toward upper (-1.0) or lower (+1.0) splits.",
+            "name": "split_bias",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Fault line displacement effect",
+        "rustdoc_summary": "Fault line displacement effect",
+        "use_cases": [
+          "glitch",
+          "error",
+          "dramatic"
+        ]
+      },
+      "None": {
+        "ai_hint": "No sampling distortion, direct coordinate passthrough.",
+        "complexity": "",
+        "energy": "calm",
+        "name": "None",
+        "pairs_with": [],
+        "parameters": [],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "No coordinate transformation",
+        "rustdoc_summary": "No coordinate transformation",
+        "use_cases": [
+          "none",
+          "baseline",
+          "passthrough"
+        ]
+      },
+      "Ripple": {
+        "ai_hint": "Circular ripple emanating from center point.\namplitude: ripple height. wavelength: distance between ripple rings.\nspeed: outward expansion rate.\ncenter: ripple origin point (default center).\nWater drop/impact effect. Don't combine with Crt sampler.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "Ripple",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Static(0.0)",
+            "doc": "Amplitude of the ripple in cells.",
+            "name": "amplitude",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Distance between ripple peaks in cells.",
+            "name": "wavelength",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Speed of ripple propagation outward.",
+            "name": "speed",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Center",
+            "doc": "Center point of the ripple.\n\nEither `\"center\"` or `{ \"x\": N, \"y\": M }`.",
+            "name": "center",
+            "ty": "RippleCenter"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Circular ripple distortion from center point",
+        "rustdoc_summary": "Circular ripple distortion from center point",
+        "use_cases": [
+          "water",
+          "impact",
+          "attention"
+        ]
+      },
+      "Shredder": {
+        "ai_hint": "Paper shredder strips effect for destruction/transitions.\nstripe_width: width of each strip in cells.\nodd_speed: movement speed of odd-numbered strips.\neven_speed: movement speed of even-numbered strips (opposite creates shearing).",
+        "complexity": "moderate",
+        "energy": "intense",
+        "name": "Shredder",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "4",
+            "doc": "Width of each shredder stripe in cells.",
+            "name": "stripe_width",
+            "ty": "u16"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Speed of odd-indexed stripes.",
+            "name": "odd_speed",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Speed of even-indexed stripes.",
+            "name": "even_speed",
+            "ty": "SignalOrFloat"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Paper shredder effect with alternating strips",
+        "rustdoc_summary": "Paper shredder effect with alternating strips",
+        "use_cases": [
+          "glitch",
+          "transition",
+          "destruction"
+        ]
+      },
+      "SineWave": {
+        "ai_hint": "Sinusoidal wave distortion for underwater/dream effects.\naxis: Horizontal, Vertical, or Both wave direction.\namplitude: wave height in cells. frequency: wave density.\nspeed: animation rate. phase: wave offset.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "SineWave",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "X",
+            "doc": "Which axis the wave affects.",
+            "name": "axis",
+            "ty": "Axis"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Amplitude of the wave in cells.\n\nHigher values create more dramatic distortion.\nRecommended: 1-3 for subtle, 4+ for dramatic.",
+            "name": "amplitude",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Number of wave cycles across the widget.",
+            "name": "frequency",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Speed of wave animation.",
+            "name": "speed",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Phase offset in radians.",
+            "name": "phase",
+            "ty": "SignalOrFloat"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Sinusoidal wave distortion",
+        "rustdoc_summary": "Sinusoidal wave distortion",
+        "use_cases": [
+          "wavy",
+          "underwater",
+          "dream"
+        ]
+      }
+    },
+    "shaders": {
+      "AmbientOcclusion": {
+        "ai_hint": "Contact shadow darkening cells near widget edges.\nedges: BottomRight (default), TopLeft, All, Inner.\nfalloff: Linear, Quadratic (default), Exponential.\nintensity: darkness strength. radius: falloff distance in cells.\nCreates depth by simulating light occlusion at boundaries.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "AmbientOcclusion",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.3",
+            "doc": "Maximum darkening intensity (0.0 = no effect, 0.5 = 50% darker at edge)",
+            "name": "intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "2 cells",
+            "doc": "Effect radius in cells from edge",
+            "name": "radius",
+            "ty": "u8"
+          },
+          {
+            "default": "BottomRight",
+            "doc": "Which edges to apply the effect to",
+            "name": "edges",
+            "ty": "AOEdges"
+          },
+          {
+            "default": "Quadratic",
+            "doc": "Falloff curve type",
+            "name": "falloff",
+            "ty": "FalloffType"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Contact shadow effect darkening cells near widget edges",
+        "rustdoc_summary": "Contact shadow effect darkening cells near widget edges",
+        "use_cases": [
+          "depth",
+          "premium",
+          "3d"
+        ]
+      },
+      "BarberPole": {
+        "ai_hint": "Animated diagonal stripes like a barber pole.\nspeed: stripe animation rate.\nstripe_width: width of colored stripes in cells.\ngap_width: width between stripes.\ncolor: stripe color.\nClassic loading indicator style.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "BarberPole",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "stripe animation rate",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "2",
+            "doc": "width of colored stripes in cells",
+            "name": "stripe_width",
+            "ty": "u16"
+          },
+          {
+            "default": "2",
+            "doc": "width between stripes",
+            "name": "gap_width",
+            "ty": "u16"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Animated diagonal stripes like a barber pole",
+        "rustdoc_summary": "Animated diagonal stripes like a barber pole",
+        "use_cases": [
+          "loading",
+          "progress",
+          "playful"
+        ]
+      },
+      "Bevel": {
+        "ai_hint": "3D embossed edge effect simulating raised or sunken surfaces.\nlight_direction: TopLeft (default), TopRight, BottomLeft, BottomRight, Top, Bottom, Left, Right.\nedge_width: bevel thickness in cells.\nhighlight_intensity and shadow_intensity: edge light and shadow strength.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "Bevel",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "TopLeft",
+            "doc": "Direction of the simulated light source",
+            "name": "light_direction",
+            "ty": "LightDirection"
+          },
+          {
+            "default": "0.3",
+            "doc": "Intensity of the highlight on lit edges (0.0 - 1.0)",
+            "name": "highlight_intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "0.3",
+            "doc": "Intensity of the shadow on dark edges (0.0 - 1.0)",
+            "name": "shadow_intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "1 cells",
+            "doc": "Width of the bevel edge in cells (1-3)",
+            "name": "edge_width",
+            "ty": "u8"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "3D embossed edge effect with configurable light direction",
+        "rustdoc_summary": "3D embossed edge effect with configurable light direction",
+        "use_cases": [
+          "3d",
+          "buttons",
+          "emboss"
+        ]
+      },
+      "BorderSweep": {
+        "ai_hint": "Border highlight that sweeps around widget edges.\nspeed: sweep animation rate around perimeter.\nlength: highlight segment length in cells.\ncolor: highlight color.\nIdeal for focus indication and selection states.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "BorderSweep",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "sweep animation rate around perimeter",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "5 cells",
+            "doc": "highlight segment length in cells",
+            "name": "length",
+            "ty": "u16"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Highlight that traces the border edge",
+        "rustdoc_summary": "Highlight that traces the border edge",
+        "use_cases": [
+          "selection",
+          "focus",
+          "highlight"
+        ]
+      },
+      "ChromaticEdge": {
+        "ai_hint": "RGB edge separation for chromatic aberration effect.\nintensity: separation amount between color channels.\nedge_width: width of affected edge region.\nhorizontal: true for horizontal separation, false for vertical.\nPremium lens distortion effect or glitch aesthetic.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "ChromaticEdge",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.3",
+            "doc": "Red/cyan separation intensity (0.0 = none, 1.0 = full)",
+            "name": "intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "0.15 cells",
+            "doc": "Width of the edge effect in cells (0.0 = none, 1.0 = half width)",
+            "name": "edge_width",
+            "ty": "f32"
+          },
+          {
+            "default": "true",
+            "doc": "Direction of effect: true = horizontal (left-right), false = vertical (top-bottom)",
+            "name": "horizontal",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Chromatic aberration effect separating RGB edges",
+        "rustdoc_summary": "Chromatic aberration effect separating RGB edges",
+        "use_cases": [
+          "glitch",
+          "premium",
+          "effect"
+        ]
+      },
+      "FocusedRowGradient": {
+        "ai_hint": "Vertical gradient highlighting selected row.\nselected_row: row index to highlight.\nselected_row_ratio: alternative selection by ratio (0.0-1.0).\nfalloff_distance: gradient fade distance from selected row.\nbright_color: highlight color for selected row.\ndim_color: color for non-selected rows.\napply_to: Foreground/Background/Both.\nIdeal for list navigation and row selection.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "FocusedRowGradient",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.5",
+            "doc": "Position of the selected/focused row (0.0 = top, 1.0 = bottom).\nOnly used if selected_row is not set. Default: 0.5 (middle)",
+            "name": "selected_row_ratio",
+            "ty": "f32"
+          },
+          {
+            "default": "5 rows",
+            "doc": "Number of rows until full dim (controls gradient spread).\nDefault: 5",
+            "name": "falloff_distance",
+            "ty": "u16"
+          },
+          {
+            "default": "Foreground",
+            "doc": "Which style component to apply the gradient to.\nDefault: Foreground",
+            "name": "apply_to",
+            "ty": "ApplyToColor"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Vertical gradient centered on a selected row",
+        "rustdoc_summary": "Vertical gradient centered on a selected row",
+        "use_cases": [
+          "selection",
+          "list",
+          "navigation"
+        ]
+      },
+      "GlistenBand": {
+        "ai_hint": "Moving light band sweep for elegant loading shimmer.\nspeed: band movement rate (0.5 typical).\nband_width: width of the light band in cells.\nangle_deg: band angle (-15 diagonal typical).\nhead, tail: gradient colors at band edges.\ndirection: sweep direction.\nrepeat_count: number of bands visible.\napply_to: Foreground/Background/Both.\nblend_strength: intensity of the effect.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "GlistenBand",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "Speed multiplier for band movement (1.0 = normal)",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "6 cells",
+            "doc": "Width of the glisten band in cells",
+            "name": "band_width",
+            "ty": "u16"
+          },
+          {
+            "default": "Forward",
+            "doc": "Direction of the sweep",
+            "name": "direction",
+            "ty": "GlistenDirection"
+          },
+          {
+            "default": "25deg",
+            "doc": "Angle of the band in degrees (0 = horizontal, 90 = vertical)",
+            "name": "angle_deg",
+            "ty": "f32"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Moving band of light that sweeps across the widget",
+        "rustdoc_summary": "Moving band of light that sweeps across the widget",
+        "use_cases": [
+          "loading",
+          "premium",
+          "shine"
+        ]
+      },
+      "GlitchLines": {
+        "ai_hint": "Random horizontal glitch lines for errors/warnings.\nseed: randomization seed. intensity: effect strength.\nmax_lines: maximum concurrent glitch lines.\nspeed: line movement/flicker rate.\nflash_chance: probability of bright flashes.\npulse_color: flash highlight color.\npulse_speed: flash animation rate.\nitalic_on_flash: apply italic during flashes.\nflash_hold: flash duration.\nnoise_type: Uniform or Gaussian distribution.",
+        "complexity": "moderate",
+        "energy": "intense",
+        "name": "GlitchLines",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.5",
+            "doc": "Probability of any line appearing (0.0 - 1.0)",
+            "name": "intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "6",
+            "doc": "Maximum number of interference lines",
+            "name": "max_lines",
+            "ty": "u16"
+          },
+          {
+            "default": "1",
+            "doc": "Speed multiplier for pattern changes (higher = faster flicker)",
+            "name": "speed",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Random horizontal glitch interference lines",
+        "rustdoc_summary": "Random horizontal glitch interference lines",
+        "use_cases": [
+          "error",
+          "glitch",
+          "dramatic"
+        ]
+      },
+      "Glow": {
+        "ai_hint": "Multi-cell bloom/halo around widget edges.\nradius: glow extent. intensity: brightness of the glow.\nfalloff: Linear, Quadratic, Exponential. pulse_speed: optional pulsing in Hz.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "Glow",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "2 cells",
+            "doc": "Radius of the glow effect in cells (1-5)",
+            "name": "radius",
+            "ty": "u8"
+          },
+          {
+            "default": "0.6",
+            "doc": "Overall intensity multiplier (0.0 - 1.0)",
+            "name": "intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "Quadratic",
+            "doc": "Falloff curve for intensity over distance",
+            "name": "falloff",
+            "ty": "FalloffType"
+          },
+          {
+            "default": "0 Hz",
+            "doc": "Optional pulse speed in Hz (cycles per second). 0 = no pulse.",
+            "name": "pulse_speed",
+            "ty": "f32"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Multi-cell bloom/halo effect around widget edges",
+        "rustdoc_summary": "Multi-cell bloom/halo effect around widget edges",
+        "use_cases": [
+          "focus",
+          "premium",
+          "highlight"
+        ]
+      },
+      "Highlighter": {
+        "ai_hint": "Marker-style text highlighting effect.\ncolor: highlighter color (typically yellow/green).\nReveals text as if being highlighted with a marker pen.\nIdeal for emphasizing important text progressively.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Highlighter",
+        "pairs_with": [],
+        "parameters": [],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Marker-style highlight revealing text",
+        "rustdoc_summary": "Marker-style highlight revealing text",
+        "use_cases": [
+          "emphasis",
+          "reveal",
+          "attention"
+        ]
+      },
+      "LinearGradient": {
+        "ai_hint": "Gradient fill at configurable angle.\ngradient: color stops array defining the gradient.\nangle_deg: rotation angle (0=horizontal, 90=vertical, -45=diagonal).\nElegant for backgrounds and premium surfaces.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "LinearGradient",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0",
+            "doc": "rotation angle (0=horizontal, 90=vertical, -45=diagonal)",
+            "name": "angle_deg",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Static color gradient across widget",
+        "rustdoc_summary": "Static color gradient across widget",
+        "use_cases": [
+          "background",
+          "premium",
+          "branding"
+        ]
+      },
+      "NeonFlicker": {
+        "ai_hint": "Flickering neon tube simulation.\nstability: 0.85=subtle flicker, 0.5=dying tube, 1.0=steady.\nseed: randomization seed.\nsegment: which tube segment to affect (for multi-segment signs).\ndim_amount: brightness reduction during flicker.\nspeed: flicker rate.\nflash_chance: probability of bright flashes.\ndecay_rate: how quickly brightness returns after flicker.\nnoise_type: Uniform or Gaussian flicker patterns.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "NeonFlicker",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.7",
+            "doc": "Base stability (0.0 = always flickering, 1.0 = never flickers)",
+            "name": "stability",
+            "ty": "f32"
+          },
+          {
+            "default": "Row",
+            "doc": "Segment mode: \"cell\", \"row\", or \"column\"",
+            "name": "segment",
+            "ty": "SegmentMode"
+          },
+          {
+            "default": "0.8",
+            "doc": "How much the flicker dims the color (0.0 - 1.0)",
+            "name": "dim_amount",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Flickering neon sign effect with independent segments",
+        "rustdoc_summary": "Flickering neon sign effect with independent segments",
+        "use_cases": [
+          "retro",
+          "neon",
+          "ambient"
+        ]
+      },
+      "PulseWave": {
+        "ai_hint": "Rippling color wave effect.\nfrequency: wave density.\nspeed: wave animation rate.\ncolor: wave highlight color.\ndirection: wave propagation direction.\nwavelength: distance between wave peaks.\nAttention/loading indicator for selection states.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "PulseWave",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "2",
+            "doc": "Wave frequency (waves per animation cycle)",
+            "name": "frequency",
+            "ty": "f32"
+          },
+          {
+            "default": "1",
+            "doc": "Wave speed multiplier",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "Horizontal",
+            "doc": "Wave direction",
+            "name": "direction",
+            "ty": "WaveDirection"
+          },
+          {
+            "default": "8 cells",
+            "doc": "Wavelength in cells (how spread out the wave is)",
+            "name": "wavelength",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Rippling color wave emanating from position",
+        "rustdoc_summary": "Rippling color wave emanating from position",
+        "use_cases": [
+          "attention",
+          "loading",
+          "ambient"
+        ]
+      },
+      "Radar": {
+        "ai_hint": "Rotating radar sweep effect.\nspeed: rotation rate (revolutions per second).\ntail_length: angular length of the sweep trail.\ncolor: sweep highlight color.\nScanning/search indicator for tech interfaces.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "Radar",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "rotation rate (revolutions per second)",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "1.00 rad",
+            "doc": "angular length of the sweep trail",
+            "name": "tail_length",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Rotating radar-style sweep effect",
+        "rustdoc_summary": "Rotating radar-style sweep effect",
+        "use_cases": [
+          "scanning",
+          "loading",
+          "tech"
+        ]
+      },
+      "Reflect": {
+        "ai_hint": "Moving reflective glint across surface.\nspeed: glint movement rate.\ncolor: highlight color for the glint.\nPremium surface effect for polished/metallic appearance.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Reflect",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "2",
+            "doc": "glint movement rate",
+            "name": "speed",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Moving reflective glint band",
+        "rustdoc_summary": "Moving reflective glint band",
+        "use_cases": [
+          "premium",
+          "loading",
+          "shine"
+        ]
+      },
+      "RevealWipe": {
+        "ai_hint": "Progressive reveal wipe driven by t parameter.\ndirection: WipeDirection for reveal direction.\nReveals content progressively, ideal for text/data display.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "RevealWipe",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "LeftToRight",
+            "doc": "Direction of the reveal animation",
+            "name": "direction",
+            "ty": "RevealDirection"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Progressive reveal from one direction, hiding unrevealed text",
+        "rustdoc_summary": "Progressive reveal from one direction, hiding unrevealed text",
+        "use_cases": [
+          "reveal",
+          "transition",
+          "text"
+        ]
+      },
+      "StochasticSparkle": {
+        "ai_hint": "Film grain / frosted glass shimmer for premium surfaces.\nsparkle_density: fraction of cells (0.05=5%), brightness_boost: multiplier (1.2=20% brighter).\nspeed: 0.25=shimmer, 1.0=static. noise_type: Uniform (even) or Gaussian (clustered).\napply_to: Foreground/Background/Both.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "StochasticSparkle",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "5%",
+            "doc": "Fraction of cells that sparkle per frame (0.0 - 1.0).\n0.05 = 5% of cells sparkle, creating subtle texture.\nHigher values create more active/noisy appearance.",
+            "name": "sparkle_density",
+            "ty": "f32"
+          },
+          {
+            "default": "20%",
+            "doc": "How much to brighten sparkling cells (multiplier).\n1.0 = no change, 1.2 = 20% brighter, 1.5 = 50% brighter.",
+            "name": "brightness_boost",
+            "ty": "f32"
+          },
+          {
+            "default": "0.25",
+            "doc": "Speed of sparkle animation (lower = slower shimmer).\n1.0 = update every frame, 0.25 = update every 4 frames.\nLower values create \"shimmering sand\" vs \"static\" look.",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "Background",
+            "doc": "Which color channel(s) to apply sparkle to.",
+            "name": "apply_to",
+            "ty": "SparkleTarget"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Film grain / frosted glass effect with random cell brightening",
+        "rustdoc_summary": "Film grain / frosted glass effect with random cell brightening",
+        "use_cases": [
+          "premium-surface",
+          "frosted-glass",
+          "texture",
+          "ambient"
+        ]
+      },
+      "SubCellShake": {
+        "ai_hint": "Micro-jitter via rapid color oscillation.\namplitude: shake strength. frequency: oscillation rate.\naxis: Horizontal, Vertical, Both (default). chromatic: RGB channel separation.\nedge_only: limit to widget borders. For chromatic aberration effect.",
+        "complexity": "moderate",
+        "energy": "intense",
+        "name": "SubCellShake",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.15",
+            "doc": "Shake amplitude as brightness variation (0.0 - 0.5 typical)",
+            "name": "amplitude",
+            "ty": "f32"
+          },
+          {
+            "default": "12 Hz",
+            "doc": "Shake frequency in Hz (oscillations per second)",
+            "name": "frequency",
+            "ty": "f32"
+          },
+          {
+            "default": "Both",
+            "doc": "Which axis to apply shake to",
+            "name": "axis",
+            "ty": "ShakeAxis"
+          },
+          {
+            "default": "false",
+            "doc": "Enable chromatic aberration (RGB channel offset)",
+            "name": "chromatic",
+            "ty": "bool"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Micro-jitter visual effect through rapid color oscillation",
+        "rustdoc_summary": "Micro-jitter visual effect through rapid color oscillation",
+        "use_cases": [
+          "error",
+          "vibration",
+          "attention"
+        ]
+      }
+    },
+    "shadows": {
+      "Braille": {
+        "ai_hint": "2×4 subpixel density grid using braille characters.\nFinest-grained shadow detail available.\nRequires braille font support in terminal.\nMay vary in appearance based on font rendering.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "Braille",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.5",
+            "doc": "Fill density from 0.0 (empty) to 1.0 (fully filled).",
+            "name": "density",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Braille patterns for dithered/density-based shadows",
+        "rustdoc_summary": "Braille patterns for dithered/density-based shadows",
+        "use_cases": [
+          "depth",
+          "fine",
+          "subtle"
+        ]
+      },
+      "Gradient": {
+        "ai_hint": "Multi-layer shadow with decreasing intensity.\nlayers: number of gradient layers (2-3 typical).\nCreates depth gradient from element edge outward.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "Gradient",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "2",
+            "doc": "Number of gradient layers (1-4).\nMore layers = softer shadow, but uses more screen space.",
+            "name": "layers",
+            "ty": "u8"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Multi-layer gradient shadow with decreasing intensity",
+        "rustdoc_summary": "Multi-layer gradient shadow with decreasing intensity",
+        "use_cases": [
+          "depth",
+          "soft",
+          "premium"
+        ]
+      },
+      "HalfBlock": {
+        "ai_hint": "Half-block characters (▐▄▌▀) for sub-cell shadow precision.\nBest quality shadow with smooth edges.\noffset_x, offset_y: shadow offset (positive = right/down).\ncolor: shadow color. surface_color: background for blending.\nedges: BottomRight (default), All, etc.\nsoft_edges: use half-blocks at boundaries for smoothness.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "HalfBlock",
+        "pairs_with": [],
+        "parameters": [],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Half-block characters for soft sub-cell shadows",
+        "rustdoc_summary": "Half-block characters for soft sub-cell shadows",
+        "use_cases": [
+          "depth",
+          "premium",
+          "modal"
+        ]
+      },
+      "Solid": {
+        "ai_hint": "Simple background color fill shadow.\nMaximum terminal compatibility, works everywhere.\nNo special character requirements.\noffset_x, offset_y: shadow offset. color: shadow color.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "Solid",
+        "pairs_with": [],
+        "parameters": [],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Solid color cells (space with background color)",
+        "rustdoc_summary": "Solid color cells (space with background color)",
+        "use_cases": [
+          "depth",
+          "compatible",
+          "simple"
+        ]
+      }
+    },
+    "styles": {
+      "ColorFade": {
+        "ai_hint": "Fade toward target color based on t parameter.\ntarget: destination color.\ncolor_space: RGB or HSL interpolation.\nSmooth color transitions for mood or branding changes.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "ColorFade",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Rgb",
+            "doc": "Color space for interpolation (affects transition smoothness).",
+            "name": "color_space",
+            "ty": "ColorSpace"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Color fade toward target",
+        "rustdoc_summary": "Color fade toward target",
+        "use_cases": [
+          "transition",
+          "mood",
+          "branding"
+        ]
+      },
+      "ColorShift": {
+        "ai_hint": "HSL color manipulation over time.\nhue_shift: hue rotation amount.\nsaturation_shift: saturation adjustment.\nlightness_shift: brightness adjustment.\nMood transitions and color effects.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "ColorShift",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0deg",
+            "doc": "Hue shift in degrees (-180 to 180).",
+            "name": "hue_shift",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Saturation adjustment (-1.0 to 1.0).",
+            "name": "saturation_shift",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Lightness adjustment (-1.0 to 1.0).",
+            "name": "lightness_shift",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "HSL color shift animation",
+        "rustdoc_summary": "HSL color shift animation",
+        "use_cases": [
+          "mood",
+          "transition",
+          "effect"
+        ]
+      },
+      "FadeIn": {
+        "ai_hint": "Opacity fade in driven by t parameter.\napply_to: Foreground, Background, or Both.\nease: easing function for animation curve.\nClassic entrance effect, pairs with any mask.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "FadeIn",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Both",
+            "doc": "Which style components to fade (foreground, background, or both).",
+            "name": "apply_to",
+            "ty": "FadeApplyTo"
+          },
+          {
+            "default": "Type(Linear)",
+            "doc": "Easing curve for the fade animation.",
+            "name": "ease",
+            "ty": "EasingCurve"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Fades in from transparent/black",
+        "rustdoc_summary": "Fades in from transparent/black",
+        "use_cases": [
+          "enter",
+          "reveal",
+          "transition"
+        ]
+      },
+      "FadeOut": {
+        "ai_hint": "Opacity fade out driven by t parameter.\napply_to: Foreground, Background, or Both.\nease: easing function for animation curve.\nClassic exit effect, pairs with any mask.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "FadeOut",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Both",
+            "doc": "Which style components to fade.",
+            "name": "apply_to",
+            "ty": "FadeApplyTo"
+          },
+          {
+            "default": "Type(Linear)",
+            "doc": "Easing curve for the fade animation.",
+            "name": "ease",
+            "ty": "EasingCurve"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Fades out to transparent/black",
+        "rustdoc_summary": "Fades out to transparent/black",
+        "use_cases": [
+          "exit",
+          "hide",
+          "transition"
+        ]
+      },
+      "Glitch": {
+        "ai_hint": "Glitch-style color/style distortion.\nseed: randomization seed. intensity: effect strength.\nitalic_start, italic_end: time window for italic glitch.\nError/dramatic effect for cyberpunk aesthetics.",
+        "complexity": "moderate",
+        "energy": "intense",
+        "name": "Glitch",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "42",
+            "doc": "Seed for deterministic randomness.",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "0.3",
+            "doc": "Probability of applying a modifier (0.0 to 1.0).",
+            "name": "intensity",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Random glitch distortion with modifiers",
+        "rustdoc_summary": "Random glitch distortion with modifiers",
+        "use_cases": [
+          "error",
+          "dramatic",
+          "cyberpunk"
+        ]
+      },
+      "ItalicWindow": {
+        "ai_hint": "Apply italic style during a time window.\nstart: t value when italic begins.\nend: t value when italic ends.\nText emphasis animation for timed highlights.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "ItalicWindow",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0",
+            "doc": "Start of the italic window (0.0 to 1.0).",
+            "name": "start",
+            "ty": "f32"
+          },
+          {
+            "default": "1",
+            "doc": "End of the italic window (0.0 to 1.0).",
+            "name": "end",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Italic modifier during time window",
+        "rustdoc_summary": "Italic modifier during time window",
+        "use_cases": [
+          "emphasis",
+          "animation",
+          "text"
+        ]
+      },
+      "NeonFlicker": {
+        "ai_hint": "Flickering neon tube style effect.\nstability: 0.0-1.0 (higher = more stable, lower = dying tube).\nRetro neon sign aesthetic with randomized flicker.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "NeonFlicker",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.8",
+            "doc": "Stability factor (0.0 = very unstable, 1.0 = perfectly stable).",
+            "name": "stability",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Neon sign flicker effect (temporal)",
+        "rustdoc_summary": "Neon sign flicker effect (temporal)",
+        "use_cases": [
+          "retro",
+          "neon",
+          "ambient"
+        ]
+      },
+      "Pulse": {
+        "ai_hint": "Color intensity pulsing animation.\nfrequency: pulse rate (Hz).\ncolor: pulse highlight color.\nAttention/alive indicator for active elements.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Pulse",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "Pulse frequency (cycles per normalized time unit).",
+            "name": "frequency",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Pulsing color intensity effect",
+        "rustdoc_summary": "Pulsing color intensity effect",
+        "use_cases": [
+          "attention",
+          "heartbeat",
+          "ambient"
+        ]
+      },
+      "Rainbow": {
+        "ai_hint": "Continuous hue cycling through spectrum.\nspeed: hue rotation rate.\nPlayful/celebration effect, pride flag aesthetic.",
+        "complexity": "simple",
+        "energy": "moderate",
+        "name": "Rainbow",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "Speed of hue rotation (degrees per normalized time unit).",
+            "name": "speed",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Rainbow color cycling effect",
+        "rustdoc_summary": "Rainbow color cycling effect",
+        "use_cases": [
+          "playful",
+          "pride",
+          "celebration"
+        ]
+      },
+      "RigidShakeStyle": {
+        "ai_hint": "Italic style synchronized with RigidShake filter timing.\nshake_period, num_shakes, pause_duration: must match RigidShake params.\nApplies italic when widget shifts right, creating coordinated motion.\nALWAYS use with RigidShake filter for proper synchronization.",
+        "complexity": "advanced",
+        "energy": "intense",
+        "name": "RigidShakeStyle",
+        "pairs_with": [
+          "RigidShake"
+        ],
+        "parameters": [
+          {
+            "default": "0.29s",
+            "doc": "Duration of one back-and-forth shake in seconds.",
+            "name": "shake_period",
+            "ty": "f32"
+          },
+          {
+            "default": "4",
+            "doc": "Number of shakes before pause (max 8).",
+            "name": "num_shakes",
+            "ty": "u8"
+          },
+          {
+            "default": "0.52s",
+            "doc": "Duration of pause between shake cycles in seconds.",
+            "name": "pause_duration",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Italic synced with RigidShake filter",
+        "rustdoc_summary": "Italic synced with RigidShake filter",
+        "use_cases": [
+          "error",
+          "attention",
+          "sync"
+        ]
+      },
+      "Spatial": {
+        "ai_hint": "Wraps any SpatialShaderType as a style effect.\nshader: the spatial shader to apply. angle_deg: rotation for shader orientation.\nAllows using spatial shaders in style effect contexts.\nAdvanced composition for custom animations.",
+        "complexity": "advanced",
+        "energy": "varies",
+        "name": "Spatial",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0",
+            "doc": "rotation for shader orientation",
+            "name": "angle_deg",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Static color gradient across widget",
+        "rustdoc_summary": "Static color gradient across widget",
+        "use_cases": [
+          "custom",
+          "advanced"
+        ]
+      }
+    }
+  },
+  "layers": {
+    "content": "Text transformation. Modifies characters themselves.",
+    "filter": "Post-processing on rendered output. Applied last.",
+    "mask": "Controls visibility (0.0-1.0). Used for transitions.",
+    "sampler": "Distorts coordinates before rendering. Applied first.",
+    "shader": "Per-cell styling based on position/time. Visual texture.",
+    "shadow": "Depth effect rendered beneath element."
+  },
+  "phases": {
+    "dwelling": "Element stable, ambient effects active",
+    "entering": "Element appearing (t: 0→1 reveals)",
+    "exiting": "Element leaving (t: 0→1 hides)"
+  },
+  "recipes": {
+    "elegant_modal_enter": {
+      "description": "Sophisticated modal appearance with depth",
+      "effects": [
+        {
+          "effect": "Iris",
+          "layer": "mask",
+          "params": {
+            "shape": "Box",
+            "soft_edge": 0.15
+          }
+        },
+        {
+          "effect": "StochasticSparkle",
+          "layer": "shader",
+          "params": {
+            "sparkle_density": 0.03,
+            "speed": 0.2
+          }
+        },
+        {
+          "effect": "HalfBlock",
+          "layer": "shadow",
+          "params": {
+            "offset_x": 2,
+            "offset_y": 1
+          }
+        }
+      ],
+      "mood": [
+        "professional",
+        "premium"
+      ],
+      "notes": ""
+    },
+    "error_shake": {
+      "description": "Attention-grabbing error feedback",
+      "effects": [
+        {
+          "effect": "RigidShake",
+          "layer": "filter",
+          "params": {
+            "max_eighths": 10,
+            "num_shakes": 3
+          }
+        },
+        {
+          "effect": "RigidShakeStyle",
+          "layer": "style",
+          "params": {}
+        }
+      ],
+      "mood": [
+        "urgent",
+        "error"
+      ],
+      "notes": "Ensure widget has 2-cell margins on each side"
+    },
+    "list_item_hover": {
+      "description": "Responsive list item hover feedback",
+      "effects": [
+        {
+          "effect": "HoverBar",
+          "layer": "filter",
+          "params": {
+            "base_eighths": 2,
+            "max_eighths": 8
+          }
+        }
+      ],
+      "mood": [
+        "interactive",
+        "selection"
+      ],
+      "notes": ""
+    },
+    "loading_shimmer": {
+      "description": "Skeleton loading state with movement",
+      "effects": [
+        {
+          "effect": "GlistenBand",
+          "layer": "shader",
+          "params": {
+            "angle_deg": -15,
+            "band_width": 3,
+            "speed": 0.5
+          }
+        }
+      ],
+      "mood": [
+        "loading",
+        "modern"
+      ],
+      "notes": ""
+    },
+    "retro_crt": {
+      "description": "Nostalgic CRT monitor aesthetic",
+      "effects": [
+        {
+          "effect": "Crt",
+          "layer": "sampler",
+          "params": {
+            "curvature": 0.1,
+            "scanline_strength": 0.3
+          }
+        },
+        {
+          "effect": "Crt",
+          "layer": "filter",
+          "params": {
+            "glow": 0.1,
+            "scanline_strength": 0.2
+          }
+        },
+        {
+          "effect": "NeonFlicker",
+          "layer": "shader",
+          "params": {
+            "stability": 0.85
+          }
+        }
+      ],
+      "mood": [
+        "retro",
+        "gaming"
+      ],
+      "notes": ""
+    }
+  },
+  "semantics": {
+    "moods": {
+      "elegant": [
+        "GlistenBand",
+        "Iris",
+        "LinearGradient",
+        "Glow",
+        "StochasticSparkle"
+      ],
+      "minimal": [
+        "Wipe",
+        "FadeIn",
+        "FadeOut",
+        "Dim"
+      ],
+      "playful": [
+        "Dissolve",
+        "Rainbow",
+        "BarberPole",
+        "BrailleDust",
+        "Checkers"
+      ],
+      "professional": [
+        "StochasticSparkle",
+        "Wipe",
+        "FadeIn",
+        "LinearGradient",
+        "HalfBlock"
+      ],
+      "retro": [
+        "Crt",
+        "NeonFlicker",
+        "SplitFlap",
+        "Odometer",
+        "InterlaceCurtain"
+      ],
+      "urgent": [
+        "RigidShake",
+        "SubCellShake",
+        "GlitchLines",
+        "CrtJitter",
+        "FaultLine"
+      ]
+    },
+    "use_cases": {
+      "data_display": {
+        "content": [
+          "Odometer",
+          "SplitFlap",
+          "Numeric"
+        ],
+        "filters": [],
+        "masks": [],
+        "shaders": [
+          "Highlighter",
+          "RevealWipe"
+        ],
+        "shadow": false
+      },
+      "error_feedback": {
+        "content": [
+          "Scramble",
+          "GlitchShift"
+        ],
+        "filters": [
+          "RigidShake",
+          "SubCellShake"
+        ],
+        "masks": [],
+        "shaders": [
+          "GlitchLines",
+          "SubCellShake",
+          "NeonFlicker"
+        ],
+        "shadow": false
+      },
+      "focus_selection": {
+        "content": [],
+        "filters": [],
+        "masks": [],
+        "shaders": [
+          "BorderSweep",
+          "PulseWave",
+          "FocusedRowGradient",
+          "Glow"
+        ],
+        "shadow": false
+      },
+      "hover_selection": {
+        "content": [
+          "WrapIndicator"
+        ],
+        "filters": [
+          "HoverBar",
+          "UnderlineWipe",
+          "BracketEmphasis",
+          "DotIndicator",
+          "GlistenSweep",
+          "KittScanner",
+          "ShadeScanner",
+          "PillButton"
+        ],
+        "masks": [],
+        "shaders": [
+          "FocusedRowGradient",
+          "BorderSweep",
+          "Glow"
+        ],
+        "shadow": false
+      },
+      "loading": {
+        "content": [
+          "Typewriter"
+        ],
+        "filters": [
+          "BrailleDust",
+          "SubPixelBar",
+          "MotionBlur",
+          "PatternFill"
+        ],
+        "masks": [],
+        "shaders": [
+          "BarberPole",
+          "StochasticSparkle",
+          "GlistenBand"
+        ],
+        "shadow": false
+      },
+      "premium_surfaces": {
+        "content": [],
+        "filters": [
+          "BrailleDust",
+          "Vignette",
+          "ColorBridgedShade"
+        ],
+        "masks": [],
+        "shaders": [
+          "StochasticSparkle",
+          "GlistenBand",
+          "LinearGradient",
+          "AmbientOcclusion",
+          "Bevel",
+          "Glow"
+        ],
+        "shadow": true
+      },
+      "retro_crt": {
+        "content": [
+          "SplitFlap",
+          "Odometer"
+        ],
+        "filters": [
+          "Crt",
+          "InterlaceCurtain"
+        ],
+        "masks": [],
+        "shaders": [
+          "NeonFlicker"
+        ],
+        "shadow": false
+      },
+      "transitions": {
+        "content": [],
+        "filters": [],
+        "masks": [
+          "Wipe",
+          "Iris",
+          "Dissolve",
+          "Blinds",
+          "Radial",
+          "Diamond"
+        ],
+        "shaders": [],
+        "shadow": false
+      }
+    }
+  },
+  "version": "2.2.2"
+}

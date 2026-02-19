@@ -1,0 +1,16 @@
+target/
+**/*.rs.bk
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.scorpio/
+.claude/
+.git_state_temp
+memory/
+plans/
+prompts/
+CONTEXT.md
+TASKS.md

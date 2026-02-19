@@ -1,0 +1,42 @@
+# <FILE>xtask/Cargo.toml</FILE> - <DESC>Build tooling crate for documentation generation and CI tasks</DESC>
+# <VERS>VERSION: 1.1.1</VERS>
+# <WCTX>Expose schema types for docs generation</WCTX>
+# <CLOG>Add tui-vfx-core dependency for schema inspection</CLOG>
+
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.86.0"
+publish = false
+
+[dependencies]
+# CLI argument parsing
+clap = { version = "4", features = ["derive"] }
+
+# TOML parsing for capabilities.toml
+toml = "0.8"
+
+# JSON parsing for rustdoc output
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# File system operations
+walkdir = "2"
+
+# Error handling
+anyhow = "1"
+
+# Colored terminal output
+owo-colors = "4"
+
+# Effect crates for metadata extraction
+tui-vfx-types = { path = "../crates/tui-vfx-types" }
+tui-vfx-compositor = { path = "../crates/tui-vfx-compositor" }
+tui-vfx-style = { path = "../crates/tui-vfx-style" }
+tui-vfx-content = { path = "../crates/tui-vfx-content" }
+tui-vfx-shadow = { path = "../crates/tui-vfx-shadow" }
+tui-vfx-core = { path = "../crates/tui-vfx-core" }
+
+# <FILE>xtask/Cargo.toml</FILE> - <DESC>Build tooling crate for documentation generation and CI tasks</DESC>
+# <VERS>END OF VERSION: 1.1.1</VERS>

@@ -1,0 +1,35 @@
+# <FILE>crates/tui-vfx-style/Cargo.toml</FILE> - <DESC>Manifest for Style/Color logic library</DESC>
+# <VERS>VERSION: 0.1.2</VERS>
+# <WCTX>Release readiness metadata update</WCTX>
+# <CLOG>Add workspace keywords and categories</CLOG>
+
+[package]
+name = "tui-vfx-style"
+description = "Color interpolation and style effects for tui-vfx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+
+[dependencies]
+# Foundation types (framework-agnostic)
+tui-vfx-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+# Introspection protocol
+tui-vfx-core.workspace = true
+# Signal generators for wave-based shaders
+mixed-signals.workspace = true
+# Geometry primitives (for shared EasingType)
+tui-vfx-geometry.workspace = true
+
+[dev-dependencies]
+# Standard testing
+rstest = "0.18"
+
+# <FILE>crates/tui-vfx-style/Cargo.toml</FILE> - <DESC>Manifest for Style/Color logic library</DESC>
+# <VERS>END OF VERSION: 0.1.2</VERS>

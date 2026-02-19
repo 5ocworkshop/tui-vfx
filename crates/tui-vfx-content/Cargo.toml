@@ -1,0 +1,29 @@
+# <FILE>crates/tui-vfx-content/Cargo.toml</FILE> - <DESC>Library manifest</DESC>
+# <VERS>VERSION: 0.1.2</VERS>
+# <WCTX>Release readiness metadata update</WCTX>
+# <CLOG>Add workspace keywords and categories</CLOG>
+
+[package]
+name = "tui-vfx-content"
+description = "Text manipulation primitives for tui-vfx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+
+[dependencies]
+unicode-segmentation = "1.10"
+serde.workspace = true
+# Introspection protocol
+tui-vfx-core.workspace = true
+mixed-signals.workspace = true
+
+[features]
+default = []
+
+# <FILE>crates/tui-vfx-content/Cargo.toml</FILE> - <DESC>Library manifest</DESC>
+# <VERS>END OF VERSION: 0.1.2</VERS>

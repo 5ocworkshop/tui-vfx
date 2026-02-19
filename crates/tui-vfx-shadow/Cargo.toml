@@ -1,0 +1,27 @@
+# <FILE>crates/tui-vfx-shadow/Cargo.toml</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
+# <VERS>VERSION: 0.4.2</VERS>
+# <WCTX>Release readiness metadata cleanup</WCTX>
+# <CLOG>Add tui-vfx-core dependency for schema derivation</CLOG>
+
+[package]
+name = "tui-vfx-shadow"
+description = "Shadow rendering effects for TUI applications"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+keywords = ["tui", "terminal", "shadow", "effects"]
+categories = ["command-line-interface", "graphics"]
+
+[dependencies]
+tui-vfx-types.workspace = true
+tui-vfx-core.workspace = true
+serde.workspace = true
+bitflags = { version = "2.4", features = ["serde"] }
+
+[dev-dependencies]
+
+# <FILE>crates/tui-vfx-shadow/Cargo.toml</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
+# <VERS>END OF VERSION: 0.4.2</VERS>

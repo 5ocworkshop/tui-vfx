@@ -1,0 +1,26 @@
+# <FILE>crates/tui-vfx-types/Cargo.toml</FILE> - <DESC>Foundation types for tui-vfx ecosystem</DESC>
+# <VERS>VERSION: 0.3.1</VERS>
+# <WCTX>Release readiness metadata cleanup</WCTX>
+# <CLOG>Remove no-std category and add sub-crate README reference</CLOG>
+
+[package]
+name = "tui-vfx-types"
+description = "Framework-agnostic foundation types for the tui-vfx ecosystem"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "README.md"
+keywords = ["animation", "terminal", "tui", "types"]
+categories = ["data-structures"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+[features]
+default = ["serde"]
+serde = ["dep:serde"]
+
+# <FILE>crates/tui-vfx-types/Cargo.toml</FILE> - <DESC>Foundation types for tui-vfx ecosystem</DESC>
+# <VERS>END OF VERSION: 0.3.1</VERS>

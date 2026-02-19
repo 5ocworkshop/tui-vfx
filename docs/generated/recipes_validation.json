@@ -1,0 +1,3421 @@
+{
+  "summary": {
+    "total_recipes": 471,
+    "files_with_errors": 0,
+    "files_with_warnings": 0,
+    "error_count": 0,
+    "warning_count": 0,
+    "info_count": 0
+  },
+  "recipes": [
+    {
+      "path": "../tui-vfx-recipes/recipes/_bottom_blinds_collapse.json",
+      "id": "notifications.bottom_blinds_collapse",
+      "title": "_Bottom Blinds Collapse",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/_center_expand.json",
+      "id": "notifications.center_expand",
+      "title": "_Center Expand",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/_default_toast.json",
+      "id": "notifications.default_toast",
+      "title": "_Default Toast",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/_diagonal_slide_permille.json",
+      "id": "notifications.diagonal_slide_permille",
+      "title": "_Diagonal Permille Slide",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/_edge_wipe_slide.json",
+      "id": "notifications.edge_wipe_slide",
+      "title": "_Edge Wipe Slide",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/_legacy_demo_g.json",
+      "id": "notifications.legacy_demo_g",
+      "title": "_Legacy Demo G",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/_slide_in_bounce.json",
+      "id": "notifications.slide_in_bounce",
+      "title": "_Slide In + Bounce",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/ambient_banner.json",
+      "id": "notifications.ambient_banner",
+      "title": "Ambient Banner",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/border_breathing_glow.json",
+      "id": "border.breathing_glow",
+      "title": "Border Breathing Glow",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/border_danger_flash.json",
+      "id": "border.danger_flash",
+      "title": "Border Danger Flash",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/border_gold_luxury.json",
+      "id": "border.gold_luxury",
+      "title": "Border Gold Luxury",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/border_neon_chase.json",
+      "id": "border.neon_chase",
+      "title": "Border Neon Chase",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/border_pulse_attention.json",
+      "id": "border.pulse_attention",
+      "title": "Border Pulse (Attention)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/border_racing_green.json",
+      "id": "border.racing_green",
+      "title": "Border Racing (Green)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/border_sweep_clockwise.json",
+      "id": "border.sweep_clockwise",
+      "title": "Border Sweep (Clockwise)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/border_sweep_counter.json",
+      "id": "border.sweep_counter",
+      "title": "Border Sweep (Counter-Clockwise)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/bottom_blinds_collapse.json",
+      "id": "notifications.bottom_blinds_collapse",
+      "title": "Bottom Blinds Collapse",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/bsod_crash.json",
+      "id": "notifications.bsod_crash",
+      "title": "Blue Screen",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/btop_focused_row_demo.json",
+      "id": "showcase.btop_focused_row",
+      "title": "btop Focused Row",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/center_expand.json",
+      "id": "notifications.center_expand",
+      "title": "Center Expand",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/circuit_trace.json",
+      "id": "notifications.circuit_trace",
+      "title": "Circuit Trace",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/coin_get.json",
+      "id": "notifications.coin_get",
+      "title": "Coin Get",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/custom_netflix_n_bars.json",
+      "id": "custom.netflix_n_bars",
+      "title": "Netflix N Bars (Custom)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/custom_netflix_spectrum_bars.json",
+      "id": "custom.netflix_spectrum_bars",
+      "title": "Netflix Spectrum Bars (Custom)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/cyber_glitch.json",
+      "id": "notifications.cyber_glitch",
+      "title": "Cyber-Glitch",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/cyber_glitch_shift.json",
+      "id": "notifications.cyber_glitch_shift",
+      "title": "Cyber-Glitch Shift",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/cyber_transmission.json",
+      "id": "notifications.cyber_transmission",
+      "title": "Cyber-Transmission",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/cyber_transmission_glitch_lines.json",
+      "id": "notifications.cyber_transmission_glitch_lines",
+      "title": "Cyber-Transmission (Glitch Lines)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/cyber_transmission_typewriter.json",
+      "id": "notifications.cyber_transmission_typewriter",
+      "title": "Cyber-Transmission (Typewriter)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/data_radar.json",
+      "id": "notifications.data_radar",
+      "title": "Data Radar",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/baseline.json",
+      "id": "debug.baseline",
+      "title": "Debug: Baseline (No Effects)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_cellular_faultline.json",
+      "id": "debug.complex.cellular_faultline",
+      "title": "Debug: Cellular Mask + FaultLine + RowRange Targeting",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_cinematic_reveal.json",
+      "id": "debug.complex.cinematic_reveal",
+      "title": "Debug: Cinematic Path Reveal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_content_shader_combo.json",
+      "id": "debug.complex.content_shader_combo",
+      "title": "Debug: Content Effect with Spatial Shader",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_crt_retro.json",
+      "id": "debug.complex.crt_retro",
+      "title": "Debug: CRT Retro with PathReveal + GlitchLines + Rows",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_diamond_highlight.json",
+      "id": "debug.complex.diamond_highlight",
+      "title": "Debug: Diamond + Checkers + Blinds + Highlighter + FocusedRowGradient + BackgroundOnly",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_full_pipeline.json",
+      "id": "debug.complex.full_pipeline",
+      "title": "Debug: Full Pipeline Stress Test",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_layered_shaders.json",
+      "id": "debug.complex.layered_shaders",
+      "title": "Debug: Multiple Style Layers with Different Shaders",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_multi_sampler.json",
+      "id": "debug.complex.multi_sampler",
+      "title": "Debug: Multiple Samplers with Filters",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_neon_barber.json",
+      "id": "debug.complex.neon_barber",
+      "title": "Debug: NoiseDither + CrtJitter + BarberPole/NeonFlicker + Column Targeting",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/complex/complex_radar_ripple.json",
+      "id": "debug.complex.radar_ripple",
+      "title": "Debug: Radial Mask + Ripple + Cell Targeting + Radar Shader",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_dissolve.json",
+      "id": "debug.content.dissolve",
+      "title": "Debug: Content - Dissolve",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_glitch_shift.json",
+      "id": "debug.content.glitch_shift",
+      "title": "Debug: Content - GlitchShift",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_marquee.json",
+      "id": "debug.content.marquee",
+      "title": "Debug: Content - Marquee",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_mirror.json",
+      "id": "debug.content.mirror",
+      "title": "Debug: Content - Mirror",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_morph.json",
+      "id": "debug.content.morph",
+      "title": "Debug: Content - Morph",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_numeric.json",
+      "id": "debug.content.numeric",
+      "title": "Debug: Content - Numeric",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_odometer.json",
+      "id": "debug.content.odometer",
+      "title": "Debug: Content - Odometer",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_redact.json",
+      "id": "debug.content.redact",
+      "title": "Debug: Content - Redact",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_scramble.json",
+      "id": "debug.content.scramble",
+      "title": "Debug: Content - Scramble",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_scramble_glitch_shift.json",
+      "id": "debug.content.scramble_glitch_shift",
+      "title": "Debug: Content - ScrambleGlitchShift",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_split_flap.json",
+      "id": "debug.content.split_flap",
+      "title": "Debug: Content - SplitFlap",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/content/content_typewriter.json",
+      "id": "debug.content.typewriter",
+      "title": "Debug: Content - Typewriter",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/filters/filter_crt.json",
+      "id": "debug.filter.crt",
+      "title": "Debug: Filter - CRT",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/filters/filter_dim.json",
+      "id": "debug.filter.dim",
+      "title": "Debug: Filter - Dim",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/filters/filter_invert.json",
+      "id": "debug.filter.invert",
+      "title": "Debug: Filter - Invert",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/filters/filter_tint.json",
+      "id": "debug.filter.tint",
+      "title": "Debug: Filter - Tint",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/filters/filter_vignette.json",
+      "id": "debug.filter.vignette",
+      "title": "Debug: Filter - Vignette",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_blinds.json",
+      "id": "debug.mask.blinds",
+      "title": "Debug: Mask - Blinds",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_cellular.json",
+      "id": "debug.mask.cellular",
+      "title": "Debug: Mask - Cellular",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_center_wipe_fade_modal.json",
+      "id": "notifications.center_expand",
+      "title": "Center Expand",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_checkers.json",
+      "id": "debug.mask.checkers",
+      "title": "Debug: Mask - Checkers",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_diamond.json",
+      "id": "debug.mask.diamond",
+      "title": "Debug: Mask - Diamond",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_dissolve.json",
+      "id": "debug.mask.dissolve",
+      "title": "Debug: Mask - Dissolve",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_iris.json",
+      "id": "debug.mask.iris",
+      "title": "Debug: Mask - Iris",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_noise_dither.json",
+      "id": "debug.mask.noise_dither",
+      "title": "Debug: Mask - NoiseDither",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_path_reveal.json",
+      "id": "debug.mask.path_reveal",
+      "title": "Debug: Mask - PathReveal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_radial.json",
+      "id": "debug.mask.radial",
+      "title": "Debug: Mask - Radial",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_wipe.json",
+      "id": "debug.mask.wipe",
+      "title": "Debug: Mask - Wipe",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/masks/mask_wipe_fade_left_right.json",
+      "id": "debug.mask.wipe_fade_left_right",
+      "title": "Debug: Wipe + Fade Left-Right",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/samplers/sampler_crt.json",
+      "id": "debug.sampler.crt",
+      "title": "Debug: Sampler - CRT",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/samplers/sampler_crt_jitter.json",
+      "id": "debug.sampler.crt_jitter",
+      "title": "Debug: Sampler - CrtJitter",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/samplers/sampler_faultline.json",
+      "id": "debug.sampler.faultline",
+      "title": "Debug: Sampler - FaultLine",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/samplers/sampler_ripple.json",
+      "id": "debug.sampler.ripple",
+      "title": "Debug: Sampler - Ripple",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/samplers/sampler_shredder.json",
+      "id": "debug.sampler.shredder",
+      "title": "Debug: Sampler - Shredder",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/samplers/sampler_sinewave.json",
+      "id": "debug.sampler.sinewave",
+      "title": "Debug: Sampler - SineWave",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_barber_pole.json",
+      "id": "debug.shader.barber_pole",
+      "title": "Debug: Shader - BarberPole",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_border_sweep.json",
+      "id": "debug.shader.border_sweep",
+      "title": "Debug: Shader - BorderSweep",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_focused_row_gradient.json",
+      "id": "debug.shader.focused_row_gradient",
+      "title": "Debug: Shader - FocusedRowGradient",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_glisten_band.json",
+      "id": "debug.shader.glisten_band",
+      "title": "Debug: Shader - GlistenBand",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_glitch_lines.json",
+      "id": "debug.shader.glitch_lines",
+      "title": "Debug: Shader - GlitchLines",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_highlighter.json",
+      "id": "debug.shader.highlighter",
+      "title": "Debug: Shader - Highlighter",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_linear_gradient.json",
+      "id": "debug.shader.linear_gradient",
+      "title": "Debug: Shader - LinearGradient",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_neon_flicker.json",
+      "id": "debug.shader.neon_flicker",
+      "title": "Debug: Shader - NeonFlicker",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_pulse_wave.json",
+      "id": "debug.shader.pulse_wave",
+      "title": "Debug: Shader - PulseWave",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_radar.json",
+      "id": "debug.shader.radar",
+      "title": "Debug: Shader - Radar",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/shaders/shader_reflect.json",
+      "id": "debug.shader.reflect",
+      "title": "Debug: Shader - Reflect",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_color_fade.json",
+      "id": "debug.style.color_fade",
+      "title": "Debug: Style - ColorFade",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_color_shift.json",
+      "id": "debug.style.color_shift",
+      "title": "Debug: Style - ColorShift",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_fade_in.json",
+      "id": "debug.style.fade_in",
+      "title": "Debug: Style - FadeIn",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_fade_out.json",
+      "id": "debug.style.fade_out",
+      "title": "Debug: Style - FadeOut",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_glitch.json",
+      "id": "debug.style.glitch",
+      "title": "Debug: Style - Glitch",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_italic_window.json",
+      "id": "debug.style.italic_window",
+      "title": "Debug: Style - ItalicWindow",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_neon_flicker.json",
+      "id": "debug.style.neon_flicker",
+      "title": "Debug: Style - NeonFlicker",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_pulse.json",
+      "id": "debug.style.pulse",
+      "title": "Debug: Style - Pulse",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/debug_recipes/styles/style_rainbow.json",
+      "id": "debug.style.rainbow",
+      "title": "Debug: Style - Rainbow",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/default_toast.json",
+      "id": "notifications.default_toast",
+      "title": "Default Toast",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/departure_board.json",
+      "id": "notifications.departure_board",
+      "title": "Departure Board",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/diagonal_slide_permille.json",
+      "id": "notifications.diagonal_slide_permille",
+      "title": "Diagonal Permille Slide",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/digital_rain.json",
+      "id": "effects.digital_rain",
+      "title": "Digital Rain",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/dream_state.json",
+      "id": "notifications.dream_state",
+      "title": "Dream State",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/BackIn.json",
+      "id": "easing.BackIn",
+      "title": "Back In Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/BackInOut.json",
+      "id": "easing.BackInOut",
+      "title": "Back InOut Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/BackOut.json",
+      "id": "easing.BackOut",
+      "title": "Back Out Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/Bezier.json",
+      "id": "easing.Bezier",
+      "title": "Bezier Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/BounceIn.json",
+      "id": "easing.BounceIn",
+      "title": "Bounce In Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/BounceInOut.json",
+      "id": "easing.BounceInOut",
+      "title": "Bounce InOut Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/BounceOut.json",
+      "id": "easing.BounceOut",
+      "title": "Bounce Out Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/CircIn.json",
+      "id": "easing.CircIn",
+      "title": "Circular In Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/CircInOut.json",
+      "id": "easing.CircInOut",
+      "title": "Circular InOut Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/CircOut.json",
+      "id": "easing.CircOut",
+      "title": "Circular Out Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/CubicIn.json",
+      "id": "easing.CubicIn",
+      "title": "Cubic In Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/CubicInOut.json",
+      "id": "easing.CubicInOut",
+      "title": "Cubic InOut Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/CubicOut.json",
+      "id": "easing.CubicOut",
+      "title": "Cubic Out Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ElasticIn.json",
+      "id": "easing.ElasticIn",
+      "title": "Elastic In Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ElasticInOut.json",
+      "id": "easing.ElasticInOut",
+      "title": "Elastic InOut Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ElasticOut.json",
+      "id": "easing.ElasticOut",
+      "title": "Elastic Out Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ExpoIn.json",
+      "id": "easing.ExpoIn",
+      "title": "Exponential In Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ExpoInOut.json",
+      "id": "easing.ExpoInOut",
+      "title": "Exponential InOut Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ExpoOut.json",
+      "id": "easing.ExpoOut",
+      "title": "Exponential Out Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/Linear.json",
+      "id": "easing.Linear",
+      "title": "Linear Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/QuadIn.json",
+      "id": "easing.QuadIn",
+      "title": "Quadratic In Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/QuadInOut.json",
+      "id": "easing.QuadInOut",
+      "title": "Quadratic InOut Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/QuadOut.json",
+      "id": "easing.QuadOut",
+      "title": "Quadratic Out Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/SineIn.json",
+      "id": "easing.SineIn",
+      "title": "Sine In Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/SineInOut.json",
+      "id": "easing.SineInOut",
+      "title": "Sine InOut Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/SineOut.json",
+      "id": "easing.SineOut",
+      "title": "Sine Out Easing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ease_bezier_custom.json",
+      "id": "examples.bezier_custom_ease",
+      "title": "Custom Bézier Curve",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ease_circular_modal.json",
+      "id": "examples.circular_smooth_modal",
+      "title": "Smooth Modal Dialog",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/easing/ease_expo_snappy.json",
+      "id": "examples.expo_snappy_notification",
+      "title": "Snappy Notification",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/edge_accent.json",
+      "id": "notifications.edge_accent",
+      "title": "Edge Accent",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/edge_wipe_slide.json",
+      "id": "notifications.edge_wipe_slide",
+      "title": "Edge Wipe Slide",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_braille_by_word.json",
+      "id": "showcase.effect_parity_braille_by_word",
+      "title": "Braille By Word",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_braille_by_word_down.json",
+      "id": "showcase.effect_parity_braille_by_word_down",
+      "title": "Braille By Word Down",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_braille_wave_down.json",
+      "id": "showcase.effect_parity_braille_wave_down",
+      "title": "Braille Wave Down",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_braille_wave_linear.json",
+      "id": "showcase.effect_parity_braille_wave_linear",
+      "title": "Braille Wave Linear",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_cellular_mask.json",
+      "id": "showcase.effect_parity_cellular_mask",
+      "title": "Cellular Mask Effect",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_cellular_organic.json",
+      "id": "showcase.effect_parity_cellular_organic",
+      "title": "Cellular Organic Pattern",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_color_fade.json",
+      "id": "showcase.effect_parity_color_fade",
+      "title": "Color Fade Effect",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_color_shift.json",
+      "id": "showcase.effect_parity_color_shift",
+      "title": "Color Shift Effect",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_dissolve_byword.json",
+      "id": "showcase.effect_parity_dissolve_byword",
+      "title": "Braille Word Reveal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_dissolve_clustered.json",
+      "id": "showcase.effect_parity_dissolve_clustered",
+      "title": "Braille Wave Random",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_dissolve_text.json",
+      "id": "showcase.effect_parity_dissolve_text",
+      "title": "Text Dissolve Effect",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_dissolve_variations.json",
+      "id": "showcase.effect_parity_dissolve_variations",
+      "title": "Dissolve Variations: Edge-In Pattern",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_half_cell_wipe.json",
+      "id": "showcase.effect_parity_half_cell_wipe",
+      "title": "Half-Cell Wipe",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_half_cell_wipe_by_word.json",
+      "id": "showcase.effect_parity_half_cell_wipe_by_word",
+      "title": "Half-Cell Word Wipe",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_half_cell_wipe_rtl.json",
+      "id": "showcase.effect_parity_half_cell_wipe_rtl",
+      "title": "Half-Cell Wipe RTL",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_morph_binary.json",
+      "id": "showcase.effect_parity_morph_binary",
+      "title": "Morph Binary Digits",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_morph_braille_reveal.json",
+      "id": "showcase.effect_parity_morph_braille_reveal",
+      "title": "Morph Braille Reveal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_morph_density.json",
+      "id": "showcase.effect_parity_morph_density",
+      "title": "Morph Density Blocks",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_morph_density_reveal.json",
+      "id": "showcase.effect_parity_morph_density_reveal",
+      "title": "Morph Density Reveal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_morph_scatter.json",
+      "id": "showcase.effect_parity_morph_scatter",
+      "title": "Morph Scatter Pattern",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_morph_text.json",
+      "id": "showcase.effect_parity_morph_text",
+      "title": "Text Morph Effect",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_radial_corners.json",
+      "id": "showcase.effect_parity_radial_corners",
+      "title": "Radial Mask from Corner",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_radial_mask.json",
+      "id": "showcase.effect_parity_radial_mask",
+      "title": "Radial Mask Effect",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/effect_parity_text_fade.json",
+      "id": "showcase.effect_parity_text_fade",
+      "title": "Text Fade Effect",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/examples/marquee_oscillating_speed.json",
+      "id": "examples.marquee_oscillating_speed",
+      "title": "Marquee with Oscillating Speed",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/examples/scramble_dynamic_pace.json",
+      "id": "examples.scramble_dynamic_pace",
+      "title": "Scramble with Dynamic Resolve Pace",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/examples/typewriter_gaussian_variance.json",
+      "id": "examples.typewriter_gaussian_variance",
+      "title": "Typewriter with Gaussian Variance",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/examples/typewriter_perlin_variance.json",
+      "id": "examples.typewriter_perlin_variance",
+      "title": "Typewriter with Perlin Variance",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/experimental/block_border_demo.json",
+      "id": "experimental.block_border",
+      "title": "Block Border Demo",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/experimental/braille_border_demo.json",
+      "id": "experimental.braille_border",
+      "title": "Braille Border Demo",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/experimental/chamfered_corners_demo.json",
+      "id": "experimental.chamfered_corners",
+      "title": "Chamfered Corners Demo",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/experimental/gallery_frame_demo.json",
+      "id": "experimental.gallery_frame",
+      "title": "Gallery Frame Demo",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/experimental/hexagon_shape_demo.json",
+      "id": "experimental.hexagon_shape",
+      "title": "Hexagon Shape Demo",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/experimental/matte_shadow_demo.json",
+      "id": "experimental.matte_shadow",
+      "title": "Matte Shadow Demo",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/experimental/speech_bubble_demo.json",
+      "id": "experimental.speech_bubble",
+      "title": "Speech Bubble Demo",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/focus_input.json",
+      "id": "notifications.focus_input",
+      "title": "Focus Input",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/glisten_band_directions.json",
+      "id": "notifications.glisten_band_directions",
+      "title": "Glisten Band Directions",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/glisten_white_band_directions.json",
+      "id": "notifications.glisten_white_band_directions",
+      "title": "Glisten White Band Directions",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/glitch_lines_showcase.json",
+      "id": "notifications.glitch_lines_showcase",
+      "title": "Glitch Lines Showcase",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/golden_eye_reveal.json",
+      "id": "notifications.golden_eye_reveal",
+      "title": "Golden Eye Reveal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/golden_marquee.json",
+      "id": "notifications.golden_marquee",
+      "title": "Golden Shimmer",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/gun_barrel_reveal.json",
+      "id": "notifications.gun_barrel_reveal",
+      "title": "Gun Barrel Reveal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/action_required.json",
+      "id": "notifications.action_required",
+      "title": "Action Required",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/aurora_cascade.json",
+      "id": "notifications.aurora_cascade",
+      "title": "Aurora Cascade",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/breath_gentle.json",
+      "id": "notifications.breath_gentle",
+      "title": "Breath Gentle",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/connection_sync.json",
+      "id": "notifications.connection_sync",
+      "title": "Connection Sync",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/dismissible_notice.json",
+      "id": "notifications.dismissible_notice",
+      "title": "Dismissible Notice",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/error_alert.json",
+      "id": "notifications.error_alert",
+      "title": "Error Alert",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/gentle_nudge.json",
+      "id": "notifications.gentle_nudge",
+      "title": "Gentle Nudge",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/info_tooltip.json",
+      "id": "notifications.info_tooltip",
+      "title": "Info Tooltip",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/integrity_check.json",
+      "id": "notifications.integrity_check",
+      "title": "Integrity Check",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/matrix_glitch.json",
+      "id": "notifications.matrix_glitch",
+      "title": "Matrix Glitch",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/progress_pulse.json",
+      "id": "notifications.progress_pulse",
+      "title": "Progress Pulse",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/quantum_portal.json",
+      "id": "notifications.quantum_portal",
+      "title": "Quantum Portal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/retro_arcade.json",
+      "id": "notifications.retro_arcade",
+      "title": "Retro Arcade",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/stacked_compact.json",
+      "id": "notifications.stacked_compact",
+      "title": "Stacked Compact",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/success_pop.json",
+      "id": "notifications.success_pop",
+      "title": "Success Pop",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/system_status.json",
+      "id": "notifications.system_status",
+      "title": "System Status",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/update_available.json",
+      "id": "notifications.update_available",
+      "title": "Update Available",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/warning_caution.json",
+      "id": "notifications.warning_caution",
+      "title": "Warning Caution",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/haiku_recipes1/whimsical_bounce.json",
+      "id": "notifications.whimsical_bounce",
+      "title": "Whimsical Bounce",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/heartbeat_critical.json",
+      "id": "notifications.heartbeat_critical",
+      "title": "Heartbeat Critical",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/hll_admin_message.json",
+      "id": "hll.admin_message",
+      "title": "HLL Admin Message",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/hll_leave_server.json",
+      "id": "hll.leave_server",
+      "title": "HLL Leave Server",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/hologram_checkers.json",
+      "id": "notifications.hologram_checkers",
+      "title": "Hologram Scan",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/legacy_demo_g.json",
+      "id": "notifications.legacy_demo_g",
+      "title": "Legacy Demo G",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/legacy_example_auto_dismiss.json",
+      "id": "notifications.legacy_example_auto_dismiss",
+      "title": "Legacy: Auto Dismiss",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/legacy_example_bottom_center.json",
+      "id": "notifications.legacy_example_bottom_center",
+      "title": "Legacy: Bottom Center",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/legacy_example_expand.json",
+      "id": "notifications.legacy_example_expand",
+      "title": "Legacy: Expand",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/legacy_example_fade.json",
+      "id": "notifications.legacy_example_fade",
+      "title": "Legacy: Fade",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/legacy_example_slide_right.json",
+      "id": "notifications.legacy_example_slide_right",
+      "title": "Legacy: Slide Right",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/legacy_example_success.json",
+      "id": "notifications.legacy_example_success",
+      "title": "Legacy: Success",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/legacy_example_top_left.json",
+      "id": "notifications.legacy_example_top_left",
+      "title": "Legacy: Top Left",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/liquid_slide.json",
+      "id": "notifications.liquid_slide",
+      "title": "Liquid Slide",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/matrix_reveal.json",
+      "id": "notifications.matrix_reveal",
+      "title": "The Matrix",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/connected.json",
+      "id": "midcentury.connected",
+      "title": "Connected",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/deploy.json",
+      "id": "midcentury.deploy",
+      "title": "Deploy",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/disconnected.json",
+      "id": "midcentury.disconnected",
+      "title": "Disconnected",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/error.json",
+      "id": "midcentury.error",
+      "title": "Error",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/git_conflict.json",
+      "id": "midcentury.git_conflict",
+      "title": "Git Conflict",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/git_pull.json",
+      "id": "midcentury.git_pull",
+      "title": "Git Pull",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/git_push.json",
+      "id": "midcentury.git_push",
+      "title": "Git Push",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/info.json",
+      "id": "midcentury.info",
+      "title": "Info",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/reminder.json",
+      "id": "midcentury.reminder",
+      "title": "Reminder",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/success.json",
+      "id": "midcentury.success",
+      "title": "Success",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/tests_failed.json",
+      "id": "midcentury.tests_failed",
+      "title": "Tests Failed",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/tests_passed.json",
+      "id": "midcentury.tests_passed",
+      "title": "Tests Passed",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/midcentury-modern/warning.json",
+      "id": "midcentury.warning",
+      "title": "Warning",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/ambient_breathing.json",
+      "id": "modern.ambient_breathing",
+      "title": "Ambient Breathing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/button_press_depth.json",
+      "id": "modern.button_press_depth",
+      "title": "Button Press Depth",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/contact_darkening.json",
+      "id": "modern.contact_darkening",
+      "title": "Contact Darkening (Ambient Occlusion)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/dual_tone_half_block.json",
+      "id": "modern.dual_tone_half_block",
+      "title": "Dual-Tone Half Block Art",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/gloss_highlight_sweep.json",
+      "id": "modern.gloss_highlight_sweep",
+      "title": "Gloss Highlight Sweep",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/glow_ring_focus.json",
+      "id": "modern.glow_ring_focus",
+      "title": "Glow Ring Focus",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/half_cell_progress.json",
+      "id": "modern.half_cell_progress",
+      "title": "Half-Cell Progress Bar",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/material_card.json",
+      "id": "modern.material_card",
+      "title": "Material Card",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/micro_nudge_attention.json",
+      "id": "modern.micro_nudge_attention",
+      "title": "Micro Nudge Attention",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/partial_block_showcase.json",
+      "id": "modern.partial_block_showcase",
+      "title": "Partial Block Showcase",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/skeleton_shimmer.json",
+      "id": "modern.skeleton_shimmer",
+      "title": "Skeleton Shimmer Loading",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/soft_shadow_panel.json",
+      "id": "modern.soft_shadow_panel",
+      "title": "Soft Shadow Panel",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/modern_design/surface_elevation.json",
+      "id": "modern.surface_elevation",
+      "title": "Surface Elevation Demo",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_effect_all_new_features.json",
+      "id": "showcase.multi_effect_all_new_features",
+      "title": "Effect Parity Showcase",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_effect_cinema_reveal.json",
+      "id": "showcase.multi_effect_cinema_reveal",
+      "title": "Multi-Effect: Cinema Reveal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_effect_color_dissolve.json",
+      "id": "showcase.multi_effect_color_dissolve",
+      "title": "Multi-Effect: Color Fade + Dissolve",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_effect_morph_radial.json",
+      "id": "showcase.multi_effect_morph_radial",
+      "title": "Multi-Effect: Morph + Radial",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_effect_radial_cellular.json",
+      "id": "showcase.multi_effect_radial_cellular",
+      "title": "Multi-Mask: Radial + Cellular",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_effect_retro_terminal.json",
+      "id": "showcase.multi_effect_retro_terminal",
+      "title": "Multi-Effect: Retro Terminal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_filter_faded_notice.json",
+      "id": "showcase.multi_filter_faded_notice",
+      "title": "Multi-Filter: Faded Notice",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_mask_dual_reveal.json",
+      "id": "showcase.multi_mask_dual_reveal",
+      "title": "Multi-Mask: Dual Reveal (OR)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/multi_mask_textured_wipe.json",
+      "id": "showcase.multi_mask_textured_wipe",
+      "title": "Multi-Mask: Textured Wipe (AND)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/neon_flicker_showcase.json",
+      "id": "notifications.neon_flicker_showcase",
+      "title": "Neon Flicker Showcase",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/neon_open.json",
+      "id": "notifications.neon_open",
+      "title": "Neon Open",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/neon_sign_flicker.json",
+      "id": "notifications.neon_sign_flicker",
+      "title": "Neon Sign Flicker",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/odometer_counter.json",
+      "id": "notifications.odometer_counter",
+      "title": "Odometer Counter",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/paper_shredder.json",
+      "id": "notifications.paper_shredder",
+      "title": "Paper Shredder",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/physics_bounce_drop.json",
+      "id": "physics.bounce_drop",
+      "title": "Bounce Drop",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/physics_friction_slide.json",
+      "id": "physics.friction_slide",
+      "title": "Friction Slide",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/physics_hover_float.json",
+      "id": "physics.hover_float",
+      "title": "Hover Float",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/physics_orbit_spinner.json",
+      "id": "physics.orbit_spinner",
+      "title": "Orbit Spinner",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/physics_pendulum_swing.json",
+      "id": "physics.pendulum_swing",
+      "title": "Pendulum Swing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/physics_projectile_toss.json",
+      "id": "physics.projectile_toss",
+      "title": "Projectile Toss",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/physics_spring_elastic.json",
+      "id": "physics.spring_elastic",
+      "title": "Spring Elastic",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/pill_notification.json",
+      "id": "notifications.pill_notification",
+      "title": "Pill Notification",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/portal_entry.json",
+      "id": "notifications.portal_entry",
+      "title": "Portal Entry",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_arcade_marquee.json",
+      "id": "progress.arcade_marquee",
+      "title": "Arcade Marquee",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_aurora.json",
+      "id": "progress.aurora",
+      "title": "Aurora Progress",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_braille_gradient.json",
+      "id": "progress.braille_gradient",
+      "title": "Braille Gradient Bar",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_braille_horizontal.json",
+      "id": "progress.braille_horizontal",
+      "title": "Braille Progress (Horizontal)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_braille_vertical.json",
+      "id": "progress.braille_vertical",
+      "title": "Braille Progress (Vertical)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_braille_wave.json",
+      "id": "progress.braille_wave",
+      "title": "Braille Wave",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_corporate_blue.json",
+      "id": "progress.corporate_blue",
+      "title": "Corporate Blue",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_cylon_braille_horizontal.json",
+      "id": "progress.cylon_braille_horizontal",
+      "title": "Cylon Scanner (Braille Horizontal)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_cylon_braille_vertical.json",
+      "id": "progress.cylon_braille_vertical",
+      "title": "Cylon Scanner (Braille Vertical)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_cylon_scanner.json",
+      "id": "progress.cylon_scanner",
+      "title": "Cylon Scanner",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_cylon_scanner_minimal.json",
+      "id": "progress.cylon_scanner_minimal",
+      "title": "Cylon Scanner (Minimal)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_executive_silver.json",
+      "id": "progress.executive_silver",
+      "title": "Executive Silver",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_fire_trail.json",
+      "id": "progress.fire_trail",
+      "title": "Fire Trail",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_heartbeat.json",
+      "id": "progress.heartbeat",
+      "title": "Heartbeat Monitor",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_knight_rider.json",
+      "id": "progress.knight_rider",
+      "title": "Knight Rider",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_matrix_rain.json",
+      "id": "progress.matrix_rain",
+      "title": "Matrix Rain",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_minimal_line.json",
+      "id": "progress.minimal_line",
+      "title": "Minimal Line",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_pixel_cascade.json",
+      "id": "progress.pixel_cascade",
+      "title": "Pixel Cascade",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_retro_crt.json",
+      "id": "progress.retro_crt",
+      "title": "Retro CRT Loading",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_scanner.json",
+      "id": "notifications.progress_scanner",
+      "title": "Progress Scanner",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/progress_scanner_row_target.json",
+      "id": "notifications.progress_scanner_row_target",
+      "title": "Progress Scanner (Row Targeting)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/pulse_wave_alert.json",
+      "id": "notifications.pulse_wave_alert",
+      "title": "Pulse Wave Alert",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/pulse_wave_directions.json",
+      "id": "notifications.pulse_wave_directions",
+      "title": "Pulse Wave Directions",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/recreated_logo.json",
+      "id": "recreated.netflix_logo",
+      "title": "Recreated Logo Sequence",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/retro_terminal.json",
+      "id": "notifications.retro_terminal",
+      "title": "Retro Terminal",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/connected.json",
+      "id": "scandi_edge.connected",
+      "title": "Connected",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/deploy.json",
+      "id": "scandi_edge.deploy",
+      "title": "Deploy",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/disconnected.json",
+      "id": "scandi_edge.disconnected",
+      "title": "Disconnected",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/error.json",
+      "id": "scandi_edge.error",
+      "title": "Error",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/git_conflict.json",
+      "id": "scandi_edge.git_conflict",
+      "title": "Git Conflict",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/git_pull.json",
+      "id": "scandi_edge.git_pull",
+      "title": "Git Pull",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/git_push.json",
+      "id": "scandi_edge.git_push",
+      "title": "Git Push",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/info.json",
+      "id": "scandi_edge.info",
+      "title": "Info",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/reminder.json",
+      "id": "scandi_edge.reminder",
+      "title": "Reminder",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/success.json",
+      "id": "scandi_edge.success",
+      "title": "Success",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/tests_failed.json",
+      "id": "scandi_edge.tests_failed",
+      "title": "Tests Failed",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/tests_passed.json",
+      "id": "scandi_edge.tests_passed",
+      "title": "Tests Passed",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-edge/warning.json",
+      "id": "scandi_edge.warning",
+      "title": "Warning",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/connected.json",
+      "id": "scandi.connected",
+      "title": "Connected",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/deploy.json",
+      "id": "scandi.deploy",
+      "title": "Deploy",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/disconnected.json",
+      "id": "scandi.disconnected",
+      "title": "Disconnected",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/error.json",
+      "id": "scandi.error",
+      "title": "Error",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/git_conflict.json",
+      "id": "scandi.git_conflict",
+      "title": "Git Conflict",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/git_pull.json",
+      "id": "scandi.git_pull",
+      "title": "Git Pull",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/git_push.json",
+      "id": "scandi.git_push",
+      "title": "Git Push",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/info.json",
+      "id": "scandi.info",
+      "title": "Info",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/reminder.json",
+      "id": "scandi.reminder",
+      "title": "Reminder",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/success.json",
+      "id": "scandi.success",
+      "title": "Success",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/tests_failed.json",
+      "id": "scandi.tests_failed",
+      "title": "Tests Failed",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/tests_passed.json",
+      "id": "scandi.tests_passed",
+      "title": "Tests Passed",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scandi-inspired/warning.json",
+      "id": "scandi.warning",
+      "title": "Warning",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/scanner_wipe.json",
+      "id": "notifications.scanner_wipe",
+      "title": "Data Scanner",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/search_match.json",
+      "id": "notifications.search_match",
+      "title": "Search Match",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/security_breach.json",
+      "id": "notifications.security_breach",
+      "title": "Security Breach",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/showcase_netflix_style.json",
+      "id": "showcase.netflix_style",
+      "title": "Cinema Splash",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/signal_glitch_storm.json",
+      "id": "notifications.signal_glitch_storm",
+      "title": "Glitch Storm",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/signal_heartbeat_monitor.json",
+      "id": "notifications.signal_heartbeat_monitor",
+      "title": "Heartbeat Monitor",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/signal_organic_drift.json",
+      "id": "notifications.signal_organic_drift",
+      "title": "Organic Drift",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/signal_quantum_flux.json",
+      "id": "notifications.signal_quantum_flux",
+      "title": "Quantum Flux",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/signal_seismic_alert.json",
+      "id": "notifications.signal_seismic_alert",
+      "title": "Seismic Alert",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/slide_in_bounce.json",
+      "id": "notifications.slide_in_bounce",
+      "title": "Slide In + Bounce",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/slide_shift_barrier_down.json",
+      "id": "slide_shift_barrier_down",
+      "title": "SlideShift Barrier Down",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/slide_shift_barrier_two_line.json",
+      "id": "slide_shift_barrier_two_line",
+      "title": "SlideShift Two-Line Split",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/slide_shift_barrier_up.json",
+      "id": "slide_shift_barrier_up",
+      "title": "SlideShift Barrier Up",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/slingshot_elastic.json",
+      "id": "notifications.slingshot_elastic",
+      "title": "Slingshot Elastic",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/slingshot_exit.json",
+      "id": "notifications.slingshot_exit",
+      "title": "Slingshot Exit",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/smooth_arc.json",
+      "id": "notifications.smooth_arc",
+      "title": "Smooth Rainbow Arc",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/ambient_whisper.json",
+      "id": "notifications.ambient_whisper",
+      "title": "Ambient Whisper",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/completion_snap.json",
+      "id": "notifications.completion_snap",
+      "title": "Completion Snap",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/context_bloom.json",
+      "id": "notifications.context_bloom",
+      "title": "Context Bloom",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/crystalline_formation.json",
+      "id": "notifications.crystalline_formation",
+      "title": "Crystalline Formation",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/digital_rainfall.json",
+      "id": "notifications.digital_rainfall",
+      "title": "Digital Rainfall",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/electromagnetic_pulse.json",
+      "id": "notifications.electromagnetic_pulse",
+      "title": "Electromagnetic Pulse",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/elegance_drift.json",
+      "id": "notifications.elegance_drift",
+      "title": "Elegance Drift",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/elegance_drift_smooth.json",
+      "id": "notifications.elegance_drift_smooth",
+      "title": "Elegance Drift Smooth",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/focus_anchor.json",
+      "id": "notifications.focus_anchor",
+      "title": "Focus Anchor",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/gravity_well.json",
+      "id": "notifications.gravity_well",
+      "title": "Gravity Well",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/neural_spark.json",
+      "id": "notifications.neural_spark",
+      "title": "Neural Spark",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/ocean_depths.json",
+      "id": "notifications.ocean_depths",
+      "title": "Ocean Depths",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/priority_stack.json",
+      "id": "notifications.priority_stack",
+      "title": "Priority Stack",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/prism_refraction.json",
+      "id": "notifications.prism_refraction",
+      "title": "Prism Refraction",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/progress_heartbeat.json",
+      "id": "notifications.progress_heartbeat",
+      "title": "Progress Heartbeat",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/quantum_dissolve.json",
+      "id": "notifications.quantum_dissolve",
+      "title": "Quantum Dissolve",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/sonic_boom.json",
+      "id": "notifications.sonic_boom",
+      "title": "Sonic Boom",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/spectral_haunting.json",
+      "id": "notifications.spectral_haunting",
+      "title": "Spectral Haunting",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/temporal_rift.json",
+      "id": "notifications.temporal_rift",
+      "title": "Temporal Rift",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/thermal_vision.json",
+      "id": "notifications.thermal_vision",
+      "title": "Thermal Vision",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/sonnet_recipes1/validation_slide.json",
+      "id": "notifications.validation_slide",
+      "title": "Validation Slide",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/spinner_breathing_bar.json",
+      "id": "progress.breathing_bar",
+      "title": "Breathing Bar",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/spinner_orbit.json",
+      "id": "progress.orbit_spinner",
+      "title": "Orbit Spinner",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/spinner_pulse_dot.json",
+      "id": "progress.pulse_dot",
+      "title": "Pulse Dot",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/spring_disclosure.json",
+      "id": "notifications.spring_disclosure",
+      "title": "Springy Disclosure",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/step_motion.json",
+      "id": "notifications.step_motion",
+      "title": "Stop Motion",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/stress_test_multilayer.json",
+      "id": "test.stress_multilayer",
+      "title": "Multi-Layer Stress Test",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/system_boot.json",
+      "id": "notifications.system_boot",
+      "title": "System Boot",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/task_processing.json",
+      "id": "notifications.task_processing",
+      "title": "Task Processing",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/test_italic.json",
+      "id": "test.italic",
+      "title": "Italic Test",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/title_bottom_center.json",
+      "id": "notifications.title_bottom_center",
+      "title": "Title Bottom Center",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/title_showcase.json",
+      "id": "notifications.title_showcase",
+      "title": "Title Showcase",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/title_top_left.json",
+      "id": "notifications.title_top_left",
+      "title": "Title Top Left",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/title_top_right.json",
+      "id": "notifications.title_top_right",
+      "title": "Title Top Right",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/title_vertical_right.json",
+      "id": "notifications.title_vertical_right",
+      "title": "Vertical Right Title",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/title_vertical_sides.json",
+      "id": "notifications.title_vertical_sides",
+      "title": "Vertical Side Titles",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/battery_low_meter.json",
+      "id": "toolkit.core.battery_low_meter",
+      "title": "Battery Low Meter",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/copy_flash_confirm.json",
+      "id": "toolkit.core.copy_flash_confirm",
+      "title": "Copy Flash Confirm",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/download_complete_dither.json",
+      "id": "toolkit.core.download_complete_dither",
+      "title": "Download Complete Dither",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/error_fracture_alert.json",
+      "id": "toolkit.core.error_fracture_alert",
+      "title": "Error Fracture Alert",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/frosted_sheen_toast.json",
+      "id": "toolkit.core.frosted_sheen_toast",
+      "title": "Frosted Sheen Toast",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/permission_spotlight.json",
+      "id": "toolkit.core.permission_spotlight",
+      "title": "Permission Spotlight",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/reconnect_ripple.json",
+      "id": "toolkit.core.reconnect_ripple",
+      "title": "Reconnect Ripple",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/shortcut_hint_hover.json",
+      "id": "toolkit.core.shortcut_hint_hover",
+      "title": "Shortcut Hint Hover",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/success_stamp.json",
+      "id": "toolkit.core.success_stamp",
+      "title": "Success Stamp",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/sync_breath.json",
+      "id": "toolkit.core.sync_breath",
+      "title": "Sync Breath",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/update_shimmer_ribbon.json",
+      "id": "toolkit.core.update_shimmer_ribbon",
+      "title": "Update Shimmer Ribbon",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/core/warning_beacon_banner.json",
+      "id": "toolkit.core.warning_beacon_banner",
+      "title": "Warning Beacon Banner",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/astronomical_transit.json",
+      "id": "toolkit.showcase.astronomical_transit",
+      "title": "Astronomical Transit",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/aurora_drift.json",
+      "id": "toolkit.showcase.aurora_drift",
+      "title": "Aurora Drift",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/deep_sea_biolume.json",
+      "id": "toolkit.showcase.deep_sea_biolume",
+      "title": "Deep Sea Biolume",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/fantasy_spell_runes.json",
+      "id": "toolkit.showcase.fantasy_spell_runes",
+      "title": "Fantasy Spell Runes",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/film_noir_smoke.json",
+      "id": "toolkit.showcase.film_noir_smoke",
+      "title": "Film Noir Smoke",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/fireworks_confetti.json",
+      "id": "toolkit.showcase.fireworks_confetti",
+      "title": "Fireworks Confetti",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/gothic_cathedral_glass.json",
+      "id": "toolkit.showcase.gothic_cathedral_glass",
+      "title": "Gothic Cathedral Glass",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/ink_in_water.json",
+      "id": "toolkit.showcase.ink_in_water",
+      "title": "Ink in Water",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/jazz_improv.json",
+      "id": "toolkit.showcase.jazz_improv",
+      "title": "Jazz Improv",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/kaleidoscope_prism.json",
+      "id": "toolkit.showcase.kaleidoscope_prism",
+      "title": "Kaleidoscope Prism",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/mountaineering_weather_front.json",
+      "id": "toolkit.showcase.mountaineering_weather_front",
+      "title": "Mountaineering Weather Front",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/museum_exhibit_label.json",
+      "id": "toolkit.showcase.museum_exhibit_label",
+      "title": "Museum Exhibit Label",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/paper_shred_thriller.json",
+      "id": "toolkit.showcase.paper_shred_thriller",
+      "title": "Paper Shred Thriller",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/pop_art_halftone.json",
+      "id": "toolkit.showcase.pop_art_halftone",
+      "title": "Pop Art Halftone",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/spacewarp_hyperspace.json",
+      "id": "toolkit.showcase.spacewarp_hyperspace",
+      "title": "Spacewarp Hyperspace",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/spy_uplink.json",
+      "id": "toolkit.showcase.spy_uplink",
+      "title": "Spy Uplink",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/stargate_aperture.json",
+      "id": "toolkit.showcase.stargate_aperture",
+      "title": "Stargate Aperture",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/telegraph_room.json",
+      "id": "toolkit.showcase.telegraph_room",
+      "title": "Telegraph Room",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/train_schedule_flipboard.json",
+      "id": "toolkit.showcase.train_schedule_flipboard",
+      "title": "Train Schedule Flipboard",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/showcase/wargames_defcon.json",
+      "id": "toolkit.showcase.wargames_defcon",
+      "title": "WarGames DEFCON",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/airmail_envelope.json",
+      "id": "toolkit.sizzle.airmail_envelope",
+      "title": "Airmail Envelope",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/arcade_coin.json",
+      "id": "toolkit.sizzle.arcade_coin",
+      "title": "Arcade Coin",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/camera_shutter_pop.json",
+      "id": "toolkit.sizzle.camera_shutter_pop",
+      "title": "Camera Shutter Pop",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/drone_delivery.json",
+      "id": "toolkit.sizzle.drone_delivery",
+      "title": "Drone Delivery",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/fountain_pen_ink.json",
+      "id": "toolkit.sizzle.fountain_pen_ink",
+      "title": "Fountain Pen Ink",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/heartbeat_monitor.json",
+      "id": "toolkit.sizzle.heartbeat_monitor",
+      "title": "Heartbeat Monitor",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/kintsugi_repair.json",
+      "id": "toolkit.sizzle.kintsugi_repair",
+      "title": "Kintsugi Repair",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/morse_ping.json",
+      "id": "toolkit.sizzle.morse_ping",
+      "title": "Morse Ping",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/origami_fold.json",
+      "id": "toolkit.sizzle.origami_fold",
+      "title": "Origami Fold",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/popcorn_burst.json",
+      "id": "toolkit.sizzle.popcorn_burst",
+      "title": "Popcorn Burst",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/postcard_swoosh.json",
+      "id": "toolkit.sizzle.postcard_swoosh",
+      "title": "Postcard Swoosh",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/subway_arrival_board.json",
+      "id": "toolkit.sizzle.subway_arrival_board",
+      "title": "Subway Arrival Board",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/toolkit/sizzle/theremin_glide.json",
+      "id": "toolkit.sizzle.theremin_glide",
+      "title": "Theremin Glide",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/dialogue_01_greetings_falken.json",
+      "id": "wargames.dialogue.01_greetings_falken",
+      "title": "Dialogue 01 - Greetings Professor Falken",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/dialogue_02_feeling_today.json",
+      "id": "wargames.dialogue.02_feeling_today",
+      "title": "Dialogue 02 - How Are You Feeling",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/dialogue_03_side_selection.json",
+      "id": "wargames.dialogue.03_side_selection",
+      "title": "Dialogue 03 - Side Selection",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/dialogue_04_first_strike.json",
+      "id": "wargames.dialogue.04_first_strike",
+      "title": "Dialogue 04 - Awaiting First Strike",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/dialogue_05_identity_confusion.json",
+      "id": "wargames.dialogue.05_identity_confusion",
+      "title": "Dialogue 05 - Not Falken",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/dialogue_06_still_playing.json",
+      "id": "wargames.dialogue.06_still_playing",
+      "title": "Dialogue 06 - Still Playing The Game",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/enhanced_games_list.json",
+      "id": "wargames.enhanced.games_list",
+      "title": "Enhanced CRT - WOPR Games List",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/enhanced_launch_sequence.json",
+      "id": "wargames.enhanced.launch_sequence",
+      "title": "Enhanced CRT - Launch Sequence",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/enhanced_system_status.json",
+      "id": "wargames.enhanced.system_status",
+      "title": "Enhanced CRT - System Diagnostic",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/enhanced_target_data.json",
+      "id": "wargames.enhanced.target_data",
+      "title": "Enhanced CRT - Target Coordinates",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/launch_01_missiles_targeted.json",
+      "id": "wargames.launch.01_missiles_targeted",
+      "title": "Launch 01 - Missiles Targeted",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/launch_02_changes_locked.json",
+      "id": "wargames.launch.02_changes_locked",
+      "title": "Launch 02 - Changes Locked Out",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/map_01_world_outline.json",
+      "id": "wargames.map.01_world_outline",
+      "title": "Map 01 - World Outline",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/map_02_usa_soviet.json",
+      "id": "wargames.map.02_usa_soviet",
+      "title": "Map 02 - USA vs Soviet Union",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/map_03_north_america.json",
+      "id": "wargames.map.03_north_america",
+      "title": "Map 03 - North America",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/map_04_missile_trajectory_01.json",
+      "id": "wargames.map.04_missile_trajectory_01",
+      "title": "Map 04 - Missile Trajectory 01",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/map_05_missile_trajectory_02.json",
+      "id": "wargames.map.05_missile_trajectory_02",
+      "title": "Map 05 - Missile Trajectory 02",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/map_06_impact_zones.json",
+      "id": "wargames.map.06_impact_zones",
+      "title": "Map 06 - Impact Zones",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/map_07_explosion_flash.json",
+      "id": "wargames.map.07_explosion_flash",
+      "title": "Map 07 - Explosion Flash",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/new_postlogon_human_input.json",
+      "id": "wargames.new_postlogon_human_input",
+      "title": "WarGames - Human Input Example",
+      "extends": [
+        "themes/new_human_input_smooth.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/new_postlogon_intro.json",
+      "id": "wargames.new_postlogon_intro",
+      "title": "WarGames - Post-Logon Intro",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/new_rapid_flip_1.json",
+      "id": "wargames.new_rapid_flip_1",
+      "title": "WarGames - Rapid Flip Sequence Screen 1",
+      "extends": [
+        "themes/new_rapid_sequence_base.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/new_rapid_flip_2.json",
+      "id": "wargames.new_rapid_flip_2",
+      "title": "WarGames - Rapid Flip Sequence Screen 2",
+      "extends": [
+        "themes/new_rapid_sequence_base.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/new_scrolling_status.json",
+      "id": "wargames.new_scrolling_status",
+      "title": "WarGames - Scrolling Status Output",
+      "extends": [
+        "themes/new_scrolling_output.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/norad_01_missile_warning.json",
+      "id": "wargames.norad.01_missile_warning",
+      "title": "NORAD 01 - Missile Warning",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/norad_02_tactical_status.json",
+      "id": "wargames.norad.02_tactical_status",
+      "title": "NORAD 02 - Tactical Status Display",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/norad_03_threat_board.json",
+      "id": "wargames.norad.03_threat_board",
+      "title": "NORAD 03 - Threat Assessment Board",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/norad_04_launch_detection.json",
+      "id": "wargames.norad.04_launch_detection",
+      "title": "NORAD 04 - Launch Detection Alert",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/norad_05_defcon_status.json",
+      "id": "wargames.norad.05_defcon_status",
+      "title": "NORAD 05 - DEFCON Status Board",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/norad_06_cpe1704tks.json",
+      "id": "wargames.norad.06_cpe1704tks",
+      "title": "NORAD 06 - CPE1704TKS",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/norad_07_impact_countdown.json",
+      "id": "wargames.norad.07_impact_countdown",
+      "title": "NORAD 07 - Impact Countdown",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/opening_seattle_school_login.json",
+      "id": "wargames.opening.seattle_school_login",
+      "title": "Opening - Seattle School District Login",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/outcome_01_kill_ratios.json",
+      "id": "wargames.outcome.01_kill_ratios",
+      "title": "Outcome 01 - Military Kill Ratios",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/outcome_02_casualties.json",
+      "id": "wargames.outcome.02_casualties",
+      "title": "Outcome 02 - Casualty Projections",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/outcome_03_winner_none.json",
+      "id": "wargames.outcome.03_winner_none",
+      "title": "Outcome 03 - Winner None",
+      "extends": [
+        "themes/new_wopr_fullscreen_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_01_network_ports.json",
+      "id": "wargames.sequence.01_network_ports",
+      "title": "Sequence 01 - Network Ports",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_02_phone_connect.json",
+      "id": "wargames.sequence.02_phone_connect",
+      "title": "Sequence 02 - Phone Connection",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_03_phone_number.json",
+      "id": "wargames.sequence.03_phone_number",
+      "title": "Sequence 03 - Phone Number",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_04_catalog_ref.json",
+      "id": "wargames.sequence.04_catalog_ref",
+      "title": "Sequence 04 - Catalog Reference",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_05_system_status.json",
+      "id": "wargames.sequence.05_system_status",
+      "title": "Sequence 05 - System Status",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_06_cornet_ready.json",
+      "id": "wargames.sequence.06_cornet_ready",
+      "title": "Sequence 06 - CORNET Ready",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_07_control_pak.json",
+      "id": "wargames.sequence.07_control_pak",
+      "title": "Sequence 07 - Control Package",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_08_defset.json",
+      "id": "wargames.sequence.08_defset",
+      "title": "Sequence 08 - DEFSET 9",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_09_port_destruct.json",
+      "id": "wargames.sequence.09_port_destruct",
+      "title": "Sequence 09 - Port Destruct",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_10_alt_net.json",
+      "id": "wargames.sequence.10_alt_net",
+      "title": "Sequence 10 - ALT NET Ready",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/sequence_11_syscomp_all_ports.json",
+      "id": "wargames.sequence.11_syscomp_all_ports",
+      "title": "Sequence 11 - SYSCOMP All Ports",
+      "extends": [
+        "themes/enhanced_crt_computer.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/test_greeting.json",
+      "id": "wargames.test_greeting",
+      "title": "Test Greeting",
+      "extends": [
+        "themes/wopr_green.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/computer_base.json",
+      "id": "templates.wargames.computer",
+      "title": "WarGames Computer Template (Legacy)",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/enhanced_crt_computer.json",
+      "id": "templates.wargames.enhanced_crt_computer",
+      "title": "WarGames Enhanced CRT Computer Template",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/human_input.json",
+      "id": "templates.wargames.human_input",
+      "title": "WarGames Human Input Template",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/new_computer_typing_steady.json",
+      "id": "templates.wargames.computer_typing_steady",
+      "title": "WarGames Computer Typing - Steady",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/new_human_input_smooth.json",
+      "id": "templates.wargames.human_input_smooth",
+      "title": "WarGames Human Input - Smooth Fast",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/new_rapid_sequence_base.json",
+      "id": "templates.wargames.rapid_sequence",
+      "title": "WarGames Rapid Sequence - Hollywood System BS",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/new_scrolling_output.json",
+      "id": "templates.wargames.scrolling_output",
+      "title": "WarGames Scrolling System Output",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/new_wopr_fullscreen_cyan.json",
+      "id": "templates.wargames.wopr_fullscreen_cyan",
+      "title": "WarGames WOPR Fullscreen Cyan",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/wopr_cyan.json",
+      "id": "templates.wargames.wopr_cyan",
+      "title": "WarGames WOPR Cyan Template",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/themes/wopr_green.json",
+      "id": "templates.wargames.wopr_green",
+      "title": "WarGames WOPR Green Template",
+      "extends": [],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_chess.json",
+      "id": "wargames.chess",
+      "title": "WarGames - Chess",
+      "extends": [
+        "themes/wopr_green.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_defcon.json",
+      "id": "wargames.defcon",
+      "title": "WarGames - DEFCON",
+      "extends": [
+        "themes/wopr_green.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_discovery.json",
+      "id": "wargames.discovery",
+      "title": "WarGames - Discovery",
+      "extends": [
+        "themes/wopr_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_games_list.json",
+      "id": "wargames.games_list",
+      "title": "WarGames - Games List",
+      "extends": [
+        "themes/wopr_green.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_greetings.json",
+      "id": "wargames.greetings",
+      "title": "WarGames - Greetings",
+      "extends": [
+        "themes/wopr_green.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_id_not_recognized.json",
+      "id": "wargames.id_not_recognized",
+      "title": "WarGames - ID Error",
+      "extends": [
+        "themes/wopr_green.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_login.json",
+      "id": "wargames.login",
+      "title": "WarGames - Login",
+      "extends": [
+        "themes/human_input.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_shall_we_play.json",
+      "id": "wargames.shall_we_play",
+      "title": "WarGames - Shall We Play",
+      "extends": [
+        "themes/wopr_green.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/wargames/wargames_winning_move.json",
+      "id": "wargames.winning_move",
+      "title": "WarGames - Winning Move",
+      "extends": [
+        "themes/wopr_cyan.json"
+      ],
+      "issues": []
+    },
+    {
+      "path": "../tui-vfx-recipes/recipes/whisper_toast.json",
+      "id": "notifications.whisper_toast",
+      "title": "Whisper Toast",
+      "extends": [],
+      "issues": []
+    }
+  ]
+}

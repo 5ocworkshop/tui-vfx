@@ -1,0 +1,662 @@
+# tui-vfx API Documentation Manifest
+#
+# This file is the editorial source of truth for API documentation.
+# Technical details (types, fields, signatures) come from code introspection.
+# Editorial details (descriptions, examples, notes) are defined here.
+#
+# Run `cargo xtask docs api` to generate docs/generated/API.md
+#
+# See docs/design/API_DOC_GENERATION_PLAN.md for architecture details.
+
+# <FILE>docs/templates/api_docs.toml</FILE> - <DESC>Editorial manifest for tui-vfx API documentation</DESC>
+# <VERS>VERSION: 3.0.1</VERS>
+# <WCTX>Public release prep</WCTX>
+# <CLOG>Align OFPF version with manifest meta.version</CLOG>
+
+[meta]
+version = "3.0.1"
+description = "tui-vfx API documentation editorial content"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DOCUMENT STRUCTURE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[structure]
+title = "TUI-VFX Complete API Reference"
+intro = """
+The Pipeline API is the **single unified interface** for applying visual effects to terminal
+grids. You provide a source grid, configure a composition, and render a fully composited
+frame into a destination grid.
+
+**Key idea:** `CompositionOptions` is the superset entry point (supports every capability,
+including shadows). `CompositionSpec` is the serializable, data-driven variant and now
+supports shadows and `preserve_unfilled`.
+"""
+
+[structure.parts]
+compositor = { order = 1, title = "Compositor Pipeline", description = "Core rendering pipeline and configuration" }
+shadows = { order = 2, title = "Shadows", description = "Depth effects beneath elements" }
+style = { order = 3, title = "Style System", description = "Per-cell styling and effects" }
+content = { order = 4, title = "Content Transformers", description = "Text content modifications" }
+geometry = { order = 5, title = "Geometry & Motion", description = "Transitions, motion paths, easing" }
+prelude = { order = 6, title = "Prelude & Imports", description = "Recommended imports" }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EFFECT INVENTORY SUMMARY
+# Counts are extracted from code; this section defines the table structure
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[inventory]
+description = "Summary of all effect categories"
+
+[inventory.categories]
+masks = { api_path = "tui_vfx_compositor::types::MaskSpec" }
+filters = { api_path = "tui_vfx_compositor::types::FilterSpec" }
+samplers = { api_path = "tui_vfx_compositor::types::SamplerSpec" }
+shaders = { api_path = "tui_vfx_style::models::SpatialShaderType" }
+styles = { api_path = "tui_vfx_style::models::StyleEffect" }
+content = { api_path = "tui_vfx_content::types::ContentEffect" }
+shadows = { api_path = "tui_vfx_shadow::ShadowConfig / ShadowSpec" }
+geometry = { api_path = "tui_vfx_geometry::types::*" }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENTRY POINTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[entry_points]
+section_title = "Unified Entry Points"
+
+[entry_points.render_pipeline]
+order = 1
+subtitle = "full superset"
+description = "Primary entry point accepting CompositionOptions"
+notes = "**Use this for everything.** It accepts the full `CompositionOptions` superset, including shadows and `preserve_unfilled`."
+
+[entry_points.render_pipeline_with_area]
+order = 2
+description = "Convenience overload using RenderArea"
+notes = "Convenience overload using `RenderArea { width, height, offset_x, offset_y }`."
+
+[entry_points.render_pipeline_with_spec]
+order = 3
+subtitle = "data-driven"
+description = "Data-driven entry point using serializable CompositionSpec"
+notes = "Uses `CompositionSpec` (serializable) and `SpatialShaderType` layers, including shadow and `preserve_unfilled` support."
+
+[entry_points.render_pipeline_with_spec_area]
+order = 4
+description = "Spec variant with RenderArea convenience"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CORE TYPES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[types.CompositionOptions]
+part = "compositor"
+subtitle = "runtime superset"
+builder_methods = [
+    "`.with_mask(MaskSpec)` / `.with_masks(Cow<[MaskSpec]>)`",
+    "`.with_filter(FilterSpec)` / `.with_filters(Cow<[FilterSpec]>)`",
+    "`.with_mask_combine_mode(MaskCombineMode)`",
+    "`.with_shader_layer(&dyn StyleShader, StyleRegion)`",
+    "`.with_shadow(impl Into<ShadowSpec>)`",
+    "`.with_preserve_unfilled(bool)`",
+]
+builder_title = "Builder methods (ergonomic entry point)"
+
+[types.CompositionSpec]
+part = "compositor"
+subtitle = "serializable"
+notes = """
+- Intended for JSON/TOML-driven configs.
+- Uses `ShaderLayerSpec` + `SpatialShaderType` (serializable).
+- `shadow` uses the same `ShadowSpec` as runtime `CompositionOptions`.
+- `ShadowSpec` is serializable and wraps `ShadowConfig` (style, edges, soft edges).
+- `preserve_unfilled` defaults to `true` to match runtime behavior.
+"""
+
+[types.ShaderWithRegion]
+part = "compositor"
+description = "Runtime shader instance with region"
+notes = "Use `ShaderWithRegion` for runtime shader instances and `ShaderLayerSpec` for serialized specs."
+
+[types.ShaderLayerSpec]
+part = "compositor"
+description = "Serializable shader layer specification"
+
+[types.ShadowConfig]
+part = "shadows"
+subtitle = "configuration"
+description = "Shadow rendering configuration used by ShadowSpec and render_shadow."
+notes = "See specs.ShadowConfig for integration details."
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TIMING
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[timing]
+section_title = "Timing: `t`, `loop_t`, `phase`"
+t = "primary animation progress (0.0 → 1.0)."
+loop_t = "optional looped time (0.0 → 1.0 repeating). Used by continuous effects."
+phase = "optional phase (from `mixed_signals::traits::Phase`) for enter/dwell/exit semantics."
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RENDER ORDER
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[render_order]
+section_title = "Render Order"
+
+[[render_order.steps]]
+order = 1
+name = "Sampler"
+description = "coordinate distortion"
+
+[[render_order.steps]]
+order = 2
+name = "Shadow"
+description = "if enabled"
+
+[[render_order.steps]]
+order = 3
+name = "Element content"
+description = ""
+
+[[render_order.steps]]
+order = 4
+name = "Masks"
+description = "applied to element + shadow together"
+
+[[render_order.steps]]
+order = 5
+name = "Filters"
+description = "post-processing"
+
+[[render_order.steps]]
+order = 6
+name = "Shaders"
+description = "per-cell styling"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MASKS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[specs.MaskSpec]
+part = "compositor"
+section_title = "MaskSpec"
+description = "Masks control cell visibility based on position and animation progress `t`."
+
+[specs.MaskSpec.notes.wipe_semantics]
+title = "Wipe semantics"
+content = """
+`Wipe` supports **reveal** or **hide** direction:
+- `reveal`: content appears traveling in this direction
+- `hide`: content disappears traveling in this direction
+- `direction`: legacy alias for `reveal`
+
+Exactly one of `reveal`, `hide`, or `direction` should be set.
+"""
+
+[specs.MaskSpec.enums.WipeDirection]
+title = "WipeDirection (16 variants)"
+groups = [
+    { name = "Cardinal", variants = ["LeftToRight", "RightToLeft", "TopToBottom", "BottomToTop"] },
+    { name = "Diagonal", variants = ["TopLeftToBottomRight", "TopRightToBottomLeft", "BottomLeftToTopRight", "BottomRightToTopLeft"] },
+    { name = "Aliases", variants = ["FromLeft", "FromRight", "FromTop", "FromBottom"] },
+    { name = "Center-out (curtains opening)", variants = ["HorizontalCenterOut", "VerticalCenterOut"] },
+    { name = "Edges-in (curtains closing)", variants = ["HorizontalEdgesIn", "VerticalEdgesIn"] },
+]
+
+[specs.MaskSpec.enums.other]
+title = "Other mask enums"
+items = [
+    { name = "Orientation", variants = ["Horizontal", "Vertical"] },
+    { name = "IrisShape", variants = ["Circle", "Diamond", "Box"] },
+    { name = "DitherMatrix", variants = ["Bayer4", "Bayer8"] },
+    { name = "RadialOrigin", variants = ["Center", "TopLeft", "TopRight", "BottomLeft", "BottomRight", "Custom { x, y }"] },
+    { name = "RevealPathType", variants = ["Spiral { rotations, direction }", "Radial { start_angle, direction }"] },
+    { name = "SpiralDirection", variants = ["Clockwise", "CounterClockwise"] },
+    { name = "CellularPattern", variants = ["Voronoi", "Hexagonal", "Organic"] },
+]
+
+[specs.MaskSpec.enums.MaskCombineMode]
+title = "MaskCombineMode"
+table = [
+    { mode = "All", behavior = "Visible only if ALL masks pass (AND)" },
+    { mode = "Any", behavior = "Visible if ANY mask passes (OR)" },
+    { mode = "Blend { ratio }", behavior = "Smooth blend between masks (ratio 0.0 → 1.0)" },
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FILTERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[specs.FilterSpec]
+part = "compositor"
+section_title = "FilterSpec"
+description = "Filters modify cell colors/styles after rendering (applied in order)."
+
+[specs.FilterSpec.enums.ApplyTo]
+variants = ["Foreground", "Background", "Both"]
+default = "Both"
+aliases = ["fg", "bg"]
+
+[specs.FilterSpec.enums.PatternType]
+variants = [
+    "Single { char }",
+    "Checkerboard { char_a, char_b }",
+    "HorizontalLines { line_char, spacing }",
+    "VerticalLines { line_char, spacing }",
+]
+
+[specs.FilterSpec.enums.BraillePatternType]
+variants = ["SingleDot", "OneToTwoDots", "OneToThreeDots", "OneToFourDots"]
+
+[specs.FilterSpec.enums.MotionBlurDirection]
+variants = ["Left", "Right", "Up", "Down"]
+
+[specs.FilterSpec.enums.SubPixelBarDirection]
+variants = ["Horizontal", "Vertical"]
+notes = "Horizontal uses ▏▎▍▌▋▊▉█, Vertical uses ▁▂▃▄▅▆▇█"
+
+[specs.FilterSpec.notes.RigidShake]
+content = "**RigidShake** requires **margin cells** around the widget area. Apply to an area that includes the margins so the partial-block extensions can render."
+
+[specs.FilterSpec.notes.SubCellShake]
+content = "**SubCellShake** (filter) uses partial blocks to simulate physical vibration; **SubCellShake** (shader) is a color oscillation effect."
+
+[specs.FilterSpec.notes.SignalOrFloat]
+title = "Signal-driven parameters (`SignalOrFloat`)"
+content = """
+Many filter, sampler, and content parameters accept `SignalOrFloat` from `mixed_signals`,
+allowing either static values or values driven by external signals at runtime.
+Use `SignalOrFloat::Static(...)` for fixed values, or the signal form for dynamic control
+based on your `SignalContext`.
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SAMPLERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[specs.SamplerSpec]
+part = "compositor"
+section_title = "SamplerSpec"
+description = "Samplers transform coordinate space before cell lookup."
+
+[specs.SamplerSpec.enums.Axis]
+variants = ["X", "Y"]
+
+[specs.SamplerSpec.enums.RippleCenter]
+variants = ["Center", "Point { x, y }"]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SHADOWS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[specs.ShadowConfig]
+part = "shadows"
+section_title = "ShadowConfig"
+intro = """
+Shadows come from the `tui-vfx-shadow` crate and can be rendered **directly**
+or **integrated** into the compositor via `ShadowSpec`.
+"""
+
+[specs.ShadowStyle]
+part = "shadows"
+section_title = "ShadowStyle"
+variants = [
+    { name = "HalfBlock", note = "(default) — best quality sub-cell shadows" },
+    { name = "Braille { density }", note = "— 2x4 subpixel grid, font-dependent" },
+    { name = "Solid", note = "— maximum compatibility" },
+    { name = "Gradient { layers }", note = "— multi-layer soft shadow" },
+]
+
+[specs.ShadowEdges]
+part = "shadows"
+section_title = "ShadowEdges (bitflags)"
+variants = ["RIGHT", "BOTTOM", "LEFT", "TOP"]
+convenience = ["BOTTOM_RIGHT", "TOP_LEFT", "ALL"]
+rule = "edges only render when the offset direction matches (e.g., `RIGHT` requires `offset_x > 0`)."
+
+[specs.ShadowSpec]
+part = "shadows"
+section_title = "Compositor integration"
+example = """
+```rust
+let options = CompositionOptions::default()
+    .with_shadow(ShadowSpec::new(my_shadow_config));
+```
+"""
+see_also = "For full guidance and examples, see `docs/HOWTO_SHADOWS.md`."
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STYLE SYSTEM
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[specs.StyleRegion]
+part = "style"
+section_title = "StyleRegion"
+description = "Apply styles to targeted regions:"
+variants = [
+    "All", "TextOnly", "BorderOnly", "BackgroundOnly",
+    "Rows(Vec<u16>)", "RowRange { start, end }",
+    "Cell { x, y }", "Cells(Vec<CellCoord>)",
+    "Column(u16)", "Columns(Vec<u16>)", "ColumnRange { start, end }",
+    "Modulo { axis, modulus, remainder }",
+]
+
+[specs.StyleRegion.enums.ModuloAxis]
+variants = ["Horizontal", "Vertical"]
+
+[specs.SpatialShaderType]
+part = "style"
+section_title = "Spatial Shaders (`SpatialShaderType`)"
+description = "These are serializable shader variants for use in `CompositionSpec` and `ShaderLayerSpec`."
+
+[specs.SpatialShaderType.enums]
+title = "Shader-specific supporting enums"
+items = [
+    { name = "GlistenDirection", variants = ["Forward", "Reverse", "PingPong"] },
+    { name = "GlistenApplyTo", variants = ["Foreground", "Background", "Both"] },
+    { name = "WaveDirection", variants = ["Horizontal", "Vertical", "Radial", "Diagonal"] },
+    { name = "ApplyToColor", variants = ["Foreground", "Background", "Both"] },
+    { name = "RevealDirection", variants = ["LeftToRight", "RightToLeft", "TopToBottom", "BottomToTop"] },
+    { name = "NoiseType", variants = ["Uniform", "Gaussian"] },
+    { name = "SegmentMode", variants = ["Cell", "Row", "Column"] },
+    { name = "AOEdges", variants = ["BottomRight", "TopLeft", "All", "Inner"] },
+    { name = "FalloffType", variants = ["Linear", "Quadratic", "Exponential"] },
+    { name = "LightDirection", variants = ["TopLeft", "TopRight", "BottomLeft", "BottomRight", "Top", "Bottom", "Left", "Right"] },
+    { name = "ShakeAxis", variants = ["Horizontal", "Vertical", "Both"] },
+    { name = "SparkleTarget", variants = ["Foreground", "Background", "Both"] },
+]
+
+[specs.SpatialShaderType.notes.runtime_only]
+title = "Runtime-only shaders (trait objects)"
+content = """
+If you implement a custom `StyleShader` at runtime, it can be used with
+`CompositionOptions::with_shader_layer(&shader, ...)` but will not be serializable
+via `SpatialShaderType` unless you add a new variant.
+"""
+
+[specs.StyleEffect]
+part = "style"
+section_title = "StyleEffect (temporal effects)"
+description = "Temporal style effects driven by animation progress."
+
+[specs.StyleConfig]
+part = "style"
+section_title = "StyleConfig"
+
+[specs.StyleConfig.enums.ModifierConfig]
+variants = ["Bold", "Dim", "Italic", "Underlined", "SlowBlink", "RapidBlink", "Reversed", "Hidden", "CrossedOut"]
+
+[specs.StyleLayer]
+part = "style"
+section_title = "StyleLayer"
+
+[specs.StyleTransition]
+part = "style"
+section_title = "StyleTransition"
+
+[specs.FadeSpec]
+part = "style"
+section_title = "FadeSpec / FadeChain"
+
+[specs.FadeSpec.enums.FadeTarget]
+variants = ["Black", "White", "Transparent", "Base", "Color { color: ColorConfig }"]
+
+[specs.FadeSpec.enums.FadeApplyTo]
+variants = ["Foreground", "Background", "Both"]
+
+[specs.FadeSpec.notes.FadeEnvelope]
+content = "`FadeEnvelope`: `{ attack, release }` for attack/hold/release shaping."
+
+[specs.FadeSpec.notes.FadeChain]
+content = "`FadeChain` combines segments: `FadeSegment { fade: FadeSpec, weight }`."
+
+[specs.ColorConfig]
+part = "style"
+section_title = "Color configuration"
+
+[specs.ColorSpace]
+part = "style"
+variants = ["Rgb", "Hsl"]
+
+[specs.BlendMode]
+part = "style"
+variants = ["Normal", "Additive", "Multiply", "Screen", "Overlay", "Mix"]
+
+[specs.ColorRamp]
+part = "style"
+description = "`pub struct ColorRamp { pub stops: Vec<ColorStop>, pub space: ColorSpace }`"
+
+[specs.ColorStop]
+part = "style"
+description = "`pub struct ColorStop { pub position: f32, pub color: ColorConfig }`"
+
+[specs.Gradient]
+part = "style"
+description = "`pub struct Gradient { pub stops: Vec<(f32, Color)>, pub space: ColorSpace }`"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONTENT TRANSFORMERS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[specs.ContentEffect]
+part = "content"
+section_title = "ContentEffect"
+description = "Content transformers modify text strings based on animation progress."
+
+[specs.ContentEffect.types.TypewriterCursor]
+kind = "struct"
+fields = ["character", "blink_interval", "show_while_typing", "show_after_complete"]
+
+[specs.ContentEffect.enums]
+items = [
+    { name = "ScrambleCharset", variants = ["Alphanumeric", "Binary", "Matrix", "Katakana"] },
+    { name = "MirrorAxis", variants = ["Horizontal", "Vertical"] },
+    { name = "SlideShiftLineMode", variants = ["Block", "FirstLineOnly"] },
+    { name = "SlideShiftFlowMode", variants = ["StayShifted", "FlowBack"] },
+    { name = "DissolveReplacement", variants = ["Space", "Dot", "Custom(char)"] },
+    { name = "DissolveDirection", variants = ["LeftToRight", "RightToLeft", "CenterIn", "CenterOut"] },
+    { name = "DissolvePattern", variants = ["Sequential", "Random", "EdgeIn", "EdgeOut", "Clustered { cluster_size }", "ByWord", "ByLine"] },
+    { name = "MorphDirection", variants = ["LeftToRight", "RightToLeft", "Simultaneous"] },
+]
+
+[specs.ContentEffect.enums.MorphProgression]
+variants = [
+    "Linear", "Scatter", "Wave", "Density", "Binary", "Braille",
+    "DensityReveal", "DensityConceal",
+    "BrailleReveal", "BrailleRevealDown", "BrailleWaveUp", "BrailleWaveDown",
+    "BrailleRandomUp", "BrailleRandomDown",
+    "BrailleByWordUp", "BrailleByWordDown", "BrailleByLineUp", "BrailleByLineDown",
+    "BrailleHalfCellWipe", "BrailleHalfCellWipeByWord",
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GEOMETRY & MOTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[specs.TransitionSpec]
+part = "geometry"
+section_title = "TransitionSpec"
+description = "These types drive transitions, motion paths, easing, and layout resolution."
+
+[specs.MotionSpec]
+part = "geometry"
+section_title = "MotionSpec"
+
+[specs.SlideDirection]
+part = "geometry"
+section_title = "SlideDirection"
+variants = [
+    "Default", "FromTop", "FromBottom", "FromLeft", "FromRight",
+    "FromTopLeft", "FromTopRight", "FromBottomLeft", "FromBottomRight",
+]
+
+[specs.PathType]
+part = "geometry"
+section_title = "PathType (motion paths)"
+variants = [
+    "Linear",
+    "Arc { bulge }",
+    "Bezier { control_x, control_y }",
+    "Spring { stiffness, damping }",
+    "Bounce { bounces, decay }",
+    "Squash",
+    "Hover",
+    "Rectilinear { x_first }",
+    "Spiral { rotations }",
+    "Step { steps }",
+    "Projectile { arc_height, gravity }",
+    "Friction { drag }",
+    "Orbit { revolutions, direction }",
+    "Pendulum { amplitude, oscillations, damping }",
+]
+
+[specs.PathType.notes.bezier]
+content = "Bezier is a quadratic spatial curve"
+
+[specs.EasingCurve]
+part = "geometry"
+section_title = "EasingCurve"
+
+[specs.EasingType]
+part = "geometry"
+section_title = "EasingType (selection)"
+variants = [
+    "Linear",
+    "EaseInQuad", "EaseOutQuad", "EaseInOutQuad",
+    "EaseInCubic", "EaseOutCubic", "EaseInOutCubic",
+    "EaseInQuart", "EaseOutQuart", "EaseInOutQuart",
+    "EaseInQuint", "EaseOutQuint", "EaseInOutQuint",
+    "EaseInSine", "EaseOutSine", "EaseInOutSine",
+    "EaseInExpo", "EaseOutExpo", "EaseInOutExpo",
+    "EaseInCirc", "EaseOutCirc", "EaseInOutCirc",
+    "EaseInBack", "EaseOutBack", "EaseInOutBack",
+    "EaseInElastic", "EaseOutElastic", "EaseInOutElastic",
+    "EaseInBounce", "EaseOutBounce", "EaseInOutBounce",
+]
+
+[specs.SnappingStrategy]
+part = "geometry"
+section_title = "SnappingStrategy"
+variants = ["Floor", "Round", "Stochastic { seed }"]
+
+[specs.PlacementSpec]
+part = "geometry"
+section_title = "Placement and layout types"
+
+[specs.PositionSpec]
+part = "geometry"
+
+[specs.AnchorSpec]
+part = "geometry"
+
+[specs.Origin]
+part = "geometry"
+variants = [
+    "Center", "TopLeft", "TopCenter", "TopRight",
+    "MiddleLeft", "MiddleCenter", "MiddleRight",
+    "BottomLeft", "BottomCenter", "BottomRight",
+]
+
+[specs.RectScaleSpec]
+part = "geometry"
+
+[specs.Shake]
+part = "geometry"
+variants = [
+    "None",
+    "Uniform { intensity: f32, frequency: f32 }",
+    "Horizontal { intensity: f32, frequency: f32 }",
+    "Vertical { intensity: f32, frequency: f32 }",
+    "Decay { intensity: f32, decay: f32, frequency: f32 }",
+]
+
+[specs.Timeline]
+part = "geometry"
+description = "`pub struct Timeline { pub start_ms: u64, pub duration_ms: u64 }`"
+
+[specs.Keyframe]
+part = "geometry"
+description = "`pub struct Keyframe { pub time: f32, pub value: f32 }`"
+
+[specs.KeyframeTimeline]
+part = "geometry"
+description = "`pub struct KeyframeTimeline { pub keyframes: Vec<Keyframe>, pub easing: EasingType }`"
+
+[specs.TimeWarpCurve]
+part = "geometry"
+variants = [
+    "Linear { start: f32, end: f32 }",
+    "Speed { multiplier: f32 }",
+    "Sigmoid { steepness: f32 }",
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PRELUDE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[prelude]
+section_title = "Prelude & Imports"
+recommendation = "Recommended for most users:"
+usage = "use tui_vfx::prelude::*;"
+
+[prelude.exports]
+types = """
+pub use tui_vfx_types::{Anchor, BoundaryMode, Cell, Color, Grid, GridExt, Modifiers,
+    OwnedGrid, Point, Rect, Size, Style};
+"""
+core_schema = """
+pub use tui_vfx_core::{ConfigSchema, FieldMeta, Range, ScalarValue, SchemaField, SchemaNode};
+"""
+geometry = """
+pub use tui_vfx_geometry::easing::EasingType;
+"""
+compositor_pipeline = """
+pub use tui_vfx_compositor::pipeline::{
+    CompositionOptions, CompositionSpec, ShaderLayerSpec, ShaderWithRegion, ShadowSpec,
+    render_pipeline, render_pipeline_with_spec, render_pipeline_with_spec_area,
+};
+"""
+compositor_types = """
+pub use tui_vfx_compositor::types::{
+    ApplyTo, Axis, DitherMatrix, FilterSpec, IrisShape, MaskCombineMode, MaskSpec, Orientation,
+    RippleCenter, SamplerSpec, WipeDirection,
+};
+"""
+style = """
+pub use tui_vfx_style::models::{
+    BlendMode, ColorConfig, ColorRamp, ColorSpace, FadeDirection, FadeEffect, FadeSpec,
+    Gradient, StyleConfig, StyleEffect, StyleLayer, StyleTransition,
+};
+"""
+content = """
+pub use tui_vfx_content::prelude::*;
+"""
+shadows = """
+pub use tui_vfx_shadow::{ShadowConfig, ShadowEdges, ShadowStyle, render_shadow, render_shadow_simple};
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EXAMPLES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[examples.quick_start]
+title = "Quick Start (Pipeline)"
+code = """
+use tui_vfx::prelude::*;
+
+let options = CompositionOptions::default()
+    .with_mask(MaskSpec::Dissolve { seed: 42, chunk_size: 1 })
+    .with_filter(FilterSpec::Dim {
+        factor: SignalOrFloat::Static(0.5),
+        apply_to: ApplyTo::Both,
+    });
+
+render_pipeline(&source, &mut dest, width, height, 0, 0, options, None);
+"""
+
+# <FILE>docs/templates/api_docs.toml</FILE> - <DESC>Editorial manifest for tui-vfx API documentation</DESC>
+# <VERS>END OF VERSION: 1.0.1</VERS>

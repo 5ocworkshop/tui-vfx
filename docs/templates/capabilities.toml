@@ -1,0 +1,1125 @@
+# tui-vfx Capabilities Manifest
+#
+# This file is the editorial source of truth for effect documentation.
+# Technical details (types, defaults) come from rustdoc comments in source code.
+# Editorial details (use cases, hints, moods) are defined here.
+#
+# Run `cargo xtask docs generate` to merge sources and generate:
+#   - docs/CAPABILITIES.md (human-readable reference)
+#   - docs/generated/ai-context.md (condensed AI prompt)
+#
+# See docs/design/CAPABILITY_MANIFEST_*.md for architecture details.
+
+# <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
+# <VERS>VERSION: 2.2.2</VERS>
+# <WCTX>Docs coverage: include new powerline parameters</WCTX>
+# <CLOG>Expand ai_hint for GlistenSweep and KittScanner powerline fields</CLOG>
+
+[meta]
+version = "2.2.2"
+description = "tui-vfx visual effects capability manifest"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TAXONOMY
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[taxonomy.layers]
+sampler = "Distorts coordinates before rendering. Applied first."
+shadow = "Depth effect rendered beneath element."
+mask = "Controls visibility (0.0-1.0). Used for transitions."
+shader = "Per-cell styling based on position/time. Visual texture."
+filter = "Post-processing on rendered output. Applied last."
+content = "Text transformation. Modifies characters themselves."
+
+[taxonomy.phases]
+entering = "Element appearing (t: 0→1 reveals)"
+dwelling = "Element stable, ambient effects active"
+exiting = "Element leaving (t: 0→1 hides)"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MASKS
+# Visibility control for transitions. All operate on t (0.0→1.0).
+# Source: crates/tui-vfx-compositor/src/types/cls_mask_spec.rs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[effects.masks.None]
+use_cases = ["none", "baseline", "passthrough"]
+energy = "calm"
+ai_hint = "No mask effect, fully visible passthrough. Use to disable masking."
+
+[effects.masks.Wipe]
+use_cases = ["transition", "reveal", "cinematic"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Classic film-style linear reveal/hide.
+reveal/hide: WipeDirection (16 variants - cardinal, diagonal, aliases, center-out).
+soft_edge: blur transition (0.1-0.2 for smooth, 0 for hard edge)."""
+
+[effects.masks.Dissolve]
+use_cases = ["transition", "dream-sequence", "magical"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Random pixel dissolve transition.
+seed: randomization seed for consistent patterns.
+chunk_size: 1-2 for subtle shimmer, 4+ for retro/pixelated look."""
+
+[effects.masks.Checkers]
+use_cases = ["transition", "retro", "playful"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Checkerboard pattern reveal.
+cell_size: size of checker squares.
+Retro TV/game aesthetic, pairs well with CRT effects."""
+
+[effects.masks.Blinds]
+use_cases = ["transition", "presentation"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Venetian blinds effect for professional presentations.
+orientation: Horizontal or Vertical slats.
+count: number of blind slats."""
+
+[effects.masks.Iris]
+use_cases = ["transition", "dramatic", "spotlight"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Spotlight/iris reveal expanding from center.
+shape: Circle (smooth), Diamond (angular), Box (rectangular).
+soft_edge: blur transition at iris boundary."""
+
+[effects.masks.Diamond]
+use_cases = ["transition", "dramatic"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Diamond shape expanding from center.
+soft_edge: blur at diamond boundary for smoother reveal."""
+
+[effects.masks.NoiseDither]
+use_cases = ["transition", "retro", "subtle"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Dithered noise pattern transition.
+seed: randomization seed for consistent patterns.
+matrix: Bayer4 (subtle 4x4 dither), Bayer8 (more visible 8x8 dither)."""
+
+[effects.masks.PathReveal]
+use_cases = ["transition", "creative", "animated"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Path-based reveal following a geometric trajectory.
+path: Spiral (playful inward/outward), Radial (dramatic sweep).
+soft_edge: blur at reveal boundary."""
+
+[effects.masks.Radial]
+use_cases = ["transition", "dramatic", "reveal"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Radial expansion from configurable origin point.
+origin: Center, TopLeft, TopRight, BottomLeft, BottomRight, Custom(x,y).
+soft_edge: blur at radial boundary."""
+
+[effects.masks.Cellular]
+use_cases = ["transition", "organic", "creative"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Organic cellular pattern reveal.
+pattern: Voronoi (natural/organic), Hexagonal (tech/futuristic), Organic (irregular).
+seed: randomization seed. cell_count: number of cells in pattern."""
+
+# WipeDirection variants (16 total):
+# Cardinal: LeftToRight, RightToLeft, TopToBottom, BottomToTop
+# Diagonal: TopLeftToBottomRight, TopRightToBottomLeft, BottomLeftToTopRight, BottomRightToTopLeft
+# Aliases: FromLeft, FromRight, FromTop, FromBottom
+# Center-Out (Barn Door): HorizontalCenterOut, VerticalCenterOut, HorizontalEdgesIn, VerticalEdgesIn
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FILTERS
+# Post-processing effects. Applied after rendering.
+# Source: crates/tui-vfx-compositor/src/types/cls_filter_spec.rs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[effects.filters.None]
+use_cases = ["none", "baseline", "passthrough"]
+energy = "calm"
+ai_hint = "No filter effect, passthrough output. Use to disable filtering."
+
+[effects.filters.Dim]
+use_cases = ["background", "inactive", "subtle"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Darken output uniformly.
+factor: 0.0=black, 1.0=unchanged (0.5 typical for dimming).
+apply_to: Foreground, Background, or Both."""
+
+[effects.filters.Invert]
+use_cases = ["highlight", "dramatic", "selection"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Color inversion (negative) effect.
+apply_to: Foreground, Background, or Both.
+Creates high-contrast selection or dramatic effect."""
+
+[effects.filters.Tint]
+use_cases = ["mood", "branding", "overlay"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Apply color overlay/tint.
+color: tint color to apply.
+strength: blend intensity (0.0=none, 1.0=full tint).
+apply_to: Foreground, Background, or Both."""
+
+[effects.filters.Vignette]
+use_cases = ["focus", "cinematic", "premium"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Edge darkening that draws focus to center.
+strength: intensity of darkening at edges.
+radius: how far vignette extends from edges (signal-driven).
+Cinematic focus effect for premium surfaces."""
+
+[effects.filters.Crt]
+use_cases = ["retro", "gaming", "nostalgic"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """CRT monitor post-processing effect.
+scanline_strength: intensity of horizontal scanlines (0.2-0.4 typical).
+glow: phosphor glow amount around bright pixels.
+Pairs well with Crt sampler for full retro effect."""
+
+[effects.filters.PatternFill]
+use_cases = ["texture", "background", "decoration"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Background texture patterns.
+pattern: Single (char), Checkerboard (char_a, char_b), HorizontalLines, VerticalLines.
+color: pattern color. only_empty: only fill empty cells.
+See PatternType variants for full options."""
+
+[effects.filters.Greyscale]
+use_cases = ["disabled", "inactive", "dramatic"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Desaturate output using BT.601 luminance formula.
+strength: desaturation amount (0.0=color, 1.0=full greyscale).
+apply_to: Foreground, Background, or Both.
+Ideal for disabled/inactive states."""
+
+[effects.filters.BrailleDust]
+use_cases = ["ambient", "texture", "premium"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Animated braille particles for ambient texture.
+density: particle coverage (0.05=sparse, 0.2=dense).
+hz: animation speed/update rate.
+seed: randomization seed. color: particle color.
+pattern: SingleDot (subtle), OneToTwoDots, OneToThreeDots, OneToFourDots (visible).
+Requires braille font support."""
+
+[effects.filters.InterlaceCurtain]
+use_cases = ["retro", "loading", "effect"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Scanline/interlace dimming effect.
+density: row spacing (1.0=every other row). dim_factor: per-row darkening amount.
+scroll_speed: animates the scanlines."""
+
+[effects.filters.MotionBlur]
+use_cases = ["movement", "speed", "dynamic"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Directional blur trail.
+direction: Left/Right/Up/Down. trail_length: number of trailing cells.
+opacity_decay: controls falloff sharpness."""
+
+[effects.filters.ColorBridgedShade]
+use_cases = ["opacity", "fade", "subtle"]
+energy = "calm"
+complexity = "moderate"
+ai_hint = """Maps opacity to shade characters (░▒▓█) with color bridging.
+fg_color, bg_color: endpoint colors for shading transitions.
+Smooth color transitions at shade boundaries."""
+
+[effects.filters.SubPixelBar]
+use_cases = ["loading", "progress", "indicator"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """High-resolution progress bar with 8x cell precision.
+Uses ▏▎▍▌▋▊▉█ (horizontal) or ▁▂▃▄▅▆▇█ (vertical) partial blocks.
+progress: 0.0-1.0 fill amount.
+direction: Horizontal or Vertical.
+filled_color, unfilled_color: bar colors.
+animated: true cycles progress automatically with t parameter."""
+
+[effects.filters.SubCellShake]
+use_cases = ["error", "tactile", "feedback"]
+energy = "intense"
+complexity = "moderate"
+ai_hint = """Physical edge vibration using ▏▎▍▌▋▊▉ partial blocks.
+Simulates tactile feedback like incorrect password shake.
+amplitude: shake intensity. frequency: oscillation rate.
+seed: randomization. edge_only: true limits to widget borders.
+filled_color, bg_color: vibration colors.
+Best for error/rejection feedback, button press responses."""
+
+[effects.filters.RigidShake]
+use_cases = ["error", "attention", "tactile-feedback", "notification"]
+energy = "intense"
+complexity = "advanced"
+premium = true
+ai_hint = """Ketchup bottle damped oscillation. Multiple diminishing shakes then pause.
+IMPORTANT: Apply to area INCLUDING margin cells (margin_width default 2).
+Key params: shake_period=0.29s, num_shakes=4, pause_duration=0.52s, max_eighths=12 (1.5 cells).
+damping array controls amplitude decay (e.g., [1.0, 0.7, 0.45, 0.25]).
+Pairs with RigidShakeStyle for synchronized text italic."""
+
+[effects.filters.RigidShake.notes]
+requires = ["margin_cells"]
+pairs_with = ["RigidShakeStyle"]
+
+[effects.filters.HoverBar]
+use_cases = ["hover", "selection", "indicator"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Progress-driven partial bar using ▏▎▍▌▋▊▉█ with fg/bg inversion.
+base_eighths: width at rest (0-8), max_eighths: width at full (0-16, spans 2 cells).
+position: Left/Right, margin_width default 2. Ideal for list selection."""
+
+[effects.filters.UnderlineWipe]
+use_cases = ["hover", "link", "indicator"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Underline wipes in based on progress.
+direction: WipeDirection, line_char default ▁, row_offset from bottom.
+gradient: enable gradient fade. glisten: add highlight sweep for hover polish."""
+
+[effects.filters.BracketEmphasis]
+use_cases = ["hover", "selection", "emphasis"]
+energy = "calm"
+complexity = "simple"
+ai_hint = "Brackets fade in at content edges based on progress. left/right chars default [ ]. Fades from bg_color to color."
+
+[effects.filters.DotIndicator]
+use_cases = ["selection", "navigation", "indicator"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Dot/bullet fades in adjacent to content.
+progress: 0.0-1.0 fade amount. indicator_char default •, position Left/Right.
+For list selection and navigation."""
+
+[effects.filters.GlistenSweep]
+use_cases = ["hover", "shine", "premium"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Diagonal 45-degree highlight sweep for polished hover feedback.
+boost: brightness increase (default 40, 0-255).
+band_width: glisten width as fraction of diagonal (0.2 typical).
+speed: animation rate (0.5 default, 0=manual progress only).
+progress: 0.0=inactive, 1.0=fully visible.
+powerline_mode: true to handle powerline separators safely (bg on text, fg on separators).
+boost_separator_bg: true to also boost separator backgrounds for continuous powerlines.
+Creates premium "shine" effect for buttons and cards on hover."""
+
+[effects.filters.KittScanner]
+use_cases = ["hover", "retro", "sci-fi"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Horizontal ping-pong scanner (KITT/Larson scanner) effect.
+boost: brightness increase (default 50).
+band_width: scanner column width (0.15 default, 0.0-0.5).
+bps: beats per second for ping-pong cycle (1.0 = 2 second full cycle).
+progress: 0.0=inactive, 1.0=fully active.
+apply_to: which channel to boost (fg, bg, or both) when not in powerline mode.
+powerline_mode: true to handle powerline separators safely.
+boost_separator_bg: true to also boost separator backgrounds for continuous powerlines.
+Full-height scanning column with smooth ping-pong motion.
+Classic Knight Rider aesthetic for retro sci-fi hover states."""
+
+[effects.filters.ShadeScanner]
+use_cases = ["hover", "reveal", "retro"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Ping-pong scanner that dims text with shade overlay (░).
+shade_color: overlay color (default rgb(40,40,45)).
+bps: beats per second for ping-pong cycle.
+progress: 0.0=inactive, 1.0=fully active.
+Text left of scanner position gets progressively dimmed.
+Creates wave of dimming that washes over and retreats.
+Retro terminal aesthetic with dramatic reveal/dim effect."""
+
+[effects.filters.PillButton]
+use_cases = ["button", "hover", "premium"]
+energy = "calm"
+complexity = "moderate"
+ai_hint = """Pill-shaped button with gradient edges and optional glisten.
+button_color: main button fill color.
+bg_color: background for gradient fade at edges.
+edge_width: cells for gradient transition (default 3).
+glisten: enable shimmer effect on hover (default true).
+progress: hover state (0.0=rest, 1.0=fully hovered).
+Creates no-border button with smooth bg→button→bg gradient.
+Brightens on hover, adds moving glisten when progress>0.5."""
+
+# PatternType variants:
+# - Single: Repeating character (char)
+# - Checkerboard: Alternating characters (char_a, char_b)
+# - HorizontalLines: Row lines (line_char, spacing)
+# - VerticalLines: Column lines (line_char, spacing)
+
+# BraillePatternType variants (for BrailleDust):
+# - SingleDot: Most subtle (⠁ ⠂ ⠄)
+# - OneToTwoDots: Subtle
+# - OneToThreeDots: Moderate
+# - OneToFourDots: More visible
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SAMPLERS
+# Coordinate distortion. Applied before rendering.
+# Source: crates/tui-vfx-compositor/src/types/cls_sampler_spec.rs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[effects.samplers.None]
+use_cases = ["none", "baseline", "passthrough"]
+energy = "calm"
+ai_hint = "No sampling distortion, direct coordinate passthrough."
+
+[effects.samplers.SineWave]
+use_cases = ["wavy", "underwater", "dream"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Sinusoidal wave distortion for underwater/dream effects.
+axis: Horizontal, Vertical, or Both wave direction.
+amplitude: wave height in cells. frequency: wave density.
+speed: animation rate. phase: wave offset."""
+
+[effects.samplers.Ripple]
+use_cases = ["water", "impact", "attention"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Circular ripple emanating from center point.
+amplitude: ripple height. wavelength: distance between ripple rings.
+speed: outward expansion rate.
+center: ripple origin point (default center).
+Water drop/impact effect. Don't combine with Crt sampler."""
+
+[effects.samplers.Shredder]
+use_cases = ["glitch", "transition", "destruction"]
+energy = "intense"
+complexity = "moderate"
+ai_hint = """Paper shredder strips effect for destruction/transitions.
+stripe_width: width of each strip in cells.
+odd_speed: movement speed of odd-numbered strips.
+even_speed: movement speed of even-numbered strips (opposite creates shearing)."""
+
+[effects.samplers.FaultLine]
+use_cases = ["glitch", "error", "dramatic"]
+energy = "intense"
+complexity = "moderate"
+ai_hint = """Fault line displacement like tectonic shift.
+seed: randomization seed for fault placement.
+intensity: displacement amount.
+split_bias: tendency to split horizontally vs vertically.
+Earthquake/glitch effect for errors or dramatic moments."""
+
+[effects.samplers.Crt]
+use_cases = ["retro", "gaming", "nostalgic"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """CRT monitor scanlines and barrel curvature distortion.
+scanline_strength: intensity of horizontal lines.
+jitter: random scanline displacement amount.
+curvature: barrel distortion (0=flat, 0.1-0.2 typical).
+Pairs with Crt filter for full retro CRT aesthetic."""
+
+[effects.samplers.CrtJitter]
+use_cases = ["glitch", "error", "retro"]
+energy = "intense"
+complexity = "moderate"
+ai_hint = """CRT crash/jitter effect simulating failing monitor.
+intensity: jitter displacement amount.
+speed_hz: jitter frequency in Hz.
+decay_ms: how quickly jitter settles after trigger.
+For error states or retro malfunction aesthetics."""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SHADERS (Spatial)
+# Per-cell styling based on position and time.
+# Source: crates/tui-vfx-style/src/models/cls_spatial_shader_type.rs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[effects.shaders.LinearGradient]
+use_cases = ["background", "premium", "branding"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Gradient fill at configurable angle.
+gradient: color stops array defining the gradient.
+angle_deg: rotation angle (0=horizontal, 90=vertical, -45=diagonal).
+Elegant for backgrounds and premium surfaces."""
+
+[effects.shaders.BarberPole]
+use_cases = ["loading", "progress", "playful"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Animated diagonal stripes like a barber pole.
+speed: stripe animation rate.
+stripe_width: width of colored stripes in cells.
+gap_width: width between stripes.
+color: stripe color.
+Classic loading indicator style."""
+
+[effects.shaders.Radar]
+use_cases = ["scanning", "loading", "tech"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Rotating radar sweep effect.
+speed: rotation rate (revolutions per second).
+tail_length: angular length of the sweep trail.
+color: sweep highlight color.
+Scanning/search indicator for tech interfaces."""
+
+[effects.shaders.BorderSweep]
+use_cases = ["selection", "focus", "highlight"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Border highlight that sweeps around widget edges.
+speed: sweep animation rate around perimeter.
+length: highlight segment length in cells.
+color: highlight color.
+Ideal for focus indication and selection states."""
+
+[effects.shaders.Highlighter]
+use_cases = ["emphasis", "reveal", "attention"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Marker-style text highlighting effect.
+color: highlighter color (typically yellow/green).
+Reveals text as if being highlighted with a marker pen.
+Ideal for emphasizing important text progressively."""
+
+[effects.shaders.Reflect]
+use_cases = ["premium", "loading", "shine"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Moving reflective glint across surface.
+speed: glint movement rate.
+color: highlight color for the glint.
+Premium surface effect for polished/metallic appearance."""
+
+[effects.shaders.GlistenBand]
+use_cases = ["loading", "premium", "shine"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Moving light band sweep for elegant loading shimmer.
+speed: band movement rate (0.5 typical).
+band_width: width of the light band in cells.
+angle_deg: band angle (-15 diagonal typical).
+head, tail: gradient colors at band edges.
+direction: sweep direction.
+repeat_count: number of bands visible.
+apply_to: Foreground/Background/Both.
+blend_strength: intensity of the effect."""
+
+[effects.shaders.GlitchLines]
+use_cases = ["error", "glitch", "dramatic"]
+energy = "intense"
+complexity = "moderate"
+ai_hint = """Random horizontal glitch lines for errors/warnings.
+seed: randomization seed. intensity: effect strength.
+max_lines: maximum concurrent glitch lines.
+speed: line movement/flicker rate.
+flash_chance: probability of bright flashes.
+pulse_color: flash highlight color.
+pulse_speed: flash animation rate.
+italic_on_flash: apply italic during flashes.
+flash_hold: flash duration.
+noise_type: Uniform or Gaussian distribution."""
+
+[effects.shaders.NeonFlicker]
+use_cases = ["retro", "neon", "ambient"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Flickering neon tube simulation.
+stability: 0.85=subtle flicker, 0.5=dying tube, 1.0=steady.
+seed: randomization seed.
+segment: which tube segment to affect (for multi-segment signs).
+dim_amount: brightness reduction during flicker.
+speed: flicker rate.
+flash_chance: probability of bright flashes.
+decay_rate: how quickly brightness returns after flicker.
+noise_type: Uniform or Gaussian flicker patterns."""
+
+[effects.shaders.PulseWave]
+use_cases = ["attention", "loading", "ambient"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Rippling color wave effect.
+frequency: wave density.
+speed: wave animation rate.
+color: wave highlight color.
+direction: wave propagation direction.
+wavelength: distance between wave peaks.
+Attention/loading indicator for selection states."""
+
+[effects.shaders.FocusedRowGradient]
+use_cases = ["selection", "list", "navigation"]
+energy = "calm"
+complexity = "moderate"
+ai_hint = """Vertical gradient highlighting selected row.
+selected_row: row index to highlight.
+selected_row_ratio: alternative selection by ratio (0.0-1.0).
+falloff_distance: gradient fade distance from selected row.
+bright_color: highlight color for selected row.
+dim_color: color for non-selected rows.
+apply_to: Foreground/Background/Both.
+Ideal for list navigation and row selection."""
+
+[effects.shaders.RevealWipe]
+use_cases = ["reveal", "transition", "text"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Progressive reveal wipe driven by t parameter.
+direction: WipeDirection for reveal direction.
+Reveals content progressively, ideal for text/data display."""
+
+[effects.shaders.StochasticSparkle]
+use_cases = ["premium-surface", "frosted-glass", "texture", "ambient"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Film grain / frosted glass shimmer for premium surfaces.
+sparkle_density: fraction of cells (0.05=5%), brightness_boost: multiplier (1.2=20% brighter).
+speed: 0.25=shimmer, 1.0=static. noise_type: Uniform (even) or Gaussian (clustered).
+apply_to: Foreground/Background/Both."""
+
+[effects.shaders.AmbientOcclusion]
+use_cases = ["depth", "premium", "3d"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Contact shadow darkening cells near widget edges.
+edges: BottomRight (default), TopLeft, All, Inner.
+falloff: Linear, Quadratic (default), Exponential.
+intensity: darkness strength. radius: falloff distance in cells.
+Creates depth by simulating light occlusion at boundaries."""
+
+[effects.shaders.Bevel]
+use_cases = ["3d", "buttons", "emboss"]
+energy = "calm"
+complexity = "moderate"
+ai_hint = """3D embossed edge effect simulating raised or sunken surfaces.
+light_direction: TopLeft (default), TopRight, BottomLeft, BottomRight, Top, Bottom, Left, Right.
+edge_width: bevel thickness in cells.
+highlight_intensity and shadow_intensity: edge light and shadow strength."""
+
+[effects.shaders.Glow]
+use_cases = ["focus", "premium", "highlight"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Multi-cell bloom/halo around widget edges.
+radius: glow extent. intensity: brightness of the glow.
+falloff: Linear, Quadratic, Exponential. pulse_speed: optional pulsing in Hz."""
+
+[effects.shaders.SubCellShake]
+use_cases = ["error", "vibration", "attention"]
+energy = "intense"
+complexity = "moderate"
+ai_hint = """Micro-jitter via rapid color oscillation.
+amplitude: shake strength. frequency: oscillation rate.
+axis: Horizontal, Vertical, Both (default). chromatic: RGB channel separation.
+edge_only: limit to widget borders. For chromatic aberration effect."""
+
+[effects.shaders.ChromaticEdge]
+use_cases = ["glitch", "premium", "effect"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """RGB edge separation for chromatic aberration effect.
+intensity: separation amount between color channels.
+edge_width: width of affected edge region.
+horizontal: true for horizontal separation, false for vertical.
+Premium lens distortion effect or glitch aesthetic."""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STYLE EFFECTS
+# Temporal animations driven by t (0.0→1.0).
+# Source: crates/tui-vfx-style/src/models/cls_style_effect.rs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[effects.styles.FadeIn]
+use_cases = ["enter", "reveal", "transition"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Opacity fade in driven by t parameter.
+apply_to: Foreground, Background, or Both.
+ease: easing function for animation curve.
+Classic entrance effect, pairs with any mask."""
+
+[effects.styles.FadeOut]
+use_cases = ["exit", "hide", "transition"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Opacity fade out driven by t parameter.
+apply_to: Foreground, Background, or Both.
+ease: easing function for animation curve.
+Classic exit effect, pairs with any mask."""
+
+[effects.styles.Pulse]
+use_cases = ["attention", "heartbeat", "ambient"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Color intensity pulsing animation.
+frequency: pulse rate (Hz).
+color: pulse highlight color.
+Attention/alive indicator for active elements."""
+
+[effects.styles.Rainbow]
+use_cases = ["playful", "pride", "celebration"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Continuous hue cycling through spectrum.
+speed: hue rotation rate.
+Playful/celebration effect, pride flag aesthetic."""
+
+[effects.styles.Glitch]
+use_cases = ["error", "dramatic", "cyberpunk"]
+energy = "intense"
+complexity = "moderate"
+ai_hint = """Glitch-style color/style distortion.
+seed: randomization seed. intensity: effect strength.
+italic_start, italic_end: time window for italic glitch.
+Error/dramatic effect for cyberpunk aesthetics."""
+
+[effects.styles.NeonFlicker]
+use_cases = ["retro", "neon", "ambient"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Flickering neon tube style effect.
+stability: 0.0-1.0 (higher = more stable, lower = dying tube).
+Retro neon sign aesthetic with randomized flicker."""
+
+[effects.styles.Spatial]
+use_cases = ["custom", "advanced"]
+energy = "varies"
+complexity = "advanced"
+ai_hint = """Wraps any SpatialShaderType as a style effect.
+shader: the spatial shader to apply. angle_deg: rotation for shader orientation.
+Allows using spatial shaders in style effect contexts.
+Advanced composition for custom animations."""
+
+[effects.styles.ItalicWindow]
+use_cases = ["emphasis", "animation", "text"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Apply italic style during a time window.
+start: t value when italic begins.
+end: t value when italic ends.
+Text emphasis animation for timed highlights."""
+
+[effects.styles.ColorShift]
+use_cases = ["mood", "transition", "effect"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """HSL color manipulation over time.
+hue_shift: hue rotation amount.
+saturation_shift: saturation adjustment.
+lightness_shift: brightness adjustment.
+Mood transitions and color effects."""
+
+[effects.styles.ColorFade]
+use_cases = ["transition", "mood", "branding"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Fade toward target color based on t parameter.
+target: destination color.
+color_space: RGB or HSL interpolation.
+Smooth color transitions for mood or branding changes."""
+
+[effects.styles.RigidShakeStyle]
+use_cases = ["error", "attention", "sync"]
+energy = "intense"
+complexity = "advanced"
+ai_hint = """Italic style synchronized with RigidShake filter timing.
+shake_period, num_shakes, pause_duration: must match RigidShake params.
+Applies italic when widget shifts right, creating coordinated motion.
+ALWAYS use with RigidShake filter for proper synchronization."""
+
+[effects.styles.RigidShakeStyle.notes]
+pairs_with = ["RigidShake"]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONTENT TRANSFORMERS
+# Text content modifications.
+# Source: crates/tui-vfx-content/src/transformers/mod.rs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[effects.content.Typewriter]
+use_cases = ["reveal", "typing", "narrative"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Character-by-character text reveal.
+speed_variance: jitter in per-character timing for organic typing.
+Reveals text progressively based on t parameter."""
+
+[effects.content.Scramble]
+use_cases = ["decrypt", "reveal", "tech"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Random character scrambling that resolves to final text.
+resolve_pace: how quickly characters settle. charset: character set to cycle.
+seed: randomization seed for deterministic effects."""
+
+[effects.content.GlitchShift]
+use_cases = ["glitch", "error", "cyberpunk"]
+energy = "intense"
+complexity = "moderate"
+ai_hint = """Glitch-style text distortion with horizontal shifts.
+shift_amount: column displacement size.
+glitch_start, glitch_end: time window for glitching. seed: randomization seed."""
+
+[effects.content.ScrambleGlitchShift]
+use_cases = ["glitch", "decrypt", "dramatic"]
+energy = "intense"
+complexity = "advanced"
+ai_hint = """Combined scramble + glitch shift for maximum chaos.
+resolve_pace: scramble settle rate. charset: scramble character set.
+scramble_seed: scramble randomness. shift_amount: horizontal displacement.
+glitch_start, glitch_end: glitch time window."""
+
+[effects.content.Dissolve]
+use_cases = ["transition", "fade", "pixel"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Pixel dissolve text transition.
+replacement: character used for dissolve. pattern: dissolve pattern.
+direction: dissolve direction. seed: randomization seed."""
+
+[effects.content.Marquee]
+use_cases = ["scrolling", "ticker", "news"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Scrolling text ticker effect.
+speed: scroll rate. width: visible window width.
+Text scrolls horizontally through the window."""
+
+[effects.content.SlideShift]
+use_cases = ["transition", "slide", "animation"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Sliding text with row jump after passing a column span.
+start_col, end_col: horizontal window. start_row: initial row.
+shift_col, shift_width: barrier span. row_shift: rows to jump.
+line_mode, flow_mode: line handling and flow direction."""
+
+[effects.content.Mirror]
+use_cases = ["effect", "playful", "reflection"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Mirror/flip text horizontally or vertically.
+axis: Horizontal or Vertical mirroring."""
+
+[effects.content.Morph]
+use_cases = ["transition", "smooth", "creative"]
+energy = "moderate"
+complexity = "advanced"
+ai_hint = """Character morphing/blending between text states.
+source: starting text. progression: morph progression style.
+direction: forward or reverse. seed: randomization seed."""
+
+[effects.content.Numeric]
+use_cases = ["data", "counter", "dashboard"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Number transition animations for dashboards.
+format: numeric format string for output.
+Smoothly animates between numeric values."""
+
+[effects.content.Odometer]
+use_cases = ["counter", "retro", "mechanical"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Odometer-style digit rolling animation.
+Digits roll vertically like mechanical counter.
+Retro/mechanical aesthetic for counters and scores."""
+
+[effects.content.Redact]
+use_cases = ["censorship", "reveal", "dramatic"]
+energy = "moderate"
+complexity = "simple"
+ai_hint = """Redaction/censoring effect with █ blocks.
+symbol: character used for redaction masking.
+Covers text with blocks, can reveal progressively."""
+
+[effects.content.SplitFlap]
+use_cases = ["retro", "airport", "mechanical"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Split-flap display effect like airport departure boards.
+speed: flip speed. cascade: stagger between characters.
+Characters flip through alphabet to reach target."""
+
+[effects.content.WrapIndicator]
+use_cases = ["hover", "selection", "emphasis"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Prefix/suffix symbols appear progressively with progress.
+Progress 0.0: "Item" → 0.5: "» Item" → 1.0: "» Item «"
+prefix/suffix strings, characters appear one at a time. Ideal for hover indicators."""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SHADOWS
+# Depth effects rendered beneath elements.
+# Source: crates/tui-vfx-shadow/src/types/
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[effects.shadows.HalfBlock]
+use_cases = ["depth", "premium", "modal"]
+energy = "calm"
+complexity = "simple"
+premium = true
+ai_hint = """Half-block characters (▐▄▌▀) for sub-cell shadow precision.
+Best quality shadow with smooth edges.
+offset_x, offset_y: shadow offset (positive = right/down).
+color: shadow color. surface_color: background for blending.
+edges: BottomRight (default), All, etc.
+soft_edges: use half-blocks at boundaries for smoothness."""
+
+[effects.shadows.Braille]
+use_cases = ["depth", "fine", "subtle"]
+energy = "calm"
+complexity = "moderate"
+ai_hint = """2×4 subpixel density grid using braille characters.
+Finest-grained shadow detail available.
+Requires braille font support in terminal.
+May vary in appearance based on font rendering."""
+
+[effects.shadows.Solid]
+use_cases = ["depth", "compatible", "simple"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Simple background color fill shadow.
+Maximum terminal compatibility, works everywhere.
+No special character requirements.
+offset_x, offset_y: shadow offset. color: shadow color."""
+
+[effects.shadows.Gradient]
+use_cases = ["depth", "soft", "premium"]
+energy = "calm"
+complexity = "moderate"
+ai_hint = """Multi-layer shadow with decreasing intensity.
+layers: number of gradient layers (2-3 typical).
+Creates depth gradient from element edge outward."""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SEMANTIC MAPPINGS
+# Intent to effect suggestions.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[semantics.moods]
+professional = ["StochasticSparkle", "Wipe", "FadeIn", "LinearGradient", "HalfBlock"]
+playful = ["Dissolve", "Rainbow", "BarberPole", "BrailleDust", "Checkers"]
+urgent = ["RigidShake", "SubCellShake", "GlitchLines", "CrtJitter", "FaultLine"]
+elegant = ["GlistenBand", "Iris", "LinearGradient", "Glow", "StochasticSparkle"]
+retro = ["Crt", "NeonFlicker", "SplitFlap", "Odometer", "InterlaceCurtain"]
+minimal = ["Wipe", "FadeIn", "FadeOut", "Dim"]
+
+[semantics.use_cases.transitions]
+masks = ["Wipe", "Iris", "Dissolve", "Blinds", "Radial", "Diamond"]
+filters = []
+shaders = []
+content = []
+
+[semantics.use_cases.transitions.extras]
+styles = ["FadeIn", "FadeOut", "ColorFade"]
+
+[semantics.use_cases.loading]
+masks = []
+filters = ["BrailleDust", "SubPixelBar", "MotionBlur", "PatternFill"]
+shaders = ["BarberPole", "StochasticSparkle", "GlistenBand"]
+content = ["Typewriter"]
+
+[semantics.use_cases.error_feedback]
+masks = []
+filters = ["RigidShake", "SubCellShake"]
+shaders = ["GlitchLines", "SubCellShake", "NeonFlicker"]
+content = ["Scramble", "GlitchShift"]
+
+[semantics.use_cases.error_feedback.extras]
+samplers = ["CrtJitter", "FaultLine"]
+
+[semantics.use_cases.hover_selection]
+masks = []
+filters = ["HoverBar", "UnderlineWipe", "BracketEmphasis", "DotIndicator", "GlistenSweep", "KittScanner", "ShadeScanner", "PillButton"]
+shaders = ["FocusedRowGradient", "BorderSweep", "Glow"]
+content = ["WrapIndicator"]
+
+[semantics.use_cases.data_display]
+masks = []
+filters = []
+shaders = ["Highlighter", "RevealWipe"]
+content = ["Odometer", "SplitFlap", "Numeric"]
+
+[semantics.use_cases.premium_surfaces]
+masks = []
+filters = ["BrailleDust", "Vignette", "ColorBridgedShade"]
+shaders = ["StochasticSparkle", "GlistenBand", "LinearGradient", "AmbientOcclusion", "Bevel", "Glow"]
+content = []
+shadow = true
+
+[semantics.use_cases.focus_selection]
+masks = []
+filters = []
+shaders = ["BorderSweep", "PulseWave", "FocusedRowGradient", "Glow"]
+content = []
+
+[semantics.use_cases.retro_crt]
+masks = []
+filters = ["Crt", "InterlaceCurtain"]
+shaders = ["NeonFlicker"]
+content = ["SplitFlap", "Odometer"]
+
+# Also add samplers that pair well
+[semantics.use_cases.retro_crt.extras]
+samplers = ["Crt", "CrtJitter"]
+styles = ["NeonFlicker", "Glitch"]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RECIPES
+# Proven effect combinations.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[recipes.elegant_modal_enter]
+description = "Sophisticated modal appearance with depth"
+mood = ["professional", "premium"]
+effects = [
+    { layer = "mask", effect = "Iris", params = { shape = "Box", soft_edge = 0.15 } },
+    { layer = "shader", effect = "StochasticSparkle", params = { sparkle_density = 0.03, speed = 0.2 } },
+    { layer = "shadow", effect = "HalfBlock", params = { offset_x = 2, offset_y = 1 } },
+]
+
+[recipes.error_shake]
+description = "Attention-grabbing error feedback"
+mood = ["urgent", "error"]
+effects = [
+    { layer = "filter", effect = "RigidShake", params = { num_shakes = 3, max_eighths = 10 } },
+    { layer = "style", effect = "RigidShakeStyle", params = {} },
+]
+notes = "Ensure widget has 2-cell margins on each side"
+
+[recipes.retro_crt]
+description = "Nostalgic CRT monitor aesthetic"
+mood = ["retro", "gaming"]
+effects = [
+    { layer = "sampler", effect = "Crt", params = { scanline_strength = 0.3, curvature = 0.1 } },
+    { layer = "filter", effect = "Crt", params = { scanline_strength = 0.2, glow = 0.1 } },
+    { layer = "shader", effect = "NeonFlicker", params = { stability = 0.85 } },
+]
+
+[recipes.loading_shimmer]
+description = "Skeleton loading state with movement"
+mood = ["loading", "modern"]
+effects = [
+    { layer = "shader", effect = "GlistenBand", params = { speed = 0.5, band_width = 3, angle_deg = -15 } },
+]
+
+[recipes.list_item_hover]
+description = "Responsive list item hover feedback"
+mood = ["interactive", "selection"]
+effects = [
+    { layer = "filter", effect = "HoverBar", params = { base_eighths = 2, max_eighths = 8 } },
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONSTRAINTS
+# What doesn't work together, performance notes, compatibility.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[[constraints.conflicts]]
+a = "Crt_sampler"
+b = "Ripple"
+reason = "Both distort coordinates, visual chaos"
+
+[[constraints.conflicts]]
+a = "RigidShake"
+b = "SubCellShake"
+reason = "Competing shake effects"
+
+[[constraints.performance_notes]]
+effect = "StochasticSparkle"
+note = "Lower speed (0.1-0.3) for smoother animation"
+
+[[constraints.performance_notes]]
+effect = "BrailleDust"
+note = "Balance density vs hz for performance"
+
+[[constraints.performance_notes]]
+effect = "multiple_filters"
+note = "Filters applied sequentially, each has cost"
+
+[[constraints.terminal_compatibility]]
+effect = "Braille_shadow"
+note = "Font-dependent rendering quality"
+
+[[constraints.terminal_compatibility]]
+effect = "BrailleDust"
+note = "Requires braille font support"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMPOSITION PIPELINE
+# Render order and how effects combine.
+# Source: crates/tui-vfx-compositor/src/pipeline/cls_composition_options.rs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[pipeline]
+description = "Effects apply in specific order for predictable composition"
+
+# Render order (1 = first, applied at bottom)
+[pipeline.render_order]
+sampler = { order = 1, description = "Coordinate distortion applied first" }
+shadow = { order = 2, description = "Rendered beneath element (extended area)" }
+element = { order = 3, description = "Main content rendered" }
+mask = { order = 4, description = "Applied to shadow + element together" }
+shader = { order = 5, description = "Per-cell styling throughout" }
+filter = { order = 6, description = "Post-processing applied last" }
+
+# CompositionOptions key fields
+[pipeline.options]
+sampler_spec = "Optional coordinate distortion"
+masks = "Array of masks (combined with mask_combine_mode)"
+mask_combine_mode = "AND (all must pass) or OR (any passes)"
+filters = "Array of post-processing filters (applied in order)"
+shader_layers = "Per-region shaders with optional bounds"
+shadow = "Optional integrated shadow"
+t = "Animation progress 0.0-1.0"
+loop_t = "Cyclical time for continuous effects"
+phase = "Entering/Dwelling/Exiting/Finished"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TERMINAL COMPATIBILITY
+# What works where and what doesn't.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[compatibility]
+description = "Effect compatibility across terminal types"
+
+[compatibility.universal]
+description = "Works on all TrueColor terminals"
+effects = [
+    "All masks",
+    "All filters",
+    "All style effects",
+    "LinearGradient, PulseWave, BorderSweep shaders",
+    "All content transformers",
+    "HalfBlock and Solid shadow styles",
+]
+
+[compatibility.font_dependent]
+description = "May vary based on terminal font"
+effects = [
+    { effect = "Braille shadow", note = "Requires braille unicode support" },
+    { effect = "BrailleDust filter", note = "Requires braille unicode support" },
+    { effect = "StochasticSparkle", note = "When using braille noise type" },
+]
+
+# <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
+# <VERS>END OF VERSION: 2.2.1</VERS>
