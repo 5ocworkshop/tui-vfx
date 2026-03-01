@@ -2,25 +2,44 @@
 set -euo pipefail
 
 CRATES=(
-#  tui-vfx-types
-#  tui-vfx-core-macros
-#  tui-vfx-debug
-#  tui-vfx-core
-#  tui-vfx-geometry
-#  tui-vfx-shadow
-#  tui-vfx-content
-#  tui-vfx-style
-#  tui-vfx-compositor
+  tui-vfx-types
+  tui-vfx-core-macros
+  tui-vfx-debug
+  tui-vfx-core
+  tui-vfx-geometry
+  tui-vfx-shadow
+  tui-vfx-content
+  tui-vfx-style
+  tui-vfx-compositor
   tui-vfx
 )
+
+MAX_RETRIES=5
+INITIAL_WAIT=30
+RETRY_WAIT=120
 
 for i in "${!CRATES[@]}"; do
   crate="${CRATES[$i]}"
   echo "=== Publishing $crate ($(( i + 1 ))/${#CRATES[@]}) ==="
-  cargo publish -p "$crate"
+
+  attempt=0
+  while true; do
+    if cargo publish -p "$crate" 2>&1; then
+      break
+    else
+      attempt=$(( attempt + 1 ))
+      if (( attempt >= MAX_RETRIES )); then
+        echo "  FAILED after $MAX_RETRIES attempts. Aborting."
+        exit 1
+      fi
+      echo "  Attempt $attempt failed — waiting ${RETRY_WAIT}s before retry..."
+      sleep "$RETRY_WAIT"
+    fi
+  done
+
   if (( i < ${#CRATES[@]} - 1 )); then
-    echo "  Waiting 30s for crates.io index..."
-    sleep 30
+    echo "  Waiting ${INITIAL_WAIT}s for crates.io index..."
+    sleep "$INITIAL_WAIT"
   fi
 done
 

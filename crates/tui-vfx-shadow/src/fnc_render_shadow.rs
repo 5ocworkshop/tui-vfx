@@ -135,10 +135,10 @@ mod tests {
         render_shadow(&mut grid, rect, &config, 1.0);
 
         // Verify shadow was rendered at right edge (x=15, x=16)
-        // Col 1 (x=15): 25% shadow using ▊ with fg=surface, bg=shadow
-        // Col 2 (x=16): 50% shadow using ▐ with fg=shadow, bg=surface
+        // Col 1 (x=15): 50% shadow using ▐ with fg=shadow, bg=surface
+        // Col 2 (x=16): 50% shadow using ▌ with fg=shadow, bg=surface
         let cell = grid.get(15, 3).unwrap();
-        assert_ne!(cell.bg, Color::TRANSPARENT); // First col: bg=shadow
+        assert_ne!(cell.fg, Color::TRANSPARENT); // First col: fg=shadow
         let cell = grid.get(16, 3).unwrap();
         assert_ne!(cell.fg, Color::TRANSPARENT); // Second col: fg=shadow
     }
@@ -191,12 +191,12 @@ mod tests {
         let rect = Rect::new(5, 2, 10, 6);
 
         // render_shadow_simple uses HalfBlock with default offset (1,1) and soft edges
-        // With offset=1, only first column exists: ▊ with fg=surface, bg=shadow
+        // With offset=1, only first column exists: ▐ with fg=shadow, bg=surface
         render_shadow_simple(&mut grid, rect, Color::BLACK.with_alpha(128), None, 1.0);
 
         let cell = grid.get(15, 3).unwrap();
-        // First column uses bg=shadow (▊ with inverted colors)
-        assert_ne!(cell.bg, Color::TRANSPARENT);
+        // First column uses fg=shadow (▐ with standard fg=shadow,bg=surface)
+        assert_ne!(cell.fg, Color::TRANSPARENT);
     }
 }
 

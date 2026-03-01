@@ -16,7 +16,6 @@ use crate::types::ShadowConfig;
 pub struct HalfBlockRenderer;
 
 /// Right half block: ▐ (U+2590)
-#[allow(dead_code)]
 const RIGHT_HALF: char = '▐';
 /// Lower half block: ▄ (U+2584)
 const LOWER_HALF: char = '▄';
@@ -24,8 +23,6 @@ const LOWER_HALF: char = '▄';
 const LEFT_HALF: char = '▌';
 /// Upper half block: ▀ (U+2580)
 const UPPER_HALF: char = '▀';
-/// Left 3/4 block: ▊ (U+258A) - used with fg=surface,bg=shadow for 25% shadow on right
-const LEFT_THREE_QUARTERS: char = '▊';
 /// Three-quarter block: ▙ (U+2599) - upper-left + lower-left + lower-right quadrants
 /// Used for corner cell (dx=1, dy=0) to join left-shadow (upper-left) with bottom edge (lower)
 #[allow(dead_code)]
@@ -167,13 +164,10 @@ impl HalfBlockRenderer {
             for x in start_x..end_x {
                 if grid.in_bounds(x, y) {
                     let cell = if soft && x == start_x {
-                        // First column: 25% shadow using left 3/4 block with inverted colors
-                        // ▊ with fg=surface,bg=shadow shows 75% surface + 25% shadow on right
-                        shadow_cell(
-                            Cell::new(LEFT_THREE_QUARTERS)
-                                .with_fg(surface)
-                                .with_bg(shadow),
-                        )
+                        // First column: 50% shadow using right half block
+                        // ▐ with fg=shadow,bg=surface shows 50% surface (left) + 50% shadow (right)
+                        // Maintains fg=shadow,bg=surface convention for compositor consistency
+                        shadow_cell(Cell::new(RIGHT_HALF).with_fg(shadow).with_bg(surface))
                     } else if soft && x == start_x + 1 {
                         // Second column: left half block (50% shadow on LEFT half)
                         // Shadow connects with first column's 25% shadow
@@ -320,12 +314,8 @@ impl HalfBlockRenderer {
                                 .with_bg(surface),
                         )
                     } else if soft && dx == 0 {
-                        // First column, other rows: 25% shadow (matches right edge)
-                        shadow_cell(
-                            Cell::new(LEFT_THREE_QUARTERS)
-                                .with_fg(surface)
-                                .with_bg(shadow),
-                        )
+                        // First column, other rows: 50% shadow (matches right edge)
+                        shadow_cell(Cell::new(RIGHT_HALF).with_fg(shadow).with_bg(surface))
                     } else if soft && dx == 1 && dy == 0 {
                         // Second column, first row: continue vertical edge only (hard 90 corner)
                         // ▌ continues the left-half pattern from right edge col2, no horizontal extension
@@ -368,10 +358,10 @@ mod tests {
 
         // Check that shadow exists at expected positions
         // Right edge shadow starts at x=13 (5+8), offset=2 gives 2 columns
-        // Col 1 (x=13): 25% shadow using ▊ with fg=surface, bg=shadow
+        // Col 1 (x=13): 50% shadow using ▐ with fg=shadow, bg=surface
         let cell = grid.get(13, 3).unwrap();
-        assert_eq!(cell.ch, LEFT_THREE_QUARTERS);
-        assert_ne!(cell.bg, Color::TRANSPARENT); // bg=shadow
+        assert_eq!(cell.ch, RIGHT_HALF);
+        assert_ne!(cell.fg, Color::TRANSPARENT); // fg=shadow
 
         // Col 2 (x=14): 50% shadow using ▌ with fg=shadow, bg=surface
         let cell = grid.get(14, 3).unwrap();

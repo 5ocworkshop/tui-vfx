@@ -975,7 +975,7 @@ checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
 name = "tui-vfx"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "tui-vfx-compositor",
  "tui-vfx-content",
@@ -989,7 +989,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-compositor"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "lazy_static",
  "mixed-signals",
@@ -1007,7 +1007,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-content"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "mixed-signals",
  "serde",
@@ -1017,7 +1017,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "mixed-signals",
  "serde",
@@ -1027,7 +1027,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-core-macros"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1036,7 +1036,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-debug"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "chrono",
  "colored",
@@ -1047,7 +1047,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-geometry"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "approx",
  "criterion",
@@ -1060,7 +1060,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-shadow"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bitflags",
  "serde",
@@ -1070,7 +1070,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-style"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "mixed-signals",
  "rstest",
@@ -1083,7 +1083,7 @@ dependencies = [
 
 [[package]]
 name = "tui-vfx-types"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "serde",
 ]
