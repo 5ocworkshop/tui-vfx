@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_glisten_band_shader.rs</FILE> - <DESC>GlistenBand shader implementation</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>Schema V2.2 standardization</WCTX>
-// <CLOG>Renamed GlistenApplyTo variants Fg/Bg to Foreground/Background for consistency</CLOG>
+// <VERS>VERSION: 2.0.1</VERS>
+// <WCTX>Fix shader speed bug — speed field was truncating sweep range</WCTX>
+// <CLOG>Remove self.speed from positional computation; caller controls sweep rate via loop_t</CLOG>
 
 use crate::models::{ColorConfig, ColorSpace};
 use crate::traits::{ShaderContext, StyleShader};
@@ -130,7 +130,7 @@ impl StyleShader for GlistenBandShader {
 
         // Calculate effective t based on direction and repeat_count
         let effective_t = {
-            let scaled_t = t * self.speed;
+            let scaled_t = t;
             let cycle_t = if self.repeat_count > 0 {
                 // Clamp to repeat_count cycles
                 scaled_t.min(self.repeat_count as f32)
@@ -217,4 +217,4 @@ impl StyleShader for GlistenBandShader {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_glisten_band_shader.rs</FILE> - <DESC>GlistenBand shader implementation</DESC>
-// <VERS>END OF VERSION: 1.1.0 - 2025-12-22</VERS>
+// <VERS>END OF VERSION: 2.0.1</VERS>

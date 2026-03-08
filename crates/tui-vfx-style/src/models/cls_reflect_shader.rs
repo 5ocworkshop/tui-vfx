@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_reflect_shader.rs</FILE> - <DESC>Reflect (sheen) shader implementation</DESC>
-// <VERS>VERSION: 1.0.0 - 2025-12-18T11:45:00Z - 2025-12-18T12:24:24Z</VERS>
-// <WCTX>New primitive</WCTX>
-// <CLOG>Initial implementation</CLOG>
+// <VERS>VERSION: 1.0.1</VERS>
+// <WCTX>Fix shader speed bug — speed field was truncating sweep range</WCTX>
+// <CLOG>Remove self.speed from positional computation; caller controls sweep rate via loop_t</CLOG>
 
 use crate::models::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
@@ -20,7 +20,7 @@ impl StyleShader for ReflectShader {
         // position = (time * speed) % (width + gap)
         let gap = 20.0_f64;
         let cycle_width = ctx.width as f64 + gap;
-        let pos = (ctx.t * self.speed as f64 * cycle_width) % cycle_width;
+        let pos = (ctx.t * cycle_width) % cycle_width;
         let dist = (ctx.local_x as f64 - pos).abs();
         let mut style = base;
         // Band width ~ 2.0
@@ -35,4 +35,4 @@ impl StyleShader for ReflectShader {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_reflect_shader.rs</FILE> - <DESC>Reflect (sheen) shader implementation</DESC>
-// <VERS>END OF VERSION: 1.0.0 - 2025-12-18T11:45:00Z - 2025-12-18T12:24:24Z</VERS>
+// <VERS>END OF VERSION: 1.0.1</VERS>

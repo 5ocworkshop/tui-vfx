@@ -1,7 +1,7 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.9.1</VERS> -->
-<!-- <WCTX>Public release prep</WCTX> -->
-<!-- <CLOG>Fix FILE metadata to match actual filename</CLOG> -->
+<!-- <VERS>VERSION: 2.10.0</VERS> -->
+<!-- <WCTX>Fix shader speed documentation after speed-truncation bugfix</WCTX> -->
+<!-- <CLOG>Add timing contract section; clarify speed is caller-controlled via loop_t, not shader-internal</CLOG> -->
 
 # TUI-VFX Complete API Reference
 
@@ -182,9 +182,33 @@ Use `ShaderWithRegion` for runtime shader instances and `ShaderLayerSpec` for se
 
 ## Timing: `t`, `loop_t`, `phase`
 
-- `t`: primary animation progress (0.0 → 1.0).
-- `loop_t`: optional looped time (0.0 → 1.0 repeating). Used by continuous effects.
+- `t`: primary animation progress (0.0 → 1.0). Drives one-shot effects (masks, fades).
+- `loop_t`: optional looped time (0.0 → 1.0 repeating). **Required for continuous shader effects.** The compositor clamps `shader_t` to `[0, 1]` before passing it to shaders.
 - `phase`: optional phase (from `mixed_signals::traits::Phase`) for enter/dwell/exit semantics.
+
+### Shader timing contract (important)
+
+Spatial shaders (GlistenBand, BorderSweep, Radar, Reflect, Orbit, etc.) treat `t` as a
+**pure position parameter**: `t=0.0` = effect at start position, `t=1.0` = effect at end
+position. Shaders do **not** scale `t` internally — the `speed` field on shader structs is
+retained for serialization compatibility but is **not used during rendering** (as of v0.2.2).
+
+**The caller controls sweep rate by driving `loop_t`:**
+
+```rust
+// Example: glisten that completes one sweep every 3 seconds
+let speed = 0.3; // from theme config
+let loop_t = (elapsed_seconds as f64 * speed as f64).fract();
+let options = CompositionOptions {
+    t: phase_progress,
+    loop_t: Some(loop_t),
+    ..Default::default()
+}.with_shader_layer(&shader, StyleRegion::All);
+```
+
+If you omit `loop_t`, the compositor falls back to `t` (phase progress), which means
+the shader sweeps once over the phase duration — appropriate for enter/exit animations
+but not for continuous dwell effects.
 
 ## Render Order
 
@@ -803,4 +827,4 @@ pub use tui_vfx_shadow::{ShadowConfig, ShadowEdges, ShadowStyle, render_shadow, 
 ---
 
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 2.9.1</VERS> -->
+<!-- <VERS>END OF VERSION: 2.10.0</VERS> -->

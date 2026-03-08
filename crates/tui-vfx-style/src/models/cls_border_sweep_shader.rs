@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_border_sweep_shader.rs</FILE> - <DESC>Border sweep shader implementation</DESC>
-// <VERS>VERSION: 1.0.0 - 2025-12-18T11:45:00Z - 2025-12-18T12:24:24Z</VERS>
-// <WCTX>New primitive</WCTX>
-// <CLOG>Initial implementation</CLOG>
+// <VERS>VERSION: 1.0.1</VERS>
+// <WCTX>Fix shader speed bug — speed field was truncating sweep range</WCTX>
+// <CLOG>Remove self.speed from positional computation; caller controls sweep rate via loop_t</CLOG>
 
 use crate::models::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
@@ -40,7 +40,7 @@ impl StyleShader for BorderSweepShader {
         } else {
             u32::from(width) + u32::from(height) + u32::from(width) + (u32::from(height - 1 - y))
         } as f32;
-        let sweep_pos = (t * self.speed * perimeter as f32) % perimeter as f32;
+        let sweep_pos = (t * perimeter as f32) % perimeter as f32;
         let dist = (sweep_pos - pos)
             .abs()
             .min(perimeter as f32 - (sweep_pos - pos).abs());
@@ -53,4 +53,4 @@ impl StyleShader for BorderSweepShader {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_border_sweep_shader.rs</FILE> - <DESC>Border sweep shader implementation</DESC>
-// <VERS>END OF VERSION: 1.0.0 - 2025-12-18T11:45:00Z - 2025-12-18T12:24:24Z</VERS>
+// <VERS>END OF VERSION: 1.0.1</VERS>

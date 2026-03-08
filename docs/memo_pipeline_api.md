@@ -1,7 +1,7 @@
 <!-- <FILE>docs/memo_pipeline_api.md</FILE> - <DESC>Memo on pipeline API usage</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Docs hygiene: add required metadata headers</WCTX> -->
-<!-- <CLOG>Add metadata header and footer for documentation standards</CLOG> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Fix shader speed documentation after speed-truncation bugfix</WCTX> -->
+<!-- <CLOG>Add shader timing guidance to Key Takeaways; correct glisten speed example</CLOG> -->
 
 # Memo: Mastering the TUI-VFX Pipeline API
 
@@ -217,8 +217,9 @@ render_pipeline(
     *   **Filters** colorize/post-process.
     *   **Shaders** apply surface effects (gradients, gloss).
 3.  **`t` is King**: Almost all effects are stateless functions of `t`. If you pass the same `t`, you get the same frame. This makes testing and debugging animations trivial.
+4.  **Shaders are spatial, callers own timing**: Spatial shaders (GlistenBand, BorderSweep, Radar, Reflect, Orbit) treat `t` as a pure position parameter (`0.0` = start, `1.0` = end). They do **not** scale `t` by their `speed` field — the `speed` field is retained for serde compatibility but is not used during rendering. To control sweep rate, drive `loop_t` from the caller: `loop_t = (elapsed * speed).fract()`. This separates the timing concern (caller) from the spatial concern (shader).
 
 Hope this helps clear up the pipeline usage!
 
 <!-- <FILE>docs/memo_pipeline_api.md</FILE> - <DESC>Memo on pipeline API usage</DESC> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->

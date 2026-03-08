@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_radar_shader.rs</FILE> - <DESC>Radar sweep shader implementation</DESC>
-// <VERS>VERSION: 1.0.0 - 2025-12-18T11:45:00Z - 2025-12-18T12:24:24Z</VERS>
-// <WCTX>New primitive</WCTX>
-// <CLOG>Initial implementation</CLOG>
+// <VERS>VERSION: 1.0.1</VERS>
+// <WCTX>Fix shader speed bug — speed field was truncating sweep range</WCTX>
+// <CLOG>Remove self.speed from positional computation; caller controls sweep rate via loop_t</CLOG>
 
 use crate::models::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
@@ -27,7 +27,7 @@ impl StyleShader for RadarShader {
         // Angle in 0..2PI
         let angle = dy.atan2(dx).rem_euclid(std::f32::consts::TAU);
         // Current sweep angle
-        let sweep = (t * self.speed * std::f32::consts::TAU).rem_euclid(std::f32::consts::TAU);
+        let sweep = (t * std::f32::consts::TAU).rem_euclid(std::f32::consts::TAU);
         // Difference
         let diff = (sweep - angle).rem_euclid(std::f32::consts::TAU);
         let tail_length = if self.tail_length.is_finite() && self.tail_length > 0.0 {
@@ -52,4 +52,4 @@ impl StyleShader for RadarShader {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_radar_shader.rs</FILE> - <DESC>Radar sweep shader implementation</DESC>
-// <VERS>END OF VERSION: 1.0.0 - 2025-12-18T11:45:00Z - 2025-12-18T12:24:24Z</VERS>
+// <VERS>END OF VERSION: 1.0.1</VERS>

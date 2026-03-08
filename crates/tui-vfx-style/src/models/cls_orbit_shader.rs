@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_orbit_shader.rs</FILE> - <DESC>Orbiting dot shader implementation</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>Introduce orbit shader for spatial effects</WCTX>
-// <CLOG>Initial OrbitShader implementation</CLOG>
+// <VERS>VERSION: 1.0.1</VERS>
+// <WCTX>Fix shader speed bug — speed field was truncating sweep range</WCTX>
+// <CLOG>Remove self.speed from positional computation; caller controls sweep rate via loop_t</CLOG>
 
 use crate::models::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
@@ -42,7 +42,7 @@ impl StyleShader for OrbitShader {
         }
 
         let mut style = base;
-        let base_angle = ctx.t as f32 * self.speed * std::f32::consts::TAU;
+        let base_angle = ctx.t as f32 * std::f32::consts::TAU;
         let dot_count = self.dot_count as f32;
 
         for i in 0..self.dot_count {
@@ -61,4 +61,4 @@ impl StyleShader for OrbitShader {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_orbit_shader.rs</FILE> - <DESC>Orbiting dot shader implementation</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.0.1</VERS>

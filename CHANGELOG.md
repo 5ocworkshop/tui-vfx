@@ -1,13 +1,18 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.2.0</VERS> -->
-<!-- <WCTX>Add 0.2.1 patch release entry</WCTX> -->
-<!-- <CLOG>Document HalfBlock right-edge shadow convention fix</CLOG> -->
+<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <WCTX>Add 0.2.2 patch release entry</WCTX> -->
+<!-- <CLOG>Document shader speed-truncation bugfix across 5 shaders</CLOG> -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
+
+## 0.2.2 — 2026-03-08
+
+### Fixed
+- **tui-vfx-style:** All positional-sweep shaders (`GlistenBandShader`, `BorderSweepShader`, `RadarShader`, `ReflectShader`, `OrbitShader`) multiplied `t * self.speed` internally, but the compositor clamps `t` (via `shader_t`) to `[0, 1]`. With `speed < 1.0`, the sweep was truncated to `speed%` of the full range (e.g. `speed: 0.3` → band only reached 30% of widget width). Fix: removed `self.speed` from the positional computation in all 5 shaders. Sweep rate is now controlled exclusively by the caller via `loop_t`, which is the correct architectural boundary — the compositor owns timing, shaders own spatial mapping. The `speed` field remains on each struct for serde compatibility but is no longer used in rendering. Upstream consumers (e.g. `normalise_shader_timing` in gooey-ratatui) that worked around this bug can now be simplified.
 
 ## 0.2.1 — 2026-03-01
 
@@ -33,4 +38,4 @@ Initial public release.
 - Recipe validation tooling for JSON effect configurations
 
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
