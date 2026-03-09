@@ -24,17 +24,19 @@ for i in "${!CRATES[@]}"; do
 
   attempt=0
   while true; do
-    if cargo publish -p "$crate" 2>&1; then
+    output=$(cargo publish -p "$crate" 2>&1) && break
+    if echo "$output" | grep -q "already exists"; then
+      echo "  Already published — skipping."
       break
-    else
-      attempt=$(( attempt + 1 ))
-      if (( attempt >= MAX_RETRIES )); then
-        echo "  FAILED after $MAX_RETRIES attempts. Aborting."
-        exit 1
-      fi
-      echo "  Attempt $attempt failed — waiting ${RETRY_WAIT}s before retry..."
-      sleep "$RETRY_WAIT"
     fi
+    attempt=$(( attempt + 1 ))
+    if (( attempt >= MAX_RETRIES )); then
+      echo "  FAILED after $MAX_RETRIES attempts. Aborting."
+      echo "$output"
+      exit 1
+    fi
+    echo "  Attempt $attempt failed — waiting ${RETRY_WAIT}s before retry..."
+    sleep "$RETRY_WAIT"
   done
 
   if (( i < ${#CRATES[@]} - 1 )); then
