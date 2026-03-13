@@ -106,9 +106,9 @@ impl ShadowGradeConfig {
     /// update.
     pub const fn dramatic() -> Self {
         Self {
-            fg_dim_strength: 0.28,
+            fg_dim_strength: 0.40,
             bg_dim_strength: 0.58,
-            fg_desaturate_strength: 0.22,
+            fg_desaturate_strength: 0.30,
             bg_desaturate_strength: 0.42,
             fg_tint_strength: 0.10,
             bg_tint_strength: 0.18,
@@ -137,9 +137,9 @@ mod tests {
         let d = ShadowGradeConfig::dramatic();
 
         // Locked numeric values from plan
-        assert_eq!(d.fg_dim_strength, 0.28);
+        assert_eq!(d.fg_dim_strength, 0.40);
         assert_eq!(d.bg_dim_strength, 0.58);
-        assert_eq!(d.fg_desaturate_strength, 0.22);
+        assert_eq!(d.fg_desaturate_strength, 0.30);
         assert_eq!(d.bg_desaturate_strength, 0.42);
         assert_eq!(d.fg_tint_strength, 0.10);
         assert_eq!(d.bg_tint_strength, 0.18);

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_half_block.rs</FILE> - <DESC>Half-block shadow renderer for sub-cell precision</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
-// <WCTX>Remove modifier-alpha feature flag</WCTX>
-// <CLOG>mod_alpha always available - remove cfg guards and duplicate functions</CLOG>
+// <VERS>VERSION: 0.8.1</VERS>
+// <WCTX>Add +1 inset to right-edge shadow start_y for grade-underlying visual weight</WCTX>
+// <CLOG>+1 inset on both right-edge start_y and bottom-edge start_x for grade-underlying visual weight</CLOG>
 
 //! Half-block shadow renderer using Unicode block characters.
 //!
@@ -157,7 +157,9 @@ impl HalfBlockRenderer {
     ) {
         let start_x = (rect_x + rect_w).max(0) as usize;
         let end_x = (rect_x + rect_w + ox).max(0) as usize;
-        let start_y = (rect_y + oy.max(0)).max(0) as usize;
+        // +1 inset: start shadow 1 row below element top for grade-underlying visual weight
+        // TODO: plumb inset_x/inset_y through ShadowConfig when tunability is needed
+        let start_y = (rect_y + oy.max(0) + 1).max(0) as usize;
         let end_y = (rect_y + rect_h + oy.min(0)).max(0) as usize;
 
         for y in start_y..end_y {
@@ -195,7 +197,9 @@ impl HalfBlockRenderer {
         surface: Color,
         soft: bool,
     ) {
-        let start_x = (rect_x + ox.max(0)).max(0) as usize;
+        // +1 inset: start shadow 1 col right of element left for grade-underlying visual weight
+        // TODO: plumb inset_x/inset_y through ShadowConfig when tunability is needed
+        let start_x = (rect_x + ox.max(0) + 1).max(0) as usize;
         let end_x = (rect_x + rect_w + ox.min(0)).max(0) as usize;
         let start_y = (rect_y + rect_h).max(0) as usize;
         let end_y = (rect_y + rect_h + oy).max(0) as usize;
@@ -358,13 +362,14 @@ mod tests {
 
         // Check that shadow exists at expected positions
         // Right edge shadow starts at x=13 (5+8), offset=2 gives 2 columns
+        // start_y = rect_y + oy + 1 = 2 + 1 + 1 = 4 (inset pushes 1 row down)
         // Col 1 (x=13): 50% shadow using ▐ with fg=shadow, bg=surface
-        let cell = grid.get(13, 3).unwrap();
+        let cell = grid.get(13, 4).unwrap();
         assert_eq!(cell.ch, RIGHT_HALF);
         assert_ne!(cell.fg, Color::TRANSPARENT); // fg=shadow
 
         // Col 2 (x=14): 50% shadow using ▌ with fg=shadow, bg=surface
-        let cell = grid.get(14, 3).unwrap();
+        let cell = grid.get(14, 4).unwrap();
         assert_eq!(cell.ch, LEFT_HALF);
         assert_ne!(cell.fg, Color::TRANSPARENT); // fg=shadow
     }
@@ -388,4 +393,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_half_block.rs</FILE> - <DESC>Half-block shadow renderer for sub-cell precision</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.8.1</VERS>

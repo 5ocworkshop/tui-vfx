@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_gradient.rs</FILE> - <DESC>Multi-layer gradient shadow renderer</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Remove modifier-alpha feature flag</WCTX>
-// <CLOG>mod_alpha always available - remove cfg guards</CLOG>
+// <VERS>VERSION: 0.4.1</VERS>
+// <WCTX>Add +1 inset to right-edge shadow start_y for grade-underlying visual weight</WCTX>
+// <CLOG>+1 inset on both right-edge start_y and bottom-edge start_x for grade-underlying visual weight</CLOG>
 
 //! Multi-layer gradient shadow renderer.
 //!
@@ -181,7 +181,9 @@ impl GradientRenderer {
         if edges.has_right() && ox > 0 {
             let start_x = (rect_x + rect_w).max(0) as usize;
             let end_x = (rect_x + rect_w + ox).max(0) as usize;
-            let start_y = (rect_y + oy.max(0)).max(0) as usize;
+            // +1 inset: start shadow 1 row below element top for grade-underlying visual weight
+            // TODO: plumb inset_x/inset_y through ShadowConfig when tunability is needed
+            let start_y = (rect_y + oy.max(0) + 1).max(0) as usize;
             let end_y = (rect_y + rect_h + oy.min(0)).max(0) as usize;
 
             Self::fill_region(
@@ -196,7 +198,9 @@ impl GradientRenderer {
 
         // Bottom edge shadow
         if edges.has_bottom() && oy > 0 {
-            let start_x = (rect_x + ox.max(0)).max(0) as usize;
+            // +1 inset: start shadow 1 col right of element left for grade-underlying visual weight
+            // TODO: plumb inset_x/inset_y through ShadowConfig when tunability is needed
+            let start_x = (rect_x + ox.max(0) + 1).max(0) as usize;
             let end_x = (rect_x + rect_w + ox.min(0)).max(0) as usize;
             let start_y = (rect_y + rect_h).max(0) as usize;
             let end_y = (rect_y + rect_h + oy).max(0) as usize;
@@ -292,8 +296,8 @@ mod tests {
 
         GradientRenderer::render(&mut grid, rect, &config, 1, 1.0);
 
-        // Check that shadow exists
-        let cell = grid.get(15, 3).unwrap();
+        // Check that shadow exists (y=4 due to +1 inset on right edge)
+        let cell = grid.get(15, 4).unwrap();
         assert_ne!(cell.bg, Color::TRANSPARENT);
     }
 
@@ -335,4 +339,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_gradient.rs</FILE> - <DESC>Multi-layer gradient shadow renderer</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>

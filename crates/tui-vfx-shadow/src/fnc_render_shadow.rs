@@ -140,11 +140,12 @@ mod tests {
         render_shadow(&mut grid, rect, &config, 1.0);
 
         // Verify shadow was rendered at right edge (x=15, x=16)
+        // start_y = rect_y + oy + 1 = 2 + 1 + 1 = 4 (inset)
         // Col 1 (x=15): 50% shadow using ▐ with fg=shadow, bg=surface
         // Col 2 (x=16): 50% shadow using ▌ with fg=shadow, bg=surface
-        let cell = grid.get(15, 3).unwrap();
+        let cell = grid.get(15, 4).unwrap();
         assert_ne!(cell.fg, Color::TRANSPARENT); // First col: fg=shadow
-        let cell = grid.get(16, 3).unwrap();
+        let cell = grid.get(16, 4).unwrap();
         assert_ne!(cell.fg, Color::TRANSPARENT); // Second col: fg=shadow
     }
 
@@ -158,7 +159,7 @@ mod tests {
 
         render_shadow(&mut grid, rect, &config, 1.0);
 
-        let cell = grid.get(15, 3).unwrap();
+        let cell = grid.get(15, 4).unwrap();
         assert_ne!(cell.bg, Color::TRANSPARENT);
     }
 
@@ -172,7 +173,7 @@ mod tests {
 
         render_shadow(&mut grid, rect, &config, 1.0);
 
-        let cell = grid.get(15, 3).unwrap();
+        let cell = grid.get(15, 4).unwrap();
         assert_ne!(cell.ch, ' ');
     }
 
@@ -186,7 +187,7 @@ mod tests {
 
         render_shadow(&mut grid, rect, &config, 1.0);
 
-        let cell = grid.get(15, 3).unwrap();
+        let cell = grid.get(15, 4).unwrap();
         assert_eq!(cell.ch, '▒');
         assert_ne!(cell.fg, Color::TRANSPARENT);
     }
@@ -201,7 +202,7 @@ mod tests {
 
         render_shadow(&mut grid, rect, &config, 1.0);
 
-        let cell = grid.get(15, 3).unwrap();
+        let cell = grid.get(15, 4).unwrap();
         assert_ne!(cell.bg, Color::TRANSPARENT);
     }
 
@@ -214,7 +215,7 @@ mod tests {
         // With offset=1, only first column exists: ▐ with fg=shadow, bg=surface
         render_shadow_simple(&mut grid, rect, Color::BLACK.with_alpha(128), None, 1.0);
 
-        let cell = grid.get(15, 3).unwrap();
+        let cell = grid.get(15, 4).unwrap();
         // First column uses fg=shadow (▐ with standard fg=shadow,bg=surface)
         assert_ne!(cell.fg, Color::TRANSPARENT);
     }

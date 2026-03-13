@@ -1016,7 +1016,8 @@ fn test_shadow_grade_underlying_is_visibly_dramatic() {
         None,
     );
 
-    let shadow_cell = dest.get(11, 2).unwrap();
+    // y=3 accounts for +1 inset on right-edge start_y
+    let shadow_cell = dest.get(11, 3).unwrap();
     let graded_fg_luma = bt601_luma(shadow_cell.fg);
     let graded_bg_luma = bt601_luma(shadow_cell.bg);
 
@@ -1040,14 +1041,15 @@ fn test_shadow_grade_underlying_is_visibly_dramatic() {
         graded_fg_luma,
     );
 
-    // Background luma reduction must exceed foreground by at least 5 points
-    // (dramatic preset: bg_dim=0.58 vs fg_dim=0.28, but absolute drop also
-    // depends on starting luma, so margin is ~6.4 with canonical sample colors)
+    // BG dim strength (0.58) exceeds FG dim strength (0.40), so relative
+    // drop (drop / starting_luma) must be larger for BG than FG.
+    let bg_relative = bg_luma_drop / original_bg_luma;
+    let fg_relative = fg_luma_drop / original_fg_luma;
     assert!(
-        bg_luma_drop >= fg_luma_drop + 5.0,
-        "BG luma drop ({:.1}) must exceed FG luma drop ({:.1}) by at least 5",
-        bg_luma_drop,
-        fg_luma_drop,
+        bg_relative > fg_relative,
+        "BG relative luma drop ({:.3}) must exceed FG relative drop ({:.3})",
+        bg_relative,
+        fg_relative,
     );
 
     // Foreground saturation reduction must be non-zero
@@ -1104,16 +1106,19 @@ fn test_shadow_grade_underlying_uses_stronger_bg_grading_than_fg() {
         None,
     );
 
-    let shadow_cell = dest.get(11, 2).unwrap();
+    // y=3 accounts for +1 inset on right-edge start_y
+    let shadow_cell = dest.get(11, 3).unwrap();
 
-    // bg grading must be stronger than fg grading
+    // bg grading strength is stronger than fg, so relative drop must be larger
     let bg_luma_drop = bt601_luma(original_bg) - bt601_luma(shadow_cell.bg);
     let fg_luma_drop = bt601_luma(original_fg) - bt601_luma(shadow_cell.fg);
+    let bg_relative = bg_luma_drop / bt601_luma(original_bg);
+    let fg_relative = fg_luma_drop / bt601_luma(original_fg);
     assert!(
-        bg_luma_drop > fg_luma_drop,
-        "BG luma drop ({:.1}) must exceed FG drop ({:.1})",
-        bg_luma_drop,
-        fg_luma_drop,
+        bg_relative > fg_relative,
+        "BG relative luma drop ({:.3}) must exceed FG relative drop ({:.3})",
+        bg_relative,
+        fg_relative,
     );
 }
 
@@ -1168,7 +1173,8 @@ fn test_shadow_grade_underlying_progress_controls_visibility() {
     );
 
     // Shadow region cell at t=1.0 must show grading
-    let cell_t1 = dest_t1.get(11, 2).unwrap();
+    // y=3 accounts for +1 inset on right-edge start_y
+    let cell_t1 = dest_t1.get(11, 3).unwrap();
     let bg_luma_t1 = bt601_luma(cell_t1.bg);
     assert!(
         original_bg_luma - bg_luma_t1 > 10.0,
@@ -1178,7 +1184,7 @@ fn test_shadow_grade_underlying_progress_controls_visibility() {
 
     // At t=0.0, the shadow cell should be closer to the original than at t=1.0
     // (either ungraded or much less graded)
-    let cell_t0 = dest_t0.get(11, 2).unwrap();
+    let cell_t0 = dest_t0.get(11, 3).unwrap();
     let bg_luma_t0 = bt601_luma(cell_t0.bg);
     let drop_t0 = original_bg_luma - bg_luma_t0;
     let drop_t1 = original_bg_luma - bg_luma_t1;
@@ -1224,8 +1230,9 @@ fn test_shadow_grade_underlying_gradient_softens_penumbra() {
     // Farther from element = softer shadow = weaker grading
     // With offset (3,3) and gradient layers=3, the rightmost column should have
     // weaker grading than the column closest to the element
-    let inner_cell = dest.get(10, 3).unwrap(); // closest shadow column to element
-    let outer_cell = dest.get(12, 3).unwrap(); // farther shadow column
+    // y=4 accounts for +1 inset on right-edge start_y
+    let inner_cell = dest.get(10, 4).unwrap(); // closest shadow column to element
+    let outer_cell = dest.get(12, 4).unwrap(); // farther shadow column
 
     let inner_drop = original_bg_luma - bt601_luma(inner_cell.bg);
     let outer_drop = original_bg_luma - bt601_luma(outer_cell.bg);
