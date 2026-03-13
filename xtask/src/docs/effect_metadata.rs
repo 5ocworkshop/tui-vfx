@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.1.2</VERS>
-// <WCTX>Keep filter metadata aligned with new powerline fields</WCTX>
-// <CLOG>Add missing powerline fields to filter metadata variants</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Keep generated metadata aligned with shadow style variants</WCTX>
+// <CLOG>Add MediumShade to shadow metadata extraction variants</CLOG>
 
 use std::collections::HashMap;
 
@@ -574,6 +574,7 @@ fn extract_shadow_metadata() -> HashMap<String, EffectMetadata> {
     let variants: Vec<ShadowStyle> = vec![
         ShadowStyle::HalfBlock,
         ShadowStyle::Braille { density: 0.5 },
+        ShadowStyle::MediumShade,
         ShadowStyle::Solid,
         ShadowStyle::Gradient { layers: 2 },
     ];
@@ -597,4 +598,4 @@ fn extract_shadow_metadata() -> HashMap<String, EffectMetadata> {
 }
 
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>END OF VERSION: 1.1.2</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

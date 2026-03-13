@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/fnc_render_shadow.rs</FILE> - <DESC>Main entry point for shadow rendering</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New crate for theme-aware shadow rendering with multiple styles</WCTX>
-// <CLOG>Add render_shadow_gradient_colors for visible gradients with theme colors</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Add medium-shade style dispatch in main render entrypoint</WCTX>
+// <CLOG>Wire ShadowStyle::MediumShade to MediumShadeRenderer and add integration test</CLOG>
 
 //! Main entry point function for shadow rendering.
 //!
@@ -10,7 +10,9 @@
 
 use tui_vfx_types::{Grid, Rect};
 
-use crate::renderers::{BrailleRenderer, GradientRenderer, HalfBlockRenderer, SolidRenderer};
+use crate::renderers::{
+    BrailleRenderer, GradientRenderer, HalfBlockRenderer, MediumShadeRenderer, SolidRenderer,
+};
 use crate::types::{ShadowConfig, ShadowStyle};
 
 /// Render a shadow for an element at the given rect.
@@ -50,6 +52,9 @@ pub fn render_shadow<G: Grid>(
         }
         ShadowStyle::Braille { density } => {
             BrailleRenderer::render(grid, element_rect, config, density, progress);
+        }
+        ShadowStyle::MediumShade => {
+            MediumShadeRenderer::render(grid, element_rect, config, progress);
         }
         ShadowStyle::Solid => {
             SolidRenderer::render(grid, element_rect, config, progress);
@@ -172,6 +177,21 @@ mod tests {
     }
 
     #[test]
+    fn test_render_shadow_medium_shade() {
+        let mut grid = OwnedGrid::new(30, 15);
+        let rect = Rect::new(5, 2, 10, 6);
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(200))
+            .with_style(ShadowStyle::MediumShade)
+            .with_edges(ShadowEdges::BOTTOM_RIGHT);
+
+        render_shadow(&mut grid, rect, &config, 1.0);
+
+        let cell = grid.get(15, 3).unwrap();
+        assert_eq!(cell.ch, '▒');
+        assert_ne!(cell.fg, Color::TRANSPARENT);
+    }
+
+    #[test]
     fn test_render_shadow_gradient() {
         let mut grid = OwnedGrid::new(30, 15);
         let rect = Rect::new(5, 2, 10, 6);
@@ -201,4 +221,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/fnc_render_shadow.rs</FILE> - <DESC>Main entry point for shadow rendering</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/lib.rs</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>Enhanced API documentation with comprehensive details</WCTX>
-// <CLOG>Add detailed documentation for styles, pipeline integration, and usage patterns</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Document and re-export new medium-shade shadow style support</WCTX>
+// <CLOG>Add MediumShade docs/examples and include MediumShadeRenderer in crate exports</CLOG>
 
 //! # TUI VFX Shadow
 //!
@@ -12,7 +12,7 @@
 //!
 //! ## Features
 //!
-//! - **Multiple shadow styles**: HalfBlock, Braille, Solid, and Gradient
+//! - **Multiple shadow styles**: HalfBlock, Braille, MediumShade, Solid, and Gradient
 //! - **Sub-cell precision**: Half-block characters provide smooth shadow edges
 //! - **Configurable offsets**: Position shadows in any direction (±x, ±y)
 //! - **Edge selection**: Render shadows on specific edges (top, bottom, left, right)
@@ -65,6 +65,7 @@
 //! |-------|------------|----------|---------------|----------|
 //! | HalfBlock | ▐▄▌▀ | Yes (2x) | Good | Default, most UIs |
 //! | Braille | ⣿⡇⠿ | Yes (2x4) | Variable | Dithered effects |
+//! | MediumShade | ▒ | No | Good | Textured full-cell shade |
 //! | Solid | (space) | No | Excellent | Maximum compat |
 //! | Gradient | (space) | No | Excellent | Soft drop shadows |
 //!
@@ -120,6 +121,19 @@
 //!
 //! **Note:** Braille rendering depends on terminal font support. Some fonts
 //! may not render braille characters at the expected size.
+//!
+//! ### MediumShade
+//!
+//! Uses the Unicode medium shade character (`▒`) for a textured full-cell shadow.
+//! This style avoids braille dot patterns while retaining visual grain.
+//!
+//! ```
+//! use tui_vfx_shadow::{ShadowConfig, ShadowStyle};
+//! use tui_vfx_types::Color;
+//!
+//! let config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+//!     .with_style(ShadowStyle::MediumShade);
+//! ```
 //!
 //! ### Solid
 //!
@@ -253,6 +267,7 @@
 //!         .with_surface_color(theme.surface.background)
 //!         .with_style(match theme.shadow.style {
 //!             "braille" => ShadowStyle::braille(theme.shadow.density),
+//!             "medium_shade" => ShadowStyle::MediumShade,
 //!             "gradient" => ShadowStyle::gradient(theme.shadow.layers),
 //!             "solid" => ShadowStyle::Solid,
 //!             _ => ShadowStyle::HalfBlock,
@@ -309,7 +324,9 @@ pub use fnc_render_shadow::{render_shadow, render_shadow_gradient_colors, render
 pub use types::{ShadowConfig, ShadowEdges, ShadowStyle};
 
 // Re-export renderers for direct access if needed
-pub use renderers::{BrailleRenderer, GradientRenderer, HalfBlockRenderer, SolidRenderer};
+pub use renderers::{
+    BrailleRenderer, GradientRenderer, HalfBlockRenderer, MediumShadeRenderer, SolidRenderer,
+};
 
 // <FILE>crates/tui-vfx-shadow/src/lib.rs</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

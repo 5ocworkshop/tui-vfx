@@ -1,13 +1,23 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
-<!-- <WCTX>Add 0.2.2 patch release entry</WCTX> -->
-<!-- <CLOG>Document shader speed-truncation bugfix across 5 shaders</CLOG> -->
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
+<!-- <WCTX>Add 0.2.3 patch release entry for medium-shade shadow support</WCTX> -->
+<!-- <CLOG>Document new MediumShade shadow style and shadow metadata updates</CLOG> -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
+
+## 0.2.3 — 2026-03-13
+
+### Added
+- **tui-vfx-shadow:** Added `ShadowStyle::MediumShade`, a textured full-cell shadow style that renders with the Unicode medium shade character (`▒`).
+- **tui-vfx-shadow:** Added `MediumShadeRenderer` and wired it through `render_shadow(...)` style dispatch.
+
+### Changed
+- **tui-vfx-shadow:** Updated crate docs and renderer exports to include the new medium-shade style and renderer.
+- **xtask/docs:** Included `MediumShade` in extracted shadow effect metadata so generated docs/schema output reflects the new style.
 
 ## 0.2.2 — 2026-03-08
 
@@ -38,4 +48,4 @@ Initial public release.
 - Recipe validation tooling for JSON effect configurations
 
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->
