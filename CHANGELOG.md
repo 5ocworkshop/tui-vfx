@@ -1,7 +1,7 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.5.0</VERS> -->
-<!-- <WCTX>Color-inert glyph detection for shadow grading replacement</WCTX> -->
-<!-- <CLOG>Document color-inert glyph detection and replacement_char field</CLOG> -->
+<!-- <VERS>VERSION: 1.6.0</VERS> -->
+<!-- <WCTX>Shadow edge insets and stronger fg grading for grade-underlying</WCTX> -->
+<!-- <CLOG>Document +1 edge insets and dramatic preset fg strength bump</CLOG> -->
 
 # Changelog
 
@@ -26,6 +26,8 @@ This project follows [Semantic Versioning](https://semver.org/).
 - **tui-vfx-compositor:** Fixed `test_shadow_extends_render_area` assertion that checked `bg` instead of `fg` for half-block soft-edge shadow cells (shadow color is carried in `fg` for `RIGHT_HALF` characters).
 
 ### Changed
+- **tui-vfx-shadow:** All five renderers (HalfBlock, Solid, MediumShade, Braille, Gradient) now apply a +1 inset on right-edge `start_y` and bottom-edge `start_x`, so shadows start 1 cell further from the element corner. This improves grade-underlying visual weight by preventing the shadow from crowding the element boundary.
+- **tui-vfx-shadow:** `ShadowGradeConfig::dramatic()` preset bumped `fg_dim_strength` from 0.28 → 0.40 and `fg_desaturate_strength` from 0.22 → 0.30, making bright underlying text (e.g. white) more visibly subdued in shadow regions.
 - **docs:** Updated `HOWTO_SHADOWS.md` with Shadow Compositing Modes section, dramatic example, and custom grade parameters example.
 - **docs:** Updated `API_HAND.md` and `api_docs.toml` to document new types and builder methods.
 - **xtask/docs:** Updated `api_metadata.rs` and `gen_api.rs` so generated `API.md` includes `ShadowCompositeMode` and `ShadowGradeConfig` sections and the updated `ShadowConfig` struct.
