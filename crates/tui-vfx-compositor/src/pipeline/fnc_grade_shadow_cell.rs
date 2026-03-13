@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compositor/src/pipeline/fnc_grade_shadow_cell.rs</FILE> - <DESC>Destination-preserving color grading for grade-underlying shadow mode</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1 dramatic color-shadow rollout: implement the grade-underlying compositor helper</WCTX>
-// <CLOG>Initial creation with locked algorithm recipe from master plan</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Color-inert glyph detection for shadow grading replacement</WCTX>
+// <CLOG>Replace color-inert glyphs (emoji, PUA) with neutral placeholder during grading</CLOG>
 
 //! Grade-underlying shadow cell helper.
 //!
@@ -11,6 +11,7 @@
 //! [`ShadowCompositeMode::GradeUnderlying`](tui_vfx_shadow::ShadowCompositeMode::GradeUnderlying).
 
 use tui_vfx_shadow::ShadowGradeConfig;
+use tui_vfx_types::color_inert::is_color_inert_glyph;
 use tui_vfx_types::{Cell, Color};
 
 /// Apply color grading to `dest_cell` based on rendered shadow coverage.
@@ -68,9 +69,15 @@ pub fn grade_shadow_cell(
         graded_bg = graded_bg.with_alpha(dest_cell.bg.a);
     }
 
-    // Preserve ch, mods, mod_alpha from destination
+    // Replace color-inert glyphs with neutral placeholder if configured
+    let graded_ch = match grade.replacement_char {
+        Some(replacement) if is_color_inert_glyph(dest_cell.ch) => replacement,
+        _ => dest_cell.ch,
+    };
+
+    // Preserve ch (or replacement), mods, mod_alpha from destination
     Cell {
-        ch: dest_cell.ch,
+        ch: graded_ch,
         fg: graded_fg,
         bg: graded_bg,
         mods: dest_cell.mods,
@@ -108,4 +115,4 @@ fn tint(color: Color, tint_color: Color, s: f32) -> Color {
 }
 
 // <FILE>crates/tui-vfx-compositor/src/pipeline/fnc_grade_shadow_cell.rs</FILE> - <DESC>Destination-preserving color grading for grade-underlying shadow mode</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

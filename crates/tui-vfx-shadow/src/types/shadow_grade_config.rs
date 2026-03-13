@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_grade_config.rs</FILE> - <DESC>Color grading parameters for grade-underlying shadow mode</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 0 dramatic color-shadow rollout: add grade config struct with dramatic preset</WCTX>
-// <CLOG>Initial creation with locked dramatic numeric defaults</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Color-inert glyph detection for shadow grading replacement</WCTX>
+// <CLOG>Add replacement_char field for color-inert glyph substitution during grading</CLOG>
 
 //! Shadow grade configuration.
 //!
@@ -66,6 +66,16 @@ pub struct ShadowGradeConfig {
 
     /// When `true`, preserve the destination background alpha channel.
     pub preserve_bg_alpha: bool,
+
+    /// Optional replacement character for color-inert glyphs (emoji, PUA).
+    ///
+    /// When `Some`, glyphs that ignore ANSI fg color attributes are replaced
+    /// with this character during grading. This prevents bright bitmap glyphs
+    /// from creating visual artifacts in dimmed shadow regions.
+    ///
+    /// Set to `None` to preserve all original glyphs (backward compatible default).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replacement_char: Option<char>,
 }
 
 impl Default for ShadowGradeConfig {
@@ -80,6 +90,7 @@ impl Default for ShadowGradeConfig {
             bg_tint_strength: 0.0,
             preserve_fg_alpha: true,
             preserve_bg_alpha: true,
+            replacement_char: None,
         }
     }
 }
@@ -103,6 +114,7 @@ impl ShadowGradeConfig {
             bg_tint_strength: 0.18,
             preserve_fg_alpha: true,
             preserve_bg_alpha: true,
+            replacement_char: Some('\u{00B7}'),
         }
     }
 }
@@ -133,11 +145,18 @@ mod tests {
         assert_eq!(d.bg_tint_strength, 0.18);
         assert!(d.preserve_fg_alpha);
         assert!(d.preserve_bg_alpha);
+        assert_eq!(d.replacement_char, Some('\u{00B7}'));
 
         // Background grading must be stronger than foreground
         assert!(d.bg_dim_strength > d.fg_dim_strength);
         assert!(d.bg_desaturate_strength > d.fg_desaturate_strength);
         assert!(d.bg_tint_strength > d.fg_tint_strength);
+    }
+
+    #[test]
+    fn shadow_grade_config_default_has_no_replacement() {
+        let def = ShadowGradeConfig::default();
+        assert_eq!(def.replacement_char, None);
     }
 
     #[test]
@@ -150,4 +169,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_grade_config.rs</FILE> - <DESC>Color grading parameters for grade-underlying shadow mode</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

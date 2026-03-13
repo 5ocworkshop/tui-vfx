@@ -1,7 +1,7 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
 <!-- <VERS>VERSION: 1.5.0</VERS> -->
-<!-- <WCTX>Add 0.2.4 patch release entry for dramatic grade-underlying shadow compositing</WCTX> -->
-<!-- <CLOG>Document new ShadowCompositeMode, ShadowGradeConfig, and grade-underlying shadow pipeline</CLOG> -->
+<!-- <WCTX>Color-inert glyph detection for shadow grading replacement</WCTX> -->
+<!-- <CLOG>Document color-inert glyph detection and replacement_char field</CLOG> -->
 
 # Changelog
 
@@ -18,6 +18,12 @@ This project follows [Semantic Versioning](https://semver.org/).
 - **tui-vfx-compositor:** Added `fnc_grade_shadow_cell` — implements the grade-underlying algorithm (desaturate → dim → tint) that preserves destination glyphs and modifiers while applying color grading scaled by shadow coverage.
 - **tui-vfx-compositor:** Pipeline branches on `ShadowCompositeMode`: `GlyphOverlay` uses the existing `blend_shadow_cell`, `GradeUnderlying` uses the new `grade_shadow_cell`.
 - **tui-vfx (prelude):** Re-exported `ShadowCompositeMode` and `ShadowGradeConfig` from the prelude.
+- **tui-vfx-types:** Added `color_inert` module with `is_color_inert_glyph()` — detects emoji, PUA/nerd-font icons, variation selectors, and ZWJ that ignore ANSI fg color in terminal emulators.
+- **tui-vfx-shadow:** Added `ShadowGradeConfig::replacement_char` field (`Option<char>`) — when set, color-inert glyphs are replaced with the given character during grade-underlying compositing. `Default` is `None` (backward compatible); `dramatic()` sets `Some('·')`.
+- **tui-vfx-compositor:** `grade_shadow_cell` now conditionally replaces color-inert glyphs with the configured placeholder, preventing bright bitmap artifacts in dimmed shadow regions.
+
+### Fixed
+- **tui-vfx-compositor:** Fixed `test_shadow_extends_render_area` assertion that checked `bg` instead of `fg` for half-block soft-edge shadow cells (shadow color is carried in `fg` for `RIGHT_HALF` characters).
 
 ### Changed
 - **docs:** Updated `HOWTO_SHADOWS.md` with Shadow Compositing Modes section, dramatic example, and custom grade parameters example.

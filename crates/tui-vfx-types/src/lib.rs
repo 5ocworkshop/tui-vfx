@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-types/src/lib.rs</FILE> - <DESC>Foundation types for mixed-animations ecosystem</DESC>
 // <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Add RigidShake timing utility for shared effect synchronization</WCTX>
-// <CLOG>Add rigid_shake_timing module with RigidShakeTiming and RigidShakeState</CLOG>
+// <WCTX>Color-inert glyph detection for shadow grading replacement</WCTX>
+// <CLOG>Add color_inert module with is_color_inert_glyph detection utility</CLOG>
 
 //! # mixed-types
 //!
@@ -30,6 +30,9 @@
 //! ### Braille
 //! - [`braille`] - Utilities for Unicode braille patterns (U+2800–U+28FF)
 //!
+//! ### Color-Inert Glyph Detection
+//! - [`color_inert`] - Detection for glyphs that ignore ANSI fg color (emoji, PUA/nerd fonts)
+//!
 //! ### Animation Timing
 //! - [`rigid_shake_timing`] - Shared timing for RigidShake filter and style effects
 //!
@@ -43,6 +46,7 @@
 
 pub mod braille;
 mod cell;
+pub mod color_inert;
 mod color;
 mod geometry;
 mod grid;

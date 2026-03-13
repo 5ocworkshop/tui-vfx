@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>VERSION: 5.3.0</VERS>
-// <WCTX>Phase 2 dramatic color-shadow rollout: add animation and gradient coverage tests</WCTX>
-// <CLOG>Add progress_controls_visibility and gradient_softens_penumbra tests for Phase 2</CLOG>
+// <VERS>VERSION: 5.4.0</VERS>
+// <WCTX>Color-inert glyph detection for shadow grading replacement</WCTX>
+// <CLOG>Add integration tests for color-inert glyph replacement in grade-underlying pipeline</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;
@@ -594,12 +594,12 @@ fn test_shadow_extends_render_area() {
         "Right-edge shadow should be rendered at x=11"
     );
 
-    // Soft edge shadow at x=10 uses fg for half-block character
+    // Soft edge shadow at x=10 uses fg for half-block character (bg is transparent surface)
     let soft_edge_shadow = dest.get(10, 2).unwrap();
     assert_ne!(
-        soft_edge_shadow.bg,
+        soft_edge_shadow.fg,
         Color::TRANSPARENT,
-        "Soft edge shadow should be rendered at x=10"
+        "Soft edge shadow should be rendered at x=10 (fg carries shadow in half-block)"
     );
 
     // Bottom edge shadow at y=5, adjusted x range (x=2 to x=9 due to offset)
@@ -1247,5 +1247,105 @@ fn test_shadow_grade_underlying_gradient_softens_penumbra() {
     );
 }
 
+// ============================================================================
+// COLOR-INERT GLYPH REPLACEMENT TESTS (Pipeline integration)
+// ============================================================================
+
+/// Create a dest grid filled with emoji for color-inert replacement tests.
+fn create_emoji_dest_grid(width: usize, height: usize) -> OwnedGrid {
+    let mut grid = OwnedGrid::new(width, height);
+    for y in 0..height {
+        for x in 0..width {
+            let cell = Cell {
+                ch: '🚀',
+                fg: Color::rgb(220, 180, 80),
+                bg: Color::rgb(90, 110, 140),
+                ..Default::default()
+            };
+            grid.set(x, y, cell);
+        }
+    }
+    grid
+}
+
+#[test]
+fn test_shadow_grade_underlying_replaces_emoji_with_dramatic_grade() {
+    let source = create_source_grid(10, 5, 'X');
+    let mut dest = create_emoji_dest_grid(20, 20);
+
+    let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+        .with_offset(2, 1)
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(tui_vfx_shadow::ShadowStyle::Solid)
+        .with_dramatic_grade(); // dramatic() sets replacement_char = Some('·')
+
+    render_pipeline(
+        &source,
+        &mut dest,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config)),
+            t: 1.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    // Shadow region cell should have emoji replaced with middle dot
+    let shadow_cell = dest.get(11, 2).unwrap();
+    assert_eq!(
+        shadow_cell.ch, '\u{00B7}',
+        "Emoji in shadow region should be replaced with middle dot, got '{}'",
+        shadow_cell.ch,
+    );
+
+    // Element region should still have 'X' (source content overwrites)
+    assert_eq!(dest.get(0, 0).unwrap().ch, 'X');
+}
+
+#[test]
+fn test_shadow_grade_underlying_preserves_emoji_when_replacement_none() {
+    let source = create_source_grid(10, 5, 'X');
+    let mut dest = create_emoji_dest_grid(20, 20);
+
+    use tui_vfx_shadow::{ShadowCompositeMode, ShadowGradeConfig};
+    let grade = ShadowGradeConfig {
+        replacement_char: None, // no replacement
+        ..ShadowGradeConfig::dramatic()
+    };
+    let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+        .with_offset(2, 1)
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(tui_vfx_shadow::ShadowStyle::Solid)
+        .with_composite_mode(ShadowCompositeMode::GradeUnderlying)
+        .with_grade(grade);
+
+    render_pipeline(
+        &source,
+        &mut dest,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config)),
+            t: 1.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    // Shadow region cell should still have emoji (no replacement configured)
+    let shadow_cell = dest.get(11, 2).unwrap();
+    assert_eq!(
+        shadow_cell.ch, '🚀',
+        "Emoji should be preserved when replacement_char is None, got '{}'",
+        shadow_cell.ch,
+    );
+}
+
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>END OF VERSION: 5.3.0</VERS>
+// <VERS>END OF VERSION: 5.4.0</VERS>
