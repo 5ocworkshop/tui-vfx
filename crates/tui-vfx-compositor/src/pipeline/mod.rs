@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/mod.rs</FILE> - <DESC>Pipeline module</DESC>
-// <VERS>VERSION: 7.3.0</VERS>
-// <WCTX>Shadow integration into compositor pipeline</WCTX>
-// <CLOG>Re-export ShadowSpec from types for convenient access</CLOG>
+// <VERS>VERSION: 7.4.0</VERS>
+// <WCTX>Phase 1 dramatic color-shadow rollout: wire grade-underlying into pipeline</WCTX>
+// <CLOG>Add fnc_grade_shadow_cell module export</CLOG>
 
 pub mod cls_composition_options;
 pub mod cls_composition_spec;
@@ -11,6 +11,7 @@ mod cls_prepared_sampler;
 pub mod cls_render_area;
 pub mod cls_shader_layer_spec;
 pub mod fnc_check_masks;
+pub mod fnc_grade_shadow_cell;
 pub mod fnc_render_pipeline_with_spec;
 pub mod fnc_render_pipeline_with_spec_area;
 pub mod orc_render_pipeline;
@@ -26,4 +27,4 @@ pub use fnc_render_pipeline_with_spec_area::render_pipeline_with_spec_area;
 pub use orc_render_pipeline::{render_pipeline, render_pipeline_with_area};
 
 // <FILE>tui-vfx-compositor/src/pipeline/mod.rs</FILE> - <DESC>Pipeline module</DESC>
-// <VERS>END OF VERSION: 7.3.0</VERS>
+// <VERS>END OF VERSION: 7.4.0</VERS>

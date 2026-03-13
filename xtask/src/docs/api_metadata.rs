@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/api_metadata.rs</FILE> - <DESC>API metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.1.1</VERS>
-// <WCTX>Rustfmt normalization for API metadata imports</WCTX>
-// <CLOG>Reorder effect metadata imports after formatter run</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Phase 2 dramatic color-shadow rollout: docs, examples, and quality closure</WCTX>
+// <CLOG>Add composite_mode and grade fields to ShadowConfig TypeDoc</CLOG>
 
 use std::collections::HashMap;
 
@@ -383,6 +383,16 @@ fn extract_core_types() -> Vec<TypeDoc> {
                     ty: "bool".to_string(),
                     description: "Use half-blocks for smoothness".to_string(),
                 },
+                FieldDoc {
+                    name: "composite_mode".to_string(),
+                    ty: "ShadowCompositeMode".to_string(),
+                    description: "Compositing mode (glyph overlay or grade underlying)".to_string(),
+                },
+                FieldDoc {
+                    name: "grade".to_string(),
+                    ty: "Option<ShadowGradeConfig>".to_string(),
+                    description: "Color grading parameters for grade-underlying mode".to_string(),
+                },
             ],
             code_block: Some(
                 r#"pub struct ShadowConfig {
@@ -393,6 +403,8 @@ fn extract_core_types() -> Vec<TypeDoc> {
     pub surface_color: Option<Color>,
     pub edges: ShadowEdges,
     pub soft_edges: bool,
+    pub composite_mode: ShadowCompositeMode,
+    pub grade: Option<ShadowGradeConfig>,
 }"#
                 .to_string(),
             ),
@@ -844,4 +856,4 @@ fn extract_supporting_enums() -> HashMap<String, Vec<EnumDoc>> {
 }
 
 // <FILE>xtask/src/docs/api_metadata.rs</FILE> - <DESC>API metadata extraction from runtime introspection</DESC>
-// <VERS>END OF VERSION: 1.1.1</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Phase 1 rustdoc enrichment for documentation pipeline</WCTX>
-// <CLOG>Enhance module documentation with configuration overview</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Phase 0 dramatic color-shadow rollout: add compositing mode and grade config fields</WCTX>
+// <CLOG>Add composite_mode, grade fields and with_composite_mode/with_grade/with_dramatic_grade builders</CLOG>
 
 //! # Shadow Configuration
 //!
@@ -35,7 +35,7 @@
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::Color;
 
-use super::{ShadowEdges, ShadowStyle};
+use super::{ShadowCompositeMode, ShadowEdges, ShadowGradeConfig, ShadowStyle};
 
 /// Configuration for rendering a shadow effect.
 ///
@@ -82,6 +82,22 @@ pub struct ShadowConfig {
     /// Only applies to `ShadowStyle::HalfBlock`. When true, the shadow
     /// edge uses half-block characters for a softer transition.
     pub soft_edges: bool,
+
+    /// Shadow compositing mode.
+    ///
+    /// Controls how rendered shadow data is applied onto destination cells.
+    /// The default [`GlyphOverlay`](ShadowCompositeMode::GlyphOverlay)
+    /// preserves backward-compatible glyph-based shadow rendering.
+    pub composite_mode: ShadowCompositeMode,
+
+    /// Optional color grading parameters for
+    /// [`GradeUnderlying`](ShadowCompositeMode::GradeUnderlying) mode.
+    ///
+    /// Ignored when `composite_mode` is `GlyphOverlay`. When `None` with
+    /// `GradeUnderlying`, the compositor uses `ShadowGradeConfig::default()`
+    /// (zero-strength, effectively no grading).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub grade: Option<ShadowGradeConfig>,
 }
 
 impl Default for ShadowConfig {
@@ -94,6 +110,8 @@ impl Default for ShadowConfig {
             surface_color: None,
             edges: ShadowEdges::BOTTOM_RIGHT,
             soft_edges: true,
+            composite_mode: ShadowCompositeMode::GlyphOverlay,
+            grade: None,
         }
     }
 }
@@ -160,6 +178,35 @@ impl ShadowConfig {
         self
     }
 
+    /// Set the shadow compositing mode.
+    ///
+    /// See [`ShadowCompositeMode`] for available modes.
+    #[inline]
+    pub fn with_composite_mode(mut self, mode: ShadowCompositeMode) -> Self {
+        self.composite_mode = mode;
+        self
+    }
+
+    /// Set custom grade parameters for grade-underlying mode.
+    ///
+    /// This also sets `composite_mode` to
+    /// [`GradeUnderlying`](ShadowCompositeMode::GradeUnderlying).
+    #[inline]
+    pub fn with_grade(mut self, grade: ShadowGradeConfig) -> Self {
+        self.composite_mode = ShadowCompositeMode::GradeUnderlying;
+        self.grade = Some(grade);
+        self
+    }
+
+    /// Enable dramatic grade-underlying mode with the recommended preset.
+    ///
+    /// Convenience builder that sets `composite_mode` to `GradeUnderlying`
+    /// and `grade` to [`ShadowGradeConfig::dramatic()`].
+    #[inline]
+    pub fn with_dramatic_grade(self) -> Self {
+        self.with_grade(ShadowGradeConfig::dramatic())
+    }
+
     /// Calculate the actual shadow color at a given progress value.
     ///
     /// This allows shadows to animate in/out by interpolating alpha.
@@ -201,6 +248,33 @@ mod tests {
     }
 
     #[test]
+    fn shadow_config_defaults_to_glyph_overlay() {
+        let config = ShadowConfig::default();
+        assert_eq!(config.composite_mode, ShadowCompositeMode::GlyphOverlay);
+        assert!(config.grade.is_none());
+    }
+
+    #[test]
+    fn shadow_config_grade_underlying_serde_round_trip() {
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(180)).with_dramatic_grade();
+        let json = serde_json::to_string(&config).unwrap();
+        let restored: ShadowConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(config, restored);
+        assert_eq!(
+            restored.composite_mode,
+            ShadowCompositeMode::GradeUnderlying
+        );
+        assert!(restored.grade.is_some());
+    }
+
+    #[test]
+    fn shadow_config_with_dramatic_grade_sets_mode_and_grade() {
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(128)).with_dramatic_grade();
+        assert_eq!(config.composite_mode, ShadowCompositeMode::GradeUnderlying);
+        assert_eq!(config.grade, Some(ShadowGradeConfig::dramatic()));
+    }
+
+    #[test]
     fn test_color_at_progress() {
         let config = ShadowConfig::new(Color::BLACK.with_alpha(200));
 
@@ -219,4 +293,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

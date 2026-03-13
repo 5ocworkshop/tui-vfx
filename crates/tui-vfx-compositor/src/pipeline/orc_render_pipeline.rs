@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 11.4.1</VERS>
-// <WCTX>Clippy cleanup for shadow blend helper</WCTX>
-// <CLOG>Return blended cell directly to satisfy let-and-return lint</CLOG>
+// <VERS>VERSION: 11.5.0</VERS>
+// <WCTX>Phase 1 dramatic color-shadow rollout: wire grade-underlying into pipeline</WCTX>
+// <CLOG>Branch both shadow-copy paths on composite_mode: GlyphOverlay keeps blend_shadow_cell, GradeUnderlying calls grade_shadow_cell</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
 use super::cls_prepared_filter::{PreparedFilter, prepare_filters};
@@ -9,11 +9,12 @@ use super::cls_prepared_mask::{PreparedMask, prepare_masks};
 use super::cls_prepared_sampler::{PreparedSampler, prepare_sampler};
 use super::cls_render_area::RenderArea;
 use super::fnc_check_masks::check_prepared_masks;
+use super::fnc_grade_shadow_cell::grade_shadow_cell;
 use crate::traits::pipeline_inspector::CompositorInspector;
 use crate::types::cls_sampler_spec::SamplerSpec;
 use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
-use tui_vfx_shadow::render_shadow;
+use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
 use tui_vfx_style::traits::ShaderContext;
 use tui_vfx_types::{Cell, Grid, OwnedGrid, Rect, Style};
 
@@ -155,6 +156,7 @@ fn render_pipeline_with_shadow(
 ) {
     // Extract shadow spec (caller guarantees it's Some)
     let shadow_spec = options.shadow.as_ref().expect("shadow_spec must be Some");
+    let grade_config = shadow_spec.config.grade.unwrap_or_default();
 
     // Calculate extended dimensions
     let ext_width = width + shadow_spec.extra_width();
@@ -274,8 +276,16 @@ fn render_pipeline_with_shadow(
                         // Element cells: direct overwrite
                         *cell
                     } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
-                        // Shadow cells: blend with underlying content
-                        blend_shadow_cell(cell, dest_cell)
+                        // Shadow cells: composite with underlying content
+                        match shadow_spec.config.composite_mode {
+                            ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
+                            ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                cell,
+                                dest_cell,
+                                shadow_spec.config.color,
+                                &grade_config,
+                            ),
+                        }
                     } else {
                         *cell
                     };
@@ -330,8 +340,16 @@ fn render_pipeline_with_shadow(
                         // Element cells: direct overwrite
                         *cell
                     } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
-                        // Shadow cells: blend with underlying content
-                        blend_shadow_cell(cell, dest_cell)
+                        // Shadow cells: composite with underlying content
+                        match shadow_spec.config.composite_mode {
+                            ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
+                            ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                cell,
+                                dest_cell,
+                                shadow_spec.config.color,
+                                &grade_config,
+                            ),
+                        }
                     } else {
                         *cell
                     };
@@ -661,4 +679,4 @@ fn blend_shadow_cell(shadow_cell: &Cell, dest_cell: &Cell) -> Cell {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>END OF VERSION: 11.4.1</VERS>
+// <VERS>END OF VERSION: 11.5.0</VERS>

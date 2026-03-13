@@ -1,7 +1,7 @@
-// <FILE>tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>VERSION: 5.1.1</VERS>
-// <WCTX>Clippy cleanup</WCTX>
-// <CLOG>Remove clone calls on Copy ShadowConfig</CLOG>
+// <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
+// <VERS>VERSION: 5.3.0</VERS>
+// <WCTX>Phase 2 dramatic color-shadow rollout: add animation and gradient coverage tests</WCTX>
+// <CLOG>Add progress_controls_visibility and gradient_softens_penumbra tests for Phase 2</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;
@@ -866,5 +866,386 @@ fn test_shadow_progress_controls_opacity() {
     );
 }
 
-// <FILE>tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>END OF VERSION: 5.1.1</VERS>
+// ============================================================================
+// GRADE-UNDERLYING SHADOW TESTS (Phase 1)
+// ============================================================================
+
+/// BT.601 luma for test assertions.
+fn bt601_luma(c: Color) -> f32 {
+    0.299 * c.r as f32 + 0.587 * c.g as f32 + 0.114 * c.b as f32
+}
+
+/// Saturation span for test assertions.
+fn saturation_span(c: Color) -> u8 {
+    let max = c.r.max(c.g).max(c.b);
+    let min = c.r.min(c.g).min(c.b);
+    max - min
+}
+
+/// Create a dest grid filled with colored content for grade-underlying tests.
+/// Uses the canonical sample colors from the plan.
+fn create_grade_dest_grid(width: usize, height: usize) -> OwnedGrid {
+    let mut grid = OwnedGrid::new(width, height);
+    for y in 0..height {
+        for x in 0..width {
+            let cell = Cell {
+                ch: 'A',
+                fg: Color::rgb(220, 180, 80),
+                bg: Color::rgb(90, 110, 140),
+                mods: tui_vfx_types::Modifiers {
+                    bold: true,
+                    ..Default::default()
+                },
+                mod_alpha: Some(200),
+            };
+            grid.set(x, y, cell);
+        }
+    }
+    grid
+}
+
+#[test]
+fn test_shadow_grade_underlying_preserves_destination_glyphs() {
+    let source = create_source_grid(10, 5, 'X');
+    let mut dest = create_grade_dest_grid(20, 20);
+
+    let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+        .with_offset(2, 1)
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(tui_vfx_shadow::ShadowStyle::Solid)
+        .with_dramatic_grade();
+
+    render_pipeline(
+        &source,
+        &mut dest,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config)),
+            t: 1.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    // Shadow region: right edge at x=10..12, y=0..5
+    // Check that destination glyphs are preserved in shadow region
+    let shadow_cell = dest.get(11, 2).unwrap();
+    assert_eq!(
+        shadow_cell.ch, 'A',
+        "Grade-underlying must preserve destination glyph, got '{}'",
+        shadow_cell.ch
+    );
+
+    // Check a few more shadow cells
+    let shadow_cell2 = dest.get(10, 3).unwrap();
+    assert_eq!(
+        shadow_cell2.ch, 'A',
+        "Grade-underlying must preserve destination glyph at second position"
+    );
+}
+
+#[test]
+fn test_shadow_grade_underlying_preserves_destination_modifiers() {
+    let source = create_source_grid(10, 5, 'X');
+    let mut dest = create_grade_dest_grid(20, 20);
+
+    let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+        .with_offset(2, 1)
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(tui_vfx_shadow::ShadowStyle::Solid)
+        .with_dramatic_grade();
+
+    render_pipeline(
+        &source,
+        &mut dest,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config)),
+            t: 1.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    let shadow_cell = dest.get(11, 2).unwrap();
+    assert!(
+        shadow_cell.mods.bold,
+        "Grade-underlying must preserve destination modifiers (bold)"
+    );
+    assert_eq!(
+        shadow_cell.mod_alpha,
+        Some(200),
+        "Grade-underlying must preserve destination mod_alpha"
+    );
+}
+
+#[test]
+fn test_shadow_grade_underlying_is_visibly_dramatic() {
+    let source = create_source_grid(10, 5, 'X');
+    let mut dest = create_grade_dest_grid(20, 20);
+
+    let original_fg = Color::rgb(220, 180, 80);
+    let original_bg = Color::rgb(90, 110, 140);
+    let original_fg_luma = bt601_luma(original_fg);
+    let original_bg_luma = bt601_luma(original_bg);
+
+    let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+        .with_offset(2, 1)
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(tui_vfx_shadow::ShadowStyle::Solid)
+        .with_dramatic_grade();
+
+    render_pipeline(
+        &source,
+        &mut dest,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config)),
+            t: 1.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    let shadow_cell = dest.get(11, 2).unwrap();
+    let graded_fg_luma = bt601_luma(shadow_cell.fg);
+    let graded_bg_luma = bt601_luma(shadow_cell.bg);
+
+    // Background luma reduction must be at least 20 points
+    let bg_luma_drop = original_bg_luma - graded_bg_luma;
+    assert!(
+        bg_luma_drop >= 20.0,
+        "BG luma must drop by at least 20 points, got {:.1} (from {:.1} to {:.1})",
+        bg_luma_drop,
+        original_bg_luma,
+        graded_bg_luma,
+    );
+
+    // Foreground luma reduction must be at least 8 points
+    let fg_luma_drop = original_fg_luma - graded_fg_luma;
+    assert!(
+        fg_luma_drop >= 8.0,
+        "FG luma must drop by at least 8 points, got {:.1} (from {:.1} to {:.1})",
+        fg_luma_drop,
+        original_fg_luma,
+        graded_fg_luma,
+    );
+
+    // Background luma reduction must exceed foreground by at least 5 points
+    // (dramatic preset: bg_dim=0.58 vs fg_dim=0.28, but absolute drop also
+    // depends on starting luma, so margin is ~6.4 with canonical sample colors)
+    assert!(
+        bg_luma_drop >= fg_luma_drop + 5.0,
+        "BG luma drop ({:.1}) must exceed FG luma drop ({:.1}) by at least 5",
+        bg_luma_drop,
+        fg_luma_drop,
+    );
+
+    // Foreground saturation reduction must be non-zero
+    let original_fg_sat = saturation_span(original_fg);
+    let graded_fg_sat = saturation_span(shadow_cell.fg);
+    assert!(
+        graded_fg_sat < original_fg_sat,
+        "FG saturation must decrease (was {}, now {})",
+        original_fg_sat,
+        graded_fg_sat,
+    );
+
+    // Background saturation must also decrease
+    let original_bg_sat = saturation_span(original_bg);
+    let graded_bg_sat = saturation_span(shadow_cell.bg);
+    assert!(
+        graded_bg_sat < original_bg_sat,
+        "BG saturation must decrease (was {}, now {})",
+        original_bg_sat,
+        graded_bg_sat,
+    );
+
+    // Glyph and modifiers preserved (regression)
+    assert_eq!(shadow_cell.ch, 'A');
+    assert!(shadow_cell.mods.bold);
+}
+
+#[test]
+fn test_shadow_grade_underlying_uses_stronger_bg_grading_than_fg() {
+    let source = create_source_grid(10, 5, 'X');
+    let mut dest = create_grade_dest_grid(20, 20);
+
+    let original_bg = Color::rgb(90, 110, 140);
+    let original_fg = Color::rgb(220, 180, 80);
+
+    let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+        .with_offset(2, 1)
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(tui_vfx_shadow::ShadowStyle::Solid)
+        .with_dramatic_grade();
+
+    render_pipeline(
+        &source,
+        &mut dest,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config)),
+            t: 1.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    let shadow_cell = dest.get(11, 2).unwrap();
+
+    // bg grading must be stronger than fg grading
+    let bg_luma_drop = bt601_luma(original_bg) - bt601_luma(shadow_cell.bg);
+    let fg_luma_drop = bt601_luma(original_fg) - bt601_luma(shadow_cell.fg);
+    assert!(
+        bg_luma_drop > fg_luma_drop,
+        "BG luma drop ({:.1}) must exceed FG drop ({:.1})",
+        bg_luma_drop,
+        fg_luma_drop,
+    );
+}
+
+// ============================================================================
+// GRADE-UNDERLYING SHADOW TESTS (Phase 2 — animation and gradient coverage)
+// ============================================================================
+
+#[test]
+fn test_shadow_grade_underlying_progress_controls_visibility() {
+    let source = create_source_grid(10, 5, 'X');
+    let original_bg = Color::rgb(90, 110, 140);
+    let original_bg_luma = bt601_luma(original_bg);
+
+    let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+        .with_offset(2, 2)
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(tui_vfx_shadow::ShadowStyle::Solid)
+        .with_dramatic_grade();
+
+    // At t=0.0, shadow should be invisible (progress controls shadow opacity)
+    let mut dest_t0 = create_grade_dest_grid(20, 20);
+    render_pipeline(
+        &source,
+        &mut dest_t0,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
+            t: 0.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    // At t=1.0, shadow should be fully visible with grading
+    let mut dest_t1 = create_grade_dest_grid(20, 20);
+    render_pipeline(
+        &source,
+        &mut dest_t1,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config)),
+            t: 1.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    // Shadow region cell at t=1.0 must show grading
+    let cell_t1 = dest_t1.get(11, 2).unwrap();
+    let bg_luma_t1 = bt601_luma(cell_t1.bg);
+    assert!(
+        original_bg_luma - bg_luma_t1 > 10.0,
+        "At t=1.0, shadow cell BG must be visibly graded (luma drop {:.1})",
+        original_bg_luma - bg_luma_t1,
+    );
+
+    // At t=0.0, the shadow cell should be closer to the original than at t=1.0
+    // (either ungraded or much less graded)
+    let cell_t0 = dest_t0.get(11, 2).unwrap();
+    let bg_luma_t0 = bt601_luma(cell_t0.bg);
+    let drop_t0 = original_bg_luma - bg_luma_t0;
+    let drop_t1 = original_bg_luma - bg_luma_t1;
+    assert!(
+        drop_t1 > drop_t0 + 5.0,
+        "Grading at t=1.0 ({:.1}) must be stronger than at t=0.0 ({:.1})",
+        drop_t1,
+        drop_t0,
+    );
+}
+
+#[test]
+fn test_shadow_grade_underlying_gradient_softens_penumbra() {
+    let source = create_source_grid(10, 5, 'X');
+    let original_bg = Color::rgb(90, 110, 140);
+    let original_bg_luma = bt601_luma(original_bg);
+
+    // Gradient shadow with multiple layers creates varying alpha across the shadow
+    let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(200))
+        .with_offset(3, 3)
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(tui_vfx_shadow::ShadowStyle::Gradient { layers: 3 })
+        .with_dramatic_grade();
+
+    let mut dest = create_grade_dest_grid(20, 20);
+    render_pipeline(
+        &source,
+        &mut dest,
+        10,
+        5,
+        0,
+        0,
+        CompositionOptions {
+            shadow: Some(ShadowSpec::new(shadow_config)),
+            t: 1.0,
+            ..Default::default()
+        },
+        None,
+    );
+
+    // Sample cells at different distances from the element edge
+    // Closer to element = denser shadow = stronger grading
+    // Farther from element = softer shadow = weaker grading
+    // With offset (3,3) and gradient layers=3, the rightmost column should have
+    // weaker grading than the column closest to the element
+    let inner_cell = dest.get(10, 3).unwrap(); // closest shadow column to element
+    let outer_cell = dest.get(12, 3).unwrap(); // farther shadow column
+
+    let inner_drop = original_bg_luma - bt601_luma(inner_cell.bg);
+    let outer_drop = original_bg_luma - bt601_luma(outer_cell.bg);
+
+    // Inner shadow should have stronger grading (or at least not weaker) than outer
+    // This validates that gradient alpha correctly scales grade intensity
+    assert!(
+        inner_drop >= outer_drop,
+        "Inner shadow grading ({:.1}) must be >= outer ({:.1}) — gradient should soften penumbra",
+        inner_drop,
+        outer_drop,
+    );
+
+    // Both should show some grading effect (non-zero drop)
+    assert!(
+        inner_drop > 1.0,
+        "Inner shadow must show some grading (drop={:.1})",
+        inner_drop,
+    );
+}
+
+// <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
+// <VERS>END OF VERSION: 5.3.0</VERS>

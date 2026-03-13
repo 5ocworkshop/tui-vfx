@@ -22,6 +22,7 @@ serde.workspace = true
 bitflags = { version = "2.4", features = ["serde"] }
 
 [dev-dependencies]
+serde_json.workspace = true
 
 # <FILE>crates/tui-vfx-shadow/Cargo.toml</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
 # <VERS>END OF VERSION: 0.4.2</VERS>

@@ -380,8 +380,15 @@ pub struct ShadowConfig {
     pub surface_color: Option<Color>,
     pub edges: ShadowEdges,
     pub soft_edges: bool,
+    pub composite_mode: ShadowCompositeMode,
+    pub grade: Option<ShadowGradeConfig>,
 }
 ```
+
+Shadow compositing is controlled by `composite_mode`: the default `GlyphOverlay` replaces
+destination content with shadow glyphs, while `GradeUnderlying` preserves destination glyphs
+and applies color grading (desaturate, dim, tint) scaled by shadow coverage.
+Use `.with_dramatic_grade()` for a visible preset with stronger background than foreground grading.
 
 ## ShadowStyle
 - `HalfBlock` (default) — best quality sub-cell shadows
@@ -394,11 +401,28 @@ pub struct ShadowConfig {
 
 **Rule:** edges only render when the offset direction matches (e.g., `RIGHT` requires `offset_x > 0`).
 
+## ShadowCompositeMode
+
+- `GlyphOverlay` (default) — shadow glyphs replace destination content
+- `GradeUnderlying` — destination glyphs preserved; color grading applied
+
+## ShadowGradeConfig
+
+Controls dim, desaturate, and tint strengths for grade-underlying mode. Use `ShadowGradeConfig::dramatic()` for the recommended visible preset.
+
 ## Compositor integration
 
 ```rust
+// Standard glyph-overlay shadow (default)
 let options = CompositionOptions::default()
     .with_shadow(ShadowSpec::new(my_shadow_config));
+
+// Dramatic grade-underlying shadow
+let dramatic_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+    .with_offset(2, 1)
+    .with_dramatic_grade();
+let options = CompositionOptions::default()
+    .with_shadow(ShadowSpec::new(dramatic_config));
 ```
 
 For full guidance and examples, see `docs/HOWTO_SHADOWS.md`.
@@ -821,7 +845,7 @@ pub use tui_vfx_style::models::{
 pub use tui_vfx_content::prelude::*;
 
 // Shadows
-pub use tui_vfx_shadow::{ShadowConfig, ShadowEdges, ShadowStyle, render_shadow, render_shadow_simple};
+pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowGradeConfig, ShadowStyle, render_shadow, render_shadow_simple};
 ```
 
 ---

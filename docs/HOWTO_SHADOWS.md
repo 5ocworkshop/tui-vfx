@@ -157,6 +157,9 @@ ShadowConfig::new(color: Color)
     .with_edges(edges: ShadowEdges)      // Which edges to shadow (default: BOTTOM_RIGHT)
     .with_soft_edges(enabled: bool)      // Use half-blocks for transitions (default: true)
     .with_surface_color(color: Color)    // Background for blending (for HalfBlock)
+    .with_composite_mode(mode)           // GlyphOverlay (default) or GradeUnderlying
+    .with_grade(grade_config)            // Custom ShadowGradeConfig
+    .with_dramatic_grade()               // Shorthand: GradeUnderlying + dramatic preset
 ```
 
 ### ShadowSpec (compositor wrapper)
@@ -283,6 +286,70 @@ for frame in 0..60 {
     draw_modal_with_opacity(&mut grid, rect, t);
 }
 ```
+
+---
+
+## Shadow Compositing Modes
+
+By default, shadows use **glyph overlay** compositing: shadow characters (half-blocks, braille patterns, etc.) replace whatever is underneath. This is the traditional approach.
+
+For a more sophisticated look, **grade-underlying** compositing preserves destination glyphs and modifiers while applying color grading (desaturation, dimming, tinting) to the shadow region. Text beneath the shadow remains readable but visually recedes.
+
+### ShadowCompositeMode
+
+| Mode | Behavior |
+|------|----------|
+| `GlyphOverlay` (default) | Shadow glyphs replace destination content |
+| `GradeUnderlying` | Destination glyphs preserved; color grading applied |
+
+### Dramatic Grade-Underlying Example
+
+```rust
+let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+    .with_offset(2, 1)
+    .with_edges(ShadowEdges::BOTTOM_RIGHT)
+    .with_style(ShadowStyle::Solid)
+    .with_dramatic_grade();  // enables GradeUnderlying with visible preset
+
+render_pipeline(
+    &modal_source,
+    &mut dest,
+    10, 5,
+    offset_x, offset_y,
+    CompositionOptions {
+        t: 1.0,
+        shadow: Some(ShadowSpec::new(shadow_config)),
+        ..Default::default()
+    },
+    None,
+);
+```
+
+The `dramatic()` preset applies stronger background grading than foreground grading, making the shadow region clearly visible while keeping text legible. Background grading is intentionally stronger because backgrounds occupy more visual area and contribute more to the perception of depth.
+
+### Custom Grade Parameters
+
+For fine-tuned control, construct `ShadowGradeConfig` directly:
+
+```rust
+use tui_vfx_shadow::ShadowGradeConfig;
+
+let config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+    .with_offset(2, 1)
+    .with_composite_mode(ShadowCompositeMode::GradeUnderlying)
+    .with_grade(ShadowGradeConfig {
+        fg_dim_strength: 0.15,
+        bg_dim_strength: 0.40,
+        fg_desaturate_strength: 0.10,
+        bg_desaturate_strength: 0.30,
+        fg_tint_strength: 0.05,
+        bg_tint_strength: 0.10,
+        preserve_fg_alpha: true,
+        preserve_bg_alpha: true,
+    });
+```
+
+All strength values range from `0.0` (no effect) to `1.0` (maximum) and are further scaled by shadow coverage at each cell.
 
 ---
 

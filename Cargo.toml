@@ -15,7 +15,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.2.3"
+version = "0.2.4"
 edition = "2024"
 rust-version = "1.86.0"
 license = "MIT"
@@ -25,15 +25,15 @@ categories = ["command-line-interface", "graphics"]
 
 [workspace.dependencies]
 # Internal crates
-tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.2.3" }
-tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.2.3" }
-tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.2.3" }
-tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.2.3" }
-tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.2.3" }
-tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.2.3" }
-tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.2.3" }
-tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.2.3" }
-tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.2.3" }
+tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.2.4" }
+tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.2.4" }
+tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.2.4" }
+tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.2.4" }
+tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.2.4" }
+tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.2.4" }
+tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.2.4" }
+tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.2.4" }
+tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.2.4" }
 
 # External dependencies (preserve versions from source crates)
 mixed-signals = "0.2"

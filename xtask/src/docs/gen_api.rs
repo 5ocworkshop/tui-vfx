@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/gen_api.rs</FILE> - <DESC>Generate API.md from code metadata + api_docs.toml</DESC>
-// <VERS>VERSION: 1.1.1</VERS>
-// <WCTX>Address clippy single_char_add_str warnings</WCTX>
-// <CLOG>Use push('\\n') for single-character newlines</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Phase 2 dramatic color-shadow rollout: docs, examples, and quality closure</WCTX>
+// <CLOG>Render ShadowCompositeMode and ShadowGradeConfig sections in shadows part</CLOG>
 
 use super::api_metadata::ApiMetadata;
 use super::effect_metadata::EffectMetadata;
@@ -534,6 +534,30 @@ fn write_shadows_section(output: &mut String, api: &ApiMetadata, toml: &ApiDocsM
         }
     }
 
+    // ShadowCompositeMode
+    if let Some(entry) = toml.specs.get("ShadowCompositeMode") {
+        output.push_str(&format!("## {}\n\n", entry.section_title));
+        for variant in &entry.variants {
+            if let Some(table) = variant.as_table() {
+                let name = table.get("name").and_then(|v| v.as_str()).unwrap_or("");
+                let note = table.get("note").and_then(|v| v.as_str()).unwrap_or("");
+                output.push_str(&format!("- `{}` {}\n", name, note));
+            } else if let Some(s) = variant.as_str() {
+                output.push_str(&format!("- `{}`\n", s));
+            }
+        }
+        output.push('\n');
+    }
+
+    // ShadowGradeConfig
+    if let Some(entry) = toml.specs.get("ShadowGradeConfig") {
+        output.push_str(&format!("## {}\n\n", entry.section_title));
+        if !entry.description.is_empty() {
+            output.push_str(&entry.description);
+            output.push_str("\n\n");
+        }
+    }
+
     // Compositor integration example
     if let Some(entry) = toml.specs.get("ShadowSpec") {
         output.push_str("## Compositor integration\n\n");
@@ -826,4 +850,4 @@ fn write_prelude_section(output: &mut String, toml: &ApiDocsManifest) {
 }
 
 // <FILE>xtask/src/docs/gen_api.rs</FILE> - <DESC>Generate API.md from code metadata + api_docs.toml</DESC>
-// <VERS>END OF VERSION: 1.1.1</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

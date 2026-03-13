@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/lib.rs</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Document and re-export new medium-shade shadow style support</WCTX>
-// <CLOG>Add MediumShade docs/examples and include MediumShadeRenderer in crate exports</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Phase 0 dramatic color-shadow rollout: re-export compositing mode and grade config</WCTX>
+// <CLOG>Add ShadowCompositeMode and ShadowGradeConfig to crate-root re-exports and update crate docs</CLOG>
 
 //! # TUI VFX Shadow
 //!
@@ -304,12 +304,21 @@
 //! 2. Limit **Gradient** layers to 2-3
 //! 3. Consider caching shadow renders for static elements
 //!
+//! ## Shadow Geometry vs Compositing
+//!
+//! Shadow geometry (style, offset, edges) and shadow compositing mode are
+//! independently configurable. Geometry controls where and how shadow cells
+//! are rendered; compositing mode controls how those cells are applied onto
+//! destination content. See [`ShadowCompositeMode`] for available modes.
+//!
 //! ## Module Structure
 //!
 //! - [`render_shadow`] - Main entry point for shadow rendering
 //! - [`render_shadow_simple`] - Convenience function with defaults
 //! - [`ShadowConfig`] - Configuration struct with builder pattern
 //! - [`ShadowStyle`] - Enum of rendering styles
+//! - [`ShadowCompositeMode`] - Compositing mode (glyph overlay vs grade underlying)
+//! - [`ShadowGradeConfig`] - Color grading parameters for grade-underlying mode
 //! - [`ShadowEdges`] - Bitflags for edge selection
 //! - [`renderers`] - Direct access to individual renderer implementations
 
@@ -321,7 +330,7 @@ pub mod types;
 pub use fnc_render_shadow::{render_shadow, render_shadow_gradient_colors, render_shadow_simple};
 
 // Re-export types at crate root for convenience
-pub use types::{ShadowConfig, ShadowEdges, ShadowStyle};
+pub use types::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowGradeConfig, ShadowStyle};
 
 // Re-export renderers for direct access if needed
 pub use renderers::{
@@ -329,4 +338,4 @@ pub use renderers::{
 };
 
 // <FILE>crates/tui-vfx-shadow/src/lib.rs</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

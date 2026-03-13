@@ -102,10 +102,26 @@ pub fn check() -> Result<()> {
         }
     }
 
-    check_file("docs/generated/CAPABILITIES.md", &gen_markdown::render(&merged)?, &mut stale);
-    check_file("docs/generated/capabilities.json", &gen_json::render(&merged)?, &mut stale);
-    check_file("docs/generated/effect_schemas.json", &gen_effect_schemas::render(&merged)?, &mut stale);
-    check_file("docs/generated/ai-context.md", &gen_ai_context::render(&merged)?, &mut stale);
+    check_file(
+        "docs/generated/CAPABILITIES.md",
+        &gen_markdown::render(&merged)?,
+        &mut stale,
+    );
+    check_file(
+        "docs/generated/capabilities.json",
+        &gen_json::render(&merged)?,
+        &mut stale,
+    );
+    check_file(
+        "docs/generated/effect_schemas.json",
+        &gen_effect_schemas::render(&merged)?,
+        &mut stale,
+    );
+    check_file(
+        "docs/generated/ai-context.md",
+        &gen_ai_context::render(&merged)?,
+        &mut stale,
+    );
 
     // API.md (separate pipeline)
     let api_data = api_metadata::extract_api_metadata();

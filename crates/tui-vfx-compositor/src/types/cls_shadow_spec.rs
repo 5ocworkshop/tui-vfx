@@ -1,7 +1,7 @@
-// <FILE>tui-vfx-compositor/src/types/cls_shadow_spec.rs</FILE> - <DESC>Shadow specification for compositor pipeline</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Enable serde support for shadow specs</WCTX>
-// <CLOG>Add Serialize/Deserialize derives and flatten ShadowConfig for spec usage</CLOG>
+// <FILE>crates/tui-vfx-compositor/src/types/cls_shadow_spec.rs</FILE> - <DESC>Shadow specification for compositor pipeline</DESC>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Phase 0 dramatic color-shadow rollout: add grade-underlying contract tests</WCTX>
+// <CLOG>Add tests for grade-underlying config preservation and default glyph-overlay assertion</CLOG>
 
 //! Shadow specification for the compositor pipeline.
 //!
@@ -149,7 +149,38 @@ mod tests {
         assert_eq!(spec.extra_width(), 3);
         assert_eq!(spec.extra_height(), 2);
     }
+
+    #[test]
+    fn shadow_spec_preserves_grade_underlying_config() {
+        use tui_vfx_shadow::{ShadowCompositeMode, ShadowGradeConfig};
+
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(180)).with_dramatic_grade();
+        let spec = ShadowSpec::new(config);
+
+        assert_eq!(
+            spec.config.composite_mode,
+            ShadowCompositeMode::GradeUnderlying
+        );
+        assert_eq!(spec.config.grade, Some(ShadowGradeConfig::dramatic()));
+
+        // Serde round-trip through spec
+        let json = serde_json::to_string(&spec).unwrap();
+        let restored: ShadowSpec = serde_json::from_str(&json).unwrap();
+        assert_eq!(spec, restored);
+    }
+
+    #[test]
+    fn shadow_spec_simple_still_defaults_to_glyph_overlay() {
+        use tui_vfx_shadow::ShadowCompositeMode;
+
+        let spec = ShadowSpec::simple(Color::BLACK.with_alpha(128), 2, 1);
+        assert_eq!(
+            spec.config.composite_mode,
+            ShadowCompositeMode::GlyphOverlay
+        );
+        assert!(spec.config.grade.is_none());
+    }
 }
 
-// <FILE>tui-vfx-compositor/src/types/cls_shadow_spec.rs</FILE> - <DESC>Shadow specification for compositor pipeline</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <FILE>crates/tui-vfx-compositor/src/types/cls_shadow_spec.rs</FILE> - <DESC>Shadow specification for compositor pipeline</DESC>
+// <VERS>END OF VERSION: 0.3.0</VERS>

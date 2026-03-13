@@ -1,8 +1,8 @@
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>VERSION: 0.2.1</VERS>
-// <WCTX>Clippy cleanup</WCTX>
-// <CLOG>Initialize CompositionOptions without post-default reassignment</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Phase 1 dramatic color-shadow rollout: spec-equivalence for grade-underlying</WCTX>
+// <CLOG>Add spec-equivalence test for shadow grade-underlying mode</CLOG>
 
 use tui_vfx_compositor::pipeline::{
     CompositionOptions, CompositionSpec, RenderArea, ShaderLayerSpec, render_pipeline,
@@ -165,6 +165,60 @@ fn test_render_pipeline_with_spec_matches_options_shadow() {
     assert_grids_equal(&dest_options, &dest_spec);
 }
 
+#[test]
+fn test_render_pipeline_with_spec_matches_options_shadow_grade_underlying() {
+    let source = create_source_grid(6, 4, 'G');
+
+    // Pre-fill dest grids with content so grading has something to grade
+    let fill_cell = Cell {
+        ch: 'B',
+        fg: Color::new(220, 180, 80, 255),
+        bg: Color::new(90, 110, 140, 255),
+        ..Default::default()
+    };
+    let mut dest_options = OwnedGrid::new(8, 6);
+    let mut dest_spec = OwnedGrid::new(8, 6);
+    for y in 0..6 {
+        for x in 0..8 {
+            dest_options.set(x, y, fill_cell);
+            dest_spec.set(x, y, fill_cell);
+        }
+    }
+
+    let shadow = ShadowSpec::new(
+        ShadowConfig::new(Color::BLACK.with_alpha(180))
+            .with_offset(2, 2)
+            .with_edges(ShadowEdges::BOTTOM_RIGHT)
+            .with_style(tui_vfx_shadow::ShadowStyle::Solid)
+            .with_dramatic_grade(),
+    );
+
+    let options = CompositionOptions {
+        shadow: Some(shadow.clone()),
+        preserve_unfilled: true,
+        t: 1.0,
+        ..Default::default()
+    };
+
+    let spec = CompositionSpec {
+        sampler_spec: None,
+        masks: Vec::new(),
+        mask_combine_mode: MaskCombineMode::All,
+        filters: Vec::new(),
+        shader_layers: Vec::new(),
+        shadow: Some(shadow),
+        preserve_unfilled: true,
+        t: 1.0,
+        loop_t: None,
+        phase: None,
+    };
+
+    render_pipeline(&source, &mut dest_options, 6, 4, 0, 0, options, None);
+    render_pipeline_with_spec(&source, &mut dest_spec, 6, 4, 0, 0, &spec, None);
+
+    assert_grids_equal(&dest_options, &dest_spec);
+}
+
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>END OF VERSION: 0.2.1</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx/src/lib.rs</FILE> - <DESC>Meta-crate re-exporting all tui-vfx components</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Hover indicator effects implementation</WCTX>
-// <CLOG>Add HoverBarPosition to prelude for hover indicator filters</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Phase 2 dramatic color-shadow rollout: docs, examples, and quality closure</WCTX>
+// <CLOG>Add ShadowCompositeMode and ShadowGradeConfig to prelude exports</CLOG>
 
 //! # TUI VFX
 //!
@@ -181,9 +181,10 @@ pub mod prelude {
 
     // Shadow - shadow rendering
     pub use tui_vfx_shadow::{
-        ShadowConfig, ShadowEdges, ShadowStyle, render_shadow, render_shadow_simple,
+        ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowGradeConfig, ShadowStyle,
+        render_shadow, render_shadow_simple,
     };
 }
 
 // <FILE>crates/tui-vfx/src/lib.rs</FILE> - <DESC>Meta-crate re-exporting all tui-vfx components</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

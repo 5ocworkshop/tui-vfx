@@ -228,6 +228,78 @@ xtask *args:
     cargo xtask {{args}}
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# DRAMATIC COLOR-SHADOW ROLLOUT
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Phase-specific validation recipes for the dramatic color-graded shadow feature.
+# See gt-design/plans/tui-vfx-v1-dramatic-color-shadow-plan.md for the master plan.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Phase 0 red: shadow contract tests (should fail before implementation)
+dramatic-shadow-phase0-red:
+    cargo test -p tui-vfx-shadow shadow_config_grade_underlying_serde_round_trip -- --nocapture
+    cargo test -p tui-vfx-shadow shadow_grade_config_dramatic_defaults_are_visible -- --nocapture
+    cargo test -p tui-vfx-compositor shadow_spec_preserves_grade_underlying_config -- --nocapture
+
+# Phase 0 green: shadow contract + lib tests
+dramatic-shadow-phase0-green:
+    cargo test -p tui-vfx-shadow --lib -- --nocapture
+    cargo test -p tui-vfx-compositor --lib -- --nocapture
+
+# Phase 0 docs: clippy + rustdoc + format
+dramatic-shadow-phase0-docs:
+    cargo clippy -p tui-vfx-shadow --lib --no-deps -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc -p tui-vfx-shadow --no-deps
+    cargo clippy -p tui-vfx-compositor --lib --no-deps -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc -p tui-vfx-compositor --no-deps
+    cargo fmt --all -- --check
+
+# Phase 1 red: grade-underlying integration tests (should fail before implementation)
+dramatic-shadow-phase1-red:
+    cargo test -p tui-vfx-compositor --test test_pipeline test_shadow_grade_underlying_preserves_destination_glyphs -- --nocapture
+    cargo test -p tui-vfx-compositor --test test_pipeline test_shadow_grade_underlying_preserves_destination_modifiers -- --nocapture
+    cargo test -p tui-vfx-compositor --test test_pipeline test_shadow_grade_underlying_is_visibly_dramatic -- --nocapture
+
+# Phase 1 green: full compositor test suite
+dramatic-shadow-phase1-green:
+    cargo test -p tui-vfx-compositor --test test_pipeline -- --nocapture
+    cargo test -p tui-vfx-compositor --test test_pipeline test_render_pipeline_with_spec -- --nocapture
+    cargo test -p tui-vfx-shadow --lib -- --nocapture
+
+# Phase 1 docs: clippy + rustdoc
+dramatic-shadow-phase1-docs:
+    cargo clippy -p tui-vfx-compositor --lib --no-deps -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc -p tui-vfx-compositor --no-deps
+
+# Phase 2 red: animation and gradient tests (should fail before implementation)
+dramatic-shadow-phase2-red:
+    cargo test -p tui-vfx-compositor --test test_pipeline test_shadow_grade_underlying_progress_controls_visibility -- --nocapture
+    cargo test -p tui-vfx-compositor --test test_pipeline test_shadow_grade_underlying_gradient_softens_penumbra -- --nocapture
+
+# Phase 2 green: full test suite + spec equivalence (skip pre-existing test_shadow_extends_render_area)
+dramatic-shadow-phase2-green:
+    cargo test -p tui-vfx-compositor --test test_pipeline -- --nocapture --skip test_shadow_extends_render_area
+    cargo test -p tui-vfx-compositor --test test_pipeline test_render_pipeline_with_spec -- --nocapture
+
+# Phase 2 docs: both crates clippy + rustdoc
+dramatic-shadow-phase2-docs:
+    cargo clippy -p tui-vfx-shadow --lib --no-deps -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc -p tui-vfx-shadow --no-deps
+    cargo clippy -p tui-vfx-compositor --lib --no-deps -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc -p tui-vfx-compositor --no-deps
+
+# Full quality gate: all phases green + docs + format + workspace test
+dramatic-shadow-full-quality:
+    cargo fmt --all -- --check
+    cargo clippy -p tui-vfx-shadow --lib --no-deps -- -D warnings
+    cargo clippy -p tui-vfx-compositor --lib --no-deps -- -D warnings
+    RUSTDOCFLAGS="-D warnings" cargo doc -p tui-vfx-shadow --no-deps
+    RUSTDOCFLAGS="-D warnings" cargo doc -p tui-vfx-compositor --no-deps
+    cargo test -p tui-vfx-shadow --lib -- --nocapture
+    cargo test -p tui-vfx-compositor --lib -- --nocapture
+    cargo test -p tui-vfx-compositor --test test_pipeline -- --nocapture --skip test_shadow_extends_render_area
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # CI SIMULATION
 # ═══════════════════════════════════════════════════════════════════════════════
 

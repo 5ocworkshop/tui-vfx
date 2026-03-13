@@ -1,13 +1,28 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.4.0</VERS> -->
-<!-- <WCTX>Add 0.2.3 patch release entry for medium-shade shadow support</WCTX> -->
-<!-- <CLOG>Document new MediumShade shadow style and shadow metadata updates</CLOG> -->
+<!-- <VERS>VERSION: 1.5.0</VERS> -->
+<!-- <WCTX>Add 0.2.4 patch release entry for dramatic grade-underlying shadow compositing</WCTX> -->
+<!-- <CLOG>Document new ShadowCompositeMode, ShadowGradeConfig, and grade-underlying shadow pipeline</CLOG> -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
+
+## 0.2.4 — 2026-03-13
+
+### Added
+- **tui-vfx-shadow:** Added `ShadowCompositeMode` enum with `GlyphOverlay` (default, backward-compatible) and `GradeUnderlying` (destination-preserving color grading) variants.
+- **tui-vfx-shadow:** Added `ShadowGradeConfig` struct with per-channel dim, desaturate, and tint strength controls for fine-tuned grade-underlying shadows.
+- **tui-vfx-shadow:** Added `ShadowConfig::with_composite_mode()`, `.with_grade()`, and `.with_dramatic_grade()` builder methods.
+- **tui-vfx-compositor:** Added `fnc_grade_shadow_cell` — implements the grade-underlying algorithm (desaturate → dim → tint) that preserves destination glyphs and modifiers while applying color grading scaled by shadow coverage.
+- **tui-vfx-compositor:** Pipeline branches on `ShadowCompositeMode`: `GlyphOverlay` uses the existing `blend_shadow_cell`, `GradeUnderlying` uses the new `grade_shadow_cell`.
+- **tui-vfx (prelude):** Re-exported `ShadowCompositeMode` and `ShadowGradeConfig` from the prelude.
+
+### Changed
+- **docs:** Updated `HOWTO_SHADOWS.md` with Shadow Compositing Modes section, dramatic example, and custom grade parameters example.
+- **docs:** Updated `API_HAND.md` and `api_docs.toml` to document new types and builder methods.
+- **xtask/docs:** Updated `api_metadata.rs` and `gen_api.rs` so generated `API.md` includes `ShadowCompositeMode` and `ShadowGradeConfig` sections and the updated `ShadowConfig` struct.
 
 ## 0.2.3 — 2026-03-13
 
@@ -48,4 +63,4 @@ Initial public release.
 - Recipe validation tooling for JSON effect configurations
 
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.5.0</VERS> -->
