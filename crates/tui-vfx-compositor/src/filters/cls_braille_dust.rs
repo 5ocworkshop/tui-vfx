@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_braille_dust.rs</FILE> - <DESC>Stochastic braille dust filter for frosted glass texture</DESC>
-// <VERS>VERSION: 1.1.1</VERS>
-// <WCTX>Clippy cleanup</WCTX>
-// <CLOG>Remove field reassignments after Cell::default in tests</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Fix braille_dust to recognize empty braille ⠀ (U+2800) as empty</WCTX>
+// <CLOG>Extend is_cell_empty to treat ⠀ (braille with no dots) as empty alongside whitespace, so dust particles appear in braille art content</CLOG>
 
 use crate::traits::filter::Filter;
 use mixed_signals::math::fast_random;
@@ -100,7 +100,7 @@ impl BrailleDust {
     /// Check if a cell is considered empty.
     #[inline]
     fn is_cell_empty(cell: &Cell) -> bool {
-        cell.ch.is_whitespace()
+        cell.ch.is_whitespace() || cell.ch == '\u{2800}'
     }
 
     /// Generate deterministic noise for a position and time.
@@ -304,4 +304,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_braille_dust.rs</FILE> - <DESC>Stochastic braille dust filter for frosted glass texture</DESC>
-// <VERS>END OF VERSION: 1.1.1</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>
