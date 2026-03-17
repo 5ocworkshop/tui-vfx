@@ -1,13 +1,20 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.6.0</VERS> -->
-<!-- <WCTX>Shadow edge insets and stronger fg grading for grade-underlying</WCTX> -->
-<!-- <CLOG>Document +1 edge insets and dramatic preset fg strength bump</CLOG> -->
+<!-- <VERS>VERSION: 1.7.0</VERS> -->
+<!-- <WCTX>CharsetNoise content transformer for living textures</WCTX> -->
+<!-- <CLOG>Document CharsetNoise transformer addition in 0.2.5</CLOG> -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
+
+## 0.2.5 — 2026-03-17
+
+### Added
+- **tui-vfx-content:** Added `CharsetNoise` content transformer — non-converging, time-varying character replacement with vertical gradient support. Unlike Scramble (which resolves toward target text), CharsetNoise cycles indefinitely, replacing characters from a configurable charset at a given hz rate. Supports position-aware charset gradients (sparse characters at top, dense at bottom) and per-cell jitter for organic variation. Designed for living textures: fire, rain, smoke, static noise. Including empty characters (like `⠀`) in sparse pools creates flickering shape boundaries.
+- **tui-vfx-content:** Added `GradientStop` type for charset gradient configuration and `AffectMode` enum (`all` / `non_empty`) controlling which cells are replaced.
+- **tui-vfx-content:** Added `CharsetNoise` variant to `ContentEffect` enum with full serde support (`"type": "charset_noise"` in JSON).
 
 ## 0.2.4 — 2026-03-13
 

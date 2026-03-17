@@ -1,8 +1,9 @@
 // <FILE>tui-vfx-content/src/transformers/mod.rs</FILE> - <DESC>Content transformers module</DESC>
-// <VERS>VERSION: 1.11.0</VERS>
-// <WCTX>Hover indicator effects implementation</WCTX>
-// <CLOG>Add WrapIndicator transformer for prefix/suffix wrapping</CLOG>
+// <VERS>VERSION: 1.12.0</VERS>
+// <WCTX>CharsetNoise transformer for non-converging time-varying character replacement</WCTX>
+// <CLOG>Add CharsetNoise transformer and re-export</CLOG>
 
+pub mod cls_charset_noise;
 pub mod cls_dissolve;
 pub mod cls_glitch_shift;
 pub mod cls_marquee;
@@ -20,6 +21,7 @@ pub mod cls_wrap_indicator;
 pub mod fnc_get_transformer;
 pub mod fnc_morph_chars;
 
+pub use cls_charset_noise::CharsetNoise;
 pub use cls_dissolve::Dissolve;
 pub use cls_glitch_shift::GlitchShift;
 pub use cls_marquee::Marquee;
@@ -37,4 +39,4 @@ pub use cls_wrap_indicator::WrapIndicator;
 pub use fnc_get_transformer::get_transformer;
 
 // <FILE>tui-vfx-content/src/transformers/mod.rs</FILE> - <DESC>Content transformers module</DESC>
-// <VERS>END OF VERSION: 1.11.0</VERS>
+// <VERS>END OF VERSION: 1.12.0</VERS>
