@@ -400,9 +400,42 @@ pub enum SamplerSpec {
         #[serde(default = "default_pendulum_phase_spread")]
         phase_spread: SignalOrFloat,
     },
+
+    /// Gravity/acceleration displacement effect.
+    ///
+    /// Applies parabolic acceleration (`0.5 * a * t²`), making content fall
+    /// or rise with increasing speed. Capped at terminal velocity to prevent
+    /// content from flying off screen.
+    ///
+    /// # Parameters
+    ///
+    /// - `axis`: Which axis gravity pulls along (Y = fall down, X = slide right)
+    /// - `acceleration`: Cells per t² (positive = down/right, negative = up/left)
+    /// - `terminal_velocity`: Maximum displacement cap in cells
+    Gravity {
+        /// Which axis gravity pulls along.
+        #[serde(default)]
+        axis: Axis,
+
+        /// Acceleration in cells per t² unit.
+        /// Positive = down/right, negative = up/left.
+        #[serde(default = "default_gravity_acceleration")]
+        acceleration: SignalOrFloat,
+
+        /// Maximum displacement in cells.
+        #[serde(default = "default_gravity_terminal_velocity")]
+        terminal_velocity: SignalOrFloat,
+    },
 }
 
 // Default functions for signal-or-float fields
+fn default_gravity_acceleration() -> SignalOrFloat {
+    SignalOrFloat::Static(4.0)
+}
+
+fn default_gravity_terminal_velocity() -> SignalOrFloat {
+    SignalOrFloat::Static(10.0)
+}
 fn default_sine_amplitude() -> SignalOrFloat {
     SignalOrFloat::Static(1.0)
 }
@@ -500,6 +533,7 @@ impl SamplerSpec {
             SamplerSpec::CrtJitter { .. } => "CrtJitter",
             SamplerSpec::Bounce { .. } => "Bounce",
             SamplerSpec::Pendulum { .. } => "Pendulum",
+            SamplerSpec::Gravity { .. } => "Gravity",
         }
     }
 
@@ -516,6 +550,9 @@ impl SamplerSpec {
             SamplerSpec::Bounce { .. } => "Bouncing vertical displacement for loaders",
             SamplerSpec::Pendulum { .. } => {
                 "Bidirectional swaying motion for menus and hanging items"
+            }
+            SamplerSpec::Gravity { .. } => {
+                "Parabolic acceleration for falling/rising content"
             }
         }
     }
@@ -603,6 +640,15 @@ impl SamplerSpec {
                 ("amplitude", format!("{:?}", amplitude)),
                 ("speed", format!("{:?}", speed)),
                 ("phase_spread", format!("{:?}", phase_spread)),
+            ],
+            SamplerSpec::Gravity {
+                axis,
+                acceleration,
+                terminal_velocity,
+            } => vec![
+                ("axis", format!("{:?}", axis)),
+                ("acceleration", format!("{:?}", acceleration)),
+                ("terminal_velocity", format!("{:?}", terminal_velocity)),
             ],
         }
     }

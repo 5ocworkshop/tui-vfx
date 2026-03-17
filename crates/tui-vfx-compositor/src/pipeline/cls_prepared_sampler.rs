@@ -7,6 +7,7 @@ use crate::samplers::cls_bounce::Bounce;
 use crate::samplers::cls_crt_jitter::CrtJitter;
 use crate::samplers::cls_crt_sampler::CrtSampler;
 use crate::samplers::cls_fault_line::FaultLine;
+use crate::samplers::cls_gravity::Gravity;
 use crate::samplers::cls_pendulum::Pendulum;
 use crate::samplers::cls_ripple::Ripple;
 use crate::samplers::cls_shredder::Shredder;
@@ -25,6 +26,7 @@ pub(crate) enum PreparedSampler {
     CrtJitter(CrtJitter),
     Bounce(Bounce),
     Pendulum(Pendulum),
+    Gravity(Gravity),
 }
 
 impl PreparedSampler {
@@ -46,6 +48,7 @@ impl PreparedSampler {
             PreparedSampler::CrtJitter(configured) => configured.sample(x, y, width, height, t),
             PreparedSampler::Bounce(configured) => configured.sample(x, y, width, height, t),
             PreparedSampler::Pendulum(configured) => configured.sample(x, y, width, height, t),
+            PreparedSampler::Gravity(configured) => configured.sample(x, y, width, height, t),
         };
         match sampled {
             Some((sx, sy)) => (Some(sx), Some(sy)),
@@ -64,6 +67,7 @@ impl PreparedSampler {
             PreparedSampler::CrtJitter(_) => "CrtJitter",
             PreparedSampler::Bounce(_) => "Bounce",
             PreparedSampler::Pendulum(_) => "Pendulum",
+            PreparedSampler::Gravity(_) => "Gravity",
         }
     }
 }
@@ -181,6 +185,15 @@ pub(crate) fn prepare_sampler(t: f64, sampler_spec: &Option<SamplerSpec>) -> Pre
                 eval_phase_spread,
                 *axis,
             ))
+        }
+        SamplerSpec::Gravity {
+            axis,
+            acceleration,
+            terminal_velocity,
+        } => {
+            let eval_accel = acceleration.evaluate(t, &signal_ctx).unwrap_or(4.0);
+            let eval_terminal = terminal_velocity.evaluate(t, &signal_ctx).unwrap_or(10.0);
+            PreparedSampler::Gravity(Gravity::new(eval_accel as f32, eval_terminal as f32, *axis))
         }
     }
 }
