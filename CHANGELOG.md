@@ -9,6 +9,17 @@ All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 0.2.6 — 2026-03-17
+
+### Added
+- **tui-vfx-compositor:** Added `CharsetNoise` filter — non-converging time-varying character replacement operating at the compositor level. Replaces cell characters from a position-aware charset gradient that changes over time. Lives in the filter pipeline alongside braille_dust, tint, dim, etc., so every consumer (factory, recipe preview, any future consumer) gets it automatically. Supports vertical gradient of charsets, per-cell jitter, and desynchronized timing. JSON: `{ "type": "charset_noise", "hz": 8.0, "seed": 42, "jitter": 0.15, "gradient": [...] }`.
+
+### Changed
+- **tui-vfx-content:** **BREAKING:** Removed `CharsetNoise` variant from `ContentEffect` enum. CharsetNoise is now a compositor filter (`FilterSpec::CharsetNoise`), not a content transformer. Recipes should use `pipeline.filter.dwell` instead of `content.effect`. The old `cls_charset_noise.rs` and `cls_charset_noise_config.rs` moved to recyclebin.
+
+### Fixed
+- **tui-vfx-compositor:** Fixed `CharsetNoise` filter time_step calculation — was dividing by 1000 (leftover from content transformer which received milliseconds). Compositor filters receive normalized t (0–1). Matches braille_dust's pattern.
+
 ## 0.2.5 — 2026-03-17
 
 ### Added
