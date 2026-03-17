@@ -266,6 +266,10 @@ pub enum FilterSpec {
         /// Optional foreground color for dust particles
         #[serde(default)]
         color: Option<ColorConfig>,
+        /// Drift in cells per step lifecycle. Positive = downward (gravity),
+        /// negative = upward (sparks rising). Default 0.0 (no drift).
+        #[serde(default)]
+        drift: f32,
     },
     /// Scanline/interlace effect for backdrop dimming
     ///

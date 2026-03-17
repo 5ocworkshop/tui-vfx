@@ -47,6 +47,9 @@ pub struct BrailleDust {
     pub pattern: BraillePattern,
     /// Optional foreground color for the dust
     pub fg_color: Option<Color>,
+    /// Drift in cells per step lifecycle. Positive = downward (gravity), negative = upward (sparks rising).
+    /// The hash query shifts by this many rows over each particle's lifetime.
+    pub drift: f32,
 }
 
 impl Default for BrailleDust {
@@ -57,6 +60,7 @@ impl Default for BrailleDust {
             seed: 42,
             pattern: BraillePattern::SingleDot,
             fg_color: None,
+            drift: 0.0,
         }
     }
 }
@@ -94,6 +98,13 @@ impl BrailleDust {
     /// Set the foreground color for dust particles.
     pub fn with_fg(mut self, color: Color) -> Self {
         self.fg_color = Some(color);
+        self
+    }
+
+    /// Set drift in cells per step lifecycle.
+    /// Positive = downward (gravity), negative = upward (sparks rising).
+    pub fn with_drift(mut self, drift: f32) -> Self {
+        self.drift = drift;
         self
     }
 
@@ -180,8 +191,21 @@ impl Filter for BrailleDust {
             return;
         }
 
-        // Generate noise for this position and time (desynchronized per cell)
-        let noise = self.noise(x, y, t);
+        // Drift: shift the query position over the step lifecycle.
+        // The noise is evaluated at the "source" position, which drifts
+        // over time. A particle born at row 5 will appear at row 5, then
+        // row 6, then row 7 as the step progresses — faking gravity.
+        let (query_x, query_y) = if self.drift.abs() > 0.001 {
+            let cell_t = t + self.cell_time_offset(x, y);
+            let step_progress = (cell_t * self.hz as f64).fract() as f32;
+            let drift_offset = (self.drift * step_progress).round() as i32;
+            (x, (y as i32 - drift_offset).max(0) as u16)
+        } else {
+            (x, y)
+        };
+
+        // Generate noise at the drifted source position (desynchronized per cell)
+        let noise = self.noise(query_x, query_y, t);
 
         // Check if this cell should have dust (stochastic threshold)
         if noise > (1.0 - self.density) {
@@ -194,7 +218,7 @@ impl Filter for BrailleDust {
             }
 
             // Pick braille character
-            let char_noise = self.noise(x.wrapping_add(1000), y.wrapping_add(1000), t);
+            let char_noise = self.noise(query_x.wrapping_add(1000), query_y.wrapping_add(1000), t);
             cell.ch = self.braille_char(char_noise);
 
             // Apply foreground color dimmed by fade envelope for smooth fade-in/fade-out

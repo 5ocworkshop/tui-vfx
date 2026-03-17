@@ -260,6 +260,7 @@ pub(crate) fn prepare_filter(
             seed,
             pattern,
             color,
+            drift,
         } => {
             use crate::filters::cls_braille_dust::BraillePattern;
             let braille_pattern = match pattern {
@@ -284,6 +285,9 @@ pub(crate) fn prepare_filter(
             if let Some(color_config) = color {
                 let c: Color = (*color_config).into();
                 filter = filter.with_fg(c);
+            }
+            if *drift != 0.0 {
+                filter = filter.with_drift(*drift);
             }
             Some(PreparedFilter::BrailleDust(filter))
         }
