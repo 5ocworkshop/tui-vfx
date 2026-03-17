@@ -1,7 +1,7 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.7.0</VERS> -->
-<!-- <WCTX>CharsetNoise content transformer for living textures</WCTX> -->
-<!-- <CLOG>Document CharsetNoise transformer addition in 0.2.5</CLOG> -->
+<!-- <VERS>VERSION: 1.8.0</VERS> -->
+<!-- <WCTX>Document 0.2.5 additions: CharsetNoise, Gravity sampler, braille_dust improvements</WCTX> -->
+<!-- <CLOG>Add Gravity sampler, braille_dust desync/fade/drift/empty-braille fixes to changelog</CLOG> -->
 
 # Changelog
 
@@ -15,6 +15,13 @@ This project follows [Semantic Versioning](https://semver.org/).
 - **tui-vfx-content:** Added `CharsetNoise` content transformer — non-converging, time-varying character replacement with vertical gradient support. Unlike Scramble (which resolves toward target text), CharsetNoise cycles indefinitely, replacing characters from a configurable charset at a given hz rate. Supports position-aware charset gradients (sparse characters at top, dense at bottom) and per-cell jitter for organic variation. Designed for living textures: fire, rain, smoke, static noise. Including empty characters (like `⠀`) in sparse pools creates flickering shape boundaries.
 - **tui-vfx-content:** Added `GradientStop` type for charset gradient configuration and `AffectMode` enum (`all` / `non_empty`) controlling which cells are replaced.
 - **tui-vfx-content:** Added `CharsetNoise` variant to `ContentEffect` enum with full serde support (`"type": "charset_noise"` in JSON).
+- **tui-vfx-compositor:** Added `Gravity` sampler — parabolic acceleration displacement (`0.5 * a * t²`) with terminal velocity cap. Positive acceleration = fall down/right, negative = rise up/left. Useful for falling text, rising smoke, drop-in entrances, and debris effects. JSON: `{ "type": "gravity", "axis": "y", "acceleration": 6.0, "terminal_velocity": 12.0 }`.
+- **tui-vfx-compositor:** Added `drift` field to `BrailleDust` filter — shifts particle hash query position over each lifecycle step, faking gravity (positive = fall) or buoyancy (negative = rise) without per-particle state. JSON: `"drift": 2.0`.
+
+### Fixed
+- **tui-vfx-compositor:** `BrailleDust` filter now recognizes empty braille `⠀` (U+2800) as empty alongside whitespace, so dust particles correctly appear in braille art content that uses `⠀` for empty space.
+- **tui-vfx-compositor:** `BrailleDust` particles now appear at staggered times — per-cell time offset desynchronizes step transitions so particles don't all flash in unison.
+- **tui-vfx-compositor:** `BrailleDust` particles now fade in/out smoothly — foreground color is dimmed by a `sin(π * progress)` bell curve envelope over each lifecycle step, replacing the previous binary snap on/off.
 
 ## 0.2.4 — 2026-03-13
 
