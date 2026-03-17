@@ -129,7 +129,7 @@ impl Filter for CharsetNoise {
 
         // Per-cell desynchronized time step
         let cell_t = t + self.cell_time_offset(x, y);
-        let time_step = (cell_t * self.hz as f64 / 1000.0).floor() as u64;
+        let time_step = (cell_t * self.hz as f64).floor() as u64;
 
         let h = self.cell_hash(x, y, time_step);
 
