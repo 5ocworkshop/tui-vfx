@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_braille_dust.rs</FILE> - <DESC>Stochastic braille dust filter for frosted glass texture</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>Fix braille_dust to recognize empty braille ⠀ (U+2800) as empty</WCTX>
-// <CLOG>Extend is_cell_empty to treat ⠀ (braille with no dots) as empty alongside whitespace, so dust particles appear in braille art content</CLOG>
+// <VERS>VERSION: 1.3.0</VERS>
+// <WCTX>Desynchronize braille_dust particles and add fade envelope</WCTX>
+// <CLOG>Per-cell time offset so particles appear/disappear at staggered times; within-step fade envelope modulates braille dot count for smooth fade-in/fade-out instead of binary snap</CLOG>
 
 use crate::traits::filter::Filter;
 use mixed_signals::math::fast_random;
@@ -103,14 +103,32 @@ impl BrailleDust {
         cell.ch.is_whitespace() || cell.ch == '\u{2800}'
     }
 
+    /// Per-cell time offset for desynchronized particle updates.
+    /// Different cells cross their step boundary at different times,
+    /// so particles appear and disappear independently rather than
+    /// all flashing in unison.
+    #[inline]
+    fn cell_time_offset(&self, x: u16, y: u16) -> f64 {
+        let position_hash =
+            (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
+        let offset_seed = position_hash ^ self.seed.wrapping_mul(2654435761);
+        // Offset within one step period (0.0 to 1.0/hz seconds)
+        (offset_seed % 1000) as f64 / 1000.0 / self.hz.max(0.1) as f64
+    }
+
     /// Generate deterministic noise for a position and time.
+    /// Each cell has a per-cell time offset so particles desynchronize.
     #[inline]
     fn noise(&self, x: u16, y: u16, t: f64) -> f32 {
+        // Per-cell time offset desynchronizes step transitions
+        let cell_t = t + self.cell_time_offset(x, y);
+
         // Convert time to discrete steps based on hz (changes per second)
-        let time_component = (t * self.hz as f64).floor() as u64;
+        let time_component = (cell_t * self.hz as f64).floor() as u64;
 
         // Pack x,y into a single value with good bit distribution
-        let position_hash = (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
+        let position_hash =
+            (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
 
         // Combine with seed and time
         let input = self
@@ -119,6 +137,17 @@ impl BrailleDust {
             .wrapping_add(time_component.wrapping_mul(3935559000370003845));
 
         fast_random(self.seed, input)
+    }
+
+    /// Returns a fade envelope (0.0→1.0→0.0) for the current position
+    /// within its time step. Particles smoothly fade in and out instead
+    /// of snapping on/off.
+    #[inline]
+    fn step_fade(&self, x: u16, y: u16, t: f64) -> f32 {
+        let cell_t = t + self.cell_time_offset(x, y);
+        let fract = (cell_t * self.hz as f64).fract() as f32;
+        // Smooth bell curve: sin(π * fract) — 0 at edges, 1 at center
+        (fract * std::f32::consts::PI).sin()
     }
 
     /// Get a random braille character based on noise value.
@@ -151,14 +180,23 @@ impl Filter for BrailleDust {
             return;
         }
 
-        // Generate noise for this position and time
+        // Generate noise for this position and time (desynchronized per cell)
         let noise = self.noise(x, y, t);
 
         // Check if this cell should have dust (stochastic threshold)
         if noise > (1.0 - self.density) {
-            // Use a second noise value to pick the braille character
+            // Fade envelope: 0→1→0 over each step, so particles smoothly appear/disappear
+            let fade = self.step_fade(x, y, t);
+
+            // Scale braille dot count by fade — fewer dots at edges of lifecycle
             let char_noise = self.noise(x.wrapping_add(1000), y.wrapping_add(1000), t);
-            cell.ch = self.braille_char(char_noise);
+            let faded_noise = char_noise * fade;
+            cell.ch = self.braille_char(faded_noise);
+
+            // Skip rendering if fade is too low (effectively invisible)
+            if fade < 0.05 {
+                return;
+            }
 
             // Apply foreground color if specified
             if let Some(fg) = self.fg_color {
@@ -304,4 +342,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_braille_dust.rs</FILE> - <DESC>Stochastic braille dust filter for frosted glass texture</DESC>
-// <VERS>END OF VERSION: 1.2.0</VERS>
+// <VERS>END OF VERSION: 1.3.0</VERS>
