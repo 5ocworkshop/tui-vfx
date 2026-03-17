@@ -23,10 +23,12 @@ for i in "${!CRATES[@]}"; do
   echo "=== Publishing $crate ($(( i + 1 ))/${#CRATES[@]}) ==="
 
   attempt=0
+  skipped=false
   while true; do
     output=$(cargo publish -p "$crate" 2>&1) && break
     if echo "$output" | grep -q "already exists"; then
       echo "  Already published — skipping."
+      skipped=true
       break
     fi
     attempt=$(( attempt + 1 ))
@@ -39,7 +41,7 @@ for i in "${!CRATES[@]}"; do
     sleep "$RETRY_WAIT"
   done
 
-  if (( i < ${#CRATES[@]} - 1 )); then
+  if (( i < ${#CRATES[@]} - 1 )) && ! $skipped; then
     echo "  Waiting ${INITIAL_WAIT}s for crates.io index..."
     sleep "$INITIAL_WAIT"
   fi
