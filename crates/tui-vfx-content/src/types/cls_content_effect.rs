@@ -43,7 +43,6 @@
 //! { "type": "typewriter", "speed_variance": { "signal": "t" }} // Animated
 //! ```
 
-use super::cls_charset_noise_config::{AffectMode, GradientStop};
 use super::cls_dissolve_config::{DissolveDirection, DissolvePattern, DissolveReplacement};
 use super::cls_mirror_axis::MirrorAxis;
 use super::cls_morph_config::{MorphDirection, MorphProgression};
@@ -308,64 +307,6 @@ pub enum ContentEffect {
         /// Suffix to append (e.g., " «").
         suffix: String,
     },
-
-    /// Non-converging time-varying character replacement.
-    ///
-    /// Replaces characters from a position-aware charset that changes over time.
-    /// Unlike Scramble (which resolves toward target), CharsetNoise cycles
-    /// indefinitely — producing living textures like fire, rain, smoke, or static.
-    ///
-    /// Supports a vertical gradient of charsets: sparse characters at the top,
-    /// dense at the bottom. Including empty characters (like ⠀) in sparse pools
-    /// makes the shape boundary itself fluctuate.
-    ///
-    /// # Parameters
-    ///
-    /// - `hz`: Pattern changes per second (8.0 = organic fire flicker)
-    /// - `seed`: Deterministic base for reproducible patterns
-    /// - `jitter`: Per-cell random offset to gradient position (0.0–1.0)
-    /// - `affect`: Which cells to replace (default: `non_empty`)
-    /// - `chars`: Flat charset (all cells use the same pool)
-    /// - `gradient`: Position-aware charsets (overrides `chars` if present)
-    ///
-    /// # JSON Examples
-    ///
-    /// ```json
-    /// { "type": "charset_noise", "chars": "⣿⣷⣾⣯⣻⣽", "hz": 8.0, "seed": 42 }
-    /// ```
-    ///
-    /// ```json
-    /// { "type": "charset_noise", "hz": 8.0, "seed": 42, "jitter": 0.15,
-    ///   "gradient": [
-    ///     { "at": 0.0, "chars": "⠀⠀⠁⠂⠈" },
-    ///     { "at": 1.0, "chars": "⣿⣷⣾⣯⣻⣽" }
-    ///   ]
-    /// }
-    /// ```
-    CharsetNoise {
-        /// Pattern changes per second.
-        #[serde(default = "default_charset_noise_hz")]
-        hz: f32,
-        /// Deterministic seed for reproducible patterns.
-        #[serde(default)]
-        seed: u64,
-        /// Per-cell random offset to gradient position (0.0 = none, 1.0 = full range).
-        #[serde(default)]
-        jitter: f32,
-        /// Which cells to affect.
-        #[serde(default)]
-        affect: AffectMode,
-        /// Flat charset — all cells use this pool. Ignored if `gradient` is present.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        chars: Option<String>,
-        /// Position-aware charset gradient. Overrides `chars` if present.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        gradient: Option<Vec<GradientStop>>,
-    },
-}
-
-fn default_charset_noise_hz() -> f32 {
-    8.0
 }
 
 impl ContentEffect {
@@ -386,7 +327,6 @@ impl ContentEffect {
             ContentEffect::Dissolve { .. } => "Dissolve",
             ContentEffect::Morph { .. } => "Morph",
             ContentEffect::WrapIndicator { .. } => "WrapIndicator",
-            ContentEffect::CharsetNoise { .. } => "CharsetNoise",
         }
     }
 
@@ -409,9 +349,6 @@ impl ContentEffect {
             ContentEffect::Dissolve { .. } => "Character-level dissolve effect",
             ContentEffect::Morph { .. } => "Text morphing transition",
             ContentEffect::WrapIndicator { .. } => "Prefix/suffix wrapper for indicators",
-            ContentEffect::CharsetNoise { .. } => {
-                "Non-converging time-varying character replacement"
-            }
         }
     }
 
@@ -518,28 +455,6 @@ impl ContentEffect {
             ],
             ContentEffect::WrapIndicator { prefix, suffix } => {
                 vec![("prefix", prefix.clone()), ("suffix", suffix.clone())]
-            }
-            ContentEffect::CharsetNoise {
-                hz,
-                seed,
-                jitter,
-                affect,
-                chars,
-                gradient,
-            } => {
-                let mut params = vec![
-                    ("hz", format!("{}", hz)),
-                    ("seed", format!("{}", seed)),
-                    ("jitter", format!("{}", jitter)),
-                    ("affect", format!("{:?}", affect)),
-                ];
-                if let Some(c) = chars {
-                    params.push(("chars", c.clone()));
-                }
-                if let Some(g) = gradient {
-                    params.push(("gradient_stops", format!("{}", g.len())));
-                }
-                params
             }
         }
     }

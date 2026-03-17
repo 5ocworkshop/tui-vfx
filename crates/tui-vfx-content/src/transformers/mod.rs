@@ -3,7 +3,6 @@
 // <WCTX>CharsetNoise transformer for non-converging time-varying character replacement</WCTX>
 // <CLOG>Add CharsetNoise transformer and re-export</CLOG>
 
-pub mod cls_charset_noise;
 pub mod cls_dissolve;
 pub mod cls_glitch_shift;
 pub mod cls_marquee;
@@ -21,7 +20,6 @@ pub mod cls_wrap_indicator;
 pub mod fnc_get_transformer;
 pub mod fnc_morph_chars;
 
-pub use cls_charset_noise::CharsetNoise;
 pub use cls_dissolve::Dissolve;
 pub use cls_glitch_shift::GlitchShift;
 pub use cls_marquee::Marquee;

@@ -144,6 +144,15 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             seed: 42,
             pattern: Default::default(),
             color: None,
+            drift: 0.0,
+        },
+        FilterSpec::CharsetNoise {
+            hz: 8.0,
+            seed: 42,
+            jitter: 0.15,
+            affect: Default::default(),
+            chars: None,
+            gradient: None,
         },
         FilterSpec::InterlaceCurtain {
             density: 1.0,

@@ -5,6 +5,7 @@
 
 use crate::filters::cls_bracket_emphasis::BracketEmphasis;
 use crate::filters::cls_braille_dust::BrailleDust;
+use crate::filters::cls_charset_noise::CharsetNoise;
 use crate::filters::cls_color_bridged_shade::ColorBridgedShade;
 use crate::filters::cls_crt::Crt;
 use crate::filters::cls_dim::Dim;
@@ -40,6 +41,7 @@ pub(crate) enum PreparedFilter {
     PatternFill(PatternFill),
     Greyscale(Greyscale),
     BrailleDust(BrailleDust),
+    CharsetNoise(CharsetNoise),
     InterlaceCurtain(InterlaceCurtain),
     MotionBlur(MotionBlur),
     ColorBridgedShade(ColorBridgedShade),
@@ -89,6 +91,9 @@ impl PreparedFilter {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
             PreparedFilter::BrailleDust(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
+            PreparedFilter::CharsetNoise(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
             PreparedFilter::InterlaceCurtain(filter) => {
@@ -146,6 +151,7 @@ impl PreparedFilter {
             PreparedFilter::PatternFill(_) => "PatternFill",
             PreparedFilter::Greyscale(_) => "Greyscale",
             PreparedFilter::BrailleDust(_) => "BrailleDust",
+            PreparedFilter::CharsetNoise(_) => "CharsetNoise",
             PreparedFilter::InterlaceCurtain(_) => "InterlaceCurtain",
             PreparedFilter::MotionBlur(_) => "MotionBlur",
             PreparedFilter::ColorBridgedShade(_) => "ColorBridgedShade",
@@ -290,6 +296,44 @@ pub(crate) fn prepare_filter(
                 filter = filter.with_drift(*drift);
             }
             Some(PreparedFilter::BrailleDust(filter))
+        }
+        FilterSpec::CharsetNoise {
+            hz,
+            seed,
+            jitter,
+            affect,
+            chars,
+            gradient,
+        } => {
+            use crate::filters::cls_charset_noise::{
+                AffectMode, CharsetGradientStop, CharsetNoise as CharsetNoiseFilter,
+            };
+            let affect_mode = match affect {
+                crate::types::cls_filter_spec::CharsetNoiseAffect::All => AffectMode::All,
+                crate::types::cls_filter_spec::CharsetNoiseAffect::NonEmpty => AffectMode::NonEmpty,
+            };
+            // Build gradient stops: prefer explicit gradient, fall back to flat chars
+            let stops = if let Some(g) = gradient {
+                g.iter()
+                    .map(|s| CharsetGradientStop {
+                        at: s.at,
+                        chars: s.chars.chars().collect(),
+                    })
+                    .collect()
+            } else if let Some(c) = chars {
+                vec![CharsetGradientStop {
+                    at: 0.0,
+                    chars: c.chars().collect(),
+                }]
+            } else {
+                vec![CharsetGradientStop {
+                    at: 0.0,
+                    chars: "█▓▒░".chars().collect(),
+                }]
+            };
+            Some(PreparedFilter::CharsetNoise(CharsetNoiseFilter::new(
+                *seed, *hz, *jitter, affect_mode, stops,
+            )))
         }
         FilterSpec::InterlaceCurtain {
             density,

@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/filters/mod.rs</FILE> - <DESC>Filter implementations (internal)</DESC>
-// <VERS>VERSION: 2.5.1</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Add shared filter test helper module</CLOG>
+// <VERS>VERSION: 2.6.0</VERS>
+// <WCTX>Add CharsetNoise filter for living textures</WCTX>
+// <CLOG>Add cls_charset_noise filter module</CLOG>
 
 pub(crate) mod cls_bracket_emphasis;
+pub(crate) mod cls_charset_noise;
 pub(crate) mod cls_braille_dust;
 pub(crate) mod cls_color_bridged_shade;
 pub(crate) mod cls_crt;
@@ -30,4 +31,4 @@ pub(crate) mod cls_vignette;
 pub(crate) mod test_support;
 
 // <FILE>tui-vfx-compositor/src/filters/mod.rs</FILE> - <DESC>Filter implementations (internal)</DESC>
-// <VERS>END OF VERSION: 2.5.1</VERS>
+// <VERS>END OF VERSION: 2.6.0</VERS>

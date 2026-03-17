@@ -130,6 +130,29 @@ pub enum BraillePatternType {
     OneToFourDots,
 }
 
+/// A single stop in a CharsetNoise vertical gradient.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(deny_unknown_fields)]
+pub struct CharsetNoiseGradientStop {
+    /// Normalized vertical position (0.0 = top, 1.0 = bottom).
+    pub at: f32,
+    /// Pool of characters at this position.
+    pub chars: String,
+}
+
+/// Controls which cells CharsetNoise affects.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum CharsetNoiseAffect {
+    /// Replace all cells (including whitespace).
+    All,
+    /// Replace only non-whitespace cells (default).
+    #[default]
+    NonEmpty,
+}
+
 /// Target for filter effects - which color component to affect.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
@@ -270,6 +293,68 @@ pub enum FilterSpec {
         /// negative = upward (sparks rising). Default 0.0 (no drift).
         #[serde(default)]
         drift: f32,
+    },
+    /// Non-converging time-varying character replacement for living textures.
+    ///
+    /// Replaces cell characters from a position-aware charset gradient that
+    /// changes over time. Unlike content transformers (which resolve toward
+    /// a target), CharsetNoise cycles indefinitely — producing living textures
+    /// like fire, rain, smoke, or static noise.
+    ///
+    /// Supports a vertical gradient of charsets: sparse characters at the top,
+    /// dense at the bottom. Including empty characters (like `⠀`) in sparse
+    /// pools makes the shape boundary itself fluctuate — cells flicker between
+    /// visible and invisible.
+    ///
+    /// Chains naturally with other filters: run `charset_noise` first to mutate
+    /// characters, then `braille_dust` to fill gaps with particles, then `tint`
+    /// for color warmth.
+    ///
+    /// # Parameters
+    ///
+    /// - `hz`: Pattern changes per second (8.0 = organic fire flicker)
+    /// - `seed`: Deterministic base for reproducible patterns
+    /// - `jitter`: Per-cell random offset to gradient position (0.0–1.0)
+    /// - `affect`: Which cells to replace (`"all"` or `"non_empty"`, default: `"non_empty"`)
+    /// - `chars`: Flat charset (all cells use the same pool)
+    /// - `gradient`: Position-aware charsets (overrides `chars` if present)
+    ///
+    /// # JSON Examples
+    ///
+    /// Flat charset (all cells use the same pool):
+    /// ```json
+    /// { "type": "charset_noise", "chars": "⣿⣷⣾⣯⣻⣽", "hz": 8.0, "seed": 42 }
+    /// ```
+    ///
+    /// Vertical gradient (sparse flickering tips, solid dense base):
+    /// ```json
+    /// { "type": "charset_noise", "hz": 8.0, "seed": 42, "jitter": 0.15,
+    ///   "gradient": [
+    ///     { "at": 0.0, "chars": "⠀⠀⠀⠁⠂⠈" },
+    ///     { "at": 0.5, "chars": "⡖⣂⢒⡒⣄⢆" },
+    ///     { "at": 1.0, "chars": "⣿⣷⣾⣯⣻⣽" }
+    ///   ]
+    /// }
+    /// ```
+    CharsetNoise {
+        /// Pattern changes per second (default 8.0).
+        #[serde(default = "default_charset_noise_hz")]
+        hz: f32,
+        /// Deterministic seed for reproducible patterns.
+        #[serde(default)]
+        seed: u64,
+        /// Per-cell random offset to gradient position (0.0 = none, 1.0 = full range).
+        #[serde(default)]
+        jitter: f32,
+        /// Which cells to affect: "all" or "non_empty" (default).
+        #[serde(default)]
+        affect: CharsetNoiseAffect,
+        /// Flat charset — all cells use this pool. Ignored if `gradient` is present.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        chars: Option<String>,
+        /// Position-aware charset gradient. Overrides `chars` if present.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        gradient: Option<Vec<CharsetNoiseGradientStop>>,
     },
     /// Scanline/interlace effect for backdrop dimming
     ///
@@ -666,6 +751,10 @@ fn default_braille_seed() -> u64 {
     42
 }
 
+fn default_charset_noise_hz() -> f32 {
+    8.0
+}
+
 fn default_interlace_density() -> f32 {
     1.0
 }
@@ -967,6 +1056,7 @@ impl FilterSpec {
             FilterSpec::PatternFill { .. } => "PatternFill",
             FilterSpec::Greyscale { .. } => "Greyscale",
             FilterSpec::BrailleDust { .. } => "BrailleDust",
+            FilterSpec::CharsetNoise { .. } => "CharsetNoise",
             FilterSpec::InterlaceCurtain { .. } => "InterlaceCurtain",
             FilterSpec::MotionBlur { .. } => "MotionBlur",
             FilterSpec::ColorBridgedShade { .. } => "ColorBridgedShade",
@@ -996,6 +1086,9 @@ impl FilterSpec {
             FilterSpec::PatternFill { .. } => "Pattern fill effect for background textures",
             FilterSpec::Greyscale { .. } => "Greyscale/desaturate filter using BT.601 luminance",
             FilterSpec::BrailleDust { .. } => "Stochastic braille dust for frosted glass texture",
+            FilterSpec::CharsetNoise { .. } => {
+                "Non-converging time-varying character replacement for living textures"
+            }
             FilterSpec::InterlaceCurtain { .. } => "Scanline/interlace effect for backdrop dimming",
             FilterSpec::MotionBlur { .. } => "Motion blur trail effect with directional dimming",
             FilterSpec::ColorBridgedShade { .. } => {
@@ -1069,6 +1162,13 @@ impl FilterSpec {
                 ("density", format!("{}", density)),
                 ("hz", format!("{}", hz)),
                 ("seed", format!("{}", seed)),
+            ],
+            FilterSpec::CharsetNoise {
+                hz, seed, jitter, ..
+            } => vec![
+                ("hz", format!("{}", hz)),
+                ("seed", format!("{}", seed)),
+                ("jitter", format!("{}", jitter)),
             ],
             FilterSpec::InterlaceCurtain {
                 density,

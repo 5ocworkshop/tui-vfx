@@ -5,10 +5,9 @@
 
 use crate::traits::TextTransformer;
 use crate::transformers::{
-    CharsetNoise, Dissolve, GlitchShift, Marquee, Mirror, Morph, Numeric, Odometer, Redact,
-    Scramble, ScrambleGlitchShift, SlideShift, SplitFlap, Typewriter, WrapIndicator,
+    Dissolve, GlitchShift, Marquee, Mirror, Morph, Numeric, Odometer, Redact, Scramble,
+    ScrambleGlitchShift, SlideShift, SplitFlap, Typewriter, WrapIndicator,
 };
-use crate::types::cls_charset_noise_config::GradientStop;
 use crate::types::ContentEffect;
 pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
     match effect {
@@ -100,31 +99,6 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
         } => Box::new(Morph::new(source.clone(), *progression, *direction, *seed)),
         ContentEffect::WrapIndicator { prefix, suffix } => {
             Box::new(WrapIndicator::new(prefix.clone(), suffix.clone()))
-        }
-        ContentEffect::CharsetNoise {
-            hz,
-            seed,
-            jitter,
-            affect,
-            chars,
-            gradient,
-        } => {
-            // Build gradient stops: prefer explicit gradient, fall back to flat chars
-            let stops = if let Some(g) = gradient {
-                g.clone()
-            } else if let Some(c) = chars {
-                vec![GradientStop {
-                    at: 0.0,
-                    chars: c.clone(),
-                }]
-            } else {
-                // No charset specified — use a default visible placeholder
-                vec![GradientStop {
-                    at: 0.0,
-                    chars: "█▓▒░".to_string(),
-                }]
-            };
-            Box::new(CharsetNoise::new(*seed, *hz, *jitter, *affect, stops))
         }
     }
 }
