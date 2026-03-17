@@ -199,7 +199,7 @@ impl Filter for BrailleDust {
             let cell_t = t + self.cell_time_offset(x, y);
             let step_progress = (cell_t * self.hz as f64).fract() as f32;
             let drift_offset = (self.drift * step_progress).round() as i32;
-            (x, (y as i32 - drift_offset).max(0) as u16)
+            (x, (y as i32 + drift_offset).max(0) as u16)
         } else {
             (x, y)
         };
