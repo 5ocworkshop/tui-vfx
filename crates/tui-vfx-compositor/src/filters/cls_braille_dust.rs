@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_braille_dust.rs</FILE> - <DESC>Stochastic braille dust filter for frosted glass texture</DESC>
 // <VERS>VERSION: 1.3.0</VERS>
 // <WCTX>Desynchronize braille_dust particles and add fade envelope</WCTX>
-// <CLOG>Per-cell time offset so particles appear/disappear at staggered times; within-step fade envelope modulates braille dot count for smooth fade-in/fade-out instead of binary snap</CLOG>
+// <CLOG>Per-cell time offset for staggered particles; fade envelope dims fg color smoothly (sin bell curve) for organic fade-in/fade-out</CLOG>
 
 use crate::traits::filter::Filter;
 use mixed_signals::math::fast_random;
@@ -188,19 +188,22 @@ impl Filter for BrailleDust {
             // Fade envelope: 0→1→0 over each step, so particles smoothly appear/disappear
             let fade = self.step_fade(x, y, t);
 
-            // Scale braille dot count by fade — fewer dots at edges of lifecycle
-            let char_noise = self.noise(x.wrapping_add(1000), y.wrapping_add(1000), t);
-            let faded_noise = char_noise * fade;
-            cell.ch = self.braille_char(faded_noise);
-
             // Skip rendering if fade is too low (effectively invisible)
             if fade < 0.05 {
                 return;
             }
 
-            // Apply foreground color if specified
+            // Pick braille character
+            let char_noise = self.noise(x.wrapping_add(1000), y.wrapping_add(1000), t);
+            cell.ch = self.braille_char(char_noise);
+
+            // Apply foreground color dimmed by fade envelope for smooth fade-in/fade-out
             if let Some(fg) = self.fg_color {
-                cell.fg = fg;
+                cell.fg = Color::rgb(
+                    (fg.r as f32 * fade) as u8,
+                    (fg.g as f32 * fade) as u8,
+                    (fg.b as f32 * fade) as u8,
+                );
             }
         }
     }
@@ -314,7 +317,11 @@ mod tests {
 
         dust.apply(&mut cell, 0, 0, 10, 10, 0.5);
 
-        assert_eq!(cell.fg, Color::rgb(100, 100, 100));
+        // Color is dimmed by the fade envelope — verify it's set (non-white)
+        // and in the right color family (gray, not the original white)
+        assert_ne!(cell.fg, Color::WHITE, "fg should be changed from default");
+        assert_eq!(cell.fg.r, cell.fg.g, "gray color should have equal channels");
+        assert!(cell.fg.r <= 100, "dimmed color should not exceed base color");
     }
 
     #[test]
