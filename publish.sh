@@ -37,7 +37,9 @@ for i in "${!CRATES[@]}"; do
       echo "$output"
       exit 1
     fi
-    echo "  Attempt $attempt failed — waiting ${RETRY_WAIT}s before retry..."
+    echo "  Attempt $attempt failed:"
+    echo "$output"
+    echo "  Retrying in ${RETRY_WAIT}s..."
     sleep "$RETRY_WAIT"
   done
 
