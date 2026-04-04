@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Phase 0 dramatic color-shadow rollout: add compositing mode and grade config fields</WCTX>
-// <CLOG>Add composite_mode, grade fields and with_composite_mode/with_grade/with_dramatic_grade builders</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Separate shared shadow edge insets from cast span so consumers can tune orthogonal start positions without widening the shadow footprint</WCTX>
+// <CLOG>Add inset_x/inset_y fields plus with_inset builder so edge shadows can start at explicit insets independent of offset span</CLOG>
 
 //! # Shadow Configuration
 //!
@@ -13,7 +13,8 @@
 //! | Option | Type | Description |
 //! |--------|------|-------------|
 //! | `style` | [`ShadowStyle`] | Rendering technique (HalfBlock, Braille, Solid, Gradient) |
-//! | `offset_x/y` | `i8` | Shadow position relative to element |
+//! | `offset_x/y` | `i8` | Shadow span beyond the element on each axis |
+//! | `inset_x/y` | `Option<u8>` | Optional orthogonal inset override before horizontal/vertical edges begin |
 //! | `color` | [`Color`] | Shadow color (use alpha for transparency) |
 //! | `edges` | [`ShadowEdges`] | Which edges receive shadows |
 //! | `soft_edges` | `bool` | Enable half-block edge transitions |
@@ -26,7 +27,8 @@
 //!
 //! // Typical drop shadow
 //! let config = ShadowConfig::new(Color::BLACK.with_alpha(128))
-//!     .with_offset(2, 1)
+//!     .with_offset(1, 1)
+//!     .with_inset(2, 1)
 //!     .with_edges(ShadowEdges::BOTTOM_RIGHT);
 //! ```
 //!
@@ -46,7 +48,8 @@ use super::{ShadowCompositeMode, ShadowEdges, ShadowGradeConfig, ShadowStyle};
 /// use tui_vfx_types::Color;
 ///
 /// let config = ShadowConfig::new(Color::BLACK.with_alpha(128))
-///     .with_offset(2, 1)
+///     .with_offset(1, 1)
+///     .with_inset(2, 1)
 ///     .with_style(ShadowStyle::HalfBlock)
 ///     .with_edges(ShadowEdges::BOTTOM_RIGHT)
 ///     .with_soft_edges(true);
@@ -62,6 +65,12 @@ pub struct ShadowConfig {
 
     /// Y offset from element (positive = down, negative = up).
     pub offset_y: i8,
+
+    /// Horizontal inset before top/bottom shadow edges begin.
+    pub inset_x: Option<u8>,
+
+    /// Vertical inset before left/right shadow edges begin.
+    pub inset_y: Option<u8>,
 
     /// Shadow color.
     pub color: Color,
@@ -106,6 +115,8 @@ impl Default for ShadowConfig {
             style: ShadowStyle::HalfBlock,
             offset_x: 1,
             offset_y: 1,
+            inset_x: None,
+            inset_y: None,
             color: Color::BLACK.with_alpha(128),
             surface_color: None,
             edges: ShadowEdges::BOTTOM_RIGHT,
@@ -122,6 +133,7 @@ impl ShadowConfig {
     /// Uses defaults for other settings:
     /// - Style: HalfBlock
     /// - Offset: (1, 1)
+    /// - Inset: legacy renderer-derived behavior
     /// - Edges: BOTTOM_RIGHT
     /// - Soft edges: enabled
     #[inline]
@@ -132,14 +144,29 @@ impl ShadowConfig {
         }
     }
 
-    /// Set the shadow offset (x, y).
+    /// Set the shadow span beyond the element (x, y).
     ///
     /// Positive x = shadow to the right, negative = left.
     /// Positive y = shadow below, negative = above.
+    ///
+    /// The absolute values determine how many columns/rows of shadow extend
+    /// beyond the element. Use [`with_inset`](Self::with_inset) to trim where
+    /// those edge runs begin along the orthogonal axis.
     #[inline]
     pub fn with_offset(mut self, x: i8, y: i8) -> Self {
         self.offset_x = x;
         self.offset_y = y;
+        self
+    }
+
+    /// Set the orthogonal shadow edge insets (x, y).
+    ///
+    /// `x` trims top/bottom shadow runs inward from the horizontal edge.
+    /// `y` trims left/right shadow runs inward from the vertical edge.
+    #[inline]
+    pub fn with_inset(mut self, x: u8, y: u8) -> Self {
+        self.inset_x = Some(x);
+        self.inset_y = Some(y);
         self
     }
 
@@ -227,6 +254,8 @@ mod tests {
         assert_eq!(config.style, ShadowStyle::HalfBlock);
         assert_eq!(config.offset_x, 1);
         assert_eq!(config.offset_y, 1);
+        assert_eq!(config.inset_x, None);
+        assert_eq!(config.inset_y, None);
         assert_eq!(config.edges, ShadowEdges::BOTTOM_RIGHT);
         assert!(config.soft_edges);
     }
@@ -235,6 +264,7 @@ mod tests {
     fn test_builder_pattern() {
         let config = ShadowConfig::new(Color::RED)
             .with_offset(2, 3)
+            .with_inset(4, 5)
             .with_style(ShadowStyle::Solid)
             .with_edges(ShadowEdges::ALL)
             .with_soft_edges(false);
@@ -242,6 +272,8 @@ mod tests {
         assert_eq!(config.color, Color::RED);
         assert_eq!(config.offset_x, 2);
         assert_eq!(config.offset_y, 3);
+        assert_eq!(config.inset_x, Some(4));
+        assert_eq!(config.inset_y, Some(5));
         assert_eq!(config.style, ShadowStyle::Solid);
         assert_eq!(config.edges, ShadowEdges::ALL);
         assert!(!config.soft_edges);
@@ -293,4 +325,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

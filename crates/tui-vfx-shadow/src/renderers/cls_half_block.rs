@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_half_block.rs</FILE> - <DESC>Half-block shadow renderer for sub-cell precision</DESC>
-// <VERS>VERSION: 0.8.1</VERS>
-// <WCTX>Add +1 inset to right-edge shadow start_y for grade-underlying visual weight</WCTX>
-// <CLOG>+1 inset on both right-edge start_y and bottom-edge start_x for grade-underlying visual weight</CLOG>
+// <VERS>VERSION: 0.9.0</VERS>
+// <WCTX>Honor explicit shared shadow inset controls so GTD can keep single-cell shadow spans while starting horizontal and vertical edges at different insets</WCTX>
+// <CLOG>Replace hardcoded edge insets with config.inset_x/inset_y when rendering half-block shadows</CLOG>
 
 //! Half-block shadow renderer using Unicode block characters.
 //!
@@ -58,6 +58,8 @@ impl HalfBlockRenderer {
 
         let ox = config.offset_x as i32;
         let oy = config.offset_y as i32;
+        let inset_x = config.inset_x.map(i32::from);
+        let inset_y = config.inset_y.map(i32::from);
 
         let edges = config.edges;
 
@@ -71,6 +73,7 @@ impl HalfBlockRenderer {
                 rect_h,
                 ox,
                 oy,
+                inset_y,
                 shadow_color,
                 surface,
                 config.soft_edges,
@@ -87,6 +90,7 @@ impl HalfBlockRenderer {
                 rect_h,
                 ox,
                 oy,
+                inset_x,
                 shadow_color,
                 surface,
                 config.soft_edges,
@@ -103,6 +107,7 @@ impl HalfBlockRenderer {
                 rect_h,
                 ox,
                 oy,
+                inset_y,
                 shadow_color,
                 surface,
                 config.soft_edges,
@@ -119,6 +124,7 @@ impl HalfBlockRenderer {
                 rect_h,
                 ox,
                 oy,
+                inset_x,
                 shadow_color,
                 surface,
                 config.soft_edges,
@@ -151,16 +157,21 @@ impl HalfBlockRenderer {
         rect_h: i32,
         ox: i32,
         oy: i32,
+        inset_y: Option<i32>,
         shadow: Color,
         surface: Color,
         soft: bool,
     ) {
         let start_x = (rect_x + rect_w).max(0) as usize;
         let end_x = (rect_x + rect_w + ox).max(0) as usize;
-        // +1 inset: start shadow 1 row below element top for grade-underlying visual weight
-        // TODO: plumb inset_x/inset_y through ShadowConfig when tunability is needed
-        let start_y = (rect_y + oy.max(0) + 1).max(0) as usize;
-        let end_y = (rect_y + rect_h + oy.min(0)).max(0) as usize;
+        let start_y = match inset_y {
+            Some(inset_y) => (rect_y + inset_y).max(0) as usize,
+            None => (rect_y + oy.max(0)).max(0) as usize,
+        };
+        let end_y = match inset_y {
+            Some(_) => (rect_y + rect_h).max(0) as usize,
+            None => (rect_y + rect_h + oy.min(0)).max(0) as usize,
+        };
 
         for y in start_y..end_y {
             for x in start_x..end_x {
@@ -193,14 +204,19 @@ impl HalfBlockRenderer {
         rect_h: i32,
         ox: i32,
         oy: i32,
+        inset_x: Option<i32>,
         shadow: Color,
         surface: Color,
         soft: bool,
     ) {
-        // +1 inset: start shadow 1 col right of element left for grade-underlying visual weight
-        // TODO: plumb inset_x/inset_y through ShadowConfig when tunability is needed
-        let start_x = (rect_x + ox.max(0) + 1).max(0) as usize;
-        let end_x = (rect_x + rect_w + ox.min(0)).max(0) as usize;
+        let start_x = match inset_x {
+            Some(inset_x) => (rect_x + inset_x).max(0) as usize,
+            None => (rect_x + ox.max(0) + 1).max(0) as usize,
+        };
+        let end_x = match inset_x {
+            Some(_) => (rect_x + rect_w).max(0) as usize,
+            None => (rect_x + rect_w + ox.min(0)).max(0) as usize,
+        };
         let start_y = (rect_y + rect_h).max(0) as usize;
         let end_y = (rect_y + rect_h + oy).max(0) as usize;
 
@@ -229,14 +245,21 @@ impl HalfBlockRenderer {
         rect_h: i32,
         ox: i32,
         oy: i32,
+        inset_y: Option<i32>,
         shadow: Color,
         surface: Color,
         soft: bool,
     ) {
         let start_x = (rect_x + ox).max(0) as usize;
         let end_x = rect_x.max(0) as usize;
-        let start_y = (rect_y + oy.max(0)).max(0) as usize;
-        let end_y = (rect_y + rect_h + oy.min(0)).max(0) as usize;
+        let start_y = match inset_y {
+            Some(inset_y) => (rect_y + inset_y).max(0) as usize,
+            None => (rect_y + oy.max(0)).max(0) as usize,
+        };
+        let end_y = match inset_y {
+            Some(_) => (rect_y + rect_h).max(0) as usize,
+            None => (rect_y + rect_h + oy.min(0)).max(0) as usize,
+        };
 
         for y in start_y..end_y {
             for x in start_x..end_x {
@@ -262,12 +285,19 @@ impl HalfBlockRenderer {
         _rect_h: i32,
         ox: i32,
         oy: i32,
+        inset_x: Option<i32>,
         shadow: Color,
         surface: Color,
         soft: bool,
     ) {
-        let start_x = (rect_x + ox.max(0)).max(0) as usize;
-        let end_x = (rect_x + rect_w + ox.min(0)).max(0) as usize;
+        let start_x = match inset_x {
+            Some(inset_x) => (rect_x + inset_x).max(0) as usize,
+            None => (rect_x + ox.max(0)).max(0) as usize,
+        };
+        let end_x = match inset_x {
+            Some(_) => (rect_x + rect_w).max(0) as usize,
+            None => (rect_x + rect_w + ox.min(0)).max(0) as usize,
+        };
         let start_y = (rect_y + oy).max(0) as usize;
         let end_y = rect_y.max(0) as usize;
 
@@ -355,23 +385,23 @@ mod tests {
         let mut grid = OwnedGrid::new(20, 10);
         let rect = Rect::new(5, 2, 8, 4);
         let config = ShadowConfig::new(Color::BLACK.with_alpha(128))
-            .with_offset(2, 1) // Offset of 2 so we have both soft edge columns
+            .with_offset(1, 1)
+            .with_inset(2, 1)
             .with_edges(ShadowEdges::BOTTOM_RIGHT);
 
         HalfBlockRenderer::render(&mut grid, rect, &config, 1.0);
 
-        // Check that shadow exists at expected positions
-        // Right edge shadow starts at x=13 (5+8), offset=2 gives 2 columns
-        // start_y = rect_y + oy + 1 = 2 + 1 + 1 = 4 (inset pushes 1 row down)
-        // Col 1 (x=13): 50% shadow using ▐ with fg=shadow, bg=surface
+        // Right edge shadow uses a single column and starts one row below the top edge.
         let cell = grid.get(13, 4).unwrap();
         assert_eq!(cell.ch, RIGHT_HALF);
-        assert_ne!(cell.fg, Color::TRANSPARENT); // fg=shadow
+        assert_ne!(cell.fg, Color::TRANSPARENT);
+        assert_eq!(grid.get(14, 4).unwrap().fg, Color::TRANSPARENT);
 
-        // Col 2 (x=14): 50% shadow using ▌ with fg=shadow, bg=surface
-        let cell = grid.get(14, 4).unwrap();
-        assert_eq!(cell.ch, LEFT_HALF);
-        assert_ne!(cell.fg, Color::TRANSPARENT); // fg=shadow
+        // Bottom edge shadow begins two columns in from the left edge.
+        let cell = grid.get(7, 6).unwrap();
+        assert_eq!(cell.ch, LOWER_HALF);
+        assert_ne!(cell.fg, Color::TRANSPARENT);
+        assert_eq!(grid.get(6, 6).unwrap().fg, Color::TRANSPARENT);
     }
 
     #[test]
@@ -393,4 +423,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_half_block.rs</FILE> - <DESC>Half-block shadow renderer for sub-cell precision</DESC>
-// <VERS>END OF VERSION: 0.8.1</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>

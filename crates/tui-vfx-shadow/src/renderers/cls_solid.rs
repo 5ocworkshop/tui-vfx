@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_solid.rs</FILE> - <DESC>Solid color shadow renderer</DESC>
-// <VERS>VERSION: 0.3.1</VERS>
-// <WCTX>Add +1 inset to right-edge shadow start_y for grade-underlying visual weight</WCTX>
-// <CLOG>+1 inset on both right-edge start_y and bottom-edge start_x for grade-underlying visual weight</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Honor explicit shared shadow inset controls so GTD can keep single-cell shadow spans while starting horizontal and vertical edges at different insets</WCTX>
+// <CLOG>Replace hardcoded edge insets with config.inset_x/inset_y when rendering solid shadows</CLOG>
 
 //! Solid color shadow renderer.
 //!
@@ -40,6 +40,8 @@ impl SolidRenderer {
 
         let ox = config.offset_x as i32;
         let oy = config.offset_y as i32;
+        let inset_x = config.inset_x.map(i32::from);
+        let inset_y = config.inset_y.map(i32::from);
         let edges = config.edges;
 
         // Calculate shadow regions based on offset direction and enabled edges
@@ -47,21 +49,29 @@ impl SolidRenderer {
         // Right edge shadow
         if edges.has_right() && ox > 0 {
             let start_x = (rect_x + rect_w).max(0) as usize;
-            // +1 inset: start shadow 1 row below element top for grade-underlying visual weight
-            // TODO: plumb inset_x/inset_y through ShadowConfig when tunability is needed
-            let start_y = (rect_y + oy.max(0) + 1).max(0) as usize;
+            let start_y = match inset_y {
+                Some(inset_y) => (rect_y + inset_y).max(0) as usize,
+                None => (rect_y + oy.max(0)).max(0) as usize,
+            };
             let w = ox as usize;
-            let h = (rect_h - oy.abs().min(rect_h)).max(0) as usize;
+            let h = match inset_y {
+                Some(inset_y) => (rect_h - inset_y.min(rect_h)).max(0) as usize,
+                None => (rect_h - oy.abs().min(rect_h)).max(0) as usize,
+            };
             Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
         }
 
         // Bottom edge shadow
         if edges.has_bottom() && oy > 0 {
-            // +1 inset: start shadow 1 col right of element left for grade-underlying visual weight
-            // TODO: plumb inset_x/inset_y through ShadowConfig when tunability is needed
-            let start_x = (rect_x + ox.max(0) + 1).max(0) as usize;
+            let start_x = match inset_x {
+                Some(inset_x) => (rect_x + inset_x).max(0) as usize,
+                None => (rect_x + ox.max(0) + 1).max(0) as usize,
+            };
             let start_y = (rect_y + rect_h).max(0) as usize;
-            let w = (rect_w - ox.abs().min(rect_w)).max(0) as usize;
+            let w = match inset_x {
+                Some(inset_x) => (rect_w - inset_x.min(rect_w)).max(0) as usize,
+                None => (rect_w - ox.abs().min(rect_w)).max(0) as usize,
+            };
             let h = oy as usize;
             Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
         }
@@ -138,23 +148,25 @@ mod tests {
         let mut grid = OwnedGrid::new(20, 10);
         let rect = Rect::new(5, 2, 8, 4);
         let config = ShadowConfig::new(Color::BLACK.with_alpha(128))
-            .with_offset(2, 1)
+            .with_offset(1, 1)
+            .with_inset(2, 1)
             .with_style(crate::types::ShadowStyle::Solid)
             .with_edges(ShadowEdges::BOTTOM_RIGHT);
 
         SolidRenderer::render(&mut grid, rect, &config, 1.0);
 
-        // Check that shadow exists at expected positions
-        // Right edge shadow: x=13-14, y=4-5 (start_y = rect_y + oy + 1 = 2+1+1 = 4, inset)
+        // Right edge shadow uses a single column and starts one row below the top edge.
         let cell = grid.get(13, 4).unwrap();
         assert_ne!(cell.bg, Color::TRANSPARENT);
         assert_eq!(cell.ch, ' ');
+        assert_eq!(grid.get(14, 4).unwrap().bg, Color::TRANSPARENT);
 
-        // Bottom edge shadow: x=8-12, y=6 (start_x = rect_x + ox + 1 = 5+2+1 = 8, inset)
-        let cell = grid.get(8, 6).unwrap();
+        // Bottom edge shadow begins two columns in from the left edge.
+        let cell = grid.get(7, 6).unwrap();
         assert_ne!(cell.bg, Color::TRANSPARENT);
+        assert_eq!(grid.get(6, 6).unwrap().bg, Color::TRANSPARENT);
 
-        // Corner shadow at x=13-14, y=6
+        // Corner shadow remains at the bottom-right corner.
         let cell = grid.get(13, 6).unwrap();
         assert_ne!(cell.bg, Color::TRANSPARENT);
     }
@@ -178,4 +190,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_solid.rs</FILE> - <DESC>Solid color shadow renderer</DESC>
-// <VERS>END OF VERSION: 0.3.1</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
