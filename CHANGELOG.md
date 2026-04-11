@@ -1,13 +1,28 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.8.0</VERS> -->
-<!-- <WCTX>Document 0.2.5 additions: CharsetNoise, Gravity sampler, braille_dust improvements</WCTX> -->
-<!-- <CLOG>Add Gravity sampler, braille_dust desync/fade/drift/empty-braille fixes to changelog</CLOG> -->
+<!-- <VERS>VERSION: 1.9.0</VERS> -->
+<!-- <WCTX>feat/content-ergonomics: document 0.3.0 ergonomic additions to tui-vfx-content</WCTX> -->
+<!-- <CLOG>Add 0.3.0 section covering ContentEffect::apply and TypewriterCursor presets</CLOG> -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
+
+## 0.3.0 — 2026-04-11
+
+### Added
+- **tui-vfx-content:** Added `ContentEffect::apply(target, progress) -> String` — a one-call ergonomic entry point that hides the `get_transformer` dispatcher, the `SignalContext`, and the `Cow` unwrap for the common static-progress case. Collapses three lines of boilerplate into one.
+- **tui-vfx-content:** Added `ContentEffect::apply_to_borrowed(target, progress) -> Cow<'_, str>` preserving the zero-allocation fast path that the underlying `TextTransformer::transform` method provides. Use this when you care about avoiding `Cow::into_owned` in the no-op case (e.g. Typewriter at progress `1.0` returning the full target as a borrowed slice).
+- **tui-vfx-content:** Added `ContentEffect::apply_with_context(target, progress, &ctx) -> Cow<'_, str>` — the advanced-use entry point for signal-driven pacing with a caller-supplied `SignalContext`.
+- **tui-vfx-content:** Added `TypewriterCursor::simple(glyph)` and the convenience presets `block()` (█), `underscore()` (_), `pipe()` (|), and `caret()` (▌). Each preset is a thin wrapper over `Self::default()` that swaps the character field, so the rest of the `SignalOrFloat` shape is preserved exactly.
+- **tui-vfx-content:** Crate-level rustdoc gained Quick start, Static vs signal-driven parameters, and Cursor presets sections explaining when to reach for `SignalOrFloat::Static(n)` vs the dynamic variants.
+
+### Changed
+- **workspace:** Bumped workspace version from `0.2.6` to `0.3.0` to reflect the additive `tui-vfx-content` public API additions. All other crates are republished at the new version unchanged.
+
+### Notes
+- Every change in this release is **additive** to the public API. The existing `get_transformer` + `TextTransformer::transform` + `SignalContext` path is unchanged and remains the canonical advanced API. No call sites need to migrate.
 
 ## 0.2.6 — 2026-03-17
 
