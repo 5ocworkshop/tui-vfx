@@ -1,12 +1,12 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.8.1</VERS> -->
-<!-- <WCTX>Public release prep</WCTX> -->
-<!-- <CLOG>Fix FILE metadata to match actual filename</CLOG> -->
+<!-- <VERS>VERSION: 1.9.0</VERS> -->
+<!-- <WCTX>feat/content-ergonomics: document ContentEffect::apply and TypewriterCursor presets</WCTX> -->
+<!-- <CLOG>Add Applying a content effect and TypewriterCursor presets sections</CLOG> -->
 
 # tui-vfx Capabilities Reference
 
 > **MAINTENANCE NOTE:** This document must be kept in sync with the source code.
-> Last verified: 2026-01-22
+> Last verified: 2026-04-11
 > When adding new effects, update the relevant section below.
 
 This document provides a complete inventory of visual effects available in tui-vfx,
@@ -360,6 +360,52 @@ Progress 1.0: "» YES «"
 - Characters appear one at a time as progress increases
 - Ideal for hover indicators like "» Selected Item «"
 
+### Applying a content effect (since 0.3.0)
+
+For the common case where you have a `progress: f64` from an animation
+loop and want the transformed text back, call `ContentEffect::apply`
+directly instead of going through the dispatcher:
+
+```rust
+use tui_vfx_content::prelude::*;
+
+let effect = ContentEffect::Typewriter {
+    speed_variance: SignalOrFloat::Static(0.0),
+    cursor: None,
+};
+let revealed: String = effect.apply("Hello World", 0.5);
+```
+
+The full method set:
+
+| Method | Returns | When to use |
+|--------|---------|-------------|
+| `apply(target, progress)` | `String` | The 95% case — owned result, default `SignalContext`. |
+| `apply_to_borrowed(target, progress)` | `Cow<'_, str>` | When you want to preserve the zero-allocation fast path (e.g. Typewriter at progress `1.0`). |
+| `apply_with_context(target, progress, &ctx)` | `Cow<'_, str>` | Advanced — signal-driven pacing with a custom `SignalContext`. |
+
+The existing `get_transformer(&effect).transform(target, progress, &ctx)`
+path is unchanged and remains the canonical advanced API.
+
+### TypewriterCursor presets (since 0.3.0)
+
+`TypewriterCursor` ships with one-line constructors for the canonical
+terminal cursor glyphs:
+
+```rust
+use tui_vfx_content::types::TypewriterCursor;
+
+let block = TypewriterCursor::block();        // █
+let underscore = TypewriterCursor::underscore(); // _
+let pipe = TypewriterCursor::pipe();          // |
+let caret = TypewriterCursor::caret();        // ▌
+let custom = TypewriterCursor::simple('◆');   // any single glyph
+```
+
+Each preset uses `Default::default()` for `blink_interval`,
+`show_while_typing`, and `show_after_complete`, so consumers can opt in
+to a glyph without writing the full struct literal.
+
 ---
 
 ## Shadows
@@ -483,4 +529,4 @@ JSON/TOML-driven configurations.
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.8.1</VERS> -->
+<!-- <VERS>END OF VERSION: 1.9.0</VERS> -->
