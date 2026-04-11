@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>VERSION: 2.10.0</VERS>
-// <WCTX>CharsetNoise content transformer for living textures</WCTX>
-// <CLOG>Add CharsetNoise variant to ContentEffect enum for non-converging time-varying character replacement with vertical gradient support</CLOG>
+// <VERS>VERSION: 2.11.0</VERS>
+// <WCTX>feat/content-ergonomics: ContentEffect::apply convenience entry point</WCTX>
+// <CLOG>Document the ergonomic apply / apply_to_borrowed / apply_with_context entry points</CLOG>
 
 //! # Content Effects
 //!
@@ -60,6 +60,27 @@ fn default_shift_width() -> u16 {
 ///
 /// Content effects operate on character data, modifying what text is displayed
 /// rather than how it appears (style) or where it appears (filters/samplers).
+///
+/// # Applying an effect
+///
+/// The simplest way to drive a content effect is the inherent
+/// [`apply`](Self::apply) method, which collapses the dispatcher +
+/// [`SignalContext`](mixed_signals::prelude::SignalContext) +
+/// [`Cow`](std::borrow::Cow) ceremony into one call:
+///
+/// ```
+/// use tui_vfx_content::prelude::*;
+///
+/// let effect = ContentEffect::Typewriter {
+///     speed_variance: SignalOrFloat::Static(0.0),
+///     cursor: None,
+/// };
+/// let revealed: String = effect.apply("Hello World", 0.5);
+/// ```
+///
+/// For the borrowed-fast-path variant see
+/// [`apply_to_borrowed`](Self::apply_to_borrowed); for signal-driven pacing
+/// see [`apply_with_context`](Self::apply_with_context).
 ///
 /// # Categories
 ///
@@ -461,4 +482,4 @@ impl ContentEffect {
 }
 
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>END OF VERSION: 2.10.0</VERS>
+// <VERS>END OF VERSION: 2.11.0</VERS>
