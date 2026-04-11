@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs</FILE> - <DESC>Prepared sampler enum for pipeline rendering</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>Add pendulum sampler for swaying animations</WCTX>
-// <CLOG>Add Pendulum variant to PreparedSampler</CLOG>
+// <VERS>VERSION: 1.2.1</VERS>
+// <WCTX>feat/content-ergonomics: clean up pre-existing workspace clippy lint</WCTX>
+// <CLOG>Drop redundant f32-to-f32 casts on Gravity::new arguments (clippy::unnecessary_cast)</CLOG>
 
 use crate::samplers::cls_bounce::Bounce;
 use crate::samplers::cls_crt_jitter::CrtJitter;
@@ -193,10 +193,10 @@ pub(crate) fn prepare_sampler(t: f64, sampler_spec: &Option<SamplerSpec>) -> Pre
         } => {
             let eval_accel = acceleration.evaluate(t, &signal_ctx).unwrap_or(4.0);
             let eval_terminal = terminal_velocity.evaluate(t, &signal_ctx).unwrap_or(10.0);
-            PreparedSampler::Gravity(Gravity::new(eval_accel as f32, eval_terminal as f32, *axis))
+            PreparedSampler::Gravity(Gravity::new(eval_accel, eval_terminal, *axis))
         }
     }
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs</FILE> - <DESC>Prepared sampler enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 1.2.0</VERS>
+// <VERS>END OF VERSION: 1.2.1</VERS>

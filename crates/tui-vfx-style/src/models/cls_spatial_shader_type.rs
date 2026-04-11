@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>VERSION: 2.1.1</VERS>
-// <WCTX>Rustfmt normalization for spatial shader docs</WCTX>
-// <CLOG>Apply formatting updates after clippy run</CLOG>
+// <VERS>VERSION: 2.1.2</VERS>
+// <WCTX>feat/content-ergonomics: clean up pre-existing workspace rustdoc lint</WCTX>
+// <CLOG>Drop broken intra-doc links: CompositionOptions (out-of-crate) and StyleEffect::Spatial (use full crate path)</CLOG>
 
 //! # Spatial Shader Types
 //!
@@ -50,8 +50,9 @@
 //!
 //! ## Usage
 //!
-//! Shaders are typically applied via [`CompositionOptions::shader_layers`] or
-//! wrapped in a [`StyleEffect::Spatial`] for temporal animation.
+//! Shaders are typically applied via `CompositionOptions::shader_layers`
+//! (in `tui-vfx-compositor`) or wrapped in a
+//! [`crate::models::StyleEffect::Spatial`] for temporal animation.
 
 use crate::models::{
     LinearGradientShader, cls_ambient_occlusion_shader::AmbientOcclusionShader,
@@ -343,4 +344,4 @@ impl SpatialShaderType {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>END OF VERSION: 2.1.1</VERS>
+// <VERS>END OF VERSION: 2.1.2</VERS>

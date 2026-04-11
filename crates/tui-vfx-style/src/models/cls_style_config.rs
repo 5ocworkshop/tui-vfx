@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_style_config.rs</FILE> - <DESC>Serde-friendly representation of Ratatui Style</DESC>
-// <VERS>VERSION: 1.0.1 - 2025-12-18T09:16:57Z</VERS>
-// <WCTX>Clippy fix: field_reassign_with_default</WCTX>
-// <CLOG>Used struct literal for Style initialization</CLOG>
+// <VERS>VERSION: 1.0.2</VERS>
+// <WCTX>feat/content-ergonomics: clean up pre-existing workspace rustdoc lint</WCTX>
+// <CLOG>Drop broken intra-doc link to ratatui::style::Style (use plain code formatting)</CLOG>
 
 use crate::models::ColorConfig;
 use serde::{Deserialize, Serialize};
@@ -60,7 +60,7 @@ fn vec_to_modifiers(mods: &[ModifierConfig]) -> Modifiers {
     }
     out
 }
-/// Stable, serde-friendly representation of [`ratatui::style::Style`].
+/// Stable, serde-friendly representation of `ratatui::style::Style`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]
 pub struct StyleConfig {
@@ -105,4 +105,4 @@ impl From<StyleConfig> for Style {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_style_config.rs</FILE> - <DESC>Serde-friendly representation of Ratatui Style</DESC>
-// <VERS>END OF VERSION: 1.0.1 - 2025-12-18T09:16:57Z</VERS>
+// <VERS>END OF VERSION: 1.0.2</VERS>

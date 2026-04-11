@@ -1,12 +1,12 @@
 // <FILE>tui-vfx-style/src/models/cls_color_config.rs</FILE> - <DESC>Serde-friendly representation of Color</DESC>
-// <VERS>VERSION: 1.4.0 - 2026-01-12</VERS>
-// <WCTX>L2/L3 abstraction: tui-style-fx uses mixed-types</WCTX>
-// <CLOG>Fixed Color→ColorConfig mapping to use Light* variants for bright colors</CLOG>
+// <VERS>VERSION: 1.4.1</VERS>
+// <WCTX>feat/content-ergonomics: clean up pre-existing workspace rustdoc lint</WCTX>
+// <CLOG>Drop broken intra-doc link to ratatui::style::Color (use plain code formatting)</CLOG>
 
 use serde::{Deserialize, Deserializer, Serialize};
 use tui_vfx_types::Color;
 
-/// Stable, serde-friendly representation of [`ratatui::style::Color`].
+/// Stable, serde-friendly representation of `ratatui::style::Color`.
 ///
 /// We avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and
 /// configuration formats remain under our control.
@@ -263,4 +263,4 @@ impl From<ColorConfig> for Color {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_color_config.rs</FILE> - <DESC>Serde-friendly representation of Color</DESC>
-// <VERS>END OF VERSION: 1.4.0 - 2026-01-12</VERS>
+// <VERS>END OF VERSION: 1.4.1</VERS>

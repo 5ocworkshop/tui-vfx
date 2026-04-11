@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_charset_noise.rs</FILE> - <DESC>Non-converging time-varying character replacement filter with vertical gradient</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>CharsetNoise as a compositor filter for living textures (fire, rain, static, smoke)</WCTX>
-// <CLOG>Initial creation: per-cell character replacement from position-aware charset gradient with jitter, operating on the rendered cell grid</CLOG>
+// <VERS>VERSION: 1.0.1</VERS>
+// <WCTX>feat/content-ergonomics: clean up pre-existing workspace clippy lint</WCTX>
+// <CLOG>Use struct-init form in test make_cell helper (clippy::field_reassign_with_default)</CLOG>
 
 use crate::traits::filter::Filter;
 use mixed_signals::random::hash_to_index;
@@ -165,9 +165,10 @@ mod tests {
     use super::*;
 
     fn make_cell(ch: char) -> Cell {
-        let mut c = Cell::default();
-        c.ch = ch;
-        c
+        Cell {
+            ch,
+            ..Cell::default()
+        }
     }
 
     fn simple_gradient() -> Vec<CharsetGradientStop> {
@@ -280,4 +281,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_charset_noise.rs</FILE> - <DESC>Non-converging time-varying character replacement filter with vertical gradient</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.0.1</VERS>

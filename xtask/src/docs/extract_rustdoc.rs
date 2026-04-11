@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/extract_rustdoc.rs</FILE> - <DESC>Extract effect metadata from runtime introspection</DESC>
-// <VERS>VERSION: 2.0.4</VERS>
-// <WCTX>Populate parameter docs with schema type information</WCTX>
-// <CLOG>Traverse nested schema fields for shader/style parameters</CLOG>
+// <VERS>VERSION: 2.0.5</VERS>
+// <WCTX>feat/content-ergonomics: clean up pre-existing workspace rustdoc lint</WCTX>
+// <CLOG>Wrap example map literal in a code block so rustdoc stops parsing it as an intra-doc link</CLOG>
 
 use super::effect_metadata::{AllEffectMetadata, extract_all_metadata};
 use anyhow::Result;
@@ -16,7 +16,8 @@ use tui_vfx_style::models::{SpatialShaderType, StyleEffect};
 #[derive(Debug, Default)]
 pub struct RustdocData {
     /// Effects by category, then by variant name.
-    /// e.g., effects["masks"]["Wipe"] = EffectDoc { ... }
+    ///
+    /// e.g., `effects["masks"]["Wipe"] = EffectDoc { ... }`
     pub effects: HashMap<String, HashMap<String, EffectDoc>>,
 }
 
@@ -334,4 +335,4 @@ mod tests {
 }
 
 // <FILE>xtask/src/docs/extract_rustdoc.rs</FILE> - <DESC>Extract effect metadata from runtime introspection</DESC>
-// <VERS>END OF VERSION: 2.0.4</VERS>
+// <VERS>END OF VERSION: 2.0.5</VERS>

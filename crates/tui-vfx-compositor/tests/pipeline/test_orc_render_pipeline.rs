@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>VERSION: 5.4.0</VERS>
-// <WCTX>Color-inert glyph detection for shadow grading replacement</WCTX>
-// <CLOG>Add integration tests for color-inert glyph replacement in grade-underlying pipeline</CLOG>
+// <VERS>VERSION: 5.4.1</VERS>
+// <WCTX>feat/content-ergonomics: clean up pre-existing workspace clippy lint</WCTX>
+// <CLOG>Drop redundant ShadowConfig clone() since the type is Copy (clippy::clone_on_copy)</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;
@@ -1148,7 +1148,7 @@ fn test_shadow_grade_underlying_progress_controls_visibility() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config.clone())),
+            shadow: Some(ShadowSpec::new(shadow_config)),
             t: 0.0,
             ..Default::default()
         },
@@ -1355,4 +1355,4 @@ fn test_shadow_grade_underlying_preserves_emoji_when_replacement_none() {
 }
 
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>END OF VERSION: 5.4.0</VERS>
+// <VERS>END OF VERSION: 5.4.1</VERS>
