@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>VERSION: 2.1.2</VERS>
-// <WCTX>feat/content-ergonomics: clean up pre-existing workspace rustdoc lint</WCTX>
-// <CLOG>Drop broken intra-doc links: CompositionOptions (out-of-crate) and StyleEffect::Spatial (use full crate path)</CLOG>
+// <VERS>VERSION: 2.1.3</VERS>
+// <WCTX>Fix xtask docs api generator drift: key_parameters() omitted required color/head/tail fields</WCTX>
+// <CLOG>Add required fields to key_parameters() for BarberPole, Radar, BorderSweep, Highlighter, Reflect, PulseWave, GlistenBand, Glow — these were missing the required color (or head/tail) field the shader struct requires at JSON parse time</CLOG>
 
 //! # Spatial Shader Types
 //!
@@ -255,10 +255,12 @@ impl SpatialShaderType {
                 ("speed", format!("{}", s.speed)),
                 ("stripe_width", format!("{}", s.stripe_width)),
                 ("gap_width", format!("{}", s.gap_width)),
+                ("color", format!("{:?}", s.color)),
             ],
             SpatialShaderType::Radar(s) => vec![
                 ("speed", format!("{}", s.speed)),
                 ("tail_length", format!("{:.2} rad", s.tail_length)),
+                ("color", format!("{:?}", s.color)),
             ],
             SpatialShaderType::Orbit(s) => vec![
                 ("speed", format!("{}", s.speed)),
@@ -267,14 +269,20 @@ impl SpatialShaderType {
             SpatialShaderType::BorderSweep(s) => vec![
                 ("speed", format!("{}", s.speed)),
                 ("length", format!("{} cells", s.length)),
+                ("color", format!("{:?}", s.color)),
             ],
-            SpatialShaderType::Highlighter(_s) => vec![],
-            SpatialShaderType::Reflect(s) => vec![("speed", format!("{}", s.speed))],
+            SpatialShaderType::Highlighter(s) => vec![("color", format!("{:?}", s.color))],
+            SpatialShaderType::Reflect(s) => vec![
+                ("speed", format!("{}", s.speed)),
+                ("color", format!("{:?}", s.color)),
+            ],
             SpatialShaderType::GlistenBand(s) => vec![
                 ("speed", format!("{}", s.speed)),
                 ("band_width", format!("{} cells", s.band_width)),
                 ("direction", format!("{:?}", s.direction)),
                 ("angle_deg", format!("{}deg", s.angle_deg)),
+                ("head", format!("{:?}", s.head)),
+                ("tail", format!("{:?}", s.tail)),
             ],
             SpatialShaderType::GlitchLines(s) => vec![
                 ("intensity", format!("{}", s.intensity)),
@@ -291,6 +299,7 @@ impl SpatialShaderType {
                 ("speed", format!("{}", s.speed)),
                 ("direction", format!("{:?}", s.direction)),
                 ("wavelength", format!("{} cells", s.wavelength)),
+                ("color", format!("{:?}", s.color)),
             ],
             SpatialShaderType::FocusedRowGradient(s) => vec![
                 ("selected_row_ratio", format!("{}", s.selected_row_ratio)),
@@ -327,6 +336,7 @@ impl SpatialShaderType {
                 ("intensity", format!("{}", s.intensity)),
                 ("falloff", format!("{:?}", s.falloff)),
                 ("pulse_speed", format!("{} Hz", s.pulse_speed)),
+                ("color", format!("{:?}", s.color)),
             ],
             SpatialShaderType::SubCellShake(s) => vec![
                 ("amplitude", format!("{}", s.amplitude)),
@@ -344,4 +354,4 @@ impl SpatialShaderType {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>END OF VERSION: 2.1.2</VERS>
+// <VERS>END OF VERSION: 2.1.3</VERS>

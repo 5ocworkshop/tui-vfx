@@ -618,7 +618,7 @@ energy = "calm"
 complexity = "moderate"
 premium = true
 ai_hint = """Multi-cell bloom/halo around widget edges.
-radius: glow extent. intensity: brightness of the glow.
+radius: glow extent. intensity: brightness of the glow. color: glow tint.
 falloff: Linear, Quadratic, Exponential. pulse_speed: optional pulsing in Hz."""
 
 [effects.shaders.SubCellShake]

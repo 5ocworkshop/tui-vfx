@@ -21,7 +21,7 @@ supports shadows and `preserve_unfilled`.
 | Category | Count (variants) | Primary API |
 | --- | --- | --- |
 | Masks | 10 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
-| Filters | 22 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
+| Filters | 23 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
 | Spatial Shaders | 17 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
@@ -288,7 +288,7 @@ Pattern for cellular mask
 
 ---
 
-## FilterSpec (22 effects)
+## FilterSpec (23 effects)
 
 Filters modify cell colors/styles after rendering (applied in order).
 
@@ -296,6 +296,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | --- | --- | --- |
 | `BracketEmphasis` | Brackets that appear around content based on progress | `left`, `right`, `progress` |
 | `BrailleDust` | Stochastic braille dust for frosted glass texture | `density`, `hz`, `seed` |
+| `CharsetNoise` | Non-converging time-varying character replacement for living textures | `hz`, `seed`, `jitter` |
 | `ColorBridgedShade` | Color-bridged shade for smooth opacity rendering | `opacity`, `fg_color`, `bg_color` |
 | `Crt` | CRT monitor post-processing effect | `scanline_strength`, `glow` |
 | `Dim` | Dim/darken the output | `factor`, `apply_to` |
@@ -478,20 +479,20 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 | Shader | Parameters |
 | --- | --- |
 | `AmbientOcclusion` | `intensity`, `radius`, `edges`, `falloff` |
-| `BarberPole` | `speed`, `stripe_width`, `gap_width` |
+| `BarberPole` | `speed`, `stripe_width`, `gap_width`, `color` |
 | `Bevel` | `light_direction`, `highlight_intensity`, `shadow_intensity`, `edge_width` |
-| `BorderSweep` | `speed`, `length` |
+| `BorderSweep` | `speed`, `length`, `color` |
 | `ChromaticEdge` | `intensity`, `edge_width`, `horizontal` |
 | `FocusedRowGradient` | `selected_row_ratio`, `falloff_distance`, `apply_to` |
-| `GlistenBand` | `speed`, `band_width`, `direction`, `angle_deg` |
+| `GlistenBand` | `speed`, `band_width`, `direction`, `angle_deg`, `head`, `tail` |
 | `GlitchLines` | `intensity`, `max_lines`, `speed` |
-| `Glow` | `radius`, `intensity`, `falloff`, `pulse_speed` |
-| `Highlighter` | - |
+| `Glow` | `radius`, `intensity`, `falloff`, `pulse_speed`, `color` |
+| `Highlighter` | `color` |
 | `LinearGradient` | `angle_deg` |
 | `NeonFlicker` | `stability`, `segment`, `dim_amount` |
-| `PulseWave` | `frequency`, `speed`, `direction`, `wavelength` |
-| `Radar` | `speed`, `tail_length` |
-| `Reflect` | `speed` |
+| `PulseWave` | `frequency`, `speed`, `direction`, `wavelength`, `color` |
+| `Radar` | `speed`, `tail_length`, `color` |
+| `Reflect` | `speed`, `color` |
 | `RevealWipe` | `direction` |
 | `StochasticSparkle` | `sparkle_density`, `brightness_boost`, `speed`, `apply_to` |
 | `SubCellShake` | `amplitude`, `frequency`, `axis`, `chromatic` |
@@ -531,7 +532,7 @@ pub enum StyleEffect {
     Glitch { seed: 42, intensity: 0.3 },
     ItalicWindow { start: 0, end: 1 },
     NeonFlicker { stability: 0.8 },
-    Pulse { frequency: 1 },
+    Pulse { frequency: 1, color: Color { r: 255, g: 255, b: 255, a: 255 } },
     Rainbow { speed: 1 },
     RigidShakeStyle { shake_period: 0.29s, num_shakes: 4, pause_duration: 0.52s },
     Spatial { angle_deg: 0 },

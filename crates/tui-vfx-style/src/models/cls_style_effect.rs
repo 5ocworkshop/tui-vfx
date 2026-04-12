@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_style_effect.rs</FILE> - <DESC>StyleEffect enum with documentation methods</DESC>
-// <VERS>VERSION: 0.15.0</VERS>
-// <WCTX>Phase 1 rustdoc enrichment for documentation pipeline</WCTX>
-// <CLOG>Add comprehensive module and enum documentation for rustdoc generation</CLOG>
+// <VERS>VERSION: 0.15.1</VERS>
+// <WCTX>Fix xtask docs api generator drift: StyleEffect::Pulse key_parameters() omitted required color field</WCTX>
+// <CLOG>Add color to Pulse key_parameters() so generated API.md shows the required target color field</CLOG>
 
 //! # Style Effects
 //!
@@ -681,7 +681,10 @@ impl StyleEffect {
                 ("apply_to", format!("{:?}", apply_to)),
                 ("ease", format!("{:?}", ease)),
             ],
-            StyleEffect::Pulse { frequency, .. } => vec![("frequency", format!("{}", frequency))],
+            StyleEffect::Pulse { frequency, color } => vec![
+                ("frequency", format!("{}", frequency)),
+                ("color", format!("{:?}", color)),
+            ],
             StyleEffect::Rainbow { speed } => vec![("speed", format!("{}", speed))],
             StyleEffect::Glitch {
                 seed, intensity, ..
@@ -728,4 +731,4 @@ fn pseudo_random(input: u32) -> f32 {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_style_effect.rs</FILE> - <DESC>StyleEffect enum with documentation methods</DESC>
-// <VERS>END OF VERSION: 0.15.0</VERS>
+// <VERS>END OF VERSION: 0.15.1</VERS>

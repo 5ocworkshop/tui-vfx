@@ -1990,6 +1990,12 @@
             "doc": "width between stripes",
             "name": "gap_width",
             "ty": "u16"
+          },
+          {
+            "default": "Blue",
+            "doc": "stripe color",
+            "name": "color",
+            "ty": "ColorConfig"
           }
         ],
         "premium": false,
@@ -2062,6 +2068,12 @@
             "doc": "highlight segment length in cells",
             "name": "length",
             "ty": "u16"
+          },
+          {
+            "default": "Cyan",
+            "doc": "highlight color",
+            "name": "color",
+            "ty": "ColorConfig"
           }
         ],
         "premium": false,
@@ -2176,6 +2188,18 @@
             "doc": "Angle of the band in degrees (0 = horizontal, 90 = vertical)",
             "name": "angle_deg",
             "ty": "f32"
+          },
+          {
+            "default": "LightYellow",
+            "doc": "Color at the leading edge of the band (brightest point)",
+            "name": "head",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "Rgb { r: 200, g: 160, b: 0 }",
+            "doc": "Color at the trailing edge of the band (fades into base)",
+            "name": "tail",
+            "ty": "ColorConfig"
           }
         ],
         "premium": true,
@@ -2225,7 +2249,7 @@
         ]
       },
       "Glow": {
-        "ai_hint": "Multi-cell bloom/halo around widget edges.\nradius: glow extent. intensity: brightness of the glow.\nfalloff: Linear, Quadratic, Exponential. pulse_speed: optional pulsing in Hz.",
+        "ai_hint": "Multi-cell bloom/halo around widget edges.\nradius: glow extent. intensity: brightness of the glow. color: glow tint.\nfalloff: Linear, Quadratic, Exponential. pulse_speed: optional pulsing in Hz.",
         "complexity": "moderate",
         "energy": "calm",
         "name": "Glow",
@@ -2254,6 +2278,12 @@
             "doc": "Optional pulse speed in Hz (cycles per second). 0 = no pulse.",
             "name": "pulse_speed",
             "ty": "f32"
+          },
+          {
+            "default": "Cyan",
+            "doc": "The glow color",
+            "name": "color",
+            "ty": "ColorConfig"
           }
         ],
         "premium": true,
@@ -2272,7 +2302,14 @@
         "energy": "moderate",
         "name": "Highlighter",
         "pairs_with": [],
-        "parameters": [],
+        "parameters": [
+          {
+            "default": "Yellow",
+            "doc": "highlighter color (typically yellow/green)",
+            "name": "color",
+            "ty": "ColorConfig"
+          }
+        ],
         "premium": false,
         "requires": [],
         "rustdoc_description": "Marker-style highlight revealing text",
@@ -2373,6 +2410,12 @@
             "doc": "Wavelength in cells (how spread out the wave is)",
             "name": "wavelength",
             "ty": "f32"
+          },
+          {
+            "default": "Magenta",
+            "doc": "Color to pulse towards",
+            "name": "color",
+            "ty": "ColorConfig"
           }
         ],
         "premium": false,
@@ -2403,6 +2446,12 @@
             "doc": "angular length of the sweep trail",
             "name": "tail_length",
             "ty": "f32"
+          },
+          {
+            "default": "Green",
+            "doc": "sweep highlight color",
+            "name": "color",
+            "ty": "ColorConfig"
           }
         ],
         "premium": false,
@@ -2427,6 +2476,12 @@
             "doc": "glint movement rate",
             "name": "speed",
             "ty": "f32"
+          },
+          {
+            "default": "White",
+            "doc": "highlight color for the glint",
+            "name": "color",
+            "ty": "ColorConfig"
           }
         ],
         "premium": false,
@@ -2850,6 +2905,12 @@
             "doc": "Pulse frequency (cycles per normalized time unit).",
             "name": "frequency",
             "ty": "f32"
+          },
+          {
+            "default": "Color { r: 255, g: 255, b: 255, a: 255 }",
+            "doc": "Target color to pulse toward.",
+            "name": "color",
+            "ty": "Color"
           }
         ],
         "premium": false,
