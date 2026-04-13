@@ -1,7 +1,7 @@
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Capture the workflow we used to diagnose the project_onto_polyline phantom-projection bug</WCTX> -->
-<!-- <CLOG>Initial guide: when to use the validator, what its flags do, how to read the dump, and a worked debugging example</CLOG> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Document new --canvas / --canvas-content flags for simulating real canvas content (color + lorem ipsum) under the widget during validation</WCTX> -->
+<!-- <CLOG>MINOR: Add --canvas and --canvas-content flags to the "flags that matter" section, with guidance on using --canvas-content lorem for glyph bleed-through debugging</CLOG> -->
 
 # Pipeline Validator: An LLM's Guide to Inspecting Recipe Output
 
@@ -28,6 +28,8 @@ You should reach for it **before** asking the user "what do you see?" — it is 
 - **`--sample-t T1 [T2 T3 …]`** — sample at specific phase progress values (0.0–1.0 within the chosen phase). `--sample-t 0.5 --phase dwelling` means "halfway through dwell".
 - **`--dump --stage output`** — dump the rendered buffer state. `-vvv` (triple verbose) is required to actually see the cell-level grid output.
 - **`--stages -vvv`** — print per-stage cell modification counts (sampler, mask, shader, filter), plus a sample of cell-by-cell modifications. Use this to localize *which* stage is making the change you didn't expect.
+- **`--canvas RRGGBB`** — pre-fill the simulation buffer with this RGB color before each render, so you can see how a recipe composites over a non-default canvas (gt-design beige, dashboard navy, etc.). Hex, no alpha.
+- **`--canvas-content MODE`** — what glyphs to paint into the canvas along with the color. `empty` (default) = spaces, `sentinel` = repeating `+` grid (useful for the early color-only tests), `lorem` = lorem ipsum text wrapped across the buffer. Combine with `--canvas` for a full content+color simulation of a widget overlaying a document. Use `lorem` when debugging **glyph bleed-through** bugs — any canvas character visible inside the widget rectangle after the overlay renders is a bug.
 - **`--trace`** — even more verbose pipeline tracing; usually too noisy. Try `--stages -vvv` first.
 
 ## Reading the dump
@@ -102,4 +104,4 @@ Fix: use true point-to-segment Euclidean distance, including the parallel offset
 - `tools/pipeline-validator/src/stages/functions/fnc_sample_buffer_cells.rs` (in tui-vfx-recipes) — the grid-map and per-row dump implementations
 
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
