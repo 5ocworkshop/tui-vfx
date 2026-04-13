@@ -216,6 +216,19 @@ seed: randomization seed. color: particle color.
 pattern: SingleDot (subtle), OneToTwoDots, OneToThreeDots, OneToFourDots (visible).
 Requires braille font support."""
 
+[effects.filters.CharsetNoise]
+use_cases = ["glitch", "ambient", "textural", "cyber"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Time-varying character replacement using a configurable charset gradient.
+seed: deterministic randomization seed.
+hz: update rate in changes per second.
+jitter: per-cell variation in vertical gradient position.
+progress: blend amount from original glyphs to noisy glyphs.
+affect_mode: All, NonEmpty, or Empty cells.
+gradient: ordered charset stops controlling how glyph noise evolves across the effect.
+Useful for signal corruption, ambient machine texture, and non-converging decode surfaces."""
+
 [effects.filters.InterlaceCurtain]
 use_cases = ["retro", "loading", "effect"]
 energy = "calm"
@@ -561,6 +574,36 @@ direction: wave propagation direction.
 wavelength: distance between wave peaks.
 Attention/loading indicator for selection states."""
 
+[effects.shaders.TracePropagation]
+use_cases = ["schematic", "pcb", "system-flow", "technical"]
+energy = "moderate"
+complexity = "moderate"
+premium = true
+ai_hint = """Orthogonal signal pulse traveling through routed trace lanes.
+speed: propagation rate of the signal head.
+color: pulse tint.
+grid_spacing: distance between horizontal/vertical trace lanes.
+line_width: lane thickness in cells.
+tail_length: pulse trail length behind the signal head.
+origin: TopLeft, TopRight, BottomLeft, BottomRight, or Center.
+apply_to: Foreground, Background, or Both.
+Ideal for Blueprint-style progress overlays, routed system diagrams, and PCB-inspired surfaces."""
+
+[effects.shaders.TracePath]
+use_cases = ["schematic", "pcb", "path-authored", "technical"]
+energy = "moderate"
+complexity = "moderate"
+premium = true
+ai_hint = """Authored routed trace following explicit waypoints.
+color: pulse tint.
+speed: travel rate of the signal head.
+tail_length: illuminated trail length behind the signal.
+thickness: maximum route thickness in cells.
+junction_boost: extra emphasis when the pulse passes a turn.
+apply_to: Foreground, Background, or Both.
+paths: one or more orthogonal polylines, each with points and optional delay.
+Ideal for art-directed blueprint traces and as the deterministic foundation for future obstacle-aware auto-routing."""
+
 [effects.shaders.FocusedRowGradient]
 use_cases = ["selection", "list", "navigation"]
 energy = "calm"
@@ -620,6 +663,20 @@ premium = true
 ai_hint = """Multi-cell bloom/halo around widget edges.
 radius: glow extent. intensity: brightness of the glow. color: glow tint.
 falloff: Linear, Quadratic, Exponential. pulse_speed: optional pulsing in Hz."""
+
+[effects.shaders.EdgeSheen]
+use_cases = ["premium-shell", "toast", "card", "surface"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Calm premium sheen constrained to widget edges instead of sweeping across the full surface.
+color: sheen tint.
+speed: perimeter travel rate.
+band_width: sheen segment length around the shell.
+edge_width: how far inward from the edge the effect reaches.
+corner_boost: extra emphasis as the sheen passes corners.
+apply_to: Foreground, Background, or Both.
+Ideal for polished shells, modals, banners, and luxury UI chrome."""
 
 [effects.shaders.SubCellShake]
 use_cases = ["error", "vibration", "attention"]
@@ -892,6 +949,14 @@ ai_hint = """2×4 subpixel density grid using braille characters.
 Finest-grained shadow detail available.
 Requires braille font support in terminal.
 May vary in appearance based on font rendering."""
+
+[effects.shadows.MediumShade]
+use_cases = ["depth", "texture", "full-cell", "fallback-premium"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Textured full-cell shadow using the medium shade glyph `▒`.
+Creates a denser, more graphic shadow than HalfBlock while staying simpler than Gradient.
+Good for moody overlays, stylized cards, and terminals where braille density is too fine."""
 
 [effects.shadows.Solid]
 use_cases = ["depth", "compatible", "simple"]

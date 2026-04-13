@@ -45,6 +45,7 @@ This document provides a complete inventory of visual effects available in tui-v
 |--------|-------------|----------|
 | **BracketEmphasis** | Brackets that appear around content based on progress | hover, selection, emphasis |
 | **BrailleDust** | Stochastic braille dust for frosted glass texture | ambient, texture, premium |
+| **CharsetNoise** | Non-converging time-varying character replacement for living textures | glitch, ambient, textural, cyber |
 | **ColorBridgedShade** | Color-bridged shade for smooth opacity rendering | opacity, fade, subtle |
 | **Crt** | CRT monitor post-processing effect | retro, gaming, nostalgic |
 | **Dim** | Dim/darken the output | background, inactive, subtle |
@@ -88,6 +89,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **Bevel** | 3D embossed edge effect with configurable light direction | 3d, buttons, emboss |
 | **BorderSweep** | Highlight that traces the border edge | selection, focus, highlight |
 | **ChromaticEdge** | Chromatic aberration effect separating RGB edges | glitch, premium, effect |
+| **EdgeSheen** | Calm premium sheen that glides along the widget perimeter | premium-shell, toast, card, surface |
 | **FocusedRowGradient** | Vertical gradient centered on a selected row | selection, list, navigation |
 | **GlistenBand** | Moving band of light that sweeps across the widget | loading, premium, shine |
 | **GlitchLines** | Random horizontal glitch interference lines | error, glitch, dramatic |
@@ -101,6 +103,8 @@ This document provides a complete inventory of visual effects available in tui-v
 | **RevealWipe** | Progressive reveal from one direction, hiding unrevealed text | reveal, transition, text |
 | **StochasticSparkle** | Film grain / frosted glass effect with random cell brightening | premium-surface, frosted-glass, texture, ambient |
 | **SubCellShake** | Micro-jitter visual effect through rapid color oscillation | error, vibration, attention |
+| **TracePath** | Authored routed signal path following explicit waypoints | schematic, pcb, path-authored, technical |
+| **TracePropagation** | Orthogonal signal pulse moving through routed trace lanes | schematic, pcb, system-flow, technical |
 
 ## Style Effects (Temporal Animations)
 
@@ -144,6 +148,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **Braille** | Braille patterns for dithered/density-based shadows | depth, fine, subtle |
 | **Gradient** | Multi-layer gradient shadow with decreasing intensity | depth, soft, premium |
 | **HalfBlock** | Half-block characters for soft sub-cell shadows | depth, premium, modal |
+| **MediumShade** | Medium-shade character cells for textured full-cell shadows | depth, texture, full-cell, fallback-premium |
 | **Solid** | Solid color cells (space with background color) | depth, compatible, simple |
 
 ## Quick Reference

@@ -6,7 +6,10 @@
 use tui_vfx_geometry::easing::EasingType;
 use tui_vfx_geometry::types::EasingCurve;
 use tui_vfx_style::models::cls_chromatic_edge_shader::ChromaticEdgeShader;
+use tui_vfx_style::models::cls_edge_sheen_shader::EdgeSheenShader;
 use tui_vfx_style::models::cls_orbit_shader::OrbitShader;
+use tui_vfx_style::models::cls_trace_path_shader::TracePathShader;
+use tui_vfx_style::models::cls_trace_propagation_shader::TracePropagationShader;
 use tui_vfx_style::models::{
     ColorSpace, Gradient, LinearGradientShader, SpatialShaderType, StyleEffect, StyleTransition,
 };
@@ -89,6 +92,39 @@ fn test_style_effect_roundtrip_spatial_orbit() {
     };
     let effect = StyleEffect::Spatial {
         shader: SpatialShaderType::Orbit(shader),
+    };
+    let json = serde_json::to_string(&effect).expect("serialize spatial effect");
+    let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn test_style_effect_roundtrip_spatial_edge_sheen() {
+    let shader = EdgeSheenShader::default();
+    let effect = StyleEffect::Spatial {
+        shader: SpatialShaderType::EdgeSheen(shader),
+    };
+    let json = serde_json::to_string(&effect).expect("serialize spatial effect");
+    let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn test_style_effect_roundtrip_spatial_trace_propagation() {
+    let shader = TracePropagationShader::default();
+    let effect = StyleEffect::Spatial {
+        shader: SpatialShaderType::TracePropagation(shader),
+    };
+    let json = serde_json::to_string(&effect).expect("serialize spatial effect");
+    let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn test_style_effect_roundtrip_spatial_trace_path() {
+    let shader = TracePathShader::default();
+    let effect = StyleEffect::Spatial {
+        shader: SpatialShaderType::TracePath(shader),
     };
     let json = serde_json::to_string(&effect).expect("serialize spatial effect");
     let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");

@@ -27,6 +27,9 @@
 //! | [`Reflect`](SpatialShaderType::Reflect) | Moving reflective glint |
 //! | [`GlistenBand`](SpatialShaderType::GlistenBand) | Moving light band sweep |
 //! | [`PulseWave`](SpatialShaderType::PulseWave) | Rippling color wave |
+//! | [`TracePropagation`](SpatialShaderType::TracePropagation) | Orthogonal routed signal pulse |
+//! | [`TracePath`](SpatialShaderType::TracePath) | Authored routed signal path |
+//! | [`EdgeSheen`](SpatialShaderType::EdgeSheen) | Calm perimeter sheen for shells |
 //!
 //! ### Glitch & Flicker
 //! | Shader | Description |
@@ -58,6 +61,7 @@ use crate::models::{
     LinearGradientShader, cls_ambient_occlusion_shader::AmbientOcclusionShader,
     cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
     cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
+    cls_edge_sheen_shader::EdgeSheenShader,
     cls_focused_row_gradient_shader::FocusedRowGradientShader,
     cls_glisten_band_shader::GlistenBandShader, cls_glitch_lines_shader::GlitchLinesShader,
     cls_glow_shader::GlowShader, cls_highlighter_shader::HighlighterShader,
@@ -65,7 +69,8 @@ use crate::models::{
     cls_pulse_wave_shader::PulseWaveShader, cls_radar_shader::RadarShader,
     cls_reflect_shader::ReflectShader, cls_reveal_wipe_shader::RevealWipeShader,
     cls_stochastic_sparkle_shader::StochasticSparkleShader,
-    cls_sub_cell_shake_shader::SubCellShakeShader,
+    cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
+    cls_trace_propagation_shader::TracePropagationShader,
 };
 use crate::traits::{ShaderContext, StyleShader};
 use serde::{Deserialize, Serialize};
@@ -79,7 +84,8 @@ use tui_vfx_types::Style;
 /// # Categories
 ///
 /// - **Gradients**: LinearGradient, Highlighter
-/// - **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave
+/// - **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,
+///   TracePropagation, TracePath, EdgeSheen
 /// - **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge
 /// - **Depth**: AmbientOcclusion, Bevel, Glow
 /// - **Premium**: StochasticSparkle
@@ -124,6 +130,12 @@ pub enum SpatialShaderType {
     /// Rippling color wave emanating from position (attention).
     PulseWave(PulseWaveShader),
 
+    /// Orthogonal signal pulse moving through routed trace lanes.
+    TracePropagation(TracePropagationShader),
+
+    /// Authored routed signal path following explicit waypoints.
+    TracePath(TracePathShader),
+
     /// Vertical gradient centered on selected row (list navigation).
     FocusedRowGradient(FocusedRowGradientShader),
 
@@ -141,6 +153,9 @@ pub enum SpatialShaderType {
 
     /// Multi-cell bloom/halo around widget edges (focus).
     Glow(GlowShader),
+
+    /// Calm premium sheen that glides along the widget perimeter.
+    EdgeSheen(EdgeSheenShader),
 
     /// Micro-jitter through rapid color oscillation (error).
     SubCellShake(SubCellShakeShader),
@@ -162,12 +177,15 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::GlitchLines(s) => s.style_at(ctx, base),
             SpatialShaderType::NeonFlicker(s) => s.style_at(ctx, base),
             SpatialShaderType::PulseWave(s) => s.style_at(ctx, base),
+            SpatialShaderType::TracePropagation(s) => s.style_at(ctx, base),
+            SpatialShaderType::TracePath(s) => s.style_at(ctx, base),
             SpatialShaderType::FocusedRowGradient(s) => s.style_at(ctx, base),
             SpatialShaderType::RevealWipe(s) => s.style_at(ctx, base),
             SpatialShaderType::StochasticSparkle(s) => s.style_at(ctx, base),
             SpatialShaderType::AmbientOcclusion(s) => s.style_at(ctx, base),
             SpatialShaderType::Bevel(s) => s.style_at(ctx, base),
             SpatialShaderType::Glow(s) => s.style_at(ctx, base),
+            SpatialShaderType::EdgeSheen(s) => s.style_at(ctx, base),
             SpatialShaderType::SubCellShake(s) => s.style_at(ctx, base),
             SpatialShaderType::ChromaticEdge(s) => s.style_at(ctx, base),
         }
@@ -193,12 +211,15 @@ impl SpatialShaderType {
             SpatialShaderType::GlitchLines(_) => "GlitchLines",
             SpatialShaderType::NeonFlicker(_) => "NeonFlicker",
             SpatialShaderType::PulseWave(_) => "PulseWave",
+            SpatialShaderType::TracePropagation(_) => "TracePropagation",
+            SpatialShaderType::TracePath(_) => "TracePath",
             SpatialShaderType::FocusedRowGradient(_) => "FocusedRowGradient",
             SpatialShaderType::RevealWipe(_) => "RevealWipe",
             SpatialShaderType::StochasticSparkle(_) => "StochasticSparkle",
             SpatialShaderType::AmbientOcclusion(_) => "AmbientOcclusion",
             SpatialShaderType::Bevel(_) => "Bevel",
             SpatialShaderType::Glow(_) => "Glow",
+            SpatialShaderType::EdgeSheen(_) => "EdgeSheen",
             SpatialShaderType::SubCellShake(_) => "SubCellShake",
             SpatialShaderType::ChromaticEdge(_) => "ChromaticEdge",
         }
@@ -222,6 +243,12 @@ impl SpatialShaderType {
                 "Flickering neon sign effect with independent segments"
             }
             SpatialShaderType::PulseWave(_) => "Rippling color wave emanating from position",
+            SpatialShaderType::TracePropagation(_) => {
+                "Orthogonal signal pulse moving through routed trace lanes"
+            }
+            SpatialShaderType::TracePath(_) => {
+                "Authored routed signal path following explicit waypoints"
+            }
             SpatialShaderType::FocusedRowGradient(_) => {
                 "Vertical gradient centered on a selected row"
             }
@@ -238,6 +265,9 @@ impl SpatialShaderType {
                 "3D embossed edge effect with configurable light direction"
             }
             SpatialShaderType::Glow(_) => "Multi-cell bloom/halo effect around widget edges",
+            SpatialShaderType::EdgeSheen(_) => {
+                "Calm premium sheen that glides along the widget perimeter"
+            }
             SpatialShaderType::SubCellShake(_) => {
                 "Micro-jitter visual effect through rapid color oscillation"
             }
@@ -301,6 +331,22 @@ impl SpatialShaderType {
                 ("wavelength", format!("{} cells", s.wavelength)),
                 ("color", format!("{:?}", s.color)),
             ],
+            SpatialShaderType::TracePropagation(s) => vec![
+                ("speed", format!("{}", s.speed)),
+                ("grid_spacing", format!("{} cells", s.grid_spacing)),
+                ("tail_length", format!("{:.1} cells", s.tail_length)),
+                ("origin", format!("{:?}", s.origin)),
+                ("color", format!("{:?}", s.color)),
+            ],
+            SpatialShaderType::TracePath(s) => vec![
+                ("speed", format!("{}", s.speed)),
+                ("tail_length", format!("{:.1} cells", s.tail_length)),
+                ("thickness", format!("{} cells", s.thickness)),
+                ("junction_boost", format!("{}", s.junction_boost)),
+                ("paths", format!("{}", s.paths.len())),
+                ("color", format!("{:?}", s.color)),
+                ("apply_to", format!("{:?}", s.apply_to)),
+            ],
             SpatialShaderType::FocusedRowGradient(s) => vec![
                 ("selected_row_ratio", format!("{}", s.selected_row_ratio)),
                 ("falloff_distance", format!("{} rows", s.falloff_distance)),
@@ -336,6 +382,13 @@ impl SpatialShaderType {
                 ("intensity", format!("{}", s.intensity)),
                 ("falloff", format!("{:?}", s.falloff)),
                 ("pulse_speed", format!("{} Hz", s.pulse_speed)),
+                ("color", format!("{:?}", s.color)),
+            ],
+            SpatialShaderType::EdgeSheen(s) => vec![
+                ("speed", format!("{}", s.speed)),
+                ("band_width", format!("{} cells", s.band_width)),
+                ("edge_width", format!("{} cells", s.edge_width)),
+                ("corner_boost", format!("{}", s.corner_boost)),
                 ("color", format!("{:?}", s.color)),
             ],
             SpatialShaderType::SubCellShake(s) => vec![

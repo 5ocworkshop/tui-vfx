@@ -339,6 +339,7 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         Gradient, LinearGradientShader, cls_ambient_occlusion_shader::AmbientOcclusionShader,
         cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
         cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
+        cls_edge_sheen_shader::EdgeSheenShader,
         cls_focused_row_gradient_shader::FocusedRowGradientShader,
         cls_glisten_band_shader::GlistenBandShader, cls_glitch_lines_shader::GlitchLinesShader,
         cls_glow_shader::GlowShader, cls_highlighter_shader::HighlighterShader,
@@ -346,7 +347,8 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         cls_radar_shader::RadarShader, cls_reflect_shader::ReflectShader,
         cls_reveal_wipe_shader::RevealWipeShader,
         cls_stochastic_sparkle_shader::StochasticSparkleShader,
-        cls_sub_cell_shake_shader::SubCellShakeShader,
+        cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
+        cls_trace_propagation_shader::TracePropagationShader,
     };
     use tui_vfx_types::Color;
 
@@ -382,12 +384,15 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         SpatialShaderType::GlitchLines(GlitchLinesShader::default()),
         SpatialShaderType::NeonFlicker(NeonFlickerShader::default()),
         SpatialShaderType::PulseWave(PulseWaveShader::default()),
+        SpatialShaderType::TracePropagation(TracePropagationShader::default()),
+        SpatialShaderType::TracePath(TracePathShader::default()),
         SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader::default()),
         SpatialShaderType::RevealWipe(RevealWipeShader::default()),
         SpatialShaderType::StochasticSparkle(StochasticSparkleShader::default()),
         SpatialShaderType::AmbientOcclusion(AmbientOcclusionShader::default()),
         SpatialShaderType::Bevel(BevelShader::default()),
         SpatialShaderType::Glow(GlowShader::default()),
+        SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
         SpatialShaderType::SubCellShake(SubCellShakeShader::default()),
         SpatialShaderType::ChromaticEdge(ChromaticEdgeShader::default()),
     ];

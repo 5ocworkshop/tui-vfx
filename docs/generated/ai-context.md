@@ -27,6 +27,7 @@
 ### Filters
 - **BracketEmphasis**: Brackets fade in at content edges based on progress.
 - **BrailleDust**: Animated braille particles for ambient texture. [Premium]
+- **CharsetNoise**: Time-varying character replacement using a configurable charset gradient.
 - **ColorBridgedShade**: Maps opacity to shade characters (░▒▓█) with color bridging.
 - **Crt**: CRT monitor post-processing effect.
 - **Dim**: Darken output uniformly.
@@ -55,6 +56,7 @@
 - **Bevel**: 3D embossed edge effect simulating raised or sunken surfaces.
 - **BorderSweep**: Border highlight that sweeps around widget edges.
 - **ChromaticEdge**: RGB edge separation for chromatic aberration effect.
+- **EdgeSheen**: Calm premium sheen constrained to widget edges instead of sweeping across the full surface. [Premium]
 - **FocusedRowGradient**: Vertical gradient highlighting selected row.
 - **GlistenBand**: Moving light band sweep for elegant loading shimmer. [Premium]
 - **GlitchLines**: Random horizontal glitch lines for errors/warnings. [Intense]
@@ -68,6 +70,8 @@
 - **RevealWipe**: Progressive reveal wipe driven by t parameter.
 - **StochasticSparkle**: Film grain / frosted glass shimmer for premium surfaces. [Premium]
 - **SubCellShake**: Micro-jitter via rapid color oscillation. [Intense]
+- **TracePath**: Authored routed trace following explicit waypoints. [Premium]
+- **TracePropagation**: Orthogonal signal pulse traveling through routed trace lanes. [Premium]
 
 ### Samplers
 - **Crt**: CRT monitor scanlines and barrel curvature distortion.

@@ -10,6 +10,7 @@ use tui_vfx_style::models::Gradient;
 use tui_vfx_style::models::cls_barber_pole_shader::BarberPoleShader;
 use tui_vfx_style::models::cls_border_sweep_shader::BorderSweepShader;
 use tui_vfx_style::models::cls_chromatic_edge_shader::ChromaticEdgeShader;
+use tui_vfx_style::models::cls_edge_sheen_shader::EdgeSheenShader;
 use tui_vfx_style::models::cls_focused_row_gradient_shader::FocusedRowGradientShader;
 use tui_vfx_style::models::cls_glisten_band_shader::GlistenBandShader;
 use tui_vfx_style::models::cls_glitch_lines_shader::GlitchLinesShader;
@@ -20,6 +21,8 @@ use tui_vfx_style::models::cls_orbit_shader::OrbitShader;
 use tui_vfx_style::models::cls_pulse_wave_shader::PulseWaveShader;
 use tui_vfx_style::models::cls_radar_shader::RadarShader;
 use tui_vfx_style::models::cls_reflect_shader::ReflectShader;
+use tui_vfx_style::models::cls_trace_path_shader::TracePathShader;
+use tui_vfx_style::models::cls_trace_propagation_shader::TracePropagationShader;
 use tui_vfx_style::models::{ColorSpace, FadeApplyTo, SpatialShaderType, StyleEffect};
 use tui_vfx_types::Color;
 
@@ -54,6 +57,7 @@ fn test_spatial_shader_name_returns_nonempty() {
             length: 5,
             color: ColorConfig::Cyan,
         }),
+        SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
         SpatialShaderType::Highlighter(HighlighterShader {
             color: ColorConfig::Yellow,
         }),
@@ -63,6 +67,8 @@ fn test_spatial_shader_name_returns_nonempty() {
         }),
         SpatialShaderType::GlitchLines(GlitchLinesShader::default()),
         SpatialShaderType::NeonFlicker(NeonFlickerShader::default()),
+        SpatialShaderType::TracePropagation(TracePropagationShader::default()),
+        SpatialShaderType::TracePath(TracePathShader::default()),
         SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader::default()),
         SpatialShaderType::LinearGradient(LinearGradientShader {
             gradient: Gradient::default(),
@@ -104,6 +110,7 @@ fn test_spatial_shader_description_returns_nonempty() {
             length: 5,
             color: ColorConfig::Cyan,
         }),
+        SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
         SpatialShaderType::Highlighter(HighlighterShader {
             color: ColorConfig::Yellow,
         }),
@@ -113,6 +120,8 @@ fn test_spatial_shader_description_returns_nonempty() {
         }),
         SpatialShaderType::GlitchLines(GlitchLinesShader::default()),
         SpatialShaderType::NeonFlicker(NeonFlickerShader::default()),
+        SpatialShaderType::TracePropagation(TracePropagationShader::default()),
+        SpatialShaderType::TracePath(TracePathShader::default()),
         SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader::default()),
         SpatialShaderType::LinearGradient(LinearGradientShader {
             gradient: Gradient::default(),

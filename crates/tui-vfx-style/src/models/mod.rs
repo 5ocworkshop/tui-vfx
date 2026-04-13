@@ -12,6 +12,7 @@ pub mod cls_chromatic_edge_shader;
 pub mod cls_color_config;
 pub mod cls_color_ramp;
 pub mod cls_color_space;
+pub mod cls_edge_sheen_shader;
 pub mod cls_fade_effect;
 pub mod cls_fade_spec;
 pub mod cls_falloff_type;
@@ -39,6 +40,9 @@ pub mod cls_style_layer;
 pub mod cls_style_region;
 pub mod cls_style_transition;
 pub mod cls_sub_cell_shake_shader;
+pub mod cls_trace_common;
+pub mod cls_trace_path_shader;
+pub mod cls_trace_propagation_shader;
 
 #[cfg(test)]
 pub(crate) mod test_support;
@@ -51,6 +55,7 @@ pub use cls_chromatic_edge_shader::ChromaticEdgeShader;
 pub use cls_color_config::ColorConfig;
 pub use cls_color_ramp::{ColorRamp, ColorStop};
 pub use cls_color_space::ColorSpace;
+pub use cls_edge_sheen_shader::{EdgeSheenApplyTo, EdgeSheenShader};
 pub use cls_fade_effect::{FadeDirection, FadeEffect, FadeToBlack, fade_effect};
 pub use cls_fade_spec::{FadeApplyTo, FadeChain, FadeSegment, FadeSpec, FadeTarget};
 pub use cls_falloff_type::FalloffType;
@@ -78,6 +83,9 @@ pub use cls_style_layer::StyleLayer;
 pub use cls_style_region::{CellCoord, ModuloAxis, StyleRegion};
 pub use cls_style_transition::StyleTransition;
 pub use cls_sub_cell_shake_shader::{ShakeAxis, SubCellShakeShader};
+pub use cls_trace_common::{TraceApplyTo, TraceOrigin, TracePoint, TracePolyline};
+pub use cls_trace_path_shader::TracePathShader;
+pub use cls_trace_propagation_shader::TracePropagationShader;
 pub use tui_vfx_geometry::easing::EasingType;
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>

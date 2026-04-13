@@ -23,7 +23,7 @@ supports shadows and `preserve_unfilled`.
 | Masks | 10 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
 | Filters | 23 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
-| Spatial Shaders | 17 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
+| Spatial Shaders | 20 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
 | Content Transformers | 13 (+ `None`) | `tui_vfx_content::types::ContentEffect` |
 | Shadows | 5 styles | `tui_vfx_shadow::ShadowConfig / ShadowSpec` |
@@ -483,6 +483,7 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 | `Bevel` | `light_direction`, `highlight_intensity`, `shadow_intensity`, `edge_width` |
 | `BorderSweep` | `speed`, `length`, `color` |
 | `ChromaticEdge` | `intensity`, `edge_width`, `horizontal` |
+| `EdgeSheen` | `speed`, `band_width`, `edge_width`, `corner_boost`, `color` |
 | `FocusedRowGradient` | `selected_row_ratio`, `falloff_distance`, `apply_to` |
 | `GlistenBand` | `speed`, `band_width`, `direction`, `angle_deg`, `head`, `tail` |
 | `GlitchLines` | `intensity`, `max_lines`, `speed` |
@@ -496,6 +497,8 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 | `RevealWipe` | `direction` |
 | `StochasticSparkle` | `sparkle_density`, `brightness_boost`, `speed`, `apply_to` |
 | `SubCellShake` | `amplitude`, `frequency`, `axis`, `chromatic` |
+| `TracePath` | `speed`, `tail_length`, `thickness`, `junction_boost`, `paths`, `color`, `apply_to` |
+| `TracePropagation` | `speed`, `grid_spacing`, `tail_length`, `origin`, `color` |
 
 ### Shader-specific supporting enums
 

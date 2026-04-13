@@ -598,6 +598,43 @@
           "premium"
         ]
       },
+      "CharsetNoise": {
+        "ai_hint": "Time-varying character replacement using a configurable charset gradient.\nseed: deterministic randomization seed.\nhz: update rate in changes per second.\njitter: per-cell variation in vertical gradient position.\nprogress: blend amount from original glyphs to noisy glyphs.\naffect_mode: All, NonEmpty, or Empty cells.\ngradient: ordered charset stops controlling how glyph noise evolves across the effect.\nUseful for signal corruption, ambient machine texture, and non-converging decode surfaces.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "CharsetNoise",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "8",
+            "doc": "Pattern changes per second (default 8.0).",
+            "name": "hz",
+            "ty": "f32"
+          },
+          {
+            "default": "42",
+            "doc": "Deterministic seed for reproducible patterns.",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "0.15",
+            "doc": "Per-cell random offset to gradient position (0.0 = none, 1.0 = full range).",
+            "name": "jitter",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Non-converging time-varying character replacement for living textures",
+        "rustdoc_summary": "Non-converging time-varying character replacement for living textures",
+        "use_cases": [
+          "glitch",
+          "ambient",
+          "textural",
+          "cyber"
+        ]
+      },
       "ColorBridgedShade": {
         "ai_hint": "Maps opacity to shade characters (░▒▓█) with color bridging.\nfg_color, bg_color: endpoint colors for shading transitions.\nSmooth color transitions at shade boundaries.",
         "complexity": "moderate",
@@ -2122,6 +2159,55 @@
           "effect"
         ]
       },
+      "EdgeSheen": {
+        "ai_hint": "Calm premium sheen constrained to widget edges instead of sweeping across the full surface.\ncolor: sheen tint.\nspeed: perimeter travel rate.\nband_width: sheen segment length around the shell.\nedge_width: how far inward from the edge the effect reaches.\ncorner_boost: extra emphasis as the sheen passes corners.\napply_to: Foreground, Background, or Both.\nIdeal for polished shells, modals, banners, and luxury UI chrome.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "EdgeSheen",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0.8",
+            "doc": "Sweep speed multiplier.",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "10 cells",
+            "doc": "Band width along the perimeter in cells.",
+            "name": "band_width",
+            "ty": "u16"
+          },
+          {
+            "default": "2 cells",
+            "doc": "Thickness of the effect measured inward from the edge.",
+            "name": "edge_width",
+            "ty": "u8"
+          },
+          {
+            "default": "0.2",
+            "doc": "Extra highlight applied near corners.",
+            "name": "corner_boost",
+            "ty": "f32"
+          },
+          {
+            "default": "White",
+            "doc": "Sheen tint.",
+            "name": "color",
+            "ty": "ColorConfig"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Calm premium sheen that glides along the widget perimeter",
+        "rustdoc_summary": "Calm premium sheen that glides along the widget perimeter",
+        "use_cases": [
+          "premium-shell",
+          "toast",
+          "card",
+          "surface"
+        ]
+      },
       "FocusedRowGradient": {
         "ai_hint": "Vertical gradient highlighting selected row.\nselected_row: row index to highlight.\nselected_row_ratio: alternative selection by ratio (0.0-1.0).\nfalloff_distance: gradient fade distance from selected row.\nbright_color: highlight color for selected row.\ndim_color: color for non-selected rows.\napply_to: Foreground/Background/Both.\nIdeal for list navigation and row selection.",
         "complexity": "moderate",
@@ -2602,6 +2688,116 @@
           "vibration",
           "attention"
         ]
+      },
+      "TracePath": {
+        "ai_hint": "Authored routed trace following explicit waypoints.\ncolor: pulse tint.\nspeed: travel rate of the signal head.\ntail_length: illuminated trail length behind the signal.\nthickness: maximum route thickness in cells.\njunction_boost: extra emphasis when the pulse passes a turn.\napply_to: Foreground, Background, or Both.\npaths: one or more orthogonal polylines, each with points and optional delay.\nIdeal for art-directed blueprint traces and as the deterministic foundation for future obstacle-aware auto-routing.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "TracePath",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "Travel speed multiplier for the pulse head.",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "7.0 cells",
+            "doc": "Length of the illuminated pulse tail in cells.",
+            "name": "tail_length",
+            "ty": "f32"
+          },
+          {
+            "default": "1 cells",
+            "doc": "Maximum route thickness in cells.",
+            "name": "thickness",
+            "ty": "u16"
+          },
+          {
+            "default": "0.2",
+            "doc": "Extra emphasis when the pulse passes a turn/junction.",
+            "name": "junction_boost",
+            "ty": "f32"
+          },
+          {
+            "default": "1",
+            "doc": "One or more authored routes.",
+            "name": "paths",
+            "ty": "Vec<TracePolyline>"
+          },
+          {
+            "default": "Cyan",
+            "doc": "Trace pulse color.",
+            "name": "color",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "Foreground",
+            "doc": "Which channel(s) to affect.",
+            "name": "apply_to",
+            "ty": "TraceApplyTo"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Authored routed signal path following explicit waypoints",
+        "rustdoc_summary": "Authored routed signal path following explicit waypoints",
+        "use_cases": [
+          "schematic",
+          "pcb",
+          "path-authored",
+          "technical"
+        ]
+      },
+      "TracePropagation": {
+        "ai_hint": "Orthogonal signal pulse traveling through routed trace lanes.\nspeed: propagation rate of the signal head.\ncolor: pulse tint.\ngrid_spacing: distance between horizontal/vertical trace lanes.\nline_width: lane thickness in cells.\ntail_length: pulse trail length behind the signal head.\norigin: TopLeft, TopRight, BottomLeft, BottomRight, or Center.\napply_to: Foreground, Background, or Both.\nIdeal for Blueprint-style progress overlays, routed system diagrams, and PCB-inspired surfaces.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "TracePropagation",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "1",
+            "doc": "Propagation speed multiplier.",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "6 cells",
+            "doc": "Distance in cells between trace lanes.",
+            "name": "grid_spacing",
+            "ty": "u16"
+          },
+          {
+            "default": "5.0 cells",
+            "doc": "Length of the pulse tail in cells.",
+            "name": "tail_length",
+            "ty": "f32"
+          },
+          {
+            "default": "TopLeft",
+            "doc": "Starting point for the propagation.",
+            "name": "origin",
+            "ty": "TraceOrigin"
+          },
+          {
+            "default": "Cyan",
+            "doc": "Trace pulse color.",
+            "name": "color",
+            "ty": "ColorConfig"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Orthogonal signal pulse moving through routed trace lanes",
+        "rustdoc_summary": "Orthogonal signal pulse moving through routed trace lanes",
+        "use_cases": [
+          "schematic",
+          "pcb",
+          "system-flow",
+          "technical"
+        ]
       }
     },
     "shadows": {
@@ -2668,6 +2864,24 @@
           "depth",
           "premium",
           "modal"
+        ]
+      },
+      "MediumShade": {
+        "ai_hint": "Textured full-cell shadow using the medium shade glyph `▒`.\nCreates a denser, more graphic shadow than HalfBlock while staying simpler than Gradient.\nGood for moody overlays, stylized cards, and terminals where braille density is too fine.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "MediumShade",
+        "pairs_with": [],
+        "parameters": [],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Medium-shade character cells for textured full-cell shadows",
+        "rustdoc_summary": "Medium-shade character cells for textured full-cell shadows",
+        "use_cases": [
+          "depth",
+          "texture",
+          "full-cell",
+          "fallback-premium"
         ]
       },
       "Solid": {
