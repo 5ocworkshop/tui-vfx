@@ -1,7 +1,7 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.11.0</VERS> -->
-<!-- <WCTX>Document canvas-aware FadeIn/FadeOut: the new `from`/`to` FadeTarget fields on StyleEffect variants that let recipes fade from a defined canvas color instead of black</WCTX> -->
-<!-- <CLOG>Add StyleEffect::FadeIn/FadeOut `from`/`to` field, Rust + JSON examples, and pointer to CAPABILITIES_REFERENCE for the full FadeTarget table</CLOG> -->
+<!-- <VERS>VERSION: 2.12.0</VERS> -->
+<!-- <WCTX>Close the schema-drift gap between the filter table here and cls_filter_spec.rs v3.4.0: eight filters (CharsetNoise, HoverBar, UnderlineWipe, BracketEmphasis, DotIndicator, PillButton, GlistenSweep, KittScanner, ShadeScanner) were never added to the table — seven were added to CAPABILITIES_REFERENCE.md but not here</WCTX>
+<!-- <CLOG>MINOR: Add the nine missing filter rows to the FilterSpec table; add BrailleDust.drift field; expand UnderlineWipe row with bg_color/gradient/glisten; add WipeDirection/HoverBarPosition enum references in Notes</CLOG> -->
 
 # TUI-VFX Complete API Reference
 
@@ -301,13 +301,22 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `Crt` | CRT scanlines/glow | `scanline_strength: SignalOrFloat`, `glow: SignalOrFloat` |
 | `PatternFill` | Background texture | `pattern: PatternType`, `color: Option<ColorConfig>`, `only_empty: bool` |
 | `Greyscale` | BT.601 desaturation | `strength: SignalOrFloat`, `apply_to` |
-| `BrailleDust` | Animated braille dust | `density`, `hz`, `seed`, `pattern`, `color` |
+| `BrailleDust` | Animated braille dust | `density`, `hz`, `seed`, `pattern: BraillePatternType`, `color: Option<ColorConfig>`, `drift` |
+| `CharsetNoise` | Time-varying char replacement (living textures) | `hz`, `seed`, `jitter`, `affect: CharsetNoiseAffect`, `chars: Option<String>` (flat) or `gradient: Option<Vec<CharsetNoiseGradientStop>>` (position-aware) |
 | `InterlaceCurtain` | Scanline dimming | `density`, `dim_factor`, `scroll_speed` |
-| `MotionBlur` | Directional trail | `trail_length`, `opacity_decay`, `direction` |
+| `MotionBlur` | Directional trail | `trail_length`, `opacity_decay`, `direction: MotionBlurDirection` |
 | `ColorBridgedShade` | Shade chars (░▒▓█) | `opacity`, `fg_color`, `bg_color` |
-| `SubPixelBar` | 8x progress bar | `progress`, `direction`, `filled_color`, `unfilled_color`, `animated` |
+| `SubPixelBar` | 8x progress bar | `progress`, `direction: SubPixelBarDirection`, `filled_color`, `unfilled_color`, `animated: bool` |
 | `SubCellShake` | Partial-block vibration | `amplitude`, `frequency`, `seed`, `edge_only`, `filled_color`, `bg_color` |
-| `RigidShake` | Damped rigid shake | `shake_period`, `num_shakes`, `pause_duration`, `max_eighths`, `base_eighths`, `damping`, `element_color`, `bg_color`, `inner_width`, `margin_width` |
+| `RigidShake` | Damped rigid shake | `shake_period`, `num_shakes`, `pause_duration`, `max_eighths`, `base_eighths`, `damping: Vec<f32>`, `element_color`, `bg_color`, `inner_width`, `margin_width` |
+| `HoverBar` | Progress-driven partial bar | `base_eighths`, `max_eighths`, `position: HoverBarPosition`, `bar_color`, `bg_color`, `progress`, `margin_width` |
+| `UnderlineWipe` | Horizontal underline wipe-in | `direction: WipeDirection`, `color`, `bg_color`, `line_char`, `row_offset`, `progress`, `gradient: bool`, `glisten: bool` |
+| `BracketEmphasis` | Fade-in brackets around content | `left: char`, `right: char`, `color`, `bg_color`, `progress` |
+| `DotIndicator` | Dot/bullet marker | `indicator_char: char`, `position: HoverBarPosition`, `color`, `bg_color`, `progress` |
+| `PillButton` | Pill button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten: bool`, `progress` |
+| `GlistenSweep` | Diagonal 45° highlight sweep | `boost: u8`, `band_width: f32`, `speed: f32`, `progress: f32`, `powerline_mode: bool`, `boost_separator_bg: bool` |
+| `KittScanner` | Horizontal ping-pong brightness sweep | `boost: u8`, `band_width: f32`, `bps: f32`, `progress: f32`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool` |
+| `ShadeScanner` | Ping-pong scanner w/ shade overlay | `shade_color`, `bps: f32`, `progress: f32` |
 
 ### ApplyTo
 `Foreground`, `Background`, `Both` (default). Aliases: `fg`, `bg`.
@@ -327,11 +336,32 @@ Filters modify cell colors/styles after rendering (applied in order).
 ### SubPixelBarDirection
 `Horizontal` (▏▎▍▌▋▊▉█), `Vertical` (▁▂▃▄▅▆▇█)
 
+### HoverBarPosition
+`Left` (default), `Right`, `Top`, `Bottom` — reused by `HoverBar` and `DotIndicator`.
+
+### WipeDirection (UnderlineWipe)
+`LeftToRight` (default), `RightToLeft`, `TopToBottom`, `BottomToTop`, plus diagonals,
+center-out/edges-in variants, and `FromLeft`/`FromRight`/`FromTop`/`FromBottom` aliases.
+See `cls_mask_spec.rs::WipeDirection`.
+
+### CharsetNoiseAffect
+`All` (replace all cells including whitespace), `NonEmpty` (default — skip whitespace).
+
 ### Notes
 - **RigidShake** requires **margin cells** around the widget area. Apply to an area that
   includes the margins so the partial-block extensions can render.
 - **SubCellShake** (filter) uses partial blocks to simulate physical vibration; **SubCellShake**
   (shader) is a color oscillation effect.
+- **GlistenSweep / KittScanner** do not have a `color` field — they apply an additive
+  `boost` (u8) to existing cell colors, so drive palette through `base_style` and use
+  the filter only for temporal motion. `KittScanner.bps` is "beats per second", not a
+  conventional `speed` field.
+- **ShadeScanner** is a dimming sweep (no `boost`), not a brightening sweep like its
+  `KittScanner` neighbor.
+- **Progress-driven filters** (`HoverBar`, `UnderlineWipe`, `BracketEmphasis`,
+  `DotIndicator`, `PillButton`, `GlistenSweep`, `KittScanner`, `ShadeScanner`) take a
+  static `progress: f32` in their standard form — use `1.0` to fully activate the
+  effect during dwell. For animation, drive `progress` via a signal expression.
 
 ### Signal-driven parameters (`SignalOrFloat`)
 
@@ -903,4 +933,4 @@ pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowG
 ---
 
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 2.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 2.12.0</VERS> -->

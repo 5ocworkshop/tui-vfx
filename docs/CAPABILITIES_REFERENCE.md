@@ -1,12 +1,12 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.10.0</VERS> -->
-<!-- <WCTX>Document canvas-aware FadeIn/FadeOut and the new `from`/`to` FadeTarget fields so design-system authors can avoid the black-flash artifact on non-default canvases</WCTX> -->
-<!-- <CLOG>Add "Canvas-aware FadeIn / FadeOut" section describing the new fields, FadeTarget variants, and the standalone-recipe limitation that currently forces canvas color into the recipe itself</CLOG> -->
+<!-- <VERS>VERSION: 1.11.0</VERS> -->
+<!-- <WCTX>Close the schema-drift gap between this document and cls_filter_spec.rs v3.4.0: four filters (GlistenSweep, KittScanner, ShadeScanner, PillButton) were never documented here and two more (UnderlineWipe, CharsetNoise) had incomplete parameter lists</WCTX> -->
+<!-- <CLOG>MINOR: Add GlistenSweep, KittScanner, ShadeScanner, PillButton, CharsetNoise rows to the Filters table; add detailed "Newer Hover & Feedback Filters" notes section covering the real struct fields (boost/band_width/bps/progress/apply_to/powerline_mode/boost_separator_bg — NOT the color/intensity/trail_length language prose descriptions might imply); correct UnderlineWipe row to include bg_color/gradient/glisten fields</CLOG> -->
 
 # tui-vfx Capabilities Reference
 
 > **MAINTENANCE NOTE:** This document must be kept in sync with the source code.
-> Last verified: 2026-04-11
+> Last verified: 2026-04-13
 > When adding new effects, update the relevant section below.
 
 This document provides a complete inventory of visual effects available in tui-vfx,
@@ -81,7 +81,8 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **Crt** | CRT monitor post-processing | `scanline_strength`, `glow` |
 | **PatternFill** | Background texture patterns | `pattern`, `color`, `only_empty` |
 | **Greyscale** | Desaturate (BT.601 luminance) | `strength`, `apply_to` |
-| **BrailleDust** | Animated braille particles | `density`, `hz`, `seed`, `pattern`, `color` |
+| **BrailleDust** | Animated braille particles | `density`, `hz`, `seed`, `pattern`, `color`, `drift` |
+| **CharsetNoise** | Time-varying character replacement (living textures) | `hz`, `seed`, `jitter`, `affect`, `chars` (flat) or `gradient` (position-aware) |
 | **InterlaceCurtain** | Scanline/interlace effect | `density`, `dim_factor`, `scroll_speed` |
 | **MotionBlur** | Directional blur trail | `trail_length`, `opacity_decay`, `direction` |
 | **ColorBridgedShade** | Shade char opacity (░▒▓█) | `opacity`, `fg_color`, `bg_color` |
@@ -89,9 +90,13 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **SubCellShake** | Edge vibration using partial blocks | `amplitude`, `frequency`, `seed`, `edge_only`, `filled_color`, `bg_color` |
 | **RigidShake** | Ketchup bottle damped oscillation | `shake_period`, `num_shakes`, `pause_duration`, `max_eighths`, `base_eighths`, `damping`, `element_color`, `bg_color`, `inner_width`, `margin_width` |
 | **HoverBar** | Progress-driven partial bar indicator | `base_eighths`, `max_eighths`, `position`, `bar_color`, `bg_color`, `progress`, `margin_width` |
-| **UnderlineWipe** | Horizontal underline wipe-in | `direction`, `color`, `line_char`, `row_offset`, `progress` |
+| **UnderlineWipe** | Horizontal underline wipe-in | `direction`, `color`, `bg_color`, `line_char`, `row_offset`, `progress`, `gradient`, `glisten` |
 | **BracketEmphasis** | Fade-in brackets around content | `left`, `right`, `color`, `bg_color`, `progress` |
 | **DotIndicator** | Simple dot/bullet marker | `indicator_char`, `position`, `color`, `bg_color`, `progress` |
+| **PillButton** | Pill-shaped button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten`, `progress` |
+| **GlistenSweep** | Diagonal 45° brightness sweep (hover shine) | `boost` (u8, additive), `band_width` (f32, diagonal fraction), `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
+| **KittScanner** | Horizontal ping-pong brightness sweep (KITT/Larson) | `boost` (u8), `band_width`, `bps`, `progress`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
+| **ShadeScanner** | Ping-pong scanner that dims text with shade overlay | `shade_color`, `bps`, `progress` |
 
 ### PatternType Variants
 
@@ -302,6 +307,61 @@ Four filters designed for hover/focus visual feedback, all driven by `progress` 
 - `position`: Left or Right side
 - Fades in based on progress
 - Ideal for list selection, navigation bullets
+
+### Newer Hover & Feedback Filters
+
+Four filters added after the original hover-indicator family. These work by
+**boosting existing cell colors** with additive brightness, so the widget's
+`base_style` drives the palette and the filter drives the temporal/spatial
+motion on top of it. None of them take a `color` field — if prose descriptions
+elsewhere refer to "the red KITT color" or "the warm-white glisten", that's
+aesthetic intent, not a recipe field. Drive color through `base_style`.
+
+**PillButton** — Pill-shaped button appearance with horizontal gradient edges:
+- `button_color`: Solid fill color for the pill interior
+- `bg_color`: Background at the extreme edges (gradients fade `button_color → bg_color`)
+- `edge_width`: Width of the left/right gradient edge in cells (default 3)
+- `glisten`: Enable glisten/shimmer sweep on hover (default true)
+- `progress`: Hover progress 0.0..1.0 (default 0.0 — set to a non-zero value to activate)
+- Ideal for interactive buttons, CTA primitives, rounded interactive surfaces
+
+**GlistenSweep** — Diagonal 45° highlight band that boosts existing colors:
+- `boost`: Additive u8 brightness boost applied under the band (default 40)
+- `band_width`: Width of the highlight band as a fraction of the diagonal (default 0.2)
+- `speed`: Animation speed; when 0, the band is positioned by `progress` only (default 0.5)
+- `progress`: Hover progress 0.0..1.0 (set to 1.0 to keep the filter active)
+- `powerline_mode`: Smart powerline rendering (bg on text, fg only on separator glyphs)
+- `boost_separator_bg`: Additionally boost separator backgrounds when `powerline_mode` is true — needed for powerlines with a continuous bg rather than terminal default
+- Ideal for hover shine, button press feedback, polished CTAs
+
+**KittScanner** — Horizontal ping-pong brightness sweep (the KITT/Larson aesthetic):
+- `boost`: Additive u8 brightness boost under the band (default 50)
+- `band_width`: Width of the scanner band as fraction of total width (default 0.15, typical 0.0..0.5)
+- `bps`: Beats per second for the ping-pong cycle (default 1.0) — **not** `speed`
+- `progress`: 0.0..1.0, set to 1.0 to activate
+- `apply_to`: Which color component to boost (fg / bg / both, default Both)
+- `powerline_mode` / `boost_separator_bg`: See GlistenSweep
+- Use a red `base_style.foreground` for the classic KITT/Larson look — the boost is additive, not replacement
+- Ideal for status bars, alert indicators, ambient attention-getters
+
+**ShadeScanner** — Ping-pong scanner that dims text with a shade overlay:
+- `shade_color`: The dimming overlay color applied as the band sweeps (default dark grey)
+- `bps`: Beats per second for the ping-pong cycle (default 1.0)
+- `progress`: 0.0..1.0, set to 1.0 to activate
+- Simpler than KittScanner (no boost, no band_width, no powerline options) — this is a dimming sweep, not a brightening sweep
+- Ideal for "reading" effects, progressive-reveal teases, subtle attention cues
+
+### Living-Texture Filters
+
+**CharsetNoise** — Non-converging time-varying character replacement:
+- `hz`: Pattern changes per second (default 8.0)
+- `seed`: Deterministic random seed for reproducible patterns
+- `jitter`: Per-cell random offset to gradient position (0.0..1.0)
+- `affect`: `"all"` or `"non_empty"` (default `non_empty`) — whether whitespace cells are replaced
+- `chars`: Flat charset used for every cell (ignored if `gradient` is set)
+- `gradient`: Position-aware charsets — `Vec<{ at: f32, chars: String }>` — overrides `chars`
+- Use the flat form for uniform textures (static noise, smoke); use the gradient form for fire-like shapes where sparse/flickering characters sit above dense solid characters
+- Chains naturally: `charset_noise` → `braille_dust` → `tint`
 
 ---
 
@@ -594,4 +654,4 @@ JSON/TOML-driven configurations.
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.10.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.11.0</VERS> -->
