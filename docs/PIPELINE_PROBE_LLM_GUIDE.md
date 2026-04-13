@@ -1,7 +1,7 @@
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>Phase-2 validator delegation documentation update</WCTX> -->
-<!-- <CLOG>MINOR: Update the tool-selection guidance to mention that pipeline-validator now has an explicit delegated probe mode in addition to the standalone recipe-probe adapter</CLOG> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>Phase-2 recipe adapter metadata documentation update</WCTX> -->
+<!-- <CLOG>MINOR: Clarify that recipe-side probe tools now attach adapter metadata for content/style activity on top of the direct engine probe report</CLOG> -->
 
 # Pipeline Probe: A Direct-Engine Guide for LLMs and Humans
 
@@ -22,7 +22,7 @@ It answers the question:
 | You need JSON/NDJSON instead of prose dumps | `pipeline-probe` or `recipe-probe` |
 | You need parse/rules/profile checks from the recipe schema | `pipeline-validator` |
 
-The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes` repo at `tools/recipe-probe/`. It builds a `ProbeSceneSpec` for you from a recipe file and then delegates into the capabilities documented below. If you are already using `pipeline-validator`, the same sibling repo now also exposes `pipeline-validator --probe` as an in-place delegation path.
+The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes` repo at `tools/recipe-probe/`. It builds a `ProbeSceneSpec` for you from a recipe file and then delegates into the capabilities documented below. If you are already using `pipeline-validator`, the same sibling repo now also exposes `pipeline-validator --probe` as an in-place delegation path. Both recipe-side tools attach adapter metadata for content/style activity when that information is not visible in compositor-only cell diffs.
 
 ## What phase 1 supports
 
@@ -246,4 +246,4 @@ Key fields:
 - `crates/tui-vfx-probe/README.md`
 
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
