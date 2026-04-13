@@ -1,3 +1,8 @@
+# <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>Phase-1 pipeline probe workspace integration</WCTX>
+# <CLOG>MINOR: Add crates/tui-vfx-probe to the workspace member list for the new engine-owned observability crate</CLOG>
+
 [workspace]
 resolver = "3"
 members = [
@@ -11,6 +16,7 @@ members = [
     "crates/tui-vfx-content",
     "crates/tui-vfx-shadow",
     "crates/tui-vfx-debug",
+    "crates/tui-vfx-probe",
     "xtask",
 ]
 
@@ -41,3 +47,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand = "0.8"
 smallvec = "1.11"
+
+# <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
+# <VERS>END OF VERSION: 0.1.0</VERS>

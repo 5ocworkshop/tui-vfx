@@ -1059,6 +1059,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tui-vfx-probe"
+version = "0.3.0"
+dependencies = [
+ "mixed-signals",
+ "serde",
+ "serde_json",
+ "tui-vfx-compositor",
+ "tui-vfx-style",
+ "tui-vfx-types",
+]
+
+[[package]]
 name = "tui-vfx-shadow"
 version = "0.3.0"
 dependencies = [

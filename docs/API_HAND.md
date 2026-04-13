@@ -1,7 +1,7 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.12.0</VERS> -->
+<!-- <VERS>VERSION: 2.14.0</VERS> -->
 <!-- <WCTX>Close the schema-drift gap between the filter table here and cls_filter_spec.rs v3.4.0: eight filters (CharsetNoise, HoverBar, UnderlineWipe, BracketEmphasis, DotIndicator, PillButton, GlistenSweep, KittScanner, ShadeScanner) were never added to the table — seven were added to CAPABILITIES_REFERENCE.md but not here</WCTX>
-<!-- <CLOG>MINOR: Add the nine missing filter rows to the FilterSpec table; add BrailleDust.drift field; expand UnderlineWipe row with bg_color/gradient/glisten; add WipeDirection/HoverBarPosition enum references in Notes</CLOG> -->
+<!-- <CLOG>MINOR: Extend the pipeline-probe section to cover collect_timeline, run_probe_diff, ProbeTimelineReport, ProbeDiffReport, and the new CLI flags</CLOG> -->
 
 # TUI-VFX Complete API Reference
 
@@ -93,6 +93,99 @@ pub fn render_pipeline_with_spec_area(
     inspector: Option<&mut dyn CompositorInspector>,
 )
 ```
+
+---
+
+### `run_probe` (structured observability)
+
+```rust
+pub fn run_probe(
+    scene: &ProbeSceneSpec,
+    request: &ProbeRequest,
+) -> Result<ProbeReport, ProbeError>
+```
+
+Engine-owned single-frame observability entry point from `tui-vfx-probe`.
+
+Phase-1 surface:
+- direct-engine input via `ProbeSceneSpec`
+- selectors: `all`, `non-empty`, `modified`
+- JSON-friendly output via `ProbeReport`
+- compositor-stage `last_touch` attribution and richer trace events (sampler source coords, mask visibility, shader/filter before/after snapshots)
+
+### `pipeline-probe` (CLI)
+
+```bash
+pipeline-probe \
+  --input probe-scene.json \
+  --format json|ndjson \
+  --phase entering|dwelling|exiting \
+  --sample-t 0.0..1.0 \
+  --cells all|non-empty|modified \
+  [--with-causation]
+```
+
+This binary lives in `crates/tui-vfx-probe` and is intended for direct engine scenes rather
+than recipe JSON. Additional phase-1.5 flags:
+- `--frames N` — emit a `ProbeTimelineReport` sampled evenly across the phase
+- `--diff-to T` — emit a `ProbeDiffReport` comparing `--sample-t` against another phase-local time
+
+Use `pipeline-validator` in the sibling `tui-vfx-recipes` repo when you need recipe parse/rules/profile stages.
+
+---
+
+## Probe Types
+
+### `ProbeSceneSpec`
+
+```rust
+pub struct ProbeSceneSpec {
+    pub source: ProbeGridSpec,
+    pub destination: ProbeGridSpec,
+    pub widget_offset: ProbePoint,
+    pub composition: CompositionSpec,
+}
+```
+
+Wraps the full direct-engine input seam required for one probe run:
+- source grid
+- destination frame
+- widget placement
+- serialized composition config
+
+### `ProbeRequest`
+
+```rust
+pub struct ProbeRequest {
+    pub phase: ProbePhase,
+    pub sample_t: f64,
+    pub cells: ProbeCellSelector,
+    pub with_causation: bool,
+}
+```
+
+### `ProbeReport`
+
+Top-level single-frame report containing:
+- `request` and `timing`
+- `frame` and `widget` geometry
+- `pipeline` inventory counts
+- `summary` (`total_cells`, `non_empty_cells`, `modified_cells`)
+- emitted `cells[]`
+- per-cell `last_touch` and optional `trace[]`
+
+### `ProbeTimelineReport`
+
+Wraps `frames: Vec<ProbeReport>` sampled evenly across one phase.
+
+### `ProbeDiffReport`
+
+Emits only changed cells between `from_t` and `to_t`, each with:
+- `before` snapshot
+- `after` snapshot
+- optional `last_touch` / `trace` from the later sample
+
+**Current limitation:** probe traces are now useful for compositor stages, but style/content-stage hooks are still pending.
 
 ---
 
@@ -933,4 +1026,4 @@ pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowG
 ---
 
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 2.12.0</VERS> -->
+<!-- <VERS>END OF VERSION: 2.14.0</VERS> -->

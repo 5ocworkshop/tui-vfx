@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.11.0</VERS> -->
-<!-- <WCTX>Close the schema-drift gap between this document and cls_filter_spec.rs v3.4.0: four filters (GlistenSweep, KittScanner, ShadeScanner, PillButton) were never documented here and two more (UnderlineWipe, CharsetNoise) had incomplete parameter lists</WCTX> -->
-<!-- <CLOG>MINOR: Add GlistenSweep, KittScanner, ShadeScanner, PillButton, CharsetNoise rows to the Filters table; add detailed "Newer Hover & Feedback Filters" notes section covering the real struct fields (boost/band_width/bps/progress/apply_to/powerline_mode/boost_separator_bg — NOT the color/intensity/trail_length language prose descriptions might imply); correct UnderlineWipe row to include bg_color/gradient/glisten fields</CLOG> -->
+<!-- <VERS>VERSION: 1.13.0</VERS> -->
+<!-- <WCTX>Expand the observability inventory now that pipeline-probe supports timeline and diff reports in addition to single-frame dumps</WCTX> -->
+<!-- <CLOG>MINOR: Extend the observability section with timeline/diff support and richer trace-event details so the hand-maintained capabilities doc matches the current probe</CLOG> -->
 
 # tui-vfx Capabilities Reference
 
@@ -30,6 +30,7 @@ design.
 6. [Content Transformers (Text Effects)](#content-transformers-text-effects)
 7. [Shadows](#shadows)
 8. [Composition Pipeline](#composition-pipeline)
+9. [Observability & Debugging](#observability--debugging)
 
 ---
 
@@ -596,6 +597,49 @@ JSON/TOML-driven configurations.
 
 ---
 
+## Observability & Debugging
+
+**Source:** `crates/tui-vfx-probe/*`, `docs/PIPELINE_PROBE_LLM_GUIDE.md`
+
+`tui-vfx` now includes an engine-owned direct-scene probe surface for structured debugging.
+
+### Phase-1 probe capabilities
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Single-frame JSON dump | ✅ | `run_probe()` / `pipeline-probe` |
+| NDJSON output | ✅ | One report per line; useful for tooling |
+| Selectors | ✅ | `all`, `non-empty`, `modified` |
+| Widget/frame geometry | ✅ | `frame.size`, `widget.abs_origin`, `widget.size` |
+| Summary counts | ✅ | `total_cells`, `non_empty_cells`, `modified_cells` |
+| Compositor-stage last-touch attribution | ✅ | sampler, mask, shader, filter callbacks only |
+| Rich trace emission | ✅ | sampler source coords, mask visibility, shader/filter before-after snapshots |
+| Multi-frame timeline | ✅ | `collect_timeline()` / `pipeline-probe --frames N` |
+| Frame diff mode | ✅ | `run_probe_diff()` / `pipeline-probe --diff-to T` |
+| Style/content-stage hooks | ❌ | planned follow-up |
+| Full engine-wide causation chain | ❌ | planned follow-up |
+
+### Probe inputs and outputs
+
+- **Input:** `ProbeSceneSpec`
+  - `source` grid
+  - `destination` frame
+  - `widget_offset`
+  - serialized `CompositionSpec`
+- **Outputs:**
+  - `ProbeReport` for one frame
+  - `ProbeTimelineReport` for evenly sampled multi-frame playback
+  - `ProbeDiffReport` for changed cells between two samples
+
+### Recommended debugging split
+
+- Use **`pipeline-probe`** for direct engine scenes and machine-parseable frame inspection.
+- Use **`pipeline-validator`** (sibling `tui-vfx-recipes` repo) when you need recipe parsing, rules, profile construction, and recipe-corpus checks.
+
+For a concrete LLM-ready workflow, see `docs/PIPELINE_PROBE_LLM_GUIDE.md`. The guide now documents frame dumps, timelines, and diff-based debugging flows.
+
+---
+
 ## Quick Reference: Effect Categories
 
 ### For Transitions (Enter/Exit)
@@ -654,4 +698,4 @@ JSON/TOML-driven configurations.
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.13.0</VERS> -->

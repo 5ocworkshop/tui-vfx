@@ -1,7 +1,7 @@
 <!-- <FILE>README.md</FILE> - <DESC>Project overview and usage guide</DESC> -->
-<!-- <VERS>VERSION: 1.0.3</VERS> -->
-<!-- <WCTX>Public release prep</WCTX> -->
-<!-- <CLOG>Fix metadata header to use HTML comments</CLOG> -->
+<!-- <VERS>VERSION: 1.2.0</VERS> -->
+<!-- <WCTX>Phase-1.5 pipeline probe documentation updates</WCTX> -->
+<!-- <CLOG>MINOR: Update the docs section so README reflects that pipeline-probe now supports frame dumps, timelines, and frame diffs for direct engine scenes</CLOG> -->
 # tui-vfx
 
 Cell-based visual effects for terminal UIs.
@@ -208,6 +208,7 @@ The library is organized into several sub-crates:
 | `tui-vfx-style` | Color interpolation and style effects |
 | `tui-vfx-content` | Text manipulation primitives |
 | `tui-vfx-compositor` | Pipeline and compositing effects |
+| `tui-vfx-probe` | Structured one-frame observability and probe CLI |
 
 ### Data-driven configuration
 
@@ -220,6 +221,11 @@ potential scripting bindings while keeping the heavy lifting in Rust.
 ## Documentation
 
 See `docs/generated/API.md` for the complete API reference.
+
+Hand-maintained debugging references:
+- `docs/PIPELINE_PROBE_LLM_GUIDE.md` — how to use `pipeline-probe` to inspect direct engine scenes as JSON/NDJSON, timeline reports, and frame diffs
+- `docs/PIPELINE_VALIDATOR_LLM_GUIDE.md` — how to use the recipe-side validator in `tui-vfx-recipes`
+- `docs/design/pipeline-probe-design.md` — first-pass design and rollout notes for the probe architecture
 
 Machine-readable references:
 - `docs/generated/capabilities.json` — effect inventory + key parameters
@@ -242,4 +248,4 @@ Outputs:
 MIT
 
 <!-- <FILE>README.md</FILE> - <DESC>Project overview and usage guide</DESC> -->
-<!-- <VERS>END OF VERSION: 1.0.3</VERS> -->
+<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->

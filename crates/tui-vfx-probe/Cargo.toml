@@ -1,0 +1,33 @@
+# <FILE>crates/tui-vfx-probe/Cargo.toml</FILE> - <DESC>Engine-owned AI-native pipeline observability crate</DESC>
+# <VERS>VERSION: 0.3.0</VERS>
+# <WCTX>Phase-1 pipeline probe documentation polish</WCTX>
+# <CLOG>MINOR: Add crate README metadata so published docs and package metadata point users at the probe usage guide</CLOG>
+
+[package]
+name = "tui-vfx-probe"
+description = "Engine-owned structured pipeline observability for tui-vfx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
+
+[dependencies]
+tui-vfx-compositor.workspace = true
+tui-vfx-types.workspace = true
+mixed-signals.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tui-vfx-style.workspace = true
+
+[[bin]]
+name = "pipeline-probe"
+path = "src/bin/pipeline-probe.rs"
+
+# <FILE>crates/tui-vfx-probe/Cargo.toml</FILE> - <DESC>Engine-owned AI-native pipeline observability crate</DESC>
+# <VERS>END OF VERSION: 0.3.0</VERS>
