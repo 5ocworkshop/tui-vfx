@@ -1,7 +1,7 @@
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
-<!-- <WCTX>Unified recipe probe trace documentation</WCTX> -->
-<!-- <CLOG>MINOR: Clarify that recipe-side tools now emit unified per-cell content/style/compositor traces, while direct engine probe remains compositor-scoped and queryable through SQLite</CLOG> -->
+<!-- <VERS>VERSION: 0.9.0</VERS> -->
+<!-- <WCTX>Probe-side diagnostics documentation</WCTX> -->
+<!-- <CLOG>MINOR: Document the new probe-side diagnostics helpers for border/text integrity issues and clarify how they complement the existing report/timeline/diff surfaces</CLOG> -->
 
 # Pipeline Probe: A Direct-Engine Guide for LLMs and Humans
 
@@ -35,12 +35,16 @@ The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes
 - summary counts
 - compositor-stage `last_touch`
 - optional trace emission with sampler/mask metadata and filter/shader before/after snapshots
+- probe-side diagnostics helpers in the library for:
+  - alphabetic text leaking onto border rows
+  - underline glyphs contaminating the bottom border
 
 ## What phase 1 does not support yet
 
 - style/content stage attribution
 - full engine-wide causation coverage beyond compositor callbacks
 - recipe adapter delegation
+- full automatic detection of text truncation, missing-glyph, and motion-continuity defects at the CLI level
 
 ## Input document: `ProbeSceneSpec`
 
@@ -157,6 +161,32 @@ This is especially helpful when you need to answer questions like:
 - how many modified cells exist per frame?
 - what is the full trace history for widget-local `(x, y)` across a timeline?
 
+## Probe-side diagnostics helpers
+
+For callers embedding `tui-vfx-probe` as a library, the crate now exposes
+basic diagnostics helpers on top of `ProbeReport`:
+
+- `row_text(&report, y)` — reconstruct a widget-local text row
+- `max_widget_y(&report)` — find the bottommost emitted widget row
+- `has_ascii_alpha(text)` — detect semantic text leakage into decorative rows
+- `collect_basic_diagnostics(&report)` — emit typed diagnostics for:
+  - `alpha_on_top_border`
+  - `alpha_on_bottom_border`
+  - `underline_on_bottom_border`
+
+These helpers are intended to bridge the gap between:
+- **structural truth** — “which cells changed?”
+- **visual integrity** — “did the border/text contract survive composition?”
+
+They do **not** replace human visual QA, but they do convert common classes of
+visual breakage into repeatable machine checks.
+
+On the recipe side, `tui-vfx-recipes` now layers an additional diagnostics pass
+on top of probe output that can reason about the intended message string across
+dwell samples. That recipe-aware layer is where checks like
+`expected_message_missing` belong, because only the recipe adapter knows the
+semantic text contract.
+
 ## Typical workflows
 
 ### 1. Sanity-check a no-effect scene
@@ -258,6 +288,7 @@ Key fields:
 5. Use `abs` coords when comparing against frame overlays or underlays.
 6. Use `--frames` when you need progression across a phase and `--diff-to` when you only care about changed cells between two times.
 7. Treat `trace` as compositor-scoped causation: it is richer than before, but it still does not cover recipe-side style/content stages yet.
+8. When debugging border/text integrity, pair raw report inspection with the new diagnostics helpers instead of relying only on ad hoc SQL.
 
 ## Current limitations to keep in mind
 

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Embedded SQLite query backend for probe playback data</WCTX>
-// <CLOG>MINOR: Export the in-memory SQLite playback store alongside the existing report and timeline surfaces so callers can issue ad-hoc SQL over probe data</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Initial probe-side diagnostics for border/text integrity issues</WCTX>
+// <CLOG>MINOR: Export typed diagnostics helpers so probe consumers can detect common border-row and underline-placement defects without ad hoc SQL</CLOG>
 
 //! Engine-owned structured pipeline observability for `tui-vfx`.
 //!
@@ -32,6 +32,7 @@
 
 mod cls_probe_cell;
 mod cls_probe_color;
+mod cls_probe_diagnostic;
 mod cls_probe_diff_cell;
 mod cls_probe_diff_report;
 mod cls_probe_error;
@@ -50,15 +51,20 @@ mod cls_probe_timing;
 mod cls_probe_trace_event;
 mod cls_probe_widget;
 mod fnc_build_owned_grid;
+mod fnc_collect_basic_diagnostics;
 mod fnc_diff_frames;
+mod fnc_has_ascii_alpha;
+mod fnc_max_widget_y;
 mod fnc_modifier_names;
 mod fnc_normalize_color;
+mod fnc_row_text;
 mod fnc_select_cells;
 mod orc_collect_timeline;
 mod orc_run_probe;
 
 pub use cls_probe_cell::ProbeCell;
 pub use cls_probe_color::ProbeColor;
+pub use cls_probe_diagnostic::{ProbeDiagnostic, ProbeDiagnosticSeverity};
 pub use cls_probe_diff_cell::ProbeDiffCell;
 pub use cls_probe_diff_report::ProbeDiffReport;
 pub use cls_probe_error::ProbeError;
@@ -75,9 +81,13 @@ pub use cls_probe_timeline_report::ProbeTimelineReport;
 pub use cls_probe_timing::ProbeTiming;
 pub use cls_probe_trace_event::ProbeTraceEvent;
 pub use cls_probe_widget::ProbeWidget;
+pub use fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 pub use fnc_diff_frames::diff_frames;
+pub use fnc_has_ascii_alpha::has_ascii_alpha;
+pub use fnc_max_widget_y::max_widget_y;
 pub use orc_collect_timeline::collect_timeline;
 pub use orc_run_probe::{run_probe, run_probe_diff};
+pub use fnc_row_text::row_text;
 
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>
