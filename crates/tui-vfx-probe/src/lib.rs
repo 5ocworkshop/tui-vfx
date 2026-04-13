@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Phase-1.5 probe timeline and diff support</WCTX>
-// <CLOG>MINOR: Export the new timeline, diff, trace-snapshot, and modifier helper surfaces alongside the existing frame-dump API</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Embedded SQLite query backend for probe playback data</WCTX>
+// <CLOG>MINOR: Export the in-memory SQLite playback store alongside the existing report and timeline surfaces so callers can issue ad-hoc SQL over probe data</CLOG>
 
 //! Engine-owned structured pipeline observability for `tui-vfx`.
 //!
@@ -14,6 +14,7 @@
 //! - selectors for `all`, `non-empty`, and `modified` cells
 //! - compositor-stage `last_touch` attribution
 //! - timeline and frame-diff helpers built on repeated frame dumps
+//! - optional in-memory SQLite indexing/query support for large playback datasets
 //!
 //! This crate does **not** depend on `tui-vfx-recipes`; recipe-side tooling is expected
 //! to adapt into `ProbeSceneSpec` later.
@@ -41,6 +42,7 @@ mod cls_probe_pipeline_inventory;
 mod cls_probe_report;
 mod cls_probe_request;
 mod cls_probe_scene_spec;
+mod cls_probe_sqlite_store;
 mod cls_probe_state_snapshot;
 mod cls_probe_summary;
 mod cls_probe_timeline_report;
@@ -66,6 +68,7 @@ pub use cls_probe_pipeline_inventory::ProbePipelineInventory;
 pub use cls_probe_report::{ProbeFrame, ProbePoint, ProbeReport, ProbeReportSource, ProbeSize};
 pub use cls_probe_request::{ProbeCellSelector, ProbePhase, ProbeRequest};
 pub use cls_probe_scene_spec::ProbeSceneSpec;
+pub use cls_probe_sqlite_store::ProbeSqliteStore;
 pub use cls_probe_state_snapshot::ProbeStateSnapshot;
 pub use cls_probe_summary::ProbeSummary;
 pub use cls_probe_timeline_report::ProbeTimelineReport;
@@ -77,4 +80,4 @@ pub use orc_collect_timeline::collect_timeline;
 pub use orc_run_probe::{run_probe, run_probe_diff};
 
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

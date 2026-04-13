@@ -1,7 +1,7 @@
 <!-- <FILE>crates/tui-vfx-probe/README.md</FILE> - <DESC>README for the engine-owned pipeline probe crate</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Phase-1.5 pipeline probe documentation update</WCTX> -->
-<!-- <CLOG>MINOR: Update the README to advertise timeline/diff modes and richer trace snapshots in addition to the original frame-dump flow</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Embedded SQLite query backend documentation</WCTX> -->
+<!-- <CLOG>MINOR: Add the embedded SQLite query workflow to the crate README so callers can xray large playback datasets with SQL</CLOG> -->
 
 # tui-vfx-probe
 
@@ -14,6 +14,7 @@ It lets an LLM or human inspect one rendered frame as structured JSON instead of
 - one-frame execution through `run_probe()`
 - multi-frame timelines through `collect_timeline()` / `--frames N`
 - frame diffs through `run_probe_diff()` / `--diff-to T`
+- in-memory SQLite indexing and ad-hoc SQL queries through `ProbeSqliteStore` / `--sqlite-query`
 - JSON / NDJSON output through `pipeline-probe`
 - cell selectors: `all`, `non-empty`, `modified`
 - widget/frame metadata
@@ -48,7 +49,7 @@ The CLI accepts a `ProbeSceneSpec` JSON document:
 - `widget_offset` — widget placement in the destination frame
 - `composition` — serialized `CompositionSpec`
 
-See `docs/PIPELINE_PROBE_LLM_GUIDE.md` for full debugging workflows, timeline/diff examples, and output-reading guidance for LLMs and humans.
+See `docs/PIPELINE_PROBE_LLM_GUIDE.md` for full debugging workflows, timeline/diff examples, SQLite query examples, and output-reading guidance for LLMs and humans.
 
 <!-- <FILE>crates/tui-vfx-probe/README.md</FILE> - <DESC>README for the engine-owned pipeline probe crate</DESC> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->

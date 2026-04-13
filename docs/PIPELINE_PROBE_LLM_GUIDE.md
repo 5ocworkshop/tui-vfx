@@ -1,7 +1,7 @@
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>Phase-2 recipe adapter metadata documentation update</WCTX> -->
-<!-- <CLOG>MINOR: Clarify that recipe-side probe tools now attach adapter metadata for content/style activity on top of the direct engine probe report</CLOG> -->
+<!-- <VERS>VERSION: 0.7.0</VERS> -->
+<!-- <WCTX>Embedded SQLite query backend documentation</WCTX> -->
+<!-- <CLOG>MINOR: Document the new --sqlite-query workflow so large frame/timeline/diff datasets can be explored with SQL instead of ad-hoc text search</CLOG> -->
 
 # Pipeline Probe: A Direct-Engine Guide for LLMs and Humans
 
@@ -129,6 +129,33 @@ Important:
 - `--with-causation` — emit trace entries with sampler source coords, mask visibility, and shader/filter before/after snapshots
 - `--frames N` — sample evenly across the selected phase and emit a timeline report
 - `--diff-to T` — compare `--sample-t` against another phase-local time and emit only changed cells
+- `--sqlite-query SQL` — materialize the produced report into an in-memory SQLite database and return query results as JSON rows
+
+## SQLite xray mode
+
+For large timelines or dense per-cell traces, use the embedded SQLite query layer instead of grepping JSON.
+
+Example: count all trace events in a timeline run
+
+```bash
+cargo run -q -p tui-vfx-probe --bin pipeline-probe -- \
+  --input animated-scene.json \
+  --phase dwelling \
+  --frames 5 \
+  --sqlite-query "select stage, count(*) as events from probe_trace_events group by stage order by events desc"
+```
+
+Useful tables:
+- `probe_runs`
+- `probe_frames`
+- `probe_cells`
+- `probe_trace_events`
+- `probe_diff_cells`
+
+This is especially helpful when you need to answer questions like:
+- which cells were touched by shader but not filter?
+- how many modified cells exist per frame?
+- what is the full trace history for widget-local `(x, y)` across a timeline?
 
 ## Typical workflows
 
@@ -246,4 +273,4 @@ Key fields:
 - `crates/tui-vfx-probe/README.md`
 
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.7.0</VERS> -->
