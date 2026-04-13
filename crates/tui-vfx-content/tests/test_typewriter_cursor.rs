@@ -73,10 +73,7 @@ fn simple_with_default_glyph_matches_default() {
     // simple('█') is equivalent to default(), aside from being the
     // explicit form. This pins the contract that simple() never alters
     // the non-character fields.
-    assert_eq!(
-        TypewriterCursor::simple('█'),
-        TypewriterCursor::default()
-    );
+    assert_eq!(TypewriterCursor::simple('█'), TypewriterCursor::default());
 }
 
 // <FILE>tui-vfx-content/tests/test_typewriter_cursor.rs</FILE> - <DESC>Tests for TypewriterCursor convenience constructors</DESC>

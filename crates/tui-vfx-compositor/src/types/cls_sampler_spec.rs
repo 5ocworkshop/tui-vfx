@@ -551,9 +551,7 @@ impl SamplerSpec {
             SamplerSpec::Pendulum { .. } => {
                 "Bidirectional swaying motion for menus and hanging items"
             }
-            SamplerSpec::Gravity { .. } => {
-                "Parabolic acceleration for falling/rising content"
-            }
+            SamplerSpec::Gravity { .. } => "Parabolic acceleration for falling/rising content",
         }
     }
 

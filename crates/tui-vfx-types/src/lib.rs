@@ -46,8 +46,8 @@
 
 pub mod braille;
 mod cell;
-pub mod color_inert;
 mod color;
+pub mod color_inert;
 mod geometry;
 mod grid;
 mod modifiers;

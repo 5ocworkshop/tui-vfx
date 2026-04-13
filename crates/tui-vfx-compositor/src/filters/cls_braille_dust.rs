@@ -120,8 +120,7 @@ impl BrailleDust {
     /// all flashing in unison.
     #[inline]
     fn cell_time_offset(&self, x: u16, y: u16) -> f64 {
-        let position_hash =
-            (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
+        let position_hash = (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
         let offset_seed = position_hash ^ self.seed.wrapping_mul(2654435761);
         // Offset within one step period (0.0 to 1.0/hz seconds)
         (offset_seed % 1000) as f64 / 1000.0 / self.hz.max(0.1) as f64
@@ -138,8 +137,7 @@ impl BrailleDust {
         let time_component = (cell_t * self.hz as f64).floor() as u64;
 
         // Pack x,y into a single value with good bit distribution
-        let position_hash =
-            (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
+        let position_hash = (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
 
         // Combine with seed and time
         let input = self
@@ -344,8 +342,14 @@ mod tests {
         // Color is dimmed by the fade envelope — verify it's set (non-white)
         // and in the right color family (gray, not the original white)
         assert_ne!(cell.fg, Color::WHITE, "fg should be changed from default");
-        assert_eq!(cell.fg.r, cell.fg.g, "gray color should have equal channels");
-        assert!(cell.fg.r <= 100, "dimmed color should not exceed base color");
+        assert_eq!(
+            cell.fg.r, cell.fg.g,
+            "gray color should have equal channels"
+        );
+        assert!(
+            cell.fg.r <= 100,
+            "dimmed color should not exceed base color"
+        );
     }
 
     #[test]

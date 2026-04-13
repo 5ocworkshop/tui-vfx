@@ -69,8 +69,7 @@ impl CharsetNoise {
     /// Per-cell time offset for desynchronized updates (same pattern as braille_dust).
     #[inline]
     fn cell_time_offset(&self, x: u16, y: u16) -> f64 {
-        let position_hash =
-            (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
+        let position_hash = (x as u64).wrapping_mul(374761393) ^ (y as u64).wrapping_mul(668265263);
         let offset_seed = position_hash ^ self.seed.wrapping_mul(2654435761);
         (offset_seed % 1000) as f64 / 1000.0 / self.hz.max(0.1) as f64
     }
@@ -114,9 +113,7 @@ impl CharsetNoise {
     fn should_affect(&self, cell: &Cell) -> bool {
         match self.affect {
             AffectMode::All => true,
-            AffectMode::NonEmpty => {
-                !cell.ch.is_whitespace() && cell.ch != '\u{2800}'
-            }
+            AffectMode::NonEmpty => !cell.ch.is_whitespace() && cell.ch != '\u{2800}',
         }
     }
 }
@@ -173,8 +170,14 @@ mod tests {
 
     fn simple_gradient() -> Vec<CharsetGradientStop> {
         vec![
-            CharsetGradientStop { at: 0.0, chars: vec!['A', 'B'] },
-            CharsetGradientStop { at: 1.0, chars: vec!['Y', 'Z'] },
+            CharsetGradientStop {
+                at: 0.0,
+                chars: vec!['A', 'B'],
+            },
+            CharsetGradientStop {
+                at: 1.0,
+                chars: vec!['Y', 'Z'],
+            },
         ]
     }
 
@@ -233,8 +236,16 @@ mod tests {
 
     #[test]
     fn different_time_different_output() {
-        let filter = CharsetNoise::new(42, 8.0, 0.0, AffectMode::NonEmpty,
-            vec![CharsetGradientStop { at: 0.0, chars: "ABCDEFGHIJ".chars().collect() }]);
+        let filter = CharsetNoise::new(
+            42,
+            8.0,
+            0.0,
+            AffectMode::NonEmpty,
+            vec![CharsetGradientStop {
+                at: 0.0,
+                chars: "ABCDEFGHIJ".chars().collect(),
+            }],
+        );
         // Collect outputs across many time values — should not all be identical
         let mut results = std::collections::HashSet::new();
         for t_ms in (0..10000).step_by(200) {
@@ -242,7 +253,11 @@ mod tests {
             filter.apply(&mut cell, 3, 3, 10, 10, t_ms as f64);
             results.insert(cell.ch);
         }
-        assert!(results.len() > 1, "Different time steps should produce different characters, got {:?}", results);
+        assert!(
+            results.len() > 1,
+            "Different time steps should produce different characters, got {:?}",
+            results
+        );
     }
 
     #[test]

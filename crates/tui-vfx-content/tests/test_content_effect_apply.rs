@@ -80,9 +80,7 @@ fn apply_matches_explicit_dispatcher_path() {
 
     let transformer = get_transformer(&effect);
     let ctx = SignalContext::default();
-    let via_explicit = transformer
-        .transform(target, progress, &ctx)
-        .into_owned();
+    let via_explicit = transformer.transform(target, progress, &ctx).into_owned();
 
     assert_eq!(via_apply, via_explicit);
 }

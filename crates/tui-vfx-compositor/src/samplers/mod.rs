@@ -4,11 +4,11 @@
 // <CLOG>Add cls_gravity module</CLOG>
 
 pub(crate) mod cls_bounce;
-pub(crate) mod cls_gravity;
 pub(crate) mod cls_crt_jitter;
 pub(crate) mod cls_crt_sampler;
 pub(crate) mod cls_distortion;
 pub(crate) mod cls_fault_line;
+pub(crate) mod cls_gravity;
 pub(crate) mod cls_pendulum;
 pub(crate) mod cls_ripple;
 pub(crate) mod cls_shredder;

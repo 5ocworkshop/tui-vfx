@@ -140,8 +140,10 @@ fn grading_still_applied_to_colors_when_glyph_replaced() {
     assert_eq!(result.ch, '\u{00B7}');
 
     // But colors should still be graded (bg should be dimmer)
-    let original_luma = 0.299 * original_bg.r as f32 + 0.587 * original_bg.g as f32 + 0.114 * original_bg.b as f32;
-    let graded_luma = 0.299 * result.bg.r as f32 + 0.587 * result.bg.g as f32 + 0.114 * result.bg.b as f32;
+    let original_luma =
+        0.299 * original_bg.r as f32 + 0.587 * original_bg.g as f32 + 0.114 * original_bg.b as f32;
+    let graded_luma =
+        0.299 * result.bg.r as f32 + 0.587 * result.bg.g as f32 + 0.114 * result.bg.b as f32;
     assert!(
         graded_luma < original_luma,
         "BG should be dimmed even when glyph is replaced (original luma={:.1}, graded={:.1})",

@@ -4,8 +4,8 @@
 // <CLOG>Add cls_charset_noise filter module</CLOG>
 
 pub(crate) mod cls_bracket_emphasis;
-pub(crate) mod cls_charset_noise;
 pub(crate) mod cls_braille_dust;
+pub(crate) mod cls_charset_noise;
 pub(crate) mod cls_color_bridged_shade;
 pub(crate) mod cls_crt;
 pub(crate) mod cls_dim;

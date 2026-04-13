@@ -332,7 +332,11 @@ pub(crate) fn prepare_filter(
                 }]
             };
             Some(PreparedFilter::CharsetNoise(CharsetNoiseFilter::new(
-                *seed, *hz, *jitter, affect_mode, stops,
+                *seed,
+                *hz,
+                *jitter,
+                affect_mode,
+                stops,
             )))
         }
         FilterSpec::InterlaceCurtain {
