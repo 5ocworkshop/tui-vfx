@@ -13,6 +13,11 @@ This document provides a complete inventory of visual effects available in tui-v
 derived from the actual source code. Use this as a reference when planning visual
 designs for terminal applications.
 
+Before authoring new effects or recipes, read
+[`TERMINAL_MOTION_HEURISTICS.md`](TERMINAL_MOTION_HEURISTICS.md) for the
+terminal-specific perception and compositing constraints that should shape the
+design.
+
 ---
 
 ## Table of Contents

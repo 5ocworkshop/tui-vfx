@@ -5,6 +5,10 @@
 
 # Recipe JSON Schema Summary (Observed)
 
+Before authoring recipes, read [`../TERMINAL_MOTION_HEURISTICS.md`](../TERMINAL_MOTION_HEURISTICS.md).
+Schema knowledge alone is not enough; many effects fail because they ignore
+terminal-specific perception, cell ownership, and compositing constraints.
+
 ## Top-Level Keys
 - **Required (observed in all):** `schema_version`, `id`, `title`, `description`, `version`, `config`.
   - Evidence: `../tui-vfx-recipes/recipes/progress_scanner.json:2-8`.
