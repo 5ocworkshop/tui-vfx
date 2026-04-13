@@ -2690,7 +2690,7 @@
         ]
       },
       "TracePath": {
-        "ai_hint": "Authored routed trace following explicit waypoints.\ncolor: pulse tint.\nspeed: travel rate of the signal head.\ntail_length: illuminated trail length behind the signal.\nthickness: maximum route thickness in cells.\njunction_boost: extra emphasis when the pulse passes a turn.\napply_to: Foreground, Background, or Both.\npaths: one or more orthogonal polylines, each with points and optional delay.\nIdeal for art-directed blueprint traces and as the deterministic foundation for future obstacle-aware auto-routing.",
+        "ai_hint": "Authored routed trace following explicit waypoints.\ncolor: pulse tint.\nspeed: travel rate of the signal head.\ntail_length: illuminated trail length behind the signal.\nvertical_weight: makes vertical travel consume more route time for smoother perceived turns.\nthickness: maximum route thickness in cells.\njunction_boost: extra emphasis when the pulse passes a turn.\njunction_glow: local emphasis at the corner cell itself.\ntail_mode: Path for continuous tails, Segment for active-segment-only tails.\napply_to: Foreground, Background, or Both.\npaths: one or more orthogonal polylines, each with points and optional delay.\nIdeal for art-directed blueprint traces and as the deterministic foundation for future obstacle-aware auto-routing.",
         "complexity": "moderate",
         "energy": "moderate",
         "name": "TracePath",
@@ -2709,6 +2709,12 @@
             "ty": "f32"
           },
           {
+            "default": "1",
+            "doc": "Perceptual weight applied to vertical travel.\n\nValues above 1.0 make vertical segments consume more route time,\nwhich helps tall terminal cells read more smoothly during turns.",
+            "name": "vertical_weight",
+            "ty": "f32"
+          },
+          {
             "default": "1 cells",
             "doc": "Maximum route thickness in cells.",
             "name": "thickness",
@@ -2719,6 +2725,18 @@
             "doc": "Extra emphasis when the pulse passes a turn/junction.",
             "name": "junction_boost",
             "ty": "f32"
+          },
+          {
+            "default": "0.15",
+            "doc": "Additional local brightness at the turn cell itself.",
+            "name": "junction_glow",
+            "ty": "f32"
+          },
+          {
+            "default": "Path",
+            "doc": "Tail behavior along the route.",
+            "name": "tail_mode",
+            "ty": "TraceTailMode"
           },
           {
             "default": "1",

@@ -216904,6 +216904,23 @@
                       "json_key": null,
                       "meta": {
                         "default": null,
+                        "description": "Perceptual weight applied to vertical travel.\n\nValues above 1.0 make vertical segments consume more route time,\nwhich helps tall terminal cells read more smoothly during turns.",
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "vertical_weight",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "f32"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
                         "description": "Maximum route thickness in cells.",
                         "help": null,
                         "json_key": null,
@@ -216952,6 +216969,56 @@
                         "kind": "primitive",
                         "range": null,
                         "type": "f32"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": "Additional local brightness at the turn cell itself.",
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "junction_glow",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "f32"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": "Tail behavior along the route.",
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "tail_mode",
+                      "schema": {
+                        "description": "How the illuminated tail should behave along an authored route.",
+                        "json_name": null,
+                        "kind": "enum",
+                        "name": "TraceTailMode",
+                        "tag_field": null,
+                        "variants": [
+                          {
+                            "description": "Tail spans the full authored path continuously.",
+                            "json_value": "path",
+                            "kind": "unit",
+                            "name": "Path"
+                          },
+                          {
+                            "description": "Tail is constrained to the active segment, with only a small corner carry-over.",
+                            "json_value": "segment",
+                            "kind": "unit",
+                            "name": "Segment"
+                          }
+                        ]
                       }
                     },
                     {
@@ -225496,6 +225563,23 @@
                     "json_key": null,
                     "meta": {
                       "default": null,
+                      "description": "Perceptual weight applied to vertical travel.\n\nValues above 1.0 make vertical segments consume more route time,\nwhich helps tall terminal cells read more smoothly during turns.",
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "vertical_weight",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": null,
+                      "type": "f32"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
                       "description": "Maximum route thickness in cells.",
                       "help": null,
                       "json_key": null,
@@ -225544,6 +225628,56 @@
                       "kind": "primitive",
                       "range": null,
                       "type": "f32"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": "Additional local brightness at the turn cell itself.",
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "junction_glow",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": null,
+                      "type": "f32"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": "Tail behavior along the route.",
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "tail_mode",
+                    "schema": {
+                      "description": "How the illuminated tail should behave along an authored route.",
+                      "json_name": null,
+                      "kind": "enum",
+                      "name": "TraceTailMode",
+                      "tag_field": null,
+                      "variants": [
+                        {
+                          "description": "Tail spans the full authored path continuously.",
+                          "json_value": "path",
+                          "kind": "unit",
+                          "name": "Path"
+                        },
+                        {
+                          "description": "Tail is constrained to the active segment, with only a small corner carry-over.",
+                          "json_value": "segment",
+                          "kind": "unit",
+                          "name": "Segment"
+                        }
+                      ]
                     }
                   },
                   {
@@ -231303,6 +231437,23 @@
                                 "json_key": null,
                                 "meta": {
                                   "default": null,
+                                  "description": "Perceptual weight applied to vertical travel.\n\nValues above 1.0 make vertical segments consume more route time,\nwhich helps tall terminal cells read more smoothly during turns.",
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "vertical_weight",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
                                   "description": "Maximum route thickness in cells.",
                                   "help": null,
                                   "json_key": null,
@@ -231351,6 +231502,56 @@
                                   "kind": "primitive",
                                   "range": null,
                                   "type": "f32"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": "Additional local brightness at the turn cell itself.",
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "junction_glow",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": "Tail behavior along the route.",
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "tail_mode",
+                                "schema": {
+                                  "description": "How the illuminated tail should behave along an authored route.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "TraceTailMode",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": "Tail spans the full authored path continuously.",
+                                      "json_value": "path",
+                                      "kind": "unit",
+                                      "name": "Path"
+                                    },
+                                    {
+                                      "description": "Tail is constrained to the active segment, with only a small corner carry-over.",
+                                      "json_value": "segment",
+                                      "kind": "unit",
+                                      "name": "Segment"
+                                    }
+                                  ]
                                 }
                               },
                               {
@@ -239291,6 +239492,23 @@
                               "json_key": null,
                               "meta": {
                                 "default": null,
+                                "description": "Perceptual weight applied to vertical travel.\n\nValues above 1.0 make vertical segments consume more route time,\nwhich helps tall terminal cells read more smoothly during turns.",
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "vertical_weight",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": null,
+                                "type": "f32"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
                                 "description": "Maximum route thickness in cells.",
                                 "help": null,
                                 "json_key": null,
@@ -239339,6 +239557,56 @@
                                 "kind": "primitive",
                                 "range": null,
                                 "type": "f32"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": "Additional local brightness at the turn cell itself.",
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "junction_glow",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": null,
+                                "type": "f32"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": "Tail behavior along the route.",
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "tail_mode",
+                              "schema": {
+                                "description": "How the illuminated tail should behave along an authored route.",
+                                "json_name": null,
+                                "kind": "enum",
+                                "name": "TraceTailMode",
+                                "tag_field": null,
+                                "variants": [
+                                  {
+                                    "description": "Tail spans the full authored path continuously.",
+                                    "json_value": "path",
+                                    "kind": "unit",
+                                    "name": "Path"
+                                  },
+                                  {
+                                    "description": "Tail is constrained to the active segment, with only a small corner carry-over.",
+                                    "json_value": "segment",
+                                    "kind": "unit",
+                                    "name": "Segment"
+                                  }
+                                ]
                               }
                             },
                             {

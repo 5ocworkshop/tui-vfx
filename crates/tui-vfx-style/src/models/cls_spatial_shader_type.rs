@@ -341,8 +341,11 @@ impl SpatialShaderType {
             SpatialShaderType::TracePath(s) => vec![
                 ("speed", format!("{}", s.speed)),
                 ("tail_length", format!("{:.1} cells", s.tail_length)),
+                ("vertical_weight", format!("{}", s.vertical_weight)),
                 ("thickness", format!("{} cells", s.thickness)),
                 ("junction_boost", format!("{}", s.junction_boost)),
+                ("junction_glow", format!("{}", s.junction_glow)),
+                ("tail_mode", format!("{:?}", s.tail_mode)),
                 ("paths", format!("{}", s.paths.len())),
                 ("color", format!("{:?}", s.color)),
                 ("apply_to", format!("{:?}", s.apply_to)),

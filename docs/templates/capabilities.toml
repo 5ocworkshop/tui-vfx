@@ -598,8 +598,11 @@ ai_hint = """Authored routed trace following explicit waypoints.
 color: pulse tint.
 speed: travel rate of the signal head.
 tail_length: illuminated trail length behind the signal.
+vertical_weight: makes vertical travel consume more route time for smoother perceived turns.
 thickness: maximum route thickness in cells.
 junction_boost: extra emphasis when the pulse passes a turn.
+junction_glow: local emphasis at the corner cell itself.
+tail_mode: Path for continuous tails, Segment for active-segment-only tails.
 apply_to: Foreground, Background, or Both.
 paths: one or more orthogonal polylines, each with points and optional delay.
 Ideal for art-directed blueprint traces and as the deterministic foundation for future obstacle-aware auto-routing."""

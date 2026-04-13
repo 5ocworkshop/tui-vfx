@@ -497,7 +497,7 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 | `RevealWipe` | `direction` |
 | `StochasticSparkle` | `sparkle_density`, `brightness_boost`, `speed`, `apply_to` |
 | `SubCellShake` | `amplitude`, `frequency`, `axis`, `chromatic` |
-| `TracePath` | `speed`, `tail_length`, `thickness`, `junction_boost`, `paths`, `color`, `apply_to` |
+| `TracePath` | `speed`, `tail_length`, `vertical_weight`, `thickness`, `junction_boost`, `junction_glow`, `tail_mode`, `paths`, `color`, `apply_to` |
 | `TracePropagation` | `speed`, `grid_spacing`, `tail_length`, `origin`, `color` |
 
 ### Shader-specific supporting enums
