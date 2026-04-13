@@ -1,7 +1,7 @@
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>VERSION: 0.7.0</VERS> -->
-<!-- <WCTX>Embedded SQLite query backend documentation</WCTX> -->
-<!-- <CLOG>MINOR: Document the new --sqlite-query workflow so large frame/timeline/diff datasets can be explored with SQL instead of ad-hoc text search</CLOG> -->
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <WCTX>Unified recipe probe trace documentation</WCTX> -->
+<!-- <CLOG>MINOR: Clarify that recipe-side tools now emit unified per-cell content/style/compositor traces, while direct engine probe remains compositor-scoped and queryable through SQLite</CLOG> -->
 
 # Pipeline Probe: A Direct-Engine Guide for LLMs and Humans
 
@@ -22,7 +22,7 @@ It answers the question:
 | You need JSON/NDJSON instead of prose dumps | `pipeline-probe` or `recipe-probe` |
 | You need parse/rules/profile checks from the recipe schema | `pipeline-validator` |
 
-The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes` repo at `tools/recipe-probe/`. It builds a `ProbeSceneSpec` for you from a recipe file and then delegates into the capabilities documented below. If you are already using `pipeline-validator`, the same sibling repo now also exposes `pipeline-validator --probe` as an in-place delegation path. Both recipe-side tools attach adapter metadata for content/style activity when that information is not visible in compositor-only cell diffs.
+The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes` repo at `tools/recipe-probe/`. It builds a `ProbeSceneSpec` for you from a recipe file and then delegates into the capabilities documented below. If you are already using `pipeline-validator`, the same sibling repo now also exposes `pipeline-validator --probe` as an in-place delegation path. Those recipe-side tools now emit unified per-cell traces that merge content, style, and compositor stages, while direct `pipeline-probe` remains compositor-scoped.
 
 ## What phase 1 supports
 
@@ -273,4 +273,4 @@ Key fields:
 - `crates/tui-vfx-probe/README.md`
 
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>END OF VERSION: 0.7.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->
