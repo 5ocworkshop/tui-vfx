@@ -56,7 +56,7 @@ pub use cls_color_config::ColorConfig;
 pub use cls_color_ramp::{ColorRamp, ColorStop};
 pub use cls_color_space::ColorSpace;
 pub use cls_edge_sheen_shader::{EdgeSheenApplyTo, EdgeSheenShader};
-pub use cls_fade_effect::{FadeDirection, FadeEffect, FadeToBlack, fade_effect};
+pub use cls_fade_effect::{FadeDirection, FadeEffect, FadeToBlack, FadeToColor, fade_effect};
 pub use cls_fade_spec::{FadeApplyTo, FadeChain, FadeSegment, FadeSpec, FadeTarget};
 pub use cls_falloff_type::FalloffType;
 pub use cls_focused_row_gradient_shader::{ApplyToColor, FocusedRowGradientShader};

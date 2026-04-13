@@ -1,7 +1,7 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.10.0</VERS> -->
-<!-- <WCTX>Fix shader speed documentation after speed-truncation bugfix</WCTX> -->
-<!-- <CLOG>Add timing contract section; clarify speed is caller-controlled via loop_t, not shader-internal</CLOG> -->
+<!-- <VERS>VERSION: 2.11.0</VERS> -->
+<!-- <WCTX>Document canvas-aware FadeIn/FadeOut: the new `from`/`to` FadeTarget fields on StyleEffect variants that let recipes fade from a defined canvas color instead of black</WCTX> -->
+<!-- <CLOG>Add StyleEffect::FadeIn/FadeOut `from`/`to` field, Rust + JSON examples, and pointer to CAPABILITIES_REFERENCE for the full FadeTarget table</CLOG> -->
 
 # TUI-VFX Complete API Reference
 
@@ -493,8 +493,8 @@ via `SpatialShaderType` unless you add a new variant.
 
 ```rust
 pub enum StyleEffect {
-    FadeIn { apply_to: FadeApplyTo, ease: EasingCurve },
-    FadeOut { apply_to: FadeApplyTo, ease: EasingCurve },
+    FadeIn  { apply_to: FadeApplyTo, ease: EasingCurve, from: FadeTarget },
+    FadeOut { apply_to: FadeApplyTo, ease: EasingCurve, to:   FadeTarget },
     Pulse { frequency: f32, color: Color },
     Rainbow { speed: f32 },
     Glitch { seed: u64, intensity: f32, italic_start: Option<f32>, italic_end: Option<f32> },
@@ -506,6 +506,58 @@ pub enum StyleEffect {
     RigidShakeStyle { shake_period: f32, num_shakes: u8, pause_duration: f32 },
 }
 ```
+
+### Canvas-aware FadeIn / FadeOut (since v0.3)
+
+The `from` field on `FadeIn` and `to` field on `FadeOut` default to
+`FadeTarget::Black`. **The render path automatically substitutes the sampled
+canvas background color for `Color::BLACK`** right before rendering each
+widget, so host applications that paint a non-default canvas (e.g. gt-design)
+get canvas-aware fades without touching recipe JSON:
+
+1. Host paints its canvas into the buffer.
+2. Host calls `preview.render(area, buf, now)`.
+3. For each animated widget, the render path reads `buf.cell(widget_x, widget_y).bg`.
+4. If the cell has an explicit `Color::Rgb`, that color replaces any fade
+   target whose color is still `Color::BLACK`.
+5. Widget fades from/to the sampled canvas color.
+
+Recipes don't need to encode palette colors in their JSON — they use the
+`fade_in` / `fade_out` defaults and the canvas follows them at render time.
+
+**Explicit override (for custom effects)** — set `from` (or `to`) to any
+`FadeTarget::Color { color }`. Explicit colors are never auto-substituted,
+so use this when you want a dramatic red alert fade, a white blowout, etc.:
+
+```rust
+use tui_vfx_style::models::{FadeTarget, ColorConfig, StyleEffect, FadeApplyTo};
+use tui_vfx_geometry::{easing::EasingType, types::EasingCurve};
+
+let effect = StyleEffect::FadeIn {
+    apply_to: FadeApplyTo::Both,
+    ease: EasingCurve::Type(EasingType::CubicOut),
+    from: FadeTarget::Color {
+        color: ColorConfig::Rgb { r: 255, g: 40, b: 0 },
+    },
+};
+```
+
+JSON form (recipe authors):
+
+```json
+{
+  "type": "fade_in",
+  "apply_to": "both",
+  "easing": "cubic_out",
+  "from": {
+    "type": "color",
+    "color": { "type": "rgb", "r": 255, "g": 40, "b": 0 }
+  }
+}
+```
+
+See `CAPABILITIES_REFERENCE.md` for the full `FadeTarget` variant table and
+the auto-substitution rules.
 
 ### StyleConfig
 
@@ -851,4 +903,4 @@ pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowG
 ---
 
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 2.10.0</VERS> -->
+<!-- <VERS>END OF VERSION: 2.11.0</VERS> -->

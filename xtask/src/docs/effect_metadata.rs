@@ -416,17 +416,19 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
 }
 
 fn extract_style_metadata() -> HashMap<String, EffectMetadata> {
-    use tui_vfx_style::models::{ColorSpace, FadeApplyTo};
+    use tui_vfx_style::models::{ColorSpace, FadeApplyTo, FadeTarget};
     use tui_vfx_types::Color;
 
     let variants: Vec<StyleEffect> = vec![
         StyleEffect::FadeIn {
             apply_to: FadeApplyTo::Both,
             ease: Default::default(),
+            from: FadeTarget::Black,
         },
         StyleEffect::FadeOut {
             apply_to: FadeApplyTo::Both,
             ease: Default::default(),
+            to: FadeTarget::Black,
         },
         StyleEffect::Pulse {
             frequency: 1.0,

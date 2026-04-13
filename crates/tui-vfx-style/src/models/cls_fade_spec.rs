@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_fade_spec.rs</FILE> - <DESC>General color-to-color fade with chaining</DESC>
-// <VERS>VERSION: 2.1.0</VERS>
-// <WCTX>mixed-signals migration: envelope adoption</WCTX>
-// <CLOG>Added optional LinearEnvelope for attack/hold/release fade shaping</CLOG>
+// <VERS>VERSION: 2.2.0</VERS>
+// <WCTX>FadeTarget::Color flatten was producing duplicate "type" key collisions when serialized through StyleEffectSerde, blocking the FadeIn-from-canvas-color fix</WCTX>
+// <CLOG>MINOR: Drop #[serde(flatten)] on FadeTarget::Color; nest the ColorConfig as a named "color" field. Round-trip now: {"type": "color", "color": {"type": "rgb", "r":..., "g":..., "b":...}}. Pre-existing recipes are unaffected because no recipe currently uses FadeTarget::Color through serde
 
 use crate::models::{ColorConfig, ColorSpace};
 use crate::traits::StyleInterpolator;
@@ -27,11 +27,11 @@ pub enum FadeTarget {
     Transparent,
     /// Fade to/from the base color (no change - useful in chains)
     Base,
-    /// Fade to/from a specific color
-    Color {
-        #[serde(flatten)]
-        color: ColorConfig,
-    },
+    /// Fade to/from a specific color.
+    ///
+    /// JSON: `{"type": "color", "color": {"type": "rgb", "r": 120, "g": 20, "b": 100}}`
+    /// or with the RGB shorthand: `{"type": "color", "color": {"r": 120, "g": 20, "b": 100}}`
+    Color { color: ColorConfig },
 }
 
 impl FadeTarget {
@@ -657,4 +657,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_fade_spec.rs</FILE> - <DESC>General color-to-color fade with chaining</DESC>
-// <VERS>END OF VERSION: 2.1.0</VERS>
+// <VERS>END OF VERSION: 2.2.0</VERS>

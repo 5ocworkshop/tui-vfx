@@ -117,6 +117,7 @@ fn test_fade_in_direction() {
         direction: FadeDirection::In,
         apply_to: FadeApplyTo::Both,
         ease: EasingCurve::Type(EasingType::Linear),
+        color: Color::BLACK,
     };
     let base = Style::fg(Color::WHITE);
 
@@ -138,6 +139,7 @@ fn test_fade_out_direction() {
         direction: FadeDirection::Out,
         apply_to: FadeApplyTo::Both,
         ease: EasingCurve::Type(EasingType::Linear),
+        color: Color::BLACK,
     };
     let base = Style::fg(Color::WHITE);
 
@@ -163,6 +165,7 @@ fn test_fade_with_quad_in() {
         direction: FadeDirection::Out,
         apply_to: FadeApplyTo::Both,
         ease: EasingCurve::Type(EasingType::QuadIn),
+        color: Color::BLACK,
     };
     let base = Style::fg(Color::WHITE);
 
@@ -185,6 +188,7 @@ fn test_fade_with_cubic_out() {
         direction: FadeDirection::In,
         apply_to: FadeApplyTo::Both,
         ease: EasingCurve::Type(EasingType::CubicOut),
+        color: Color::BLACK,
     };
     let base = Style::fg(Color::WHITE);
 
@@ -211,6 +215,7 @@ fn test_fade_with_bezier_curve() {
             x2: 0.58,
             y2: 1.0,
         },
+        color: Color::BLACK,
     };
     let base = Style::fg(Color::WHITE);
 

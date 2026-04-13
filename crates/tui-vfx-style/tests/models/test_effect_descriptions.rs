@@ -23,7 +23,8 @@ use tui_vfx_style::models::cls_radar_shader::RadarShader;
 use tui_vfx_style::models::cls_reflect_shader::ReflectShader;
 use tui_vfx_style::models::cls_trace_path_shader::TracePathShader;
 use tui_vfx_style::models::cls_trace_propagation_shader::TracePropagationShader;
-use tui_vfx_style::models::{ColorSpace, FadeApplyTo, SpatialShaderType, StyleEffect};
+use tui_vfx_style::models::{ColorSpace, FadeApplyTo, FadeTarget, SpatialShaderType, StyleEffect};
+use tui_vfx_style::traits::StyleInterpolator;
 use tui_vfx_types::Color;
 
 // ============================================================================
@@ -203,10 +204,12 @@ fn test_style_effect_type_names() {
         StyleEffect::FadeIn {
             apply_to: FadeApplyTo::Both,
             ease: EasingCurve::Type(EasingType::Linear),
+            from: FadeTarget::Black,
         },
         StyleEffect::FadeOut {
             apply_to: FadeApplyTo::Foreground,
             ease: EasingCurve::Type(EasingType::Linear),
+            to: FadeTarget::Black,
         },
         StyleEffect::Pulse {
             frequency: 1.0,
@@ -247,10 +250,12 @@ fn test_style_effect_descriptions() {
         StyleEffect::FadeIn {
             apply_to: FadeApplyTo::Both,
             ease: EasingCurve::Type(EasingType::Linear),
+            from: FadeTarget::Black,
         },
         StyleEffect::FadeOut {
             apply_to: FadeApplyTo::Foreground,
             ease: EasingCurve::Type(EasingType::Linear),
+            to: FadeTarget::Black,
         },
         StyleEffect::Pulse {
             frequency: 1.0,
@@ -317,6 +322,7 @@ fn test_fade_effect_key_parameters() {
     let effect = StyleEffect::FadeIn {
         apply_to: FadeApplyTo::Both,
         ease: EasingCurve::Type(EasingType::Linear),
+        from: FadeTarget::Black,
     };
     let params = effect.key_parameters();
     let param_names: Vec<&str> = params.iter().map(|(n, _)| *n).collect();
@@ -328,6 +334,79 @@ fn test_fade_effect_key_parameters() {
     assert!(
         param_names.contains(&"ease"),
         "FadeIn should include ease param"
+    );
+    assert!(
+        param_names.contains(&"from"),
+        "FadeIn should include from param"
+    );
+}
+
+#[test]
+fn fade_in_default_from_is_black_for_backward_compat() {
+    // Regression: confirm that omitting `from` in a recipe still parses to
+    // FadeTarget::Black, so existing recipes don't break.
+    let json = r#"{"type": "fade_in", "apply_to": "both", "ease": "linear"}"#;
+    let effect: StyleEffect = serde_json::from_str(json).unwrap();
+    match effect {
+        StyleEffect::FadeIn { from, .. } => assert_eq!(from, FadeTarget::Black),
+        _ => panic!("expected FadeIn"),
+    }
+}
+
+#[test]
+fn fade_in_from_rgb_round_trips_through_serde() {
+    // The whole point of the new field: a recipe can specify a custom from
+    // color (typically the canvas color) to fade from instead of black.
+    let effect = StyleEffect::FadeIn {
+        apply_to: FadeApplyTo::Both,
+        ease: EasingCurve::Type(EasingType::Linear),
+        from: FadeTarget::Color {
+            color: ColorConfig::Rgb {
+                r: 120,
+                g: 20,
+                b: 100,
+            },
+        },
+    };
+    let serialized = serde_json::to_string(&effect).unwrap();
+    let parsed: StyleEffect = serde_json::from_str(&serialized).unwrap();
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn fade_in_from_canvas_color_paints_canvas_at_t_zero() {
+    // The whole point of the fix: at t=0 the result should be the canvas
+    // color, not black, so the widget appears to grow out of the canvas
+    // instead of stamping near-black over it.
+    let canvas = tui_vfx_types::Color::rgb(120, 20, 100);
+    let widget = tui_vfx_types::Color::rgb(252, 252, 248);
+    let effect = StyleEffect::FadeIn {
+        apply_to: FadeApplyTo::Both,
+        ease: EasingCurve::Type(EasingType::Linear),
+        from: FadeTarget::Color {
+            color: ColorConfig::Rgb {
+                r: 120,
+                g: 20,
+                b: 100,
+            },
+        },
+    };
+    let base = tui_vfx_types::Style {
+        fg: widget,
+        bg: widget,
+        mods: tui_vfx_types::Modifiers::default(),
+    };
+
+    let at_zero = effect.calculate(0.0, base);
+    assert_eq!(
+        at_zero.bg, canvas,
+        "at t=0 the fade should paint the canvas color, not black"
+    );
+
+    let at_one = effect.calculate(1.0, base);
+    assert_eq!(
+        at_one.bg, widget,
+        "at t=1 the fade should paint the base widget color"
     );
 }
 

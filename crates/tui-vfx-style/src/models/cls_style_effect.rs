@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_style_effect.rs</FILE> - <DESC>StyleEffect enum with documentation methods</DESC>
-// <VERS>VERSION: 0.15.1</VERS>
-// <WCTX>Fix xtask docs api generator drift: StyleEffect::Pulse key_parameters() omitted required color field</WCTX>
-// <CLOG>Add color to Pulse key_parameters() so generated API.md shows the required target color field</CLOG>
+// <VERS>VERSION: 0.16.0</VERS>
+// <WCTX>FadeIn was hard-coded to fade from black, which destroys non-default canvas colors during enter; expose the from/to FadeTarget so recipes can fade from canvas color</WCTX>
+// <CLOG>MINOR: FadeIn gains a `from: FadeTarget` field (default Black for backward compat); FadeOut gains a `to: FadeTarget` field (default Black). Calculate routes through configured target, so a recipe can specify `from: { type: "rgb", r, g, b }` to fade from canvas instead of black</CLOG>
 
 //! # Style Effects
 //!
@@ -44,7 +44,7 @@
 //! parameters of a `RigidShake` filter to keep text styling synchronized
 //! with positional movement.
 
-use crate::models::{ColorConfig, ColorSpace, FadeApplyTo, FadeSpec, SpatialShaderType};
+use crate::models::{ColorConfig, ColorSpace, FadeApplyTo, FadeSpec, FadeTarget, SpatialShaderType};
 use crate::traits::{StyleInterpolator, StyleShader};
 use crate::utils::{
     blend_style_to_color, blend_style_to_color_in_space, darken, rainbow_style, shift_style_hsl,
@@ -75,27 +75,47 @@ use tui_vfx_types::{Color, RigidShakeTiming, Style};
 /// ```
 #[derive(Debug, Clone, tui_vfx_core::ConfigSchema)]
 pub enum StyleEffect {
-    /// Fade in from black/transparent.
+    /// Fade in toward the base style from a configurable starting target.
     ///
-    /// Transitions the style from invisible to fully visible over the
+    /// Transitions the style from `from` to the base style over the
     /// animation timeline. The `apply_to` field controls whether foreground,
     /// background, or both are affected.
+    ///
+    /// # Canvas-aware fade-in
+    ///
+    /// Default `from` is `FadeTarget::Black`, which is correct for the
+    /// historical "rise out of darkness" effect on terminal-default
+    /// backgrounds. **On a non-default canvas color, this paints near-black
+    /// over your canvas during the first ~30% of the fade**, which reads as
+    /// the canvas being torn open. Set `from` to a `Color` matching your
+    /// canvas color (or use a design-system template that injects it) so the
+    /// widget appears to grow out of the canvas instead of out of black.
     FadeIn {
         /// Which style components to fade (foreground, background, or both).
         apply_to: FadeApplyTo,
         /// Easing curve for the fade animation.
         ease: EasingCurve,
+        /// Color to fade from. Default `Black`. Set to `Color { color }`
+        /// matching your canvas to avoid black-flash on enter over non-default
+        /// canvases.
+        from: FadeTarget,
     },
 
-    /// Fade out to black/transparent.
+    /// Fade out from the base style toward a configurable target.
     ///
-    /// Transitions the style from fully visible to invisible. Opposite of
-    /// [`FadeIn`](Self::FadeIn).
+    /// Transitions the style from fully visible to `to`. Opposite of
+    /// [`FadeIn`](Self::FadeIn). Default `to` is `Black` for backward compat;
+    /// set to a `Color` matching your canvas to fade out into the canvas
+    /// instead of into black.
     FadeOut {
         /// Which style components to fade.
         apply_to: FadeApplyTo,
         /// Easing curve for the fade animation.
         ease: EasingCurve,
+        /// Color to fade to. Default `Black`. Set to `Color { color }`
+        /// matching your canvas to avoid black-flash on exit over non-default
+        /// canvases.
+        to: FadeTarget,
     },
 
     /// Pulsing color intensity.
@@ -230,12 +250,16 @@ enum StyleEffectSerde {
         apply_to: FadeApplyTo,
         #[serde(default)]
         ease: EasingCurve,
+        #[serde(default)]
+        from: FadeTarget,
     },
     FadeOut {
         #[serde(default)]
         apply_to: FadeApplyTo,
         #[serde(default)]
         ease: EasingCurve,
+        #[serde(default)]
+        to: FadeTarget,
     },
     Pulse {
         frequency: f32,
@@ -280,13 +304,23 @@ enum StyleEffectSerde {
 impl From<&StyleEffect> for StyleEffectSerde {
     fn from(value: &StyleEffect) -> Self {
         match value {
-            StyleEffect::FadeIn { apply_to, ease } => Self::FadeIn {
+            StyleEffect::FadeIn {
+                apply_to,
+                ease,
+                from,
+            } => Self::FadeIn {
                 apply_to: *apply_to,
                 ease: *ease,
+                from: *from,
             },
-            StyleEffect::FadeOut { apply_to, ease } => Self::FadeOut {
+            StyleEffect::FadeOut {
+                apply_to,
+                ease,
+                to,
+            } => Self::FadeOut {
                 apply_to: *apply_to,
                 ease: *ease,
+                to: *to,
             },
             StyleEffect::Pulse { frequency, color } => Self::Pulse {
                 frequency: *frequency,
@@ -345,8 +379,24 @@ impl From<&StyleEffect> for StyleEffectSerde {
 impl From<StyleEffectSerde> for StyleEffect {
     fn from(value: StyleEffectSerde) -> Self {
         match value {
-            StyleEffectSerde::FadeIn { apply_to, ease } => Self::FadeIn { apply_to, ease },
-            StyleEffectSerde::FadeOut { apply_to, ease } => Self::FadeOut { apply_to, ease },
+            StyleEffectSerde::FadeIn {
+                apply_to,
+                ease,
+                from,
+            } => Self::FadeIn {
+                apply_to,
+                ease,
+                from,
+            },
+            StyleEffectSerde::FadeOut {
+                apply_to,
+                ease,
+                to,
+            } => Self::FadeOut {
+                apply_to,
+                ease,
+                to,
+            },
             StyleEffectSerde::Pulse { frequency, color } => Self::Pulse {
                 frequency,
                 color: Color::from(color),
@@ -418,22 +468,26 @@ impl PartialEq for StyleEffect {
                 Self::FadeIn {
                     apply_to: a1,
                     ease: e1,
+                    from: f1,
                 },
                 Self::FadeIn {
                     apply_to: a2,
                     ease: e2,
+                    from: f2,
                 },
-            ) => a1 == a2 && e1 == e2,
+            ) => a1 == a2 && e1 == e2 && f1 == f2,
             (
                 Self::FadeOut {
                     apply_to: a1,
                     ease: e1,
+                    to: t1,
                 },
                 Self::FadeOut {
                     apply_to: a2,
                     ease: e2,
+                    to: t2,
                 },
-            ) => a1 == a2 && e1 == e2,
+            ) => a1 == a2 && e1 == e2 && t1 == t2,
             (
                 Self::Pulse {
                     frequency: f1,
@@ -507,14 +561,32 @@ impl StyleInterpolator for StyleEffect {
     fn calculate(&self, t: f64, base: Style) -> Style {
         let t32 = t as f32;
         match self {
-            StyleEffect::FadeIn { apply_to, ease } => FadeSpec::from_black()
-                .with_apply_to(*apply_to)
-                .with_ease(*ease)
-                .calculate(t, base),
-            StyleEffect::FadeOut { apply_to, ease } => FadeSpec::to_black()
-                .with_apply_to(*apply_to)
-                .with_ease(*ease)
-                .calculate(t, base),
+            StyleEffect::FadeIn {
+                apply_to,
+                ease,
+                from,
+            } => FadeSpec {
+                from: *from,
+                to: FadeTarget::Base,
+                apply_to: *apply_to,
+                ease: *ease,
+                space: ColorSpace::Rgb,
+                envelope: None,
+            }
+            .calculate(t, base),
+            StyleEffect::FadeOut {
+                apply_to,
+                ease,
+                to,
+            } => FadeSpec {
+                from: FadeTarget::Base,
+                to: *to,
+                apply_to: *apply_to,
+                ease: *ease,
+                space: ColorSpace::Rgb,
+                envelope: None,
+            }
+            .calculate(t, base),
             StyleEffect::Pulse { frequency, color } => {
                 let wave = (t32 * frequency * std::f32::consts::TAU).sin();
                 let blend_factor = (wave + 1.0) / 2.0;
@@ -673,13 +745,23 @@ impl StyleEffect {
     /// Returns key parameters of this effect for documentation purposes.
     pub fn key_parameters(&self) -> Vec<(&'static str, String)> {
         match self {
-            StyleEffect::FadeIn { apply_to, ease } => vec![
+            StyleEffect::FadeIn {
+                apply_to,
+                ease,
+                from,
+            } => vec![
                 ("apply_to", format!("{:?}", apply_to)),
                 ("ease", format!("{:?}", ease)),
+                ("from", format!("{:?}", from)),
             ],
-            StyleEffect::FadeOut { apply_to, ease } => vec![
+            StyleEffect::FadeOut {
+                apply_to,
+                ease,
+                to,
+            } => vec![
                 ("apply_to", format!("{:?}", apply_to)),
                 ("ease", format!("{:?}", ease)),
+                ("to", format!("{:?}", to)),
             ],
             StyleEffect::Pulse { frequency, color } => vec![
                 ("frequency", format!("{}", frequency)),
@@ -731,4 +813,4 @@ fn pseudo_random(input: u32) -> f32 {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_style_effect.rs</FILE> - <DESC>StyleEffect enum with documentation methods</DESC>
-// <VERS>END OF VERSION: 0.15.1</VERS>
+// <VERS>END OF VERSION: 0.16.0</VERS>

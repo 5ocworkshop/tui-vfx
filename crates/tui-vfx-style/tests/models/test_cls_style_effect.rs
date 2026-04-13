@@ -25,6 +25,7 @@ fn test_fade_out() {
     let effect = StyleEffect::FadeOut {
         apply_to: FadeApplyTo::Foreground,
         ease: EasingCurve::Type(EasingType::Linear),
+        to: tui_vfx_style::models::FadeTarget::Black,
     };
     let result = effect.calculate(0.5, base);
     assert_eq!(result.fg, Color::rgb(127, 127, 127));

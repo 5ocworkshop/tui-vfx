@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.9.0</VERS> -->
-<!-- <WCTX>feat/content-ergonomics: document ContentEffect::apply and TypewriterCursor presets</WCTX> -->
-<!-- <CLOG>Add Applying a content effect and TypewriterCursor presets sections</CLOG> -->
+<!-- <VERS>VERSION: 1.10.0</VERS> -->
+<!-- <WCTX>Document canvas-aware FadeIn/FadeOut and the new `from`/`to` FadeTarget fields so design-system authors can avoid the black-flash artifact on non-default canvases</WCTX> -->
+<!-- <CLOG>Add "Canvas-aware FadeIn / FadeOut" section describing the new fields, FadeTarget variants, and the standalone-recipe limitation that currently forces canvas color into the recipe itself</CLOG> -->
 
 # tui-vfx Capabilities Reference
 
@@ -313,8 +313,8 @@ Style effects animate properties over time, driven by `t` (0.0→1.0).
 
 | Effect | Description | Key Parameters |
 |--------|-------------|----------------|
-| **FadeIn** | Opacity fade in | `apply_to`, `ease` |
-| **FadeOut** | Opacity fade out | `apply_to`, `ease` |
+| **FadeIn** | Fade toward base from a configurable start color (default black) | `apply_to`, `ease`, `from` |
+| **FadeOut** | Fade from base toward a configurable end color (default black) | `apply_to`, `ease`, `to` |
 | **Pulse** | Color intensity pulsing | `frequency`, `color` |
 | **Rainbow** | Continuous hue cycling | `speed` |
 | **Glitch** | Glitch-style distortion | `seed`, `intensity`, `italic_start`, `italic_end` |
@@ -324,6 +324,66 @@ Style effects animate properties over time, driven by `t` (0.0→1.0).
 | **ColorShift** | HSL color manipulation | `hue_shift`, `saturation_shift`, `lightness_shift` |
 | **ColorFade** | Fade toward target color | `target`, `color_space` |
 | **RigidShakeStyle** | Italic synced with RigidShake | `shake_period`, `num_shakes`, `pause_duration` |
+
+### Canvas-aware FadeIn / FadeOut (since v0.3)
+
+`FadeIn` and `FadeOut` fade between the widget's base color and a configurable
+`FadeTarget`. Historically these were hard-coded to fade to/from `Black`; as of
+v0.3 the renderer now supports **automatic canvas substitution** plus optional
+explicit `from` (on FadeIn) / `to` (on FadeOut) fields on the recipe.
+
+**Automatic canvas substitution (the normal case).** Right before rendering
+each animated widget, the render path samples the destination buffer's
+background color at the widget's top-left cell. If the host has painted a
+non-default RGB background there (e.g. a gt-design canvas surface) **and the
+recipe's fade is still defaulting to `Color::BLACK`**, the render path
+substitutes the sampled canvas color into the fade's target. The widget
+then appears to grow *out of* the canvas on enter and dissolve *into* it on
+exit — no black flash, no recipe changes needed.
+
+The substitution rules:
+
+1. Sample succeeds only when the destination cell has an explicit `Rgb(r, g, b)`
+   background. Terminal-default / named / indexed backgrounds are ignored.
+2. Substitution only replaces `Color::BLACK`. Any fade that already has an
+   explicit color (see "explicit override" below) is passed through untouched.
+3. If the host paints nothing before calling render, the legacy fade-from-black
+   behavior is preserved bit-for-bit.
+
+This means `gt-design`-style applications that paint a canvas color into the
+buffer before calling `preview.render(...)` get canvas-aware fades for free,
+and recipes don't need to encode palette-specific colors in their JSON.
+
+**Explicit override (for custom effects).** When a recipe wants to fade from
+something other than the canvas — a dramatic red alert flash, a white blowout,
+whatever — set `from` (or `to` on FadeOut) to a concrete color. Explicit
+colors are never replaced:
+
+```json
+{
+  "type": "fade_in",
+  "apply_to": "both",
+  "easing": "back_out",
+  "from": {
+    "type": "color",
+    "color": { "type": "rgb", "r": 255, "g": 40, "b": 0 }
+  }
+}
+```
+
+**`FadeTarget` variants:**
+
+| Variant | JSON | Behavior |
+|---|---|---|
+| `Black` (default) | `{"type": "black"}` or omit | Fade from/to `rgb(0,0,0)`; **auto-replaced with sampled canvas color if host painted one** |
+| `White` | `{"type": "white"}` | Fade from/to `rgb(255,255,255)` |
+| `Transparent` | `{"type": "transparent"}` | Snap threshold (no smooth blend) |
+| `Base` | `{"type": "base"}` | Use the widget's base color (no-op in chains) |
+| `Color` | `{"type": "color", "color": {...}}` | Fade from/to an explicit `ColorConfig` — never auto-substituted |
+
+For fully custom color-to-color fades that aren't anchored at the base color
+on one end, use `ColorFade` instead — it takes both endpoints and an
+interpolation color space.
 
 ---
 
@@ -534,4 +594,4 @@ JSON/TOML-driven configurations.
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.9.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.10.0</VERS> -->
