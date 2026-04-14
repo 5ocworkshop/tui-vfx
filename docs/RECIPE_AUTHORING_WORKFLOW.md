@@ -1,7 +1,7 @@
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>VERSION: 1.1.0</VERS> -->
-<!-- <WCTX>Recipe workflow plus new diagnostics layers</WCTX> -->
-<!-- <CLOG>MINOR: Document how the new probe-side and recipe-aware diagnostics layers fit into the staged authoring workflow and where they still fall short of full visual QA</CLOG> -->
+<!-- <VERS>VERSION: 1.2.0</VERS> -->
+<!-- <WCTX>Recipe workflow plus focused-cell, motion-analysis, and text-integrity diagnostics</WCTX> -->
+<!-- <CLOG>MINOR: Update the canonical authoring workflow to include focused widget-cell debugging, timeline motion analysis, and partial-match text diagnostics as first-class tools in the staged recipe loop</CLOG> -->
 
 # Recipe Authoring Workflow
 
@@ -66,6 +66,18 @@ cargo run -q -p pipeline-validator -- --rules --stages path/to/stage.json
 cargo run -q -p recipe-probe -- --with-causation path/to/stage.json
 ```
 
+When a single cell looks wrong, use focused-cell mode instead of scanning a
+full frame dump:
+
+```bash
+cargo run -q -p recipe-probe -- \
+  path/to/stage.json \
+  --phase dwelling \
+  --sample-t 1.0 \
+  --with-causation \
+  --widget-cell 0,0
+```
+
 For time-varying stages:
 
 ```bash
@@ -76,10 +88,23 @@ cargo run -q -p recipe-probe -- \
   path/to/stage.json
 ```
 
+For animated effects, use timeline motion analysis early rather than waiting for
+human visual doubt:
+
+```bash
+cargo run -q -p recipe-probe -- \
+  path/to/stage.json \
+  --phase dwelling \
+  --frames 5 \
+  --with-causation \
+  --sqlite-query "select effect, span_x, span_y, status from probe_motion_effects order by effect"
+```
+
 Recipe-side tooling also now has a recipe-aware diagnostics layer on top of the
 probe output. That makes it possible to flag some failures automatically, such as:
 
 - expected message missing at a dwell sample
+- expected message partially matching the target text with a similarity score
 - text leaking onto border rows
 - underline contamination on the bottom border
 
@@ -116,6 +141,7 @@ prefer to:
 - [PIPELINE_PROBE_LLM_GUIDE.md](PIPELINE_PROBE_LLM_GUIDE.md)
 - [PIPELINE_VALIDATOR_LLM_GUIDE.md](PIPELINE_VALIDATOR_LLM_GUIDE.md)
 - [RECIPE_VISUAL_QA.md](RECIPE_VISUAL_QA.md)
+- [PIPELINE_PROBE_WISHLIST.md](PIPELINE_PROBE_WISHLIST.md)
 
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->

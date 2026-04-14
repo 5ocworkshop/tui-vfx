@@ -1,13 +1,23 @@
 <!-- <FILE>docs/RECIPE_VISUAL_QA.md</FILE> - <DESC>Canonical visual QA checklist for the probe-validation recipe corpus</DESC> -->
-<!-- <VERS>VERSION: 1.1.0</VERS> -->
-<!-- <WCTX>Recipe visual QA guide aligned with the restored lighthouse motion model</WCTX> -->
-<!-- <CLOG>MINOR: Update the lighthouse checklist to describe the one-way wrap beam behavior and the continuous offscreen half-cycle that now define the intended look</CLOG> -->
+<!-- <VERS>VERSION: 1.2.0</VERS> -->
+<!-- <WCTX>Recipe visual QA guide aligned with the latest focused-cell and motion-analysis workflows</WCTX> -->
+<!-- <CLOG>MINOR: Add a short preflight reminding authors to pair the visual pass with focused-cell probing, motion-analysis SQL, and partial-match diagnostics before calling a recipe visually signed off</CLOG> -->
 
 # Recipe Visual QA
 
 This checklist is the canonical human-eye companion to the structured probe and
 validator workflow. Use it during manual preview runs to confirm that the final
 recipe **looks** the way the structured tooling says it behaves.
+
+## Preflight before the human-eye pass
+
+Before signing off visually, also run:
+- focused-cell probe on any visibly suspicious coordinate via `--widget-cell x,y`
+- timeline motion analysis for moving effects via `probe_motion_effects`
+- recipe text diagnostics to check for `expected_message_partial_match` on unstable samples
+
+That way the human-eye pass is confirming the art direction, not discovering
+basic structural issues that the debug tooling could have surfaced first.
 
 ## alarm_lighthouse.json
 - **Must see:** center bloom, stable readable `PANIC BEACON // HOLD`, a wide red beam that sweeps one direction, disappears for roughly half the loop, then re-enters from the opposite side like a rotating lighthouse lamp, plus urgent orange-red pulse and perimeter glow.
@@ -60,4 +70,4 @@ recipe **looks** the way the structured tooling says it behaves.
 - **Likely tuning knob:** `style.spatial_shader.dot_count`, `style.spatial_shader.speed`, `filter.dwell.boost`.
 
 <!-- <FILE>docs/RECIPE_VISUAL_QA.md</FILE> - <DESC>Canonical visual QA checklist for the probe-validation recipe corpus</DESC> -->
-<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
