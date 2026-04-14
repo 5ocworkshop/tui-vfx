@@ -1,7 +1,7 @@
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>VERSION: 0.1.0</VERS>
-# <WCTX>Phase-1 pipeline probe workspace integration</WCTX>
-# <CLOG>MINOR: Add crates/tui-vfx-probe to the workspace member list for the new engine-owned observability crate</CLOG>
+# <VERS>VERSION: 0.2.0</VERS>
+# <WCTX>Phase 0 P0.1-P0.5 binding generalization release</WCTX>
+# <CLOG>MINOR: Bump workspace.package.version from 0.3.0 to 0.4.0 to reflect the BindableValue, BindableU16, PrepareContext, shader *_binding fields, FadeToCanvas filter, and RigidShake num_shakes_binding additions</CLOG>
 
 [workspace]
 resolver = "3"
@@ -21,7 +21,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.86.0"
 license = "MIT"
@@ -31,15 +31,15 @@ categories = ["command-line-interface", "graphics"]
 
 [workspace.dependencies]
 # Internal crates
-tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.3.0" }
-tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.3.0" }
-tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.3.0" }
-tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.3.0" }
-tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.3.0" }
-tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.3.0" }
-tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.3.0" }
-tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.3.0" }
-tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.3.0" }
+tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.4.0" }
+tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.4.0" }
+tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.4.0" }
+tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.4.0" }
+tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.4.0" }
+tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.4.0" }
+tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.4.0" }
+tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.4.0" }
+tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.4.0" }
 
 # External dependencies (preserve versions from source crates)
 mixed-signals = "0.2"

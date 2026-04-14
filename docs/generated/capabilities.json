@@ -546,10 +546,10 @@
             "ty": "char"
           },
           {
-            "default": "0",
-            "doc": "Progress (0.0 = invisible, 1.0 = fully visible)",
+            "default": "Signal(Static(0.0))",
+            "doc": "Progress (0.0 = invisible, 1.0 = fully visible). Accepts a raw\nnumber, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           }
         ],
         "premium": false,
@@ -751,10 +751,10 @@
             "ty": "HoverBarPosition"
           },
           {
-            "default": "0",
-            "doc": "Progress (0.0 = invisible, 1.0 = fully visible)",
+            "default": "Signal(Static(0.0))",
+            "doc": "Progress (0.0 = invisible, 1.0 = fully visible). Accepts a raw\nnumber, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           }
         ],
         "premium": false,
@@ -765,6 +765,42 @@
           "selection",
           "navigation",
           "indicator"
+        ]
+      },
+      "FadeToCanvas": {
+        "ai_hint": "Use as the exit filter on notifications, modals, and toolkit widgets that should fade into the terminal backdrop instead of flashing dark. Set canvas_color to the app's actual terminal background (e.g. {r:240,g:240,b:245} for a light theme, {r:20,g:20,b:30} for a dark one) and drive strength from the exit animation progress (0.0 = widget visible, 1.0 = fully faded into canvas). Replaces the older tint(black, 0.7+) hack which darkens regardless of canvas. Parameters: canvas_color (ColorConfig target), strength (BindableValue blend ratio), apply_to (foreground/background/both).",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "FadeToCanvas",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Rgb { r: 0, g: 0, b: 0 }",
+            "doc": "The canvas color to fade into — should match the terminal\nbackground the recipe will run against.",
+            "name": "canvas_color",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "Signal(Static(1.0))",
+            "doc": "Fade strength (0.0 = untouched, 1.0 = fully replaced with\ncanvas_color). Uses `BindableValue` so the P0.1 signal/binding\nsurface applies uniformly across filter parameters.",
+            "name": "strength",
+            "ty": "BindableValue"
+          },
+          {
+            "default": "Both",
+            "doc": "Which color component(s) to fade.",
+            "name": "apply_to",
+            "ty": "ApplyTo"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Canvas-aware exit fade: blend cells toward a declared canvas color",
+        "rustdoc_summary": "Canvas-aware exit fade: blend cells toward a declared canvas color",
+        "use_cases": [
+          "exit_transitions",
+          "dismissal",
+          "modal_close"
         ]
       },
       "GlistenSweep": {
@@ -793,10 +829,10 @@
             "ty": "f32"
           },
           {
-            "default": "0",
-            "doc": "Hover progress (0.0 = not hovered, 1.0 = fully hovered)",
+            "default": "Signal(Static(0.0))",
+            "doc": "Hover progress (0.0 = not hovered, 1.0 = fully hovered). Accepts\na raw number, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           },
           {
             "default": "false",
@@ -877,10 +913,10 @@
             "ty": "HoverBarPosition"
           },
           {
-            "default": "0",
-            "doc": "Animation progress (0.0 = rest, 1.0 = fully active)",
+            "default": "Signal(Static(0.0))",
+            "doc": "Animation progress (0.0 = rest, 1.0 = fully active). Accepts a\nraw number, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           }
         ],
         "premium": false,
@@ -954,7 +990,7 @@
         ]
       },
       "KittScanner": {
-        "ai_hint": "Horizontal ping-pong scanner (KITT/Larson scanner) effect.\nboost: brightness increase (default 50).\nband_width: scanner column width (0.15 default, 0.0-0.5).\nbps: beats per second for ping-pong cycle (1.0 = 2 second full cycle).\nprogress: 0.0=inactive, 1.0=fully active.\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nFull-height scanning column with smooth ping-pong motion.\nClassic Knight Rider aesthetic for retro sci-fi hover states.",
+        "ai_hint": "Horizontal ping-pong scanner (KITT/Larson scanner) effect.\nboost: brightness increase (default 50).\nband_width: scanner column width (0.15 default, 0.0-0.5).\nbps: beats per second for ping-pong cycle (1.0 = 2 second full cycle).\nprogress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).\nmotion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nFull-height scanning column with smooth ping-pong motion.\nClassic Knight Rider aesthetic for retro sci-fi hover states.",
         "complexity": "simple",
         "energy": "moderate",
         "name": "KittScanner",
@@ -979,10 +1015,10 @@
             "ty": "f32"
           },
           {
-            "default": "0",
-            "doc": "Animation progress (0.0 = inactive, 1.0 = fully active)",
+            "default": "Signal(Static(0.0))",
+            "doc": "Animation progress (0.0 = inactive, 1.0 = fully active).\n\nAccepts a raw number (`0.5`), a signal spec, or a runtime binding\n(`{\"binding\": \"scroll_progress\"}`). When set to a binding, the\nvalue is resolved at render time from `ShaderRuntimeParams`.",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           },
           {
             "default": "PingPong",
@@ -1128,10 +1164,10 @@
             "ty": "bool"
           },
           {
-            "default": "0",
-            "doc": "Hover progress (0.0 = not hovered, 1.0 = fully hovered)",
+            "default": "Signal(Static(0.0))",
+            "doc": "Hover progress (0.0 = not hovered, 1.0 = fully hovered). Accepts\na raw number, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           }
         ],
         "premium": false,
@@ -1211,10 +1247,10 @@
             "ty": "f32"
           },
           {
-            "default": "0",
-            "doc": "Animation progress (0.0 = inactive, 1.0 = fully active)",
+            "default": "Signal(Static(0.0))",
+            "doc": "Animation progress (0.0 = inactive, 1.0 = fully active). Accepts\na raw number, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           }
         ],
         "premium": false,
@@ -1277,10 +1313,10 @@
         "pairs_with": [],
         "parameters": [
           {
-            "default": "0.5",
-            "doc": "Progress value (0.0 = empty, 1.0 = full)",
+            "default": "Signal(Static(0.5))",
+            "doc": "Progress value (0.0 = empty, 1.0 = full). Accepts a raw number,\na signal spec, or a runtime binding (`{\"binding\": \"scroll_ratio\"}`).",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           },
           {
             "default": "Horizontal",
@@ -1349,10 +1385,10 @@
             "ty": "WipeDirection"
           },
           {
-            "default": "0",
-            "doc": "Progress (0.0 = none, 1.0 = full width)",
+            "default": "Signal(Static(0.0))",
+            "doc": "Progress (0.0 = none, 1.0 = full width). Accepts a raw number,\nsignal spec, or runtime binding.",
             "name": "progress",
-            "ty": "f32"
+            "ty": "BindableValue"
           },
           {
             "default": "true",
@@ -2259,7 +2295,7 @@
         "parameters": [
           {
             "default": "1",
-            "doc": "Speed multiplier for band movement (1.0 = normal)",
+            "doc": "Speed multiplier for band movement (1.0 = normal).\n\nNOTE: Currently a no-op — the sweep rate is driven by `ctx.t` per\nthe v2.0.1 fix. A `speed_binding` counterpart is deferred until the\nunderlying field is reconnected.",
             "name": "speed",
             "ty": "f32"
           },
@@ -2988,7 +3024,7 @@
         ]
       },
       "FadeIn": {
-        "ai_hint": "Opacity fade in driven by t parameter.\napply_to: Foreground, Background, or Both.\nease: easing function for animation curve.\nClassic entrance effect, pairs with any mask.",
+        "ai_hint": "Opacity fade in driven by t parameter.\napply_to: Foreground, Background, or Both.\nease: easing function for animation curve.\nfrom: FadeTarget the fade starts from (defaults to FadeTarget::Black). Set to FadeTarget::Color { color: <canvas_rgb> } to fade in *from* the terminal canvas color instead of stamping black at t=0 — the canvas-aware enter counterpart to the FadeToCanvas exit filter.\nClassic entrance effect, pairs with any mask.",
         "complexity": "simple",
         "energy": "calm",
         "name": "FadeIn",

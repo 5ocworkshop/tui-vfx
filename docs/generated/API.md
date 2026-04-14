@@ -21,7 +21,7 @@ supports shadows and `preserve_unfilled`.
 | Category | Count (variants) | Primary API |
 | --- | --- | --- |
 | Masks | 10 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
-| Filters | 23 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
+| Filters | 24 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
 | Spatial Shaders | 20 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
@@ -288,7 +288,7 @@ Pattern for cellular mask
 
 ---
 
-## FilterSpec (23 effects)
+## FilterSpec (24 effects)
 
 Filters modify cell colors/styles after rendering (applied in order).
 
@@ -301,6 +301,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `Crt` | CRT monitor post-processing effect | `scanline_strength`, `glow` |
 | `Dim` | Dim/darken the output | `factor`, `apply_to` |
 | `DotIndicator` | Simple dot/bullet indicator adjacent to content | `indicator_char`, `position`, `progress` |
+| `FadeToCanvas` | Canvas-aware exit fade: blend cells toward a declared canvas color | `canvas_color`, `strength`, `apply_to` |
 | `GlistenSweep` | Diagonal glisten sweep effect | `boost`, `band_width`, `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
 | `Greyscale` | Greyscale/desaturate filter using BT.601 luminance | `strength`, `apply_to` |
 | `HoverBar` | Progress-driven partial bar indicator for hover states | `base_eighths`, `max_eighths`, `position`, `progress` |

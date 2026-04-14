@@ -341,7 +341,8 @@ ai_hint = """Horizontal ping-pong scanner (KITT/Larson scanner) effect.
 boost: brightness increase (default 50).
 band_width: scanner column width (0.15 default, 0.0-0.5).
 bps: beats per second for ping-pong cycle (1.0 = 2 second full cycle).
-progress: 0.0=inactive, 1.0=fully active.
+progress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).
+motion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).
 apply_to: which channel to boost (fg, bg, or both) when not in powerline mode.
 powerline_mode: true to handle powerline separators safely.
 boost_separator_bg: true to also boost separator backgrounds for continuous powerlines.
@@ -713,6 +714,7 @@ complexity = "simple"
 ai_hint = """Opacity fade in driven by t parameter.
 apply_to: Foreground, Background, or Both.
 ease: easing function for animation curve.
+from: FadeTarget the fade starts from (defaults to FadeTarget::Black). Set to FadeTarget::Color { color: <canvas_rgb> } to fade in *from* the terminal canvas color instead of stamping black at t=0 — the canvas-aware enter counterpart to the FadeToCanvas exit filter.
 Classic entrance effect, pairs with any mask."""
 
 [effects.styles.FadeOut]
@@ -1191,3 +1193,16 @@ effects = [
 
 # <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
 # <VERS>END OF VERSION: 2.2.1</VERS>
+
+# ════════════════════════════════════════════════════════════════════════════════
+# Generated stubs - fill in use_cases, energy, and ai_hint
+# ════════════════════════════════════════════════════════════════════════════════
+
+[effects.filters.FadeToCanvas]
+summary = "Canvas-aware exit fade: blend cells toward a declared canvas color"
+use_cases = ["exit_transitions", "dismissal", "modal_close"]
+energy = "calm"
+complexity = "simple"
+premium = false
+ai_hint = "Use as the exit filter on notifications, modals, and toolkit widgets that should fade into the terminal backdrop instead of flashing dark. Set canvas_color to the app's actual terminal background (e.g. {r:240,g:240,b:245} for a light theme, {r:20,g:20,b:30} for a dark one) and drive strength from the exit animation progress (0.0 = widget visible, 1.0 = fully faded into canvas). Replaces the older tint(black, 0.7+) hack which darkens regardless of canvas. Parameters: canvas_color (ColorConfig target), strength (BindableValue blend ratio), apply_to (foreground/background/both)."
+

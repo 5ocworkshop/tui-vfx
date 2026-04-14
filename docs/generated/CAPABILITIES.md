@@ -50,6 +50,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **Crt** | CRT monitor post-processing effect | retro, gaming, nostalgic |
 | **Dim** | Dim/darken the output | background, inactive, subtle |
 | **DotIndicator** | Simple dot/bullet indicator adjacent to content | selection, navigation, indicator |
+| **FadeToCanvas** | Canvas-aware exit fade: blend cells toward a declared canvas color | exit_transitions, dismissal, modal_close |
 | **GlistenSweep** | Diagonal glisten sweep effect | hover, shine, premium |
 | **Greyscale** | Greyscale/desaturate filter using BT.601 luminance | disabled, inactive, dramatic |
 | **HoverBar** | Progress-driven partial bar indicator for hover states | hover, selection, indicator |

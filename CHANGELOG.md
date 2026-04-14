@@ -1,13 +1,123 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.9.0</VERS> -->
-<!-- <WCTX>feat/content-ergonomics: document 0.3.0 ergonomic additions to tui-vfx-content</WCTX> -->
-<!-- <CLOG>Add 0.3.0 section covering ContentEffect::apply and TypewriterCursor presets</CLOG> -->
+<!-- <VERS>VERSION: 1.10.0</VERS> -->
+<!-- <WCTX>Phase 0 P0.1-P0.5 binding generalization release</WCTX> -->
+<!-- <CLOG>Add 0.4.0 section covering BindableValue, BindableU16, PrepareContext, shader *_binding fields, FadeToCanvas filter, and RigidShake num_shakes_binding</CLOG> -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
+
+## 0.4.0 — 2026-04-14
+
+This release lands the **Phase 0 binding generalization** for gt-design's
+dynamic recipe story: filter parameters, cell-region coordinates, shader
+parameters, and select integer counters can now resolve from a
+`ShaderRuntimeParams` map at render time, letting apps drive effect
+parameters from live widget state (scroll progress, hover index, error
+severity, etc.) instead of static literals.
+
+Every addition is **backwards-compatible**: existing recipe JSON that uses
+raw number literals continues to parse and render unchanged. The binding
+surface is opt-in per field via a new `{"binding": "key"}` tagged form.
+
+### Added
+
+- **tui-vfx-compositor: `BindableValue` wrapper type** for filter-spec f32
+  fields. Lives in `tui_vfx_compositor::types::BindableValue` and wraps
+  `mixed_signals::SignalOrFloat` with a new `Binding(String)` variant. The
+  lenient deserialize accepts four JSON shapes — raw number, tagged
+  `{"signal": ...}`, tagged `{"binding": "key"}`, or bare `SignalOrFloat`
+  — so existing recipes that emit `"progress": 0.5` keep working. Serialize
+  normalizes to the tagged form.
+- **tui-vfx-compositor: `PrepareContext` bundle** (`pipeline::cls_prepare_context`)
+  carrying `loop_t`, `SignalContext`, and a borrowed `&ShaderRuntimeParams`
+  per frame. Passed into `prepare_filter` / `prepare_filters` so filter
+  spec arms can resolve runtime bindings without adding new parameters to
+  the filter call signature.
+- **tui-vfx-compositor: `progress_binding` support on 9 filters.** The
+  `progress` field on `KittScanner`, `ShadeScanner`, `GlistenSweep`,
+  `HoverBar`, `SubPixelBar`, `UnderlineWipe`, `PillButton`,
+  `BracketEmphasis`, and `DotIndicator` is now a `BindableValue`. Apps can
+  drive progress from a live runtime param via
+  `"progress": {"binding": "scroll_progress"}`. Missing bindings fall back
+  to 0.0 (inactive state).
+- **tui-vfx-compositor: `FadeToCanvas` filter** (`filters::cls_fade_to_canvas`)
+  — the sanctioned replacement for the `tint(black, 0.7+)` exit hack. Blends
+  cells toward a declared `canvas_color` at caller-controlled strength,
+  avoiding the dark-flash artifact on light canvases. Strength is
+  `BindableValue`-typed so apps can drive it from exit animation progress.
+  5 unit tests including a regression guard that fails if mid-fade values
+  are darker than both widget and canvas.
+- **tui-vfx-compositor: `RigidShake.num_shakes_binding`** lets apps drive
+  shake count from severity/error-level state (warning → 1 shake, error →
+  4, critical → 8). Resolved u16 is saturating-cast to u8 and further
+  clamped to the filter's 0–8 hard cap.
+- **tui-vfx-style: `BindableU16` wrapper type** for u16 cell-coordinate
+  values (`models::cls_bindable_u16`). Parallel to `BindableValue` but
+  scoped to integer positions. Lives in tui-vfx-style rather than the
+  compositor because `StyleRegion` lives there and the style crate is the
+  lowest layer that already owns `ShaderRuntimeParams`.
+- **tui-vfx-style: `StyleRegion::Cell.x` / `.y` lifted to `BindableU16`.**
+  A single-cell style region's coordinates can now be a runtime binding —
+  the primitive powering the HLL modal hover-bar slide-between-buttons
+  pattern and any future "indicator slides between N positions" effect.
+  `StyleRegion::resolved(&runtime_params) -> Cow<'_, Self>` lowers a
+  binding-bearing `Cell` to concrete literals once per layer per frame
+  (zero clone for every bindless region via `Cow::Borrowed`). The render
+  pipeline in `orc_render_pipeline::apply_shaders` resolves before calling
+  `should_style`.
+- **tui-vfx-style: shader `*_binding` generalization.** Mirroring the
+  existing `FocusedRowGradient::selected_row_binding` pattern, adds:
+  - `BorderSweepShader.position_binding` — normalized 0.0–1.0 override
+    for the bead's perimeter position.
+  - `GlistenBandShader.direction_binding` — u16-coded direction override
+    (`0=Forward`, `1=Reverse`, `2=PingPong`).
+  - `GlistenBandShader.blend_strength_binding` — f32 override clamped to
+    0.0–1.0.
+  - `PulseWaveShader.frequency_binding` — f32 override; `blend_at`
+    signature gained an explicit `frequency` parameter so `style_at`
+    resolves once per frame rather than per cell.
+- **docs/templates/capabilities.toml: `FadeToCanvas` capability entry**
+  with `calm` energy, `simple` complexity, and
+  `exit_transitions` / `dismissal` / `modal_close` use cases. Generated
+  API docs pick this up through `cargo xtask docs generate`.
+
+### Changed
+
+- **workspace: version 0.3.0 → 0.4.0.** All workspace members pick up the
+  bump via `version.workspace = true`. Workspace.dependencies internal
+  crate specs were updated to `version = "0.4.0"` alongside.
+- **tui-vfx-compositor: `prepare_filter` / `prepare_filters` signature.**
+  Replaced the loose `(loop_t: f64, signal_ctx: &SignalContext)` parameter
+  pair with a single `&PrepareContext` argument. Zero behavior change —
+  filter arms see the same `loop_t` and `signal_ctx` via shadow bindings.
+- **tui-vfx-style: `GlistenBandShader.speed` field.** Deferred adding a
+  `speed_binding` counterpart because the underlying `speed` field has
+  been a no-op since v2.0.1 (removed from positional computation in favor
+  of `loop_t`-driven sweep). A binding over a vestigial field would be
+  misleading. Noted on the struct field and will revisit when the speed
+  field is reconnected.
+
+### Fixed
+
+- **tui-vfx-compositor: dark-flash exit bug on light canvases.** Recipes
+  that previously used `tint(black, 0.7+)` as their exit filter can
+  migrate to `FadeToCanvas` with their app's actual terminal background.
+  The new filter's inline test suite pins the regression: mid-fade values
+  are never darker than both the widget color and the canvas color.
+
+### Notes
+
+- Damping array binding for `RigidShake` is intentionally deferred pending
+  a scalar-multiplier design (scale the whole `[f32; 8]` curve uniformly).
+  Not needed for the severity-driven shake count use case the P0.5 prompt
+  calls out; flagged for a follow-up.
+- Canvas-color runtime binding (so themes can update
+  `FadeToCanvas.canvas_color` live without recompiling) is deferred to a
+  future P0 pass. Today's fix lands the filter and the flash-fix with a
+  static canvas color.
 
 ## 0.3.0 — 2026-04-11
 

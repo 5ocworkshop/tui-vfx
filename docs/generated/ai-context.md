@@ -32,6 +32,7 @@
 - **Crt**: CRT monitor post-processing effect.
 - **Dim**: Darken output uniformly.
 - **DotIndicator**: Dot/bullet fades in adjacent to content.
+- **FadeToCanvas**: Use as the exit filter on notifications, modals, and toolkit widgets that should fade into the terminal backdrop instead of flashing dark.
 - **GlistenSweep**: Diagonal 45-degree highlight sweep for polished hover feedback.
 - **Greyscale**: Desaturate output using BT.
 - **HoverBar**: Progress-driven partial bar using ▏▎▍▌▋▊▉█ with fg/bg inversion.
