@@ -465,7 +465,7 @@ fn render_loop_inspected(
                 local_y,
                 src_local_x,
                 src_local_y,
-                sampler.name(),
+                &format!("{}#1", sampler.name()),
             );
 
             let (src_x, src_y) = match (src_local_x, src_local_y) {
@@ -509,7 +509,7 @@ fn render_loop_inspected(
             );
 
             // Apply filters with inspector
-            for filter in prepared_filters {
+            for (filter_index, filter) in prepared_filters.iter().enumerate() {
                 let before_cell = out_cell;
                 filter.apply(&mut out_cell, local_x, local_y, w16, h16, loop_t);
                 inspector.on_filter_applied(
@@ -517,7 +517,7 @@ fn render_loop_inspected(
                     local_y,
                     &before_cell,
                     &out_cell,
-                    filter.name(),
+                    &format!("{}#{}", filter.name(), filter_index + 1),
                 );
             }
 
@@ -599,7 +599,7 @@ fn apply_shaders_inspected(
     options: &CompositionOptions<'_>,
     inspector: &mut dyn CompositorInspector,
 ) {
-    for layer in &options.shader_layers {
+    for (shader_index, layer) in options.shader_layers.iter().enumerate() {
         if layer.region.should_style(local_x, local_y, w16, h16) {
             let (ctx_x, ctx_y, ctx_w, ctx_h) = layer
                 .region
@@ -633,7 +633,7 @@ fn apply_shaders_inspected(
                 local_y,
                 before_style,
                 new_style,
-                layer.shader.name(),
+                &format!("{}#{}", layer.shader.name(), shader_index + 1),
             );
         }
     }

@@ -3,6 +3,8 @@
 // <WCTX>Phase-1.5 probe timeline, diff, and trace support</WCTX>
 // <CLOG>MINOR: Auto-populate direct probe report diagnostics from the full widget dump so callers immediately see baseline border/text integrity findings without extra helper calls</CLOG>
 
+use serde_json::{Value, json};
+use tui_vfx_compositor::pipeline::CompositionSpec;
 use tui_vfx_compositor::pipeline::render_pipeline_with_spec;
 use tui_vfx_types::Grid;
 
@@ -17,11 +19,13 @@ use crate::cls_probe_scene_spec::ProbeSceneSpec;
 use crate::cls_probe_summary::ProbeSummary;
 use crate::cls_probe_timing::ProbeTiming;
 use crate::cls_probe_widget::ProbeWidget;
+use crate::fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
 use crate::fnc_build_owned_grid::build_owned_grid;
 use crate::fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 use crate::fnc_diff_frames::diff_frames;
 use crate::fnc_modifier_names::modifier_names;
 use crate::fnc_normalize_color::normalize_color;
+use crate::fnc_runtime_context_from_composition::runtime_context_from_composition;
 use crate::fnc_select_cells::select_cells;
 use crate::fnc_variant_name_from_debug::variant_name_from_debug;
 
@@ -74,6 +78,7 @@ pub fn run_probe(
     let mut composition = scene.composition.clone();
     composition.t = request.sample_t;
     composition.phase = Some(request.phase.to_mixed_phase());
+    let runtime = runtime_context_from_composition(&composition);
 
     let mut inspector = ProbeInspector::default();
     render_pipeline_with_spec(
@@ -116,13 +121,14 @@ pub fn run_probe(
             }
 
             let trace = if request.with_causation {
-                inspector.trace_for(x as u16, y as u16)
+                let mut trace = inspector.trace_for(x as u16, y as u16);
+                enrich_trace_events(&mut trace, &composition, runtime.as_ref());
+                trace
             } else {
                 Vec::new()
             };
 
-            all_cells.push((
-                ProbeCell {
+            let mut probe_cell = ProbeCell {
                     abs: ProbePoint {
                         x: (abs_origin_x + x) as u16,
                         y: (abs_origin_y + y) as u16,
@@ -137,10 +143,11 @@ pub fn run_probe(
                     modifiers: modifier_names(final_cell.mods),
                     last_touch: inspector.last_touch_for(x as u16, y as u16),
                     trace,
-                },
-                is_non_empty,
-                is_modified,
-            ));
+                    root_cause: None,
+                };
+            probe_cell.root_cause = build_probe_cell_root_cause(&probe_cell, runtime.as_ref());
+
+            all_cells.push((probe_cell, is_non_empty, is_modified));
         }
     }
 
@@ -174,39 +181,8 @@ pub fn run_probe(
                 height: scene.source.height,
             },
         },
-        pipeline: ProbePipelineInventory {
-            sampler: composition
-                .sampler_spec
-                .as_ref()
-                .map(|sampler| format!("{sampler:?}")),
-            sampler_effects: composition
-                .sampler_spec
-                .iter()
-                .map(variant_name_from_debug)
-                .collect(),
-            mask_count: composition.masks.len(),
-            mask_effects: composition
-                .masks
-                .iter()
-                .map(variant_name_from_debug)
-                .collect(),
-            filter_count: composition.filters.len(),
-            filter_effects: composition
-                .filters
-                .iter()
-                .map(variant_name_from_debug)
-                .collect(),
-            shader_count: composition.shader_layers.len(),
-            shader_effects: composition
-                .shader_layers
-                .iter()
-                .map(|layer| variant_name_from_debug(&layer.shader))
-                .collect(),
-            style_count: 0,
-            style_effects: Vec::new(),
-            content_count: 0,
-            content_effects: Vec::new(),
-        },
+        pipeline: build_pipeline_inventory(&composition),
+        runtime: runtime.clone(),
         summary: ProbeSummary {
             total_cells: widget_width * widget_height,
             non_empty_cells,
@@ -246,39 +222,8 @@ pub fn run_probe(
                 height: scene.source.height,
             },
         },
-        pipeline: ProbePipelineInventory {
-            sampler: composition
-                .sampler_spec
-                .as_ref()
-                .map(|sampler| format!("{sampler:?}")),
-            sampler_effects: composition
-                .sampler_spec
-                .iter()
-                .map(variant_name_from_debug)
-                .collect(),
-            mask_count: composition.masks.len(),
-            mask_effects: composition
-                .masks
-                .iter()
-                .map(variant_name_from_debug)
-                .collect(),
-            filter_count: composition.filters.len(),
-            filter_effects: composition
-                .filters
-                .iter()
-                .map(variant_name_from_debug)
-                .collect(),
-            shader_count: composition.shader_layers.len(),
-            shader_effects: composition
-                .shader_layers
-                .iter()
-                .map(|layer| variant_name_from_debug(&layer.shader))
-                .collect(),
-            style_count: 0,
-            style_effects: Vec::new(),
-            content_count: 0,
-            content_effects: Vec::new(),
-        },
+        pipeline: build_pipeline_inventory(&composition),
+        runtime,
         summary: ProbeSummary {
             total_cells: widget_width * widget_height,
             non_empty_cells,
@@ -287,6 +232,146 @@ pub fn run_probe(
         diagnostics,
         cells: select_cells(all_cells, request.cells),
     })
+}
+
+fn build_pipeline_inventory(composition: &CompositionSpec) -> ProbePipelineInventory {
+    ProbePipelineInventory {
+        sampler: composition
+            .sampler_spec
+            .as_ref()
+            .map(|sampler| format!("{sampler:?}")),
+        sampler_effects: composition
+            .sampler_spec
+            .iter()
+            .map(|sampler| format!("{}#1", variant_name_from_debug(sampler)))
+            .collect(),
+        mask_count: composition.masks.len(),
+        mask_effects: composition
+            .masks
+            .iter()
+            .enumerate()
+            .map(|(index, mask)| format!("{}#{}", variant_name_from_debug(mask), index + 1))
+            .collect(),
+        filter_count: composition.filters.len(),
+        filter_effects: composition
+            .filters
+            .iter()
+            .enumerate()
+            .map(|(index, filter)| {
+                format!("{}#{}", variant_name_from_debug(filter), index + 1)
+            })
+            .collect(),
+        shader_count: composition.shader_layers.len(),
+        shader_effects: composition
+            .shader_layers
+            .iter()
+            .enumerate()
+            .map(|(index, layer)| {
+                format!("{}#{}", variant_name_from_debug(&layer.shader), index + 1)
+            })
+            .collect(),
+        style_count: 0,
+        style_effects: Vec::new(),
+        content_count: 0,
+        content_effects: Vec::new(),
+    }
+}
+
+fn enrich_trace_events(
+    trace: &mut [crate::ProbeTraceEvent],
+    composition: &CompositionSpec,
+    runtime: Option<&crate::ProbeRuntimeContext>,
+) {
+    for event in trace {
+        let (params, notes) =
+            trace_event_details(&event.stage, event.effect.as_deref(), composition, runtime);
+        event.params = params;
+        if !notes.is_empty() {
+            event.notes = notes;
+        }
+    }
+}
+
+fn trace_event_details(
+    stage: &str,
+    effect_name: Option<&str>,
+    composition: &CompositionSpec,
+    runtime: Option<&crate::ProbeRuntimeContext>,
+) -> (Option<Value>, Vec<String>) {
+    let Some(effect_name) = effect_name else {
+        return (None, Vec::new());
+    };
+    let normalized_effect_name = effect_name
+        .split('#')
+        .next()
+        .unwrap_or(effect_name);
+
+    match stage {
+        "sampler" => match composition.sampler_spec.as_ref() {
+            Some(sampler) if variant_name_from_debug(sampler) == normalized_effect_name => {
+                (serde_json::to_value(sampler).ok(), Vec::new())
+            }
+            _ => (None, Vec::new()),
+        },
+        "mask" => serialize_matches(
+            composition
+                .masks
+                .iter()
+                .filter(|mask| variant_name_from_debug(*mask) == normalized_effect_name)
+                .map(|mask| serde_json::to_value(mask).unwrap_or(Value::Null))
+                .collect(),
+        ),
+        "filter" => serialize_matches(
+            composition
+                .filters
+                .iter()
+                .filter(|filter| variant_name_from_debug(*filter) == normalized_effect_name)
+                .map(|filter| serde_json::to_value(filter).unwrap_or(Value::Null))
+                .collect(),
+        ),
+        "shader" => {
+            let matches = composition
+                .shader_layers
+                .iter()
+                .filter(|layer| variant_name_from_debug(&layer.shader) == normalized_effect_name)
+                .map(|layer| {
+                    let ctx = tui_vfx_style::traits::ShaderContext::new(
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        composition.loop_t.unwrap_or(composition.t),
+                        composition.phase,
+                        Some(composition.runtime_params.clone().into()),
+                    );
+                    json!({
+                        "region": layer.region,
+                        "shader": &layer.shader,
+                        "binding_requests": layer.shader.runtime_binding_requests(),
+                        "binding_resolutions": layer.shader.runtime_binding_resolutions(&ctx),
+                    })
+                })
+                .collect::<Vec<_>>();
+            serialize_matches(matches)
+        }
+        _ => {
+            let _ = runtime;
+            (None, Vec::new())
+        }
+    }
+}
+
+fn serialize_matches(matches: Vec<Value>) -> (Option<Value>, Vec<String>) {
+    match matches.len() {
+        0 => (None, Vec::new()),
+        1 => (matches.into_iter().next(), Vec::new()),
+        _ => (
+            Some(Value::Array(matches)),
+            vec!["multiple configured instances matched this effect name".to_string()],
+        ),
+    }
 }
 
 /// Compares two phase-local samples from the same scene and returns only the changed cells.

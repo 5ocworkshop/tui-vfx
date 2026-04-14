@@ -31,6 +31,7 @@
 //! - `docs/design/pipeline-probe-design.md`
 
 mod cls_probe_cell;
+mod cls_probe_cell_root_cause;
 mod cls_probe_color;
 mod cls_probe_diagnostic;
 mod cls_probe_diff_cell;
@@ -43,6 +44,7 @@ mod cls_probe_operational_analysis;
 mod cls_probe_pipeline_inventory;
 mod cls_probe_report;
 mod cls_probe_request;
+mod cls_probe_runtime_context;
 mod cls_probe_scene_spec;
 mod cls_probe_sqlite_store;
 mod cls_probe_state_snapshot;
@@ -52,6 +54,7 @@ mod cls_probe_timing;
 mod cls_probe_trace_event;
 mod cls_probe_widget;
 mod fnc_build_owned_grid;
+mod fnc_build_probe_cell_root_cause;
 mod fnc_collect_basic_diagnostics;
 mod fnc_collect_probe_operational_analysis;
 mod fnc_diff_frames;
@@ -61,11 +64,13 @@ mod fnc_modifier_names;
 mod fnc_normalize_color;
 mod fnc_row_text;
 mod fnc_select_cells;
+mod fnc_runtime_context_from_composition;
 mod fnc_variant_name_from_debug;
 mod orc_collect_timeline;
 mod orc_run_probe;
 
 pub use cls_probe_cell::ProbeCell;
+pub use cls_probe_cell_root_cause::{ProbeCellRootCause, ProbeCellStageCause};
 pub use cls_probe_color::ProbeColor;
 pub use cls_probe_diagnostic::{ProbeDiagnostic, ProbeDiagnosticSeverity};
 pub use cls_probe_diff_cell::ProbeDiffCell;
@@ -80,6 +85,7 @@ pub use cls_probe_operational_analysis::{
 pub use cls_probe_pipeline_inventory::ProbePipelineInventory;
 pub use cls_probe_report::{ProbeFrame, ProbePoint, ProbeReport, ProbeReportSource, ProbeSize};
 pub use cls_probe_request::{ProbeCellSelector, ProbePhase, ProbeRequest};
+pub use cls_probe_runtime_context::{ProbeRuntimeContext, ProbeRuntimeParam};
 pub use cls_probe_scene_spec::ProbeSceneSpec;
 pub use cls_probe_sqlite_store::ProbeSqliteStore;
 pub use cls_probe_state_snapshot::ProbeStateSnapshot;
@@ -89,10 +95,14 @@ pub use cls_probe_timing::ProbeTiming;
 pub use cls_probe_trace_event::ProbeTraceEvent;
 pub use cls_probe_widget::ProbeWidget;
 pub use fnc_collect_basic_diagnostics::collect_basic_diagnostics;
+pub use fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
 pub use fnc_collect_probe_operational_analysis::collect_probe_operational_analysis;
 pub use fnc_diff_frames::diff_frames;
 pub use fnc_has_ascii_alpha::has_ascii_alpha;
 pub use fnc_max_widget_y::max_widget_y;
+pub use fnc_runtime_context_from_composition::{
+    runtime_context_from_composition, runtime_value_json,
+};
 pub use orc_collect_timeline::collect_timeline;
 pub use orc_run_probe::{run_probe, run_probe_diff};
 pub use fnc_row_text::row_text;

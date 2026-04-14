@@ -72,7 +72,9 @@ use crate::models::{
     cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
     cls_trace_propagation_shader::TracePropagationShader,
 };
-use crate::traits::{ShaderContext, StyleShader};
+use crate::traits::{
+    ShaderContext, ShaderRuntimeBindingRequest, ShaderRuntimeBindingResolution, StyleShader,
+};
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::Style;
 /// Spatial shader types for per-cell style computation.
@@ -274,6 +276,27 @@ impl SpatialShaderType {
             SpatialShaderType::ChromaticEdge(_) => {
                 "Chromatic aberration effect separating RGB edges"
             }
+        }
+    }
+
+    /// Returns the runtime binding requests declared by this shader.
+    pub fn runtime_binding_requests(&self) -> Vec<ShaderRuntimeBindingRequest> {
+        match self {
+            SpatialShaderType::FocusedRowGradient(shader) => shader.runtime_binding_requests(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// Resolves runtime bindings for this shader against the current shader context.
+    pub fn runtime_binding_resolutions(
+        &self,
+        ctx: &ShaderContext,
+    ) -> Vec<ShaderRuntimeBindingResolution> {
+        match self {
+            SpatialShaderType::FocusedRowGradient(shader) => {
+                shader.runtime_binding_resolutions(ctx)
+            }
+            _ => Vec::new(),
         }
     }
 

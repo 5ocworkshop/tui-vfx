@@ -11,7 +11,10 @@ use tui_vfx_probe::{
     run_probe,
 };
 use tui_vfx_style::models::BorderSweepShader;
-use tui_vfx_style::models::{ColorConfig, SpatialShaderType, StyleRegion};
+use tui_vfx_style::models::{
+    ApplyToColor, ColorConfig, FocusedRowGradientShader, SpatialShaderType, StyleRegion,
+};
+use tui_vfx_style::traits::ShaderRuntimeParams;
 use tui_vfx_types::{Cell, Color, Modifiers};
 
 fn make_grid(width: u16, height: u16, ch: char) -> ProbeGridSpec {
@@ -242,6 +245,70 @@ fn test_run_probe_rejects_grid_shape_mismatch() {
 
     let error = run_probe(&scene, &request).expect_err("shape mismatch should fail");
     assert!(error.to_string().contains("invalid scene"));
+}
+
+#[test]
+fn test_run_probe_reports_runtime_bindings_params_and_root_cause() {
+    let scene = ProbeSceneSpec {
+        source: make_grid(1, 6, 'A'),
+        destination: make_grid(4, 8, ' '),
+        widget_offset: ProbePoint { x: 1, y: 1 },
+        composition: CompositionSpec {
+            shader_layers: vec![ShaderLayerSpec {
+                shader: SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader {
+                    selected_row: None,
+                    selected_row_binding: Some("selected_row".to_owned()),
+                    selected_row_ratio: 0.0,
+                    selected_row_ratio_binding: None,
+                    falloff_distance: 1,
+                    bright_color: ColorConfig::White,
+                    dim_color: ColorConfig::Black,
+                    apply_to: ApplyToColor::Background,
+                }),
+                region: StyleRegion::All,
+            }],
+            runtime_params: [("selected_row", 3_u16)].into_iter().collect::<ShaderRuntimeParams>(),
+            ..CompositionSpec::default()
+        },
+    };
+    let request = ProbeRequest {
+        phase: ProbePhase::Dwelling,
+        sample_t: 1.0,
+        cells: ProbeCellSelector::Modified,
+        with_causation: true,
+    };
+
+    let report = run_probe(&scene, &request).expect("probe should succeed");
+    assert_eq!(
+        report.runtime.as_ref().expect("runtime context").supplied_params[0].key,
+        "selected_row"
+    );
+    assert!(report
+        .runtime
+        .as_ref()
+        .expect("runtime context")
+        .binding_resolutions
+        .iter()
+        .any(|resolution| resolution.field == "selected_row"));
+    assert!(report.cells.iter().any(|cell| {
+        cell.root_cause
+            .as_ref()
+            .is_some_and(|cause| cause.summary.contains("shader"))
+    }));
+    assert!(report.cells.iter().any(|cell| {
+        cell.trace.iter().any(|event| {
+            event.stage == "shader"
+                && event.params.is_some()
+                && event.params.as_ref().is_some_and(|params| {
+                    params.get("binding_resolutions").is_some()
+                        || params
+                            .as_array()
+                            .and_then(|items| items.first())
+                            .and_then(|item| item.get("binding_resolutions"))
+                            .is_some()
+                })
+        })
+    }));
 }
 
 // <FILE>crates/tui-vfx-probe/tests/test_probe_frame_dump.rs</FILE> - <DESC>Integration tests for phase-1 probe frame dumps</DESC>

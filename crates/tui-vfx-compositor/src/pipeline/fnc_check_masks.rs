@@ -40,9 +40,15 @@ pub(crate) fn check_prepared_masks(
     let results: SmallVec<[bool; 2]> = if let Some(inspector) = inspector {
         masks
             .iter()
-            .map(|mask| {
+            .enumerate()
+            .map(|(index, mask)| {
                 let visible = mask.is_visible(local_x, local_y, width, height, t);
-                inspector.on_mask_checked(local_x, local_y, visible, mask.name());
+                inspector.on_mask_checked(
+                    local_x,
+                    local_y,
+                    visible,
+                    &format!("{}#{}", mask.name(), index + 1),
+                );
                 visible
             })
             .collect()

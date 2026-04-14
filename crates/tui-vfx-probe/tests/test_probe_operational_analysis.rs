@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_operational_analysis.rs</FILE> - <DESC>Regression tests for direct probe operational analysis</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>TDD for direct compositor-stage success/failure summaries layered on top of probe reports</WCTX>
-// <CLOG>NEW: Add tests proving direct operational analysis reports stage success when configured effects fire and combined failure when report diagnostics already indicate the sampled result is unhealthy</CLOG>
+// <CLOG>MINOR: Assert that direct per-effect analysis discloses configured_instances so SQL consumers can tell when a row is a unique effect versus a same-name aggregate</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::CompositionSpec;
@@ -59,7 +59,9 @@ fn test_collect_probe_operational_analysis_reports_success_for_filter_stage() {
                 && stage
                     .effects
                     .iter()
-                    .any(|effect| effect.effect == "Dim" && effect.status == ProbeOperationalStatus::Success))
+                    .any(|effect| effect.effect == "Dim#1"
+                        && effect.configured_instances == 1
+                        && effect.status == ProbeOperationalStatus::Success))
     );
 }
 
@@ -109,4 +111,4 @@ fn test_collect_probe_operational_analysis_reports_failure_for_bad_border_scene(
 }
 
 // <FILE>crates/tui-vfx-probe/tests/test_probe_operational_analysis.rs</FILE> - <DESC>Regression tests for direct probe operational analysis</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

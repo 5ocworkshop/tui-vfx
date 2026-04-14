@@ -4,7 +4,10 @@
 // <CLOG>Updated to use ShaderContext for screen-space effects</CLOG>
 
 use crate::models::{ColorConfig, ColorSpace};
-use crate::traits::{ShaderContext, StyleShader};
+use crate::traits::{
+    ShaderContext, ShaderRuntimeBindingRequest, ShaderRuntimeBindingResolution,
+    ShaderRuntimeBindingStatus, StyleShader,
+};
 use crate::utils::blend_colors;
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
@@ -126,6 +129,81 @@ impl Default for FocusedRowGradientShader {
             dim_color: default_dim_color(),
             apply_to: ApplyToColor::default(),
         }
+    }
+}
+
+impl FocusedRowGradientShader {
+    pub fn runtime_binding_requests(&self) -> Vec<ShaderRuntimeBindingRequest> {
+        let mut requests = Vec::new();
+        if let Some(binding) = self.selected_row_binding.as_ref() {
+            requests.push(ShaderRuntimeBindingRequest {
+                field: "selected_row".to_string(),
+                binding: binding.clone(),
+                expected_type: "u16".to_string(),
+            });
+        }
+        if let Some(binding) = self.selected_row_ratio_binding.as_ref() {
+            requests.push(ShaderRuntimeBindingRequest {
+                field: "selected_row_ratio".to_string(),
+                binding: binding.clone(),
+                expected_type: "f32".to_string(),
+            });
+        }
+        requests
+    }
+
+    pub fn runtime_binding_resolutions(
+        &self,
+        ctx: &ShaderContext,
+    ) -> Vec<ShaderRuntimeBindingResolution> {
+        let mut resolutions = Vec::new();
+
+        if let Some(binding) = self.selected_row_binding.as_ref() {
+            let supplied = ctx.runtime_param(binding);
+            let supplied_kind = supplied.map(|value| value.kind_name().to_string());
+            let supplied_value = supplied.map(serde_json::Value::from);
+            let coerced = matches!(supplied_kind.as_deref(), Some("float"));
+            let resolved = ctx.runtime_param_u16(binding);
+            resolutions.push(ShaderRuntimeBindingResolution {
+                field: "selected_row".to_string(),
+                binding: binding.clone(),
+                expected_type: "u16".to_string(),
+                status: match (resolved, self.selected_row) {
+                    (Some(_), _) if coerced => ShaderRuntimeBindingStatus::Coerced,
+                    (Some(_), _) => ShaderRuntimeBindingStatus::Resolved,
+                    (None, Some(_)) => ShaderRuntimeBindingStatus::FallbackStatic,
+                    (None, None) => ShaderRuntimeBindingStatus::Missing,
+                },
+                supplied_kind,
+                supplied_value,
+                effective_value: resolved.map(serde_json::Value::from),
+                fallback_value: self.selected_row.map(serde_json::Value::from),
+            });
+        }
+
+        if let Some(binding) = self.selected_row_ratio_binding.as_ref() {
+            let supplied = ctx.runtime_param(binding);
+            let supplied_kind = supplied.map(|value| value.kind_name().to_string());
+            let supplied_value = supplied.map(serde_json::Value::from);
+            let coerced = matches!(supplied_kind.as_deref(), Some("integer"));
+            let resolved = ctx.runtime_param_f32(binding).map(|value| value.clamp(0.0, 1.0));
+            resolutions.push(ShaderRuntimeBindingResolution {
+                field: "selected_row_ratio".to_string(),
+                binding: binding.clone(),
+                expected_type: "f32".to_string(),
+                status: match resolved {
+                    Some(_) if coerced => ShaderRuntimeBindingStatus::Coerced,
+                    Some(_) => ShaderRuntimeBindingStatus::Resolved,
+                    None => ShaderRuntimeBindingStatus::FallbackStatic,
+                },
+                supplied_kind,
+                supplied_value,
+                effective_value: resolved.map(serde_json::Value::from),
+                fallback_value: Some(serde_json::Value::from(self.selected_row_ratio.clamp(0.0, 1.0))),
+            });
+        }
+
+        resolutions
     }
 }
 

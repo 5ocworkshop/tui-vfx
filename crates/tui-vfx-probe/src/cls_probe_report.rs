@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::cls_probe_cell::ProbeCell;
 use crate::cls_probe_diagnostic::ProbeDiagnostic;
 use crate::cls_probe_pipeline_inventory::ProbePipelineInventory;
+use crate::cls_probe_runtime_context::ProbeRuntimeContext;
 use crate::cls_probe_request::ProbeRequest;
 use crate::cls_probe_summary::ProbeSummary;
 use crate::cls_probe_timing::ProbeTiming;
@@ -50,6 +51,8 @@ pub struct ProbeReport {
     pub frame: ProbeFrame,
     pub widget: ProbeWidget,
     pub pipeline: ProbePipelineInventory,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub runtime: Option<ProbeRuntimeContext>,
     pub summary: ProbeSummary,
     #[serde(default)]
     pub diagnostics: Vec<ProbeDiagnostic>,

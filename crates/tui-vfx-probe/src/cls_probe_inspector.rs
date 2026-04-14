@@ -50,7 +50,7 @@ impl CompositorInspector for ProbeInspector {
         src_y: Option<u16>,
         sampler_name: &str,
     ) {
-        if sampler_name != "None" {
+        if !sampler_name.starts_with("None") {
             self.remember(
                 dest_x,
                 dest_y,
@@ -61,6 +61,8 @@ impl CompositorInspector for ProbeInspector {
                     visible: None,
                     before: None,
                     after: None,
+                    params: None,
+                    notes: Vec::new(),
                 },
             );
         }
@@ -77,6 +79,8 @@ impl CompositorInspector for ProbeInspector {
                 visible: Some(visible),
                 before: None,
                 after: None,
+                params: None,
+                notes: Vec::new(),
             },
         );
     }
@@ -99,6 +103,8 @@ impl CompositorInspector for ProbeInspector {
                 visible: None,
                 before: Some(ProbeStateSnapshot::from_style(before)),
                 after: Some(ProbeStateSnapshot::from_style(after)),
+                params: None,
+                notes: Vec::new(),
             },
         );
     }
@@ -121,6 +127,8 @@ impl CompositorInspector for ProbeInspector {
                 visible: None,
                 before: Some(ProbeStateSnapshot::from_cell(before)),
                 after: Some(ProbeStateSnapshot::from_cell(after)),
+                params: None,
+                notes: Vec::new(),
             },
         );
     }

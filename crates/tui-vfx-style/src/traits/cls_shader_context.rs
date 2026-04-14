@@ -19,6 +19,16 @@ pub enum ShaderRuntimeParamValue {
 }
 
 impl ShaderRuntimeParamValue {
+    /// Return a stable human-readable kind for this runtime value.
+    pub fn kind_name(&self) -> &'static str {
+        match self {
+            Self::Integer(_) => "integer",
+            Self::Float(_) => "float",
+            Self::Boolean(_) => "boolean",
+            Self::Text(_) => "text",
+        }
+    }
+
     /// Attempt to coerce this runtime value to f32.
     pub fn as_f32(&self) -> Option<f32> {
         match self {
@@ -43,6 +53,52 @@ impl ShaderRuntimeParamValue {
             _ => None,
         }
     }
+}
+
+impl From<&ShaderRuntimeParamValue> for serde_json::Value {
+    fn from(value: &ShaderRuntimeParamValue) -> Self {
+        match value {
+            ShaderRuntimeParamValue::Integer(inner) => serde_json::Value::from(*inner),
+            ShaderRuntimeParamValue::Float(inner) => serde_json::Value::from(*inner),
+            ShaderRuntimeParamValue::Boolean(inner) => serde_json::Value::from(*inner),
+            ShaderRuntimeParamValue::Text(inner) => serde_json::Value::from(inner.clone()),
+        }
+    }
+}
+
+/// Declares that a shader can bind a runtime parameter to a named config field.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ShaderRuntimeBindingRequest {
+    pub field: String,
+    pub binding: String,
+    pub expected_type: String,
+}
+
+/// Reports how a shader binding resolved against the supplied runtime params.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ShaderRuntimeBindingStatus {
+    Resolved,
+    Coerced,
+    Missing,
+    FallbackStatic,
+}
+
+/// Resolution record for one shader runtime binding.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ShaderRuntimeBindingResolution {
+    pub field: String,
+    pub binding: String,
+    pub expected_type: String,
+    pub status: ShaderRuntimeBindingStatus,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub supplied_kind: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub supplied_value: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub effective_value: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fallback_value: Option<serde_json::Value>,
 }
 
 impl From<u16> for ShaderRuntimeParamValue {

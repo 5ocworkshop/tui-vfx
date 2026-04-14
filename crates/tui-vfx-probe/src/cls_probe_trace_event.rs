@@ -4,6 +4,7 @@
 // <CLOG>MINOR: Expand trace events to carry sampler source coordinates, mask visibility, and optional before/after snapshots for shader and filter stages</CLOG>
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::cls_probe_report::ProbePoint;
 use crate::cls_probe_state_snapshot::ProbeStateSnapshot;
@@ -22,6 +23,10 @@ pub struct ProbeTraceEvent {
     pub before: Option<ProbeStateSnapshot>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub after: Option<ProbeStateSnapshot>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub params: Option<Value>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub notes: Vec<String>,
 }
 
 // <FILE>crates/tui-vfx-probe/src/cls_probe_trace_event.rs</FILE> - <DESC>Per-cell causation trace DTO</DESC>

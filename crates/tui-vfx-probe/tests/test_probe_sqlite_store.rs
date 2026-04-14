@@ -12,7 +12,10 @@ use tui_vfx_probe::{
     ProbeSqliteStore, collect_timeline, run_probe, run_probe_diff,
 };
 use tui_vfx_style::models::BorderSweepShader;
-use tui_vfx_style::models::{ColorConfig, SpatialShaderType, StyleRegion};
+use tui_vfx_style::models::{
+    ApplyToColor, ColorConfig, FocusedRowGradientShader, SpatialShaderType, StyleRegion,
+};
+use tui_vfx_style::traits::ShaderRuntimeParams;
 use tui_vfx_types::{Cell, Color, Modifiers};
 
 fn make_grid(width: u16, height: u16, ch: char) -> ProbeGridSpec {
@@ -55,6 +58,31 @@ fn shader_scene() -> ProbeSceneSpec {
                 }),
                 region: StyleRegion::All,
             }],
+            ..CompositionSpec::default()
+        },
+    }
+}
+
+fn binding_scene() -> ProbeSceneSpec {
+    ProbeSceneSpec {
+        source: make_grid(1, 6, 'S'),
+        destination: make_grid(4, 8, ' '),
+        widget_offset: ProbePoint { x: 1, y: 1 },
+        composition: CompositionSpec {
+            shader_layers: vec![ShaderLayerSpec {
+                shader: SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader {
+                    selected_row: None,
+                    selected_row_binding: Some("selected_row".to_owned()),
+                    selected_row_ratio: 0.0,
+                    selected_row_ratio_binding: None,
+                    falloff_distance: 1,
+                    bright_color: ColorConfig::White,
+                    dim_color: ColorConfig::Black,
+                    apply_to: ApplyToColor::Background,
+                }),
+                region: StyleRegion::All,
+            }],
+            runtime_params: [("selected_row", 3_u16)].into_iter().collect::<ShaderRuntimeParams>(),
             ..CompositionSpec::default()
         },
     }
@@ -148,6 +176,7 @@ fn test_sqlite_store_indexes_operational_analysis_rows() {
                             {
                                 "effect": "Dim",
                                 "configured": true,
+                                "configured_instances": 1,
                                 "touched_cells": 6,
                                 "observed_event_count": 6,
                                 "status": "success"
@@ -182,6 +211,7 @@ fn test_sqlite_store_indexes_operational_analysis_rows() {
                             {
                                 "effect": "Dim",
                                 "configured": true,
+                                "configured_instances": 1,
                                 "touched_cells": 12,
                                 "observed_event_count": 12,
                                 "status": "success"
@@ -214,6 +244,7 @@ fn test_sqlite_store_indexes_operational_analysis_rows() {
                                     {
                                         "effect": "Dim",
                                         "configured": true,
+                                        "configured_instances": 1,
                                         "touched_cells": 4,
                                         "observed_event_count": 4,
                                         "status": "success"
@@ -245,9 +276,10 @@ fn test_sqlite_store_indexes_operational_analysis_rows() {
         .unwrap();
     assert_eq!(lifecycle_rows[0]["count"], 1);
     let effect_rows = store
-        .query_json("select count(*) as count from probe_analysis_effects where effect = 'Dim'")
+        .query_json("select count(*) as count, max(configured_instances) as max_instances from probe_analysis_effects where effect = 'Dim'")
         .unwrap();
     assert_eq!(effect_rows[0]["count"], 3);
+    assert_eq!(effect_rows[0]["max_instances"], 1);
 }
 
 #[test]
@@ -293,6 +325,45 @@ fn test_sqlite_store_indexes_report_diagnostics_rows() {
     assert_eq!(rows.len(), 3);
     assert_eq!(rows[0]["code"], "alpha_on_bottom_border");
     assert_eq!(rows[0]["severity"], "error");
+}
+
+#[test]
+fn test_sqlite_store_indexes_runtime_and_root_cause_rows() {
+    let report = run_probe(
+        &binding_scene(),
+        &ProbeRequest {
+            phase: ProbePhase::Dwelling,
+            sample_t: 1.0,
+            cells: ProbeCellSelector::Modified,
+            with_causation: true,
+        },
+    )
+    .unwrap();
+    let store = ProbeSqliteStore::new_in_memory().unwrap();
+    store.ingest_report("binding", &report).unwrap();
+
+    let runtime_rows = store
+        .query_json("select key, kind from probe_runtime_params order by key")
+        .unwrap();
+    assert_eq!(runtime_rows.len(), 1);
+    assert_eq!(runtime_rows[0]["key"], "selected_row");
+    assert_eq!(runtime_rows[0]["kind"], "integer");
+
+    let binding_rows = store
+        .query_json("select field, status from probe_binding_resolutions order by field")
+        .unwrap();
+    assert!(!binding_rows.is_empty());
+    assert_eq!(binding_rows[0]["field"], "selected_row");
+
+    let trace_rows = store
+        .query_json("select count(*) as count from probe_trace_events where params_json is not null")
+        .unwrap();
+    assert!(trace_rows[0]["count"].as_i64().unwrap() > 0);
+
+    let root_rows = store
+        .query_json("select count(*) as count from probe_cell_root_causes where dominant_stage = 'shader'")
+        .unwrap();
+    assert!(root_rows[0]["count"].as_i64().unwrap() > 0);
 }
 
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>

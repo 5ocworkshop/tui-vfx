@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/fnc_collect_probe_operational_analysis.rs</FILE> - <DESC>Collect operational analysis from direct probe reports</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Direct engine stage-by-stage success/failure reporting</WCTX>
-// <CLOG>MINOR: Expand direct operational analysis to report success/failure for each configured compositor effect so multi-element stages can be diagnosed without manual trace grouping</CLOG>
+// <CLOG>MINOR: Track how many configured elements share the same effect name so per-effect rows can disclose aggregation ambiguity for duplicate same-name instances</CLOG>
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -53,7 +53,7 @@ pub fn collect_probe_operational_analysis(
         let configured_effects = configured_effects_for_stage(stage, reports);
         let mut effect_rows = configured_effects
             .iter()
-            .map(|effect| {
+            .map(|(effect, configured_instances)| {
                 let (effect_touched_cells, effect_event_count) = effects
                     .get(effect)
                     .map(|(cells, count)| (cells.len(), *count))
@@ -61,6 +61,7 @@ pub fn collect_probe_operational_analysis(
                 ProbeEffectOperationalAnalysis {
                     effect: effect.clone(),
                     configured: true,
+                    configured_instances: *configured_instances,
                     touched_cells: effect_touched_cells,
                     observed_event_count: effect_event_count,
                     status: if effect_event_count > 0 {
@@ -72,12 +73,13 @@ pub fn collect_probe_operational_analysis(
             })
             .collect::<Vec<_>>();
         for (effect, (cells, count)) in effects {
-            if configured_effects.contains(&effect) {
+            if configured_effects.iter().any(|(configured_effect, _)| configured_effect == &effect) {
                 continue;
             }
             effect_rows.push(ProbeEffectOperationalAnalysis {
                 effect,
                 configured: false,
+                configured_instances: 0,
                 touched_cells: cells.len(),
                 observed_event_count: count,
                 status: ProbeOperationalStatus::Warning,
@@ -150,14 +152,30 @@ fn configured_count_for_stage(stage: &str, reports: &[ProbeReport]) -> usize {
         .unwrap_or_default()
 }
 
-fn configured_effects_for_stage(stage: &str, reports: &[ProbeReport]) -> Vec<String> {
-    let mut effects = BTreeSet::new();
+fn configured_effects_for_stage(stage: &str, reports: &[ProbeReport]) -> Vec<(String, usize)> {
+    let mut effects = BTreeMap::new();
     for report in reports {
         match stage {
-            "sampler" => effects.extend(report.pipeline.sampler_effects.iter().cloned()),
-            "mask" => effects.extend(report.pipeline.mask_effects.iter().cloned()),
-            "shader" => effects.extend(report.pipeline.shader_effects.iter().cloned()),
-            "filter" => effects.extend(report.pipeline.filter_effects.iter().cloned()),
+            "sampler" => {
+                for effect in &report.pipeline.sampler_effects {
+                    *effects.entry(effect.clone()).or_insert(0usize) += 1;
+                }
+            }
+            "mask" => {
+                for effect in &report.pipeline.mask_effects {
+                    *effects.entry(effect.clone()).or_insert(0usize) += 1;
+                }
+            }
+            "shader" => {
+                for effect in &report.pipeline.shader_effects {
+                    *effects.entry(effect.clone()).or_insert(0usize) += 1;
+                }
+            }
+            "filter" => {
+                for effect in &report.pipeline.filter_effects {
+                    *effects.entry(effect.clone()).or_insert(0usize) += 1;
+                }
+            }
             _ => {}
         }
     }
@@ -165,4 +183,4 @@ fn configured_effects_for_stage(stage: &str, reports: &[ProbeReport]) -> Vec<Str
 }
 
 // <FILE>crates/tui-vfx-probe/src/fnc_collect_probe_operational_analysis.rs</FILE> - <DESC>Collect operational analysis from direct probe reports</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

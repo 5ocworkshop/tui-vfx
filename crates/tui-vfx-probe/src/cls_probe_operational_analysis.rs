@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/cls_probe_operational_analysis.rs</FILE> - <DESC>Structured operational analysis for direct probe reports</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Direct engine stage-by-stage success/failure reporting</WCTX>
-// <CLOG>MINOR: Add per-effect operational DTOs so direct pipeline-probe users can confirm success/failure for each configured compositor element, not just each stage</CLOG>
+// <CLOG>MINOR: Add configured_instances to per-effect operational rows so SQL consumers can see when same-name effects are aggregated instead of pretending instance identity is unique</CLOG>
 
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +19,7 @@ pub enum ProbeOperationalStatus {
 pub struct ProbeEffectOperationalAnalysis {
     pub effect: String,
     pub configured: bool,
+    pub configured_instances: usize,
     pub touched_cells: usize,
     pub observed_event_count: usize,
     pub status: ProbeOperationalStatus,
@@ -58,4 +59,4 @@ pub struct ProbeOperationalAnalysis {
 }
 
 // <FILE>crates/tui-vfx-probe/src/cls_probe_operational_analysis.rs</FILE> - <DESC>Structured operational analysis for direct probe reports</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

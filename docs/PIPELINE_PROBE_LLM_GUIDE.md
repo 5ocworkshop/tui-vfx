@@ -36,6 +36,12 @@ cells and trace events.
 Direct and recipe-side analysis rows now also support effect-level slicing via
 `probe_analysis_effects`, which is the quickest way to ask whether a specific
 configured filter/shader/mask/style/content element actually fired.
+The new `configured_instances` column also makes the current limitation
+explicit: values above `1` mean the row aggregates multiple same-name effects
+rather than proving true per-instance identity.
+For compositor-backed rows, effect names are now tagged with stable ordinals
+such as `Dim#1` or `BorderSweep#2`, which closes the duplicate-same-name gap for
+sampler/mask/shader/filter stages.
 
 ## What phase 1 supports
 
@@ -47,7 +53,7 @@ configured filter/shader/mask/style/content element actually fired.
 - widget/frame metadata
 - summary counts
 - compositor-stage `last_touch`
-- optional trace emission with sampler/mask metadata and filter/shader before/after snapshots
+- optional trace emission with sampler/mask metadata, filter/shader before/after snapshots, and stage parameter payloads when the tool can resolve them
 - direct report `diagnostics[]` entries for baseline border/text integrity issues
 - probe-side diagnostics helpers in the library for:
   - alphabetic text leaking onto border rows
@@ -168,6 +174,9 @@ Useful tables:
 - `probe_frames`
 - `probe_cells`
 - `probe_trace_events`
+- `probe_runtime_params`
+- `probe_binding_resolutions`
+- `probe_cell_root_causes`
 - `probe_diff_cells`
 
 This is especially helpful when you need to answer questions like:
@@ -293,7 +302,9 @@ Key fields:
 - `cells[].abs` — frame-absolute coordinates
 - `cells[].widget_local` — widget-local coordinates
 - `cells[].last_touch` — most recent compositor stage that touched the cell
-- `cells[].trace` — per-cell compositor trace events; shader/filter events carry `before`/`after` snapshots, sampler events carry `sampled_from`, and mask events carry `visible`
+- `cells[].trace` — per-cell compositor trace events; shader/filter events carry `before`/`after` snapshots, sampler events carry `sampled_from`, mask events carry `visible`, and parameterized stages can attach `params`
+- `cells[].root_cause` — synthesized cell-centric explanation of the dominant stage, hidden masks, sampled source coordinate, relevant bindings, and per-stage summaries
+- `runtime` — supplied runtime params plus shader binding requests/resolutions for dynamic shader state
 - `diagnostics[]` — optional structured probe warnings/errors for visual-integrity findings that can be determined directly from the report
 
 ## Recommended LLM workflow

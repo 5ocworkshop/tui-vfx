@@ -229,7 +229,42 @@ impl ProbeSqliteStore {
                 after_bg_r integer,
                 after_bg_g integer,
                 after_bg_b integer,
-                after_bg_a integer
+                after_bg_a integer,
+                params_json text,
+                notes_json text not null
+            );
+            create table probe_runtime_params (
+                run_id text not null,
+                frame_index integer not null,
+                key text not null,
+                kind text not null,
+                value_json text not null
+            );
+            create table probe_binding_resolutions (
+                run_id text not null,
+                frame_index integer not null,
+                field text not null,
+                binding text not null,
+                expected_type text not null,
+                status text not null,
+                supplied_kind text,
+                supplied_value_json text,
+                effective_value_json text,
+                fallback_value_json text
+            );
+            create table probe_cell_root_causes (
+                run_id text not null,
+                frame_index integer not null,
+                widget_x integer not null,
+                widget_y integer not null,
+                dominant_stage text,
+                summary text not null,
+                changed_stages_json text not null,
+                hidden_by_masks_json text not null,
+                sampled_from_x integer,
+                sampled_from_y integer,
+                bindings_json text not null,
+                stage_causes_json text not null
             );
             create table probe_diff_cells (
                 run_id text not null,
@@ -280,6 +315,7 @@ impl ProbeSqliteStore {
                 stage text not null,
                 effect text not null,
                 configured integer not null,
+                configured_instances integer not null,
                 touched_cells integer not null,
                 observed_event_count integer not null,
                 status text not null
@@ -332,6 +368,37 @@ impl ProbeSqliteStore {
                 report.pipeline.content_count as i64,
             ],
         )?;
+        if let Some(runtime) = &report.runtime {
+            for param in &runtime.supplied_params {
+                self.conn.execute(
+                    "insert into probe_runtime_params(run_id, frame_index, key, kind, value_json) values (?1, ?2, ?3, ?4, ?5)",
+                    params![
+                        run_id,
+                        frame_index,
+                        param.key,
+                        param.kind,
+                        serde_json::to_string(&param.value).unwrap_or_else(|_| "null".to_string()),
+                    ],
+                )?;
+            }
+            for resolution in &runtime.binding_resolutions {
+                self.conn.execute(
+                    "insert into probe_binding_resolutions(run_id, frame_index, field, binding, expected_type, status, supplied_kind, supplied_value_json, effective_value_json, fallback_value_json) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                    params![
+                        run_id,
+                        frame_index,
+                        resolution.field,
+                        resolution.binding,
+                        resolution.expected_type,
+                        format!("{:?}", resolution.status).to_lowercase(),
+                        resolution.supplied_kind,
+                        resolution.supplied_value.as_ref().map(|value| serde_json::to_string(value).unwrap_or_else(|_| "null".to_string())),
+                        resolution.effective_value.as_ref().map(|value| serde_json::to_string(value).unwrap_or_else(|_| "null".to_string())),
+                        resolution.fallback_value.as_ref().map(|value| serde_json::to_string(value).unwrap_or_else(|_| "null".to_string())),
+                    ],
+                )?;
+            }
+        }
         for diagnostic in &report.diagnostics {
             self.conn.execute(
                 "insert into probe_diagnostics(run_id, frame_index, code, severity, message, widget_y) values (?1, ?2, ?3, ?4, ?5, ?6)",
@@ -369,9 +436,28 @@ impl ProbeSqliteStore {
                     cell.last_touch.as_ref().and_then(|value| value.effect.clone()),
                 ],
             )?;
+            if let Some(root_cause) = &cell.root_cause {
+                self.conn.execute(
+                    "insert into probe_cell_root_causes(run_id, frame_index, widget_x, widget_y, dominant_stage, summary, changed_stages_json, hidden_by_masks_json, sampled_from_x, sampled_from_y, bindings_json, stage_causes_json) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+                    params![
+                        run_id,
+                        frame_index,
+                        cell.widget_local.x as i64,
+                        cell.widget_local.y as i64,
+                        root_cause.dominant_stage.clone(),
+                        root_cause.summary.clone(),
+                        serde_json::to_string(&root_cause.changed_stages).unwrap_or_else(|_| "[]".to_string()),
+                        serde_json::to_string(&root_cause.hidden_by_masks).unwrap_or_else(|_| "[]".to_string()),
+                        root_cause.sampled_from.map(|point| point.x as i64),
+                        root_cause.sampled_from.map(|point| point.y as i64),
+                        serde_json::to_string(&root_cause.bindings).unwrap_or_else(|_| "[]".to_string()),
+                        serde_json::to_string(&root_cause.stage_causes).unwrap_or_else(|_| "[]".to_string()),
+                    ],
+                )?;
+            }
             for (event_index, event) in cell.trace.iter().enumerate() {
                 self.conn.execute(
-                    "insert into probe_trace_events(run_id, frame_index, widget_x, widget_y, event_index, stage, effect, sampled_from_x, sampled_from_y, visible, before_fg_r, before_fg_g, before_fg_b, before_fg_a, before_bg_r, before_bg_g, before_bg_b, before_bg_a, after_fg_r, after_fg_g, after_fg_b, after_fg_a, after_bg_r, after_bg_g, after_bg_b, after_bg_a) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26)",
+                    "insert into probe_trace_events(run_id, frame_index, widget_x, widget_y, event_index, stage, effect, sampled_from_x, sampled_from_y, visible, before_fg_r, before_fg_g, before_fg_b, before_fg_a, before_bg_r, before_bg_g, before_bg_b, before_bg_a, after_fg_r, after_fg_g, after_fg_b, after_fg_a, after_bg_r, after_bg_g, after_bg_b, after_bg_a, params_json, notes_json) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28)",
                     params![
                         run_id,
                         frame_index,
@@ -399,6 +485,8 @@ impl ProbeSqliteStore {
                         event.after.as_ref().map(|value| value.bg.g as i64),
                         event.after.as_ref().map(|value| value.bg.b as i64),
                         event.after.as_ref().map(|value| value.bg.a as i64),
+                        event.params.as_ref().map(|value| serde_json::to_string(value).unwrap_or_else(|_| "null".to_string())),
+                        serde_json::to_string(&event.notes).unwrap_or_else(|_| "[]".to_string()),
                     ],
                 )?;
             }
@@ -460,7 +548,7 @@ impl ProbeSqliteStore {
                 .flatten()
             {
                 self.conn.execute(
-                    "insert into probe_analysis_effects(run_id, scope, phase, sample_t, stage, effect, configured, touched_cells, observed_event_count, status) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                    "insert into probe_analysis_effects(run_id, scope, phase, sample_t, stage, effect, configured, configured_instances, touched_cells, observed_event_count, status) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
                     params![
                         run_id,
                         scope,
@@ -469,6 +557,7 @@ impl ProbeSqliteStore {
                         stage.get("stage").and_then(Value::as_str).unwrap_or("unknown"),
                         effect.get("effect").and_then(Value::as_str).unwrap_or("unknown"),
                         effect.get("configured").and_then(Value::as_bool).map(i64::from).unwrap_or_default(),
+                        effect.get("configured_instances").and_then(Value::as_u64).unwrap_or_default() as i64,
                         effect.get("touched_cells").and_then(Value::as_u64).unwrap_or_default() as i64,
                         effect.get("observed_event_count").and_then(Value::as_u64).unwrap_or_default() as i64,
                         effect.get("status").and_then(Value::as_str).unwrap_or("inactive"),

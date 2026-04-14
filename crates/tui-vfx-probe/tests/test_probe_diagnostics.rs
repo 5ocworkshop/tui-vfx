@@ -35,6 +35,7 @@ fn make_report(rows: &[&str]) -> ProbeReport {
                 modifiers: Vec::new(),
                 last_touch: None,
                 trace: Vec::new(),
+                root_cause: None,
             });
         }
     }
@@ -75,6 +76,7 @@ fn make_report(rows: &[&str]) -> ProbeReport {
             content_count: 0,
             content_effects: Vec::new(),
         },
+        runtime: None,
         summary: ProbeSummary {
             total_cells: cells.len(),
             non_empty_cells: cells.len(),
