@@ -738,6 +738,175 @@ mod tests {
         assert_eq!(fa.progress, 0.25);
         assert_eq!(fb.progress, 0.9);
     }
+
+    // --- Binding coverage for the remaining 8 lifted filters ----------------
+    //
+    // One test per filter that drives its progress field via a named runtime
+    // parameter and asserts the resolved value lands on the prepared filter.
+    // The per-filter regression (literal still works) is covered transitively
+    // by the existing FilterSpec serde roundtrip tests plus the green-gate
+    // pipeline-validator runs against the existing recipe corpus.
+
+    fn bind_ctx(key: &'static str, value: f32) -> ShaderRuntimeParams {
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert(key, value);
+        rp
+    }
+
+    #[test]
+    fn sub_pixel_bar_progress_binding_resolves() {
+        use crate::types::cls_filter_spec::SubPixelBarDirection;
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = bind_ctx("p", 0.6);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = FilterSpec::SubPixelBar {
+            progress: BindableValue::Binding("p".into()),
+            direction: SubPixelBarDirection::default(),
+            filled_color: ColorConfig::Green,
+            unfilled_color: ColorConfig::Gray,
+            animated: false,
+        };
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::SubPixelBar(f) => assert_eq!(f.progress, 0.6),
+            other => panic!("expected SubPixelBar, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn hover_bar_progress_binding_resolves() {
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = bind_ctx("p", 0.42);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = FilterSpec::HoverBar {
+            base_eighths: 4,
+            max_eighths: 12,
+            position: Default::default(),
+            bar_color: ColorConfig::Blue,
+            bg_color: ColorConfig::Black,
+            progress: BindableValue::Binding("p".into()),
+            margin_width: 2,
+        };
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::HoverBar(f) => assert_eq!(f.progress, 0.42),
+            other => panic!("expected HoverBar, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn underline_wipe_progress_binding_resolves() {
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = bind_ctx("p", 0.8);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = FilterSpec::UnderlineWipe {
+            direction: Default::default(),
+            color: ColorConfig::Blue,
+            bg_color: ColorConfig::Black,
+            line_char: '_',
+            row_offset: 0,
+            progress: BindableValue::Binding("p".into()),
+            gradient: true,
+            glisten: true,
+        };
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::UnderlineWipe(f) => assert_eq!(f.progress, 0.8),
+            other => panic!("expected UnderlineWipe, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn bracket_emphasis_progress_binding_resolves() {
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = bind_ctx("p", 0.33);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = FilterSpec::BracketEmphasis {
+            left: '[',
+            right: ']',
+            color: ColorConfig::Blue,
+            bg_color: ColorConfig::Black,
+            progress: BindableValue::Binding("p".into()),
+        };
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::BracketEmphasis(f) => assert_eq!(f.progress, 0.33),
+            other => panic!("expected BracketEmphasis, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn dot_indicator_progress_binding_resolves() {
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = bind_ctx("p", 1.0);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = FilterSpec::DotIndicator {
+            indicator_char: '*',
+            position: Default::default(),
+            color: ColorConfig::Blue,
+            bg_color: ColorConfig::Black,
+            progress: BindableValue::Binding("p".into()),
+        };
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::DotIndicator(f) => assert_eq!(f.progress, 1.0),
+            other => panic!("expected DotIndicator, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn pill_button_progress_binding_resolves() {
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = bind_ctx("p", 0.15);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = FilterSpec::PillButton {
+            button_color: ColorConfig::Blue,
+            bg_color: ColorConfig::Black,
+            edge_width: 3,
+            glisten: true,
+            progress: BindableValue::Binding("p".into()),
+        };
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::PillButton(f) => assert_eq!(f.progress, 0.15),
+            other => panic!("expected PillButton, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn glisten_sweep_progress_binding_resolves() {
+        let rp = bind_ctx("p", 0.55);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = FilterSpec::GlistenSweep {
+            boost: 40,
+            band_width: 0.2,
+            speed: 0.5,
+            progress: BindableValue::Binding("p".into()),
+            powerline_mode: false,
+            boost_separator_bg: false,
+        };
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::GlistenSweep(f) => assert_eq!(f.progress, 0.55),
+            other => panic!("expected GlistenSweep, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn shade_scanner_progress_binding_resolves() {
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = bind_ctx("p", 0.75);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = FilterSpec::ShadeScanner {
+            shade_color: ColorConfig::Gray,
+            bps: 1.0,
+            progress: BindableValue::Binding("p".into()),
+        };
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::ShadeScanner(f) => assert_eq!(f.progress, 0.75),
+            other => panic!("expected ShadeScanner, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
