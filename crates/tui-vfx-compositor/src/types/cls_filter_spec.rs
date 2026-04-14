@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.8.0</VERS>
-// <WCTX>Phase 0 P0.5 — add num_shakes_binding on RigidShake so severity can drive shake count</WCTX>
-// <CLOG>Add FilterSpec::RigidShake.num_shakes_binding: Option<String> with u16->u8 clamp so apps can map severity/error-level to live shake count. Damping array binding is deferred pending a scalar-multiplier design
+// <VERS>VERSION: 3.9.0</VERS>
+// <WCTX>Phase 0 P0.C followup — add damping_scale_binding on RigidShake so severity can also scale the shake decay curve alongside num_shakes_binding, plus FadeToCanvas.canvas_color_binding for live terminal-background tracking</WCTX>
+// <CLOG>Add FilterSpec::RigidShake.damping_scale_binding: Option<String> resolved to f32 at prepare time, clamped 0.1..=10.0, and multiplied element-wise into the 8-element damping array. Missing or out-of-range bindings fall back to the unscaled static damping curve. Also adds FilterSpec::FadeToCanvas.canvas_color_binding from the sibling O-P0.B commit
 
 //! # Filter Specifications
 //!
@@ -533,6 +533,23 @@ pub enum FilterSpec {
         /// Amplitude multipliers for each shake (damping curve, up to 8 values)
         #[serde(default = "default_rigid_damping")]
         damping: Vec<f32>,
+        /// Optional runtime parameter key that scales the entire `damping`
+        /// curve uniformly at render time. Resolved as an `f32` and clamped
+        /// to `0.1..=10.0` to prevent runaway decay (< 0.1 would make the
+        /// shake decay slower than one full cycle, > 10.0 would stall the
+        /// shake within the first fraction). The resolved scale multiplies
+        /// every element of the 8-entry damping array before the filter
+        /// constructs its `RigidShakeTiming`, so a runtime value of 2.0
+        /// doubles the decay rate of every shake while 0.5 halves it.
+        /// Missing bindings fall back to the static `damping` curve
+        /// unchanged.
+        ///
+        /// Use this together with `num_shakes_binding` to drive both shake
+        /// count AND shake intensity from the same severity state: warning
+        /// might pair (1, 0.5) for a gentle single-cycle nudge while
+        /// critical pairs (8, 2.0) for a tight, rapidly-decaying cluster.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        damping_scale_binding: Option<String>,
         /// Color of the element being shaken
         #[serde(default = "default_rigid_element_color")]
         element_color: ColorConfig,

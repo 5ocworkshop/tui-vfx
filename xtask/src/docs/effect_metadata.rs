@@ -198,6 +198,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             max_eighths: 12,
             base_eighths: 3,
             damping: vec![1.0],
+            damping_scale_binding: None,
             element_color: ColorConfig::Gray,
             bg_color: ColorConfig::Black,
             inner_width: 10,

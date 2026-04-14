@@ -461,6 +461,7 @@ pub(crate) fn prepare_filter(
             max_eighths,
             base_eighths,
             damping,
+            damping_scale_binding,
             element_color,
             bg_color,
             inner_width,
@@ -472,6 +473,21 @@ pub(crate) fn prepare_filter(
             let mut damping_arr = [0.0_f32; 8];
             for (i, &v) in damping.iter().take(8).enumerate() {
                 damping_arr[i] = v;
+            }
+            // Resolve damping_scale from the runtime binding when present.
+            // The resolved f32 is clamped to 0.1..=10.0 and multiplied into
+            // every element of the damping array, so a scale of 2.0 doubles
+            // the decay rate of the whole curve and a scale of 0.5 halves
+            // it. Missing bindings leave the static damping curve
+            // untouched (equivalent to a scale of 1.0).
+            let resolved_damping_scale = damping_scale_binding
+                .as_deref()
+                .and_then(|key| prepare_ctx.runtime_params.get_f32(key))
+                .map(|s| s.clamp(0.1, 10.0));
+            if let Some(scale) = resolved_damping_scale {
+                for v in damping_arr.iter_mut() {
+                    *v *= scale;
+                }
             }
             // Resolve num_shakes from the runtime binding when present.
             // The runtime param map exposes get_u16; the downstream filter
@@ -952,6 +968,14 @@ mod tests {
         num_shakes: u8,
         num_shakes_binding: Option<String>,
     ) -> FilterSpec {
+        rigid_shake_spec_full(num_shakes, num_shakes_binding, None)
+    }
+
+    fn rigid_shake_spec_full(
+        num_shakes: u8,
+        num_shakes_binding: Option<String>,
+        damping_scale_binding: Option<String>,
+    ) -> FilterSpec {
         use tui_vfx_style::models::ColorConfig;
         FilterSpec::RigidShake {
             shake_period: 0.29,
@@ -961,6 +985,7 @@ mod tests {
             max_eighths: 12,
             base_eighths: 3,
             damping: vec![1.0, 0.7, 0.4, 0.2],
+            damping_scale_binding,
             element_color: ColorConfig::Gray,
             bg_color: ColorConfig::Black,
             inner_width: 10,
@@ -1016,6 +1041,151 @@ mod tests {
         let spec = rigid_shake_spec_with(4, None);
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => assert_eq!(filter.num_shakes(), 4),
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    // --- O-P0.C: rigid_shake damping_scale_binding coverage ----------------
+
+    #[test]
+    fn rigid_shake_damping_scale_binding_doubles_curve_when_scale_is_two() {
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("severity_damping", 2.0_f32);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_full(4, None, Some("severity_damping".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => {
+                // Static damping curve: [1.0, 0.7, 0.4, 0.2, 0.0, 0.0, 0.0, 0.0]
+                // Scale 2.0 doubles every element.
+                let expected = [2.0, 1.4, 0.8, 0.4, 0.0, 0.0, 0.0, 0.0];
+                let actual = filter.damping();
+                for (i, (&a, &e)) in actual.iter().zip(expected.iter()).enumerate() {
+                    assert!(
+                        (a - e).abs() < 1e-6,
+                        "damping[{}] = {} but expected {}",
+                        i,
+                        a,
+                        e
+                    );
+                }
+            }
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn rigid_shake_damping_scale_binding_halves_curve_when_scale_is_half() {
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("severity_damping", 0.5_f32);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_full(4, None, Some("severity_damping".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => {
+                let expected = [0.5, 0.35, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0];
+                let actual = filter.damping();
+                for (i, (&a, &e)) in actual.iter().zip(expected.iter()).enumerate() {
+                    assert!(
+                        (a - e).abs() < 1e-6,
+                        "damping[{}] = {} but expected {}",
+                        i,
+                        a,
+                        e
+                    );
+                }
+            }
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn rigid_shake_damping_scale_binding_clamps_below_lower_bound() {
+        // Scale 0.01 must clamp to 0.1 so damping[0] lands on 0.1 (= 1.0 * 0.1)
+        // rather than 0.01 which would stall the shake entirely.
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("scale", 0.01_f32);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_full(4, None, Some("scale".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => {
+                let damping = filter.damping();
+                assert!(
+                    (damping[0] - 0.1).abs() < 1e-6,
+                    "damping[0] = {} after clamp to 0.1; expected 0.1",
+                    damping[0]
+                );
+            }
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn rigid_shake_damping_scale_binding_clamps_above_upper_bound() {
+        // Scale 999.0 must clamp to 10.0 so damping[0] lands on 10.0
+        // (= 1.0 * 10.0) rather than blowing out the numeric range.
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("scale", 999.0_f32);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_full(4, None, Some("scale".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => {
+                let damping = filter.damping();
+                assert!(
+                    (damping[0] - 10.0).abs() < 1e-6,
+                    "damping[0] = {} after clamp to 10.0; expected 10.0",
+                    damping[0]
+                );
+            }
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn rigid_shake_damping_scale_binding_missing_falls_back_to_unscaled_curve() {
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_full(4, None, Some("missing".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => {
+                // Missing binding: the damping array passes through unchanged.
+                let expected = [1.0, 0.7, 0.4, 0.2, 0.0, 0.0, 0.0, 0.0];
+                let actual = filter.damping();
+                for (i, (&a, &e)) in actual.iter().zip(expected.iter()).enumerate() {
+                    assert!(
+                        (a - e).abs() < 1e-6,
+                        "damping[{}] = {} but expected {}",
+                        i,
+                        a,
+                        e
+                    );
+                }
+            }
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn rigid_shake_damping_scale_binding_no_binding_leaves_curve_untouched() {
+        // Regression guard: when damping_scale_binding is None (the common
+        // case for recipes authored before O-P0.C), the damping array must
+        // be the untouched static curve — no silent scaling by 1.0 that
+        // could mask a regression later.
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_full(4, None, None);
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => {
+                let expected = [1.0, 0.7, 0.4, 0.2, 0.0, 0.0, 0.0, 0.0];
+                let actual = filter.damping();
+                for (i, (&a, &e)) in actual.iter().zip(expected.iter()).enumerate() {
+                    assert!(
+                        (a - e).abs() < 1e-6,
+                        "damping[{}] = {} but expected {}",
+                        i,
+                        a,
+                        e
+                    );
+                }
+            }
             other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
         }
     }

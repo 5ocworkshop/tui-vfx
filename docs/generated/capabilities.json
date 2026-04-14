@@ -1187,7 +1187,7 @@
         ]
       },
       "RigidShake": {
-        "ai_hint": "Ketchup bottle damped oscillation. Multiple diminishing shakes then pause.\nIMPORTANT: Apply to area INCLUDING margin cells (margin_width default 2).\nKey params: shake_period=0.29s, num_shakes=4, pause_duration=0.52s, max_eighths=12 (1.5 cells).\ndamping array controls amplitude decay (e.g., [1.0, 0.7, 0.45, 0.25]).\nPairs with RigidShakeStyle for synchronized text italic.",
+        "ai_hint": "Ketchup bottle damped oscillation. Multiple diminishing shakes then pause.\nIMPORTANT: Apply to area INCLUDING margin cells (margin_width default 2).\nKey params: shake_period=0.29s, num_shakes=4, pause_duration=0.52s, max_eighths=12 (1.5 cells).\ndamping array controls amplitude decay (e.g., [1.0, 0.7, 0.45, 0.25]).\nnum_shakes_binding: optional runtime-param key that resolves to u16 → shake count, clamped 0-8; pair with severity state (warning=1, error=4, critical=8).\ndamping_scale_binding: optional runtime-param key that resolves to f32 and multiplies every element of the damping array uniformly, clamped 0.1-10.0 (2.0 doubles decay rate, 0.5 halves it); pair with num_shakes_binding to drive both shake count AND intensity from the same severity state (warning=(1,0.5) gentle nudge, critical=(8,2.0) tight cluster).\nPairs with RigidShakeStyle for synchronized text italic.",
         "complexity": "advanced",
         "energy": "intense",
         "name": "RigidShake",

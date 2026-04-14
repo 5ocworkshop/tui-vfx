@@ -84615,6 +84615,26 @@
                 "json_key": null,
                 "meta": {
                   "default": null,
+                  "description": "Optional runtime parameter key that scales the entire `damping`\ncurve uniformly at render time. Resolved as an `f32` and clamped\nto `0.1..=10.0` to prevent runaway decay (< 0.1 would make the\nshake decay slower than one full cycle, > 10.0 would stall the\nshake within the first fraction). The resolved scale multiplies\nevery element of the 8-entry damping array before the filter\nconstructs its `RigidShakeTiming`, so a runtime value of 2.0\ndoubles the decay rate of every shake while 0.5 halves it.\nMissing bindings fall back to the static `damping` curve\nunchanged.\n\nUse this together with `num_shakes_binding` to drive both shake\ncount AND shake intensity from the same severity state: warning\nmight pair (1, 0.5) for a gentle single-cycle nudge while\ncritical pairs (8, 2.0) for a tight, rapidly-decaying cluster.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "damping_scale_binding",
+                "schema": {
+                  "inner": {
+                    "kind": "primitive",
+                    "range": null,
+                    "type": "String"
+                  },
+                  "kind": "option"
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
                   "description": "Color of the element being shaken",
                   "help": null,
                   "json_key": null,
@@ -136463,6 +136483,26 @@
                   "type": "f32"
                 },
                 "kind": "vec"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Optional runtime parameter key that scales the entire `damping`\ncurve uniformly at render time. Resolved as an `f32` and clamped\nto `0.1..=10.0` to prevent runaway decay (< 0.1 would make the\nshake decay slower than one full cycle, > 10.0 would stall the\nshake within the first fraction). The resolved scale multiplies\nevery element of the 8-entry damping array before the filter\nconstructs its `RigidShakeTiming`, so a runtime value of 2.0\ndoubles the decay rate of every shake while 0.5 halves it.\nMissing bindings fall back to the static `damping` curve\nunchanged.\n\nUse this together with `num_shakes_binding` to drive both shake\ncount AND shake intensity from the same severity state: warning\nmight pair (1, 0.5) for a gentle single-cycle nudge while\ncritical pairs (8, 2.0) for a tight, rapidly-decaying cluster.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "damping_scale_binding",
+              "schema": {
+                "inner": {
+                  "kind": "primitive",
+                  "range": null,
+                  "type": "String"
+                },
+                "kind": "option"
               }
             },
             {
