@@ -107,5 +107,36 @@ fn binding_json_shape_is_externally_tagged_snake_case() {
     assert_eq!(json, r#"{"binding":"progress_ratio"}"#);
 }
 
+#[test]
+fn deserializes_raw_number_as_static_signal() {
+    // Existing recipes emit `"progress": 0.75` — accept it as a static literal.
+    let parsed: BindableValue = serde_json::from_str("0.75").unwrap();
+    assert_eq!(parsed, BindableValue::Signal(SignalOrFloat::Static(0.75)));
+}
+
+#[test]
+fn deserializes_tagged_signal_object_with_raw_number_inner() {
+    // `SignalOrFloat::Static` serializes as a bare number, so `{"signal": 0.5}`
+    // is the tagged form when `signal_serde_roundtrip` round-trips a static.
+    let parsed: BindableValue = serde_json::from_str(r#"{"signal":0.5}"#).unwrap();
+    assert_eq!(parsed, BindableValue::Signal(SignalOrFloat::Static(0.5)));
+}
+
+#[test]
+fn deserializes_tagged_binding_object() {
+    let parsed: BindableValue = serde_json::from_str(r#"{"binding":"progress"}"#).unwrap();
+    assert_eq!(parsed, BindableValue::Binding("progress".to_string()));
+}
+
+#[test]
+fn signal_static_serializes_as_tagged_raw_number() {
+    // Documents the wire format: a static signal emits as `{"signal": <num>}`,
+    // not `{"signal": {"static": <num>}}`, because SignalOrFloat::Static uses
+    // untagged serde via SignalOrFloatSerde.
+    let value = BindableValue::Signal(SignalOrFloat::Static(0.5));
+    let json = serde_json::to_string(&value).unwrap();
+    assert_eq!(json, r#"{"signal":0.5}"#);
+}
+
 // <FILE>tui-vfx-compositor/tests/types/test_bindable_value.rs</FILE> - <DESC>Tests for BindableValue evaluate, conversions, and serde</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>
