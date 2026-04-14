@@ -278,6 +278,7 @@ Key fields:
 - `cells[].widget_local` — widget-local coordinates
 - `cells[].last_touch` — most recent compositor stage that touched the cell
 - `cells[].trace` — per-cell compositor trace events; shader/filter events carry `before`/`after` snapshots, sampler events carry `sampled_from`, and mask events carry `visible`
+- `diagnostics[]` — optional structured probe warnings/errors for visual-integrity findings that can be determined directly from the report
 
 ## Recommended LLM workflow
 

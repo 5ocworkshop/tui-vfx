@@ -188,6 +188,7 @@ pub fn run_probe(
             non_empty_cells,
             modified_cells,
         },
+        diagnostics: Vec::new(),
         cells: select_cells(all_cells, request.cells),
     })
 }

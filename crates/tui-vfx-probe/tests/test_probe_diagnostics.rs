@@ -74,6 +74,7 @@ fn make_report(rows: &[&str]) -> ProbeReport {
             non_empty_cells: cells.len(),
             modified_cells: 0,
         },
+        diagnostics: Vec::new(),
         cells,
     }
 }

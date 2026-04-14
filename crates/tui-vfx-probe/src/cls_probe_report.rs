@@ -1,11 +1,12 @@
 // <FILE>crates/tui-vfx-probe/src/cls_probe_report.rs</FILE> - <DESC>Top-level probe report DTOs</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase-1 pipeline probe scaffolding</WCTX>
-// <CLOG>NEW: Add top-level frame dump report DTOs plus shared point/size metadata types</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>First-class diagnostics in probe report output</WCTX>
+// <CLOG>MINOR: Add a diagnostics array to ProbeReport so higher-level tooling can surface structured visual-integrity findings directly in emitted reports</CLOG>
 
 use serde::{Deserialize, Serialize};
 
 use crate::cls_probe_cell::ProbeCell;
+use crate::cls_probe_diagnostic::ProbeDiagnostic;
 use crate::cls_probe_pipeline_inventory::ProbePipelineInventory;
 use crate::cls_probe_request::ProbeRequest;
 use crate::cls_probe_summary::ProbeSummary;
@@ -50,8 +51,10 @@ pub struct ProbeReport {
     pub widget: ProbeWidget,
     pub pipeline: ProbePipelineInventory,
     pub summary: ProbeSummary,
+    #[serde(default)]
+    pub diagnostics: Vec<ProbeDiagnostic>,
     pub cells: Vec<ProbeCell>,
 }
 
 // <FILE>crates/tui-vfx-probe/src/cls_probe_report.rs</FILE> - <DESC>Top-level probe report DTOs</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
