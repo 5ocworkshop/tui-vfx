@@ -175,6 +175,7 @@ pub mod prelude {
         BlendMode, ColorConfig, ColorRamp, ColorSpace, FadeDirection, FadeEffect, FadeSpec,
         Gradient, StyleConfig, StyleEffect, StyleLayer, StyleTransition,
     };
+    pub use tui_vfx_style::traits::{ShaderRuntimeParamValue, ShaderRuntimeParams};
 
     // Content - text transformers
     pub use tui_vfx_content::prelude::*;

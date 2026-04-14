@@ -5,14 +5,16 @@
 use crate::common::make_ctx;
 
 use tui_vfx_style::models::{ApplyToColor, ColorConfig, FocusedRowGradientShader};
-use tui_vfx_style::traits::StyleShader;
+use tui_vfx_style::traits::{ShaderContext, ShaderRuntimeParams, StyleShader};
 use tui_vfx_types::{Color, Style};
 
 #[test]
 fn test_selected_row_is_bright_color() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 0.5,
+        selected_row_ratio_binding: None,
         falloff_distance: 5,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -31,7 +33,9 @@ fn test_selected_row_is_bright_color() {
 fn test_max_distance_is_dim_color() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 0.5,
+        selected_row_ratio_binding: None,
         falloff_distance: 5,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -50,7 +54,9 @@ fn test_max_distance_is_dim_color() {
 fn test_gradient_interpolation() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 0.5,
+        selected_row_ratio_binding: None,
         falloff_distance: 4,
         bright_color: ColorConfig::Rgb {
             r: 200,
@@ -90,7 +96,9 @@ fn test_gradient_interpolation() {
 fn test_symmetrical_above_and_below() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 0.5,
+        selected_row_ratio_binding: None,
         falloff_distance: 5,
         bright_color: ColorConfig::Rgb {
             r: 255,
@@ -119,7 +127,9 @@ fn test_symmetrical_above_and_below() {
 fn test_apply_to_background() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 0.5,
+        selected_row_ratio_binding: None,
         falloff_distance: 5,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -140,7 +150,9 @@ fn test_apply_to_background() {
 fn test_apply_to_both() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 0.5,
+        selected_row_ratio_binding: None,
         falloff_distance: 5,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -170,7 +182,9 @@ fn test_zero_height_graceful() {
 fn test_zero_falloff_uses_dim_immediately() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 0.5,
+        selected_row_ratio_binding: None,
         falloff_distance: 0,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -193,7 +207,9 @@ fn test_zero_falloff_uses_dim_immediately() {
 fn test_top_row_selection() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 0.0, // Top
+        selected_row_ratio_binding: None,
         falloff_distance: 3,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -212,7 +228,9 @@ fn test_top_row_selection() {
 fn test_bottom_row_selection() {
     let shader = FocusedRowGradientShader {
         selected_row: None,
+        selected_row_binding: None,
         selected_row_ratio: 1.0, // Bottom
+        selected_row_ratio_binding: None,
         falloff_distance: 3,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -231,7 +249,9 @@ fn test_bottom_row_selection() {
 fn test_selected_row_takes_precedence() {
     let shader = FocusedRowGradientShader {
         selected_row: Some(3),   // Explicitly select row 3
+        selected_row_binding: None,
         selected_row_ratio: 0.9, // This should be ignored
+        selected_row_ratio_binding: None,
         falloff_distance: 5,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -255,7 +275,9 @@ fn test_selected_row_takes_precedence() {
 fn test_selected_row_clamped_to_bounds() {
     let shader = FocusedRowGradientShader {
         selected_row: Some(100), // Way out of bounds
+        selected_row_binding: None,
         selected_row_ratio: 0.5,
+        selected_row_ratio_binding: None,
         falloff_distance: 3,
         bright_color: ColorConfig::White,
         dim_color: ColorConfig::Black,
@@ -268,6 +290,68 @@ fn test_selected_row_clamped_to_bounds() {
     // Row 9 (last valid row) should be brightest since 100 clamps to 9
     let last_row = shader.style_at(&make_ctx(0, 9, 20, height, 0.0), base);
     assert_eq!(last_row.fg, Color::WHITE);
+}
+
+#[test]
+fn test_selected_row_binding_overrides_static_value() {
+    let shader = FocusedRowGradientShader {
+        selected_row: Some(1),
+        selected_row_binding: Some("selected_row".to_owned()),
+        selected_row_ratio: 0.0,
+        selected_row_ratio_binding: None,
+        falloff_distance: 2,
+        bright_color: ColorConfig::White,
+        dim_color: ColorConfig::Black,
+        apply_to: ApplyToColor::Foreground,
+    };
+
+    let runtime_params = [("selected_row", 4_u16)].into_iter().collect::<ShaderRuntimeParams>();
+    let ctx = ShaderContext::new(
+        0,
+        4,
+        20,
+        10,
+        0,
+        0,
+        0.0,
+        None,
+        Some(runtime_params.into()),
+    );
+
+    let result = shader.style_at(&ctx, Style::fg(Color::gray(128)));
+    assert_eq!(result.fg, Color::WHITE);
+}
+
+#[test]
+fn test_selected_row_ratio_binding_is_used_when_row_unset() {
+    let shader = FocusedRowGradientShader {
+        selected_row: None,
+        selected_row_binding: None,
+        selected_row_ratio: 0.0,
+        selected_row_ratio_binding: Some("selected_row_ratio".to_owned()),
+        falloff_distance: 2,
+        bright_color: ColorConfig::White,
+        dim_color: ColorConfig::Black,
+        apply_to: ApplyToColor::Foreground,
+    };
+
+    let runtime_params = [("selected_row_ratio", 0.5_f32)]
+        .into_iter()
+        .collect::<ShaderRuntimeParams>();
+    let ctx = ShaderContext::new(
+        0,
+        5,
+        20,
+        10,
+        0,
+        0,
+        0.0,
+        None,
+        Some(runtime_params.into()),
+    );
+
+    let result = shader.style_at(&ctx, Style::fg(Color::gray(128)));
+    assert_eq!(result.fg, Color::WHITE);
 }
 
 // <FILE>tui-vfx-style/tests/models/test_cls_focused_row_gradient_shader.rs</FILE> - <DESC>Tests for FocusedRowGradient shader</DESC>

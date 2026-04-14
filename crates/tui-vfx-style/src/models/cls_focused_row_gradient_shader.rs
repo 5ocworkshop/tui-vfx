@@ -36,10 +36,23 @@ pub struct FocusedRowGradientShader {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selected_row: Option<u16>,
 
+    /// Optional runtime parameter key used to resolve the selected row at render time.
+    ///
+    /// When present, the compositor looks up this key in `ShaderRuntimeParams`
+    /// and uses that value instead of the static `selected_row`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_row_binding: Option<String>,
+
     /// Position of the selected/focused row (0.0 = top, 1.0 = bottom).
     /// Only used if selected_row is not set. Default: 0.5 (middle)
     #[serde(default = "default_selected_row_ratio")]
     pub selected_row_ratio: f32,
+
+    /// Optional runtime parameter key used to resolve the selected row ratio at render time.
+    ///
+    /// This is only used when no `selected_row` value or binding resolves.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_row_ratio_binding: Option<String>,
 
     /// Number of rows until full dim (controls gradient spread).
     /// Default: 5
@@ -105,7 +118,9 @@ impl Default for FocusedRowGradientShader {
     fn default() -> Self {
         Self {
             selected_row: None,
+            selected_row_binding: None,
             selected_row_ratio: default_selected_row_ratio(),
+            selected_row_ratio_binding: None,
             falloff_distance: default_falloff_distance(),
             bright_color: default_bright_color(),
             dim_color: default_dim_color(),
@@ -123,10 +138,21 @@ impl StyleShader for FocusedRowGradientShader {
         // Calculate Y position of selected row
         // If selected_row is set, use it directly (clamped to valid range)
         // Otherwise, use selected_row_ratio to calculate position
-        let selected_y = if let Some(row) = self.selected_row {
+        let selected_row = self
+            .selected_row_binding
+            .as_deref()
+            .and_then(|binding| ctx.runtime_param_u16(binding))
+            .or(self.selected_row);
+        let selected_row_ratio = self
+            .selected_row_ratio_binding
+            .as_deref()
+            .and_then(|binding| ctx.runtime_param_f32(binding))
+            .unwrap_or(self.selected_row_ratio)
+            .clamp(0.0, 1.0);
+
+        let selected_y = if let Some(row) = selected_row {
             row.min(height.saturating_sub(1)) as i32
         } else {
-            let selected_row_ratio = self.selected_row_ratio.clamp(0.0, 1.0);
             // Use (height - 1) so ratio 1.0 maps to the last row, not beyond
             ((height.saturating_sub(1)) as f32 * selected_row_ratio).round() as i32
         };

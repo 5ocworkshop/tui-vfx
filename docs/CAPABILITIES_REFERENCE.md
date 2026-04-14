@@ -151,7 +151,7 @@ Spatial shaders compute per-cell style modifications based on position, time, an
 | **GlitchLines** | Random horizontal glitch | `seed`, `intensity`, `max_lines`, `speed`, `flash_chance`, `pulse_color`, `pulse_speed`, `italic_on_flash`, `flash_hold`, `noise_type` |
 | **NeonFlicker** | Flickering neon tube | `stability`, `seed`, `segment`, `dim_amount`, `speed`, `flash_chance`, `decay_rate`, `noise_type` |
 | **PulseWave** | Rippling color wave | `frequency`, `speed`, `color`, `direction`, `wavelength` |
-| **FocusedRowGradient** | Vertical gradient on selected row | `selected_row`, `selected_row_ratio`, `falloff_distance`, `bright_color`, `dim_color`, `apply_to` |
+| **FocusedRowGradient** | Vertical gradient on selected row | `selected_row`, `selected_row_binding`, `selected_row_ratio`, `selected_row_ratio_binding`, `falloff_distance`, `bright_color`, `dim_color`, `apply_to` |
 | **RevealWipe** | Progressive reveal | `direction` |
 | **StochasticSparkle** | Film grain / frosted glass | `sparkle_density`, `brightness_boost`, `speed`, `seed`, `apply_to`, `noise_type` |
 | **AmbientOcclusion** | Contact shadow at widget edges | `intensity`, `radius`, `edges`, `falloff`, `shadow_color` |

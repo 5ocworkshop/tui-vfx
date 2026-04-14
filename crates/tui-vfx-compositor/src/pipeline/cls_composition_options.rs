@@ -11,8 +11,9 @@ use crate::types::cls_shadow_spec::ShadowSpec;
 use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
 use std::borrow::Cow;
+use std::sync::Arc;
 use tui_vfx_style::models::StyleRegion;
-use tui_vfx_style::traits::StyleShader;
+use tui_vfx_style::traits::{ShaderRuntimeParams, StyleShader};
 
 /// A shader paired with its region constraint.
 /// Each shader can target a different region (e.g., BorderOnly, TextOnly, Rows).
@@ -87,6 +88,9 @@ pub struct CompositionOptions<'a> {
 
     /// Current animation phase (Entering/Dwelling/Exiting/Finished)
     pub phase: Option<Phase>,
+
+    /// Render-time runtime parameter map exposed to spatial shaders.
+    pub runtime_params: Arc<ShaderRuntimeParams>,
 }
 
 impl Default for CompositionOptions<'_> {
@@ -102,6 +106,7 @@ impl Default for CompositionOptions<'_> {
             t: 0.0,
             loop_t: None,
             phase: None,
+            runtime_params: Arc::default(),
         }
     }
 }
@@ -176,6 +181,12 @@ impl<'a> CompositionOptions<'a> {
     /// A 30x12 element with offset (2, 1) renders to a 32x13 area.
     pub fn with_shadow(mut self, shadow: impl Into<ShadowSpec>) -> Self {
         self.shadow = Some(shadow.into());
+        self
+    }
+
+    /// Set render-time runtime parameters exposed to spatial shaders.
+    pub fn with_runtime_params(mut self, runtime_params: Arc<ShaderRuntimeParams>) -> Self {
+        self.runtime_params = runtime_params;
         self
     }
 

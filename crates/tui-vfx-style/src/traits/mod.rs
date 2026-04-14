@@ -6,7 +6,7 @@
 pub mod cls_shader_context;
 pub mod tr_style_interpolator;
 pub mod tr_style_shader;
-pub use cls_shader_context::ShaderContext;
+pub use cls_shader_context::{ShaderContext, ShaderRuntimeParamValue, ShaderRuntimeParams};
 pub use tr_style_interpolator::StyleInterpolator;
 pub use tr_style_shader::StyleShader;
 pub use tui_vfx_core::ConfigSchema;

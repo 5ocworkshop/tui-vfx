@@ -8,6 +8,7 @@ use crate::pipeline::cls_shader_layer_spec::ShaderLayerSpec;
 use crate::types::{FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, ShadowSpec};
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
+use tui_vfx_style::traits::ShaderRuntimeParams;
 
 /// Serializable composition specification for render pipeline bindings.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
@@ -55,6 +56,11 @@ pub struct CompositionSpec {
     #[serde(default, skip_serializing, skip_deserializing)]
     #[config(opaque)]
     pub phase: Option<Phase>,
+
+    /// Render-time runtime parameter map exposed to spatial shaders.
+    #[serde(default, skip_serializing, skip_deserializing)]
+    #[config(opaque)]
+    pub runtime_params: ShaderRuntimeParams,
 }
 
 impl Default for CompositionSpec {
@@ -70,6 +76,7 @@ impl Default for CompositionSpec {
             t: 0.0,
             loop_t: None,
             phase: None,
+            runtime_params: ShaderRuntimeParams::default(),
         }
     }
 }

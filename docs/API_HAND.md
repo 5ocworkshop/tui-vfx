@@ -234,6 +234,7 @@ pub struct CompositionOptions<'a> {
 - `.with_filter(FilterSpec)` / `.with_filters(Cow<[FilterSpec]>)`
 - `.with_mask_combine_mode(MaskCombineMode)`
 - `.with_shader_layer(&dyn StyleShader, StyleRegion)`
+- `.with_runtime_params(Arc<ShaderRuntimeParams>)`
 - `.with_shadow(impl Into<ShadowSpec>)`
 - `.with_preserve_unfilled(bool)`
 
@@ -251,6 +252,7 @@ pub struct CompositionSpec {
     pub t: f64,
     pub loop_t: Option<f64>,
     pub phase: Option<Phase>,
+    pub runtime_params: ShaderRuntimeParams,
 }
 ```
 
@@ -260,6 +262,7 @@ pub struct CompositionSpec {
 - `shadow` uses the same `ShadowSpec` as runtime `CompositionOptions`.
 - `ShadowSpec` is serializable and wraps `ShadowConfig` (style, edges, soft edges).
 - `preserve_unfilled` defaults to `true` to match runtime behavior.
+- `runtime_params` is runtime-only today (not serialized) and feeds dynamic shader bindings.
 
 ## Shader Layers
 
@@ -306,6 +309,33 @@ let options = CompositionOptions {
 If you omit `loop_t`, the compositor falls back to `t` (phase progress), which means
 the shader sweeps once over the phase duration — appropriate for enter/exit animations
 but not for continuous dwell effects.
+
+## Runtime shader params / bindings
+
+Spatial shaders can now read render-time values from `ShaderRuntimeParams`.
+
+Example:
+
+```rust
+let runtime_params = [("selected_row", 7_u16)]
+    .into_iter()
+    .collect::<ShaderRuntimeParams>();
+
+let shader = SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader {
+    selected_row: None,
+    selected_row_binding: Some("selected_row".to_owned()),
+    selected_row_ratio: 0.5,
+    selected_row_ratio_binding: None,
+    falloff_distance: 4,
+    bright_color: ColorConfig::White,
+    dim_color: ColorConfig::Black,
+    apply_to: ApplyToColor::Background,
+});
+```
+
+At render time, pass `runtime_params` through `CompositionOptions` / `CompositionSpec`.
+This is intended for dynamic widget state such as selected row, scroll ratio, cursor
+position, or hover/focus coordinates.
 
 ## Render Order
 

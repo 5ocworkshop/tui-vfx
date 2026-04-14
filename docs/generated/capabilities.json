@@ -985,6 +985,12 @@
             "ty": "f32"
           },
           {
+            "default": "PingPong",
+            "doc": "Motion mode for the scanner sweep",
+            "name": "motion_mode",
+            "ty": "ScannerMotionMode"
+          },
+          {
             "default": "Both",
             "doc": "Which color component to boost (ignored if powerline_mode is true)",
             "name": "apply_to",
@@ -2716,7 +2722,7 @@
           },
           {
             "default": "1 cells",
-            "doc": "Maximum route thickness in cells.",
+            "doc": "Maximum route thickness in cells.\n\n`1` means a single-cell centerline. Larger values expand outward from\nthe route centerline.",
             "name": "thickness",
             "ty": "u16"
           },
@@ -2999,6 +3005,12 @@
             "doc": "Easing curve for the fade animation.",
             "name": "ease",
             "ty": "EasingCurve"
+          },
+          {
+            "default": "Black",
+            "doc": "Color to fade from. Default `Black`. Set to `Color { color }`\nmatching your canvas to avoid black-flash on enter over non-default\ncanvases.",
+            "name": "from",
+            "ty": "FadeTarget"
           }
         ],
         "premium": false,
@@ -3029,6 +3041,12 @@
             "doc": "Easing curve for the fade animation.",
             "name": "ease",
             "ty": "EasingCurve"
+          },
+          {
+            "default": "Black",
+            "doc": "Color to fade to. Default `Black`. Set to `Color { color }`\nmatching your canvas to avoid black-flash on exit over non-default\ncanvases.",
+            "name": "to",
+            "ty": "FadeTarget"
           }
         ],
         "premium": false,

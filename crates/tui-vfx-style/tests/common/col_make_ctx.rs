@@ -6,16 +6,7 @@
 use tui_vfx_style::traits::ShaderContext;
 
 pub(crate) fn make_ctx(x: u16, y: u16, width: u16, height: u16, t: f64) -> ShaderContext {
-    ShaderContext {
-        local_x: x,
-        local_y: y,
-        width,
-        height,
-        screen_x: 0,
-        screen_y: 0,
-        t,
-        phase: None,
-    }
+    ShaderContext::new(x, y, width, height, 0, 0, t, None, None)
 }
 
 // <FILE>tui-vfx-style/tests/common/col_make_ctx.rs</FILE> - <DESC>Create ShaderContext for integration tests</DESC>

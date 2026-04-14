@@ -350,11 +350,23 @@ impl SpatialShaderType {
                 ("color", format!("{:?}", s.color)),
                 ("apply_to", format!("{:?}", s.apply_to)),
             ],
-            SpatialShaderType::FocusedRowGradient(s) => vec![
-                ("selected_row_ratio", format!("{}", s.selected_row_ratio)),
-                ("falloff_distance", format!("{} rows", s.falloff_distance)),
-                ("apply_to", format!("{:?}", s.apply_to)),
-            ],
+            SpatialShaderType::FocusedRowGradient(s) => {
+                let mut params = vec![
+                    ("selected_row_ratio", format!("{}", s.selected_row_ratio)),
+                    ("falloff_distance", format!("{} rows", s.falloff_distance)),
+                    ("apply_to", format!("{:?}", s.apply_to)),
+                ];
+                if let Some(selected_row) = s.selected_row {
+                    params.push(("selected_row", format!("{selected_row}")));
+                }
+                if let Some(binding) = s.selected_row_binding.as_ref() {
+                    params.push(("selected_row_binding", binding.clone()));
+                }
+                if let Some(binding) = s.selected_row_ratio_binding.as_ref() {
+                    params.push(("selected_row_ratio_binding", binding.clone()));
+                }
+                params
+            }
             SpatialShaderType::RevealWipe(s) => vec![("direction", format!("{:?}", s.direction))],
             SpatialShaderType::StochasticSparkle(s) => vec![
                 (

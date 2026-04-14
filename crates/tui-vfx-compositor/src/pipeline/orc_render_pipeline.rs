@@ -569,6 +569,7 @@ fn apply_shaders(
                 screen_y: offset_y as u16,
                 t: shader_t,
                 phase: options.phase,
+                runtime_params: options.runtime_params.clone(),
             };
 
             let current_style = Style {
@@ -614,6 +615,7 @@ fn apply_shaders_inspected(
                 screen_y: offset_y as u16,
                 t: shader_t,
                 phase: options.phase,
+                runtime_params: options.runtime_params.clone(),
             };
 
             let before_style = Style {

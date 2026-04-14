@@ -341,7 +341,7 @@ mod tests {
             ..Default::default()
         };
 
-        let ctx = ShaderContext::new(5, 5, 10, 10, 0, 0, 0.5, None);
+        let ctx = ShaderContext::new(5, 5, 10, 10, 0, 0, 0.5, None, None);
         let base = Style {
             fg: Color::WHITE,
             bg: Color::new(100, 100, 100, 255),

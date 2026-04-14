@@ -306,7 +306,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `HoverBar` | Progress-driven partial bar indicator for hover states | `base_eighths`, `max_eighths`, `position`, `progress` |
 | `InterlaceCurtain` | Scanline/interlace effect for backdrop dimming | `density`, `dim_factor`, `scroll_speed` |
 | `Invert` | Invert colors | `apply_to` |
-| `KittScanner` | Horizontal ping-pong scanner effect (KITT/Larson) | `boost`, `band_width`, `bps`, `progress`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
+| `KittScanner` | Horizontal ping-pong scanner effect (KITT/Larson) | `boost`, `band_width`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
 | `MotionBlur` | Motion blur trail effect with directional dimming | `trail_length`, `opacity_decay`, `direction` |
 | `None` | No filter effect | - |
 | `PatternFill` | Pattern fill effect for background textures | `pattern`, `color`, `only_empty` |
@@ -530,8 +530,8 @@ via `SpatialShaderType` unless you add a new variant.
 pub enum StyleEffect {
     ColorFade { color_space: Rgb },
     ColorShift { hue_shift: 0deg, saturation_shift: 0, lightness_shift: 0 },
-    FadeIn { apply_to: Both, ease: Type(Linear) },
-    FadeOut { apply_to: Both, ease: Type(Linear) },
+    FadeIn { apply_to: Both, ease: Type(Linear), from: Black },
+    FadeOut { apply_to: Both, ease: Type(Linear), to: Black },
     Glitch { seed: 42, intensity: 0.3 },
     ItalicWindow { start: 0, end: 1 },
     NeonFlicker { stability: 0.8 },

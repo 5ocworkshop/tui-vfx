@@ -52,6 +52,7 @@ pub fn render_pipeline_with_spec(
         t: spec.t,
         loop_t: spec.loop_t,
         phase: spec.phase,
+        runtime_params: spec.runtime_params.clone().into(),
     };
 
     render_pipeline(

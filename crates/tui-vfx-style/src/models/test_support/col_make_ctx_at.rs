@@ -6,7 +6,7 @@
 use crate::traits::ShaderContext;
 
 pub(crate) fn make_ctx_at(x: u16, y: u16, width: u16, height: u16, t: f64) -> ShaderContext {
-    ShaderContext::new(x, y, width, height, 0, 0, t, None)
+    ShaderContext::new(x, y, width, height, 0, 0, t, None, None)
 }
 
 // <FILE>tui-vfx-style/src/models/test_support/col_make_ctx_at.rs</FILE> - <DESC>Create ShaderContext with explicit time</DESC>

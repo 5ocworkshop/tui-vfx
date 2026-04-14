@@ -1,8 +1,8 @@
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Phase 1 dramatic color-shadow rollout: spec-equivalence for grade-underlying</WCTX>
-// <CLOG>Add spec-equivalence test for shadow grade-underlying mode</CLOG>
+// <CLOG>MINOR: Track the new runtime_params field in CompositionSpec fixtures so spec-equivalence coverage keeps compiling as the runtime shader context surface evolves</CLOG>
 
 use tui_vfx_compositor::pipeline::{
     CompositionOptions, CompositionSpec, RenderArea, ShaderLayerSpec, render_pipeline,
@@ -11,6 +11,7 @@ use tui_vfx_compositor::pipeline::{
 use tui_vfx_compositor::types::{MaskCombineMode, ShadowSpec};
 use tui_vfx_shadow::{ShadowConfig, ShadowEdges};
 use tui_vfx_style::models::{BorderSweepShader, ColorConfig, SpatialShaderType, StyleRegion};
+use tui_vfx_style::traits::cls_shader_context::ShaderRuntimeParams;
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid};
 
 fn create_source_grid(width: usize, height: usize, fill_char: char) -> OwnedGrid {
@@ -90,6 +91,7 @@ fn test_render_pipeline_with_spec_matches_options_shader_layer() {
         t: 0.5,
         loop_t: None,
         phase: None,
+        runtime_params: ShaderRuntimeParams::default(),
     };
 
     render_pipeline(&source, &mut dest_options, 8, 5, 0, 0, options, None);
@@ -157,6 +159,7 @@ fn test_render_pipeline_with_spec_matches_options_shadow() {
         t: 0.0,
         loop_t: None,
         phase: None,
+        runtime_params: ShaderRuntimeParams::default(),
     };
 
     render_pipeline(&source, &mut dest_options, 6, 4, 0, 0, options, None);
@@ -211,6 +214,7 @@ fn test_render_pipeline_with_spec_matches_options_shadow_grade_underlying() {
         t: 1.0,
         loop_t: None,
         phase: None,
+        runtime_params: ShaderRuntimeParams::default(),
     };
 
     render_pipeline(&source, &mut dest_options, 6, 4, 0, 0, options, None);
@@ -221,4 +225,4 @@ fn test_render_pipeline_with_spec_matches_options_shadow_grade_underlying() {
 
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

@@ -6,7 +6,7 @@
 use crate::traits::ShaderContext;
 
 pub(crate) fn make_ctx(x: u16, y: u16, width: u16, height: u16) -> ShaderContext {
-    ShaderContext::new(x, y, width, height, 0, 0, 0.0, None)
+    ShaderContext::new(x, y, width, height, 0, 0, 0.0, None, None)
 }
 
 // <FILE>tui-vfx-style/src/models/test_support/col_make_ctx.rs</FILE> - <DESC>Create ShaderContext for style tests</DESC>

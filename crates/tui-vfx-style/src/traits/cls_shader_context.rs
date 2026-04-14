@@ -4,6 +4,150 @@
 // <CLOG>Initial implementation with local coords, screen offset, and animation state</CLOG>
 
 use mixed_signals::traits::Phase;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
+/// Runtime scalar value exposed to spatial shaders during render.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ShaderRuntimeParamValue {
+    Integer(i64),
+    Float(f64),
+    Boolean(bool),
+    Text(String),
+}
+
+impl ShaderRuntimeParamValue {
+    /// Attempt to coerce this runtime value to f32.
+    pub fn as_f32(&self) -> Option<f32> {
+        match self {
+            Self::Integer(value) => Some(*value as f32),
+            Self::Float(value) if value.is_finite() => Some(*value as f32),
+            _ => None,
+        }
+    }
+
+    /// Attempt to coerce this runtime value to u16.
+    pub fn as_u16(&self) -> Option<u16> {
+        match self {
+            Self::Integer(value) => u16::try_from(*value).ok(),
+            Self::Float(value) if value.is_finite() && *value >= 0.0 => {
+                let rounded = value.round();
+                if rounded <= u16::MAX as f64 {
+                    Some(rounded as u16)
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    }
+}
+
+impl From<u16> for ShaderRuntimeParamValue {
+    fn from(value: u16) -> Self {
+        Self::Integer(i64::from(value))
+    }
+}
+
+impl From<u32> for ShaderRuntimeParamValue {
+    fn from(value: u32) -> Self {
+        Self::Integer(i64::from(value))
+    }
+}
+
+impl From<usize> for ShaderRuntimeParamValue {
+    fn from(value: usize) -> Self {
+        Self::Integer(value as i64)
+    }
+}
+
+impl From<i64> for ShaderRuntimeParamValue {
+    fn from(value: i64) -> Self {
+        Self::Integer(value)
+    }
+}
+
+impl From<f32> for ShaderRuntimeParamValue {
+    fn from(value: f32) -> Self {
+        Self::Float(f64::from(value))
+    }
+}
+
+impl From<f64> for ShaderRuntimeParamValue {
+    fn from(value: f64) -> Self {
+        Self::Float(value)
+    }
+}
+
+impl From<bool> for ShaderRuntimeParamValue {
+    fn from(value: bool) -> Self {
+        Self::Boolean(value)
+    }
+}
+
+impl From<String> for ShaderRuntimeParamValue {
+    fn from(value: String) -> Self {
+        Self::Text(value)
+    }
+}
+
+impl From<&str> for ShaderRuntimeParamValue {
+    fn from(value: &str) -> Self {
+        Self::Text(value.to_owned())
+    }
+}
+
+/// Runtime parameter map exposed to spatial shaders during render.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ShaderRuntimeParams(pub BTreeMap<String, ShaderRuntimeParamValue>);
+
+impl ShaderRuntimeParams {
+    /// Create an empty runtime parameter map.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Insert a runtime parameter.
+    pub fn insert(
+        &mut self,
+        key: impl Into<String>,
+        value: impl Into<ShaderRuntimeParamValue>,
+    ) -> Option<ShaderRuntimeParamValue> {
+        self.0.insert(key.into(), value.into())
+    }
+
+    /// Fetch a runtime parameter by key.
+    pub fn get(&self, key: &str) -> Option<&ShaderRuntimeParamValue> {
+        self.0.get(key)
+    }
+
+    /// Fetch a runtime parameter coerced to f32.
+    pub fn get_f32(&self, key: &str) -> Option<f32> {
+        self.get(key).and_then(ShaderRuntimeParamValue::as_f32)
+    }
+
+    /// Fetch a runtime parameter coerced to u16.
+    pub fn get_u16(&self, key: &str) -> Option<u16> {
+        self.get(key).and_then(ShaderRuntimeParamValue::as_u16)
+    }
+}
+
+impl<K, V> FromIterator<(K, V)> for ShaderRuntimeParams
+where
+    K: Into<String>,
+    V: Into<ShaderRuntimeParamValue>,
+{
+    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
+        let mut params = Self::new();
+        for (key, value) in iter {
+            params.insert(key, value);
+        }
+        params
+    }
+}
 
 /// Context passed to StyleShader implementations for spatial effects.
 ///
@@ -20,7 +164,7 @@ use mixed_signals::traits::Phase;
 /// - **Widget-relative effects**: Use `local_x`, `local_y` for effects like highlights, sweeps
 /// - **Screen-space effects**: Use screen coords for effects that span multiple widgets or align to screen edges
 /// - **Phase-aware effects**: Use `phase` to vary behavior during enter/dwell/exit
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct ShaderContext {
     /// Local X coordinate within widget (0 = left edge of widget)
     pub local_x: u16,
@@ -38,6 +182,8 @@ pub struct ShaderContext {
     pub t: f64,
     /// Current animation phase (Entering/Dwelling/Exiting/Finished)
     pub phase: Option<Phase>,
+    /// Render-time runtime parameter map for shader bindings.
+    pub runtime_params: Arc<ShaderRuntimeParams>,
 }
 
 impl ShaderContext {
@@ -52,6 +198,7 @@ impl ShaderContext {
         screen_y: u16,
         t: f64,
         phase: Option<Phase>,
+        runtime_params: Option<Arc<ShaderRuntimeParams>>,
     ) -> Self {
         Self {
             local_x,
@@ -62,6 +209,7 @@ impl ShaderContext {
             screen_y,
             t,
             phase,
+            runtime_params: runtime_params.unwrap_or_default(),
         }
     }
 
@@ -114,6 +262,21 @@ impl ShaderContext {
     pub fn is_exiting(&self) -> bool {
         matches!(self.phase, Some(Phase::End))
     }
+
+    /// Fetch a render-time runtime parameter by key.
+    pub fn runtime_param(&self, key: &str) -> Option<&ShaderRuntimeParamValue> {
+        self.runtime_params.get(key)
+    }
+
+    /// Fetch a render-time runtime parameter coerced to f32.
+    pub fn runtime_param_f32(&self, key: &str) -> Option<f32> {
+        self.runtime_params.get_f32(key)
+    }
+
+    /// Fetch a render-time runtime parameter coerced to u16.
+    pub fn runtime_param_u16(&self, key: &str) -> Option<u16> {
+        self.runtime_params.get_u16(key)
+    }
 }
 
 impl Default for ShaderContext {
@@ -127,6 +290,7 @@ impl Default for ShaderContext {
             screen_y: 0,
             t: 0.0,
             phase: None,
+            runtime_params: Arc::default(),
         }
     }
 }
