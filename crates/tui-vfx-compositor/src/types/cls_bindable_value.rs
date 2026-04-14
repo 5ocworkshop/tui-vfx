@@ -38,7 +38,7 @@ use serde::{Deserialize, Serialize};
 use tui_vfx_style::traits::ShaderRuntimeParams;
 
 /// A filter-spec field value resolved at frame-prepare time.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(rename_all = "snake_case", from = "BindableValueRepr")]
 pub enum BindableValue {
     /// A signal expression or static literal, resolved through `mixed-signals`.

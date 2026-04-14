@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.4.0</VERS>
-// <WCTX>Add boost_separator_bg for continuous powerline backgrounds</WCTX>
-// <CLOG>Add boost_separator_bg to KittScanner and GlistenSweep for powerlines with non-terminal backgrounds</CLOG>
+// <VERS>VERSION: 3.5.0</VERS>
+// <WCTX>Phase 0 P0.1 — lift KittScanner progress to BindableValue for runtime binding support</WCTX>
+// <CLOG>Change FilterSpec::KittScanner.progress from f32 to BindableValue so recipes can bind progress to a runtime parameter name</CLOG>
 
 //! # Filter Specifications
 //!
@@ -66,6 +66,7 @@
 //! - `background` — Only affect cell background
 //! - `both` — Affect both (default)
 
+use super::cls_bindable_value::BindableValue;
 use super::cls_hover_bar_position::HoverBarPosition;
 use super::cls_mask_spec::WipeDirection;
 use mixed_signals::types::SignalOrFloat;
@@ -660,9 +661,13 @@ pub enum FilterSpec {
         /// Beats per second for ping-pong cycle
         #[serde(default = "default_kitt_bps")]
         bps: f32,
-        /// Animation progress (0.0 = inactive, 1.0 = fully active)
+        /// Animation progress (0.0 = inactive, 1.0 = fully active).
+        ///
+        /// Accepts a raw number (`0.5`), a signal spec, or a runtime binding
+        /// (`{"binding": "scroll_progress"}`). When set to a binding, the
+        /// value is resolved at render time from `ShaderRuntimeParams`.
         #[serde(default)]
-        progress: f32,
+        progress: BindableValue,
         /// Motion mode for the scanner sweep
         #[serde(default)]
         motion_mode: ScannerMotionMode,
@@ -1325,7 +1330,7 @@ impl FilterSpec {
                 ("boost", format!("{}", boost)),
                 ("band_width", format!("{}", band_width)),
                 ("bps", format!("{} Hz", bps)),
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
                 ("motion_mode", format!("{:?}", motion_mode)),
                 ("apply_to", format!("{:?}", apply_to)),
                 ("powerline_mode", format!("{}", powerline_mode)),
@@ -1345,4 +1350,4 @@ impl FilterSpec {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 3.4.0</VERS>
+// <VERS>END OF VERSION: 3.5.0</VERS>

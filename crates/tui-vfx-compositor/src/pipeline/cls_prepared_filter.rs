@@ -576,11 +576,14 @@ pub(crate) fn prepare_filter(
             powerline_mode,
             boost_separator_bg,
         } => {
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
             let filter = KittScanner::new()
                 .with_boost(*boost)
                 .with_band_width(*band_width)
                 .with_bps(*bps)
-                .with_progress(*progress)
+                .with_progress(evaluated_progress)
                 .with_motion_mode(*motion_mode)
                 .with_apply_to(*apply_to)
                 .with_powerline_mode(*powerline_mode)

@@ -1,11 +1,11 @@
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>Keep generated metadata aligned with shadow style variants</WCTX>
-// <CLOG>Add MediumShade to shadow metadata extraction variants</CLOG>
+// <VERS>VERSION: 1.3.0</VERS>
+// <WCTX>Phase 0 P0.1 — KittScanner.progress lifted to BindableValue</WCTX>
+// <CLOG>Construct KittScanner progress via BindableValue::static_f32 to match the new lifted spec field type</CLOG>
 
 use std::collections::HashMap;
 
-use tui_vfx_compositor::types::{FilterSpec, MaskSpec, SamplerSpec};
+use tui_vfx_compositor::types::{BindableValue, FilterSpec, MaskSpec, SamplerSpec};
 use tui_vfx_content::types::ContentEffect;
 use tui_vfx_shadow::types::ShadowStyle;
 use tui_vfx_style::models::{ColorConfig, SpatialShaderType, StyleEffect};
@@ -248,7 +248,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             boost: 50,
             band_width: 0.15,
             bps: 1.0,
-            progress: 0.0,
+            progress: BindableValue::static_f32(0.0),
             motion_mode: Default::default(),
             apply_to: Default::default(),
             powerline_mode: false,
