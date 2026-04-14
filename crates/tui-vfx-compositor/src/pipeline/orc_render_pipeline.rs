@@ -557,9 +557,12 @@ fn apply_shaders(
     options: &CompositionOptions<'_>,
 ) {
     for layer in &options.shader_layers {
-        if layer.region.should_style(local_x, local_y, w16, h16) {
-            let (ctx_x, ctx_y, ctx_w, ctx_h) = layer
-                .region
+        // Resolve any runtime-parameter bindings (e.g. Cell { x, y } with
+        // BindableU16::Binding coords) into concrete literals for this
+        // frame's runtime_params. Returns Cow::Borrowed for bindless regions.
+        let resolved = layer.region.resolved(&options.runtime_params);
+        if resolved.should_style(local_x, local_y, w16, h16) {
+            let (ctx_x, ctx_y, ctx_w, ctx_h) = resolved
                 .to_local_coords(local_x, local_y)
                 .unwrap_or((local_x, local_y, w16, h16));
 
@@ -603,9 +606,9 @@ fn apply_shaders_inspected(
     inspector: &mut dyn CompositorInspector,
 ) {
     for (shader_index, layer) in options.shader_layers.iter().enumerate() {
-        if layer.region.should_style(local_x, local_y, w16, h16) {
-            let (ctx_x, ctx_y, ctx_w, ctx_h) = layer
-                .region
+        let resolved = layer.region.resolved(&options.runtime_params);
+        if resolved.should_style(local_x, local_y, w16, h16) {
+            let (ctx_x, ctx_y, ctx_w, ctx_h) = resolved
                 .to_local_coords(local_x, local_y)
                 .unwrap_or((local_x, local_y, w16, h16));
 

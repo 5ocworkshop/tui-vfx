@@ -1,9 +1,11 @@
 // <FILE>tui-vfx-style/tests/models/test_cls_style_region.rs</FILE> - <DESC>Tests for StyleRegion</DESC>
-// <VERS>VERSION: 3.0.0 - 2025-12-31</VERS>
-// <WCTX>Modulo targeting for StyleRegion</WCTX>
-// <CLOG>Added tests for Modulo variant with axis, modulus, remainder</CLOG>
+// <VERS>VERSION: 3.1.0</VERS>
+// <WCTX>Phase 0 P0.2 — cell-coordinate BindableU16 bindings</WCTX>
+// <CLOG>Add Cell-binding tests covering resolved() borrow/owned paths, should_style, bounding_rect, and safe-fail on unresolved bindings</CLOG>
 
-use tui_vfx_style::models::StyleRegion;
+use std::borrow::Cow;
+use tui_vfx_style::models::{BindableU16, StyleRegion};
+use tui_vfx_style::traits::ShaderRuntimeParams;
 
 #[test]
 fn test_all_region_styles_everything() {
@@ -469,5 +471,153 @@ fn test_serde_modulo_axis_roundtrip() {
     );
 }
 
+// --- Phase 0 P0.2: Cell coordinate binding tests -----------------------
+
+fn cell(x: u16, y: u16) -> StyleRegion {
+    StyleRegion::Cell {
+        x: BindableU16::Literal(x),
+        y: BindableU16::Literal(y),
+    }
+}
+
+fn cell_bound(x: BindableU16, y: BindableU16) -> StyleRegion {
+    StyleRegion::Cell { x, y }
+}
+
+#[test]
+fn cell_with_literal_coords_styles_exact_cell() {
+    let region = cell(5, 3);
+    let w = 10;
+    let h = 6;
+    assert!(region.should_style(5, 3, w, h));
+    assert!(!region.should_style(5, 2, w, h));
+    assert!(!region.should_style(4, 3, w, h));
+    assert!(!region.should_style(0, 0, w, h));
+}
+
+#[test]
+fn cell_with_literal_bounding_rect_is_1x1_at_coord() {
+    let region = cell(7, 2);
+    assert_eq!(region.bounding_rect(), Some((7, 2, 1, 1)));
+}
+
+#[test]
+fn cell_resolved_with_literal_coords_borrows() {
+    // A Cell whose coordinates are already literals should avoid the clone
+    // and return a Cow::Borrowed.
+    let region = cell(5, 3);
+    let rp = ShaderRuntimeParams::new();
+    let resolved = region.resolved(&rp);
+    assert!(matches!(resolved, Cow::Borrowed(_)));
+}
+
+#[test]
+fn cell_resolved_with_binding_lowers_to_literal() {
+    let region = cell_bound(
+        BindableU16::Binding("hovered_button_x".to_string()),
+        BindableU16::Literal(5),
+    );
+    let mut rp = ShaderRuntimeParams::new();
+    rp.insert("hovered_button_x", 37_u16);
+
+    let resolved = region.resolved(&rp);
+    assert!(matches!(resolved, Cow::Owned(_)));
+
+    match resolved.as_ref() {
+        StyleRegion::Cell {
+            x: BindableU16::Literal(xl),
+            y: BindableU16::Literal(yl),
+        } => {
+            assert_eq!(*xl, 37);
+            assert_eq!(*yl, 5);
+        }
+        other => panic!("expected resolved Cell with literal coords, got {:?}", other),
+    }
+}
+
+#[test]
+fn cell_resolved_post_resolution_styles_the_runtime_coordinate() {
+    let region = cell_bound(
+        BindableU16::Binding("hover_x".to_string()),
+        BindableU16::Literal(2),
+    );
+    let mut rp = ShaderRuntimeParams::new();
+    rp.insert("hover_x", 20_u16);
+
+    let resolved = region.resolved(&rp);
+    assert!(resolved.should_style(20, 2, 40, 10));
+    assert!(!resolved.should_style(19, 2, 40, 10));
+}
+
+#[test]
+fn cell_resolved_missing_binding_falls_back_to_zero() {
+    // Missing runtime param: binding lowers to Literal(0), so the region
+    // points at the top-left cell. Safe default for "not yet hovered."
+    let region = cell_bound(
+        BindableU16::Binding("missing".to_string()),
+        BindableU16::Binding("also_missing".to_string()),
+    );
+    let rp = ShaderRuntimeParams::new();
+
+    let resolved = region.resolved(&rp);
+    assert!(resolved.should_style(0, 0, 40, 10));
+    assert!(!resolved.should_style(5, 5, 40, 10));
+}
+
+#[test]
+fn cell_unresolved_binding_should_style_is_safe_noop() {
+    // Calling should_style directly on a Cell with Binding coords (bypassing
+    // resolved()) must not panic and must not match anywhere.
+    let region = cell_bound(
+        BindableU16::Binding("x".to_string()),
+        BindableU16::Literal(3),
+    );
+    assert!(!region.should_style(0, 3, 10, 10));
+    assert!(!region.should_style(20, 3, 30, 10));
+}
+
+#[test]
+fn cell_unresolved_binding_bounding_rect_is_none() {
+    // A Cell with an unresolved Binding cannot report its bounding rect.
+    let region = cell_bound(
+        BindableU16::Literal(5),
+        BindableU16::Binding("y".to_string()),
+    );
+    assert_eq!(region.bounding_rect(), None);
+}
+
+#[test]
+fn cell_binding_json_deserializes_from_mixed_literal_and_binding() {
+    // StyleRegion is an externally-tagged enum (PascalCase), so a Cell
+    // shows up as {"Cell": {"x": ..., "y": ...}}. Recipe fixtures can mix
+    // forms: x is a raw integer, y is a tagged binding. Both get absorbed
+    // by BindableU16's lenient deserialize.
+    let json = r#"{
+        "Cell": {
+            "x": 20,
+            "y": { "binding": "button_row" }
+        }
+    }"#;
+    let parsed: StyleRegion = serde_json::from_str(json).unwrap();
+    match parsed {
+        StyleRegion::Cell { x, y } => {
+            assert_eq!(x, BindableU16::Literal(20));
+            assert_eq!(y, BindableU16::Binding("button_row".to_string()));
+        }
+        other => panic!("expected StyleRegion::Cell, got {:?}", other),
+    }
+}
+
+#[test]
+fn cell_binding_serde_roundtrip_normalizes_to_tagged_form() {
+    let region = cell_bound(
+        BindableU16::Literal(20),
+        BindableU16::Binding("button_row".to_string()),
+    );
+    let json = serde_json::to_string(&region).unwrap();
+    let parsed: StyleRegion = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed, region);
+}
+
 // <FILE>tui-vfx-style/tests/models/test_cls_style_region.rs</FILE> - <DESC>Tests for StyleRegion</DESC>
-// <VERS>END OF VERSION: 3.0.0 - 2025-12-31</VERS>
+// <VERS>END OF VERSION: 3.1.0</VERS>

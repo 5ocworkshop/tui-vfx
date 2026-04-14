@@ -1,9 +1,12 @@
 // <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum</DESC>
-// <VERS>VERSION: 4.1.0</VERS>
-// <WCTX>Region-relative shader coordinates for RevealWipe</WCTX>
-// <CLOG>Add bounding_rect() and to_local_coords() for region-relative shader context</CLOG>
+// <VERS>VERSION: 4.2.0</VERS>
+// <WCTX>Phase 0 P0.2 — lift StyleRegion::Cell coordinates to BindableU16 for runtime-parameter position bindings</WCTX>
+// <CLOG>Change Cell { x, y } from u16 to BindableU16 and add resolved() method that lowers bindings to concrete coords via ShaderRuntimeParams</CLOG>
 
+use super::cls_bindable_u16::BindableU16;
+use crate::traits::ShaderRuntimeParams;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 
 /// A cell coordinate for per-cell targeting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
@@ -74,12 +77,21 @@ pub enum StyleRegion {
         /// First row to exclude (exclusive end)
         end: u16,
     },
-    /// Apply style to a single cell at (x, y)
+    /// Apply style to a single cell at (x, y).
+    ///
+    /// Both coordinates are [`BindableU16`]: either a raw integer
+    /// (backwards-compatible with pre-P0.2 recipes) or a
+    /// `{"binding": "name"}` form that resolves from `ShaderRuntimeParams`
+    /// at render time. The binding must be resolved into a literal via
+    /// [`StyleRegion::resolved`] before `should_style` or `bounding_rect`
+    /// can interpret the coordinates — the hot render loop in
+    /// `tui-vfx-compositor::pipeline::orc_render_pipeline` does this once
+    /// per layer per frame.
     Cell {
         /// X coordinate (column, 0-based from left)
-        x: u16,
+        x: BindableU16,
         /// Y coordinate (row, 0-based from top)
-        y: u16,
+        y: BindableU16,
     },
     /// Apply style to multiple specific cells
     Cells(Vec<CellCoord>),
@@ -140,8 +152,15 @@ impl StyleRegion {
                 y >= *start && y < *end
             }
             StyleRegion::Cell { x: cx, y: cy } => {
-                // Match exact cell position
-                x == *cx && y == *cy
+                // Match exact cell position. Unresolved bindings silently
+                // match nothing — the render pipeline must call
+                // `StyleRegion::resolved` with the frame's runtime params
+                // before entering the per-cell hot loop so both coords end
+                // up as concrete literals.
+                match (cx.literal(), cy.literal()) {
+                    (Some(cx_lit), Some(cy_lit)) => x == cx_lit && y == cy_lit,
+                    _ => false,
+                }
             }
             StyleRegion::Cells(cells) => {
                 // Match if (x, y) is in the cell list
@@ -204,8 +223,13 @@ impl StyleRegion {
                 None
             }
 
-            // Single cell - bounded
-            StyleRegion::Cell { x, y } => Some((*x, *y, 1, 1)),
+            // Single cell - bounded. Returns None if either coordinate is
+            // an unresolved runtime binding; callers should `resolved()`
+            // the region first.
+            StyleRegion::Cell { x, y } => match (x.literal(), y.literal()) {
+                (Some(xl), Some(yl)) => Some((xl, yl, 1, 1)),
+                _ => None,
+            },
 
             // Multiple cells - compute bounding box
             StyleRegion::Cells(cells) => {
@@ -236,7 +260,47 @@ impl StyleRegion {
             (local_x, local_y, width, height)
         })
     }
+
+    /// Return a version of this region with any runtime-parameter bindings
+    /// resolved to concrete literals.
+    ///
+    /// For variants that carry no `BindableU16` fields (which is every
+    /// variant except `Cell`), the original region is borrowed unchanged —
+    /// no clone, no allocation.
+    ///
+    /// For `Cell` variants whose coordinates are already literals, the
+    /// original region is also borrowed unchanged. Only a `Cell` with at
+    /// least one `Binding` coordinate produces an owned clone with both
+    /// coordinates lowered to `Literal` form.
+    ///
+    /// Callers should invoke this once per layer per frame, outside the
+    /// per-cell hot loop, so that `should_style` and `bounding_rect` can
+    /// read concrete coordinates without threading a `ShaderRuntimeParams`
+    /// reference through the loop body.
+    ///
+    /// A `Binding` that misses the runtime_params map resolves to `0`,
+    /// making the region effectively point at the top-left cell — a safe
+    /// failure mode equivalent to "no hover yet."
+    pub fn resolved<'a>(
+        &'a self,
+        runtime_params: &ShaderRuntimeParams,
+    ) -> Cow<'a, StyleRegion> {
+        match self {
+            StyleRegion::Cell { x, y } => match (x, y) {
+                (BindableU16::Literal(_), BindableU16::Literal(_)) => Cow::Borrowed(self),
+                _ => {
+                    let x_lit = x.evaluate(runtime_params).unwrap_or(0);
+                    let y_lit = y.evaluate(runtime_params).unwrap_or(0);
+                    Cow::Owned(StyleRegion::Cell {
+                        x: BindableU16::Literal(x_lit),
+                        y: BindableU16::Literal(y_lit),
+                    })
+                }
+            },
+            _ => Cow::Borrowed(self),
+        }
+    }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum</DESC>
-// <VERS>END OF VERSION: 4.1.0</VERS>
+// <VERS>END OF VERSION: 4.2.0</VERS>

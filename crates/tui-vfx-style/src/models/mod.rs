@@ -1,11 +1,12 @@
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>VERSION: 1.8.1</VERS>
-// <WCTX>Consolidate style test helpers</WCTX>
-// <CLOG>Add style model test helper module</CLOG>
+// <VERS>VERSION: 1.9.0</VERS>
+// <WCTX>Phase 0 P0.2 — add BindableU16 for runtime-parameter cell coordinate bindings</WCTX>
+// <CLOG>Register cls_bindable_u16 module and re-export BindableU16</CLOG>
 
 pub mod cls_ambient_occlusion_shader;
 pub mod cls_barber_pole_shader;
 pub mod cls_bevel_shader;
+pub mod cls_bindable_u16;
 pub mod cls_blend_mode;
 pub mod cls_border_sweep_shader;
 pub mod cls_chromatic_edge_shader;
@@ -49,6 +50,7 @@ pub(crate) mod test_support;
 pub use cls_ambient_occlusion_shader::{AOEdges, AmbientOcclusionShader};
 pub use cls_barber_pole_shader::BarberPoleShader;
 pub use cls_bevel_shader::{BevelShader, LightDirection};
+pub use cls_bindable_u16::BindableU16;
 pub use cls_blend_mode::BlendMode;
 pub use cls_border_sweep_shader::BorderSweepShader;
 pub use cls_chromatic_edge_shader::ChromaticEdgeShader;
