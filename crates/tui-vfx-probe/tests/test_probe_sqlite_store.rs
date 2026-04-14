@@ -366,5 +366,45 @@ fn test_sqlite_store_indexes_runtime_and_root_cause_rows() {
     assert!(root_rows[0]["count"].as_i64().unwrap() > 0);
 }
 
+#[test]
+fn test_sqlite_store_indexes_motion_analysis_rows() {
+    let store = ProbeSqliteStore::new_in_memory().unwrap();
+    store
+        .ingest_motion_analysis_value(
+            "motion",
+            &json!({
+                "phase": "dwelling",
+                "effects": [
+                    {
+                        "stage": "filter",
+                        "effect": "KittScanner#1",
+                        "frame_count": 5,
+                        "active_frames": 5,
+                        "start_centroid_x": 3.0,
+                        "end_centroid_x": 40.0,
+                        "min_centroid_x": 3.0,
+                        "max_centroid_x": 40.0,
+                        "span_x": 37.0,
+                        "start_centroid_y": 1.0,
+                        "end_centroid_y": 1.0,
+                        "min_centroid_y": 1.0,
+                        "max_centroid_y": 1.0,
+                        "span_y": 0.0,
+                        "status": "success",
+                        "notes": []
+                    }
+                ]
+            }),
+        )
+        .unwrap();
+
+    let rows = store
+        .query_json("select effect, span_x, status from probe_motion_effects")
+        .unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["effect"], "KittScanner#1");
+    assert_eq!(rows[0]["status"], "success");
+}
+
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>
 // <VERS>END OF VERSION: 0.4.0</VERS>

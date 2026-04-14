@@ -148,6 +148,50 @@ impl ProbeSqliteStore {
         Ok(())
     }
 
+    pub fn ingest_motion_analysis_value(
+        &self,
+        run_id: &str,
+        motion_analysis: &Value,
+    ) -> Result<(), rusqlite::Error> {
+        let phase = motion_analysis
+            .get("phase")
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+
+        for effect in motion_analysis
+            .get("effects")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            self.conn.execute(
+                "insert into probe_motion_effects(run_id, phase, stage, effect, frame_count, active_frames, start_centroid_x, end_centroid_x, min_centroid_x, max_centroid_x, span_x, start_centroid_y, end_centroid_y, min_centroid_y, max_centroid_y, span_y, status, notes_json) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
+                params![
+                    run_id,
+                    phase,
+                    effect.get("stage").and_then(Value::as_str).unwrap_or("unknown"),
+                    effect.get("effect").and_then(Value::as_str).unwrap_or("unknown"),
+                    effect.get("frame_count").and_then(Value::as_u64).unwrap_or_default() as i64,
+                    effect.get("active_frames").and_then(Value::as_u64).unwrap_or_default() as i64,
+                    effect.get("start_centroid_x").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("end_centroid_x").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("min_centroid_x").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("max_centroid_x").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("span_x").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("start_centroid_y").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("end_centroid_y").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("min_centroid_y").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("max_centroid_y").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("span_y").and_then(Value::as_f64).unwrap_or_default(),
+                    effect.get("status").and_then(Value::as_str).unwrap_or("inactive"),
+                    serde_json::to_string(effect.get("notes").unwrap_or(&Value::Array(Vec::new()))).unwrap_or_else(|_| "[]".to_string()),
+                ],
+            )?;
+        }
+
+        Ok(())
+    }
+
     fn create_schema(&self) -> Result<(), rusqlite::Error> {
         self.conn.execute_batch(
             "
@@ -330,6 +374,26 @@ impl ProbeSqliteStore {
                 warning_diagnostics integer not null,
                 failing_stages_json text not null,
                 diagnostic_codes_json text not null
+            );
+            create table probe_motion_effects (
+                run_id text not null,
+                phase text not null,
+                stage text not null,
+                effect text not null,
+                frame_count integer not null,
+                active_frames integer not null,
+                start_centroid_x real not null,
+                end_centroid_x real not null,
+                min_centroid_x real not null,
+                max_centroid_x real not null,
+                span_x real not null,
+                start_centroid_y real not null,
+                end_centroid_y real not null,
+                min_centroid_y real not null,
+                max_centroid_y real not null,
+                span_y real not null,
+                status text not null,
+                notes_json text not null
             );
             ",
         )?;

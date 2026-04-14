@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>Probe-side diagnostics plus direct operational analysis exports</WCTX>
-// <CLOG>MINOR: Export typed operational-analysis helpers so direct pipeline-probe consumers can confirm compositor-stage success/failure without post-processing raw traces</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>Probe-side diagnostics, operational analysis, and focused cell lookup exports</WCTX>
+// <CLOG>MINOR: Export a widget-cell lookup helper so direct and recipe-side CLIs can expose one-cell root-cause workflows without hand-rolled report scanning</CLOG>
 
 //! Engine-owned structured pipeline observability for `tui-vfx`.
 //!
@@ -58,6 +58,7 @@ mod fnc_build_probe_cell_root_cause;
 mod fnc_collect_basic_diagnostics;
 mod fnc_collect_probe_operational_analysis;
 mod fnc_diff_frames;
+mod fnc_find_widget_cell;
 mod fnc_has_ascii_alpha;
 mod fnc_max_widget_y;
 mod fnc_modifier_names;
@@ -98,6 +99,7 @@ pub use fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 pub use fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
 pub use fnc_collect_probe_operational_analysis::collect_probe_operational_analysis;
 pub use fnc_diff_frames::diff_frames;
+pub use fnc_find_widget_cell::find_widget_cell;
 pub use fnc_has_ascii_alpha::has_ascii_alpha;
 pub use fnc_max_widget_y::max_widget_y;
 pub use fnc_runtime_context_from_composition::{
@@ -108,4 +110,4 @@ pub use orc_run_probe::{run_probe, run_probe_diff};
 pub use fnc_row_text::row_text;
 
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

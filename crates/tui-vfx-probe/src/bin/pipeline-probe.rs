@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/bin/pipeline-probe.rs</FILE> - <DESC>CLI entry point for tui-vfx-probe</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>Direct probe operational analysis output</WCTX>
-// <CLOG>MINOR: Emit direct compositor-stage operational analysis alongside probe payloads and ingest it into SQLite so engine-only debugging gets the same element-by-element success/failure surface as recipe-probe</CLOG>
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>Direct probe focused widget-cell output</WCTX>
+// <CLOG>MINOR: Add --widget-cell so direct pipeline-probe runs can return one cell plus its root cause directly instead of making users search an entire report by hand</CLOG>
 
 //! Command-line wrapper for the `tui-vfx-probe` library.
 //!
@@ -15,7 +15,8 @@ use std::fs;
 
 use tui_vfx_probe::{
     ProbeCellSelector, ProbePhase, ProbeRequest, ProbeSceneSpec, ProbeSqliteStore,
-    collect_probe_operational_analysis, collect_timeline, run_probe, run_probe_diff,
+    collect_probe_operational_analysis, collect_timeline, find_widget_cell, run_probe,
+    run_probe_diff,
 };
 
 fn main() {
@@ -36,6 +37,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut frames = None;
     let mut diff_to = None;
     let mut sqlite_query = None;
+    let mut widget_cell = None;
 
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -79,12 +81,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 );
             }
             "--sqlite-query" => sqlite_query = args.next(),
+            "--widget-cell" => widget_cell = args.next(),
             other => return Err(format!("unsupported argument: {other}").into()),
         }
     }
 
     if frames.is_some() && diff_to.is_some() {
         return Err("--frames and --diff-to are mutually exclusive".into());
+    }
+    if widget_cell.is_some() && (frames.is_some() || diff_to.is_some() || sqlite_query.is_some()) {
+        return Err("--widget-cell currently supports only single-frame probe output".into());
     }
 
     let input_path = input_path.ok_or("--input is required")?;
@@ -103,9 +109,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             },
         )?;
         let analysis = collect_probe_operational_analysis("timeline", &timeline.frames);
-        return print_query_or_output(&format, sqlite_query.as_deref(), Some(&analysis), &timeline, |store| {
-            store.ingest_timeline("run", &timeline)
-        });
+        return print_query_or_output(
+            &format,
+            sqlite_query.as_deref(),
+            Some(&analysis),
+            &timeline,
+            |store| store.ingest_timeline("run", &timeline),
+            None,
+        );
     }
 
     if let Some(to_t) = diff_to {
@@ -130,9 +141,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         )?;
         let reports = vec![from_report, to_report];
         let analysis = collect_probe_operational_analysis("diff", &reports);
-        return print_query_or_output(&format, sqlite_query.as_deref(), Some(&analysis), &diff, |store| {
-            store.ingest_diff("run", &diff)
-        });
+        return print_query_or_output(
+            &format,
+            sqlite_query.as_deref(),
+            Some(&analysis),
+            &diff,
+            |store| store.ingest_diff("run", &diff),
+            None,
+        );
     }
 
     let report = run_probe(
@@ -154,9 +170,20 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         },
     )?;
     let analysis = collect_probe_operational_analysis("frame", std::slice::from_ref(&analysis_report));
-    print_query_or_output(&format, sqlite_query.as_deref(), Some(&analysis), &report, |store| {
-        store.ingest_report("run", &report)
-    })
+    let focus_cell = if let Some(raw) = widget_cell.as_deref() {
+        let (x, y) = parse_widget_cell(raw)?;
+        find_widget_cell(&analysis_report, x, y)
+    } else {
+        None
+    };
+    print_query_or_output(
+        &format,
+        sqlite_query.as_deref(),
+        Some(&analysis),
+        &report,
+        |store| store.ingest_report("run", &report),
+        focus_cell.as_ref(),
+    )
 }
 
 fn print_query_or_output<T, U>(
@@ -165,6 +192,7 @@ fn print_query_or_output<T, U>(
     analysis: Option<&U>,
     value: &T,
     ingest: impl FnOnce(&ProbeSqliteStore) -> Result<(), rusqlite::Error>,
+    focus_cell: Option<&tui_vfx_probe::ProbeCell>,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     T: serde::Serialize,
@@ -183,9 +211,17 @@ where
         format,
         &serde_json::json!({
             "analysis": analysis,
+            "focus_cell": focus_cell,
             "probe": value,
         }),
     )
+}
+
+fn parse_widget_cell(raw: &str) -> Result<(u16, u16), Box<dyn std::error::Error>> {
+    let (x, y) = raw
+        .split_once(',')
+        .ok_or("--widget-cell must be formatted as x,y")?;
+    Ok((x.parse::<u16>()?, y.parse::<u16>()?))
 }
 
 fn print_output(
@@ -201,4 +237,4 @@ fn print_output(
 }
 
 // <FILE>crates/tui-vfx-probe/src/bin/pipeline-probe.rs</FILE> - <DESC>CLI entry point for tui-vfx-probe</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>VERSION: 0.11.0</VERS> -->
-<!-- <WCTX>Probe-side diagnostics documentation</WCTX> -->
-<!-- <CLOG>MINOR: Clarify that recipe-aware dwell diagnostics can now distinguish between always-missing text and text that is unstable only at some dwell samples, which helps audits catch flicker/progression defects faster</CLOG> -->
+<!-- <VERS>VERSION: 0.12.0</VERS> -->
+<!-- <WCTX>Probe-side diagnostics, focused-cell, and motion-analysis documentation</WCTX> -->
+<!-- <CLOG>MINOR: Document the focused widget-cell workflows, direct analysis payloads, and recipe-side motion-analysis SQL tables so the current debug surface is actually discoverable from the canonical guide</CLOG> -->
 
 # Pipeline Probe: A Direct-Engine Guide for LLMs and Humans
 
@@ -26,6 +26,8 @@ The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes
 The recipe-side tools also now emit:
 - `analysis` — stage-by-stage health for the currently requested slice
 - `lifecycle_analysis` — stage-by-stage health across entering, stable dwelling, and exiting
+- `focus_cell` — one widget-local cell plus its trace/root-cause when a focused-cell flag is used
+- `motion_analysis` — timeline-only movement diagnostics for motion-candidate effects when timeline sampling is used
 
 When those recipe-side tools are used with `--sqlite-query`, they also index
 their stage/lifecycle analysis into dedicated SQLite tables so health questions
@@ -42,6 +44,21 @@ rather than proving true per-instance identity.
 For compositor-backed rows, effect names are now tagged with stable ordinals
 such as `Dim#1` or `BorderSweep#2`, which closes the duplicate-same-name gap for
 sampler/mask/shader/filter stages.
+
+The fastest focused debugging workflow is now:
+
+```bash
+cargo run -q -p tui-vfx-probe --bin pipeline-probe -- \
+  --input scene.json \
+  --phase dwelling \
+  --sample-t 1.0 \
+  --with-causation \
+  --widget-cell 0,0
+```
+
+That returns top-level `focus_cell` with the selected cell’s trace and
+`root_cause`, so you can ask “why is this exact cell wrong?” without scanning a
+full-frame report.
 
 ## What phase 1 supports
 
@@ -151,6 +168,7 @@ Important:
 - `--sample-t <0.0..1.0>` — phase-local progress value
 - `--cells all|non-empty|modified` — how much cell detail to emit
 - `--with-causation` — emit trace entries with sampler source coords, mask visibility, and shader/filter before/after snapshots
+- `--widget-cell X,Y` — include a top-level `focus_cell` for one widget-local coordinate in single-frame mode
 - `--frames N` — sample evenly across the selected phase and emit a timeline report
 - `--diff-to T` — compare `--sample-t` against another phase-local time and emit only changed cells
 - `--sqlite-query SQL` — materialize the produced report into an in-memory SQLite database and return query results as JSON rows
@@ -178,11 +196,18 @@ Useful tables:
 - `probe_binding_resolutions`
 - `probe_cell_root_causes`
 - `probe_diff_cells`
+- `probe_diagnostics`
+- `probe_analysis_stages`
+- `probe_analysis_effects`
+- `probe_analysis_combined`
+- `probe_motion_effects`
 
 This is especially helpful when you need to answer questions like:
 - which cells were touched by shader but not filter?
 - how many modified cells exist per frame?
 - what is the full trace history for widget-local `(x, y)` across a timeline?
+- which diagnostics fired for this direct probe run?
+- did a moving effect traverse meaningful distance or stall in place?
 
 ## Probe-side diagnostics helpers
 
@@ -209,7 +234,8 @@ On the recipe side, `tui-vfx-recipes` now layers an additional diagnostics pass
 on top of probe output that can reason about the intended message string across
 dwell samples. That recipe-aware layer is where checks like
 `expected_message_missing` and
-`expected_message_unstable_across_dwell` belong, because only the recipe
+`expected_message_unstable_across_dwell` and
+`expected_message_partial_match` belong, because only the recipe
 adapter knows the semantic text contract.
 
 ## Typical workflows
@@ -288,6 +314,40 @@ Expect:
 - `changed_cells_count > 0` when the effect is visibly animated
 - `cells[].before` / `cells[].after` snapshots for each changed cell
 
+### 6. Ask “why is widget-local cell (x, y) wrong?”
+
+```bash
+cargo run -q -p tui-vfx-probe --bin pipeline-probe -- \
+  --input scene.json \
+  --phase dwelling \
+  --sample-t 1.0 \
+  --with-causation \
+  --widget-cell 0,0
+```
+
+Expect:
+- top-level `focus_cell`
+- `focus_cell.root_cause`
+- stage-level summaries explaining the dominant cause for that coordinate
+
+### 7. Ask “did this moving effect actually move?”
+
+Use recipe-side timelines for this today:
+
+```bash
+cargo run -q -p recipe-probe -- \
+  recipes/vfx-probe-validation/alarm_lighthouse.json \
+  --phase dwelling \
+  --frames 5 \
+  --with-causation \
+  --sqlite-query "select effect, span_x, status from probe_motion_effects order by effect"
+```
+
+Expect:
+- one row per motion-candidate effect
+- `span_x` / `span_y` metrics
+- a coarse `status` like `success` or `warning`
+
 ## How to read the output
 
 Key fields:
@@ -306,6 +366,7 @@ Key fields:
 - `cells[].root_cause` — synthesized cell-centric explanation of the dominant stage, hidden masks, sampled source coordinate, relevant bindings, and per-stage summaries
 - `runtime` — supplied runtime params plus shader binding requests/resolutions for dynamic shader state
 - `diagnostics[]` — optional structured probe warnings/errors for visual-integrity findings that can be determined directly from the report
+- `focus_cell` — optional top-level focused widget-local cell for root-cause-first debugging
 
 ## Recommended LLM workflow
 
@@ -329,7 +390,8 @@ Key fields:
 
 - `docs/design/pipeline-probe-design.md`
 - `docs/PIPELINE_VALIDATOR_LLM_GUIDE.md`
+- `docs/PIPELINE_PROBE_WISHLIST.md`
 - `crates/tui-vfx-probe/README.md`
 
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->
