@@ -63,11 +63,17 @@ fn make_report(rows: &[&str]) -> ProbeReport {
         },
         pipeline: ProbePipelineInventory {
             sampler: None,
+            sampler_effects: Vec::new(),
             mask_count: 0,
+            mask_effects: Vec::new(),
             filter_count: 0,
+            filter_effects: Vec::new(),
             shader_count: 0,
+            shader_effects: Vec::new(),
             style_count: 0,
+            style_effects: Vec::new(),
             content_count: 0,
+            content_effects: Vec::new(),
         },
         summary: ProbeSummary {
             total_cells: cells.len(),

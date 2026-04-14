@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Initial probe-side diagnostics for border/text integrity issues</WCTX>
-// <CLOG>MINOR: Export typed diagnostics helpers so probe consumers can detect common border-row and underline-placement defects without ad hoc SQL</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Probe-side diagnostics plus direct operational analysis exports</WCTX>
+// <CLOG>MINOR: Export typed operational-analysis helpers so direct pipeline-probe consumers can confirm compositor-stage success/failure without post-processing raw traces</CLOG>
 
 //! Engine-owned structured pipeline observability for `tui-vfx`.
 //!
@@ -39,6 +39,7 @@ mod cls_probe_error;
 mod cls_probe_grid_spec;
 mod cls_probe_inspector;
 mod cls_probe_last_touch;
+mod cls_probe_operational_analysis;
 mod cls_probe_pipeline_inventory;
 mod cls_probe_report;
 mod cls_probe_request;
@@ -52,6 +53,7 @@ mod cls_probe_trace_event;
 mod cls_probe_widget;
 mod fnc_build_owned_grid;
 mod fnc_collect_basic_diagnostics;
+mod fnc_collect_probe_operational_analysis;
 mod fnc_diff_frames;
 mod fnc_has_ascii_alpha;
 mod fnc_max_widget_y;
@@ -59,6 +61,7 @@ mod fnc_modifier_names;
 mod fnc_normalize_color;
 mod fnc_row_text;
 mod fnc_select_cells;
+mod fnc_variant_name_from_debug;
 mod orc_collect_timeline;
 mod orc_run_probe;
 
@@ -70,6 +73,10 @@ pub use cls_probe_diff_report::ProbeDiffReport;
 pub use cls_probe_error::ProbeError;
 pub use cls_probe_grid_spec::ProbeGridSpec;
 pub use cls_probe_last_touch::ProbeLastTouch;
+pub use cls_probe_operational_analysis::{
+    ProbeCombinedOperationalAnalysis, ProbeEffectOperationalAnalysis, ProbeOperationalAnalysis,
+    ProbeOperationalStatus, ProbeStageOperationalAnalysis,
+};
 pub use cls_probe_pipeline_inventory::ProbePipelineInventory;
 pub use cls_probe_report::{ProbeFrame, ProbePoint, ProbeReport, ProbeReportSource, ProbeSize};
 pub use cls_probe_request::{ProbeCellSelector, ProbePhase, ProbeRequest};
@@ -82,6 +89,7 @@ pub use cls_probe_timing::ProbeTiming;
 pub use cls_probe_trace_event::ProbeTraceEvent;
 pub use cls_probe_widget::ProbeWidget;
 pub use fnc_collect_basic_diagnostics::collect_basic_diagnostics;
+pub use fnc_collect_probe_operational_analysis::collect_probe_operational_analysis;
 pub use fnc_diff_frames::diff_frames;
 pub use fnc_has_ascii_alpha::has_ascii_alpha;
 pub use fnc_max_widget_y::max_widget_y;
@@ -90,4 +98,4 @@ pub use orc_run_probe::{run_probe, run_probe_diff};
 pub use fnc_row_text::row_text;
 
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

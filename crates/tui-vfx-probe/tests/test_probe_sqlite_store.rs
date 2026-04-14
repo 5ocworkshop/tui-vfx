@@ -1,9 +1,10 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>TDD for the embedded SQLite query backend including full trace snapshots</WCTX>
-// <CLOG>MINOR: Extend SQLite store coverage to prove trace-event background snapshots are persisted so background-only effects can be queried directly</CLOG>
+// <CLOG>MINOR: Extend SQLite store coverage to prove report-level diagnostics are indexed and queryable alongside raw probe frames/traces and operational analysis</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
+use serde_json::json;
 use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec};
 use tui_vfx_compositor::types::{ApplyTo, FilterSpec};
 use tui_vfx_probe::{
@@ -86,6 +87,12 @@ fn test_sqlite_store_indexes_frame_report_cells_and_trace_events() {
         .query_json("select count(*) as count from probe_trace_events where stage = 'filter' and before_bg_r is not null and after_bg_r is not null")
         .unwrap();
     assert_eq!(bg_snapshot_rows[0]["count"], 6);
+    let diagnostic_rows = store
+        .query_json("select code from probe_diagnostics order by code")
+        .unwrap();
+    assert_eq!(diagnostic_rows.len(), 2);
+    assert_eq!(diagnostic_rows[0]["code"], "alpha_on_bottom_border");
+    assert_eq!(diagnostic_rows[1]["code"], "alpha_on_top_border");
 }
 
 #[test]
@@ -121,5 +128,172 @@ fn test_sqlite_store_indexes_diff_rows() {
     assert!(rows[0]["changed_cells_count"].as_i64().unwrap() > 0);
 }
 
+#[test]
+fn test_sqlite_store_indexes_operational_analysis_rows() {
+    let store = ProbeSqliteStore::new_in_memory().unwrap();
+    store
+        .ingest_operational_analysis_value(
+            "analysis",
+            &json!({
+                "scope": "frame",
+                "stages": [
+                    {
+                        "stage": "filter",
+                        "configured": true,
+                        "configured_count": 1,
+                        "touched_cells": 6,
+                        "observed_event_count": 6,
+                        "observed_effects": ["Dim"],
+                        "effects": [
+                            {
+                                "effect": "Dim",
+                                "configured": true,
+                                "touched_cells": 6,
+                                "observed_event_count": 6,
+                                "status": "success"
+                            }
+                        ],
+                        "status": "success"
+                    }
+                ],
+                "combined": {
+                    "status": "success",
+                    "error_diagnostics": 0,
+                    "warning_diagnostics": 0,
+                    "failing_stages": [],
+                    "diagnostic_codes": []
+                }
+            }),
+        )
+        .unwrap();
+    store
+        .ingest_lifecycle_analysis_value(
+            "analysis",
+            &json!({
+                "stages": [
+                    {
+                        "stage": "filter",
+                        "configured": true,
+                        "configured_count": 1,
+                        "touched_cells": 12,
+                        "observed_event_count": 12,
+                        "observed_effects": ["Dim"],
+                        "effects": [
+                            {
+                                "effect": "Dim",
+                                "configured": true,
+                                "touched_cells": 12,
+                                "observed_event_count": 12,
+                                "status": "success"
+                            }
+                        ],
+                        "status": "success"
+                    }
+                ],
+                "combined": {
+                    "status": "success",
+                    "error_diagnostics": 0,
+                    "warning_diagnostics": 0,
+                    "failing_stages": [],
+                    "diagnostic_codes": []
+                },
+                "phases": [
+                    {
+                        "phase": "entering",
+                        "sample_t": 0.5,
+                        "analysis": {
+                            "stages": [
+                                {
+                                    "stage": "filter",
+                                    "configured": true,
+                                "configured_count": 1,
+                                "touched_cells": 4,
+                                "observed_event_count": 4,
+                                "observed_effects": ["Dim"],
+                                "effects": [
+                                    {
+                                        "effect": "Dim",
+                                        "configured": true,
+                                        "touched_cells": 4,
+                                        "observed_event_count": 4,
+                                        "status": "success"
+                                    }
+                                ],
+                                "status": "success"
+                            }
+                        ],
+                            "combined": {
+                                "status": "success",
+                                "error_diagnostics": 0,
+                                "warning_diagnostics": 0,
+                                "failing_stages": [],
+                                "diagnostic_codes": []
+                            }
+                        }
+                    }
+                ]
+            }),
+        )
+        .unwrap();
+
+    let stage_rows = store
+        .query_json("select count(*) as count from probe_analysis_stages where stage = 'filter'")
+        .unwrap();
+    assert_eq!(stage_rows[0]["count"], 3);
+    let lifecycle_rows = store
+        .query_json("select count(*) as count from probe_analysis_combined where scope = 'lifecycle_phase' and phase = 'entering'")
+        .unwrap();
+    assert_eq!(lifecycle_rows[0]["count"], 1);
+    let effect_rows = store
+        .query_json("select count(*) as count from probe_analysis_effects where effect = 'Dim'")
+        .unwrap();
+    assert_eq!(effect_rows[0]["count"], 3);
+}
+
+#[test]
+fn test_sqlite_store_indexes_report_diagnostics_rows() {
+    let report = run_probe(
+        &ProbeSceneSpec {
+            source: ProbeGridSpec {
+                width: 4,
+                height: 3,
+                cells: vec![
+                    Cell::styled('A', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('─', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('─', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('╮', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('│', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('O', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('K', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('│', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('╰', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('▁', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('Z', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                    Cell::styled('╯', Color::WHITE, Color::BLACK, Modifiers::NONE),
+                ],
+            },
+            destination: make_grid(6, 5, ' '),
+            widget_offset: ProbePoint { x: 1, y: 1 },
+            composition: CompositionSpec::default(),
+        },
+        &ProbeRequest {
+            phase: ProbePhase::Dwelling,
+            sample_t: 1.0,
+            cells: ProbeCellSelector::Modified,
+            with_causation: false,
+        },
+    )
+    .unwrap();
+    let store = ProbeSqliteStore::new_in_memory().unwrap();
+    store.ingest_report("diag", &report).unwrap();
+
+    let rows = store
+        .query_json("select code, severity from probe_diagnostics order by code")
+        .unwrap();
+    assert_eq!(rows.len(), 3);
+    assert_eq!(rows[0]["code"], "alpha_on_bottom_border");
+    assert_eq!(rows[0]["severity"], "error");
+}
+
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

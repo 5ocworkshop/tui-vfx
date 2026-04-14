@@ -23,7 +23,19 @@ It answers the question:
 | You need parse/rules/profile checks from the recipe schema | `pipeline-validator` |
 
 The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes` repo at `tools/recipe-probe/`. It builds a `ProbeSceneSpec` for you from a recipe file and then delegates into the capabilities documented below. If you are already using `pipeline-validator`, the same sibling repo now also exposes `pipeline-validator --probe` as an in-place delegation path. Those recipe-side tools now emit unified per-cell traces that merge content, style, and compositor stages, while direct `pipeline-probe` remains compositor-scoped.
-The recipe-side tools also now emit a stage-by-stage `analysis` payload that summarizes which configured stages actually fired and whether the combined result is operationally healthy.
+The recipe-side tools also now emit:
+- `analysis` — stage-by-stage health for the currently requested slice
+- `lifecycle_analysis` — stage-by-stage health across entering, stable dwelling, and exiting
+
+When those recipe-side tools are used with `--sqlite-query`, they also index
+their stage/lifecycle analysis into dedicated SQLite tables so health questions
+can be answered with SQL instead of ad hoc text inspection.
+The direct engine probe now also indexes report-level diagnostics into
+`probe_diagnostics`, so structural warning/error rows are queryable alongside
+cells and trace events.
+Direct and recipe-side analysis rows now also support effect-level slicing via
+`probe_analysis_effects`, which is the quickest way to ask whether a specific
+configured filter/shader/mask/style/content element actually fired.
 
 ## What phase 1 supports
 

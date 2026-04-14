@@ -23,6 +23,7 @@ use crate::fnc_diff_frames::diff_frames;
 use crate::fnc_modifier_names::modifier_names;
 use crate::fnc_normalize_color::normalize_color;
 use crate::fnc_select_cells::select_cells;
+use crate::fnc_variant_name_from_debug::variant_name_from_debug;
 
 /// Runs one direct-engine probe and returns a structured frame dump.
 ///
@@ -178,11 +179,33 @@ pub fn run_probe(
                 .sampler_spec
                 .as_ref()
                 .map(|sampler| format!("{sampler:?}")),
+            sampler_effects: composition
+                .sampler_spec
+                .iter()
+                .map(variant_name_from_debug)
+                .collect(),
             mask_count: composition.masks.len(),
+            mask_effects: composition
+                .masks
+                .iter()
+                .map(variant_name_from_debug)
+                .collect(),
             filter_count: composition.filters.len(),
+            filter_effects: composition
+                .filters
+                .iter()
+                .map(variant_name_from_debug)
+                .collect(),
             shader_count: composition.shader_layers.len(),
+            shader_effects: composition
+                .shader_layers
+                .iter()
+                .map(|layer| variant_name_from_debug(&layer.shader))
+                .collect(),
             style_count: 0,
+            style_effects: Vec::new(),
             content_count: 0,
+            content_effects: Vec::new(),
         },
         summary: ProbeSummary {
             total_cells: widget_width * widget_height,
@@ -228,11 +251,33 @@ pub fn run_probe(
                 .sampler_spec
                 .as_ref()
                 .map(|sampler| format!("{sampler:?}")),
+            sampler_effects: composition
+                .sampler_spec
+                .iter()
+                .map(variant_name_from_debug)
+                .collect(),
             mask_count: composition.masks.len(),
+            mask_effects: composition
+                .masks
+                .iter()
+                .map(variant_name_from_debug)
+                .collect(),
             filter_count: composition.filters.len(),
+            filter_effects: composition
+                .filters
+                .iter()
+                .map(variant_name_from_debug)
+                .collect(),
             shader_count: composition.shader_layers.len(),
+            shader_effects: composition
+                .shader_layers
+                .iter()
+                .map(|layer| variant_name_from_debug(&layer.shader))
+                .collect(),
             style_count: 0,
+            style_effects: Vec::new(),
             content_count: 0,
+            content_effects: Vec::new(),
         },
         summary: ProbeSummary {
             total_cells: widget_width * widget_height,

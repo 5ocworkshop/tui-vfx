@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/cls_probe_sqlite_store.rs</FILE> - <DESC>In-memory SQLite index for probe playback data</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Background snapshot storage for trace-event SQLite queries</WCTX>
-// <CLOG>MINOR: Extend probe_trace_events storage to persist before/after background color snapshots so background-only effects can be verified directly through SQL queries</CLOG>
+// <CLOG>MINOR: Extend the SQLite store with probe_diagnostics rows so report-level warnings/errors can be sliced via SQL alongside frame/trace and operational-analysis data</CLOG>
 
 use rusqlite::types::ValueRef;
 use rusqlite::{Connection, params};
@@ -102,6 +102,50 @@ impl ProbeSqliteStore {
             out.push(Value::Object(object));
         }
         Ok(out)
+    }
+
+    pub fn ingest_operational_analysis_value(
+        &self,
+        run_id: &str,
+        analysis: &Value,
+    ) -> Result<(), rusqlite::Error> {
+        let scope = analysis
+            .get("scope")
+            .and_then(Value::as_str)
+            .unwrap_or("analysis");
+        self.insert_analysis_value(run_id, scope, None, None, analysis)
+    }
+
+    pub fn ingest_lifecycle_analysis_value(
+        &self,
+        run_id: &str,
+        lifecycle_analysis: &Value,
+    ) -> Result<(), rusqlite::Error> {
+        self.insert_analysis_value(run_id, "lifecycle", None, None, lifecycle_analysis)?;
+
+        for phase in lifecycle_analysis
+            .get("phases")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            let phase_name = phase
+                .get("phase")
+                .and_then(Value::as_str)
+                .map(str::to_string);
+            let sample_t = phase.get("sample_t").and_then(Value::as_f64);
+            if let Some(analysis) = phase.get("analysis") {
+                self.insert_analysis_value(
+                    run_id,
+                    "lifecycle_phase",
+                    phase_name.as_deref(),
+                    sample_t,
+                    analysis,
+                )?;
+            }
+        }
+
+        Ok(())
     }
 
     fn create_schema(&self) -> Result<(), rusqlite::Error> {
@@ -207,6 +251,50 @@ impl ProbeSqliteStore {
                 last_touch_effect text,
                 trace_len integer not null
             );
+            create table probe_diagnostics (
+                run_id text not null,
+                frame_index integer not null,
+                code text not null,
+                severity text not null,
+                message text not null,
+                widget_y integer
+            );
+            create table probe_analysis_stages (
+                run_id text not null,
+                scope text not null,
+                phase text,
+                sample_t real,
+                stage text not null,
+                configured integer not null,
+                configured_count integer not null,
+                touched_cells integer not null,
+                observed_event_count integer not null,
+                observed_effects_json text not null,
+                status text not null
+            );
+            create table probe_analysis_effects (
+                run_id text not null,
+                scope text not null,
+                phase text,
+                sample_t real,
+                stage text not null,
+                effect text not null,
+                configured integer not null,
+                touched_cells integer not null,
+                observed_event_count integer not null,
+                status text not null
+            );
+            create table probe_analysis_combined (
+                run_id text not null,
+                scope text not null,
+                phase text,
+                sample_t real,
+                status text not null,
+                error_diagnostics integer not null,
+                warning_diagnostics integer not null,
+                failing_stages_json text not null,
+                diagnostic_codes_json text not null
+            );
             ",
         )?;
         Ok(())
@@ -244,6 +332,19 @@ impl ProbeSqliteStore {
                 report.pipeline.content_count as i64,
             ],
         )?;
+        for diagnostic in &report.diagnostics {
+            self.conn.execute(
+                "insert into probe_diagnostics(run_id, frame_index, code, severity, message, widget_y) values (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    run_id,
+                    frame_index,
+                    diagnostic.code,
+                    format!("{:?}", diagnostic.severity).to_lowercase(),
+                    diagnostic.message,
+                    diagnostic.widget_y.map(i64::from),
+                ],
+            )?;
+        }
         for cell in &report.cells {
             self.conn.execute(
                 "insert into probe_cells(run_id, frame_index, abs_x, abs_y, widget_x, widget_y, ch, fg_r, fg_g, fg_b, fg_a, bg_r, bg_g, bg_b, bg_a, modifiers_json, last_touch_stage, last_touch_effect) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
@@ -304,7 +405,81 @@ impl ProbeSqliteStore {
         }
         Ok(())
     }
+
+    fn insert_analysis_value(
+        &self,
+        run_id: &str,
+        scope: &str,
+        phase: Option<&str>,
+        sample_t: Option<f64>,
+        analysis: &Value,
+    ) -> Result<(), rusqlite::Error> {
+        if let Some(combined) = analysis.get("combined") {
+            self.conn.execute(
+                "insert into probe_analysis_combined(run_id, scope, phase, sample_t, status, error_diagnostics, warning_diagnostics, failing_stages_json, diagnostic_codes_json) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    run_id,
+                    scope,
+                    phase,
+                    sample_t,
+                    combined.get("status").and_then(Value::as_str).unwrap_or("inactive"),
+                    combined.get("error_diagnostics").and_then(Value::as_u64).unwrap_or_default() as i64,
+                    combined.get("warning_diagnostics").and_then(Value::as_u64).unwrap_or_default() as i64,
+                    serde_json::to_string(combined.get("failing_stages").unwrap_or(&Value::Array(Vec::new()))).unwrap_or_else(|_| "[]".to_string()),
+                    serde_json::to_string(combined.get("diagnostic_codes").unwrap_or(&Value::Array(Vec::new()))).unwrap_or_else(|_| "[]".to_string()),
+                ],
+            )?;
+        }
+
+        for stage in analysis
+            .get("stages")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            self.conn.execute(
+                "insert into probe_analysis_stages(run_id, scope, phase, sample_t, stage, configured, configured_count, touched_cells, observed_event_count, observed_effects_json, status) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                params![
+                    run_id,
+                    scope,
+                    phase,
+                    sample_t,
+                    stage.get("stage").and_then(Value::as_str).unwrap_or("unknown"),
+                    stage.get("configured").and_then(Value::as_bool).map(i64::from).unwrap_or_default(),
+                    stage.get("configured_count").and_then(Value::as_u64).unwrap_or_default() as i64,
+                    stage.get("touched_cells").and_then(Value::as_u64).unwrap_or_default() as i64,
+                    stage.get("observed_event_count").and_then(Value::as_u64).unwrap_or_default() as i64,
+                    serde_json::to_string(stage.get("observed_effects").unwrap_or(&Value::Array(Vec::new()))).unwrap_or_else(|_| "[]".to_string()),
+                    stage.get("status").and_then(Value::as_str).unwrap_or("inactive"),
+                ],
+            )?;
+            for effect in stage
+                .get("effects")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                self.conn.execute(
+                    "insert into probe_analysis_effects(run_id, scope, phase, sample_t, stage, effect, configured, touched_cells, observed_event_count, status) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                    params![
+                        run_id,
+                        scope,
+                        phase,
+                        sample_t,
+                        stage.get("stage").and_then(Value::as_str).unwrap_or("unknown"),
+                        effect.get("effect").and_then(Value::as_str).unwrap_or("unknown"),
+                        effect.get("configured").and_then(Value::as_bool).map(i64::from).unwrap_or_default(),
+                        effect.get("touched_cells").and_then(Value::as_u64).unwrap_or_default() as i64,
+                        effect.get("observed_event_count").and_then(Value::as_u64).unwrap_or_default() as i64,
+                        effect.get("status").and_then(Value::as_str).unwrap_or("inactive"),
+                    ],
+                )?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 // <FILE>crates/tui-vfx-probe/src/cls_probe_sqlite_store.rs</FILE> - <DESC>In-memory SQLite index for probe playback data</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

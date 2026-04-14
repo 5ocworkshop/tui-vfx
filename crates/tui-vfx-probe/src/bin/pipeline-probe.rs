@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/bin/pipeline-probe.rs</FILE> - <DESC>CLI entry point for tui-vfx-probe</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>Embedded SQLite query backend polish</WCTX>
-// <CLOG>PATCH: Remove an unreachable return and keep the SQLite query flag as the single branching point for query-vs-report output</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>Direct probe operational analysis output</WCTX>
+// <CLOG>MINOR: Emit direct compositor-stage operational analysis alongside probe payloads and ingest it into SQLite so engine-only debugging gets the same element-by-element success/failure surface as recipe-probe</CLOG>
 
 //! Command-line wrapper for the `tui-vfx-probe` library.
 //!
@@ -15,7 +15,7 @@ use std::fs;
 
 use tui_vfx_probe::{
     ProbeCellSelector, ProbePhase, ProbeRequest, ProbeSceneSpec, ProbeSqliteStore,
-    collect_timeline, run_probe, run_probe_diff,
+    collect_probe_operational_analysis, collect_timeline, run_probe, run_probe_diff,
 };
 
 fn main() {
@@ -102,14 +102,35 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 with_causation,
             },
         )?;
-        return print_query_or_output(&format, sqlite_query.as_deref(), &timeline, |store| {
+        let analysis = collect_probe_operational_analysis("timeline", &timeline.frames);
+        return print_query_or_output(&format, sqlite_query.as_deref(), Some(&analysis), &timeline, |store| {
             store.ingest_timeline("run", &timeline)
         });
     }
 
     if let Some(to_t) = diff_to {
         let diff = run_probe_diff(&scene, phase, sample_t, to_t, with_causation)?;
-        return print_query_or_output(&format, sqlite_query.as_deref(), &diff, |store| {
+        let from_report = run_probe(
+            &scene,
+            &ProbeRequest {
+                phase,
+                sample_t,
+                cells: ProbeCellSelector::All,
+                with_causation: true,
+            },
+        )?;
+        let to_report = run_probe(
+            &scene,
+            &ProbeRequest {
+                phase,
+                sample_t: to_t,
+                cells: ProbeCellSelector::All,
+                with_causation: true,
+            },
+        )?;
+        let reports = vec![from_report, to_report];
+        let analysis = collect_probe_operational_analysis("diff", &reports);
+        return print_query_or_output(&format, sqlite_query.as_deref(), Some(&analysis), &diff, |store| {
             store.ingest_diff("run", &diff)
         });
     }
@@ -123,27 +144,48 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             with_causation,
         },
     )?;
-    print_query_or_output(&format, sqlite_query.as_deref(), &report, |store| {
+    let analysis_report = run_probe(
+        &scene,
+        &ProbeRequest {
+            phase,
+            sample_t,
+            cells: ProbeCellSelector::All,
+            with_causation: true,
+        },
+    )?;
+    let analysis = collect_probe_operational_analysis("frame", std::slice::from_ref(&analysis_report));
+    print_query_or_output(&format, sqlite_query.as_deref(), Some(&analysis), &report, |store| {
         store.ingest_report("run", &report)
     })
 }
 
-fn print_query_or_output<T>(
+fn print_query_or_output<T, U>(
     format: &str,
     sqlite_query: Option<&str>,
+    analysis: Option<&U>,
     value: &T,
     ingest: impl FnOnce(&ProbeSqliteStore) -> Result<(), rusqlite::Error>,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     T: serde::Serialize,
+    U: serde::Serialize,
 {
     if let Some(sql) = sqlite_query {
         let store = ProbeSqliteStore::new_in_memory()?;
         ingest(&store)?;
+        if let Some(analysis) = analysis {
+            store.ingest_operational_analysis_value("run", &serde_json::to_value(analysis)?)?;
+        }
         let rows = store.query_json(sql)?;
         return print_output(format, &rows);
     }
-    print_output(format, value)
+    print_output(
+        format,
+        &serde_json::json!({
+            "analysis": analysis,
+            "probe": value,
+        }),
+    )
 }
 
 fn print_output(
@@ -159,4 +201,4 @@ fn print_output(
 }
 
 // <FILE>crates/tui-vfx-probe/src/bin/pipeline-probe.rs</FILE> - <DESC>CLI entry point for tui-vfx-probe</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>
