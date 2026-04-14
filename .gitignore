@@ -14,3 +14,5 @@ plans/
 prompts/
 CONTEXT.md
 TASKS.md
+.omx/
+PROMPT_*.md
