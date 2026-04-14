@@ -1,8 +1,9 @@
 // <FILE>tui-vfx-compositor/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>VERSION: 2.8.0</VERS>
-// <WCTX>Hover indicator effects implementation</WCTX>
-// <CLOG>Add HoverBarPosition type for hover/focus indicator positioning</CLOG>
+// <VERS>VERSION: 2.9.0</VERS>
+// <WCTX>Phase 0 P0.1 — progress_binding infrastructure</WCTX>
+// <CLOG>Add cls_bindable_value module and BindableValue re-export</CLOG>
 
+pub mod cls_bindable_value;
 pub mod cls_filter_spec;
 pub mod cls_hover_bar_position;
 pub mod cls_mask_spec;
@@ -10,6 +11,7 @@ pub mod cls_sampler_spec;
 pub mod cls_shadow_spec;
 pub mod mask_combine_mode;
 
+pub use cls_bindable_value::BindableValue;
 pub use cls_filter_spec::{
     ApplyTo, BraillePatternType, FilterSpec, MotionBlurDirection, PatternType, SubPixelBarDirection,
 };
@@ -22,4 +24,4 @@ pub use cls_shadow_spec::ShadowSpec;
 pub use mask_combine_mode::MaskCombineMode;
 
 // <FILE>tui-vfx-compositor/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>END OF VERSION: 2.8.0</VERS>
+// <VERS>END OF VERSION: 2.9.0</VERS>
