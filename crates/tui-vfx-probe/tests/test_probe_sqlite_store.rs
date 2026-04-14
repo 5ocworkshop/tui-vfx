@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>TDD for the embedded SQLite query backend</WCTX>
-// <CLOG>NEW: Verify that frame, timeline, and diff reports can be ingested into SQLite and queried for aggregate playback facts</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>TDD for the embedded SQLite query backend including full trace snapshots</WCTX>
+// <CLOG>MINOR: Extend SQLite store coverage to prove trace-event background snapshots are persisted so background-only effects can be queried directly</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec};
@@ -82,6 +82,10 @@ fn test_sqlite_store_indexes_frame_report_cells_and_trace_events() {
         .query_json("select count(*) as count from probe_trace_events where stage = 'filter'")
         .unwrap();
     assert_eq!(trace_rows[0]["count"], 6);
+    let bg_snapshot_rows = store
+        .query_json("select count(*) as count from probe_trace_events where stage = 'filter' and before_bg_r is not null and after_bg_r is not null")
+        .unwrap();
+    assert_eq!(bg_snapshot_rows[0]["count"], 6);
 }
 
 #[test]
@@ -118,4 +122,4 @@ fn test_sqlite_store_indexes_diff_rows() {
 }
 
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

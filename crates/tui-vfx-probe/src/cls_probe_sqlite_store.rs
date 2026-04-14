@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/cls_probe_sqlite_store.rs</FILE> - <DESC>In-memory SQLite index for probe playback data</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Embedded SQLite query backend for probe playback data</WCTX>
-// <CLOG>NEW: Add a lightweight in-memory SQLite store that ingests frame, timeline, and diff reports and returns arbitrary SQL query results as JSON rows</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Background snapshot storage for trace-event SQLite queries</WCTX>
+// <CLOG>MINOR: Extend probe_trace_events storage to persist before/after background color snapshots so background-only effects can be verified directly through SQL queries</CLOG>
 
 use rusqlite::types::ValueRef;
 use rusqlite::{Connection, params};
@@ -174,10 +174,18 @@ impl ProbeSqliteStore {
                 before_fg_g integer,
                 before_fg_b integer,
                 before_fg_a integer,
+                before_bg_r integer,
+                before_bg_g integer,
+                before_bg_b integer,
+                before_bg_a integer,
                 after_fg_r integer,
                 after_fg_g integer,
                 after_fg_b integer,
-                after_fg_a integer
+                after_fg_a integer,
+                after_bg_r integer,
+                after_bg_g integer,
+                after_bg_b integer,
+                after_bg_a integer
             );
             create table probe_diff_cells (
                 run_id text not null,
@@ -262,7 +270,7 @@ impl ProbeSqliteStore {
             )?;
             for (event_index, event) in cell.trace.iter().enumerate() {
                 self.conn.execute(
-                    "insert into probe_trace_events(run_id, frame_index, widget_x, widget_y, event_index, stage, effect, sampled_from_x, sampled_from_y, visible, before_fg_r, before_fg_g, before_fg_b, before_fg_a, after_fg_r, after_fg_g, after_fg_b, after_fg_a) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
+                    "insert into probe_trace_events(run_id, frame_index, widget_x, widget_y, event_index, stage, effect, sampled_from_x, sampled_from_y, visible, before_fg_r, before_fg_g, before_fg_b, before_fg_a, before_bg_r, before_bg_g, before_bg_b, before_bg_a, after_fg_r, after_fg_g, after_fg_b, after_fg_a, after_bg_r, after_bg_g, after_bg_b, after_bg_a) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26)",
                     params![
                         run_id,
                         frame_index,
@@ -278,10 +286,18 @@ impl ProbeSqliteStore {
                         event.before.as_ref().map(|value| value.fg.g as i64),
                         event.before.as_ref().map(|value| value.fg.b as i64),
                         event.before.as_ref().map(|value| value.fg.a as i64),
+                        event.before.as_ref().map(|value| value.bg.r as i64),
+                        event.before.as_ref().map(|value| value.bg.g as i64),
+                        event.before.as_ref().map(|value| value.bg.b as i64),
+                        event.before.as_ref().map(|value| value.bg.a as i64),
                         event.after.as_ref().map(|value| value.fg.r as i64),
                         event.after.as_ref().map(|value| value.fg.g as i64),
                         event.after.as_ref().map(|value| value.fg.b as i64),
                         event.after.as_ref().map(|value| value.fg.a as i64),
+                        event.after.as_ref().map(|value| value.bg.r as i64),
+                        event.after.as_ref().map(|value| value.bg.g as i64),
+                        event.after.as_ref().map(|value| value.bg.b as i64),
+                        event.after.as_ref().map(|value| value.bg.a as i64),
                     ],
                 )?;
             }
@@ -291,4 +307,4 @@ impl ProbeSqliteStore {
 }
 
 // <FILE>crates/tui-vfx-probe/src/cls_probe_sqlite_store.rs</FILE> - <DESC>In-memory SQLite index for probe playback data</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

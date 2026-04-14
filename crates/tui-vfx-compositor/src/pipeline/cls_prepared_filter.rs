@@ -566,6 +566,7 @@ pub(crate) fn prepare_filter(
             band_width,
             bps,
             progress,
+            motion_mode,
             apply_to,
             powerline_mode,
             boost_separator_bg,
@@ -575,6 +576,7 @@ pub(crate) fn prepare_filter(
                 .with_band_width(*band_width)
                 .with_bps(*bps)
                 .with_progress(*progress)
+                .with_motion_mode(*motion_mode)
                 .with_apply_to(*apply_to)
                 .with_powerline_mode(*powerline_mode)
                 .with_boost_separator_bg(*boost_separator_bg);

@@ -5,15 +5,16 @@
 // <CLOG>Add boost_separator_bg toggle for powerlines with non-terminal backgrounds</CLOG>
 
 use crate::traits::filter::Filter;
-use crate::types::cls_filter_spec::ApplyTo;
+use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode};
 use crate::utils::is_powerline_separator;
 use tui_vfx_types::{Cell, Color};
 
-/// Horizontal ping-pong scanner effect (Larson scanner / KITT scanner).
+/// Horizontal scanner effect (Larson scanner / KITT scanner).
 ///
-/// Creates a vertical band of brightness that sweeps horizontally left-to-right,
-/// then right-to-left in a continuous ping-pong pattern. The effect applies to
-/// the full height of the content, creating a dramatic scanning column.
+/// Creates a vertical band of brightness that sweeps horizontally across the
+/// full height of the content. The default mode is the classic KITT/Larson
+/// ping-pong pattern, but one-way wrap modes are also supported for
+/// lighthouse-style beams.
 ///
 /// # Usage
 ///
@@ -43,6 +44,8 @@ pub struct KittScanner {
     pub progress: f32,
     /// Beats per second for ping-pong cycle (default: 1.0 = 2 beats per cycle)
     pub bps: f32,
+    /// Motion mode controlling whether the scanner ping-pongs or wraps one-way.
+    pub motion_mode: ScannerMotionMode,
     /// Which color component to boost (ignored if powerline_mode is true)
     pub apply_to: ApplyTo,
     /// Smart powerline mode: bg on text, fg only on separators
@@ -59,6 +62,7 @@ impl Default for KittScanner {
             band_width: 0.15,
             progress: 0.0,
             bps: 1.0, // 1 beat/sec means 2 seconds for full ping-pong
+            motion_mode: ScannerMotionMode::PingPong,
             apply_to: ApplyTo::Both,
             powerline_mode: false,
             boost_separator_bg: false,
@@ -93,6 +97,12 @@ impl KittScanner {
     /// Set the beats per second.
     pub fn with_bps(mut self, bps: f32) -> Self {
         self.bps = bps.max(0.1);
+        self
+    }
+
+    /// Set the motion mode.
+    pub fn with_motion_mode(mut self, motion_mode: ScannerMotionMode) -> Self {
+        self.motion_mode = motion_mode;
         self
     }
 
@@ -134,17 +144,33 @@ impl Filter for KittScanner {
             return;
         }
 
-        // Ping-pong position using sine wave
-        // bps=1.0 means 1 beat per second, so 2 seconds for full cycle
-        // sin goes -1 to 1, we map to 0 to 1 for position
-        let cycle = (t * self.bps as f64 * std::f64::consts::PI) as f32;
-        let ping_pong = (cycle.sin() + 1.0) / 2.0; // 0.0 to 1.0, smooth ping-pong
-
-        // Horizontal position
-        let nx = x as f32 / width.max(1) as f32;
-
-        // Distance from scanner position
-        let dist = (nx - ping_pong).abs();
+        let width_f = width.max(1) as f32;
+        let nx = x as f32 / width_f;
+        let dist = match self.motion_mode {
+            ScannerMotionMode::PingPong => {
+                let cycle = (t * self.bps as f64 * std::f64::consts::PI) as f32;
+                let ping_pong = (cycle.sin() + 1.0) / 2.0;
+                (nx - ping_pong).abs()
+            }
+            ScannerMotionMode::ForwardWrap => {
+                let phase = ((t * self.bps as f64).fract()) as f32;
+                if phase >= 0.5 {
+                    return;
+                }
+                let visible_t = phase * 2.0;
+                let center = -self.band_width + visible_t * (1.0 + 2.0 * self.band_width);
+                (nx - center).abs()
+            }
+            ScannerMotionMode::ReverseWrap => {
+                let phase = ((t * self.bps as f64).fract()) as f32;
+                if phase >= 0.5 {
+                    return;
+                }
+                let visible_t = phase * 2.0;
+                let center = 1.0 + self.band_width - visible_t * (1.0 + 2.0 * self.band_width);
+                (nx - center).abs()
+            }
+        };
 
         // Apply highlight if within band (applies to all rows for full-height effect)
         if dist < self.band_width {
@@ -300,12 +326,14 @@ mod tests {
             .with_boost(80)
             .with_band_width(0.25)
             .with_progress(0.75)
-            .with_bps(2.0);
+            .with_bps(2.0)
+            .with_motion_mode(ScannerMotionMode::ForwardWrap);
 
         assert_eq!(filter.boost, 80);
         assert_eq!(filter.band_width, 0.25);
         assert_eq!(filter.progress, 0.75);
         assert_eq!(filter.bps, 2.0);
+        assert_eq!(filter.motion_mode, ScannerMotionMode::ForwardWrap);
     }
 
     #[test]
@@ -421,6 +449,26 @@ mod tests {
 
         let filter = KittScanner::default();
         assert_eq!(filter.apply_to, ApplyTo::Both);
+    }
+
+    #[test]
+    fn forward_wrap_reaches_left_then_right_and_goes_dark() {
+        let filter = KittScanner::new()
+            .with_progress(1.0)
+            .with_bps(1.0)
+            .with_motion_mode(ScannerMotionMode::ForwardWrap);
+
+        let mut left = make_cell();
+        filter.apply(&mut left, 0, 0, 10, 1, 0.01);
+        assert_ne!(left.fg, Color::rgb(100, 100, 100));
+
+        let mut right = make_cell();
+        filter.apply(&mut right, 9, 0, 10, 1, 0.4);
+        assert_ne!(right.fg, Color::rgb(100, 100, 100));
+
+        let mut dark = make_cell();
+        filter.apply(&mut dark, 5, 0, 10, 1, 0.75);
+        assert_eq!(dark.fg, Color::rgb(100, 100, 100));
     }
 
     #[test]

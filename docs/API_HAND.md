@@ -1,7 +1,7 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.14.0</VERS> -->
-<!-- <WCTX>Close the schema-drift gap between the filter table here and cls_filter_spec.rs v3.4.0: eight filters (CharsetNoise, HoverBar, UnderlineWipe, BracketEmphasis, DotIndicator, PillButton, GlistenSweep, KittScanner, ShadeScanner) were never added to the table — seven were added to CAPABILITIES_REFERENCE.md but not here</WCTX>
-<!-- <CLOG>MINOR: Extend the pipeline-probe section to cover collect_timeline, run_probe_diff, ProbeTimelineReport, ProbeDiffReport, and the new CLI flags</CLOG> -->
+<!-- <VERS>VERSION: 2.15.0</VERS> -->
+<!-- <WCTX>Document KittScanner motion_mode and richer probe trace snapshot storage</WCTX> -->
+<!-- <CLOG>MINOR: Update the KittScanner field list to include motion_mode and note that probe trace snapshots now persist both foreground and background before/after data for SQL-backed diagnostics</CLOG> -->
 
 # TUI-VFX Complete API Reference
 
@@ -111,7 +111,7 @@ Phase-1 surface:
 - direct-engine input via `ProbeSceneSpec`
 - selectors: `all`, `non-empty`, `modified`
 - JSON-friendly output via `ProbeReport`
-- compositor-stage `last_touch` attribution and richer trace events (sampler source coords, mask visibility, shader/filter before/after snapshots)
+- compositor-stage `last_touch` attribution and richer trace events (sampler source coords, mask visibility, shader/filter before/after snapshots, including full foreground and background color data)
 
 ### `pipeline-probe` (CLI)
 
@@ -173,6 +173,10 @@ Top-level single-frame report containing:
 - `summary` (`total_cells`, `non_empty_cells`, `modified_cells`)
 - emitted `cells[]`
 - per-cell `last_touch` and optional `trace[]`
+
+For SQL-backed analysis, trace snapshots now persist both foreground and
+background before/after data, which is especially important for verifying
+background-only effects such as sweeps and glow-band interactions.
 
 ### `ProbeTimelineReport`
 
@@ -408,7 +412,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `DotIndicator` | Dot/bullet marker | `indicator_char: char`, `position: HoverBarPosition`, `color`, `bg_color`, `progress` |
 | `PillButton` | Pill button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten: bool`, `progress` |
 | `GlistenSweep` | Diagonal 45° highlight sweep | `boost: u8`, `band_width: f32`, `speed: f32`, `progress: f32`, `powerline_mode: bool`, `boost_separator_bg: bool` |
-| `KittScanner` | Horizontal ping-pong brightness sweep | `boost: u8`, `band_width: f32`, `bps: f32`, `progress: f32`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool` |
+| `KittScanner` | Horizontal scanner sweep (ping-pong or one-way wrap) | `boost: u8`, `band_width: f32`, `bps: f32`, `progress: f32`, `motion_mode`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool` |
 | `ShadeScanner` | Ping-pong scanner w/ shade overlay | `shade_color`, `bps: f32`, `progress: f32` |
 
 ### ApplyTo
@@ -448,7 +452,8 @@ See `cls_mask_spec.rs::WipeDirection`.
 - **GlistenSweep / KittScanner** do not have a `color` field — they apply an additive
   `boost` (u8) to existing cell colors, so drive palette through `base_style` and use
   the filter only for temporal motion. `KittScanner.bps` is "beats per second", not a
-  conventional `speed` field.
+  conventional `speed` field. `KittScanner.motion_mode` now controls whether the
+  scan ping-pongs (`ping_pong`) or wraps one-way (`forward_wrap` / `reverse_wrap`).
 - **ShadeScanner** is a dimming sweep (no `boost`), not a brightening sweep like its
   `KittScanner` neighbor.
 - **Progress-driven filters** (`HoverBar`, `UnderlineWipe`, `BracketEmphasis`,
@@ -1026,4 +1031,4 @@ pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowG
 ---
 
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 2.14.0</VERS> -->
+<!-- <VERS>END OF VERSION: 2.15.0</VERS> -->

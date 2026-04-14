@@ -249,6 +249,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             band_width: 0.15,
             bps: 1.0,
             progress: 0.0,
+            motion_mode: Default::default(),
             apply_to: Default::default(),
             powerline_mode: false,
             boost_separator_bg: false,

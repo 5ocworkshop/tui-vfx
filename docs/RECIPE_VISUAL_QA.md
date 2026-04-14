@@ -1,7 +1,7 @@
 <!-- <FILE>docs/RECIPE_VISUAL_QA.md</FILE> - <DESC>Canonical visual QA checklist for the probe-validation recipe corpus</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Promote the recipe visual QA checklist into canonical engine docs</WCTX> -->
-<!-- <CLOG>ADD: Document human-eye QA expectations, failure signs, and tuning knobs for the stabilized probe-validation recipes</CLOG> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Recipe visual QA guide aligned with the restored lighthouse motion model</WCTX> -->
+<!-- <CLOG>MINOR: Update the lighthouse checklist to describe the one-way wrap beam behavior and the continuous offscreen half-cycle that now define the intended look</CLOG> -->
 
 # Recipe Visual QA
 
@@ -10,9 +10,9 @@ validator workflow. Use it during manual preview runs to confirm that the final
 recipe **looks** the way the structured tooling says it behaves.
 
 ## alarm_lighthouse.json
-- **Must see:** center bloom, stable readable `PANIC BEACON // HOLD`, sweeping hot background band, urgent orange-red pulse, visible perimeter glow.
-- **Bad sign:** border warps, sweep stops short or snaps back, pulse is too faint to read as an alarm.
-- **Likely tuning knob:** `filter.dwell.speed`, `style.dwell_effect.frequency`, `style.spatial_shader.intensity`.
+- **Must see:** center bloom, stable readable `PANIC BEACON // HOLD`, a wide red beam that sweeps one direction, disappears for roughly half the loop, then re-enters from the opposite side like a rotating lighthouse lamp, plus urgent orange-red pulse and perimeter glow.
+- **Bad sign:** border warps, sweep snaps back instead of wrapping, or the beam never spends any time offscreen.
+- **Likely tuning knob:** `filter.dwell.motion_mode`, `filter.dwell.band_width`, `filter.dwell.bps`, `style.dwell_effect.frequency`.
 
 ## cathedral_of_static.json
 - **Must see:** noisy old-screen entrance, stable `STATIC` title, CRT bend/jitter, mostly desaturated body, edge unease.
@@ -60,4 +60,4 @@ recipe **looks** the way the structured tooling says it behaves.
 - **Likely tuning knob:** `style.spatial_shader.dot_count`, `style.spatial_shader.speed`, `filter.dwell.boost`.
 
 <!-- <FILE>docs/RECIPE_VISUAL_QA.md</FILE> - <DESC>Canonical visual QA checklist for the probe-validation recipe corpus</DESC> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->

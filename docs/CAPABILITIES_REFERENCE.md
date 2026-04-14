@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.13.0</VERS> -->
-<!-- <WCTX>Expand the observability inventory now that pipeline-probe supports timeline and diff reports in addition to single-frame dumps</WCTX> -->
-<!-- <CLOG>MINOR: Extend the observability section with timeline/diff support and richer trace-event details so the hand-maintained capabilities doc matches the current probe</CLOG> -->
+<!-- <VERS>VERSION: 1.14.0</VERS> -->
+<!-- <WCTX>Sync KittScanner and observability docs to the newer diagnostics work</WCTX> -->
+<!-- <CLOG>MINOR: Update KittScanner capabilities to mention motion_mode and extend observability notes so they mention probe-side diagnostics and full background snapshots in trace storage</CLOG> -->
 
 # tui-vfx Capabilities Reference
 
@@ -96,7 +96,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **DotIndicator** | Simple dot/bullet marker | `indicator_char`, `position`, `color`, `bg_color`, `progress` |
 | **PillButton** | Pill-shaped button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten`, `progress` |
 | **GlistenSweep** | Diagonal 45° brightness sweep (hover shine) | `boost` (u8, additive), `band_width` (f32, diagonal fraction), `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
-| **KittScanner** | Horizontal ping-pong brightness sweep (KITT/Larson) | `boost` (u8), `band_width`, `bps`, `progress`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
+| **KittScanner** | Horizontal scanner sweep (KITT/Larson or one-way lighthouse wrap) | `boost` (u8), `band_width`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
 | **ShadeScanner** | Ping-pong scanner that dims text with shade overlay | `shade_color`, `bps`, `progress` |
 
 ### PatternType Variants
@@ -335,14 +335,15 @@ aesthetic intent, not a recipe field. Drive color through `base_style`.
 - `boost_separator_bg`: Additionally boost separator backgrounds when `powerline_mode` is true — needed for powerlines with a continuous bg rather than terminal default
 - Ideal for hover shine, button press feedback, polished CTAs
 
-**KittScanner** — Horizontal ping-pong brightness sweep (the KITT/Larson aesthetic):
+**KittScanner** — Horizontal scanner sweep:
 - `boost`: Additive u8 brightness boost under the band (default 50)
 - `band_width`: Width of the scanner band as fraction of total width (default 0.15, typical 0.0..0.5)
-- `bps`: Beats per second for the ping-pong cycle (default 1.0) — **not** `speed`
+- `bps`: Beats per second for the scanner cycle (default 1.0) — **not** `speed`
 - `progress`: 0.0..1.0, set to 1.0 to activate
+- `motion_mode`: `ping_pong` (classic KITT/Larson), `forward_wrap`, or `reverse_wrap`
 - `apply_to`: Which color component to boost (fg / bg / both, default Both)
 - `powerline_mode` / `boost_separator_bg`: See GlistenSweep
-- Use a red `base_style.foreground` for the classic KITT/Larson look — the boost is additive, not replacement
+- Use a red base style for the classic KITT/Larson or lighthouse look — the boost is additive, not replacement
 - Ideal for status bars, alert indicators, ambient attention-getters
 
 **ShadeScanner** — Ping-pong scanner that dims text with a shade overlay:
@@ -613,9 +614,10 @@ JSON/TOML-driven configurations.
 | Widget/frame geometry | ✅ | `frame.size`, `widget.abs_origin`, `widget.size` |
 | Summary counts | ✅ | `total_cells`, `non_empty_cells`, `modified_cells` |
 | Compositor-stage last-touch attribution | ✅ | sampler, mask, shader, filter callbacks only |
-| Rich trace emission | ✅ | sampler source coords, mask visibility, shader/filter before-after snapshots |
+| Rich trace emission | ✅ | sampler source coords, mask visibility, shader/filter before-after snapshots with full fg/bg state |
 | Multi-frame timeline | ✅ | `collect_timeline()` / `pipeline-probe --frames N` |
 | Frame diff mode | ✅ | `run_probe_diff()` / `pipeline-probe --diff-to T` |
+| Probe-side diagnostics helpers | ✅ | border alpha leakage + underline-on-border detection |
 | Style/content-stage hooks | ❌ | planned follow-up |
 | Full engine-wide causation chain | ❌ | planned follow-up |
 
@@ -630,6 +632,7 @@ JSON/TOML-driven configurations.
   - `ProbeReport` for one frame
   - `ProbeTimelineReport` for evenly sampled multi-frame playback
   - `ProbeDiffReport` for changed cells between two samples
+  - `collect_basic_diagnostics(&ProbeReport)` for typed border/text-integrity warnings and errors
 
 ### Recommended debugging split
 
@@ -698,4 +701,4 @@ For a concrete LLM-ready workflow, see `docs/PIPELINE_PROBE_LLM_GUIDE.md`. The g
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.13.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.14.0</VERS> -->

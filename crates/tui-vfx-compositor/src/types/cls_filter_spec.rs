@@ -173,6 +173,17 @@ pub enum ApplyTo {
     Both,
 }
 
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum ScannerMotionMode {
+    #[default]
+    PingPong,
+    ForwardWrap,
+    ReverseWrap,
+}
+
 /// Complete filter specification with all parameters.
 ///
 /// Filters are post-processing effects applied after content is rendered.
@@ -635,10 +646,10 @@ pub enum FilterSpec {
         #[serde(default)]
         boost_separator_bg: bool,
     },
-    /// Horizontal ping-pong scanner effect (KITT/Larson scanner)
+    /// Horizontal scanner effect (KITT/Larson scanner or one-way wrap sweep)
     ///
-    /// Creates a horizontal band of brightness that sweeps left-to-right,
-    /// then right-to-left in a continuous ping-pong pattern.
+    /// Creates a horizontal band of brightness that either sweeps in a
+    /// continuous ping-pong pattern or wraps one-way for lighthouse-style beams.
     KittScanner {
         /// Brightness boost added to cells under the scanner
         #[serde(default = "default_kitt_boost")]
@@ -652,6 +663,9 @@ pub enum FilterSpec {
         /// Animation progress (0.0 = inactive, 1.0 = fully active)
         #[serde(default)]
         progress: f32,
+        /// Motion mode for the scanner sweep
+        #[serde(default)]
+        motion_mode: ScannerMotionMode,
         /// Which color component to boost (ignored if powerline_mode is true)
         #[serde(default = "default_kitt_apply_to")]
         apply_to: ApplyTo,
@@ -1303,6 +1317,7 @@ impl FilterSpec {
                 band_width,
                 bps,
                 progress,
+                motion_mode,
                 apply_to,
                 powerline_mode,
                 boost_separator_bg,
@@ -1311,6 +1326,7 @@ impl FilterSpec {
                 ("band_width", format!("{}", band_width)),
                 ("bps", format!("{} Hz", bps)),
                 ("progress", format!("{}", progress)),
+                ("motion_mode", format!("{:?}", motion_mode)),
                 ("apply_to", format!("{:?}", apply_to)),
                 ("powerline_mode", format!("{}", powerline_mode)),
                 ("boost_separator_bg", format!("{}", boost_separator_bg)),
