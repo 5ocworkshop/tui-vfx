@@ -1,7 +1,7 @@
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>VERSION: 0.9.0</VERS> -->
+<!-- <VERS>VERSION: 0.11.0</VERS> -->
 <!-- <WCTX>Probe-side diagnostics documentation</WCTX> -->
-<!-- <CLOG>MINOR: Document the new probe-side diagnostics helpers for border/text integrity issues and clarify how they complement the existing report/timeline/diff surfaces</CLOG> -->
+<!-- <CLOG>MINOR: Clarify that recipe-aware dwell diagnostics can now distinguish between always-missing text and text that is unstable only at some dwell samples, which helps audits catch flicker/progression defects faster</CLOG> -->
 
 # Pipeline Probe: A Direct-Engine Guide for LLMs and Humans
 
@@ -35,6 +35,7 @@ The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes
 - summary counts
 - compositor-stage `last_touch`
 - optional trace emission with sampler/mask metadata and filter/shader before/after snapshots
+- direct report `diagnostics[]` entries for baseline border/text integrity issues
 - probe-side diagnostics helpers in the library for:
   - alphabetic text leaking onto border rows
   - underline glyphs contaminating the bottom border
@@ -163,8 +164,9 @@ This is especially helpful when you need to answer questions like:
 
 ## Probe-side diagnostics helpers
 
-For callers embedding `tui-vfx-probe` as a library, the crate now exposes
-basic diagnostics helpers on top of `ProbeReport`:
+Direct `run_probe` reports now auto-populate baseline `diagnostics[]` entries
+for these checks, and callers embedding `tui-vfx-probe` as a library can also
+run the same helpers manually on top of any `ProbeReport`:
 
 - `row_text(&report, y)` — reconstruct a widget-local text row
 - `max_widget_y(&report)` — find the bottommost emitted widget row
@@ -184,8 +186,9 @@ visual breakage into repeatable machine checks.
 On the recipe side, `tui-vfx-recipes` now layers an additional diagnostics pass
 on top of probe output that can reason about the intended message string across
 dwell samples. That recipe-aware layer is where checks like
-`expected_message_missing` belong, because only the recipe adapter knows the
-semantic text contract.
+`expected_message_missing` and
+`expected_message_unstable_across_dwell` belong, because only the recipe
+adapter knows the semantic text contract.
 
 ## Typical workflows
 

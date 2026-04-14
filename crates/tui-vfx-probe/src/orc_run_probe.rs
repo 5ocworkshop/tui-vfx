@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Phase-1.5 probe timeline, diff, and trace support</WCTX>
-// <CLOG>MINOR: Emit full compositor trace chains when requested and add a run_probe_diff helper for frame-to-frame comparisons inside one phase</CLOG>
+// <CLOG>MINOR: Auto-populate direct probe report diagnostics from the full widget dump so callers immediately see baseline border/text integrity findings without extra helper calls</CLOG>
 
 use tui_vfx_compositor::pipeline::render_pipeline_with_spec;
 use tui_vfx_types::Grid;
@@ -18,6 +18,7 @@ use crate::cls_probe_summary::ProbeSummary;
 use crate::cls_probe_timing::ProbeTiming;
 use crate::cls_probe_widget::ProbeWidget;
 use crate::fnc_build_owned_grid::build_owned_grid;
+use crate::fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 use crate::fnc_diff_frames::diff_frames;
 use crate::fnc_modifier_names::modifier_names;
 use crate::fnc_normalize_color::normalize_color;
@@ -142,7 +143,7 @@ pub fn run_probe(
         }
     }
 
-    Ok(ProbeReport {
+    let diagnostics = collect_basic_diagnostics(&ProbeReport {
         schema_version: "0.1.0".to_string(),
         kind: "frame_dump".to_string(),
         source: ProbeReportSource {
@@ -189,6 +190,56 @@ pub fn run_probe(
             modified_cells,
         },
         diagnostics: Vec::new(),
+        cells: all_cells.iter().map(|(cell, _, _)| cell.clone()).collect(),
+    });
+
+    Ok(ProbeReport {
+        schema_version: "0.1.0".to_string(),
+        kind: "frame_dump".to_string(),
+        source: ProbeReportSource {
+            input_kind: "probe_scene_spec".to_string(),
+        },
+        request: request.clone(),
+        timing: ProbeTiming {
+            requested_phase: request.phase,
+            requested_t: request.sample_t,
+            effective_phase: request.phase,
+            effective_t: request.sample_t,
+            tick_ms: None,
+        },
+        frame: ProbeFrame {
+            size: ProbeSize {
+                width: scene.destination.width,
+                height: scene.destination.height,
+            },
+        },
+        widget: ProbeWidget {
+            abs_origin: ProbePoint {
+                x: scene.widget_offset.x,
+                y: scene.widget_offset.y,
+            },
+            size: ProbeSize {
+                width: scene.source.width,
+                height: scene.source.height,
+            },
+        },
+        pipeline: ProbePipelineInventory {
+            sampler: composition
+                .sampler_spec
+                .as_ref()
+                .map(|sampler| format!("{sampler:?}")),
+            mask_count: composition.masks.len(),
+            filter_count: composition.filters.len(),
+            shader_count: composition.shader_layers.len(),
+            style_count: 0,
+            content_count: 0,
+        },
+        summary: ProbeSummary {
+            total_cells: widget_width * widget_height,
+            non_empty_cells,
+            modified_cells,
+        },
+        diagnostics,
         cells: select_cells(all_cells, request.cells),
     })
 }
@@ -239,4 +290,4 @@ pub fn run_probe_diff(
 }
 
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

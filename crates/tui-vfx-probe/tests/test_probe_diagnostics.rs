@@ -1,12 +1,12 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_diagnostics.rs</FILE> - <DESC>Regression tests for basic probe diagnostics helpers</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>TDD for initial probe-side diagnostics covering border contamination and underline placement</WCTX>
-// <CLOG>NEW: Add tests proving the diagnostics helpers catch alphabetic text on border rows and underline glyphs on the bottom border while staying quiet on clean reports</CLOG>
+// <CLOG>MINOR: Add regression coverage for row reconstruction preserving horizontal gaps so diagnostics can reason about sparse reports without collapsing text</CLOG>
 
 use tui_vfx_probe::{
     ProbeCell, ProbeColor, ProbeFrame, ProbePipelineInventory, ProbePoint, ProbeReport,
     ProbeReportSource, ProbeRequest, ProbeSize, ProbeSummary, ProbeTiming, ProbeWidget,
-    ProbeCellSelector, ProbePhase, collect_basic_diagnostics,
+    ProbeCellSelector, ProbePhase, collect_basic_diagnostics, row_text,
 };
 
 fn probe_color() -> ProbeColor {
@@ -103,5 +103,16 @@ fn test_collect_basic_diagnostics_is_empty_for_clean_border_rows() {
     assert!(diagnostics.is_empty());
 }
 
+#[test]
+fn test_row_text_preserves_horizontal_gaps_from_widget_coordinates() {
+    let mut report = make_report(&["╭──╮", "│OK│", "╰──╯"]);
+    report.widget.size.width = 5;
+    report.cells.retain(|cell| {
+        !(cell.widget_local.y == 1 && (cell.widget_local.x == 1 || cell.widget_local.x == 3))
+    });
+
+    assert_eq!(row_text(&report, 1), "│ K  ");
+}
+
 // <FILE>crates/tui-vfx-probe/tests/test_probe_diagnostics.rs</FILE> - <DESC>Regression tests for basic probe diagnostics helpers</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
