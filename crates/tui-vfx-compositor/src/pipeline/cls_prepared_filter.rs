@@ -1,8 +1,9 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>VERSION: 2.13.0</VERS>
-// <WCTX>Add boost_separator_bg for continuous powerline backgrounds</WCTX>
-// <CLOG>Pass boost_separator_bg to KittScanner and GlistenSweep</CLOG>
+// <VERS>VERSION: 2.14.0</VERS>
+// <WCTX>Phase 0 P0.1 — thread PrepareContext (loop_t, signal_ctx, runtime_params) through prepare_filter</WCTX>
+// <CLOG>Replace loose (loop_t, signal_ctx) params with a single &PrepareContext on prepare_filter and prepare_filters</CLOG>
 
+use super::cls_prepare_context::PrepareContext;
 use crate::filters::cls_bracket_emphasis::BracketEmphasis;
 use crate::filters::cls_braille_dust::BrailleDust;
 use crate::filters::cls_charset_noise::CharsetNoise;
@@ -28,7 +29,6 @@ use crate::filters::cls_underline_wipe::UnderlineWipe;
 use crate::filters::cls_vignette::Vignette;
 use crate::traits::filter::Filter;
 use crate::types::cls_filter_spec::{FilterSpec, PatternType};
-use mixed_signals::traits::SignalContext;
 use smallvec::SmallVec;
 use tui_vfx_types::{Cell, Color};
 
@@ -192,9 +192,14 @@ fn convert_pattern_type(spec: &PatternType) -> crate::filters::cls_pattern_fill:
 
 pub(crate) fn prepare_filter(
     spec: &FilterSpec,
-    loop_t: f64,
-    signal_ctx: &SignalContext,
+    prepare_ctx: &PrepareContext,
 ) -> Option<PreparedFilter> {
+    // Shadow bindings keep the existing match arms (which reference `loop_t`
+    // and `signal_ctx` extensively) untouched. Per-filter BindableValue lifts
+    // land in follow-up commits and reach for `prepare_ctx.runtime_params`
+    // alongside these.
+    let loop_t = prepare_ctx.loop_t;
+    let signal_ctx = &prepare_ctx.signal_ctx;
     match spec {
         FilterSpec::None => None,
         FilterSpec::Dim { factor, apply_to } => {
@@ -599,12 +604,11 @@ pub(crate) fn prepare_filter(
 
 pub(crate) fn prepare_filters(
     filters: &[FilterSpec],
-    loop_t: f64,
+    prepare_ctx: &PrepareContext,
 ) -> SmallVec<[PreparedFilter; 3]> {
-    let signal_ctx = SignalContext::for_loop(loop_t, 0);
     let mut prepared = SmallVec::new();
     for filter in filters {
-        if let Some(prepared_filter) = prepare_filter(filter, loop_t, &signal_ctx) {
+        if let Some(prepared_filter) = prepare_filter(filter, prepare_ctx) {
             prepared.push(prepared_filter);
         }
     }
@@ -612,4 +616,4 @@ pub(crate) fn prepare_filters(
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 2.13.0</VERS>
+// <VERS>END OF VERSION: 2.14.0</VERS>

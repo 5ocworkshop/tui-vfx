@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 11.5.0</VERS>
-// <WCTX>Phase 1 dramatic color-shadow rollout: wire grade-underlying into pipeline</WCTX>
-// <CLOG>Branch both shadow-copy paths on composite_mode: GlyphOverlay keeps blend_shadow_cell, GradeUnderlying calls grade_shadow_cell</CLOG>
+// <VERS>VERSION: 11.6.0</VERS>
+// <WCTX>Phase 0 P0.1 — build PrepareContext carrying runtime_params before filter preparation</WCTX>
+// <CLOG>Construct a PrepareContext from loop_t + options.runtime_params and hand it to prepare_filters at both callsites</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
+use super::cls_prepare_context::PrepareContext;
 use super::cls_prepared_filter::{PreparedFilter, prepare_filters};
 use super::cls_prepared_mask::{PreparedMask, prepare_masks};
 use super::cls_prepared_sampler::{PreparedSampler, prepare_sampler};
@@ -80,7 +81,8 @@ pub fn render_pipeline(
     let sampler = prepare_sampler(options.t, &options.sampler_spec);
     let prepared_masks = prepare_masks(options.masks.as_ref());
     let loop_t = options.loop_t.unwrap_or(options.t);
-    let prepared_filters = prepare_filters(options.filters.as_ref(), loop_t);
+    let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
+    let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
 
     // Dispatch to inspected or non-inspected loop
     // (Two loops needed due to Rust borrow checker constraints with optional mutable refs)
@@ -181,7 +183,8 @@ fn render_pipeline_with_shadow(
     // Prepare effects for element rendering
     let sampler = prepare_sampler(options.t, &options.sampler_spec);
     let loop_t = options.loop_t.unwrap_or(options.t);
-    let prepared_filters = prepare_filters(options.filters.as_ref(), loop_t);
+    let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
+    let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
     let shader_t = options.loop_t.unwrap_or(options.t).clamp(0.0, 1.0);
 
     // Render element content to buffer (on top of shadow)

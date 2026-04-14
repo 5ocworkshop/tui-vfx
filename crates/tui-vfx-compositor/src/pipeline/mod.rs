@@ -1,10 +1,11 @@
 // <FILE>tui-vfx-compositor/src/pipeline/mod.rs</FILE> - <DESC>Pipeline module</DESC>
-// <VERS>VERSION: 7.4.0</VERS>
-// <WCTX>Phase 1 dramatic color-shadow rollout: wire grade-underlying into pipeline</WCTX>
-// <CLOG>Add fnc_grade_shadow_cell module export</CLOG>
+// <VERS>VERSION: 7.5.0</VERS>
+// <WCTX>Phase 0 P0.1 — progress_binding infrastructure</WCTX>
+// <CLOG>Add cls_prepare_context module holding the per-frame PrepareContext bundle</CLOG>
 
 pub mod cls_composition_options;
 pub mod cls_composition_spec;
+mod cls_prepare_context;
 mod cls_prepared_filter;
 mod cls_prepared_mask;
 mod cls_prepared_sampler;
@@ -27,4 +28,4 @@ pub use fnc_render_pipeline_with_spec_area::render_pipeline_with_spec_area;
 pub use orc_render_pipeline::{render_pipeline, render_pipeline_with_area};
 
 // <FILE>tui-vfx-compositor/src/pipeline/mod.rs</FILE> - <DESC>Pipeline module</DESC>
-// <VERS>END OF VERSION: 7.4.0</VERS>
+// <VERS>END OF VERSION: 7.5.0</VERS>
