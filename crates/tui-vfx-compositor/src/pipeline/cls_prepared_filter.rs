@@ -396,7 +396,10 @@ pub(crate) fn prepare_filter(
             };
             let filled: Color = (*filled_color).into();
             let unfilled: Color = (*unfilled_color).into();
-            let filter = SubPixelBar::new(*progress)
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
+            let filter = SubPixelBar::new(evaluated_progress)
                 .with_direction(bar_direction)
                 .with_filled_color(filled)
                 .with_unfilled_color(unfilled)
@@ -465,13 +468,16 @@ pub(crate) fn prepare_filter(
         } => {
             let bar: Color = (*bar_color).into();
             let bg: Color = (*bg_color).into();
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
             let filter = HoverBar::new()
                 .with_base_eighths(*base_eighths)
                 .with_max_eighths(*max_eighths)
                 .with_position(*position)
                 .with_bar_color(bar)
                 .with_bg_color(bg)
-                .with_progress(*progress)
+                .with_progress(evaluated_progress)
                 .with_margin_width(*margin_width);
             Some(PreparedFilter::HoverBar(filter))
         }
@@ -487,13 +493,16 @@ pub(crate) fn prepare_filter(
         } => {
             let line_color: Color = (*color).into();
             let bg: Color = (*bg_color).into();
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
             let filter = UnderlineWipe::new()
                 .with_direction(*direction)
                 .with_color(line_color)
                 .with_bg_color(bg)
                 .with_line_char(*line_char)
                 .with_row_offset(*row_offset)
-                .with_progress(*progress)
+                .with_progress(evaluated_progress)
                 .with_gradient(*gradient)
                 .with_glisten(*glisten);
             Some(PreparedFilter::UnderlineWipe(filter))
@@ -507,12 +516,15 @@ pub(crate) fn prepare_filter(
         } => {
             let bracket_color: Color = (*color).into();
             let bg: Color = (*bg_color).into();
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
             let filter = BracketEmphasis::new()
                 .with_left(*left)
                 .with_right(*right)
                 .with_color(bracket_color)
                 .with_bg_color(bg)
-                .with_progress(*progress);
+                .with_progress(evaluated_progress);
             Some(PreparedFilter::BracketEmphasis(filter))
         }
         FilterSpec::DotIndicator {
@@ -524,12 +536,15 @@ pub(crate) fn prepare_filter(
         } => {
             let dot_color: Color = (*color).into();
             let bg: Color = (*bg_color).into();
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
             let filter = DotIndicator::new()
                 .with_char(*indicator_char)
                 .with_position(*position)
                 .with_color(dot_color)
                 .with_bg_color(bg)
-                .with_progress(*progress);
+                .with_progress(evaluated_progress);
             Some(PreparedFilter::DotIndicator(filter))
         }
         FilterSpec::PillButton {
@@ -541,12 +556,15 @@ pub(crate) fn prepare_filter(
         } => {
             let btn_color: Color = (*button_color).into();
             let bg: Color = (*bg_color).into();
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
             let filter = PillButton::new()
                 .with_button_color(btn_color)
                 .with_bg_color(bg)
                 .with_edge_width(*edge_width)
                 .with_glisten(*glisten)
-                .with_progress(*progress);
+                .with_progress(evaluated_progress);
             Some(PreparedFilter::PillButton(filter))
         }
         FilterSpec::GlistenSweep {
@@ -557,11 +575,14 @@ pub(crate) fn prepare_filter(
             powerline_mode,
             boost_separator_bg,
         } => {
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
             let filter = GlistenSweep::new()
                 .with_boost(*boost)
                 .with_band_width(*band_width)
                 .with_speed(*speed)
-                .with_progress(*progress)
+                .with_progress(evaluated_progress)
                 .with_powerline_mode(*powerline_mode)
                 .with_boost_separator_bg(*boost_separator_bg);
             Some(PreparedFilter::GlistenSweep(filter))
@@ -596,10 +617,13 @@ pub(crate) fn prepare_filter(
             progress,
         } => {
             let shade: Color = (*shade_color).into();
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
             let filter = ShadeScanner::new()
                 .with_shade_color(shade)
                 .with_bps(*bps)
-                .with_progress(*progress);
+                .with_progress(evaluated_progress);
             Some(PreparedFilter::ShadeScanner(filter))
         }
     }

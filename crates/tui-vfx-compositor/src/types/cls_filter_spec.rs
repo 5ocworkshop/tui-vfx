@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.5.0</VERS>
-// <WCTX>Phase 0 P0.1 — lift KittScanner progress to BindableValue for runtime binding support</WCTX>
-// <CLOG>Change FilterSpec::KittScanner.progress from f32 to BindableValue so recipes can bind progress to a runtime parameter name</CLOG>
+// <VERS>VERSION: 3.6.0</VERS>
+// <WCTX>Phase 0 P0.1 — lift progress field on remaining 8 filters to BindableValue</WCTX>
+// <CLOG>Lift SubPixelBar, HoverBar, UnderlineWipe, BracketEmphasis, DotIndicator, PillButton, GlistenSweep, ShadeScanner progress fields from f32 to BindableValue; default_bar_progress now returns BindableValue
 
 //! # Filter Specifications
 //!
@@ -415,9 +415,10 @@ pub enum FilterSpec {
     /// Uses partial block characters (▏▎▍▌▋▊▉█ for horizontal, ▁▂▃▄▅▆▇█ for vertical)
     /// to render progress bars with 8 times the resolution of cell-by-cell filling.
     SubPixelBar {
-        /// Progress value (0.0 = empty, 1.0 = full)
+        /// Progress value (0.0 = empty, 1.0 = full). Accepts a raw number,
+        /// a signal spec, or a runtime binding (`{"binding": "scroll_ratio"}`).
         #[serde(default = "default_bar_progress")]
-        progress: f32,
+        progress: BindableValue,
         /// Fill direction
         #[serde(default)]
         direction: SubPixelBarDirection,
@@ -522,9 +523,10 @@ pub enum FilterSpec {
         /// Background color (for inversion)
         #[serde(default = "default_hover_bg_color")]
         bg_color: ColorConfig,
-        /// Animation progress (0.0 = rest, 1.0 = fully active)
+        /// Animation progress (0.0 = rest, 1.0 = fully active). Accepts a
+        /// raw number, signal spec, or runtime binding.
         #[serde(default)]
-        progress: f32,
+        progress: BindableValue,
         /// Margin width on the active side (1-2 cells)
         #[serde(default = "default_hover_margin_width")]
         margin_width: u8,
@@ -549,9 +551,10 @@ pub enum FilterSpec {
         /// Row offset from bottom (0 = last row)
         #[serde(default)]
         row_offset: u16,
-        /// Progress (0.0 = none, 1.0 = full width)
+        /// Progress (0.0 = none, 1.0 = full width). Accepts a raw number,
+        /// signal spec, or runtime binding.
         #[serde(default)]
-        progress: f32,
+        progress: BindableValue,
         /// Enable gradient from bg_color to color along wipe direction
         #[serde(default = "default_true")]
         gradient: bool,
@@ -576,9 +579,10 @@ pub enum FilterSpec {
         /// Background color for blending
         #[serde(default = "default_bracket_bg_color")]
         bg_color: ColorConfig,
-        /// Progress (0.0 = invisible, 1.0 = fully visible)
+        /// Progress (0.0 = invisible, 1.0 = fully visible). Accepts a raw
+        /// number, signal spec, or runtime binding.
         #[serde(default)]
-        progress: f32,
+        progress: BindableValue,
     },
     /// Simple dot/bullet indicator that appears adjacent to content
     ///
@@ -597,9 +601,10 @@ pub enum FilterSpec {
         /// Background color for blending
         #[serde(default = "default_dot_bg_color")]
         bg_color: ColorConfig,
-        /// Progress (0.0 = invisible, 1.0 = fully visible)
+        /// Progress (0.0 = invisible, 1.0 = fully visible). Accepts a raw
+        /// number, signal spec, or runtime binding.
         #[serde(default)]
-        progress: f32,
+        progress: BindableValue,
     },
     /// Pill-shaped button with gradient edges
     ///
@@ -618,9 +623,10 @@ pub enum FilterSpec {
         /// Enable glisten effect on hover
         #[serde(default = "default_true")]
         glisten: bool,
-        /// Hover progress (0.0 = not hovered, 1.0 = fully hovered)
+        /// Hover progress (0.0 = not hovered, 1.0 = fully hovered). Accepts
+        /// a raw number, signal spec, or runtime binding.
         #[serde(default)]
-        progress: f32,
+        progress: BindableValue,
     },
     /// Diagonal glisten sweep effect
     ///
@@ -636,9 +642,10 @@ pub enum FilterSpec {
         /// Animation speed (0 = use progress only)
         #[serde(default = "default_glisten_speed")]
         speed: f32,
-        /// Hover progress (0.0 = not hovered, 1.0 = fully hovered)
+        /// Hover progress (0.0 = not hovered, 1.0 = fully hovered). Accepts
+        /// a raw number, signal spec, or runtime binding.
         #[serde(default)]
-        progress: f32,
+        progress: BindableValue,
         /// Smart powerline mode: bg on text, fg only on separator glyphs
         #[serde(default)]
         powerline_mode: bool,
@@ -693,9 +700,10 @@ pub enum FilterSpec {
         /// Beats per second for ping-pong cycle
         #[serde(default = "default_shade_scanner_bps")]
         bps: f32,
-        /// Animation progress (0.0 = inactive, 1.0 = fully active)
+        /// Animation progress (0.0 = inactive, 1.0 = fully active). Accepts
+        /// a raw number, signal spec, or runtime binding.
         #[serde(default)]
-        progress: f32,
+        progress: BindableValue,
     },
 }
 
@@ -802,8 +810,8 @@ fn default_shade_bg() -> ColorConfig {
     ColorConfig::Black
 }
 
-fn default_bar_progress() -> f32 {
-    0.5
+fn default_bar_progress() -> BindableValue {
+    BindableValue::static_f32(0.5)
 }
 
 fn default_bar_filled() -> ColorConfig {
@@ -1221,7 +1229,7 @@ impl FilterSpec {
                 direction,
                 ..
             } => vec![
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
                 ("direction", format!("{:?}", direction)),
             ],
             FilterSpec::SubCellShake {
@@ -1258,7 +1266,7 @@ impl FilterSpec {
                 ("base_eighths", format!("{}", base_eighths)),
                 ("max_eighths", format!("{}", max_eighths)),
                 ("position", format!("{:?}", position)),
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
             ],
             FilterSpec::UnderlineWipe {
                 direction,
@@ -1268,7 +1276,7 @@ impl FilterSpec {
                 ..
             } => vec![
                 ("direction", format!("{:?}", direction)),
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
                 ("gradient", format!("{}", gradient)),
                 ("glisten", format!("{}", glisten)),
             ],
@@ -1280,7 +1288,7 @@ impl FilterSpec {
             } => vec![
                 ("left", format!("{}", left)),
                 ("right", format!("{}", right)),
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
             ],
             FilterSpec::DotIndicator {
                 indicator_char,
@@ -1290,7 +1298,7 @@ impl FilterSpec {
             } => vec![
                 ("indicator_char", format!("{}", indicator_char)),
                 ("position", format!("{:?}", position)),
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
             ],
             FilterSpec::PillButton {
                 edge_width,
@@ -1300,7 +1308,7 @@ impl FilterSpec {
             } => vec![
                 ("edge_width", format!("{}", edge_width)),
                 ("glisten", format!("{}", glisten)),
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
             ],
             FilterSpec::GlistenSweep {
                 boost,
@@ -1313,7 +1321,7 @@ impl FilterSpec {
                 ("boost", format!("{}", boost)),
                 ("band_width", format!("{}", band_width)),
                 ("speed", format!("{}", speed)),
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
                 ("powerline_mode", format!("{}", powerline_mode)),
                 ("boost_separator_bg", format!("{}", boost_separator_bg)),
             ],
@@ -1343,11 +1351,11 @@ impl FilterSpec {
             } => vec![
                 ("shade_color", format!("{:?}", shade_color)),
                 ("bps", format!("{} Hz", bps)),
-                ("progress", format!("{}", progress)),
+                ("progress", format!("{:?}", progress)),
             ],
         }
     }
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 3.5.0</VERS>
+// <VERS>END OF VERSION: 3.6.0</VERS>

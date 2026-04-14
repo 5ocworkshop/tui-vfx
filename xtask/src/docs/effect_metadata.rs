@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
-// <WCTX>Phase 0 P0.1 — KittScanner.progress lifted to BindableValue</WCTX>
-// <CLOG>Construct KittScanner progress via BindableValue::static_f32 to match the new lifted spec field type</CLOG>
+// <VERS>VERSION: 1.4.0</VERS>
+// <WCTX>Phase 0 P0.1 — remaining 8 filter progress fields lifted to BindableValue</WCTX>
+// <CLOG>Wrap every sample FilterSpec progress in BindableValue::static_f32 to match the new lifted spec field type across all 9 filters</CLOG>
 
 use std::collections::HashMap;
 
@@ -170,7 +170,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             bg_color: ColorConfig::Black,
         },
         FilterSpec::SubPixelBar {
-            progress: 0.5,
+            progress: BindableValue::static_f32(0.5),
             direction: Default::default(),
             filled_color: ColorConfig::Green,
             unfilled_color: ColorConfig::Gray,
@@ -202,7 +202,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             position: Default::default(),
             bar_color: ColorConfig::Blue,
             bg_color: ColorConfig::Black,
-            progress: 0.0,
+            progress: BindableValue::static_f32(0.0),
             margin_width: 2,
         },
         FilterSpec::UnderlineWipe {
@@ -211,7 +211,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             bg_color: ColorConfig::Black,
             line_char: '—',
             row_offset: 0,
-            progress: 0.0,
+            progress: BindableValue::static_f32(0.0),
             gradient: true,
             glisten: true,
         },
@@ -220,27 +220,27 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             right: ']',
             color: ColorConfig::Blue,
             bg_color: ColorConfig::Black,
-            progress: 0.0,
+            progress: BindableValue::static_f32(0.0),
         },
         FilterSpec::DotIndicator {
             indicator_char: '•',
             position: Default::default(),
             color: ColorConfig::Blue,
             bg_color: ColorConfig::Black,
-            progress: 0.0,
+            progress: BindableValue::static_f32(0.0),
         },
         FilterSpec::PillButton {
             button_color: ColorConfig::Blue,
             bg_color: ColorConfig::Black,
             edge_width: 3,
             glisten: true,
-            progress: 0.0,
+            progress: BindableValue::static_f32(0.0),
         },
         FilterSpec::GlistenSweep {
             boost: 40,
             band_width: 0.2,
             speed: 0.5,
-            progress: 0.0,
+            progress: BindableValue::static_f32(0.0),
             powerline_mode: false,
             boost_separator_bg: false,
         },
@@ -257,7 +257,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
         FilterSpec::ShadeScanner {
             shade_color: ColorConfig::Gray,
             bps: 1.0,
-            progress: 0.0,
+            progress: BindableValue::static_f32(0.0),
         },
     ];
 
