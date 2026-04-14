@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_fade_to_canvas.rs</FILE> - <DESC>Exit filter that blends cells toward a declared canvas color</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 0 P0.4 — canvas-aware exit fade replacement for the tint(black, 0.7+) hack</WCTX>
-// <CLOG>Initial FadeToCanvas filter: fg/bg blend toward a configured canvas color with caller-controlled strength, avoiding the dark-flash artifact on light canvases</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase 0 P0.B followup — canvas_color_binding so themes can drive the exit-fade target from a runtime Rgb parameter (e.g. current terminal background) instead of a compile-time ColorConfig</WCTX>
+// <CLOG>No behavior change in the runtime filter struct itself — the binding resolution lives in prepare_filter which picks between the static canvas_color ColorConfig and the runtime Rgb parameter before constructing FadeToCanvas. Adds three new inline prepare-time tests covering the binding resolution, missing-binding fallback, and non-Rgb-kind fallback paths</CLOG>
 
 //! # FadeToCanvas filter
 //!
@@ -196,4 +196,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_fade_to_canvas.rs</FILE> - <DESC>Exit filter that blends cells toward a declared canvas color</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -65622,7 +65622,7 @@
             "name": "Tint"
           },
           {
-            "description": "Canvas-aware exit fade that blends cells toward a declared canvas\ncolor. Use this in place of `tint(black, ...)` on exit animations so\nthe widget doesn't flash dark on light terminal backgrounds: set\n`canvas_color` to match the terminal background and drive `strength`\nfrom the exit phase progress (static 1.0 for instant fade, signal\nfor smooth animation, binding for runtime-driven control).\n\nDefaults to black for drop-in compatibility with the old tint hack.",
+            "description": "Canvas-aware exit fade that blends cells toward a declared canvas\ncolor. Use this in place of `tint(black, ...)` on exit animations so\nthe widget doesn't flash dark on light terminal backgrounds: set\n`canvas_color` to match the terminal background and drive `strength`\nfrom the exit phase progress (static 1.0 for instant fade, signal\nfor smooth animation, binding for runtime-driven control).\n\nDefaults to black for drop-in compatibility with the old tint hack.\nAdd `canvas_color_binding` to swap the static canvas color for a\nruntime-provided RGB triple when the terminal background changes\n(theme mode flip, live palette adjustment, etc.) — the binding\nresolves once at prepare time from a\n`ShaderRuntimeParamValue::Rgb` entry in the composition's runtime\nparams map, and falls back to `canvas_color` when the binding is\nmissing or not an Rgb value.",
             "fields": [
               {
                 "json_key": null,
@@ -65847,6 +65847,26 @@
                       "name": "Indexed"
                     }
                   ]
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Optional runtime parameter key that overrides `canvas_color`\nper frame. Must resolve to a `ShaderRuntimeParamValue::Rgb`\n(JSON shape `{\"r\": <u8>, \"g\": <u8>, \"b\": <u8>}`) to take\neffect; any other kind or a missing binding falls back to\nthe static `canvas_color`.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "canvas_color_binding",
+                "schema": {
+                  "inner": {
+                    "kind": "primitive",
+                    "range": null,
+                    "type": "String"
+                  },
+                  "kind": "option"
                 }
               },
               {
@@ -120224,7 +120244,7 @@
           "name": "DotIndicator"
         },
         "fade_to_canvas": {
-          "description": "Canvas-aware exit fade that blends cells toward a declared canvas\ncolor. Use this in place of `tint(black, ...)` on exit animations so\nthe widget doesn't flash dark on light terminal backgrounds: set\n`canvas_color` to match the terminal background and drive `strength`\nfrom the exit phase progress (static 1.0 for instant fade, signal\nfor smooth animation, binding for runtime-driven control).\n\nDefaults to black for drop-in compatibility with the old tint hack.",
+          "description": "Canvas-aware exit fade that blends cells toward a declared canvas\ncolor. Use this in place of `tint(black, ...)` on exit animations so\nthe widget doesn't flash dark on light terminal backgrounds: set\n`canvas_color` to match the terminal background and drive `strength`\nfrom the exit phase progress (static 1.0 for instant fade, signal\nfor smooth animation, binding for runtime-driven control).\n\nDefaults to black for drop-in compatibility with the old tint hack.\nAdd `canvas_color_binding` to swap the static canvas color for a\nruntime-provided RGB triple when the terminal background changes\n(theme mode flip, live palette adjustment, etc.) — the binding\nresolves once at prepare time from a\n`ShaderRuntimeParamValue::Rgb` entry in the composition's runtime\nparams map, and falls back to `canvas_color` when the binding is\nmissing or not an Rgb value.",
           "fields": [
             {
               "json_key": null,
@@ -120449,6 +120469,26 @@
                     "name": "Indexed"
                   }
                 ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Optional runtime parameter key that overrides `canvas_color`\nper frame. Must resolve to a `ShaderRuntimeParamValue::Rgb`\n(JSON shape `{\"r\": <u8>, \"g\": <u8>, \"b\": <u8>}`) to take\neffect; any other kind or a missing binding falls back to\nthe static `canvas_color`.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "canvas_color_binding",
+              "schema": {
+                "inner": {
+                  "kind": "primitive",
+                  "range": null,
+                  "type": "String"
+                },
+                "kind": "option"
               }
             },
             {
@@ -261093,7 +261133,7 @@
                       "json_key": null,
                       "meta": {
                         "default": null,
-                        "description": "Speed multiplier for band movement (1.0 = normal).\n\nNOTE: Currently a no-op — the sweep rate is driven by `ctx.t` per\nthe v2.0.1 fix. A `speed_binding` counterpart is deferred until the\nunderlying field is reconnected.",
+                        "description": "Speed multiplier for band movement (`1.0` = normal).\n\nReconnected in 2.2.0 as a scalar multiplier on the `ctx.t`-driven\nsweep rate: `effective_t = (t * speed).fract()` for Forward, and\nsimilarly for Reverse / PingPong. `speed == 2.0` sweeps twice per\noriginal time unit; `speed == 0.5` sweeps half as often;\n`speed == 1.0` is the historical default. Resolved values are\nclamped to `0.1..=10.0` to prevent degenerate sweep rates.",
                         "help": null,
                         "json_key": null,
                         "optional": true,
@@ -261104,6 +261144,26 @@
                         "kind": "primitive",
                         "range": null,
                         "type": "f32"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": "Optional runtime parameter key that overrides `speed` per frame.\nResolved values are clamped to `0.1..=10.0`. Missing or\nunresolvable bindings fall back to the static `speed`.\n\nUsed together with `direction_binding` / `blend_strength_binding`\nso apps can drive sweep rate, direction, and intensity from the\nsame runtime params map (e.g. accelerate the sweep on hover,\nslow it during dwell).",
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "speed_binding",
+                      "schema": {
+                        "inner": {
+                          "kind": "primitive",
+                          "range": null,
+                          "type": "String"
+                        },
+                        "kind": "option"
                       }
                     },
                     {
@@ -268367,7 +268427,7 @@
                     "json_key": null,
                     "meta": {
                       "default": null,
-                      "description": "Speed multiplier for band movement (1.0 = normal).\n\nNOTE: Currently a no-op — the sweep rate is driven by `ctx.t` per\nthe v2.0.1 fix. A `speed_binding` counterpart is deferred until the\nunderlying field is reconnected.",
+                      "description": "Speed multiplier for band movement (`1.0` = normal).\n\nReconnected in 2.2.0 as a scalar multiplier on the `ctx.t`-driven\nsweep rate: `effective_t = (t * speed).fract()` for Forward, and\nsimilarly for Reverse / PingPong. `speed == 2.0` sweeps twice per\noriginal time unit; `speed == 0.5` sweeps half as often;\n`speed == 1.0` is the historical default. Resolved values are\nclamped to `0.1..=10.0` to prevent degenerate sweep rates.",
                       "help": null,
                       "json_key": null,
                       "optional": true,
@@ -268378,6 +268438,26 @@
                       "kind": "primitive",
                       "range": null,
                       "type": "f32"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": "Optional runtime parameter key that overrides `speed` per frame.\nResolved values are clamped to `0.1..=10.0`. Missing or\nunresolvable bindings fall back to the static `speed`.\n\nUsed together with `direction_binding` / `blend_strength_binding`\nso apps can drive sweep rate, direction, and intensity from the\nsame runtime params map (e.g. accelerate the sweep on hover,\nslow it during dwell).",
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "speed_binding",
+                    "schema": {
+                      "inner": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "String"
+                      },
+                      "kind": "option"
                     }
                   },
                   {
@@ -276422,7 +276502,7 @@
                                 "json_key": null,
                                 "meta": {
                                   "default": null,
-                                  "description": "Speed multiplier for band movement (1.0 = normal).\n\nNOTE: Currently a no-op — the sweep rate is driven by `ctx.t` per\nthe v2.0.1 fix. A `speed_binding` counterpart is deferred until the\nunderlying field is reconnected.",
+                                  "description": "Speed multiplier for band movement (`1.0` = normal).\n\nReconnected in 2.2.0 as a scalar multiplier on the `ctx.t`-driven\nsweep rate: `effective_t = (t * speed).fract()` for Forward, and\nsimilarly for Reverse / PingPong. `speed == 2.0` sweeps twice per\noriginal time unit; `speed == 0.5` sweeps half as often;\n`speed == 1.0` is the historical default. Resolved values are\nclamped to `0.1..=10.0` to prevent degenerate sweep rates.",
                                   "help": null,
                                   "json_key": null,
                                   "optional": true,
@@ -276433,6 +276513,26 @@
                                   "kind": "primitive",
                                   "range": null,
                                   "type": "f32"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": "Optional runtime parameter key that overrides `speed` per frame.\nResolved values are clamped to `0.1..=10.0`. Missing or\nunresolvable bindings fall back to the static `speed`.\n\nUsed together with `direction_binding` / `blend_strength_binding`\nso apps can drive sweep rate, direction, and intensity from the\nsame runtime params map (e.g. accelerate the sweep on hover,\nslow it during dwell).",
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "speed_binding",
+                                "schema": {
+                                  "inner": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "option"
                                 }
                               },
                               {
@@ -285153,7 +285253,7 @@
                               "json_key": null,
                               "meta": {
                                 "default": null,
-                                "description": "Speed multiplier for band movement (1.0 = normal).\n\nNOTE: Currently a no-op — the sweep rate is driven by `ctx.t` per\nthe v2.0.1 fix. A `speed_binding` counterpart is deferred until the\nunderlying field is reconnected.",
+                                "description": "Speed multiplier for band movement (`1.0` = normal).\n\nReconnected in 2.2.0 as a scalar multiplier on the `ctx.t`-driven\nsweep rate: `effective_t = (t * speed).fract()` for Forward, and\nsimilarly for Reverse / PingPong. `speed == 2.0` sweeps twice per\noriginal time unit; `speed == 0.5` sweeps half as often;\n`speed == 1.0` is the historical default. Resolved values are\nclamped to `0.1..=10.0` to prevent degenerate sweep rates.",
                                 "help": null,
                                 "json_key": null,
                                 "optional": true,
@@ -285164,6 +285264,26 @@
                                 "kind": "primitive",
                                 "range": null,
                                 "type": "f32"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": "Optional runtime parameter key that overrides `speed` per frame.\nResolved values are clamped to `0.1..=10.0`. Missing or\nunresolvable bindings fall back to the static `speed`.\n\nUsed together with `direction_binding` / `blend_strength_binding`\nso apps can drive sweep rate, direction, and intensity from the\nsame runtime params map (e.g. accelerate the sweep on hover,\nslow it during dwell).",
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "speed_binding",
+                              "schema": {
+                                "inner": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "String"
+                                },
+                                "kind": "option"
                               }
                             },
                             {

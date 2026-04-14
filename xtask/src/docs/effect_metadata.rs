@@ -123,6 +123,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
         },
         FilterSpec::FadeToCanvas {
             canvas_color: ColorConfig::Rgb { r: 0, g: 0, b: 0 },
+            canvas_color_binding: None,
             strength: BindableValue::static_f32(1.0),
             apply_to: Default::default(),
         },

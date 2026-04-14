@@ -768,7 +768,7 @@
         ]
       },
       "FadeToCanvas": {
-        "ai_hint": "Use as the exit filter on notifications, modals, and toolkit widgets that should fade into the terminal backdrop instead of flashing dark. Set canvas_color to the app's actual terminal background (e.g. {r:240,g:240,b:245} for a light theme, {r:20,g:20,b:30} for a dark one) and drive strength from the exit animation progress (0.0 = widget visible, 1.0 = fully faded into canvas). Replaces the older tint(black, 0.7+) hack which darkens regardless of canvas. Parameters: canvas_color (ColorConfig target), strength (BindableValue blend ratio), apply_to (foreground/background/both).",
+        "ai_hint": "Use as the exit filter on notifications, modals, and toolkit widgets that should fade into the terminal backdrop instead of flashing dark. Set canvas_color to the app's actual terminal background (e.g. {r:240,g:240,b:245} for a light theme, {r:20,g:20,b:30} for a dark one) and drive strength from the exit animation progress (0.0 = widget visible, 1.0 = fully faded into canvas). Replaces the older tint(black, 0.7+) hack which darkens regardless of canvas. Parameters: canvas_color (ColorConfig target), canvas_color_binding (optional runtime-param key that overrides canvas_color from a ShaderRuntimeParamValue::Rgb entry — use this to track live theme mode flips or app-reported terminal background changes), strength (BindableValue blend ratio), apply_to (foreground/background/both).",
         "complexity": "simple",
         "energy": "calm",
         "name": "FadeToCanvas",
@@ -779,6 +779,12 @@
             "doc": "The canvas color to fade into — should match the terminal\nbackground the recipe will run against.",
             "name": "canvas_color",
             "ty": "ColorConfig"
+          },
+          {
+            "default": "None",
+            "doc": "Optional runtime parameter key that overrides `canvas_color`\nper frame. Must resolve to a `ShaderRuntimeParamValue::Rgb`\n(JSON shape `{\"r\": <u8>, \"g\": <u8>, \"b\": <u8>}`) to take\neffect; any other kind or a missing binding falls back to\nthe static `canvas_color`.",
+            "name": "canvas_color_binding",
+            "ty": "Option<String>"
           },
           {
             "default": "Signal(Static(1.0))",
@@ -2295,7 +2301,7 @@
         "parameters": [
           {
             "default": "1",
-            "doc": "Speed multiplier for band movement (1.0 = normal).\n\nNOTE: Currently a no-op — the sweep rate is driven by `ctx.t` per\nthe v2.0.1 fix. A `speed_binding` counterpart is deferred until the\nunderlying field is reconnected.",
+            "doc": "Speed multiplier for band movement (`1.0` = normal).\n\nReconnected in 2.2.0 as a scalar multiplier on the `ctx.t`-driven\nsweep rate: `effective_t = (t * speed).fract()` for Forward, and\nsimilarly for Reverse / PingPong. `speed == 2.0` sweeps twice per\noriginal time unit; `speed == 0.5` sweeps half as often;\n`speed == 1.0` is the historical default. Resolved values are\nclamped to `0.1..=10.0` to prevent degenerate sweep rates.",
             "name": "speed",
             "ty": "f32"
           },

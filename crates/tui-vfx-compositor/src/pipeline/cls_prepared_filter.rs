@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
 // <VERS>VERSION: 2.14.0</VERS>
-// <WCTX>Phase 0 P0.1 — thread PrepareContext (loop_t, signal_ctx, runtime_params) through prepare_filter</WCTX>
-// <CLOG>Replace loose (loop_t, signal_ctx) params with a single &PrepareContext on prepare_filter and prepare_filters</CLOG>
+// <WCTX>Phase 0 P0.B followup — resolve FadeToCanvas.canvas_color_binding from a ShaderRuntimeParamValue::Rgb entry at prepare time</WCTX>
+// <CLOG>Thread canvas_color_binding through the FadeToCanvas prepare arm: if the binding is present and resolves to an Rgb runtime param, use it as the prepared canvas color; otherwise fall back to the static ColorConfig. Adds four new inline tests covering resolution, missing-binding fallback, non-Rgb-kind fallback, and no-binding passthrough</CLOG>
 
 use super::cls_prepare_context::PrepareContext;
 use crate::filters::cls_bracket_emphasis::BracketEmphasis;
@@ -232,13 +232,20 @@ pub(crate) fn prepare_filter(
         }
         FilterSpec::FadeToCanvas {
             canvas_color,
+            canvas_color_binding,
             strength,
             apply_to,
         } => {
             let evaluated_strength = strength
                 .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
                 .unwrap_or(0.0);
-            let canvas: Color = (*canvas_color).into();
+            // Resolve canvas_color_binding to an RGB runtime param when
+            // present; missing bindings and non-Rgb kinds fall back to
+            // the static canvas_color ColorConfig.
+            let canvas: Color = canvas_color_binding
+                .as_deref()
+                .and_then(|key| prepare_ctx.runtime_params.get_color(key))
+                .unwrap_or_else(|| (*canvas_color).into());
             Some(PreparedFilter::FadeToCanvas(FadeToCanvas {
                 canvas_color: canvas,
                 strength: evaluated_strength,
@@ -1012,7 +1019,128 @@ mod tests {
             other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
         }
     }
+
+    // --- FadeToCanvas canvas_color_binding coverage (O-P0.B) ----------------
+
+    fn fade_to_canvas_spec(
+        canvas_color: tui_vfx_style::models::ColorConfig,
+        canvas_color_binding: Option<String>,
+    ) -> FilterSpec {
+        FilterSpec::FadeToCanvas {
+            canvas_color,
+            canvas_color_binding,
+            strength: BindableValue::static_f32(1.0),
+            apply_to: ApplyTo::Both,
+        }
+    }
+
+    #[test]
+    fn fade_to_canvas_canvas_color_binding_resolves_runtime_rgb() {
+        use tui_vfx_style::models::ColorConfig;
+        use tui_vfx_style::traits::ShaderRuntimeParamValue;
+
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert(
+            "terminal_bg",
+            ShaderRuntimeParamValue::Rgb {
+                r: 240,
+                g: 241,
+                b: 242,
+            },
+        );
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = fade_to_canvas_spec(ColorConfig::Black, Some("terminal_bg".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::FadeToCanvas(filter) => {
+                assert_eq!(filter.canvas_color, Color::rgb(240, 241, 242));
+            }
+            other => panic!(
+                "expected FadeToCanvas, got {:?}",
+                std::mem::discriminant(&other)
+            ),
+        }
+    }
+
+    #[test]
+    fn fade_to_canvas_canvas_color_binding_missing_falls_back_to_static() {
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = fade_to_canvas_spec(
+            ColorConfig::Rgb {
+                r: 10,
+                g: 20,
+                b: 30,
+            },
+            Some("missing".to_string()),
+        );
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::FadeToCanvas(filter) => {
+                assert_eq!(filter.canvas_color, Color::rgb(10, 20, 30));
+            }
+            other => panic!(
+                "expected FadeToCanvas, got {:?}",
+                std::mem::discriminant(&other)
+            ),
+        }
+    }
+
+    #[test]
+    fn fade_to_canvas_canvas_color_binding_non_rgb_kind_falls_back_to_static() {
+        use tui_vfx_style::models::ColorConfig;
+        use tui_vfx_style::traits::ShaderRuntimeParamValue;
+
+        // A runtime param that happens to exist under the binding key but
+        // reports a non-Rgb kind (e.g. a stray integer) must fall through
+        // to the static canvas_color, not silently corrupt the fade target.
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("terminal_bg", ShaderRuntimeParamValue::Integer(42));
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = fade_to_canvas_spec(
+            ColorConfig::Rgb {
+                r: 7,
+                g: 8,
+                b: 9,
+            },
+            Some("terminal_bg".to_string()),
+        );
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::FadeToCanvas(filter) => {
+                assert_eq!(filter.canvas_color, Color::rgb(7, 8, 9));
+            }
+            other => panic!(
+                "expected FadeToCanvas, got {:?}",
+                std::mem::discriminant(&other)
+            ),
+        }
+    }
+
+    #[test]
+    fn fade_to_canvas_no_binding_uses_static_canvas_color() {
+        use tui_vfx_style::models::ColorConfig;
+
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = fade_to_canvas_spec(
+            ColorConfig::Rgb {
+                r: 180,
+                g: 180,
+                b: 190,
+            },
+            None,
+        );
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::FadeToCanvas(filter) => {
+                assert_eq!(filter.canvas_color, Color::rgb(180, 180, 190));
+            }
+            other => panic!(
+                "expected FadeToCanvas, got {:?}",
+                std::mem::discriminant(&other)
+            ),
+        }
+    }
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 2.14.0</VERS>
+// <VERS>END OF VERSION: 2.15.0</VERS>

@@ -248,11 +248,25 @@ pub enum FilterSpec {
     /// for smooth animation, binding for runtime-driven control).
     ///
     /// Defaults to black for drop-in compatibility with the old tint hack.
+    /// Add `canvas_color_binding` to swap the static canvas color for a
+    /// runtime-provided RGB triple when the terminal background changes
+    /// (theme mode flip, live palette adjustment, etc.) — the binding
+    /// resolves once at prepare time from a
+    /// `ShaderRuntimeParamValue::Rgb` entry in the composition's runtime
+    /// params map, and falls back to `canvas_color` when the binding is
+    /// missing or not an Rgb value.
     FadeToCanvas {
         /// The canvas color to fade into — should match the terminal
         /// background the recipe will run against.
         #[serde(default = "default_fade_to_canvas_color")]
         canvas_color: ColorConfig,
+        /// Optional runtime parameter key that overrides `canvas_color`
+        /// per frame. Must resolve to a `ShaderRuntimeParamValue::Rgb`
+        /// (JSON shape `{"r": <u8>, "g": <u8>, "b": <u8>}`) to take
+        /// effect; any other kind or a missing binding falls back to
+        /// the static `canvas_color`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        canvas_color_binding: Option<String>,
         /// Fade strength (0.0 = untouched, 1.0 = fully replaced with
         /// canvas_color). Uses `BindableValue` so the P0.1 signal/binding
         /// surface applies uniformly across filter parameters.
@@ -1204,10 +1218,15 @@ impl FilterSpec {
             ],
             FilterSpec::FadeToCanvas {
                 canvas_color,
+                canvas_color_binding,
                 strength,
                 apply_to,
             } => vec![
                 ("canvas_color", format!("{:?}", canvas_color)),
+                (
+                    "canvas_color_binding",
+                    format!("{:?}", canvas_color_binding),
+                ),
                 ("strength", format!("{:?}", strength)),
                 ("apply_to", format!("{:?}", apply_to)),
             ],

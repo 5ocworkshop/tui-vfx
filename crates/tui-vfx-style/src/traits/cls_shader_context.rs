@@ -1,14 +1,24 @@
 // <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>Adding screen-space context to shaders</WCTX>
-// <CLOG>Initial implementation with local coords, screen offset, and animation state</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Phase 0 P0.B followup — add an Rgb variant to ShaderRuntimeParamValue so canvas_color / tint / gradient bindings can ship a concrete RGB triple through the runtime-params map without widening to a string-typed color-token path</WCTX>
+// <CLOG>MINOR: add ShaderRuntimeParamValue::Rgb{r,g,b}, an as_color() accessor returning tui_vfx_types::Color, a From<Color> impl, and a ShaderRuntimeParams::get_color helper; extend kind_name / as_f32 / as_u16 / serde_json::Value conversion to handle the new variant</CLOG>
 
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::Arc;
+use tui_vfx_types::Color;
 
 /// Runtime scalar value exposed to spatial shaders during render.
+///
+/// The `Rgb` variant carries an opaque RGB triple (alpha is always 255);
+/// use it when a recipe binding needs to supply a concrete color at
+/// runtime — e.g. `FadeToCanvas.canvas_color_binding` reading the current
+/// terminal background, or a tint that tracks a theme-mode flip. Variant
+/// order matters for `serde(untagged)` deserialization: scalar variants
+/// come first so single JSON numbers / booleans / strings hit their
+/// expected match arm, and `Rgb` is last so it only matches JSON objects
+/// shaped like `{"r": <u8>, "g": <u8>, "b": <u8>}`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ShaderRuntimeParamValue {
@@ -16,6 +26,15 @@ pub enum ShaderRuntimeParamValue {
     Float(f64),
     Boolean(bool),
     Text(String),
+    /// Opaque RGB triple. Deserializes from `{"r": ..., "g": ..., "b": ...}`.
+    Rgb {
+        /// Red channel (0-255).
+        r: u8,
+        /// Green channel (0-255).
+        g: u8,
+        /// Blue channel (0-255).
+        b: u8,
+    },
 }
 
 impl ShaderRuntimeParamValue {
@@ -26,6 +45,7 @@ impl ShaderRuntimeParamValue {
             Self::Float(_) => "float",
             Self::Boolean(_) => "boolean",
             Self::Text(_) => "text",
+            Self::Rgb { .. } => "rgb",
         }
     }
 
@@ -53,6 +73,15 @@ impl ShaderRuntimeParamValue {
             _ => None,
         }
     }
+
+    /// Attempt to read this runtime value as an opaque RGB `Color`.
+    /// Returns `None` for non-Rgb variants.
+    pub fn as_color(&self) -> Option<Color> {
+        match self {
+            Self::Rgb { r, g, b } => Some(Color::rgb(*r, *g, *b)),
+            _ => None,
+        }
+    }
 }
 
 impl From<&ShaderRuntimeParamValue> for serde_json::Value {
@@ -62,6 +91,9 @@ impl From<&ShaderRuntimeParamValue> for serde_json::Value {
             ShaderRuntimeParamValue::Float(inner) => serde_json::Value::from(*inner),
             ShaderRuntimeParamValue::Boolean(inner) => serde_json::Value::from(*inner),
             ShaderRuntimeParamValue::Text(inner) => serde_json::Value::from(inner.clone()),
+            ShaderRuntimeParamValue::Rgb { r, g, b } => {
+                serde_json::json!({"r": *r, "g": *g, "b": *b})
+            }
         }
     }
 }
@@ -155,6 +187,16 @@ impl From<&str> for ShaderRuntimeParamValue {
     }
 }
 
+impl From<Color> for ShaderRuntimeParamValue {
+    fn from(value: Color) -> Self {
+        Self::Rgb {
+            r: value.r,
+            g: value.g,
+            b: value.b,
+        }
+    }
+}
+
 /// Runtime parameter map exposed to spatial shaders during render.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
@@ -188,6 +230,12 @@ impl ShaderRuntimeParams {
     /// Fetch a runtime parameter coerced to u16.
     pub fn get_u16(&self, key: &str) -> Option<u16> {
         self.get(key).and_then(ShaderRuntimeParamValue::as_u16)
+    }
+
+    /// Fetch a runtime parameter interpreted as an opaque RGB `Color`.
+    /// Returns `None` for non-Rgb variants or unknown keys.
+    pub fn get_color(&self, key: &str) -> Option<Color> {
+        self.get(key).and_then(ShaderRuntimeParamValue::as_color)
     }
 }
 
@@ -333,6 +381,12 @@ impl ShaderContext {
     pub fn runtime_param_u16(&self, key: &str) -> Option<u16> {
         self.runtime_params.get_u16(key)
     }
+
+    /// Fetch a render-time runtime parameter interpreted as an opaque
+    /// RGB `Color`. Returns `None` for non-Rgb variants or unknown keys.
+    pub fn runtime_param_color(&self, key: &str) -> Option<Color> {
+        self.runtime_params.get_color(key)
+    }
 }
 
 impl Default for ShaderContext {
@@ -352,4 +406,4 @@ impl Default for ShaderContext {
 }
 
 // <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>
