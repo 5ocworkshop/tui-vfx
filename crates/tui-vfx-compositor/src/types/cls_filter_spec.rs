@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.7.0</VERS>
-// <WCTX>Phase 0 P0.4 — add FadeToCanvas filter variant for canvas-aware exit fades</WCTX>
-// <CLOG>Add FilterSpec::FadeToCanvas { canvas_color, strength, apply_to } variant, the sanctioned replacement for tint(black, 0.7+) exit hacks that flash on light canvases
+// <VERS>VERSION: 3.8.0</VERS>
+// <WCTX>Phase 0 P0.5 — add num_shakes_binding on RigidShake so severity can drive shake count</WCTX>
+// <CLOG>Add FilterSpec::RigidShake.num_shakes_binding: Option<String> with u16->u8 clamp so apps can map severity/error-level to live shake count. Damping array binding is deferred pending a scalar-multiplier design
 
 //! # Filter Specifications
 //!
@@ -498,6 +498,15 @@ pub enum FilterSpec {
         /// Number of shakes before pause (max 8)
         #[serde(default = "default_rigid_num_shakes")]
         num_shakes: u8,
+        /// Optional runtime parameter key used to resolve the shake count
+        /// at render time. The resolved u16 is clamped to u8 range
+        /// (0-255) and the downstream filter clamps further to 0-8.
+        /// Missing bindings fall back to the static `num_shakes`.
+        ///
+        /// Use this to drive shake count from severity/error-level state:
+        /// warning => 1 shake, error => 4 shakes, critical => 8 shakes.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        num_shakes_binding: Option<String>,
         /// Duration of pause between shake cycles in seconds
         #[serde(default = "default_rigid_pause_duration")]
         pause_duration: f32,
@@ -1401,4 +1410,4 @@ impl FilterSpec {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 3.7.0</VERS>
+// <VERS>END OF VERSION: 3.8.0</VERS>

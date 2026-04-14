@@ -449,6 +449,7 @@ pub(crate) fn prepare_filter(
         FilterSpec::RigidShake {
             shake_period,
             num_shakes,
+            num_shakes_binding,
             pause_duration,
             max_eighths,
             base_eighths,
@@ -465,9 +466,18 @@ pub(crate) fn prepare_filter(
             for (i, &v) in damping.iter().take(8).enumerate() {
                 damping_arr[i] = v;
             }
+            // Resolve num_shakes from the runtime binding when present.
+            // The runtime param map exposes get_u16; the downstream filter
+            // clamps further to the 0-8 shake cap. Missing bindings fall
+            // back to the static num_shakes.
+            let resolved_num_shakes = num_shakes_binding
+                .as_deref()
+                .and_then(|key| prepare_ctx.runtime_params.get_u16(key))
+                .map(|n| n.min(u8::MAX as u16) as u8)
+                .unwrap_or(*num_shakes);
             let filter = RigidShake::new()
                 .with_shake_period(*shake_period)
-                .with_num_shakes(*num_shakes)
+                .with_num_shakes(resolved_num_shakes)
                 .with_pause_duration(*pause_duration)
                 .with_max_eighths(*max_eighths)
                 .with_base_eighths(*base_eighths)
@@ -926,6 +936,80 @@ mod tests {
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::ShadeScanner(f) => assert_eq!(f.progress, 0.75),
             other => panic!("expected ShadeScanner, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    // --- P0.5: rigid_shake num_shakes_binding -------------------------------
+
+    fn rigid_shake_spec_with(
+        num_shakes: u8,
+        num_shakes_binding: Option<String>,
+    ) -> FilterSpec {
+        use tui_vfx_style::models::ColorConfig;
+        FilterSpec::RigidShake {
+            shake_period: 0.29,
+            num_shakes,
+            num_shakes_binding,
+            pause_duration: 0.52,
+            max_eighths: 12,
+            base_eighths: 3,
+            damping: vec![1.0, 0.7, 0.4, 0.2],
+            element_color: ColorConfig::Gray,
+            bg_color: ColorConfig::Black,
+            inner_width: 10,
+            margin_width: 2,
+        }
+    }
+
+    #[test]
+    fn rigid_shake_num_shakes_binding_resolves_to_runtime_param() {
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("severity", 6_u16);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_with(1, Some("severity".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => {
+                assert_eq!(filter.num_shakes(), 6);
+            }
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn rigid_shake_num_shakes_binding_clamps_to_filter_cap() {
+        // The runtime param can report anything; RigidShake::with_num_shakes
+        // clamps to 8. Binding 99 should land on the cap.
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("severity", 99_u16);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_with(1, Some("severity".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => {
+                assert_eq!(filter.num_shakes(), 8);
+            }
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn rigid_shake_num_shakes_missing_binding_falls_back_to_static() {
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_with(3, Some("missing".to_string()));
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => assert_eq!(filter.num_shakes(), 3),
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn rigid_shake_no_binding_uses_static_field() {
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = rigid_shake_spec_with(4, None);
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::RigidShake(filter) => assert_eq!(filter.num_shakes(), 4),
+            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
         }
     }
 }

@@ -192,6 +192,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
         FilterSpec::RigidShake {
             shake_period: 0.29,
             num_shakes: 4,
+            num_shakes_binding: None,
             pause_duration: 0.52,
             max_eighths: 12,
             base_eighths: 3,
