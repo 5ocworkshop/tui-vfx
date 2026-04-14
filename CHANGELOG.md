@@ -1,13 +1,113 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.10.0</VERS> -->
-<!-- <WCTX>Phase 0 P0.1-P0.5 binding generalization release</WCTX> -->
-<!-- <CLOG>Add 0.4.0 section covering BindableValue, BindableU16, PrepareContext, shader *_binding fields, FadeToCanvas filter, and RigidShake num_shakes_binding</CLOG> -->
+<!-- <VERS>VERSION: 1.11.0</VERS> -->
+<!-- <WCTX>Phase 0 "Outstanding P0 shader bindings" release covering the three items that partially shipped in 0.4.0 and were closed out on feat/phase0-shader-bindings-followup (O-P0.A/B/C)</WCTX> -->
+<!-- <CLOG>Add 0.5.0 section covering GlistenBand.speed reconnect + speed_binding, FadeToCanvas.canvas_color_binding and the new ShaderRuntimeParamValue::Rgb variant, and RigidShake.damping_scale_binding</CLOG> -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
+
+## 0.5.0 — 2026-04-14
+
+This release closes out the **three outstanding shader/filter bindings**
+that were called out inside Phase 0 P0.3, P0.4, and P0.5 but partially
+shipped in 0.4.0. The gt-design prompt #157 "Outstanding P0 shader
+bindings" subsection tracks these as O-P0.A, O-P0.B, and O-P0.C. After
+this release Phase 0 engine prerequisites are complete — every field
+the runtime-binding story needs is wired, documented, fixture-covered,
+and released. Additive minor version bump: every recipe that parsed
+against 0.4.0 parses against 0.5.0 unchanged, and the three new
+`*_binding` fields are all `Option<String>` with `skip_serializing_if`.
+
+### Added
+
+- **`GlistenBandShader.speed_binding: Option<String>`** (O-P0.A).
+  Drives the band sweep rate from a runtime f32 parameter, clamped
+  `0.1..=10.0` to prevent degenerate sweep rates (below 0.1 the band
+  stalls visibly, above 10.0 it flickers). Companion to the
+  existing `direction_binding` and `blend_strength_binding` so apps
+  can modulate sweep rate, direction, and intensity from the same
+  runtime params map (e.g. accelerate on hover, slow during dwell).
+- **Reconnected `GlistenBandShader.speed` field** (O-P0.A
+  prerequisite). The `speed` field has been a no-op since v2.0.1
+  when the sweep was refactored to be driven purely by `ctx.t`; this
+  release reconnects it as a scalar multiplier on the `t`-based
+  sweep (`scaled_t = t * effective_speed`) so recipes that declared
+  `speed != 1.0` before 0.5.0 now render at the rates their authors
+  originally intended. **Visual-behavior change for six existing
+  recipes** that used non-default speed values but rendered
+  identically regardless: `skeleton_shimmer.json` (0.7, now slower),
+  `update_shimmer_ribbon.json` (0.8, now slower), `glisten_band_directions.json`
+  (1.5, now faster), `shader_glisten_band*.json` fixtures (1.5), and
+  `glisten_white_band_directions.json` (3.0, much faster). This is a
+  fix, not a regression — the declared values now mean what they
+  say.
+- **`FilterSpec::FadeToCanvas.canvas_color_binding: Option<String>`**
+  (O-P0.B). Drives the exit-fade target color from a runtime
+  parameter at prepare time instead of baking a static
+  `ColorConfig` into the recipe. Missing bindings and non-Rgb kinds
+  fall through to the declared `canvas_color`. Typical use: an app
+  that toggles dark/light mode at runtime reports the current
+  terminal background via `current_terminal_bg` runtime params so
+  every toast's exit fade tracks the new backdrop without needing
+  per-theme recipe variants.
+- **`ShaderRuntimeParamValue::Rgb { r: u8, g: u8, b: u8 }` variant**
+  (O-P0.B prerequisite). Runtime params previously carried only
+  `Integer`, `Float`, `Boolean`, and `Text` — binding a `Color`
+  required widening the enum. The new trailing `Rgb` variant
+  deserializes from `{"r": <u8>, "g": <u8>, "b": <u8>}` JSON objects
+  and does not collide with the existing scalar variants under
+  `serde(untagged)`. New `ShaderRuntimeParamValue::as_color()` and
+  `ShaderRuntimeParams::get_color(key)` accessors lower the binding
+  resolution path for any filter that needs a runtime Color. New
+  `From<tui_vfx_types::Color> for ShaderRuntimeParamValue` impl so
+  apps can `params.insert("bg", my_color)` without naming the
+  variant directly.
+- **`FilterSpec::RigidShake.damping_scale_binding: Option<String>`**
+  (O-P0.C). Drives a single scalar multiplier over the 8-entry
+  `damping` curve so apps can tighten or loosen the shake decay at
+  runtime without authoring N recipe variants. Resolved as `f32`,
+  clamped `0.1..=10.0`, and multiplied element-wise into every
+  element of the curve at prepare time. Recommended pairing with
+  the existing `num_shakes_binding` to drive both shake count AND
+  decay rate from the same severity source: warning → (1 shake,
+  scale 0.5), error → (4 shakes, scale 1.0), critical → (8 shakes,
+  scale 2.0). Missing bindings leave the declared damping curve
+  unchanged.
+
+### Changed
+
+- **workspace: crate version `0.4.0` → `0.5.0`.**
+- **Internal workspace dep floors bumped from `0.4.0` to `0.5.0`**
+  across `tui-vfx-types`, `tui-vfx-core`, `tui-vfx-core-macros`,
+  `tui-vfx-geometry`, `tui-vfx-compositor`, `tui-vfx-style`,
+  `tui-vfx-content`, `tui-vfx-shadow`, and `tui-vfx-debug`.
+- **Generated docs regenerated** via `cargo xtask docs generate` to
+  pick up the new `canvas_color_binding` and `damping_scale_binding`
+  fields. `cargo xtask docs check` is clean with zero warnings.
+  `GlistenBand.speed_binding` and the reconnected `speed` field did
+  not need doc regeneration because they are struct-level additions
+  that the capabilities.toml already listed in the key-parameters
+  inventory.
+
+### Deferred
+
+Nothing. After this release every Phase 0 engine prerequisite in
+prompt #157 is fully landed. The `btop_focused_row_dynamic_list.json`
+reproducibility acceptance bullet remains deferred to Phase 5 per
+the prompt — that is a recipe-authoring item, not an engine gap.
+
+### Migration notes
+
+Consumers compiling against the `ShaderRuntimeParamValue` enum must
+handle the new `Rgb` variant in match arms that use the non-exhaustive
+`match` form (or add `_ => ...` fallbacks). The existing
+`kind_name()`, `as_f32()`, `as_u16()`, `serde_json::Value::from`,
+and `ShaderRuntimeParams::get_f32`/`get_u16` accessors all degrade
+gracefully — `as_f32` and `as_u16` return `None` for `Rgb`, which
+matches their existing semantics for `Boolean`/`Text`.
 
 ## 0.4.0 — 2026-04-14
 
