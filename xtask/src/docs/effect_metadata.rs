@@ -121,6 +121,11 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             strength: Default::default(),
             apply_to: Default::default(),
         },
+        FilterSpec::FadeToCanvas {
+            canvas_color: ColorConfig::Rgb { r: 0, g: 0, b: 0 },
+            strength: BindableValue::static_f32(1.0),
+            apply_to: Default::default(),
+        },
         FilterSpec::Vignette {
             strength: Default::default(),
             radius: Default::default(),

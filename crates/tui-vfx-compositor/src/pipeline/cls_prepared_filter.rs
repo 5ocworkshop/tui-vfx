@@ -11,6 +11,7 @@ use crate::filters::cls_color_bridged_shade::ColorBridgedShade;
 use crate::filters::cls_crt::Crt;
 use crate::filters::cls_dim::Dim;
 use crate::filters::cls_dot_indicator::DotIndicator;
+use crate::filters::cls_fade_to_canvas::FadeToCanvas;
 use crate::filters::cls_glisten_sweep::GlistenSweep;
 use crate::filters::cls_greyscale::Greyscale;
 use crate::filters::cls_hover_bar::HoverBar;
@@ -36,6 +37,7 @@ pub(crate) enum PreparedFilter {
     Dim { filter: Dim, factor: f32 },
     Invert(Invert),
     Tint(Tint),
+    FadeToCanvas(FadeToCanvas),
     Vignette(Vignette),
     Crt(Crt),
     PatternFill(PatternFill),
@@ -76,6 +78,9 @@ impl PreparedFilter {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
             PreparedFilter::Tint(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
+            PreparedFilter::FadeToCanvas(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
             PreparedFilter::Vignette(filter) => {
@@ -146,6 +151,7 @@ impl PreparedFilter {
             PreparedFilter::Dim { .. } => "Dim",
             PreparedFilter::Invert(_) => "Invert",
             PreparedFilter::Tint(_) => "Tint",
+            PreparedFilter::FadeToCanvas(_) => "FadeToCanvas",
             PreparedFilter::Vignette(_) => "Vignette",
             PreparedFilter::Crt(_) => "Crt",
             PreparedFilter::PatternFill(_) => "PatternFill",
@@ -220,6 +226,21 @@ pub(crate) fn prepare_filter(
             let tint_color: Color = (*color).into();
             Some(PreparedFilter::Tint(Tint {
                 color: tint_color,
+                strength: evaluated_strength,
+                apply_to: *apply_to,
+            }))
+        }
+        FilterSpec::FadeToCanvas {
+            canvas_color,
+            strength,
+            apply_to,
+        } => {
+            let evaluated_strength = strength
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
+            let canvas: Color = (*canvas_color).into();
+            Some(PreparedFilter::FadeToCanvas(FadeToCanvas {
+                canvas_color: canvas,
                 strength: evaluated_strength,
                 apply_to: *apply_to,
             }))

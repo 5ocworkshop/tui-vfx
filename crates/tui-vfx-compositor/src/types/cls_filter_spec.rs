@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.6.0</VERS>
-// <WCTX>Phase 0 P0.1 — lift progress field on remaining 8 filters to BindableValue</WCTX>
-// <CLOG>Lift SubPixelBar, HoverBar, UnderlineWipe, BracketEmphasis, DotIndicator, PillButton, GlistenSweep, ShadeScanner progress fields from f32 to BindableValue; default_bar_progress now returns BindableValue
+// <VERS>VERSION: 3.7.0</VERS>
+// <WCTX>Phase 0 P0.4 — add FadeToCanvas filter variant for canvas-aware exit fades</WCTX>
+// <CLOG>Add FilterSpec::FadeToCanvas { canvas_color, strength, apply_to } variant, the sanctioned replacement for tint(black, 0.7+) exit hacks that flash on light canvases
 
 //! # Filter Specifications
 //!
@@ -238,6 +238,28 @@ pub enum FilterSpec {
         #[serde(default = "default_tint_strength")]
         strength: SignalOrFloat,
         /// Which color component to tint
+        apply_to: ApplyTo,
+    },
+    /// Canvas-aware exit fade that blends cells toward a declared canvas
+    /// color. Use this in place of `tint(black, ...)` on exit animations so
+    /// the widget doesn't flash dark on light terminal backgrounds: set
+    /// `canvas_color` to match the terminal background and drive `strength`
+    /// from the exit phase progress (static 1.0 for instant fade, signal
+    /// for smooth animation, binding for runtime-driven control).
+    ///
+    /// Defaults to black for drop-in compatibility with the old tint hack.
+    FadeToCanvas {
+        /// The canvas color to fade into — should match the terminal
+        /// background the recipe will run against.
+        #[serde(default = "default_fade_to_canvas_color")]
+        canvas_color: ColorConfig,
+        /// Fade strength (0.0 = untouched, 1.0 = fully replaced with
+        /// canvas_color). Uses `BindableValue` so the P0.1 signal/binding
+        /// surface applies uniformly across filter parameters.
+        #[serde(default)]
+        strength: BindableValue,
+        /// Which color component(s) to fade.
+        #[serde(default = "default_fade_to_canvas_apply_to")]
         apply_to: ApplyTo,
     },
     /// Vignette darkening around edges
@@ -746,6 +768,14 @@ fn default_tint_strength() -> SignalOrFloat {
     SignalOrFloat::Static(0.5)
 }
 
+fn default_fade_to_canvas_color() -> ColorConfig {
+    ColorConfig::Rgb { r: 0, g: 0, b: 0 }
+}
+
+fn default_fade_to_canvas_apply_to() -> ApplyTo {
+    ApplyTo::Both
+}
+
 fn default_vignette_strength() -> SignalOrFloat {
     SignalOrFloat::Static(0.5)
 }
@@ -1078,6 +1108,7 @@ impl FilterSpec {
             FilterSpec::Dim { .. } => "Dim",
             FilterSpec::Invert { .. } => "Invert",
             FilterSpec::Tint { .. } => "Tint",
+            FilterSpec::FadeToCanvas { .. } => "FadeToCanvas",
             FilterSpec::Vignette { .. } => "Vignette",
             FilterSpec::Crt { .. } => "Crt",
             FilterSpec::PatternFill { .. } => "PatternFill",
@@ -1108,6 +1139,9 @@ impl FilterSpec {
             FilterSpec::Dim { .. } => "Dim/darken the output",
             FilterSpec::Invert { .. } => "Invert colors",
             FilterSpec::Tint { .. } => "Apply a color tint",
+            FilterSpec::FadeToCanvas { .. } => {
+                "Canvas-aware exit fade: blend cells toward a declared canvas color"
+            }
             FilterSpec::Vignette { .. } => "Vignette darkening around edges",
             FilterSpec::Crt { .. } => "CRT monitor post-processing effect",
             FilterSpec::PatternFill { .. } => "Pattern fill effect for background textures",
@@ -1156,6 +1190,15 @@ impl FilterSpec {
                 apply_to,
             } => vec![
                 ("color", format!("{:?}", color)),
+                ("strength", format!("{:?}", strength)),
+                ("apply_to", format!("{:?}", apply_to)),
+            ],
+            FilterSpec::FadeToCanvas {
+                canvas_color,
+                strength,
+                apply_to,
+            } => vec![
+                ("canvas_color", format!("{:?}", canvas_color)),
                 ("strength", format!("{:?}", strength)),
                 ("apply_to", format!("{:?}", apply_to)),
             ],
@@ -1358,4 +1401,4 @@ impl FilterSpec {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 3.6.0</VERS>
+// <VERS>END OF VERSION: 3.7.0</VERS>

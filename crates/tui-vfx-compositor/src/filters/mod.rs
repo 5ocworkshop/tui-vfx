@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/mod.rs</FILE> - <DESC>Filter implementations (internal)</DESC>
-// <VERS>VERSION: 2.6.0</VERS>
-// <WCTX>Add CharsetNoise filter for living textures</WCTX>
-// <CLOG>Add cls_charset_noise filter module</CLOG>
+// <VERS>VERSION: 2.7.0</VERS>
+// <WCTX>Phase 0 P0.4 — add FadeToCanvas exit filter</WCTX>
+// <CLOG>Add cls_fade_to_canvas filter module</CLOG>
 
 pub(crate) mod cls_bracket_emphasis;
 pub(crate) mod cls_braille_dust;
@@ -10,6 +10,7 @@ pub(crate) mod cls_color_bridged_shade;
 pub(crate) mod cls_crt;
 pub(crate) mod cls_dim;
 pub(crate) mod cls_dot_indicator;
+pub(crate) mod cls_fade_to_canvas;
 pub(crate) mod cls_glisten_sweep;
 pub(crate) mod cls_greyscale;
 pub(crate) mod cls_hover_bar;
@@ -31,4 +32,4 @@ pub(crate) mod cls_vignette;
 pub(crate) mod test_support;
 
 // <FILE>tui-vfx-compositor/src/filters/mod.rs</FILE> - <DESC>Filter implementations (internal)</DESC>
-// <VERS>END OF VERSION: 2.6.0</VERS>
+// <VERS>END OF VERSION: 2.7.0</VERS>
