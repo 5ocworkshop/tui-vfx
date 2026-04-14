@@ -55,6 +55,7 @@ fn shader_scene() -> ProbeSceneSpec {
                     speed: 1.0,
                     length: 2,
                     color: ColorConfig::Red,
+                    position_binding: None,
                 }),
                 region: StyleRegion::All,
             }],

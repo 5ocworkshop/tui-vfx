@@ -69,6 +69,7 @@ fn test_render_pipeline_with_spec_matches_options_shader_layer() {
         speed: 1.0,
         length: 3,
         color: ColorConfig::Red,
+        position_binding: None,
     };
     let spec_shader = shader.clone();
 

@@ -57,6 +57,7 @@ fn test_spatial_shader_name_returns_nonempty() {
             speed: 1.0,
             length: 5,
             color: ColorConfig::Cyan,
+            position_binding: None,
         }),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
         SpatialShaderType::Highlighter(HighlighterShader {
@@ -110,6 +111,7 @@ fn test_spatial_shader_description_returns_nonempty() {
             speed: 1.0,
             length: 5,
             color: ColorConfig::Cyan,
+            position_binding: None,
         }),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
         SpatialShaderType::Highlighter(HighlighterShader {
