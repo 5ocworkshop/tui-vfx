@@ -618,5 +618,103 @@ pub(crate) fn prepare_filters(
     prepared
 }
 
+#[cfg(test)]
+mod tests {
+    //! Inline tests live here (rather than in `tests/pipeline/`) because
+    //! `prepare_filter` is `pub(crate)` — the lowest-friction place to
+    //! exercise the spec → PreparedFilter conversion directly is inside
+    //! the crate.
+
+    use super::*;
+    use crate::types::BindableValue;
+    use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode};
+    use tui_vfx_style::traits::ShaderRuntimeParams;
+
+    fn kitt_spec_with_progress(progress: BindableValue) -> FilterSpec {
+        FilterSpec::KittScanner {
+            boost: 50,
+            band_width: 0.15,
+            bps: 1.0,
+            progress,
+            motion_mode: ScannerMotionMode::default(),
+            apply_to: ApplyTo::Both,
+            powerline_mode: false,
+            boost_separator_bg: false,
+        }
+    }
+
+    #[test]
+    fn kitt_scanner_progress_binding_resolves_from_runtime_params() {
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("demo_progress", 0.7_f32);
+        let ctx = PrepareContext::new(0.0, &rp);
+
+        let spec = kitt_spec_with_progress(BindableValue::Binding("demo_progress".into()));
+        let prepared = prepare_filter(&spec, &ctx).expect("KittScanner prepares");
+
+        match prepared {
+            PreparedFilter::KittScanner(filter) => assert_eq!(filter.progress, 0.7),
+            other => panic!("expected PreparedFilter::KittScanner, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn kitt_scanner_progress_binding_missing_param_falls_back_to_zero() {
+        // Empty runtime_params → the Binding resolves to None → unwrap_or(0.0).
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+
+        let spec = kitt_spec_with_progress(BindableValue::Binding("missing".into()));
+        let prepared = prepare_filter(&spec, &ctx).expect("KittScanner prepares");
+
+        match prepared {
+            PreparedFilter::KittScanner(filter) => assert_eq!(filter.progress, 0.0),
+            other => panic!("expected PreparedFilter::KittScanner, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn kitt_scanner_progress_static_literal_still_works() {
+        // Regression guard: a pre-lift-style literal still passes through cleanly.
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+
+        let spec = kitt_spec_with_progress(BindableValue::static_f32(0.5));
+        let prepared = prepare_filter(&spec, &ctx).expect("KittScanner prepares");
+
+        match prepared {
+            PreparedFilter::KittScanner(filter) => assert_eq!(filter.progress, 0.5),
+            other => panic!("expected PreparedFilter::KittScanner, got {:?}", std::mem::discriminant(&other)),
+        }
+    }
+
+    #[test]
+    fn kitt_scanner_progress_binding_updates_between_frames() {
+        // Two different PrepareContexts with different runtime_params values
+        // should produce two different prepared filters. Proves the binding
+        // re-resolves per frame rather than capturing a snapshot.
+        let spec = kitt_spec_with_progress(BindableValue::Binding("demo_progress".into()));
+
+        let mut rp_a = ShaderRuntimeParams::new();
+        rp_a.insert("demo_progress", 0.25_f32);
+        let ctx_a = PrepareContext::new(0.0, &rp_a);
+
+        let mut rp_b = ShaderRuntimeParams::new();
+        rp_b.insert("demo_progress", 0.9_f32);
+        let ctx_b = PrepareContext::new(0.016, &rp_b);
+
+        let prepared_a = prepare_filter(&spec, &ctx_a).unwrap();
+        let prepared_b = prepare_filter(&spec, &ctx_b).unwrap();
+
+        let (PreparedFilter::KittScanner(fa), PreparedFilter::KittScanner(fb)) =
+            (&prepared_a, &prepared_b)
+        else {
+            panic!("expected PreparedFilter::KittScanner from both frames");
+        };
+        assert_eq!(fa.progress, 0.25);
+        assert_eq!(fb.progress, 0.9);
+    }
+}
+
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
 // <VERS>END OF VERSION: 2.14.0</VERS>
