@@ -1,5 +1,5 @@
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions)</DESC>
-// <VERS>VERSION: 3.0.0</VERS>
+// <VERS>VERSION: 3.0.1</VERS>
 // <WCTX>Upgrade SplitFlap from a linear-progression text walk into a physically-accurate mechanical Solari departure-board transformer. Add nine new fields — cycles (every char flips through satisfying pool distance regardless of target index), jitter (per-column mechanical timing imperfection), charset (Alpha/Digits/Uppercase pool selection), settle_overshoot (brief bounce past target), leading_blocks (opening █▓▒░ flash), settle_hinge (closing █→▀→▔→—→▁→▄→letter rotation using upper/lower half blocks plus em-dash hinge), spring_settle (remap hinge timing through DampedSpring for authentic gravity-fall-plus-bounce), authentic_timing (all columns start simultaneously from blank, landing time proportional to flap distance — not sequential cascade), from_message (message-to-message transitions where each column rotates from its previous char to its new char through shortest forward-only drum path). Add solari_preset(animation_ms) factory that computes Solari-authentic values (35ms/flap target, matching real Alitalia Linate and Frankfurt Hbf boards). All new fields default to values that preserve 2.1.0 linear-walk behavior.</WCTX>
 // <CLOG>v3.0.0: complete physical Solari board implementation. Add SplitFlapCharset enum (Alpha/Digits/Uppercase), nine new struct fields all with #[serde(default)] for backward compat, solari_preset + with_from_message builders, estimated_flap_ms helper, AUTHENTIC_FLAP_MS + ALPHA_POOL_SIZE constants, BLOCK_CHARS + HINGE_CHARS rotation sequences, DampedSpring hinge remapping. ContentEffect::SplitFlap grows seven optional fields; existing `{ "type": "split_flap", "speed": X, "cascade": Y }` recipes deserialize unchanged.</CLOG>
 
@@ -273,6 +273,17 @@ impl TextTransformer for SplitFlap {
 
         let mut out = String::with_capacity(target.len());
         for (i, target_char) in target.chars().enumerate() {
+            // Structural characters (newlines, tabs, carriage returns)
+            // pass through unchanged at every frame. This is load-bearing
+            // for multi-line messages like arrivals boards — the flap
+            // mechanism doesn't exist between rows, so the row separator
+            // must remain a row separator throughout the animation
+            // rather than flipping through the pool like content.
+            if target_char == '\n' || target_char == '\r' || target_char == '\t' {
+                out.push(target_char);
+                continue;
+            }
+
             let jitter_factor = self.jitter_factor(i);
 
             // Resolve target_idx. If not in pool, emit the target char
@@ -684,6 +695,77 @@ mod tests {
         assert_eq!(chars[1], 'B');
     }
 
+    // ---------- multi-line: newline passthrough ----------
+
+    #[test]
+    fn newlines_pass_through_unchanged_during_flip() {
+        // A multi-line message (arrivals board style) must preserve its
+        // newlines at every progress value so the layout doesn't collapse
+        // into a single long row mid-animation.
+        let shader = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        );
+        for t in [0.0, 0.25, 0.5, 0.75, 0.99, 1.0] {
+            let r = shader.transform("AB\nCD", t, &ctx());
+            assert!(
+                r.contains('\n'),
+                "multi-line message must preserve newline at t={t}, got {r:?}"
+            );
+            // Also: the newline should be at position 2 (not shifted).
+            assert_eq!(
+                r.chars().position(|c| c == '\n'),
+                Some(2),
+                "newline must stay at its column at t={t}, got {r:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn multiline_authentic_timing_lands_all_rows() {
+        let shader = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        );
+        let target = "ROW 1\nROW 2\nROW 3";
+        assert_eq!(shader.transform(target, 1.0, &ctx()), target);
+    }
+
+    #[test]
+    fn multiline_from_message_preserves_structure() {
+        let shader = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        )
+        .with_from_message("A1\nB2");
+        for t in [0.0, 0.3, 0.6, 1.0] {
+            let r = shader.transform("X9\nY8", t, &ctx());
+            assert_eq!(
+                r.chars().filter(|&c| c == '\n').count(),
+                1,
+                "multi-line from_message must preserve newline count at t={t}"
+            );
+        }
+    }
+
     // ---------- combined ----------
 
     #[test]
@@ -700,4 +782,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions)</DESC>
-// <VERS>END OF VERSION: 3.0.0</VERS>
+// <VERS>END OF VERSION: 3.0.1</VERS>
