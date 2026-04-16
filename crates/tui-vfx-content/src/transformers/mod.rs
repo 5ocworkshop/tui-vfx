@@ -31,7 +31,7 @@ pub use cls_redact::Redact;
 pub use cls_scramble::Scramble;
 pub use cls_scramble_glitch_shift::ScrambleGlitchShift;
 pub use cls_slide_shift::SlideShift;
-pub use cls_split_flap::SplitFlap;
+pub use cls_split_flap::{SplitFlap, SplitFlapCharset};
 pub use cls_typewriter::Typewriter;
 pub use cls_wrap_indicator::WrapIndicator;
 pub use fnc_get_transformer::get_transformer;

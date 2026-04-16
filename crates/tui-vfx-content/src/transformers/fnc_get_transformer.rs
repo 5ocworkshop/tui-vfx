@@ -53,8 +53,35 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
             glitch_end.clone(),
             resolve_pace.clone(),
         )),
-        ContentEffect::SplitFlap { speed, cascade } => {
-            Box::new(SplitFlap::new(speed.clone(), cascade.clone()))
+        ContentEffect::SplitFlap {
+            speed,
+            cascade,
+            cycles,
+            jitter,
+            charset,
+            settle_overshoot,
+            leading_blocks,
+            settle_hinge,
+            spring_settle,
+            authentic_timing,
+            from_message,
+        } => {
+            let mut sf = SplitFlap::new_mechanical(
+                speed.clone(),
+                cascade.clone(),
+                cycles.clone(),
+                *jitter,
+                *charset,
+                *settle_overshoot,
+                *leading_blocks,
+                *settle_hinge,
+                *spring_settle,
+                *authentic_timing,
+            );
+            if let Some(from) = from_message {
+                sf = sf.with_from_message(from.clone());
+            }
+            Box::new(sf)
         }
         ContentEffect::Odometer => Box::new(Odometer),
         ContentEffect::Redact { symbol } => Box::new(Redact::new(*symbol)),

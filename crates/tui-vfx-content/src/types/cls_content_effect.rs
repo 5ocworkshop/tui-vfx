@@ -179,15 +179,71 @@ pub enum ContentEffect {
 
     /// Airport/train station split-flap display.
     ///
-    /// Characters flip through the alphabet like mechanical departure boards.
-    /// Creates a satisfying retro-mechanical aesthetic.
+    /// Characters flip through a character pool like mechanical departure
+    /// boards (Solari, Alitalia, Frankfurt Hbf). 3.0.0 adds nine
+    /// mechanical-feel controls; all default to values that preserve
+    /// 2.1.0 linear-walk behavior, so legacy recipes deserialize unchanged.
     SplitFlap {
         /// Flip animation speed.
         #[serde(default)]
         speed: SignalOrFloat,
         /// Cascade delay between characters (0 = simultaneous, higher = wave).
+        /// Authentic Solari boards use cascade=0; distance-based staggering
+        /// is provided by `authentic_timing` instead.
         #[serde(default)]
         cascade: SignalOrFloat,
+        /// Minimum full character-pool cycles each char walks before
+        /// landing, so low-distance targets (like "A") still flip through
+        /// a satisfying alphabet span.
+        #[serde(default)]
+        cycles: SignalOrFloat,
+        /// Per-character deterministic cascade-timing variance (0.0-1.0).
+        /// Breaks lockstep landings; cells arrive in bursts like a real
+        /// Solari board.
+        #[serde(default)]
+        jitter: f32,
+        /// Character pool — Alpha (default, space+A-Z+digits+punctuation),
+        /// Digits (for flight numbers / clocks), or Uppercase (for station
+        /// names).
+        #[serde(default)]
+        charset: crate::transformers::SplitFlapCharset,
+        /// Brief overshoot-and-bounce at the end of each char's
+        /// progression — shows the target+1 character then settles.
+        #[serde(default)]
+        settle_overshoot: bool,
+        /// Fraction of each char's progression spent cycling through
+        /// █▓▒░ block density glyphs at the opening. Because █ fills
+        /// the cell with the terminal fg color, this flashes a "full
+        /// fg-color cursor" before any letters appear.
+        #[serde(default)]
+        leading_blocks: f32,
+        /// Plays a 6-frame physical flap rotation at the end of each
+        /// char's progression: █→▀→▔→—→▁→▄→letter. The upper-half (▀)
+        /// and lower-half (▄) blocks and their one-eighth edge variants
+        /// (▔/▁) simulate the top of an old card falling over a hinge
+        /// and the bottom of a new card rising into place.
+        #[serde(default)]
+        settle_hinge: bool,
+        /// Remap the hinge rotation through a DampedSpring curve so the
+        /// card falls fast under gravity and bounces at the landing
+        /// detent. Only applies when settle_hinge is true.
+        #[serde(default)]
+        spring_settle: bool,
+        /// Physical-Solari arrival timing: all columns start rotating
+        /// simultaneously at progress=0 from the blank position and each
+        /// lands at a time proportional to its flap distance. The
+        /// longest rotation lands at progress=1.0; shorter rotations
+        /// land earlier. Matches real boards where staggered clacking
+        /// comes from per-column distance, not sequential cascade.
+        #[serde(default)]
+        authentic_timing: bool,
+        /// Message-to-message transition: each column rotates FROM the
+        /// character at `from_message[i]` TO the character at `target[i]`,
+        /// rotating through the shortest forward-only drum path. Columns
+        /// whose character doesn't change do zero flaps and render
+        /// instantly.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        from_message: Option<String>,
     },
 
     /// Vertical scrolling digit counter.
@@ -421,9 +477,36 @@ impl ContentEffect {
                 ("glitch_start", format!("{:?}", glitch_start)),
                 ("glitch_end", format!("{:?}", glitch_end)),
             ],
-            ContentEffect::SplitFlap { speed, cascade } => vec![
+            ContentEffect::SplitFlap {
+                speed,
+                cascade,
+                cycles,
+                jitter,
+                charset,
+                settle_overshoot,
+                leading_blocks,
+                settle_hinge,
+                spring_settle,
+                authentic_timing,
+                from_message,
+            } => vec![
                 ("speed", format!("{:?}", speed)),
                 ("cascade", format!("{:?}", cascade)),
+                ("cycles", format!("{:?}", cycles)),
+                ("jitter", format!("{}", jitter)),
+                ("charset", format!("{:?}", charset)),
+                ("settle_overshoot", format!("{}", settle_overshoot)),
+                ("leading_blocks", format!("{}", leading_blocks)),
+                ("settle_hinge", format!("{}", settle_hinge)),
+                ("spring_settle", format!("{}", spring_settle)),
+                ("authentic_timing", format!("{}", authentic_timing)),
+                (
+                    "from_message",
+                    from_message
+                        .as_deref()
+                        .map(|s| format!("\"{}\"", s))
+                        .unwrap_or_else(|| "None".to_string()),
+                ),
             ],
             ContentEffect::Odometer => vec![],
             ContentEffect::Redact { symbol } => vec![("symbol", format!("{}", symbol))],
