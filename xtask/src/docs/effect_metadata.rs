@@ -544,6 +544,7 @@ fn extract_content_metadata() -> HashMap<String, EffectMetadata> {
             spring_settle: false,
             authentic_timing: false,
             from_message: None,
+            rolling_flip: false,
         },
         ContentEffect::Odometer,
         ContentEffect::Redact { symbol: '█' },

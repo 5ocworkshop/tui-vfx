@@ -244,6 +244,16 @@ pub enum ContentEffect {
         /// instantly.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         from_message: Option<String>,
+        /// Replace the intermediate-letter walk with a continuous
+        /// rolling-card animation. Each walk step plays through the
+        /// 6-frame `█→▀→▔→—→▁→▄` hinge rotation, so the viewer sees
+        /// cards physically tumbling over each other throughout the
+        /// walk instead of watching the alphabet flicker past. The
+        /// target letter is revealed only at progress=1.0. Best paired
+        /// with low `cycles` (0.2–0.5) and longer animation durations
+        /// so each rotation has enough frames to read as a flip.
+        #[serde(default)]
+        rolling_flip: bool,
     },
 
     /// Vertical scrolling digit counter.
@@ -489,6 +499,7 @@ impl ContentEffect {
                 spring_settle,
                 authentic_timing,
                 from_message,
+                rolling_flip,
             } => vec![
                 ("speed", format!("{:?}", speed)),
                 ("cascade", format!("{:?}", cascade)),
@@ -507,6 +518,7 @@ impl ContentEffect {
                         .map(|s| format!("\"{}\"", s))
                         .unwrap_or_else(|| "None".to_string()),
                 ),
+                ("rolling_flip", format!("{}", rolling_flip)),
             ],
             ContentEffect::Odometer => vec![],
             ContentEffect::Redact { symbol } => vec![("symbol", format!("{}", symbol))],

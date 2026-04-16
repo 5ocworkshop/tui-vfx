@@ -65,6 +65,7 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
             spring_settle,
             authentic_timing,
             from_message,
+            rolling_flip,
         } => {
             let mut sf = SplitFlap::new_mechanical(
                 speed.clone(),
@@ -77,7 +78,8 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
                 *settle_hinge,
                 *spring_settle,
                 *authentic_timing,
-            );
+            )
+            .with_rolling_flip(*rolling_flip);
             if let Some(from) = from_message {
                 sf = sf.with_from_message(from.clone());
             }

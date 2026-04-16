@@ -1,5 +1,5 @@
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions)</DESC>
-// <VERS>VERSION: 3.0.1</VERS>
+// <VERS>VERSION: 3.1.0</VERS>
 // <WCTX>Upgrade SplitFlap from a linear-progression text walk into a physically-accurate mechanical Solari departure-board transformer. Add nine new fields — cycles (every char flips through satisfying pool distance regardless of target index), jitter (per-column mechanical timing imperfection), charset (Alpha/Digits/Uppercase pool selection), settle_overshoot (brief bounce past target), leading_blocks (opening █▓▒░ flash), settle_hinge (closing █→▀→▔→—→▁→▄→letter rotation using upper/lower half blocks plus em-dash hinge), spring_settle (remap hinge timing through DampedSpring for authentic gravity-fall-plus-bounce), authentic_timing (all columns start simultaneously from blank, landing time proportional to flap distance — not sequential cascade), from_message (message-to-message transitions where each column rotates from its previous char to its new char through shortest forward-only drum path). Add solari_preset(animation_ms) factory that computes Solari-authentic values (35ms/flap target, matching real Alitalia Linate and Frankfurt Hbf boards). All new fields default to values that preserve 2.1.0 linear-walk behavior.</WCTX>
 // <CLOG>v3.0.0: complete physical Solari board implementation. Add SplitFlapCharset enum (Alpha/Digits/Uppercase), nine new struct fields all with #[serde(default)] for backward compat, solari_preset + with_from_message builders, estimated_flap_ms helper, AUTHENTIC_FLAP_MS + ALPHA_POOL_SIZE constants, BLOCK_CHARS + HINGE_CHARS rotation sequences, DampedSpring hinge remapping. ContentEffect::SplitFlap grows seven optional fields; existing `{ "type": "split_flap", "speed": X, "cascade": Y }` recipes deserialize unchanged.</CLOG>
 
@@ -80,6 +80,22 @@ pub struct SplitFlap {
     pub spring_settle: bool,
     pub authentic_timing: bool,
     pub from_message: Option<String>,
+    /// When true, replace the intermediate-letter walk with a continuous
+    /// rolling-card animation — each walk step plays through the 6-frame
+    /// HINGE rotation sequence (█→▀→▔→—→▁→▄) so the viewer sees cards
+    /// physically tumbling over each other instead of watching the
+    /// alphabet flicker past. The settled target letter is revealed only
+    /// at progress=1.0 via the transformer's own early return.
+    ///
+    /// This captures the dominant visual character of a real Solari
+    /// board — the letters in rapid rotation are too fast to read
+    /// individually, so what the eye perceives is the rotation itself,
+    /// not text. Pairs best with low `cycles` values (0.2–0.5) and
+    /// longer animation durations so each rotation step has enough
+    /// frames to read as a full flip rather than a blur.
+    ///
+    /// Default: false (traditional walk showing intermediate letters).
+    pub rolling_flip: bool,
 }
 
 impl SplitFlap {
@@ -104,6 +120,7 @@ impl SplitFlap {
             spring_settle: false,
             authentic_timing: false,
             from_message: None,
+            rolling_flip: false,
         }
     }
 
@@ -133,7 +150,14 @@ impl SplitFlap {
             spring_settle,
             authentic_timing,
             from_message: None,
+            rolling_flip: false,
         }
+    }
+
+    /// Enable `rolling_flip` mode on this transformer.
+    pub fn with_rolling_flip(mut self, rolling: bool) -> Self {
+        self.rolling_flip = rolling;
+        self
     }
 
     /// Message-to-message transition: each column rotates from the
@@ -370,6 +394,22 @@ impl TextTransformer for SplitFlap {
             let walk_span = (walk_end - leading).max(0.01);
             let walk_progress = ((char_progress - leading) / walk_span).clamp(0.0, 1.0);
             let walk_pos = this_flap_distance * walk_progress;
+
+            // rolling_flip: instead of showing the intermediate letter at
+            // each walk step, play the 6-frame HINGE rotation continuously
+            // across every step. Each step = one full hinge rotation. The
+            // final target is revealed only at char_progress >= 1.0 via
+            // the transformer's early return; the last hinge step ending
+            // in ▄ visually hands off to the settled letter cleanly.
+            if self.rolling_flip {
+                // Sub-progress within the current step (0.0..1.0 per step).
+                let step_frac = walk_pos.fract();
+                let glyph_idx = (step_frac * HINGE_CHARS.len() as f64)
+                    .min(HINGE_CHARS.len() as f64 - 1.0)
+                    as usize;
+                out.push(HINGE_CHARS[glyph_idx]);
+                continue;
+            }
 
             // settle_overshoot (only when settle_hinge is off — hinge owns
             // the settle window).
@@ -695,6 +735,44 @@ mod tests {
         assert_eq!(chars[1], 'B');
     }
 
+    // ---------- rolling_flip: continuous card rotation ----------
+
+    #[test]
+    fn rolling_flip_shows_hinge_glyphs_during_walk() {
+        // With rolling_flip enabled, every position during the walk
+        // phase must be a HINGE rotation glyph, never a pool letter.
+        let shader = sf_full(1.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, false)
+            .with_rolling_flip(true);
+        for t in [0.1, 0.3, 0.5, 0.7] {
+            let c = shader.transform("Z", t, &ctx()).chars().next().unwrap();
+            assert!(
+                HINGE_CHARS.contains(&c),
+                "rolling_flip at t={t} must show a rotation glyph, got '{c}'"
+            );
+        }
+    }
+
+    #[test]
+    fn rolling_flip_lands_on_target_at_progress_1() {
+        let shader = sf_full(1.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, false)
+            .with_rolling_flip(true);
+        assert_eq!(shader.transform("HELLO", 1.0, &ctx()), "HELLO");
+    }
+
+    #[test]
+    fn rolling_flip_default_off_preserves_letter_walk() {
+        let shader = sf(0.5, 0.0, SplitFlapCharset::Alpha, false, 0.0, false);
+        assert!(!shader.rolling_flip);
+        // Without rolling_flip, mid-walk should show a pool letter
+        // (not a hinge glyph), confirming the old walk behavior remains
+        // the default.
+        let c = shader.transform("Z", 0.3, &ctx()).chars().next().unwrap();
+        assert!(
+            !HINGE_CHARS.contains(&c),
+            "without rolling_flip, mid-walk must show a pool letter, got '{c}'"
+        );
+    }
+
     // ---------- multi-line: newline passthrough ----------
 
     #[test]
@@ -782,4 +860,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions)</DESC>
-// <VERS>END OF VERSION: 3.0.1</VERS>
+// <VERS>END OF VERSION: 3.1.0</VERS>
