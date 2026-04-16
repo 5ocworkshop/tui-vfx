@@ -60,9 +60,7 @@ fn test_spatial_shader_name_returns_nonempty() {
             position_binding: None,
         }),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
-        SpatialShaderType::Highlighter(HighlighterShader {
-            color: ColorConfig::Yellow,
-        }),
+        SpatialShaderType::Highlighter(HighlighterShader::new(ColorConfig::Yellow)),
         SpatialShaderType::Reflect(ReflectShader {
             speed: 2.0,
             color: ColorConfig::White,
@@ -114,9 +112,7 @@ fn test_spatial_shader_description_returns_nonempty() {
             position_binding: None,
         }),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
-        SpatialShaderType::Highlighter(HighlighterShader {
-            color: ColorConfig::Yellow,
-        }),
+        SpatialShaderType::Highlighter(HighlighterShader::new(ColorConfig::Yellow)),
         SpatialShaderType::Reflect(ReflectShader {
             speed: 2.0,
             color: ColorConfig::White,

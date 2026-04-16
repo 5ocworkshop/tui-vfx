@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>VERSION: 2.1.3</VERS>
-// <WCTX>Fix xtask docs api generator drift: key_parameters() omitted required color/head/tail fields</WCTX>
-// <CLOG>Add required fields to key_parameters() for BarberPole, Radar, BorderSweep, Highlighter, Reflect, PulseWave, GlistenBand, Glow — these were missing the required color (or head/tail) field the shader struct requires at JSON parse time</CLOG>
+// <VERS>VERSION: 2.2.0</VERS>
+// <WCTX>Surface the expanded Highlighter parameter surface (apply_to / mode / direction / speed / blend_strength / soft_edge / band_width) introduced in cls_highlighter_shader v2.0.0 so the docs extractor shows the full control set</WCTX>
+// <CLOG>Extend Highlighter branch of key_parameters() from color-only to include apply_to, mode, direction, speed, blend_strength, soft_edge, and band_width</CLOG>
 
 //! # Spatial Shader Types
 //!
@@ -324,7 +324,16 @@ impl SpatialShaderType {
                 ("length", format!("{} cells", s.length)),
                 ("color", format!("{:?}", s.color)),
             ],
-            SpatialShaderType::Highlighter(s) => vec![("color", format!("{:?}", s.color))],
+            SpatialShaderType::Highlighter(s) => vec![
+                ("color", format!("{:?}", s.color)),
+                ("apply_to", format!("{:?}", s.apply_to)),
+                ("mode", format!("{:?}", s.mode)),
+                ("direction", format!("{:?}", s.direction)),
+                ("speed", format!("{}", s.speed)),
+                ("blend_strength", format!("{}", s.blend_strength)),
+                ("soft_edge", format!("{}", s.soft_edge)),
+                ("band_width", format!("{} cells", s.band_width)),
+            ],
             SpatialShaderType::Reflect(s) => vec![
                 ("speed", format!("{}", s.speed)),
                 ("color", format!("{:?}", s.color)),
@@ -445,4 +454,4 @@ impl SpatialShaderType {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>END OF VERSION: 2.1.3</VERS>
+// <VERS>END OF VERSION: 2.2.0</VERS>

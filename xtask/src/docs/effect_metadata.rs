@@ -383,9 +383,7 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
             color: ColorConfig::Cyan,
             position_binding: None,
         }),
-        SpatialShaderType::Highlighter(HighlighterShader {
-            color: ColorConfig::Yellow,
-        }),
+        SpatialShaderType::Highlighter(HighlighterShader::new(ColorConfig::Yellow)),
         SpatialShaderType::Reflect(ReflectShader {
             speed: 2.0,
             color: ColorConfig::White,

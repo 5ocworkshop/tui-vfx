@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>VERSION: 1.9.0</VERS>
-// <WCTX>Phase 0 P0.2 — add BindableU16 for runtime-parameter cell coordinate bindings</WCTX>
-// <CLOG>Register cls_bindable_u16 module and re-export BindableU16</CLOG>
+// <VERS>VERSION: 2.0.0</VERS>
+// <WCTX>Re-export the expanded HighlighterShader companion types introduced in cls_highlighter_shader v2.0.0</WCTX>
+// <CLOG>Expand `pub use cls_highlighter_shader` to include HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask, TextContrast alongside HighlighterShader</CLOG>
 
 pub mod cls_ambient_occlusion_shader;
 pub mod cls_barber_pole_shader;
@@ -67,7 +67,10 @@ pub use cls_glitch_lines_shader::GlitchLinesShader;
 pub use cls_glow_shader::GlowShader;
 pub use cls_gradient::Gradient;
 pub use cls_gradient_lut::GradientLUT;
-pub use cls_highlighter_shader::HighlighterShader;
+pub use cls_highlighter_shader::{
+    HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
+    HighlighterShader, TextContrast,
+};
 pub use cls_linear_gradient_shader::LinearGradientShader;
 pub use cls_neon_flicker_shader::{NeonFlickerShader, SegmentMode};
 pub use cls_noise_type::NoiseType;
@@ -91,4 +94,4 @@ pub use cls_trace_propagation_shader::TracePropagationShader;
 pub use tui_vfx_geometry::easing::EasingType;
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>END OF VERSION: 1.8.1</VERS>
+// <VERS>END OF VERSION: 2.0.0</VERS>
