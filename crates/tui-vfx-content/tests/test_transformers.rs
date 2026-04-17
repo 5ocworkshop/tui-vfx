@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/test_transformers.rs</FILE> - <DESC>Linker for transformer tests</DESC>
-// <VERS>VERSION: 1.3.0 - 2026-01-21</VERS>
-// <WCTX>SlideShift content transformer</WCTX>
-// <CLOG>Added test_cls_slide_shift</CLOG>
+// <VERS>VERSION: 1.4.0</VERS>
+// <WCTX>feat/cursor-primitive T23: Typewriter::transform_with_cursor</WCTX>
+// <CLOG>Added test_typewriter_transform_with_cursor</CLOG>
 
 #[path = "transformers/test_cls_marquee.rs"]
 mod test_cls_marquee;
@@ -17,6 +17,8 @@ mod test_cls_slide_shift;
 mod test_cls_typewriter;
 #[path = "transformers/test_fnc_get_transformer.rs"]
 mod test_fnc_get_transformer;
+#[path = "transformers/test_typewriter_transform_with_cursor.rs"]
+mod test_typewriter_transform_with_cursor;
 
 // <FILE>tui-vfx-content/tests/test_transformers.rs</FILE> - <DESC>Linker for transformer tests</DESC>
-// <VERS>END OF VERSION: 1.3.0 - 2026-01-21</VERS>
+// <VERS>END OF VERSION: 1.4.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>feat/content-ergonomics: document static vs signal-driven parameters and one-call apply</WCTX>
-// <CLOG>Add Quick start, Static vs signal-driven parameters, and Cursor presets sections</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>feat/cursor-primitive: register cursor module</WCTX>
+// <CLOG>Add pub mod cursor</CLOG>
 
 //! # TUI VFX Content
 //!
@@ -99,6 +99,7 @@
 //! let custom = TypewriterCursor::simple('◆');   // any single glyph
 //! ```
 
+pub mod cursor;
 pub mod prelude;
 pub mod traits;
 pub mod transformers;
@@ -106,4 +107,4 @@ pub mod types;
 pub mod utils;
 
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

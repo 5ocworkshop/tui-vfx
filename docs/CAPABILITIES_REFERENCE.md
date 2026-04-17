@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.14.0</VERS> -->
-<!-- <WCTX>Sync KittScanner and observability docs to the newer diagnostics work</WCTX> -->
-<!-- <CLOG>MINOR: Update KittScanner capabilities to mention motion_mode and extend observability notes so they mention probe-side diagnostics and full background snapshots in trace storage</CLOG> -->
+<!-- <VERS>VERSION: 1.15.0</VERS> -->
+<!-- <WCTX>feat/cursor-primitive T29: hand docs for the general Cursor primitive + TypewriterCursor flatten</WCTX> -->
+<!-- <CLOG>MINOR: Document the tui_vfx_content::cursor primitive (Cursor, CursorBlink, GrowIn, Wake, CursorState, CursorPaintOps), the consumer bridging pattern via fnc_build_cursor_shader + SpatialShaderType::Cursor, and note that TypewriterCursor now composes Cursor via #[serde(flatten)]</CLOG>
 
 # tui-vfx Capabilities Reference
 
@@ -532,6 +532,77 @@ let custom = TypewriterCursor::simple('◆');   // any single glyph
 Each preset uses `Default::default()` for `blink_interval`,
 `show_while_typing`, and `show_after_complete`, so consumers can opt in
 to a glyph without writing the full struct literal.
+
+Since 0.4.0, `TypewriterCursor` composes the general [`Cursor`](#cursor-primitive-since-040)
+primitive via `#[serde(flatten)]`. The legacy fields (`character`,
+`blink_interval`, `show_while_typing`, `show_after_complete`) continue to
+work unchanged at both the Rust and JSON layers, but richer cursor
+behavior — grow-in animations and fading wake trails — is authored on
+the nested `Cursor` directly (e.g. `tcursor.cursor.grow_in = ...`,
+`tcursor.cursor.wake = ...`).
+
+### Cursor primitive (since 0.4.0)
+
+`tui_vfx_content::cursor::Cursor` is a general-purpose cursor primitive. Any
+effect, transformer, or overlay that wants a cursor — with optional grow-in
+animation and a fading wake trail — can own one.
+
+Defaults render a plain static block cursor. Animations opt in:
+
+```rust
+use tui_vfx_content::cursor::Cursor;
+
+// Static (v1.1.0-compatible behavior)
+let plain = Cursor::block();
+
+// 200ms bottom-up grow on show
+let greeting = Cursor::block().with_grow_in(200.0);
+
+// Fading warmth trail, 1.5s decay, 8-cell cap
+let editor = Cursor::block().with_wake_tint(1.5, 8);
+```
+
+**Subsystems:**
+
+- `CursorBlink { interval_ms }` — `0` disables blinking (accepts legacy alias `blink_interval`).
+- `GrowIn { mode, direction, duration_ms, grow_out_ms, curve }` — `mode = Never` (default) disables.
+- `Wake { mode, decay_seconds, max_cells, curve, tint }` — `mode = Off` (default) disables.
+
+**Runtime:**
+
+- `CursorState` holds the per-frame bookkeeping (current/previous position,
+  grow-in phase, wake history). Consumers own one per rendered cursor.
+- `fnc_advance_cursor(&mut state, &cursor, pos, now, dt, ctx)` advances state.
+- `fnc_render_cursor(&state, &cursor, now, ctx)` produces a
+  [`CursorPaintOps`](#consumer-bridging-pattern) snapshot with a primary-cell
+  op and a trail of fading cells.
+
+See rustdoc and the design spec at
+`docs/superpowers/specs/2026-04-17-cursor-primitive-design.md` for full field
+reference.
+
+#### Consumer bridging pattern
+
+The content crate produces paint ops; the style crate's `CursorShader`
+consumes a flattened snapshot and renders it through the compositor. The
+four-line bridge is:
+
+```rust
+// Per frame:
+fnc_advance_cursor(&mut state, &cursor, pos, now, dt, ctx);
+let (text, ops) = typewriter.transform_with_cursor(
+    target, progress, ctx, &cursor, &mut state, now, dt,
+);
+// Paint text into your source grid as usual, then install the shader:
+let shader = fnc_build_cursor_shader(&ops, &cursor.wake);
+comp_spec.shader_layers.push(ShaderLayerSpec {
+    shader: SpatialShaderType::Cursor(shader),
+    region: full_area,
+});
+// Optional: for Ghost-mode wake, also call
+//   fnc_apply_ghost_glyphs_to_grid(&mut source, &ops);
+// before composition so the ghost glyphs appear where the shader paints tint.
+```
 
 ---
 

@@ -455,9 +455,69 @@
           },
           {
             "default": "Static(0.0)",
-            "doc": "Cascade delay between characters (0 = simultaneous, higher = wave).",
+            "doc": "Cascade delay between characters (0 = simultaneous, higher = wave).\nAuthentic Solari boards use cascade=0; distance-based staggering\nis provided by `authentic_timing` instead.",
             "name": "cascade",
             "ty": "SignalOrFloat"
+          },
+          {
+            "default": "Static(0.0)",
+            "doc": "Minimum full character-pool cycles each char walks before\nlanding, so low-distance targets (like \"A\") still flip through\na satisfying alphabet span.",
+            "name": "cycles",
+            "ty": "SignalOrFloat"
+          },
+          {
+            "default": "0",
+            "doc": "Per-character deterministic cascade-timing variance (0.0-1.0).\nBreaks lockstep landings; cells arrive in bursts like a real\nSolari board.",
+            "name": "jitter",
+            "ty": "f32"
+          },
+          {
+            "default": "Alpha",
+            "doc": "Character pool — Alpha (default, space+A-Z+digits+punctuation),\nDigits (for flight numbers / clocks), or Uppercase (for station\nnames).",
+            "name": "charset",
+            "ty": "SplitFlapCharset"
+          },
+          {
+            "default": "false",
+            "doc": "Brief overshoot-and-bounce at the end of each char's\nprogression — shows the target+1 character then settles.",
+            "name": "settle_overshoot",
+            "ty": "bool"
+          },
+          {
+            "default": "0",
+            "doc": "Fraction of each char's progression spent cycling through\n█▓▒░ block density glyphs at the opening. Because █ fills\nthe cell with the terminal fg color, this flashes a \"full\nfg-color cursor\" before any letters appear.",
+            "name": "leading_blocks",
+            "ty": "f32"
+          },
+          {
+            "default": "false",
+            "doc": "Plays a 6-frame physical flap rotation at the end of each\nchar's progression: █→▀→▔→—→▁→▄→letter. The upper-half (▀)\nand lower-half (▄) blocks and their one-eighth edge variants\n(▔/▁) simulate the top of an old card falling over a hinge\nand the bottom of a new card rising into place.",
+            "name": "settle_hinge",
+            "ty": "bool"
+          },
+          {
+            "default": "false",
+            "doc": "Remap the hinge rotation through a DampedSpring curve so the\ncard falls fast under gravity and bounces at the landing\ndetent. Only applies when settle_hinge is true.",
+            "name": "spring_settle",
+            "ty": "bool"
+          },
+          {
+            "default": "false",
+            "doc": "Physical-Solari arrival timing: all columns start rotating\nsimultaneously at progress=0 from the blank position and each\nlands at a time proportional to its flap distance. The\nlongest rotation lands at progress=1.0; shorter rotations\nland earlier. Matches real boards where staggered clacking\ncomes from per-column distance, not sequential cascade.",
+            "name": "authentic_timing",
+            "ty": "bool"
+          },
+          {
+            "default": "None",
+            "doc": "Message-to-message transition: each column rotates FROM the\ncharacter at `from_message[i]` TO the character at `target[i]`,\nrotating through the shortest forward-only drum path. Columns\nwhose character doesn't change do zero flaps and render\ninstantly.",
+            "name": "from_message",
+            "ty": "Option<String>"
+          },
+          {
+            "default": "false",
+            "doc": "Replace the intermediate-letter walk with a continuous\nrolling-card animation. Each walk step plays through the\n6-frame `█→▀→▔→—→▁→▄` hinge rotation, so the viewer sees\ncards physically tumbling over each other throughout the\nwalk instead of watching the alphabet flicker past. The\ntarget letter is revealed only at progress=1.0. Best paired\nwith low `cycles` (0.2–0.5) and longer animation durations\nso each rotation has enough frames to read as a flip.",
+            "name": "rolling_flip",
+            "ty": "bool"
           }
         ],
         "premium": false,
@@ -2439,9 +2499,51 @@
         "parameters": [
           {
             "default": "Yellow",
-            "doc": "highlighter color (typically yellow/green)",
+            "doc": "The highlight ink color.",
             "name": "color",
             "ty": "ColorConfig"
+          },
+          {
+            "default": "Background",
+            "doc": "Which channel(s) the ink affects. Default: `Background` (matches 1.0.0).",
+            "name": "apply_to",
+            "ty": "HighlighterApplyTo"
+          },
+          {
+            "default": "Fill",
+            "doc": "Sweep coverage shape. Default: `Fill` (matches 1.0.0 progressive fill).",
+            "name": "mode",
+            "ty": "HighlighterMode"
+          },
+          {
+            "default": "Forward",
+            "doc": "Direction the sweep travels. Default: `Forward` (matches 1.0.0\nleft-to-right).",
+            "name": "direction",
+            "ty": "HighlighterDirection"
+          },
+          {
+            "default": "1",
+            "doc": "Sweep-rate multiplier (1.0 = default time-driven sweep). Default: 1.0.",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "1",
+            "doc": "How strongly the highlighter color replaces the base, from 0.0\n(invisible) to 1.0 (full replacement). Default: 1.0 (matches 1.0.0\nfull-replace behavior).",
+            "name": "blend_strength",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Softness of the trailing edge from 0.0 (hard cutoff) to 1.0 (fully\nfeathered). Affects the Fill-mode sweep head and the Band-mode tail.\nDefault: 0.0 (matches 1.0.0 hard edge).",
+            "name": "soft_edge",
+            "ty": "f32"
+          },
+          {
+            "default": "6 cells",
+            "doc": "Width of the moving ink band in cells when `mode = Band`. Ignored in\n`Fill` mode. Default: 6.",
+            "name": "band_width",
+            "ty": "u16"
           }
         ],
         "premium": false,

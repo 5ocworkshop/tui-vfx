@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>VERSION: 2.2.0</VERS>
-// <WCTX>Surface the expanded Highlighter parameter surface (apply_to / mode / direction / speed / blend_strength / soft_edge / band_width) introduced in cls_highlighter_shader v2.0.0 so the docs extractor shows the full control set</WCTX>
-// <CLOG>Extend Highlighter branch of key_parameters() from color-only to include apply_to, mode, direction, speed, blend_strength, soft_edge, and band_width</CLOG>
+// <VERS>VERSION: 2.3.0</VERS>
+// <WCTX>feat/cursor-primitive T28: register SpatialShaderType::Cursor(CursorShader) — variant + dispatch match arms (style_at / name / terse_description / key_parameters) + doc-table entry under "Animated Effects". No runtime bindings today; follow StochasticSparkle precedent for the minimal dispatch.</WCTX>
+// <CLOG>MINOR: add Cursor variant wrapping CursorShader; extend StyleShader, name(), terse_description(), key_parameters() match arms; doc-table row added under Animated Effects</CLOG>
 
 //! # Spatial Shader Types
 //!
@@ -30,6 +30,7 @@
 //! | [`TracePropagation`](SpatialShaderType::TracePropagation) | Orthogonal routed signal pulse |
 //! | [`TracePath`](SpatialShaderType::TracePath) | Authored routed signal path |
 //! | [`EdgeSheen`](SpatialShaderType::EdgeSheen) | Calm perimeter sheen for shells |
+//! | [`Cursor`](SpatialShaderType::Cursor) | Primary-cell alpha + wake trail tint/ghost |
 //!
 //! ### Glitch & Flicker
 //! | Shader | Description |
@@ -61,7 +62,7 @@ use crate::models::{
     LinearGradientShader, cls_ambient_occlusion_shader::AmbientOcclusionShader,
     cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
     cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
-    cls_edge_sheen_shader::EdgeSheenShader,
+    cls_cursor_shader::CursorShader, cls_edge_sheen_shader::EdgeSheenShader,
     cls_focused_row_gradient_shader::FocusedRowGradientShader,
     cls_glisten_band_shader::GlistenBandShader, cls_glitch_lines_shader::GlitchLinesShader,
     cls_glow_shader::GlowShader, cls_highlighter_shader::HighlighterShader,
@@ -164,6 +165,11 @@ pub enum SpatialShaderType {
 
     /// Chromatic aberration separating RGB at edges (glitch).
     ChromaticEdge(ChromaticEdgeShader),
+
+    /// Primary-cell alpha modulation + wake trail tint/ghost for a cursor
+    /// primitive. Built per-frame from a `CursorPaintOps` snapshot via
+    /// `tui_vfx_content::cursor::fnc_build_cursor_shader`.
+    Cursor(CursorShader),
 }
 impl StyleShader for SpatialShaderType {
     fn style_at(&self, ctx: &ShaderContext, base: Style) -> Style {
@@ -190,6 +196,7 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::EdgeSheen(s) => s.style_at(ctx, base),
             SpatialShaderType::SubCellShake(s) => s.style_at(ctx, base),
             SpatialShaderType::ChromaticEdge(s) => s.style_at(ctx, base),
+            SpatialShaderType::Cursor(s) => s.style_at(ctx, base),
         }
     }
 
@@ -224,6 +231,7 @@ impl SpatialShaderType {
             SpatialShaderType::EdgeSheen(_) => "EdgeSheen",
             SpatialShaderType::SubCellShake(_) => "SubCellShake",
             SpatialShaderType::ChromaticEdge(_) => "ChromaticEdge",
+            SpatialShaderType::Cursor(_) => "Cursor",
         }
     }
 
@@ -275,6 +283,9 @@ impl SpatialShaderType {
             }
             SpatialShaderType::ChromaticEdge(_) => {
                 "Chromatic aberration effect separating RGB edges"
+            }
+            SpatialShaderType::Cursor(_) => {
+                "Primary-cell alpha modulation + wake trail tint/ghost for a cursor primitive"
             }
         }
     }
@@ -449,9 +460,21 @@ impl SpatialShaderType {
                 ("edge_width", format!("{} cells", s.edge_width)),
                 ("horizontal", format!("{}", s.horizontal)),
             ],
+            SpatialShaderType::Cursor(s) => vec![
+                ("mode", format!("{:?}", s.mode)),
+                ("tint", format!("{:?}", s.tint)),
+                (
+                    "primary",
+                    match s.primary.as_ref() {
+                        Some(p) => format!("{:?} @ alpha {:.2}", p.position, p.alpha),
+                        None => "none".to_string(),
+                    },
+                ),
+                ("trail_len", format!("{}", s.trail.len())),
+            ],
         }
     }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>END OF VERSION: 2.2.0</VERS>
+// <VERS>END OF VERSION: 2.3.0</VERS>

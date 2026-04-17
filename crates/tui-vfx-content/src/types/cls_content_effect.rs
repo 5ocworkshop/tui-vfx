@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>VERSION: 2.11.0</VERS>
-// <WCTX>feat/content-ergonomics: ContentEffect::apply convenience entry point</WCTX>
-// <CLOG>Document the ergonomic apply / apply_to_borrowed / apply_with_context entry points</CLOG>
+// <VERS>VERSION: 2.11.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up — the T20 TypewriterCursor flatten grew that struct (it now composes Cursor, which carries a ColorConfig-bearing Wake). The Typewriter variant is now ~760B while other variants are <64B, triggering clippy::large_enum_variant. Boxing `cursor: Option<TypewriterCursor>` would be a breaking public-API change for all ContentEffect constructors; silence the lint at the enum level instead with a documented rationale.</WCTX>
+// <CLOG>PATCH: add #[allow(clippy::large_enum_variant)] with rationale pointing at the T20 flatten</CLOG>
 
 //! # Content Effects
 //!
@@ -101,6 +101,13 @@ fn default_shift_width() -> u16 {
     Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+// The `Typewriter { cursor: Option<TypewriterCursor>, .. }` variant is
+// substantially larger than the others because `TypewriterCursor` composes
+// the general `Cursor` primitive via `#[serde(flatten)]` (which in turn
+// carries `Wake { tint: ColorConfig, .. }`). Boxing `cursor` would be a
+// breaking public-API change for every ContentEffect constructor; we accept
+// the size delta since `ContentEffect` is rarely stored in large vectors.
+#[allow(clippy::large_enum_variant)]
 pub enum ContentEffect {
     /// Classic typewriter reveal effect.
     ///
@@ -577,4 +584,4 @@ impl ContentEffect {
 }
 
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>END OF VERSION: 2.11.0</VERS>
+// <VERS>END OF VERSION: 2.11.1</VERS>

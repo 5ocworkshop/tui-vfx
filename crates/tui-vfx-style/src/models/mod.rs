@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>Re-export the expanded HighlighterShader companion types introduced in cls_highlighter_shader v2.0.0</WCTX>
-// <CLOG>Expand `pub use cls_highlighter_shader` to include HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask, TextContrast alongside HighlighterShader</CLOG>
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>feat/cursor-primitive T24: register CursorShader skeleton — new module cls_cursor_shader providing CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail as a flat per-frame snapshot type owned by tui-vfx-style so downstream consumers can hand it to SpatialShaderType without a style→content dep</WCTX>
+// <CLOG>Register cls_cursor_shader module and public re-exports for CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail</CLOG>
 
 pub mod cls_ambient_occlusion_shader;
 pub mod cls_barber_pole_shader;
@@ -13,6 +13,7 @@ pub mod cls_chromatic_edge_shader;
 pub mod cls_color_config;
 pub mod cls_color_ramp;
 pub mod cls_color_space;
+pub mod cls_cursor_shader;
 pub mod cls_edge_sheen_shader;
 pub mod cls_fade_effect;
 pub mod cls_fade_spec;
@@ -57,6 +58,9 @@ pub use cls_chromatic_edge_shader::ChromaticEdgeShader;
 pub use cls_color_config::ColorConfig;
 pub use cls_color_ramp::{ColorRamp, ColorStop};
 pub use cls_color_space::ColorSpace;
+pub use cls_cursor_shader::{
+    CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail,
+};
 pub use cls_edge_sheen_shader::{EdgeSheenApplyTo, EdgeSheenShader};
 pub use cls_fade_effect::{FadeDirection, FadeEffect, FadeToBlack, FadeToColor, fade_effect};
 pub use cls_fade_spec::{FadeApplyTo, FadeChain, FadeSegment, FadeSpec, FadeTarget};
@@ -94,4 +98,4 @@ pub use cls_trace_propagation_shader::TracePropagationShader;
 pub use tui_vfx_geometry::easing::EasingType;
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <VERS>END OF VERSION: 2.1.0</VERS>

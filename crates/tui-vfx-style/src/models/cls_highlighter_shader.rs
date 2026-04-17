@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_highlighter_shader.rs</FILE> - <DESC>Highlighter sweep shader with direction, mode, blending, and runtime bindings</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>Upgrade highlighter from a minimal bg-fill with hardcoded black fg into a full sweep shader matching the capability surface of GlistenBand/BorderSweep. Add apply_to, text_contrast, mode (Fill/Band), direction (6 variants), speed, blend_strength, soft_edge, band_width, row_mask, and runtime bindings for speed/direction/blend_strength. All new fields default to values that preserve 1.0.0 behavior exactly, so existing `{ "color": X }` recipes continue to render identically.</WCTX>
-// <CLOG>v2.0.0: add HighlighterApplyTo (Background default / Foreground / Both), TextContrast (Black default / Preserve / Explicit), HighlighterMode (Fill default / Band), HighlighterDirection (Forward default / Reverse / TopDown / BottomUp / CenterOut / EdgesIn), speed (default 1.0) + speed_binding, direction_binding, blend_strength (default 1.0) + blend_strength_binding, band_width (default 6, used only in Band mode), soft_edge (default 0.0 — hard edge), row_mask (AllRows default / LastRow / FirstRow / Range). Add HighlighterShader::new constructor and Default impl. Existing `HighlighterShader { color }` struct-literal callers must either use `::new(color)` or `..Default::default()`.</CLOG>
+// <VERS>VERSION: 2.0.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up passing through unrelated tui-vfx-style warnings surfaced by the workspace lint gate — TextContrast has a manual `Default` impl that clippy::derivable_impls wants replaced with `#[default]` on the Black variant. No semantic change.</WCTX>
+// <CLOG>PATCH: derive Default on TextContrast with #[default] on Black; remove the manual impl Default block</CLOG>
 
 use crate::models::{ColorConfig, ColorSpace};
 use crate::traits::{ShaderContext, StyleShader};
@@ -30,11 +30,12 @@ pub enum HighlighterApplyTo {
 }
 
 /// How to treat the foreground when `apply_to = Background`.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(tag = "mode", rename_all = "snake_case")]
 pub enum TextContrast {
     /// Force `fg = Color::BLACK` (default — matches 1.0.0 behavior). Keeps
     /// text readable on bright highlight colors like yellow or cyan.
+    #[default]
     Black,
     /// Keep whatever foreground the cell already had. Use when the base
     /// foreground is already chosen for contrast against the highlighter
@@ -43,12 +44,6 @@ pub enum TextContrast {
     /// Set the foreground to an explicit color for every cell the
     /// highlighter covers.
     Explicit { color: ColorConfig },
-}
-
-impl Default for TextContrast {
-    fn default() -> Self {
-        Self::Black
-    }
 }
 
 /// Coverage shape of the highlighter sweep.
@@ -720,4 +715,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_highlighter_shader.rs</FILE> - <DESC>Highlighter sweep shader with direction, mode, blending, and runtime bindings</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <VERS>END OF VERSION: 2.0.1</VERS>

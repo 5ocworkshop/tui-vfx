@@ -262,5 +262,13 @@ impl From<ColorConfig> for Color {
     }
 }
 
+impl Default for ColorConfig {
+    /// Returns `ColorConfig::Reset` — the terminal's default foreground color.
+    /// Used as the no-op tint value in `Wake::default()`.
+    fn default() -> Self {
+        Self::Reset
+    }
+}
+
 // <FILE>tui-vfx-style/src/models/cls_color_config.rs</FILE> - <DESC>Serde-friendly representation of Color</DESC>
 // <VERS>END OF VERSION: 1.4.1</VERS>
