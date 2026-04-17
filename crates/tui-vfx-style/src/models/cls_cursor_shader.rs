@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_cursor_shader.rs</FILE> - <DESC>CursorShader — paints primary-cell alpha and wake trail tint/ghost</DESC>
-// <VERS>VERSION: 0.4.1</VERS>
-// <WCTX>feat/cursor-primitive T31: clippy clean-up — replace the manual Default impl for CursorShaderMode with a derive + #[default] variant attribute (clippy::derivable_impls)</WCTX>
-// <CLOG>PATCH: derive Default on CursorShaderMode using #[default] on Off; no semantic change (default is still Off)</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Cursor wake-trail visibility: the previous implementation only tinted base.fg, so cells without visible text showed no trail. Blend the tint onto base.bg too so the trail glows like a mouse-tail behind the cursor even on empty cells.</WCTX>
+// <CLOG>MINOR: trail cells now blend the tint into both base.fg and base.bg using the same alpha; primary-cell behavior unchanged</CLOG>
 
 use super::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
@@ -197,8 +197,13 @@ impl StyleShader for CursorShader {
                 return base;
             }
             let tint: Color = self.tint.into();
-            let blended = blend_rgb(base.fg, tint, alpha);
-            return base.with_fg(blended);
+            // Blend the tint onto BOTH fg and bg so the trail is visible even
+            // on cells where no glyph is drawn — this produces the classic
+            // "mouse-tail" glow behind the cursor. Using the same alpha for
+            // both channels preserves the natural fade-out shape.
+            let blended_fg = blend_rgb(base.fg, tint, alpha);
+            let blended_bg = blend_rgb(base.bg, tint, alpha);
+            return base.with_fg(blended_fg).with_bg(blended_bg);
         }
 
         base
@@ -232,4 +237,4 @@ fn blend_rgb(base: Color, tint: Color, alpha: f32) -> Color {
 // cls_spatial_shader_type.rs.
 
 // <FILE>tui-vfx-style/src/models/cls_cursor_shader.rs</FILE> - <DESC>CursorShader — paints primary-cell alpha and wake trail tint/ghost</DESC>
-// <VERS>END OF VERSION: 0.4.1</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

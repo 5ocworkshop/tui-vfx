@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/tests/models/test_cls_cursor_shader.rs</FILE> - <DESC>Tests for CursorShader</DESC>
-// <VERS>VERSION: 0.4.1</VERS>
-// <WCTX>feat/cursor-primitive T31: clippy clean-up — switch `let mut x = Default::default(); x.field = ...` to struct-literal with `..Default::default()` (clippy::field_reassign_with_default)</WCTX>
-// <CLOG>PATCH: rewrite shader construction in tests to struct-literal form; no semantic change</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Cursor wake-trail visibility: blend tint onto base.bg as well as base.fg so the trail glows on cells without visible text</WCTX>
+// <CLOG>MINOR: add tint_trail_also_blends_background and tint_trail_bg_at_zero_alpha_preserves_base tests</CLOG>
 
 use tui_vfx_style::models::{
     ColorConfig, CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail,
@@ -175,6 +175,72 @@ fn trail_cell_outside_trail_list_untouched() {
     assert_eq!(out, base);
 }
 
+// ---------------- Trail bg-blend (mouse-tail glow) ----------------
+
+#[test]
+fn tint_trail_also_blends_background() {
+    let shader = CursorShader {
+        mode: CursorShaderMode::Tint,
+        tint: ColorConfig::Rgb {
+            r: 255,
+            g: 180,
+            b: 100,
+        },
+        trail: vec![CursorShaderTrail {
+            position: (0, 3),
+            alpha: 0.5,
+            glyph: None,
+        }],
+        ..CursorShader::default()
+    };
+    // Base has a distinct bg so we can see it move toward the tint.
+    let base = Style::default()
+        .with_fg(Color::rgb(50, 50, 50))
+        .with_bg(Color::rgb(10, 10, 10));
+    let out = shader.style_at(&ctx(3, 0), base);
+    // bg should sit between base (10,10,10) and tint (255,180,100) at alpha 0.5:
+    // r ≈ 132, g ≈ 95, b ≈ 55.
+    assert!(
+        out.bg.r > 80 && out.bg.r < 200,
+        "bg.r should blend toward tint: got {}",
+        out.bg.r
+    );
+    assert!(
+        out.bg.g > 60 && out.bg.g < 160,
+        "bg.g should blend toward tint: got {}",
+        out.bg.g
+    );
+    assert!(
+        out.bg.b > 30 && out.bg.b < 130,
+        "bg.b should blend toward tint: got {}",
+        out.bg.b
+    );
+    assert_ne!(out.bg, base.bg, "trail cell bg should be tinted");
+}
+
+#[test]
+fn tint_trail_bg_at_zero_alpha_preserves_base() {
+    let shader = CursorShader {
+        mode: CursorShaderMode::Tint,
+        tint: ColorConfig::Rgb {
+            r: 255,
+            g: 180,
+            b: 100,
+        },
+        trail: vec![CursorShaderTrail {
+            position: (0, 3),
+            alpha: 0.0,
+            glyph: None,
+        }],
+        ..CursorShader::default()
+    };
+    let base = Style::default()
+        .with_fg(Color::rgb(50, 50, 50))
+        .with_bg(Color::rgb(10, 10, 10));
+    let out = shader.style_at(&ctx(3, 0), base);
+    assert_eq!(out.bg, base.bg);
+}
+
 // ---------------- T28: constructor + dispatch ----------------
 
 #[test]
@@ -243,4 +309,4 @@ fn spatial_shader_type_cursor_off_mode_dispatches_to_base() {
 }
 
 // <FILE>tui-vfx-style/tests/models/test_cls_cursor_shader.rs</FILE> - <DESC>Tests for CursorShader</DESC>
-// <VERS>END OF VERSION: 0.4.1</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>
