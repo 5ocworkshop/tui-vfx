@@ -42,10 +42,19 @@ fn make_grid_from_rows(rows: &[&str]) -> ProbeGridSpec {
             chars.push(' ');
         }
         for ch in chars {
-            cells.push(Cell::styled(ch, Color::WHITE, Color::BLACK, Modifiers::NONE));
+            cells.push(Cell::styled(
+                ch,
+                Color::WHITE,
+                Color::BLACK,
+                Modifiers::NONE,
+            ));
         }
     }
-    ProbeGridSpec { width, height, cells }
+    ProbeGridSpec {
+        width,
+        height,
+        cells,
+    }
 }
 
 #[test]
@@ -268,7 +277,9 @@ fn test_run_probe_reports_runtime_bindings_params_and_root_cause() {
                 }),
                 region: StyleRegion::All,
             }],
-            runtime_params: [("selected_row", 3_u16)].into_iter().collect::<ShaderRuntimeParams>(),
+            runtime_params: [("selected_row", 3_u16)]
+                .into_iter()
+                .collect::<ShaderRuntimeParams>(),
             ..CompositionSpec::default()
         },
     };
@@ -281,16 +292,23 @@ fn test_run_probe_reports_runtime_bindings_params_and_root_cause() {
 
     let report = run_probe(&scene, &request).expect("probe should succeed");
     assert_eq!(
-        report.runtime.as_ref().expect("runtime context").supplied_params[0].key,
+        report
+            .runtime
+            .as_ref()
+            .expect("runtime context")
+            .supplied_params[0]
+            .key,
         "selected_row"
     );
-    assert!(report
-        .runtime
-        .as_ref()
-        .expect("runtime context")
-        .binding_resolutions
-        .iter()
-        .any(|resolution| resolution.field == "selected_row"));
+    assert!(
+        report
+            .runtime
+            .as_ref()
+            .expect("runtime context")
+            .binding_resolutions
+            .iter()
+            .any(|resolution| resolution.field == "selected_row")
+    );
     assert!(report.cells.iter().any(|cell| {
         cell.root_cause
             .as_ref()

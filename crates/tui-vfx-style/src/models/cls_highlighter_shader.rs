@@ -88,7 +88,9 @@ pub enum HighlighterDirection {
 ///
 /// Useful for underline-wipe effects (`LastRow`), title-bar highlights
 /// (`FirstRow`), or custom banded coverage (`Range`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
 #[serde(tag = "mode", rename_all = "snake_case")]
 pub enum HighlighterRowMask {
     /// Apply to every row (default — matches 1.0.0 behavior).
@@ -316,9 +318,7 @@ impl HighlighterShader {
                 (width.saturating_sub(1)).saturating_sub(x) as f32,
                 width.saturating_sub(1).max(1) as f32,
             ),
-            HighlighterDirection::TopDown => {
-                (y as f32, height.saturating_sub(1).max(1) as f32)
-            }
+            HighlighterDirection::TopDown => (y as f32, height.saturating_sub(1).max(1) as f32),
             HighlighterDirection::BottomUp => (
                 (height.saturating_sub(1)).saturating_sub(y) as f32,
                 height.saturating_sub(1).max(1) as f32,
@@ -391,12 +391,8 @@ impl HighlighterShader {
             HighlighterRowMask::AllRows => true,
             HighlighterRowMask::FirstRow => ctx.local_y == 0,
             HighlighterRowMask::LastRow => ctx.local_y + 1 >= ctx.height,
-            HighlighterRowMask::TopAndBottom => {
-                ctx.local_y == 0 || ctx.local_y + 1 >= ctx.height
-            }
-            HighlighterRowMask::Range { start, end } => {
-                ctx.local_y >= start && ctx.local_y <= end
-            }
+            HighlighterRowMask::TopAndBottom => ctx.local_y == 0 || ctx.local_y + 1 >= ctx.height,
+            HighlighterRowMask::Range { start, end } => ctx.local_y >= start && ctx.local_y <= end,
         }
     }
 
@@ -549,7 +545,11 @@ mod tests {
             ..Default::default()
         };
         let styled = shader.style_at(&ctx_at(0, 0, 10, 3, 0.5), base);
-        assert_eq!(styled.fg, Color::BLACK, "default TextContrast::Black must match 1.0.0 hardcoded behavior");
+        assert_eq!(
+            styled.fg,
+            Color::BLACK,
+            "default TextContrast::Black must match 1.0.0 hardcoded behavior"
+        );
     }
 
     // ---------------- New apply_to behaviors ----------------
@@ -577,14 +577,21 @@ mod tests {
             ..Default::default()
         };
         let styled = shader.style_at(&ctx_at(0, 0, 10, 3, 1.0), base);
-        assert_eq!(styled.fg, base.fg, "Preserve must keep the original foreground");
+        assert_eq!(
+            styled.fg, base.fg,
+            "Preserve must keep the original foreground"
+        );
     }
 
     #[test]
     fn text_contrast_explicit_sets_custom_fg() {
         let mut shader = HighlighterShader::new(ColorConfig::Yellow);
         shader.text_contrast = TextContrast::Explicit {
-            color: ColorConfig::Rgb { r: 255, g: 0, b: 255 },
+            color: ColorConfig::Rgb {
+                r: 255,
+                g: 0,
+                b: 255,
+            },
         };
         let base = Style::default();
         let styled = shader.style_at(&ctx_at(0, 0, 10, 3, 1.0), base);
@@ -606,7 +613,10 @@ mod tests {
         let near = shader.style_at(&ctx_at(11, 0, 20, 3, 0.5), base);
         let far = shader.style_at(&ctx_at(2, 0, 20, 3, 0.5), base);
         assert_ne!(near, base, "cell at head must be highlighted in Band mode");
-        assert_eq!(far, base, "cell far behind head must not be highlighted in Band mode");
+        assert_eq!(
+            far, base,
+            "cell far behind head must not be highlighted in Band mode"
+        );
     }
 
     #[test]
@@ -646,7 +656,10 @@ mod tests {
         let top = shader.style_at(&ctx_at(1, 0, 10, 3, 1.0), base);
         let bot = shader.style_at(&ctx_at(1, 2, 10, 3, 1.0), base);
         assert_eq!(top, base, "top row must be untouched with LastRow mask");
-        assert_ne!(bot, base, "bottom row must be highlighted with LastRow mask");
+        assert_ne!(
+            bot, base,
+            "bottom row must be highlighted with LastRow mask"
+        );
     }
 
     #[test]
@@ -677,7 +690,11 @@ mod tests {
         let ctx = ctx_with_params(0, 0, 10, 3, 0.25, params);
         // speed=2.0 at t=0.25 is equivalent to speed=1.0 at t=0.5
         let styled = shader.style_at(&ctx, Style::default());
-        assert_ne!(styled, Style::default(), "cell should be highlighted once speed doubles effective_t");
+        assert_ne!(
+            styled,
+            Style::default(),
+            "cell should be highlighted once speed doubles effective_t"
+        );
     }
 
     #[test]
@@ -701,7 +718,11 @@ mod tests {
         params.insert("bs", ShaderRuntimeParamValue::Float(2.0)); // will clamp to 1.0
         let ctx = ctx_with_params(0, 0, 10, 3, 1.0, params);
         let styled = shader.style_at(&ctx, Style::default());
-        assert_ne!(styled, Style::default(), "clamped binding should produce a highlight");
+        assert_ne!(
+            styled,
+            Style::default(),
+            "clamped binding should produce a highlight"
+        );
     }
 
     // ---------------- deny_unknown_fields still works ----------------
@@ -710,7 +731,10 @@ mod tests {
     fn unknown_field_still_rejected() {
         let json = r#"{"color":{"type":"yellow"},"nonsense":123}"#;
         let result: Result<HighlighterShader, _> = serde_json::from_str(json);
-        assert!(result.is_err(), "deny_unknown_fields must still reject typos");
+        assert!(
+            result.is_err(),
+            "deny_unknown_fields must still reject typos"
+        );
     }
 }
 

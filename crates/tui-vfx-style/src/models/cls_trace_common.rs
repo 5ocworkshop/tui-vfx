@@ -247,7 +247,10 @@ mod tests {
 
     fn polyline(points: &[(u16, u16)]) -> TracePolyline {
         TracePolyline {
-            points: points.iter().map(|(x, y)| TracePoint { x: *x, y: *y }).collect(),
+            points: points
+                .iter()
+                .map(|(x, y)| TracePoint { x: *x, y: *y })
+                .collect(),
             delay: 0.0,
         }
     }

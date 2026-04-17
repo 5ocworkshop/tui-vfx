@@ -90,7 +90,10 @@ fn forwards_trail_entries_preserving_glyph_none() {
     let shader = fnc_build_cursor_shader(&ops, &wake);
     assert_eq!(shader.trail.len(), 2);
     assert_eq!(shader.trail[0].position, (0, 4));
-    assert!(shader.trail[0].glyph.is_none(), "Tint entries carry no glyph");
+    assert!(
+        shader.trail[0].glyph.is_none(),
+        "Tint entries carry no glyph"
+    );
     assert_eq!(shader.trail[1].position, (0, 3));
     assert_eq!(shader.trail[1].glyph.as_deref(), Some("▓"));
 }

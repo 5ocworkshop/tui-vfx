@@ -64,8 +64,8 @@ mod fnc_max_widget_y;
 mod fnc_modifier_names;
 mod fnc_normalize_color;
 mod fnc_row_text;
-mod fnc_select_cells;
 mod fnc_runtime_context_from_composition;
+mod fnc_select_cells;
 mod fnc_variant_name_from_debug;
 mod orc_collect_timeline;
 mod orc_run_probe;
@@ -95,19 +95,19 @@ pub use cls_probe_timeline_report::ProbeTimelineReport;
 pub use cls_probe_timing::ProbeTiming;
 pub use cls_probe_trace_event::ProbeTraceEvent;
 pub use cls_probe_widget::ProbeWidget;
-pub use fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 pub use fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
+pub use fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 pub use fnc_collect_probe_operational_analysis::collect_probe_operational_analysis;
 pub use fnc_diff_frames::diff_frames;
 pub use fnc_find_widget_cell::find_widget_cell;
 pub use fnc_has_ascii_alpha::has_ascii_alpha;
 pub use fnc_max_widget_y::max_widget_y;
+pub use fnc_row_text::row_text;
 pub use fnc_runtime_context_from_composition::{
     runtime_context_from_composition, runtime_value_json,
 };
 pub use orc_collect_timeline::collect_timeline;
 pub use orc_run_probe::{run_probe, run_probe_diff};
-pub use fnc_row_text::row_text;
 
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
 // <VERS>END OF VERSION: 0.7.0</VERS>

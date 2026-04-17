@@ -8,7 +8,9 @@ use tui_vfx_style::traits::ShaderRuntimeParamValue;
 
 use crate::{ProbeRuntimeContext, ProbeRuntimeParam};
 
-pub fn runtime_context_from_composition(composition: &CompositionSpec) -> Option<ProbeRuntimeContext> {
+pub fn runtime_context_from_composition(
+    composition: &CompositionSpec,
+) -> Option<ProbeRuntimeContext> {
     let supplied_params = composition
         .runtime_params
         .0

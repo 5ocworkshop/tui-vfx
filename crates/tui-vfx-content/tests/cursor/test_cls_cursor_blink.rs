@@ -17,7 +17,9 @@ fn default_is_no_blink() {
 
 #[test]
 fn roundtrips_through_serde_json() {
-    let b = CursorBlink { interval_ms: SignalOrFloat::Static(500.0) };
+    let b = CursorBlink {
+        interval_ms: SignalOrFloat::Static(500.0),
+    };
     let json = serde_json::to_string(&b).unwrap();
     let back: CursorBlink = serde_json::from_str(&json).unwrap();
     assert_eq!(b, back);

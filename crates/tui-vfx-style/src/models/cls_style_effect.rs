@@ -44,7 +44,9 @@
 //! parameters of a `RigidShake` filter to keep text styling synchronized
 //! with positional movement.
 
-use crate::models::{ColorConfig, ColorSpace, FadeApplyTo, FadeSpec, FadeTarget, SpatialShaderType};
+use crate::models::{
+    ColorConfig, ColorSpace, FadeApplyTo, FadeSpec, FadeTarget, SpatialShaderType,
+};
 use crate::traits::{StyleInterpolator, StyleShader};
 use crate::utils::{
     blend_style_to_color, blend_style_to_color_in_space, darken, rainbow_style, shift_style_hsl,
@@ -313,11 +315,7 @@ impl From<&StyleEffect> for StyleEffectSerde {
                 ease: *ease,
                 from: *from,
             },
-            StyleEffect::FadeOut {
-                apply_to,
-                ease,
-                to,
-            } => Self::FadeOut {
+            StyleEffect::FadeOut { apply_to, ease, to } => Self::FadeOut {
                 apply_to: *apply_to,
                 ease: *ease,
                 to: *to,
@@ -388,15 +386,9 @@ impl From<StyleEffectSerde> for StyleEffect {
                 ease,
                 from,
             },
-            StyleEffectSerde::FadeOut {
-                apply_to,
-                ease,
-                to,
-            } => Self::FadeOut {
-                apply_to,
-                ease,
-                to,
-            },
+            StyleEffectSerde::FadeOut { apply_to, ease, to } => {
+                Self::FadeOut { apply_to, ease, to }
+            }
             StyleEffectSerde::Pulse { frequency, color } => Self::Pulse {
                 frequency,
                 color: Color::from(color),
@@ -574,11 +566,7 @@ impl StyleInterpolator for StyleEffect {
                 envelope: None,
             }
             .calculate(t, base),
-            StyleEffect::FadeOut {
-                apply_to,
-                ease,
-                to,
-            } => FadeSpec {
+            StyleEffect::FadeOut { apply_to, ease, to } => FadeSpec {
                 from: FadeTarget::Base,
                 to: *to,
                 apply_to: *apply_to,
@@ -754,11 +742,7 @@ impl StyleEffect {
                 ("ease", format!("{:?}", ease)),
                 ("from", format!("{:?}", from)),
             ],
-            StyleEffect::FadeOut {
-                apply_to,
-                ease,
-                to,
-            } => vec![
+            StyleEffect::FadeOut { apply_to, ease, to } => vec![
                 ("apply_to", format!("{:?}", apply_to)),
                 ("ease", format!("{:?}", ease)),
                 ("to", format!("{:?}", to)),

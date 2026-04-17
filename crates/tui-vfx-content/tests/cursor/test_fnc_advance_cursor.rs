@@ -4,9 +4,11 @@
 // <CLOG>T19: add edge-case tests E5, E12, E13, E15</CLOG>
 
 use mixed_signals::prelude::SignalContext;
-use tui_vfx_content::cursor::{fnc_advance_cursor, Cursor, CursorState};
+use tui_vfx_content::cursor::{Cursor, CursorState, fnc_advance_cursor};
 
-fn ctx() -> SignalContext { SignalContext::new(0, 0) }
+fn ctx() -> SignalContext {
+    SignalContext::new(0, 0)
+}
 
 #[test]
 fn first_advance_sets_position_and_no_history() {
@@ -22,7 +24,14 @@ fn e2_stationary_cursor_does_not_grow_history() {
     let mut state = CursorState::new();
     let cursor = Cursor::default().with_wake_tint(10.0, 0); // Tint on, no cap
     for i in 0..10 {
-        fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), i as f64 * 0.016, 0.016, &ctx());
+        fnc_advance_cursor(
+            &mut state,
+            &cursor,
+            Some((0, 0)),
+            i as f64 * 0.016,
+            0.016,
+            &ctx(),
+        );
     }
     assert!(state.history.is_empty());
 }
@@ -50,7 +59,11 @@ fn e3_revisiting_cell_replaces_old_entry() {
     fnc_advance_cursor(&mut state, &cursor, Some((0, 2)), 0.2, 0.1, &ctx());
     fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.3, 0.1, &ctx()); // revisit (0,1) — removes old (0,1) entry, inserts fresh
     // History should not contain (0,1) twice.
-    let hits = state.history.iter().filter(|e| (e.0, e.1) == (0, 1)).count();
+    let hits = state
+        .history
+        .iter()
+        .filter(|e| (e.0, e.1) == (0, 1))
+        .count();
     assert!(hits <= 1);
     // Most recent entry should be the cell we just left.
     assert_eq!(state.history.back().unwrap().0, 0);
@@ -79,7 +92,14 @@ fn max_cells_caps_history_oldest_dropped() {
     let mut state = CursorState::new();
     let cursor = Cursor::default().with_wake_tint(100.0, 3); // long decay, cap=3
     for col in 0..10 {
-        fnc_advance_cursor(&mut state, &cursor, Some((0, col)), col as f64 * 0.01, 0.01, &ctx());
+        fnc_advance_cursor(
+            &mut state,
+            &cursor,
+            Some((0, col)),
+            col as f64 * 0.01,
+            0.01,
+            &ctx(),
+        );
     }
     assert_eq!(state.history.len(), 3);
     // Oldest three should be dropped; expect entries 6, 7, 8 (0-indexed).
@@ -92,7 +112,14 @@ fn max_cells_zero_means_no_cap() {
     let mut state = CursorState::new();
     let cursor = Cursor::default().with_wake_tint(100.0, 0);
     for col in 0..20 {
-        fnc_advance_cursor(&mut state, &cursor, Some((0, col)), col as f64 * 0.01, 0.01, &ctx());
+        fnc_advance_cursor(
+            &mut state,
+            &cursor,
+            Some((0, col)),
+            col as f64 * 0.01,
+            0.01,
+            &ctx(),
+        );
     }
     assert_eq!(state.history.len(), 20 - 1); // last position isn't in history yet
 }
@@ -100,7 +127,7 @@ fn max_cells_zero_means_no_cap() {
 // --- T15: grow-in phase state machine ---
 
 use mixed_signals::prelude::SignalOrFloat;
-use tui_vfx_content::cursor::{GrowInPhase, GrowInMode};
+use tui_vfx_content::cursor::{GrowInMode, GrowInPhase};
 
 #[test]
 fn grow_in_mode_never_snaps_to_visible_on_show() {

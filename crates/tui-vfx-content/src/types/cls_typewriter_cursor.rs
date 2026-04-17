@@ -65,7 +65,9 @@ impl Default for TypewriterCursor {
         Self {
             cursor: Cursor {
                 // Keep v1.1.0 default: blink every 500ms.
-                blink: CursorBlink { interval_ms: SignalOrFloat::Static(500.0) },
+                blink: CursorBlink {
+                    interval_ms: SignalOrFloat::Static(500.0),
+                },
                 ..Cursor::default()
             },
             show_while_typing: SignalOrFloat::Static(1.0),
@@ -86,7 +88,9 @@ impl TypewriterCursor {
         Self {
             cursor: Cursor {
                 character: glyph.to_string(),
-                blink: CursorBlink { interval_ms: SignalOrFloat::Static(500.0) },
+                blink: CursorBlink {
+                    interval_ms: SignalOrFloat::Static(500.0),
+                },
                 ..Cursor::default()
             },
             ..Self::default()

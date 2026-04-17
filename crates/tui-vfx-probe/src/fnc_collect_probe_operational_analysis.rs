@@ -30,11 +30,19 @@ pub fn collect_probe_operational_analysis(
                 for event in &cell.trace {
                     if event.stage == stage {
                         observed_event_count += 1;
-                        touched_cells.insert((frame_index, cell.widget_local.x, cell.widget_local.y));
-                        if let Some(effect) = event.effect.as_ref().filter(|effect| !effect.is_empty()) {
+                        touched_cells.insert((
+                            frame_index,
+                            cell.widget_local.x,
+                            cell.widget_local.y,
+                        ));
+                        if let Some(effect) =
+                            event.effect.as_ref().filter(|effect| !effect.is_empty())
+                        {
                             observed_effects.insert(effect.clone());
                             let entry = effects.entry(effect.clone()).or_default();
-                            entry.0.insert((frame_index, cell.widget_local.x, cell.widget_local.y));
+                            entry
+                                .0
+                                .insert((frame_index, cell.widget_local.x, cell.widget_local.y));
                             entry.1 += 1;
                         }
                     }
@@ -73,7 +81,10 @@ pub fn collect_probe_operational_analysis(
             })
             .collect::<Vec<_>>();
         for (effect, (cells, count)) in effects {
-            if configured_effects.iter().any(|(configured_effect, _)| configured_effect == &effect) {
+            if configured_effects
+                .iter()
+                .any(|(configured_effect, _)| configured_effect == &effect)
+            {
                 continue;
             }
             effect_rows.push(ProbeEffectOperationalAnalysis {

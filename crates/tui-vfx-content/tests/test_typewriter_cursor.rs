@@ -10,7 +10,10 @@ use tui_vfx_content::types::TypewriterCursor;
 
 fn assert_default_shape_except_character(cursor: &TypewriterCursor) {
     let default = TypewriterCursor::default();
-    assert_eq!(cursor.cursor.blink.interval_ms, default.cursor.blink.interval_ms);
+    assert_eq!(
+        cursor.cursor.blink.interval_ms,
+        default.cursor.blink.interval_ms
+    );
     assert_eq!(cursor.show_while_typing, default.show_while_typing);
     assert_eq!(cursor.show_after_complete, default.show_after_complete);
 }
@@ -102,7 +105,10 @@ fn backcompat_parses_v1_1_0_json() {
         _ => panic!(),
     }
     // All new fields default to no-ops.
-    assert_eq!(parsed.cursor.grow_in, tui_vfx_content::cursor::GrowIn::default());
+    assert_eq!(
+        parsed.cursor.grow_in,
+        tui_vfx_content::cursor::GrowIn::default()
+    );
     assert_eq!(parsed.cursor.wake, tui_vfx_content::cursor::Wake::default());
 }
 
@@ -113,7 +119,10 @@ fn legacy_convenience_constructors_still_work() {
     // Default show semantics unchanged.
     assert!(matches!(b.show_while_typing, SignalOrFloat::Static(1.0)));
     assert!(matches!(b.show_after_complete, SignalOrFloat::Static(1.0)));
-    assert!(matches!(b.cursor.blink.interval_ms, SignalOrFloat::Static(500.0)));
+    assert!(matches!(
+        b.cursor.blink.interval_ms,
+        SignalOrFloat::Static(500.0)
+    ));
 }
 
 // <FILE>tui-vfx-content/tests/test_typewriter_cursor.rs</FILE> - <DESC>Tests for TypewriterCursor convenience constructors</DESC>

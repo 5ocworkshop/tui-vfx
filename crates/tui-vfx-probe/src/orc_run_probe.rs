@@ -19,8 +19,8 @@ use crate::cls_probe_scene_spec::ProbeSceneSpec;
 use crate::cls_probe_summary::ProbeSummary;
 use crate::cls_probe_timing::ProbeTiming;
 use crate::cls_probe_widget::ProbeWidget;
-use crate::fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
 use crate::fnc_build_owned_grid::build_owned_grid;
+use crate::fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
 use crate::fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 use crate::fnc_diff_frames::diff_frames;
 use crate::fnc_modifier_names::modifier_names;
@@ -129,22 +129,22 @@ pub fn run_probe(
             };
 
             let mut probe_cell = ProbeCell {
-                    abs: ProbePoint {
-                        x: (abs_origin_x + x) as u16,
-                        y: (abs_origin_y + y) as u16,
-                    },
-                    widget_local: ProbePoint {
-                        x: x as u16,
-                        y: y as u16,
-                    },
-                    ch: final_cell.ch,
-                    fg: normalize_color(final_cell.fg),
-                    bg: normalize_color(final_cell.bg),
-                    modifiers: modifier_names(final_cell.mods),
-                    last_touch: inspector.last_touch_for(x as u16, y as u16),
-                    trace,
-                    root_cause: None,
-                };
+                abs: ProbePoint {
+                    x: (abs_origin_x + x) as u16,
+                    y: (abs_origin_y + y) as u16,
+                },
+                widget_local: ProbePoint {
+                    x: x as u16,
+                    y: y as u16,
+                },
+                ch: final_cell.ch,
+                fg: normalize_color(final_cell.fg),
+                bg: normalize_color(final_cell.bg),
+                modifiers: modifier_names(final_cell.mods),
+                last_touch: inspector.last_touch_for(x as u16, y as u16),
+                trace,
+                root_cause: None,
+            };
             probe_cell.root_cause = build_probe_cell_root_cause(&probe_cell, runtime.as_ref());
 
             all_cells.push((probe_cell, is_non_empty, is_modified));
@@ -257,9 +257,7 @@ fn build_pipeline_inventory(composition: &CompositionSpec) -> ProbePipelineInven
             .filters
             .iter()
             .enumerate()
-            .map(|(index, filter)| {
-                format!("{}#{}", variant_name_from_debug(filter), index + 1)
-            })
+            .map(|(index, filter)| format!("{}#{}", variant_name_from_debug(filter), index + 1))
             .collect(),
         shader_count: composition.shader_layers.len(),
         shader_effects: composition
@@ -301,10 +299,7 @@ fn trace_event_details(
     let Some(effect_name) = effect_name else {
         return (None, Vec::new());
     };
-    let normalized_effect_name = effect_name
-        .split('#')
-        .next()
-        .unwrap_or(effect_name);
+    let normalized_effect_name = effect_name.split('#').next().unwrap_or(effect_name);
 
     match stage {
         "sampler" => match composition.sampler_spec.as_ref() {

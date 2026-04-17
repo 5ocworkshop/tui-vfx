@@ -7,7 +7,9 @@ use std::collections::BTreeSet;
 
 use tui_vfx_style::traits::ShaderRuntimeBindingResolution;
 
-use crate::{ProbeCell, ProbeCellRootCause, ProbeCellStageCause, ProbeRuntimeContext, ProbeTraceEvent};
+use crate::{
+    ProbeCell, ProbeCellRootCause, ProbeCellStageCause, ProbeRuntimeContext, ProbeTraceEvent,
+};
 
 pub fn build_probe_cell_root_cause(
     cell: &ProbeCell,
@@ -31,11 +33,7 @@ pub fn build_probe_cell_root_cause(
         .filter(|event| event.stage == "mask" && event.visible == Some(false))
         .filter_map(|event| event.effect.clone())
         .collect::<Vec<_>>();
-    let sampled_from = cell
-        .trace
-        .iter()
-        .rev()
-        .find_map(|event| event.sampled_from);
+    let sampled_from = cell.trace.iter().rev().find_map(|event| event.sampled_from);
     let bindings = relevant_bindings(&cell.trace, runtime);
     let stage_causes = cell
         .trace
@@ -81,11 +79,22 @@ fn overall_summary(trace: &[ProbeTraceEvent], hidden_by_masks: &[String]) -> Str
     }
 
     match trace.last() {
-        Some(event) if event.stage == "filter" => "Final appearance was dominated by filter output".to_string(),
-        Some(event) if event.stage == "shader" => "Final appearance was dominated by shader styling".to_string(),
-        Some(event) if event.stage == "style" => "Final appearance was dominated by recipe style interpolation".to_string(),
-        Some(event) if event.stage == "content" => "Rendered content differs because the recipe content effect transformed the text".to_string(),
-        Some(event) if event.stage == "sampler" => "Rendered cell content was sampled from a different source coordinate".to_string(),
+        Some(event) if event.stage == "filter" => {
+            "Final appearance was dominated by filter output".to_string()
+        }
+        Some(event) if event.stage == "shader" => {
+            "Final appearance was dominated by shader styling".to_string()
+        }
+        Some(event) if event.stage == "style" => {
+            "Final appearance was dominated by recipe style interpolation".to_string()
+        }
+        Some(event) if event.stage == "content" => {
+            "Rendered content differs because the recipe content effect transformed the text"
+                .to_string()
+        }
+        Some(event) if event.stage == "sampler" => {
+            "Rendered cell content was sampled from a different source coordinate".to_string()
+        }
         Some(_) => "Cell was modified by one or more pipeline stages".to_string(),
         None => "Cell was not modified".to_string(),
     }

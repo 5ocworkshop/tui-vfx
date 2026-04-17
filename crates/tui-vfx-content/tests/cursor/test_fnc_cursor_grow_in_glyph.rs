@@ -3,7 +3,7 @@
 // <WCTX>feat/cursor-primitive: grow-in glyph mapping</WCTX>
 // <CLOG>Initial tests</CLOG>
 
-use tui_vfx_content::cursor::{fnc_cursor_grow_in_glyph, GrowDirection};
+use tui_vfx_content::cursor::{GrowDirection, fnc_cursor_grow_in_glyph};
 
 #[test]
 fn block_up_maps_progress_to_eighth_blocks() {

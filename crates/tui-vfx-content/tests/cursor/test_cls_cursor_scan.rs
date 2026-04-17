@@ -13,7 +13,10 @@ fn scan_mode_default_is_off() {
 
 #[test]
 fn scan_mode_serde_snake_case() {
-    assert_eq!(serde_json::to_string(&ScanMode::Pulse).unwrap(), "\"pulse\"");
+    assert_eq!(
+        serde_json::to_string(&ScanMode::Pulse).unwrap(),
+        "\"pulse\""
+    );
     assert_eq!(
         serde_json::to_string(&ScanMode::HalfBlockBounce).unwrap(),
         "\"half_block_bounce\""
@@ -51,8 +54,7 @@ fn cursor_scan_serde_roundtrip() {
 
 #[test]
 fn cursor_scan_parses_minimal_json() {
-    let parsed: CursorScan =
-        serde_json::from_str(r#"{"mode":"pulse","period_ms":1500}"#).unwrap();
+    let parsed: CursorScan = serde_json::from_str(r#"{"mode":"pulse","period_ms":1500}"#).unwrap();
     assert_eq!(parsed.mode, ScanMode::Pulse);
     assert!(matches!(parsed.period_ms, SignalOrFloat::Static(1500.0)));
 }

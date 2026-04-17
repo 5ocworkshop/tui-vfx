@@ -137,9 +137,7 @@ impl ConfigSchema for BindableU16 {
                 },
                 SchemaVariant::Tuple {
                     name: "Binding".to_string(),
-                    description: Some(
-                        "A named runtime parameter resolved per frame".to_string(),
-                    ),
+                    description: Some("A named runtime parameter resolved per frame".to_string()),
                     json_value: Some("binding".to_string()),
                     items: vec![SchemaField::new(
                         "name",

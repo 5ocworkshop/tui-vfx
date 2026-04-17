@@ -169,7 +169,8 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             with_causation: true,
         },
     )?;
-    let analysis = collect_probe_operational_analysis("frame", std::slice::from_ref(&analysis_report));
+    let analysis =
+        collect_probe_operational_analysis("frame", std::slice::from_ref(&analysis_report));
     let focus_cell = if let Some(raw) = widget_cell.as_deref() {
         let (x, y) = parse_widget_cell(raw)?;
         find_widget_cell(&analysis_report, x, y)

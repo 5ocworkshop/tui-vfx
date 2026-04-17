@@ -7,22 +7,17 @@ use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use tui_vfx_content::cursor::{Cursor, CursorState};
 use tui_vfx_content::transformers::Typewriter;
 
-fn ctx() -> SignalContext { SignalContext::new(0, 0) }
+fn ctx() -> SignalContext {
+    SignalContext::new(0, 0)
+}
 
 #[test]
 fn at_half_progress_splices_block_cursor_after_revealed_chars() {
     let mut state = CursorState::new();
     let cursor = Cursor::block(); // no animation, static block
     let tw = Typewriter::default();
-    let (text, _ops) = tw.transform_with_cursor(
-        "hello world",
-        0.5,
-        &ctx(),
-        &cursor,
-        &mut state,
-        0.0,
-        0.016,
-    );
+    let (text, _ops) =
+        tw.transform_with_cursor("hello world", 0.5, &ctx(), &cursor, &mut state, 0.0, 0.016);
     // 11 graphemes * 0.5 = 5 revealed → cursor at index 5 (past "hello").
     assert_eq!(text, "hello█");
 }
@@ -35,9 +30,8 @@ fn empty_cursor_character_produces_plain_reveal() {
         ..Cursor::default()
     };
     let tw = Typewriter::default();
-    let (text, _ops) = tw.transform_with_cursor(
-        "abcdef", 0.5, &ctx(), &cursor, &mut state, 0.0, 0.016,
-    );
+    let (text, _ops) =
+        tw.transform_with_cursor("abcdef", 0.5, &ctx(), &cursor, &mut state, 0.0, 0.016);
     assert_eq!(text, "abc");
 }
 
@@ -46,9 +40,7 @@ fn at_full_progress_cursor_sits_past_last_char() {
     let mut state = CursorState::new();
     let cursor = Cursor::block();
     let tw = Typewriter::default();
-    let (text, _ops) = tw.transform_with_cursor(
-        "ab", 1.0, &ctx(), &cursor, &mut state, 0.0, 0.016,
-    );
+    let (text, _ops) = tw.transform_with_cursor("ab", 1.0, &ctx(), &cursor, &mut state, 0.0, 0.016);
     assert_eq!(text, "ab█");
 }
 

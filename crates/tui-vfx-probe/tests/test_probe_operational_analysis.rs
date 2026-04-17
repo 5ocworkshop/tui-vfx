@@ -7,8 +7,8 @@ use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::CompositionSpec;
 use tui_vfx_compositor::types::{ApplyTo, FilterSpec};
 use tui_vfx_probe::{
-    ProbeCellSelector, ProbeGridSpec, ProbeOperationalStatus, ProbePhase, ProbePoint,
-    ProbeRequest, ProbeSceneSpec, collect_probe_operational_analysis, run_probe,
+    ProbeCellSelector, ProbeGridSpec, ProbeOperationalStatus, ProbePhase, ProbePoint, ProbeRequest,
+    ProbeSceneSpec, collect_probe_operational_analysis, run_probe,
 };
 use tui_vfx_types::{Cell, Color, Modifiers};
 
@@ -49,20 +49,12 @@ fn test_collect_probe_operational_analysis_reports_success_for_filter_stage() {
 
     let analysis = collect_probe_operational_analysis("frame", &[report]);
     assert_eq!(analysis.combined.status, ProbeOperationalStatus::Failure);
-    assert!(
-        analysis
-            .stages
-            .iter()
-            .any(|stage| stage.stage == "filter"
-                && stage.status == ProbeOperationalStatus::Success
-                && stage.observed_event_count > 0
-                && stage
-                    .effects
-                    .iter()
-                    .any(|effect| effect.effect == "Dim#1"
-                        && effect.configured_instances == 1
-                        && effect.status == ProbeOperationalStatus::Success))
-    );
+    assert!(analysis.stages.iter().any(|stage| stage.stage == "filter"
+        && stage.status == ProbeOperationalStatus::Success
+        && stage.observed_event_count > 0
+        && stage.effects.iter().any(|effect| effect.effect == "Dim#1"
+            && effect.configured_instances == 1
+            && effect.status == ProbeOperationalStatus::Success)));
 }
 
 #[test]

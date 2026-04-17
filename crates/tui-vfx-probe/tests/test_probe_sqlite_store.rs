@@ -83,7 +83,9 @@ fn binding_scene() -> ProbeSceneSpec {
                 }),
                 region: StyleRegion::All,
             }],
-            runtime_params: [("selected_row", 3_u16)].into_iter().collect::<ShaderRuntimeParams>(),
+            runtime_params: [("selected_row", 3_u16)]
+                .into_iter()
+                .collect::<ShaderRuntimeParams>(),
             ..CompositionSpec::default()
         },
     }
@@ -357,12 +359,16 @@ fn test_sqlite_store_indexes_runtime_and_root_cause_rows() {
     assert_eq!(binding_rows[0]["field"], "selected_row");
 
     let trace_rows = store
-        .query_json("select count(*) as count from probe_trace_events where params_json is not null")
+        .query_json(
+            "select count(*) as count from probe_trace_events where params_json is not null",
+        )
         .unwrap();
     assert!(trace_rows[0]["count"].as_i64().unwrap() > 0);
 
     let root_rows = store
-        .query_json("select count(*) as count from probe_cell_root_causes where dominant_stage = 'shader'")
+        .query_json(
+            "select count(*) as count from probe_cell_root_causes where dominant_stage = 'shader'",
+        )
         .unwrap();
     assert!(root_rows[0]["count"].as_i64().unwrap() > 0);
 }

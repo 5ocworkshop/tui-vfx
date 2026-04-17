@@ -186,7 +186,9 @@ impl FocusedRowGradientShader {
             let supplied_kind = supplied.map(|value| value.kind_name().to_string());
             let supplied_value = supplied.map(serde_json::Value::from);
             let coerced = matches!(supplied_kind.as_deref(), Some("integer"));
-            let resolved = ctx.runtime_param_f32(binding).map(|value| value.clamp(0.0, 1.0));
+            let resolved = ctx
+                .runtime_param_f32(binding)
+                .map(|value| value.clamp(0.0, 1.0));
             resolutions.push(ShaderRuntimeBindingResolution {
                 field: "selected_row_ratio".to_string(),
                 binding: binding.clone(),
@@ -199,7 +201,9 @@ impl FocusedRowGradientShader {
                 supplied_kind,
                 supplied_value,
                 effective_value: resolved.map(serde_json::Value::from),
-                fallback_value: Some(serde_json::Value::from(self.selected_row_ratio.clamp(0.0, 1.0))),
+                fallback_value: Some(serde_json::Value::from(
+                    self.selected_row_ratio.clamp(0.0, 1.0),
+                )),
             });
         }
 

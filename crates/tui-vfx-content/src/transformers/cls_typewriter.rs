@@ -90,8 +90,8 @@ impl TextTransformer for Typewriter {
 }
 
 use crate::cursor::{
-    fnc_advance_cursor, fnc_render_cursor, fnc_splice_cursor_into_text,
-    fnc_typewriter_cursor_position, Cursor, CursorPaintOps, CursorState,
+    Cursor, CursorPaintOps, CursorState, fnc_advance_cursor, fnc_render_cursor,
+    fnc_splice_cursor_into_text, fnc_typewriter_cursor_position,
 };
 
 impl Typewriter {
@@ -136,9 +136,11 @@ impl Typewriter {
         // Render paint ops and splice the primary glyph in.
         let ops = fnc_render_cursor(state, cursor, now, signal_ctx);
         let text = match ops.primary.as_ref() {
-            Some(p) if !p.glyph.is_empty() => {
-                Cow::Owned(fnc_splice_cursor_into_text(revealed.as_ref(), idx, &p.glyph))
-            }
+            Some(p) if !p.glyph.is_empty() => Cow::Owned(fnc_splice_cursor_into_text(
+                revealed.as_ref(),
+                idx,
+                &p.glyph,
+            )),
             _ => revealed,
         };
         (text, ops)

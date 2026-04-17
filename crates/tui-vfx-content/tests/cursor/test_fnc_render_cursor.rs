@@ -5,10 +5,12 @@
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use tui_vfx_content::cursor::{
-    fnc_advance_cursor, fnc_render_cursor, Cursor, CursorScan, CursorState, GrowInMode, ScanMode,
+    Cursor, CursorScan, CursorState, GrowInMode, ScanMode, fnc_advance_cursor, fnc_render_cursor,
 };
 
-fn ctx() -> SignalContext { SignalContext::new(0, 0) }
+fn ctx() -> SignalContext {
+    SignalContext::new(0, 0)
+}
 
 #[test]
 fn static_cursor_renders_full_glyph_and_alpha_1() {
@@ -34,7 +36,7 @@ fn grow_in_midway_renders_partial_block() {
     fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.1, 0.1, &ctx()); // ~50% through
     let ops = fnc_render_cursor(&state, &cursor, 0.1, &ctx());
     let p = ops.primary.unwrap();
-    assert_ne!(p.glyph, "█");  // should be a partial glyph
+    assert_ne!(p.glyph, "█"); // should be a partial glyph
     assert!(!p.glyph.is_empty());
     assert!(p.alpha > 0.0 && p.alpha < 1.0);
 }
@@ -135,8 +137,8 @@ fn e10_empty_character_with_wake_still_decays_trail() {
     fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.1, 0.1, &ctx());
     cursor.character = "".into();
     let ops = fnc_render_cursor(&state, &cursor, 0.1, &ctx());
-    assert!(ops.primary.is_none());       // no primary
-    assert_eq!(ops.trail.len(), 1);       // existing trail persists
+    assert!(ops.primary.is_none()); // no primary
+    assert_eq!(ops.trail.len(), 1); // existing trail persists
 }
 
 // --- CursorScan: Pulse / HalfBlockBounce / Off ---

@@ -7,8 +7,8 @@
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
-use crate::models::cls_fade_spec::FadeApplyTo;
 use crate::models::cls_color_space::ColorSpace;
+use crate::models::cls_fade_spec::FadeApplyTo;
 use crate::traits::StyleInterpolator;
 use crate::utils::apply_easing;
 use crate::utils::fnc_blend_colors::blend_colors;

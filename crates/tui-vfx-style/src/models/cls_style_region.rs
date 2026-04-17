@@ -281,10 +281,7 @@ impl StyleRegion {
     /// A `Binding` that misses the runtime_params map resolves to `0`,
     /// making the region effectively point at the top-left cell — a safe
     /// failure mode equivalent to "no hover yet."
-    pub fn resolved<'a>(
-        &'a self,
-        runtime_params: &ShaderRuntimeParams,
-    ) -> Cow<'a, StyleRegion> {
+    pub fn resolved<'a>(&'a self, runtime_params: &ShaderRuntimeParams) -> Cow<'a, StyleRegion> {
         match self {
             StyleRegion::Cell { x, y } => match (x, y) {
                 (BindableU16::Literal(_), BindableU16::Literal(_)) => Cow::Borrowed(self),

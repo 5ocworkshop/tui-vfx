@@ -15,10 +15,22 @@ fn empty_has_no_primary_and_no_trail() {
 #[test]
 fn builds_primary_and_trail_ops() {
     let ops = CursorPaintOps {
-        primary: Some(PrimaryOp { position: (2, 5), glyph: "▄".into(), alpha: 0.5 }),
+        primary: Some(PrimaryOp {
+            position: (2, 5),
+            glyph: "▄".into(),
+            alpha: 0.5,
+        }),
         trail: vec![
-            TrailOp { position: (2, 4), glyph: None, alpha: 0.3 },
-            TrailOp { position: (2, 3), glyph: Some("█".into()), alpha: 0.1 },
+            TrailOp {
+                position: (2, 4),
+                glyph: None,
+                alpha: 0.3,
+            },
+            TrailOp {
+                position: (2, 3),
+                glyph: Some("█".into()),
+                alpha: 0.1,
+            },
         ],
     };
     assert_eq!(ops.primary.as_ref().unwrap().position, (2, 5));

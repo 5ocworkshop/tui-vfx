@@ -3,11 +3,11 @@
 // <WCTX>Initial probe-side diagnostics for border/text integrity issues</WCTX>
 // <CLOG>NEW: Add a probe-level diagnostics pass that detects alphabetic text leaking onto border rows and underline glyphs contaminating the bottom border</CLOG>
 
+use crate::ProbeReport;
 use crate::cls_probe_diagnostic::{ProbeDiagnostic, ProbeDiagnosticSeverity};
 use crate::fnc_has_ascii_alpha::has_ascii_alpha;
 use crate::fnc_max_widget_y::max_widget_y;
 use crate::fnc_row_text::row_text;
-use crate::ProbeReport;
 
 pub fn collect_basic_diagnostics(report: &ProbeReport) -> Vec<ProbeDiagnostic> {
     let mut diagnostics = Vec::new();

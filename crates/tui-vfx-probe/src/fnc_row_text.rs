@@ -12,7 +12,11 @@ pub fn row_text(report: &ProbeReport, widget_y: u16) -> String {
     }
 
     let mut row = vec![' '; width];
-    for cell in report.cells.iter().filter(|cell| cell.widget_local.y == widget_y) {
+    for cell in report
+        .cells
+        .iter()
+        .filter(|cell| cell.widget_local.y == widget_y)
+    {
         let x = cell.widget_local.x as usize;
         if x < width {
             row[x] = cell.ch;

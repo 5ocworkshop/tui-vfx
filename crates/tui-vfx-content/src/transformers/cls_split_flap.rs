@@ -312,7 +312,9 @@ impl TextTransformer for SplitFlap {
 
             // Resolve target_idx. If not in pool, emit the target char
             // directly when progress > 0.9, else emit the pool's space.
-            let target_idx = match pool.iter().position(|&p| p == target_char.to_ascii_uppercase())
+            let target_idx = match pool
+                .iter()
+                .position(|&p| p == target_char.to_ascii_uppercase())
             {
                 Some(idx) => idx,
                 None => {
@@ -378,9 +380,8 @@ impl TextTransformer for SplitFlap {
                 } else {
                     linear_phase
                 };
-                let glyph_idx =
-                    (settle_phase * HINGE_CHARS.len() as f64).min(HINGE_CHARS.len() as f64 - 1.0)
-                        as usize;
+                let glyph_idx = (settle_phase * HINGE_CHARS.len() as f64)
+                    .min(HINGE_CHARS.len() as f64 - 1.0) as usize;
                 out.push(HINGE_CHARS[glyph_idx]);
                 continue;
             }
@@ -405,17 +406,14 @@ impl TextTransformer for SplitFlap {
                 // Sub-progress within the current step (0.0..1.0 per step).
                 let step_frac = walk_pos.fract();
                 let glyph_idx = (step_frac * HINGE_CHARS.len() as f64)
-                    .min(HINGE_CHARS.len() as f64 - 1.0)
-                    as usize;
+                    .min(HINGE_CHARS.len() as f64 - 1.0) as usize;
                 out.push(HINGE_CHARS[glyph_idx]);
                 continue;
             }
 
             // settle_overshoot (only when settle_hinge is off — hinge owns
             // the settle window).
-            let current_idx = if !self.settle_hinge
-                && self.settle_overshoot
-                && char_progress > 0.9
+            let current_idx = if !self.settle_hinge && self.settle_overshoot && char_progress > 0.9
             {
                 let settle_phase = (char_progress - 0.9) / 0.1;
                 if settle_phase < 0.5 {
@@ -630,8 +628,26 @@ mod tests {
 
     #[test]
     fn spring_settle_retimes_hinge_frames() {
-        let linear = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, true, false, false);
-        let spring = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, true, true, false);
+        let linear = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        );
+        let spring = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            true,
+            false,
+        );
         let samples = [0.835, 0.86, 0.9, 0.94, 0.97];
         let any_diff = samples.iter().any(|&t| {
             linear.transform("A", t, &ctx()).chars().next()
@@ -642,7 +658,16 @@ mod tests {
 
     #[test]
     fn spring_settle_still_lands_on_target() {
-        let x = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, true, true, false);
+        let x = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            true,
+            false,
+        );
         assert_eq!(x.transform("HELLO", 1.0, &ctx()), "HELLO");
     }
 
@@ -650,7 +675,16 @@ mod tests {
 
     #[test]
     fn authentic_timing_short_distance_lands_early() {
-        let x = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, true);
+        let x = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        );
         let r = x.transform("AZ", 0.1, &ctx());
         let chars: Vec<char> = r.chars().collect();
         assert_eq!(chars[0], 'A', "short-distance char must land early");
@@ -659,13 +693,31 @@ mod tests {
 
     #[test]
     fn authentic_timing_all_land_at_progress_1() {
-        let x = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, true);
+        let x = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        );
         assert_eq!(x.transform("FLIGHT 721", 1.0, &ctx()), "FLIGHT 721");
     }
 
     #[test]
     fn authentic_timing_identical_chars_land_together() {
-        let x = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, true);
+        let x = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        );
         let r = x.transform("AA", 0.5, &ctx());
         let chars: Vec<char> = r.chars().collect();
         assert_eq!(chars[0], chars[1]);
@@ -699,8 +751,17 @@ mod tests {
 
     #[test]
     fn from_message_unchanged_columns_land_immediately() {
-        let x = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, true)
-            .with_from_message("LL");
+        let x = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        )
+        .with_from_message("LL");
         for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
             let r = x.transform("LX", t, &ctx());
             assert_eq!(r.chars().next().unwrap(), 'L', "at t={t}");
@@ -709,8 +770,17 @@ mod tests {
 
     #[test]
     fn from_message_forward_only_drum_rotation() {
-        let x = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, true)
-            .with_from_message("Z");
+        let x = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        )
+        .with_from_message("Z");
         assert_eq!(x.transform("A", 1.0, &ctx()), "A");
         let mid = x.transform("A", 0.5, &ctx()).chars().next().unwrap();
         assert_ne!(mid, 'A');
@@ -719,15 +789,33 @@ mod tests {
 
     #[test]
     fn from_message_lands_all_chars_at_progress_1() {
-        let x = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, true)
-            .with_from_message("LONDON");
+        let x = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        )
+        .with_from_message("LONDON");
         assert_eq!(x.transform("PARIS ", 1.0, &ctx()), "PARIS ");
     }
 
     #[test]
     fn from_message_shorter_than_target_pads_with_space() {
-        let x = sf_full(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, true)
-            .with_from_message("AB");
+        let x = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            true,
+        )
+        .with_from_message("AB");
         assert_eq!(x.transform("ABCDE", 1.0, &ctx()), "ABCDE");
         let r = x.transform("ABCDE", 0.05, &ctx());
         let chars: Vec<char> = r.chars().collect();
@@ -741,8 +829,17 @@ mod tests {
     fn rolling_flip_shows_hinge_glyphs_during_walk() {
         // With rolling_flip enabled, every position during the walk
         // phase must be a HINGE rotation glyph, never a pool letter.
-        let shader = sf_full(1.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, false)
-            .with_rolling_flip(true);
+        let shader = sf_full(
+            1.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            false,
+        )
+        .with_rolling_flip(true);
         for t in [0.1, 0.3, 0.5, 0.7] {
             let c = shader.transform("Z", t, &ctx()).chars().next().unwrap();
             assert!(
@@ -754,8 +851,17 @@ mod tests {
 
     #[test]
     fn rolling_flip_lands_on_target_at_progress_1() {
-        let shader = sf_full(1.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false, false, false)
-            .with_rolling_flip(true);
+        let shader = sf_full(
+            1.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            false,
+            false,
+            false,
+        )
+        .with_rolling_flip(true);
         assert_eq!(shader.transform("HELLO", 1.0, &ctx()), "HELLO");
     }
 
@@ -848,7 +954,16 @@ mod tests {
 
     #[test]
     fn full_solari_arc_produces_correct_glyph_family_per_phase() {
-        let x = sf_full(1.0, 0.1, SplitFlapCharset::Uppercase, false, 0.15, true, false, false);
+        let x = sf_full(
+            1.0,
+            0.1,
+            SplitFlapCharset::Uppercase,
+            false,
+            0.15,
+            true,
+            false,
+            false,
+        );
         let opening = x.transform("S", 0.05, &ctx()).chars().next().unwrap();
         assert!(BLOCK_CHARS.contains(&opening));
         let middle = x.transform("S", 0.5, &ctx()).chars().next().unwrap();

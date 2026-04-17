@@ -4,9 +4,9 @@
 // <CLOG>MINOR: Add regression coverage for row reconstruction preserving horizontal gaps so diagnostics can reason about sparse reports without collapsing text</CLOG>
 
 use tui_vfx_probe::{
-    ProbeCell, ProbeColor, ProbeFrame, ProbePipelineInventory, ProbePoint, ProbeReport,
-    ProbeReportSource, ProbeRequest, ProbeSize, ProbeSummary, ProbeTiming, ProbeWidget,
-    ProbeCellSelector, ProbePhase, collect_basic_diagnostics, row_text,
+    ProbeCell, ProbeCellSelector, ProbeColor, ProbeFrame, ProbePhase, ProbePipelineInventory,
+    ProbePoint, ProbeReport, ProbeReportSource, ProbeRequest, ProbeSize, ProbeSummary, ProbeTiming,
+    ProbeWidget, collect_basic_diagnostics, row_text,
 };
 
 fn probe_color() -> ProbeColor {
@@ -20,15 +20,25 @@ fn probe_color() -> ProbeColor {
 }
 
 fn make_report(rows: &[&str]) -> ProbeReport {
-    let width = rows.iter().map(|row| row.chars().count()).max().unwrap_or_default() as u16;
+    let width = rows
+        .iter()
+        .map(|row| row.chars().count())
+        .max()
+        .unwrap_or_default() as u16;
     let height = rows.len() as u16;
     let mut cells = Vec::new();
 
     for (y, row) in rows.iter().enumerate() {
         for (x, ch) in row.chars().enumerate() {
             cells.push(ProbeCell {
-                abs: ProbePoint { x: x as u16, y: y as u16 },
-                widget_local: ProbePoint { x: x as u16, y: y as u16 },
+                abs: ProbePoint {
+                    x: x as u16,
+                    y: y as u16,
+                },
+                widget_local: ProbePoint {
+                    x: x as u16,
+                    y: y as u16,
+                },
                 ch,
                 fg: probe_color(),
                 bg: probe_color(),
@@ -43,7 +53,9 @@ fn make_report(rows: &[&str]) -> ProbeReport {
     ProbeReport {
         schema_version: "0.1.0".to_string(),
         kind: "frame_dump".to_string(),
-        source: ProbeReportSource { input_kind: "test".to_string() },
+        source: ProbeReportSource {
+            input_kind: "test".to_string(),
+        },
         request: ProbeRequest {
             phase: ProbePhase::Dwelling,
             sample_t: 1.0,
@@ -57,7 +69,9 @@ fn make_report(rows: &[&str]) -> ProbeReport {
             effective_t: 1.0,
             tick_ms: None,
         },
-        frame: ProbeFrame { size: ProbeSize { width, height } },
+        frame: ProbeFrame {
+            size: ProbeSize { width, height },
+        },
         widget: ProbeWidget {
             abs_origin: ProbePoint { x: 0, y: 0 },
             size: ProbeSize { width, height },
@@ -91,7 +105,10 @@ fn make_report(rows: &[&str]) -> ProbeReport {
 fn test_collect_basic_diagnostics_reports_alpha_on_border_rows() {
     let report = make_report(&["A──╮", "│OK│", "╰──Z"]);
     let diagnostics = collect_basic_diagnostics(&report);
-    let codes = diagnostics.iter().map(|diagnostic| diagnostic.code.as_str()).collect::<Vec<_>>();
+    let codes = diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect::<Vec<_>>();
     assert!(codes.contains(&"alpha_on_top_border"));
     assert!(codes.contains(&"alpha_on_bottom_border"));
 }
@@ -100,7 +117,10 @@ fn test_collect_basic_diagnostics_reports_alpha_on_border_rows() {
 fn test_collect_basic_diagnostics_reports_underline_on_bottom_border() {
     let report = make_report(&["╭──╮", "│OK│", "╰▁▁╯"]);
     let diagnostics = collect_basic_diagnostics(&report);
-    let codes = diagnostics.iter().map(|diagnostic| diagnostic.code.as_str()).collect::<Vec<_>>();
+    let codes = diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect::<Vec<_>>();
     assert!(codes.contains(&"underline_on_bottom_border"));
 }
 

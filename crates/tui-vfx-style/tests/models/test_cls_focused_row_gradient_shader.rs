@@ -248,7 +248,7 @@ fn test_bottom_row_selection() {
 #[test]
 fn test_selected_row_takes_precedence() {
     let shader = FocusedRowGradientShader {
-        selected_row: Some(3),   // Explicitly select row 3
+        selected_row: Some(3), // Explicitly select row 3
         selected_row_binding: None,
         selected_row_ratio: 0.9, // This should be ignored
         selected_row_ratio_binding: None,
@@ -305,18 +305,10 @@ fn test_selected_row_binding_overrides_static_value() {
         apply_to: ApplyToColor::Foreground,
     };
 
-    let runtime_params = [("selected_row", 4_u16)].into_iter().collect::<ShaderRuntimeParams>();
-    let ctx = ShaderContext::new(
-        0,
-        4,
-        20,
-        10,
-        0,
-        0,
-        0.0,
-        None,
-        Some(runtime_params.into()),
-    );
+    let runtime_params = [("selected_row", 4_u16)]
+        .into_iter()
+        .collect::<ShaderRuntimeParams>();
+    let ctx = ShaderContext::new(0, 4, 20, 10, 0, 0, 0.0, None, Some(runtime_params.into()));
 
     let result = shader.style_at(&ctx, Style::fg(Color::gray(128)));
     assert_eq!(result.fg, Color::WHITE);
@@ -338,17 +330,7 @@ fn test_selected_row_ratio_binding_is_used_when_row_unset() {
     let runtime_params = [("selected_row_ratio", 0.5_f32)]
         .into_iter()
         .collect::<ShaderRuntimeParams>();
-    let ctx = ShaderContext::new(
-        0,
-        5,
-        20,
-        10,
-        0,
-        0,
-        0.0,
-        None,
-        Some(runtime_params.into()),
-    );
+    let ctx = ShaderContext::new(0, 5, 20, 10, 0, 0, 0.0, None, Some(runtime_params.into()));
 
     let result = shader.style_at(&ctx, Style::fg(Color::gray(128)));
     assert_eq!(result.fg, Color::WHITE);

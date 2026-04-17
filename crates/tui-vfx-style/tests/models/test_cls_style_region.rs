@@ -531,7 +531,10 @@ fn cell_resolved_with_binding_lowers_to_literal() {
             assert_eq!(*xl, 37);
             assert_eq!(*yl, 5);
         }
-        other => panic!("expected resolved Cell with literal coords, got {:?}", other),
+        other => panic!(
+            "expected resolved Cell with literal coords, got {:?}",
+            other
+        ),
     }
 }
 
