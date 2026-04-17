@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_render_cursor.rs</FILE> - <DESC>Tests for fnc_render_cursor</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>feat/cursor-primitive: render tests</WCTX>
-// <CLOG>Initial tests — primary op (T16)</CLOG>
+// <CLOG>T17: add wake Tint trail tests</CLOG>
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use tui_vfx_content::cursor::{
@@ -59,5 +59,54 @@ fn empty_character_returns_no_primary_op() {
     assert!(ops.primary.is_none());
 }
 
+// --- T17: wake Tint trail painting ---
+
+#[test]
+fn tint_wake_emits_trail_ops_with_decaying_alpha() {
+    let mut state = CursorState::new();
+    let cursor = Cursor::default().with_wake_tint(1.0, 0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.0, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.1, 0.1, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 2)), 0.5, 0.4, &ctx());
+    let ops = fnc_render_cursor(&state, &cursor, 0.5, &ctx());
+    assert_eq!(ops.trail.len(), 2);
+    // All trail ops are glyph=None in Tint mode.
+    for op in &ops.trail {
+        assert!(op.glyph.is_none());
+    }
+    // Oldest entry should have lower alpha than newest.
+    let oldest_alpha = ops.trail[0].alpha;
+    let newest_alpha = ops.trail[1].alpha;
+    assert!(oldest_alpha < newest_alpha);
+    for op in &ops.trail {
+        assert!((0.0..=1.0).contains(&op.alpha));
+    }
+}
+
+#[test]
+fn e7_trail_decays_while_cursor_hidden() {
+    let mut state = CursorState::new();
+    let mut cursor = Cursor::default().with_wake_tint(1.0, 0);
+    cursor.visibility = SignalOrFloat::Static(1.0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.0, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.1, 0.1, &ctx());
+    cursor.visibility = SignalOrFloat::Static(0.0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.5, 0.4, &ctx());
+    let ops = fnc_render_cursor(&state, &cursor, 0.5, &ctx());
+    assert!(ops.primary.is_none()); // cursor hidden
+    assert_eq!(ops.trail.len(), 1);
+    assert!(ops.trail[0].alpha > 0.0 && ops.trail[0].alpha < 1.0);
+}
+
+#[test]
+fn e11_wake_off_emits_no_trail_ops() {
+    let mut state = CursorState::new();
+    let cursor = Cursor::default(); // WakeMode::Off
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.0, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.1, 0.1, &ctx());
+    let ops = fnc_render_cursor(&state, &cursor, 0.1, &ctx());
+    assert!(ops.trail.is_empty());
+}
+
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_render_cursor.rs</FILE> - <DESC>Tests for fnc_render_cursor</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
