@@ -1,5 +1,5 @@
 <!-- <FILE>docs/generated/API.md</FILE> - <DESC>Complete TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 3.0.1</VERS> -->
+<!-- <VERS>VERSION: 3.1.0</VERS> -->
 <!-- <WCTX>Generated API documentation</WCTX> -->
 <!-- <CLOG>Auto-generated from code + api_docs.toml</CLOG> -->
 
@@ -489,7 +489,7 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 | `GlistenBand` | `speed`, `band_width`, `direction`, `angle_deg`, `head`, `tail` |
 | `GlitchLines` | `intensity`, `max_lines`, `speed` |
 | `Glow` | `radius`, `intensity`, `falloff`, `pulse_speed`, `color` |
-| `Highlighter` | `color` |
+| `Highlighter` | `color`, `apply_to`, `mode`, `direction`, `speed`, `blend_strength`, `soft_edge`, `band_width` |
 | `LinearGradient` | `angle_deg` |
 | `NeonFlicker` | `stability`, `segment`, `dim_amount` |
 | `PulseWave` | `frequency`, `speed`, `direction`, `wavelength`, `color` |
@@ -572,7 +572,7 @@ pub enum ContentEffect {
     Scramble { resolve_pace: Static(0.0), charset: Alphanumeric, seed: 42 },
     ScrambleGlitchShift { resolve_pace: Static(0.0), charset: Alphanumeric, scramble_seed: 42, shift_amount: 4, glitch_start: Static(0.0), glitch_end: Static(0.0) },
     SlideShift { start_col: 0, end_col: 0, start_row: 0, shift_col: 0, shift_width: 1, row_shift: 0, line_mode: Block, flow_mode: StayShifted },
-    SplitFlap { speed: Static(0.0), cascade: Static(0.0) },
+    SplitFlap { speed: Static(0.0), cascade: Static(0.0), cycles: Static(0.0), jitter: 0, charset: Alpha, settle_overshoot: false, leading_blocks: 0, settle_hinge: false, spring_settle: false, authentic_timing: false, from_message: None, rolling_flip: false },
     Typewriter { speed_variance: Static(0.0) },
     WrapIndicator { prefix: » , suffix:  « },
 }
@@ -695,4 +695,4 @@ pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowG
 ---
 
 <!-- <FILE>docs/generated/API.md</FILE> - <DESC>Complete TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 3.0.1</VERS> -->
+<!-- <VERS>END OF VERSION: 3.1.0</VERS> -->
