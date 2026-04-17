@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-content/src/cursor/fnc_render_cursor.rs</FILE> - <DESC>Render cursor state into paint ops</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>feat/cursor-primitive: render — wake Ghost trail (T18)</WCTX>
-// <CLOG>T18: Ghost mode emits trail ops carrying cursor character</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>feat/cursor-scan: while the cursor is parked (GrowInPhase::Visible) and scan is enabled, override the primary glyph with fnc_cursor_scan_glyph. Grow-in and grow-out still win within their windows so scan never fights the shape animation. Scan is only meaningful with period_ms > 0.</WCTX>
+// <CLOG>MINOR: wire ScanMode into primary_op's Visible branch. phase = (now_ms % period_ms) / period_ms; passed through fnc_cursor_scan_glyph. period_ms ≤ 0 or ScanMode::Off is a no-op.</CLOG>
 
 use super::{
-    fnc_cursor_grow_in_glyph, Cursor, CursorPaintOps, CursorState, GrowInPhase, PrimaryOp,
-    TrailOp, WakeMode,
+    fnc_cursor_grow_in_glyph, fnc_cursor_scan_glyph, Cursor, CursorPaintOps, CursorState,
+    GrowInPhase, PrimaryOp, ScanMode, TrailOp, WakeMode,
 };
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 
@@ -109,7 +109,27 @@ fn primary_op(
             if alpha <= 0.0 {
                 None
             } else {
-                Some(PrimaryOp { position: pos, glyph: cursor.character.clone(), alpha })
+                // Scan override — only in the Visible phase. Grow-in/out
+                // take precedence above and are not touched.
+                let glyph = if matches!(cursor.scan.mode, ScanMode::Off) {
+                    cursor.character.clone()
+                } else {
+                    let period_ms = cursor
+                        .scan
+                        .period_ms
+                        .evaluate(now, ctx)
+                        .unwrap_or(0.0)
+                        .max(0.0) as f64;
+                    if period_ms <= 0.0 {
+                        cursor.character.clone()
+                    } else {
+                        // now is seconds; period_ms is milliseconds.
+                        let now_ms = now * 1000.0;
+                        let phase = ((now_ms.rem_euclid(period_ms)) / period_ms) as f32;
+                        fnc_cursor_scan_glyph(&cursor.character, phase, cursor.scan.mode)
+                    }
+                };
+                Some(PrimaryOp { position: pos, glyph, alpha })
             }
         }
         GrowInPhase::GrowingIn { elapsed_ms } => {
@@ -155,4 +175,4 @@ fn clamp_unit(v: f32) -> f32 {
 }
 
 // <FILE>tui-vfx-content/src/cursor/fnc_render_cursor.rs</FILE> - <DESC>Render cursor state into paint ops</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

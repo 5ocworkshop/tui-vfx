@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-content/src/cursor/cls_cursor.rs</FILE> - <DESC>Cursor primitive config</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>feat/cursor-primitive: compose general Cursor via #[serde(flatten)] (T20)</WCTX>
-// <CLOG>Flatten `blink` so `blink_interval` / `interval_ms` lift to top level — required for TypewriterCursor v1.1.0 backcompat</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>feat/cursor-scan: add a third cursor animation axis — CursorScan — that modulates the glyph through a bounded shape cycle while the cursor is parked. Grow-in → wake → scan is the animation precedence; scan runs only in the Visible phase.</WCTX>
+// <CLOG>MINOR: Add `scan: CursorScan` field, default = CursorScan::default() (ScanMode::Off + period_ms 0). #[serde(default)] at the struct level carries the backcompat — pre-0.2 JSON parses unchanged.</CLOG>
 
-use super::{CursorBlink, GrowIn, GrowInMode, Wake, WakeMode};
+use super::{CursorBlink, CursorScan, GrowIn, GrowInMode, Wake, WakeMode};
 use mixed_signals::prelude::SignalOrFloat;
 use serde::{Deserialize, Serialize};
 
@@ -52,6 +52,7 @@ pub struct Cursor {
     pub blink: CursorBlink,
     pub grow_in: GrowIn,
     pub wake: Wake,
+    pub scan: CursorScan,
 }
 
 impl Default for Cursor {
@@ -62,6 +63,7 @@ impl Default for Cursor {
             blink: CursorBlink::default(),
             grow_in: GrowIn::default(),
             wake: Wake::default(),
+            scan: CursorScan::default(),
         }
     }
 }
@@ -119,4 +121,4 @@ impl Cursor {
 }
 
 // <FILE>tui-vfx-content/src/cursor/cls_cursor.rs</FILE> - <DESC>Cursor primitive config</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

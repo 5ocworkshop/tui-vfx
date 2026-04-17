@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/test_cursor.rs</FILE> - <DESC>Aggregator for cursor module tests</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>feat/cursor-primitive T28: register test_fnc_build_cursor_shader aggregator entry</WCTX>
-// <CLOG>Add T28 test module (fnc_build_cursor_shader)</CLOG>
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>feat/cursor-scan: register test_cls_cursor_scan and test_fnc_cursor_scan_glyph aggregator entries.</WCTX>
+// <CLOG>MINOR: two new mod entries for the CursorScan peer tests.</CLOG>
 
 #[path = "cursor/test_cls_cursor_blink.rs"]
 mod test_cls_cursor_blink;
@@ -11,6 +11,9 @@ mod test_cls_cursor_grow_in;
 
 #[path = "cursor/test_cls_cursor_wake.rs"]
 mod test_cls_cursor_wake;
+
+#[path = "cursor/test_cls_cursor_scan.rs"]
+mod test_cls_cursor_scan;
 
 #[path = "cursor/test_cls_cursor.rs"]
 mod test_cls_cursor;
@@ -23,6 +26,9 @@ mod test_cls_cursor_paint_ops;
 
 #[path = "cursor/test_fnc_cursor_grow_in_glyph.rs"]
 mod test_fnc_cursor_grow_in_glyph;
+
+#[path = "cursor/test_fnc_cursor_scan_glyph.rs"]
+mod test_fnc_cursor_scan_glyph;
 
 #[path = "cursor/test_fnc_advance_cursor.rs"]
 mod test_fnc_advance_cursor;
@@ -43,4 +49,4 @@ mod test_fnc_apply_ghost_glyphs_to_grid;
 mod test_fnc_build_cursor_shader;
 
 // <FILE>tui-vfx-content/tests/test_cursor.rs</FILE> - <DESC>Aggregator for cursor module tests</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>
