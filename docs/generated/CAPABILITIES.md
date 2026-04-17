@@ -96,6 +96,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **ConcealedLight** | Hidden-source architectural light wash for thresholds, seams, and shell hierarchy | shell-hierarchy, threshold, panel-depth, architectural-light |
 | **Diffusion** | Soft material-light diffusion for paper, textile, and frosted surfaces | material-light, ambient, supportive-ui, frosted, textile |
 | **EdgeSheen** | Calm premium sheen that glides along the widget perimeter | premium-shell, toast, card, surface |
+| **FocusField** | Point or pane-following focus field for subtle attention shaping | focus, active-pane, spotlight, attention-shaping |
 | **FocusedRowGradient** | Vertical gradient centered on a selected row | selection, list, navigation |
 | **GlistenBand** | Moving band of light that sweeps across the widget | loading, premium, shine |
 | **GlitchLines** | Random horizontal glitch interference lines | error, glitch, dramatic |

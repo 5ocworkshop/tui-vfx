@@ -110,6 +110,23 @@ Default posture:
 - background-focused
 - very subtle drift only when the theme justifies it
 
+### FocusField
+Best for:
+- active pane emphasis
+- subtle hotspot guidance
+- modal and command palette focus shaping
+- drawers and inspectors that should feel current without glowing loudly
+
+Avoid:
+- turning every focus change into a theatrical spotlight
+- large high-intensity fields behind dense copy
+- using pulse by default in power-user-heavy flows
+
+Default posture:
+- background-focused
+- rect/pane mode before hotspot mode in application UI
+- static by default; pulse only when the theme strongly justifies it
+
 ### AffordanceWake
 Best for:
 - reveal-on-need secondary affordances

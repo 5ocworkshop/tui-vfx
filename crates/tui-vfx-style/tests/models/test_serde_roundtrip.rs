@@ -10,6 +10,7 @@ use tui_vfx_style::models::cls_chromatic_edge_shader::ChromaticEdgeShader;
 use tui_vfx_style::models::cls_concealed_light_shader::ConcealedLightShader;
 use tui_vfx_style::models::cls_diffusion_shader::DiffusionShader;
 use tui_vfx_style::models::cls_edge_sheen_shader::EdgeSheenShader;
+use tui_vfx_style::models::cls_focus_field_shader::FocusFieldShader;
 use tui_vfx_style::models::cls_orbit_shader::OrbitShader;
 use tui_vfx_style::models::cls_trace_path_shader::TracePathShader;
 use tui_vfx_style::models::cls_trace_propagation_shader::TracePropagationShader;
@@ -129,6 +130,17 @@ fn test_style_effect_roundtrip_spatial_diffusion() {
     let shader = DiffusionShader::default();
     let effect = StyleEffect::Spatial {
         shader: SpatialShaderType::Diffusion(shader),
+    };
+    let json = serde_json::to_string(&effect).expect("serialize spatial effect");
+    let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn test_style_effect_roundtrip_spatial_focus_field() {
+    let shader = FocusFieldShader::default();
+    let effect = StyleEffect::Spatial {
+        shader: SpatialShaderType::FocusField(shader),
     };
     let json = serde_json::to_string(&effect).expect("serialize spatial effect");
     let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");

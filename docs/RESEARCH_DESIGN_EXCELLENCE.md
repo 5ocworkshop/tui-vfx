@@ -52,6 +52,7 @@ This heavily favors:
 ### Secondary
 3. `AffordanceWakeShader`
 4. `WayfindingNodeShader`
+5. `FocusFieldShader` (follow-on extension for hotspot/pane attention shaping)
 
 ### Deferred
 - `MaterialContrastShader`
@@ -75,6 +76,12 @@ surfaces that can carry warmth and softness without noisy motion.
 
 These two were the least duplicative, most terminal-appropriate, and most
 cross-theme-useful recommendations.
+
+Later follow-on discussion also identified a strong adjacent need for a
+**FocusFieldShader** that can either follow a hotspot (`Ellipse`) or a focused
+pane (`Rect`). That capability sits closest to application UX/navigation
+guidance and is especially relevant for shell hierarchy and active-pane focus
+shaping.
 
 ## Suggested next implementation order
 1. `ConcealedLightShader`

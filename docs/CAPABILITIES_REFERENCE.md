@@ -161,6 +161,7 @@ Spatial shaders compute per-cell style modifications based on position, time, an
 | **Glow** | Multi-cell bloom/halo | `color`, `radius`, `falloff`, `intensity`, `pulse_speed` |
 | **ConcealedLight** | Hidden-source architectural light wash | `source`, `spread`, `edge_width`, `source_cutoff`, `intensity`, `mode`, `apply_to` |
 | **Diffusion** | Soft material-light diffusion | `source`, `radius`, `softness`, `edge_firmness`, `intensity`, `mode`, `apply_to` |
+| **FocusField** | Point or pane-following focus field | `shape`, `center_x/y`, `radius_x/y`, `rect_*`, `feather`, `intensity`, `pulse_speed` |
 | **AffordanceWake** | Dormant secondary affordance wake | `zone`, `radius`, `progress`, `progress_binding`, `rest_intensity`, `peak_intensity`, `apply_to` |
 | **WayfindingNode** | Calm node emphasis for breadcrumbs/steps | `nodes`, `radius`, `current_index`, `current_index_binding`, `previous_strength`, `future_strength`, `pulse_speed` |
 | **SubCellShake** | Micro-jitter color oscillation | `amplitude`, `frequency`, `axis`, `chromatic`, `seed`, `edge_only`, `edge_width` |
@@ -205,6 +206,13 @@ Premium effect for frosted glass / film grain texture:
 - `edge_firmness`: Preserves a disciplined frame around the perimeter
 - `mode`: Static by default; WarmDrift, CoolDrift, and Breath stay intentionally subtle
 - Best on shell-owned or background-heavy surfaces, not dense text blocks
+
+**FocusField** — A subtle attention field that can follow either a hotspot or a pane:
+- `shape`: `Ellipse` for spotlight-like center fields, `Rect` for pane-following emphasis
+- Ellipse mode uses `center_x` / `center_y` and `radius_x` / `radius_y`
+- Rect mode uses `rect_x`, `rect_y`, `rect_width`, `rect_height`, with `feather` controlling soft spill outside the pane
+- All geometry can be bound at runtime, making the field follow changing focus targets
+- Best for active-pane emphasis, subtle hotspot guidance, and attention shaping that should be felt more than seen
 
 **AffordanceWake** — Low-noise dormant-to-active affordance emphasis:
 - `zone`: AllEdges, Corners, LeftRail, RightRail, TopRail, BottomRail

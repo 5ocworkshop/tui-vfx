@@ -32,6 +32,7 @@
 //! | [`EdgeSheen`](SpatialShaderType::EdgeSheen) | Calm perimeter sheen for shells |
 //! | [`ConcealedLight`](SpatialShaderType::ConcealedLight) | Hidden-source architectural light wash |
 //! | [`Diffusion`](SpatialShaderType::Diffusion) | Soft material-light diffusion |
+//! | [`FocusField`](SpatialShaderType::FocusField) | Point or pane-following focus field |
 //! | [`AffordanceWake`](SpatialShaderType::AffordanceWake) | Dormant secondary affordances resolving on demand |
 //! | [`WayfindingNode`](SpatialShaderType::WayfindingNode) | Calm node emphasis for steps, breadcrumbs, and junctions |
 //! | [`Cursor`](SpatialShaderType::Cursor) | Primary-cell alpha + wake trail tint/ghost |
@@ -69,6 +70,7 @@ use crate::models::{
     cls_chromatic_edge_shader::ChromaticEdgeShader,
     cls_concealed_light_shader::ConcealedLightShader, cls_cursor_shader::CursorShader,
     cls_diffusion_shader::DiffusionShader, cls_edge_sheen_shader::EdgeSheenShader,
+    cls_focus_field_shader::FocusFieldShader,
     cls_focused_row_gradient_shader::FocusedRowGradientShader,
     cls_glisten_band_shader::GlistenBandShader, cls_glitch_lines_shader::GlitchLinesShader,
     cls_glow_shader::GlowShader, cls_highlighter_shader::HighlighterShader,
@@ -95,8 +97,8 @@ use tui_vfx_types::Style;
 ///
 /// - **Gradients**: LinearGradient, Highlighter
 /// - **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,
-///   TracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, AffordanceWake,
-///   WayfindingNode
+///   TracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, FocusField,
+///   AffordanceWake, WayfindingNode
 /// - **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge
 /// - **Depth**: AmbientOcclusion, Bevel, Glow
 /// - **Premium**: StochasticSparkle
@@ -174,6 +176,9 @@ pub enum SpatialShaderType {
     /// Soft material-light diffusion for paper, textile, and frosted surfaces.
     Diffusion(DiffusionShader),
 
+    /// Point/ellipse or pane/rect-following focus field.
+    FocusField(FocusFieldShader),
+
     /// Dormant secondary affordances that resolve on demand.
     AffordanceWake(AffordanceWakeShader),
 
@@ -216,6 +221,7 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::EdgeSheen(s) => s.style_at(ctx, base),
             SpatialShaderType::ConcealedLight(s) => s.style_at(ctx, base),
             SpatialShaderType::Diffusion(s) => s.style_at(ctx, base),
+            SpatialShaderType::FocusField(s) => s.style_at(ctx, base),
             SpatialShaderType::AffordanceWake(s) => s.style_at(ctx, base),
             SpatialShaderType::WayfindingNode(s) => s.style_at(ctx, base),
             SpatialShaderType::SubCellShake(s) => s.style_at(ctx, base),
@@ -255,6 +261,7 @@ impl SpatialShaderType {
             SpatialShaderType::EdgeSheen(_) => "EdgeSheen",
             SpatialShaderType::ConcealedLight(_) => "ConcealedLight",
             SpatialShaderType::Diffusion(_) => "Diffusion",
+            SpatialShaderType::FocusField(_) => "FocusField",
             SpatialShaderType::AffordanceWake(_) => "AffordanceWake",
             SpatialShaderType::WayfindingNode(_) => "WayfindingNode",
             SpatialShaderType::SubCellShake(_) => "SubCellShake",
@@ -312,6 +319,9 @@ impl SpatialShaderType {
             SpatialShaderType::Diffusion(_) => {
                 "Soft material-light diffusion for paper, textile, and frosted surfaces"
             }
+            SpatialShaderType::FocusField(_) => {
+                "Point or pane-following focus field for subtle attention shaping"
+            }
             SpatialShaderType::AffordanceWake(_) => {
                 "Dormant secondary affordances resolving on demand through edge, corner, or rail emphasis"
             }
@@ -334,6 +344,7 @@ impl SpatialShaderType {
     pub fn runtime_binding_requests(&self) -> Vec<ShaderRuntimeBindingRequest> {
         match self {
             SpatialShaderType::FocusedRowGradient(shader) => shader.runtime_binding_requests(),
+            SpatialShaderType::FocusField(shader) => shader.runtime_binding_requests(),
             SpatialShaderType::AffordanceWake(shader) => shader.runtime_binding_requests(),
             SpatialShaderType::WayfindingNode(shader) => shader.runtime_binding_requests(),
             _ => Vec::new(),
@@ -349,6 +360,7 @@ impl SpatialShaderType {
             SpatialShaderType::FocusedRowGradient(shader) => {
                 shader.runtime_binding_resolutions(ctx)
             }
+            SpatialShaderType::FocusField(shader) => shader.runtime_binding_resolutions(ctx),
             SpatialShaderType::AffordanceWake(shader) => shader.runtime_binding_resolutions(ctx),
             SpatialShaderType::WayfindingNode(shader) => shader.runtime_binding_resolutions(ctx),
             _ => Vec::new(),
@@ -504,6 +516,12 @@ impl SpatialShaderType {
                 ("radius", format!("{} cells", s.radius)),
                 ("softness", format!("{:.2}", s.softness)),
                 ("intensity", format!("{:.2}", s.intensity)),
+            ],
+            SpatialShaderType::FocusField(s) => vec![
+                ("shape", format!("{:?}", s.shape)),
+                ("intensity", format!("{:.2}", s.intensity)),
+                ("feather", format!("{} cells", s.feather)),
+                ("pulse_speed", format!("{:.2}", s.pulse_speed)),
             ],
             SpatialShaderType::AffordanceWake(s) => vec![
                 ("zone", format!("{:?}", s.zone)),

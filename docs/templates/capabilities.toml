@@ -735,6 +735,20 @@ mode: Static, WarmDrift, CoolDrift, or Breath (all intended to stay subtle).
 apply_to: Foreground, Background, or Both.
 Best on shell-owned and background-heavy regions such as support panels, empty states, calm loading surfaces, and reflective/warm UI contexts."""
 
+[effects.shaders.FocusField]
+use_cases = ["focus", "active-pane", "spotlight", "attention-shaping"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Point or pane-following focus field for subtle attention shaping.
+shape: Ellipse or Rect.
+Ellipse mode uses center_x/center_y with radius_x/radius_y, optionally overridden by center_x_binding/center_y_binding.
+Rect mode uses rect_x/rect_y/rect_width/rect_height, optionally overridden by rect_* bindings.
+feather: falloff distance outside the rect in cells.
+intensity: overall field strength. pulse_speed: optional very low-amplitude pulse.
+apply_to: Foreground, Background, or Both.
+Best for softly emphasizing a focused hotspot, active pane, modal, drawer, or command palette without turning the UI into a theatrical spotlight."""
+
 [effects.shaders.AffordanceWake]
 use_cases = ["latent-affordance", "focus-support", "navigation", "contextual-ui"]
 energy = "calm"

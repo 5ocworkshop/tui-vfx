@@ -2594,6 +2594,49 @@
           "surface"
         ]
       },
+      "FocusField": {
+        "ai_hint": "Point or pane-following focus field for subtle attention shaping.\nshape: Ellipse or Rect.\nEllipse mode uses center_x/center_y with radius_x/radius_y, optionally overridden by center_x_binding/center_y_binding.\nRect mode uses rect_x/rect_y/rect_width/rect_height, optionally overridden by rect_* bindings.\nfeather: falloff distance outside the rect in cells.\nintensity: overall field strength. pulse_speed: optional very low-amplitude pulse.\napply_to: Foreground, Background, or Both.\nBest for softly emphasizing a focused hotspot, active pane, modal, drawer, or command palette without turning the UI into a theatrical spotlight.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "FocusField",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Ellipse",
+            "doc": "Ellipse or Rect",
+            "name": "shape",
+            "ty": "FocusFieldShape"
+          },
+          {
+            "default": "0.22",
+            "doc": "overall field strength",
+            "name": "intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "3 cells",
+            "doc": "falloff distance outside the rect in cells",
+            "name": "feather",
+            "ty": "u8"
+          },
+          {
+            "default": "0.00",
+            "doc": "optional very low-amplitude pulse",
+            "name": "pulse_speed",
+            "ty": "f32"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Point or pane-following focus field for subtle attention shaping",
+        "rustdoc_summary": "Point or pane-following focus field for subtle attention shaping",
+        "use_cases": [
+          "focus",
+          "active-pane",
+          "spotlight",
+          "attention-shaping"
+        ]
+      },
       "FocusedRowGradient": {
         "ai_hint": "Vertical gradient highlighting selected row.\nselected_row: row index to highlight.\nselected_row_ratio: alternative selection by ratio (0.0-1.0).\nfalloff_distance: gradient fade distance from selected row.\nbright_color: highlight color for selected row.\ndim_color: color for non-selected rows.\napply_to: Foreground/Background/Both.\nIdeal for list navigation and row selection.",
         "complexity": "moderate",

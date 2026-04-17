@@ -63,6 +63,7 @@
 - **ConcealedLight**: Hidden-source architectural light wash for thresholds, seams, and shell hierarchy. [Premium]
 - **Diffusion**: Soft material-light diffusion for paper, textile, frosted, and lantern-like surfaces. [Premium]
 - **EdgeSheen**: Calm premium sheen constrained to widget edges instead of sweeping across the full surface. [Premium]
+- **FocusField**: Point or pane-following focus field for subtle attention shaping. [Premium]
 - **FocusedRowGradient**: Vertical gradient highlighting selected row.
 - **GlistenBand**: Moving light band sweep for elegant loading shimmer. [Premium]
 - **GlitchLines**: Random horizontal glitch lines for errors/warnings. [Intense]

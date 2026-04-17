@@ -14,6 +14,7 @@ use tui_vfx_style::models::cls_chromatic_edge_shader::ChromaticEdgeShader;
 use tui_vfx_style::models::cls_concealed_light_shader::ConcealedLightShader;
 use tui_vfx_style::models::cls_diffusion_shader::DiffusionShader;
 use tui_vfx_style::models::cls_edge_sheen_shader::EdgeSheenShader;
+use tui_vfx_style::models::cls_focus_field_shader::FocusFieldShader;
 use tui_vfx_style::models::cls_focused_row_gradient_shader::FocusedRowGradientShader;
 use tui_vfx_style::models::cls_glisten_band_shader::GlistenBandShader;
 use tui_vfx_style::models::cls_glitch_lines_shader::GlitchLinesShader;
@@ -66,6 +67,7 @@ fn test_spatial_shader_name_returns_nonempty() {
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
         SpatialShaderType::ConcealedLight(ConcealedLightShader::default()),
         SpatialShaderType::Diffusion(DiffusionShader::default()),
+        SpatialShaderType::FocusField(FocusFieldShader::default()),
         SpatialShaderType::AffordanceWake(AffordanceWakeShader::default()),
         SpatialShaderType::WayfindingNode(WayfindingNodeShader::default()),
         SpatialShaderType::Highlighter(HighlighterShader::new(ColorConfig::Yellow)),
@@ -122,6 +124,7 @@ fn test_spatial_shader_description_returns_nonempty() {
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
         SpatialShaderType::ConcealedLight(ConcealedLightShader::default()),
         SpatialShaderType::Diffusion(DiffusionShader::default()),
+        SpatialShaderType::FocusField(FocusFieldShader::default()),
         SpatialShaderType::AffordanceWake(AffordanceWakeShader::default()),
         SpatialShaderType::WayfindingNode(WayfindingNodeShader::default()),
         SpatialShaderType::Highlighter(HighlighterShader::new(ColorConfig::Yellow)),

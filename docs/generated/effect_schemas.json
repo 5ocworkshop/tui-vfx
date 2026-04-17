@@ -307916,7 +307916,7 @@
     },
     "shaders": {
       "enum_schema": {
-        "description": "Spatial shader types for per-cell style computation.\n\nEach shader computes style modifications based on cell position,\nanimation time, and shader-specific parameters. They're the primary\nmechanism for adding visual texture to widget content.\n\n# Categories\n\n- **Gradients**: LinearGradient, Highlighter\n- **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,\nTracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, AffordanceWake,\nWayfindingNode\n- **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge\n- **Depth**: AmbientOcclusion, Bevel, Glow\n- **Premium**: StochasticSparkle\n\n# Built-in Documentation\n\nUse [`terse_description()`](Self::terse_description) and\n[`key_parameters()`](Self::key_parameters) for runtime documentation.",
+        "description": "Spatial shader types for per-cell style computation.\n\nEach shader computes style modifications based on cell position,\nanimation time, and shader-specific parameters. They're the primary\nmechanism for adding visual texture to widget content.\n\n# Categories\n\n- **Gradients**: LinearGradient, Highlighter\n- **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,\nTracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, FocusField,\nAffordanceWake, WayfindingNode\n- **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge\n- **Depth**: AmbientOcclusion, Bevel, Glow\n- **Premium**: StochasticSparkle\n\n# Built-in Documentation\n\nUse [`terse_description()`](Self::terse_description) and\n[`key_parameters()`](Self::key_parameters) for runtime documentation.",
         "json_name": null,
         "kind": "enum",
         "name": "SpatialShaderType",
@@ -316251,6 +316251,704 @@
             "name": "Diffusion"
           },
           {
+            "description": "Point/ellipse or pane/rect-following focus field.",
+            "items": [
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": null,
+                  "help": null,
+                  "json_key": null,
+                  "optional": false,
+                  "range": null
+                },
+                "name": "0",
+                "schema": {
+                  "description": "A calm focus field that can either behave like a point/ellipse spotlight or\nfollow a pane/rect.\n\nThe effect is intended for subtle attention shaping: making the active pane,\nmodal, drawer, command palette, or focus hotspot feel more current without\nturning into a theatrical spotlight. The field should mostly be *felt* via\ncolor hierarchy rather than *seen* as a separate moving object.",
+                  "fields": [
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": false,
+                        "range": null
+                      },
+                      "name": "color",
+                      "schema": {
+                        "description": "Stable, serde-friendly representation of `ratatui::style::Color`.\n\nWe avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and\nconfiguration formats remain under our control.\n\n# RGB Shorthand\n\nFor RGB colors, you can use either the full tagged format or a shorthand:\n- Full: `{\"type\": \"rgb\", \"r\": 255, \"g\": 128, \"b\": 0}`\n- Shorthand: `{\"r\": 255, \"g\": 128, \"b\": 0}`\n\nBoth formats are equivalent and produce the same `ColorConfig::Rgb` value.",
+                        "json_name": null,
+                        "kind": "enum",
+                        "name": "ColorConfig",
+                        "tag_field": "type",
+                        "variants": [
+                          {
+                            "description": null,
+                            "json_value": "reset",
+                            "kind": "unit",
+                            "name": "Reset"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "black",
+                            "kind": "unit",
+                            "name": "Black"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "red",
+                            "kind": "unit",
+                            "name": "Red"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "green",
+                            "kind": "unit",
+                            "name": "Green"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "yellow",
+                            "kind": "unit",
+                            "name": "Yellow"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "blue",
+                            "kind": "unit",
+                            "name": "Blue"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "magenta",
+                            "kind": "unit",
+                            "name": "Magenta"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "cyan",
+                            "kind": "unit",
+                            "name": "Cyan"
+                          },
+                          {
+                            "description": "Standard gray (ANSI color 7, \"light gray\" in some contexts)",
+                            "json_value": "gray",
+                            "kind": "unit",
+                            "name": "Gray"
+                          },
+                          {
+                            "description": "Alias for Gray - allows \"light_gray\" in JSON",
+                            "json_value": "light_gray",
+                            "kind": "unit",
+                            "name": "LightGray"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "dark_gray",
+                            "kind": "unit",
+                            "name": "DarkGray"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "light_red",
+                            "kind": "unit",
+                            "name": "LightRed"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "light_green",
+                            "kind": "unit",
+                            "name": "LightGreen"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "light_yellow",
+                            "kind": "unit",
+                            "name": "LightYellow"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "light_blue",
+                            "kind": "unit",
+                            "name": "LightBlue"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "light_magenta",
+                            "kind": "unit",
+                            "name": "LightMagenta"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "light_cyan",
+                            "kind": "unit",
+                            "name": "LightCyan"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "white",
+                            "kind": "unit",
+                            "name": "White"
+                          },
+                          {
+                            "description": null,
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "r",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 255,
+                                    "min": 0
+                                  },
+                                  "type": "u8"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "g",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 255,
+                                    "min": 0
+                                  },
+                                  "type": "u8"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "b",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 255,
+                                    "min": 0
+                                  },
+                                  "type": "u8"
+                                }
+                              }
+                            ],
+                            "json_value": "rgb",
+                            "kind": "struct",
+                            "name": "Rgb"
+                          },
+                          {
+                            "description": null,
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "value",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 255,
+                                    "min": 0
+                                  },
+                                  "type": "u8"
+                                }
+                              }
+                            ],
+                            "json_value": "indexed",
+                            "kind": "struct",
+                            "name": "Indexed"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "shape",
+                      "schema": {
+                        "description": null,
+                        "json_name": null,
+                        "kind": "enum",
+                        "name": "FocusFieldShape",
+                        "tag_field": null,
+                        "variants": [
+                          {
+                            "description": null,
+                            "json_value": "ellipse",
+                            "kind": "unit",
+                            "name": "Ellipse"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "rect",
+                            "kind": "unit",
+                            "name": "Rect"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "center_x",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 65535,
+                          "min": 0
+                        },
+                        "type": "u16"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "center_y",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 65535,
+                          "min": 0
+                        },
+                        "type": "u16"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "center_x_binding",
+                      "schema": {
+                        "inner": {
+                          "kind": "primitive",
+                          "range": null,
+                          "type": "String"
+                        },
+                        "kind": "option"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "center_y_binding",
+                      "schema": {
+                        "inner": {
+                          "kind": "primitive",
+                          "range": null,
+                          "type": "String"
+                        },
+                        "kind": "option"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "radius_x",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 65535,
+                          "min": 0
+                        },
+                        "type": "u16"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "radius_y",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 65535,
+                          "min": 0
+                        },
+                        "type": "u16"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "rect_x",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 65535,
+                          "min": 0
+                        },
+                        "type": "u16"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "rect_y",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 65535,
+                          "min": 0
+                        },
+                        "type": "u16"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "rect_width",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 65535,
+                          "min": 0
+                        },
+                        "type": "u16"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "rect_height",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 65535,
+                          "min": 0
+                        },
+                        "type": "u16"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "rect_x_binding",
+                      "schema": {
+                        "inner": {
+                          "kind": "primitive",
+                          "range": null,
+                          "type": "String"
+                        },
+                        "kind": "option"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "rect_y_binding",
+                      "schema": {
+                        "inner": {
+                          "kind": "primitive",
+                          "range": null,
+                          "type": "String"
+                        },
+                        "kind": "option"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "rect_width_binding",
+                      "schema": {
+                        "inner": {
+                          "kind": "primitive",
+                          "range": null,
+                          "type": "String"
+                        },
+                        "kind": "option"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "rect_height_binding",
+                      "schema": {
+                        "inner": {
+                          "kind": "primitive",
+                          "range": null,
+                          "type": "String"
+                        },
+                        "kind": "option"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "feather",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": {
+                          "max": 255,
+                          "min": 0
+                        },
+                        "type": "u8"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "falloff",
+                      "schema": {
+                        "description": "Distance falloff curves for spatial effects like glow, ambient occlusion, and bevel.\n\nControls how effect intensity decreases with distance from an edge or center point.",
+                        "json_name": null,
+                        "kind": "enum",
+                        "name": "FalloffType",
+                        "tag_field": null,
+                        "variants": [
+                          {
+                            "description": "Linear falloff: intensity = 1 - (distance / radius)\nProduces a uniform gradient.",
+                            "json_value": "linear",
+                            "kind": "unit",
+                            "name": "Linear"
+                          },
+                          {
+                            "description": "Quadratic falloff: intensity = 1 - (distance / radius)²\nFaster initial falloff, slower at edges. Natural-looking for most effects.",
+                            "json_value": "quadratic",
+                            "kind": "unit",
+                            "name": "Quadratic"
+                          },
+                          {
+                            "description": "Exponential falloff: intensity = e^(-2 * distance / radius)\nVery sharp initial falloff, long gradual tail. Good for concentrated effects.",
+                            "json_value": "exponential",
+                            "kind": "unit",
+                            "name": "Exponential"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "intensity",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "f32"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "apply_to",
+                      "schema": {
+                        "description": null,
+                        "json_name": null,
+                        "kind": "enum",
+                        "name": "FocusFieldApplyTo",
+                        "tag_field": null,
+                        "variants": [
+                          {
+                            "description": null,
+                            "json_value": "foreground",
+                            "kind": "unit",
+                            "name": "Foreground"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "background",
+                            "kind": "unit",
+                            "name": "Background"
+                          },
+                          {
+                            "description": null,
+                            "json_value": "both",
+                            "kind": "unit",
+                            "name": "Both"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": null,
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "pulse_speed",
+                      "schema": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "f32"
+                      }
+                    }
+                  ],
+                  "json_name": null,
+                  "kind": "struct",
+                  "name": "FocusFieldShader"
+                }
+              }
+            ],
+            "json_value": "focus_field",
+            "kind": "tuple",
+            "name": "FocusField"
+          },
+          {
             "description": "Dormant secondary affordances that resolve on demand.",
             "items": [
               {
@@ -321471,6 +322169,704 @@
           "json_value": "edge_sheen",
           "kind": "tuple",
           "name": "EdgeSheen"
+        },
+        "focus_field": {
+          "description": "Point/ellipse or pane/rect-following focus field.",
+          "items": [
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": null,
+                "help": null,
+                "json_key": null,
+                "optional": false,
+                "range": null
+              },
+              "name": "0",
+              "schema": {
+                "description": "A calm focus field that can either behave like a point/ellipse spotlight or\nfollow a pane/rect.\n\nThe effect is intended for subtle attention shaping: making the active pane,\nmodal, drawer, command palette, or focus hotspot feel more current without\nturning into a theatrical spotlight. The field should mostly be *felt* via\ncolor hierarchy rather than *seen* as a separate moving object.",
+                "fields": [
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": false,
+                      "range": null
+                    },
+                    "name": "color",
+                    "schema": {
+                      "description": "Stable, serde-friendly representation of `ratatui::style::Color`.\n\nWe avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and\nconfiguration formats remain under our control.\n\n# RGB Shorthand\n\nFor RGB colors, you can use either the full tagged format or a shorthand:\n- Full: `{\"type\": \"rgb\", \"r\": 255, \"g\": 128, \"b\": 0}`\n- Shorthand: `{\"r\": 255, \"g\": 128, \"b\": 0}`\n\nBoth formats are equivalent and produce the same `ColorConfig::Rgb` value.",
+                      "json_name": null,
+                      "kind": "enum",
+                      "name": "ColorConfig",
+                      "tag_field": "type",
+                      "variants": [
+                        {
+                          "description": null,
+                          "json_value": "reset",
+                          "kind": "unit",
+                          "name": "Reset"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "black",
+                          "kind": "unit",
+                          "name": "Black"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "red",
+                          "kind": "unit",
+                          "name": "Red"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "green",
+                          "kind": "unit",
+                          "name": "Green"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "yellow",
+                          "kind": "unit",
+                          "name": "Yellow"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "blue",
+                          "kind": "unit",
+                          "name": "Blue"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "magenta",
+                          "kind": "unit",
+                          "name": "Magenta"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "cyan",
+                          "kind": "unit",
+                          "name": "Cyan"
+                        },
+                        {
+                          "description": "Standard gray (ANSI color 7, \"light gray\" in some contexts)",
+                          "json_value": "gray",
+                          "kind": "unit",
+                          "name": "Gray"
+                        },
+                        {
+                          "description": "Alias for Gray - allows \"light_gray\" in JSON",
+                          "json_value": "light_gray",
+                          "kind": "unit",
+                          "name": "LightGray"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "dark_gray",
+                          "kind": "unit",
+                          "name": "DarkGray"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "light_red",
+                          "kind": "unit",
+                          "name": "LightRed"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "light_green",
+                          "kind": "unit",
+                          "name": "LightGreen"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "light_yellow",
+                          "kind": "unit",
+                          "name": "LightYellow"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "light_blue",
+                          "kind": "unit",
+                          "name": "LightBlue"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "light_magenta",
+                          "kind": "unit",
+                          "name": "LightMagenta"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "light_cyan",
+                          "kind": "unit",
+                          "name": "LightCyan"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "white",
+                          "kind": "unit",
+                          "name": "White"
+                        },
+                        {
+                          "description": null,
+                          "fields": [
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": false,
+                                "range": null
+                              },
+                              "name": "r",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 255,
+                                  "min": 0
+                                },
+                                "type": "u8"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": false,
+                                "range": null
+                              },
+                              "name": "g",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 255,
+                                  "min": 0
+                                },
+                                "type": "u8"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": false,
+                                "range": null
+                              },
+                              "name": "b",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 255,
+                                  "min": 0
+                                },
+                                "type": "u8"
+                              }
+                            }
+                          ],
+                          "json_value": "rgb",
+                          "kind": "struct",
+                          "name": "Rgb"
+                        },
+                        {
+                          "description": null,
+                          "fields": [
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": false,
+                                "range": null
+                              },
+                              "name": "value",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 255,
+                                  "min": 0
+                                },
+                                "type": "u8"
+                              }
+                            }
+                          ],
+                          "json_value": "indexed",
+                          "kind": "struct",
+                          "name": "Indexed"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "shape",
+                    "schema": {
+                      "description": null,
+                      "json_name": null,
+                      "kind": "enum",
+                      "name": "FocusFieldShape",
+                      "tag_field": null,
+                      "variants": [
+                        {
+                          "description": null,
+                          "json_value": "ellipse",
+                          "kind": "unit",
+                          "name": "Ellipse"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "rect",
+                          "kind": "unit",
+                          "name": "Rect"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "center_x",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 65535,
+                        "min": 0
+                      },
+                      "type": "u16"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "center_y",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 65535,
+                        "min": 0
+                      },
+                      "type": "u16"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "center_x_binding",
+                    "schema": {
+                      "inner": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "String"
+                      },
+                      "kind": "option"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "center_y_binding",
+                    "schema": {
+                      "inner": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "String"
+                      },
+                      "kind": "option"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "radius_x",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 65535,
+                        "min": 0
+                      },
+                      "type": "u16"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "radius_y",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 65535,
+                        "min": 0
+                      },
+                      "type": "u16"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "rect_x",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 65535,
+                        "min": 0
+                      },
+                      "type": "u16"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "rect_y",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 65535,
+                        "min": 0
+                      },
+                      "type": "u16"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "rect_width",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 65535,
+                        "min": 0
+                      },
+                      "type": "u16"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "rect_height",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 65535,
+                        "min": 0
+                      },
+                      "type": "u16"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "rect_x_binding",
+                    "schema": {
+                      "inner": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "String"
+                      },
+                      "kind": "option"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "rect_y_binding",
+                    "schema": {
+                      "inner": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "String"
+                      },
+                      "kind": "option"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "rect_width_binding",
+                    "schema": {
+                      "inner": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "String"
+                      },
+                      "kind": "option"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "rect_height_binding",
+                    "schema": {
+                      "inner": {
+                        "kind": "primitive",
+                        "range": null,
+                        "type": "String"
+                      },
+                      "kind": "option"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "feather",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": {
+                        "max": 255,
+                        "min": 0
+                      },
+                      "type": "u8"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "falloff",
+                    "schema": {
+                      "description": "Distance falloff curves for spatial effects like glow, ambient occlusion, and bevel.\n\nControls how effect intensity decreases with distance from an edge or center point.",
+                      "json_name": null,
+                      "kind": "enum",
+                      "name": "FalloffType",
+                      "tag_field": null,
+                      "variants": [
+                        {
+                          "description": "Linear falloff: intensity = 1 - (distance / radius)\nProduces a uniform gradient.",
+                          "json_value": "linear",
+                          "kind": "unit",
+                          "name": "Linear"
+                        },
+                        {
+                          "description": "Quadratic falloff: intensity = 1 - (distance / radius)²\nFaster initial falloff, slower at edges. Natural-looking for most effects.",
+                          "json_value": "quadratic",
+                          "kind": "unit",
+                          "name": "Quadratic"
+                        },
+                        {
+                          "description": "Exponential falloff: intensity = e^(-2 * distance / radius)\nVery sharp initial falloff, long gradual tail. Good for concentrated effects.",
+                          "json_value": "exponential",
+                          "kind": "unit",
+                          "name": "Exponential"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "intensity",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": null,
+                      "type": "f32"
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "apply_to",
+                    "schema": {
+                      "description": null,
+                      "json_name": null,
+                      "kind": "enum",
+                      "name": "FocusFieldApplyTo",
+                      "tag_field": null,
+                      "variants": [
+                        {
+                          "description": null,
+                          "json_value": "foreground",
+                          "kind": "unit",
+                          "name": "Foreground"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "background",
+                          "kind": "unit",
+                          "name": "Background"
+                        },
+                        {
+                          "description": null,
+                          "json_value": "both",
+                          "kind": "unit",
+                          "name": "Both"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "json_key": null,
+                    "meta": {
+                      "default": null,
+                      "description": null,
+                      "help": null,
+                      "json_key": null,
+                      "optional": true,
+                      "range": null
+                    },
+                    "name": "pulse_speed",
+                    "schema": {
+                      "kind": "primitive",
+                      "range": null,
+                      "type": "f32"
+                    }
+                  }
+                ],
+                "json_name": null,
+                "kind": "struct",
+                "name": "FocusFieldShader"
+              }
+            }
+          ],
+          "json_value": "focus_field",
+          "kind": "tuple",
+          "name": "FocusField"
         },
         "focused_row_gradient": {
           "description": "Vertical gradient centered on selected row (list navigation).",
@@ -329429,7 +330825,7 @@
                 },
                 "name": "shader",
                 "schema": {
-                  "description": "Spatial shader types for per-cell style computation.\n\nEach shader computes style modifications based on cell position,\nanimation time, and shader-specific parameters. They're the primary\nmechanism for adding visual texture to widget content.\n\n# Categories\n\n- **Gradients**: LinearGradient, Highlighter\n- **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,\nTracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, AffordanceWake,\nWayfindingNode\n- **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge\n- **Depth**: AmbientOcclusion, Bevel, Glow\n- **Premium**: StochasticSparkle\n\n# Built-in Documentation\n\nUse [`terse_description()`](Self::terse_description) and\n[`key_parameters()`](Self::key_parameters) for runtime documentation.",
+                  "description": "Spatial shader types for per-cell style computation.\n\nEach shader computes style modifications based on cell position,\nanimation time, and shader-specific parameters. They're the primary\nmechanism for adding visual texture to widget content.\n\n# Categories\n\n- **Gradients**: LinearGradient, Highlighter\n- **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,\nTracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, FocusField,\nAffordanceWake, WayfindingNode\n- **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge\n- **Depth**: AmbientOcclusion, Bevel, Glow\n- **Premium**: StochasticSparkle\n\n# Built-in Documentation\n\nUse [`terse_description()`](Self::terse_description) and\n[`key_parameters()`](Self::key_parameters) for runtime documentation.",
                   "json_name": null,
                   "kind": "enum",
                   "name": "SpatialShaderType",
@@ -337764,6 +339160,704 @@
                       "name": "Diffusion"
                     },
                     {
+                      "description": "Point/ellipse or pane/rect-following focus field.",
+                      "items": [
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "0",
+                          "schema": {
+                            "description": "A calm focus field that can either behave like a point/ellipse spotlight or\nfollow a pane/rect.\n\nThe effect is intended for subtle attention shaping: making the active pane,\nmodal, drawer, command palette, or focus hotspot feel more current without\nturning into a theatrical spotlight. The field should mostly be *felt* via\ncolor hierarchy rather than *seen* as a separate moving object.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "color",
+                                "schema": {
+                                  "description": "Stable, serde-friendly representation of `ratatui::style::Color`.\n\nWe avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and\nconfiguration formats remain under our control.\n\n# RGB Shorthand\n\nFor RGB colors, you can use either the full tagged format or a shorthand:\n- Full: `{\"type\": \"rgb\", \"r\": 255, \"g\": 128, \"b\": 0}`\n- Shorthand: `{\"r\": 255, \"g\": 128, \"b\": 0}`\n\nBoth formats are equivalent and produce the same `ColorConfig::Rgb` value.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "ColorConfig",
+                                  "tag_field": "type",
+                                  "variants": [
+                                    {
+                                      "description": null,
+                                      "json_value": "reset",
+                                      "kind": "unit",
+                                      "name": "Reset"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "black",
+                                      "kind": "unit",
+                                      "name": "Black"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "red",
+                                      "kind": "unit",
+                                      "name": "Red"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "green",
+                                      "kind": "unit",
+                                      "name": "Green"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "yellow",
+                                      "kind": "unit",
+                                      "name": "Yellow"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "blue",
+                                      "kind": "unit",
+                                      "name": "Blue"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "magenta",
+                                      "kind": "unit",
+                                      "name": "Magenta"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "cyan",
+                                      "kind": "unit",
+                                      "name": "Cyan"
+                                    },
+                                    {
+                                      "description": "Standard gray (ANSI color 7, \"light gray\" in some contexts)",
+                                      "json_value": "gray",
+                                      "kind": "unit",
+                                      "name": "Gray"
+                                    },
+                                    {
+                                      "description": "Alias for Gray - allows \"light_gray\" in JSON",
+                                      "json_value": "light_gray",
+                                      "kind": "unit",
+                                      "name": "LightGray"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "dark_gray",
+                                      "kind": "unit",
+                                      "name": "DarkGray"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "light_red",
+                                      "kind": "unit",
+                                      "name": "LightRed"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "light_green",
+                                      "kind": "unit",
+                                      "name": "LightGreen"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "light_yellow",
+                                      "kind": "unit",
+                                      "name": "LightYellow"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "light_blue",
+                                      "kind": "unit",
+                                      "name": "LightBlue"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "light_magenta",
+                                      "kind": "unit",
+                                      "name": "LightMagenta"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "light_cyan",
+                                      "kind": "unit",
+                                      "name": "LightCyan"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "white",
+                                      "kind": "unit",
+                                      "name": "White"
+                                    },
+                                    {
+                                      "description": null,
+                                      "fields": [
+                                        {
+                                          "json_key": null,
+                                          "meta": {
+                                            "default": null,
+                                            "description": null,
+                                            "help": null,
+                                            "json_key": null,
+                                            "optional": false,
+                                            "range": null
+                                          },
+                                          "name": "r",
+                                          "schema": {
+                                            "kind": "primitive",
+                                            "range": {
+                                              "max": 255,
+                                              "min": 0
+                                            },
+                                            "type": "u8"
+                                          }
+                                        },
+                                        {
+                                          "json_key": null,
+                                          "meta": {
+                                            "default": null,
+                                            "description": null,
+                                            "help": null,
+                                            "json_key": null,
+                                            "optional": false,
+                                            "range": null
+                                          },
+                                          "name": "g",
+                                          "schema": {
+                                            "kind": "primitive",
+                                            "range": {
+                                              "max": 255,
+                                              "min": 0
+                                            },
+                                            "type": "u8"
+                                          }
+                                        },
+                                        {
+                                          "json_key": null,
+                                          "meta": {
+                                            "default": null,
+                                            "description": null,
+                                            "help": null,
+                                            "json_key": null,
+                                            "optional": false,
+                                            "range": null
+                                          },
+                                          "name": "b",
+                                          "schema": {
+                                            "kind": "primitive",
+                                            "range": {
+                                              "max": 255,
+                                              "min": 0
+                                            },
+                                            "type": "u8"
+                                          }
+                                        }
+                                      ],
+                                      "json_value": "rgb",
+                                      "kind": "struct",
+                                      "name": "Rgb"
+                                    },
+                                    {
+                                      "description": null,
+                                      "fields": [
+                                        {
+                                          "json_key": null,
+                                          "meta": {
+                                            "default": null,
+                                            "description": null,
+                                            "help": null,
+                                            "json_key": null,
+                                            "optional": false,
+                                            "range": null
+                                          },
+                                          "name": "value",
+                                          "schema": {
+                                            "kind": "primitive",
+                                            "range": {
+                                              "max": 255,
+                                              "min": 0
+                                            },
+                                            "type": "u8"
+                                          }
+                                        }
+                                      ],
+                                      "json_value": "indexed",
+                                      "kind": "struct",
+                                      "name": "Indexed"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "shape",
+                                "schema": {
+                                  "description": null,
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "FocusFieldShape",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": null,
+                                      "json_value": "ellipse",
+                                      "kind": "unit",
+                                      "name": "Ellipse"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "rect",
+                                      "kind": "unit",
+                                      "name": "Rect"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "center_x",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 65535,
+                                    "min": 0
+                                  },
+                                  "type": "u16"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "center_y",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 65535,
+                                    "min": 0
+                                  },
+                                  "type": "u16"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "center_x_binding",
+                                "schema": {
+                                  "inner": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "option"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "center_y_binding",
+                                "schema": {
+                                  "inner": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "option"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "radius_x",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 65535,
+                                    "min": 0
+                                  },
+                                  "type": "u16"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "radius_y",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 65535,
+                                    "min": 0
+                                  },
+                                  "type": "u16"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "rect_x",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 65535,
+                                    "min": 0
+                                  },
+                                  "type": "u16"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "rect_y",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 65535,
+                                    "min": 0
+                                  },
+                                  "type": "u16"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "rect_width",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 65535,
+                                    "min": 0
+                                  },
+                                  "type": "u16"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "rect_height",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 65535,
+                                    "min": 0
+                                  },
+                                  "type": "u16"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "rect_x_binding",
+                                "schema": {
+                                  "inner": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "option"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "rect_y_binding",
+                                "schema": {
+                                  "inner": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "option"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "rect_width_binding",
+                                "schema": {
+                                  "inner": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "option"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "rect_height_binding",
+                                "schema": {
+                                  "inner": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "option"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "feather",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 255,
+                                    "min": 0
+                                  },
+                                  "type": "u8"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "falloff",
+                                "schema": {
+                                  "description": "Distance falloff curves for spatial effects like glow, ambient occlusion, and bevel.\n\nControls how effect intensity decreases with distance from an edge or center point.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "FalloffType",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": "Linear falloff: intensity = 1 - (distance / radius)\nProduces a uniform gradient.",
+                                      "json_value": "linear",
+                                      "kind": "unit",
+                                      "name": "Linear"
+                                    },
+                                    {
+                                      "description": "Quadratic falloff: intensity = 1 - (distance / radius)²\nFaster initial falloff, slower at edges. Natural-looking for most effects.",
+                                      "json_value": "quadratic",
+                                      "kind": "unit",
+                                      "name": "Quadratic"
+                                    },
+                                    {
+                                      "description": "Exponential falloff: intensity = e^(-2 * distance / radius)\nVery sharp initial falloff, long gradual tail. Good for concentrated effects.",
+                                      "json_value": "exponential",
+                                      "kind": "unit",
+                                      "name": "Exponential"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "intensity",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "apply_to",
+                                "schema": {
+                                  "description": null,
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "FocusFieldApplyTo",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": null,
+                                      "json_value": "foreground",
+                                      "kind": "unit",
+                                      "name": "Foreground"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "background",
+                                      "kind": "unit",
+                                      "name": "Background"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "both",
+                                      "kind": "unit",
+                                      "name": "Both"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "pulse_speed",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              }
+                            ],
+                            "json_name": null,
+                            "kind": "struct",
+                            "name": "FocusFieldShader"
+                          }
+                        }
+                      ],
+                      "json_value": "focus_field",
+                      "kind": "tuple",
+                      "name": "FocusField"
+                    },
+                    {
                       "description": "Dormant secondary affordances that resolve on demand.",
                       "items": [
                         {
@@ -341252,7 +343346,7 @@
               },
               "name": "shader",
               "schema": {
-                "description": "Spatial shader types for per-cell style computation.\n\nEach shader computes style modifications based on cell position,\nanimation time, and shader-specific parameters. They're the primary\nmechanism for adding visual texture to widget content.\n\n# Categories\n\n- **Gradients**: LinearGradient, Highlighter\n- **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,\nTracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, AffordanceWake,\nWayfindingNode\n- **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge\n- **Depth**: AmbientOcclusion, Bevel, Glow\n- **Premium**: StochasticSparkle\n\n# Built-in Documentation\n\nUse [`terse_description()`](Self::terse_description) and\n[`key_parameters()`](Self::key_parameters) for runtime documentation.",
+                "description": "Spatial shader types for per-cell style computation.\n\nEach shader computes style modifications based on cell position,\nanimation time, and shader-specific parameters. They're the primary\nmechanism for adding visual texture to widget content.\n\n# Categories\n\n- **Gradients**: LinearGradient, Highlighter\n- **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,\nTracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, FocusField,\nAffordanceWake, WayfindingNode\n- **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge\n- **Depth**: AmbientOcclusion, Bevel, Glow\n- **Premium**: StochasticSparkle\n\n# Built-in Documentation\n\nUse [`terse_description()`](Self::terse_description) and\n[`key_parameters()`](Self::key_parameters) for runtime documentation.",
                 "json_name": null,
                 "kind": "enum",
                 "name": "SpatialShaderType",
@@ -349585,6 +351679,704 @@
                     "json_value": "diffusion",
                     "kind": "tuple",
                     "name": "Diffusion"
+                  },
+                  {
+                    "description": "Point/ellipse or pane/rect-following focus field.",
+                    "items": [
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "0",
+                        "schema": {
+                          "description": "A calm focus field that can either behave like a point/ellipse spotlight or\nfollow a pane/rect.\n\nThe effect is intended for subtle attention shaping: making the active pane,\nmodal, drawer, command palette, or focus hotspot feel more current without\nturning into a theatrical spotlight. The field should mostly be *felt* via\ncolor hierarchy rather than *seen* as a separate moving object.",
+                          "fields": [
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": false,
+                                "range": null
+                              },
+                              "name": "color",
+                              "schema": {
+                                "description": "Stable, serde-friendly representation of `ratatui::style::Color`.\n\nWe avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and\nconfiguration formats remain under our control.\n\n# RGB Shorthand\n\nFor RGB colors, you can use either the full tagged format or a shorthand:\n- Full: `{\"type\": \"rgb\", \"r\": 255, \"g\": 128, \"b\": 0}`\n- Shorthand: `{\"r\": 255, \"g\": 128, \"b\": 0}`\n\nBoth formats are equivalent and produce the same `ColorConfig::Rgb` value.",
+                                "json_name": null,
+                                "kind": "enum",
+                                "name": "ColorConfig",
+                                "tag_field": "type",
+                                "variants": [
+                                  {
+                                    "description": null,
+                                    "json_value": "reset",
+                                    "kind": "unit",
+                                    "name": "Reset"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "black",
+                                    "kind": "unit",
+                                    "name": "Black"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "red",
+                                    "kind": "unit",
+                                    "name": "Red"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "green",
+                                    "kind": "unit",
+                                    "name": "Green"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "yellow",
+                                    "kind": "unit",
+                                    "name": "Yellow"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "blue",
+                                    "kind": "unit",
+                                    "name": "Blue"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "magenta",
+                                    "kind": "unit",
+                                    "name": "Magenta"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "cyan",
+                                    "kind": "unit",
+                                    "name": "Cyan"
+                                  },
+                                  {
+                                    "description": "Standard gray (ANSI color 7, \"light gray\" in some contexts)",
+                                    "json_value": "gray",
+                                    "kind": "unit",
+                                    "name": "Gray"
+                                  },
+                                  {
+                                    "description": "Alias for Gray - allows \"light_gray\" in JSON",
+                                    "json_value": "light_gray",
+                                    "kind": "unit",
+                                    "name": "LightGray"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "dark_gray",
+                                    "kind": "unit",
+                                    "name": "DarkGray"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "light_red",
+                                    "kind": "unit",
+                                    "name": "LightRed"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "light_green",
+                                    "kind": "unit",
+                                    "name": "LightGreen"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "light_yellow",
+                                    "kind": "unit",
+                                    "name": "LightYellow"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "light_blue",
+                                    "kind": "unit",
+                                    "name": "LightBlue"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "light_magenta",
+                                    "kind": "unit",
+                                    "name": "LightMagenta"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "light_cyan",
+                                    "kind": "unit",
+                                    "name": "LightCyan"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "white",
+                                    "kind": "unit",
+                                    "name": "White"
+                                  },
+                                  {
+                                    "description": null,
+                                    "fields": [
+                                      {
+                                        "json_key": null,
+                                        "meta": {
+                                          "default": null,
+                                          "description": null,
+                                          "help": null,
+                                          "json_key": null,
+                                          "optional": false,
+                                          "range": null
+                                        },
+                                        "name": "r",
+                                        "schema": {
+                                          "kind": "primitive",
+                                          "range": {
+                                            "max": 255,
+                                            "min": 0
+                                          },
+                                          "type": "u8"
+                                        }
+                                      },
+                                      {
+                                        "json_key": null,
+                                        "meta": {
+                                          "default": null,
+                                          "description": null,
+                                          "help": null,
+                                          "json_key": null,
+                                          "optional": false,
+                                          "range": null
+                                        },
+                                        "name": "g",
+                                        "schema": {
+                                          "kind": "primitive",
+                                          "range": {
+                                            "max": 255,
+                                            "min": 0
+                                          },
+                                          "type": "u8"
+                                        }
+                                      },
+                                      {
+                                        "json_key": null,
+                                        "meta": {
+                                          "default": null,
+                                          "description": null,
+                                          "help": null,
+                                          "json_key": null,
+                                          "optional": false,
+                                          "range": null
+                                        },
+                                        "name": "b",
+                                        "schema": {
+                                          "kind": "primitive",
+                                          "range": {
+                                            "max": 255,
+                                            "min": 0
+                                          },
+                                          "type": "u8"
+                                        }
+                                      }
+                                    ],
+                                    "json_value": "rgb",
+                                    "kind": "struct",
+                                    "name": "Rgb"
+                                  },
+                                  {
+                                    "description": null,
+                                    "fields": [
+                                      {
+                                        "json_key": null,
+                                        "meta": {
+                                          "default": null,
+                                          "description": null,
+                                          "help": null,
+                                          "json_key": null,
+                                          "optional": false,
+                                          "range": null
+                                        },
+                                        "name": "value",
+                                        "schema": {
+                                          "kind": "primitive",
+                                          "range": {
+                                            "max": 255,
+                                            "min": 0
+                                          },
+                                          "type": "u8"
+                                        }
+                                      }
+                                    ],
+                                    "json_value": "indexed",
+                                    "kind": "struct",
+                                    "name": "Indexed"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "shape",
+                              "schema": {
+                                "description": null,
+                                "json_name": null,
+                                "kind": "enum",
+                                "name": "FocusFieldShape",
+                                "tag_field": null,
+                                "variants": [
+                                  {
+                                    "description": null,
+                                    "json_value": "ellipse",
+                                    "kind": "unit",
+                                    "name": "Ellipse"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "rect",
+                                    "kind": "unit",
+                                    "name": "Rect"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "center_x",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "center_y",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "center_x_binding",
+                              "schema": {
+                                "inner": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "String"
+                                },
+                                "kind": "option"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "center_y_binding",
+                              "schema": {
+                                "inner": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "String"
+                                },
+                                "kind": "option"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "radius_x",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "radius_y",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "rect_x",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "rect_y",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "rect_width",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "rect_height",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "rect_x_binding",
+                              "schema": {
+                                "inner": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "String"
+                                },
+                                "kind": "option"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "rect_y_binding",
+                              "schema": {
+                                "inner": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "String"
+                                },
+                                "kind": "option"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "rect_width_binding",
+                              "schema": {
+                                "inner": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "String"
+                                },
+                                "kind": "option"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "rect_height_binding",
+                              "schema": {
+                                "inner": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "String"
+                                },
+                                "kind": "option"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "feather",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 255,
+                                  "min": 0
+                                },
+                                "type": "u8"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "falloff",
+                              "schema": {
+                                "description": "Distance falloff curves for spatial effects like glow, ambient occlusion, and bevel.\n\nControls how effect intensity decreases with distance from an edge or center point.",
+                                "json_name": null,
+                                "kind": "enum",
+                                "name": "FalloffType",
+                                "tag_field": null,
+                                "variants": [
+                                  {
+                                    "description": "Linear falloff: intensity = 1 - (distance / radius)\nProduces a uniform gradient.",
+                                    "json_value": "linear",
+                                    "kind": "unit",
+                                    "name": "Linear"
+                                  },
+                                  {
+                                    "description": "Quadratic falloff: intensity = 1 - (distance / radius)²\nFaster initial falloff, slower at edges. Natural-looking for most effects.",
+                                    "json_value": "quadratic",
+                                    "kind": "unit",
+                                    "name": "Quadratic"
+                                  },
+                                  {
+                                    "description": "Exponential falloff: intensity = e^(-2 * distance / radius)\nVery sharp initial falloff, long gradual tail. Good for concentrated effects.",
+                                    "json_value": "exponential",
+                                    "kind": "unit",
+                                    "name": "Exponential"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "intensity",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": null,
+                                "type": "f32"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "apply_to",
+                              "schema": {
+                                "description": null,
+                                "json_name": null,
+                                "kind": "enum",
+                                "name": "FocusFieldApplyTo",
+                                "tag_field": null,
+                                "variants": [
+                                  {
+                                    "description": null,
+                                    "json_value": "foreground",
+                                    "kind": "unit",
+                                    "name": "Foreground"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "background",
+                                    "kind": "unit",
+                                    "name": "Background"
+                                  },
+                                  {
+                                    "description": null,
+                                    "json_value": "both",
+                                    "kind": "unit",
+                                    "name": "Both"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": null,
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "pulse_speed",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": null,
+                                "type": "f32"
+                              }
+                            }
+                          ],
+                          "json_name": null,
+                          "kind": "struct",
+                          "name": "FocusFieldShader"
+                        }
+                      }
+                    ],
+                    "json_value": "focus_field",
+                    "kind": "tuple",
+                    "name": "FocusField"
                   },
                   {
                     "description": "Dormant secondary affordances that resolve on demand.",
