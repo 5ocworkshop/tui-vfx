@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_scan.rs</FILE> - <DESC>Scan config for Cursor primitive (steady-cursor shape cycling)</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-scan: add a third cursor animation axis (alongside grow-in and wake) that modulates the cursor glyph through a bounded shape cycle while the cursor is parked. Pulse cycles through the 1/8th-block ramp (▁..█..▁) to read as a soft breath; HalfBlockBounce flips between ▀ █ ▄ for a mechanical scanner feel.</WCTX>
-// <CLOG>Initial impl — ScanMode enum (Off/Pulse/HalfBlockBounce, #[default] Off, snake_case serde), CursorScan struct with mode/period_ms/curve (all SignalOrFloat), defaults to no-op, CursorScan::noop() alias. Matches the shape of GrowIn/Wake config structs.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>feat/cursor-braille: add two braille-glyph scan modes (BraillePulse, BrailleRowFlip) that cycle the cursor through row-stacked braille fills. Unlike Pulse/HalfBlockBounce these modes OVERRIDE the base glyph entirely (no passthrough) — the braille character set has no natural passthrough for non-braille base chars.</WCTX>
+// <CLOG>MINOR: Add ScanMode::BraillePulse and ScanMode::BrailleRowFlip variants with serde snake_case (`braille_pulse`, `braille_row_flip`). Existing ScanMode variants and CursorScan struct unchanged.</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use serde::{Deserialize, Serialize};
@@ -12,15 +12,7 @@ use serde::{Deserialize, Serialize};
 /// Applies only to block (`█`) cursors; non-block cursors (e.g. `|`, `_`,
 /// `▌`) ignore scan entirely and render their base glyph.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    Default,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum ScanMode {
@@ -33,6 +25,26 @@ pub enum ScanMode {
     /// Three-step cycle: upper half (`▀`), full (`█`, brief "both"),
     /// lower half (`▄`). Reads as a mechanical scanner.
     HalfBlockBounce,
+    /// Sine-eased cycle through the four row-stacked braille fills
+    /// `⣿ → ⠿ → ⠛ → ⠉ → ⠛ → ⠿ → ⣿`. Phase `0` / `1` land on the densest
+    /// glyph (8 dots); phase `0.5` lands on the sparsest (2 dots, top row
+    /// only). Reads as a sub-cell braille breath.
+    ///
+    /// Unlike [`ScanMode::Pulse`] and [`ScanMode::HalfBlockBounce`], this
+    /// mode **replaces** the cursor's base `character` regardless of what it
+    /// was — the output is always one of the four braille row-fills. Set the
+    /// cursor's base character to match what you want phase 0 to look like
+    /// (e.g. `⣿`) so the "resting" frame and the scanned frame agree.
+    BraillePulse,
+    /// Slow square-wave alternation between a 2-dot (`⠉`, top row only) and
+    /// 4-dot (`⠛`, top two rows) braille fill. Phase `<0.5` → `⠉`; phase
+    /// `≥0.5` → `⠛`. Designed for long `period_ms` (~1.8–2.4s) so it reads
+    /// as a calm indicator, not a flicker.
+    ///
+    /// Like [`ScanMode::BraillePulse`] this mode replaces the base
+    /// `character` unconditionally — the output is always one of the two
+    /// row-stacked braille glyphs.
+    BrailleRowFlip,
 }
 
 /// Scan animation config for a [`crate::cursor::Cursor`].
@@ -120,6 +132,14 @@ mod tests {
         let parsed: CursorScan = serde_json::from_str(json).expect("parse");
         assert_eq!(parsed.mode, ScanMode::HalfBlockBounce);
 
+        let json = r#"{"mode":"braille_pulse","period_ms":2800.0}"#;
+        let parsed: CursorScan = serde_json::from_str(json).expect("parse");
+        assert_eq!(parsed.mode, ScanMode::BraillePulse);
+
+        let json = r#"{"mode":"braille_row_flip","period_ms":2000.0}"#;
+        let parsed: CursorScan = serde_json::from_str(json).expect("parse");
+        assert_eq!(parsed.mode, ScanMode::BrailleRowFlip);
+
         let json = r#"{}"#;
         let parsed: CursorScan = serde_json::from_str(json).expect("parse default");
         assert_eq!(parsed, CursorScan::default());
@@ -127,4 +147,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_scan.rs</FILE> - <DESC>Scan config for Cursor primitive (steady-cursor shape cycling)</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

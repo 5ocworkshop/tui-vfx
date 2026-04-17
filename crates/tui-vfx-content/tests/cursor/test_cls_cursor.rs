@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/cursor/test_cls_cursor.rs</FILE> - <DESC>Tests for Cursor config</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>feat/cursor-primitive T31: clippy clean-up (field_reassign_with_default)</WCTX>
-// <CLOG>PATCH: rewrite underscore-expected cursor to struct-literal form with ..Cursor::default()</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>feat/cursor-braille: peer tests for the four row-stacked braille convenience constructors (⠉ ⠛ ⠿ ⣿).</WCTX>
+// <CLOG>MINOR: add braille_static_constructors_produce_correct_glyphs and braille_constructors_otherwise_default tests verifying glyph mapping and default-equivalence for the remaining fields.</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_content::cursor::{Cursor, CursorBlink, GrowIn, GrowInMode, Wake, WakeMode};
@@ -60,7 +60,10 @@ fn convenience_ctors_equal_default_with_swapped_char() {
 fn with_grow_in_sets_once_mode_and_duration() {
     let c = Cursor::block().with_grow_in(200.0);
     assert_eq!(c.grow_in.mode, GrowInMode::Once);
-    assert!(matches!(c.grow_in.duration_ms, SignalOrFloat::Static(200.0)));
+    assert!(matches!(
+        c.grow_in.duration_ms,
+        SignalOrFloat::Static(200.0)
+    ));
 }
 
 #[test]
@@ -85,5 +88,22 @@ fn builders_preserve_other_fields() {
     assert_eq!(c.character, "▌");
 }
 
+#[test]
+fn braille_static_constructors_produce_correct_glyphs() {
+    assert_eq!(Cursor::braille_2().character, "⠉");
+    assert_eq!(Cursor::braille_4().character, "⠛");
+    assert_eq!(Cursor::braille_6().character, "⠿");
+    assert_eq!(Cursor::braille_8().character, "⣿");
+}
+
+#[test]
+fn braille_constructors_otherwise_default() {
+    let c = Cursor::braille_8();
+    assert_eq!(c.blink, Cursor::default().blink);
+    assert_eq!(c.grow_in, Cursor::default().grow_in);
+    assert_eq!(c.wake, Cursor::default().wake);
+    assert_eq!(c.scan, Cursor::default().scan);
+}
+
 // <FILE>tui-vfx-content/tests/cursor/test_cls_cursor.rs</FILE> - <DESC>Tests for Cursor config</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

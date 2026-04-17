@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/cursor/cls_cursor.rs</FILE> - <DESC>Cursor primitive config</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>feat/cursor-scan: add a third cursor animation axis — CursorScan — that modulates the glyph through a bounded shape cycle while the cursor is parked. Grow-in → wake → scan is the animation precedence; scan runs only in the Visible phase.</WCTX>
-// <CLOG>MINOR: Add `scan: CursorScan` field, default = CursorScan::default() (ScanMode::Off + period_ms 0). #[serde(default)] at the struct level carries the backcompat — pre-0.2 JSON parses unchanged.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>feat/cursor-braille: add static row-stacked braille convenience constructors (2/4/6/8 dots) so recipes and consumers can spawn ⠉ ⠛ ⠿ ⣿ cursors without a full struct literal.</WCTX>
+// <CLOG>MINOR: Add braille_2 / braille_4 / braille_6 / braille_8 ctors producing ⠉ ⠛ ⠿ ⣿ respectively. Each sets `character` and otherwise returns a Cursor::default() — no other fields altered.</CLOG>
 
 use super::{CursorBlink, CursorScan, GrowIn, GrowInMode, Wake, WakeMode};
 use mixed_signals::prelude::SignalOrFloat;
@@ -71,7 +71,10 @@ impl Default for Cursor {
 impl Cursor {
     /// Returns a cursor with the provided single glyph and otherwise-default config.
     pub fn simple(glyph: char) -> Self {
-        Self { character: glyph.to_string(), ..Self::default() }
+        Self {
+            character: glyph.to_string(),
+            ..Self::default()
+        }
     }
 
     /// Convenience constructor for a block cursor (`█`). Equivalent to [`Cursor::default`].
@@ -92,6 +95,50 @@ impl Cursor {
     /// Convenience constructor for a left half-block caret (`▌`).
     pub fn caret() -> Self {
         Self::simple('▌')
+    }
+
+    /// Convenience constructor for a row-stacked 2-dot braille cursor (`⠉`).
+    ///
+    /// Braille characters in `U+2800..=U+28FF` encode an 8-dot 2×4 grid. The
+    /// `braille_N` family produces a row-stacked fill: dots accumulate from the
+    /// top row downward. `braille_2` fills only row 1 (the top row) — 2 dots.
+    pub fn braille_2() -> Self {
+        Self {
+            character: "⠉".to_string(),
+            ..Self::default()
+        }
+    }
+
+    /// Convenience constructor for a row-stacked 4-dot braille cursor (`⠛`).
+    ///
+    /// Fills rows 1 and 2 — 4 dots total, the top half of the braille cell.
+    pub fn braille_4() -> Self {
+        Self {
+            character: "⠛".to_string(),
+            ..Self::default()
+        }
+    }
+
+    /// Convenience constructor for a row-stacked 6-dot braille cursor (`⠿`).
+    ///
+    /// Fills rows 1 through 3 — 6 dots total, the top three-quarters of the
+    /// braille cell.
+    pub fn braille_6() -> Self {
+        Self {
+            character: "⠿".to_string(),
+            ..Self::default()
+        }
+    }
+
+    /// Convenience constructor for a fully-filled 8-dot braille cursor (`⣿`).
+    ///
+    /// All four rows filled — the densest braille glyph, visually equivalent
+    /// to a solid block but at braille's 2×4 sub-cell density.
+    pub fn braille_8() -> Self {
+        Self {
+            character: "⣿".to_string(),
+            ..Self::default()
+        }
     }
 
     /// Returns a copy with grow-in enabled in [`GrowInMode::Once`] with the given duration.
@@ -121,4 +168,4 @@ impl Cursor {
 }
 
 // <FILE>tui-vfx-content/src/cursor/cls_cursor.rs</FILE> - <DESC>Cursor primitive config</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

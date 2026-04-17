@@ -9,12 +9,12 @@
 # See docs/design/API_DOC_GENERATION_PLAN.md for architecture details.
 
 # <FILE>docs/templates/api_docs.toml</FILE> - <DESC>Editorial manifest for tui-vfx API documentation</DESC>
-# <VERS>VERSION: 3.2.0</VERS>
-# <WCTX>feat/cursor-scan: add editorial manifest entries for the new CursorScan primitive and its ScanMode enum. Also update Cursor to list `scan` alongside the existing fields.</WCTX>
-# <CLOG>MINOR: Add [specs.CursorScan] and [specs.ScanMode]; extend [specs.Cursor].fields with `scan`.</CLOG>
+# <VERS>VERSION: 3.3.0</VERS>
+# <WCTX>feat/cursor-braille: document BraillePulse and BrailleRowFlip scan variants, which override the base glyph unconditionally unlike Pulse / HalfBlockBounce.</WCTX>
+# <CLOG>MINOR: extend ScanMode variants list with BraillePulse and BrailleRowFlip; extend description to note base-glyph override semantics for the two braille modes.</CLOG>
 
 [meta]
-version = "3.2.0"
+version = "3.3.0"
 description = "tui-vfx API documentation editorial content"
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -548,13 +548,21 @@ in milliseconds. `curve` is a `SignalOrFloat` over `t in 0..1` (default
 [specs.ScanMode]
 part = "content"
 section_title = "ScanMode"
-variants = ["Off", "Pulse", "HalfBlockBounce"]
+variants = ["Off", "Pulse", "HalfBlockBounce", "BraillePulse", "BrailleRowFlip"]
 description = """
 `Off` is a passthrough (base glyph unchanged). `Pulse` is a triangle wave
 over the 1/8th-block ramp `▁▂▃▄▅▆▇█` — half the period grows up, half
 decays back down; reads as a soft breath. `HalfBlockBounce` is a
 three-step cycle at thirds of the period: `▀` (upper half), `█` (full —
 brief "both"), `▄` (lower half); reads as a mechanical scanner.
+`BraillePulse` sine-eases through the four row-stacked braille fills
+`⣿ → ⠿ → ⠛ → ⠉ → ⠛ → ⠿ → ⣿` (phase 0/1 → densest `⣿`; phase 0.5 →
+sparsest `⠉`). `BrailleRowFlip` is a square-wave alternation between
+`⠉` (phase `<0.5`) and `⠛` (phase `≥0.5`), designed for slow (~1.8–2.4s)
+periods so it reads as a calm indicator. Unlike `Pulse` and
+`HalfBlockBounce`, both braille modes **override the base `character`
+unconditionally** — the output is always one of the row-stacked braille
+glyphs regardless of what the cursor's base character was.
 """
 
 # ─────────────────────────────────────────────────────────────────────────────

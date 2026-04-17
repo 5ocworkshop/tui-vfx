@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.17.0</VERS> -->
-<!-- <WCTX>Document the 10-recipe cursor debug catalog in tui-vfx-recipes. Cursor section previously described the primitive API but never listed the ready-made debug recipes that exercise each sub-feature end-to-end.</WCTX> -->
-<!-- <CLOG>MINOR: Add "Debug recipe catalog" subsection under Cursor listing the 10 cursor debug recipes (grow_in_up/down/center, caret, wake_tint/ghost/gap, scan_pulse/bounce, full) with one-line descriptions of what each demonstrates.</CLOG>
+<!-- <VERS>VERSION: 1.18.0</VERS> -->
+<!-- <WCTX>feat/cursor-braille: document the new braille cursor additions — 4 static row-stacked convenience constructors (braille_2/4/6/8 → ⠉ ⠛ ⠿ ⣿) and 2 scan modes (BraillePulse, BrailleRowFlip) that override the base glyph with braille fills.</WCTX> -->
+<!-- <CLOG>MINOR: Add "Braille cursors" subsection listing the 4 static ctors; extend "Scan" subsection with BraillePulse and BrailleRowFlip rows noting base-glyph override behavior; extend the debug recipe catalog with 6 new braille recipe entries.</CLOG>
 
 # tui-vfx Capabilities Reference
 
@@ -565,6 +565,26 @@ let greeting = Cursor::block().with_grow_in(200.0);
 let editor = Cursor::block().with_wake_tint(1.5, 8);
 ```
 
+#### Braille cursors
+
+Row-stacked braille fills give a denser, sub-cell cursor aesthetic. The four convenience constructors each produce a static `Cursor` with the matching glyph and otherwise-default config:
+
+| Ctor | Glyph | Dot count | Rows filled |
+|------|-------|-----------|-------------|
+| `Cursor::braille_2()` | `⠉` | 2 | Row 1 (top only) |
+| `Cursor::braille_4()` | `⠛` | 4 | Rows 1–2 |
+| `Cursor::braille_6()` | `⠿` | 6 | Rows 1–3 |
+| `Cursor::braille_8()` | `⣿` | 8 | Rows 1–4 (all) |
+
+Braille characters in `U+2800..=U+28FF` encode an 8-dot 2×4 grid. The four glyphs above are the "row-stacked fills" — dots accumulate from the top row downward, so they read as a discrete 4-step density ramp. `braille_8` (`⣿`) is visually comparable to a solid block but at braille's sub-cell density; `braille_2` (`⠉`) is a light two-dot indicator.
+
+```rust
+use tui_vfx_content::cursor::Cursor;
+
+let light = Cursor::braille_2(); // ⠉
+let dense = Cursor::braille_8(); // ⣿
+```
+
 **Subsystems:**
 
 - `CursorBlink { interval_ms }` — `0` disables blinking (accepts legacy alias `blink_interval`).
@@ -603,10 +623,15 @@ let breathing = Cursor {
 | `Off` (default) | (base glyph unchanged) | Static cursor |
 | `Pulse` | Triangle wave over `▁▂▃▄▅▆▇█` (up for half the period, back down for half) | Soft breath |
 | `HalfBlockBounce` | Three-step cycle: `▀` (upper), `█` (full — brief "both"), `▄` (lower), at thirds of the period | Mechanical scanner bar |
+| `BraillePulse` | Sine-eased cycle through the four row-stacked braille fills: `⣿ → ⠿ → ⠛ → ⠉ → ⠛ → ⠿ → ⣿` (phase 0/1 = densest, phase 0.5 = sparsest) | Sub-cell braille breath |
+| `BrailleRowFlip` | Square-wave alternation: `⠉` (phase `<0.5`) ↔ `⠛` (phase `≥0.5`) | Calm 1-row / 2-row indicator |
 
 **Precedence:** `grow_in` (during its active window) > `scan` > base character. Scan never overrides the grow-in ramp. `period_ms = 0` disables scan regardless of `mode`.
 
-**Scope:** Only block (`█`) cursors are affected — non-block cursors (`|`, `_`, `▌`, `◆`, …) are passed through unchanged because the ramps operate on the 1/8th-block Unicode set.
+**Scope:**
+
+- `Pulse` and `HalfBlockBounce` only affect block (`█`) cursors — non-block cursors (`|`, `_`, `▌`, `◆`, …) are passed through unchanged because the ramps operate on the 1/8th-block Unicode set.
+- `BraillePulse` and `BrailleRowFlip` **override the base `character` unconditionally** — the output is always one of the four (resp. two) row-stacked braille glyphs. This is different from `Pulse` / `HalfBlockBounce`, which pass through non-block base chars. Set the cursor's `character` to match your intended "resting" frame (e.g. `⣿` for `BraillePulse`) so the static and animated states agree visually.
 
 **Runtime:**
 
@@ -659,6 +684,12 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 | `content_typewriter_cursor_wake_gap.json` | Detached meteor-tail trail — `gap_cells=3` leaves an unpainted gap between cursor and trail |
 | `content_typewriter_cursor_scan_pulse.json` | Steady cursor breathing through the 1/8th-block ramp (Pulse scan, 1.5s period) |
 | `content_typewriter_cursor_scan_bounce.json` | Steady cursor ping-ponging through ▀→█→▄ (Half-Block Bounce scan, 900ms period) |
+| `content_typewriter_cursor_braille_2.json` | Static 2-dot row-stacked braille cursor (⠉, top row only) |
+| `content_typewriter_cursor_braille_4.json` | Static 4-dot row-stacked braille cursor (⠛, top two rows) |
+| `content_typewriter_cursor_braille_6.json` | Static 6-dot row-stacked braille cursor (⠿, top three rows) |
+| `content_typewriter_cursor_braille_8.json` | Static 8-dot row-stacked braille cursor (⣿, all four rows — densest) |
+| `content_typewriter_cursor_braille_pulse.json` | Steady cursor sine-breathing through ⣿→⠿→⠛→⠉→⠛→⠿→⣿ (BraillePulse, ~2.8s period) |
+| `content_typewriter_cursor_braille_flip.json` | Steady cursor gently alternating ⠉ ↔ ⠛ on a slow 2s square wave (BrailleRowFlip) |
 | `content_typewriter_cursor_full.json` | Kitchen sink: grow-in + wake tint + scan + blink all composed |
 
 ---
