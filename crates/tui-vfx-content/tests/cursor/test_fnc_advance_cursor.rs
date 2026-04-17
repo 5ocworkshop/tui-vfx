@@ -97,5 +97,75 @@ fn max_cells_zero_means_no_cap() {
     assert_eq!(state.history.len(), 20 - 1); // last position isn't in history yet
 }
 
+// --- T15: grow-in phase state machine ---
+
+use mixed_signals::prelude::SignalOrFloat;
+use tui_vfx_content::cursor::{GrowInPhase, GrowInMode};
+
+#[test]
+fn grow_in_mode_never_snaps_to_visible_on_show() {
+    let mut state = CursorState::new();
+    let cursor = Cursor::default(); // mode = Never, visibility = 1.0
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.0, &ctx());
+    assert_eq!(state.grow_in_phase, GrowInPhase::Visible);
+}
+
+#[test]
+fn grow_in_mode_once_enters_growing_in_on_first_show() {
+    let mut state = CursorState::new();
+    let mut cursor = Cursor::default();
+    cursor.grow_in.mode = GrowInMode::Once;
+    cursor.grow_in.duration_ms = SignalOrFloat::Static(200.0);
+    cursor.visibility = SignalOrFloat::Static(1.0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.016, &ctx());
+    assert!(matches!(state.grow_in_phase, GrowInPhase::GrowingIn { .. }));
+    assert!(state.grow_in_has_fired_once);
+}
+
+#[test]
+fn grow_in_progress_accumulates_with_dt() {
+    let mut state = CursorState::new();
+    let mut cursor = Cursor::default();
+    cursor.grow_in.mode = GrowInMode::Once;
+    cursor.grow_in.duration_ms = SignalOrFloat::Static(200.0);
+    cursor.visibility = SignalOrFloat::Static(1.0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.016, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.100, 0.100, &ctx());
+    match state.grow_in_phase {
+        GrowInPhase::GrowingIn { elapsed_ms } => assert!(elapsed_ms >= 100.0),
+        other => panic!("expected GrowingIn, got {other:?}"),
+    }
+}
+
+#[test]
+fn grow_in_snaps_to_visible_after_duration() {
+    let mut state = CursorState::new();
+    let mut cursor = Cursor::default();
+    cursor.grow_in.mode = GrowInMode::Once;
+    cursor.grow_in.duration_ms = SignalOrFloat::Static(200.0);
+    cursor.visibility = SignalOrFloat::Static(1.0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.016, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.25, 0.25, &ctx()); // > 200ms
+    assert_eq!(state.grow_in_phase, GrowInPhase::Visible);
+}
+
+#[test]
+fn grow_in_once_does_not_retrigger() {
+    let mut state = CursorState::new();
+    let mut cursor = Cursor::default();
+    cursor.grow_in.mode = GrowInMode::Once;
+    cursor.grow_in.duration_ms = SignalOrFloat::Static(200.0);
+    cursor.visibility = SignalOrFloat::Static(1.0);
+    // Show, finish animation, hide, show again.
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.016, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.25, 0.25, &ctx()); // Visible
+    cursor.visibility = SignalOrFloat::Static(0.0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.3, 0.05, &ctx()); // Hidden
+    cursor.visibility = SignalOrFloat::Static(1.0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.4, 0.1, &ctx()); // Show again
+    // Mode is Once — re-show snaps to Visible, does not start a new grow-in.
+    assert_eq!(state.grow_in_phase, GrowInPhase::Visible);
+}
+
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_advance_cursor.rs</FILE> - <DESC>Tests for fnc_advance_cursor</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>
