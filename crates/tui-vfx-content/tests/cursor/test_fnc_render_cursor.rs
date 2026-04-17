@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_render_cursor.rs</FILE> - <DESC>Tests for fnc_render_cursor</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>feat/cursor-primitive: render tests</WCTX>
-// <CLOG>T17: add wake Tint trail tests</CLOG>
+// <CLOG>T18: add wake Ghost trail test</CLOG>
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use tui_vfx_content::cursor::{
@@ -108,5 +108,18 @@ fn e11_wake_off_emits_no_trail_ops() {
     assert!(ops.trail.is_empty());
 }
 
+// --- T18: wake Ghost trail painting ---
+
+#[test]
+fn ghost_wake_emits_trail_ops_with_cursor_character() {
+    let mut state = CursorState::new();
+    let cursor = Cursor::default().with_wake_ghost(1.0, 0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.0, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.1, 0.1, &ctx());
+    let ops = fnc_render_cursor(&state, &cursor, 0.1, &ctx());
+    assert_eq!(ops.trail.len(), 1);
+    assert_eq!(ops.trail[0].glyph.as_deref(), Some("█"));
+}
+
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_render_cursor.rs</FILE> - <DESC>Tests for fnc_render_cursor</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

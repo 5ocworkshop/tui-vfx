@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/cursor/fnc_render_cursor.rs</FILE> - <DESC>Render cursor state into paint ops</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>feat/cursor-primitive: render — wake Tint trail (T17)</WCTX>
-// <CLOG>T17: add Tint trail construction with decaying alpha</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>feat/cursor-primitive: render — wake Ghost trail (T18)</WCTX>
+// <CLOG>T18: Ghost mode emits trail ops carrying cursor character</CLOG>
 
 use super::{
     fnc_cursor_grow_in_glyph, Cursor, CursorPaintOps, CursorState, GrowInPhase, PrimaryOp,
@@ -79,7 +79,11 @@ pub fn fnc_render_cursor(
                         glyph: None,
                         alpha,
                     }),
-                    WakeMode::Ghost => { /* implemented in T18 */ }
+                    WakeMode::Ghost => ops.trail.push(TrailOp {
+                        position: (entry.0, entry.1),
+                        glyph: Some(cursor.character.clone()),
+                        alpha,
+                    }),
                     WakeMode::Off => unreachable!(),
                 }
             }
@@ -151,4 +155,4 @@ fn clamp_unit(v: f32) -> f32 {
 }
 
 // <FILE>tui-vfx-content/src/cursor/fnc_render_cursor.rs</FILE> - <DESC>Render cursor state into paint ops</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>
