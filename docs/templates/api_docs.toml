@@ -9,12 +9,12 @@
 # See docs/design/API_DOC_GENERATION_PLAN.md for architecture details.
 
 # <FILE>docs/templates/api_docs.toml</FILE> - <DESC>Editorial manifest for tui-vfx API documentation</DESC>
-# <VERS>VERSION: 3.0.1</VERS>
-# <WCTX>Public release prep</WCTX>
-# <CLOG>Align OFPF version with manifest meta.version</CLOG>
+# <VERS>VERSION: 3.1.0</VERS>
+# <WCTX>feat/cursor-primitive T29: editorial manifest entries for the new Cursor primitive + CursorShader</WCTX>
+# <CLOG>MINOR: Add [specs.Cursor], [specs.CursorBlink], [specs.GrowIn], [specs.Wake], [specs.CursorShader], [specs.CursorShaderMode]; note the TypewriterCursor flatten</CLOG>
 
 [meta]
-version = "3.0.1"
+version = "3.1.0"
 description = "tui-vfx API documentation editorial content"
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -475,7 +475,83 @@ description = "Content transformers modify text strings based on animation progr
 
 [specs.ContentEffect.types.TypewriterCursor]
 kind = "struct"
-fields = ["character", "blink_interval", "show_while_typing", "show_after_complete"]
+fields = ["character", "blink_interval", "show_while_typing", "show_after_complete", "visibility", "grow_in", "wake"]
+description = "Since 0.4.0 `TypewriterCursor` composes the general `Cursor` primitive via `#[serde(flatten)]`. The legacy fields (`character`, `blink_interval`, `show_while_typing`, `show_after_complete`) continue to parse at the top-level JSON key space; the flattened `Cursor` also exposes `visibility`, `grow_in`, and `wake` for richer behavior. See `[specs.Cursor]` and `[specs.CursorBlink]` for field details."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cursor primitive (tui_vfx_content::cursor, since 0.4.0)
+# ─────────────────────────────────────────────────────────────────────────────
+
+[specs.Cursor]
+part = "content"
+section_title = "Cursor (primitive)"
+kind = "struct"
+fields = ["character", "visibility", "blink", "grow_in", "wake"]
+description = """
+`tui_vfx_content::cursor::Cursor` — general-purpose cursor primitive with
+opt-in grow-in and wake animations. Defaults render a static block cursor
+(`character = \"█\"`, no blink, no grow-in, no wake). `blink` is
+`#[serde(flatten)]` so the legacy `blink_interval` JSON key still parses at
+the top level. Paired at runtime with `CursorState` (bookkeeping),
+`fnc_advance_cursor`, and `fnc_render_cursor`.
+"""
+
+[specs.CursorBlink]
+part = "content"
+section_title = "CursorBlink"
+kind = "struct"
+fields = ["interval_ms"]
+description = "On/off duration in ms. `0` (default) = no blink. Accepts legacy alias `blink_interval`."
+
+[specs.GrowIn]
+part = "content"
+section_title = "GrowIn"
+kind = "struct"
+fields = ["mode", "direction", "duration_ms", "grow_out_ms", "curve"]
+description = """
+Grow-in animation config. `mode = Never` (default) disables. `GrowInMode`:
+`Never | Once | EveryShow`. `GrowDirection`: `Up | Down | Center`. `duration_ms`
+and `grow_out_ms` are `SignalOrFloat` (ms). `curve` is a
+`SignalOrFloat` sampled over `t in 0..1`.
+"""
+
+[specs.Wake]
+part = "content"
+section_title = "Wake"
+kind = "struct"
+fields = ["mode", "decay_seconds", "max_cells", "curve", "tint"]
+description = """
+Fading wake trail config. `mode = Off` (default) disables; other modes:
+`Tint` (alpha-blends `tint` onto the glyph beneath) and `Ghost` (tints and
+overwrites the glyph with the cursor `character`). `decay_seconds` is
+per-cell decay; `max_cells = 0` means no hard cap. `curve` is a
+`SignalOrFloat` over age-normalized `t in 0..1`. `tint` is a theme-aware
+`ColorConfig`.
+"""
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CursorShader (tui_vfx_style::models::CursorShader, since 0.4.0)
+# ─────────────────────────────────────────────────────────────────────────────
+
+[specs.CursorShader]
+part = "style"
+section_title = "CursorShader"
+kind = "struct"
+fields = ["mode", "tint", "primary", "trail"]
+description = """
+`tui_vfx_style::models::CursorShader` — paints primary-cell alpha (for
+grow-in fade) and the wake trail tint/ghost composition. Registered as
+`SpatialShaderType::Cursor(CursorShader)`. Constructed per-frame by
+consumers via `tui_vfx_content::cursor::fnc_build_cursor_shader(&ops, &wake)`
+from a `CursorPaintOps` snapshot (the content crate owns the bridge so
+the style crate avoids a reverse dependency).
+"""
+
+[specs.CursorShaderMode]
+part = "style"
+section_title = "CursorShaderMode"
+variants = ["Off", "Tint", "Ghost"]
+description = "Mirror of `tui_vfx_content::cursor::WakeMode` in the style crate. `Off` short-circuits the shader; `Tint` blends tint onto trail cells; `Ghost` is identical at the style layer (glyph overwrite is a consumer concern via `fnc_apply_ghost_glyphs_to_grid`)."
 
 [specs.ContentEffect.enums]
 items = [

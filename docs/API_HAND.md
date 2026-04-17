@@ -1,7 +1,7 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.15.0</VERS> -->
-<!-- <WCTX>Document KittScanner motion_mode and richer probe trace snapshot storage</WCTX> -->
-<!-- <CLOG>MINOR: Update the KittScanner field list to include motion_mode and note that probe trace snapshots now persist both foreground and background before/after data for SQL-backed diagnostics</CLOG> -->
+<!-- <VERS>VERSION: 2.16.0</VERS> -->
+<!-- <WCTX>feat/cursor-primitive T29: hand API entry for the general Cursor primitive</WCTX> -->
+<!-- <CLOG>MINOR: Document the tui_vfx_content::cursor module (Cursor, CursorBlink, GrowIn, Wake, CursorState, CursorPaintOps, and the fnc_advance_cursor / fnc_render_cursor / fnc_cursor_grow_in_glyph helpers)</CLOG>
 
 # TUI-VFX Complete API Reference
 
@@ -831,10 +831,19 @@ pub enum ContentEffect {
 }
 ```
 
+### Cursor primitive
+
+Module: `tui_vfx_content::cursor`. Types: `Cursor`, `CursorBlink`, `GrowIn`, `GrowInMode`, `GrowDirection`, `Wake`, `WakeMode`, `CursorState`, `CursorPaintOps`, `PrimaryOp`, `TrailOp`. Functions: `fnc_advance_cursor`, `fnc_render_cursor`, `fnc_cursor_grow_in_glyph`, `fnc_build_cursor_shader`, `fnc_apply_ghost_glyphs_to_grid`, `fnc_typewriter_cursor_position`, `fnc_splice_cursor_into_text`.
+
+General-purpose cursor primitive with opt-in grow-in and wake animations. Defaults render a static cursor identical to v1.1.0 `TypewriterCursor` output. Pairs with `tui_vfx_style::models::CursorShader` (dispatched via `SpatialShaderType::Cursor`) for compositor integration.
+
+`TypewriterCursor` now composes `Cursor` via `#[serde(flatten)]`, so legacy fields (`character`, `blink_interval`, `show_while_typing`, `show_after_complete`) remain at the top-level JSON key space.
+
 ### Supporting types
 
 **TypewriterCursor (struct):**
 `character`, `blink_interval`, `show_while_typing`, `show_after_complete`
+Since 0.4.0 also exposes the flattened `Cursor` fields (`visibility`, `grow_in`, `wake`) for richer behavior.
 
 **ScrambleCharset:** `Alphanumeric`, `Binary`, `Matrix`, `Katakana`
 
