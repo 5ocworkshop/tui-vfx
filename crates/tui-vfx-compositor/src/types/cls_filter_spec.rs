@@ -284,6 +284,16 @@ pub enum FilterSpec {
         /// Radius where vignette starts (0.0 = center, 1.0 = edges), can be signal-driven
         #[serde(default = "default_vignette_radius")]
         radius: SignalOrFloat,
+        /// Which edge(s) the darkening originates from. Empty/default keeps
+        /// the classic all-sides radial vignette.
+        #[serde(default)]
+        sides: Vec<VignetteEdge>,
+        /// Optional low-amplitude spatial dither to reduce visible contouring.
+        #[serde(default)]
+        dither_amount: f32,
+        /// Optional temporal rate for the dither pattern in Hz. 0.0 = static.
+        #[serde(default)]
+        temporal_dither_hz: f32,
     },
     /// CRT monitor post-processing effect
     Crt {
@@ -884,6 +894,19 @@ pub enum SubcellLightRenderMode {
     Vertical,
 }
 
+/// Which edge a directional vignette darkens from.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum VignetteEdge {
+    #[default]
+    Top,
+    Bottom,
+    Left,
+    Right,
+}
+
 // Default functions for signal-or-float fields
 fn default_dim_factor() -> SignalOrFloat {
     SignalOrFloat::Static(0.5)
@@ -1393,9 +1416,18 @@ impl FilterSpec {
                 ("strength", format!("{:?}", strength)),
                 ("apply_to", format!("{:?}", apply_to)),
             ],
-            FilterSpec::Vignette { strength, radius } => vec![
+            FilterSpec::Vignette {
+                strength,
+                radius,
+                sides,
+                dither_amount,
+                temporal_dither_hz,
+            } => vec![
                 ("strength", format!("{:?}", strength)),
                 ("radius", format!("{:?}", radius)),
+                ("sides", format!("{:?}", sides)),
+                ("dither_amount", format!("{}", dither_amount)),
+                ("temporal_dither_hz", format!("{}", temporal_dither_hz)),
             ],
             FilterSpec::Crt {
                 scanline_strength,

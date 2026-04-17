@@ -137,6 +137,9 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
         FilterSpec::Vignette {
             strength: Default::default(),
             radius: Default::default(),
+            sides: vec![],
+            dither_amount: 0.0,
+            temporal_dither_hz: 0.0,
         },
         FilterSpec::Crt {
             scanline_strength: Default::default(),

@@ -1640,7 +1640,7 @@
         ]
       },
       "Vignette": {
-        "ai_hint": "Edge darkening that draws focus to center.\nstrength: intensity of darkening at edges.\nradius: how far vignette extends from edges (signal-driven).\nCinematic focus effect for premium surfaces.",
+        "ai_hint": "Edge darkening that draws focus to center.\nstrength: intensity of darkening at edges.\nradius: how far vignette extends from edges (signal-driven).\nsides: optional list of edges (`top`, `bottom`, `left`, `right`) for directional mode. Omit for classic all-sides radial vignette.\ndither_amount: optional low-amplitude spatial dither to reduce visible contouring on large flat fields.\ntemporal_dither_hz: optional low-rate temporal refresh for that dither (0 = static).\nCinematic focus effect for premium surfaces.",
         "complexity": "simple",
         "energy": "calm",
         "name": "Vignette",
@@ -1657,6 +1657,24 @@
             "doc": "Radius where vignette starts (0.0 = center, 1.0 = edges), can be signal-driven",
             "name": "radius",
             "ty": "SignalOrFloat"
+          },
+          {
+            "default": "[]",
+            "doc": "Which edge(s) the darkening originates from. Empty/default keeps\nthe classic all-sides radial vignette.",
+            "name": "sides",
+            "ty": "Vec<VignetteEdge>"
+          },
+          {
+            "default": "0",
+            "doc": "Optional low-amplitude spatial dither to reduce visible contouring.",
+            "name": "dither_amount",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Optional temporal rate for the dither pattern in Hz. 0.0 = static.",
+            "name": "temporal_dither_hz",
+            "ty": "f32"
           }
         ],
         "premium": false,

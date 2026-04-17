@@ -267,13 +267,38 @@ pub(crate) fn prepare_filter(
                 apply_to: *apply_to,
             }))
         }
-        FilterSpec::Vignette { strength, radius } => {
+        FilterSpec::Vignette {
+            strength,
+            radius,
+            sides,
+            dither_amount,
+            temporal_dither_hz,
+        } => {
             let evaluated_strength = strength.evaluate(loop_t, signal_ctx).unwrap_or(0.5);
             let evaluated_radius = radius.evaluate(loop_t, signal_ctx).unwrap_or(0.8);
-            Some(PreparedFilter::Vignette(Vignette::new(
-                evaluated_strength,
-                evaluated_radius,
-            )))
+            Some(PreparedFilter::Vignette(
+                Vignette::new(evaluated_strength, evaluated_radius)
+                    .with_sides(
+                        sides
+                            .iter()
+                            .map(|side| match side {
+                                crate::types::cls_filter_spec::VignetteEdge::Top => {
+                                    crate::filters::cls_vignette::VignetteEdge::Top
+                                }
+                                crate::types::cls_filter_spec::VignetteEdge::Bottom => {
+                                    crate::filters::cls_vignette::VignetteEdge::Bottom
+                                }
+                                crate::types::cls_filter_spec::VignetteEdge::Left => {
+                                    crate::filters::cls_vignette::VignetteEdge::Left
+                                }
+                                crate::types::cls_filter_spec::VignetteEdge::Right => {
+                                    crate::filters::cls_vignette::VignetteEdge::Right
+                                }
+                            })
+                            .collect::<Vec<_>>(),
+                    )
+                    .with_dither(*dither_amount, *temporal_dither_hz),
+            ))
         }
         FilterSpec::Crt {
             scanline_strength,

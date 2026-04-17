@@ -115242,6 +115242,88 @@
                     }
                   ]
                 }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Which edge(s) the darkening originates from. Empty/default keeps\nthe classic all-sides radial vignette.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "sides",
+                "schema": {
+                  "item": {
+                    "description": "Which edge a directional vignette darkens from.",
+                    "json_name": null,
+                    "kind": "enum",
+                    "name": "VignetteEdge",
+                    "tag_field": null,
+                    "variants": [
+                      {
+                        "description": null,
+                        "json_value": "top",
+                        "kind": "unit",
+                        "name": "Top"
+                      },
+                      {
+                        "description": null,
+                        "json_value": "bottom",
+                        "kind": "unit",
+                        "name": "Bottom"
+                      },
+                      {
+                        "description": null,
+                        "json_value": "left",
+                        "kind": "unit",
+                        "name": "Left"
+                      },
+                      {
+                        "description": null,
+                        "json_value": "right",
+                        "kind": "unit",
+                        "name": "Right"
+                      }
+                    ]
+                  },
+                  "kind": "vec"
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Optional low-amplitude spatial dither to reduce visible contouring.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "dither_amount",
+                "schema": {
+                  "kind": "primitive",
+                  "range": null,
+                  "type": "f32"
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Optional temporal rate for the dither pattern in Hz. 0.0 = static.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "temporal_dither_hz",
+                "schema": {
+                  "kind": "primitive",
+                  "range": null,
+                  "type": "f32"
+                }
               }
             ],
             "json_value": "vignette",
@@ -202305,6 +202387,88 @@
                     "name": "Signal"
                   }
                 ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Which edge(s) the darkening originates from. Empty/default keeps\nthe classic all-sides radial vignette.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "sides",
+              "schema": {
+                "item": {
+                  "description": "Which edge a directional vignette darkens from.",
+                  "json_name": null,
+                  "kind": "enum",
+                  "name": "VignetteEdge",
+                  "tag_field": null,
+                  "variants": [
+                    {
+                      "description": null,
+                      "json_value": "top",
+                      "kind": "unit",
+                      "name": "Top"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "bottom",
+                      "kind": "unit",
+                      "name": "Bottom"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "left",
+                      "kind": "unit",
+                      "name": "Left"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "right",
+                      "kind": "unit",
+                      "name": "Right"
+                    }
+                  ]
+                },
+                "kind": "vec"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Optional low-amplitude spatial dither to reduce visible contouring.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "dither_amount",
+              "schema": {
+                "kind": "primitive",
+                "range": null,
+                "type": "f32"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Optional temporal rate for the dither pattern in Hz. 0.0 = static.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "temporal_dither_hz",
+              "schema": {
+                "kind": "primitive",
+                "range": null,
+                "type": "f32"
               }
             }
           ],

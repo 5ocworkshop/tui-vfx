@@ -185,6 +185,9 @@ complexity = "simple"
 ai_hint = """Edge darkening that draws focus to center.
 strength: intensity of darkening at edges.
 radius: how far vignette extends from edges (signal-driven).
+sides: optional list of edges (`top`, `bottom`, `left`, `right`) for directional mode. Omit for classic all-sides radial vignette.
+dither_amount: optional low-amplitude spatial dither to reduce visible contouring on large flat fields.
+temporal_dither_hz: optional low-rate temporal refresh for that dither (0 = static).
 Cinematic focus effect for premium surfaces."""
 
 [effects.filters.Crt]

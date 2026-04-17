@@ -321,7 +321,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `SubcellLight` | Sub-cell light renderer for blank shell-owned cells | `lit_color`, `unlit_color`, `render_mode`, `sample_from`, `threshold`, `temporal_dither_hz`, `only_blank` |
 | `Tint` | Apply a color tint | `color`, `strength`, `apply_to` |
 | `UnderlineWipe` | Horizontal underline that wipes in based on progress | `direction`, `progress`, `gradient`, `glisten` |
-| `Vignette` | Vignette darkening around edges | `strength`, `radius` |
+| `Vignette` | Vignette darkening around edges | `strength`, `radius`, `sides`, `dither_amount`, `temporal_dither_hz` |
 
 ### RigidShake
 

@@ -79,7 +79,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **Dim** | Darken output | `factor`: 0.0=black, 1.0=unchanged; `apply_to` |
 | **Invert** | Color inversion | `apply_to` |
 | **Tint** | Apply color overlay | `color`, `strength`, `apply_to` |
-| **Vignette** | Edge darkening | `strength`, `radius` (signal-driven) |
+| **Vignette** | Edge darkening | `strength`, `radius` (signal-driven), `sides`, `dither_amount`, `temporal_dither_hz` |
 | **Crt** | CRT monitor post-processing | `scanline_strength`, `glow` |
 | **PatternFill** | Background texture patterns | `pattern`, `color`, `only_empty` |
 | **Greyscale** | Desaturate (BT.601 luminance) | `strength`, `apply_to` |
@@ -250,6 +250,14 @@ Premium effect for frosted glass / film grain texture:
 **InterlaceCurtain** — Scanline/interlace dimming effect:
 - `density`: Row spacing (1.0 = every other row)
 - `scroll_speed`: Animation speed for scrolling scanlines
+
+**Vignette** — Edge darkening that draws focus inward:
+- `strength`: overall dimming amount
+- `radius`: how far the vignette reaches inward
+- `sides`: optional list of directional edges (`top`, `bottom`, `left`, `right`) for single-side or two-side light/falloff impressions
+- `dither_amount`: optional low-amplitude contour softening on large flat fields
+- `temporal_dither_hz`: optional low-rate temporal refresh for the dither
+- Use subtle dither when the vignette reads too obviously as a square cell-grid gradient rather than a soft optical falloff
 
 **MotionBlur** — Directional blur trail effect:
 - `direction`: Left (default), Right, Up, Down
