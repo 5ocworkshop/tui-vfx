@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/test_cursor.rs</FILE> - <DESC>Aggregator for cursor module tests</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>feat/cursor-primitive: test aggregator</WCTX>
-// <CLOG>Add T16 test module (fnc_render_cursor)</CLOG>
+// <CLOG>Add T21 test module (fnc_typewriter_cursor_position)</CLOG>
 
 #[path = "cursor/test_cls_cursor_blink.rs"]
 mod test_cls_cursor_blink;
@@ -30,5 +30,8 @@ mod test_fnc_advance_cursor;
 #[path = "cursor/test_fnc_render_cursor.rs"]
 mod test_fnc_render_cursor;
 
+#[path = "cursor/test_fnc_typewriter_cursor_position.rs"]
+mod test_fnc_typewriter_cursor_position;
+
 // <FILE>tui-vfx-content/tests/test_cursor.rs</FILE> - <DESC>Aggregator for cursor module tests</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
