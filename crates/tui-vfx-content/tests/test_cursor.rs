@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/test_cursor.rs</FILE> - <DESC>Aggregator for cursor module tests</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>feat/cursor-primitive: test aggregator</WCTX>
-// <CLOG>Add T22 test module (fnc_splice_cursor_into_text)</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>feat/cursor-primitive T27: register test_fnc_apply_ghost_glyphs_to_grid aggregator entry</WCTX>
+// <CLOG>Add T27 test module (fnc_apply_ghost_glyphs_to_grid)</CLOG>
 
 #[path = "cursor/test_cls_cursor_blink.rs"]
 mod test_cls_cursor_blink;
@@ -36,5 +36,8 @@ mod test_fnc_typewriter_cursor_position;
 #[path = "cursor/test_fnc_splice_cursor_into_text.rs"]
 mod test_fnc_splice_cursor_into_text;
 
+#[path = "cursor/test_fnc_apply_ghost_glyphs_to_grid.rs"]
+mod test_fnc_apply_ghost_glyphs_to_grid;
+
 // <FILE>tui-vfx-content/tests/test_cursor.rs</FILE> - <DESC>Aggregator for cursor module tests</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

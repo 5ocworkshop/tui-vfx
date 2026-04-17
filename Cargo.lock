@@ -1087,6 +1087,7 @@ dependencies = [
  "serde_json",
  "tui-vfx-core",
  "tui-vfx-style",
+ "tui-vfx-types",
  "unicode-segmentation",
 ]
 

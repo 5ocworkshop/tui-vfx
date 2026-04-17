@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/cursor/mod.rs</FILE> - <DESC>General Cursor primitive module</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>feat/cursor-primitive: module skeleton + all re-exports (Tasks 1–11, 21, 22)</WCTX>
-// <CLOG>Register fnc_splice_cursor_into_text (T22)</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>feat/cursor-primitive T27: register fnc_apply_ghost_glyphs_to_grid module + re-export so consumers can paint ghost-mode wake glyphs into a source grid before composition</WCTX>
+// <CLOG>Register fnc_apply_ghost_glyphs_to_grid (T27)</CLOG>
 
 //! General-purpose cursor primitive with optional grow-in and wake animations.
 //!
@@ -22,6 +22,7 @@ pub mod cls_cursor_paint_ops;
 pub mod cls_cursor_state;
 pub mod cls_cursor_wake;
 pub mod fnc_advance_cursor;
+pub mod fnc_apply_ghost_glyphs_to_grid;
 pub mod fnc_cursor_grow_in_glyph;
 pub mod fnc_render_cursor;
 pub mod fnc_splice_cursor_into_text;
@@ -34,10 +35,11 @@ pub use cls_cursor_paint_ops::{CursorPaintOps, PrimaryOp, TrailOp};
 pub use cls_cursor_state::{CursorState, GrowInPhase};
 pub use cls_cursor_wake::{Wake, WakeMode};
 pub use fnc_advance_cursor::fnc_advance_cursor;
+pub use fnc_apply_ghost_glyphs_to_grid::fnc_apply_ghost_glyphs_to_grid;
 pub use fnc_cursor_grow_in_glyph::fnc_cursor_grow_in_glyph;
 pub use fnc_render_cursor::fnc_render_cursor;
 pub use fnc_splice_cursor_into_text::fnc_splice_cursor_into_text;
 pub use fnc_typewriter_cursor_position::fnc_typewriter_cursor_position;
 
 // <FILE>tui-vfx-content/src/cursor/mod.rs</FILE> - <DESC>General Cursor primitive module</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
