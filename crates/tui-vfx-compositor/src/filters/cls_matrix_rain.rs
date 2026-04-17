@@ -35,6 +35,16 @@ pub enum MatrixRainGlyphPreset {
     Ascii,
 }
 
+/// Rendering behavior for MatrixRain.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum MatrixRainMode {
+    /// Column-coherent falling streams (modern interpretation).
+    #[default]
+    Modern,
+    /// Stationary glyph field with illumination waves (classic film-inspired look).
+    Classic,
+}
+
 /// Deterministic procedural digital-rain filter.
 ///
 /// The filter treats each screen column as an independently-parameterized
@@ -44,6 +54,7 @@ pub enum MatrixRainGlyphPreset {
 /// which keeps it compatible with the compositor's stateless per-cell filter
 /// API while still reading as coherent columnar rain.
 pub struct MatrixRain {
+    pub mode: MatrixRainMode,
     pub density: f32,
     pub speed_multiplier: f32,
     pub speed_min: f32,
@@ -61,6 +72,7 @@ pub struct MatrixRain {
 impl Default for MatrixRain {
     fn default() -> Self {
         Self {
+            mode: MatrixRainMode::Modern,
             density: 0.5,
             speed_multiplier: 1.0,
             speed_min: 5.0,
@@ -84,6 +96,11 @@ impl MatrixRain {
 
     pub fn with_density(mut self, density: f32) -> Self {
         self.density = density.clamp(0.0, 1.0);
+        self
+    }
+
+    pub fn with_mode(mut self, mode: MatrixRainMode) -> Self {
+        self.mode = mode;
         self
     }
 
@@ -220,6 +237,15 @@ impl MatrixRain {
     }
 
     #[inline]
+    fn classic_glyph_at(&self, x: u16, y: u16, t: f64) -> char {
+        // Approximate "some glyphs remain static for 3 frames" by using a
+        // globally-aligned time step with a slower cadence than the modern stream churn.
+        let step = ((t as f32) * self.glyph_change_hz.max(0.1) * 3.0).floor() as u64;
+        let idx = (self.hash(x as u64, y as u64, step) % self.glyphs.len() as u64) as usize;
+        self.glyphs[idx]
+    }
+
+    #[inline]
     fn lerp_color(a: Color, b: Color, t: f32) -> Color {
         let t = t.clamp(0.0, 1.0);
         Color::rgb(
@@ -239,14 +265,38 @@ impl Filter for MatrixRain {
         let trail = self.column_trail(x).max(1);
         let head = self.head_position(x, height.max(1), t);
         let distance = head - y as f32;
-        if !(0.0..(trail as f32)).contains(&distance) {
-            return;
-        }
+        match self.mode {
+            MatrixRainMode::Modern => {
+                if !(0.0..(trail as f32)).contains(&distance) {
+                    return;
+                }
 
-        let distance_from_head = distance.floor() as u16;
-        let brightness = 1.0 - (distance / trail as f32);
-        cell.ch = self.glyph_at(x, y, distance_from_head, t);
-        cell.fg = Self::lerp_color(self.tail_color, self.head_color, brightness.powf(0.75));
+                let distance_from_head = distance.floor() as u16;
+                let brightness = 1.0 - (distance / trail as f32);
+                cell.ch = self.glyph_at(x, y, distance_from_head, t);
+                cell.fg = Self::lerp_color(self.tail_color, self.head_color, brightness.powf(0.75));
+            }
+            MatrixRainMode::Classic => {
+                // Fixed grid: glyphs stay in their cells, but only the active string window is visible.
+                // Motion is an illumination wave / visible-string front, not literal glyph descent.
+                let cycle_distance = distance.rem_euclid(height.max(1) as f32 + trail as f32);
+                let visibility_step = ((t as f32) * 2.0).floor() as u64;
+                let visible_ratio = 0.35 + 0.35 * self.hash_unit(x as u64, 7, visibility_step);
+                let visible_length = (trail as f32 * visible_ratio).max(3.0);
+                if cycle_distance >= visible_length {
+                    return;
+                }
+                let brightness = 1.0 - (cycle_distance / visible_length);
+                cell.ch = self.classic_glyph_at(x, y, t);
+                let highlighted = self.hash_unit(x as u64, 9, 0) < 0.2 && cycle_distance < 1.0;
+                let head_color = if highlighted {
+                    Self::lerp_color(self.head_color, Color::rgb(255, 255, 255), 0.35)
+                } else {
+                    self.head_color
+                };
+                cell.fg = Self::lerp_color(self.tail_color, head_color, brightness.powf(0.75));
+            }
+        }
     }
 }
 
@@ -305,6 +355,24 @@ mod tests {
         filter.apply(&mut b, 3, 4, 20, 10, 0.9);
         assert_eq!(a.ch, b.ch);
         assert_eq!(a.fg, b.fg);
+    }
+
+    #[test]
+    fn classic_mode_leaves_vertical_gaps() {
+        let filter = MatrixRain::new()
+            .with_density(1.0)
+            .with_mode(MatrixRainMode::Classic)
+            .with_seed(5);
+        let mut rendered = 0usize;
+        for y in 0..12 {
+            let mut cell = blank();
+            filter.apply(&mut cell, 2, y, 10, 12, 0.5);
+            if cell.ch != ' ' {
+                rendered += 1;
+            }
+        }
+        assert!(rendered > 0);
+        assert!(rendered < 12);
     }
 
     #[test]

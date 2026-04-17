@@ -184,6 +184,19 @@ pub enum MatrixRainCharsetPreset {
     Ascii,
 }
 
+/// Rendering mode for MatrixRain.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum MatrixRainMode {
+    /// Column-coherent falling streams (modern interpretation).
+    #[default]
+    Modern,
+    /// Stationary glyph field with illumination waves (classic interpretation).
+    Classic,
+}
+
 /// Target for filter effects - which color component to affect.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
@@ -455,6 +468,9 @@ pub enum FilterSpec {
     /// `density` and `speed_multiplier` use `BindableValue`, making them
     /// suitable first-class runtime controls for dynamic recipes.
     MatrixRain {
+        /// Rendering behavior for the digital-rain field.
+        #[serde(default)]
+        mode: MatrixRainMode,
         /// Fraction of columns that should be active (0.0 - 1.0).
         #[serde(default = "default_matrix_rain_density")]
         density: BindableValue,
@@ -1480,7 +1496,7 @@ impl FilterSpec {
                 "Non-converging time-varying character replacement for living textures"
             }
             FilterSpec::MatrixRain { .. } => {
-                "Deterministic procedural digital-rain field with coherent falling streams"
+                "Deterministic procedural digital-rain field with modern and classic rendering modes"
             }
             FilterSpec::InterlaceCurtain { .. } => "Scanline/interlace effect for backdrop dimming",
             FilterSpec::MotionBlur { .. } => "Motion blur trail effect with directional dimming",
@@ -1593,6 +1609,7 @@ impl FilterSpec {
                 ("jitter", format!("{}", jitter)),
             ],
             FilterSpec::MatrixRain {
+                mode,
                 density,
                 speed_multiplier,
                 speed_min,
@@ -1604,6 +1621,7 @@ impl FilterSpec {
                 preset,
                 ..
             } => vec![
+                ("mode", format!("{:?}", mode)),
                 ("density", format!("{:?}", density)),
                 ("speed_multiplier", format!("{:?}", speed_multiplier)),
                 ("speed_min", format!("{}", speed_min)),

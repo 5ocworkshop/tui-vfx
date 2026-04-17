@@ -19,7 +19,9 @@ use crate::filters::cls_hover_bar::HoverBar;
 use crate::filters::cls_interlace_curtain::InterlaceCurtain;
 use crate::filters::cls_invert::Invert;
 use crate::filters::cls_kitt_scanner::KittScanner;
-use crate::filters::cls_matrix_rain::{MatrixRain, MatrixRainAffectMode, MatrixRainGlyphPreset};
+use crate::filters::cls_matrix_rain::{
+    MatrixRain, MatrixRainAffectMode, MatrixRainGlyphPreset, MatrixRainMode,
+};
 use crate::filters::cls_motion_blur::{MotionBlur, MotionDirection};
 use crate::filters::cls_pattern_fill::PatternFill;
 use crate::filters::cls_pill_button::PillButton;
@@ -419,6 +421,7 @@ pub(crate) fn prepare_filter(
             )))
         }
         FilterSpec::MatrixRain {
+            mode,
             density,
             speed_multiplier,
             speed_min,
@@ -461,8 +464,13 @@ pub(crate) fn prepare_filter(
                     MatrixRainGlyphPreset::Ascii
                 }
             };
+            let mode = match mode {
+                crate::types::cls_filter_spec::MatrixRainMode::Modern => MatrixRainMode::Modern,
+                crate::types::cls_filter_spec::MatrixRainMode::Classic => MatrixRainMode::Classic,
+            };
 
             let mut filter = MatrixRain::new()
+                .with_mode(mode)
                 .with_density(resolved_density)
                 .with_speed_multiplier(resolved_speed_multiplier)
                 .with_speed_range(*speed_min, *speed_max)
@@ -1538,6 +1546,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         FilterSpec::MatrixRain {
+            mode: crate::types::cls_filter_spec::MatrixRainMode::Modern,
             density,
             speed_multiplier,
             speed_min: 5.0,
