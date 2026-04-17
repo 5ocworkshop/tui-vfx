@@ -40,7 +40,7 @@ fn sample_wake_curve(curve: &SignalOrFloat, t: f32, ctx: &SignalContext) -> f32 
 /// - `trail`: wake cells aged into the decay window.
 ///
 /// `now` is wall-clock seconds, matching the value passed to
-/// [`crate::cursor::fnc_advance_cursor`].
+/// [`crate::cursor::fnc_advance_cursor()`].
 pub fn fnc_render_cursor(
     state: &CursorState,
     cursor: &Cursor,

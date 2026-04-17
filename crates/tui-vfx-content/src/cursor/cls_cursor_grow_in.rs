@@ -1,18 +1,27 @@
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_grow_in.rs</FILE> - <DESC>GrowIn config for Cursor primitive</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-primitive: GrowIn + modes</WCTX>
-// <CLOG>Enums + struct (Tasks 3 and 4 combined)</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up — derive Default on GrowInMode and GrowDirection using #[default] attribute</WCTX>
+// <CLOG>PATCH: derive Default on GrowInMode (Never) and GrowDirection (Up); remove manual impls</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use serde::{Deserialize, Serialize};
 
 /// Controls when the grow-in animation fires.
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum GrowInMode {
     /// Never animate — cursor snaps to visible on show. (Default.)
+    #[default]
     Never,
     /// Animate on the first 0→1 visibility transition per `CursorState` lifetime.
     Once,
@@ -21,32 +30,29 @@ pub enum GrowInMode {
     EveryShow,
 }
 
-impl Default for GrowInMode {
-    fn default() -> Self {
-        Self::Never
-    }
-}
-
 /// Direction of the grow-in animation for block cursors.
 ///
 /// Non-block cursors (e.g. `|`, `_`, `◆`) ignore direction and animate alpha only.
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum GrowDirection {
     /// Grow from bottom up (`▁▂▃▄▅▆▇█`). (Default.)
+    #[default]
     Up,
     /// Grow from top down (`▔▀▇...█`).
     Down,
     /// Expand from middle outwards (`▄ → ▆ → █`).
     Center,
-}
-
-impl Default for GrowDirection {
-    fn default() -> Self {
-        Self::Up
-    }
 }
 
 /// Grow-in animation config for a [`crate::cursor::Cursor`].
@@ -103,4 +109,4 @@ impl GrowIn {
 }
 
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_grow_in.rs</FILE> - <DESC>GrowIn config for Cursor primitive</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

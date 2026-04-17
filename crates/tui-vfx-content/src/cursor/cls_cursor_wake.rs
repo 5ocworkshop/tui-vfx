@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_wake.rs</FILE> - <DESC>Wake config for Cursor primitive</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-primitive: Wake + mode</WCTX>
-// <CLOG>Enum + struct (Tasks 5 and 6 combined)</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up — derive Default on WakeMode using #[default] attribute</WCTX>
+// <CLOG>PATCH: derive Default on WakeMode (Off); remove manual impl</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use serde::{Deserialize, Serialize};
@@ -9,23 +9,26 @@ use tui_vfx_style::models::ColorConfig;
 
 /// Controls how the cursor trail paints.
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum WakeMode {
     /// No trail. (Default.)
+    #[default]
     Off,
     /// Trail paints color tint on whatever glyph is beneath. Cursor contributes color only.
     Tint,
     /// Trail paints a fading copy of the cursor character itself.
     /// **Limitation:** ignores wide-glyph content beneath — see spec E9.
     Ghost,
-}
-
-impl Default for WakeMode {
-    fn default() -> Self {
-        Self::Off
-    }
 }
 
 /// Wake trail configuration for a [`crate::cursor::Cursor`].
@@ -83,4 +86,4 @@ impl Wake {
 }
 
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_wake.rs</FILE> - <DESC>Wake config for Cursor primitive</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

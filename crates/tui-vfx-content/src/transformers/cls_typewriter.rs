@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/transformers/cls_typewriter.rs</FILE> - <DESC>Typewriter transformer</DESC>
-// <VERS>VERSION: 3.0.0</VERS>
-// <WCTX>feat/cursor-primitive T23: stateful reveal + primary cursor glyph splicing</WCTX>
-// <CLOG>Add Typewriter::transform_with_cursor; original TextTransformer::transform unchanged</CLOG>
+// <VERS>VERSION: 3.0.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up (doc-overindented-list-items on the transform_with_cursor argument list; too_many_arguments for the same method is unavoidable since the cursor API needs cursor + state + now + dt on top of the base transform signature — mark with #[allow])</WCTX>
+// <CLOG>PATCH: unindent argument bullet wrap lines; annotate transform_with_cursor with #[allow(clippy::too_many_arguments)] — the 8-arg signature is the cursor-primitive's canonical shape and not splittable without hiding state</CLOG>
 
 use crate::traits::TextTransformer;
 use crate::utils::fnc_graphemes::{len_graphemes, slice_graphemes};
@@ -106,12 +106,13 @@ impl Typewriter {
     ///
     /// * `target`     — Full text being revealed.
     /// * `progress`   — Reveal progress 0..1 (same semantics as [`Typewriter`]'s
-    ///                  [`TextTransformer::transform`] impl).
+    ///   [`TextTransformer::transform`] impl).
     /// * `signal_ctx` — Signal evaluation context.
     /// * `cursor`     — Cursor configuration (usually `tcursor.cursor`).
     /// * `state`      — Mutable cursor state owned by the caller.
     /// * `now`        — Wall-clock seconds (same value used for signal sampling).
     /// * `dt`         — Wall-clock seconds since the previous frame.
+    #[allow(clippy::too_many_arguments)]
     pub fn transform_with_cursor<'a>(
         &self,
         target: &'a str,
@@ -145,4 +146,4 @@ impl Typewriter {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_typewriter.rs</FILE> - <DESC>Typewriter transformer</DESC>
-// <VERS>END OF VERSION: 3.0.0</VERS>
+// <VERS>END OF VERSION: 3.0.1</VERS>

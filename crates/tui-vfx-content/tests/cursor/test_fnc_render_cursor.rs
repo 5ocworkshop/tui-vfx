@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_render_cursor.rs</FILE> - <DESC>Tests for fnc_render_cursor</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>feat/cursor-primitive: render tests</WCTX>
-// <CLOG>T19: add E10 edge-case test</CLOG>
+// <VERS>VERSION: 0.4.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up (field_reassign_with_default)</WCTX>
+// <CLOG>PATCH: rewrite hidden/empty-char cursor constructions to struct-literal form</CLOG>
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use tui_vfx_content::cursor::{
@@ -42,8 +42,10 @@ fn grow_in_midway_renders_partial_block() {
 #[test]
 fn hidden_state_returns_no_primary_op() {
     let mut state = CursorState::new();
-    let mut cursor = Cursor::default();
-    cursor.visibility = SignalOrFloat::Static(0.0);
+    let cursor = Cursor {
+        visibility: SignalOrFloat::Static(0.0),
+        ..Cursor::default()
+    };
     fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.016, &ctx());
     let ops = fnc_render_cursor(&state, &cursor, 0.0, &ctx());
     assert!(ops.primary.is_none());
@@ -52,8 +54,10 @@ fn hidden_state_returns_no_primary_op() {
 #[test]
 fn empty_character_returns_no_primary_op() {
     let mut state = CursorState::new();
-    let mut cursor = Cursor::default();
-    cursor.character = "".into();
+    let cursor = Cursor {
+        character: "".into(),
+        ..Cursor::default()
+    };
     fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.016, &ctx());
     let ops = fnc_render_cursor(&state, &cursor, 0.0, &ctx());
     assert!(ops.primary.is_none());
@@ -136,4 +140,4 @@ fn e10_empty_character_with_wake_still_decays_trail() {
 }
 
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_render_cursor.rs</FILE> - <DESC>Tests for fnc_render_cursor</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>

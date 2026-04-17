@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/tests/models/test_cls_cursor_shader.rs</FILE> - <DESC>Tests for CursorShader</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>feat/cursor-primitive T28: add constructor + SpatialShaderType dispatch tests — CursorShader::new stores all fields, SpatialShaderType::Cursor variant dispatches to style_at</WCTX>
-// <CLOG>Add T28 tests: cursor_shader_new_stores_fields, spatial_shader_type_cursor_dispatches</CLOG>
+// <VERS>VERSION: 0.4.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up — switch `let mut x = Default::default(); x.field = ...` to struct-literal with `..Default::default()` (clippy::field_reassign_with_default)</WCTX>
+// <CLOG>PATCH: rewrite shader construction in tests to struct-literal form; no semantic change</CLOG>
 
 use tui_vfx_style::models::{
     ColorConfig, CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail,
@@ -10,12 +10,13 @@ use tui_vfx_style::traits::{ShaderContext, StyleShader};
 use tui_vfx_types::{Color, Style};
 
 fn ctx(x: u16, y: u16) -> ShaderContext {
-    let mut c = ShaderContext::default();
-    c.local_x = x;
-    c.local_y = y;
-    c.width = 80;
-    c.height = 1;
-    c
+    ShaderContext {
+        local_x: x,
+        local_y: y,
+        width: 80,
+        height: 1,
+        ..ShaderContext::default()
+    }
 }
 
 #[test]
@@ -37,12 +38,14 @@ fn mode_variants_exist() {
 
 #[test]
 fn primary_cell_applies_alpha_to_foreground() {
-    let mut shader = CursorShader::default();
-    shader.mode = CursorShaderMode::Tint; // non-Off to exercise painting
-    shader.primary = Some(CursorShaderPrimary {
-        position: (0, 5),
-        alpha: 0.5,
-    });
+    let shader = CursorShader {
+        mode: CursorShaderMode::Tint, // non-Off to exercise painting
+        primary: Some(CursorShaderPrimary {
+            position: (0, 5),
+            alpha: 0.5,
+        }),
+        ..CursorShader::default()
+    };
     let base = Style::default().with_fg(Color::rgb(200, 200, 200));
     let out = shader.style_at(&ctx(5, 0), base);
     // At alpha=0.5 the primary cell gets fg.a ~ 128 (0.5 * 255 rounded).
@@ -52,12 +55,14 @@ fn primary_cell_applies_alpha_to_foreground() {
 
 #[test]
 fn primary_cell_at_alpha_one_preserves_fg() {
-    let mut shader = CursorShader::default();
-    shader.mode = CursorShaderMode::Tint;
-    shader.primary = Some(CursorShaderPrimary {
-        position: (0, 5),
-        alpha: 1.0,
-    });
+    let shader = CursorShader {
+        mode: CursorShaderMode::Tint,
+        primary: Some(CursorShaderPrimary {
+            position: (0, 5),
+            alpha: 1.0,
+        }),
+        ..CursorShader::default()
+    };
     let base = Style::default().with_fg(Color::rgb(200, 200, 200));
     let out = shader.style_at(&ctx(5, 0), base);
     assert_eq!(out.fg.a, 255);
@@ -65,12 +70,14 @@ fn primary_cell_at_alpha_one_preserves_fg() {
 
 #[test]
 fn non_primary_cell_untouched_when_no_trail() {
-    let mut shader = CursorShader::default();
-    shader.mode = CursorShaderMode::Tint;
-    shader.primary = Some(CursorShaderPrimary {
-        position: (0, 5),
-        alpha: 0.5,
-    });
+    let shader = CursorShader {
+        mode: CursorShaderMode::Tint,
+        primary: Some(CursorShaderPrimary {
+            position: (0, 5),
+            alpha: 0.5,
+        }),
+        ..CursorShader::default()
+    };
     let base = Style::default().with_fg(Color::rgb(200, 200, 200));
     let out = shader.style_at(&ctx(0, 0), base); // different cell
     assert_eq!(out, base);
@@ -78,12 +85,14 @@ fn non_primary_cell_untouched_when_no_trail() {
 
 #[test]
 fn off_mode_short_circuits_to_base() {
-    let mut shader = CursorShader::default();
-    shader.mode = CursorShaderMode::Off;
-    shader.primary = Some(CursorShaderPrimary {
-        position: (0, 5),
-        alpha: 0.5,
-    });
+    let shader = CursorShader {
+        mode: CursorShaderMode::Off,
+        primary: Some(CursorShaderPrimary {
+            position: (0, 5),
+            alpha: 0.5,
+        }),
+        ..CursorShader::default()
+    };
     let base = Style::default().with_fg(Color::rgb(200, 200, 200));
     let out = shader.style_at(&ctx(5, 0), base);
     assert_eq!(out, base);
@@ -93,18 +102,20 @@ fn off_mode_short_circuits_to_base() {
 
 #[test]
 fn tint_trail_blends_tint_color_onto_cell() {
-    let mut shader = CursorShader::default();
-    shader.mode = CursorShaderMode::Tint;
-    shader.tint = ColorConfig::Rgb {
-        r: 255,
-        g: 180,
-        b: 100,
+    let shader = CursorShader {
+        mode: CursorShaderMode::Tint,
+        tint: ColorConfig::Rgb {
+            r: 255,
+            g: 180,
+            b: 100,
+        },
+        trail: vec![CursorShaderTrail {
+            position: (0, 3),
+            alpha: 0.5,
+            glyph: None,
+        }],
+        ..CursorShader::default()
     };
-    shader.trail = vec![CursorShaderTrail {
-        position: (0, 3),
-        alpha: 0.5,
-        glyph: None,
-    }];
     let base = Style::default().with_fg(Color::rgb(50, 50, 50));
     let out = shader.style_at(&ctx(3, 0), base);
     // Blended fg should sit roughly halfway between base (50) and tint (255, 180, 100).
@@ -124,18 +135,20 @@ fn tint_trail_blends_tint_color_onto_cell() {
 
 #[test]
 fn tint_trail_cell_with_zero_alpha_leaves_base() {
-    let mut shader = CursorShader::default();
-    shader.mode = CursorShaderMode::Tint;
-    shader.tint = ColorConfig::Rgb {
-        r: 255,
-        g: 180,
-        b: 100,
+    let shader = CursorShader {
+        mode: CursorShaderMode::Tint,
+        tint: ColorConfig::Rgb {
+            r: 255,
+            g: 180,
+            b: 100,
+        },
+        trail: vec![CursorShaderTrail {
+            position: (0, 3),
+            alpha: 0.0,
+            glyph: None,
+        }],
+        ..CursorShader::default()
     };
-    shader.trail = vec![CursorShaderTrail {
-        position: (0, 3),
-        alpha: 0.0,
-        glyph: None,
-    }];
     let base = Style::default().with_fg(Color::rgb(50, 50, 50));
     let out = shader.style_at(&ctx(3, 0), base);
     assert_eq!(out, base);
@@ -143,18 +156,20 @@ fn tint_trail_cell_with_zero_alpha_leaves_base() {
 
 #[test]
 fn trail_cell_outside_trail_list_untouched() {
-    let mut shader = CursorShader::default();
-    shader.mode = CursorShaderMode::Tint;
-    shader.tint = ColorConfig::Rgb {
-        r: 255,
-        g: 180,
-        b: 100,
+    let shader = CursorShader {
+        mode: CursorShaderMode::Tint,
+        tint: ColorConfig::Rgb {
+            r: 255,
+            g: 180,
+            b: 100,
+        },
+        trail: vec![CursorShaderTrail {
+            position: (0, 3),
+            alpha: 0.8,
+            glyph: None,
+        }],
+        ..CursorShader::default()
     };
-    shader.trail = vec![CursorShaderTrail {
-        position: (0, 3),
-        alpha: 0.8,
-        glyph: None,
-    }];
     let base = Style::default().with_fg(Color::rgb(50, 50, 50));
     let out = shader.style_at(&ctx(7, 0), base); // not in trail
     assert_eq!(out, base);
@@ -228,4 +243,4 @@ fn spatial_shader_type_cursor_off_mode_dispatches_to_base() {
 }
 
 // <FILE>tui-vfx-style/tests/models/test_cls_cursor_shader.rs</FILE> - <DESC>Tests for CursorShader</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/cursor/test_cls_cursor.rs</FILE> - <DESC>Tests for Cursor config</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-primitive: Cursor struct tests</WCTX>
-// <CLOG>Initial tests — struct, convenience ctors, builders</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up (field_reassign_with_default)</WCTX>
+// <CLOG>PATCH: rewrite underscore-expected cursor to struct-literal form with ..Cursor::default()</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_content::cursor::{Cursor, CursorBlink, GrowIn, GrowInMode, Wake, WakeMode};
@@ -49,8 +49,10 @@ fn simple_uses_provided_glyph_and_keeps_defaults() {
 
 #[test]
 fn convenience_ctors_equal_default_with_swapped_char() {
-    let mut expected = Cursor::default();
-    expected.character = "_".to_string();
+    let expected = Cursor {
+        character: "_".to_string(),
+        ..Cursor::default()
+    };
     assert_eq!(Cursor::underscore(), expected);
 }
 
@@ -84,4 +86,4 @@ fn builders_preserve_other_fields() {
 }
 
 // <FILE>tui-vfx-content/tests/cursor/test_cls_cursor.rs</FILE> - <DESC>Tests for Cursor config</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

@@ -1,27 +1,22 @@
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_state.rs</FILE> - <DESC>Runtime state for Cursor primitive</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-primitive: CursorState</WCTX>
-// <CLOG>Initial impl</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up — derive Default on GrowInPhase using #[default] attribute</WCTX>
+// <CLOG>PATCH: derive Default on GrowInPhase (Hidden); remove manual impl</CLOG>
 
 use std::collections::VecDeque;
 
 /// Phase of the grow-in animation state machine (see spec §4.1).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub enum GrowInPhase {
+    #[default]
     Hidden,
     GrowingIn { elapsed_ms: f64 },
     Visible,
     GrowingOut { elapsed_ms: f64 },
 }
 
-impl Default for GrowInPhase {
-    fn default() -> Self {
-        Self::Hidden
-    }
-}
-
 /// Per-cursor runtime state. Callers own one of these per [`crate::cursor::Cursor`]
-/// and pass it to [`crate::cursor::fnc_advance_cursor`] each frame.
+/// and pass it to [`crate::cursor::fnc_advance_cursor()`] each frame.
 ///
 /// The state has no clock — time comes in via `now`/`dt` on each advance.
 #[derive(Debug, Clone, Default)]
@@ -48,4 +43,4 @@ impl CursorState {
 }
 
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_state.rs</FILE> - <DESC>Runtime state for Cursor primitive</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

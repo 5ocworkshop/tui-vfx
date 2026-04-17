@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/transformers/test_typewriter_transform_with_cursor.rs</FILE> - <DESC>Tests for Typewriter::transform_with_cursor</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-primitive: typewriter cursor splicing</WCTX>
-// <CLOG>Initial tests</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up (field_reassign_with_default)</WCTX>
+// <CLOG>PATCH: rewrite cursor construction to struct-literal form with ..Cursor::default()</CLOG>
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use tui_vfx_content::cursor::{Cursor, CursorState};
@@ -30,8 +30,10 @@ fn at_half_progress_splices_block_cursor_after_revealed_chars() {
 #[test]
 fn empty_cursor_character_produces_plain_reveal() {
     let mut state = CursorState::new();
-    let mut cursor = Cursor::default();
-    cursor.character = "".into();
+    let cursor = Cursor {
+        character: "".into(),
+        ..Cursor::default()
+    };
     let tw = Typewriter::default();
     let (text, _ops) = tw.transform_with_cursor(
         "abcdef", 0.5, &ctx(), &cursor, &mut state, 0.0, 0.016,
@@ -80,4 +82,4 @@ fn transform_without_cursor_unchanged() {
     assert_eq!(out.as_ref(), "he");
 }
 // <FILE>tui-vfx-content/tests/transformers/test_typewriter_transform_with_cursor.rs</FILE> - <DESC>Tests for Typewriter::transform_with_cursor</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

@@ -28,7 +28,7 @@ pub struct TrailOp {
     pub alpha: f32,
 }
 
-/// Per-frame paint output from [`crate::cursor::fnc_render_cursor`].
+/// Per-frame paint output from [`crate::cursor::fnc_render_cursor()`].
 ///
 /// Viewport clipping is the consumer's responsibility — ops may reference
 /// cells outside the visible area (see spec E8).

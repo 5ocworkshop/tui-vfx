@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_cursor_shader.rs</FILE> - <DESC>CursorShader — paints primary-cell alpha and wake trail tint/ghost</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>feat/cursor-primitive T28: ergonomic CursorShader::new constructor taking flat primitives so the content-crate bridge (fnc_build_cursor_shader) can assemble a shader from a CursorPaintOps snapshot without forcing a style→content dep (cycle). Also register this shader as a SpatialShaderType variant; that requires CursorShader: ConfigSchema, which in turn needs every field type to implement ConfigSchema. The inner CursorShaderPrimary and CursorShaderTrail structs are carried with hand-written ConfigSchema impls because tui_vfx_core's ConfigSchema derive macro does not support their (u16, u16) position tuple field.</WCTX>
-// <CLOG>MINOR: add CursorShader::new constructor; add manual ConfigSchema impls for CursorShaderPrimary and CursorShaderTrail; re-derive ConfigSchema on CursorShader so the SpatialShaderType::Cursor variant registration compiles</CLOG>
+// <VERS>VERSION: 0.4.1</VERS>
+// <WCTX>feat/cursor-primitive T31: clippy clean-up — replace the manual Default impl for CursorShaderMode with a derive + #[default] variant attribute (clippy::derivable_impls)</WCTX>
+// <CLOG>PATCH: derive Default on CursorShaderMode using #[default] on Off; no semantic change (default is still Off)</CLOG>
 
 use super::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
@@ -11,23 +11,26 @@ use tui_vfx_types::{Color, Style};
 /// Mirror of `tui_vfx_content::cursor::WakeMode`, declared in `tui-vfx-style`
 /// to avoid a reverse dependency on the content crate. Consumers convert.
 #[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum CursorShaderMode {
     /// No painting at all — shader short-circuits to the base style.
+    #[default]
     Off,
     /// Trail cells tint the fg color in place via alpha-blending.
     Tint,
     /// Trail cells tint identically to Tint; glyph overwrite is a consumer
     /// responsibility (see `tui_vfx_content::cursor::fnc_apply_ghost_glyphs_to_grid`).
     Ghost,
-}
-
-impl Default for CursorShaderMode {
-    fn default() -> Self {
-        Self::Off
-    }
 }
 
 /// Flattened primary-cell op (a cell-facing copy of `CursorPaintOps::primary`).
@@ -229,4 +232,4 @@ fn blend_rgb(base: Color, tint: Color, alpha: f32) -> Color {
 // cls_spatial_shader_type.rs.
 
 // <FILE>tui-vfx-style/src/models/cls_cursor_shader.rs</FILE> - <DESC>CursorShader — paints primary-cell alpha and wake trail tint/ghost</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>
