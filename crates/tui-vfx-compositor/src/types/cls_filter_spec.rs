@@ -154,6 +154,36 @@ pub enum CharsetNoiseAffect {
     NonEmpty,
 }
 
+/// Controls which cells MatrixRain affects.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum MatrixRainAffect {
+    /// Replace every cell in the target region.
+    #[default]
+    All,
+    /// Replace only blank/whitespace cells.
+    OnlyBlank,
+}
+
+/// Built-in glyph alphabets for MatrixRain.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum MatrixRainCharsetPreset {
+    /// Half-width katakana + digits/symbols.
+    #[default]
+    Matrix,
+    /// Binary digits only.
+    Binary,
+    /// Hexadecimal characters only.
+    Hex,
+    /// Uppercase ASCII letters and digits.
+    Ascii,
+}
+
 /// Target for filter effects - which color component to affect.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
@@ -413,6 +443,57 @@ pub enum FilterSpec {
         /// Position-aware charset gradient. Overrides `chars` if present.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         gradient: Option<Vec<CharsetNoiseGradientStop>>,
+    },
+    /// Deterministic procedural digital-rain field.
+    ///
+    /// Synthesizes coherent per-column falling streams directly in the
+    /// compositor filter path. Each column derives stream presence, speed,
+    /// trail length, glyph churn, and head position from `(x, t, seed)`,
+    /// avoiding widget-owned persistent state while still reading as Matrix
+    /// rain instead of generic noise.
+    ///
+    /// `density` and `speed_multiplier` use `BindableValue`, making them
+    /// suitable first-class runtime controls for dynamic recipes.
+    MatrixRain {
+        /// Fraction of columns that should be active (0.0 - 1.0).
+        #[serde(default = "default_matrix_rain_density")]
+        density: BindableValue,
+        /// Scales the per-column authored speed range at runtime.
+        #[serde(default = "default_matrix_rain_speed_multiplier")]
+        speed_multiplier: BindableValue,
+        /// Minimum normalized fall speed across the column population.
+        #[serde(default = "default_matrix_rain_speed_min")]
+        speed_min: f32,
+        /// Maximum normalized fall speed across the column population.
+        #[serde(default = "default_matrix_rain_speed_max")]
+        speed_max: f32,
+        /// Minimum trail length in cells.
+        #[serde(default = "default_matrix_rain_trail_min")]
+        trail_min: u16,
+        /// Maximum trail length in cells.
+        #[serde(default = "default_matrix_rain_trail_max")]
+        trail_max: u16,
+        /// Glyph churn cadence.
+        #[serde(default = "default_matrix_rain_glyph_change_hz")]
+        glyph_change_hz: f32,
+        /// Deterministic seed.
+        #[serde(default = "default_matrix_rain_seed")]
+        seed: u64,
+        /// Which cells the filter may overwrite.
+        #[serde(default)]
+        affect: MatrixRainAffect,
+        /// Built-in glyph alphabet preset.
+        #[serde(default)]
+        preset: MatrixRainCharsetPreset,
+        /// Optional custom glyph alphabet overriding the preset.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        chars: Option<String>,
+        /// Bright head color.
+        #[serde(default = "default_matrix_rain_head_color")]
+        head_color: ColorConfig,
+        /// Dim tail color.
+        #[serde(default = "default_matrix_rain_tail_color")]
+        tail_color: ColorConfig,
     },
     /// Scanline/interlace effect for backdrop dimming
     ///
@@ -960,6 +1041,50 @@ fn default_charset_noise_hz() -> f32 {
     8.0
 }
 
+fn default_matrix_rain_density() -> BindableValue {
+    BindableValue::static_f32(0.5)
+}
+
+fn default_matrix_rain_speed_multiplier() -> BindableValue {
+    BindableValue::static_f32(1.0)
+}
+
+fn default_matrix_rain_speed_min() -> f32 {
+    5.0
+}
+
+fn default_matrix_rain_speed_max() -> f32 {
+    15.0
+}
+
+fn default_matrix_rain_trail_min() -> u16 {
+    8
+}
+
+fn default_matrix_rain_trail_max() -> u16 {
+    20
+}
+
+fn default_matrix_rain_glyph_change_hz() -> f32 {
+    8.0
+}
+
+fn default_matrix_rain_seed() -> u64 {
+    42
+}
+
+fn default_matrix_rain_head_color() -> ColorConfig {
+    ColorConfig::Rgb {
+        r: 220,
+        g: 255,
+        b: 220,
+    }
+}
+
+fn default_matrix_rain_tail_color() -> ColorConfig {
+    ColorConfig::Rgb { r: 0, g: 160, b: 0 }
+}
+
 fn default_interlace_density() -> f32 {
     1.0
 }
@@ -1316,6 +1441,7 @@ impl FilterSpec {
             FilterSpec::Greyscale { .. } => "Greyscale",
             FilterSpec::BrailleDust { .. } => "BrailleDust",
             FilterSpec::CharsetNoise { .. } => "CharsetNoise",
+            FilterSpec::MatrixRain { .. } => "MatrixRain",
             FilterSpec::InterlaceCurtain { .. } => "InterlaceCurtain",
             FilterSpec::MotionBlur { .. } => "MotionBlur",
             FilterSpec::ColorBridgedShade { .. } => "ColorBridgedShade",
@@ -1352,6 +1478,9 @@ impl FilterSpec {
             FilterSpec::BrailleDust { .. } => "Stochastic braille dust for frosted glass texture",
             FilterSpec::CharsetNoise { .. } => {
                 "Non-converging time-varying character replacement for living textures"
+            }
+            FilterSpec::MatrixRain { .. } => {
+                "Deterministic procedural digital-rain field with coherent falling streams"
             }
             FilterSpec::InterlaceCurtain { .. } => "Scanline/interlace effect for backdrop dimming",
             FilterSpec::MotionBlur { .. } => "Motion blur trail effect with directional dimming",
@@ -1462,6 +1591,28 @@ impl FilterSpec {
                 ("hz", format!("{}", hz)),
                 ("seed", format!("{}", seed)),
                 ("jitter", format!("{}", jitter)),
+            ],
+            FilterSpec::MatrixRain {
+                density,
+                speed_multiplier,
+                speed_min,
+                speed_max,
+                trail_min,
+                trail_max,
+                glyph_change_hz,
+                seed,
+                preset,
+                ..
+            } => vec![
+                ("density", format!("{:?}", density)),
+                ("speed_multiplier", format!("{:?}", speed_multiplier)),
+                ("speed_min", format!("{}", speed_min)),
+                ("speed_max", format!("{}", speed_max)),
+                ("trail_min", format!("{}", trail_min)),
+                ("trail_max", format!("{}", trail_max)),
+                ("glyph_change_hz", format!("{}", glyph_change_hz)),
+                ("seed", format!("{}", seed)),
+                ("preset", format!("{:?}", preset)),
             ],
             FilterSpec::InterlaceCurtain {
                 density,

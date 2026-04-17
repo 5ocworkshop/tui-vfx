@@ -19,6 +19,7 @@ use crate::filters::cls_hover_bar::HoverBar;
 use crate::filters::cls_interlace_curtain::InterlaceCurtain;
 use crate::filters::cls_invert::Invert;
 use crate::filters::cls_kitt_scanner::KittScanner;
+use crate::filters::cls_matrix_rain::{MatrixRain, MatrixRainAffectMode, MatrixRainGlyphPreset};
 use crate::filters::cls_motion_blur::{MotionBlur, MotionDirection};
 use crate::filters::cls_pattern_fill::PatternFill;
 use crate::filters::cls_pill_button::PillButton;
@@ -49,6 +50,7 @@ pub(crate) enum PreparedFilter {
     Greyscale(Greyscale),
     BrailleDust(BrailleDust),
     CharsetNoise(CharsetNoise),
+    MatrixRain(MatrixRain),
     InterlaceCurtain(InterlaceCurtain),
     MotionBlur(MotionBlur),
     ColorBridgedShade(ColorBridgedShade),
@@ -106,6 +108,9 @@ impl PreparedFilter {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
             PreparedFilter::CharsetNoise(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
+            PreparedFilter::MatrixRain(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
             PreparedFilter::InterlaceCurtain(filter) => {
@@ -171,6 +176,7 @@ impl PreparedFilter {
             PreparedFilter::Greyscale(_) => "Greyscale",
             PreparedFilter::BrailleDust(_) => "BrailleDust",
             PreparedFilter::CharsetNoise(_) => "CharsetNoise",
+            PreparedFilter::MatrixRain(_) => "MatrixRain",
             PreparedFilter::InterlaceCurtain(_) => "InterlaceCurtain",
             PreparedFilter::MotionBlur(_) => "MotionBlur",
             PreparedFilter::ColorBridgedShade(_) => "ColorBridgedShade",
@@ -411,6 +417,66 @@ pub(crate) fn prepare_filter(
                 affect_mode,
                 stops,
             )))
+        }
+        FilterSpec::MatrixRain {
+            density,
+            speed_multiplier,
+            speed_min,
+            speed_max,
+            trail_min,
+            trail_max,
+            glyph_change_hz,
+            seed,
+            affect,
+            preset,
+            chars,
+            head_color,
+            tail_color,
+        } => {
+            let resolved_density = density
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.5);
+            let resolved_speed_multiplier = speed_multiplier
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(1.0);
+            let affect = match affect {
+                crate::types::cls_filter_spec::MatrixRainAffect::All => {
+                    MatrixRainAffectMode::All
+                }
+                crate::types::cls_filter_spec::MatrixRainAffect::OnlyBlank => {
+                    MatrixRainAffectMode::OnlyBlank
+                }
+            };
+            let preset = match preset {
+                crate::types::cls_filter_spec::MatrixRainCharsetPreset::Matrix => {
+                    MatrixRainGlyphPreset::Matrix
+                }
+                crate::types::cls_filter_spec::MatrixRainCharsetPreset::Binary => {
+                    MatrixRainGlyphPreset::Binary
+                }
+                crate::types::cls_filter_spec::MatrixRainCharsetPreset::Hex => {
+                    MatrixRainGlyphPreset::Hex
+                }
+                crate::types::cls_filter_spec::MatrixRainCharsetPreset::Ascii => {
+                    MatrixRainGlyphPreset::Ascii
+                }
+            };
+
+            let mut filter = MatrixRain::new()
+                .with_density(resolved_density)
+                .with_speed_multiplier(resolved_speed_multiplier)
+                .with_speed_range(*speed_min, *speed_max)
+                .with_trail_range(*trail_min, *trail_max)
+                .with_glyph_change_hz(*glyph_change_hz)
+                .with_seed(*seed)
+                .with_affect(affect)
+                .with_preset(preset)
+                .with_head_color((*head_color).into())
+                .with_tail_color((*tail_color).into());
+            if let Some(chars) = chars {
+                filter = filter.with_custom_glyphs(chars.clone());
+            }
+            Some(PreparedFilter::MatrixRain(filter))
         }
         FilterSpec::InterlaceCurtain {
             density,
@@ -1460,6 +1526,73 @@ mod tests {
             }
             other => panic!(
                 "expected FadeToCanvas, got {:?}",
+                std::mem::discriminant(&other)
+            ),
+        }
+    }
+
+    fn matrix_rain_spec(
+        density: BindableValue,
+        speed_multiplier: BindableValue,
+    ) -> FilterSpec {
+        use tui_vfx_style::models::ColorConfig;
+
+        FilterSpec::MatrixRain {
+            density,
+            speed_multiplier,
+            speed_min: 5.0,
+            speed_max: 15.0,
+            trail_min: 8,
+            trail_max: 20,
+            glyph_change_hz: 8.0,
+            seed: 42,
+            affect: crate::types::cls_filter_spec::MatrixRainAffect::All,
+            preset: crate::types::cls_filter_spec::MatrixRainCharsetPreset::Matrix,
+            chars: None,
+            head_color: ColorConfig::Rgb {
+                r: 220,
+                g: 255,
+                b: 220,
+            },
+            tail_color: ColorConfig::Rgb { r: 0, g: 160, b: 0 },
+        }
+    }
+
+    #[test]
+    fn matrix_rain_density_binding_resolves_runtime_param() {
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("density", 0.85_f32);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = matrix_rain_spec(
+            BindableValue::Binding("density".to_owned()),
+            BindableValue::static_f32(1.0),
+        );
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::MatrixRain(filter) => {
+                assert!((filter.density - 0.85).abs() < 0.001);
+            }
+            other => panic!(
+                "expected MatrixRain, got {:?}",
+                std::mem::discriminant(&other)
+            ),
+        }
+    }
+
+    #[test]
+    fn matrix_rain_speed_multiplier_binding_resolves_runtime_param() {
+        let mut rp = ShaderRuntimeParams::new();
+        rp.insert("speed_multiplier", 1.75_f32);
+        let ctx = PrepareContext::new(0.0, &rp);
+        let spec = matrix_rain_spec(
+            BindableValue::static_f32(0.5),
+            BindableValue::Binding("speed_multiplier".to_owned()),
+        );
+        match prepare_filter(&spec, &ctx).unwrap() {
+            PreparedFilter::MatrixRain(filter) => {
+                assert!((filter.speed_multiplier - 1.75).abs() < 0.001);
+            }
+            other => panic!(
+                "expected MatrixRain, got {:?}",
                 std::mem::discriminant(&other)
             ),
         }

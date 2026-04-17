@@ -18,6 +18,7 @@ pub(crate) mod cls_hover_bar;
 pub(crate) mod cls_interlace_curtain;
 pub(crate) mod cls_invert;
 pub(crate) mod cls_kitt_scanner;
+pub(crate) mod cls_matrix_rain;
 pub(crate) mod cls_motion_blur;
 pub(crate) mod cls_pattern_fill;
 pub(crate) mod cls_pill_button;
