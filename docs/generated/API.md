@@ -1,5 +1,5 @@
 <!-- <FILE>docs/generated/API.md</FILE> - <DESC>Complete TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 3.1.0</VERS> -->
+<!-- <VERS>VERSION: 3.2.0</VERS> -->
 <!-- <WCTX>Generated API documentation</WCTX> -->
 <!-- <CLOG>Auto-generated from code + api_docs.toml</CLOG> -->
 
@@ -695,4 +695,4 @@ pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowG
 ---
 
 <!-- <FILE>docs/generated/API.md</FILE> - <DESC>Complete TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 3.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 3.2.0</VERS> -->

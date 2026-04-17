@@ -9,12 +9,12 @@
 # See docs/design/API_DOC_GENERATION_PLAN.md for architecture details.
 
 # <FILE>docs/templates/api_docs.toml</FILE> - <DESC>Editorial manifest for tui-vfx API documentation</DESC>
-# <VERS>VERSION: 3.1.0</VERS>
-# <WCTX>feat/cursor-primitive T29: editorial manifest entries for the new Cursor primitive + CursorShader</WCTX>
-# <CLOG>MINOR: Add [specs.Cursor], [specs.CursorBlink], [specs.GrowIn], [specs.Wake], [specs.CursorShader], [specs.CursorShaderMode]; note the TypewriterCursor flatten</CLOG>
+# <VERS>VERSION: 3.2.0</VERS>
+# <WCTX>feat/cursor-scan: add editorial manifest entries for the new CursorScan primitive and its ScanMode enum. Also update Cursor to list `scan` alongside the existing fields.</WCTX>
+# <CLOG>MINOR: Add [specs.CursorScan] and [specs.ScanMode]; extend [specs.Cursor].fields with `scan`.</CLOG>
 
 [meta]
-version = "3.1.0"
+version = "3.2.0"
 description = "tui-vfx API documentation editorial content"
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -486,14 +486,14 @@ description = "Since 0.4.0 `TypewriterCursor` composes the general `Cursor` prim
 part = "content"
 section_title = "Cursor (primitive)"
 kind = "struct"
-fields = ["character", "visibility", "blink", "grow_in", "wake"]
+fields = ["character", "visibility", "blink", "grow_in", "wake", "scan"]
 description = """
 `tui_vfx_content::cursor::Cursor` — general-purpose cursor primitive with
-opt-in grow-in and wake animations. Defaults render a static block cursor
-(`character = \"█\"`, no blink, no grow-in, no wake). `blink` is
-`#[serde(flatten)]` so the legacy `blink_interval` JSON key still parses at
-the top level. Paired at runtime with `CursorState` (bookkeeping),
-`fnc_advance_cursor`, and `fnc_render_cursor`.
+opt-in grow-in, wake, and scan animations. Defaults render a static block
+cursor (`character = \"█\"`, no blink, no grow-in, no wake, no scan).
+`blink` is `#[serde(flatten)]` so the legacy `blink_interval` JSON key
+still parses at the top level. Paired at runtime with `CursorState`
+(bookkeeping), `fnc_advance_cursor`, and `fnc_render_cursor`.
 """
 
 [specs.CursorBlink]
@@ -526,7 +526,35 @@ Fading wake trail config. `mode = Off` (default) disables; other modes:
 overwrites the glyph with the cursor `character`). `decay_seconds` is
 per-cell decay; `max_cells = 0` means no hard cap. `curve` is a
 `SignalOrFloat` over age-normalized `t in 0..1`. `tint` is a theme-aware
-`ColorConfig`.
+`ColorConfig`. Non-block cursors animate alpha only — the 1/8th-block
+ramp is block-only (as is `ScanMode::Pulse`).
+"""
+
+[specs.CursorScan]
+part = "content"
+section_title = "CursorScan"
+kind = "struct"
+fields = ["mode", "period_ms", "curve"]
+description = """
+`tui_vfx_content::cursor::CursorScan` — cycles the cursor glyph through a
+bounded shape set while the cursor is parked. `mode = Off` (default) +
+`period_ms = 0` disable the scan. Grow-in wins during its active window;
+scan only runs once grow-in completes. `period_ms` is full cycle duration
+in milliseconds. `curve` is a `SignalOrFloat` over `t in 0..1` (default
+`Static(1.0)` = linear identity). Block-only: non-block cursors (e.g.
+`|`, `_`, `▌`) pass through unchanged.
+"""
+
+[specs.ScanMode]
+part = "content"
+section_title = "ScanMode"
+variants = ["Off", "Pulse", "HalfBlockBounce"]
+description = """
+`Off` is a passthrough (base glyph unchanged). `Pulse` is a triangle wave
+over the 1/8th-block ramp `▁▂▃▄▅▆▇█` — half the period grows up, half
+decays back down; reads as a soft breath. `HalfBlockBounce` is a
+three-step cycle at thirds of the period: `▀` (upper half), `█` (full —
+brief "both"), `▄` (lower half); reads as a mechanical scanner.
 """
 
 # ─────────────────────────────────────────────────────────────────────────────

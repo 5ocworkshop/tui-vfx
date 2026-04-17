@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.15.0</VERS> -->
-<!-- <WCTX>feat/cursor-primitive T29: hand docs for the general Cursor primitive + TypewriterCursor flatten</WCTX> -->
-<!-- <CLOG>MINOR: Document the tui_vfx_content::cursor primitive (Cursor, CursorBlink, GrowIn, Wake, CursorState, CursorPaintOps), the consumer bridging pattern via fnc_build_cursor_shader + SpatialShaderType::Cursor, and note that TypewriterCursor now composes Cursor via #[serde(flatten)]</CLOG>
+<!-- <VERS>VERSION: 1.16.0</VERS> -->
+<!-- <WCTX>feat/cursor-scan: document the new CursorScan primitive (Pulse / HalfBlockBounce), and add a tail-length configurability callout for the Wake subsection.</WCTX> -->
+<!-- <CLOG>MINOR: Add "Scan" subsection documenting CursorScan + ScanMode; add Wake "Tail length configurability" callout covering max_cells, decay_seconds, and the block-only scope of the 1/8th ramp.</CLOG>
 
 # tui-vfx Capabilities Reference
 
@@ -567,6 +567,43 @@ let editor = Cursor::block().with_wake_tint(1.5, 8);
 - `CursorBlink { interval_ms }` — `0` disables blinking (accepts legacy alias `blink_interval`).
 - `GrowIn { mode, direction, duration_ms, grow_out_ms, curve }` — `mode = Never` (default) disables.
 - `Wake { mode, decay_seconds, max_cells, curve, tint }` — `mode = Off` (default) disables.
+- `CursorScan { mode, period_ms, curve }` — `mode = Off` (default) disables. Cycles the cursor glyph while parked (grow-in wins during its window).
+
+#### Wake
+
+Tail length configurability:
+
+- `max_cells` caps the trail length (hard cap, number of cells). `0` means no cap — the trail is time-bounded only, running as long as `decay_seconds` allows.
+- `decay_seconds` controls the fade speed. A larger value keeps the trail visible for longer; `0` disables the trail regardless of `mode`.
+- Non-block cursors (e.g. `|`, `_`, `▌`) cannot be shape-ramped, so they use alpha-only animation for wake **and** grow-in. The 1/8th-block ramp used by grow-in and by `ScanMode::Pulse` is block-only (`█`); any other base glyph is passed through unchanged.
+
+#### Scan
+
+`CursorScan` (since 0.6.0 of the cursor module) cycles the cursor glyph through a bounded shape set while the cursor is parked, adding life to a steady cursor without moving it. All fields default to a no-op:
+
+```rust
+use tui_vfx_content::cursor::{Cursor, CursorScan, ScanMode};
+use mixed_signals::prelude::SignalOrFloat;
+
+let breathing = Cursor {
+    scan: CursorScan {
+        mode: ScanMode::Pulse,
+        period_ms: SignalOrFloat::Static(1500.0),
+        ..CursorScan::default()
+    },
+    ..Cursor::default()
+};
+```
+
+| Mode | Glyph sequence | Reads as |
+|------|----------------|----------|
+| `Off` (default) | (base glyph unchanged) | Static cursor |
+| `Pulse` | Triangle wave over `▁▂▃▄▅▆▇█` (up for half the period, back down for half) | Soft breath |
+| `HalfBlockBounce` | Three-step cycle: `▀` (upper), `█` (full — brief "both"), `▄` (lower), at thirds of the period | Mechanical scanner bar |
+
+**Precedence:** `grow_in` (during its active window) > `scan` > base character. Scan never overrides the grow-in ramp. `period_ms = 0` disables scan regardless of `mode`.
+
+**Scope:** Only block (`█`) cursors are affected — non-block cursors (`|`, `_`, `▌`, `◆`, …) are passed through unchanged because the ramps operate on the 1/8th-block Unicode set.
 
 **Runtime:**
 
