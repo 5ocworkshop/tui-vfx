@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/cursor/fnc_advance_cursor.rs</FILE> - <DESC>Advance cursor state one frame</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-primitive: position + history push</WCTX>
-// <CLOG>Initial impl — position update + history push (Tasks 1–11 scope)</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>feat/cursor-primitive: wake aging + max_cells cap</WCTX>
+// <CLOG>T14: age out history entries older than decay_seconds; cap at max_cells</CLOG>
 
 use super::{Cursor, CursorState, WakeMode};
 use mixed_signals::prelude::SignalContext;
@@ -16,8 +16,7 @@ use mixed_signals::prelude::SignalContext;
 /// 4. Update position.
 /// 5. Recompute grow-in phase against effective visibility.
 ///
-/// This implementation (Tasks 1–11) handles steps 1 and 4. Steps 2, 3, 5 are
-/// added in subsequent tasks.
+/// This implementation (T14) handles steps 1–4. Step 5 is added in T15.
 pub fn fnc_advance_cursor(
     state: &mut CursorState,
     cursor: &Cursor,
@@ -36,8 +35,34 @@ pub fn fnc_advance_cursor(
         }
     }
 
+    // Age out entries older than decay_seconds.
+    if wake_enabled {
+        let decay = cursor
+            .wake
+            .decay_seconds
+            .evaluate(now, _ctx)
+            .unwrap_or(0.0)
+            .max(0.0) as f64;
+        if decay > 0.0 {
+            state.history.retain(|e| now - e.2 <= decay);
+        } else {
+            // decay_seconds = 0 is canonical "disable wake" (spec E11).
+            state.history.clear();
+        }
+        // Cap history.
+        let cap = cursor.wake.max_cells as usize;
+        if cap > 0 {
+            while state.history.len() > cap {
+                state.history.pop_front();
+            }
+        }
+    } else {
+        // Wake mode switched to Off — drain any lingering trail.
+        state.history.clear();
+    }
+
     state.position = new_position;
 }
 
 // <FILE>tui-vfx-content/src/cursor/fnc_advance_cursor.rs</FILE> - <DESC>Advance cursor state one frame</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
