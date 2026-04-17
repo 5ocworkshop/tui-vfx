@@ -468,6 +468,39 @@ pub enum FilterSpec {
         #[serde(default)]
         animated: bool,
     },
+    /// Sub-cell light renderer for blank shell-owned cells.
+    ///
+    /// Interprets an existing color field (usually background light from a
+    /// shader) and re-renders it into partial-block or braille glyphs. This is
+    /// useful when a light field feels too square or too obviously cell-based:
+    /// the shader defines the light distribution, while this filter provides a
+    /// finer terminal-native rasterization in blank cells.
+    ///
+    /// This filter is usually best paired with background-heavy light shaders
+    /// such as `ConcealedLight`, `Diffusion`, or `FocusField`.
+    SubcellLight {
+        /// The fully lit color used in the sub-cell glyph.
+        #[serde(default = "default_subcell_light_lit")]
+        lit_color: ColorConfig,
+        /// The unlit/background color shown through the unfilled portion.
+        #[serde(default = "default_subcell_light_unlit")]
+        unlit_color: ColorConfig,
+        /// Render strategy (braille, horizontal eighths, or vertical eighths).
+        #[serde(default)]
+        render_mode: SubcellLightRenderMode,
+        /// Which existing color field to sample (`foreground` or `background`).
+        #[serde(default)]
+        sample_from: LightSampleFrom,
+        /// Minimum normalized intensity required before a cell is converted.
+        #[serde(default = "default_subcell_light_threshold")]
+        threshold: f32,
+        /// Optional low-rate temporal dither in Hz for braille mode. 0 = static.
+        #[serde(default)]
+        temporal_dither_hz: f32,
+        /// If true (default), only convert blank cells.
+        #[serde(default = "default_true")]
+        only_blank: bool,
+    },
     /// Sub-cell shake using partial vertical blocks
     ///
     /// Creates physical-feeling vibration by oscillating edges using partial blocks
@@ -828,6 +861,29 @@ pub enum SubPixelBarDirection {
     Vertical,
 }
 
+/// Which existing cell color channel to interpret as the light field.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum LightSampleFrom {
+    Foreground,
+    #[default]
+    Background,
+}
+
+/// Glyph strategy for sub-cell light rendering.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum SubcellLightRenderMode {
+    #[default]
+    Braille,
+    Horizontal,
+    Vertical,
+}
+
 // Default functions for signal-or-float fields
 fn default_dim_factor() -> SignalOrFloat {
     SignalOrFloat::Static(0.5)
@@ -927,6 +983,26 @@ fn default_bar_unfilled() -> ColorConfig {
         g: 50,
         b: 50,
     }
+}
+
+fn default_subcell_light_lit() -> ColorConfig {
+    ColorConfig::Rgb {
+        r: 220,
+        g: 220,
+        b: 220,
+    }
+}
+
+fn default_subcell_light_unlit() -> ColorConfig {
+    ColorConfig::Rgb {
+        r: 24,
+        g: 24,
+        b: 24,
+    }
+}
+
+fn default_subcell_light_threshold() -> f32 {
+    0.06
 }
 
 fn default_shake_amplitude() -> u8 {
@@ -1221,6 +1297,7 @@ impl FilterSpec {
             FilterSpec::MotionBlur { .. } => "MotionBlur",
             FilterSpec::ColorBridgedShade { .. } => "ColorBridgedShade",
             FilterSpec::SubPixelBar { .. } => "SubPixelBar",
+            FilterSpec::SubcellLight { .. } => "SubcellLight",
             FilterSpec::SubCellShake { .. } => "SubCellShake",
             FilterSpec::RigidShake { .. } => "RigidShake",
             FilterSpec::HoverBar { .. } => "HoverBar",
@@ -1259,6 +1336,9 @@ impl FilterSpec {
                 "Color-bridged shade for smooth opacity rendering"
             }
             FilterSpec::SubPixelBar { .. } => "Sub-pixel progress bar with 8x resolution",
+            FilterSpec::SubcellLight { .. } => {
+                "Sub-cell light renderer for blank shell-owned cells"
+            }
             FilterSpec::SubCellShake { .. } => "Sub-cell shake using partial vertical blocks",
             FilterSpec::RigidShake { .. } => "Rigid body shake filter with damped oscillation",
             FilterSpec::HoverBar { .. } => "Progress-driven partial bar indicator for hover states",
@@ -1385,6 +1465,23 @@ impl FilterSpec {
             } => vec![
                 ("progress", format!("{:?}", progress)),
                 ("direction", format!("{:?}", direction)),
+            ],
+            FilterSpec::SubcellLight {
+                lit_color,
+                unlit_color,
+                render_mode,
+                sample_from,
+                threshold,
+                temporal_dither_hz,
+                only_blank,
+            } => vec![
+                ("lit_color", format!("{:?}", lit_color)),
+                ("unlit_color", format!("{:?}", unlit_color)),
+                ("render_mode", format!("{:?}", render_mode)),
+                ("sample_from", format!("{:?}", sample_from)),
+                ("threshold", format!("{}", threshold)),
+                ("temporal_dither_hz", format!("{}", temporal_dither_hz)),
+                ("only_blank", format!("{}", only_blank)),
             ],
             FilterSpec::SubCellShake {
                 amplitude,

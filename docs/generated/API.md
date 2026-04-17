@@ -21,7 +21,7 @@ supports shadows and `preserve_unfilled`.
 | Category | Count (variants) | Primary API |
 | --- | --- | --- |
 | Masks | 11 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
-| Filters | 25 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
+| Filters | 26 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
 | Spatial Shaders | 25 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
@@ -289,7 +289,7 @@ Pattern for cellular mask
 
 ---
 
-## FilterSpec (25 effects)
+## FilterSpec (26 effects)
 
 Filters modify cell colors/styles after rendering (applied in order).
 
@@ -318,6 +318,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `ShadeScanner` | Ping-pong scanner that dims text with shade overlay | `shade_color`, `bps`, `progress` |
 | `SubCellShake` | Sub-cell shake using partial vertical blocks | `amplitude`, `frequency`, `seed`, `edge_only` |
 | `SubPixelBar` | Sub-pixel progress bar with 8x resolution | `progress`, `direction` |
+| `SubcellLight` | Sub-cell light renderer for blank shell-owned cells | `lit_color`, `unlit_color`, `render_mode`, `sample_from`, `threshold`, `temporal_dither_hz`, `only_blank` |
 | `Tint` | Apply a color tint | `color`, `strength`, `apply_to` |
 | `UnderlineWipe` | Horizontal underline that wipes in based on progress | `direction`, `progress`, `gradient`, `glisten` |
 | `Vignette` | Vignette darkening around edges | `strength`, `radius` |

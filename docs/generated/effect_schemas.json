@@ -126457,6 +126457,587 @@
             "name": "SubPixelBar"
           },
           {
+            "description": "Sub-cell light renderer for blank shell-owned cells.\n\nInterprets an existing color field (usually background light from a\nshader) and re-renders it into partial-block or braille glyphs. This is\nuseful when a light field feels too square or too obviously cell-based:\nthe shader defines the light distribution, while this filter provides a\nfiner terminal-native rasterization in blank cells.\n\nThis filter is usually best paired with background-heavy light shaders\nsuch as `ConcealedLight`, `Diffusion`, or `FocusField`.",
+            "fields": [
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "The fully lit color used in the sub-cell glyph.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "lit_color",
+                "schema": {
+                  "description": "Stable, serde-friendly representation of `ratatui::style::Color`.\n\nWe avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and\nconfiguration formats remain under our control.\n\n# RGB Shorthand\n\nFor RGB colors, you can use either the full tagged format or a shorthand:\n- Full: `{\"type\": \"rgb\", \"r\": 255, \"g\": 128, \"b\": 0}`\n- Shorthand: `{\"r\": 255, \"g\": 128, \"b\": 0}`\n\nBoth formats are equivalent and produce the same `ColorConfig::Rgb` value.",
+                  "json_name": null,
+                  "kind": "enum",
+                  "name": "ColorConfig",
+                  "tag_field": "type",
+                  "variants": [
+                    {
+                      "description": null,
+                      "json_value": "reset",
+                      "kind": "unit",
+                      "name": "Reset"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "black",
+                      "kind": "unit",
+                      "name": "Black"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "red",
+                      "kind": "unit",
+                      "name": "Red"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "green",
+                      "kind": "unit",
+                      "name": "Green"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "yellow",
+                      "kind": "unit",
+                      "name": "Yellow"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "blue",
+                      "kind": "unit",
+                      "name": "Blue"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "magenta",
+                      "kind": "unit",
+                      "name": "Magenta"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "cyan",
+                      "kind": "unit",
+                      "name": "Cyan"
+                    },
+                    {
+                      "description": "Standard gray (ANSI color 7, \"light gray\" in some contexts)",
+                      "json_value": "gray",
+                      "kind": "unit",
+                      "name": "Gray"
+                    },
+                    {
+                      "description": "Alias for Gray - allows \"light_gray\" in JSON",
+                      "json_value": "light_gray",
+                      "kind": "unit",
+                      "name": "LightGray"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "dark_gray",
+                      "kind": "unit",
+                      "name": "DarkGray"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_red",
+                      "kind": "unit",
+                      "name": "LightRed"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_green",
+                      "kind": "unit",
+                      "name": "LightGreen"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_yellow",
+                      "kind": "unit",
+                      "name": "LightYellow"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_blue",
+                      "kind": "unit",
+                      "name": "LightBlue"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_magenta",
+                      "kind": "unit",
+                      "name": "LightMagenta"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_cyan",
+                      "kind": "unit",
+                      "name": "LightCyan"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "white",
+                      "kind": "unit",
+                      "name": "White"
+                    },
+                    {
+                      "description": null,
+                      "fields": [
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "r",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 255,
+                              "min": 0
+                            },
+                            "type": "u8"
+                          }
+                        },
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "g",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 255,
+                              "min": 0
+                            },
+                            "type": "u8"
+                          }
+                        },
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "b",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 255,
+                              "min": 0
+                            },
+                            "type": "u8"
+                          }
+                        }
+                      ],
+                      "json_value": "rgb",
+                      "kind": "struct",
+                      "name": "Rgb"
+                    },
+                    {
+                      "description": null,
+                      "fields": [
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "value",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 255,
+                              "min": 0
+                            },
+                            "type": "u8"
+                          }
+                        }
+                      ],
+                      "json_value": "indexed",
+                      "kind": "struct",
+                      "name": "Indexed"
+                    }
+                  ]
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "The unlit/background color shown through the unfilled portion.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "unlit_color",
+                "schema": {
+                  "description": "Stable, serde-friendly representation of `ratatui::style::Color`.\n\nWe avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and\nconfiguration formats remain under our control.\n\n# RGB Shorthand\n\nFor RGB colors, you can use either the full tagged format or a shorthand:\n- Full: `{\"type\": \"rgb\", \"r\": 255, \"g\": 128, \"b\": 0}`\n- Shorthand: `{\"r\": 255, \"g\": 128, \"b\": 0}`\n\nBoth formats are equivalent and produce the same `ColorConfig::Rgb` value.",
+                  "json_name": null,
+                  "kind": "enum",
+                  "name": "ColorConfig",
+                  "tag_field": "type",
+                  "variants": [
+                    {
+                      "description": null,
+                      "json_value": "reset",
+                      "kind": "unit",
+                      "name": "Reset"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "black",
+                      "kind": "unit",
+                      "name": "Black"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "red",
+                      "kind": "unit",
+                      "name": "Red"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "green",
+                      "kind": "unit",
+                      "name": "Green"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "yellow",
+                      "kind": "unit",
+                      "name": "Yellow"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "blue",
+                      "kind": "unit",
+                      "name": "Blue"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "magenta",
+                      "kind": "unit",
+                      "name": "Magenta"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "cyan",
+                      "kind": "unit",
+                      "name": "Cyan"
+                    },
+                    {
+                      "description": "Standard gray (ANSI color 7, \"light gray\" in some contexts)",
+                      "json_value": "gray",
+                      "kind": "unit",
+                      "name": "Gray"
+                    },
+                    {
+                      "description": "Alias for Gray - allows \"light_gray\" in JSON",
+                      "json_value": "light_gray",
+                      "kind": "unit",
+                      "name": "LightGray"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "dark_gray",
+                      "kind": "unit",
+                      "name": "DarkGray"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_red",
+                      "kind": "unit",
+                      "name": "LightRed"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_green",
+                      "kind": "unit",
+                      "name": "LightGreen"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_yellow",
+                      "kind": "unit",
+                      "name": "LightYellow"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_blue",
+                      "kind": "unit",
+                      "name": "LightBlue"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_magenta",
+                      "kind": "unit",
+                      "name": "LightMagenta"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "light_cyan",
+                      "kind": "unit",
+                      "name": "LightCyan"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "white",
+                      "kind": "unit",
+                      "name": "White"
+                    },
+                    {
+                      "description": null,
+                      "fields": [
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "r",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 255,
+                              "min": 0
+                            },
+                            "type": "u8"
+                          }
+                        },
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "g",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 255,
+                              "min": 0
+                            },
+                            "type": "u8"
+                          }
+                        },
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "b",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 255,
+                              "min": 0
+                            },
+                            "type": "u8"
+                          }
+                        }
+                      ],
+                      "json_value": "rgb",
+                      "kind": "struct",
+                      "name": "Rgb"
+                    },
+                    {
+                      "description": null,
+                      "fields": [
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "value",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 255,
+                              "min": 0
+                            },
+                            "type": "u8"
+                          }
+                        }
+                      ],
+                      "json_value": "indexed",
+                      "kind": "struct",
+                      "name": "Indexed"
+                    }
+                  ]
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Render strategy (braille, horizontal eighths, or vertical eighths).",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "render_mode",
+                "schema": {
+                  "description": "Glyph strategy for sub-cell light rendering.",
+                  "json_name": null,
+                  "kind": "enum",
+                  "name": "SubcellLightRenderMode",
+                  "tag_field": null,
+                  "variants": [
+                    {
+                      "description": null,
+                      "json_value": "braille",
+                      "kind": "unit",
+                      "name": "Braille"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "horizontal",
+                      "kind": "unit",
+                      "name": "Horizontal"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "vertical",
+                      "kind": "unit",
+                      "name": "Vertical"
+                    }
+                  ]
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Which existing color field to sample (`foreground` or `background`).",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "sample_from",
+                "schema": {
+                  "description": "Which existing cell color channel to interpret as the light field.",
+                  "json_name": null,
+                  "kind": "enum",
+                  "name": "LightSampleFrom",
+                  "tag_field": null,
+                  "variants": [
+                    {
+                      "description": null,
+                      "json_value": "foreground",
+                      "kind": "unit",
+                      "name": "Foreground"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "background",
+                      "kind": "unit",
+                      "name": "Background"
+                    }
+                  ]
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Minimum normalized intensity required before a cell is converted.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "threshold",
+                "schema": {
+                  "kind": "primitive",
+                  "range": null,
+                  "type": "f32"
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Optional low-rate temporal dither in Hz for braille mode. 0 = static.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "temporal_dither_hz",
+                "schema": {
+                  "kind": "primitive",
+                  "range": null,
+                  "type": "f32"
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "If true (default), only convert blank cells.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "only_blank",
+                "schema": {
+                  "kind": "primitive",
+                  "range": null,
+                  "type": "bool"
+                }
+              }
+            ],
+            "json_value": "subcell_light",
+            "kind": "struct",
+            "name": "SubcellLight"
+          },
+          {
             "description": "Sub-cell shake using partial vertical blocks\n\nCreates physical-feeling vibration by oscillating edges using partial blocks\n(▏▎▍▌▋▊▉) to shift the visual center of mass without changing grid coordinates.\nThis is the \"incorrect password\" or \"tactile click\" effect from IDEAS.md.",
             "fields": [
               {
@@ -191157,6 +191738,587 @@
           "json_value": "sub_pixel_bar",
           "kind": "struct",
           "name": "SubPixelBar"
+        },
+        "subcell_light": {
+          "description": "Sub-cell light renderer for blank shell-owned cells.\n\nInterprets an existing color field (usually background light from a\nshader) and re-renders it into partial-block or braille glyphs. This is\nuseful when a light field feels too square or too obviously cell-based:\nthe shader defines the light distribution, while this filter provides a\nfiner terminal-native rasterization in blank cells.\n\nThis filter is usually best paired with background-heavy light shaders\nsuch as `ConcealedLight`, `Diffusion`, or `FocusField`.",
+          "fields": [
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "The fully lit color used in the sub-cell glyph.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "lit_color",
+              "schema": {
+                "description": "Stable, serde-friendly representation of `ratatui::style::Color`.\n\nWe avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and\nconfiguration formats remain under our control.\n\n# RGB Shorthand\n\nFor RGB colors, you can use either the full tagged format or a shorthand:\n- Full: `{\"type\": \"rgb\", \"r\": 255, \"g\": 128, \"b\": 0}`\n- Shorthand: `{\"r\": 255, \"g\": 128, \"b\": 0}`\n\nBoth formats are equivalent and produce the same `ColorConfig::Rgb` value.",
+                "json_name": null,
+                "kind": "enum",
+                "name": "ColorConfig",
+                "tag_field": "type",
+                "variants": [
+                  {
+                    "description": null,
+                    "json_value": "reset",
+                    "kind": "unit",
+                    "name": "Reset"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "black",
+                    "kind": "unit",
+                    "name": "Black"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "red",
+                    "kind": "unit",
+                    "name": "Red"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "green",
+                    "kind": "unit",
+                    "name": "Green"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "yellow",
+                    "kind": "unit",
+                    "name": "Yellow"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "blue",
+                    "kind": "unit",
+                    "name": "Blue"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "magenta",
+                    "kind": "unit",
+                    "name": "Magenta"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "cyan",
+                    "kind": "unit",
+                    "name": "Cyan"
+                  },
+                  {
+                    "description": "Standard gray (ANSI color 7, \"light gray\" in some contexts)",
+                    "json_value": "gray",
+                    "kind": "unit",
+                    "name": "Gray"
+                  },
+                  {
+                    "description": "Alias for Gray - allows \"light_gray\" in JSON",
+                    "json_value": "light_gray",
+                    "kind": "unit",
+                    "name": "LightGray"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "dark_gray",
+                    "kind": "unit",
+                    "name": "DarkGray"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_red",
+                    "kind": "unit",
+                    "name": "LightRed"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_green",
+                    "kind": "unit",
+                    "name": "LightGreen"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_yellow",
+                    "kind": "unit",
+                    "name": "LightYellow"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_blue",
+                    "kind": "unit",
+                    "name": "LightBlue"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_magenta",
+                    "kind": "unit",
+                    "name": "LightMagenta"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_cyan",
+                    "kind": "unit",
+                    "name": "LightCyan"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "white",
+                    "kind": "unit",
+                    "name": "White"
+                  },
+                  {
+                    "description": null,
+                    "fields": [
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "r",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 255,
+                            "min": 0
+                          },
+                          "type": "u8"
+                        }
+                      },
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "g",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 255,
+                            "min": 0
+                          },
+                          "type": "u8"
+                        }
+                      },
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "b",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 255,
+                            "min": 0
+                          },
+                          "type": "u8"
+                        }
+                      }
+                    ],
+                    "json_value": "rgb",
+                    "kind": "struct",
+                    "name": "Rgb"
+                  },
+                  {
+                    "description": null,
+                    "fields": [
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "value",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 255,
+                            "min": 0
+                          },
+                          "type": "u8"
+                        }
+                      }
+                    ],
+                    "json_value": "indexed",
+                    "kind": "struct",
+                    "name": "Indexed"
+                  }
+                ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "The unlit/background color shown through the unfilled portion.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "unlit_color",
+              "schema": {
+                "description": "Stable, serde-friendly representation of `ratatui::style::Color`.\n\nWe avoid enabling Ratatui's `serde` feature so the logic crates remain lightweight and\nconfiguration formats remain under our control.\n\n# RGB Shorthand\n\nFor RGB colors, you can use either the full tagged format or a shorthand:\n- Full: `{\"type\": \"rgb\", \"r\": 255, \"g\": 128, \"b\": 0}`\n- Shorthand: `{\"r\": 255, \"g\": 128, \"b\": 0}`\n\nBoth formats are equivalent and produce the same `ColorConfig::Rgb` value.",
+                "json_name": null,
+                "kind": "enum",
+                "name": "ColorConfig",
+                "tag_field": "type",
+                "variants": [
+                  {
+                    "description": null,
+                    "json_value": "reset",
+                    "kind": "unit",
+                    "name": "Reset"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "black",
+                    "kind": "unit",
+                    "name": "Black"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "red",
+                    "kind": "unit",
+                    "name": "Red"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "green",
+                    "kind": "unit",
+                    "name": "Green"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "yellow",
+                    "kind": "unit",
+                    "name": "Yellow"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "blue",
+                    "kind": "unit",
+                    "name": "Blue"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "magenta",
+                    "kind": "unit",
+                    "name": "Magenta"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "cyan",
+                    "kind": "unit",
+                    "name": "Cyan"
+                  },
+                  {
+                    "description": "Standard gray (ANSI color 7, \"light gray\" in some contexts)",
+                    "json_value": "gray",
+                    "kind": "unit",
+                    "name": "Gray"
+                  },
+                  {
+                    "description": "Alias for Gray - allows \"light_gray\" in JSON",
+                    "json_value": "light_gray",
+                    "kind": "unit",
+                    "name": "LightGray"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "dark_gray",
+                    "kind": "unit",
+                    "name": "DarkGray"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_red",
+                    "kind": "unit",
+                    "name": "LightRed"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_green",
+                    "kind": "unit",
+                    "name": "LightGreen"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_yellow",
+                    "kind": "unit",
+                    "name": "LightYellow"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_blue",
+                    "kind": "unit",
+                    "name": "LightBlue"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_magenta",
+                    "kind": "unit",
+                    "name": "LightMagenta"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "light_cyan",
+                    "kind": "unit",
+                    "name": "LightCyan"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "white",
+                    "kind": "unit",
+                    "name": "White"
+                  },
+                  {
+                    "description": null,
+                    "fields": [
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "r",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 255,
+                            "min": 0
+                          },
+                          "type": "u8"
+                        }
+                      },
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "g",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 255,
+                            "min": 0
+                          },
+                          "type": "u8"
+                        }
+                      },
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "b",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 255,
+                            "min": 0
+                          },
+                          "type": "u8"
+                        }
+                      }
+                    ],
+                    "json_value": "rgb",
+                    "kind": "struct",
+                    "name": "Rgb"
+                  },
+                  {
+                    "description": null,
+                    "fields": [
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "value",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 255,
+                            "min": 0
+                          },
+                          "type": "u8"
+                        }
+                      }
+                    ],
+                    "json_value": "indexed",
+                    "kind": "struct",
+                    "name": "Indexed"
+                  }
+                ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Render strategy (braille, horizontal eighths, or vertical eighths).",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "render_mode",
+              "schema": {
+                "description": "Glyph strategy for sub-cell light rendering.",
+                "json_name": null,
+                "kind": "enum",
+                "name": "SubcellLightRenderMode",
+                "tag_field": null,
+                "variants": [
+                  {
+                    "description": null,
+                    "json_value": "braille",
+                    "kind": "unit",
+                    "name": "Braille"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "horizontal",
+                    "kind": "unit",
+                    "name": "Horizontal"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "vertical",
+                    "kind": "unit",
+                    "name": "Vertical"
+                  }
+                ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Which existing color field to sample (`foreground` or `background`).",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "sample_from",
+              "schema": {
+                "description": "Which existing cell color channel to interpret as the light field.",
+                "json_name": null,
+                "kind": "enum",
+                "name": "LightSampleFrom",
+                "tag_field": null,
+                "variants": [
+                  {
+                    "description": null,
+                    "json_value": "foreground",
+                    "kind": "unit",
+                    "name": "Foreground"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "background",
+                    "kind": "unit",
+                    "name": "Background"
+                  }
+                ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Minimum normalized intensity required before a cell is converted.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "threshold",
+              "schema": {
+                "kind": "primitive",
+                "range": null,
+                "type": "f32"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Optional low-rate temporal dither in Hz for braille mode. 0 = static.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "temporal_dither_hz",
+              "schema": {
+                "kind": "primitive",
+                "range": null,
+                "type": "f32"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "If true (default), only convert blank cells.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "only_blank",
+              "schema": {
+                "kind": "primitive",
+                "range": null,
+                "type": "bool"
+              }
+            }
+          ],
+          "json_value": "subcell_light",
+          "kind": "struct",
+          "name": "SubcellLight"
         },
         "tint": {
           "description": "Apply a color tint",

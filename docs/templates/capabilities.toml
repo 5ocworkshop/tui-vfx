@@ -274,6 +274,21 @@ direction: Horizontal or Vertical.
 filled_color, unfilled_color: bar colors.
 animated: true cycles progress automatically with t parameter."""
 
+[effects.filters.SubcellLight]
+use_cases = ["sub-cell-light", "blank-cells", "premium-light", "light-dither"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Sub-cell light renderer for blank shell-owned cells.
+Use after a background or foreground light shader when the light field feels too square.
+lit_color / unlit_color: colors for the lit and unlit portions of the glyph.
+render_mode: braille, horizontal, or vertical.
+sample_from: foreground or background color field to interpret.
+threshold: minimum normalized intensity required before conversion.
+temporal_dither_hz: optional low-rate temporal variation for braille mode (0 = static).
+only_blank: if true, only converts blank cells.
+Best for margins, padding, shell chrome, empty-state surfaces, and other blank regions where partial glyphs can soften the grid without harming readability."""
+
 [effects.filters.SubCellShake]
 use_cases = ["error", "tactile", "feedback"]
 energy = "intense"

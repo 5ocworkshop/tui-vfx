@@ -67,6 +67,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **ShadeScanner** | Ping-pong scanner that dims text with shade overlay | hover, reveal, retro |
 | **SubCellShake** | Sub-cell shake using partial vertical blocks | error, tactile, feedback |
 | **SubPixelBar** | Sub-pixel progress bar with 8x resolution | loading, progress, indicator |
+| **SubcellLight** | Sub-cell light renderer for blank shell-owned cells | sub-cell-light, blank-cells, premium-light, light-dither |
 | **Tint** | Apply a color tint | mood, branding, overlay |
 | **UnderlineWipe** | Horizontal underline that wipes in based on progress | hover, link, indicator |
 | **Vignette** | Vignette darkening around edges | focus, cinematic, premium |

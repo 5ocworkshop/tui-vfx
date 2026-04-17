@@ -49,6 +49,7 @@
 - **ShadeScanner**: Ping-pong scanner that dims text with shade overlay (░).
 - **SubCellShake**: Physical edge vibration using ▏▎▍▌▋▊▉ partial blocks. [Intense]
 - **SubPixelBar**: High-resolution progress bar with 8x cell precision.
+- **SubcellLight**: Sub-cell light renderer for blank shell-owned cells. [Premium]
 - **Tint**: Apply color overlay/tint.
 - **UnderlineWipe**: Underline wipes in based on progress.
 - **Vignette**: Edge darkening that draws focus to center.

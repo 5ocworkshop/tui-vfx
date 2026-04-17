@@ -89,6 +89,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **MotionBlur** | Directional blur trail | `trail_length`, `opacity_decay`, `direction` |
 | **ColorBridgedShade** | Shade char opacity (░▒▓█) | `opacity`, `fg_color`, `bg_color` |
 | **SubPixelBar** | 8x resolution progress bar | `progress`, `direction`, `filled_color`, `unfilled_color`, `animated` |
+| **SubcellLight** | Sub-cell light renderer for blank shell-owned cells | `lit_color`, `unlit_color`, `render_mode`, `sample_from`, `threshold`, `temporal_dither_hz`, `only_blank` |
 | **SubCellShake** | Edge vibration using partial blocks | `amplitude`, `frequency`, `seed`, `edge_only`, `filled_color`, `bg_color` |
 | **RigidShake** | Ketchup bottle damped oscillation | `shake_period`, `num_shakes`, `pause_duration`, `max_eighths`, `base_eighths`, `damping`, `element_color`, `bg_color`, `inner_width`, `margin_width` |
 | **HoverBar** | Progress-driven partial bar indicator | `base_eighths`, `max_eighths`, `position`, `bar_color`, `bg_color`, `progress`, `margin_width` |
@@ -255,6 +256,14 @@ Premium effect for frosted glass / film grain texture:
 - `direction`: Horizontal or Vertical fill
 - `animated`: Enables automatic progress cycling with `t` parameter
 - Ideal for loading indicators with smooth sub-cell precision
+
+**SubcellLight** — Companion filter that renders an existing light field into partial-block or braille glyphs in blank cells:
+- `render_mode`: `braille`, `horizontal`, or `vertical`
+- `sample_from`: `foreground` or `background` light field to interpret
+- `lit_color` / `unlit_color`: endpoint colors for the rendered glyph
+- `threshold`: minimum normalized intensity before a blank cell is converted
+- `temporal_dither_hz`: optional low-rate temporal braille variation (0 = static)
+- Best when paired with `ConcealedLight`, `Diffusion`, or `FocusField` on shell-owned blank cells to make light feel less square
 
 **SubCellShake (Filter)** — Physical vibration effect using partial vertical blocks:
 - Creates edge oscillation using ▏▎▍▌▋▊▉ characters

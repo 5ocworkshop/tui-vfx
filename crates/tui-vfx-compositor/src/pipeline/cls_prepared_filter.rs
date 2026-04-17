@@ -25,6 +25,10 @@ use crate::filters::cls_pill_button::PillButton;
 use crate::filters::cls_rigid_shake::RigidShake;
 use crate::filters::cls_shade_scanner::ShadeScanner;
 use crate::filters::cls_sub_cell_shake::SubCellShake;
+use crate::filters::cls_subcell_light::{
+    LightSampleFrom as ImplLightSampleFrom, SubcellLight,
+    SubcellLightRenderMode as ImplSubcellLightRenderMode,
+};
 use crate::filters::cls_sub_pixel_bar::{BarDirection, SubPixelBar};
 use crate::filters::cls_tint::Tint;
 use crate::filters::cls_underline_wipe::UnderlineWipe;
@@ -49,6 +53,7 @@ pub(crate) enum PreparedFilter {
     MotionBlur(MotionBlur),
     ColorBridgedShade(ColorBridgedShade),
     SubPixelBar(SubPixelBar),
+    SubcellLight(SubcellLight),
     SubCellShake(SubCellShake),
     RigidShake(RigidShake),
     HoverBar(HoverBar),
@@ -115,6 +120,9 @@ impl PreparedFilter {
             PreparedFilter::SubPixelBar(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
+            PreparedFilter::SubcellLight(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
             PreparedFilter::SubCellShake(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
@@ -167,6 +175,7 @@ impl PreparedFilter {
             PreparedFilter::MotionBlur(_) => "MotionBlur",
             PreparedFilter::ColorBridgedShade(_) => "ColorBridgedShade",
             PreparedFilter::SubPixelBar(_) => "SubPixelBar",
+            PreparedFilter::SubcellLight(_) => "SubcellLight",
             PreparedFilter::SubCellShake(_) => "SubCellShake",
             PreparedFilter::RigidShake(_) => "RigidShake",
             PreparedFilter::HoverBar(_) => "HoverBar",
@@ -440,6 +449,40 @@ pub(crate) fn prepare_filter(
                 .animated(*animated);
             Some(PreparedFilter::SubPixelBar(filter))
         }
+        FilterSpec::SubcellLight {
+            lit_color,
+            unlit_color,
+            render_mode,
+            sample_from,
+            threshold,
+            temporal_dither_hz,
+            only_blank,
+        } => Some(PreparedFilter::SubcellLight(SubcellLight {
+            lit_color: (*lit_color).into(),
+            unlit_color: (*unlit_color).into(),
+            render_mode: match render_mode {
+                crate::types::cls_filter_spec::SubcellLightRenderMode::Braille => {
+                    ImplSubcellLightRenderMode::Braille
+                }
+                crate::types::cls_filter_spec::SubcellLightRenderMode::Horizontal => {
+                    ImplSubcellLightRenderMode::Horizontal
+                }
+                crate::types::cls_filter_spec::SubcellLightRenderMode::Vertical => {
+                    ImplSubcellLightRenderMode::Vertical
+                }
+            },
+            sample_from: match sample_from {
+                crate::types::cls_filter_spec::LightSampleFrom::Foreground => {
+                    ImplLightSampleFrom::Foreground
+                }
+                crate::types::cls_filter_spec::LightSampleFrom::Background => {
+                    ImplLightSampleFrom::Background
+                }
+            },
+            threshold: *threshold,
+            temporal_dither_hz: *temporal_dither_hz,
+            only_blank: *only_blank,
+        })),
         FilterSpec::SubCellShake {
             amplitude,
             frequency,

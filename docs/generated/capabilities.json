@@ -1500,6 +1500,67 @@
           "indicator"
         ]
       },
+      "SubcellLight": {
+        "ai_hint": "Sub-cell light renderer for blank shell-owned cells.\nUse after a background or foreground light shader when the light field feels too square.\nlit_color / unlit_color: colors for the lit and unlit portions of the glyph.\nrender_mode: braille, horizontal, or vertical.\nsample_from: foreground or background color field to interpret.\nthreshold: minimum normalized intensity required before conversion.\ntemporal_dither_hz: optional low-rate temporal variation for braille mode (0 = static).\nonly_blank: if true, only converts blank cells.\nBest for margins, padding, shell chrome, empty-state surfaces, and other blank regions where partial glyphs can soften the grid without harming readability.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "SubcellLight",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "White",
+            "doc": "The fully lit color used in the sub-cell glyph.",
+            "name": "lit_color",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "Black",
+            "doc": "The unlit/background color shown through the unfilled portion.",
+            "name": "unlit_color",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "Braille",
+            "doc": "Render strategy (braille, horizontal eighths, or vertical eighths).",
+            "name": "render_mode",
+            "ty": "SubcellLightRenderMode"
+          },
+          {
+            "default": "Background",
+            "doc": "Which existing color field to sample (`foreground` or `background`).",
+            "name": "sample_from",
+            "ty": "LightSampleFrom"
+          },
+          {
+            "default": "0.06",
+            "doc": "Minimum normalized intensity required before a cell is converted.",
+            "name": "threshold",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Optional low-rate temporal dither in Hz for braille mode. 0 = static.",
+            "name": "temporal_dither_hz",
+            "ty": "f32"
+          },
+          {
+            "default": "true",
+            "doc": "If true (default), only convert blank cells.",
+            "name": "only_blank",
+            "ty": "bool"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Sub-cell light renderer for blank shell-owned cells",
+        "rustdoc_summary": "Sub-cell light renderer for blank shell-owned cells",
+        "use_cases": [
+          "sub-cell-light",
+          "blank-cells",
+          "premium-light",
+          "light-dither"
+        ]
+      },
       "Tint": {
         "ai_hint": "Apply color overlay/tint.\ncolor: tint color to apply.\nstrength: blend intensity (0.0=none, 1.0=full tint).\napply_to: Foreground, Background, or Both.",
         "complexity": "simple",

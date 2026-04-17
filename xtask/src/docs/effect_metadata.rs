@@ -189,6 +189,15 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             unfilled_color: ColorConfig::Gray,
             animated: false,
         },
+        FilterSpec::SubcellLight {
+            lit_color: ColorConfig::White,
+            unlit_color: ColorConfig::Black,
+            render_mode: Default::default(),
+            sample_from: Default::default(),
+            threshold: 0.06,
+            temporal_dither_hz: 0.0,
+            only_blank: true,
+        },
         FilterSpec::SubCellShake {
             amplitude: 2,
             frequency: 8.0,
