@@ -38,12 +38,33 @@ fn wake_serde_roundtrip() {
         mode: WakeMode::Tint,
         decay_seconds: SignalOrFloat::Static(1.5),
         max_cells: 8,
+        gap_cells: 0,
         curve: SignalOrFloat::Static(1.0),
         tint: tui_vfx_style::models::ColorConfig::default(),
     };
     let json = serde_json::to_string(&w).unwrap();
     let back: Wake = serde_json::from_str(&json).unwrap();
     assert_eq!(w, back);
+}
+
+#[test]
+fn wake_default_has_zero_gap_cells() {
+    assert_eq!(Wake::default().gap_cells, 0);
+}
+
+#[test]
+fn wake_gap_cells_roundtrip() {
+    let w = Wake {
+        mode: WakeMode::Tint,
+        decay_seconds: SignalOrFloat::Static(1.5),
+        max_cells: 8,
+        gap_cells: 3,
+        curve: SignalOrFloat::Static(1.0),
+        tint: tui_vfx_style::models::ColorConfig::default(),
+    };
+    let json = serde_json::to_string(&w).unwrap();
+    let back: Wake = serde_json::from_str(&json).unwrap();
+    assert_eq!(back.gap_cells, 3);
 }
 
 // <FILE>tui-vfx-content/tests/cursor/test_cls_cursor_wake.rs</FILE> - <DESC>Tests for Wake + WakeMode</DESC>

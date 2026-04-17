@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_wake.rs</FILE> - <DESC>Wake config for Cursor primitive</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>feat/cursor-primitive T31: clippy clean-up — derive Default on WakeMode using #[default] attribute</WCTX>
-// <CLOG>PATCH: derive Default on WakeMode (Off); remove manual impl</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Add gap_cells field so the trail can be optionally disconnected from the live cursor; default 0 keeps the trail visually adjacent to the cursor</WCTX>
+// <CLOG>MINOR: gap_cells: u32 (default 0). 0 = trail starts in the cell immediately behind the cursor; N > 0 inserts an N-cell unpainted gap before the trail begins.</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use serde::{Deserialize, Serialize};
@@ -59,6 +59,12 @@ pub struct Wake {
     pub decay_seconds: SignalOrFloat,
     /// Hard cap on trail length. `0` = no cap (time-only).
     pub max_cells: u32,
+    /// Cells of unpainted gap between the live cursor and the start of the
+    /// trail. `0` (default) keeps the trail visually connected to the cursor —
+    /// the cell immediately behind the cursor is fully tinted. Larger values
+    /// insert N unpainted cells before the trail begins, for a detached
+    /// "meteor tail" look.
+    pub gap_cells: u32,
     /// Decay curve sampled with age-normalized `t in 0..1`, returning alpha in `0..1`.
     /// Default `Static(1.0)` is treated as linear by `fnc_render_cursor`.
     pub curve: SignalOrFloat,
@@ -72,6 +78,7 @@ impl Default for Wake {
             mode: WakeMode::Off,
             decay_seconds: SignalOrFloat::Static(0.0),
             max_cells: 0,
+            gap_cells: 0,
             curve: SignalOrFloat::Static(1.0),
             tint: ColorConfig::default(),
         }
@@ -86,4 +93,4 @@ impl Wake {
 }
 
 // <FILE>tui-vfx-content/src/cursor/cls_cursor_wake.rs</FILE> - <DESC>Wake config for Cursor primitive</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

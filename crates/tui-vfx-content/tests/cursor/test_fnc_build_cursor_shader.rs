@@ -14,6 +14,7 @@ fn wake_mode_with(mode: WakeMode, tint: ColorConfig) -> Wake {
         mode,
         decay_seconds: SignalOrFloat::Static(1.0),
         max_cells: 8,
+        gap_cells: 0,
         curve: SignalOrFloat::Static(1.0),
         tint,
     }
