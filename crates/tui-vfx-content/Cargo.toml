@@ -21,6 +21,10 @@ serde.workspace = true
 # Introspection protocol
 tui-vfx-core.workspace = true
 mixed-signals.workspace = true
+tui-vfx-style.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
 
 [features]
 default = []

@@ -1084,7 +1084,9 @@ version = "0.5.0"
 dependencies = [
  "mixed-signals",
  "serde",
+ "serde_json",
  "tui-vfx-core",
+ "tui-vfx-style",
  "unicode-segmentation",
 ]
 
