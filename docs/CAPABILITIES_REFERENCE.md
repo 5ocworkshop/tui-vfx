@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.16.0</VERS> -->
-<!-- <WCTX>feat/cursor-scan: document the new CursorScan primitive (Pulse / HalfBlockBounce), and add a tail-length configurability callout for the Wake subsection.</WCTX> -->
-<!-- <CLOG>MINOR: Add "Scan" subsection documenting CursorScan + ScanMode; add Wake "Tail length configurability" callout covering max_cells, decay_seconds, and the block-only scope of the 1/8th ramp.</CLOG>
+<!-- <VERS>VERSION: 1.17.0</VERS> -->
+<!-- <WCTX>Document the 10-recipe cursor debug catalog in tui-vfx-recipes. Cursor section previously described the primitive API but never listed the ready-made debug recipes that exercise each sub-feature end-to-end.</WCTX> -->
+<!-- <CLOG>MINOR: Add "Debug recipe catalog" subsection under Cursor listing the 10 cursor debug recipes (grow_in_up/down/center, caret, wake_tint/ghost/gap, scan_pulse/bounce, full) with one-line descriptions of what each demonstrates.</CLOG>
 
 # tui-vfx Capabilities Reference
 
@@ -50,6 +50,7 @@ Masks control the visibility of content during transitions. All masks operate on
 | **Iris** | Spotlight/iris from center | `shape`: Circle/Diamond/Box, `soft_edge` |
 | **Diamond** | Diamond expand from center | `soft_edge` |
 | **NoiseDither** | Dithered noise pattern | `seed`, `matrix`: Bayer4/Bayer8 |
+| **Materialize** | Organic resolve/materialize reveal | `origin`, `seed`, `chunk_size`, `noise`, `soft_edge` |
 | **PathReveal** | Path-based reveal (spiral, radial sweep) | `path`: Spiral/Radial, `soft_edge` |
 | **Radial** | Radial expansion from origin | `origin`: Center/corners/Custom, `soft_edge` |
 | **Cellular** | Organic/cellular pattern | `pattern`: Voronoi/Hexagonal/Organic, `seed`, `cell_count` |
@@ -94,6 +95,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **UnderlineWipe** | Horizontal underline wipe-in | `direction`, `color`, `bg_color`, `line_char`, `row_offset`, `progress`, `gradient`, `glisten` |
 | **BracketEmphasis** | Fade-in brackets around content | `left`, `right`, `color`, `bg_color`, `progress` |
 | **DotIndicator** | Simple dot/bullet marker | `indicator_char`, `position`, `color`, `bg_color`, `progress` |
+| **EdgeGrow** | Generalized edge growth/stretch indicator | `rest_eighths`, `peak_eighths`, `edge`, `fill_color`, `bg_color`, `progress`, `margin_width` |
 | **PillButton** | Pill-shaped button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten`, `progress` |
 | **GlistenSweep** | Diagonal 45° brightness sweep (hover shine) | `boost` (u8, additive), `band_width` (f32, diagonal fraction), `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
 | **KittScanner** | Horizontal scanner sweep (KITT/Larson or one-way lighthouse wrap) | `boost` (u8), `band_width`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
@@ -471,6 +473,7 @@ Content transformers modify text content during animation.
 | **Redact** | Redaction/censoring effect |
 | **SplitFlap** | Split-flap display effect |
 | **WrapIndicator** | Prefix/suffix wrapping based on progress |
+| **GlyphCascade** | Glyph alphabet cascade / symbol evolution |
 
 ### WrapIndicator Details
 
@@ -640,6 +643,23 @@ comp_spec.shader_layers.push(ShaderLayerSpec {
 //   fnc_apply_ghost_glyphs_to_grid(&mut source, &ops);
 // before composition so the ghost glyphs appear where the shader paints tint.
 ```
+
+#### Debug recipe catalog
+
+Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exercise every cursor sub-feature. All use a short 200ms slide-in so the widget lands before any cursor animation plays (earlier recipes had the cursor painting while the widget was still off-screen). Grow-in recipes use `content.mode=loop` + `every_show` grow-in + slow blink so the effect replays each loop cycle; scan recipes use `enter_only` because scan keys off `absolute_t` and cycles continuously during dwell regardless.
+
+| Recipe file | What it shows |
+|-------------|---------------|
+| `content_typewriter_cursor_grow_in_up.json` | Block cursor grows in from the baseline (1/8th block → full) on each un-blink |
+| `content_typewriter_cursor_grow_in_down.json` | Block cursor drops in from the ceiling on each un-blink |
+| `content_typewriter_cursor_grow_in_center.json` | Block cursor expands outward from the middle row on each un-blink |
+| `content_typewriter_cursor_caret.json` | Non-block caret (▌) fading in via alpha (direction is ignored for non-block glyphs) |
+| `content_typewriter_cursor_wake_tint.json` | Connected tint trail behind the cursor; tint matches cursor fg (fading echo look) |
+| `content_typewriter_cursor_wake_ghost.json` | Fading copies of the cursor glyph trailing the reveal head (Ghost mode) |
+| `content_typewriter_cursor_wake_gap.json` | Detached meteor-tail trail — `gap_cells=3` leaves an unpainted gap between cursor and trail |
+| `content_typewriter_cursor_scan_pulse.json` | Steady cursor breathing through the 1/8th-block ramp (Pulse scan, 1.5s period) |
+| `content_typewriter_cursor_scan_bounce.json` | Steady cursor ping-ponging through ▀→█→▄ (Half-Block Bounce scan, 900ms period) |
+| `content_typewriter_cursor_full.json` | Kitchen sink: grow-in + wake tint + scan + blink all composed |
 
 ---
 
