@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/transformers/cls_typewriter.rs</FILE> - <DESC>Typewriter transformer</DESC>
-// <VERS>VERSION: 2.0.1</VERS>
-// <WCTX>feat-20251224-170136: Complete signal-driven content effects</WCTX>
-// <CLOG>Fixed off-by-one error in character reveal threshold calculation (i+1)/total instead of i/total</CLOG>
+// <VERS>VERSION: 3.0.0</VERS>
+// <WCTX>feat/cursor-primitive T23: stateful reveal + primary cursor glyph splicing</WCTX>
+// <CLOG>Add Typewriter::transform_with_cursor; original TextTransformer::transform unchanged</CLOG>
 
 use crate::traits::TextTransformer;
 use crate::utils::fnc_graphemes::{len_graphemes, slice_graphemes};
@@ -89,5 +89,60 @@ impl TextTransformer for Typewriter {
     }
 }
 
+use crate::cursor::{
+    fnc_advance_cursor, fnc_render_cursor, fnc_splice_cursor_into_text,
+    fnc_typewriter_cursor_position, Cursor, CursorPaintOps, CursorState,
+};
+
+impl Typewriter {
+    /// Stateful reveal that splices a cursor glyph into the output string at the
+    /// current reveal boundary, advancing the provided [`CursorState`] in place.
+    ///
+    /// Returns `(text, paint_ops)`. `paint_ops` carries the wake/primary paint
+    /// info for consumers that want cell-level rendering via
+    /// [`tui_vfx_style::models::CursorShader`] (see Task 28).
+    ///
+    /// # Arguments
+    ///
+    /// * `target`     — Full text being revealed.
+    /// * `progress`   — Reveal progress 0..1 (same semantics as [`Typewriter`]'s
+    ///                  [`TextTransformer::transform`] impl).
+    /// * `signal_ctx` — Signal evaluation context.
+    /// * `cursor`     — Cursor configuration (usually `tcursor.cursor`).
+    /// * `state`      — Mutable cursor state owned by the caller.
+    /// * `now`        — Wall-clock seconds (same value used for signal sampling).
+    /// * `dt`         — Wall-clock seconds since the previous frame.
+    pub fn transform_with_cursor<'a>(
+        &self,
+        target: &'a str,
+        progress: f64,
+        signal_ctx: &SignalContext,
+        cursor: &Cursor,
+        state: &mut CursorState,
+        now: f64,
+        dt: f64,
+    ) -> (Cow<'a, str>, CursorPaintOps) {
+        // Run the base reveal.
+        let revealed = self.transform(target, progress, signal_ctx);
+
+        // Resolve cursor position from progress and advance the primitive.
+        let idx = fnc_typewriter_cursor_position(target, progress).unwrap_or(0);
+        // Row is always 0 for a single-line typewriter reveal; callers wrapping
+        // multi-line text must drive the cursor externally.
+        let pos = (0u16, idx as u16);
+        fnc_advance_cursor(state, cursor, Some(pos), now, dt, signal_ctx);
+
+        // Render paint ops and splice the primary glyph in.
+        let ops = fnc_render_cursor(state, cursor, now, signal_ctx);
+        let text = match ops.primary.as_ref() {
+            Some(p) if !p.glyph.is_empty() => {
+                Cow::Owned(fnc_splice_cursor_into_text(revealed.as_ref(), idx, &p.glyph))
+            }
+            _ => revealed,
+        };
+        (text, ops)
+    }
+}
+
 // <FILE>tui-vfx-content/src/transformers/cls_typewriter.rs</FILE> - <DESC>Typewriter transformer</DESC>
-// <VERS>END OF VERSION: 2.0.1</VERS>
+// <VERS>END OF VERSION: 3.0.0</VERS>
