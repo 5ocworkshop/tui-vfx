@@ -213,6 +213,9 @@ Premium effect for frosted glass / film grain texture:
 - Rect mode uses `rect_x`, `rect_y`, `rect_width`, `rect_height`, with `feather` controlling soft spill outside the pane
 - All geometry can be bound at runtime, making the field follow changing focus targets
 - Best for active-pane emphasis, subtle hotspot guidance, and attention shaping that should be felt more than seen
+- In multi-effect recipes, treat it as a **background/shell support layer** rather than the primary effect users consciously notice
+- It pairs well with `ConcealedLight`, `AffordanceWake`, and `WayfindingNode`
+- Avoid letting it compete with strong foreground shaders, dense text effects, or loud animated sweeps on the same cells
 
 **AffordanceWake** — Low-noise dormant-to-active affordance emphasis:
 - `zone`: AllEdges, Corners, LeftRail, RightRail, TopRail, BottomRail

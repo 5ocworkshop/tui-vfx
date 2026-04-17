@@ -127,6 +127,12 @@ Default posture:
 - rect/pane mode before hotspot mode in application UI
 - static by default; pulse only when the theme strongly justifies it
 
+Layering guidance:
+- use it as a **quiet support layer** under more explicit cues
+- combine it with `ConcealedLight` for shell hierarchy or with `AffordanceWake` / `WayfindingNode` for clearer navigation support
+- avoid stacking it directly against strong foreground shaders or loud animated sweeps on the same cells
+- if another effect is the thing users should consciously notice, `FocusField` should usually sit behind it and simply make the active area feel more current
+
 ### AffordanceWake
 Best for:
 - reveal-on-need secondary affordances
