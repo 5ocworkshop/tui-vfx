@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/cursor/cls_cursor.rs</FILE> - <DESC>Cursor primitive config</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-primitive: Cursor struct + defaults + ctors + builders</WCTX>
-// <CLOG>Initial impl — Tasks 7, 8, 9 combined</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>feat/cursor-primitive: compose general Cursor via #[serde(flatten)] (T20)</WCTX>
+// <CLOG>Flatten `blink` so `blink_interval` / `interval_ms` lift to top level — required for TypewriterCursor v1.1.0 backcompat</CLOG>
 
 use super::{CursorBlink, GrowIn, GrowInMode, Wake, WakeMode};
 use mixed_signals::prelude::SignalOrFloat;
@@ -44,6 +44,11 @@ pub struct Cursor {
     /// (e.g. typewriter's `show_while_typing` / `show_after_complete`) to
     /// produce the effective visibility the grow-in state machine observes.
     pub visibility: SignalOrFloat,
+    /// Blink configuration. Flattened into the serialized JSON so the legacy
+    /// `blink_interval` key (see [`CursorBlink::interval_ms`]'s serde alias)
+    /// parses at the top level of a [`Cursor`] — required for pre-2.0
+    /// [`crate::types::TypewriterCursor`] JSON to round-trip.
+    #[serde(flatten)]
     pub blink: CursorBlink,
     pub grow_in: GrowIn,
     pub wake: Wake,
@@ -114,4 +119,4 @@ impl Cursor {
 }
 
 // <FILE>tui-vfx-content/src/cursor/cls_cursor.rs</FILE> - <DESC>Cursor primitive config</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>
