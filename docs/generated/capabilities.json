@@ -1501,7 +1501,7 @@
         ]
       },
       "SubcellLight": {
-        "ai_hint": "Sub-cell light renderer for blank shell-owned cells.\nUse after a background or foreground light shader when the light field feels too square.\nlit_color / unlit_color: colors for the lit and unlit portions of the glyph.\nrender_mode: braille, horizontal, or vertical.\nsample_from: foreground or background color field to interpret.\nthreshold: minimum normalized intensity required before conversion.\ntemporal_dither_hz: optional low-rate temporal variation for braille mode (0 = static).\nonly_blank: if true, only converts blank cells.\nBest for margins, padding, shell chrome, empty-state surfaces, and other blank regions where partial glyphs can soften the grid without harming readability.",
+        "ai_hint": "Sub-cell light renderer for blank shell-owned cells.\nUse after a background or foreground light shader when the light field feels too square.\nlit_color / unlit_color: colors for the lit and unlit portions of the glyph.\nrender_mode: braille, horizontal, or vertical.\nsample_from: foreground or background color field to interpret.\nthreshold: minimum normalized intensity required before conversion.\ntemporal_dither_hz: optional low-rate temporal variation for braille mode (0 = static).\nonly_blank: if true, only converts blank cells.\nBest for margins, padding, shell chrome, empty-state surfaces, and other blank cells in the targeted region where partial glyphs can soften the grid without harming readability.",
         "complexity": "moderate",
         "energy": "calm",
         "name": "SubcellLight",

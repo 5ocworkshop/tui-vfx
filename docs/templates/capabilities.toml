@@ -287,7 +287,7 @@ sample_from: foreground or background color field to interpret.
 threshold: minimum normalized intensity required before conversion.
 temporal_dither_hz: optional low-rate temporal variation for braille mode (0 = static).
 only_blank: if true, only converts blank cells.
-Best for margins, padding, shell chrome, empty-state surfaces, and other blank regions where partial glyphs can soften the grid without harming readability."""
+Best for margins, padding, shell chrome, empty-state surfaces, and other blank cells in the targeted region where partial glyphs can soften the grid without harming readability."""
 
 [effects.filters.SubCellShake]
 use_cases = ["error", "tactile", "feedback"]

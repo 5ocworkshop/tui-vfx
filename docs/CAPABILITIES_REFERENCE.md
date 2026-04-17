@@ -193,6 +193,7 @@ Premium effect for frosted glass / film grain texture:
 **Glow** — Multi-cell bloom/halo effect around widget edges:
 - `falloff`: Controls intensity curve (Linear, Quadratic, Exponential)
 - `pulse_speed`: Optional pulsing animation in Hz
+- When used on blank shell-owned surfaces, pairing `Glow` with `SubcellLight` can soften square cell boundaries and make the field feel less blocky
 
 **ConcealedLight** — Hidden-source architectural light for thresholds, seams, and shell hierarchy:
 - `source`: Which edge hides the light source (Top, Bottom, Left, Right)
@@ -207,6 +208,7 @@ Premium effect for frosted glass / film grain texture:
 - `edge_firmness`: Preserves a disciplined frame around the perimeter
 - `mode`: Static by default; WarmDrift, CoolDrift, and Breath stay intentionally subtle
 - Best on shell-owned or background-heavy surfaces, not dense text blocks
+- `SubcellLight` can be layered afterward in blank cells when the resulting field feels too square
 
 **FocusField** — A subtle attention field that can follow either a hotspot or a pane:
 - `shape`: `Ellipse` for spotlight-like center fields, `Rect` for pane-following emphasis
@@ -231,6 +233,12 @@ Premium effect for frosted glass / film grain texture:
 - `previous_strength`: Emphasis strength for already-passed nodes
 - `future_strength`: Optional preview of upcoming nodes
 - More practical and application-oriented than the routed signal-trace shaders
+
+**SubcellLight** — A companion filter for light fields rather than a standalone light source:
+- best used after `Glow`, `ConcealedLight`, `Diffusion`, or `FocusField`
+- interprets the existing light field and re-renders blank cells in the targeted region with braille or partial blocks
+- useful when a background light field feels too obviously square on the cell grid
+- should usually stay on shell-owned cells, not dense body text
 
 **SubCellShake (Shader)** — Micro-jitter visual effect through rapid color oscillation:
 - `axis`: Horizontal, Vertical, Both (default)

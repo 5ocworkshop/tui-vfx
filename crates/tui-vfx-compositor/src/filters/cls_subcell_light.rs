@@ -159,7 +159,7 @@ impl Filter for SubcellLight {
             return;
         }
 
-        let eighths = (intensity * 8.0).round().clamp(0.0, 8.0) as u8;
+        let eighths = ((intensity * 8.0).round().clamp(0.0, 8.0) as u8).max(1);
         cell.ch = match self.render_mode {
             SubcellLightRenderMode::Braille => self.rotated_braille_pattern(eighths as usize, x, y, t),
             SubcellLightRenderMode::Horizontal => Self::horizontal_partial(eighths),
