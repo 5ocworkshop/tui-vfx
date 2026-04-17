@@ -1071,6 +1071,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec",
+ "tui-vfx-content",
  "tui-vfx-core",
  "tui-vfx-debug",
  "tui-vfx-shadow",
