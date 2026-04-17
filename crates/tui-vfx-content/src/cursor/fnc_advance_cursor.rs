@@ -75,7 +75,11 @@ pub fn fnc_advance_cursor(
         .unwrap_or(0.0)
         .max(0.0) as f64;
     let vis_base = cursor.visibility.evaluate(now, ctx).unwrap_or(0.0);
-    let vis = if vis_base.is_finite() { vis_base.clamp(0.0, 1.0) } else { 0.0 };
+    let vis = if vis_base.is_finite() {
+        vis_base.clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
 
     let dt_ms = (dt * 1000.0).max(0.0);
     let prev_vis = state.last_effective_visibility;
@@ -84,15 +88,17 @@ pub fn fnc_advance_cursor(
     let show_transition = prev_vis <= 0.0 && vis > 0.0;
     let hide_transition = prev_vis > 0.0 && vis <= 0.0;
 
-    let grow_in_active = matches!(cursor.grow_in.mode, GrowInMode::Once | GrowInMode::EveryShow)
-        && duration_ms > 0.0;
+    let grow_in_active = matches!(
+        cursor.grow_in.mode,
+        GrowInMode::Once | GrowInMode::EveryShow
+    ) && duration_ms > 0.0;
     let grow_out_active = grow_out_ms > 0.0;
 
     state.grow_in_phase = match state.grow_in_phase {
         GrowInPhase::Hidden => {
             if show_transition && grow_in_active {
-                let once_suppressed = matches!(cursor.grow_in.mode, GrowInMode::Once)
-                    && state.grow_in_has_fired_once;
+                let once_suppressed =
+                    matches!(cursor.grow_in.mode, GrowInMode::Once) && state.grow_in_has_fired_once;
                 if once_suppressed {
                     GrowInPhase::Visible
                 } else {

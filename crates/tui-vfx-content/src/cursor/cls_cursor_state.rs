@@ -10,9 +10,13 @@ use std::collections::VecDeque;
 pub enum GrowInPhase {
     #[default]
     Hidden,
-    GrowingIn { elapsed_ms: f64 },
+    GrowingIn {
+        elapsed_ms: f64,
+    },
     Visible,
-    GrowingOut { elapsed_ms: f64 },
+    GrowingOut {
+        elapsed_ms: f64,
+    },
 }
 
 /// Per-cursor runtime state. Callers own one of these per [`crate::cursor::Cursor`]

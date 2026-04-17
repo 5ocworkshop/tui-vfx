@@ -9,15 +9,7 @@ use tui_vfx_style::models::ColorConfig;
 
 /// Controls how the cursor trail paints.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    Default,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum WakeMode {

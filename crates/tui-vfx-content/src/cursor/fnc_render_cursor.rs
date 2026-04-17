@@ -4,8 +4,8 @@
 // <CLOG>MINOR: wire ScanMode into primary_op's Visible branch. phase = (now_ms % period_ms) / period_ms; passed through fnc_cursor_scan_glyph. period_ms ≤ 0 or ScanMode::Off is a no-op.</CLOG>
 
 use super::{
-    fnc_cursor_grow_in_glyph, fnc_cursor_scan_glyph, Cursor, CursorPaintOps, CursorState,
-    GrowInPhase, PrimaryOp, ScanMode, TrailOp, WakeMode,
+    Cursor, CursorPaintOps, CursorState, GrowInPhase, PrimaryOp, ScanMode, TrailOp, WakeMode,
+    fnc_cursor_grow_in_glyph, fnc_cursor_scan_glyph,
 };
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 
@@ -15,10 +15,7 @@ fn sample_grow_in_curve(curve: &SignalOrFloat, t: f32, ctx: &SignalContext) -> f
     if matches!(curve, SignalOrFloat::Static(v) if (*v - 1.0).abs() < 1e-6) {
         return t.clamp(0.0, 1.0);
     }
-    curve
-        .evaluate(t as f64, ctx)
-        .unwrap_or(t)
-        .clamp(0.0, 1.0)
+    curve.evaluate(t as f64, ctx).unwrap_or(t).clamp(0.0, 1.0)
 }
 
 /// Sample a wake decay curve, treating the default `Static(1.0)` as linear decay
@@ -104,7 +101,11 @@ fn primary_op(
         GrowInPhase::Hidden => None,
         GrowInPhase::Visible => {
             let alpha = clamp_unit(
-                cursor.visibility.evaluate(now, ctx).unwrap_or(1.0).clamp(0.0, 1.0),
+                cursor
+                    .visibility
+                    .evaluate(now, ctx)
+                    .unwrap_or(1.0)
+                    .clamp(0.0, 1.0),
             );
             if alpha <= 0.0 {
                 None
@@ -129,7 +130,11 @@ fn primary_op(
                         fnc_cursor_scan_glyph(&cursor.character, phase, cursor.scan.mode)
                     }
                 };
-                Some(PrimaryOp { position: pos, glyph, alpha })
+                Some(PrimaryOp {
+                    position: pos,
+                    glyph,
+                    alpha,
+                })
             }
         }
         GrowInPhase::GrowingIn { elapsed_ms } => {
@@ -146,7 +151,11 @@ fn primary_op(
             if glyph.is_empty() || alpha <= 0.0 {
                 None
             } else {
-                Some(PrimaryOp { position: pos, glyph, alpha })
+                Some(PrimaryOp {
+                    position: pos,
+                    glyph,
+                    alpha,
+                })
             }
         }
         GrowInPhase::GrowingOut { elapsed_ms } => {
@@ -164,14 +173,22 @@ fn primary_op(
             if glyph.is_empty() || alpha <= 0.0 {
                 None
             } else {
-                Some(PrimaryOp { position: pos, glyph, alpha })
+                Some(PrimaryOp {
+                    position: pos,
+                    glyph,
+                    alpha,
+                })
             }
         }
     }
 }
 
 fn clamp_unit(v: f32) -> f32 {
-    if v.is_finite() { v.clamp(0.0, 1.0) } else { 0.0 }
+    if v.is_finite() {
+        v.clamp(0.0, 1.0)
+    } else {
+        0.0
+    }
 }
 
 // <FILE>tui-vfx-content/src/cursor/fnc_render_cursor.rs</FILE> - <DESC>Render cursor state into paint ops</DESC>

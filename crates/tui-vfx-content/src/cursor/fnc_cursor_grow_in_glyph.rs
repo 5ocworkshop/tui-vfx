@@ -16,7 +16,11 @@ const CENTER_BLOCKS: &[&str] = &["", "▄", "▆", "█"];
 /// - Non-block glyphs keep their base character; only alpha animates
 ///   (see spec §4.2, E4).
 /// - Progress is clamped to `0..=1`; out-of-range inputs return endpoint values.
-pub fn fnc_cursor_grow_in_glyph(base: &str, progress: f32, direction: GrowDirection) -> (String, f32) {
+pub fn fnc_cursor_grow_in_glyph(
+    base: &str,
+    progress: f32,
+    direction: GrowDirection,
+) -> (String, f32) {
     let p = progress.clamp(0.0, 1.0);
 
     if base != "█" {

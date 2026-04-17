@@ -259,12 +259,7 @@ fn cursor_shader_new_stores_fields() {
         alpha: 0.3,
         glyph: None,
     }];
-    let shader = CursorShader::new(
-        CursorShaderMode::Tint,
-        tint,
-        primary.clone(),
-        trail.clone(),
-    );
+    let shader = CursorShader::new(CursorShaderMode::Tint, tint, primary.clone(), trail.clone());
     assert_eq!(shader.mode, CursorShaderMode::Tint);
     assert_eq!(shader.tint, tint);
     assert_eq!(shader.primary, primary);
@@ -305,7 +300,10 @@ fn spatial_shader_type_cursor_off_mode_dispatches_to_base() {
     let wrapped = SpatialShaderType::Cursor(shader);
     let base = Style::default().with_fg(Color::rgb(200, 200, 200));
     let out = wrapped.style_at(&ctx(5, 0), base);
-    assert_eq!(out, base, "Off mode dispatched through SpatialShaderType must short-circuit");
+    assert_eq!(
+        out, base,
+        "Off mode dispatched through SpatialShaderType must short-circuit"
+    );
 }
 
 // <FILE>tui-vfx-style/tests/models/test_cls_cursor_shader.rs</FILE> - <DESC>Tests for CursorShader</DESC>

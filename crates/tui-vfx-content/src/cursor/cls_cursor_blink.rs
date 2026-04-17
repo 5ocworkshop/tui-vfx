@@ -30,7 +30,9 @@ pub struct CursorBlink {
 
 impl Default for CursorBlink {
     fn default() -> Self {
-        Self { interval_ms: SignalOrFloat::Static(0.0) }
+        Self {
+            interval_ms: SignalOrFloat::Static(0.0),
+        }
     }
 }
 

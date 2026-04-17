@@ -18,10 +18,8 @@
 //!    destination grid.
 
 use mixed_signals::prelude::SignalContext;
-use tui_vfx_compositor::pipeline::{
-    render_pipeline_with_spec, CompositionSpec, ShaderLayerSpec,
-};
-use tui_vfx_content::cursor::{fnc_build_cursor_shader, Cursor, CursorState};
+use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec, render_pipeline_with_spec};
+use tui_vfx_content::cursor::{Cursor, CursorState, fnc_build_cursor_shader};
 use tui_vfx_content::transformers::Typewriter;
 use tui_vfx_style::models::SpatialShaderType;
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid};
@@ -38,7 +36,10 @@ fn cursor_primary_is_spliced_into_typewriter_output() {
     let (text, _ops) =
         tw.transform_with_cursor("hello", 0.6, &ctx(), &cursor, &mut state, 0.0, 0.016);
     // 5 graphemes × 0.6 = 3 revealed → cursor at idx 3 with block glyph '█'.
-    assert!(text.contains('█'), "expected block cursor glyph in {text:?}");
+    assert!(
+        text.contains('█'),
+        "expected block cursor glyph in {text:?}"
+    );
     assert!(
         text.starts_with("hel"),
         "expected revealed prefix 'hel' in {text:?}"
@@ -53,24 +54,9 @@ fn cursor_shader_paints_wake_tint_on_dest_grid() {
 
     // Two advances at different progress values so the previous position
     // becomes a wake-trail entry after the second frame.
-    let _ = tw.transform_with_cursor(
-        "abcdef",
-        0.2,
-        &ctx(),
-        &cursor,
-        &mut state,
-        0.0,
-        0.016,
-    );
-    let (text, ops) = tw.transform_with_cursor(
-        "abcdef",
-        0.4,
-        &ctx(),
-        &cursor,
-        &mut state,
-        0.05,
-        0.05,
-    );
+    let _ = tw.transform_with_cursor("abcdef", 0.2, &ctx(), &cursor, &mut state, 0.0, 0.016);
+    let (text, ops) =
+        tw.transform_with_cursor("abcdef", 0.4, &ctx(), &cursor, &mut state, 0.05, 0.05);
 
     assert!(
         !ops.trail.is_empty(),

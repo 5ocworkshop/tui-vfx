@@ -11,15 +11,7 @@ use tui_vfx_types::{Color, Style};
 /// Mirror of `tui_vfx_content::cursor::WakeMode`, declared in `tui-vfx-style`
 /// to avoid a reverse dependency on the content crate. Consumers convert.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    Default,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum CursorShaderMode {
@@ -129,9 +121,7 @@ impl tui_vfx_core::ConfigSchema for CursorShaderTrail {
 /// Constructed per-frame by the consumer from a `CursorPaintOps` snapshot
 /// (see `fnc_build_cursor_shader` in `tui-vfx-content`). The shader itself
 /// is stateless beyond the per-frame snapshot it holds.
-#[derive(
-    Debug, Clone, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
-)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(default)]
 pub struct CursorShader {
     pub mode: CursorShaderMode,

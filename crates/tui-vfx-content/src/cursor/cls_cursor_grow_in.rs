@@ -8,15 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// Controls when the grow-in animation fires.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    Default,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum GrowInMode {
@@ -34,15 +26,7 @@ pub enum GrowInMode {
 ///
 /// Non-block cursors (e.g. `|`, `_`, `◆`) ignore direction and animate alpha only.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    Default,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum GrowDirection {
