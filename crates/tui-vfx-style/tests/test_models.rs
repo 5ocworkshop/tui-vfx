@@ -1,13 +1,15 @@
 // <FILE>tui-vfx-style/tests/test_models.rs</FILE> - <DESC>Linker file for models integration tests</DESC>
-// <VERS>VERSION: 0.6.0 - 2025-12-30</VERS>
-// <WCTX>Pipeline debugging tools - effect documentation</WCTX>
-// <CLOG>Added effect descriptions test module</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>feat/cursor-primitive T24: add test_cls_cursor_shader module for the new CursorShader skeleton</WCTX>
+// <CLOG>Register test_cls_cursor_shader module</CLOG>
 
 #[path = "common/mod.rs"]
 mod common;
 
 #[path = "models/test_cls_color_space.rs"]
 mod test_cls_color_space;
+#[path = "models/test_cls_cursor_shader.rs"]
+mod test_cls_cursor_shader;
 #[path = "models/test_cls_easing_type.rs"]
 mod test_cls_easing_type;
 #[path = "models/test_cls_fade_to_black.rs"]
@@ -36,4 +38,4 @@ mod test_effect_descriptions;
 mod test_serde_roundtrip;
 
 // <FILE>tui-vfx-style/tests/test_models.rs</FILE> - <DESC>Linker file for models integration tests</DESC>
-// <VERS>END OF VERSION: 0.6.0 - 2025-12-30</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>
