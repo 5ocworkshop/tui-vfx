@@ -2217,6 +2217,49 @@
       }
     },
     "shaders": {
+      "AffordanceWake": {
+        "ai_hint": "Dormant secondary affordances resolving on demand through edge, corner, or rail emphasis.\nzone: AllEdges, Corners, LeftRail, RightRail, TopRail, or BottomRail.\nprogress: 0.0-1.0 activation amount, optionally overridden by progress_binding.\nrest_intensity: baseline dormant intensity (often 0.0).\npeak_intensity: full wake strength.\nradius: how far the wake reaches from the targeted zone.\napply_to: Foreground, Background, or Both.\nIdeal for reveal-on-need secondary affordances that should stay quiet until focus, hover, or context makes them useful.",
+        "complexity": "simple",
+        "energy": "calm",
+        "name": "AffordanceWake",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "AllEdges",
+            "doc": "AllEdges, Corners, LeftRail, RightRail, TopRail, or BottomRail",
+            "name": "zone",
+            "ty": "AffordanceWakeZone"
+          },
+          {
+            "default": "2 cells",
+            "doc": "how far the wake reaches from the targeted zone",
+            "name": "radius",
+            "ty": "u8"
+          },
+          {
+            "default": "0.25",
+            "doc": "full wake strength",
+            "name": "peak_intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "0.00",
+            "doc": "0.0-1.0 activation amount, optionally overridden by progress_binding",
+            "name": "progress",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Dormant secondary affordances resolving on demand through edge, corner, or rail emphasis",
+        "rustdoc_summary": "Dormant secondary affordances resolving on demand through edge, corner, or rail emphasis",
+        "use_cases": [
+          "latent-affordance",
+          "focus-support",
+          "navigation",
+          "contextual-ui"
+        ]
+      },
       "AmbientOcclusion": {
         "ai_hint": "Contact shadow darkening cells near widget edges.\nedges: BottomRight (default), TopLeft, All, Inner.\nfalloff: Linear, Quadratic (default), Exponential.\nintensity: darkness strength. radius: falloff distance in cells.\nCreates depth by simulating light occlusion at boundaries.",
         "complexity": "moderate",
@@ -2413,6 +2456,93 @@
           "glitch",
           "premium",
           "effect"
+        ]
+      },
+      "ConcealedLight": {
+        "ai_hint": "Hidden-source architectural light wash for thresholds, seams, and shell hierarchy.\nsource: Top, Bottom, Left, or Right edge that hides the source line.\nspread: total inward reach in cells.\nedge_width: width of the strongest lit band just inside the concealed source.\nsource_cutoff: fraction of spread reserved as a dark lip before the light visibly emerges.\nintensity: overall strength. falloff: Linear, Quadratic, Exponential.\nmode: Static, Pulse, or Drift (all intended to stay low-amplitude).\napply_to: Foreground, Background, or Both.\nIdeal for drawers, headers, footers, sidebars, panel seams, thresholds, and shell-owned cells where structure should be felt more than seen.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "ConcealedLight",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Top",
+            "doc": "Top, Bottom, Left, or Right edge that hides the source line",
+            "name": "source",
+            "ty": "ConcealedLightSource"
+          },
+          {
+            "default": "4 cells",
+            "doc": "total inward reach in cells",
+            "name": "spread",
+            "ty": "u8"
+          },
+          {
+            "default": "1 cells",
+            "doc": "width of the strongest lit band just inside the concealed source",
+            "name": "edge_width",
+            "ty": "u8"
+          },
+          {
+            "default": "0.18",
+            "doc": "overall strength. falloff: Linear, Quadratic, Exponential",
+            "name": "intensity",
+            "ty": "f32"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Hidden-source architectural light wash for thresholds, seams, and shell hierarchy",
+        "rustdoc_summary": "Hidden-source architectural light wash for thresholds, seams, and shell hierarchy",
+        "use_cases": [
+          "shell-hierarchy",
+          "threshold",
+          "panel-depth",
+          "architectural-light"
+        ]
+      },
+      "Diffusion": {
+        "ai_hint": "Soft material-light diffusion for paper, textile, frosted, and lantern-like surfaces.\nsource: Center, edge, or corner source geometry.\nradius: maximum reach of the diffusion field in cells.\nsoftness: broadens or tightens the diffusion response.\nedge_firmness: preserves a disciplined frame around the perimeter.\nintensity: overall strength. falloff: Linear, Quadratic, Exponential.\nmode: Static, WarmDrift, CoolDrift, or Breath (all intended to stay subtle).\napply_to: Foreground, Background, or Both.\nBest on shell-owned and background-heavy regions such as support panels, empty states, calm loading surfaces, and reflective/warm UI contexts.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "Diffusion",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Center",
+            "doc": "Center, edge, or corner source geometry",
+            "name": "source",
+            "ty": "DiffusionSource"
+          },
+          {
+            "default": "6 cells",
+            "doc": "maximum reach of the diffusion field in cells",
+            "name": "radius",
+            "ty": "u8"
+          },
+          {
+            "default": "0.55",
+            "doc": "broadens or tightens the diffusion response",
+            "name": "softness",
+            "ty": "f32"
+          },
+          {
+            "default": "0.20",
+            "doc": "overall strength. falloff: Linear, Quadratic, Exponential",
+            "name": "intensity",
+            "ty": "f32"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Soft material-light diffusion for paper, textile, and frosted surfaces",
+        "rustdoc_summary": "Soft material-light diffusion for paper, textile, and frosted surfaces",
+        "use_cases": [
+          "material-light",
+          "ambient",
+          "supportive-ui",
+          "frosted",
+          "textile"
         ]
       },
       "EdgeSheen": {
@@ -3113,6 +3243,49 @@
           "pcb",
           "system-flow",
           "technical"
+        ]
+      },
+      "WayfindingNode": {
+        "ai_hint": "Calm node emphasis for breadcrumbs, progress steps, and route hints.\nnodes: one or more explicit x/y node positions.\ncurrent_index: optional current node index, optionally overridden by current_index_binding.\nprevious_strength: emphasis for nodes before the current node.\nfuture_strength: emphasis for nodes after the current node.\nradius: local node influence area in cells.\nintensity: overall node emphasis strength.\npulse_speed: optional low-amplitude pulse for the current node.\napply_to: Foreground, Background, or Both.\nUnlike trace-path style effects, this is intended for practical application wayfinding rather than animated signal visualization.",
+        "complexity": "moderate",
+        "energy": "calm",
+        "name": "WayfindingNode",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "0",
+            "doc": "one or more explicit x/y node positions",
+            "name": "nodes",
+            "ty": "Vec<WayfindingNode>"
+          },
+          {
+            "default": "2 cells",
+            "doc": "local node influence area in cells",
+            "name": "radius",
+            "ty": "u8"
+          },
+          {
+            "default": "0.22",
+            "doc": "overall node emphasis strength",
+            "name": "intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "none",
+            "doc": "optional current node index, optionally overridden by current_index_binding",
+            "name": "current_index",
+            "ty": "Option<u16>"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Calm node emphasis for breadcrumbs, progress steps, and route hints",
+        "rustdoc_summary": "Calm node emphasis for breadcrumbs, progress steps, and route hints",
+        "use_cases": [
+          "breadcrumb",
+          "progress-steps",
+          "junction",
+          "wayfinding"
         ]
       }
     },

@@ -30,6 +30,10 @@
 //! | [`TracePropagation`](SpatialShaderType::TracePropagation) | Orthogonal routed signal pulse |
 //! | [`TracePath`](SpatialShaderType::TracePath) | Authored routed signal path |
 //! | [`EdgeSheen`](SpatialShaderType::EdgeSheen) | Calm perimeter sheen for shells |
+//! | [`ConcealedLight`](SpatialShaderType::ConcealedLight) | Hidden-source architectural light wash |
+//! | [`Diffusion`](SpatialShaderType::Diffusion) | Soft material-light diffusion |
+//! | [`AffordanceWake`](SpatialShaderType::AffordanceWake) | Dormant secondary affordances resolving on demand |
+//! | [`WayfindingNode`](SpatialShaderType::WayfindingNode) | Calm node emphasis for steps, breadcrumbs, and junctions |
 //! | [`Cursor`](SpatialShaderType::Cursor) | Primary-cell alpha + wake trail tint/ghost |
 //!
 //! ### Glitch & Flicker
@@ -59,10 +63,12 @@
 //! [`crate::models::StyleEffect::Spatial`] for temporal animation.
 
 use crate::models::{
-    LinearGradientShader, cls_ambient_occlusion_shader::AmbientOcclusionShader,
-    cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
-    cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
-    cls_cursor_shader::CursorShader, cls_edge_sheen_shader::EdgeSheenShader,
+    LinearGradientShader, cls_affordance_wake_shader::AffordanceWakeShader,
+    cls_ambient_occlusion_shader::AmbientOcclusionShader, cls_barber_pole_shader::BarberPoleShader,
+    cls_bevel_shader::BevelShader, cls_border_sweep_shader::BorderSweepShader,
+    cls_chromatic_edge_shader::ChromaticEdgeShader,
+    cls_concealed_light_shader::ConcealedLightShader, cls_cursor_shader::CursorShader,
+    cls_diffusion_shader::DiffusionShader, cls_edge_sheen_shader::EdgeSheenShader,
     cls_focused_row_gradient_shader::FocusedRowGradientShader,
     cls_glisten_band_shader::GlistenBandShader, cls_glitch_lines_shader::GlitchLinesShader,
     cls_glow_shader::GlowShader, cls_highlighter_shader::HighlighterShader,
@@ -72,6 +78,7 @@ use crate::models::{
     cls_stochastic_sparkle_shader::StochasticSparkleShader,
     cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
     cls_trace_propagation_shader::TracePropagationShader,
+    cls_wayfinding_node_shader::WayfindingNodeShader,
 };
 use crate::traits::{
     ShaderContext, ShaderRuntimeBindingRequest, ShaderRuntimeBindingResolution, StyleShader,
@@ -88,7 +95,8 @@ use tui_vfx_types::Style;
 ///
 /// - **Gradients**: LinearGradient, Highlighter
 /// - **Animated**: BarberPole, Radar, Orbit, BorderSweep, Reflect, GlistenBand, PulseWave,
-///   TracePropagation, TracePath, EdgeSheen
+///   TracePropagation, TracePath, EdgeSheen, ConcealedLight, Diffusion, AffordanceWake,
+///   WayfindingNode
 /// - **Glitch**: GlitchLines, NeonFlicker, SubCellShake, ChromaticEdge
 /// - **Depth**: AmbientOcclusion, Bevel, Glow
 /// - **Premium**: StochasticSparkle
@@ -160,6 +168,18 @@ pub enum SpatialShaderType {
     /// Calm premium sheen that glides along the widget perimeter.
     EdgeSheen(EdgeSheenShader),
 
+    /// Hidden-source architectural light for thresholds, shells, and seams.
+    ConcealedLight(ConcealedLightShader),
+
+    /// Soft material-light diffusion for paper, textile, and frosted surfaces.
+    Diffusion(DiffusionShader),
+
+    /// Dormant secondary affordances that resolve on demand.
+    AffordanceWake(AffordanceWakeShader),
+
+    /// Calm node/junction emphasis for breadcrumbs, steps, and route hints.
+    WayfindingNode(WayfindingNodeShader),
+
     /// Micro-jitter through rapid color oscillation (error).
     SubCellShake(SubCellShakeShader),
 
@@ -194,6 +214,10 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::Bevel(s) => s.style_at(ctx, base),
             SpatialShaderType::Glow(s) => s.style_at(ctx, base),
             SpatialShaderType::EdgeSheen(s) => s.style_at(ctx, base),
+            SpatialShaderType::ConcealedLight(s) => s.style_at(ctx, base),
+            SpatialShaderType::Diffusion(s) => s.style_at(ctx, base),
+            SpatialShaderType::AffordanceWake(s) => s.style_at(ctx, base),
+            SpatialShaderType::WayfindingNode(s) => s.style_at(ctx, base),
             SpatialShaderType::SubCellShake(s) => s.style_at(ctx, base),
             SpatialShaderType::ChromaticEdge(s) => s.style_at(ctx, base),
             SpatialShaderType::Cursor(s) => s.style_at(ctx, base),
@@ -229,6 +253,10 @@ impl SpatialShaderType {
             SpatialShaderType::Bevel(_) => "Bevel",
             SpatialShaderType::Glow(_) => "Glow",
             SpatialShaderType::EdgeSheen(_) => "EdgeSheen",
+            SpatialShaderType::ConcealedLight(_) => "ConcealedLight",
+            SpatialShaderType::Diffusion(_) => "Diffusion",
+            SpatialShaderType::AffordanceWake(_) => "AffordanceWake",
+            SpatialShaderType::WayfindingNode(_) => "WayfindingNode",
             SpatialShaderType::SubCellShake(_) => "SubCellShake",
             SpatialShaderType::ChromaticEdge(_) => "ChromaticEdge",
             SpatialShaderType::Cursor(_) => "Cursor",
@@ -278,6 +306,18 @@ impl SpatialShaderType {
             SpatialShaderType::EdgeSheen(_) => {
                 "Calm premium sheen that glides along the widget perimeter"
             }
+            SpatialShaderType::ConcealedLight(_) => {
+                "Hidden-source architectural light wash for thresholds, seams, and shell hierarchy"
+            }
+            SpatialShaderType::Diffusion(_) => {
+                "Soft material-light diffusion for paper, textile, and frosted surfaces"
+            }
+            SpatialShaderType::AffordanceWake(_) => {
+                "Dormant secondary affordances resolving on demand through edge, corner, or rail emphasis"
+            }
+            SpatialShaderType::WayfindingNode(_) => {
+                "Calm node emphasis for breadcrumbs, progress steps, and route hints"
+            }
             SpatialShaderType::SubCellShake(_) => {
                 "Micro-jitter visual effect through rapid color oscillation"
             }
@@ -294,6 +334,8 @@ impl SpatialShaderType {
     pub fn runtime_binding_requests(&self) -> Vec<ShaderRuntimeBindingRequest> {
         match self {
             SpatialShaderType::FocusedRowGradient(shader) => shader.runtime_binding_requests(),
+            SpatialShaderType::AffordanceWake(shader) => shader.runtime_binding_requests(),
+            SpatialShaderType::WayfindingNode(shader) => shader.runtime_binding_requests(),
             _ => Vec::new(),
         }
     }
@@ -307,6 +349,8 @@ impl SpatialShaderType {
             SpatialShaderType::FocusedRowGradient(shader) => {
                 shader.runtime_binding_resolutions(ctx)
             }
+            SpatialShaderType::AffordanceWake(shader) => shader.runtime_binding_resolutions(ctx),
+            SpatialShaderType::WayfindingNode(shader) => shader.runtime_binding_resolutions(ctx),
             _ => Vec::new(),
         }
     }
@@ -448,6 +492,35 @@ impl SpatialShaderType {
                 ("edge_width", format!("{} cells", s.edge_width)),
                 ("corner_boost", format!("{}", s.corner_boost)),
                 ("color", format!("{:?}", s.color)),
+            ],
+            SpatialShaderType::ConcealedLight(s) => vec![
+                ("source", format!("{:?}", s.source)),
+                ("spread", format!("{} cells", s.spread)),
+                ("edge_width", format!("{} cells", s.edge_width)),
+                ("intensity", format!("{:.2}", s.intensity)),
+            ],
+            SpatialShaderType::Diffusion(s) => vec![
+                ("source", format!("{:?}", s.source)),
+                ("radius", format!("{} cells", s.radius)),
+                ("softness", format!("{:.2}", s.softness)),
+                ("intensity", format!("{:.2}", s.intensity)),
+            ],
+            SpatialShaderType::AffordanceWake(s) => vec![
+                ("zone", format!("{:?}", s.zone)),
+                ("radius", format!("{} cells", s.radius)),
+                ("peak_intensity", format!("{:.2}", s.peak_intensity)),
+                ("progress", format!("{:.2}", s.progress)),
+            ],
+            SpatialShaderType::WayfindingNode(s) => vec![
+                ("nodes", format!("{}", s.nodes.len())),
+                ("radius", format!("{} cells", s.radius)),
+                ("intensity", format!("{:.2}", s.intensity)),
+                (
+                    "current_index",
+                    s.current_index
+                        .map(|value| value.to_string())
+                        .unwrap_or_else(|| "none".to_string()),
+                ),
             ],
             SpatialShaderType::SubCellShake(s) => vec![
                 ("amplitude", format!("{}", s.amplitude)),

@@ -87,11 +87,14 @@ This document provides a complete inventory of visual effects available in tui-v
 
 | Effect | Description | Use Cases |
 |--------|-------------|----------|
+| **AffordanceWake** | Dormant secondary affordances resolving on demand through edge, corner, or rail emphasis | latent-affordance, focus-support, navigation, contextual-ui |
 | **AmbientOcclusion** | Contact shadow effect darkening cells near widget edges | depth, premium, 3d |
 | **BarberPole** | Animated diagonal stripes like a barber pole | loading, progress, playful |
 | **Bevel** | 3D embossed edge effect with configurable light direction | 3d, buttons, emboss |
 | **BorderSweep** | Highlight that traces the border edge | selection, focus, highlight |
 | **ChromaticEdge** | Chromatic aberration effect separating RGB edges | glitch, premium, effect |
+| **ConcealedLight** | Hidden-source architectural light wash for thresholds, seams, and shell hierarchy | shell-hierarchy, threshold, panel-depth, architectural-light |
+| **Diffusion** | Soft material-light diffusion for paper, textile, and frosted surfaces | material-light, ambient, supportive-ui, frosted, textile |
 | **EdgeSheen** | Calm premium sheen that glides along the widget perimeter | premium-shell, toast, card, surface |
 | **FocusedRowGradient** | Vertical gradient centered on a selected row | selection, list, navigation |
 | **GlistenBand** | Moving band of light that sweeps across the widget | loading, premium, shine |
@@ -108,6 +111,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **SubCellShake** | Micro-jitter visual effect through rapid color oscillation | error, vibration, attention |
 | **TracePath** | Authored routed signal path following explicit waypoints | schematic, pcb, path-authored, technical |
 | **TracePropagation** | Orthogonal signal pulse moving through routed trace lanes | schematic, pcb, system-flow, technical |
+| **WayfindingNode** | Calm node emphasis for breadcrumbs, progress steps, and route hints | breadcrumb, progress-steps, junction, wayfinding |
 
 ## Style Effects (Temporal Animations)
 

@@ -16,6 +16,8 @@
 - [RECIPE_AUTHORING_WORKFLOW.md](RECIPE_AUTHORING_WORKFLOW.md) — Canonical staged workflow for building complex recipes one effect at a time, validating each layer, then flattening to a single final file
 - [RECIPE_VISUAL_QA.md](RECIPE_VISUAL_QA.md) — Canonical visual checklist for manually previewing and signing off complex probe-validation recipes
 - [design/pipeline-probe-design.md](design/pipeline-probe-design.md) — The current phase-1 design and rollout plan for engine-owned AI-native observability
+- [RESEARCH_DESIGN_EXCELLENCE.md](RESEARCH_DESIGN_EXCELLENCE.md) — Cross-domain research summary for subtle, premium terminal polish and the current recommendation shortlist
+- [DESIGN_EXCELLENCE_USAGE_GUIDE.md](DESIGN_EXCELLENCE_USAGE_GUIDE.md) — Research-backed guidance on when and how often subtle effects should be used, including fatigue management and deterministic-vs-stochastic rules
 - [Cursor primitive](CAPABILITIES_REFERENCE.md#cursor-primitive-since-040) — General-purpose cursor primitive with grow-in + wake trail; powers `TypewriterCursor` and standalone caret overlays
 
 ## Generated (via `cargo xtask docs`)

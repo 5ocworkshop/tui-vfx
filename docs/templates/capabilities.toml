@@ -705,6 +705,64 @@ corner_boost: extra emphasis as the sheen passes corners.
 apply_to: Foreground, Background, or Both.
 Ideal for polished shells, modals, banners, and luxury UI chrome."""
 
+[effects.shaders.ConcealedLight]
+use_cases = ["shell-hierarchy", "threshold", "panel-depth", "architectural-light"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Hidden-source architectural light wash for thresholds, seams, and shell hierarchy.
+source: Top, Bottom, Left, or Right edge that hides the source line.
+spread: total inward reach in cells.
+edge_width: width of the strongest lit band just inside the concealed source.
+source_cutoff: fraction of spread reserved as a dark lip before the light visibly emerges.
+intensity: overall strength. falloff: Linear, Quadratic, Exponential.
+mode: Static, Pulse, or Drift (all intended to stay low-amplitude).
+apply_to: Foreground, Background, or Both.
+Ideal for drawers, headers, footers, sidebars, panel seams, thresholds, and shell-owned cells where structure should be felt more than seen."""
+
+[effects.shaders.Diffusion]
+use_cases = ["material-light", "ambient", "supportive-ui", "frosted", "textile"]
+energy = "calm"
+complexity = "moderate"
+premium = true
+ai_hint = """Soft material-light diffusion for paper, textile, frosted, and lantern-like surfaces.
+source: Center, edge, or corner source geometry.
+radius: maximum reach of the diffusion field in cells.
+softness: broadens or tightens the diffusion response.
+edge_firmness: preserves a disciplined frame around the perimeter.
+intensity: overall strength. falloff: Linear, Quadratic, Exponential.
+mode: Static, WarmDrift, CoolDrift, or Breath (all intended to stay subtle).
+apply_to: Foreground, Background, or Both.
+Best on shell-owned and background-heavy regions such as support panels, empty states, calm loading surfaces, and reflective/warm UI contexts."""
+
+[effects.shaders.AffordanceWake]
+use_cases = ["latent-affordance", "focus-support", "navigation", "contextual-ui"]
+energy = "calm"
+complexity = "simple"
+ai_hint = """Dormant secondary affordances resolving on demand through edge, corner, or rail emphasis.
+zone: AllEdges, Corners, LeftRail, RightRail, TopRail, or BottomRail.
+progress: 0.0-1.0 activation amount, optionally overridden by progress_binding.
+rest_intensity: baseline dormant intensity (often 0.0).
+peak_intensity: full wake strength.
+radius: how far the wake reaches from the targeted zone.
+apply_to: Foreground, Background, or Both.
+Ideal for reveal-on-need secondary affordances that should stay quiet until focus, hover, or context makes them useful."""
+
+[effects.shaders.WayfindingNode]
+use_cases = ["breadcrumb", "progress-steps", "junction", "wayfinding"]
+energy = "calm"
+complexity = "moderate"
+ai_hint = """Calm node emphasis for breadcrumbs, progress steps, and route hints.
+nodes: one or more explicit x/y node positions.
+current_index: optional current node index, optionally overridden by current_index_binding.
+previous_strength: emphasis for nodes before the current node.
+future_strength: emphasis for nodes after the current node.
+radius: local node influence area in cells.
+intensity: overall node emphasis strength.
+pulse_speed: optional low-amplitude pulse for the current node.
+apply_to: Foreground, Background, or Both.
+Unlike trace-path style effects, this is intended for practical application wayfinding rather than animated signal visualization."""
+
 [effects.shaders.SubCellShake]
 use_cases = ["error", "vibration", "attention"]
 energy = "intense"

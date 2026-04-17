@@ -23,7 +23,7 @@ supports shadows and `preserve_unfilled`.
 | Masks | 11 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
 | Filters | 25 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
-| Spatial Shaders | 20 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
+| Spatial Shaders | 24 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
 | Content Transformers | 14 (+ `None`) | `tui_vfx_content::types::ContentEffect` |
 | Shadows | 5 styles | `tui_vfx_shadow::ShadowConfig / ShadowSpec` |
@@ -481,11 +481,14 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 
 | Shader | Parameters |
 | --- | --- |
+| `AffordanceWake` | `zone`, `radius`, `peak_intensity`, `progress` |
 | `AmbientOcclusion` | `intensity`, `radius`, `edges`, `falloff` |
 | `BarberPole` | `speed`, `stripe_width`, `gap_width`, `color` |
 | `Bevel` | `light_direction`, `highlight_intensity`, `shadow_intensity`, `edge_width` |
 | `BorderSweep` | `speed`, `length`, `color` |
 | `ChromaticEdge` | `intensity`, `edge_width`, `horizontal` |
+| `ConcealedLight` | `source`, `spread`, `edge_width`, `intensity` |
+| `Diffusion` | `source`, `radius`, `softness`, `intensity` |
 | `EdgeSheen` | `speed`, `band_width`, `edge_width`, `corner_boost`, `color` |
 | `FocusedRowGradient` | `selected_row_ratio`, `falloff_distance`, `apply_to` |
 | `GlistenBand` | `speed`, `band_width`, `direction`, `angle_deg`, `head`, `tail` |
@@ -502,6 +505,7 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 | `SubCellShake` | `amplitude`, `frequency`, `axis`, `chromatic` |
 | `TracePath` | `speed`, `tail_length`, `vertical_weight`, `thickness`, `junction_boost`, `junction_glow`, `tail_mode`, `paths`, `color`, `apply_to` |
 | `TracePropagation` | `speed`, `grid_spacing`, `tail_length`, `origin`, `color` |
+| `WayfindingNode` | `nodes`, `radius`, `intensity`, `current_index` |
 
 ### Shader-specific supporting enums
 

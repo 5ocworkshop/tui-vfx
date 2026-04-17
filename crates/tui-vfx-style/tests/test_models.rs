@@ -6,10 +6,16 @@
 #[path = "common/mod.rs"]
 mod common;
 
+#[path = "models/test_cls_affordance_wake_shader.rs"]
+mod test_cls_affordance_wake_shader;
 #[path = "models/test_cls_color_space.rs"]
 mod test_cls_color_space;
+#[path = "models/test_cls_concealed_light_shader.rs"]
+mod test_cls_concealed_light_shader;
 #[path = "models/test_cls_cursor_shader.rs"]
 mod test_cls_cursor_shader;
+#[path = "models/test_cls_diffusion_shader.rs"]
+mod test_cls_diffusion_shader;
 #[path = "models/test_cls_easing_type.rs"]
 mod test_cls_easing_type;
 #[path = "models/test_cls_fade_to_black.rs"]
@@ -32,6 +38,8 @@ mod test_cls_style_effect;
 mod test_cls_style_region;
 #[path = "models/test_cls_style_transition.rs"]
 mod test_cls_style_transition;
+#[path = "models/test_cls_wayfinding_node_shader.rs"]
+mod test_cls_wayfinding_node_shader;
 #[path = "models/test_effect_descriptions.rs"]
 mod test_effect_descriptions;
 #[path = "models/test_serde_roundtrip.rs"]

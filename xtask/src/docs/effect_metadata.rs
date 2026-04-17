@@ -361,9 +361,11 @@ fn extract_sampler_metadata() -> HashMap<String, EffectMetadata> {
 
 fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
     use tui_vfx_style::models::{
-        Gradient, LinearGradientShader, cls_ambient_occlusion_shader::AmbientOcclusionShader,
+        Gradient, LinearGradientShader, cls_affordance_wake_shader::AffordanceWakeShader,
+        cls_ambient_occlusion_shader::AmbientOcclusionShader,
         cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
         cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
+        cls_concealed_light_shader::ConcealedLightShader, cls_diffusion_shader::DiffusionShader,
         cls_edge_sheen_shader::EdgeSheenShader,
         cls_focused_row_gradient_shader::FocusedRowGradientShader,
         cls_glisten_band_shader::GlistenBandShader, cls_glitch_lines_shader::GlitchLinesShader,
@@ -374,6 +376,7 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         cls_stochastic_sparkle_shader::StochasticSparkleShader,
         cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
         cls_trace_propagation_shader::TracePropagationShader,
+        cls_wayfinding_node_shader::WayfindingNodeShader,
     };
     use tui_vfx_types::Color;
 
@@ -417,6 +420,10 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         SpatialShaderType::Bevel(BevelShader::default()),
         SpatialShaderType::Glow(GlowShader::default()),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
+        SpatialShaderType::ConcealedLight(ConcealedLightShader::default()),
+        SpatialShaderType::Diffusion(DiffusionShader::default()),
+        SpatialShaderType::AffordanceWake(AffordanceWakeShader::default()),
+        SpatialShaderType::WayfindingNode(WayfindingNodeShader::default()),
         SpatialShaderType::SubCellShake(SubCellShakeShader::default()),
         SpatialShaderType::ChromaticEdge(ChromaticEdgeShader::default()),
     ];

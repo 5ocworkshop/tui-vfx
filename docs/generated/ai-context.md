@@ -54,11 +54,14 @@
 - **Vignette**: Edge darkening that draws focus to center.
 
 ### Shaders
+- **AffordanceWake**: Dormant secondary affordances resolving on demand through edge, corner, or rail emphasis.
 - **AmbientOcclusion**: Contact shadow darkening cells near widget edges. [Premium]
 - **BarberPole**: Animated diagonal stripes like a barber pole.
 - **Bevel**: 3D embossed edge effect simulating raised or sunken surfaces.
 - **BorderSweep**: Border highlight that sweeps around widget edges.
 - **ChromaticEdge**: RGB edge separation for chromatic aberration effect.
+- **ConcealedLight**: Hidden-source architectural light wash for thresholds, seams, and shell hierarchy. [Premium]
+- **Diffusion**: Soft material-light diffusion for paper, textile, frosted, and lantern-like surfaces. [Premium]
 - **EdgeSheen**: Calm premium sheen constrained to widget edges instead of sweeping across the full surface. [Premium]
 - **FocusedRowGradient**: Vertical gradient highlighting selected row.
 - **GlistenBand**: Moving light band sweep for elegant loading shimmer. [Premium]
@@ -75,6 +78,7 @@
 - **SubCellShake**: Micro-jitter via rapid color oscillation. [Intense]
 - **TracePath**: Authored routed trace following explicit waypoints. [Premium]
 - **TracePropagation**: Orthogonal signal pulse traveling through routed trace lanes. [Premium]
+- **WayfindingNode**: Calm node emphasis for breadcrumbs, progress steps, and route hints.
 
 ### Samplers
 - **Crt**: CRT monitor scanlines and barrel curvature distortion.

@@ -159,6 +159,10 @@ Spatial shaders compute per-cell style modifications based on position, time, an
 | **AmbientOcclusion** | Contact shadow at widget edges | `intensity`, `radius`, `edges`, `falloff`, `shadow_color` |
 | **Bevel** | 3D embossed edge effect | `light_direction`, `highlight_intensity`, `shadow_intensity`, `edge_width` |
 | **Glow** | Multi-cell bloom/halo | `color`, `radius`, `falloff`, `intensity`, `pulse_speed` |
+| **ConcealedLight** | Hidden-source architectural light wash | `source`, `spread`, `edge_width`, `source_cutoff`, `intensity`, `mode`, `apply_to` |
+| **Diffusion** | Soft material-light diffusion | `source`, `radius`, `softness`, `edge_firmness`, `intensity`, `mode`, `apply_to` |
+| **AffordanceWake** | Dormant secondary affordance wake | `zone`, `radius`, `progress`, `progress_binding`, `rest_intensity`, `peak_intensity`, `apply_to` |
+| **WayfindingNode** | Calm node emphasis for breadcrumbs/steps | `nodes`, `radius`, `current_index`, `current_index_binding`, `previous_strength`, `future_strength`, `pulse_speed` |
 | **SubCellShake** | Micro-jitter color oscillation | `amplitude`, `frequency`, `axis`, `chromatic`, `seed`, `edge_only`, `edge_width` |
 | **ChromaticEdge** | RGB edge separation | `intensity`, `edge_width`, `horizontal` |
 
@@ -187,6 +191,34 @@ Premium effect for frosted glass / film grain texture:
 **Glow** — Multi-cell bloom/halo effect around widget edges:
 - `falloff`: Controls intensity curve (Linear, Quadratic, Exponential)
 - `pulse_speed`: Optional pulsing animation in Hz
+
+**ConcealedLight** — Hidden-source architectural light for thresholds, seams, and shell hierarchy:
+- `source`: Which edge hides the light source (Top, Bottom, Left, Right)
+- `spread`: How far the light reaches inward from the source
+- `edge_width`: Width of the strongest lit band just inside the concealed lip
+- `source_cutoff`: Reserves a dark lip before the light visibly emerges
+- Use for panel shells, drawers, thresholds, headers, and subtle structural depth
+
+**Diffusion** — Soft material-light response for paper, textile, frosted, and lantern-like surfaces:
+- `source`: Center, edge, or corner source geometry
+- `softness`: Broadens/tightens the diffusion response
+- `edge_firmness`: Preserves a disciplined frame around the perimeter
+- `mode`: Static by default; WarmDrift, CoolDrift, and Breath stay intentionally subtle
+- Best on shell-owned or background-heavy surfaces, not dense text blocks
+
+**AffordanceWake** — Low-noise dormant-to-active affordance emphasis:
+- `zone`: AllEdges, Corners, LeftRail, RightRail, TopRail, BottomRail
+- `progress` / `progress_binding`: Activation amount for reveal-on-need affordances
+- `rest_intensity`: Optional dormant baseline, often 0.0
+- `peak_intensity`: Full wake strength
+- Intended to complement explicit hover/focus indicators rather than replace them
+
+**WayfindingNode** — Calm node/junction emphasis for breadcrumbs, progress steps, and route hints:
+- `nodes`: Explicit x/y node positions
+- `current_index` / `current_index_binding`: Current active node
+- `previous_strength`: Emphasis strength for already-passed nodes
+- `future_strength`: Optional preview of upcoming nodes
+- More practical and application-oriented than the routed signal-trace shaders
 
 **SubCellShake (Shader)** — Micro-jitter visual effect through rapid color oscillation:
 - `axis`: Horizontal, Vertical, Both (default)

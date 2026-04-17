@@ -7,9 +7,12 @@ use tui_vfx_geometry::easing::EasingType;
 use tui_vfx_geometry::types::EasingCurve;
 use tui_vfx_style::models::ColorConfig;
 use tui_vfx_style::models::Gradient;
+use tui_vfx_style::models::cls_affordance_wake_shader::AffordanceWakeShader;
 use tui_vfx_style::models::cls_barber_pole_shader::BarberPoleShader;
 use tui_vfx_style::models::cls_border_sweep_shader::BorderSweepShader;
 use tui_vfx_style::models::cls_chromatic_edge_shader::ChromaticEdgeShader;
+use tui_vfx_style::models::cls_concealed_light_shader::ConcealedLightShader;
+use tui_vfx_style::models::cls_diffusion_shader::DiffusionShader;
 use tui_vfx_style::models::cls_edge_sheen_shader::EdgeSheenShader;
 use tui_vfx_style::models::cls_focused_row_gradient_shader::FocusedRowGradientShader;
 use tui_vfx_style::models::cls_glisten_band_shader::GlistenBandShader;
@@ -23,6 +26,7 @@ use tui_vfx_style::models::cls_radar_shader::RadarShader;
 use tui_vfx_style::models::cls_reflect_shader::ReflectShader;
 use tui_vfx_style::models::cls_trace_path_shader::TracePathShader;
 use tui_vfx_style::models::cls_trace_propagation_shader::TracePropagationShader;
+use tui_vfx_style::models::cls_wayfinding_node_shader::WayfindingNodeShader;
 use tui_vfx_style::models::{ColorSpace, FadeApplyTo, FadeTarget, SpatialShaderType, StyleEffect};
 use tui_vfx_style::traits::StyleInterpolator;
 use tui_vfx_types::Color;
@@ -60,6 +64,10 @@ fn test_spatial_shader_name_returns_nonempty() {
             position_binding: None,
         }),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
+        SpatialShaderType::ConcealedLight(ConcealedLightShader::default()),
+        SpatialShaderType::Diffusion(DiffusionShader::default()),
+        SpatialShaderType::AffordanceWake(AffordanceWakeShader::default()),
+        SpatialShaderType::WayfindingNode(WayfindingNodeShader::default()),
         SpatialShaderType::Highlighter(HighlighterShader::new(ColorConfig::Yellow)),
         SpatialShaderType::Reflect(ReflectShader {
             speed: 2.0,
@@ -112,6 +120,10 @@ fn test_spatial_shader_description_returns_nonempty() {
             position_binding: None,
         }),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
+        SpatialShaderType::ConcealedLight(ConcealedLightShader::default()),
+        SpatialShaderType::Diffusion(DiffusionShader::default()),
+        SpatialShaderType::AffordanceWake(AffordanceWakeShader::default()),
+        SpatialShaderType::WayfindingNode(WayfindingNodeShader::default()),
         SpatialShaderType::Highlighter(HighlighterShader::new(ColorConfig::Yellow)),
         SpatialShaderType::Reflect(ReflectShader {
             speed: 2.0,

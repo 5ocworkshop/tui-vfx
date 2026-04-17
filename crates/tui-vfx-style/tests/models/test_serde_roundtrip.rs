@@ -5,11 +5,15 @@
 
 use tui_vfx_geometry::easing::EasingType;
 use tui_vfx_geometry::types::EasingCurve;
+use tui_vfx_style::models::cls_affordance_wake_shader::AffordanceWakeShader;
 use tui_vfx_style::models::cls_chromatic_edge_shader::ChromaticEdgeShader;
+use tui_vfx_style::models::cls_concealed_light_shader::ConcealedLightShader;
+use tui_vfx_style::models::cls_diffusion_shader::DiffusionShader;
 use tui_vfx_style::models::cls_edge_sheen_shader::EdgeSheenShader;
 use tui_vfx_style::models::cls_orbit_shader::OrbitShader;
 use tui_vfx_style::models::cls_trace_path_shader::TracePathShader;
 use tui_vfx_style::models::cls_trace_propagation_shader::TracePropagationShader;
+use tui_vfx_style::models::cls_wayfinding_node_shader::WayfindingNodeShader;
 use tui_vfx_style::models::{
     ColorSpace, Gradient, LinearGradientShader, SpatialShaderType, StyleEffect, StyleTransition,
 };
@@ -103,6 +107,50 @@ fn test_style_effect_roundtrip_spatial_edge_sheen() {
     let shader = EdgeSheenShader::default();
     let effect = StyleEffect::Spatial {
         shader: SpatialShaderType::EdgeSheen(shader),
+    };
+    let json = serde_json::to_string(&effect).expect("serialize spatial effect");
+    let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn test_style_effect_roundtrip_spatial_concealed_light() {
+    let shader = ConcealedLightShader::default();
+    let effect = StyleEffect::Spatial {
+        shader: SpatialShaderType::ConcealedLight(shader),
+    };
+    let json = serde_json::to_string(&effect).expect("serialize spatial effect");
+    let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn test_style_effect_roundtrip_spatial_diffusion() {
+    let shader = DiffusionShader::default();
+    let effect = StyleEffect::Spatial {
+        shader: SpatialShaderType::Diffusion(shader),
+    };
+    let json = serde_json::to_string(&effect).expect("serialize spatial effect");
+    let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn test_style_effect_roundtrip_spatial_affordance_wake() {
+    let shader = AffordanceWakeShader::default();
+    let effect = StyleEffect::Spatial {
+        shader: SpatialShaderType::AffordanceWake(shader),
+    };
+    let json = serde_json::to_string(&effect).expect("serialize spatial effect");
+    let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
+    assert_eq!(effect, parsed);
+}
+
+#[test]
+fn test_style_effect_roundtrip_spatial_wayfinding_node() {
+    let shader = WayfindingNodeShader::default();
+    let effect = StyleEffect::Spatial {
+        shader: SpatialShaderType::WayfindingNode(shader),
     };
     let json = serde_json::to_string(&effect).expect("serialize spatial effect");
     let parsed: StyleEffect = serde_json::from_str(&json).expect("deserialize spatial effect");
