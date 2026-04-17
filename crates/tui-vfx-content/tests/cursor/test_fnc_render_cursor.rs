@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_render_cursor.rs</FILE> - <DESC>Tests for fnc_render_cursor</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>feat/cursor-primitive: render tests</WCTX>
-// <CLOG>T18: add wake Ghost trail test</CLOG>
+// <CLOG>T19: add E10 edge-case test</CLOG>
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use tui_vfx_content::cursor::{
@@ -121,5 +121,19 @@ fn ghost_wake_emits_trail_ops_with_cursor_character() {
     assert_eq!(ops.trail[0].glyph.as_deref(), Some("█"));
 }
 
+// --- T19: edge-case tests (E10) ---
+
+#[test]
+fn e10_empty_character_with_wake_still_decays_trail() {
+    let mut state = CursorState::new();
+    let mut cursor = Cursor::default().with_wake_tint(1.0, 0);
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.0, &ctx());
+    fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.1, 0.1, &ctx());
+    cursor.character = "".into();
+    let ops = fnc_render_cursor(&state, &cursor, 0.1, &ctx());
+    assert!(ops.primary.is_none());       // no primary
+    assert_eq!(ops.trail.len(), 1);       // existing trail persists
+}
+
 // <FILE>tui-vfx-content/tests/cursor/test_fnc_render_cursor.rs</FILE> - <DESC>Tests for fnc_render_cursor</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
