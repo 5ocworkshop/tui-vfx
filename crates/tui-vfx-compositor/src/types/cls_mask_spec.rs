@@ -224,6 +224,51 @@ pub enum DitherMatrix {
     Bayer8,
 }
 
+/// Organic materialization mask configuration.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(deny_unknown_fields)]
+pub struct Materialize {
+    /// Origin point that biases where the reveal begins.
+    #[serde(default)]
+    pub origin: RadialOrigin,
+    /// Seed for deterministic noise breakup.
+    #[serde(default)]
+    pub seed: u64,
+    /// Size of grouped materialization chunks.
+    #[serde(default = "default_materialize_chunk_size")]
+    pub chunk_size: u8,
+    /// Noise amplitude added to the reveal threshold.
+    #[serde(default = "default_materialize_noise")]
+    pub noise: f32,
+    /// Whether to soften the reveal edge.
+    #[serde(default = "default_materialize_soft_edge")]
+    pub soft_edge: bool,
+}
+
+fn default_materialize_chunk_size() -> u8 {
+    1
+}
+
+fn default_materialize_noise() -> f32 {
+    0.18
+}
+
+fn default_materialize_soft_edge() -> bool {
+    true
+}
+
+impl Default for Materialize {
+    fn default() -> Self {
+        Self {
+            origin: RadialOrigin::Center,
+            seed: 0,
+            chunk_size: default_materialize_chunk_size(),
+            noise: default_materialize_noise(),
+            soft_edge: default_materialize_soft_edge(),
+        }
+    }
+}
+
 /// Complete mask specification with all parameters.
 ///
 /// This enum provides full configuration for each mask type,
@@ -425,6 +470,29 @@ pub enum MaskSpec {
         matrix: DitherMatrix,
     },
 
+    /// Organic materialization reveal that blends an origin-biased field with deterministic noise.
+    Materialize {
+        /// Origin point that biases where the reveal begins.
+        #[serde(default)]
+        origin: RadialOrigin,
+
+        /// Seed for deterministic breakup.
+        #[serde(default)]
+        seed: u64,
+
+        /// Chunk size for grouped reveal cells.
+        #[serde(default = "default_materialize_chunk_size")]
+        chunk_size: u8,
+
+        /// Noise amplitude (0.0-1.0).
+        #[serde(default = "default_materialize_noise")]
+        noise: f32,
+
+        /// Enable a soft reveal edge.
+        #[serde(default = "default_materialize_soft_edge")]
+        soft_edge: bool,
+    },
+
     /// Path-based reveal (spiral, radial sweep, etc.).
     ///
     /// Content is revealed following a geometric path pattern.
@@ -581,6 +649,7 @@ impl MaskSpec {
             MaskSpec::Blinds { .. } => "Blinds",
             MaskSpec::Iris { .. } => "Iris",
             MaskSpec::Diamond { .. } => "Diamond",
+            MaskSpec::Materialize { .. } => "Materialize",
             MaskSpec::NoiseDither { .. } => "NoiseDither",
             MaskSpec::PathReveal { .. } => "PathReveal",
             MaskSpec::Radial { .. } => "Radial",
@@ -598,6 +667,9 @@ impl MaskSpec {
             MaskSpec::Blinds { .. } => "Venetian blinds effect",
             MaskSpec::Iris { .. } => "Iris/spotlight reveal from center",
             MaskSpec::Diamond { .. } => "Diamond-shaped expand from center",
+            MaskSpec::Materialize { .. } => {
+                "Organic materialization reveal with origin bias and noise"
+            }
             MaskSpec::NoiseDither { .. } => "Dithered noise pattern reveal",
             MaskSpec::PathReveal { .. } => "Path-based reveal (spiral, radial sweep)",
             MaskSpec::Radial { .. } => "Radial reveal expanding from configurable origin",
@@ -643,6 +715,19 @@ impl MaskSpec {
             MaskSpec::Diamond { soft_edge } => {
                 vec![("soft_edge", format!("{}", soft_edge))]
             }
+            MaskSpec::Materialize {
+                origin,
+                seed,
+                chunk_size,
+                noise,
+                soft_edge,
+            } => vec![
+                ("origin", format!("{:?}", origin)),
+                ("seed", format!("{}", seed)),
+                ("chunk_size", format!("{}", chunk_size)),
+                ("noise", format!("{}", noise)),
+                ("soft_edge", format!("{}", soft_edge)),
+            ],
             MaskSpec::NoiseDither { seed, matrix } => vec![
                 ("seed", format!("{}", seed)),
                 ("matrix", format!("{:?}", matrix)),

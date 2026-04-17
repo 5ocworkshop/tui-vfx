@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>VERSION: 2.11.1</VERS>
-// <WCTX>feat/cursor-primitive T31: clippy clean-up — the T20 TypewriterCursor flatten grew that struct (it now composes Cursor, which carries a ColorConfig-bearing Wake). The Typewriter variant is now ~760B while other variants are <64B, triggering clippy::large_enum_variant. Boxing `cursor: Option<TypewriterCursor>` would be a breaking public-API change for all ContentEffect constructors; silence the lint at the enum level instead with a documented rationale.</WCTX>
-// <CLOG>PATCH: add #[allow(clippy::large_enum_variant)] with rationale pointing at the T20 flatten</CLOG>
+// <VERS>VERSION: 2.12.0</VERS>
+// <WCTX>Add GlyphCascade as a richer evolve-like content effect</WCTX>
+// <CLOG>Add ContentEffect::GlyphCascade variant with alphabet, pattern, direction, seed, mode fields; wire name/description/enumerate_params arms</CLOG>
 
 //! # Content Effects
 //!
@@ -44,6 +44,7 @@
 //! ```
 
 use super::cls_dissolve_config::{DissolveDirection, DissolvePattern, DissolveReplacement};
+use super::cls_glyph_cascade::{GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern};
 use super::cls_mirror_axis::MirrorAxis;
 use super::cls_morph_config::{MorphDirection, MorphProgression};
 use super::cls_scramble_charset::ScrambleCharset;
@@ -182,6 +183,30 @@ pub enum ContentEffect {
         /// Progress value when glitch ends.
         #[serde(default)]
         glitch_end: SignalOrFloat,
+    },
+
+    /// Glyph-cascade / symbol-evolution effect.
+    ///
+    /// Transitions each character position through a configurable glyph alphabet
+    /// (blocks, circles, braille, custom strings, etc.) according to a reveal order.
+    /// This is a richer recipe-friendly evolve primitive: it can land on the target
+    /// text, destabilize away from it, or stay in glyph-space for the full effect.
+    GlyphCascade {
+        /// Glyph alphabet used for the intermediate cascade.
+        #[serde(default)]
+        alphabet: GlyphCascadeAlphabet,
+        /// Reveal ordering pattern across the text.
+        #[serde(default)]
+        pattern: GlyphCascadePattern,
+        /// Direction for sequential patterns.
+        #[serde(default)]
+        direction: DissolveDirection,
+        /// Seed for deterministic random ordering.
+        #[serde(default)]
+        seed: u64,
+        /// How the glyph cascade interacts with the target text.
+        #[serde(default)]
+        mode: GlyphCascadeMode,
     },
 
     /// Airport/train station split-flap display.
@@ -411,6 +436,7 @@ impl ContentEffect {
             ContentEffect::Scramble { .. } => "Scramble",
             ContentEffect::GlitchShift { .. } => "GlitchShift",
             ContentEffect::ScrambleGlitchShift { .. } => "ScrambleGlitchShift",
+            ContentEffect::GlyphCascade { .. } => "GlyphCascade",
             ContentEffect::SplitFlap { .. } => "SplitFlap",
             ContentEffect::Odometer => "Odometer",
             ContentEffect::Redact { .. } => "Redact",
@@ -433,6 +459,7 @@ impl ContentEffect {
             ContentEffect::ScrambleGlitchShift { .. } => {
                 "Combined scramble and glitch shift effect"
             }
+            ContentEffect::GlyphCascade { .. } => "Glyph-cascade / symbol-evolution effect",
             ContentEffect::SplitFlap { .. } => "Airport/train station split-flap display",
             ContentEffect::Odometer => "Vertical scrolling digit counter",
             ContentEffect::Redact { .. } => "Text redaction/censorship effect",
@@ -493,6 +520,19 @@ impl ContentEffect {
                 ("shift_amount", format!("{}", shift_amount)),
                 ("glitch_start", format!("{:?}", glitch_start)),
                 ("glitch_end", format!("{:?}", glitch_end)),
+            ],
+            ContentEffect::GlyphCascade {
+                alphabet,
+                pattern,
+                direction,
+                seed,
+                mode,
+            } => vec![
+                ("alphabet", format!("{:?}", alphabet)),
+                ("pattern", format!("{:?}", pattern)),
+                ("direction", format!("{:?}", direction)),
+                ("seed", format!("{}", seed)),
+                ("mode", format!("{:?}", mode)),
             ],
             ContentEffect::SplitFlap {
                 speed,
@@ -584,4 +624,4 @@ impl ContentEffect {
 }
 
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>END OF VERSION: 2.11.1</VERS>
+// <VERS>END OF VERSION: 2.12.0</VERS>

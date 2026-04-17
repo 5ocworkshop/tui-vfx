@@ -1,10 +1,11 @@
 // <FILE>tui-vfx-content/src/transformers/mod.rs</FILE> - <DESC>Content transformers module</DESC>
-// <VERS>VERSION: 1.12.0</VERS>
-// <WCTX>CharsetNoise transformer for non-converging time-varying character replacement</WCTX>
-// <CLOG>Add CharsetNoise transformer and re-export</CLOG>
+// <VERS>VERSION: 1.13.0</VERS>
+// <WCTX>Register GlyphCascade transformer</WCTX>
+// <CLOG>Add cls_glyph_cascade module and re-export GlyphCascade</CLOG>
 
 pub mod cls_dissolve;
 pub mod cls_glitch_shift;
+pub mod cls_glyph_cascade;
 pub mod cls_marquee;
 pub mod cls_mirror;
 pub mod cls_morph;
@@ -22,6 +23,7 @@ pub mod fnc_morph_chars;
 
 pub use cls_dissolve::Dissolve;
 pub use cls_glitch_shift::GlitchShift;
+pub use cls_glyph_cascade::GlyphCascade;
 pub use cls_marquee::Marquee;
 pub use cls_mirror::Mirror;
 pub use cls_morph::Morph;
@@ -37,4 +39,4 @@ pub use cls_wrap_indicator::WrapIndicator;
 pub use fnc_get_transformer::get_transformer;
 
 // <FILE>tui-vfx-content/src/transformers/mod.rs</FILE> - <DESC>Content transformers module</DESC>
-// <VERS>END OF VERSION: 1.12.0</VERS>
+// <VERS>END OF VERSION: 1.13.0</VERS>

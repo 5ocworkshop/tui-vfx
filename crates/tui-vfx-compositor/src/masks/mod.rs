@@ -10,6 +10,7 @@ pub(crate) mod cls_cellular;
 pub(crate) mod cls_checkers;
 pub(crate) mod cls_diamond;
 pub(crate) mod cls_dissolve;
+pub(crate) mod cls_materialize;
 pub(crate) mod cls_noise_dither;
 pub(crate) mod cls_path_reveal;
 pub(crate) mod cls_radial;

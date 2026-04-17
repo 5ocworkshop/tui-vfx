@@ -5,8 +5,8 @@
 
 use crate::masks::{
     cls_blinds::Blinds, cls_cellular::Cellular, cls_checkers::Checkers, cls_diamond::Diamond,
-    cls_dissolve::Dissolve, cls_noise_dither::NoiseDither, cls_path_reveal::PathReveal,
-    cls_radial::Radial, cls_spotlight::Spotlight, cls_wipe::Wipe,
+    cls_dissolve::Dissolve, cls_materialize::Materialize, cls_noise_dither::NoiseDither,
+    cls_path_reveal::PathReveal, cls_radial::Radial, cls_spotlight::Spotlight, cls_wipe::Wipe,
 };
 use crate::traits::mask::Mask;
 use crate::types::cls_mask_spec::MaskSpec;
@@ -20,6 +20,7 @@ pub(crate) enum PreparedMask {
     Blinds(Blinds),
     Iris(Spotlight),
     Diamond(Diamond),
+    Materialize(Materialize),
     NoiseDither(NoiseDither),
     PathReveal(PathReveal),
     Radial(Radial),
@@ -43,6 +44,7 @@ impl PreparedMask {
             PreparedMask::Blinds(mask) => mask.is_visible(local_x, local_y, width, height, t),
             PreparedMask::Iris(mask) => mask.is_visible(local_x, local_y, width, height, t),
             PreparedMask::Diamond(mask) => mask.is_visible(local_x, local_y, width, height, t),
+            PreparedMask::Materialize(mask) => mask.is_visible(local_x, local_y, width, height, t),
             PreparedMask::NoiseDither(mask) => mask.is_visible(local_x, local_y, width, height, t),
             PreparedMask::PathReveal(mask) => mask.is_visible(local_x, local_y, width, height, t),
             PreparedMask::Radial(mask) => mask.is_visible(local_x, local_y, width, height, t),
@@ -59,6 +61,7 @@ impl PreparedMask {
             PreparedMask::Blinds(_) => "Blinds",
             PreparedMask::Iris(_) => "Iris",
             PreparedMask::Diamond(_) => "Diamond",
+            PreparedMask::Materialize(_) => "Materialize",
             PreparedMask::NoiseDither(_) => "NoiseDither",
             PreparedMask::PathReveal(_) => "PathReveal",
             PreparedMask::Radial(_) => "Radial",
@@ -90,6 +93,19 @@ pub(crate) fn prepare_mask(spec: &MaskSpec) -> PreparedMask {
             PreparedMask::Iris(Spotlight::new(*shape, *soft_edge))
         }
         MaskSpec::Diamond { soft_edge } => PreparedMask::Diamond(Diamond::new(*soft_edge)),
+        MaskSpec::Materialize {
+            origin,
+            seed,
+            chunk_size,
+            noise,
+            soft_edge,
+        } => PreparedMask::Materialize(Materialize::new(
+            *origin,
+            *seed,
+            *chunk_size,
+            *noise,
+            *soft_edge,
+        )),
         MaskSpec::NoiseDither { seed, matrix } => {
             PreparedMask::NoiseDither(NoiseDither::new(*seed, *matrix))
         }

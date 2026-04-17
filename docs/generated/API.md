@@ -1,5 +1,5 @@
 <!-- <FILE>docs/generated/API.md</FILE> - <DESC>Complete TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 3.2.0</VERS> -->
+<!-- <VERS>VERSION: 3.3.0</VERS> -->
 <!-- <WCTX>Generated API documentation</WCTX> -->
 <!-- <CLOG>Auto-generated from code + api_docs.toml</CLOG> -->
 
@@ -20,12 +20,12 @@ supports shadows and `preserve_unfilled`.
 
 | Category | Count (variants) | Primary API |
 | --- | --- | --- |
-| Masks | 10 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
-| Filters | 24 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
+| Masks | 11 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
+| Filters | 25 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
 | Spatial Shaders | 20 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
-| Content Transformers | 13 (+ `None`) | `tui_vfx_content::types::ContentEffect` |
+| Content Transformers | 14 (+ `None`) | `tui_vfx_content::types::ContentEffect` |
 | Shadows | 5 styles | `tui_vfx_shadow::ShadowConfig / ShadowSpec` |
 | Geometry & Motion | 20+ | `tui_vfx_geometry::types::*` |
 
@@ -199,7 +199,7 @@ Use `ShaderWithRegion` for runtime shader instances and `ShaderLayerSpec` for se
 
 ---
 
-## MaskSpec (10 effects)
+## MaskSpec (11 effects)
 
 Masks control cell visibility based on position and animation progress `t`.
 
@@ -211,6 +211,7 @@ Masks control cell visibility based on position and animation progress `t`.
 | `Diamond` | Diamond-shaped expand from center | `soft_edge` |
 | `Dissolve` | Random pixel dissolve effect | `seed`, `chunk_size` |
 | `Iris` | Iris/spotlight reveal from center | `shape`, `soft_edge` |
+| `Materialize` | Organic materialization reveal with origin bias and noise | `origin`, `seed`, `chunk_size`, `noise`, `soft_edge` |
 | `NoiseDither` | Dithered noise pattern reveal | `seed`, `matrix` |
 | `None` | No mask applied — content is fully visible | - |
 | `PathReveal` | Path-based reveal (spiral, radial sweep) | `path`, `soft_edge` |
@@ -288,7 +289,7 @@ Pattern for cellular mask
 
 ---
 
-## FilterSpec (24 effects)
+## FilterSpec (25 effects)
 
 Filters modify cell colors/styles after rendering (applied in order).
 
@@ -301,6 +302,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `Crt` | CRT monitor post-processing effect | `scanline_strength`, `glow` |
 | `Dim` | Dim/darken the output | `factor`, `apply_to` |
 | `DotIndicator` | Simple dot/bullet indicator adjacent to content | `indicator_char`, `position`, `progress` |
+| `EdgeGrow` | Generalized edge growth / stretch indicator using sub-cell blocks | `rest_eighths`, `peak_eighths`, `edge`, `progress`, `margin_width` |
 | `FadeToCanvas` | Canvas-aware exit fade: blend cells toward a declared canvas color | `canvas_color`, `canvas_color_binding`, `strength`, `apply_to` |
 | `GlistenSweep` | Diagonal glisten sweep effect | `boost`, `band_width`, `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
 | `Greyscale` | Greyscale/desaturate filter using BT.601 luminance | `strength`, `apply_to` |
@@ -563,6 +565,7 @@ Content transformers modify text strings based on animation progress.
 pub enum ContentEffect {
     Dissolve { replacement: Space, pattern: Random, direction: LeftToRight, seed: 0 },
     GlitchShift { shift_amount: 4, glitch_start: Static(0.0), glitch_end: Static(0.0), seed: 42 },
+    GlyphCascade { alphabet: Circles, pattern: Sequential, direction: LeftToRight, seed: 42, mode: IntoTarget },
     Marquee { speed: Static(0.0), width: 20 },
     Mirror { axis: Horizontal },
     Morph { source: , progression: Linear, direction: LeftToRight, seed: 0 },
@@ -695,4 +698,4 @@ pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowG
 ---
 
 <!-- <FILE>docs/generated/API.md</FILE> - <DESC>Complete TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 3.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 3.3.0</VERS> -->

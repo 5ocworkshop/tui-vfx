@@ -123,6 +123,55 @@
           "cyberpunk"
         ]
       },
+      "GlyphCascade": {
+        "ai_hint": "Glyph alphabet cascade / symbol evolution effect.\nalphabet: circles, blocks, shaded, quadrants, braille, or custom glyph string.\npattern: sequential, random, edge_in, edge_out, by_word, by_line.\ndirection: left_to_right, right_to_left, center_in, center_out.\nseed: deterministic ordering. mode: into_target, from_target, or glyphs_only.\nGreat for premium text reveals, systemic sci-fi transitions, and brandable glyph-native UI motion.",
+        "complexity": "advanced",
+        "energy": "moderate",
+        "name": "GlyphCascade",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Circles",
+            "doc": "Glyph alphabet used for the intermediate cascade.",
+            "name": "alphabet",
+            "ty": "GlyphCascadeAlphabet"
+          },
+          {
+            "default": "Sequential",
+            "doc": "Reveal ordering pattern across the text.",
+            "name": "pattern",
+            "ty": "GlyphCascadePattern"
+          },
+          {
+            "default": "LeftToRight",
+            "doc": "Direction for sequential patterns.",
+            "name": "direction",
+            "ty": "DissolveDirection"
+          },
+          {
+            "default": "42",
+            "doc": "Seed for deterministic random ordering.",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "IntoTarget",
+            "doc": "How the glyph cascade interacts with the target text.",
+            "name": "mode",
+            "ty": "GlyphCascadeMode"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Glyph-cascade / symbol-evolution effect",
+        "rustdoc_summary": "Glyph-cascade / symbol-evolution effect",
+        "use_cases": [
+          "evolve",
+          "glyph",
+          "materialize",
+          "symbolic-transition"
+        ]
+      },
       "Marquee": {
         "ai_hint": "Scrolling text ticker effect.\nspeed: scroll rate. width: visible window width.\nText scrolls horizontally through the window.",
         "complexity": "simple",
@@ -825,6 +874,56 @@
           "selection",
           "navigation",
           "indicator"
+        ]
+      },
+      "EdgeGrow": {
+        "ai_hint": "Generalized edge growth / stretch indicator using sub-cell partial blocks.\nrest_eighths: width at rest. peak_eighths: width at full activation.\nedge: left/right/top/bottom origin. fill_color/bg_color: visual colors.\nprogress: activation amount (raw number, signal, or runtime binding). margin_width: available margin cells.\nUse for hover rails, bottom bars, expanding selection gutters, and terminal-native stretch/grow accents.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "EdgeGrow",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "2",
+            "doc": "Width at rest in eighths of a cell.",
+            "name": "rest_eighths",
+            "ty": "u8"
+          },
+          {
+            "default": "12",
+            "doc": "Width at full activation in eighths.",
+            "name": "peak_eighths",
+            "ty": "u8"
+          },
+          {
+            "default": "Left",
+            "doc": "Which edge grows outward from the content.",
+            "name": "edge",
+            "ty": "HoverBarPosition"
+          },
+          {
+            "default": "Signal(Static(0.0))",
+            "doc": "Progress (0.0-1.0) as raw number, signal, or runtime binding.",
+            "name": "progress",
+            "ty": "BindableValue"
+          },
+          {
+            "default": "2",
+            "doc": "Available margin width on the active side.",
+            "name": "margin_width",
+            "ty": "u8"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Generalized edge growth / stretch indicator using sub-cell blocks",
+        "rustdoc_summary": "Generalized edge growth / stretch indicator using sub-cell blocks",
+        "use_cases": [
+          "hover",
+          "focus",
+          "stretch",
+          "rail",
+          "selection"
         ]
       },
       "FadeToCanvas": {
@@ -1681,6 +1780,55 @@
           "transition",
           "dramatic",
           "spotlight"
+        ]
+      },
+      "Materialize": {
+        "ai_hint": "Organic resolve/materialize reveal that feels like content condensing into place.\norigin: where the reveal bias begins (center/corners/custom). seed: deterministic breakup.\nchunk_size: grouped cells for chunkier resolve. noise: threshold variation amount.\nsoft_edge: blend the boundary. Best for premium enter transitions, modal reveals, and 'assembled' UI moments.",
+        "complexity": "advanced",
+        "energy": "moderate",
+        "name": "Materialize",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Center",
+            "doc": "Origin point that biases where the reveal begins.",
+            "name": "origin",
+            "ty": "RadialOrigin"
+          },
+          {
+            "default": "0",
+            "doc": "Seed for deterministic breakup.",
+            "name": "seed",
+            "ty": "u64"
+          },
+          {
+            "default": "1",
+            "doc": "Chunk size for grouped reveal cells.",
+            "name": "chunk_size",
+            "ty": "u8"
+          },
+          {
+            "default": "0.18",
+            "doc": "Noise amplitude (0.0-1.0).",
+            "name": "noise",
+            "ty": "f32"
+          },
+          {
+            "default": "true",
+            "doc": "Enable a soft reveal edge.",
+            "name": "soft_edge",
+            "ty": "bool"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Organic materialization reveal with origin bias and noise",
+        "rustdoc_summary": "Organic materialization reveal with origin bias and noise",
+        "use_cases": [
+          "materialize",
+          "resolve",
+          "coalesce",
+          "hero-transition"
         ]
       },
       "NoiseDither": {

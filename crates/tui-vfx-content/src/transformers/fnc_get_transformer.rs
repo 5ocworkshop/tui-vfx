@@ -5,8 +5,8 @@
 
 use crate::traits::TextTransformer;
 use crate::transformers::{
-    Dissolve, GlitchShift, Marquee, Mirror, Morph, Numeric, Odometer, Redact, Scramble,
-    ScrambleGlitchShift, SlideShift, SplitFlap, Typewriter, WrapIndicator,
+    Dissolve, GlitchShift, GlyphCascade, Marquee, Mirror, Morph, Numeric, Odometer, Redact,
+    Scramble, ScrambleGlitchShift, SlideShift, SplitFlap, Typewriter, WrapIndicator,
 };
 use crate::types::ContentEffect;
 pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
@@ -52,6 +52,19 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
             glitch_start.clone(),
             glitch_end.clone(),
             resolve_pace.clone(),
+        )),
+        ContentEffect::GlyphCascade {
+            alphabet,
+            pattern,
+            direction,
+            seed,
+            mode,
+        } => Box::new(GlyphCascade::new(
+            alphabet.clone(),
+            pattern.clone(),
+            *direction,
+            *seed,
+            *mode,
         )),
         ContentEffect::SplitFlap {
             speed,

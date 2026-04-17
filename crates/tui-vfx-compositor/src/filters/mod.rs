@@ -10,6 +10,7 @@ pub(crate) mod cls_color_bridged_shade;
 pub(crate) mod cls_crt;
 pub(crate) mod cls_dim;
 pub(crate) mod cls_dot_indicator;
+pub(crate) mod cls_edge_grow;
 pub(crate) mod cls_fade_to_canvas;
 pub(crate) mod cls_glisten_sweep;
 pub(crate) mod cls_greyscale;

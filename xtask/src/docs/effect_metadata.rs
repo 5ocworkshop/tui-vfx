@@ -73,6 +73,13 @@ fn extract_mask_metadata() -> HashMap<String, EffectMetadata> {
             seed: 0,
             matrix: Default::default(),
         },
+        MaskSpec::Materialize {
+            origin: Default::default(),
+            seed: 0,
+            chunk_size: 1,
+            noise: 0.18,
+            soft_edge: true,
+        },
         MaskSpec::PathReveal {
             path: Default::default(),
             soft_edge: true,
@@ -236,6 +243,15 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             color: ColorConfig::Blue,
             bg_color: ColorConfig::Black,
             progress: BindableValue::static_f32(0.0),
+        },
+        FilterSpec::EdgeGrow {
+            rest_eighths: 2,
+            peak_eighths: 12,
+            edge: Default::default(),
+            fill_color: ColorConfig::Blue,
+            bg_color: ColorConfig::Black,
+            progress: BindableValue::static_f32(0.0),
+            margin_width: 2,
         },
         FilterSpec::PillButton {
             button_color: ColorConfig::Blue,
@@ -531,6 +547,13 @@ fn extract_content_metadata() -> HashMap<String, EffectMetadata> {
             shift_amount: 4,
             glitch_start: Default::default(),
             glitch_end: Default::default(),
+        },
+        ContentEffect::GlyphCascade {
+            alphabet: tui_vfx_content::types::GlyphCascadeAlphabet::Circles,
+            pattern: tui_vfx_content::types::GlyphCascadePattern::Sequential,
+            direction: DissolveDirection::LeftToRight,
+            seed: 42,
+            mode: tui_vfx_content::types::GlyphCascadeMode::IntoTarget,
         },
         ContentEffect::SplitFlap {
             speed: Default::default(),

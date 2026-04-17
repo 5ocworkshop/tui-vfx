@@ -27,5 +27,9 @@ tui-vfx-shadow.workspace = true
 [dev-dependencies]
 tui-vfx-debug.workspace = true
 
+[[example]]
+name = "pipeline_effects_showcase"
+path = "../../examples/pipeline_effects_showcase.rs"
+
 # <FILE>crates/tui-vfx/Cargo.toml</FILE> - <DESC>Meta-crate that re-exports all tui-vfx components</DESC>
 # <VERS>END OF VERSION: 0.2.1</VERS>

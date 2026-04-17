@@ -195,7 +195,7 @@ pub enum ScannerMotionMode {
 /// - **Basic Adjustments**: Dim, Invert, Tint, Greyscale
 /// - **Ambient Textures**: Vignette, PatternFill, BrailleDust
 /// - **Retro/CRT**: Crt, InterlaceCurtain, MotionBlur
-/// - **Hover Indicators**: HoverBar, UnderlineWipe, BracketEmphasis, DotIndicator
+/// - **Hover Indicators**: HoverBar, UnderlineWipe, BracketEmphasis, DotIndicator, EdgeGrow
 /// - **Tactile Feedback**: SubCellShake, RigidShake
 ///
 /// # Signal-Driven Parameters
@@ -668,6 +668,35 @@ pub enum FilterSpec {
         #[serde(default)]
         progress: BindableValue,
     },
+    /// Generalized edge growth / stretch indicator using sub-cell blocks.
+    ///
+    /// A richer successor to hover bars: supports all four edges, arbitrary
+    /// margin widths, and larger growth ranges while keeping the same terminal-native
+    /// partial-block vocabulary. Ideal for hover rails, bottom tabs, expanding pills,
+    /// and container-edge emphasis.
+    EdgeGrow {
+        /// Width at rest in eighths of a cell.
+        #[serde(default = "default_edge_grow_rest_eighths")]
+        rest_eighths: u8,
+        /// Width at full activation in eighths.
+        #[serde(default = "default_edge_grow_peak_eighths")]
+        peak_eighths: u8,
+        /// Which edge grows outward from the content.
+        #[serde(default)]
+        edge: HoverBarPosition,
+        /// Fill/accent color for the grown edge.
+        #[serde(default = "default_edge_grow_fill")]
+        fill_color: ColorConfig,
+        /// Background color behind the grown edge.
+        #[serde(default = "default_edge_grow_bg")]
+        bg_color: ColorConfig,
+        /// Progress (0.0-1.0) as raw number, signal, or runtime binding.
+        #[serde(default = "default_edge_grow_progress")]
+        progress: BindableValue,
+        /// Available margin width on the active side.
+        #[serde(default = "default_edge_grow_margin_width")]
+        margin_width: u8,
+    },
     /// Pill-shaped button with gradient edges
     ///
     /// Creates a soft, rounded button appearance using horizontal gradients
@@ -1077,6 +1106,39 @@ fn default_dot_bg_color() -> ColorConfig {
     }
 }
 
+// EdgeGrow defaults
+fn default_edge_grow_rest_eighths() -> u8 {
+    2
+}
+
+fn default_edge_grow_peak_eighths() -> u8 {
+    12
+}
+
+fn default_edge_grow_fill() -> ColorConfig {
+    ColorConfig::Rgb {
+        r: 100,
+        g: 150,
+        b: 200,
+    }
+}
+
+fn default_edge_grow_bg() -> ColorConfig {
+    ColorConfig::Rgb {
+        r: 30,
+        g: 30,
+        b: 30,
+    }
+}
+
+fn default_edge_grow_progress() -> BindableValue {
+    BindableValue::static_f32(0.0)
+}
+
+fn default_edge_grow_margin_width() -> u8 {
+    2
+}
+
 // PillButton defaults
 fn default_pill_button_color() -> ColorConfig {
     ColorConfig::Rgb {
@@ -1165,6 +1227,7 @@ impl FilterSpec {
             FilterSpec::UnderlineWipe { .. } => "UnderlineWipe",
             FilterSpec::BracketEmphasis { .. } => "BracketEmphasis",
             FilterSpec::DotIndicator { .. } => "DotIndicator",
+            FilterSpec::EdgeGrow { .. } => "EdgeGrow",
             FilterSpec::PillButton { .. } => "PillButton",
             FilterSpec::GlistenSweep { .. } => "GlistenSweep",
             FilterSpec::KittScanner { .. } => "KittScanner",
@@ -1206,6 +1269,9 @@ impl FilterSpec {
                 "Brackets that appear around content based on progress"
             }
             FilterSpec::DotIndicator { .. } => "Simple dot/bullet indicator adjacent to content",
+            FilterSpec::EdgeGrow { .. } => {
+                "Generalized edge growth / stretch indicator using sub-cell blocks"
+            }
             FilterSpec::PillButton { .. } => "Pill-shaped button with gradient edges",
             FilterSpec::GlistenSweep { .. } => "Diagonal glisten sweep effect",
             FilterSpec::KittScanner { .. } => "Horizontal ping-pong scanner effect (KITT/Larson)",
@@ -1387,6 +1453,20 @@ impl FilterSpec {
                 ("indicator_char", format!("{}", indicator_char)),
                 ("position", format!("{:?}", position)),
                 ("progress", format!("{:?}", progress)),
+            ],
+            FilterSpec::EdgeGrow {
+                rest_eighths,
+                peak_eighths,
+                edge,
+                progress,
+                margin_width,
+                ..
+            } => vec![
+                ("rest_eighths", format!("{}", rest_eighths)),
+                ("peak_eighths", format!("{}", peak_eighths)),
+                ("edge", format!("{:?}", edge)),
+                ("progress", format!("{:?}", progress)),
+                ("margin_width", format!("{}", margin_width)),
             ],
             FilterSpec::PillButton {
                 edge_width,

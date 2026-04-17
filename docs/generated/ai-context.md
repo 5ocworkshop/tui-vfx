@@ -18,6 +18,7 @@
 - **Diamond**: Diamond shape expanding from center.
 - **Dissolve**: Random pixel dissolve transition.
 - **Iris**: Spotlight/iris reveal expanding from center.
+- **Materialize**: Organic resolve/materialize reveal that feels like content condensing into place. [Premium]
 - **NoiseDither**: Dithered noise pattern transition.
 - **None**: No mask effect, fully visible passthrough.
 - **PathReveal**: Path-based reveal following a geometric trajectory.
@@ -32,6 +33,7 @@
 - **Crt**: CRT monitor post-processing effect.
 - **Dim**: Darken output uniformly.
 - **DotIndicator**: Dot/bullet fades in adjacent to content.
+- **EdgeGrow**: Generalized edge growth / stretch indicator using sub-cell partial blocks. [Premium]
 - **FadeToCanvas**: Use as the exit filter on notifications, modals, and toolkit widgets that should fade into the terminal backdrop instead of flashing dark.
 - **GlistenSweep**: Diagonal 45-degree highlight sweep for polished hover feedback.
 - **Greyscale**: Desaturate output using BT.
@@ -86,6 +88,7 @@
 ### Content
 - **Dissolve**: Pixel dissolve text transition.
 - **GlitchShift**: Glitch-style text distortion with horizontal shifts. [Intense]
+- **GlyphCascade**: Glyph alphabet cascade / symbol evolution effect. [Premium]
 - **Marquee**: Scrolling text ticker effect.
 - **Mirror**: Mirror/flip text horizontally or vertically.
 - **Morph**: Character morphing/blending between text states.

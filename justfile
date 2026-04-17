@@ -203,6 +203,10 @@ examples:
     @echo "Available examples:"
     @find examples -name "*.rs" -exec basename {} .rs \; 2>/dev/null || echo "No examples found"
 
+# Run the pipeline-level effects showcase example
+example-pipeline-effects:
+    cargo run -p tui-vfx --example pipeline_effects_showcase
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAINTENANCE
 # ═══════════════════════════════════════════════════════════════════════════════

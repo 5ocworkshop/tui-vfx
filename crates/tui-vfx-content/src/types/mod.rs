@@ -1,10 +1,11 @@
 // <FILE>tui-vfx-content/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>VERSION: 1.9.0</VERS>
-// <WCTX>feat/content-ergonomics: ContentEffect::apply convenience entry point</WCTX>
-// <CLOG>Add fnc_apply_content_effect module wiring ContentEffect::apply ergonomic methods</CLOG>
+// <VERS>VERSION: 1.10.0</VERS>
+// <WCTX>Register GlyphCascade configuration types</WCTX>
+// <CLOG>Add cls_glyph_cascade module and re-export GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern</CLOG>
 
 pub mod cls_content_effect;
 pub mod cls_dissolve_config;
+pub mod cls_glyph_cascade;
 pub mod cls_mirror_axis;
 pub mod cls_morph_config;
 pub mod cls_scramble_charset;
@@ -15,6 +16,7 @@ pub mod fnc_apply_content_effect;
 
 pub use cls_content_effect::ContentEffect;
 pub use cls_dissolve_config::{DissolveDirection, DissolvePattern, DissolveReplacement};
+pub use cls_glyph_cascade::{GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern};
 pub use cls_mirror_axis::MirrorAxis;
 pub use cls_morph_config::{MorphDirection, MorphProgression};
 pub use cls_scramble_charset::ScrambleCharset;
@@ -23,4 +25,4 @@ pub use cls_slide_shift_line_mode::SlideShiftLineMode;
 pub use cls_typewriter_cursor::TypewriterCursor;
 
 // <FILE>tui-vfx-content/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>END OF VERSION: 1.9.0</VERS>
+// <VERS>END OF VERSION: 1.10.0</VERS>

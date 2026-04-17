@@ -11,6 +11,7 @@ use crate::filters::cls_color_bridged_shade::ColorBridgedShade;
 use crate::filters::cls_crt::Crt;
 use crate::filters::cls_dim::Dim;
 use crate::filters::cls_dot_indicator::DotIndicator;
+use crate::filters::cls_edge_grow::EdgeGrow;
 use crate::filters::cls_fade_to_canvas::FadeToCanvas;
 use crate::filters::cls_glisten_sweep::GlistenSweep;
 use crate::filters::cls_greyscale::Greyscale;
@@ -54,6 +55,7 @@ pub(crate) enum PreparedFilter {
     UnderlineWipe(UnderlineWipe),
     BracketEmphasis(BracketEmphasis),
     DotIndicator(DotIndicator),
+    EdgeGrow(EdgeGrow),
     PillButton(PillButton),
     GlistenSweep(GlistenSweep),
     KittScanner(KittScanner),
@@ -131,6 +133,9 @@ impl PreparedFilter {
             PreparedFilter::DotIndicator(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
+            PreparedFilter::EdgeGrow(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
             PreparedFilter::PillButton(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
@@ -168,6 +173,7 @@ impl PreparedFilter {
             PreparedFilter::UnderlineWipe(_) => "UnderlineWipe",
             PreparedFilter::BracketEmphasis(_) => "BracketEmphasis",
             PreparedFilter::DotIndicator(_) => "DotIndicator",
+            PreparedFilter::EdgeGrow(_) => "EdgeGrow",
             PreparedFilter::PillButton(_) => "PillButton",
             PreparedFilter::GlistenSweep(_) => "GlistenSweep",
             PreparedFilter::KittScanner(_) => "KittScanner",
@@ -601,6 +607,30 @@ pub(crate) fn prepare_filter(
                 .with_progress(evaluated_progress);
             Some(PreparedFilter::DotIndicator(filter))
         }
+        FilterSpec::EdgeGrow {
+            rest_eighths,
+            peak_eighths,
+            edge,
+            fill_color,
+            bg_color,
+            progress,
+            margin_width,
+        } => {
+            let fill: Color = (*fill_color).into();
+            let bg: Color = (*bg_color).into();
+            let evaluated_progress = progress
+                .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
+                .unwrap_or(0.0);
+            Some(PreparedFilter::EdgeGrow(EdgeGrow {
+                rest_eighths: *rest_eighths,
+                peak_eighths: *peak_eighths,
+                edge: *edge,
+                fill_color: fill,
+                bg_color: bg,
+                progress: evaluated_progress,
+                margin_width: *margin_width,
+            }))
+        }
         FilterSpec::PillButton {
             button_color,
             bg_color,
@@ -732,7 +762,10 @@ mod tests {
 
         match prepared {
             PreparedFilter::KittScanner(filter) => assert_eq!(filter.progress, 0.7),
-            other => panic!("expected PreparedFilter::KittScanner, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected PreparedFilter::KittScanner, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -747,7 +780,10 @@ mod tests {
 
         match prepared {
             PreparedFilter::KittScanner(filter) => assert_eq!(filter.progress, 0.0),
-            other => panic!("expected PreparedFilter::KittScanner, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected PreparedFilter::KittScanner, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -762,7 +798,10 @@ mod tests {
 
         match prepared {
             PreparedFilter::KittScanner(filter) => assert_eq!(filter.progress, 0.5),
-            other => panic!("expected PreparedFilter::KittScanner, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected PreparedFilter::KittScanner, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -823,7 +862,10 @@ mod tests {
         };
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::SubPixelBar(f) => assert_eq!(f.progress, 0.6),
-            other => panic!("expected SubPixelBar, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected SubPixelBar, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -844,7 +886,10 @@ mod tests {
         };
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::HoverBar(f) => assert_eq!(f.progress, 0.42),
-            other => panic!("expected HoverBar, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected HoverBar, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -866,7 +911,10 @@ mod tests {
         };
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::UnderlineWipe(f) => assert_eq!(f.progress, 0.8),
-            other => panic!("expected UnderlineWipe, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected UnderlineWipe, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -885,7 +933,10 @@ mod tests {
         };
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::BracketEmphasis(f) => assert_eq!(f.progress, 0.33),
-            other => panic!("expected BracketEmphasis, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected BracketEmphasis, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -904,7 +955,10 @@ mod tests {
         };
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::DotIndicator(f) => assert_eq!(f.progress, 1.0),
-            other => panic!("expected DotIndicator, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected DotIndicator, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -923,7 +977,10 @@ mod tests {
         };
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::PillButton(f) => assert_eq!(f.progress, 0.15),
-            other => panic!("expected PillButton, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected PillButton, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -941,7 +998,10 @@ mod tests {
         };
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::GlistenSweep(f) => assert_eq!(f.progress, 0.55),
-            other => panic!("expected GlistenSweep, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected GlistenSweep, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -958,16 +1018,16 @@ mod tests {
         };
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::ShadeScanner(f) => assert_eq!(f.progress, 0.75),
-            other => panic!("expected ShadeScanner, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected ShadeScanner, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
     // --- P0.5: rigid_shake num_shakes_binding -------------------------------
 
-    fn rigid_shake_spec_with(
-        num_shakes: u8,
-        num_shakes_binding: Option<String>,
-    ) -> FilterSpec {
+    fn rigid_shake_spec_with(num_shakes: u8, num_shakes_binding: Option<String>) -> FilterSpec {
         rigid_shake_spec_full(num_shakes, num_shakes_binding, None)
     }
 
@@ -1003,7 +1063,10 @@ mod tests {
             PreparedFilter::RigidShake(filter) => {
                 assert_eq!(filter.num_shakes(), 6);
             }
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1019,7 +1082,10 @@ mod tests {
             PreparedFilter::RigidShake(filter) => {
                 assert_eq!(filter.num_shakes(), 8);
             }
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1030,7 +1096,10 @@ mod tests {
         let spec = rigid_shake_spec_with(3, Some("missing".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => assert_eq!(filter.num_shakes(), 3),
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1041,7 +1110,10 @@ mod tests {
         let spec = rigid_shake_spec_with(4, None);
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => assert_eq!(filter.num_shakes(), 4),
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1069,7 +1141,10 @@ mod tests {
                     );
                 }
             }
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1093,7 +1168,10 @@ mod tests {
                     );
                 }
             }
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1114,7 +1192,10 @@ mod tests {
                     damping[0]
                 );
             }
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1135,7 +1216,10 @@ mod tests {
                     damping[0]
                 );
             }
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1159,7 +1243,10 @@ mod tests {
                     );
                 }
             }
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1186,7 +1273,10 @@ mod tests {
                     );
                 }
             }
-            other => panic!("expected RigidShake, got {:?}", std::mem::discriminant(&other)),
+            other => panic!(
+                "expected RigidShake, got {:?}",
+                std::mem::discriminant(&other)
+            ),
         }
     }
 
@@ -1268,11 +1358,7 @@ mod tests {
         rp.insert("terminal_bg", ShaderRuntimeParamValue::Integer(42));
         let ctx = PrepareContext::new(0.0, &rp);
         let spec = fade_to_canvas_spec(
-            ColorConfig::Rgb {
-                r: 7,
-                g: 8,
-                b: 9,
-            },
+            ColorConfig::Rgb { r: 7, g: 8, b: 9 },
             Some("terminal_bg".to_string()),
         );
         match prepare_filter(&spec, &ctx).unwrap() {

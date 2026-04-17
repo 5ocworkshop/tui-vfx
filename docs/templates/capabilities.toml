@@ -126,6 +126,16 @@ ai_hint = """Organic cellular pattern reveal.
 pattern: Voronoi (natural/organic), Hexagonal (tech/futuristic), Organic (irregular).
 seed: randomization seed. cell_count: number of cells in pattern."""
 
+[effects.masks.Materialize]
+use_cases = ["materialize", "resolve", "coalesce", "hero-transition"]
+energy = "moderate"
+complexity = "advanced"
+premium = true
+ai_hint = """Organic resolve/materialize reveal that feels like content condensing into place.
+origin: where the reveal bias begins (center/corners/custom). seed: deterministic breakup.
+chunk_size: grouped cells for chunkier resolve. noise: threshold variation amount.
+soft_edge: blend the boundary. Best for premium enter transitions, modal reveals, and 'assembled' UI moments."""
+
 # WipeDirection variants (16 total):
 # Cardinal: LeftToRight, RightToLeft, TopToBottom, BottomToTop
 # Diagonal: TopLeftToBottomRight, TopRightToBottomLeft, BottomLeftToTopRight, BottomRightToTopLeft
@@ -375,6 +385,17 @@ glisten: enable shimmer effect on hover (default true).
 progress: hover state (0.0=rest, 1.0=fully hovered).
 Creates no-border button with smooth bg→button→bg gradient.
 Brightens on hover, adds moving glisten when progress>0.5."""
+
+[effects.filters.EdgeGrow]
+use_cases = ["hover", "focus", "stretch", "rail", "selection"]
+energy = "moderate"
+complexity = "moderate"
+premium = true
+ai_hint = """Generalized edge growth / stretch indicator using sub-cell partial blocks.
+rest_eighths: width at rest. peak_eighths: width at full activation.
+edge: left/right/top/bottom origin. fill_color/bg_color: visual colors.
+progress: activation amount (raw number, signal, or runtime binding). margin_width: available margin cells.
+Use for hover rails, bottom bars, expanding selection gutters, and terminal-native stretch/grow accents."""
 
 # PatternType variants:
 # - Single: Repeating character (char)
@@ -930,6 +951,18 @@ ai_hint = """Prefix/suffix symbols appear progressively with progress.
 Progress 0.0: "Item" → 0.5: "» Item" → 1.0: "» Item «"
 prefix/suffix strings, characters appear one at a time. Ideal for hover indicators."""
 
+[effects.content.GlyphCascade]
+use_cases = ["evolve", "glyph", "materialize", "symbolic-transition"]
+energy = "moderate"
+complexity = "advanced"
+premium = true
+ai_hint = """Glyph alphabet cascade / symbol evolution effect.
+alphabet: circles, blocks, shaded, quadrants, braille, or custom glyph string.
+pattern: sequential, random, edge_in, edge_out, by_word, by_line.
+direction: left_to_right, right_to_left, center_in, center_out.
+seed: deterministic ordering. mode: into_target, from_target, or glyphs_only.
+Great for premium text reveals, systemic sci-fi transitions, and brandable glyph-native UI motion."""
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # SHADOWS
 # Depth effects rendered beneath elements.
@@ -1207,4 +1240,3 @@ energy = "calm"
 complexity = "simple"
 premium = false
 ai_hint = "Use as the exit filter on notifications, modals, and toolkit widgets that should fade into the terminal backdrop instead of flashing dark. Set canvas_color to the app's actual terminal background (e.g. {r:240,g:240,b:245} for a light theme, {r:20,g:20,b:30} for a dark one) and drive strength from the exit animation progress (0.0 = widget visible, 1.0 = fully faded into canvas). Replaces the older tint(black, 0.7+) hack which darkens regardless of canvas. Parameters: canvas_color (ColorConfig target), canvas_color_binding (optional runtime-param key that overrides canvas_color from a ShaderRuntimeParamValue::Rgb entry — use this to track live theme mode flips or app-reported terminal background changes), strength (BindableValue blend ratio), apply_to (foreground/background/both)."
-

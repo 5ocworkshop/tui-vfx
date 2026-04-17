@@ -99,6 +99,30 @@ fn test_filter_spec_greyscale_fg_only() {
     assert_eq!(spec, parsed);
 }
 
+#[test]
+fn test_filter_spec_edge_grow_serde_roundtrip() {
+    let spec = FilterSpec::EdgeGrow {
+        rest_eighths: 2,
+        peak_eighths: 14,
+        edge: tui_vfx_compositor::types::HoverBarPosition::Bottom,
+        fill_color: ColorConfig::Rgb {
+            r: 255,
+            g: 128,
+            b: 0,
+        },
+        bg_color: ColorConfig::Rgb {
+            r: 20,
+            g: 20,
+            b: 25,
+        },
+        progress: tui_vfx_compositor::types::BindableValue::static_f32(0.5),
+        margin_width: 3,
+    };
+    let json = serde_json::to_string(&spec).unwrap();
+    let parsed: FilterSpec = serde_json::from_str(&json).unwrap();
+    assert_eq!(spec, parsed);
+}
+
 // =============================================================================
 // ApplyTo PascalCase alias tests
 // =============================================================================

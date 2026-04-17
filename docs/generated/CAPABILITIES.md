@@ -33,6 +33,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **Diamond** | Diamond-shaped expand from center | transition, dramatic |
 | **Dissolve** | Random pixel dissolve effect | transition, dream-sequence, magical |
 | **Iris** | Iris/spotlight reveal from center | transition, dramatic, spotlight |
+| **Materialize** | Organic materialization reveal with origin bias and noise | materialize, resolve, coalesce, hero-transition |
 | **NoiseDither** | Dithered noise pattern reveal | transition, retro, subtle |
 | **None** | No mask applied — content is fully visible | none, baseline, passthrough |
 | **PathReveal** | Path-based reveal (spiral, radial sweep) | transition, creative, animated |
@@ -50,6 +51,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **Crt** | CRT monitor post-processing effect | retro, gaming, nostalgic |
 | **Dim** | Dim/darken the output | background, inactive, subtle |
 | **DotIndicator** | Simple dot/bullet indicator adjacent to content | selection, navigation, indicator |
+| **EdgeGrow** | Generalized edge growth / stretch indicator using sub-cell blocks | hover, focus, stretch, rail, selection |
 | **FadeToCanvas** | Canvas-aware exit fade: blend cells toward a declared canvas color | exit_transitions, dismissal, modal_close |
 | **GlistenSweep** | Diagonal glisten sweep effect | hover, shine, premium |
 | **Greyscale** | Greyscale/desaturate filter using BT.601 luminance | disabled, inactive, dramatic |
@@ -129,6 +131,7 @@ This document provides a complete inventory of visual effects available in tui-v
 |--------|-------------|----------|
 | **Dissolve** | Character-level dissolve effect | transition, fade, pixel |
 | **GlitchShift** | Horizontal shift glitch effect | glitch, error, cyberpunk |
+| **GlyphCascade** | Glyph-cascade / symbol-evolution effect | evolve, glyph, materialize, symbolic-transition |
 | **Marquee** | Scrolling marquee text | scrolling, ticker, news |
 | **Mirror** | Mirror/reverse text effect | effect, playful, reflection |
 | **Morph** | Text morphing transition | transition, smooth, creative |

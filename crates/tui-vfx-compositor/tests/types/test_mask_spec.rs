@@ -3,7 +3,9 @@
 // <WCTX>Ergonomic reveal/hide schema for intuitive mask direction semantics</WCTX>
 // <CLOG>Update tests for new reveal/hide/direction optional fields</CLOG>
 
-use tui_vfx_compositor::types::{DitherMatrix, IrisShape, MaskSpec, Orientation, WipeDirection};
+use tui_vfx_compositor::types::{
+    DitherMatrix, IrisShape, MaskSpec, Orientation, RadialOrigin, WipeDirection,
+};
 
 #[test]
 fn test_mask_spec_default_is_none() {
@@ -119,6 +121,20 @@ fn test_mask_spec_noise_dither_serde_roundtrip() {
     let spec = MaskSpec::NoiseDither {
         seed: 123,
         matrix: DitherMatrix::Bayer8,
+    };
+    let json = serde_json::to_string(&spec).unwrap();
+    let parsed: MaskSpec = serde_json::from_str(&json).unwrap();
+    assert_eq!(spec, parsed);
+}
+
+#[test]
+fn test_mask_spec_materialize_serde_roundtrip() {
+    let spec = MaskSpec::Materialize {
+        origin: RadialOrigin::Center,
+        seed: 99,
+        chunk_size: 2,
+        noise: 0.25,
+        soft_edge: true,
     };
     let json = serde_json::to_string(&spec).unwrap();
     let parsed: MaskSpec = serde_json::from_str(&json).unwrap();
