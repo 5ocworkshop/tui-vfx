@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_cursor_shader.rs</FILE> - <DESC>CursorShader — paints primary-cell alpha and wake trail tint/ghost</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>feat/cursor-primitive T26: wake Tint mode — trail cells alpha-blend the configured tint color onto the base fg via a local blend_rgb helper. ColorConfig resolves to Color via `into()` (matches the established pattern in cls_highlighter_shader).</WCTX>
-// <CLOG>MINOR: add blend_rgb helper + Tint-arm trail painting; zero-alpha trail leaves base untouched; Ghost-arm renders identical tint (glyph overwrite is a content-crate helper concern — T27)</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>feat/cursor-primitive T28: ergonomic CursorShader::new constructor taking flat primitives so the content-crate bridge (fnc_build_cursor_shader) can assemble a shader from a CursorPaintOps snapshot without forcing a style→content dep (cycle). Also register this shader as a SpatialShaderType variant; that requires CursorShader: ConfigSchema, which in turn needs every field type to implement ConfigSchema. The inner CursorShaderPrimary and CursorShaderTrail structs are carried with hand-written ConfigSchema impls because tui_vfx_core's ConfigSchema derive macro does not support their (u16, u16) position tuple field.</WCTX>
+// <CLOG>MINOR: add CursorShader::new constructor; add manual ConfigSchema impls for CursorShaderPrimary and CursorShaderTrail; re-derive ConfigSchema on CursorShader so the SpatialShaderType::Cursor variant registration compiles</CLOG>
 
 use super::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
@@ -40,6 +40,36 @@ pub struct CursorShaderPrimary {
     pub alpha: f32,
 }
 
+// Manual ConfigSchema impl — the tui_vfx_core derive macro does not support
+// `(u16, u16)` tuple fields. This shader is assembled imperatively per frame,
+// not authored as recipe JSON, so the schema surface only needs to be
+// "non-fatal" for the SpatialShaderType enum derive (which requires every
+// variant to implement ConfigSchema).
+impl tui_vfx_core::ConfigSchema for CursorShaderPrimary {
+    fn schema() -> tui_vfx_core::SchemaNode {
+        use tui_vfx_core::{FieldMeta, SchemaField, SchemaNode};
+        SchemaNode::Struct {
+            name: "CursorShaderPrimary".to_string(),
+            description: Some("Flattened primary-cell op (row, col) + alpha".to_string()),
+            json_name: None,
+            fields: vec![
+                SchemaField::new(
+                    "position",
+                    SchemaNode::Primitive {
+                        type_name: "(u16, u16)".to_string(),
+                        range: None,
+                    },
+                    FieldMeta {
+                        description: Some("(row, col) in local widget coordinates".to_string()),
+                        ..Default::default()
+                    },
+                ),
+                SchemaField::new("alpha", f32::schema(), FieldMeta::default()),
+            ],
+        }
+    }
+}
+
 /// Flattened trail-cell op (a cell-facing copy of `CursorPaintOps::trail`).
 ///
 /// `glyph = None` = Tint-mode entry (consumer paints tint on whatever is
@@ -53,12 +83,52 @@ pub struct CursorShaderTrail {
     pub glyph: Option<String>,
 }
 
+impl tui_vfx_core::ConfigSchema for CursorShaderTrail {
+    fn schema() -> tui_vfx_core::SchemaNode {
+        use tui_vfx_core::{FieldMeta, SchemaField, SchemaNode};
+        SchemaNode::Struct {
+            name: "CursorShaderTrail".to_string(),
+            description: Some(
+                "Flattened trail-cell op (row, col) + alpha + optional ghost glyph".to_string(),
+            ),
+            json_name: None,
+            fields: vec![
+                SchemaField::new(
+                    "position",
+                    SchemaNode::Primitive {
+                        type_name: "(u16, u16)".to_string(),
+                        range: None,
+                    },
+                    FieldMeta {
+                        description: Some("(row, col) in local widget coordinates".to_string()),
+                        ..Default::default()
+                    },
+                ),
+                SchemaField::new("alpha", f32::schema(), FieldMeta::default()),
+                SchemaField::new(
+                    "glyph",
+                    <Option<String> as tui_vfx_core::ConfigSchema>::schema(),
+                    FieldMeta {
+                        description: Some(
+                            "Some(_) for Ghost-mode entries, None for Tint-mode".to_string(),
+                        ),
+                        optional: true,
+                        ..Default::default()
+                    },
+                ),
+            ],
+        }
+    }
+}
+
 /// Shader that paints cursor primary-cell alpha and wake trail tint/ghost.
 ///
 /// Constructed per-frame by the consumer from a `CursorPaintOps` snapshot
 /// (see `fnc_build_cursor_shader` in `tui-vfx-content`). The shader itself
 /// is stateless beyond the per-frame snapshot it holds.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
 #[serde(default)]
 pub struct CursorShader {
     pub mode: CursorShaderMode,
@@ -66,6 +136,29 @@ pub struct CursorShader {
     pub tint: ColorConfig,
     pub primary: Option<CursorShaderPrimary>,
     pub trail: Vec<CursorShaderTrail>,
+}
+
+impl CursorShader {
+    /// Build a [`CursorShader`] from flat primary/trail data.
+    ///
+    /// The `tui-vfx-style` crate intentionally does *not* depend on
+    /// `tui-vfx-content` (that would cycle, since content depends on
+    /// style for `ColorConfig`). So `CursorShader` itself only sees flat
+    /// primitives; the bridge from `tui_vfx_content::cursor::CursorPaintOps`
+    /// lives in `tui_vfx_content::cursor::fnc_build_cursor_shader`.
+    pub fn new(
+        mode: CursorShaderMode,
+        tint: ColorConfig,
+        primary: Option<CursorShaderPrimary>,
+        trail: Vec<CursorShaderTrail>,
+    ) -> Self {
+        Self {
+            mode,
+            tint,
+            primary,
+            trail,
+        }
+    }
 }
 
 impl StyleShader for CursorShader {
@@ -132,7 +225,8 @@ fn blend_rgb(base: Color, tint: Color, alpha: f32) -> Color {
     }
 }
 
-// Constructor + SpatialShaderType dispatch registration arrive in T28.
+// SpatialShaderType::Cursor dispatch registration lives in
+// cls_spatial_shader_type.rs.
 
 // <FILE>tui-vfx-style/src/models/cls_cursor_shader.rs</FILE> - <DESC>CursorShader — paints primary-cell alpha and wake trail tint/ghost</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

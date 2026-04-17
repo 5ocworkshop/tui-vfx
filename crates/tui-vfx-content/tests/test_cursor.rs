@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/test_cursor.rs</FILE> - <DESC>Aggregator for cursor module tests</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>feat/cursor-primitive T27: register test_fnc_apply_ghost_glyphs_to_grid aggregator entry</WCTX>
-// <CLOG>Add T27 test module (fnc_apply_ghost_glyphs_to_grid)</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>feat/cursor-primitive T28: register test_fnc_build_cursor_shader aggregator entry</WCTX>
+// <CLOG>Add T28 test module (fnc_build_cursor_shader)</CLOG>
 
 #[path = "cursor/test_cls_cursor_blink.rs"]
 mod test_cls_cursor_blink;
@@ -39,5 +39,8 @@ mod test_fnc_splice_cursor_into_text;
 #[path = "cursor/test_fnc_apply_ghost_glyphs_to_grid.rs"]
 mod test_fnc_apply_ghost_glyphs_to_grid;
 
+#[path = "cursor/test_fnc_build_cursor_shader.rs"]
+mod test_fnc_build_cursor_shader;
+
 // <FILE>tui-vfx-content/tests/test_cursor.rs</FILE> - <DESC>Aggregator for cursor module tests</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>
