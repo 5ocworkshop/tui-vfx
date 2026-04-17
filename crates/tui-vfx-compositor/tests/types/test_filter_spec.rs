@@ -60,6 +60,9 @@ fn test_filter_spec_vignette_serde_roundtrip() {
     let spec = FilterSpec::Vignette {
         strength: SignalOrFloat::Static(0.6),
         radius: SignalOrFloat::Static(0.8),
+        sides: vec![],
+        dither_amount: 0.0,
+        temporal_dither_hz: 0.0,
     };
     let json = serde_json::to_string(&spec).unwrap();
     let parsed: FilterSpec = serde_json::from_str(&json).unwrap();

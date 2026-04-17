@@ -327,6 +327,9 @@ fn test_filter_vignette_darkens_edges() {
             filters: Cow::Owned(vec![FilterSpec::Vignette {
                 strength: SignalOrFloat::Static(0.8),
                 radius: SignalOrFloat::Static(0.3),
+                sides: vec![],
+                dither_amount: 0.0,
+                temporal_dither_hz: 0.0,
             }]),
             t: 1.0,
             ..Default::default()
