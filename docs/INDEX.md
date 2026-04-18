@@ -1,14 +1,15 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.6.0</VERS> -->
-<!-- <WCTX>feat/cursor-primitive T29: link new Cursor primitive section</WCTX> -->
-<!-- <CLOG>MINOR: Add a link to the Cursor primitive section in CAPABILITIES_REFERENCE.md</CLOG>
+<!-- <VERS>VERSION: 1.7.1</VERS> -->
+<!-- <WCTX>Point INDEX entry for COMPOSED_CAPABILITIES.md at the v0.2 rewrite — structured around the six composition axes (mask, sampler, filter, style, motion path, runtime bindings) rather than a flat shortlist, with per-recipe citations grounded in a full 630-recipe audit.</WCTX> -->
+<!-- <CLOG>PATCH: Refresh INDEX entry description for COMPOSED_CAPABILITIES.md v0.2.0.</CLOG>
 
 # Documentation Index
 
 ## Hand-Maintained
 - [TERMINAL_MOTION_HEURISTICS.md](TERMINAL_MOTION_HEURISTICS.md) — Canonical terminal-specific motion, depth, and compositing heuristics for effect and recipe design
 - [API_HAND.md](API_HAND.md) — Original hand-maintained API reference
-- [CAPABILITIES_REFERENCE.md](CAPABILITIES_REFERENCE.md) — Hand-maintained capabilities reference
+- [CAPABILITIES_REFERENCE.md](CAPABILITIES_REFERENCE.md) — Hand-maintained capabilities reference (primitive inventory)
+- [COMPOSED_CAPABILITIES.md](COMPOSED_CAPABILITIES.md) — Curated catalog of composed capabilities organised around the six composition axes (mask / sampler / filter / style / motion path / runtime bindings), with foundational A+B→X patterns, variant-rich option-set treasure, a hero/easter-egg showcase, and designer refinement opportunities — grounded in a full audit of the ~630-recipe `tui-vfx-recipes` corpus
 - [HOWTO_SHADOWS.md](HOWTO_SHADOWS.md) — Shadow rendering guide and integration patterns
 - [PIPELINE_VALIDATOR_LLM_GUIDE.md](PIPELINE_VALIDATOR_LLM_GUIDE.md) — How an LLM should use the `pipeline-validator` CLI (in the sibling `tui-vfx-recipes` repo) to inspect recipe rendering, diagnose shader bugs, and verify per-cell output
 - [PIPELINE_PROBE_LLM_GUIDE.md](PIPELINE_PROBE_LLM_GUIDE.md) — How an LLM or user should use the engine-side `pipeline-probe` CLI to inspect direct `ProbeSceneSpec` inputs as structured JSON/NDJSON
@@ -28,4 +29,4 @@
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.7.1</VERS> -->
