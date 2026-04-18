@@ -50,3 +50,11 @@ smallvec = "1.11"
 
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
 # <VERS>END OF VERSION: 0.1.0</VERS>
+# Example/demo workloads need meaningful optimization in dev too; otherwise
+# local cargo run / cargo test significantly under-represents real runtime
+# performance and makes the stack look slower than it is.
+[profile.dev]
+opt-level = 2
+
+[profile.dev.package."*"]
+opt-level = 3
