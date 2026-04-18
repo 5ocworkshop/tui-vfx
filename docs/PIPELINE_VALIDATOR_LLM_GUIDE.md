@@ -1,7 +1,7 @@
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>VERSION: 1.1.0</VERS> -->
-<!-- <WCTX>Document new --canvas / --canvas-content flags for simulating real canvas content (color + lorem ipsum) under the widget during validation</WCTX> -->
-<!-- <CLOG>MINOR: Add --canvas and --canvas-content flags to the "flags that matter" section, with guidance on using --canvas-content lorem for glyph bleed-through debugging</CLOG> -->
+<!-- <VERS>VERSION: 1.2.0</VERS> -->
+<!-- <WCTX>Clarify validator ownership versus Preview and probe, and document the upstream-native debug-recipes QC flow plus concrete export acceptance</WCTX> -->
+<!-- <CLOG>MINOR: Add an authority split for Preview / validator / probe, document --debug-recipes-qc, and explain that concrete GTD bridge exports are valid upstream recipe inputs after token resolution</CLOG> -->
 
 # Pipeline Validator: An LLM's Guide to Inspecting Recipe Output
 
@@ -13,6 +13,8 @@ It exists because, when a recipe behaves unexpectedly, the question "what does t
 
 | Situation | Tool |
 |---|---|
+| Need the canonical recipe-authoring verdict (parse/rules/stages) | `pipeline-validator <file>` |
+| Need a machine-readable upstream QC pass over debug recipes or resolved concrete exports | `pipeline-validator --debug-recipes-qc --format json <path-or-dir>` |
 | Recipe parses? Schema valid? | `pipeline-validator <file>` (default) |
 | Stage-by-stage cell modification counts | `--stages -vvv` |
 | What does the buffer literally look like at a specific time? | `--dump --stage output --sample-t T --phase X -vvv` |
@@ -20,6 +22,20 @@ It exists because, when a recipe behaves unexpectedly, the question "what does t
 | Wrong colors / wrong glyphs at specific positions | grid-map and per-row dumps under `--dump --stage output -vvv` |
 
 You should reach for it **before** asking the user "what do you see?" — it is faster than waiting for a human to launch a demo and describe an animation in words.
+
+## Authority split: Preview vs validator vs probe
+
+- **Preview / demo browser** is the canonical **recipe player** for human-eye sign-off and visual acceptance.
+- **`pipeline-validator`** is the canonical **recipe-authoring validation** surface. It owns parse/rules/profile/stage truth plus upstream-native debug-recipes QC.
+- **`recipe-probe` / `pipeline-validator --probe`** are the canonical **structured recipe evidence** surfaces when you need JSON frame/timeline/diff/debug output from the same recipe input.
+- **`pipeline-probe`** is the canonical **direct engine-scene** probe when you already have a `ProbeSceneSpec` or want engine-only observability without recipe parsing.
+
+Those surfaces are complementary:
+- validator answers **“is this recipe authoring input valid and structurally healthy upstream?”**
+- probe answers **“what structured frame/timeline evidence do we have for this recipe or scene?”**
+- Preview answers **“does the canonical player look correct to a human?”**
+
+Do not move GTD display-truth semantics into validator acceptance. Upstream validator/probe accept **resolved concrete recipe payloads** as normal recipe JSON, but GTD token resolution remains GTD-owned.
 
 ## The flags that matter
 
@@ -30,7 +46,36 @@ You should reach for it **before** asking the user "what do you see?" — it is 
 - **`--stages -vvv`** — print per-stage cell modification counts (sampler, mask, shader, filter), plus a sample of cell-by-cell modifications. Use this to localize *which* stage is making the change you didn't expect.
 - **`--canvas RRGGBB`** — pre-fill the simulation buffer with this RGB color before each render, so you can see how a recipe composites over a non-default canvas (gt-design beige, dashboard navy, etc.). Hex, no alpha.
 - **`--canvas-content MODE`** — what glyphs to paint into the canvas along with the color. `empty` (default) = spaces, `sentinel` = repeating `+` grid (useful for the early color-only tests), `lorem` = lorem ipsum text wrapped across the buffer. Combine with `--canvas` for a full content+color simulation of a widget overlaying a document. Use `lorem` when debugging **glyph bleed-through** bugs — any canvas character visible inside the widget rectangle after the overlay renders is a bug.
+- **`--debug-recipes-qc`** — run the upstream-native QC bundle: rules/stages validation, recipe-side structured probe evidence, future-capture artifact hints, family-aware checks for debug fixtures, and GTD-agnostic acceptance of concrete exported recipe JSON.
 - **`--trace`** — even more verbose pipeline tracing; usually too noisy. Try `--stages -vvv` first.
+
+## Debug-recipes QC
+
+Use the QC mode when you want one upstream-owned command surface for recipe-authoring proof:
+
+```bash
+cargo run -q -p pipeline-validator -- \
+  --debug-recipes-qc \
+  --format json \
+  recipes/debug_recipes/shaders/shader_glisten_band_speed_binding.json
+```
+
+Or against a resolved concrete export produced by bridge tooling:
+
+```bash
+cargo run -q -p pipeline-validator -- \
+  --debug-recipes-qc \
+  --format json \
+  /path/to/exported/concrete_recipe.json
+```
+
+The QC report is intentionally GTD-agnostic. It records:
+- validation stages
+- frame / lifecycle / timeline / diff evidence
+- family tags and binding/canvas checks where relevant
+- deterministic artifact hints and a stable fingerprint for future golden capture
+
+It does **not** claim GTD display truth or GTD token-resolution correctness.
 
 ## Reading the dump
 
@@ -104,4 +149,4 @@ Fix: use true point-to-segment Euclidean distance, including the parallel offset
 - `tools/pipeline-validator/src/stages/functions/fnc_sample_buffer_cells.rs` (in tui-vfx-recipes) — the grid-map and per-row dump implementations
 
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->

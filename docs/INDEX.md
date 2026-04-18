@@ -1,17 +1,22 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.7.1</VERS> -->
-<!-- <WCTX>Point INDEX entry for COMPOSED_CAPABILITIES.md at the v0.2 rewrite — structured around the six composition axes (mask, sampler, filter, style, motion path, runtime bindings) rather than a flat shortlist, with per-recipe citations grounded in a full 630-recipe audit.</WCTX> -->
-<!-- <CLOG>PATCH: Refresh INDEX entry description for COMPOSED_CAPABILITIES.md v0.2.0.</CLOG>
+<!-- <VERS>VERSION: 1.8.0</VERS> -->
+<!-- <WCTX>Make Preview, validator, probe, and upstream-native QC ownership explicit in the docs index so recipe authors can find the correct truth surface without GTD context.</WCTX> -->
+<!-- <CLOG>MINOR: Add an explicit recipe-authoring tool ownership split plus the new debug-recipes QC surface to the canonical docs index.</CLOG> -->
 
 # Documentation Index
 
 ## Hand-Maintained
+- Recipe-authoring tool ownership:
+  - **Preview / demo browser** (`tui-vfx-recipes` preview surfaces) is the canonical **recipe player** for human visual sign-off.
+  - **`pipeline-validator`** is the canonical **recipe-authoring validation** surface (parse / rules / stages / upstream-native `--debug-recipes-qc`).
+  - **`recipe-probe` / `pipeline-validator --probe`** are the canonical **structured recipe evidence** surfaces.
+  - **`pipeline-probe`** is the canonical **direct engine-scene** probe and does not replace recipe-aware validation.
 - [TERMINAL_MOTION_HEURISTICS.md](TERMINAL_MOTION_HEURISTICS.md) — Canonical terminal-specific motion, depth, and compositing heuristics for effect and recipe design
 - [API_HAND.md](API_HAND.md) — Original hand-maintained API reference
 - [CAPABILITIES_REFERENCE.md](CAPABILITIES_REFERENCE.md) — Hand-maintained capabilities reference (primitive inventory)
 - [COMPOSED_CAPABILITIES.md](COMPOSED_CAPABILITIES.md) — Curated catalog of composed capabilities organised around the six composition axes (mask / sampler / filter / style / motion path / runtime bindings), with foundational A+B→X patterns, variant-rich option-set treasure, a hero/easter-egg showcase, and designer refinement opportunities — grounded in a full audit of the ~630-recipe `tui-vfx-recipes` corpus
 - [HOWTO_SHADOWS.md](HOWTO_SHADOWS.md) — Shadow rendering guide and integration patterns
-- [PIPELINE_VALIDATOR_LLM_GUIDE.md](PIPELINE_VALIDATOR_LLM_GUIDE.md) — How an LLM should use the `pipeline-validator` CLI (in the sibling `tui-vfx-recipes` repo) to inspect recipe rendering, diagnose shader bugs, and verify per-cell output
+- [PIPELINE_VALIDATOR_LLM_GUIDE.md](PIPELINE_VALIDATOR_LLM_GUIDE.md) — How an LLM should use the `pipeline-validator` CLI (in the sibling `tui-vfx-recipes` repo) to inspect recipe rendering, diagnose shader bugs, verify per-cell output, and run upstream-native debug-recipes QC
 - [PIPELINE_PROBE_LLM_GUIDE.md](PIPELINE_PROBE_LLM_GUIDE.md) — How an LLM or user should use the engine-side `pipeline-probe` CLI to inspect direct `ProbeSceneSpec` inputs as structured JSON/NDJSON
 - [PIPELINE_PROBE_WISHLIST.md](PIPELINE_PROBE_WISHLIST.md) — Prioritized wishlist for finishing the dream AI-native recipe debug tool, including the current diminishing-returns assessment
 - [RECIPE_AUTHORING_WORKFLOW.md](RECIPE_AUTHORING_WORKFLOW.md) — Canonical staged workflow for building complex recipes one effect at a time, validating each layer, then flattening to a single final file
@@ -29,4 +34,4 @@
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.7.1</VERS> -->
+<!-- <VERS>END OF VERSION: 1.8.0</VERS> -->

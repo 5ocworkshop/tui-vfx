@@ -1,7 +1,7 @@
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>VERSION: 1.2.0</VERS> -->
-<!-- <WCTX>Recipe workflow plus focused-cell, motion-analysis, and text-integrity diagnostics</WCTX> -->
-<!-- <CLOG>MINOR: Update the canonical authoring workflow to include focused widget-cell debugging, timeline motion analysis, and partial-match text diagnostics as first-class tools in the staged recipe loop</CLOG> -->
+<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <WCTX>Clarify the canonical role of Preview, validator, and probe surfaces inside the staged authoring loop</WCTX> -->
+<!-- <CLOG>MINOR: Add a “which tool proves what” split, including upstream-native debug-recipes QC and Preview as the canonical player for final visual sign-off</CLOG> -->
 
 # Recipe Authoring Workflow
 
@@ -17,6 +17,20 @@ Typical failure modes:
 - borders get sampled or filtered into mush
 - text clips or becomes unreadable
 - a late-stage filter overwrites the effect you actually cared about
+
+## Which tool proves what?
+
+| Question | Canonical surface |
+| --- | --- |
+| “Is this recipe structurally valid upstream?” | `pipeline-validator` |
+| “Can upstream emit deterministic structured evidence for this recipe?” | `recipe-probe` or `pipeline-validator --probe` |
+| “Can upstream run a repeatable QC bundle over debug fixtures or concrete exports?” | `pipeline-validator --debug-recipes-qc` |
+| “Does the canonical player actually look right to a human?” | Preview / demo browser |
+| “What happens for a direct engine scene with no recipe parsing?” | `pipeline-probe` |
+
+Preview is the canonical **player**.
+Validator is the canonical **recipe-authoring acceptance** surface.
+Probe outputs are the canonical **structured evidence** surfaces.
 
 ## Recommended build order
 
@@ -53,6 +67,7 @@ to a single final recipe file for normal browsing and use.
 
 7. **`final`**
    - run validator
+   - run upstream-native QC when stabilizing a reusable debug fixture or validating a resolved concrete export
    - run probe timeline/diff
    - run manual visual QA
    - flatten the proven composition back to one final file
@@ -64,6 +79,15 @@ Use the structured tooling at every stage:
 ```bash
 cargo run -q -p pipeline-validator -- --rules --stages path/to/stage.json
 cargo run -q -p recipe-probe -- --with-causation path/to/stage.json
+```
+
+For upstream-owned recipe QC over debug fixtures or GTD-resolved concrete exports:
+
+```bash
+cargo run -q -p pipeline-validator -- \
+  --debug-recipes-qc \
+  --format json \
+  path/to/concrete_recipe.json
 ```
 
 When a single cell looks wrong, use focused-cell mode instead of scanning a
@@ -144,4 +168,4 @@ prefer to:
 - [PIPELINE_PROBE_WISHLIST.md](PIPELINE_PROBE_WISHLIST.md)
 
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
