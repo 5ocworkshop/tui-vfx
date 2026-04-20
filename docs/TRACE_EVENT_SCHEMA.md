@@ -1,7 +1,8 @@
 <!-- <FILE>docs/TRACE_EVENT_SCHEMA.md</FILE> - <DESC>Canonical schema reference for TraceEvent + TraceEnvelope shipped in tui-vfx-debug::inspection (since 0.9.0)</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.4 — AI-consumption-ready schema reference for the unified inspection foundation. One table row per variant with field types and semantic notes; envelope documented separately; NDJSON line-per-envelope contract; determinism guarantees.</WCTX> -->
-<!-- <CLOG>0.1.0: initial AI-consumption schema reference covering all 18 TraceEvent variants across the four stages (lifecycle / resolution / composition / pipeline), envelope fields, stage mask semantics, NDJSON format, determinism.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Sub-plan B Phase B.1 — extend the schema reference with the shared TraceEmitter/TraceFrameContext stamping contract used by the compositor bridge and future recipe-side emitters, while preserving the canonical event/envelope tables.</WCTX> -->
+<!-- <CLOG>0.2.0: document TraceFrameContext + TraceEmitter as the shared stamping authority for TraceEnvelope emission across bridge/composer emit sites.
+0.1.0: initial AI-consumption schema reference covering all 18 TraceEvent variants across the four stages (lifecycle / resolution / composition / pipeline), envelope fields, stage mask semantics, NDJSON format, determinism.</CLOG> -->
 
 # TraceEvent Schema — `tui-vfx-debug::inspection` (since 0.9.0)
 
@@ -24,6 +25,24 @@ Every emitted event is wrapped in a `TraceEnvelope` before it reaches the sink.
 | `seq_in_frame` | `u32` | Per-frame sequence counter (resets at each new frame). Provides a stable replay order when many events share the same `t_ms`. |
 
 **NDJSON format:** one envelope per line, terminated with `\n`. `TraceReport::to_ndjson(writer)` / `TraceReport::from_ndjson(reader)` round-trip losslessly over the envelope list (the sink-side `dropped` counter is not transported; replays start at 0).
+
+## 1.1 Shared emission authority — `TraceFrameContext` + `TraceEmitter`
+
+The canonical producer-side contract is now: **one `TraceEmitter` per
+frame-cycle, shared by reference across every emit site that belongs to
+that frame**. The emitter owns the current `TraceFrameContext`
+(`frame_no`, `t_ms`, optional `recipe_id`) plus the monotonic
+`seq_in_frame` counter.
+
+| Type | Fields / methods | Notes |
+|---|---|---|
+| `TraceFrameContext` | `frame_no: u64`, `t_ms: u64`, `recipe_id: Option<RecipeId>`, `new(frame_no, t_ms)`, `with_recipe_id(id)` | Cloneable frame metadata stamped onto every emitted envelope. |
+| `TraceEmitter` | `new(sink, frame)`, `begin_frame(frame)`, `emit(event)` | `begin_frame` swaps the frame context and resets `seq_in_frame` to 0; `emit` atomically increments the per-frame sequence and forwards a stamped `TraceEnvelope` to the shared sink. |
+
+`InspectionSinkBridge` now delegates its emission path to `TraceEmitter`;
+future recipe-side lifecycle/composition emitters are expected to borrow the
+same emitter instance for the active frame so sequence ordering stays global
+within that frame.
 
 ## 2. Lifecycle stage — `StageMask::LIFECYCLE`
 
@@ -243,4 +262,4 @@ Per spec §9.6:
 - Future additive variants must preserve `#[non_exhaustive]` so client code using wildcard arms continues to compile.
 
 <!-- <FILE>docs/TRACE_EVENT_SCHEMA.md</FILE> - <DESC>Canonical schema reference for TraceEvent + TraceEnvelope</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

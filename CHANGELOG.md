@@ -17,6 +17,22 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — shared TraceEmitter stamping authority (Sub-plan B Phase B.1) — workspace 0.11.0
+
+`tui-vfx-debug::inspection` now ships **`TraceFrameContext`** and
+**`TraceEmitter`** so frame/time/recipe stamping and `seq_in_frame`
+authority live in one shared helper instead of being duplicated inside
+individual emit sites. `TraceEmitter` owns an `Arc<dyn InspectionSink>`,
+a `RwLock<TraceFrameContext>`, and an atomic `seq_in_frame` counter;
+`begin_frame(ctx)` swaps frame context + resets sequence, and `emit(event)`
+stamps the current context before forwarding to the sink.
+
+`tui-vfx-compositor::traits::cls_inspection_sink_bridge::InspectionSinkBridge`
+now delegates envelope construction to `TraceEmitter` while preserving its
+existing public API (`new`, `from_trace_sink`, `begin_frame`, `sink`,
+`context`). This centralizes sequence authority for the planned multi-stage
+shared-emitter model used by the recipe scene composer.
+
 ### Sub-plan A (recipe scene composer foundation) — final composition check (Phase A.5)
 
 All four preceding phase sections (A.1 → A.4) in this Unreleased block
