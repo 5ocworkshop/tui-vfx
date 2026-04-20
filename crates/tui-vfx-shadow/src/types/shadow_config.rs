@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Separate shared shadow edge insets from cast span so consumers can tune orthogonal start positions without widening the shadow footprint</WCTX>
-// <CLOG>Add inset_x/inset_y fields plus with_inset builder so edge shadows can start at explicit insets independent of offset span</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Sub-plan A Phase A.3.3 — add `source_region: Option<RoleTag>` so consumers can restrict shadow extrusion to cells whose source-map role matches (e.g. only extrude from Border cells instead of the whole widget rect). Default `None` preserves today's rect-based extrusion.</WCTX>
+// <CLOG>0.6.0: MINOR — add `source_region: Option<RoleTag>` field, `with_source_region(role)` builder, and `source_region()` accessor. Default is None (back-compat: extrude from the element_rect as before). Serde round-trips both None and all 12 first-class RoleTag variants plus Custom. `#[serde(skip_serializing_if = "Option::is_none")]` keeps legacy JSON unchanged when unset.
+// 0.5.0: add inset_x/inset_y fields plus with_inset builder.</CLOG>
 
 //! # Shadow Configuration
 //!
@@ -35,7 +36,7 @@
 //! [`Color`]: tui_vfx_types::Color
 
 use serde::{Deserialize, Serialize};
-use tui_vfx_types::Color;
+use tui_vfx_types::{Color, RoleTag};
 
 use super::{ShadowCompositeMode, ShadowEdges, ShadowGradeConfig, ShadowStyle};
 
@@ -54,7 +55,7 @@ use super::{ShadowCompositeMode, ShadowEdges, ShadowGradeConfig, ShadowStyle};
 ///     .with_edges(ShadowEdges::BOTTOM_RIGHT)
 ///     .with_soft_edges(true);
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ShadowConfig {
     /// Shadow rendering style.
@@ -107,6 +108,25 @@ pub struct ShadowConfig {
     /// (zero-strength, effectively no grading).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub grade: Option<ShadowGradeConfig>,
+
+    /// Optional role filter for shadow extrusion source.
+    ///
+    /// When `None` (the default), shadow extrusion is rectangular:
+    /// shadow cells are emitted outside the supplied `element_rect` with
+    /// no dependence on per-cell source content.
+    ///
+    /// When `Some(role)`, the shadow stage first computes the tight
+    /// bounding rectangle of source cells whose role matches `role` (via
+    /// [`crate::extract_shadow_envelope`]) and extrudes from THAT
+    /// bounding rectangle instead. This lets a card shadow be driven by
+    /// its `RoleTag::Border` cells rather than the whole widget rect —
+    /// fixing the "shadow on text rect" problem where a borderless text
+    /// card would otherwise cast shadow from the text cells themselves.
+    ///
+    /// Serialization skips this field when `None`, keeping legacy JSON
+    /// recipes unchanged on round-trip.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_region: Option<RoleTag>,
 }
 
 impl Default for ShadowConfig {
@@ -123,6 +143,7 @@ impl Default for ShadowConfig {
             soft_edges: true,
             composite_mode: ShadowCompositeMode::GlyphOverlay,
             grade: None,
+            source_region: None,
         }
     }
 }
@@ -234,6 +255,27 @@ impl ShadowConfig {
         self.with_grade(ShadowGradeConfig::dramatic())
     }
 
+    /// Set the role filter for shadow extrusion source.
+    ///
+    /// After this call, the shadow stage will extrude from the tight
+    /// bounding rectangle of cells whose source role matches `role`
+    /// instead of from the full caller-supplied `element_rect`. See the
+    /// field docs on [`Self::source_region`] for the full contract.
+    #[inline]
+    pub fn with_source_region(mut self, role: RoleTag) -> Self {
+        self.source_region = Some(role);
+        self
+    }
+
+    /// Return the current source_region filter, if any.
+    ///
+    /// A plain accessor pair to the builder [`Self::with_source_region`]
+    /// that avoids requiring downstream code to touch the field directly.
+    #[inline]
+    pub fn source_region(&self) -> Option<RoleTag> {
+        self.source_region.clone()
+    }
+
     /// Calculate the actual shadow color at a given progress value.
     ///
     /// This allows shadows to animate in/out by interpolating alpha.
@@ -325,4 +367,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

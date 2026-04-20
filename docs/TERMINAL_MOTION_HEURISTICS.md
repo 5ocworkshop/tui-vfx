@@ -1,7 +1,8 @@
 <!-- <FILE>docs/TERMINAL_MOTION_HEURISTICS.md</FILE> - <DESC>Canonical terminal-centric heuristics for motion, depth, and recipe authoring</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Single source of truth for terminal-specific perception and rendering constraints that affect tui-vfx effect design</WCTX> -->
-<!-- <CLOG>Initial canonical heuristics doc covering cell aspect ratio, single-glyph cells, transparent shadows, compositing order, and 60 FPS perception limits</CLOG> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.3 — add heuristics 17 and 18 covering shadow output role tagging (RoleTag::Shadow write-back, stage ordering) and role-filtered extrusion (ShadowConfig.source_region) for fixing the "shadow-on-text" splash bug</WCTX> -->
+<!-- <CLOG>1.1.0: MINOR — add heuristics 17 (shadow output carries RoleTag::Shadow; stage ordering observable in next pass / trace / direct inspection) and 18 (role-filtered shadow extrusion via source_region + fnc_extract_shadow_envelope fixes shadow-on-text bug).
+1.0.0: Initial canonical heuristics doc covering cell aspect ratio, single-glyph cells, transparent shadows, compositing order, and 60 FPS perception limits</CLOG> -->
 
 # Terminal Motion Heuristics
 
@@ -86,6 +87,27 @@ over the abstract animation idea.
 16. **Font and terminal rendering vary.**
     Braille, half-block, quarter-block, and shade glyphs do not look identical
     across WezTerm, Kitty, Alacritty, GNOME Terminal, and Windows Terminal.
+
+17. **Shadow output carries its own semantic role.**
+    Since `tui-vfx` 0.8.0, the shadow stage tags every cell it produces
+    with `RoleTag::Shadow` in the destination role map. Inspection tools,
+    trace consumers, and subsequent pipeline passes can therefore address
+    shadow output by role rather than by position. When authoring a
+    recipe that targets an element by role (e.g. `StyleRegion::Role(
+    RoleTag::Shadow)`), keep in mind the stage ordering: shadow runs
+    AFTER filters in the per-cell pipeline, so a filter in the SAME frame
+    cannot observe the shadow role tags. They become observable in the
+    next pass, in trace output, or via direct inspection of
+    `destination.roles()` after rendering completes.
+
+18. **Role-filtered shadow extrusion fixes the "shadow-on-text" bug.**
+    A text card without explicit borders casts a wrong-looking shadow
+    when the extrusion envelope follows individual text cells. Set
+    `ShadowConfig::source_region = Some(RoleTag::Border)` (or another
+    structural role) to restrict extrusion to the tight bounding box of
+    role-matched source cells. The `fnc_extract_shadow_envelope` pure
+    function carries out the restriction and is reusable by any stage
+    that wants role-filtered geometry.
 
 17. **Snapping changes the feel.**
     `round`, `floor`, and stochastic snapping are not neutral implementation

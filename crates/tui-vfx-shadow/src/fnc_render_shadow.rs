@@ -1,15 +1,17 @@
-// <FILE>crates/tui-vfx-shadow/src/fnc_render_shadow.rs</FILE> - <DESC>Main entry point for shadow rendering</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Add medium-shade style dispatch in main render entrypoint</WCTX>
-// <CLOG>Wire ShadowStyle::MediumShade to MediumShadeRenderer and add integration test</CLOG>
+// <FILE>crates/tui-vfx-shadow/src/fnc_render_shadow.rs</FILE> - <DESC>Main entry point for shadow rendering (rect-based + role-aware SemanticScene entrypoints)</DESC>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Sub-plan A Phase A.3.5 — add `render_shadow_into_scene` role-aware wrapper that writes RoleTag::Shadow into the destination SemanticScene's RoleMap for every cell the shadow stage produces. Back-compat: source_region=None delegates directly to render_shadow on the destination grid. Source_region=Some(role) computes the role-filtered bounding rect via fnc_extract_shadow_envelope and uses it as the effective element rect.</WCTX>
+// <CLOG>0.4.0: MINOR — add `render_shadow_into_scene` entrypoint for role-aware shadow stage. Writes `RoleTag::Shadow` into destination.roles_mut() for cells produced by the shadow render (measured by "was the destination cell empty before, and non-empty after"). When `config.source_region.is_some()` but no source cells match, no shadow is rendered.
+// 0.3.0: Wire ShadowStyle::MediumShade to MediumShadeRenderer and add integration test.</CLOG>
 
 //! Main entry point function for shadow rendering.
 //!
 //! Provides a unified API that dispatches to the appropriate renderer
 //! based on the configured shadow style.
 
-use tui_vfx_types::{Grid, Rect};
+use tui_vfx_types::{Grid, Rect, RoleMap, RoleTag, SemanticScene};
 
+use crate::fnc_extract_shadow_envelope::extract_shadow_envelope;
 use crate::renderers::{
     BrailleRenderer, GradientRenderer, HalfBlockRenderer, MediumShadeRenderer, SolidRenderer,
 };
@@ -122,6 +124,134 @@ pub fn render_shadow_gradient_colors<G: Grid>(
     GradientRenderer::render_with_colors(grid, element_rect, config, colors, progress);
 }
 
+/// Render a shadow into a destination [`SemanticScene`], honouring
+/// `config.source_region` for role-filtered extrusion and writing
+/// `RoleTag::Shadow` into the destination's role map for every cell the
+/// shadow stage produced.
+///
+/// This is the role-aware entrypoint added in Sub-plan A Phase A.3.5.
+/// It wraps [`render_shadow`] with two additional behaviours:
+///
+/// 1. **Role-filtered extrusion.** When `config.source_region` is
+///    `Some(role)`, [`crate::extract_shadow_envelope`] computes the tight
+///    bounding rectangle of source cells whose role matches; that
+///    rectangle is used as the effective `element_rect` instead of the
+///    caller-supplied one. If no cells match, the shadow stage is a
+///    no-op. When `config.source_region` is `None`, the caller-supplied
+///    `element_rect` is used unchanged (back-compat).
+/// 2. **Destination role-tag write-back.** Before rendering, the
+///    destination grid is snapshotted per cell. After rendering, cells
+///    whose content transitioned from "empty" (`' '` + transparent fg/bg)
+///    to "non-empty" are tagged `RoleTag::Shadow` in
+///    [`SemanticScene::roles_mut`]. This lets downstream trace consumers
+///    and subsequent pipeline passes target shadow output by role.
+///
+/// # Stage ordering note
+///
+/// The per-cell compositor pipeline runs filters BEFORE shadow today.
+/// That means a filter in the same frame cannot see the shadow tags this
+/// function writes (spec §8.3 "downstream filter can target shadow cells"
+/// refers to a subsequent frame or pipeline pass, or future reordering).
+/// The tags are still immediately observable via
+/// `destination.roles().get((x, y))` and in `tui-vfx-trace`.
+///
+/// # Example
+///
+/// ```
+/// use tui_vfx_shadow::{render_shadow_into_scene, ShadowConfig, ShadowEdges};
+/// use tui_vfx_types::{
+///     Cell, Color, Grid, OwnedGrid, Rect, RoleMap, RoleTag, SemanticScene,
+/// };
+///
+/// // Source: a 20×10 grid with an 8×4 card.
+/// let element_rect = Rect::new(5, 2, 8, 4);
+/// let mut source_grid = OwnedGrid::new(20, 10);
+/// for y in element_rect.y..element_rect.y + element_rect.height {
+///     for x in element_rect.x..element_rect.x + element_rect.width {
+///         source_grid.set(x as usize, y as usize, Cell::new('X'));
+///     }
+/// }
+/// let source_roles = RoleMap::empty(20, 10);
+///
+/// // Destination scene.
+/// let mut scene = SemanticScene::from_grid_with_default_role(
+///     OwnedGrid::new(20, 10),
+///     RoleTag::Background,
+/// );
+///
+/// // Shadow config.
+/// let config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+///     .with_offset(2, 1)
+///     .with_edges(ShadowEdges::BOTTOM_RIGHT);
+///
+/// render_shadow_into_scene(
+///     &source_grid, &source_roles, &mut scene, element_rect, &config, 1.0,
+/// );
+/// ```
+pub fn render_shadow_into_scene<G: Grid + ?Sized>(
+    source_grid: &G,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
+    element_rect: Rect,
+    config: &ShadowConfig,
+    progress: f64,
+) {
+    let effective_rect = match &config.source_region {
+        None => element_rect,
+        Some(role) => {
+            let envelope = extract_shadow_envelope(
+                source_grid,
+                source_roles,
+                Some(role.clone()),
+            );
+            match envelope.bounding_rect() {
+                Some(rect) => rect,
+                None => {
+                    // No source cells matched — no shadow to render.
+                    return;
+                }
+            }
+        }
+    };
+
+    // Snapshot destination emptiness so we can identify cells the shadow
+    // stage produced. A cell is "empty" iff glyph is ' ' AND both fg/bg
+    // alpha are zero; anything else we treat as pre-existing content.
+    let dest_w = destination.grid().width();
+    let dest_h = destination.grid().height();
+    let mut was_empty = vec![false; dest_w * dest_h];
+    for y in 0..dest_h {
+        for x in 0..dest_w {
+            let empty = destination
+                .grid()
+                .get(x, y)
+                .is_none_or(|c| c.ch == ' ' && c.bg.a == 0 && c.fg.a == 0);
+            was_empty[y * dest_w + x] = empty;
+        }
+    }
+
+    // Render the shadow into the destination's grid.
+    render_shadow(destination.grid_mut(), effective_rect, config, progress);
+
+    // Write-back RoleTag::Shadow for every cell that went empty → non-empty.
+    for y in 0..dest_h {
+        for x in 0..dest_w {
+            if !was_empty[y * dest_w + x] {
+                continue;
+            }
+            let produced = destination
+                .grid()
+                .get(x, y)
+                .is_some_and(|c| c.ch != ' ' || c.bg.a != 0 || c.fg.a != 0);
+            if produced {
+                destination
+                    .roles_mut()
+                    .set((x as u16, y as u16), RoleTag::Shadow);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -222,4 +352,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/fnc_render_shadow.rs</FILE> - <DESC>Main entry point for shadow rendering</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

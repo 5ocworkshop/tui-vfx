@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.0.0</VERS>
-// <WCTX>Sub-plan A Phase A.2.2 — role-aware pipeline. All 5 public/internal render_pipeline* fns now take `source_roles: &RoleMap` and `destination: &mut SemanticScene`. StyleRegion::Role(...) predicates consult source_roles at (x, y). Shadow stage's destination-role writes are deferred to Phase A.3 — for A.2 the destination scene's role map is left un-mutated for shadow cells.</WCTX>
-// <CLOG>12.0.0: MAJOR signature change for role-aware targeting. `render_pipeline` and `render_pipeline_with_area` gain `source_roles: &RoleMap` immediately after `source`, and their destination is now `&mut SemanticScene` (was `&mut dyn Grid`). Internal predicate evaluation in the per-cell hot loop reads `source_roles.get((x, y))` for StyleRegion::Role(_) variants; geometry variants unchanged. Inner helpers (render_loop, render_loop_inspected, render_pipeline_with_shadow) retain `&mut dyn Grid` on the destination — the public entrypoints call `destination.grid_mut()` to hand them the OwnedGrid. Legacy bare variants (BorderOnly/TextOnly/BackgroundOnly) have been removed from StyleRegion; the apply_shaders helper passes the source role into should_style via the new 5-arg signature.</CLOG>
+// <VERS>VERSION: 12.1.0</VERS>
+// <WCTX>Sub-plan A Phase A.3 — shadow stage writes RoleTag::Shadow into destination RoleMap for shadow-region cells; ShaderContext carries the source role map via Arc<RoleMap>; ShadowConfig.source_region honoured via extract_shadow_envelope.</WCTX>
+// <CLOG>12.1.0: MINOR — Phase A.3 additions. (a) render_pipeline_with_shadow now takes `destination: &mut SemanticScene` (was &mut dyn Grid) so it can write RoleTag::Shadow into the destination role map for every cell identified as a shadow region candidate. (b) apply_shaders/apply_shaders_inspected gain a `roles_arc: &Arc<RoleMap>` parameter; the ShaderContext struct literals now include the `roles` field cloned from this Arc. (c) render_loop and render_loop_inspected build the Arc<RoleMap> once per invocation (a single RoleMap clone) so per-cell Arc::clone is cheap. (d) new effective_shadow_rect() helper consults config.source_region via extract_shadow_envelope; returns None for no-match (shadow stage skipped). Non-inspected shadow path pre-computes the in_element_ni / shadow_has_coverage_ni flags so shadow-region writes can be tracked for role tagging regardless of composite mode branch.
+// 12.0.0: MAJOR signature change for role-aware targeting.</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
 use super::cls_prepare_context::PrepareContext;
@@ -15,9 +16,10 @@ use crate::traits::pipeline_inspector::CompositorInspector;
 use crate::types::cls_sampler_spec::SamplerSpec;
 use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
+use std::sync::Arc;
 use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
 use tui_vfx_style::traits::ShaderContext;
-use tui_vfx_types::{Cell, Grid, OwnedGrid, Rect, RoleMap, SemanticScene, Style};
+use tui_vfx_types::{Cell, Grid, OwnedGrid, Rect, RoleMap, RoleTag, SemanticScene, Style};
 
 /// Render pipeline with full spec support and optional inspector.
 ///
@@ -55,7 +57,7 @@ pub fn render_pipeline(
         render_pipeline_with_shadow(
             source,
             source_roles,
-            destination.grid_mut(),
+            destination,
             width,
             height,
             offset_x,
@@ -160,11 +162,17 @@ pub fn render_pipeline_with_area(
 ///
 /// Creates a working buffer with extended dimensions (element + shadow),
 /// renders shadow then element, and applies masks when copying to dest.
+///
+/// Phase A.3 role-awareness: the destination is `&mut SemanticScene` so
+/// this function can tag shadow cells with `RoleTag::Shadow` in the
+/// destination role map as they are written. Role-filtered extrusion
+/// (from `config.source_region`) is honoured via
+/// [`tui_vfx_shadow::extract_shadow_envelope`].
 #[allow(clippy::too_many_arguments)]
 fn render_pipeline_with_shadow(
     source: &dyn Grid,
     source_roles: &RoleMap,
-    dest: &mut dyn Grid,
+    destination: &mut SemanticScene,
     width: usize,
     height: usize,
     offset_x: usize,
@@ -198,8 +206,17 @@ fn render_pipeline_with_shadow(
     // Create working buffer for shadow + element
     let mut buffer = OwnedGrid::new(ext_width, ext_height);
 
-    // Render shadow to buffer (uses animation progress for fade sync)
-    render_shadow(&mut buffer, element_rect, &shadow_spec.config, options.t);
+    // Render shadow to buffer (uses animation progress for fade sync).
+    // Phase A.3: if `config.source_region` is set, the shadow stage
+    // computes the role-filtered envelope's bounding rect and extrudes
+    // from that instead of the caller-supplied element_rect. The
+    // buffer-level render path here doesn't carry a destination
+    // SemanticScene, so we derive the effective rect inline.
+    let effective_shadow_rect =
+        effective_shadow_rect(source, source_roles, element_rect, &shadow_spec.config);
+    if let Some(rect) = effective_shadow_rect {
+        render_shadow(&mut buffer, rect, &shadow_spec.config, options.t);
+    }
     let shadow_only_buffer = buffer.clone();
 
     // Prepare effects for element rendering
@@ -208,6 +225,9 @@ fn render_pipeline_with_shadow(
     let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
     let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
     let shader_t = options.loop_t.unwrap_or(options.t).clamp(0.0, 1.0);
+    // Arc-wrap the source role map once so per-cell ShaderContext cloning
+    // is a cheap atomic refcount bump instead of a RoleMap allocation.
+    let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());
 
     // Render element content to buffer (on top of shadow)
     let (w16, h16) = (width as u16, height as u16);
@@ -241,6 +261,7 @@ fn render_pipeline_with_shadow(
                 shader_t,
                 &options,
                 source_role,
+                &roles_arc,
             );
 
             // Apply filters
@@ -257,6 +278,16 @@ fn render_pipeline_with_shadow(
     let prepared_masks = prepare_masks(options.masks.as_ref());
     let mask_t = compute_mask_t(&options);
     let (ext_w16, ext_h16) = (ext_width as u16, ext_height as u16);
+
+    // Collect dest positions of shadow cells so we can tag RoleTag::Shadow
+    // in the destination's RoleMap after the grid-write phase completes.
+    let mut shadow_role_writes: Vec<(u16, u16)> = Vec::new();
+
+    // Grid-write phase: borrow the destination's grid mutably for the
+    // duration of the pixel copy loop. The `destination: &mut SemanticScene`
+    // argument re-borrows once the grid phase is done so we can write
+    // RoleTag::Shadow for the collected positions.
+    let dest: &mut dyn Grid = destination.grid_mut();
 
     if let Some(inspector) = inspector {
         // Inspected path
@@ -370,6 +401,14 @@ fn render_pipeline_with_shadow(
 
                     inspector.on_cell_rendered(local_x, local_y, &final_cell);
                     dest.set(dest_x, dest_y, final_cell);
+                    // Track shadow-region writes for Phase A.3.5 role
+                    // tagging. A shadow region is "outside element_rect
+                    // with shadow coverage"; the specific final_cell
+                    // shape varies by composite mode / source_empty, but
+                    // the destination cell IS a shadow contribution.
+                    if shadow_region_candidate {
+                        shadow_role_writes.push((dest_x as u16, dest_y as u16));
+                    }
                 }
             }
         }
@@ -409,20 +448,30 @@ fn render_pipeline_with_shadow(
                     let dest_x = offset_x + x;
                     let dest_y = offset_y + y;
 
+                    // Non-inspected path needs to compute these locally too
+                    // so we can tag shadow-region writes below.
+                    let source_empty_ni = source
+                        .get(x, y)
+                        .is_none_or(|source_cell| source_cell.is_empty());
+                    let element_left_ni = usize::from(element_rect.x);
+                    let element_top_ni = usize::from(element_rect.y);
+                    let element_right_ni =
+                        element_left_ni + usize::from(element_rect.width);
+                    let element_bottom_ni =
+                        element_top_ni + usize::from(element_rect.height);
+                    let in_element_ni = x >= element_left_ni
+                        && x < element_right_ni
+                        && y >= element_top_ni
+                        && y < element_bottom_ni;
+                    let shadow_has_coverage_ni = shadow_cell
+                        .is_some_and(|shadow_cell| !shadow_cell.is_empty());
+                    let shadow_region_candidate_ni =
+                        !in_element_ni && shadow_has_coverage_ni;
+
                     let final_cell = if shadow_element_rect.is_some() {
-                        let source_empty = source
-                            .get(x, y)
-                            .is_none_or(|source_cell| source_cell.is_empty());
-                        let element_left = usize::from(element_rect.x);
-                        let element_top = usize::from(element_rect.y);
-                        let element_right = element_left + usize::from(element_rect.width);
-                        let element_bottom = element_top + usize::from(element_rect.height);
-                        let in_element = x >= element_left
-                            && x < element_right
-                            && y >= element_top
-                            && y < element_bottom;
-                        let shadow_has_coverage =
-                            shadow_cell.is_some_and(|shadow_cell| !shadow_cell.is_empty());
+                        let source_empty = source_empty_ni;
+                        let in_element = in_element_ni;
+                        let shadow_has_coverage = shadow_has_coverage_ni;
                         if in_element || !shadow_has_coverage {
                             *cell
                         } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
@@ -478,8 +527,46 @@ fn render_pipeline_with_shadow(
                     };
 
                     dest.set(dest_x, dest_y, final_cell);
+                    if shadow_region_candidate_ni {
+                        shadow_role_writes.push((dest_x as u16, dest_y as u16));
+                    }
                 }
             }
+        }
+    }
+
+    // Phase A.3.5 role write-back: tag every shadow-region destination
+    // cell with RoleTag::Shadow. The dest borrow has dropped here; we
+    // re-borrow through `destination` to reach roles_mut().
+    if !shadow_role_writes.is_empty() {
+        let roles = destination.roles_mut();
+        for (dx, dy) in shadow_role_writes {
+            roles.set((dx, dy), RoleTag::Shadow);
+        }
+    }
+}
+
+/// Compute the effective shadow element rectangle, honouring a
+/// `source_region` filter when present.
+///
+/// Returns `None` when the filter is `Some(role)` but no source cells
+/// carry that role — in which case the caller should skip rendering the
+/// shadow entirely.
+fn effective_shadow_rect(
+    source: &dyn Grid,
+    source_roles: &RoleMap,
+    element_rect: Rect,
+    config: &tui_vfx_shadow::ShadowConfig,
+) -> Option<Rect> {
+    match &config.source_region {
+        None => Some(element_rect),
+        Some(role) => {
+            let envelope = tui_vfx_shadow::extract_shadow_envelope(
+                source,
+                source_roles,
+                Some(role.clone()),
+            );
+            envelope.bounding_rect()
         }
     }
 }
@@ -503,6 +590,8 @@ fn render_loop(
     let (w16, h16) = (width as u16, height as u16);
     let shader_t = options.loop_t.unwrap_or(options.t).clamp(0.0, 1.0);
     let mask_t = compute_mask_t(options);
+    // Arc-wrap the source role map once for cheap per-cell Arc::clone.
+    let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());
 
     for y in 0..height {
         for x in 0..width {
@@ -548,6 +637,7 @@ fn render_loop(
                 shader_t,
                 options,
                 source_role,
+                &roles_arc,
             );
 
             // Apply filters
@@ -580,6 +670,8 @@ fn render_loop_inspected(
     let (w16, h16) = (width as u16, height as u16);
     let shader_t = options.loop_t.unwrap_or(options.t).clamp(0.0, 1.0);
     let mask_t = compute_mask_t(options);
+    // Arc-wrap the source role map once for cheap per-cell Arc::clone.
+    let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());
 
     for y in 0..height {
         for x in 0..width {
@@ -635,6 +727,7 @@ fn render_loop_inspected(
                 options,
                 inspector,
                 source_role,
+                &roles_arc,
             );
 
             // Apply filters with inspector
@@ -682,6 +775,7 @@ fn apply_shaders(
     shader_t: f64,
     options: &CompositionOptions<'_>,
     source_role: Option<tui_vfx_types::RoleTag>,
+    roles_arc: &Arc<RoleMap>,
 ) {
     let area = Rect::new(0, 0, w16, h16);
     for layer in &options.shader_layers {
@@ -704,6 +798,7 @@ fn apply_shaders(
                 t: shader_t,
                 phase: options.phase,
                 runtime_params: options.runtime_params.clone(),
+                roles: roles_arc.clone(),
             };
 
             let current_style = Style {
@@ -733,6 +828,7 @@ fn apply_shaders_inspected(
     options: &CompositionOptions<'_>,
     inspector: &mut dyn CompositorInspector,
     source_role: Option<tui_vfx_types::RoleTag>,
+    roles_arc: &Arc<RoleMap>,
 ) {
     let area = Rect::new(0, 0, w16, h16);
     for (shader_index, layer) in options.shader_layers.iter().enumerate() {
@@ -752,6 +848,7 @@ fn apply_shaders_inspected(
                 t: shader_t,
                 phase: options.phase,
                 runtime_params: options.runtime_params.clone(),
+                roles: roles_arc.clone(),
             };
 
             let before_style = Style {

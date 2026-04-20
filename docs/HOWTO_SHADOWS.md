@@ -353,6 +353,80 @@ All strength values range from `0.0` (no effect) to `1.0` (maximum) and are furt
 
 ---
 
+## Targeting shadows by role (v0.8.0+)
+
+Starting with `tui-vfx` 0.8.0 (Sub-plan A Phase A.3), shadows can be
+restricted to extrude from cells that carry a specific semantic role on
+the source surface's `RoleMap`. Set `ShadowConfig.source_region` to the
+role you want to extrude from; the shadow stage computes the tight
+bounding rectangle of role-matched cells and uses that as the effective
+`element_rect`.
+
+### Why it matters
+
+Without `source_region`, a textual card casts shadow from the rectangle
+that contains its text — which often means shadow leaks from individual
+letterforms and looks wrong. With `source_region: Role(RoleTag::Border)`,
+the shadow follows the card's border role instead, giving a clean
+bounding box around the structural edge.
+
+### Worked example
+
+```rust
+use tui_vfx_shadow::{render_shadow_into_scene, ShadowConfig, ShadowEdges};
+use tui_vfx_types::{RoleTag, SemanticScene, ...};
+
+let config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+    .with_offset(2, 1)
+    .with_edges(ShadowEdges::BOTTOM_RIGHT)
+    .with_source_region(RoleTag::Border);  // <-- restrict to border role
+
+render_shadow_into_scene(
+    &source_grid,
+    &source_roles,
+    &mut destination_scene,
+    element_rect,
+    &config,
+    progress,
+);
+```
+
+After rendering, `destination_scene.roles().get((x, y))` returns
+`RoleTag::Shadow` for every cell the shadow stage produced. This is the
+observable role write-back: consumers (trace tooling, subsequent
+pipeline passes, recipe-side decisions) can now address shadow output
+by role.
+
+### Stage ordering
+
+The per-cell compositor pipeline runs stages in this order:
+
+```
+Sampler → Mask → Shader → Filter → Shadow → Final
+```
+
+Shadow runs AFTER filters. A downstream filter in the *same frame*
+therefore cannot see the `RoleTag::Shadow` tags this write-back
+produces (its stage already ran). The tags ARE observable:
+
+- **immediately** via `destination.roles().get((x, y))` in code that
+  runs after the pipeline returns,
+- **next frame** if the scene persists into another render pass,
+- **in `tui-vfx-trace`** event streams (captured at emit time).
+
+This ordering is the reason the spec §8.3 reference to "downstream
+filter can target shadow cells specifically" points at either a
+subsequent pipeline pass or a future re-ordering of stages.
+
+### Back-compat
+
+Setting `source_region = None` (the default) preserves today's
+rect-based extrusion bit-for-bit against pre-A.3 output for the same
+`element_rect`. Existing recipes don't need any changes; the field is
+opt-in.
+
+---
+
 ## Key Points
 
 1. **Shadows are rect-based** - This matches terminal UI reality where everything is rectangular

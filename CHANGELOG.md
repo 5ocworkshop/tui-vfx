@@ -1,7 +1,8 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.14.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.2 — compositor pipeline + StyleRegion hard cutover to role-aware targeting</WCTX> -->
-<!-- <CLOG>1.14.0: add Unreleased entry for the Phase A.2 hard cutover: render_pipeline* signature change (adds &RoleMap source and &mut SemanticScene destination); StyleRegion legacy bare variants removed from the Rust enum (serde back-compat preserved via custom Deserialize); workspace version bumped 0.6.0 → 0.7.0.
+<!-- <VERS>VERSION: 1.15.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.3 — style + shadow pipeline role-awareness; ShaderContext.roles, ShadowConfig.source_region, RoleTag::Shadow write-back</WCTX> -->
+<!-- <CLOG>1.15.0: add Unreleased entry for Phase A.3 — role-aware ShaderContext, ShadowConfig.source_region, fnc_extract_shadow_envelope + CellMask, render_shadow_into_scene, shadow-stage RoleTag::Shadow write-back; workspace bumped 0.7.0 → 0.8.0. ShadowConfig is no longer Copy (RoleTag::Custom carries Arc<str>).
+1.14.0: add Unreleased entry for the Phase A.2 hard cutover: render_pipeline* signature change (adds &RoleMap source and &mut SemanticScene destination); StyleRegion legacy bare variants removed from the Rust enum (serde back-compat preserved via custom Deserialize); workspace version bumped 0.6.0 → 0.7.0.
 1.13.0: add Unreleased entry for the recipe scene composer foundation primitives shipped in tui-vfx-types 0.6.0.
 1.12.0: add Unreleased section covering tui-vfx-content sources (RocketsplashImage/Font + blit helper) and pool primitives (TextPool/EffectPool/ImagePool/FontPool/PresetPool + PoolPolicy). Default-on rocketsplash-rt workspace dep.
 1.11.0: add 0.5.0 section covering GlistenBand.speed reconnect + speed_binding, FadeToCanvas.canvas_color_binding and new ShaderRuntimeParamValue::Rgb variant, plus RigidShake.damping_scale_binding.</CLOG> -->
@@ -13,6 +14,78 @@ All notable changes to this project will be documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+### Added / Changed — `tui-vfx-style`, `tui-vfx-shadow`, `tui-vfx-compositor` — style + shadow role-awareness (Sub-plan A Phase A.3) — workspace 0.8.0
+
+Shaders and the shadow stage now consume per-cell role information, and
+the shadow stage tags its output cells with `RoleTag::Shadow` in the
+destination role map so downstream trace consumers and subsequent
+pipeline passes can address shadow cells by role.
+
+- **`tui-vfx-style::ShaderContext`** gains a `roles: Arc<RoleMap>` field
+  (additive). Struct-literal construction sites must add `roles: <arc>`;
+  `ShaderContext::new(...)` callers are source-compatible (the field
+  defaults to `Arc::default()` i.e. a 0×0 empty `RoleMap`). New builder
+  `with_roles(self, roles)` and accessor `role_at((x, y))` round out the
+  ergonomic surface.
+- **`tui-vfx-shadow::ShadowConfig`** gains `source_region: Option<RoleTag>`
+  plus `with_source_region(role)` builder and `source_region()` accessor.
+  When `None` (default), shadow extrusion is rectangular as before.
+  When `Some(role)`, the shadow stage extrudes from the **tight bounding
+  rectangle of role-matched source cells** — fixing the "shadow on text
+  rect" splash bug where a text-only card would otherwise cast shadow
+  from its text cells. Serde round-trips both shapes; legacy recipes
+  without the field continue to parse unchanged.
+- **`ShadowConfig` is no longer `Copy`.** `RoleTag::Custom` carries an
+  `Arc<str>` (via `InternedRoleName`), making `ShadowConfig` non-Copy
+  when it carries a custom role. Call-sites that relied on the implicit
+  copy (`let b = a;`) must now `.clone()` explicitly. All internal call
+  sites have been migrated.
+- **New: `tui-vfx-shadow::extract_shadow_envelope`** (pure function) +
+  `CellMask` primitive. Returns the set of source cells that should
+  extrude shadow, honouring the `source_region` filter. Provides
+  `bounding_rect()` for callers that want a single rectangle derived
+  from the mask.
+- **New: `tui-vfx-shadow::render_shadow_into_scene`** entrypoint that
+  renders a shadow into a `&mut SemanticScene` and tags every produced
+  cell with `RoleTag::Shadow` in `destination.roles_mut()`. Wraps
+  `render_shadow` with role-filtered extrusion + destination tag
+  write-back.
+- **`tui-vfx-compositor::render_pipeline_with_shadow`** promotes its
+  destination from `&mut dyn Grid` to `&mut SemanticScene` so the
+  compositor-internal shadow path can write `RoleTag::Shadow` into the
+  destination role map. Shadow extrusion now honours
+  `config.source_region` via `extract_shadow_envelope`.
+- **Stage ordering clarification:** the per-cell pipeline stages run
+  Sampler → Mask → Shader → Filter → Shadow → Final. Shadow runs AFTER
+  filters (unchanged from A.2). The `RoleTag::Shadow` tags the shadow
+  stage writes into the destination role map are observable
+  immediately via `destination.roles()` and in `tui-vfx-trace`;
+  downstream filters in the same frame do NOT see them (their stage
+  already ran). Spec §8.3 "downstream filter can target shadow cells
+  specifically" refers to a subsequent frame, a subsequent pipeline
+  pass, or future re-ordering.
+- **Tiny-rectangle safety:** 1×1, 2×1, and 0×0 source cases handled
+  without panic at every layer (envelope extraction, shadow render,
+  compositor integration).
+
+### Migration notes
+
+- **Consumers building `ShaderContext` via struct literal** must add
+  `roles: <arc>` to the literal. The simplest stand-in is
+  `Arc::<RoleMap>::default()` (empty 0×0 map). Callers using
+  `ShaderContext::new(...)` are source-compatible — the new field
+  defaults internally.
+- **Consumers of `ShadowConfig`** relying on implicit copy must add
+  `.clone()`. Lint hint: `cargo build` will report move errors with
+  exact locations.
+- **Shadow cells in the destination role map:** consumers that read
+  destination roles after a shadow pipeline pass will observe
+  `RoleTag::Shadow` in place of the previous default (typically
+  `Background`) wherever the shadow stage wrote a cell. This is the
+  intended observable change; back-compat is preserved for the
+  pixel content itself (bit-for-bit match against pre-A.3 output when
+  `source_region` is `None`).
 
 ### Changed — BREAKING — `tui-vfx-compositor` — role-aware pipeline (Sub-plan A Phase A.2) — workspace 0.7.0
 

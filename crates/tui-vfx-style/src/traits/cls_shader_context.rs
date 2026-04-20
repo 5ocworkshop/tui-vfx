@@ -1,13 +1,14 @@
 // <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Phase 0 P0.B followup — add an Rgb variant to ShaderRuntimeParamValue so canvas_color / tint / gradient bindings can ship a concrete RGB triple through the runtime-params map without widening to a string-typed color-token path</WCTX>
-// <CLOG>MINOR: add ShaderRuntimeParamValue::Rgb{r,g,b}, an as_color() accessor returning tui_vfx_types::Color, a From<Color> impl, and a ShaderRuntimeParams::get_color helper; extend kind_name / as_f32 / as_u16 / serde_json::Value conversion to handle the new variant</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Sub-plan A Phase A.3.1 — ShaderContext gains role awareness. Adds a `roles: Arc<RoleMap>` field (Arc mirrors the existing `runtime_params: Arc<ShaderRuntimeParams>` pattern) so shaders can branch on per-cell RoleTag information without breaking the trait signature. Default defers to RoleMap::default() (empty 0x0 map). Constructor ShaderContext::new keeps its existing signature; a new `with_roles` builder and `role_at` accessor make role lookup ergonomic.</WCTX>
+// <CLOG>1.2.0: MINOR — add role-awareness fields/accessors/builder. Backward-compatible: struct literal callers must add `roles: <Arc<RoleMap>>`; ShaderContext::new callers are unchanged (roles default to Arc::default() i.e. empty map). `with_roles(self, roles: Arc<RoleMap>) -> Self` builder; `role_at(&self, (x, y)) -> Option<RoleTag>` reads from the role map; rustdoc explains the role-aware contract.
+// 1.1.0: add ShaderRuntimeParamValue::Rgb{r,g,b}, an as_color() accessor returning tui_vfx_types::Color, a From<Color> impl, and a ShaderRuntimeParams::get_color helper; extend kind_name / as_f32 / as_u16 / serde_json::Value conversion to handle the new variant.</CLOG>
 
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::Arc;
-use tui_vfx_types::Color;
+use tui_vfx_types::{Color, RoleMap, RoleTag};
 
 /// Runtime scalar value exposed to spatial shaders during render.
 ///
@@ -288,10 +289,26 @@ pub struct ShaderContext {
     pub phase: Option<Phase>,
     /// Render-time runtime parameter map for shader bindings.
     pub runtime_params: Arc<ShaderRuntimeParams>,
+    /// Per-cell semantic role map carried from the source `SemanticScene`.
+    ///
+    /// Shaders MAY consult `roles.get((local_x, local_y))` to branch on
+    /// the current cell's semantic role (or any other cell's role) in
+    /// addition to geometric coordinates. The compositor populates this
+    /// Arc once per pipeline invocation and clones the `Arc` per cell,
+    /// so reading is O(1) and does not allocate.
+    ///
+    /// Call sites that have no role information should pass an empty
+    /// `Arc<RoleMap>` via `Arc::default()` (or let `ShaderContext::new`
+    /// default it). Out-of-bounds reads return `None`, so a 0×0 default
+    /// is safe to pair with any coordinate.
+    pub roles: Arc<RoleMap>,
 }
 
 impl ShaderContext {
     /// Create a new shader context.
+    ///
+    /// The `roles` field is defaulted to an empty `Arc<RoleMap>`; call
+    /// [`Self::with_roles`] to attach a real role map.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         local_x: u16,
@@ -314,7 +331,27 @@ impl ShaderContext {
             t,
             phase,
             runtime_params: runtime_params.unwrap_or_default(),
+            roles: Arc::default(),
         }
+    }
+
+    /// Attach a per-cell role map to this context.
+    ///
+    /// Builder variant so callers can opt into role awareness without
+    /// widening [`Self::new`]'s argument list. The role map is shared via
+    /// `Arc`; cloning this context is a cheap atomic refcount bump.
+    pub fn with_roles(mut self, roles: Arc<RoleMap>) -> Self {
+        self.roles = roles;
+        self
+    }
+
+    /// Fetch the role tag at `(x, y)` from this context's role map.
+    ///
+    /// Returns `None` for out-of-bounds coordinates or when the role map
+    /// is empty (the default). Prefer this over `ctx.roles.get(...)` at
+    /// call sites that want a clean one-liner.
+    pub fn role_at(&self, pos: (u16, u16)) -> Option<RoleTag> {
+        self.roles.get(pos)
     }
 
     /// Get absolute screen X coordinate for this cell.
@@ -401,9 +438,10 @@ impl Default for ShaderContext {
             t: 0.0,
             phase: None,
             runtime_params: Arc::default(),
+            roles: Arc::default(),
         }
     }
 }
 
 // <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

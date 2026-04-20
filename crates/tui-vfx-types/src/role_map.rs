@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-types/src/role_map.rs</FILE> - <DESC>Dense per-cell RoleTag storage (one entry per cell of a SemanticScene)</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.1 — foundation primitive for SemanticScene role layer</WCTX>
-// <CLOG>0.1.0: initial RoleMap with row-major Vec<RoleId> storage, embedded interner, bounds-checked accessors, row-major iterator, serde round-trip via cfg_attr.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Sub-plan A Phase A.3.1 — add `Default` impl (returns an empty 0x0 map) so `Arc<RoleMap>::default()` works from `ShaderContext::default()` on the role-aware code path</WCTX>
+// <CLOG>0.2.0: MINOR — add `impl Default for RoleMap` returning `empty(0, 0)` so the new `roles: Arc<RoleMap>` field on `ShaderContext` can be built via `Arc::default()` without requiring callers to supply dimensions for placeholder contexts.
+// 0.1.0: initial RoleMap with row-major Vec<RoleId> storage, embedded interner, bounds-checked accessors, row-major iterator, serde round-trip via cfg_attr.</CLOG>
 
 //! Dense per-cell `RoleTag` storage.
 //!
@@ -131,6 +132,19 @@ impl RoleMap {
     }
 }
 
+impl Default for RoleMap {
+    /// Return an empty 0×0 `RoleMap`.
+    ///
+    /// This is the "no role information available" placeholder used by
+    /// call-sites that want to build a `ShaderContext` or other
+    /// role-carrying structure without knowing the actual dimensions.
+    /// Every `get()` returns `None` (out of bounds); `set()` is a
+    /// silent no-op.
+    fn default() -> Self {
+        Self::empty(0, 0)
+    }
+}
+
 /// Row-major iterator yielding `(x, y, RoleTag)` for every cell in a
 /// `RoleMap`.
 pub struct RoleMapIter<'a> {
@@ -156,4 +170,4 @@ impl<'a> Iterator for RoleMapIter<'a> {
 }
 
 // <FILE>crates/tui-vfx-types/src/role_map.rs</FILE> - <DESC>Dense per-cell RoleTag storage</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

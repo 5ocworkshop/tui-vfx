@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>VERSION: 5.5.0</VERS>
-// <WCTX>Sub-plan A Phase A.2.3 — route every call-site through the `_legacy` shim wrapper so these tests keep speaking the old `&mut OwnedGrid` call shape while exercising the role-aware signature underneath</WCTX>
-// <CLOG>5.5.0: MINOR — rename render_pipeline → render_pipeline_legacy shim; no behavior change under test.
+// <VERS>VERSION: 5.6.0</VERS>
+// <WCTX>Sub-plan A Phase A.3.3 — reintroduce `.clone()` at ShadowSpec::new call sites; ShadowConfig is no longer Copy (new `source_region: Option<RoleTag>` field contains Arc<str> via RoleTag::Custom).</WCTX>
+// <CLOG>5.6.0: MINOR — restore `.clone()` on every ShadowSpec::new(shadow_config) call site; ShadowConfig lost Copy in v0.6.0 when it gained source_region: Option<RoleTag>.
+// 5.5.0: MINOR — rename render_pipeline → render_pipeline_legacy shim; no behavior change under test.
 // 5.4.1: Drop redundant ShadowConfig clone() since the type is Copy (clippy::clone_on_copy)</CLOG>
 
 #[path = "test_helpers.rs"]
@@ -580,7 +581,7 @@ fn test_shadow_extends_render_area() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -653,7 +654,7 @@ fn test_shadow_with_wipe_mask() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             masks: Cow::Owned(vec![MaskSpec::Wipe {
                 reveal: Some(WipeDirection::TopToBottom),
                 hide: None,
@@ -684,7 +685,7 @@ fn test_shadow_with_wipe_mask() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             masks: Cow::Owned(vec![MaskSpec::Wipe {
                 reveal: Some(WipeDirection::TopToBottom),
                 hide: None,
@@ -731,7 +732,7 @@ fn test_shadow_partial_wipe() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             masks: Cow::Owned(vec![MaskSpec::Wipe {
                 reveal: Some(WipeDirection::TopToBottom),
                 hide: None,
@@ -786,7 +787,7 @@ fn test_shadow_with_offset() {
         10, // Place at x=10
         5,  // Place at y=5
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -832,7 +833,7 @@ fn test_shadow_progress_controls_opacity() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 0.5, // Half progress = half shadow opacity
             ..Default::default()
         },
@@ -848,7 +849,7 @@ fn test_shadow_progress_controls_opacity() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0, // Full progress = full shadow opacity
             ..Default::default()
         },
@@ -931,7 +932,7 @@ fn test_shadow_grade_underlying_preserves_destination_glyphs() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -974,7 +975,7 @@ fn test_shadow_grade_underlying_preserves_destination_modifiers() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -1017,7 +1018,7 @@ fn test_shadow_grade_underlying_is_visibly_dramatic() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -1107,7 +1108,7 @@ fn test_shadow_grade_underlying_uses_stronger_bg_grading_than_fg() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -1156,7 +1157,7 @@ fn test_shadow_grade_underlying_progress_controls_visibility() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 0.0,
             ..Default::default()
         },
@@ -1173,7 +1174,7 @@ fn test_shadow_grade_underlying_progress_controls_visibility() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -1226,7 +1227,7 @@ fn test_shadow_grade_underlying_gradient_softens_penumbra() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -1302,7 +1303,7 @@ fn test_shadow_grade_underlying_replaces_emoji_with_dramatic_grade() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },
@@ -1346,7 +1347,7 @@ fn test_shadow_grade_underlying_preserves_emoji_when_replacement_none() {
         0,
         0,
         CompositionOptions {
-            shadow: Some(ShadowSpec::new(shadow_config)),
+            shadow: Some(ShadowSpec::new(shadow_config.clone())),
             t: 1.0,
             ..Default::default()
         },

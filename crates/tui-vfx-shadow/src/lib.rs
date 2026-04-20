@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-shadow/src/lib.rs</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Phase 0 dramatic color-shadow rollout: re-export compositing mode and grade config</WCTX>
-// <CLOG>Add ShadowCompositeMode and ShadowGradeConfig to crate-root re-exports and update crate docs</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Sub-plan A Phase A.3 — role-aware shadow stage. Re-exports CellMask + extract_shadow_envelope + render_shadow_into_scene at the crate root.</WCTX>
+// <CLOG>0.4.0: MINOR — add fnc_extract_shadow_envelope module and re-export CellMask + extract_shadow_envelope + render_shadow_into_scene at crate root. Module docs updated with role-aware usage pattern.
+// 0.3.0: Add ShadowCompositeMode and ShadowGradeConfig to crate-root re-exports and update crate docs.</CLOG>
 
 //! # TUI VFX Shadow
 //!
@@ -328,12 +329,17 @@
 //! - [`ShadowEdges`] - Bitflags for edge selection
 //! - [`renderers`] - Direct access to individual renderer implementations
 
+mod fnc_extract_shadow_envelope;
 mod fnc_render_shadow;
 pub mod renderers;
 pub mod types;
 
 // Re-export main functions
-pub use fnc_render_shadow::{render_shadow, render_shadow_gradient_colors, render_shadow_simple};
+pub use fnc_extract_shadow_envelope::{CellMask, extract_shadow_envelope};
+pub use fnc_render_shadow::{
+    render_shadow, render_shadow_gradient_colors, render_shadow_into_scene,
+    render_shadow_simple,
+};
 
 // Re-export types at crate root for convenience
 pub use types::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowGradeConfig, ShadowStyle};
@@ -344,4 +350,4 @@ pub use renderers::{
 };
 
 // <FILE>crates/tui-vfx-shadow/src/lib.rs</FILE> - <DESC>Shadow rendering effects for TUI applications</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

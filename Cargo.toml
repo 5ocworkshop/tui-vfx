@@ -1,7 +1,8 @@
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>VERSION: 0.5.0</VERS>
-# <WCTX>Sub-plan A Phase A.2 — role-aware compositor pipeline + StyleRegion hard cutover; bump workspace package version so downstream consumers can pin the first release with the breaking signature change</WCTX>
-# <CLOG>0.5.0: MINOR bump workspace.package.version 0.6.0 → 0.7.0 and every internal-crate version floor 0.6.0 → 0.7.0 for Sub-plan A Phase A.2 — BREAKING: render_pipeline / render_pipeline_with_area / render_pipeline_with_spec / render_pipeline_with_spec_area now require `source_roles: &RoleMap` and `destination: &mut SemanticScene`. StyleRegion legacy bare variants (BorderOnly/TextOnly/BackgroundOnly) removed from the Rust enum; custom Deserialize parses them into canonical Role(RoleTag) form for back-compat with existing JSON recipe fixtures. Semver-meaningful breaking change documented in CHANGELOG.
+# <VERS>VERSION: 0.6.0</VERS>
+# <WCTX>Sub-plan A Phase A.3 — style + shadow pipeline role-awareness; bump workspace package version so downstream consumers can pin the first release with ShaderContext.roles, ShadowConfig.source_region, and role-write-back shadow stage.</WCTX>
+# <CLOG>0.6.0: MINOR bump workspace.package.version 0.7.0 → 0.8.0 and every internal-crate version floor 0.7.0 → 0.8.0 for Sub-plan A Phase A.3 — ADDITIVE: ShaderContext gains `roles: Arc<RoleMap>` (struct-literal callers must include the field; ::new callers unchanged). ShadowConfig gains `source_region: Option<RoleTag>` (ShadowConfig is no longer Copy — RoleTag::Custom carries Arc<str>). New `render_shadow_into_scene` entrypoint writes RoleTag::Shadow to destination role map. New `fnc_extract_shadow_envelope` pure function + CellMask primitive. Shadow stage in tui-vfx-compositor honours config.source_region via the new envelope function.
+# 0.5.0: MINOR bump workspace.package.version 0.6.0 → 0.7.0 and every internal-crate version floor 0.6.0 → 0.7.0 for Sub-plan A Phase A.2 — BREAKING: render_pipeline / render_pipeline_with_area / render_pipeline_with_spec / render_pipeline_with_spec_area now require `source_roles: &RoleMap` and `destination: &mut SemanticScene`. StyleRegion legacy bare variants (BorderOnly/TextOnly/BackgroundOnly) removed from the Rust enum; custom Deserialize parses them into canonical Role(RoleTag) form for back-compat with existing JSON recipe fixtures. Semver-meaningful breaking change documented in CHANGELOG.
 # 0.4.0: MINOR bump workspace.package.version 0.5.0 → 0.6.0 and every internal-crate version floor 0.5.0 → 0.6.0 for Sub-plan A Phase A.1 — additive foundation primitives in tui-vfx-types.
 # 0.3.0: bump workspace.package.version 0.4.0 → 0.5.0 for the Phase-0 outstanding shader bindings closeout.</CLOG>
 
@@ -23,7 +24,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.7.0"
+version = "0.8.0"
 edition = "2024"
 rust-version = "1.86.0"
 license = "MIT"
@@ -33,15 +34,15 @@ categories = ["command-line-interface", "graphics"]
 
 [workspace.dependencies]
 # Internal crates
-tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.7.0" }
-tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.7.0" }
-tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.7.0" }
-tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.7.0" }
-tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.7.0" }
-tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.7.0" }
-tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.7.0" }
-tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.7.0" }
-tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.7.0" }
+tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.8.0" }
+tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.8.0" }
+tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.8.0" }
+tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.8.0" }
+tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.8.0" }
+tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.8.0" }
+tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.8.0" }
+tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.8.0" }
+tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.8.0" }
 
 # External dependencies (preserve versions from source crates)
 mixed-signals = "0.2"

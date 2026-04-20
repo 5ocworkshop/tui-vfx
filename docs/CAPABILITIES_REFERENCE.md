@@ -787,6 +787,19 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 | `surface_color` | Option<Color> | Background for half-block blending |
 | `edges` | ShadowEdges | Which edges to render (BOTTOM_RIGHT, ALL, etc.) |
 | `soft_edges` | bool | Use half-blocks at boundaries |
+| `composite_mode` | ShadowCompositeMode | `GlyphOverlay` (default) or `GradeUnderlying` |
+| `grade` | Option<ShadowGradeConfig> | Grade parameters for `GradeUnderlying` |
+| `source_region` | Option<RoleTag> | v0.8.0+ — restrict extrusion to cells whose role matches the tag. `None` (default) = rectangular extrusion as before. `Some(role)` = extrude from the tight bounding rectangle of role-matched source cells (see `extract_shadow_envelope`) and tag produced cells with `RoleTag::Shadow` in the destination role map. Fixes the "shadow on text rect" splash bug. Builder: `with_source_region(role)`; accessor: `source_region()`. |
+
+Note: as of v0.8.0, `ShadowConfig` is no longer `Copy` — `RoleTag::Custom` carries an `Arc<str>`. Call-sites that relied on implicit copy must add `.clone()`.
+
+### New in v0.8.0 — Role-aware shadow entrypoints
+
+| Item | Description |
+|------|-------------|
+| `render_shadow_into_scene(source_grid, source_roles, &mut SemanticScene, element_rect, config, progress)` | High-level entrypoint: honours `config.source_region` and writes `RoleTag::Shadow` into destination roles for produced cells. |
+| `extract_shadow_envelope(source_grid, source_roles, source_region)` | Pure function returning a `CellMask` of cells the shadow stage should extrude from. |
+| `CellMask` | Dense row-major boolean mask with `get((x,y))`, `set`, `count`, `bounding_rect` accessors. |
 
 ---
 
