@@ -1,14 +1,40 @@
 // <FILE>crates/tui-vfx-types/src/lib.rs</FILE> - <DESC>Foundation types for mixed-animations ecosystem</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Color-inert glyph detection for shadow grading replacement</WCTX>
-// <CLOG>Add color_inert module with is_color_inert_glyph detection utility</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Sub-plan A Phase A.1 — add SemanticScene / RoleMap / RoleTag / opaque newtypes</WCTX>
+// <CLOG>0.4.0: Sub-plan A Phase A.1 — add SemanticScene + RoleMap + RoleTag (12 first-class variants + Custom) + RoleInterner + RoleId + SceneMetadata + LayerId + RecipeId + InternedString + InternedRoleName foundation primitives. All use idiomatic naming per tui-vfx-types OFPF carve-out.
+// 0.3.0: Add color_inert module with is_color_inert_glyph detection utility.</CLOG>
 
-//! # mixed-types
+//! # tui-vfx-types
 //!
-//! Framework-agnostic foundation types for the mixed-animations ecosystem.
+//! Framework-agnostic foundation types for the tui-vfx ecosystem.
 //!
 //! This crate provides the core type definitions that are shared across
 //! the animation pipeline, independent of any specific TUI framework.
+//!
+//! ## Role-tagging and `SemanticScene`
+//!
+//! Since v0.4.0, `tui-vfx-types` owns the foundation primitives that
+//! underpin the unified recipe scene composer (see the spec at
+//! `docs/superpowers/specs/2026-04-20-recipe-scene-composer-design.md`
+//! in the gt-design repo):
+//!
+//! - [`SemanticScene`] — a source surface (grid + per-cell role tags)
+//!   that is equally produced by widget renders and by recipe-driven
+//!   scene composers. Every per-cell pipeline stage (sampler, mask,
+//!   shader, filter, shadow) runs against it identically.
+//! - [`RoleMap`] — dense per-cell `RoleTag` storage backing a
+//!   `SemanticScene`.
+//! - [`RoleTag`] — 12 first-class semantic roles (Background, Text,
+//!   Title, Caption, Border, Image, Icon, Indicator, Highlight, Shadow,
+//!   Decoration, Procedural) plus `Custom(InternedRoleName)` for ad-hoc
+//!   recipe-declared roles.
+//! - [`RoleInterner`] / [`RoleId`] — compact numeric IDs with stable
+//!   assignment (first-class 0–11, Custom starts at 12).
+//! - [`LayerId`] / [`RecipeId`] — opaque interned newtypes consumed by
+//!   trace selectors / inspection sinks without forcing downstream
+//!   inspection code to depend on the recipe crate.
+//! - [`InternedString`] — cheap-to-clone `Arc<str>` wrapper backing the
+//!   opaque identifiers.
 //!
 //! ## Types
 //!
@@ -50,17 +76,35 @@ mod color;
 pub mod color_inert;
 mod geometry;
 mod grid;
+mod interned_string;
+mod layer_id;
 mod modifiers;
+mod recipe_id;
 pub mod rigid_shake_timing;
+mod role_id;
+mod role_interner;
+mod role_map;
+mod role_tag;
+mod scene_metadata;
+mod semantic_scene;
 mod style;
 
 pub use cell::Cell;
 pub use color::Color;
 pub use geometry::{Anchor, Point, Rect, Size};
 pub use grid::{BoundaryMode, Grid, GridExt, OwnedGrid};
+pub use interned_string::InternedString;
+pub use layer_id::LayerId;
 pub use modifiers::Modifiers;
+pub use recipe_id::RecipeId;
 pub use rigid_shake_timing::{RigidShakeState, RigidShakeTiming};
+pub use role_id::RoleId;
+pub use role_interner::RoleInterner;
+pub use role_map::{RoleMap, RoleMapIter};
+pub use role_tag::{InternedRoleName, RoleTag};
+pub use scene_metadata::SceneMetadata;
+pub use semantic_scene::SemanticScene;
 pub use style::Style;
 
 // <FILE>crates/tui-vfx-types/src/lib.rs</FILE> - <DESC>Foundation types for mixed-animations ecosystem</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

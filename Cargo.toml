@@ -1,7 +1,8 @@
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>VERSION: 0.3.0</VERS>
-# <WCTX>Phase 0 "Outstanding P0 shader bindings" release: reconnect GlistenBand.speed + add speed_binding (O-P0.A), add FadeToCanvas.canvas_color_binding plus a new ShaderRuntimeParamValue::Rgb variant (O-P0.B), add RigidShake.damping_scale_binding scalar curve multiplier (O-P0.C)</WCTX>
-# <CLOG>MINOR: Bump workspace.package.version from 0.4.0 to 0.5.0 and every workspace dep floor from 0.4.0 to 0.5.0 to reflect the three outstanding shader/filter bindings that were partially shipped in 0.4.0 and closed out on feat/phase0-shader-bindings-followup</CLOG>
+# <VERS>VERSION: 0.4.0</VERS>
+# <WCTX>Sub-plan A Phase A.1 — landing the role-tagging / SemanticScene foundation primitives in tui-vfx-types; bump workspace version so downstream consumers can pin the first release that exposes them</WCTX>
+# <CLOG>0.4.0: MINOR bump workspace.package.version 0.5.0 → 0.6.0 and every internal-crate version floor 0.5.0 → 0.6.0 for Sub-plan A Phase A.1 — additive foundation primitives in tui-vfx-types (SemanticScene, RoleMap, RoleTag, RoleInterner, RoleId, SceneMetadata, LayerId, RecipeId, InternedString, InternedRoleName). Additive: every 0.5.0 API keeps working; the new types are purely new surface.
+# 0.3.0: bump workspace.package.version 0.4.0 → 0.5.0 for the Phase-0 outstanding shader bindings closeout.</CLOG>
 
 [workspace]
 resolver = "3"
@@ -21,7 +22,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.5.0"
+version = "0.6.0"
 edition = "2024"
 rust-version = "1.86.0"
 license = "MIT"
@@ -31,15 +32,15 @@ categories = ["command-line-interface", "graphics"]
 
 [workspace.dependencies]
 # Internal crates
-tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.5.0" }
-tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.5.0" }
-tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.5.0" }
-tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.5.0" }
-tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.5.0" }
-tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.5.0" }
-tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.5.0" }
-tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.5.0" }
-tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.5.0" }
+tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.6.0" }
+tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.6.0" }
+tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.6.0" }
+tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.6.0" }
+tui-vfx-compositor = { path = "crates/tui-vfx-compositor", version = "0.6.0" }
+tui-vfx-style = { path = "crates/tui-vfx-style", version = "0.6.0" }
+tui-vfx-content = { path = "crates/tui-vfx-content", version = "0.6.0" }
+tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.6.0" }
+tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.6.0" }
 
 # External dependencies (preserve versions from source crates)
 mixed-signals = "0.2"

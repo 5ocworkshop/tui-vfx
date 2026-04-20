@@ -1,9 +1,34 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.8.0</VERS> -->
-<!-- <WCTX>Make Preview, validator, probe, and upstream-native QC ownership explicit in the docs index so recipe authors can find the correct truth surface without GTD context.</WCTX> -->
-<!-- <CLOG>MINOR: Add an explicit recipe-authoring tool ownership split plus the new debug-recipes QC surface to the canonical docs index.</CLOG> -->
+<!-- <VERS>VERSION: 1.9.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.1 — add Foundation primitives subsection listing SemanticScene / RoleMap / RoleTag / LayerId / RecipeId landed in tui-vfx-types</WCTX> -->
+<!-- <CLOG>1.9.0: add Foundation primitives subsection naming the role-tagging primitives shipped in tui-vfx-types 0.6.0 for the recipe scene composer.
+1.8.0: add explicit recipe-authoring tool ownership split plus the debug-recipes QC surface.</CLOG> -->
 
 # Documentation Index
+
+## Foundation primitives (in `tui-vfx-types`, since 0.6.0)
+
+The role-tagging primitives that underpin the unified recipe scene
+composer (see gt-design
+`docs/superpowers/specs/2026-04-20-recipe-scene-composer-design.md`):
+
+- **`SemanticScene`** — source surface (`OwnedGrid` + `RoleMap` +
+  `SceneMetadata`) consumed identically by every per-cell pipeline stage
+  (sampler / mask / shader / filter / shadow). Accessor parity with
+  `ratatui::Buffer` (`area()`, `cell((x, y))`).
+- **`RoleMap`** — dense per-cell `RoleTag` storage; bounds-checked
+  `get` / `set`, row-major iteration, serde-round-trippable.
+- **`RoleTag`** — 12 first-class roles (`Background`, `Text`, `Title`,
+  `Caption`, `Border`, `Image`, `Icon`, `Indicator`, `Highlight`,
+  `Shadow`, `Decoration`, `Procedural`) plus `Custom(InternedRoleName)`;
+  `#[non_exhaustive]`; shorthand `from_shorthand("border")`-style
+  parsing.
+- **`RoleInterner` / `RoleId`** — compact numeric IDs; first-class 0–11,
+  Custom starts at 12.
+- **`LayerId` / `RecipeId`** — opaque interned newtypes consumed by
+  trace selectors without forcing dependence on the recipe crate.
+- **`InternedString`** — cheap-to-clone `Arc<str>` wrapper backing the
+  opaque identifiers.
 
 ## Hand-Maintained
 - Recipe-authoring tool ownership:

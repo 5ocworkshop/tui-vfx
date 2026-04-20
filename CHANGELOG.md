@@ -1,7 +1,8 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.12.0</VERS> -->
-<!-- <WCTX>Unreleased section adding the rocketsplash sources bridge and general-purpose content-randomization pools to tui-vfx-content as part of the splash-library-and-vfx-integration plan.</WCTX> -->
-<!-- <CLOG>1.12.0: add Unreleased section covering tui-vfx-content sources (RocketsplashImage/Font + blit helper) and pool primitives (TextPool/EffectPool/ImagePool/FontPool/PresetPool + PoolPolicy). Default-on rocketsplash-rt workspace dep.
+<!-- <VERS>VERSION: 1.13.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.1 — role-tagging and SemanticScene foundation primitives landed in tui-vfx-types</WCTX> -->
+<!-- <CLOG>1.13.0: add Unreleased entry for the recipe scene composer foundation primitives shipped in tui-vfx-types 0.6.0.
+1.12.0: add Unreleased section covering tui-vfx-content sources (RocketsplashImage/Font + blit helper) and pool primitives (TextPool/EffectPool/ImagePool/FontPool/PresetPool + PoolPolicy). Default-on rocketsplash-rt workspace dep.
 1.11.0: add 0.5.0 section covering GlistenBand.speed reconnect + speed_binding, FadeToCanvas.canvas_color_binding and new ShaderRuntimeParamValue::Rgb variant, plus RigidShake.damping_scale_binding.</CLOG> -->
 
 # Changelog
@@ -11,6 +12,43 @@ All notable changes to this project will be documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+### Added — `tui-vfx-types` — recipe scene composer foundation (Sub-plan A Phase A.1)
+
+Additive foundation primitives that Sub-plans B and C build on for the
+unified recipe scene composer (see gt-design
+`docs/superpowers/specs/2026-04-20-recipe-scene-composer-design.md`):
+
+- **`SemanticScene`** — source surface combining `OwnedGrid`, `RoleMap`,
+  and `SceneMetadata`. Accessor parity with `ratatui::Buffer`: `area()`,
+  `cell((x, y))`. Plus `role((x, y))`, `roles()`, `roles_mut()`.
+  Constructors: `new(grid, roles)` (panics on dimension mismatch — a
+  documented library-misuse panic), `with_metadata(metadata)` builder,
+  and `from_grid_with_default_role(grid, default)` migration helper.
+- **`RoleMap`** — dense per-cell `RoleTag` storage. Row-major
+  `Vec<RoleId>` layout, bounds-checked `get` / `set` (silent no-op out
+  of bounds; no panic), row-major `iter()` yielding `(x, y, RoleTag)`,
+  serde round-trip via `cfg_attr`. Constructors: `empty(w, h)`,
+  `all_background(w, h)` (alias), `new_with_default(w, h, default)`.
+- **`RoleTag`** — `#[non_exhaustive]` enum with 12 first-class variants
+  (`Background`, `Text`, `Title`, `Caption`, `Border`, `Image`, `Icon`,
+  `Indicator`, `Highlight`, `Shadow`, `Decoration`, `Procedural`) and
+  `Custom(InternedRoleName)`. `from_shorthand("border")`-style parsing;
+  `shorthand_name()` round-tripper; `RoleTag::FIRST_CLASS` const array
+  for iteration.
+- **`RoleInterner` / `RoleId`** — compact numeric IDs with stable
+  assignment: first-class variants reserve IDs 0–11 in the declaration
+  order of `RoleTag::FIRST_CLASS`, Custom IDs start at 12 and grow
+  monotonically. Every `RoleMap` owns its interner.
+- **`LayerId` / `RecipeId`** — opaque interned newtypes used by future
+  trace selectors / inspection sinks without forcing downstream
+  inspection code (`tui-vfx-debug`) to depend on `tui-vfx-recipes`.
+- **`InternedString`** — cheap-to-clone `Arc<str>` wrapper; equality by
+  content; shared `empty()` sentinel to minimize allocation on defaults.
+
+No behavior change yet — these are foundation types. Pipeline
+signatures are migrated in Phase A.2; shader and shadow stages in
+Phase A.3.
 
 ### Added — `tui-vfx-content`
 
