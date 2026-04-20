@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.21.0</VERS>
+<!-- <VERS>VERSION: 1.22.0</VERS>
 <!-- <WCTX>Add a one-screen Quick Scan up front so authors see the entire primitive inventory without scrolling 985 lines; surface the gt-design /recipe-author skill as the intent-to-primitive mapping front door so this document can lean into being the parameter reference rather than an authoring guide.</WCTX>
-<!-- <CLOG>1.21.0: MINOR — add 'Quick Scan' (one-screen primitive inventory by category) after the TOC; add banner at top noting that intent-to-primitive selection lives in the gt-design /recipe-author skill.
+<!-- <CLOG>1.22.0: PATCH — note that `tui-vfx-recipes` now supports top-level `config.shadow` upstream (validator/probe parity) and cross-link the recipe-authoring shadow flow from the Shadows section.
+1.21.0: MINOR — add 'Quick Scan' (one-screen primitive inventory by category) after the TOC; add banner at top noting that intent-to-primitive selection lives in the gt-design /recipe-author skill.
 1.20.0: PATCH — Phase A.5 consistency pass: add "Unified Inspection Foundation (v0.9.0+)" cross-reference at the recommended-debugging-split section so consumers discover the new TraceEvent / TraceSink / InspectionSink surface from this document (full schema in docs/TRACE_EVENT_SCHEMA.md).
 1.19.0: MINOR — add "Role-Aware Pipeline Signature (v0.7.0+)" and "StyleRegion Targeting" subsections describing the new `&RoleMap` + `&mut SemanticScene` parameters and the Role(RoleTag) variant. Note back-compat via legacy bare-string Deserialize.
 1.18.0: Add "Braille cursors" subsection listing the 4 static ctors; extend "Scan" subsection with BraillePulse and BrailleRowFlip rows noting base-glyph override behavior; extend the debug recipe catalog with 6 new braille recipe entries.</CLOG>
@@ -9,7 +10,7 @@
 # tui-vfx Capabilities Reference
 
 > **MAINTENANCE NOTE:** This document must be kept in sync with the source code.
-> Last verified: 2026-04-13
+> Last verified: 2026-04-20
 > When adding new effects, update the relevant section below.
 
 This document is the **parameter reference** for every visual effect primitive available in tui-vfx, derived from the actual source code. Use it when authoring recipes and you need exact field names, types, defaults, and ranges.
@@ -808,13 +809,15 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 | `offset_y` | i8 | Y offset (positive = down) |
 | `color` | Color | Shadow color |
 | `surface_color` | Option<Color> | Background for half-block blending |
-| `edges` | ShadowEdges | Which edges to render (BOTTOM_RIGHT, ALL, etc.) |
+| `edges` | ShadowEdges | Which edges to render. Builder-facing names include `BOTTOM_RIGHT` / `ALL`; recipe JSON currently uses bitflag strings such as `"RIGHT | BOTTOM"`. |
 | `soft_edges` | bool | Use half-blocks at boundaries |
 | `composite_mode` | ShadowCompositeMode | `GlyphOverlay` (default) or `GradeUnderlying` |
 | `grade` | Option<ShadowGradeConfig> | Grade parameters for `GradeUnderlying` |
-| `source_region` | Option<RoleTag> | v0.8.0+ — restrict extrusion to cells whose role matches the tag. `None` (default) = rectangular extrusion as before. `Some(role)` = extrude from the tight bounding rectangle of role-matched source cells (see `extract_shadow_envelope`) and tag produced cells with `RoleTag::Shadow` in the destination role map. Fixes the "shadow on text rect" splash bug. Builder: `with_source_region(role)`; accessor: `source_region()`. |
+| `source_region` | Option<RoleTag> | v0.8.0+ — restrict extrusion to cells whose role matches the tag. `None` (default) = rectangular extrusion as before. `Some(role)` = extrude from the tight bounding rectangle of role-matched source cells (see `extract_shadow_envelope`) and tag produced cells with `RoleTag::Shadow` in the destination role map. Fixes the "shadow on text rect" splash bug. Builder: `with_source_region(role)`; accessor: `source_region()`. Recipe JSON currently uses enum names like `"Border"`. |
 
 Note: as of v0.8.0, `ShadowConfig` is no longer `Copy` — `RoleTag::Custom` carries an `Arc<str>`. Call-sites that relied on implicit copy must add `.clone()`.
+
+Since Hotfix H2 (2026-04-20), `tui-vfx-recipes` exposes this upstream surface directly as top-level `config.shadow`, and both `pipeline-validator` / `recipe-probe` now preserve the authored `ShadowSpec` instead of silently dropping it.
 
 ### New in v0.8.0 — Role-aware shadow entrypoints
 
@@ -1004,4 +1007,4 @@ Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EV
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.21.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.22.0</VERS> -->

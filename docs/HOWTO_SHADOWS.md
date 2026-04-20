@@ -353,6 +353,29 @@ All strength values range from `0.0` (no effect) to `1.0` (maximum) and are furt
 
 ---
 
+## Recipe authoring note (tui-vfx-recipes Hotfix H2+)
+
+If you author through `tui-vfx-recipes`, the same `ShadowSpec` surface is now available directly at top-level `config.shadow`. `pipeline-validator --dump` and `recipe-probe` preserve this authored shadow spec, so recipe JSON, validator output, and compositor behavior finally line up. A minimal pattern:
+
+```json
+{
+  "config": {
+    "border": { "type": "rounded" },
+    "shadow": {
+      "style": "half_block",
+      "offset_x": 2,
+      "offset_y": 1,
+      "color": { "r": 0, "g": 0, "b": 0, "a": 160 },
+      "edges": "RIGHT | BOTTOM",
+      "soft_edges": true,
+      "source_region": "Border"
+    }
+  }
+}
+```
+
+For card/toast surfaces, keep `border.type != none` and prefer `source_region: "Border"` so the shadow extrudes from the structural edge rather than text geometry. The current serde surface expects `ShadowEdges` bitflags like `"RIGHT | BOTTOM"` and `RoleTag` names like `"Border"` in recipe JSON.
+
 ## Targeting shadows by role (v0.8.0+)
 
 Starting with `tui-vfx` 0.8.0 (Sub-plan A Phase A.3), shadows can be
