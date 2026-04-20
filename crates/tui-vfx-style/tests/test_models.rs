@@ -20,6 +20,8 @@ mod test_cls_diffusion_shader;
 mod test_cls_easing_type;
 #[path = "models/test_cls_fade_to_black.rs"]
 mod test_cls_fade_to_black;
+#[path = "models/test_cls_focus_field_shader.rs"]
+mod test_cls_focus_field_shader;
 #[path = "models/test_cls_focused_row_gradient_shader.rs"]
 mod test_cls_focused_row_gradient_shader;
 #[path = "models/test_cls_glisten_band_shader.rs"]
@@ -32,8 +34,6 @@ mod test_cls_gradient_lut;
 mod test_cls_linear_gradient_shader;
 #[path = "models/test_cls_neon_flicker_shader.rs"]
 mod test_cls_neon_flicker_shader;
-#[path = "models/test_cls_focus_field_shader.rs"]
-mod test_cls_focus_field_shader;
 #[path = "models/test_cls_style_effect.rs"]
 mod test_cls_style_effect;
 #[path = "models/test_cls_style_region.rs"]

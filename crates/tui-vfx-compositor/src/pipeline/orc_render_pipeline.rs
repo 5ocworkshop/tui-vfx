@@ -159,26 +159,32 @@ fn render_pipeline_with_shadow(
     // Extract shadow spec (caller guarantees it's Some)
     let shadow_spec = options.shadow.as_ref().expect("shadow_spec must be Some");
     let grade_config = shadow_spec.config.grade.unwrap_or_default();
+    let shadow_element_rect = options.shadow_element_rect;
 
     // Calculate extended dimensions
-    let ext_width = width + shadow_spec.extra_width();
-    let ext_height = height + shadow_spec.extra_height();
-    let elem_offset_x = shadow_spec.element_offset_x();
-    let elem_offset_y = shadow_spec.element_offset_y();
+    let (ext_width, ext_height, elem_offset_x, elem_offset_y, element_rect) =
+        if let Some(shadow_rect) = shadow_element_rect {
+            (width, height, 0, 0, shadow_rect)
+        } else {
+            let ext_width = width + shadow_spec.extra_width();
+            let ext_height = height + shadow_spec.extra_height();
+            let elem_offset_x = shadow_spec.element_offset_x();
+            let elem_offset_y = shadow_spec.element_offset_y();
+            let element_rect = Rect::new(
+                elem_offset_x as u16,
+                elem_offset_y as u16,
+                width as u16,
+                height as u16,
+            );
+            (ext_width, ext_height, elem_offset_x, elem_offset_y, element_rect)
+        };
 
     // Create working buffer for shadow + element
     let mut buffer = OwnedGrid::new(ext_width, ext_height);
 
-    // Define element rect within the extended buffer
-    let element_rect = Rect::new(
-        elem_offset_x as u16,
-        elem_offset_y as u16,
-        width as u16,
-        height as u16,
-    );
-
     // Render shadow to buffer (uses animation progress for fade sync)
     render_shadow(&mut buffer, element_rect, &shadow_spec.config, options.t);
+    let shadow_only_buffer = buffer.clone();
 
     // Prepare effects for element rendering
     let sampler = prepare_sampler(options.t, &options.sampler_spec);
@@ -256,6 +262,30 @@ fn render_pipeline_with_shadow(
 
                 // Get cell from buffer and write to dest
                 if let Some(cell) = buffer.get(x, y) {
+                    let shadow_cell = shadow_only_buffer.get(x, y);
+                    let source_empty = source
+                        .get(x, y)
+                        .is_none_or(|source_cell| source_cell.is_empty());
+                    let element_left = usize::from(element_rect.x);
+                    let element_top = usize::from(element_rect.y);
+                    let element_right = element_left + usize::from(element_rect.width);
+                    let element_bottom = element_top + usize::from(element_rect.height);
+                    let in_element = x >= element_left
+                        && x < element_right
+                        && y >= element_top
+                        && y < element_bottom;
+                    let shadow_has_coverage =
+                        shadow_cell.is_some_and(|shadow_cell| !shadow_cell.is_empty());
+                    let shadow_region_candidate = !in_element && shadow_has_coverage;
+                    if shadow_region_candidate {
+                        inspector.on_shadow_cell_applied(
+                            local_x,
+                            local_y,
+                            shadow_cell.expect("shadow region candidate must have shadow coverage"),
+                            source_empty,
+                        );
+                    }
+
                     // Skip unfilled cells (space with transparent colors) to preserve
                     // underlying content in shadow corner regions
                     if options.preserve_unfilled
@@ -269,28 +299,55 @@ fn render_pipeline_with_shadow(
                     let dest_x = offset_x + x;
                     let dest_y = offset_y + y;
 
-                    // Check if this cell is in the shadow region (outside element bounds)
-                    let in_element = x >= elem_offset_x
-                        && x < elem_offset_x + width
-                        && y >= elem_offset_y
-                        && y < elem_offset_y + height;
-
-                    let final_cell = if in_element {
-                        // Element cells: direct overwrite
-                        *cell
-                    } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
-                        // Shadow cells: composite with underlying content
-                        match shadow_spec.config.composite_mode {
-                            ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
-                            ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
-                                cell,
-                                dest_cell,
-                                shadow_spec.config.color,
-                                &grade_config,
-                            ),
+                    let final_cell = if shadow_element_rect.is_some() {
+                        if in_element || !shadow_has_coverage {
+                            *cell
+                        } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
+                            let shadow_cell =
+                                shadow_cell.expect("shadow coverage implies a shadow cell");
+                            if source_empty {
+                                match shadow_spec.config.composite_mode {
+                                    ShadowCompositeMode::GlyphOverlay => {
+                                        blend_shadow_cell(shadow_cell, dest_cell)
+                                    }
+                                    ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                        shadow_cell,
+                                        dest_cell,
+                                        shadow_spec.config.color,
+                                        &grade_config,
+                                    ),
+                                }
+                            } else {
+                                match shadow_spec.config.composite_mode {
+                                    ShadowCompositeMode::GlyphOverlay => *cell,
+                                    ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                        shadow_cell,
+                                        cell,
+                                        shadow_spec.config.color,
+                                        &grade_config,
+                                    ),
+                                }
+                            }
+                        } else {
+                            *cell
                         }
                     } else {
-                        *cell
+                        // Check if this cell is in the shadow region (outside element bounds)
+                        if in_element {
+                            *cell
+                        } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
+                            match shadow_spec.config.composite_mode {
+                                ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
+                                ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                    cell,
+                                    dest_cell,
+                                    shadow_spec.config.color,
+                                    &grade_config,
+                                ),
+                            }
+                        } else {
+                            *cell
+                        }
                     };
 
                     inspector.on_cell_rendered(local_x, local_y, &final_cell);
@@ -320,6 +377,7 @@ fn render_pipeline_with_shadow(
 
                 // Get cell from buffer and write to dest
                 if let Some(cell) = buffer.get(x, y) {
+                    let shadow_cell = shadow_only_buffer.get(x, y);
                     // Skip unfilled cells (space with transparent colors) to preserve
                     // underlying content in shadow corner regions
                     if options.preserve_unfilled
@@ -333,28 +391,72 @@ fn render_pipeline_with_shadow(
                     let dest_x = offset_x + x;
                     let dest_y = offset_y + y;
 
-                    // Check if this cell is in the shadow region (outside element bounds)
-                    let in_element = x >= elem_offset_x
-                        && x < elem_offset_x + width
-                        && y >= elem_offset_y
-                        && y < elem_offset_y + height;
-
-                    let final_cell = if in_element {
-                        // Element cells: direct overwrite
-                        *cell
-                    } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
-                        // Shadow cells: composite with underlying content
-                        match shadow_spec.config.composite_mode {
-                            ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
-                            ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
-                                cell,
-                                dest_cell,
-                                shadow_spec.config.color,
-                                &grade_config,
-                            ),
+                    let final_cell = if shadow_element_rect.is_some() {
+                        let source_empty = source
+                            .get(x, y)
+                            .is_none_or(|source_cell| source_cell.is_empty());
+                        let element_left = usize::from(element_rect.x);
+                        let element_top = usize::from(element_rect.y);
+                        let element_right = element_left + usize::from(element_rect.width);
+                        let element_bottom = element_top + usize::from(element_rect.height);
+                        let in_element = x >= element_left
+                            && x < element_right
+                            && y >= element_top
+                            && y < element_bottom;
+                        let shadow_has_coverage =
+                            shadow_cell.is_some_and(|shadow_cell| !shadow_cell.is_empty());
+                        if in_element || !shadow_has_coverage {
+                            *cell
+                        } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
+                            let shadow_cell =
+                                shadow_cell.expect("shadow coverage implies a shadow cell");
+                            if source_empty {
+                                match shadow_spec.config.composite_mode {
+                                    ShadowCompositeMode::GlyphOverlay => {
+                                        blend_shadow_cell(shadow_cell, dest_cell)
+                                    }
+                                    ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                        shadow_cell,
+                                        dest_cell,
+                                        shadow_spec.config.color,
+                                        &grade_config,
+                                    ),
+                                }
+                            } else {
+                                match shadow_spec.config.composite_mode {
+                                    ShadowCompositeMode::GlyphOverlay => *cell,
+                                    ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                        shadow_cell,
+                                        cell,
+                                        shadow_spec.config.color,
+                                        &grade_config,
+                                    ),
+                                }
+                            }
+                        } else {
+                            *cell
                         }
                     } else {
-                        *cell
+                        let in_element = x >= elem_offset_x
+                            && x < elem_offset_x + width
+                            && y >= elem_offset_y
+                            && y < elem_offset_y + height;
+
+                        if in_element {
+                            *cell
+                        } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
+                            match shadow_spec.config.composite_mode {
+                                ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
+                                ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                    cell,
+                                    dest_cell,
+                                    shadow_spec.config.color,
+                                    &grade_config,
+                                ),
+                            }
+                        } else {
+                            *cell
+                        }
                     };
 
                     dest.set(dest_x, dest_y, final_cell);

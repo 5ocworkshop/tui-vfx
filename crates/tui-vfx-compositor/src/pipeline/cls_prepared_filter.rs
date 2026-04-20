@@ -28,11 +28,11 @@ use crate::filters::cls_pill_button::PillButton;
 use crate::filters::cls_rigid_shake::RigidShake;
 use crate::filters::cls_shade_scanner::ShadeScanner;
 use crate::filters::cls_sub_cell_shake::SubCellShake;
+use crate::filters::cls_sub_pixel_bar::{BarDirection, SubPixelBar};
 use crate::filters::cls_subcell_light::{
     LightSampleFrom as ImplLightSampleFrom, SubcellLight,
     SubcellLightRenderMode as ImplSubcellLightRenderMode,
 };
-use crate::filters::cls_sub_pixel_bar::{BarDirection, SubPixelBar};
 use crate::filters::cls_tint::Tint;
 use crate::filters::cls_underline_wipe::UnderlineWipe;
 use crate::filters::cls_vignette::Vignette;
@@ -443,9 +443,7 @@ pub(crate) fn prepare_filter(
                 .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
                 .unwrap_or(1.0);
             let affect = match affect {
-                crate::types::cls_filter_spec::MatrixRainAffect::All => {
-                    MatrixRainAffectMode::All
-                }
+                crate::types::cls_filter_spec::MatrixRainAffect::All => MatrixRainAffectMode::All,
                 crate::types::cls_filter_spec::MatrixRainAffect::OnlyBlank => {
                     MatrixRainAffectMode::OnlyBlank
                 }
@@ -1539,10 +1537,7 @@ mod tests {
         }
     }
 
-    fn matrix_rain_spec(
-        density: BindableValue,
-        speed_multiplier: BindableValue,
-    ) -> FilterSpec {
+    fn matrix_rain_spec(density: BindableValue, speed_multiplier: BindableValue) -> FilterSpec {
         use tui_vfx_style::models::ColorConfig;
 
         FilterSpec::MatrixRain {

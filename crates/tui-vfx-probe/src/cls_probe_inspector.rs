@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/cls_probe_inspector.rs</FILE> - <DESC>Internal compositor inspector for probe runs</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Phase-1.5 probe causation support</WCTX>
-// <CLOG>MINOR: Upgrade the inspector from last-touch-only tracking to full per-cell trace collection with optional before/after snapshots</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Phase-1.5 probe causation support with explicit shadow-stage tracing so probe reports can show whether a shadow-region cell was generated before final blending.</WCTX>
+// <CLOG>MINOR: Record shadow-stage events via on_shadow_cell_applied with before/after snapshots and a source_empty note.</CLOG>
 
 use std::collections::HashMap;
 
@@ -132,7 +132,24 @@ impl CompositorInspector for ProbeInspector {
             },
         );
     }
+
+    fn on_shadow_cell_applied(&mut self, x: u16, y: u16, shadow_cell: &Cell, source_empty: bool) {
+        self.remember(
+            x,
+            y,
+            ProbeTraceEvent {
+                stage: "shadow".to_string(),
+                effect: Some("shadow-region".to_string()),
+                sampled_from: None,
+                visible: None,
+                before: None,
+                after: Some(ProbeStateSnapshot::from_cell(shadow_cell)),
+                params: None,
+                notes: vec![format!("source_empty={source_empty}")],
+            },
+        );
+    }
 }
 
 // <FILE>crates/tui-vfx-probe/src/cls_probe_inspector.rs</FILE> - <DESC>Internal compositor inspector for probe runs</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

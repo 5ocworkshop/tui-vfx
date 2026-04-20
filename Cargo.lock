@@ -856,7 +856,9 @@ dependencies = [
 
 [[package]]
 name = "rocketsplash-formats"
-version = "0.2.1"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b109f69ef0fbcab95ae28426e5e4181544bfb011bfa330de1ef6698e5ff8dcf2"
 dependencies = [
  "bitflags",
  "serde",
@@ -865,7 +867,9 @@ dependencies = [
 
 [[package]]
 name = "rocketsplash-rt"
-version = "0.2.1"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab792823bd7b6e3434e536978acddacad7b03e66768ace7b0f0e09c8a78b7283"
 dependencies = [
  "bitflags",
  "log",

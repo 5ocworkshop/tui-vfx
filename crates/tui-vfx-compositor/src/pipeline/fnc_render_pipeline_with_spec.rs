@@ -48,6 +48,7 @@ pub fn render_pipeline_with_spec(
         filters: Cow::Borrowed(spec.filters.as_slice()),
         shader_layers,
         shadow: spec.shadow.clone(),
+        shadow_element_rect: None,
         preserve_unfilled: spec.preserve_unfilled,
         t: spec.t,
         loop_t: spec.loop_t,

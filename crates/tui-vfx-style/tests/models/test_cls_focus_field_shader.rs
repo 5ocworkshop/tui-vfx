@@ -6,7 +6,7 @@
 use crate::common::{make_ctx, make_style};
 
 use std::sync::Arc;
-use tui_vfx_style::models::{FocusFieldShape, FocusFieldShader};
+use tui_vfx_style::models::{FocusFieldShader, FocusFieldShape};
 use tui_vfx_style::traits::{ShaderContext, ShaderRuntimeParams, StyleShader};
 
 #[test]

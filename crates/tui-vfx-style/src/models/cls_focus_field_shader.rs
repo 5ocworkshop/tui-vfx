@@ -169,12 +169,28 @@ impl FocusFieldShader {
         ctx: &ShaderContext,
     ) -> Vec<ShaderRuntimeBindingResolution> {
         let pairs = [
-            ("center_x", self.center_x_binding.as_ref(), Some(self.center_x)),
-            ("center_y", self.center_y_binding.as_ref(), Some(self.center_y)),
+            (
+                "center_x",
+                self.center_x_binding.as_ref(),
+                Some(self.center_x),
+            ),
+            (
+                "center_y",
+                self.center_y_binding.as_ref(),
+                Some(self.center_y),
+            ),
             ("rect_x", self.rect_x_binding.as_ref(), Some(self.rect_x)),
             ("rect_y", self.rect_y_binding.as_ref(), Some(self.rect_y)),
-            ("rect_width", self.rect_width_binding.as_ref(), Some(self.rect_width)),
-            ("rect_height", self.rect_height_binding.as_ref(), Some(self.rect_height)),
+            (
+                "rect_width",
+                self.rect_width_binding.as_ref(),
+                Some(self.rect_width),
+            ),
+            (
+                "rect_height",
+                self.rect_height_binding.as_ref(),
+                Some(self.rect_height),
+            ),
         ];
 
         pairs

@@ -120,8 +120,7 @@ impl Vignette {
             0
         };
 
-        let hash = (x as u32)
-            .wrapping_mul(73856093)
+        let hash = (x as u32).wrapping_mul(73856093)
             ^ (y as u32).wrapping_mul(19349663)
             ^ time_step.wrapping_mul(83492791);
         let unit = (hash % 1024) as f32 / 1023.0;
@@ -149,40 +148,40 @@ impl Filter for Vignette {
         let max_dist = (cx * cx + cy * cy).sqrt();
 
         let dim_factor = if self.sides.is_empty() {
-                // Normalize distance (0.0 at center, 1.0 at corner)
-                let norm_dist = if max_dist > 0.0 { dist / max_dist } else { 0.0 };
-                let norm_dist = (norm_dist + self.dither_offset(x, y, t)).clamp(0.0, 1.0);
+            // Normalize distance (0.0 at center, 1.0 at corner)
+            let norm_dist = if max_dist > 0.0 { dist / max_dist } else { 0.0 };
+            let norm_dist = (norm_dist + self.dither_offset(x, y, t)).clamp(0.0, 1.0);
 
-                if norm_dist > self.radius {
-                    let beyond_radius = norm_dist - self.radius;
-                    let radius_range = 1.0 - self.radius;
-                    if radius_range > 0.0 {
-                        self.strength * (beyond_radius / radius_range)
-                    } else {
-                        self.strength
-                    }
+            if norm_dist > self.radius {
+                let beyond_radius = norm_dist - self.radius;
+                let radius_range = 1.0 - self.radius;
+                if radius_range > 0.0 {
+                    self.strength * (beyond_radius / radius_range)
                 } else {
-                    0.0
+                    self.strength
                 }
+            } else {
+                0.0
+            }
         } else {
-                let max_x = width.saturating_sub(1).max(1) as f32;
-                let max_y = height.saturating_sub(1).max(1) as f32;
-                let edge_dist = self
-                    .sides
-                    .iter()
-                    .map(|side| match side {
-                        VignetteEdge::Top => y as f32 / max_y,
-                        VignetteEdge::Bottom => (height.saturating_sub(y + 1)) as f32 / max_y,
-                        VignetteEdge::Left => x as f32 / max_x,
-                        VignetteEdge::Right => (width.saturating_sub(x + 1)) as f32 / max_x,
-                    })
-                    .fold(f32::INFINITY, f32::min);
-                let edge_dist = (edge_dist + self.dither_offset(x, y, t)).clamp(0.0, 1.0);
-                if edge_dist < self.radius {
-                    self.strength * (1.0 - edge_dist / self.radius.max(f32::EPSILON))
-                } else {
-                    0.0
-                }
+            let max_x = width.saturating_sub(1).max(1) as f32;
+            let max_y = height.saturating_sub(1).max(1) as f32;
+            let edge_dist = self
+                .sides
+                .iter()
+                .map(|side| match side {
+                    VignetteEdge::Top => y as f32 / max_y,
+                    VignetteEdge::Bottom => (height.saturating_sub(y + 1)) as f32 / max_y,
+                    VignetteEdge::Left => x as f32 / max_x,
+                    VignetteEdge::Right => (width.saturating_sub(x + 1)) as f32 / max_x,
+                })
+                .fold(f32::INFINITY, f32::min);
+            let edge_dist = (edge_dist + self.dither_offset(x, y, t)).clamp(0.0, 1.0);
+            if edge_dist < self.radius {
+                self.strength * (1.0 - edge_dist / self.radius.max(f32::EPSILON))
+            } else {
+                0.0
+            }
         };
 
         if dim_factor > 0.0 {

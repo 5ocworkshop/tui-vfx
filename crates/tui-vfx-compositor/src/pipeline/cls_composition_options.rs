@@ -14,6 +14,7 @@ use std::borrow::Cow;
 use std::sync::Arc;
 use tui_vfx_style::models::StyleRegion;
 use tui_vfx_style::traits::{ShaderRuntimeParams, StyleShader};
+use tui_vfx_types::Rect;
 
 /// A shader paired with its region constraint.
 /// Each shader can target a different region (e.g., BorderOnly, TextOnly, Rows).
@@ -67,6 +68,13 @@ pub struct CompositionOptions<'a> {
     /// The shadow wipes/dissolves/fades in sync with the element.
     pub shadow: Option<ShadowSpec>,
 
+    /// Optional sub-rectangle inside the source grid that should own the shadow.
+    ///
+    /// When unset, the shadow applies to the full source area. When set,
+    /// the shadow is generated only around this sub-rectangle while masks,
+    /// filters, and shaders still evaluate across the full source grid.
+    pub shadow_element_rect: Option<Rect>,
+
     /// Whether to preserve destination content where the compositor didn't render.
     ///
     /// When `true` (default), unfilled cells in the shadow's extended area (such as
@@ -102,6 +110,7 @@ impl Default for CompositionOptions<'_> {
             filters: Cow::Borrowed(&[]),
             shader_layers: SmallVec::new(),
             shadow: None,
+            shadow_element_rect: None,
             preserve_unfilled: true,
             t: 0.0,
             loop_t: None,
@@ -181,6 +190,12 @@ impl<'a> CompositionOptions<'a> {
     /// A 30x12 element with offset (2, 1) renders to a 32x13 area.
     pub fn with_shadow(mut self, shadow: impl Into<ShadowSpec>) -> Self {
         self.shadow = Some(shadow.into());
+        self
+    }
+
+    /// Restrict shadow generation to one sub-rectangle of the source grid.
+    pub fn with_shadow_element_rect(mut self, shadow_element_rect: Rect) -> Self {
+        self.shadow_element_rect = Some(shadow_element_rect);
         self
     }
 

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/traits/pipeline_inspector.rs</FILE> - <DESC>Trait for inspecting pipeline stage operations</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>L2/L3 abstraction: make compositor framework-agnostic</WCTX>
-// <CLOG>Changed Cell and Style types from ratatui to mixed_types</CLOG>
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>L2/L3 abstraction: keep the compositor framework-agnostic while exposing one explicit shadow-stage callback so downstream tools can distinguish shadow generation from final render writes.</WCTX>
+// <CLOG>Add on_shadow_cell_applied so inspector clients can trace shadow-region cells before final destination blending/preservation.</CLOG>
 
 use tui_vfx_types::{Cell, Style};
 
@@ -15,7 +15,8 @@ use tui_vfx_types::{Cell, Style};
 /// 2. Mask checks visibility → on_mask_checked
 /// 3. Shader applies style → on_shader_applied
 /// 4. Filter modifies cell → on_filter_applied
-/// 5. Cell written to buffer → on_cell_rendered
+    /// 5. Shadow-region cell prepared → on_shadow_cell_applied
+    /// 6. Cell written to buffer → on_cell_rendered
 pub trait CompositorInspector {
     /// Called after sampler transforms coordinates for a cell.
     ///
@@ -75,6 +76,21 @@ pub trait CompositorInspector {
     ) {
     }
 
+    /// Called after a shadow-region cell has been prepared in the shadow branch.
+    ///
+    /// # Arguments
+    /// * `x`, `y` - Cell position (local to widget/render area)
+    /// * `shadow_cell` - Shadow-region cell before final destination blending
+    /// * `source_empty` - Whether the corresponding source cell is empty/missing
+    fn on_shadow_cell_applied(
+        &mut self,
+        _x: u16,
+        _y: u16,
+        _shadow_cell: &Cell,
+        _source_empty: bool,
+    ) {
+    }
+
     /// Called after all effects have been applied to a cell.
     ///
     /// # Arguments
@@ -84,4 +100,4 @@ pub trait CompositorInspector {
 }
 
 // <FILE>tui-vfx-compositor/src/traits/pipeline_inspector.rs</FILE> - <DESC>Trait for inspecting pipeline stage operations</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <VERS>END OF VERSION: 2.1.0</VERS>
