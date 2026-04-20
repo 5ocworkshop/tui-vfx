@@ -1,7 +1,8 @@
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>VERSION: 1.2.0</VERS> -->
-<!-- <WCTX>Clarify validator ownership versus Preview and probe, and document the upstream-native debug-recipes QC flow plus concrete export acceptance</WCTX> -->
-<!-- <CLOG>MINOR: Add an authority split for Preview / validator / probe, document --debug-recipes-qc, and explain that concrete GTD bridge exports are valid upstream recipe inputs after token resolution</CLOG> -->
+<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.4 — cross-reference the unified inspection foundation shipped in tui-vfx-debug::inspection and the tui-vfx-trace CLI landing in Sub-plan B.</WCTX> -->
+<!-- <CLOG>1.3.0: MINOR — add "Relationship to tui-vfx-trace (Sub-plan B)" section so validator's recipe-authoring scope is distinguished from the unified inspection trace stream.
+1.2.0: MINOR — Add an authority split for Preview / validator / probe, document --debug-recipes-qc, and explain that concrete GTD bridge exports are valid upstream recipe inputs after token resolution</CLOG> -->
 
 # Pipeline Validator: An LLM's Guide to Inspecting Recipe Output
 
@@ -22,6 +23,18 @@ It exists because, when a recipe behaves unexpectedly, the question "what does t
 | Wrong colors / wrong glyphs at specific positions | grid-map and per-row dumps under `--dump --stage output -vvv` |
 
 You should reach for it **before** asking the user "what do you see?" — it is faster than waiting for a human to launch a demo and describe an animation in words.
+
+## Relationship to `tui-vfx-trace` (Sub-plan B)
+
+Since `tui-vfx-debug` v0.9.0 (Sub-plan A Phase A.4), the workspace ships a **unified inspection foundation** in `tui-vfx-debug::inspection` — canonical `TraceEvent` taxonomy, `TraceEnvelope`, `TraceSelector` / `TraceFilter`, `StageMask`, `InspectionSink`, `TraceSink`, and `TraceReport` (NDJSON-round-trippable). The schema reference is `docs/TRACE_EVENT_SCHEMA.md`.
+
+The user-facing CLI is **`tui-vfx-trace`**, landing in Sub-plan B inside the sibling `tui-vfx-recipes` repo at `tools/tui-vfx-trace/`. It covers the complete stream across lifecycle, resolution, composition, and pipeline stages.
+
+| Question | Tool |
+| --- | --- |
+| Recipe parses? Schema valid? Stage-by-stage output of one recipe? | **`pipeline-validator`** (this guide) |
+| End-to-end trace stream across lifecycle + resolution + composition + pipeline in NDJSON | **`tui-vfx-trace`** (Sub-plan B) |
+| Schema reference for every `TraceEvent` variant | **`docs/TRACE_EVENT_SCHEMA.md`** |
 
 ## Authority split: Preview vs validator vs probe
 

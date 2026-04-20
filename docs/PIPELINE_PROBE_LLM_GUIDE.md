@@ -1,7 +1,8 @@
 <!-- <FILE>docs/PIPELINE_PROBE_LLM_GUIDE.md</FILE> - <DESC>How an LLM or user should use pipeline-probe to debug direct engine scenes</DESC> -->
-<!-- <VERS>VERSION: 0.13.0</VERS> -->
-<!-- <WCTX>Clarify direct-engine probe ownership relative to Preview, validator, and recipe-side probe adapters</WCTX> -->
-<!-- <CLOG>MINOR: Make the tool-boundary guidance explicit so direct pipeline-probe is not confused with recipe-aware validator/probe acceptance or Preview visual sign-off</CLOG> -->
+<!-- <VERS>VERSION: 0.14.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.4 — cross-reference tui-vfx-debug::inspection (foundation shipped in 0.9.0) and the tui-vfx-trace CLI landing in Sub-plan B inside tui-vfx-recipes/tools.</WCTX> -->
+<!-- <CLOG>0.14.0: MINOR — add "Relationship to tui-vfx-trace (Sub-plan B)" section so pipeline-probe's direct-engine scope is distinguished from the unified inspection trace stream.
+0.13.0: MINOR — Make the tool-boundary guidance explicit so direct pipeline-probe is not confused with recipe-aware validator/probe acceptance or Preview visual sign-off</CLOG> -->
 
 # Pipeline Probe: A Direct-Engine Guide for LLMs and Humans
 
@@ -23,6 +24,18 @@ It answers the question:
 | You need parse/rules/profile checks from the recipe schema | `pipeline-validator` |
 
 The recipe-side adapter CLI `recipe-probe` lives in the sibling `tui-vfx-recipes` repo at `tools/recipe-probe/`. It builds a `ProbeSceneSpec` for you from a recipe file and then delegates into the capabilities documented below. If you are already using `pipeline-validator`, the same sibling repo now also exposes `pipeline-validator --probe` as an in-place delegation path. Those recipe-side tools now emit unified per-cell traces that merge content, style, and compositor stages, while direct `pipeline-probe` remains compositor-scoped.
+
+## Relationship to `tui-vfx-trace` (Sub-plan B)
+
+Since `tui-vfx-debug` v0.9.0 (Sub-plan A Phase A.4), the workspace ships a **unified inspection foundation** in `tui-vfx-debug::inspection` — canonical `TraceEvent` taxonomy, `TraceEnvelope`, `TraceSelector` / `TraceFilter`, `StageMask`, `InspectionSink`, `TraceSink`, and `TraceReport` (NDJSON-round-trippable). The full schema reference is `docs/TRACE_EVENT_SCHEMA.md`.
+
+The user-facing CLI for that foundation is **`tui-vfx-trace`**, landing in Sub-plan B inside the sibling `tui-vfx-recipes` repo at `tools/tui-vfx-trace/`. It covers the end-to-end stream across lifecycle, resolution, composition, and pipeline stages.
+
+| Question | Tool |
+| --- | --- |
+| I already have engine-level grids + `CompositionSpec` and want structured per-cell frame output now | **`pipeline-probe`** (this guide) |
+| I want the complete recipe-driven trace stream (lifecycle + resolution + composition + pipeline) in NDJSON | **`tui-vfx-trace`** (Sub-plan B) |
+| I want the schema reference for every `TraceEvent` variant | **`docs/TRACE_EVENT_SCHEMA.md`** |
 Preview remains the canonical **human** recipe player in `tui-vfx-recipes`; direct `pipeline-probe` is an **engine evidence** tool, not a replacement for Preview sign-off or recipe-schema validation.
 The recipe-side tools also now emit:
 - `analysis` — stage-by-stage health for the currently requested slice

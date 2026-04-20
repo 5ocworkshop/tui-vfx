@@ -1,11 +1,12 @@
-# <FILE>crates/tui-vfx-debug/Cargo.toml</FILE> - <DESC>Centralized debug logger</DESC>
-# <VERS>VERSION: 0.1.2</VERS>
-# <WCTX>Release readiness metadata update</WCTX>
-# <CLOG>Add workspace keywords and categories</CLOG>
+# <FILE>crates/tui-vfx-debug/Cargo.toml</FILE> - <DESC>Centralized debug logger + unified inspection foundation</DESC>
+# <VERS>VERSION: 0.2.0</VERS>
+# <WCTX>Sub-plan A Phase A.4 — add tui-vfx-types workspace dep (opaque IDs, RoleTag, Cell, Style, Rect for TraceEvent payloads), criterion dev-dep + two bench targets (emit-overhead and full-trace-60fps).</WCTX>
+# <CLOG>0.2.0: MINOR — add tui-vfx-types dep (inspection module needs LayerId/RecipeId/RoleTag/Cell/Style/Rect); add criterion dev-dep; declare bench_emit_overhead and bench_full_trace_60fps bench targets.
+# 0.1.2: Release readiness metadata update — keywords + categories.</CLOG>
 
 [package]
 name = "tui-vfx-debug"
-description = "Centralized debug logger for tui-vfx ecosystem"
+description = "Centralized debug logger + unified inspection foundation for tui-vfx ecosystem"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -21,6 +22,18 @@ chrono = "0.4"
 lazy_static = "1.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tui-vfx-types.workspace = true
 
-# <FILE>crates/tui-vfx-debug/Cargo.toml</FILE> - <DESC>Centralized debug logger</DESC>
-# <VERS>END OF VERSION: 0.1.2</VERS>
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "bench_emit_overhead"
+harness = false
+
+[[bench]]
+name = "bench_full_trace_60fps"
+harness = false
+
+# <FILE>crates/tui-vfx-debug/Cargo.toml</FILE> - <DESC>Centralized debug logger + unified inspection foundation</DESC>
+# <VERS>END OF VERSION: 0.2.0</VERS>

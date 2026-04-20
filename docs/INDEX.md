@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.9.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.1 — add Foundation primitives subsection listing SemanticScene / RoleMap / RoleTag / LayerId / RecipeId landed in tui-vfx-types</WCTX> -->
-<!-- <CLOG>1.9.0: add Foundation primitives subsection naming the role-tagging primitives shipped in tui-vfx-types 0.6.0 for the recipe scene composer.
+<!-- <VERS>VERSION: 1.10.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.4 — tui-vfx-debug now described as logger + unified inspection foundation; add TRACE_EVENT_SCHEMA.md link.</WCTX> -->
+<!-- <CLOG>1.10.0: add Unified inspection foundation subsection pointing at tui-vfx-debug::inspection and TRACE_EVENT_SCHEMA.md; update pipeline-probe + validator guide entries with cross-reference to the inspection surface.
+1.9.0: add Foundation primitives subsection naming the role-tagging primitives shipped in tui-vfx-types 0.6.0 for the recipe scene composer.
 1.8.0: add explicit recipe-authoring tool ownership split plus the debug-recipes QC surface.</CLOG> -->
 
 # Documentation Index
@@ -30,6 +31,46 @@ composer (see gt-design
 - **`InternedString`** — cheap-to-clone `Arc<str>` wrapper backing the
   opaque identifiers.
 
+## Unified inspection foundation (in `tui-vfx-debug::inspection`, since 0.9.0)
+
+Since v0.9.0 (Sub-plan A Phase A.4), `tui-vfx-debug` carries the
+canonical inspection surface for the recipe scene composer (see
+gt-design
+`docs/superpowers/specs/2026-04-20-recipe-scene-composer-design.md`
+§9). The logger module is unchanged; a new `inspection` module sits
+alongside it.
+
+- **`TraceEvent`** — canonical event taxonomy across lifecycle /
+  resolution / composition / pipeline stages (18 variants,
+  `#[non_exhaustive]`).
+- **`TraceEnvelope`** — event plus `frame_no`, `t_ms`, optional
+  `recipe_id`, and monotonic `seq_in_frame` counter for deterministic
+  replay ordering.
+- **`TraceSelector`** — predicate (`Cell`, `Rect`, `Role`, `Layer`,
+  `Recipe`, `All`); opaque `LayerId` / `RecipeId` from
+  `tui-vfx-types`.
+- **`TraceFilter`** — selectors (OR) + `StageMask` (AND) + frame/time
+  half-open ranges.
+- **`StageMask`** — bitmask (`LIFECYCLE | RESOLUTION | COMPOSITION |
+  PIPELINE`); emit-site short-circuit via `is_empty`.
+- **`InspectionSink`** — object-safe `Send + Sync` hook every stage
+  reports to.
+- **`TraceSink`** — thread-safe, filter-aware, optionally bounded
+  `InspectionSink` impl; `snapshot()` / `drain()` materialise a
+  `TraceReport`.
+- **`TraceReport`** — envelope list + per-stage summary + dropped
+  counter; `to_ndjson(writer)` / `from_ndjson(reader)` round-trip.
+
+`CompositorInspector` remains at
+`crates/tui-vfx-compositor/src/traits/pipeline_inspector.rs` —
+the compositor ships an additive `InspectionSinkBridge` in
+`crates/tui-vfx-compositor/src/traits/cls_inspection_sink_bridge.rs`
+that forwards compositor callbacks into any `InspectionSink` without
+disturbing existing direct implementors (`ProbeInspector`,
+`StageInspector`, `TraceInspector`).
+
+Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
+
 ## Hand-Maintained
 - Recipe-authoring tool ownership:
   - **Preview / demo browser** (`tui-vfx-recipes` preview surfaces) is the canonical **recipe player** for human visual sign-off.
@@ -43,6 +84,7 @@ composer (see gt-design
 - [HOWTO_SHADOWS.md](HOWTO_SHADOWS.md) — Shadow rendering guide and integration patterns
 - [PIPELINE_VALIDATOR_LLM_GUIDE.md](PIPELINE_VALIDATOR_LLM_GUIDE.md) — How an LLM should use the `pipeline-validator` CLI (in the sibling `tui-vfx-recipes` repo) to inspect recipe rendering, diagnose shader bugs, verify per-cell output, and run upstream-native debug-recipes QC
 - [PIPELINE_PROBE_LLM_GUIDE.md](PIPELINE_PROBE_LLM_GUIDE.md) — How an LLM or user should use the engine-side `pipeline-probe` CLI to inspect direct `ProbeSceneSpec` inputs as structured JSON/NDJSON
+- [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md) — Full `TraceEvent` / `TraceEnvelope` schema shipped in `tui-vfx-debug::inspection` (since 0.9.0); AI-consumption-ready reference
 - [PIPELINE_PROBE_WISHLIST.md](PIPELINE_PROBE_WISHLIST.md) — Prioritized wishlist for finishing the dream AI-native recipe debug tool, including the current diminishing-returns assessment
 - [RECIPE_AUTHORING_WORKFLOW.md](RECIPE_AUTHORING_WORKFLOW.md) — Canonical staged workflow for building complex recipes one effect at a time, validating each layer, then flattening to a single final file
 - [RECIPE_VISUAL_QA.md](RECIPE_VISUAL_QA.md) — Canonical visual checklist for manually previewing and signing off complex probe-validation recipes

@@ -1,7 +1,8 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.15.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.3 — style + shadow pipeline role-awareness; ShaderContext.roles, ShadowConfig.source_region, RoleTag::Shadow write-back</WCTX> -->
-<!-- <CLOG>1.15.0: add Unreleased entry for Phase A.3 — role-aware ShaderContext, ShadowConfig.source_region, fnc_extract_shadow_envelope + CellMask, render_shadow_into_scene, shadow-stage RoleTag::Shadow write-back; workspace bumped 0.7.0 → 0.8.0. ShadowConfig is no longer Copy (RoleTag::Custom carries Arc<str>).
+<!-- <VERS>VERSION: 1.16.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.4 — tui-vfx-debug becomes logger + unified inspection foundation; InspectionSinkBridge in tui-vfx-compositor; workspace bumped 0.8.0 → 0.9.0.</WCTX> -->
+<!-- <CLOG>1.16.0: add Unreleased entry for Phase A.4 — tui-vfx-debug inspection module (TraceEvent / TraceEnvelope / TraceSelector / TraceFilter / StageMask / InspectionSink / TraceSink / TraceReport with NDJSON round-trip); additive InspectionSinkBridge in tui-vfx-compositor so CompositorInspector callbacks forward into any InspectionSink; criterion dev-dep + two benches; workspace bumped 0.8.0 → 0.9.0. CompositorInspector stays at crates/tui-vfx-compositor/src/traits/pipeline_inspector.rs.
+1.15.0: add Unreleased entry for Phase A.3 — role-aware ShaderContext, ShadowConfig.source_region, fnc_extract_shadow_envelope + CellMask, render_shadow_into_scene, shadow-stage RoleTag::Shadow write-back; workspace bumped 0.7.0 → 0.8.0. ShadowConfig is no longer Copy (RoleTag::Custom carries Arc<str>).
 1.14.0: add Unreleased entry for the Phase A.2 hard cutover: render_pipeline* signature change (adds &RoleMap source and &mut SemanticScene destination); StyleRegion legacy bare variants removed from the Rust enum (serde back-compat preserved via custom Deserialize); workspace version bumped 0.6.0 → 0.7.0.
 1.13.0: add Unreleased entry for the recipe scene composer foundation primitives shipped in tui-vfx-types 0.6.0.
 1.12.0: add Unreleased section covering tui-vfx-content sources (RocketsplashImage/Font + blit helper) and pool primitives (TextPool/EffectPool/ImagePool/FontPool/PresetPool + PoolPolicy). Default-on rocketsplash-rt workspace dep.
@@ -14,6 +15,66 @@ All notable changes to this project will be documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+### Added — `tui-vfx-debug`, `tui-vfx-compositor` — unified inspection foundation (Sub-plan A Phase A.4) — workspace 0.9.0
+
+`tui-vfx-debug` gains a new **`inspection`** module alongside the existing
+logger. It ships the canonical inspection surface defined in the
+recipe-scene-composer design spec §9: one sink hook every stage reports
+into, one `TraceEvent` taxonomy, and an NDJSON-round-trippable
+`TraceReport`.
+
+- **`tui-vfx-debug::inspection::TraceEvent`** — 18 variants across four
+  stages (lifecycle / resolution / composition / pipeline);
+  `#[non_exhaustive]` so additive variants do not break clients; full
+  serde round-trip; `stage()` accessor classifies each variant against
+  `StageMask`.
+- **`tui-vfx-debug::inspection::TraceEnvelope`** — event plus `frame_no`,
+  `t_ms`, optional `recipe_id`, and monotonic `seq_in_frame` counter
+  for deterministic replay ordering.
+- **`tui-vfx-debug::inspection::TraceSelector`** — `Cell { x, y }`,
+  `Rect(Rect)`, `Role(RoleTag)`, `Layer(LayerId)`, `Recipe(RecipeId)`,
+  `All`. `#[non_exhaustive]`. Opaque newtypes from `tui-vfx-types` so
+  inspection code stays independent of the recipe crate.
+- **`tui-vfx-debug::inspection::TraceFilter`** — selectors (OR) +
+  `StageMask` (AND) + `Range<u64>` frame range + `Range<u64>` time
+  range. `accept_all()` sentinel and `accepts_any_stage()` fast-path
+  probe.
+- **`tui-vfx-debug::inspection::StageMask`** — bitmask
+  (`LIFECYCLE | RESOLUTION | COMPOSITION | PIPELINE`) with `NONE` /
+  `ALL` sentinels and `is_empty` for emit-site short-circuit.
+- **`tui-vfx-debug::inspection::InspectionSink`** — object-safe
+  `Send + Sync` trait with a single `report(&self, TraceEnvelope)`
+  method.
+- **`tui-vfx-debug::inspection::TraceSink`** — thread-safe, filtered,
+  optionally-bounded `InspectionSink` impl. `new(filter)` is
+  unbounded; `with_capacity(filter, n)` drops oldest with an explicit
+  `dropped` counter.
+- **`tui-vfx-debug::inspection::TraceReport`** — envelope list +
+  per-stage `TraceReportSummary` + `dropped` counter;
+  `to_ndjson(writer)` / `from_ndjson(reader)` methods (placement per
+  peer-review S12).
+
+The compositor ships a **bridge**, not a trait move:
+
+- **`tui-vfx-compositor::traits::cls_inspection_sink_bridge::InspectionSinkBridge`**
+  implements `CompositorInspector` and forwards every pipeline-stage
+  callback into a registered `InspectionSink` as a full
+  `TraceEvent`. `TraceFrameContext` supplies frame/time/recipe
+  context; `begin_frame(ctx)` resets `seq_in_frame` at each frame
+  boundary.
+- **`CompositorInspector` stays in `tui-vfx-compositor`** at
+  `crates/tui-vfx-compositor/src/traits/pipeline_inspector.rs`.
+  Existing direct implementors (`ProbeInspector`, `StageInspector`,
+  `TraceInspector`) continue to work unchanged. The bridge is the
+  additive forwarding path, not a replacement.
+
+Benches (criterion, `cargo bench -p tui-vfx-debug`):
+
+- `bench_emit_overhead` — contrasts `StageMask::NONE` short-circuit
+  against fully-accepted emit. Target: < 1µs per emit at NONE.
+- `bench_full_trace_60fps` — ~11k events per representative frame
+  (80×24, 4 layers, full pipeline). Target: ≤ 2ms/frame at 60fps.
 
 ### Added / Changed — `tui-vfx-style`, `tui-vfx-shadow`, `tui-vfx-compositor` — style + shadow role-awareness (Sub-plan A Phase A.3) — workspace 0.8.0
 
