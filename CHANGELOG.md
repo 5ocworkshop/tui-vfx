@@ -1,13 +1,31 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.11.0</VERS> -->
-<!-- <WCTX>Phase 0 "Outstanding P0 shader bindings" release covering the three items that partially shipped in 0.4.0 and were closed out on feat/phase0-shader-bindings-followup (O-P0.A/B/C)</WCTX> -->
-<!-- <CLOG>Add 0.5.0 section covering GlistenBand.speed reconnect + speed_binding, FadeToCanvas.canvas_color_binding and the new ShaderRuntimeParamValue::Rgb variant, and RigidShake.damping_scale_binding</CLOG> -->
+<!-- <VERS>VERSION: 1.12.0</VERS> -->
+<!-- <WCTX>Unreleased section adding the rocketsplash sources bridge and general-purpose content-randomization pools to tui-vfx-content as part of the splash-library-and-vfx-integration plan.</WCTX> -->
+<!-- <CLOG>1.12.0: add Unreleased section covering tui-vfx-content sources (RocketsplashImage/Font + blit helper) and pool primitives (TextPool/EffectPool/ImagePool/FontPool/PresetPool + PoolPolicy). Default-on rocketsplash-rt workspace dep.
+1.11.0: add 0.5.0 section covering GlistenBand.speed reconnect + speed_binding, FadeToCanvas.canvas_color_binding and new ShaderRuntimeParamValue::Rgb variant, plus RigidShake.damping_scale_binding.</CLOG> -->
 
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 This project follows [Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+### Added — `tui-vfx-content`
+
+- **Rocketsplash source primitives** (`sources/` submodule): `RocketsplashImage` loads `.rss` byte payloads via the co-designed `rocketsplash-rt` sister project; `RocketsplashFont` loads `.rsf` font atlases with a chainable `FontRender` builder (color / gradient / shadow / style / spacing / align / fallback). Both terminate in `blit_into_grid()` so rocketsplash cells compose with every downstream VFX primitive (shadows, wipes, glisten, filters). Shared `blit_render_buffer_to_grid()` helper maps `RenderCell` → `tui_vfx_types::Cell` honoring opacity and clipping. `rocketsplash-rt` is a default workspace dep — no feature flag.
+- **General-purpose content-randomization pools** (`pool/` submodule):
+  - `PoolPolicy`: `Random` (time-seeded, no `rand` crate dep) or `FirstOnly` (deterministic, test-friendly).
+  - `TextPool`: strings, sanitized on construction (control bytes stripped).
+  - `EffectPool`: `ContentEffect` values rotated per launch.
+  - `ImagePool` / `FontPool`: rocketsplash asset-map keys (name references, not inline bytes — caller owns distribution via `AssetMap`).
+  - `PresetPool` of `Preset`: curated `(text, effect, image_name, font_name)` bundles; `Preset` fields are all `Option` so Phase 2 extensions (speaker, shader / shadow overrides) are additive.
+  - All pool types derive `ConfigSchema` + serde for recipe-schema introspection and JSON round-trip.
+
+### Notes
+
+- Splash taglines are one use case for the pool primitives; dialog systems, game NPC variety, and error-message rotation are others. Placed in `tui-vfx-content` (not any specific downstream crate) so every tui-vfx consumer benefits without pulling the whole GT stack.
 
 ## 0.5.0 — 2026-04-14
 
