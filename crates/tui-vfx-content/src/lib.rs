@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>feat/cursor-primitive: register cursor module</WCTX>
-// <CLOG>Add pub mod cursor</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Splash library + VFX integration plan Stage 1.5: register pool module (TextPool / EffectPool / PresetPool) alongside sources.</WCTX>
+// <CLOG>0.5.0: add pub mod pool for general-purpose content randomization.
+// 0.4.0: add pub mod sources for rocketsplash-rt image/font integration.
+// 0.3.0: Add pub mod cursor.</CLOG>
 
 //! # TUI VFX Content
 //!
@@ -100,11 +102,13 @@
 //! ```
 
 pub mod cursor;
+pub mod pool;
 pub mod prelude;
+pub mod sources;
 pub mod traits;
 pub mod transformers;
 pub mod types;
 pub mod utils;
 
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>
