@@ -252,7 +252,13 @@
 //! render_modal(&mut dest, modal_rect, &theme);
 //!
 //! // 4. Apply compositor effects (wipe reveal, dissolve, etc.)
-//! render_pipeline(&source, &mut dest, width, height, 0, 0, compositor_options, None);
+//! //    v0.7.0+: the role-aware signature adds `&RoleMap` after source
+//! //    and promotes the destination to `&mut SemanticScene`. Use
+//! //    `RoleMap::all_background` / `SemanticScene::from_grid_with_default_role`
+//! //    at callsites without semantic info.
+//! let source_roles = RoleMap::all_background(width as u16, height as u16);
+//! let mut dest_scene = SemanticScene::from_grid_with_default_role(dest, RoleTag::Background);
+//! render_pipeline(&source, &source_roles, &mut dest_scene, width, height, 0, 0, compositor_options, None);
 //! ```
 //!
 //! ### With Theme Systems

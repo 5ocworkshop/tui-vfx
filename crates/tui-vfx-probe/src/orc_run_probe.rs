@@ -1,12 +1,12 @@
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>Phase-1.5 probe timeline, diff, and trace support</WCTX>
-// <CLOG>MINOR: Auto-populate direct probe report diagnostics from the full widget dump so callers immediately see baseline border/text integrity findings without extra helper calls</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>Sub-plan A Phase A.2.3 — migrate to role-aware render_pipeline_with_spec signature</WCTX>
+// <CLOG>0.7.0: MINOR — migrate call to the new `render_pipeline_with_spec` signature. Source roles default to `RoleMap::all_background(w, h)` (probe has no semantic info). Destination is lifted into a `SemanticScene` via `SemanticScene::from_grid_with_default_role`; after the pipeline runs, we extract the grid back via `grid_mut()` clone for downstream probe analysis (probe still speaks `Grid`, not `SemanticScene`).</CLOG>
 
 use serde_json::{Value, json};
 use tui_vfx_compositor::pipeline::CompositionSpec;
 use tui_vfx_compositor::pipeline::render_pipeline_with_spec;
-use tui_vfx_types::Grid;
+use tui_vfx_types::{Grid, RoleMap, RoleTag, SemanticScene};
 
 use crate::cls_probe_cell::ProbeCell;
 use crate::cls_probe_diff_report::ProbeDiffReport;
@@ -55,14 +55,14 @@ pub fn run_probe(
     }
 
     let source = build_owned_grid(&scene.source)?;
-    let mut destination = build_owned_grid(&scene.destination)?;
+    let destination_grid = build_owned_grid(&scene.destination)?;
     let widget_width = scene.source.width as usize;
     let widget_height = scene.source.height as usize;
     let abs_origin_x = scene.widget_offset.x as usize;
     let abs_origin_y = scene.widget_offset.y as usize;
 
-    if abs_origin_x + widget_width > destination.width()
-        || abs_origin_y + widget_height > destination.height()
+    if abs_origin_x + widget_width > destination_grid.width()
+        || abs_origin_y + widget_height > destination_grid.height()
     {
         return Err(ProbeError::InvalidScene(format!(
             "widget area {}x{} at ({}, {}) exceeds destination frame {}x{}",
@@ -70,8 +70,8 @@ pub fn run_probe(
             widget_height,
             abs_origin_x,
             abs_origin_y,
-            destination.width(),
-            destination.height()
+            destination_grid.width(),
+            destination_grid.height()
         )));
     }
 
@@ -81,9 +81,20 @@ pub fn run_probe(
     let runtime = runtime_context_from_composition(&composition);
 
     let mut inspector = ProbeInspector::default();
+    // Probe has no semantic role information — pass all-Background source
+    // roles and wrap the destination grid in a SemanticScene so the
+    // role-aware pipeline signature is satisfied. A.2 uses
+    // RoleMap::all_background everywhere as the no-info default; real
+    // widget/recipe role-tagging is Sub-plan C's work.
+    let source_w = source.width() as u16;
+    let source_h = source.height() as u16;
+    let source_roles = RoleMap::all_background(source_w, source_h);
+    let mut destination_scene =
+        SemanticScene::from_grid_with_default_role(destination_grid, RoleTag::Background);
     render_pipeline_with_spec(
         &source,
-        &mut destination,
+        &source_roles,
+        &mut destination_scene,
         widget_width,
         widget_height,
         abs_origin_x,
@@ -91,6 +102,8 @@ pub fn run_probe(
         &composition,
         Some(&mut inspector),
     );
+    // Recover the grid for downstream probe analysis.
+    let destination = destination_scene.grid().clone();
 
     let mut all_cells = Vec::with_capacity(widget_width * widget_height);
     let mut non_empty_cells = 0usize;
@@ -415,4 +428,4 @@ pub fn run_probe_diff(
 }
 
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.18.0</VERS> -->
-<!-- <WCTX>feat/cursor-braille: document the new braille cursor additions — 4 static row-stacked convenience constructors (braille_2/4/6/8 → ⠉ ⠛ ⠿ ⣿) and 2 scan modes (BraillePulse, BrailleRowFlip) that override the base glyph with braille fills.</WCTX> -->
-<!-- <CLOG>MINOR: Add "Braille cursors" subsection listing the 4 static ctors; extend "Scan" subsection with BraillePulse and BrailleRowFlip rows noting base-glyph override behavior; extend the debug recipe catalog with 6 new braille recipe entries.</CLOG>
+<!-- <VERS>VERSION: 1.19.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.2 — document role-aware render_pipeline signature and StyleRegion::Role(RoleTag) variant</WCTX> -->
+<!-- <CLOG>1.19.0: MINOR — add "Role-Aware Pipeline Signature (v0.7.0+)" and "StyleRegion Targeting" subsections describing the new `&RoleMap` + `&mut SemanticScene` parameters and the Role(RoleTag) variant. Note back-compat via legacy bare-string Deserialize.
+1.18.0: Add "Braille cursors" subsection listing the 4 static ctors; extend "Scan" subsection with BraillePulse and BrailleRowFlip rows noting base-glyph override behavior; extend the debug recipe catalog with 6 new braille recipe entries.</CLOG>
 
 # tui-vfx Capabilities Reference
 
@@ -813,6 +814,29 @@ CompositionOptions {
 `CompositionSpec` is the serializable counterpart used by `render_pipeline_with_spec`.
 It mirrors the same capabilities (including `shadow` and `preserve_unfilled`) for
 JSON/TOML-driven configurations.
+
+### Role-Aware Pipeline Signature (v0.7.0+)
+
+Since v0.7.0 all four public entrypoints (`render_pipeline`,
+`render_pipeline_with_area`, `render_pipeline_with_spec`,
+`render_pipeline_with_spec_area`) require a `source_roles: &RoleMap` and
+a destination `&mut SemanticScene`. Call-sites without semantic role
+information construct `RoleMap::all_background(w, h)` and
+`SemanticScene::from_grid_with_default_role(grid, RoleTag::Background)`
+as the no-info default.
+
+### `StyleRegion` Targeting
+
+`StyleRegion::Role(RoleTag)` is the canonical role-based targeting
+variant. Available role tags include `Background`, `Text`, `Title`,
+`Caption`, `Border`, `Image`, `Icon`, `Indicator`, `Highlight`,
+`Shadow`, `Decoration`, `Procedural`, and `Custom(InternedRoleName)`.
+
+Legacy JSON fixtures that still write `"BorderOnly"`, `"TextOnly"`, or
+`"BackgroundOnly"` continue to parse — a custom `Deserialize` lowers
+them to `Role(RoleTag::Border / Text / Background)` respectively.
+Serialization always emits the canonical form; the schema converges
+on round-trip.
 
 ### Render Order
 

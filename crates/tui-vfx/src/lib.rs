@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx/src/lib.rs</FILE> - <DESC>Meta-crate re-exporting all tui-vfx components</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>Phase 2 dramatic color-shadow rollout: docs, examples, and quality closure</WCTX>
-// <CLOG>Add ShadowCompositeMode and ShadowGradeConfig to prelude exports</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>Sub-plan A Phase A.2 — document the role-aware render_pipeline signature in the umbrella doc comment</WCTX>
+// <CLOG>0.7.0: MINOR — umbrella doc refreshed for the new `&RoleMap` + `&mut SemanticScene` call shape.
+// 0.6.0: Add ShadowCompositeMode and ShadowGradeConfig to prelude exports</CLOG>
 
 //! # TUI VFX
 //!
@@ -50,10 +51,16 @@
 //!         .with_offset(2, 1)
 //! );
 //!
-//! // Render with compositor - shadow wipes with the modal!
+//! // Role-aware signature (v0.7.0+): pass a RoleMap alongside the source
+//! // and a SemanticScene wrapping the destination. Use
+//! // `RoleMap::all_background` when you don't yet have role information
+//! // and lift the destination with `SemanticScene::from_grid_with_default_role`.
+//! let source_roles = RoleMap::all_background(30, 12);
+//! let mut dest_scene = SemanticScene::from_grid_with_default_role(dest, RoleTag::Background);
 //! render_pipeline(
 //!     &modal_source,
-//!     &mut dest,
+//!     &source_roles,
+//!     &mut dest_scene,
 //!     30,     // Element width (NOT including shadow)
 //!     12,     // Element height (NOT including shadow)
 //!     10,     // offset_x

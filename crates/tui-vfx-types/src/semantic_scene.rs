@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-types/src/semantic_scene.rs</FILE> - <DESC>SemanticScene: source surface annotated with per-cell role tags</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.1 — foundation primitive at the heart of the recipe scene composer design</WCTX>
-// <CLOG>0.1.0: initial SemanticScene with OwnedGrid + RoleMap + SceneMetadata; Buffer-parity accessors (area, cell); role accessor; from_grid_with_default_role builder; dimension-mismatch panic in new() documented as library-misuse.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Sub-plan A Phase A.2 — expose grid_mut() so pipeline stages can write cells into the destination scene's underlying OwnedGrid</WCTX>
+// <CLOG>0.2.0: MINOR — add grid_mut() accessor. The compositor needs a `&mut OwnedGrid` (which implements `Grid`) to write into the destination; grid_mut() pairs with the existing roles_mut() so role-producing stages (e.g. shadow) can write both cells and tags through the SemanticScene interface.
+// 0.1.0: initial SemanticScene with OwnedGrid + RoleMap + SceneMetadata; Buffer-parity accessors (area, cell); role accessor; from_grid_with_default_role builder; dimension-mismatch panic in new() documented as library-misuse.</CLOG>
 
 //! `SemanticScene`: a source surface annotated with per-cell role tags.
 //!
@@ -136,6 +137,17 @@ impl SemanticScene {
         &self.grid
     }
 
+    /// Mutably borrow the underlying cell grid.
+    ///
+    /// Pipeline stages that write cells into the destination use this to
+    /// get a `&mut OwnedGrid` (which implements `Grid`). Pair with
+    /// `roles_mut()` when a stage also needs to write role tags for the
+    /// cells it produces (e.g. the shadow stage writing
+    /// `RoleTag::Shadow`).
+    pub fn grid_mut(&mut self) -> &mut OwnedGrid {
+        &mut self.grid
+    }
+
     /// Borrow the role map.
     pub fn roles(&self) -> &RoleMap {
         &self.roles
@@ -154,4 +166,4 @@ impl SemanticScene {
 }
 
 // <FILE>crates/tui-vfx-types/src/semantic_scene.rs</FILE> - <DESC>SemanticScene foundation primitive</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

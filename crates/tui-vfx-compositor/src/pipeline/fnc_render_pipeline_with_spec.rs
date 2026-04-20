@@ -1,8 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/fnc_render_pipeline_with_spec.rs</FILE>
 // <DESC>Render pipeline wrapper for CompositionSpec</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Spec-driven pipeline parity for shadow and preserve_unfilled</WCTX>
-// <CLOG>Thread shadow and preserve_unfilled from CompositionSpec</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Sub-plan A Phase A.2.2 — role-aware signature: accept `&RoleMap` and `&mut SemanticScene` matching the role-aware contract of render_pipeline</WCTX>
+// <CLOG>0.4.0: MAJOR — new signature carries `source_roles: &RoleMap` after `source`, and destination becomes `&mut SemanticScene` (was `&mut dyn Grid`). Callers without role information reach for `RoleMap::all_background(w, h)` and `SemanticScene::from_grid_with_default_role(grid, RoleTag::Background)`.</CLOG>
 
 use crate::pipeline::cls_composition_options::{CompositionOptions, ShaderWithRegion};
 use crate::pipeline::cls_composition_spec::CompositionSpec;
@@ -12,13 +12,14 @@ use smallvec::SmallVec;
 use std::borrow::Cow;
 use tui_vfx_style::models::SpatialShaderType;
 use tui_vfx_style::traits::StyleShader;
-use tui_vfx_types::Grid;
+use tui_vfx_types::{Grid, RoleMap, SemanticScene};
 
 /// Render pipeline wrapper that accepts a serializable CompositionSpec.
 #[allow(clippy::too_many_arguments)]
 pub fn render_pipeline_with_spec(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     width: usize,
     height: usize,
     offset_x: usize,
@@ -57,10 +58,18 @@ pub fn render_pipeline_with_spec(
     };
 
     render_pipeline(
-        source, dest, width, height, offset_x, offset_y, options, inspector,
+        source,
+        source_roles,
+        destination,
+        width,
+        height,
+        offset_x,
+        offset_y,
+        options,
+        inspector,
     );
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/fnc_render_pipeline_with_spec.rs</FILE>
 // <DESC>Render pipeline wrapper for CompositionSpec</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

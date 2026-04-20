@@ -1,7 +1,9 @@
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>VERSION: 2.1.0</VERS>
-// <WCTX>feat/cursor-primitive T24: register CursorShader skeleton — new module cls_cursor_shader providing CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail as a flat per-frame snapshot type owned by tui-vfx-style so downstream consumers can hand it to SpatialShaderType without a style→content dep</WCTX>
-// <CLOG>Register cls_cursor_shader module and public re-exports for CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail</CLOG>
+// <VERS>VERSION: 2.3.0</VERS>
+// <WCTX>Sub-plan A Phase A.2 audit-1 remediation — register two additional `fnc_style_region_*` sibling modules that carry the custom Deserialize impl and the hand-written ConfigSchema impl extracted from cls_style_region.rs</WCTX>
+// <CLOG>2.3.0: MINOR — register fnc_style_region_deserialize and fnc_style_region_schema modules. The Rust impls are global at module scope, so merely declaring the modules is sufficient for them to take effect; no additional re-exports are needed.
+// 2.2.0: MINOR — register fnc_style_region_should_style and fnc_style_region_bounding_rect modules so callers can invoke the predicates as free functions (or reach them via the delegating methods on StyleRegion).
+// 2.1.0: Register cls_cursor_shader module and public re-exports for CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail</CLOG>
 
 pub mod cls_affordance_wake_shader;
 pub mod cls_ambient_occlusion_shader;
@@ -45,6 +47,10 @@ pub mod cls_style_effect;
 pub mod cls_style_layer;
 pub mod cls_style_region;
 pub mod cls_style_transition;
+pub mod fnc_style_region_bounding_rect;
+pub mod fnc_style_region_deserialize;
+pub mod fnc_style_region_schema;
+pub mod fnc_style_region_should_style;
 pub mod cls_sub_cell_shake_shader;
 pub mod cls_trace_common;
 pub mod cls_trace_path_shader;
@@ -112,4 +118,4 @@ pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, Wayf
 pub use tui_vfx_geometry::easing::EasingType;
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>END OF VERSION: 2.1.0</VERS>
+// <VERS>END OF VERSION: 2.2.0</VERS>

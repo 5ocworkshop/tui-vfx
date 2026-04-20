@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 11.6.0</VERS>
-// <WCTX>Phase 0 P0.1 — build PrepareContext carrying runtime_params before filter preparation</WCTX>
-// <CLOG>Construct a PrepareContext from loop_t + options.runtime_params and hand it to prepare_filters at both callsites</CLOG>
+// <VERS>VERSION: 12.0.0</VERS>
+// <WCTX>Sub-plan A Phase A.2.2 — role-aware pipeline. All 5 public/internal render_pipeline* fns now take `source_roles: &RoleMap` and `destination: &mut SemanticScene`. StyleRegion::Role(...) predicates consult source_roles at (x, y). Shadow stage's destination-role writes are deferred to Phase A.3 — for A.2 the destination scene's role map is left un-mutated for shadow cells.</WCTX>
+// <CLOG>12.0.0: MAJOR signature change for role-aware targeting. `render_pipeline` and `render_pipeline_with_area` gain `source_roles: &RoleMap` immediately after `source`, and their destination is now `&mut SemanticScene` (was `&mut dyn Grid`). Internal predicate evaluation in the per-cell hot loop reads `source_roles.get((x, y))` for StyleRegion::Role(_) variants; geometry variants unchanged. Inner helpers (render_loop, render_loop_inspected, render_pipeline_with_shadow) retain `&mut dyn Grid` on the destination — the public entrypoints call `destination.grid_mut()` to hand them the OwnedGrid. Legacy bare variants (BorderOnly/TextOnly/BackgroundOnly) have been removed from StyleRegion; the apply_shaders helper passes the source role into should_style via the new 5-arg signature.</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
 use super::cls_prepare_context::PrepareContext;
@@ -17,7 +17,7 @@ use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
 use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
 use tui_vfx_style::traits::ShaderContext;
-use tui_vfx_types::{Cell, Grid, OwnedGrid, Rect, Style};
+use tui_vfx_types::{Cell, Grid, OwnedGrid, Rect, RoleMap, SemanticScene, Style};
 
 /// Render pipeline with full spec support and optional inspector.
 ///
@@ -41,7 +41,8 @@ use tui_vfx_types::{Cell, Grid, OwnedGrid, Rect, Style};
 #[allow(clippy::too_many_arguments)]
 pub fn render_pipeline(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     width: usize,
     height: usize,
     offset_x: usize,
@@ -52,7 +53,15 @@ pub fn render_pipeline(
     // SHADOW PATH: Dispatch to shadow-aware rendering
     if options.shadow.is_some() {
         render_pipeline_with_shadow(
-            source, dest, width, height, offset_x, offset_y, options, inspector,
+            source,
+            source_roles,
+            destination.grid_mut(),
+            width,
+            height,
+            offset_x,
+            offset_y,
+            options,
+            inspector,
         );
         return;
     }
@@ -67,10 +76,11 @@ pub fn render_pipeline(
     let has_shaders = !options.shader_layers.is_empty();
 
     if !has_sampler && !has_masks && !has_filters && !has_shaders && inspector.is_none() {
+        let dest_grid = destination.grid_mut();
         for y in 0..height {
             for x in 0..width {
                 if let Some(cell) = source.get(x, y) {
-                    dest.set(offset_x + x, offset_y + y, *cell);
+                    dest_grid.set(offset_x + x, offset_y + y, *cell);
                 }
             }
         }
@@ -86,10 +96,12 @@ pub fn render_pipeline(
 
     // Dispatch to inspected or non-inspected loop
     // (Two loops needed due to Rust borrow checker constraints with optional mutable refs)
+    let dest_grid: &mut dyn Grid = destination.grid_mut();
     if let Some(inspector) = inspector {
         render_loop_inspected(
             source,
-            dest,
+            source_roles,
+            dest_grid,
             width,
             height,
             offset_x,
@@ -104,7 +116,8 @@ pub fn render_pipeline(
     } else {
         render_loop(
             source,
-            dest,
+            source_roles,
+            dest_grid,
             width,
             height,
             offset_x,
@@ -124,14 +137,16 @@ pub fn render_pipeline(
 /// a [`RenderArea`] instead of separate width/height/offset parameters.
 pub fn render_pipeline_with_area(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     area: RenderArea,
     options: CompositionOptions<'_>,
     inspector: Option<&mut dyn CompositorInspector>,
 ) {
     render_pipeline(
         source,
-        dest,
+        source_roles,
+        destination,
         area.width,
         area.height,
         area.offset_x,
@@ -148,6 +163,7 @@ pub fn render_pipeline_with_area(
 #[allow(clippy::too_many_arguments)]
 fn render_pipeline_with_shadow(
     source: &dyn Grid,
+    source_roles: &RoleMap,
     dest: &mut dyn Grid,
     width: usize,
     height: usize,
@@ -213,6 +229,7 @@ fn render_pipeline_with_shadow(
             let mut out_cell = *source_cell;
 
             // Apply shaders (coordinates relative to element)
+            let source_role = source_roles.get((src_x, src_y));
             apply_shaders(
                 &mut out_cell,
                 local_x,
@@ -223,6 +240,7 @@ fn render_pipeline_with_shadow(
                 offset_y + elem_offset_y,
                 shader_t,
                 &options,
+                source_role,
             );
 
             // Apply filters
@@ -470,6 +488,7 @@ fn render_pipeline_with_shadow(
 #[allow(clippy::too_many_arguments)]
 fn render_loop(
     source: &dyn Grid,
+    source_roles: &RoleMap,
     dest: &mut dyn Grid,
     width: usize,
     height: usize,
@@ -517,6 +536,7 @@ fn render_loop(
             let mut out_cell = *source_cell;
 
             // Apply shaders
+            let source_role = source_roles.get((src_x, src_y));
             apply_shaders(
                 &mut out_cell,
                 local_x,
@@ -527,6 +547,7 @@ fn render_loop(
                 offset_y,
                 shader_t,
                 options,
+                source_role,
             );
 
             // Apply filters
@@ -543,6 +564,7 @@ fn render_loop(
 #[allow(clippy::too_many_arguments)]
 fn render_loop_inspected(
     source: &dyn Grid,
+    source_roles: &RoleMap,
     dest: &mut dyn Grid,
     width: usize,
     height: usize,
@@ -600,6 +622,7 @@ fn render_loop_inspected(
             let mut out_cell = *source_cell;
 
             // Apply shaders with inspector
+            let source_role = source_roles.get((src_x, src_y));
             apply_shaders_inspected(
                 &mut out_cell,
                 local_x,
@@ -611,6 +634,7 @@ fn render_loop_inspected(
                 shader_t,
                 options,
                 inspector,
+                source_role,
             );
 
             // Apply filters with inspector
@@ -657,13 +681,15 @@ fn apply_shaders(
     offset_y: usize,
     shader_t: f64,
     options: &CompositionOptions<'_>,
+    source_role: Option<tui_vfx_types::RoleTag>,
 ) {
+    let area = Rect::new(0, 0, w16, h16);
     for layer in &options.shader_layers {
         // Resolve any runtime-parameter bindings (e.g. Cell { x, y } with
         // BindableU16::Binding coords) into concrete literals for this
         // frame's runtime_params. Returns Cow::Borrowed for bindless regions.
         let resolved = layer.region.resolved(&options.runtime_params);
-        if resolved.should_style(local_x, local_y, w16, h16) {
+        if resolved.should_style(local_x, local_y, source_role.clone(), area) {
             let (ctx_x, ctx_y, ctx_w, ctx_h) = resolved
                 .to_local_coords(local_x, local_y)
                 .unwrap_or((local_x, local_y, w16, h16));
@@ -706,10 +732,12 @@ fn apply_shaders_inspected(
     shader_t: f64,
     options: &CompositionOptions<'_>,
     inspector: &mut dyn CompositorInspector,
+    source_role: Option<tui_vfx_types::RoleTag>,
 ) {
+    let area = Rect::new(0, 0, w16, h16);
     for (shader_index, layer) in options.shader_layers.iter().enumerate() {
         let resolved = layer.region.resolved(&options.runtime_params);
-        if resolved.should_style(local_x, local_y, w16, h16) {
+        if resolved.should_style(local_x, local_y, source_role.clone(), area) {
             let (ctx_x, ctx_y, ctx_w, ctx_h) = resolved
                 .to_local_coords(local_x, local_y)
                 .unwrap_or((local_x, local_y, w16, h16));
@@ -789,4 +817,4 @@ fn blend_shadow_cell(shadow_cell: &Cell, dest_cell: &Cell) -> Cell {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>END OF VERSION: 11.5.0</VERS>
+// <VERS>END OF VERSION: 12.0.0</VERS>

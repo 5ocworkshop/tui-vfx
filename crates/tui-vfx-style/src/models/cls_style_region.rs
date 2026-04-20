@@ -1,12 +1,15 @@
-// <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum</DESC>
-// <VERS>VERSION: 4.2.0</VERS>
-// <WCTX>Phase 0 P0.2 — lift StyleRegion::Cell coordinates to BindableU16 for runtime-parameter position bindings</WCTX>
-// <CLOG>Change Cell { x, y } from u16 to BindableU16 and add resolved() method that lowers bindings to concrete coords via ShaderRuntimeParams</CLOG>
+// <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum (data-only; predicate + bounding-rect logic lives in fnc_style_region_* siblings; Deserialize and ConfigSchema impls live in fnc_style_region_deserialize / fnc_style_region_schema)</DESC>
+// <VERS>VERSION: 5.1.0</VERS>
+// <WCTX>Sub-plan A Phase A.2 audit-1 remediation — Deserialize/shadow and ConfigSchema extracted to dedicated fnc_* sibling files to bring this file back under OFPF cls_ LOC budget. StyleRegion surface is unchanged; only the supporting machinery moved.</WCTX>
+// <CLOG>5.1.0: extract custom Deserialize + shadow enum to fnc_style_region_deserialize.rs; extract hand-written ConfigSchema to fnc_style_region_schema.rs. This file now holds only the StyleRegion enum + associated methods + the co-located CellCoord/ModuloAxis payload types (intentionally co-located because they are payload-shapes of Cell/Cells/Modulo variants). OFPF SIZE NOTE: post-extraction LOC remains slightly above the 200 cls_ soft target because CellCoord and ModuloAxis are cohesive with StyleRegion's variants and splitting them would produce import ceremony without improving clarity.
+// 5.0.0: MAJOR — legacy bare variants removed from the Rust enum; Role(RoleTag) added; custom Deserialize implements the one-way back-compat (parse legacy → emit canonical). should_style / bounding_rect methods become thin delegators to the new fnc_* files; signatures updated to accept `role: Option<RoleTag>` and `area: Rect` per plan A.2.0. A `legacy_` method-compat helper lifts the old `(x, y, w, h)` call shape to the new API so compositor-side delegation migrates in one step.</CLOG>
 
 use super::cls_bindable_u16::BindableU16;
+use super::{fnc_style_region_bounding_rect, fnc_style_region_should_style};
 use crate::traits::ShaderRuntimeParams;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use tui_vfx_types::{Rect, RoleTag};
 
 /// A cell coordinate for per-cell targeting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
@@ -42,32 +45,49 @@ pub enum ModuloAxis {
 
 /// Specifies which region of a widget should receive style effects.
 ///
-/// Region targeting enables effects like:
-/// - `BorderOnly`: Border sweep animations on just the border
-/// - `TextOnly`: Highlighter effects on just the text content
-/// - `All`: Apply effects to the entire widget (default)
-/// - `Rows`: Target specific rows for progress indicators or scanners
-/// - `RowRange`: Target a contiguous range of rows
-/// - `Cell`: Target a single cell for per-cell effects
-/// - `Cells`: Target multiple specific cells
-/// - `Column`: Target a single column
-/// - `Columns`: Target multiple specific columns
-/// - `ColumnRange`: Target a contiguous range of columns
-/// - `Modulo`: Target rows/columns matching a modulo pattern (e.g., every other row for scanlines)
-#[derive(
-    Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
-)]
-#[serde(rename_all = "PascalCase", deny_unknown_fields)]
+/// # Role-aware targeting (v5.0.0)
+///
+/// The `Role(RoleTag)` variant addresses cells by their semantic role as
+/// carried on the source surface's `RoleMap`. This is the preferred
+/// modern form for role-based targeting (border, text, background, …).
+///
+/// The historical bare variants `BorderOnly`, `TextOnly`, and
+/// `BackgroundOnly` are no longer present in the Rust enum — they have
+/// been fully replaced by `Role(RoleTag::Border)`, `Role(RoleTag::Text)`,
+/// and `Role(RoleTag::Background)` respectively. Existing JSON recipe
+/// fixtures that still write the legacy bare strings continue to parse
+/// via a custom `Deserialize` impl that lowers them to the canonical
+/// `Role(...)` form. Serialization always emits the canonical form, so
+/// round-tripping converges.
+///
+/// # Geometry variants (unchanged)
+///
+/// `All`, `Rows`, `RowRange`, `Cell`, `Cells`, `Column`, `Columns`,
+/// `ColumnRange`, and `Modulo` remain geometry-only variants evaluated
+/// by coordinate, unaffected by role information.
+///
+/// # Custom `Deserialize`
+///
+/// Rather than leaning on `#[serde(rename_all = "PascalCase")]`, this
+/// type implements `Deserialize` by hand so it can accept BOTH:
+///
+/// - the modern tagged / role form (`"All"`, `{"Rows": …}`,
+///   `{"Role": "border"}`, `{"Role": {"Custom": "my_role"}}`), and
+/// - the legacy bare strings (`"BorderOnly"`, `"TextOnly"`,
+///   `"BackgroundOnly"`) mapped onto canonical `Role(...)` form.
+#[derive(Clone, PartialEq, Eq, Default, Debug, Serialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum StyleRegion {
     /// Apply style to the entire widget (default behavior)
     #[default]
     All,
-    /// Apply style only to text content, not borders or background
-    TextOnly,
-    /// Apply style only to border cells
-    BorderOnly,
-    /// Apply style only to background (non-text, non-border)
-    BackgroundOnly,
+    /// Apply style to cells whose semantic role matches the tag.
+    ///
+    /// Source role information is carried on `SemanticScene::roles()` (a
+    /// `RoleMap`). When the hot loop evaluates `Role(RoleTag::Border)`
+    /// against cell `(x, y)`, it reads `source_roles.get((x, y))` and
+    /// emits `true` iff that value equals `Border`.
+    Role(RoleTag),
     /// Apply style only to specific rows (0-based from widget top)
     Rows(Vec<u16>),
     /// Apply style to a contiguous range of rows [start, end)
@@ -109,8 +129,6 @@ pub enum StyleRegion {
     /// Apply style to rows/columns matching a modulo pattern.
     ///
     /// Useful for CRT scanline effects, alternating stripes, or periodic patterns.
-    /// Example: `Modulo { axis: Horizontal, modulus: 2, remainder: 0 }` targets
-    /// every other row (rows 0, 2, 4, ...).
     Modulo {
         /// Which axis to apply the modulo pattern to
         axis: ModuloAxis,
@@ -122,165 +140,64 @@ pub enum StyleRegion {
 }
 
 impl StyleRegion {
-    /// Check if a cell at (x, y) within a rect of (width, height) should receive styling.
+    /// Check if a cell at `(x, y)` within `area` should receive styling,
+    /// given the cell's optional semantic `role`.
     ///
-    /// Border cells are at x=0, x=width-1, y=0, or y=height-1.
-    /// Text cells are interior cells (not on the border).
-    /// Background cells would be interior cells without text (contextual).
-    /// Row/column-based variants check coordinates against specified indices.
-    /// Cell-based variants check exact (x, y) coordinates.
-    pub fn should_style(&self, x: u16, y: u16, width: u16, height: u16) -> bool {
-        match self {
-            StyleRegion::All => true,
-            StyleRegion::BorderOnly => {
-                x == 0 || y == 0 || x == width.saturating_sub(1) || y == height.saturating_sub(1)
-            }
-            StyleRegion::TextOnly => {
-                // Interior cells (not on border)
-                x > 0 && y > 0 && x < width.saturating_sub(1) && y < height.saturating_sub(1)
-            }
-            StyleRegion::BackgroundOnly => {
-                // Same as TextOnly for now - context would determine text vs bg
-                x > 0 && y > 0 && x < width.saturating_sub(1) && y < height.saturating_sub(1)
-            }
-            StyleRegion::Rows(rows) => {
-                // Match if y is in the specified row list
-                rows.contains(&y)
-            }
-            StyleRegion::RowRange { start, end } => {
-                // Match if y is in [start, end) range
-                y >= *start && y < *end
-            }
-            StyleRegion::Cell { x: cx, y: cy } => {
-                // Match exact cell position. Unresolved bindings silently
-                // match nothing — the render pipeline must call
-                // `StyleRegion::resolved` with the frame's runtime params
-                // before entering the per-cell hot loop so both coords end
-                // up as concrete literals.
-                match (cx.literal(), cy.literal()) {
-                    (Some(cx_lit), Some(cy_lit)) => x == cx_lit && y == cy_lit,
-                    _ => false,
-                }
-            }
-            StyleRegion::Cells(cells) => {
-                // Match if (x, y) is in the cell list
-                cells.iter().any(|c| c.x == x && c.y == y)
-            }
-            StyleRegion::Column(col) => {
-                // Match if x equals the specified column
-                x == *col
-            }
-            StyleRegion::Columns(cols) => {
-                // Match if x is in the specified column list
-                cols.contains(&x)
-            }
-            StyleRegion::ColumnRange { start, end } => {
-                // Match if x is in [start, end) range
-                x >= *start && x < *end
-            }
-            StyleRegion::Modulo {
-                axis,
-                modulus,
-                remainder,
-            } => {
-                // Modulo 0 is invalid - match nothing to avoid panic
-                if *modulus == 0 {
-                    return false;
-                }
-                // Remainder >= modulus is impossible - match nothing
-                if *remainder >= *modulus {
-                    return false;
-                }
-                let coord = match axis {
-                    ModuloAxis::Horizontal => y,
-                    ModuloAxis::Vertical => x,
-                };
-                coord % modulus == *remainder
-            }
-        }
+    /// Thin delegator to [`fnc_style_region_should_style::should_style`].
+    /// For legacy `(x, y, w, h)` call-sites that don't yet have role
+    /// information, use [`Self::should_style_legacy`] which threads
+    /// `None` automatically.
+    pub fn should_style(&self, x: u16, y: u16, role: Option<RoleTag>, area: Rect) -> bool {
+        fnc_style_region_should_style::should_style(self, x, y, role, area)
     }
 
-    /// Get the bounding rectangle for this region.
+    /// Legacy call-shape helper: lift a `(x, y, width, height)` call into
+    /// the new role-aware signature by passing `role = None` and
+    /// `area = Rect::new(0, 0, width, height)`.
     ///
-    /// Returns `Some((min_x, min_y, width, height))` for bounded regions,
-    /// or `None` for unbounded regions like `All`, `TextOnly`, `BorderOnly`, etc.
+    /// This exists for call-sites that cannot yet supply role information
+    /// (for example unit tests for the geometry variants). Do not use it
+    /// on the hot render path — that path SHOULD thread `role` from the
+    /// source `RoleMap`.
+    pub fn should_style_legacy(&self, x: u16, y: u16, width: u16, height: u16) -> bool {
+        self.should_style(x, y, None, Rect::new(0, 0, width, height))
+    }
+
+    /// Get the bounding rectangle for this region within the widget `area`.
     ///
-    /// This is used to compute region-relative coordinates for spatial shaders.
-    pub fn bounding_rect(&self) -> Option<(u16, u16, u16, u16)> {
-        match self {
-            // Unbounded regions - need grid dimensions to compute bounds
-            StyleRegion::All
-            | StyleRegion::TextOnly
-            | StyleRegion::BorderOnly
-            | StyleRegion::BackgroundOnly
-            | StyleRegion::Modulo { .. } => None,
+    /// Thin delegator to [`fnc_style_region_bounding_rect::bounding_rect`].
+    pub fn bounding_rect(&self, area: Rect) -> Option<Rect> {
+        fnc_style_region_bounding_rect::bounding_rect(self, area)
+    }
 
-            // Row-based regions - unbounded in X
-            StyleRegion::Rows(_) | StyleRegion::RowRange { .. } => None,
-
-            // Column-based regions - unbounded in Y
-            StyleRegion::Column(_) | StyleRegion::Columns(_) | StyleRegion::ColumnRange { .. } => {
-                None
-            }
-
-            // Single cell - bounded. Returns None if either coordinate is
-            // an unresolved runtime binding; callers should `resolved()`
-            // the region first.
-            StyleRegion::Cell { x, y } => match (x.literal(), y.literal()) {
-                (Some(xl), Some(yl)) => Some((xl, yl, 1, 1)),
-                _ => None,
-            },
-
-            // Multiple cells - compute bounding box
-            StyleRegion::Cells(cells) => {
-                if cells.is_empty() {
-                    return None;
-                }
-                let min_x = cells.iter().map(|c| c.x).min().unwrap_or(0);
-                let max_x = cells.iter().map(|c| c.x).max().unwrap_or(0);
-                let min_y = cells.iter().map(|c| c.y).min().unwrap_or(0);
-                let max_y = cells.iter().map(|c| c.y).max().unwrap_or(0);
-                let width = max_x.saturating_sub(min_x) + 1;
-                let height = max_y.saturating_sub(min_y) + 1;
-                Some((min_x, min_y, width, height))
-            }
-        }
+    /// Legacy call-shape helper: return the bounding rectangle for this
+    /// region, as a `(x, y, width, height)` tuple, passing a zero-origin
+    /// `Rect` of unbounded size so that the result describes the region
+    /// itself (not any intersection with the widget area).
+    pub fn bounding_rect_legacy(&self) -> Option<(u16, u16, u16, u16)> {
+        self.bounding_rect(Rect::new(0, 0, u16::MAX, u16::MAX))
+            .map(|r| (r.x, r.y, r.width, r.height))
     }
 
     /// Convert grid coordinates to region-relative coordinates.
     ///
     /// Returns `Some((local_x, local_y, region_width, region_height))` if the region
     /// has a computable bounding box, or `None` for unbounded regions.
-    ///
-    /// For unbounded regions, the caller should use grid-relative coordinates.
     pub fn to_local_coords(&self, x: u16, y: u16) -> Option<(u16, u16, u16, u16)> {
-        self.bounding_rect().map(|(min_x, min_y, width, height)| {
-            let local_x = x.saturating_sub(min_x);
-            let local_y = y.saturating_sub(min_y);
-            (local_x, local_y, width, height)
-        })
+        self.bounding_rect_legacy()
+            .map(|(min_x, min_y, width, height)| {
+                let local_x = x.saturating_sub(min_x);
+                let local_y = y.saturating_sub(min_y);
+                (local_x, local_y, width, height)
+            })
     }
 
     /// Return a version of this region with any runtime-parameter bindings
     /// resolved to concrete literals.
     ///
-    /// For variants that carry no `BindableU16` fields (which is every
-    /// variant except `Cell`), the original region is borrowed unchanged —
-    /// no clone, no allocation.
-    ///
-    /// For `Cell` variants whose coordinates are already literals, the
-    /// original region is also borrowed unchanged. Only a `Cell` with at
-    /// least one `Binding` coordinate produces an owned clone with both
-    /// coordinates lowered to `Literal` form.
-    ///
-    /// Callers should invoke this once per layer per frame, outside the
-    /// per-cell hot loop, so that `should_style` and `bounding_rect` can
-    /// read concrete coordinates without threading a `ShaderRuntimeParams`
-    /// reference through the loop body.
-    ///
-    /// A `Binding` that misses the runtime_params map resolves to `0`,
-    /// making the region effectively point at the top-left cell — a safe
-    /// failure mode equivalent to "no hover yet."
+    /// See the module docs for semantics. Borrows when no resolution is
+    /// needed; clones only for `Cell` variants with at least one
+    /// `Binding` coordinate.
     pub fn resolved<'a>(&'a self, runtime_params: &ShaderRuntimeParams) -> Cow<'a, StyleRegion> {
         match self {
             StyleRegion::Cell { x, y } => match (x, y) {
@@ -299,5 +216,6 @@ impl StyleRegion {
     }
 }
 
+
 // <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum</DESC>
-// <VERS>END OF VERSION: 4.2.0</VERS>
+// <VERS>END OF VERSION: 5.1.0</VERS>

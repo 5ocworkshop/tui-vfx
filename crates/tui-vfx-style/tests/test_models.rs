@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/tests/test_models.rs</FILE> - <DESC>Linker file for models integration tests</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>feat/cursor-primitive T24: add test_cls_cursor_shader module for the new CursorShader skeleton</WCTX>
-// <CLOG>Register test_cls_cursor_shader module</CLOG>
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>Sub-plan A Phase A.2 — register three new test modules for the role-aware StyleRegion refactor (fnc_should_style, fnc_bounding_rect, legacy_parse_round_trip)</WCTX>
+// <CLOG>0.8.0: MINOR — register test_fnc_style_region_should_style, test_fnc_style_region_bounding_rect, test_style_region_legacy_parse_round_trip
+// 0.7.0: Register test_cls_cursor_shader module</CLOG>
 
 #[path = "common/mod.rs"]
 mod common;
@@ -40,6 +41,12 @@ mod test_cls_style_effect;
 mod test_cls_style_region;
 #[path = "models/test_cls_style_transition.rs"]
 mod test_cls_style_transition;
+#[path = "models/test_fnc_style_region_should_style.rs"]
+mod test_fnc_style_region_should_style;
+#[path = "models/test_fnc_style_region_bounding_rect.rs"]
+mod test_fnc_style_region_bounding_rect;
+#[path = "models/test_style_region_legacy_parse_round_trip.rs"]
+mod test_style_region_legacy_parse_round_trip;
 #[path = "models/test_cls_wayfinding_node_shader.rs"]
 mod test_cls_wayfinding_node_shader;
 #[path = "models/test_effect_descriptions.rs"]
@@ -48,4 +55,4 @@ mod test_effect_descriptions;
 mod test_serde_roundtrip;
 
 // <FILE>tui-vfx-style/tests/test_models.rs</FILE> - <DESC>Linker file for models integration tests</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

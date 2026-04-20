@@ -1,12 +1,16 @@
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Phase 1 dramatic color-shadow rollout: spec-equivalence for grade-underlying</WCTX>
-// <CLOG>MINOR: Track the new runtime_params field in CompositionSpec fixtures so spec-equivalence coverage keeps compiling as the runtime shader context surface evolves</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Sub-plan A Phase A.2.3 — route every call-site through the `_legacy` shim wrapper so these tests keep speaking the old `&mut OwnedGrid` call shape</WCTX>
+// <CLOG>0.5.0: MINOR — switch to `_legacy` shim helpers; no behavior change.
+// 0.4.0: Track the new runtime_params field in CompositionSpec fixtures so spec-equivalence coverage keeps compiling as the runtime shader context surface evolves</CLOG>
+
+#[path = "test_helpers.rs"]
+mod test_helpers;
+use test_helpers::{render_pipeline_legacy, render_pipeline_with_spec_legacy, render_pipeline_with_spec_area_legacy};
 
 use tui_vfx_compositor::pipeline::{
-    CompositionOptions, CompositionSpec, RenderArea, ShaderLayerSpec, render_pipeline,
-    render_pipeline_with_spec, render_pipeline_with_spec_area,
+    CompositionOptions, CompositionSpec, RenderArea, ShaderLayerSpec,
 };
 use tui_vfx_compositor::types::{MaskCombineMode, ShadowSpec};
 use tui_vfx_shadow::{ShadowConfig, ShadowEdges};
@@ -53,8 +57,8 @@ fn test_render_pipeline_with_spec_matches_options_no_effects() {
     let options = CompositionOptions::default();
     let spec = CompositionSpec::default();
 
-    render_pipeline(&source, &mut dest_options, 6, 4, 0, 0, options, None);
-    render_pipeline_with_spec(&source, &mut dest_spec, 6, 4, 0, 0, &spec, None);
+    render_pipeline_legacy(&source, &mut dest_options, 6, 4, 0, 0, options, None);
+    render_pipeline_with_spec_legacy(&source, &mut dest_spec, 6, 4, 0, 0, &spec, None);
 
     assert_grids_equal(&dest_options, &dest_spec);
 }
@@ -95,8 +99,8 @@ fn test_render_pipeline_with_spec_matches_options_shader_layer() {
         runtime_params: ShaderRuntimeParams::default(),
     };
 
-    render_pipeline(&source, &mut dest_options, 8, 5, 0, 0, options, None);
-    render_pipeline_with_spec(&source, &mut dest_spec, 8, 5, 0, 0, &spec, None);
+    render_pipeline_legacy(&source, &mut dest_options, 8, 5, 0, 0, options, None);
+    render_pipeline_with_spec_legacy(&source, &mut dest_spec, 8, 5, 0, 0, &spec, None);
 
     assert_grids_equal(&dest_options, &dest_spec);
 }
@@ -116,7 +120,7 @@ fn test_render_pipeline_with_spec_area_matches_options() {
     let options = CompositionOptions::default();
     let spec = CompositionSpec::default();
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest_options,
         area.width,
@@ -126,7 +130,7 @@ fn test_render_pipeline_with_spec_area_matches_options() {
         options,
         None,
     );
-    render_pipeline_with_spec_area(&source, &mut dest_spec, area, &spec, None);
+    render_pipeline_with_spec_area_legacy(&source, &mut dest_spec, area, &spec, None);
 
     assert_grids_equal(&dest_options, &dest_spec);
 }
@@ -163,8 +167,8 @@ fn test_render_pipeline_with_spec_matches_options_shadow() {
         runtime_params: ShaderRuntimeParams::default(),
     };
 
-    render_pipeline(&source, &mut dest_options, 6, 4, 0, 0, options, None);
-    render_pipeline_with_spec(&source, &mut dest_spec, 6, 4, 0, 0, &spec, None);
+    render_pipeline_legacy(&source, &mut dest_options, 6, 4, 0, 0, options, None);
+    render_pipeline_with_spec_legacy(&source, &mut dest_spec, 6, 4, 0, 0, &spec, None);
 
     assert_grids_equal(&dest_options, &dest_spec);
 }
@@ -218,12 +222,12 @@ fn test_render_pipeline_with_spec_matches_options_shadow_grade_underlying() {
         runtime_params: ShaderRuntimeParams::default(),
     };
 
-    render_pipeline(&source, &mut dest_options, 6, 4, 0, 0, options, None);
-    render_pipeline_with_spec(&source, &mut dest_spec, 6, 4, 0, 0, &spec, None);
+    render_pipeline_legacy(&source, &mut dest_options, 6, 4, 0, 0, options, None);
+    render_pipeline_with_spec_legacy(&source, &mut dest_spec, 6, 4, 0, 0, &spec, None);
 
     assert_grids_equal(&dest_options, &dest_spec);
 }
 
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

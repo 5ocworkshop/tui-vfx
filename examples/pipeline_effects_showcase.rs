@@ -7,6 +7,7 @@
 use tui_vfx::compositor::types::{BindableValue, RadialOrigin};
 use tui_vfx::content::types::DissolveDirection;
 use tui_vfx::prelude::*;
+use tui_vfx_types::{RoleMap, RoleTag, SemanticScene};
 
 fn main() {
     println!("tui-vfx pipeline effects showcase\n");
@@ -63,7 +64,7 @@ fn snapshot_materialize(progress: f64) -> String {
         Color::rgb(18, 26, 38),
         0,
     );
-    let mut dest = blank_grid(width, height, Color::rgb(8, 12, 18));
+    let dest = blank_grid(width, height, Color::rgb(8, 12, 18));
     let options = CompositionOptions::default().with_mask(MaskSpec::Materialize {
         origin: RadialOrigin::Center,
         seed: 42,
@@ -71,9 +72,12 @@ fn snapshot_materialize(progress: f64) -> String {
         noise: 0.18,
         soft_edge: true,
     });
+    let source_roles = RoleMap::all_background(width as u16, height as u16);
+    let mut dest_scene = SemanticScene::from_grid_with_default_role(dest, RoleTag::Background);
     render_pipeline(
         &source,
-        &mut dest,
+        &source_roles,
+        &mut dest_scene,
         width,
         height,
         0,
@@ -84,7 +88,7 @@ fn snapshot_materialize(progress: f64) -> String {
         },
         None,
     );
-    grid_to_string(&dest)
+    grid_to_string(dest_scene.grid())
 }
 
 fn snapshot_edge_grow(progress: f64) -> String {
@@ -99,7 +103,7 @@ fn snapshot_edge_grow(progress: f64) -> String {
         Color::rgb(230, 235, 245),
         Color::rgb(14, 18, 26),
     );
-    let mut dest = blank_grid(width, height, Color::rgb(14, 18, 26));
+    let dest = blank_grid(width, height, Color::rgb(14, 18, 26));
     let options = CompositionOptions::default().with_filter(FilterSpec::EdgeGrow {
         rest_eighths: 1,
         peak_eighths: 14,
@@ -117,9 +121,12 @@ fn snapshot_edge_grow(progress: f64) -> String {
         progress: BindableValue::static_f32(progress as f32),
         margin_width: 2,
     });
+    let source_roles = RoleMap::all_background(width as u16, height as u16);
+    let mut dest_scene = SemanticScene::from_grid_with_default_role(dest, RoleTag::Background);
     render_pipeline(
         &source,
-        &mut dest,
+        &source_roles,
+        &mut dest_scene,
         width,
         height,
         0,
@@ -130,7 +137,7 @@ fn snapshot_edge_grow(progress: f64) -> String {
         },
         None,
     );
-    grid_to_string(&dest)
+    grid_to_string(dest_scene.grid())
 }
 
 fn snapshot_glyph_cascade(progress: f64) -> String {

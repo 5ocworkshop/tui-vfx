@@ -17,8 +17,12 @@
 //!    `SpatialShaderType::Cursor` and paints the trail tint onto the
 //!    destination grid.
 
+#[path = "pipeline/test_helpers.rs"]
+mod test_helpers;
+use test_helpers::render_pipeline_with_spec_legacy;
+
 use mixed_signals::prelude::SignalContext;
-use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec, render_pipeline_with_spec};
+use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec};
 use tui_vfx_content::cursor::{Cursor, CursorState, fnc_build_cursor_shader};
 use tui_vfx_content::transformers::Typewriter;
 use tui_vfx_style::models::SpatialShaderType;
@@ -90,7 +94,7 @@ fn cursor_shader_paints_wake_tint_on_dest_grid() {
     };
 
     let mut dest = OwnedGrid::new(20, 1);
-    render_pipeline_with_spec(&source, &mut dest, 20, 1, 0, 0, &spec, None);
+    render_pipeline_with_spec_legacy(&source, &mut dest, 20, 1, 0, 0, &spec, None);
 
     // The trail position (row, col) should have had its fg shifted away from
     // the flat grey the source grid holds. That proves the shader dispatched

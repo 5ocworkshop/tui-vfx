@@ -1,11 +1,16 @@
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>VERSION: 5.4.1</VERS>
-// <WCTX>feat/content-ergonomics: clean up pre-existing workspace clippy lint</WCTX>
-// <CLOG>Drop redundant ShadowConfig clone() since the type is Copy (clippy::clone_on_copy)</CLOG>
+// <VERS>VERSION: 5.5.0</VERS>
+// <WCTX>Sub-plan A Phase A.2.3 — route every call-site through the `_legacy` shim wrapper so these tests keep speaking the old `&mut OwnedGrid` call shape while exercising the role-aware signature underneath</WCTX>
+// <CLOG>5.5.0: MINOR — rename render_pipeline → render_pipeline_legacy shim; no behavior change under test.
+// 5.4.1: Drop redundant ShadowConfig clone() since the type is Copy (clippy::clone_on_copy)</CLOG>
+
+#[path = "test_helpers.rs"]
+mod test_helpers;
+use test_helpers::render_pipeline_legacy;
 
 use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;
-use tui_vfx_compositor::pipeline::{CompositionOptions, ShadowSpec, render_pipeline};
+use tui_vfx_compositor::pipeline::{CompositionOptions, ShadowSpec};
 use tui_vfx_compositor::types::{
     ApplyTo, FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, WipeDirection,
 };
@@ -38,7 +43,7 @@ fn test_pipeline_direct_copy_no_effects() {
     let source = create_source_grid(10, 5, 'X');
     let mut dest = OwnedGrid::new(10, 5);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -65,7 +70,7 @@ fn test_pipeline_with_offset() {
         ..Default::default()
     });
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         5,
@@ -100,7 +105,7 @@ fn test_mask_wipe_at_zero_hides_all() {
         ..Default::default()
     });
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -129,7 +134,7 @@ fn test_mask_wipe_at_one_shows_all() {
     let source = create_source_grid(10, 5, 'X');
     let mut dest = OwnedGrid::new(10, 5);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -164,7 +169,7 @@ fn test_mask_checkers_creates_pattern() {
         ..Default::default()
     });
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -192,7 +197,7 @@ fn test_multi_mask_any_mode() {
     let source = create_source_grid(10, 5, 'X');
     let mut dest = OwnedGrid::new(10, 5);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -237,7 +242,7 @@ fn test_filter_dim_reduces_brightness() {
 
     let mut dest = OwnedGrid::new(5, 5);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         5,
@@ -272,7 +277,7 @@ fn test_filter_invert_swaps_colors() {
 
     let mut dest = OwnedGrid::new(5, 5);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         5,
@@ -316,7 +321,7 @@ fn test_filter_vignette_darkens_edges() {
 
     let mut dest = OwnedGrid::new(20, 10);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         20,
@@ -359,7 +364,7 @@ fn test_filter_crt_creates_scanlines() {
 
     let mut dest = OwnedGrid::new(10, 10);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -396,7 +401,7 @@ fn test_sampler_none_passthrough() {
     let source = create_source_grid(10, 5, 'X');
     let mut dest = OwnedGrid::new(10, 5);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -429,7 +434,7 @@ fn test_combined_mask_and_filter() {
         ..Default::default()
     });
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -467,7 +472,7 @@ fn test_zero_dimensions_no_panic() {
     let source = OwnedGrid::new(0, 0);
     let mut dest = OwnedGrid::new(0, 0);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         0,
@@ -497,7 +502,7 @@ fn test_t_boundaries() {
         let source = create_source_grid(10, 5, 'X');
         let mut dest = OwnedGrid::new(10, 5);
 
-        render_pipeline(
+        render_pipeline_legacy(
             &source,
             &mut dest,
             10,
@@ -525,7 +530,7 @@ fn test_empty_effects_passthrough() {
     let source = create_source_grid(10, 5, 'X');
     let mut dest = OwnedGrid::new(10, 5);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -567,7 +572,7 @@ fn test_shadow_extends_render_area() {
         .with_offset(2, 1)
         .with_edges(ShadowEdges::BOTTOM_RIGHT);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -640,7 +645,7 @@ fn test_shadow_with_wipe_mask() {
         .with_edges(ShadowEdges::BOTTOM_RIGHT);
 
     // Wipe at t=0 should hide everything (element and shadow)
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -671,7 +676,7 @@ fn test_shadow_with_wipe_mask() {
         ..Default::default()
     });
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -718,7 +723,7 @@ fn test_shadow_partial_wipe() {
 
     // Extended area is 12x11 for a 10x10 element with offset (2,1)
     // At t=0.5 with top-to-bottom wipe, approximately top 5.5 rows visible
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -773,7 +778,7 @@ fn test_shadow_with_offset() {
         .with_offset(2, 2)
         .with_edges(ShadowEdges::BOTTOM_RIGHT);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         5,
@@ -819,7 +824,7 @@ fn test_shadow_progress_controls_opacity() {
         .with_edges(ShadowEdges::BOTTOM_RIGHT);
 
     // Render at t=0.5
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest_half,
         10,
@@ -835,7 +840,7 @@ fn test_shadow_progress_controls_opacity() {
     );
 
     // Render at t=1.0
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest_full,
         10,
@@ -918,7 +923,7 @@ fn test_shadow_grade_underlying_preserves_destination_glyphs() {
         .with_style(tui_vfx_shadow::ShadowStyle::Solid)
         .with_dramatic_grade();
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -961,7 +966,7 @@ fn test_shadow_grade_underlying_preserves_destination_modifiers() {
         .with_style(tui_vfx_shadow::ShadowStyle::Solid)
         .with_dramatic_grade();
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -1004,7 +1009,7 @@ fn test_shadow_grade_underlying_is_visibly_dramatic() {
         .with_style(tui_vfx_shadow::ShadowStyle::Solid)
         .with_dramatic_grade();
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -1094,7 +1099,7 @@ fn test_shadow_grade_underlying_uses_stronger_bg_grading_than_fg() {
         .with_style(tui_vfx_shadow::ShadowStyle::Solid)
         .with_dramatic_grade();
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -1143,7 +1148,7 @@ fn test_shadow_grade_underlying_progress_controls_visibility() {
 
     // At t=0.0, shadow should be invisible (progress controls shadow opacity)
     let mut dest_t0 = create_grade_dest_grid(20, 20);
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest_t0,
         10,
@@ -1160,7 +1165,7 @@ fn test_shadow_grade_underlying_progress_controls_visibility() {
 
     // At t=1.0, shadow should be fully visible with grading
     let mut dest_t1 = create_grade_dest_grid(20, 20);
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest_t1,
         10,
@@ -1213,7 +1218,7 @@ fn test_shadow_grade_underlying_gradient_softens_penumbra() {
         .with_dramatic_grade();
 
     let mut dest = create_grade_dest_grid(20, 20);
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -1289,7 +1294,7 @@ fn test_shadow_grade_underlying_replaces_emoji_with_dramatic_grade() {
         .with_style(tui_vfx_shadow::ShadowStyle::Solid)
         .with_dramatic_grade(); // dramatic() sets replacement_char = Some('·')
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -1333,7 +1338,7 @@ fn test_shadow_grade_underlying_preserves_emoji_when_replacement_none() {
         .with_composite_mode(ShadowCompositeMode::GradeUnderlying)
         .with_grade(grade);
 
-    render_pipeline(
+    render_pipeline_legacy(
         &source,
         &mut dest,
         10,
@@ -1358,4 +1363,4 @@ fn test_shadow_grade_underlying_preserves_emoji_when_replacement_none() {
 }
 
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>END OF VERSION: 5.4.1</VERS>
+// <VERS>END OF VERSION: 5.5.0</VERS>

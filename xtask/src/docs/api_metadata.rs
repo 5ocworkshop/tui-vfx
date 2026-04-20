@@ -1,7 +1,8 @@
 // <FILE>xtask/src/docs/api_metadata.rs</FILE> - <DESC>API metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>Phase 2 dramatic color-shadow rollout: docs, examples, and quality closure</WCTX>
-// <CLOG>Add composite_mode and grade fields to ShadowConfig TypeDoc</CLOG>
+// <VERS>VERSION: 1.3.0</VERS>
+// <WCTX>Sub-plan A Phase A.2 — refresh render_pipeline* signature strings for the role-aware cutover</WCTX>
+// <CLOG>1.3.0: MINOR — bump all four render_pipeline* signature strings to the new `&RoleMap` + `&mut SemanticScene` shape.
+// 1.2.0: Add composite_mode and grade fields to ShadowConfig TypeDoc</CLOG>
 
 use std::collections::HashMap;
 
@@ -100,7 +101,8 @@ fn extract_entry_points() -> Vec<FunctionDoc> {
             name: "render_pipeline".to_string(),
             signature: r#"pub fn render_pipeline(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     width: usize,
     height: usize,
     offset_x: usize,
@@ -109,25 +111,27 @@ fn extract_entry_points() -> Vec<FunctionDoc> {
     inspector: Option<&mut dyn CompositorInspector>,
 )"#
             .to_string(),
-            description: "Full superset entry point accepting CompositionOptions".to_string(),
+            description: "Full superset entry point accepting CompositionOptions. Since v0.7.0, requires &RoleMap for source roles and &mut SemanticScene for destination. Use `RoleMap::all_background(w, h)` and `SemanticScene::from_grid_with_default_role(grid, RoleTag::Background)` at call-sites without semantic info.".to_string(),
         },
         FunctionDoc {
             name: "render_pipeline_with_area".to_string(),
             signature: r#"pub fn render_pipeline_with_area(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     area: RenderArea,
     options: CompositionOptions<'_>,
     inspector: Option<&mut dyn CompositorInspector>,
 )"#
             .to_string(),
-            description: "Convenience overload using RenderArea".to_string(),
+            description: "Convenience overload using RenderArea. Role-aware signature since v0.7.0.".to_string(),
         },
         FunctionDoc {
             name: "render_pipeline_with_spec".to_string(),
             signature: r#"pub fn render_pipeline_with_spec(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     width: usize,
     height: usize,
     offset_x: usize,
@@ -136,19 +140,20 @@ fn extract_entry_points() -> Vec<FunctionDoc> {
     inspector: Option<&mut dyn CompositorInspector>,
 )"#
             .to_string(),
-            description: "Data-driven entry point using serializable CompositionSpec".to_string(),
+            description: "Data-driven entry point using serializable CompositionSpec. Role-aware signature since v0.7.0.".to_string(),
         },
         FunctionDoc {
             name: "render_pipeline_with_spec_area".to_string(),
             signature: r#"pub fn render_pipeline_with_spec_area(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     area: RenderArea,
     spec: &CompositionSpec,
     inspector: Option<&mut dyn CompositorInspector>,
 )"#
             .to_string(),
-            description: "Spec variant with RenderArea convenience".to_string(),
+            description: "Spec variant with RenderArea convenience. Role-aware signature since v0.7.0.".to_string(),
         },
     ]
 }

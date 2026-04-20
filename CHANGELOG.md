@@ -1,7 +1,8 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.13.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.1 — role-tagging and SemanticScene foundation primitives landed in tui-vfx-types</WCTX> -->
-<!-- <CLOG>1.13.0: add Unreleased entry for the recipe scene composer foundation primitives shipped in tui-vfx-types 0.6.0.
+<!-- <VERS>VERSION: 1.14.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.2 — compositor pipeline + StyleRegion hard cutover to role-aware targeting</WCTX> -->
+<!-- <CLOG>1.14.0: add Unreleased entry for the Phase A.2 hard cutover: render_pipeline* signature change (adds &RoleMap source and &mut SemanticScene destination); StyleRegion legacy bare variants removed from the Rust enum (serde back-compat preserved via custom Deserialize); workspace version bumped 0.6.0 → 0.7.0.
+1.13.0: add Unreleased entry for the recipe scene composer foundation primitives shipped in tui-vfx-types 0.6.0.
 1.12.0: add Unreleased section covering tui-vfx-content sources (RocketsplashImage/Font + blit helper) and pool primitives (TextPool/EffectPool/ImagePool/FontPool/PresetPool + PoolPolicy). Default-on rocketsplash-rt workspace dep.
 1.11.0: add 0.5.0 section covering GlistenBand.speed reconnect + speed_binding, FadeToCanvas.canvas_color_binding and new ShaderRuntimeParamValue::Rgb variant, plus RigidShake.damping_scale_binding.</CLOG> -->
 
@@ -12,6 +13,51 @@ All notable changes to this project will be documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+### Changed — BREAKING — `tui-vfx-compositor` — role-aware pipeline (Sub-plan A Phase A.2) — workspace 0.7.0
+
+The compositor's public render entrypoints now consume role-aware inputs
+so downstream stages (shaders, shadow extrusion) can target cells by
+semantic role rather than guessing from position or glyph content.
+
+- **`render_pipeline`**, **`render_pipeline_with_area`**,
+  **`render_pipeline_with_spec`**, and **`render_pipeline_with_spec_area`**
+  all now take `source_roles: &RoleMap` immediately after `source`, and
+  promote the destination from `&mut dyn Grid` to `&mut SemanticScene`.
+  The internal per-cell hot loop evaluates
+  `StyleRegion::Role(RoleTag)` predicates by reading
+  `source_roles.get((x, y))`.
+- **Migration helper:** call-sites without semantic information should
+  construct `RoleMap::all_background(width, height)` for the source
+  roles and `SemanticScene::from_grid_with_default_role(grid, RoleTag::Background)`
+  for the destination scene. Both are one-liner, zero-extra-allocation
+  in the common case (the `RoleMap` stores a single interned ID per cell).
+- **`StyleRegion`** gains a `Role(RoleTag)` variant for role-based
+  targeting. The legacy bare variants `BorderOnly`, `TextOnly`, and
+  `BackgroundOnly` have been **removed from the Rust enum**. Existing
+  recipe JSON fixtures that still write the legacy strings continue to
+  parse correctly — a custom `Deserialize` impl maps each legacy
+  string to its canonical `Role(RoleTag::…)` form. Serialization always
+  emits the canonical form; the schema converges on round-trip.
+- **Extractions** (OFPF size-budget pre-work):
+  `StyleRegion::should_style` and `StyleRegion::bounding_rect` are now
+  thin delegators to `fnc_style_region_should_style::should_style` and
+  `fnc_style_region_bounding_rect::bounding_rect` respectively. The
+  method signatures have changed to carry the role context:
+  `should_style(x, y, role: Option<RoleTag>, area: Rect) -> bool` and
+  `bounding_rect(area: Rect) -> Option<Rect>`. Two legacy shims
+  (`should_style_legacy(x, y, w, h)` and `bounding_rect_legacy()`)
+  lift the old call-shape onto the new API for call-sites that don't
+  yet have role information — they pass `None` for role and a
+  zero-origin area.
+- **`SemanticScene::grid_mut()`** added so pipeline stages can hand a
+  `&mut dyn Grid` (the concrete `OwnedGrid`) to internal helpers that
+  still speak `Grid`.
+
+Workspace-level version bumped 0.6.0 → 0.7.0. Downstream crates
+(tui-vfx-recipes, gt-design) must migrate their render_pipeline
+call-sites in the same release — A.2 includes the gt-design mechanical
+compile-fix so the workspace continues to build.
 
 ### Added — `tui-vfx-types` — recipe scene composer foundation (Sub-plan A Phase A.1)
 
