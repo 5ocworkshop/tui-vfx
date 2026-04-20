@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.20.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.5 — documentation consistency pass; cross-reference the A.4 unified inspection foundation (tui-vfx-debug::inspection) alongside the existing role-aware pipeline section so the capabilities ref enumerates every public surface shipped by Sub-plan A.</WCTX> -->
-<!-- <CLOG>1.20.0: PATCH — Phase A.5 consistency pass: add "Unified Inspection Foundation (v0.9.0+)" cross-reference at the recommended-debugging-split section so consumers discover the new TraceEvent / TraceSink / InspectionSink surface from this document (full schema in docs/TRACE_EVENT_SCHEMA.md).
+<!-- <VERS>VERSION: 1.21.0</VERS>
+<!-- <WCTX>Add a one-screen Quick Scan up front so authors see the entire primitive inventory without scrolling 985 lines; surface the gt-design /recipe-author skill as the intent-to-primitive mapping front door so this document can lean into being the parameter reference rather than an authoring guide.</WCTX>
+<!-- <CLOG>1.21.0: MINOR — add 'Quick Scan' (one-screen primitive inventory by category) after the TOC; add banner at top noting that intent-to-primitive selection lives in the gt-design /recipe-author skill.
+1.20.0: PATCH — Phase A.5 consistency pass: add "Unified Inspection Foundation (v0.9.0+)" cross-reference at the recommended-debugging-split section so consumers discover the new TraceEvent / TraceSink / InspectionSink surface from this document (full schema in docs/TRACE_EVENT_SCHEMA.md).
 1.19.0: MINOR — add "Role-Aware Pipeline Signature (v0.7.0+)" and "StyleRegion Targeting" subsections describing the new `&RoleMap` + `&mut SemanticScene` parameters and the Role(RoleTag) variant. Note back-compat via legacy bare-string Deserialize.
 1.18.0: Add "Braille cursors" subsection listing the 4 static ctors; extend "Scan" subsection with BraillePulse and BrailleRowFlip rows noting base-glyph override behavior; extend the debug recipe catalog with 6 new braille recipe entries.</CLOG>
 
@@ -11,14 +12,35 @@
 > Last verified: 2026-04-13
 > When adding new effects, update the relevant section below.
 
-This document provides a complete inventory of visual effects available in tui-vfx,
-derived from the actual source code. Use this as a reference when planning visual
-designs for terminal applications.
+This document is the **parameter reference** for every visual effect primitive available in tui-vfx, derived from the actual source code. Use it when authoring recipes and you need exact field names, types, defaults, and ranges.
 
-Before authoring new effects or recipes, read
-[`TERMINAL_MOTION_HEURISTICS.md`](TERMINAL_MOTION_HEURISTICS.md) for the
-terminal-specific perception and compositing constraints that should shape the
-design.
+> **Looking for "what should I use for X?"** That decision belongs in the gt-design `/recipe-author` skill, which carries the intent → primitive selection guidance, the 17 foundational composed patterns, the render-order/conflict matrix, and the quality bar. This document is the parts catalog the skill reaches into.
+
+Before authoring new effects or recipes, read [`TERMINAL_MOTION_HEURISTICS.md`](TERMINAL_MOTION_HEURISTICS.md) for the terminal-specific perception and compositing constraints that should shape the design.
+
+---
+
+## Quick scan — primitive inventory by category
+
+One-screen overview. Names link to the per-section detail below.
+
+**Masks** (transition shapes, 12 types) — [`None`](#masks-transition-shapes), [`Wipe`](#masks-transition-shapes) (16 directions), [`Dissolve`](#masks-transition-shapes), [`Checkers`](#masks-transition-shapes), [`Blinds`](#masks-transition-shapes), [`Iris`](#masks-transition-shapes), [`Diamond`](#masks-transition-shapes), [`NoiseDither`](#masks-transition-shapes), [`Materialize`](#masks-transition-shapes), [`PathReveal`](#masks-transition-shapes), [`Radial`](#masks-transition-shapes), [`Cellular`](#masks-transition-shapes)
+
+**Filters** (post-processing, 27 types) — basic: [`None`](#filters-post-processing), [`Dim`](#filters-post-processing), [`Invert`](#filters-post-processing), [`Tint`](#filters-post-processing), [`Greyscale`](#filters-post-processing) · ambient: [`Vignette`](#filters-post-processing), [`PatternFill`](#filters-post-processing), [`BrailleDust`](#filters-post-processing), [`CharsetNoise`](#filters-post-processing) · retro: [`Crt`](#filters-post-processing), [`InterlaceCurtain`](#filters-post-processing) · motion: [`MotionBlur`](#filters-post-processing) · sub-cell: [`ColorBridgedShade`](#filters-post-processing), [`SubPixelBar`](#filters-post-processing), [`SubcellLight`](#filters-post-processing), [`SubCellShake`](#filters-post-processing), [`RigidShake`](#filters-post-processing) · indicators: [`HoverBar`](#filters-post-processing), [`UnderlineWipe`](#filters-post-processing), [`BracketEmphasis`](#filters-post-processing), [`DotIndicator`](#filters-post-processing), [`EdgeGrow`](#filters-post-processing) · stylistic: [`PillButton`](#filters-post-processing) · animated: [`GlistenSweep`](#filters-post-processing), [`KittScanner`](#filters-post-processing), [`ShadeScanner`](#filters-post-processing)
+
+**Samplers** (coordinate distortion, 7 types) — [`None`](#samplers-coordinate-distortion), [`SineWave`](#samplers-coordinate-distortion), [`Ripple`](#samplers-coordinate-distortion), [`Shredder`](#samplers-coordinate-distortion), [`FaultLine`](#samplers-coordinate-distortion), [`Crt`](#samplers-coordinate-distortion), [`CrtJitter`](#samplers-coordinate-distortion)
+
+**Spatial Shaders** (per-cell styling, 23 types) — structural: [`AmbientOcclusion`](#spatial-shaders-per-cell-styling), [`Bevel`](#spatial-shaders-per-cell-styling), [`Glow`](#spatial-shaders-per-cell-styling), [`ConcealedLight`](#spatial-shaders-per-cell-styling), [`Diffusion`](#spatial-shaders-per-cell-styling), [`FocusField`](#spatial-shaders-per-cell-styling), [`LinearGradient`](#spatial-shaders-per-cell-styling) · contextual: [`AffordanceWake`](#spatial-shaders-per-cell-styling), [`WayfindingNode`](#spatial-shaders-per-cell-styling), [`BorderSweep`](#spatial-shaders-per-cell-styling), [`GlistenBand`](#spatial-shaders-per-cell-styling), [`PulseWave`](#spatial-shaders-per-cell-styling), [`FocusedRowGradient`](#spatial-shaders-per-cell-styling), [`RevealWipe`](#spatial-shaders-per-cell-styling) · expressive: [`BarberPole`](#spatial-shaders-per-cell-styling), [`Radar`](#spatial-shaders-per-cell-styling), [`Highlighter`](#spatial-shaders-per-cell-styling), [`Reflect`](#spatial-shaders-per-cell-styling), [`StochasticSparkle`](#spatial-shaders-per-cell-styling), [`GlitchLines`](#spatial-shaders-per-cell-styling), [`NeonFlicker`](#spatial-shaders-per-cell-styling) · tactile: [`SubCellShake`](#spatial-shaders-per-cell-styling), [`ChromaticEdge`](#spatial-shaders-per-cell-styling)
+
+**Style Effects** (temporal, 11 types) — [`FadeIn`](#style-effects-temporal-animations), [`FadeOut`](#style-effects-temporal-animations), [`Pulse`](#style-effects-temporal-animations), [`Rainbow`](#style-effects-temporal-animations), [`Glitch`](#style-effects-temporal-animations), [`NeonFlicker`](#style-effects-temporal-animations), [`Spatial`](#style-effects-temporal-animations), [`ItalicWindow`](#style-effects-temporal-animations), [`ColorShift`](#style-effects-temporal-animations), [`ColorFade`](#style-effects-temporal-animations), [`RigidShakeStyle`](#style-effects-temporal-animations)
+
+**Content Transformers** (text effects, 15 types) — [`Typewriter`](#content-transformers-text-effects), [`Scramble`](#content-transformers-text-effects), [`GlitchShift`](#content-transformers-text-effects), [`ScrambleGlitchShift`](#content-transformers-text-effects), [`Dissolve`](#content-transformers-text-effects), [`Marquee`](#content-transformers-text-effects), [`SlideShift`](#content-transformers-text-effects), [`Mirror`](#content-transformers-text-effects), [`Morph`](#content-transformers-text-effects), [`Numeric`](#content-transformers-text-effects), [`Odometer`](#content-transformers-text-effects), [`Redact`](#content-transformers-text-effects), [`SplitFlap`](#content-transformers-text-effects), [`WrapIndicator`](#content-transformers-text-effects), [`GlyphCascade`](#content-transformers-text-effects)
+
+**Shadows** (4 styles) — [`HalfBlock`](#shadows) (default), [`Braille`](#shadows), [`Solid`](#shadows), [`Gradient`](#shadows) — all support `source_region` role-aware extrusion since v0.8.0
+
+**Composition order** — `Sampler → Shadow → Element → Masks → Filters → Shaders` (per-cell, every frame). Shadow output carries `RoleTag::Shadow` (v0.8.0+).
+
+**For intent → primitive guidance**, the per-shader posture, the 17 composed patterns, and the quality bar, invoke `/recipe-author` in any GT-Design session. This document is its parameter reference.
 
 ---
 
@@ -982,4 +1004,4 @@ Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EV
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.20.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.21.0</VERS> -->
