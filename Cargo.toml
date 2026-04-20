@@ -49,7 +49,7 @@ rand = "0.8"
 smallvec = "1.11"
 
 # Sister projects (co-designed; see docs/internal/plans/splash-library-and-vfx-integration.md)
-rocketsplash-rt = { path = "../rocketsplash/crates/rocketsplash-rt", version = "0.2" }
+rocketsplash-rt = "0.2.2"
 
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
 # <VERS>END OF VERSION: 0.1.0</VERS>
