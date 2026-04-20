@@ -270,5 +270,5 @@ mod tests {
     }
 }
 
-// <FILE>crates/tui-vfx/crates/tui-vfx-content/src/pool/cls_preset_pool.rs</FILE>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <FILE>crates/tui-vfx-content/src/pool/cls_preset_pool.rs</FILE>
+// <VERS>END OF VERSION: 0.2.0</VERS>
