@@ -412,7 +412,11 @@ produces (its stage already ran). The tags ARE observable:
 - **immediately** via `destination.roles().get((x, y))` in code that
   runs after the pipeline returns,
 - **next frame** if the scene persists into another render pass,
-- **in `tui-vfx-trace`** event streams (captured at emit time).
+- **in `tui-vfx-trace`** event streams (captured at emit time) — see
+  [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md) for the
+  `ShadowCellApplied` variant shape (`source_role: Option<RoleTag>`,
+  `source_empty: bool`) and the `Role(RoleTag::Shadow)` selector that
+  targets the role write-back.
 
 This ordering is the reason the spec §8.3 reference to "downstream
 filter can target shadow cells specifically" points at either a

@@ -1,7 +1,8 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.16.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.4 — tui-vfx-debug becomes logger + unified inspection foundation; InspectionSinkBridge in tui-vfx-compositor; workspace bumped 0.8.0 → 0.9.0.</WCTX> -->
-<!-- <CLOG>1.16.0: add Unreleased entry for Phase A.4 — tui-vfx-debug inspection module (TraceEvent / TraceEnvelope / TraceSelector / TraceFilter / StageMask / InspectionSink / TraceSink / TraceReport with NDJSON round-trip); additive InspectionSinkBridge in tui-vfx-compositor so CompositorInspector callbacks forward into any InspectionSink; criterion dev-dep + two benches; workspace bumped 0.8.0 → 0.9.0. CompositorInspector stays at crates/tui-vfx-compositor/src/traits/pipeline_inspector.rs.
+<!-- <VERS>VERSION: 1.17.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.5 — documentation consistency pass + end-to-end integration test; consolidates A.1-A.4 as one coherent Unreleased section and adds the cross-phase regression net.</WCTX> -->
+<!-- <CLOG>1.17.0: PATCH — Phase A.5 consolidation: add "Sub-plan A (recipe scene composer foundation) — final composition check" summary at the head of the Unreleased block; point at the end-to-end integration test and the Sub-plan A handoff doc. No new public API introduced by A.5; existing A.1-A.4 entries preserved in order.
+1.16.0: add Unreleased entry for Phase A.4 — tui-vfx-debug inspection module (TraceEvent / TraceEnvelope / TraceSelector / TraceFilter / StageMask / InspectionSink / TraceSink / TraceReport with NDJSON round-trip); additive InspectionSinkBridge in tui-vfx-compositor so CompositorInspector callbacks forward into any InspectionSink; criterion dev-dep + two benches; workspace bumped 0.8.0 → 0.9.0. CompositorInspector stays at crates/tui-vfx-compositor/src/traits/pipeline_inspector.rs.
 1.15.0: add Unreleased entry for Phase A.3 — role-aware ShaderContext, ShadowConfig.source_region, fnc_extract_shadow_envelope + CellMask, render_shadow_into_scene, shadow-stage RoleTag::Shadow write-back; workspace bumped 0.7.0 → 0.8.0. ShadowConfig is no longer Copy (RoleTag::Custom carries Arc<str>).
 1.14.0: add Unreleased entry for the Phase A.2 hard cutover: render_pipeline* signature change (adds &RoleMap source and &mut SemanticScene destination); StyleRegion legacy bare variants removed from the Rust enum (serde back-compat preserved via custom Deserialize); workspace version bumped 0.6.0 → 0.7.0.
 1.13.0: add Unreleased entry for the recipe scene composer foundation primitives shipped in tui-vfx-types 0.6.0.
@@ -15,6 +16,21 @@ All notable changes to this project will be documented in this file.
 This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+### Sub-plan A (recipe scene composer foundation) — final composition check (Phase A.5)
+
+All four preceding phase sections (A.1 → A.4) in this Unreleased block
+compose as one coherent release. An end-to-end integration test
+(`crates/tui-vfx/tests/test_foundation_end_to_end.rs`) exercises every
+phase in one scenario: `SemanticScene` with non-trivial role tags
+(A.1) → `render_pipeline` with a `Role(Border)` shader (A.2) → shadow
+stage with `source_region: Border` writing `RoleTag::Shadow`
+write-back (A.3) → `InspectionSinkBridge` capturing pipeline events
+into a `TraceSink` with NDJSON round-trip (A.4). No new public API is
+introduced by A.5; it is a documentation-consistency pass and a
+cross-phase regression net. See the Sub-plan A handoff at
+`gt-design/docs/superpowers/handoffs/2026-04-20-sub-plan-A-handoff.md`
+for the full public-API surface Sub-plan B can rely on.
 
 ### Added — `tui-vfx-debug`, `tui-vfx-compositor` — unified inspection foundation (Sub-plan A Phase A.4) — workspace 0.9.0
 

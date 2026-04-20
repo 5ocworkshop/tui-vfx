@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.19.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.2 — document role-aware render_pipeline signature and StyleRegion::Role(RoleTag) variant</WCTX> -->
-<!-- <CLOG>1.19.0: MINOR — add "Role-Aware Pipeline Signature (v0.7.0+)" and "StyleRegion Targeting" subsections describing the new `&RoleMap` + `&mut SemanticScene` parameters and the Role(RoleTag) variant. Note back-compat via legacy bare-string Deserialize.
+<!-- <VERS>VERSION: 1.20.0</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.5 — documentation consistency pass; cross-reference the A.4 unified inspection foundation (tui-vfx-debug::inspection) alongside the existing role-aware pipeline section so the capabilities ref enumerates every public surface shipped by Sub-plan A.</WCTX> -->
+<!-- <CLOG>1.20.0: PATCH — Phase A.5 consistency pass: add "Unified Inspection Foundation (v0.9.0+)" cross-reference at the recommended-debugging-split section so consumers discover the new TraceEvent / TraceSink / InspectionSink surface from this document (full schema in docs/TRACE_EVENT_SCHEMA.md).
+1.19.0: MINOR — add "Role-Aware Pipeline Signature (v0.7.0+)" and "StyleRegion Targeting" subsections describing the new `&RoleMap` + `&mut SemanticScene` parameters and the Role(RoleTag) variant. Note back-compat via legacy bare-string Deserialize.
 1.18.0: Add "Braille cursors" subsection listing the 4 static ctors; extend "Scan" subsection with BraillePulse and BrailleRowFlip rows noting base-glyph override behavior; extend the debug recipe catalog with 6 new braille recipe entries.</CLOG>
 
 # tui-vfx Capabilities Reference
@@ -905,6 +906,22 @@ on round-trip.
 
 For a concrete LLM-ready workflow, see `docs/PIPELINE_PROBE_LLM_GUIDE.md`. The guide now documents frame dumps, timelines, and diff-based debugging flows.
 
+### Unified Inspection Foundation (v0.9.0+)
+
+Since v0.9.0 (Sub-plan A Phase A.4) the workspace also ships a canonical AI-consumable trace surface in `tui-vfx-debug::inspection`:
+
+| Capability | Type / Function | Purpose |
+|------------|-----------------|---------|
+| Canonical event taxonomy | `TraceEvent` (18 variants, `#[non_exhaustive]`) | One enum covering lifecycle / resolution / composition / pipeline stages. |
+| Event wrapper | `TraceEnvelope` | Event + `frame_no` + `t_ms` + optional `recipe_id` + monotonic `seq_in_frame`. |
+| Declarative filter | `TraceFilter` + `StageMask` bitflags | Selectors (OR) + stage mask (AND) + frame range + time range; emit-site short-circuit. |
+| Sink trait | `InspectionSink` (object-safe, `Send + Sync`) | `fn report(&self, envelope: TraceEnvelope)`. |
+| Default sink impl | `TraceSink` + `with_capacity(filter, n)` | Thread-safe, optionally-bounded (drop-oldest with `dropped` counter). |
+| Report + NDJSON | `TraceReport::to_ndjson(writer)` / `from_ndjson(reader)` | AI / CLI round-trip. |
+| Compositor bridge | `tui-vfx-compositor::traits::cls_inspection_sink_bridge::InspectionSinkBridge` | Additive: implements `CompositorInspector` and forwards callbacks into any `InspectionSink`. `CompositorInspector` itself stays put — existing `ProbeInspector` / `StageInspector` / `TraceInspector` impls are unchanged. |
+
+Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md). The Sub-plan B CLI consumer (`tui-vfx-trace`) will ingest NDJSON produced here.
+
 ---
 
 ## Quick Reference: Effect Categories
@@ -965,4 +982,4 @@ For a concrete LLM-ready workflow, see `docs/PIPELINE_PROBE_LLM_GUIDE.md`. The g
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.14.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.20.0</VERS> -->
