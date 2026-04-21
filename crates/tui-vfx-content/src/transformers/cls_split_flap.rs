@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions, flip-preview glyph, hinge-window flicker, per-column dispersion patterns)</DESC>
-// <VERS>VERSION: 3.2.0</VERS>
-// <WCTX>Add three orthogonal authenticity knobs — flip_preview (substitute the ▔ hinge frame with the Unicode 180°-turned target glyph so viewers catch a brief upside-down preview mid-flip, simulating the back of a Vestaboard-style flap), flip_flicker (replace the ordered hinge sequence with a per-(column,bucket)-hashed pool of {block, hinge, turned-target, target} variants so the flap reads as chaotic mechanical flicker rather than a clean rotation), and dispersion (SplitFlapDispersion enum controlling per-column start delay: Legacy preserves cascade+authentic_timing, Cascade/Authentic/Simultaneous/Random/CenterOut/EdgeIn/Shuffled produce distinct wave shapes across the board). All three keyed off the same deterministic FNV-1a hash so frame-to-frame output is stable and testable; all default to legacy behavior.</WCTX>
-// <CLOG>MINOR: add SplitFlapDispersion enum with 8 variants (Legacy preserves back-compat), add flip_preview/flip_flicker/dispersion fields to SplitFlap, add with_flip_preview / with_flip_flicker / with_dispersion builders, wire into transform() — flip_preview substitutes HINGE_CHARS[2] with char_turn(target), flip_flicker overrides the whole hinge window with a per-(col,bucket)-hashed 8-variant pool, dispersion computes column start-delays via column_start_delay() helper. Existing recipes unchanged; all new fields default to off/Legacy.</CLOG>
+// <VERS>VERSION: 3.2.1</VERS>
+// <WCTX>PATCH: fix multi-line cascade/dispersion bug. Pre-3.2.1 the transform loop tracked column position via the linear char index `i`, so for a 5-row × 44-col message `i` reached 220+, and with cascade=0.04 the rightmost columns / lower rows got delays of 8+ and never settled. Now tracks per-row `col_in_row` (resets after \n) and normalizes column_start_delay output to [0,1] using max_row_width, so cascade is interpretable as "max delay as fraction of total animation time" regardless of message length. Legacy dispersion still uses raw `i` for byte-for-byte back-compat.</WCTX>
+// <CLOG>PATCH 3.2.1: column_start_delay now takes (col_in_row, max_row_width), returns [0,1]-normalized. Added per-row col_in_row tracking in transform loop with reset on \n/\r and increment per non-newline char at every exit path. Computes max_row_width via target.lines().map(|l| l.chars().count()).max() once before the loop. Fixes cascade/random/center_out/edge_in/shuffled appearing broken on multi-line boards; authentic + simultaneous + legacy unaffected. Updated dispersion_center_out test math to match normalized space.
+// MINOR 3.2.0: add SplitFlapDispersion enum with 8 variants (Legacy preserves back-compat), add flip_preview/flip_flicker/dispersion fields to SplitFlap, add with_flip_preview / with_flip_flicker / with_dispersion builders, wire into transform() — flip_preview substitutes HINGE_CHARS[2] with char_turn(target), flip_flicker overrides the whole hinge window with a per-(col,bucket)-hashed 8-variant pool, dispersion computes column start-delays via column_start_delay() helper. Existing recipes unchanged; all new fields default to off/Legacy.</CLOG>
 
 use crate::traits::TextTransformer;
 use crate::utils::char_turn;
@@ -322,32 +323,42 @@ impl SplitFlap {
         Self::fnv_hash(a.wrapping_mul(0x01000193).wrapping_add(b))
     }
 
-    /// Non-Legacy dispersion patterns reduce to a per-column start-delay
-    /// value in "cascade units" — the same unit the existing cascade
-    /// branch uses (`(i * cascade)` subtracted from `progress * speed`).
+    /// Per-column start-delay normalized to `[0, 1]` — the fraction of
+    /// total animation time before this column begins rotating. The
+    /// caller multiplies the result by the recipe's `cascade` value, so
+    /// `cascade` is interpretable as "max delay as fraction of total
+    /// animation time" regardless of message length.
+    ///
+    /// `col_in_row` resets per row in the transform loop, so multi-line
+    /// messages cascade independently per row instead of accumulating
+    /// delay across rows (the pre-3.2.1 bug that made cascade > 0
+    /// unusable on any board taller than one line).
+    ///
     /// Legacy and Authentic return 0 from here; their timing is handled
     /// in the main transform() branch selection.
-    fn column_start_delay(&self, col: usize, total_cols: usize) -> f64 {
-        let n = total_cols.max(1) as f64;
+    fn column_start_delay(&self, col_in_row: usize, max_row_width: usize) -> f64 {
+        let n = max_row_width.max(1) as f64;
+        let last = (n - 1.0).max(1.0);
         match self.dispersion {
             SplitFlapDispersion::Legacy | SplitFlapDispersion::Authentic => 0.0,
-            SplitFlapDispersion::Cascade => col as f64,
             SplitFlapDispersion::Simultaneous => 0.0,
+            SplitFlapDispersion::Cascade => (col_in_row as f64) / last,
             SplitFlapDispersion::Random => {
-                let h = Self::fnv_hash(col as u32) as f64 / u32::MAX as f64;
-                h * n
+                Self::fnv_hash(col_in_row as u32) as f64 / u32::MAX as f64
             }
             SplitFlapDispersion::CenterOut => {
                 let center = (n - 1.0) / 2.0;
-                (col as f64 - center).abs()
+                let max_dist = center.max(1.0);
+                (col_in_row as f64 - center).abs() / max_dist
             }
             SplitFlapDispersion::EdgeIn => {
                 let center = (n - 1.0) / 2.0;
                 let max_dist = center.max(1.0);
-                max_dist - (col as f64 - center).abs()
+                (max_dist - (col_in_row as f64 - center).abs()) / max_dist
             }
             SplitFlapDispersion::Shuffled => {
-                (Self::fnv_hash(col as u32) as usize % total_cols.max(1)) as f64
+                let rank = (Self::fnv_hash(col_in_row as u32) as usize) % max_row_width.max(1);
+                rank as f64 / last
             }
         }
     }
@@ -424,13 +435,16 @@ impl TextTransformer for SplitFlap {
                 .unwrap_or(0)
         };
 
-        // Pre-count total columns (graphemes counted via char iterator —
-        // matches the per-char loop below). Used by non-Legacy dispersion
-        // variants to normalize their delay curves.
-        let total_cols = target
-            .chars()
-            .filter(|c| !matches!(c, '\n' | '\r' | '\t'))
-            .count()
+        // Pre-compute the longest row's width — non-Legacy dispersion
+        // variants normalize their delay curves against this so cascade
+        // semantics are "max delay as fraction of total animation time"
+        // regardless of message length. Without this, multi-line boards
+        // would never settle on lower rows.
+        let max_row_width = target
+            .lines()
+            .map(|line| line.chars().count())
+            .max()
+            .unwrap_or(1)
             .max(1);
 
         // authentic_timing: pre-scan the message to find the maximum
@@ -453,6 +467,11 @@ impl TextTransformer for SplitFlap {
         };
 
         let mut out = String::with_capacity(target.len());
+        // Per-row column position — resets after every newline so each
+        // row of a multi-line board independently cascades from col 0.
+        // Without this reset, dispersion delay would accumulate across
+        // rows and lower rows would never settle for any cascade > 0.
+        let mut col_in_row: usize = 0;
         for (i, target_char) in target.chars().enumerate() {
             // Structural characters (newlines, tabs, carriage returns)
             // pass through unchanged at every frame. This is load-bearing
@@ -462,6 +481,10 @@ impl TextTransformer for SplitFlap {
             // rather than flipping through the pool like content.
             if target_char == '\n' || target_char == '\r' || target_char == '\t' {
                 out.push(target_char);
+                if target_char == '\n' || target_char == '\r' {
+                    col_in_row = 0;
+                }
+                col_in_row += 1;
                 continue;
             }
 
@@ -480,6 +503,7 @@ impl TextTransformer for SplitFlap {
                     } else {
                         out.push(pool[0]);
                     }
+                    col_in_row += 1;
                     continue;
                 }
             };
@@ -492,6 +516,7 @@ impl TextTransformer for SplitFlap {
             // unchanged flaps never rotate.
             if this_flap_distance < 0.0001 {
                 out.push(target_char);
+                col_in_row += 1;
                 continue;
             }
 
@@ -507,20 +532,25 @@ impl TextTransformer for SplitFlap {
             } else {
                 // Cascade model — each column starts at a delay determined
                 // by the dispersion pattern, then walks to completion at
-                // progress=1.0. Legacy dispersion uses the column index
-                // directly (matching pre-3.2.0 behavior); other variants
-                // derive the delay from column_start_delay().
+                // progress=1.0. Legacy dispersion uses the linear char
+                // index (preserves pre-3.2.0 behavior, including its
+                // multi-line bug where lower rows never settle for
+                // cascade > 0). Non-Legacy variants use col_in_row +
+                // max_row_width to produce a normalized [0, 1] delay
+                // that resets per row, so cascade is interpretable as
+                // "max delay as fraction of total animation time."
                 let effective_cascade = f64::from(cascade) * jitter_factor;
                 let delay_units = if matches!(self.dispersion, SplitFlapDispersion::Legacy) {
                     i as f64
                 } else {
-                    self.column_start_delay(i, total_cols)
+                    self.column_start_delay(col_in_row, max_row_width)
                 };
                 (progress * f64::from(speed) - (delay_units * effective_cascade)).clamp(0.0, 1.0)
             };
 
             if char_progress >= 1.0 {
                 out.push(target_char);
+                col_in_row += 1;
                 continue;
             }
 
@@ -532,6 +562,7 @@ impl TextTransformer for SplitFlap {
                 let block_idx =
                     (sub * cycle_rate * BLOCK_CHARS.len() as f64) as usize % BLOCK_CHARS.len();
                 out.push(BLOCK_CHARS[block_idx]);
+                col_in_row += 1;
                 continue;
             }
 
@@ -570,6 +601,7 @@ impl TextTransformer for SplitFlap {
                     ];
                     let h = Self::fnv_hash2(i as u32, bucket) as usize;
                     out.push(pool[h % pool.len()].unwrap_or(target_char));
+                    col_in_row += 1;
                     continue;
                 }
 
@@ -587,6 +619,7 @@ impl TextTransformer for SplitFlap {
                     HINGE_CHARS[glyph_idx]
                 };
                 out.push(glyph);
+                col_in_row += 1;
                 continue;
             }
 
@@ -612,6 +645,7 @@ impl TextTransformer for SplitFlap {
                 let glyph_idx = (step_frac * HINGE_CHARS.len() as f64)
                     .min(HINGE_CHARS.len() as f64 - 1.0) as usize;
                 out.push(HINGE_CHARS[glyph_idx]);
+                col_in_row += 1;
                 continue;
             }
 
@@ -630,6 +664,7 @@ impl TextTransformer for SplitFlap {
             };
 
             out.push(pool.get(current_idx).copied().unwrap_or(target_char));
+            col_in_row += 1;
         }
         Cow::Owned(out)
     }
