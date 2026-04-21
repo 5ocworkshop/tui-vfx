@@ -162,6 +162,24 @@ This slice is complete when:
 
 ---
 
+
+## 65 — Performance posture of the first slice
+
+The first slice should be judged as a **structural spine**, not as the final render-loop representation.
+
+This means:
+- it is acceptable for authoring types and normalized IR to prioritize clarity and canonicalization first
+- it is **not** acceptable to accidentally let canonicalization stay in the per-frame hot path forever
+
+The expected follow-on is a compiled execution-plan layer after normalized IR stabilizes.
+
+The first slice should therefore optimize for:
+- avoiding obviously unnecessary allocations in structural code where easy
+- keeping canonicalization off the render loop
+- preserving enough shape for later compaction/caching
+
+but it does not yet need to be the final frame-budget-optimized representation.
+
 ## 70 — Immediate execution companion
 
 The live execution companion for this first code slice is:

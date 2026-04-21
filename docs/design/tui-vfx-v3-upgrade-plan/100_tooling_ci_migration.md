@@ -115,6 +115,7 @@ V3 does not ship until each of the following is green:
 - [ ] `recipe-probe` and `tui-vfx-trace` produce V3-aware reports; trace event taxonomy finalized (Decision 5 implementation track).
 - [ ] `fnc_run_debug_recipes_qc.rs` passes against the V3 debug-recipes corpus.
 - [ ] `xtask docs generate` produces V3-shape `effect_schemas.json`, `capabilities.json`, `ai-context.md`, `CAPABILITIES.md`.
+- [ ] `tui-vfx-recipes` provides a repo-local `docs-v3-generate` / `docs-v3-check` path for the new `src/v3` spine until the broader generator story is unified.
 - [ ] `docs/RECIPE_AUTHORING_WORKFLOW.md`, `SCHEMA_REFERENCE.md`, `AUTHORING_GUIDE.md`, `PROCEDURAL_SOURCES.md`, `PIPELINE_VALIDATOR_LLM_GUIDE.md` rewritten for V3.
 - [ ] `docs/templates/capabilities.toml` editorial entries match the V3 effect surface.
 - [ ] `cargo run --example demo` loads V3 recipes from the migrated corpus; optional V2 dual-load behind a feature flag per Chapter 50's transition-window semantics.
