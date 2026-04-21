@@ -276,6 +276,9 @@
       "period_ms": 4200
       # ^ The canonical cycle. Signals inside the pipeline inherit this
       #   period unless they explicitly override via their own period_ms.
+      #   Resolved direction: V3 does NOT add a separate first-class Timer
+      #   primitive at this stage. Timing remains intentionally distributed
+      #   across lifecycle/clock, pipeline.timing, and payload-local fields.
     },
 
     # -----------------------------------------------------------------------
@@ -351,10 +354,9 @@
     # top-level `pipeline` applies AFTER per-layer pipelines complete, to
     # the composed cell grid.
     #
-    # Gaps: procedural generator `params` are currently opaque
-    # (serde_json::Value) — Q30 surfaces whether V3 wants typed schemas
-    # per generator_id. Q33 flags sibling-anchored placement
-    # (anchor: "below_sibling", sibling_id: "...") as a new V3 capability.
+    # Resolved direction after audit: procedural generators use a registry key
+    # (`schema_ref`) for validator-visible typed params, and sibling-anchored
+    # placement is a first-class scene capability rather than a side note.
 
     "scene": {
       "layers": [
@@ -371,6 +373,11 @@
           "source": {
             "type": "procedural",
             "source_id": "solid_color_fade",
+            "schema_ref": "procedural.solid_color_fade.v1",
+            # ^ Resolved direction: procedural sources keep a stable `source_id`
+            #   plus a validator-visible schema registry key. Concrete `params`
+            #   remain data, but tooling validates them against the registered
+            #   per-generator schema rather than treating them as opaque blobs.
             "params": {
               "target_color": { "type": "rgb", "r": 5, "g": 5, "b": 15 },
               "fade_in_duration_ms": 250,
@@ -418,7 +425,13 @@
         "enter_ms": 500,
         "exit_ms": 400,
         "enter_ease": "quad_out",
-        "exit_ease": "quad_in"
+        "exit_ease": "quad_in",
+        "enter_path": { "type": "linear" },
+        "exit_path": { "type": "linear" },
+        "enter_from": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
+        "exit_to": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
+        "enter_snap": { "type": "round" },
+        "exit_snap": { "type": "round" }
         # ^ Easing vocabulary from mixed-signals: linear, quad_in/out/in_out,
         #   cubic_in/out/in_out, quart_in/out/in_out, quint_in/out/in_out,
         #   sine_in/out/in_out, expo_in/out/in_out, circ_in/out/in_out,
@@ -956,6 +969,13 @@
 # (`filter` in this case), but library governance/docs should recognize them as
 # a distinct category.
 #
+# Resolved architecture notes from this synthesis batch:
+# - motion-path / from / to / snapping live on `pipeline.timing`
+# - procedural generators use `source_id` + `schema_ref` + typed params
+# - sibling-anchored scene placement is a first-class scene capability
+# - canonical normalized IR is the recommended tooling-facing representation
+# - template + variants authoring remains above the concrete recipe tree
+#
 # ============================================================================
 # 6. GAPS REQUIRING PLAN-LEVEL DECISION
 # ============================================================================
@@ -963,36 +983,16 @@
 # Each has a reference to the final audit section of the migration log.
 #
 # MAJOR gaps (loader cannot ship without these):
-#   A. motion_path + offscreen from/to (final audit #3, #4)
-#      V2 `pipeline.<phase>.motion_path: {type}` + `from`/`to` offscreen.
-#      Recipes arrive/depart via geometry-aware trajectories (linear, arc,
-#      bezier, spring, bounce, etc.) that V3's pipeline.timing currently
-#      can't express. Options:
-#        (a) extend pipeline.timing with a motion_path field
-#        (b) introduce a MotionPath step kind
-#        (c) drive via Decision 5 scene-layer placement
-#      Lean: (a). Per Intention 38, trial-deserialize against
-#      tui-vfx-geometry::PathType for validation.
-#
-#   B. SignalGraph JSON shape (final audit #6, Q3)
+#   A. SignalGraph JSON shape (final audit #6, Q3)
 #      Used pervasively (breath, drift, pulse, spatial_signal).
 #      Needs mixed-signals alignment.
 #
 # MINOR gaps (less urgent, can ship V3 with these as TBD):
 #   C. base_style.modifiers (bold/italic/underline) — final audit #1.
 #   D. pipeline timing snapping (round/floor/ceil) — final audit #2.
-#   E. Procedural-generator typed params per generator_id — Q30.
-#   F. Sibling-anchored scene-layer placement — Q33.
-#   G. wave_correlated shading (primitive vs SignalGraph) — Q32.
-#   H. fractional_stripe_overlay / sub-cell primitive — Q34.
-#   I. Scope coords as ParamValue<u16> — Q29 (partially documented above).
-#   J. Region compression / derived selectors for large `Cells` lists.
-#   K. Scoped style-lane model beyond `base_style` + style_effect leaves.
-#   L. Higher-level template + variants authoring above concrete recipes.
-#   M. Hybrid transition templates as reusable composition forms.
-#   N. Rule-engine families (e.g. glyph_style) as a first-class docs/governance category.
-#   O. Ballistic celebratory particles / fireworks as a likely new generator family.
-#   P. Canonical normalized IR for validator/viewer/tooling.
+#   B. wave_correlated shading (primitive vs SignalGraph) — Q32.
+#   C. fractional_stripe_overlay / sub-cell primitive — Q34.
+#   D. Celebratory ballistic particles / fireworks as a likely new generator family.
 #
 # DROP-RECOMMENDED:
 #   - pipeline.animation_type (V2 vestigial; no observed behavior).
