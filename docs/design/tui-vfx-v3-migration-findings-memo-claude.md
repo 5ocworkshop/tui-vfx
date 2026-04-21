@@ -1,6 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-migration-findings-memo-claude.md</FILE> - <DESC>Detailed memo of findings from the V2→V3 debug-recipes migration exercise. Recommendations for schema additions/tweaks/changes plus new concepts worth considering. Intended as one of two parallel memos; the other is authored by a different reviewer doing the same migration work. The two will be compared and synthesized into a refined V3 schema draft.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Synthesize 258 V3 conceptual-recipe-migration findings (6 stages across debug_recipes + madeira-flag + wargames + extended barber_pole) into recommendations for the schema draft plus new concepts plus plan-level question promotions. Companion memo by a different reviewer is forthcoming.</WCTX> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Expand §60 from "four new questions to promote" to "my proposed answers on every outstanding schema-related question in Chapter 80, with an explicit ask for your take on each." Covers Q#1, #3, #4, #5, #6, #9, #13, #15, #16, #17, #19, #21, #22, #23 (existing in Chapter 80) plus Q#24-27 (proposed new, from the previous version of this memo). Excludes Q#7, #8, #10, #11, #20 as scheduling / process / project-scope rather than schema-shape questions. The §60 restructure turns the memo into a concrete input channel for the companion reviewer memo rather than a one-way findings report.</WCTX> -->
+<!-- <CLOG>1.1.0: MINOR — restructure §60 to cover all 18 schema-related Chapter 80 questions with per-question proposed answer + ask-for-input. Update §80 summary to reflect. No changes to §10-50 validation findings, §50 watch items, §70 deferrable, or the four proposed new questions (now folded into §60 alongside the existing 14).</CLOG> -->
 <!-- <CLOG>1.0.0: initial memo. Headline assessment (all refinement-level, no approach blockers), validated decisions, 10 schema draft refinements, 4 new concepts for discussion, 4 plan-level open questions to promote (Q#24-27), watch items, deferrables.</CLOG> -->
 
 # V3 Migration Findings Memo — Claude
@@ -8,7 +9,11 @@
 **Author:** Claude (one of two parallel reviewers)
 **Scope:** Conceptual migration of 258 V2 recipes to draft V3 shape across 6 stages
 **Date:** 2026-04-21
-**Source documents:** `tui-vfx-v3-upgrade-debug-recipes-migration-log.md` (34-question schema journal, 7-item drift table, final V2↔V3 coverage audit), `tui-vfx-v3-schema-draft.json` (specification-by-example)
+**Source documents (full filesystem paths for readers outside the repo):**
+
+- `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md` — 34-question schema journal, 7-item drift table, final V2↔V3 coverage audit
+- `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-schema-draft.json` — specification-by-example of the draft V3 schema (strip `#`-prefixed lines for valid JSON)
+- `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-upgrade-plan/` — the 11-chapter V3 upgrade plan (referenced throughout as "Chapter NN"); `80_open_questions.md` is the source of the Q#N numbering used in §60 of this memo
 
 ---
 
@@ -263,54 +268,142 @@ The 56-file wargames migration was batch-transformed by Python because every chi
 
 **Watch:** the full mainline-corpus re-authoring pass (Chapter 50 Phase 2) will be the first real stress test for V3's authoring-briefing infrastructure. Don't assume wargames-like corpus segments will teach V3 anything new; budget for real re-authoring surprises when the rest of the corpus lands.
 
-## 60 — Open questions to promote to plan level
+## 60 — Outstanding schema-related questions — my proposed answers and a request for yours
 
-Four new Open Questions surfaced by this memo's analysis. Proposed numbering continues from Q#23 (the timer question the other reviewer added):
+Chapter 80 of the V3 upgrade plan has 27 numbered open questions. Four (Q#2, #12, #14, #18) are already resolved as Concerns B/F/D/C. Of the remaining 23, I'm treating 18 as schema-related (they shape the data model, the authoring surface, the validator, or the canonical seam). The other five (Q#7 GTD sequencing, Q#8 Relative Light scheduling, Q#10 viewer project placement, Q#11 docs rollout, Q#20 surface identity) are process / scheduling / project-scope and outside this memo's remit.
 
-### 10 — Open Q #24: Canonical normalized IR as explicit V3 artifact
+For each of the 18 schema questions I've included what I'd pick today. I'd like your lean on each — either a direct answer, a disagreement with rationale, or a "no opinion / defer to you." I'm not looking for consensus on every item before we compare memos; I'm looking for surface area where we converge (fast-track to plan) vs diverge (discuss explicitly).
 
-**Question:** should V3 define a canonical normalized IR that `canonicalize(raw_recipe) → normalized_recipe` transforms author syntax into, with validator / viewer / property tests / migration equivalence all operating on the normalized form?
+Four entries (Q#24-27) are **proposed additions** to Chapter 80 that surfaced in this memo's analysis rather than in the existing numbering. They're flagged as `(proposed new)` inline.
 
-**Current state:** partially implicit in Open Q #9 (validator redesign) and Q#10 (viewer), both of which the reviewer suggested should build on a normalized IR. Neither question names the IR as a standalone artifact with its own spec.
+### 10 — Q#1: Does the `kind` discriminator survive?
 
-**Stakes if yes:** a fourth tooling track (canonicalizer) joins the cutover work but every other tool becomes simpler (single validation surface, single property-test surface, single viewer target, single migration-equivalence target). Also makes Q#5 (named-factory vs primitive equivalence) trivially testable.
+**My answer:** yes, keep the four-way `{mask, filter, sampler, shader}` discriminator on Step, plus `content_effect` and `style_effect` for the two content/style kinds the migration confirmed belong alongside the original four. Across 258 recipes every step classified cleanly into exactly one kind; I never hit an ambiguous "is this a mask or a filter" case that would signal the boundary is mushy. The discriminator also anchors validator messages, authoring guides, and trace-event taxonomy — collapsing it saves bytes in the recipe and adds cost everywhere else.
 
-**Stakes if no:** each tool re-implements its own normalization implicitly; authoring-surface variations multiply tooling code paths; round-trip fidelity is not checked.
+**Asking:** do you see any step-kind that wants to straddle two discriminators, or any case in your migration that felt like an artificial classification?
 
-**Lean:** yes, make it a first-class V3 deliverable. Tachyonfx's `to_dsl()` is a model.
+### 20 — Q#3: Phase scoping — per-step field or container?
 
-### 20 — Open Q #25: Primitive catalog governance
+**My answer:** per-step field. Stage 3's complex compositions all landed as `{kind: parallel, children: [...]}` with each child carrying its own `phase` tag. Container-only would have forced a group-by-phase outer structure the authors didn't want — they wanted group-by-semantic-intent (one Parallel per effect cluster) with phase orthogonal. Matches Scope's per-step attachment, keeps the normalized shape regular. Container propagation can still exist as sugar but per-step is the model.
 
-**Question:** what is the explicit criterion for promoting a shader to a new base primitive kind (sibling of `colored_overlay`) vs adding a new `Pattern` variant vs leaving it as an earned-name composition vs not adding it at all?
+**Asking:** did any of your migrations want a container-scoped phase that made per-step feel wrong, or was per-step natural across the corpus you touched?
 
-**Current state:** Decision 2 names the three classification tiers but doesn't specify the promotion criterion. During migration I made 10 "primitive itself" classifications using judgment; reviewers might reasonably classify differently.
+### 30 — Q#4: Composition combine semantics — explicit or defaulted?
 
-**Stakes:** the primitive catalog size is a major schema surface. Ungoverned growth bloats it; overly-strict governance leaves authoring holes.
+**My answer:** per-kind defaults, container override available, canonicalize to explicit form in the normalized IR (ties to Q#24). Masks default to declared `combine`, filters chain in order, samplers compose via HintRef — the migration never needed a Parallel container to carry its own combine policy. Authors won't write the combine field at authoring time in 95% of cases; tooling that needs explicit combines reads the normalized IR where it's always present.
 
-**Lean:** document three explicit criteria:
-1. **New base primitive kind** when `ColoredOverlay + Pattern` cannot express the spatial function (generator-class, positional, per-channel).
-2. **New Pattern variant** when a spatial-distribution function isn't covered by existing variants AND has at least two distinct authoring use cases (rule-of-two for Patterns, not rule-of-three, because the debug corpus has per-variant single-recipe coverage).
-3. **Earned-name composition** when specific parameter tuning encodes design judgment worth locking in (Decision 2's existing criterion).
+**Asking:** did you see cases where per-kind defaults felt magical or surprising? The "canonicalize to explicit" escape hatch depends on Q#24 landing.
 
-### 30 — Open Q #26: Content-effect catalog governance parity with Decision 2
+### 40 — Q#5: Named-factory and compositional JSON coexistence
 
-**Question:** does V3 apply Decision 2's primitive-vs-earned-name / Tier-1/2/3 framing to content effects (typewriter, scramble, split_flap, etc.) the same way it applies to shaders?
+**My answer:** support both, privilege named factories in authoring guides for discoverability, expose primitive/compositional form as the advanced path. Property-test equivalence for curated pairs. Don't mix the two inside a single step payload (`type: colored_overlay` with a named-factory shortcut field at the same level would be a validator error). Canonicalize both to the same normalized IR so downstream tooling sees one shape.
 
-**Current state:** Decision 2 is shader-scoped by its wording. Content effects are treated as unrestricted factories. The catalog (~16 named effects) has similar structure to the shader catalog (27 named shaders) and similar authoring pressures.
+**Asking:** do you have a view on whether mixing is permitted within one recipe (across steps, not within one step)? My lean is yes — different steps can freely mix — but I could see a case for enforcing recipe-wide consistency for readability.
 
-**Stakes:** if content effects grow the same way shaders have, they'll accumulate the same discoverability problems Decision 2 was written to solve for shaders.
+### 50 — Q#6: Scope primitive — open-closed tension
 
-**Lean:** yes, apply Decision 2 symmetrically. Primitive content effects (`redact`, `mirror`, `wrap_indicator` — minimal params, no design judgment encoded) get primitive treatment. Earned-name content effects (`split_flap` with authenticity flags, `typewriter` with cursor sub-configs) get library-factory treatment. Scramble-glitch-shift is a composition worth flagging as composition-earning-name.
+**My answer:** closed enum with a registered-named escape hatch. The 258-recipe migration closed cleanly under the closed vocabulary (area / row-or-column / cell / channel / content / theme-role / algebraic compose); no recipe needed an escape. For the rare case, `{kind: predicate, name: "<registered>"}` resolves to a Rust-side registry — no arbitrary eval strings, no closures in JSON. Caching as bitmasks still works because the registry entry declares static-or-dynamic at registration time.
 
-### 40 — Open Q #27: Factory payload opacity governance
+**Asking:** did your migration turn up cases the closed vocabulary couldn't handle? If so I'd like to know which ones before declaring the vocabulary frozen.
 
-**Question:** what's the explicit process for promoting a pattern that's factory-internal in initial V3 to schema-surface later? Rule of three? Design review? Implicit promotion on every authoring-guide pass?
+### 60 — Q#9: Validator redesign
 
-**Current state:** the schema draft says "factory-internal stays factory-internal" for Q9/Q13/Q14/Q16/Q18. But Q15 (row_mask) is the precedent where factory-internal turned out to need scope-surface promotion. Without a governance rule, future Q15s get handled ad-hoc.
+**My answer:** treat as core V3 work, not support. The validator operates on the normalized IR (Q#24), not on raw authoring syntax, so authoring-surface sugar can evolve without re-plumbing validation. Rule set: scope coherence (no `GlyphMatches` on a mask where glyphs haven't been produced yet), tree/container invariants (no empty Sequence; no Parallel with conflicting masks), hint producer/consumer resolution (every HintRef resolves to exactly one producer in scope), token/binding contracts (`requires_substitutions` and `requires_bindings` match recipe usage), migration equivalence for critical fixtures (Concern F gate material). Strict mode default.
 
-**Stakes:** recipes written against factory-internal conventions need re-migration each time a pattern gets promoted. Explicit governance keeps that from happening silently.
+**Asking:** do you see any of these categories as deferrable to post-V3, or any missing that should be core?
 
-**Lean:** rule of three at authoring-guide writing time. When writing the authoring-guide for a new-in-V3 factory that shares a pattern with two existing factories, flag the shared pattern for schema-surface review. Promote to schema-surface only if the pattern has three factories and a clean abstraction. Otherwise document the factory-internal convention and move on.
+### 70 — Q#13: PhaseSet granularity
+
+**My answer:** `phase: PhaseSet` at the step level, where PhaseSet is any subset of `{Enter, Dwell, Exit}`. `All` remains a valid shortcut for `{Enter, Dwell, Exit}`. Single-phase strings (`"enter"`, `"dwell"`, `"exit"`) remain valid shortcuts for singleton sets. Container-scoped propagation coexists as sugar but per-step is the normative model (consistent with Q#3). This closes the "enter+dwell but not exit" expressiveness gap without inventing a new container type.
+
+**Asking:** does the singleton-string-as-shortcut feel right or does it conflict with future schema evolution? I could see an argument for always-array for schema regularity at the cost of authoring brevity.
+
+### 80 — Q#15: Vocabulary refresh scope
+
+**My answer:** comprehensive-but-selective, closer to the reviewer's position than the plan's default "full pass":
+
+- **Rename** `auto_dismiss_ms` → `duration_ms`. Toast-archaeology term.
+- **Rename / rework** `continuous` — fold into the tree schema's phase model rather than keeping a parallel mechanism.
+- **Rename** preview seam nouns/modules per Q#19 (`PreviewItem` → `PlaybackItem`, `src/preview/` → `src/playback/`).
+- **Keep** `anchor`. It's a neutral geometry term in a grid context; reviewer's argument persuades me.
+- **Keep** `enter/dwell/exit` unless the translation study surfaces cases where they're actively misleading. My migration didn't surface such cases.
+- **Drop** `notification`-prefixed field names where they exist.
+
+**Asking:** do you lean comprehensive (full pass) or selective (targeted)? If selective, which of the above do you disagree with?
+
+### 90 — Q#16: Cross-step hint resolution rules
+
+**My answer:** same-layer visibility by default; cross-layer requires explicit export/import semantics if ever supported (probably not in V3); hint lifetime is per-frame ephemeral; multiple producers for the same visible hint within the same layer is a validator error (not first-wins, not last-wins, not last-producer-silently-wins). Bare names (`displacement`) rather than scoped names (`layer.flag.displacement`) — scope is implicit in the layer boundary. Hint composition (step A's hint multiplied by step B's hint) is a future `HintOp<T>` if ever needed; V3 ships hint-as-direct-bind only.
+
+**Asking:** do you see hint composition as V3-scoped or post-V3? My lean is post-V3 because the migration didn't need it, but if your migration turned up a case I missed, worth knowing.
+
+### 100 — Q#17: Primitive library / `$use` fragment composition
+
+**My answer:** ship v1 minimal and non-blocking. One fragment mechanism (`$use` referencing a `definitions` block in a file listed in `uses: []`), flattened at load time, parameterization via the Substitutions system from Concern D, no fragment inheritance in v1, strict addressability + introspection from day one. The 258-recipe migration didn't need `$use` — `extends` handled the 57-recipe wargames hierarchy cleanly and `template + variants` handled one-file-many-recipes cases. `$use` is demand-driven; ship the minimum and grow it when real cases surface.
+
+**Asking:** do you have a case from your migration where `$use` would have been cleaner than the existing two mechanisms? If not, we may be able to defer the whole question to post-V3 with no cost.
+
+### 110 — Q#19: "Preview" naming for the canonical engine seam
+
+**My answer:** rename to `Playback*`. `PreviewItem` → `PlaybackItem`, `PreviewManager` → `PlaybackManager`, module `src/preview/` → `src/playback/`. The reviewer's `PlaybackPlan` / `PlaybackUnit` suggestion is worth considering once scenes and multi-layer content are first-class — I'd pick `PlaybackPlan` if we're willing to commit to the "a plan, not an item" framing now, but `PlaybackItem` is the safer default if we're not. Bundle with V3 rename event so it's one migration, not two.
+
+**Asking:** `PlaybackItem` or `PlaybackPlan`? I'll take whichever you prefer; either is better than `Preview*` but I'd rather not re-litigate later.
+
+### 120 — Q#21: Recipe metadata fields
+
+**My answer:** keep non-blocking for V3 core. Ship the optional `metadata` block with `use_cases: [string]` as the only required field (validator warns if missing). Other fields (`aesthetic_tags`, `mood`, `related_themes`, `maturity_era`, `authoring_notes`, `last_reviewed`) optional, open-string vocabulary initially, tighten during the corpus re-authoring phase once patterns emerge. Metadata lives sibling to `config`, not inside it. Keep discovery metadata clearly separate from routing metadata (Q#18's `RoutingRole` / `SurfaceIntent`).
+
+**Asking:** do you agree `use_cases` is the only required field, or would you add one more?
+
+### 130 — Q#22: Motion path and offscreen trajectory migration
+
+**My answer:** Option A — extend `pipeline.timing` with `enter_path`, `exit_path`, `enter_from`, `exit_to`. Motion path is a recipe-level concern (governs the whole recipe's arrival and departure), not step-level (doesn't belong in the per-cell pipeline vocabulary) and not layer-level exclusively (non-scene-layer recipes still need slide-in semantics). Path types trial-deserialize against `tui-vfx-geometry::PathType` per Intention 38. Scene-layer-level placement animations from Decision 5 are additive and orthogonal — a scene layer can have its own `placement.enter_path` independent of the recipe-level path, with layer-level winning for that layer's trajectory.
+
+**This is the one blocker where I'd like strong alignment before V3 implementation starts.** Criterion 2 of the release gate (offscreen / slide fixtures) can't pass if V3 can't express motion-path recipes, and my migration didn't include motion-path-using recipes (they live in the mainline corpus that Phase 2 re-authoring will hit). If you disagree with Option A I want to hear it now.
+
+**Asking:** A, B, or C? If A, any sub-question answers (defaults, scene-layer interaction, ParamValue<PathSpec>) you feel strongly about?
+
+### 140 — Q#23: Timer story — distributed mechanisms vs first-class primitive
+
+**My answer:** defer introducing a unified Timer primitive to post-V3. Document the three-mechanism model (`pipeline.timing` for whole-recipe envelope, `mixed-signals` envelopes for signal evaluation, per-effect opt-in durations for localized content-effect timing) as intentional with clear authoring guidance: "reach for pipeline.timing for whole-recipe lifecycle, reach for mixed-signals ADSR / DampedSpring for per-step envelopes, reach for factory-internal durations only when the effect owns its own animation." If the corpus re-authoring phase surfaces concrete cases where the distributed model strains (staggered entrances, Sequence handoff), promote a Timer primitive then with real cases driving the design.
+
+**Reasoning:** the competitive-analysis pressure from tachyonfx is real but my migration didn't find a case where the distributed model failed to express the intent. Introducing a fourth arm of `StepInput<T>` speculatively adds a concept site without a concrete win. Intention 24 applies — earned-place discipline.
+
+**Asking:** did your migration surface a case where a first-class Timer would have been cleaner than the three-mechanism model? If so this becomes a much closer call.
+
+### 150 — Q#24 (proposed new): Canonical normalized IR as explicit V3 artifact
+
+**My answer:** yes, first-class V3 deliverable. Define `canonicalize(raw_recipe) → normalized_recipe`; validator (Q#9) / viewer (Q#10) / property tests (Q#5) / migration equivalence (Concern F) all operate on the normalized form. Tachyonfx's `to_dsl()` is the model — a canonical serialization that round-trips and that all downstream tooling consumes. Fourth tooling track at the cost of simplifying every other tool.
+
+The canonicalizer lives in `tui-vfx-recipes` (close to the schema). The IR is both a Rust type and a serializable JSON form so external tools can consume it without pulling the recipe runtime. Authoring-syntax sugar can evolve without IR version bumps — the stability contract is on the IR, not on the author surface.
+
+**Asking:** do you see this as worth the fourth tooling track, or do you prefer each tool implementing its own normalization implicitly? The implicit path is cheaper in week-one and more expensive in year-two.
+
+### 160 — Q#25 (proposed new): Primitive catalog governance
+
+**My answer:** document three explicit criteria:
+
+1. **New base primitive kind** (sibling of `colored_overlay`) when `ColoredOverlay + Pattern` cannot express the spatial function. Trigger cases: generator-class (produces content rather than distributing a color), positional (needs cell geometry beyond Pattern), per-channel (operates on fg/bg/glyph independently).
+2. **New Pattern variant** when a spatial-distribution function isn't covered AND has at least two distinct authoring use cases. Rule-of-two for Patterns, not rule-of-three, because the debug corpus has single-recipe-per-variant coverage by design — demanding three would strand variants as factory-internal.
+3. **Earned-name composition** when parameter tuning encodes design judgment worth locking in (Decision 2's existing criterion unchanged).
+
+Decision authority: design-lead review at authoring-guide write time.
+
+**Asking:** rule-of-two vs rule-of-three for Pattern variants is my lightest call. If you'd hold to rule-of-three strictly I could be persuaded.
+
+### 170 — Q#26 (proposed new): Content-effect catalog governance parity with Decision 2
+
+**My answer:** apply Decision 2 symmetrically to content effects. Primitive content effects (`redact`, `mirror`, `wrap_indicator` — minimal params, no design judgment) get primitive treatment. Earned-name content effects (`split_flap` with authenticity flags, `typewriter` with cursor sub-configs, `scramble` with charset control) get library-factory treatment. Compositions (`scramble_glitch_shift`) get composition-earning-name treatment. Content domain is structurally different enough from shader domain that I'd *not* introduce a parallel `ContentPattern` enum — the text-producing surface doesn't compose the way color-distributing functions do — but the three-tier governance model applies.
+
+**Asking:** do you agree content effects deserve the Decision 2 treatment, and do you agree `ContentPattern` as a parallel enum would be over-engineering?
+
+### 180 — Q#27 (proposed new): Factory payload opacity governance
+
+**My answer:** rule-of-three at authoring-guide writing time. When writing the authoring-guide for a new-in-V3 factory that shares a pattern with two existing factories, flag the shared pattern for schema-surface review. Promote to schema-surface only if the pattern has three factories and a clean abstraction. Otherwise document the factory-internal convention and move on.
+
+The schema-surface enumeration lives in the validator manifest (since the validator already needs it). Recipes written against factory-internal conventions that later get promoted go through a deprecation window with a migration hint at validation failure — not auto-rewrite, not strict-mode error without a hint. Demotion (schema-surface → factory-internal) doesn't exist; schema promotion is sticky because recipes are already authored against it.
+
+**Asking:** do you see a case for a faster promotion path (design-review-on-demand) or a slower one (rule-of-four)? Rule-of-three is the default I'd start from but isn't sacred.
 
 ## 70 — Deferrable (clearly not blocking)
 
@@ -327,13 +420,13 @@ The following were surfaced but shouldn't influence V3 shape:
 
 **New concepts for discussion (4 items):** canonical normalized IR, StepInput<T> fourth arm, primitive catalog governance, content-effect catalog parity.
 
-**Plan-level Open Questions to add (4 items):** Q#24 canonical IR, Q#25 primitive-catalog governance, Q#26 content-effect Decision-2 parity, Q#27 factory-payload-opacity governance.
+**My proposed answers on the 18 outstanding schema-related Chapter 80 questions (§60):** Q#1 keep discriminator; Q#3 per-step phase field; Q#4 per-kind defaults + explicit-in-IR; Q#5 both forms, don't mix within a step, property-test equivalence; Q#6 closed enum + registered predicate; Q#9 validator on normalized IR; Q#13 per-step PhaseSet; Q#15 comprehensive-but-selective; Q#16 same-layer hints, ephemeral, error on duplicate producer; Q#17 `$use` minimal and non-blocking; Q#19 rename to `Playback*`; Q#21 `use_cases` required, rest optional; **Q#22 Option A (motion in `pipeline.timing`) — my one strong-alignment ask**; Q#23 defer Timer primitive; Q#24 (new) canonical IR as first-class V3 deliverable; Q#25 (new) three promotion criteria, rule-of-two for Patterns; Q#26 (new) Decision 2 symmetrically to content effects, no parallel `ContentPattern` enum; Q#27 (new) rule-of-three at authoring-guide write time.
 
 **Watch items (4):** SignalGraph-shape-mixed-signals alignment, factory-internal migration cost, procedural generator params priority, wargames-migration non-representativeness.
 
 **Deferrable (4):** Q17, Q18, Q13, fourth StepInput arm.
 
-None of these are blocking. The V3 approach carries.
+None of these are blocking for V3 shape. The V3 approach carries. The one place I want strong alignment before implementation starts is Q#22 (motion path).
 
 <!-- <FILE>docs/design/tui-vfx-v3-migration-findings-memo-claude.md</FILE> -->
 <!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
