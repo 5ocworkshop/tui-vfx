@@ -1,9 +1,10 @@
-// <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions)</DESC>
-// <VERS>VERSION: 3.1.0</VERS>
-// <WCTX>Upgrade SplitFlap from a linear-progression text walk into a physically-accurate mechanical Solari departure-board transformer. Add nine new fields — cycles (every char flips through satisfying pool distance regardless of target index), jitter (per-column mechanical timing imperfection), charset (Alpha/Digits/Uppercase pool selection), settle_overshoot (brief bounce past target), leading_blocks (opening █▓▒░ flash), settle_hinge (closing █→▀→▔→—→▁→▄→letter rotation using upper/lower half blocks plus em-dash hinge), spring_settle (remap hinge timing through DampedSpring for authentic gravity-fall-plus-bounce), authentic_timing (all columns start simultaneously from blank, landing time proportional to flap distance — not sequential cascade), from_message (message-to-message transitions where each column rotates from its previous char to its new char through shortest forward-only drum path). Add solari_preset(animation_ms) factory that computes Solari-authentic values (35ms/flap target, matching real Alitalia Linate and Frankfurt Hbf boards). All new fields default to values that preserve 2.1.0 linear-walk behavior.</WCTX>
-// <CLOG>v3.0.0: complete physical Solari board implementation. Add SplitFlapCharset enum (Alpha/Digits/Uppercase), nine new struct fields all with #[serde(default)] for backward compat, solari_preset + with_from_message builders, estimated_flap_ms helper, AUTHENTIC_FLAP_MS + ALPHA_POOL_SIZE constants, BLOCK_CHARS + HINGE_CHARS rotation sequences, DampedSpring hinge remapping. ContentEffect::SplitFlap grows seven optional fields; existing `{ "type": "split_flap", "speed": X, "cascade": Y }` recipes deserialize unchanged.</CLOG>
+// <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions, flip-preview glyph, hinge-window flicker, per-column dispersion patterns)</DESC>
+// <VERS>VERSION: 3.2.0</VERS>
+// <WCTX>Add three orthogonal authenticity knobs — flip_preview (substitute the ▔ hinge frame with the Unicode 180°-turned target glyph so viewers catch a brief upside-down preview mid-flip, simulating the back of a Vestaboard-style flap), flip_flicker (replace the ordered hinge sequence with a per-(column,bucket)-hashed pool of {block, hinge, turned-target, target} variants so the flap reads as chaotic mechanical flicker rather than a clean rotation), and dispersion (SplitFlapDispersion enum controlling per-column start delay: Legacy preserves cascade+authentic_timing, Cascade/Authentic/Simultaneous/Random/CenterOut/EdgeIn/Shuffled produce distinct wave shapes across the board). All three keyed off the same deterministic FNV-1a hash so frame-to-frame output is stable and testable; all default to legacy behavior.</WCTX>
+// <CLOG>MINOR: add SplitFlapDispersion enum with 8 variants (Legacy preserves back-compat), add flip_preview/flip_flicker/dispersion fields to SplitFlap, add with_flip_preview / with_flip_flicker / with_dispersion builders, wire into transform() — flip_preview substitutes HINGE_CHARS[2] with char_turn(target), flip_flicker overrides the whole hinge window with a per-(col,bucket)-hashed 8-variant pool, dispersion computes column start-delays via column_start_delay() helper. Existing recipes unchanged; all new fields default to off/Legacy.</CLOG>
 
 use crate::traits::TextTransformer;
+use crate::utils::char_turn;
 use mixed_signals::physics::DampedSpring;
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use serde::{Deserialize, Serialize};
@@ -66,6 +67,48 @@ impl SplitFlapCharset {
     }
 }
 
+/// Dispersion pattern: how per-column start delays are distributed across
+/// the message. Controls the visual shape of "when each flap begins
+/// rotating" — the wave vs popcorn vs ripple distinction that reads as
+/// the board's personality.
+///
+/// `Legacy` (default) preserves every pre-3.2.0 recipe byte-for-byte: it
+/// honors the existing `cascade` and `authentic_timing` fields. All other
+/// variants override those and produce their own delay curve.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum SplitFlapDispersion {
+    /// Honor the pre-3.2.0 `cascade` + `authentic_timing` fields. Default
+    /// for backward compatibility — no existing recipe sees a change.
+    #[default]
+    Legacy,
+    /// Explicit left-to-right wave: column i starts at time `i * cascade`.
+    Cascade,
+    /// Physical-Solari: all columns start simultaneously, landing at
+    /// times proportional to their per-column flap distance. Equivalent
+    /// to `authentic_timing: true` regardless of the field's value.
+    Authentic,
+    /// All columns start and land together (cascade forced to 0, no
+    /// distance-proportional settle). Good for a snappy full-board swap.
+    Simultaneous,
+    /// Per-column FNV-hashed start delay — "popcorn" pattern. Each flap
+    /// begins at a pseudo-random moment within the dispersion window;
+    /// deterministic per column index.
+    Random,
+    /// Ripple from the midpoint outward: columns nearest the center
+    /// start first, edges start last.
+    CenterOut,
+    /// Ripple from both edges inward: leftmost and rightmost columns
+    /// start first, middle columns start last.
+    EdgeIn,
+    /// Cascade in hash-scrambled column order — every column gets a
+    /// unique rank in [0, N), but the rank order is pseudo-random.
+    /// Reads as a wave without a visible direction.
+    Shuffled,
+}
+
 /// Split-flap (Solari) text transformer.
 #[derive(Debug, Clone)]
 pub struct SplitFlap {
@@ -96,6 +139,30 @@ pub struct SplitFlap {
     ///
     /// Default: false (traditional walk showing intermediate letters).
     pub rolling_flip: bool,
+    /// Substitute the `▔` frame (index 2 of the HINGE rotation) with the
+    /// Unicode 180°-turned target glyph, so viewers catch a brief
+    /// upside-down preview of the arriving letter mid-flip. Models the
+    /// back-of-the-flap glimpse in Vestaboard-style displays. Falls back
+    /// to the original `▔` when the target has no honest turned form
+    /// (Q, J, digits 1/2/4/5/7, non-ASCII). Requires `settle_hinge: true`.
+    ///
+    /// Has no effect when `flip_flicker` is true — flicker owns the
+    /// entire hinge window.
+    pub flip_preview: bool,
+    /// Replace the ordered HINGE sequence with a per-(column, time-bucket)
+    /// FNV-hashed pool draw across `{█, ▀, ▔, —, ▁, ▄, target, turn(target)}`.
+    /// Reads as chaotic mechanical flicker — closer to the actual
+    /// viewer-perceived look of a real Solari flap rotating in ~35ms
+    /// than any ordered rotation. Per-column phase is automatic via the
+    /// hash, so the whole board doesn't pulse in lockstep. Requires
+    /// `settle_hinge: true` (the flicker lives inside the hinge window).
+    ///
+    /// Accessibility note: this is perceptible flicker. Opt-in.
+    pub flip_flicker: bool,
+    /// Dispersion pattern controlling per-column start delays — the
+    /// visual "shape" of which flaps begin rotating first. Default
+    /// `Legacy` preserves existing `cascade`/`authentic_timing` behavior.
+    pub dispersion: SplitFlapDispersion,
 }
 
 impl SplitFlap {
@@ -121,6 +188,9 @@ impl SplitFlap {
             authentic_timing: false,
             from_message: None,
             rolling_flip: false,
+            flip_preview: false,
+            flip_flicker: false,
+            dispersion: SplitFlapDispersion::Legacy,
         }
     }
 
@@ -151,12 +221,39 @@ impl SplitFlap {
             authentic_timing,
             from_message: None,
             rolling_flip: false,
+            flip_preview: false,
+            flip_flicker: false,
+            dispersion: SplitFlapDispersion::Legacy,
         }
     }
 
     /// Enable `rolling_flip` mode on this transformer.
     pub fn with_rolling_flip(mut self, rolling: bool) -> Self {
         self.rolling_flip = rolling;
+        self
+    }
+
+    /// Enable `flip_preview`: substitute the `▔` hinge frame with
+    /// `char_turn(target)` so viewers catch an upside-down glimpse of
+    /// the target letter mid-rotation.
+    pub fn with_flip_preview(mut self, enabled: bool) -> Self {
+        self.flip_preview = enabled;
+        self
+    }
+
+    /// Enable `flip_flicker`: replace the ordered hinge sequence with
+    /// per-(column, bucket)-hashed variant draws — chaotic mechanical
+    /// flicker instead of a clean rotation.
+    pub fn with_flip_flicker(mut self, enabled: bool) -> Self {
+        self.flip_flicker = enabled;
+        self
+    }
+
+    /// Set the dispersion pattern that controls per-column start delays.
+    /// `Legacy` (default) preserves existing `cascade`/`authentic_timing`
+    /// behavior; other variants override them.
+    pub fn with_dispersion(mut self, dispersion: SplitFlapDispersion) -> Self {
+        self.dispersion = dispersion;
         self
     }
 
@@ -204,13 +301,63 @@ impl SplitFlap {
         if self.jitter <= 0.0 {
             return 1.0;
         }
+        let normalized = (Self::fnv_hash(char_index as u32) as f64 / u32::MAX as f64) * 2.0 - 1.0;
+        1.0 + (normalized * self.jitter as f64)
+    }
+
+    /// FNV-1a 32-bit hash of a single u32 — deterministic, no dependencies.
+    /// Used for jitter, dispersion, and flicker-variant selection.
+    fn fnv_hash(input: u32) -> u32 {
         let mut hash: u32 = 0x811c9dc5;
-        for b in (char_index as u32).to_le_bytes().iter() {
+        for b in input.to_le_bytes().iter() {
             hash ^= u32::from(*b);
             hash = hash.wrapping_mul(0x01000193);
         }
-        let normalized = (hash as f64 / u32::MAX as f64) * 2.0 - 1.0;
-        1.0 + (normalized * self.jitter as f64)
+        hash
+    }
+
+    /// Combined hash of two inputs — used to seed per-(col, bucket)
+    /// flicker-variant picks so each column has its own flicker phase.
+    fn fnv_hash2(a: u32, b: u32) -> u32 {
+        Self::fnv_hash(a.wrapping_mul(0x01000193).wrapping_add(b))
+    }
+
+    /// Non-Legacy dispersion patterns reduce to a per-column start-delay
+    /// value in "cascade units" — the same unit the existing cascade
+    /// branch uses (`(i * cascade)` subtracted from `progress * speed`).
+    /// Legacy and Authentic return 0 from here; their timing is handled
+    /// in the main transform() branch selection.
+    fn column_start_delay(&self, col: usize, total_cols: usize) -> f64 {
+        let n = total_cols.max(1) as f64;
+        match self.dispersion {
+            SplitFlapDispersion::Legacy | SplitFlapDispersion::Authentic => 0.0,
+            SplitFlapDispersion::Cascade => col as f64,
+            SplitFlapDispersion::Simultaneous => 0.0,
+            SplitFlapDispersion::Random => {
+                let h = Self::fnv_hash(col as u32) as f64 / u32::MAX as f64;
+                h * n
+            }
+            SplitFlapDispersion::CenterOut => {
+                let center = (n - 1.0) / 2.0;
+                (col as f64 - center).abs()
+            }
+            SplitFlapDispersion::EdgeIn => {
+                let center = (n - 1.0) / 2.0;
+                let max_dist = center.max(1.0);
+                max_dist - (col as f64 - center).abs()
+            }
+            SplitFlapDispersion::Shuffled => {
+                (Self::fnv_hash(col as u32) as usize % total_cols.max(1)) as f64
+            }
+        }
+    }
+
+    /// True when dispersion requests physical-Solari distance-proportional
+    /// landing (either via explicit `Authentic` variant or via legacy
+    /// `authentic_timing: true`).
+    fn uses_authentic_timing(&self) -> bool {
+        matches!(self.dispersion, SplitFlapDispersion::Authentic)
+            || (matches!(self.dispersion, SplitFlapDispersion::Legacy) && self.authentic_timing)
     }
 
     fn hinge_spring() -> DampedSpring {
@@ -277,11 +424,21 @@ impl TextTransformer for SplitFlap {
                 .unwrap_or(0)
         };
 
+        // Pre-count total columns (graphemes counted via char iterator —
+        // matches the per-char loop below). Used by non-Legacy dispersion
+        // variants to normalize their delay curves.
+        let total_cols = target
+            .chars()
+            .filter(|c| !matches!(c, '\n' | '\r' | '\t'))
+            .count()
+            .max(1);
+
         // authentic_timing: pre-scan the message to find the maximum
         // per-column flap count. Every column rotates at a constant
         // per-flap rate starting from progress=0; the longest rotation
         // lands at progress=1.0, shorter rotations land earlier.
-        let max_flaps = if self.authentic_timing {
+        let use_authentic = self.uses_authentic_timing();
+        let max_flaps = if use_authentic {
             target
                 .chars()
                 .enumerate()
@@ -339,7 +496,7 @@ impl TextTransformer for SplitFlap {
             }
 
             // Compute per-column char_progress.
-            let char_progress = if self.authentic_timing {
+            let char_progress = if use_authentic {
                 // Physical Solari: all columns start simultaneously, each
                 // rotates at the same per-flap rate, so landing time is
                 // proportional to flap distance. Jitter adds mechanical
@@ -348,11 +505,18 @@ impl TextTransformer for SplitFlap {
                 let base = progress * f64::from(speed) / completion_ratio;
                 (base * jitter_factor).clamp(0.0, 1.0)
             } else {
-                // Legacy cascade model — each column starts at time
-                // i*cascade and walks to completion at progress=1.0
-                // regardless of target distance.
+                // Cascade model — each column starts at a delay determined
+                // by the dispersion pattern, then walks to completion at
+                // progress=1.0. Legacy dispersion uses the column index
+                // directly (matching pre-3.2.0 behavior); other variants
+                // derive the delay from column_start_delay().
                 let effective_cascade = f64::from(cascade) * jitter_factor;
-                (progress * f64::from(speed) - (i as f64 * effective_cascade)).clamp(0.0, 1.0)
+                let delay_units = if matches!(self.dispersion, SplitFlapDispersion::Legacy) {
+                    i as f64
+                } else {
+                    self.column_start_delay(i, total_cols)
+                };
+                (progress * f64::from(speed) - (delay_units * effective_cascade)).clamp(0.0, 1.0)
             };
 
             if char_progress >= 1.0 {
@@ -380,9 +544,49 @@ impl TextTransformer for SplitFlap {
                 } else {
                     linear_phase
                 };
+
+                // flip_flicker: per-(col, bucket)-hashed variant draw —
+                // each bucket lasts ~1/FLICKER_BUCKETS of the hinge window
+                // (~34ms at 60fps over a 270ms hinge), producing ~30Hz
+                // flicker. The pool mixes block, hinge, and letter
+                // variants so the viewer reads chaotic mechanical flipping.
+                // Per-column hash seed means columns flicker out of phase.
+                if self.flip_flicker {
+                    const FLICKER_BUCKETS: u32 = 8;
+                    let bucket =
+                        ((linear_phase * FLICKER_BUCKETS as f64) as u32).min(FLICKER_BUCKETS - 1);
+                    let turned = char_turn(target_char);
+                    // Variant pool — 8 slots when char_turn is available
+                    // (turned duplicated for higher weight), else 6 slots.
+                    let pool: [Option<char>; 8] = [
+                        Some('█'),
+                        Some('▀'),
+                        Some('▔'),
+                        Some('—'),
+                        Some('▁'),
+                        Some('▄'),
+                        turned.or(Some(target_char)),
+                        turned.or(Some('█')),
+                    ];
+                    let h = Self::fnv_hash2(i as u32, bucket) as usize;
+                    out.push(pool[h % pool.len()].unwrap_or(target_char));
+                    continue;
+                }
+
                 let glyph_idx = (settle_phase * HINGE_CHARS.len() as f64)
                     .min(HINGE_CHARS.len() as f64 - 1.0) as usize;
-                out.push(HINGE_CHARS[glyph_idx]);
+
+                // flip_preview: substitute the `▔` frame (index 2) with
+                // the 180°-turned target glyph so viewers catch an
+                // upside-down preview mid-rotation. Falls back to the
+                // original frame for unmapped targets (Q, J, digits
+                // 1/2/4/5/7, non-ASCII).
+                let glyph = if self.flip_preview && glyph_idx == 2 {
+                    char_turn(target_char).unwrap_or(HINGE_CHARS[glyph_idx])
+                } else {
+                    HINGE_CHARS[glyph_idx]
+                };
+                out.push(glyph);
                 continue;
             }
 
@@ -972,7 +1176,353 @@ mod tests {
         assert!(HINGE_CHARS.contains(&ending));
         assert_eq!(x.transform("S", 1.0, &ctx()), "S");
     }
+
+    // ---------- flip_preview: inverted-glyph frame inside hinge window ----------
+
+    #[test]
+    fn flip_preview_substitutes_turned_target_in_hinge_window() {
+        // Target `A` has turned form `Ɐ`. With flip_preview on and
+        // settle_hinge active, there must be at least one progress value
+        // in the hinge window where the emitted char is `Ɐ`.
+        let sf = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_flip_preview(true);
+        let mut saw_turned = false;
+        // Hinge window is 0.82..1.0; sweep at 30Hz density.
+        for i in 0..=100 {
+            let t = 0.82 + (i as f64) * 0.0018;
+            if sf.transform("A", t, &ctx()).chars().next() == Some('Ɐ') {
+                saw_turned = true;
+                break;
+            }
+        }
+        assert!(saw_turned, "flip_preview must show turned target 'Ɐ' somewhere in the hinge window");
+    }
+
+    #[test]
+    fn flip_preview_falls_back_for_unmapped_target() {
+        // Target `Q` has no turned form. flip_preview must fall back to
+        // the original `▔` frame at that position — no Q or random char.
+        // Sweep starts at 0.83 (strictly inside the 0.82..1.0 hinge
+        // window, since the code condition is `char_progress > 0.82`).
+        let sf = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_flip_preview(true);
+        for i in 0..50 {
+            let t = 0.83 + (i as f64) * 0.003;
+            if t >= 1.0 {
+                break;
+            }
+            let c = sf.transform("Q", t, &ctx()).chars().next().unwrap();
+            assert!(
+                HINGE_CHARS.contains(&c),
+                "flip_preview with unmapped 'Q' must still emit a hinge glyph at t={t}, got '{c}'"
+            );
+        }
+    }
+
+    #[test]
+    fn flip_preview_lands_on_target_at_progress_1() {
+        let sf = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_flip_preview(true);
+        assert_eq!(sf.transform("HELLO", 1.0, &ctx()), "HELLO");
+    }
+
+    #[test]
+    fn flip_preview_default_off_preserves_hinge_sequence() {
+        let sf = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        );
+        assert!(!sf.flip_preview);
+        // Without flip_preview, hinge window never emits a turned glyph.
+        for i in 0..=100 {
+            let t = 0.82 + (i as f64) * 0.0018;
+            let c = sf.transform("A", t, &ctx()).chars().next().unwrap();
+            assert_ne!(c, 'Ɐ', "default off must not emit turned glyph at t={t}");
+        }
+    }
+
+    // ---------- flip_flicker: per-column-hashed variant pool ----------
+
+    #[test]
+    fn flip_flicker_emits_variety_within_hinge_window() {
+        // Across the hinge window, flicker must emit a mix of glyphs
+        // (blocks, hinges, target, turned-target) — not a single stable
+        // glyph like the ordered sequence would produce.
+        let sf = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_flip_flicker(true);
+        let mut distinct = std::collections::HashSet::new();
+        for i in 0..=20 {
+            let t = 0.82 + (i as f64) * 0.009;
+            let c = sf.transform("A", t, &ctx()).chars().next().unwrap();
+            distinct.insert(c);
+        }
+        assert!(
+            distinct.len() >= 3,
+            "flicker must produce at least 3 distinct glyphs across the window, got {distinct:?}"
+        );
+    }
+
+    #[test]
+    fn flip_flicker_lands_on_target_at_progress_1() {
+        let sf = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_flip_flicker(true);
+        assert_eq!(sf.transform("HELLO", 1.0, &ctx()), "HELLO");
+    }
+
+    #[test]
+    fn flip_flicker_is_deterministic_per_column() {
+        // Same (col, progress) pair must always yield the same glyph —
+        // flicker is hash-driven, not time-of-day random.
+        let sf = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_flip_flicker(true);
+        let a = sf.transform("BOARDING", 0.87, &ctx());
+        let b = sf.transform("BOARDING", 0.87, &ctx());
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn flip_flicker_columns_are_out_of_phase() {
+        // Different columns at the same progress should (almost always)
+        // emit different glyphs — per-column hash means the board
+        // doesn't pulse in lockstep. Test empirically across a range.
+        let sf = sf_full(
+            0.0,
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_flip_flicker(true);
+        let mut saw_divergence = false;
+        for i in 0..20 {
+            let t = 0.82 + (i as f64) * 0.009;
+            let rendered = sf.transform("ABCDEFGH", t, &ctx());
+            let chars: Vec<char> = rendered.chars().collect();
+            if chars.windows(2).any(|w| w[0] != w[1]) {
+                saw_divergence = true;
+                break;
+            }
+        }
+        assert!(saw_divergence, "adjacent columns should flicker out of phase somewhere in the window");
+    }
+
+    // ---------- SplitFlapDispersion: per-column start-delay patterns ----------
+
+    #[test]
+    fn dispersion_legacy_matches_cascade_behavior() {
+        // Legacy dispersion + cascade > 0 must produce the same output
+        // as pre-3.2.0 code with the same cascade value.
+        let legacy = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.05));
+        let explicit = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.05))
+            .with_dispersion(SplitFlapDispersion::Legacy);
+        for t in [0.1, 0.3, 0.5, 0.7, 1.0] {
+            assert_eq!(
+                legacy.transform("HELLO", t, &ctx()),
+                explicit.transform("HELLO", t, &ctx()),
+                "Legacy dispersion must match default cascade behavior at t={t}"
+            );
+        }
+    }
+
+    #[test]
+    fn dispersion_simultaneous_lands_all_columns_together() {
+        // Simultaneous => all columns have delay=0 => all at same
+        // char_progress => all settle simultaneously.
+        let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.5))
+            .with_dispersion(SplitFlapDispersion::Simultaneous);
+        assert_eq!(sf.transform("HELLO", 1.0, &ctx()), "HELLO");
+        // At t close to 1.0 but not quite, all chars should be "in progress"
+        // (not yet settled) at the same rate — their glyphs should be
+        // chosen from the same point in the walk.
+        let r = sf.transform("AAAA", 0.3, &ctx());
+        let chars: Vec<char> = r.chars().collect();
+        assert!(chars.iter().all(|&c| c == chars[0]),
+                "simultaneous dispersion must produce identical chars across identical targets, got {r:?}");
+    }
+
+    #[test]
+    fn dispersion_authentic_ignores_authentic_timing_field() {
+        // dispersion: Authentic must enable Solari timing regardless of
+        // the authentic_timing field's value.
+        let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.0))
+            .with_dispersion(SplitFlapDispersion::Authentic);
+        // At progress=0.1, a short-distance char should have settled but
+        // a long-distance char should still be rotating.
+        let r = sf.transform("AZ", 0.1, &ctx());
+        let chars: Vec<char> = r.chars().collect();
+        assert_eq!(chars[0], 'A', "short-distance char must land early under Authentic dispersion");
+        assert_ne!(chars[1], 'Z', "long-distance char must still be flipping");
+    }
+
+    #[test]
+    fn dispersion_random_is_deterministic() {
+        // Random dispersion uses FNV hash, so same target must produce
+        // same output across runs.
+        let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.02))
+            .with_dispersion(SplitFlapDispersion::Random);
+        assert_eq!(
+            sf.transform("BOARDING", 0.5, &ctx()),
+            sf.transform("BOARDING", 0.5, &ctx())
+        );
+    }
+
+    #[test]
+    fn dispersion_center_out_starts_middle_first() {
+        // CenterOut: middle column (idx 2) has delay=0, edges (idx 0, 4)
+        // have delay=2. With cascade=0.3 and speed=1:
+        //   middle char_progress(t=0.99) = 0.99 → in hinge window
+        //   edge char_progress(t=0.99)   = 0.99 - 2*0.3 = 0.39 → still walking
+        // So middle emits a HINGE glyph while edges emit walk letters.
+        let sf = SplitFlap::new_mechanical(
+            SignalOrFloat::from(1.0),
+            SignalOrFloat::from(0.3),
+            SignalOrFloat::from(0.0),
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_dispersion(SplitFlapDispersion::CenterOut);
+        let r = sf.transform("AAAAA", 0.99, &ctx());
+        let chars: Vec<char> = r.chars().collect();
+        assert!(
+            HINGE_CHARS.contains(&chars[2]),
+            "middle column must be in hinge window, got {:?}",
+            chars[2]
+        );
+        assert!(
+            !HINGE_CHARS.contains(&chars[0]),
+            "edge column must still be walking, got {:?}",
+            chars[0]
+        );
+    }
+
+    #[test]
+    fn dispersion_edge_in_starts_edges_first() {
+        // EdgeIn: edges have delay=0, middle has max delay — inverse of
+        // CenterOut. At t=0.99: edges in hinge window, middle still walking.
+        let sf = SplitFlap::new_mechanical(
+            SignalOrFloat::from(1.0),
+            SignalOrFloat::from(0.3),
+            SignalOrFloat::from(0.0),
+            0.0,
+            SplitFlapCharset::Alpha,
+            false,
+            0.0,
+            true,
+            false,
+            false,
+        )
+        .with_dispersion(SplitFlapDispersion::EdgeIn);
+        let r = sf.transform("AAAAA", 0.99, &ctx());
+        let chars: Vec<char> = r.chars().collect();
+        assert!(
+            HINGE_CHARS.contains(&chars[0]),
+            "edge column must be in hinge window, got {:?}",
+            chars[0]
+        );
+        assert!(
+            !HINGE_CHARS.contains(&chars[2]),
+            "middle column must still be walking, got {:?}",
+            chars[2]
+        );
+    }
+
+    #[test]
+    fn dispersion_all_variants_land_on_target_at_progress_1() {
+        // Invariant across every dispersion variant: at progress=1.0 the
+        // message must match the target exactly.
+        for disp in [
+            SplitFlapDispersion::Legacy,
+            SplitFlapDispersion::Cascade,
+            SplitFlapDispersion::Authentic,
+            SplitFlapDispersion::Simultaneous,
+            SplitFlapDispersion::Random,
+            SplitFlapDispersion::CenterOut,
+            SplitFlapDispersion::EdgeIn,
+            SplitFlapDispersion::Shuffled,
+        ] {
+            let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.05))
+                .with_dispersion(disp);
+            assert_eq!(
+                sf.transform("FLIGHT 721", 1.0, &ctx()),
+                "FLIGHT 721",
+                "dispersion {disp:?} must land on target at progress=1.0"
+            );
+        }
+    }
+
+    #[test]
+    fn dispersion_enum_is_default_legacy() {
+        assert_eq!(SplitFlapDispersion::default(), SplitFlapDispersion::Legacy);
+    }
 }
 
-// <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions)</DESC>
-// <VERS>END OF VERSION: 3.1.0</VERS>
+// <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE>
+// <VERS>END OF VERSION: 3.2.0</VERS>

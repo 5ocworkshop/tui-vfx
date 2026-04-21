@@ -286,6 +286,29 @@ pub enum ContentEffect {
         /// so each rotation has enough frames to read as a flip.
         #[serde(default)]
         rolling_flip: bool,
+        /// Substitute the `▔` hinge frame with the Unicode 180°-turned
+        /// target glyph so viewers catch a brief upside-down preview of
+        /// the arriving letter mid-flip. Requires `settle_hinge: true`.
+        /// Falls back silently for targets without an honest turned form
+        /// (Q, J, digits 1/2/4/5/7, non-ASCII). Default: false.
+        #[serde(default)]
+        flip_preview: bool,
+        /// Replace the ordered hinge sequence with per-column-hashed
+        /// random draws from a pool of block/hinge/letter glyphs,
+        /// producing chaotic mechanical flicker (~30Hz). Requires
+        /// `settle_hinge: true`. Opt-in — this is perceptible flicker
+        /// and may be uncomfortable for motion-sensitive viewers.
+        /// Default: false.
+        #[serde(default)]
+        flip_flicker: bool,
+        /// Dispersion pattern — how per-column start delays are
+        /// distributed across the board. `Legacy` (default) preserves
+        /// pre-3.2.0 cascade+authentic_timing behavior; the other
+        /// variants (cascade/authentic/simultaneous/random/center_out/
+        /// edge_in/shuffled) override the old knobs with their own
+        /// delay curve.
+        #[serde(default)]
+        dispersion: crate::transformers::SplitFlapDispersion,
     },
 
     /// Vertical scrolling digit counter.
@@ -547,6 +570,9 @@ impl ContentEffect {
                 authentic_timing,
                 from_message,
                 rolling_flip,
+                flip_preview,
+                flip_flicker,
+                dispersion,
             } => vec![
                 ("speed", format!("{:?}", speed)),
                 ("cascade", format!("{:?}", cascade)),
@@ -566,6 +592,9 @@ impl ContentEffect {
                         .unwrap_or_else(|| "None".to_string()),
                 ),
                 ("rolling_flip", format!("{}", rolling_flip)),
+                ("flip_preview", format!("{}", flip_preview)),
+                ("flip_flicker", format!("{}", flip_flicker)),
+                ("dispersion", format!("{:?}", dispersion)),
             ],
             ContentEffect::Odometer => vec![],
             ContentEffect::Redact { symbol } => vec![("symbol", format!("{}", symbol))],
