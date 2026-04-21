@@ -1,7 +1,8 @@
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.4 — cross-reference the unified inspection foundation shipped in tui-vfx-debug::inspection and the tui-vfx-trace CLI landing in Sub-plan B.</WCTX> -->
-<!-- <CLOG>1.3.0: MINOR — add "Relationship to tui-vfx-trace (Sub-plan B)" section so validator's recipe-authoring scope is distinguished from the unified inspection trace stream.
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
+<!-- <WCTX>Hotfix H3 validator ergonomics: document multi-phase/all selection, --frames sweeps, structured JSON dump output, verbose resolution/border-trim traces, and the build-once/direct-binary workflow.</WCTX> -->
+<!-- <CLOG>1.4.0: MINOR — add H3 ergonomics guidance for phase lists/all, --frames, --format json dump mode, -vvv resolution/border-trim traces, and the build-once/direct-binary matrix workflow.
+1.3.0: MINOR — add "Relationship to tui-vfx-trace (Sub-plan B)" section so validator's recipe-authoring scope is distinguished from the unified inspection trace stream.
 1.2.0: MINOR — Add an authority split for Preview / validator / probe, document --debug-recipes-qc, and explain that concrete GTD bridge exports are valid upstream recipe inputs after token resolution</CLOG> -->
 
 # Pipeline Validator: An LLM's Guide to Inspecting Recipe Output
@@ -19,6 +20,7 @@ It exists because, when a recipe behaves unexpectedly, the question "what does t
 | Recipe parses? Schema valid? | `pipeline-validator <file>` (default) |
 | Stage-by-stage cell modification counts | `--stages -vvv` |
 | What does the buffer literally look like at a specific time? | `--dump --stage output --sample-t T --phase X -vvv` |
+| What does the buffer look like across a whole phase or lifecycle sweep? | `--dump --stage output --phase all --sample-t 0.2,0.5,0.8 -vvv` or `--dump --stage output --phase entering --frames 5 -vvv` |
 | Is shader X touching cells it shouldn't? | `--stages -vvv` (look at SHADER cell counts vs your expectation) |
 | Wrong colors / wrong glyphs at specific positions | grid-map and per-row dumps under `--dump --stage output -vvv` |
 
@@ -53,14 +55,31 @@ Do not move GTD display-truth semantics into validator acceptance. Upstream vali
 ## The flags that matter
 
 - **`--rules --stages`** — the standard pre-flight: parses, validates against rules, runs the profile/render/shader/output stages. Use this first.
-- **`--phase entering|dwelling|exiting`** — selects which animation phase to simulate. Critical: each phase has its own `t` clock, and an LLM that confuses dwell time with overall lifecycle time will get fooled (see "Time math" below).
-- **`--sample-t T1 [T2 T3 …]`** — sample at specific phase progress values (0.0–1.0 within the chosen phase). `--sample-t 0.5 --phase dwelling` means "halfway through dwell".
+- **`--phase entering|dwelling|exiting|all`** — selects which animation phase(s) to simulate. Comma-separated lists are allowed (`--phase entering,exiting`), and `all` expands to the fixed lifecycle order entering → dwelling → exiting. Critical: each phase has its own `t` clock, and an LLM that confuses dwell time with overall lifecycle time will get fooled (see "Time math" below).
+- **`--sample-t T1,T2,T3`** — sample at specific phase progress values (0.0–1.0 within the chosen phase). `--sample-t 0.5 --phase dwelling` means "halfway through dwell". Combine with `--phase all` for one invocation that emits every (phase, t) pair.
+- **`--frames N`** — sweep `N` evenly spaced sample points through the selected phase(s). If both `--frames` and `--sample-t` are supplied, `--frames` wins and validator reports a warning.
 - **`--dump --stage output`** — dump the rendered buffer state. `-vvv` (triple verbose) is required to actually see the cell-level grid output.
+- **`--format json --dump --stage output`** — emit structured JSON samples instead of prose blocks. Use this for machine-readable diffs and scripted inspection.
 - **`--stages -vvv`** — print per-stage cell modification counts (sampler, mask, shader, filter), plus a sample of cell-by-cell modifications. Use this to localize *which* stage is making the change you didn't expect.
 - **`--canvas RRGGBB`** — pre-fill the simulation buffer with this RGB color before each render, so you can see how a recipe composites over a non-default canvas (gt-design beige, dashboard navy, etc.). Hex, no alpha.
 - **`--canvas-content MODE`** — what glyphs to paint into the canvas along with the color. `empty` (default) = spaces, `sentinel` = repeating `+` grid (useful for the early color-only tests), `lorem` = lorem ipsum text wrapped across the buffer. Combine with `--canvas` for a full content+color simulation of a widget overlaying a document. Use `lorem` when debugging **glyph bleed-through** bugs — any canvas character visible inside the widget rectangle after the overlay renders is a bug.
 - **`--debug-recipes-qc`** — run the upstream-native QC bundle: rules/stages validation, recipe-side structured probe evidence, future-capture artifact hints, family-aware checks for debug fixtures, and GTD-agnostic acceptance of concrete exported recipe JSON.
 - **`--trace`** — even more verbose pipeline tracing; usually too noisy. Try `--stages -vvv` first.
+- **`-vvv` on output dumps** — now also includes recipe-config resolution lines (`[resolution] ...`) and slide border-trim decision lines (`[border-trim] ...`) so the policy-resolution class of bugs can be diagnosed without hand-patched `eprintln!`s.
+
+## Fast matrix workflow: build once, run many
+
+For one-off probes, `cargo run -q -p pipeline-validator -- ...` is fine. For big matrices across many recipe files, build once and invoke the binary directly:
+
+```bash
+cd /usr/projects/tui-vfx-recipes
+cargo build -q -p pipeline-validator --release
+./target/release/pipeline-validator --dump --stage output \
+  --phase all --sample-t 0.2,0.5,0.8 -vvv \
+  recipes/default_toast_left.json
+```
+
+Batch sampling (`--phase all`, `--frames`) already collapses many old shell loops into one invocation. The direct-binary workflow recovers the remaining `cargo run` startup cost when you need to sweep many different recipe files in one session.
 
 ## Debug-recipes QC
 
@@ -94,7 +113,7 @@ It does **not** claim GTD display truth or GTD token-resolution correctness.
 
 When you run `pipeline-validator --dump --stage output --sample-t 0.5 --phase dwelling -vvv <recipe.json>`, the most important sections are:
 
-1. **`item 0: area=(X,Y WxH), phase=…, t=…`** — confirms where the widget is being rendered in the frame buffer and what the engine thinks the current phase progress is. **If `t` doesn't match what you asked for, your time math is wrong** (see below).
+1. **`item 0: area=(X,Y WxH), phase=…, t=…`** — confirms where the widget is being rendered in the frame buffer and what the engine thinks the current phase progress is. **If `t` doesn't match what you asked for, your time math is wrong** (see below). In multi-sample dumps, each sample gets its own grouped section header.
 
 2. **`Sample cells:`** — eight named positions (corners, center, content area). Quick sanity check that the right region is being inspected.
 
@@ -147,8 +166,8 @@ Fix: use true point-to-segment Euclidean distance, including the parallel offset
 
 ## Limitations
 
-- **Single recipe per invocation** for `--dump` (or rather, the dump output is hard to read across multiple files). Pass one path at a time.
-- **Buffer is reused across sample-t values** within a single invocation, so when you pass multiple `--sample-t`, the dump shows the *last* sample's state. To compare frames, run separate invocations and diff the outputs.
+- **Single recipe per invocation** is still the easiest way to read human dump output. Structured JSON mode can carry multiple recipe rows, but the prose dump is meant for one recipe at a time.
+- **Multi-sample dumps now emit one section per sample** inside a single invocation, so `--phase all --sample-t 0.2,0.5,0.8` no longer collapses to only the last sample's buffer state. Use `--format json` when you want stable machine-readable diffs of those sections.
 - **The grid map's classification is thresholded**, not exact. If a cell is faintly modified (e.g., a fading tail), it may be classified as `b` (base) rather than `C` (cyan). Drop down to the per-cell sample list when you need precision.
 - **Animation type matters.** `animation_type: none` skips the entering phase entirely (`lifecycle.rs:29`), so `--phase entering` will produce empty output. `animation_type: fade` runs the phases without positional motion, which is usually what you want for shader debugging.
 - **Looped time confuses the mask stage.** When `time.loop = true`, `options.t` is plumbed from `loop_t` instead of phase progress (`fnc_render_animated_with_theme.rs:416`). This means masks see cycling time, not enter/exit progress, which can make a wipe mask look like it "leaps". If a mask isn't running cleanly across its phase, **disable looping** and use the shader's own `speed` multiplier to cycle the trace internally.
@@ -162,4 +181,4 @@ Fix: use true point-to-segment Euclidean distance, including the parallel offset
 - `tools/pipeline-validator/src/stages/functions/fnc_sample_buffer_cells.rs` (in tui-vfx-recipes) — the grid-map and per-row dump implementations
 
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->
