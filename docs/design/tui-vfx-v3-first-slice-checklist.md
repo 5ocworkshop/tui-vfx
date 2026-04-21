@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-first-slice-checklist.md</FILE> - <DESC>Execution checklist for the first concrete V3 implementation slice.</DESC> -->
-<!-- <VERS>VERSION: 0.7.0</VERS> -->
-<!-- <WCTX>Tracks the first code-facing work package after schema/catalog/lowering/IR/validator planning. Updated now that FS-01/FS-02 have public entry surfaces and FS-03 through FS-08 have focused structural helpers with passing tests.</WCTX> -->
-<!-- <CLOG>0.7.0: record the new public V3 parse/normalize entry points and their focused passing tests for FS-01/FS-02.
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <WCTX>Tracks the first code-facing work package after schema/catalog/lowering/IR/validator planning. Updated now that the separate V3 example path can load a file, normalize it, and print canonical IR end-to-end while the legacy viewer remains untouched.</WCTX> -->
+<!-- <CLOG>0.8.0: record the first end-to-end V3 example smoke-test output via `examples/v3_play_recipe.rs`, confirming file load + parse + normalize + dump on a standalone V3 path.
+0.7.0: record the new public V3 parse/normalize entry points and their focused passing tests for FS-01/FS-02.
 0.6.0: mark FS-08 explicitly in progress and keep the first-slice checklist aligned with the now-documented V3 scaffolding module headers/footers.
 0.5.0: mark FS-06/FS-07/FS-08 as in progress after the first hint-validation, scene-normalization, and canonical IR dump helpers landed in `tui-vfx-recipes::v3` with focused passing tests.
 0.4.0: mark FS-03/FS-04/FS-05 as in progress after the first normalization helpers landed in `tui-vfx-recipes::v3::normalize` and their focused unit tests passed.
