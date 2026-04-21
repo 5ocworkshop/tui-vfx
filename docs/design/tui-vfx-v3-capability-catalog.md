@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-capability-catalog.md</FILE> - <DESC>Live capability catalog for V3. Classifies families into primitives, composed primitives, wrappers, hybrid templates, and policy variants, and records canonical payload direction and implementation notes as the leaf catalog is hardened.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Execution artifact for the capability-catalog phase. Extended through the second batch, resolving the highest-value filter-side clusters that the audit identified as the next implementation hinge point.</WCTX> -->
-<!-- <CLOG>0.2.0: resolve batch 2 (CC-07..CC-12): indicator/progress emphasis, traveling-band/sweep, pattern/procedural texture filters, motion-treatment filters, field-rendering wrappers, and the vignette family.
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Execution artifact for the capability-catalog phase. Extended through the third batch, resolving the highest-value remaining style/content/higher-order clusters so the catalog now covers the major family groups surfaced by the audit.</WCTX> -->
+<!-- <CLOG>0.3.0: resolve batch 3 (CC-13..CC-18): style dwell modulation, typography-window style effects, typewriter+cursor renderer subtree, split-flap renderer tree, rule-engine families, and cross-lane paired capabilities.
+0.2.0: resolve batch 2 (CC-07..CC-12): indicator/progress emphasis, traveling-band/sweep, pattern/procedural texture filters, motion-treatment filters, field-rendering wrappers, and the vignette family.
 0.1.0: initial catalog and tracker. Seeds the first six resolved families from the existing audit conclusions: reveal geometry, segmented/tiled visibility, procedural breakup masks, wave displacement, fracture displacement, and style fades.</CLOG> -->
 
 # tui-vfx V3 capability catalog
@@ -31,12 +32,12 @@ Its purpose is to make the leaf catalog explicit before large-scale migration or
 | CC-10 | Motion-treatment filters | RESOLVED | Distinct motion-treatment subtree |
 | CC-11 | Field-rendering wrappers | RESOLVED | Hybrid wrapper category |
 | CC-12 | Vignette family | RESOLVED | Falloff-treatment subtree |
-| CC-13 | Style dwell modulation | OPEN | later |
-| CC-14 | Typography-window style effects | OPEN | later |
-| CC-15 | Typewriter + cursor subtree | OPEN | later |
-| CC-16 | Split-flap renderer tree | OPEN | later |
-| CC-17 | Rule-engine families | OPEN | later |
-| CC-18 | Cross-lane paired capabilities | OPEN | later |
+| CC-13 | Style dwell modulation | RESOLVED | Modulation subtree |
+| CC-14 | Typography-window style effects | RESOLVED | Typography-window subtree |
+| CC-15 | Typewriter + cursor subtree | RESOLVED | Deep renderer tree |
+| CC-16 | Split-flap renderer tree | RESOLVED | Deep renderer tree |
+| CC-17 | Rule-engine families | RESOLVED | Governance category |
+| CC-18 | Cross-lane paired capabilities | RESOLVED | Coordination category |
 | CC-19 | Celebratory particle generators | OPEN | future capability |
 
 ---
@@ -323,20 +324,145 @@ Each family entry records:
 - **rationale:**
   - the audit showed vignette is not one single leaf effect but a family of edge-falloff policies
 
+
+### CC-13 — Style dwell modulation
+
+- **lane:** style_effect
+- **classification:** primitive subtree with policy variants
+- **canonical subtree:** `style_modulation`
+- **collapsed source families:**
+  - `pulse`
+  - `rainbow`
+  - `neon_flicker`
+- **shared payload axes:**
+  - modulation rate / frequency
+  - modulation color or chroma policy
+  - stability / intensity policy
+  - loop/clock semantics
+- **recommended implementation stance:**
+  - one style-side dwell modulation subtree with family-specific modulation policies
+  - keep family names as user-facing authored modes where helpful
+- **rationale:**
+  - these families all describe continuous dwell-time style modulation rather than transitions or scoped style patching
+
+### CC-14 — Typography-window style effects
+
+- **lane:** style_effect
+- **classification:** primitive subtree
+- **canonical subtree:** `typography_window`
+- **collapsed source families:**
+  - `italic_window`
+  - the typography-window portion of `glitch`
+- **shared payload axes:**
+  - start / end window
+  - typography policy
+  - optional instability coupling
+- **recommended implementation stance:**
+  - treat typography-window semantics as a real style-side subtree rather than as incidental fields attached to unrelated effects
+  - allow `glitch` to remain distinct where it carries broader instability semantics, but model the italic-window portion as belonging here conceptually
+- **rationale:**
+  - the audit showed that typography-window behavior is meaningful enough to deserve its own family category
+
+### CC-15 — Typewriter + cursor renderer subtree
+
+- **lane:** content
+- **classification:** deep renderer tree
+- **canonical subtree:** `typewriter_renderer`
+- **collapsed source families:**
+  - `typewriter`
+  - `typewriter_cursor_caret`
+  - `typewriter_cursor_full`
+  - `typewriter_cursor_grow_in_*`
+  - `typewriter_cursor_wake_*`
+  - `typewriter_cursor_scan_*`
+  - `typewriter_cursor_braille_*`
+- **shared payload axes:**
+  - base typing policy
+  - nested cursor glyph policy
+  - nested blink policy
+  - nested grow policy
+  - nested wake policy
+  - nested scan policy
+  - visibility policy
+- **recommended implementation stance:**
+  - treat typewriter as one deep renderer with a nested cursor policy space
+  - do not explode cursor variants into top-level independent families
+- **rationale:**
+  - the final content pass made it clear that many apparent recipe “families” are just slices through nested cursor policy space inside one renderer
+
+### CC-16 — Split-flap renderer tree
+
+- **lane:** content
+- **classification:** deep renderer tree
+- **canonical subtree:** `split_flap_renderer`
+- **collapsed source families:**
+  - base `split_flap`
+  - board variants
+  - charset variants (`digits`)
+  - state-transition variants (`from_message`, board_update)
+  - physical policy variants (`rolling_cards`)
+  - authenticity/timing variants (`authentic_timing`, `cycles`, `jitter`, `leading_blocks`, `settle_hinge`, `spring_settle`, `solari_authentic`, `ambient_board`, etc.)
+- **shared payload axes:**
+  - text/board source
+  - source/target transition policy
+  - charset policy
+  - physical rotation policy
+  - authenticity/timing policy
+  - board/display policy
+- **recommended implementation stance:**
+  - one deep board/content renderer with multiple policy bundles
+  - preserve especially useful presets/reference variants in the library, but keep the implementation model unified
+- **rationale:**
+  - the audit repeatedly showed split-flap family growth was mostly policy and renderer variation, not evidence for many independent top-level families
+
+### CC-17 — Rule-engine families
+
+- **lane:** primarily filter (future could include other lanes)
+- **classification:** governance / payload category
+- **canonical subtree/category:** `rule_engine_family`
+- **collapsed source families:**
+  - `glyph_style`
+- **shared payload axes:**
+  - ordered rules
+  - char classes / match sets
+  - per-rule fg/bg/bg_alternate/fg_alternate policies
+  - phase repetition / normalization
+- **recommended implementation stance:**
+  - keep the concrete family on its existing lane (`filter`) rather than inventing a new step kind
+  - explicitly document/govern it as a rule-engine category because its payload structure and authoring concerns differ from ordinary leaf effects
+- **rationale:**
+  - the large non-debug scan confirmed `glyph_style` behaves more like a mini rule engine than a simple scalar payload
+
+### CC-18 — Cross-lane paired capabilities
+
+- **lane:** cross-cutting
+- **classification:** coordination category
+- **canonical category:** `paired_capability`
+- **collapsed source families / examples:**
+  - `rigid_shake` + `rigid_shake_style`
+  - future similar motion/treatment pairs
+- **shared payload axes:**
+  - shared timing / clock semantics
+  - shared severity/intensity interpretation
+  - coordinated but lane-specific outputs
+- **recommended implementation stance:**
+  - do not flatten these into one lane-local family
+  - treat them as coordinated pairs that share timing/control contracts while staying in their native lanes
+- **rationale:**
+  - the audit showed some capabilities are fundamentally multi-lane and should not be modeled as if one side were primary and the other accidental
+
 ---
 
 ## 4. Immediate next batch
 
 The next 4–6 families to resolve should be:
 
-1. style dwell modulation
-2. typography-window style effects
-3. typewriter + cursor subtree
-4. split-flap renderer tree
-5. rule-engine families
-6. cross-lane paired capabilities
+1. celebratory particle generators
+2. any remaining large-corpus region abstraction pressure
+3. any additional family discovered during implementation spikes
+4. normalization / lowering special cases that appear once code begins
 
-These are the highest-value remaining style/content/higher-order clusters.
+The catalog has now covered the major family groups surfaced by the audit. What remains is mostly future capability work and implementation-driven refinement.
 
 ---
 
