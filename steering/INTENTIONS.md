@@ -1,6 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Initial draft distilled from gt-design's steering/INTENTIONS.md (v0.52.0) with each of its 51 intentions evaluated against tui-vfx's project scope, goals, and philosophy. 29 intentions carried over: 17 apply directly as universal engineering wisdom, 10 apply with material adaptation for tui-vfx's context (grid-first architecture, recipe-authoring-truth upstream, tui-vfx-* family naming), 2 mirror downstream consumer requirements from our side. 22 gt-design intentions were skipped as gt-design-specific (SSOT internals, widget adapters, M3 color science, motion tokens, theme variables). Streamlined for tui-vfx's scope while preserving the load-bearing rationale behind each intention.</WCTX>
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Add a top-level writing-style directive. Applies to MARKETING.md, READMEs, rustdoc, commit messages, chapter docs, schema annotations — every place we write prose. Triggered by a review pass on MARKETING.md v0.2.1 where phrasing like "surgical control," "nothing else in the terminal-UI ecosystem," and multi-clause "this is the feature that makes X" sentences were flagged as marketing voice rather than developer voice. The directive is placed near the top so it's prominent before the numbered intentions; it's not numbered because it governs how the rest of the document is written, not what it says.</WCTX>
+<!-- <CLOG>0.2.0: MINOR — add "Writing style" section between the provenance note and the numbered intentions. Covers: no marketing voice, no grandiose framing, no filler, be specific, one idea per sentence. Includes the "why" (developers filter for signal; grandiose framing reads as insecurity; schema regularity applies to prose).</CLOG>
 <!-- <CLOG>0.1.0: initial draft. 29 numbered intentions organized into identity / architecture / discipline / philosophy clusters. Top-of-mind intentions called out (1, 3, 9, 20, 23, 24). Cross-references to V3 upgrade plan and MARKETING.md where relevant. Derived from gt-design steering/INTENTIONS.md v0.52.0 with selective adaptation.</CLOG> -->
 
 # Intentions
@@ -12,6 +13,27 @@ This file captures top-down decisions that steer implementation of tui-vfx. It i
 **Companion:** `steering/MARKETING.md` answers *how we describe what we've built*; this file answers *how we decide what to build*. The two stay in sync; when they diverge, they must be brought back into agreement.
 
 **Provenance:** this file is distilled from gt-design's `steering/INTENTIONS.md` v0.52.0. Each of its 51 intentions was evaluated against tui-vfx's scope; 29 are carried over here, adapted for tui-vfx's context. Those are hard-earned experiences. Where an intention adapts rather than copies, the adaptation note is inline.
+
+---
+
+## Writing style — applies to all docs
+
+Write like a developer, for developers. No marketing voice.
+
+- **No over-promising.** Don't say "nothing else has this" unless it's true and load-bearing. Claims the reader can disprove in ten minutes cost more trust than they build.
+- **No grandiose sentences.** If a sentence could be removed without losing information, remove it. "This is the feature that makes X possible" is almost always cut-able.
+- **Be specific.** "Targets a single cell via `Cell(x, y)`" beats "surgical targeting." Name the primitive, show the shape.
+- **Skip intensifiers.** "16.7 ms frame budget" not "an extremely tight 16.7 ms frame budget." The number does the work.
+- **No filler transitions.** Drop "moreover," "furthermore," "importantly," "it's worth noting." Just the next fact.
+- **One idea per sentence.** Long compound sentences hide the point and fatigue the reader.
+- **Match the reader.** Internal docs assume readers who know the domain; don't re-explain basics.
+- **Be honest about status.** If something is V3-planned, say V3-planned. If we're pre-1.0, say pre-1.0.
+
+Where this applies: `MARKETING.md`, `README.md` files, rustdoc on public items, commit messages, design-doc chapter prose, schema annotations. Short-form replies in code review and issues follow the same rule.
+
+Why: developers filter for signal. Filler makes them work harder to find what matters. Grandiose framing reads as insecurity about the actual capability — the opposite of what we want. Schema regularity applies to prose too; a regular voice is easier for human readers to scan and for AI authors to produce reliably.
+
+What this is *not* saying: don't be dry for its own sake. Clarity and personality coexist. The rule is "cut the filler," not "strip the voice."
 
 ---
 
@@ -278,4 +300,4 @@ Why: a project that describes itself inconsistently loses the trust of both cont
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

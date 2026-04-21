@@ -1,6 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md</FILE> - <DESC>Navigation hub and pinned Schema V3.0 reference for the V3 upgrade plan chapter directory. Defines the reading order, summarizes each chapter, and lists the pinned schema reference the rest of the plan depends on. This file's <VERS> tracks its own revisions; individual chapter files version independently.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Initial creation of the chapter directory index. The monolithic tui-vfx-v3-upgrade-plan.md (v0.16.0) is preserved at its original location and will be deprecated later; this directory is the new canonical home going forward. All chapter content is extracted-copied from the monolith, not moved.</WCTX> -->
+<!-- <VERS>VERSION: 1.0.1</VERS> -->
+<!-- <WCTX>Bring the Chapter 80 summary in the chapter map in sync with the chapter's actual content. Chapter 80 grew from 21 → 22 → 23 open questions across two updates (Q#22 motion_path promoted in Chapter 80 v1.0.0; Q#23 timer story added in Chapter 80 v1.1.0 during the tachyonfx competitive-analysis pass). This file's body already reflected the new count; only the VERS/CLOG was lagging.</WCTX> -->
+<!-- <CLOG>1.0.1: PATCH — metadata bump to record the two open-questions additions (Q#22 motion_path + offscreen, Q#23 timer story). No structural change; body was already current.</CLOG>
 <!-- <CLOG>1.0.0: initial index. Establishes chapter layout (10/20/.../110 with 10-unit spacing for flexible insertion), pins Schema V3.0 reference in the body, cross-maps each chapter to its monolith source, provides the ANSI chapter-dependency diagram.</CLOG> -->
 
 # TUI-VFX V3 Upgrade Plan
@@ -137,4 +138,4 @@ The table below names the **live** V2 locations the archive was copied from — 
 Chapter 100 (`100_tooling_ci_migration.md`) enumerates every one of these artifacts as a release-blocking migration target.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.0.1</VERS> -->

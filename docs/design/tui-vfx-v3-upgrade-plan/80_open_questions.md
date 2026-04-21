@@ -1,6 +1,7 @@
-<!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md</FILE> - <DESC>Chapter 80 — the 22 open questions that must resolve before V3 implementation, plus reviewer-opinion annotations from the 2026-04-21 GT-Design lead review memo. Each question names both the question and what's at stake in choosing different answers.</DESC> -->
-<!-- <VERS>VERSION: 1.1.0</VERS> -->
-<!-- <WCTX>Add Q#23 on the timer story. Surfaced during a competitive-analysis pass against tachyonfx (2026-04-21), which ships a per-effect `EffectTimer` with interpolation control as a core primitive. tui-vfx's timing is currently distributed across `pipeline.timing` (recipe envelope), `mixed-signals` temporal basis (signal evaluation), and per-effect opt-in durations (some factories). The question is whether to unify under a first-class Timer primitive and where it would sit relative to `ParamValue<T>` / `HintRef<T>`. Not load-bearing for V3 shape; worth explicit discussion before implementation.</WCTX>
+<!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md</FILE> - <DESC>Chapter 80 — the 27 open questions that must resolve before V3 implementation, plus reviewer-opinion annotations from the 2026-04-21 GT-Design lead review memo. Each question names both the question and what's at stake in choosing different answers.</DESC> -->
+<!-- <VERS>VERSION: 1.2.0</VERS> -->
+<!-- <WCTX>Promote four plan-level questions surfaced in the debug-recipes migration findings memo (docs/design/tui-vfx-v3-migration-findings-memo-claude.md §60). Q#24 canonical normalized IR as explicit V3 artifact; Q#25 primitive catalog governance criteria; Q#26 content-effect catalog Decision-2 parity; Q#27 factory payload opacity governance rule. All four are governance/process questions that the migration exercise surfaced but that don't belong at the schema-discussion level.</WCTX>
+<!-- <CLOG>1.2.0: MINOR — add Open Q #24 (canonical normalized IR), Q#25 (primitive catalog governance), Q#26 (content-effect Decision-2 parity), Q#27 (factory payload opacity governance) from the debug-recipes migration findings memo.</CLOG> -->
 <!-- <CLOG>1.1.0: MINOR — add Open Q #23 on timer primitive vs distributed timing mechanisms. Three-option framing (step-level Timer field, `StepInput<T>` sibling, status quo with clearer docs). Surfaced cases where the distributed model strains: per-step durations in `Sequence`, staggered entrances, content-effect timing.</CLOG>
 <!-- <CLOG>1.0.0: initial extraction from the monolith with new Open Q #22 added covering motion_path / arc / bezier / spring trajectories and offscreen from/to, previously flagged only as a major gap in the migration log final audit and schema draft. Easings themselves are covered in Decision 3 (pipeline.timing); the gap is the geometry-aware trajectory primitives and offscreen origin/destination semantics.</CLOG> -->
 
@@ -374,5 +375,89 @@ Three mechanisms means "how long does this one effect take" has three possible a
 
 **Reviewer's opinion:** not yet solicited; added after the 2026-04-21 competitive-analysis pass. Flag for next review cycle.
 
+## 240 — Q#24: Canonical normalized IR as explicit V3 artifact
+
+**Status.** Surfaced by the debug-recipes migration findings memo (docs/design/tui-vfx-v3-migration-findings-memo-claude.md §60). Partially implicit in Open Q #9 (validator redesign) and Q#10 (viewer), both of which the reviewer suggested should build on a normalized IR — but neither question names the IR as a standalone artifact with its own spec.
+
+**The question.** Should V3 define a canonical normalized IR that `canonicalize(raw_recipe) → normalized_recipe` transforms author syntax into, with validator / viewer / property tests / migration equivalence all operating on the normalized form?
+
+**Stakes if yes:** a fourth tooling track (canonicalizer) joins the cutover work, but every other tool becomes simpler:
+- Single validation surface — Q#9's validator operates on one shape, not N authoring variations.
+- Single property-test surface — Q#5's named-factory ↔ compositional equivalence test becomes trivial (canonicalize both sides, compare).
+- Single viewer target — Q#10's viewer renders normalized-form only; authoring variations collapse before they reach rendering.
+- Single migration-equivalence target — Chapter 60's release gates operate on the IR, not on raw JSON.
+
+**Stakes if no:** each tool re-implements its own normalization implicitly; authoring-surface variations multiply tooling code paths; round-trip fidelity (author → canonical → author) is not checked.
+
+**Lean:** yes, make it a first-class V3 deliverable. Tachyonfx's `to_dsl()` is a model — a canonical serialization that round-trips and that all downstream tools consume. Fourth tooling track is a real cost but pays for itself across validator, viewer, property tests, and release gates.
+
+**Sub-questions** (post-shape-decision):
+- Is the IR a Rust-only internal type, or also a serializable JSON form that tools outside the engine can consume?
+- Does the canonicalizer live in `tui-vfx-recipes` (close to the schema) or in a separate crate (so `tui-vfx-tools` can depend on canonicalization without pulling the whole recipe runtime)?
+- What's the stability contract on the IR? Can authoring-syntax sugar evolve without IR version bumps (preferred), or does every authoring change propagate?
+- Does the IR surface hint-resolution (Q#16) in explicit form, so the viewer can show cross-step data flow?
+
+**Reviewer's opinion:** not yet solicited; added 2026-04-21 after the debug-recipes migration findings memo. Flag for next review cycle. The existing reviewer already leaned "validate a canonical normalized IR, not only raw authoring syntax" in Q#9 and "build viewer on the normalized execution graph / canonical IR" in Q#10 — this question makes that artifact explicit rather than implicit.
+
+## 250 — Q#25: Primitive catalog governance
+
+**Status.** Surfaced by the debug-recipes migration findings memo (§60). Decision 2 names three classification tiers (primitive / earned-name composition / trivial composition) but doesn't specify the criterion for *which* tier a new capability lands in. During migration, 10 "primitive itself" classifications were made using judgment; a second reviewer might reasonably classify differently.
+
+**The question.** What is the explicit criterion for promoting a shader to a new base primitive kind (sibling of `colored_overlay`) vs adding a new `Pattern` variant vs leaving it as an earned-name composition vs not adding it at all?
+
+**Stakes.** The primitive catalog size is a major schema surface. Ungoverned growth bloats it (every new shader becomes a new primitive, the catalog sprawls); overly-strict governance leaves authoring holes (authors can't express a capability cleanly and reach for ad-hoc escape hatches).
+
+**Lean: document three explicit criteria.**
+
+1. **New base primitive kind** when `ColoredOverlay + Pattern` cannot express the spatial function. Rules of thumb: generator-class (produces content rather than distributing an existing color over cells), positional (needs cell geometry beyond what Pattern variants provide), per-channel (operates on fg/bg/glyph independently in a way Pattern doesn't model).
+2. **New Pattern variant** when a spatial-distribution function isn't covered by existing variants AND has at least two distinct authoring use cases. Rule-of-two for Patterns, not rule-of-three, because the debug corpus has per-variant single-recipe coverage — demanding three would leave variants stranded as factory-internal.
+3. **Earned-name composition** when specific parameter tuning encodes design judgment worth locking in. Decision 2's existing criterion.
+
+**Sub-questions:**
+- Who owns the promotion decision — spec author, design lead review, implementation review? Probably design lead review at authoring-guide write time.
+- What's the demotion path — if a primitive was promoted and later turns out to be trivially expressible as `ColoredOverlay + Pattern`, is it deprecated or left as a convenience alias?
+- Does the criterion apply symmetrically across all Step kinds (mask, sampler, filter, content), or is it shader-scoped by Decision 2's original framing? (See Q#26 for the content-effect answer.)
+
+**Reviewer's opinion:** not yet solicited. Flag for next review cycle.
+
+## 260 — Q#26: Content-effect catalog governance parity with Decision 2
+
+**Status.** Surfaced by the debug-recipes migration findings memo (§60). Decision 2 is shader-scoped by its wording. Content effects (typewriter, scramble, split_flap, morph, redact, mirror, wrap_indicator, etc.) are currently treated as unrestricted factories — ~16 named effects with similar structure to the 27-name shader catalog and similar authoring pressures.
+
+**The question.** Does V3 apply Decision 2's primitive-vs-earned-name / Tier-1/2/3 framing to content effects the same way it applies to shaders?
+
+**Stakes.** If content effects grow the same way shaders have, they'll accumulate the same discoverability problems Decision 2 was written to solve for shaders: catalog sprawl, unclear which name to reach for, earned names mixed with thin wrappers, no governance on additions.
+
+**Lean: yes, apply Decision 2 symmetrically.**
+
+- **Primitive content effects** — `redact`, `mirror`, `wrap_indicator` are minimal-param, no-design-judgment-encoded transforms. Treat as primitives.
+- **Earned-name content effects** — `split_flap` with authenticity flags, `typewriter` with cursor sub-configs, `scramble` with charset control. Treat as library-factory (earned name).
+- **Composition-earning-name** — the scramble→glitch→shift pipeline observed during migration is a composition worth flagging for earned-name promotion if it proves recurrent.
+
+**Sub-questions:**
+- Does the content-effect catalog get its own `ContentPattern` enum analogous to `Pattern` for shaders? Or is the content domain structurally different (text-producing rather than color-distributing) enough that the analogy doesn't carry?
+- If there is a parallel, does the Rust crate structure mirror — `tui-vfx-content` as the primitive crate, named effects as factories in `tui-vfx-recipes`?
+- How does this interact with Q#23 (timer story)? Many content effects carry their own duration/speed fields; a primitive-vs-earned split affects which layer owns those fields.
+
+**Reviewer's opinion:** not yet solicited. Flag for next review cycle.
+
+## 270 — Q#27: Factory payload opacity governance
+
+**Status.** Surfaced by the debug-recipes migration findings memo (§60). The schema draft says "factory-internal stays factory-internal" for several migration questions (Q9 sampler conventions, Q13 composition-axis constants, Q14 vignette defaults, Q16 contour line discipline, Q18 default_weights). But Q15 (row_mask) is the precedent where factory-internal *turned out to need* scope-surface promotion during migration. Without a governance rule, future Q15s get handled ad-hoc.
+
+**The question.** What's the explicit process for promoting a pattern that's factory-internal in initial V3 to schema-surface later? Rule of three? Design review? Implicit promotion on every authoring-guide pass?
+
+**Stakes.** Recipes written against factory-internal conventions need re-migration each time a pattern gets promoted from factory-internal to schema-surface. Explicit governance keeps that from happening silently and keeps the factory-internal→schema-surface boundary deliberate.
+
+**Lean: rule of three at authoring-guide writing time.** When writing the authoring-guide for a new-in-V3 factory that shares a pattern with two existing factories, flag the shared pattern for schema-surface review. Promote to schema-surface only if the pattern has three factories and a clean abstraction. Otherwise document the factory-internal convention and move on.
+
+**Sub-questions:**
+- Who holds the "three factories" list — spec doc, validator manifest, authoring-guide index? Probably the validator manifest, because the validator already needs the schema-surface enumeration.
+- What's the migration story for recipes written against factory-internal conventions when a pattern gets promoted? Auto-rewrite? Deprecation window? Strict-mode error with helpful migration hint?
+- Does this interact with Q#17 (`$use` / primitive library)? A factory-internal pattern that gets used across three factories might be better expressed as a shared fragment than as a schema-surface primitive, depending on whether the shared pattern is data or behavior.
+- Is there a demotion path — if a schema-surface primitive ends up used by only one factory, does it get demoted back? Probably no; schema promotion is sticky because recipes have already been authored against it.
+
+**Reviewer's opinion:** not yet solicited. Flag for next review cycle. The Q15 row_mask precedent is load-bearing — that concrete migration case should inform how the governance rule handles ambiguity.
+
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
