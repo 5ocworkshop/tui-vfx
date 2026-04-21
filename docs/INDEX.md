@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.10.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.4 — tui-vfx-debug now described as logger + unified inspection foundation; add TRACE_EVENT_SCHEMA.md link.</WCTX> -->
-<!-- <CLOG>1.10.0: add Unified inspection foundation subsection pointing at tui-vfx-debug::inspection and TRACE_EVENT_SCHEMA.md; update pipeline-probe + validator guide entries with cross-reference to the inspection surface.
+<!-- <VERS>VERSION: 1.11.0</VERS> -->
+<!-- <WCTX>Sub-plan B Phase B.6 — add the new tui-vfx-trace LLM guide and extend the tool-ownership notes so AI agents can distinguish unified trace capture from probe/validator surfaces.</WCTX> -->
+<!-- <CLOG>1.11.0: add PIPELINE_TRACE_LLM_GUIDE.md, add tui-vfx-trace to the recipe-authoring ownership split, and keep the existing inspection-foundation references intact.
+1.10.0: add Unified inspection foundation subsection pointing at tui-vfx-debug::inspection and TRACE_EVENT_SCHEMA.md; update pipeline-probe + validator guide entries with cross-reference to the inspection surface.
 1.9.0: add Foundation primitives subsection naming the role-tagging primitives shipped in tui-vfx-types 0.6.0 for the recipe scene composer.
 1.8.0: add explicit recipe-authoring tool ownership split plus the debug-recipes QC surface.</CLOG> -->
 
@@ -74,6 +75,7 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 ## Hand-Maintained
 - Recipe-authoring tool ownership:
   - **Preview / demo browser** (`tui-vfx-recipes` preview surfaces) is the canonical **recipe player** for human visual sign-off.
+  - **`tui-vfx-trace`** is the canonical **unified lifecycle/resolution/composition/pipeline trace** surface for recipe playback.
   - **`pipeline-validator`** is the canonical **recipe-authoring validation** surface (parse / rules / stages / upstream-native `--debug-recipes-qc`).
   - **`recipe-probe` / `pipeline-validator --probe`** are the canonical **structured recipe evidence** surfaces.
   - **`pipeline-probe`** is the canonical **direct engine-scene** probe and does not replace recipe-aware validation.
@@ -83,6 +85,7 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [COMPOSED_CAPABILITIES.md](COMPOSED_CAPABILITIES.md) — Curated catalog of composed capabilities organised around the six composition axes (mask / sampler / filter / style / motion path / runtime bindings), with foundational A+B→X patterns, variant-rich option-set treasure, a hero/easter-egg showcase, and designer refinement opportunities — grounded in a full audit of the ~630-recipe `tui-vfx-recipes` corpus
 - [HOWTO_SHADOWS.md](HOWTO_SHADOWS.md) — Shadow rendering guide and integration patterns
 - [PIPELINE_VALIDATOR_LLM_GUIDE.md](PIPELINE_VALIDATOR_LLM_GUIDE.md) — How an LLM should use the `pipeline-validator` CLI (in the sibling `tui-vfx-recipes` repo) to inspect recipe rendering, diagnose shader bugs, verify per-cell output, and run upstream-native debug-recipes QC
+- [PIPELINE_TRACE_LLM_GUIDE.md](PIPELINE_TRACE_LLM_GUIDE.md) — How an LLM or user should use `tui-vfx-trace` (in the sibling `tui-vfx-recipes` repo) to capture unified recipe traces as NDJSON or structured JSON summaries
 - [PIPELINE_PROBE_LLM_GUIDE.md](PIPELINE_PROBE_LLM_GUIDE.md) — How an LLM or user should use the engine-side `pipeline-probe` CLI to inspect direct `ProbeSceneSpec` inputs as structured JSON/NDJSON
 - [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md) — Full `TraceEvent` / `TraceEnvelope` schema shipped in `tui-vfx-debug::inspection` (since 0.9.0); AI-consumption-ready reference
 - [PIPELINE_PROBE_WISHLIST.md](PIPELINE_PROBE_WISHLIST.md) — Prioritized wishlist for finishing the dream AI-native recipe debug tool, including the current diminishing-returns assessment
@@ -101,4 +104,4 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.10.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.11.0</VERS> -->
