@@ -444,6 +444,75 @@ The schema is ready to be treated as a serious build-target if consumers adopt t
 
 ---
 
+
+
+## 14. Reconciliation against the V2 schema
+
+The strongest question at this stage is no longer “does the structure look elegant?”
+It is “did we forget any important V2 surface?”
+
+Current reconciliation stance:
+
+| V2 surface | V3 stance |
+|---|---|
+| `message` | kept under `config.message` |
+| `content` | kept, but explicitly treated as a deep renderer subtree |
+| `layout` | kept under `config.layout` |
+| `lifecycle` | kept under `config.lifecycle` |
+| `border` | kept under `config.border` |
+| `time` | normalized to `config.clock` |
+| style-layer `clock` | normalized to per-step `clock` override |
+| `theme` | explicit envelope-level home |
+| `shadow` | explicit envelope-level home |
+| `scene` | explicit first-class scene-layer home |
+| `requires_primitives` | explicit contract/discovery home |
+| singular `style` and plural `styles` | one normal form: tree of `style_effect` / `base_style_override` / sibling `shader` steps |
+| `interaction_states` + `interaction_config` | explicit Step-level `interaction` home |
+| legacy `spatial_shader` | migrate to `style_effect(type=spatial, shader=...)` or sibling `shader` |
+| `text_pool`, `effect_pool`, `preset_pool`, `image_pool`, `font_pool` | treated as authoring-scale template/family/content-source machinery above the concrete recipe tree |
+| `animation_type` | drop-recommended vestigial V2 surface |
+| `continuous` | replaced by `phase = all` + clocked step / renderer-tree timing rather than a separate top-level mode |
+
+The remaining intentionally unresolved V2-era pressure is no longer “where does this field go?”
+It is mostly about:
+
+- richer region compression
+- future celebratory particle generators
+- and implementation/tooling around normalized IR
+
+## 15. Reconciliation against the multi-chapter V3 upgrade plan
+
+This overview is intended to **tighten** the plan, not to contradict it.
+
+### Still aligned with the plan's core decisions
+
+- **Decision 1 — Unified Scope**: still core, now with stronger pressure for compression helpers and refs
+- **Decision 2 — Pattern / primitive governance**: still core, but with a stronger emphasis on deep subtrees and renderer trees
+- **Decision 3 — Tree authoring schema**: still core
+- **Decision 4 — Naming refresh**: no contradiction; vocabulary cleanup remains selective
+- **Decision 5 — Scene layers**: reinforced, especially by the code-derived Madeira Flag work
+- **Decision 6 — ParamValue**: still core; wrapper form for signals is now the build-against stance
+- **Decision 7 — Step output hints**: reinforced by the Madeira flag sampler→shader binding
+- **Decision 8 — Canonical upstream semantic seam**: unchanged and still load-bearing
+
+### Places where this synthesis makes the plan more explicit
+
+- It turns **deep shared substrates / renderer trees** into the main organizing idea.
+- It makes **hybrid templates** and **wrapper/router nodes** first-class design concepts.
+- It treats **template + variants** as an authoring layer above the concrete recipe tree.
+- It commits to the **normalized IR** as the recommended tooling-facing architecture.
+
+### Places where this synthesis intentionally chooses a direction
+
+- Motion-path / offscreen home: `pipeline.timing`
+- No separate Timer primitive in core V3 for now
+- Pools/presets above the concrete tree, not inside it
+- Region compression starts with `cell_run`, `cell_runs`, and `region_ref`
+- Scoped style patches stay inside `style_effect`, not a new top-level kind
+
+These are not random deviations.
+They are the explicit places where the dual-auditor pass produced enough signal to make a call.
+
 ## 13. Relationship to the JSON draft
 
 The JSON draft remains the canonical specification-by-example.

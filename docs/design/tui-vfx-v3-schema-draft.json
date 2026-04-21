@@ -186,6 +186,12 @@
   #   library/discovery/tooling hint rather than a render-time control.
   #   Use it when a recipe intentionally depends on specific primitive or
   #   generator families so validator/docs can report capability coverage.
+  #
+  # V2 pool / preset note:
+  # - `text_pool`, `effect_pool`, `preset_pool`, `image_pool`, and `font_pool`
+  #   are treated as authoring-scale family/template/content-source concerns,
+  #   not as new concrete tree nodes inside one realized recipe. They belong in
+  #   the higher-level authoring layer that emits concrete recipes.
 
   # =========================================================================
   # 5. CONFIG — the recipe body
@@ -502,6 +508,11 @@
       # Scope and phase propagate down through container children unless a
       # child overrides explicitly. Parallel children all run concurrently;
       # Sequence children run in declared order.
+      #
+      # Optional per-step clock override when one leaf needs a different
+      # temporal basis than the recipe/default layer clock:
+      #   "clock": { "loop": true, "period_ms": 1200 }
+      # This is the preferred V3 home for V2 style-layer `clock` overrides.
       #
       # Optional Step sibling for interactive recipes:
       #   "interaction": {
@@ -965,6 +976,8 @@
 #   general pipeline operation.
 # - field-rendering wrappers over upstream sources
 #   Example: subcell-light interpreting an upstream shader-defined field
+# - V2 `styles` arrays / `style` singular both normalize to one tree idiom
+#   Example: parallel `style_effect`, `base_style_override`, and `shader` steps
 # - cross-lane paired capabilities
 #   Example: rigid_shake filter + rigid_shake_style
 # - shading families that bind upstream hints
@@ -1000,6 +1013,8 @@
 #  B. Template + variants authoring sits ABOVE the concrete recipe tree
 #     - Family/template authoring (e.g. easing-family style expansion) is a
 #       separate layer that emits concrete V3 recipes.
+#     - This is also the recommended home for V2 pool/preset mechanisms
+#       (`text_pool`, `effect_pool`, `preset_pool`, `image_pool`, `font_pool`).
 #     - This concrete schema remains for a single realized recipe; it does not
 #       absorb template+variants into the StepKind algebra.
 #
