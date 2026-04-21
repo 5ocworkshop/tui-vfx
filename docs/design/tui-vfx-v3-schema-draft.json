@@ -178,6 +178,15 @@
     "logo": { "type": "image", "format": "rsb", "canonical_path": "assets/logo.rsb" }
   },
 
+  "requires_primitives": [
+    "shader.border_sweep",
+    "content.typewriter"
+  ],
+  # ^ Optional capability declaration carried forward from V2. This is a
+  #   library/discovery/tooling hint rather than a render-time control.
+  #   Use it when a recipe intentionally depends on specific primitive or
+  #   generator families so validator/docs can report capability coverage.
+
   # =========================================================================
   # 5. CONFIG — the recipe body
   # =========================================================================
@@ -342,6 +351,23 @@
       }
     },
 
+    "theme": {
+      "id": "theme-neutral"
+    },
+    # ^ Optional. Theme affinity / resolution hint for recipes that are not
+    #   fully theme-agnostic. Can be used by catalog tooling and future token
+    #   resolution layers without forcing theme semantics into every payload.
+
+    "shadow": {
+      "kind": "soft",
+      "opacity": 0.25,
+      "offset": { "x": 0, "y": 1 },
+      "blur_radius": 1
+    },
+    # ^ Optional. V2 exposed shadow as a top-level recipe concern. V3 keeps it
+    #   as an optional envelope-level visual treatment rather than forcing each
+    #   recipe to synthesize shadows from lower-level primitives.
+
     # -----------------------------------------------------------------------
     # 5.5 Scene layers (Decision 5) — multi-source composition
     # -----------------------------------------------------------------------
@@ -476,6 +502,24 @@
       # Scope and phase propagate down through container children unless a
       # child overrides explicitly. Parallel children all run concurrently;
       # Sequence children run in declared order.
+      #
+      # Optional Step sibling for interactive recipes:
+      #   "interaction": {
+      #     "element_id": "bar_yes",
+      #     "state_composition": "layered",
+      #     "transition_ms": 150,
+      #     "easing": "quad_out",
+      #     "states": [
+      #       { "state": "hover", "geometry": { "character": "█" } }
+      #     ],
+      #     "accessibility": {
+      #       "focus_visible_required": false,
+      #       "min_contrast_ratio": 3.0,
+      #       "reduce_motion_compliant": true
+      #     }
+      #   }
+      # This is the resolved V3 home for V2 `interaction_states` +
+      # `interaction_config`.
 
       "step": {
         "kind": "parallel",
@@ -796,7 +840,7 @@
 #     # ^ `default` preserves V2's offline-validator fallback. Without it
 #     #   every binding recipe fails offline validation. Strongly recommended.
 #
-#     # --- SignalGraph (Decision 6; shape tentative, see Q3) ------------
+#     # --- SignalGraph (Decision 6; resolved wrapper shape) -------------
 #     { "signal": SignalGraphNode }
 #
 # Enum-typed bindings (Q12): prefer variant strings (e.g. "forward") over
@@ -808,11 +852,13 @@
 # flags needed.
 
 # ============================================================================
-# 5.9 SignalGraph node vocabulary (tentative, Q3 + Q31)
+# 5.9 SignalGraph node vocabulary (resolved draft stance)
 # ============================================================================
 # V3 consumes mixed-signals (Intention 40). The JSON shape below is the
-# draft surface over mixed-signals' primitive catalog. Not yet settled —
-# needs alignment with mixed-signals' own JSON surface when it stabilizes.
+# concrete wrapper-based draft stance for build-against purposes. If upstream
+# mixed-signals eventually prefers a different wire format, canonicalization
+# should adapt raw recipes into the normalized IR rather than forcing authors
+# to rewrite the conceptual model.
 #
 #   SignalGraphNode ::=
 #     # --- Leaves (canonical mixed-signals primitives) ------------------
@@ -851,21 +897,14 @@
 #     # --- Runtime binding inside a graph (permissive composition) -----
 #     { "kind": "binding", "name": <name>, "default": T }
 #
-# Open questions specific to SignalGraph:
-# - Q3: Should the top-level ParamValue shape wrap signals as
-#   { "signal": SignalGraphNode } (wrapper approach, currently drafted) or
-#   allow the SignalGraphNode directly where a T is expected (transparent
-#   approach)? Wrapper is more verbose but lets ParamValue stay a tagged
-#   union; transparent requires disambiguation on { "kind": ... } presence.
-# - Q31: Spatial leaves (sample_norm_x etc.) must originate in
-#   mixed-signals for the whole approach to hold — otherwise V3 invents
-#   signal surface which Intention 40 forbids. Extending mixed-signals
-#   upstream is the proposed path.
-# - Q32: Step-output-hints (displacement, sampled_color, cell_density)
-#   need a way to feed back into SignalGraphs so a shader can shade
-#   per-cell by a sibling sampler's output. Proposal: a
-#   { "kind": "hint", "name": "displacement" } leaf that reads the hint
-#   at the cell being evaluated.
+#     # --- Pipeline hint leaf -------------------------------------------
+#     { "kind": "hint", "name": "displacement" }
+#
+# Resolved draft stance:
+# - ParamValue uses the wrapper form `{ "signal": ... }`.
+# - Spatial-coordinate leaves (`sample_norm_x`, etc.) are part of the draft
+#   conceptual surface and should be upstreamed/aligned with mixed-signals.
+# - Pipeline step-output hints are readable inside graphs via `kind = hint`.
 
 # 5.10 SUBTREE GUIDANCE — what should collapse vs what should stay distinct
 # ============================================================================
@@ -920,10 +959,20 @@
 #   Example: split_flap charset / rolling_flip / from_message
 # - wrapper/router nodes
 #   Example: style_effect(type=spatial, shader=...)
+#   Migration rule: legacy `spatial_shader` on a V2 style block becomes
+#   either (a) `style_effect(type=spatial, shader=...)` when it is semantically
+#   style-local, or (b) a sibling `shader` step when it should behave as a
+#   general pipeline operation.
 # - field-rendering wrappers over upstream sources
 #   Example: subcell-light interpreting an upstream shader-defined field
 # - cross-lane paired capabilities
 #   Example: rigid_shake filter + rigid_shake_style
+# - shading families that bind upstream hints
+#   Example: displacement_shade / wave_correlated shading over a displacement hint
+# - sub-cell / fractional rendering families
+#   Example: braille, eighth-block, partial-stripe, and similar render modes
+#   stay as payload/render-mode families inside existing leaf kinds unless a
+#   future interoperability need forces wider promotion.
 #
 # Promotion rule: only elevate a concept to the schema surface when keeping it
 # payload-internal materially harms interoperability, discovery, validation, or
@@ -982,17 +1031,19 @@
 # These are cases the migration surfaced as V3-unfixable-without-plan-work.
 # Each has a reference to the final audit section of the migration log.
 #
-# MAJOR gaps (loader cannot ship without these):
-#   A. SignalGraph JSON shape (final audit #6, Q3)
-#      Used pervasively (breath, drift, pulse, spatial_signal).
-#      Needs mixed-signals alignment.
+# Remaining gaps after the current synthesis pass:
 #
-# MINOR gaps (less urgent, can ship V3 with these as TBD):
-#   C. base_style.modifiers (bold/italic/underline) — final audit #1.
-#   D. pipeline timing snapping (round/floor/ceil) — final audit #2.
-#   B. wave_correlated shading (primitive vs SignalGraph) — Q32.
-#   C. fractional_stripe_overlay / sub-cell primitive — Q34.
-#   D. Celebratory ballistic particles / fireworks as a likely new generator family.
+#   A. Celebratory ballistic particles / fireworks as a likely new generator family.
+#      - not faithfully expressible from the currently covered primitives
+#      - likely belongs as a new procedural generator subtree, not a forced composition
+#
+#   B. Region compression / derived selectors may need richer follow-on forms.
+#      - `cell_run` / `cell_runs` + `region_ref` are the first resolved layer
+#      - future large corpora may still motivate glyph-patch / segment abstractions
+#
+#   C. Canonical normalized IR remains an implementation/tooling task.
+#      - the architectural decision is resolved
+#      - the concrete implementation still needs to be built
 #
 # DROP-RECOMMENDED:
 #   - pipeline.animation_type (V2 vestigial; no observed behavior).
