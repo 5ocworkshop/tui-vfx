@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.10.0</VERS>
-// <WCTX>Add GlyphStyle filter variant for per-glyph-category style overrides. Primary consumer: SplitFlap boards needing distinct colors for block/hinge/letter/turned glyph categories — each rule declares a char-membership set + optional fg/bg/modifier overrides, first-match-wins semantics, unmatched cells unchanged. Includes new GlyphStyleRule struct.</WCTX>
-// <CLOG>MINOR: new pub struct GlyphStyleRule { chars, fg, bg, modifiers } with serde + ConfigSchema derives; new FilterSpec::GlyphStyle { rules: Vec<GlyphStyleRule> } variant. Backward-compatible — existing recipes unaffected.
+// <VERS>VERSION: 3.11.0</VERS>
+// <WCTX>Add fg_alternate to GlyphStyleRule — symmetric to bg_alternate. Primary consumer: HBF sparse_update recipe, where the flap block rule wants its face colour to carry the neighbor cell's bg shade for a subtle depth/shadow read while cells spin. Cross-assigning fg/fg_alternate to bg_alternate/bg lands the effect.</WCTX>
+// <CLOG>MINOR: GlyphStyleRule grows pub fg_alternate: Option<ColorConfig> with serde #[serde(default, skip_serializing_if = "Option::is_none")]. Backward-compatible — recipes without the field keep v3.10.0 semantics.
 
 //! # Filter Specifications
 //!
@@ -174,6 +174,13 @@ pub struct GlyphStyleRule {
     /// unset for uniform bg behavior.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bg_alternate: Option<ColorConfig>,
+    /// Optional alternate foreground for `(x + y) % 2 == 1` cells,
+    /// symmetric to `bg_alternate`. Primary use case: make a block/hinge
+    /// glyph's face carry the NEIGHBOR cell's bg shade by setting
+    /// `fg = bg_alternate` and `fg_alternate = bg` — selling a subtle
+    /// depth/shadow read while the cell spins. Unset leaves fg uniform.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fg_alternate: Option<ColorConfig>,
 }
 
 /// Controls which cells CharsetNoise affects.

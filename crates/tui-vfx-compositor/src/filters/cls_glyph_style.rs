@@ -1,8 +1,8 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_glyph_style.rs</FILE>
 // <DESC>GlyphStyle filter — per-glyph-category style overrides via char-membership rules</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Add bg_alternate field to GlyphStyleRule for coordinate-checkerboard bg modulation. Naturally bounded by char-matching — cells outside the rule's char set (padding spaces, border, unmatched chars) are unaffected, so applying alternation to a "letter cells" rule produces a card-grid edge perception only where cards actually live.</WCTX>
-// <CLOG>MINOR: GlyphStyleRule grows pub bg_alternate: Option<Color>. When set and (x+y) parity is odd, the cell uses bg_alternate instead of bg; when unset, behavior is identical to v1.0.0. Three new inline tests covering parity application, fall-through, and bound-by-char-match.</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Add fg_alternate field (symmetric to bg_alternate) so the flap/block glyph rule can make its foreground match the NEIGHBOR cell's bg — fg tracks (x+y) parity just like bg. In HBF sparse_update this produces a subtle depth/shadow read as cards spin: the flap's visible face carries the neighbor's bg shade rather than its own, selling a slight "receding into the board" look without breaking the checkerboard.</WCTX>
+// <CLOG>MINOR: GlyphStyleRule grows pub fg_alternate: Option<Color>. When set and (x+y) parity is odd, the cell uses fg_alternate instead of fg; when unset, behavior matches v1.1.0. Three new inline tests mirror the bg_alternate coverage: parity application, fall-through when unset, bounded-by-char-match.</CLOG>
 
 //! GlyphStyle filter
 //!
@@ -55,6 +55,14 @@ pub struct GlyphStyleRule {
     /// use `bg_alternate`. Pick a slightly different shade of the same
     /// color family for a subtle card-edge perception.
     pub bg_alternate: Option<Color>,
+    /// Alternate foreground for `(x + y) % 2 == 1` cells. `None` disables
+    /// fg alternation. When set, even-parity cells use `fg` (or leave fg
+    /// untouched if `fg` is also `None`), odd-parity cells use
+    /// `fg_alternate`. Intended for block/hinge glyphs whose face colour
+    /// should match the NEIGHBOR cell's `bg` — pair with `bg_alternate`
+    /// and cross-assign (fg = neighbor bg at even, fg_alternate =
+    /// neighbor bg at odd) for a subtle depth/shadow read as cells flip.
+    pub fg_alternate: Option<Color>,
 }
 
 /// Filter that styles cells based on glyph-content membership.
@@ -73,7 +81,16 @@ impl Filter for GlyphStyle {
     fn apply(&self, cell: &mut Cell, x: u16, y: u16, _w: u16, _h: u16, _t: f64) {
         for rule in &self.rules {
             if rule.chars.contains(&cell.ch) {
-                if let Some(fg) = rule.fg {
+                // Coordinate-checkerboard fg: symmetric to bg path below.
+                // Even parity uses fg; odd parity uses fg_alternate (or
+                // falls back to fg when fg_alternate is None). Both None
+                // leaves fg untouched — v1.1.0 compatibility.
+                let parity_fg = if (x + y) % 2 == 1 {
+                    rule.fg_alternate.or(rule.fg)
+                } else {
+                    rule.fg
+                };
+                if let Some(fg) = parity_fg {
                     cell.fg = fg;
                 }
                 // Coordinate-checkerboard bg: even parity uses bg, odd
@@ -124,6 +141,7 @@ mod tests {
             fg: Some(Color::rgb(210, 210, 210)),
             bg: None,
             bg_alternate: None,
+            fg_alternate: None,
         }]);
         let mut cell = cell_with('X');
         let before = cell;
@@ -138,6 +156,7 @@ mod tests {
             fg: Some(Color::rgb(180, 180, 180)),
             bg: None,
             bg_alternate: None,
+            fg_alternate: None,
         }]);
         let mut cell = cell_with('█');
         filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
@@ -152,6 +171,7 @@ mod tests {
             fg: None,
             bg: Some(Color::rgb(42, 42, 42)),
             bg_alternate: None,
+            fg_alternate: None,
         }]);
         let mut cell = cell_with('▀');
         filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
@@ -167,12 +187,14 @@ mod tests {
                 fg: Some(Color::rgb(255, 0, 0)),
                 bg: None,
             bg_alternate: None,
+            fg_alternate: None,
             },
             GlyphStyleRule {
                 chars: vec!['H'],
                 fg: Some(Color::rgb(0, 255, 0)),
                 bg: None,
             bg_alternate: None,
+            fg_alternate: None,
             },
         ]);
         let mut cell = cell_with('H');
@@ -190,12 +212,14 @@ mod tests {
                 fg: Some(Color::rgb(210, 210, 210)),
                 bg: Some(Color::rgb(42, 42, 42)),
             bg_alternate: None,
+            fg_alternate: None,
             },
             GlyphStyleRule {
                 chars: "ⒶꓭƆꓷƎⅎ⅁ꓘ⅂ԀꓤꓤꞱ∩ΛⅯⅦⅣ".chars().collect(),
                 fg: Some(Color::rgb(140, 140, 140)),
                 bg: None,
             bg_alternate: None,
+            fg_alternate: None,
             },
         ]);
 
@@ -219,6 +243,7 @@ mod tests {
             fg: None,
             bg: Some(Color::rgb(28, 28, 28)),
             bg_alternate: Some(Color::rgb(36, 36, 36)),
+            fg_alternate: None,
         }]);
 
         // (0,0) → parity even → bg
@@ -250,6 +275,7 @@ mod tests {
             fg: None,
             bg: Some(Color::rgb(28, 28, 28)),
             bg_alternate: None,
+            fg_alternate: None,
         }]);
         for (x, y) in [(0u16, 0u16), (1, 0), (0, 1), (1, 1), (5, 7)] {
             let mut cell = cell_with('A');
@@ -269,6 +295,7 @@ mod tests {
             fg: None,
             bg: Some(Color::rgb(28, 28, 28)),
             bg_alternate: Some(Color::rgb(36, 36, 36)),
+            fg_alternate: None,
         }]);
 
         // Space at odd parity — unchanged (no rule matches)
@@ -288,7 +315,105 @@ mod tests {
         filter.apply(&mut matched, 1, 0, 10, 10, 0.0);
         assert_eq!(matched.bg, Color::rgb(36, 36, 36), "matched char gets bg_alternate");
     }
+
+    // ---------- fg_alternate: coordinate checkerboard fg modulation ----------
+
+    #[test]
+    fn fg_alternate_applies_on_odd_parity_only() {
+        let filter = GlyphStyle::new(vec![GlyphStyleRule {
+            chars: vec!['█'],
+            fg: Some(Color::rgb(200, 200, 200)),
+            bg: None,
+            bg_alternate: None,
+            fg_alternate: Some(Color::rgb(120, 120, 120)),
+        }]);
+
+        let mut even = cell_with('█');
+        filter.apply(&mut even, 0, 0, 10, 10, 0.0);
+        assert_eq!(even.fg, Color::rgb(200, 200, 200), "even parity uses fg");
+
+        let mut odd_x = cell_with('█');
+        filter.apply(&mut odd_x, 1, 0, 10, 10, 0.0);
+        assert_eq!(odd_x.fg, Color::rgb(120, 120, 120), "odd x uses fg_alternate");
+
+        let mut odd_y = cell_with('█');
+        filter.apply(&mut odd_y, 0, 1, 10, 10, 0.0);
+        assert_eq!(odd_y.fg, Color::rgb(120, 120, 120), "odd y uses fg_alternate");
+
+        let mut diag_even = cell_with('█');
+        filter.apply(&mut diag_even, 1, 1, 10, 10, 0.0);
+        assert_eq!(diag_even.fg, Color::rgb(200, 200, 200), "diagonal even uses fg");
+    }
+
+    #[test]
+    fn fg_alternate_falls_back_to_fg_when_unset() {
+        let filter = GlyphStyle::new(vec![GlyphStyleRule {
+            chars: vec!['█'],
+            fg: Some(Color::rgb(200, 200, 200)),
+            bg: None,
+            bg_alternate: None,
+            fg_alternate: None,
+        }]);
+        for (x, y) in [(0u16, 0u16), (1, 0), (0, 1), (1, 1), (5, 7)] {
+            let mut cell = cell_with('█');
+            filter.apply(&mut cell, x, y, 10, 10, 0.0);
+            assert_eq!(cell.fg, Color::rgb(200, 200, 200),
+                       "cell ({x},{y}) should fall back to fg");
+        }
+    }
+
+    #[test]
+    fn fg_alternate_bounded_by_char_match() {
+        let filter = GlyphStyle::new(vec![GlyphStyleRule {
+            chars: vec!['█'],
+            fg: Some(Color::rgb(200, 200, 200)),
+            bg: None,
+            bg_alternate: None,
+            fg_alternate: Some(Color::rgb(120, 120, 120)),
+        }]);
+
+        // Unmatched char at odd parity stays unchanged
+        let mut space = cell_with(' ');
+        let before = space;
+        filter.apply(&mut space, 1, 0, 10, 10, 0.0);
+        assert_eq!(space, before, "unmatched space is not touched by fg_alternate");
+
+        // Matched char at odd parity gets fg_alternate
+        let mut block = cell_with('█');
+        filter.apply(&mut block, 1, 0, 10, 10, 0.0);
+        assert_eq!(block.fg, Color::rgb(120, 120, 120));
+    }
+
+    #[test]
+    fn fg_alternate_crossed_with_bg_produces_neighbor_bg_face() {
+        // The HBF sparse_update use case: setting fg = bg_alternate's
+        // color and fg_alternate = bg's color means the flap's face
+        // always carries the NEIGHBOR cell's bg shade (subtle depth).
+        let own_bg = Color::rgb(44, 46, 52);
+        let own_bg_alt = Color::rgb(66, 58, 46);
+        let filter = GlyphStyle::new(vec![GlyphStyleRule {
+            chars: vec!['█'],
+            fg: Some(own_bg_alt),
+            bg: Some(own_bg),
+            bg_alternate: Some(own_bg_alt),
+            fg_alternate: Some(own_bg),
+        }]);
+
+        // Even parity: cell bg = own_bg; neighbor bg = own_bg_alt.
+        // Flap fg should equal own_bg_alt (= neighbor bg).
+        let mut even = cell_with('█');
+        filter.apply(&mut even, 0, 0, 10, 10, 0.0);
+        assert_eq!(even.bg, own_bg, "even parity cell bg");
+        assert_eq!(even.fg, own_bg_alt, "even parity fg matches neighbor bg");
+
+        // Odd parity: cell bg = own_bg_alt; neighbor bg = own_bg.
+        // Flap fg should equal own_bg (= neighbor bg).
+        let mut odd = cell_with('█');
+        filter.apply(&mut odd, 1, 0, 10, 10, 0.0);
+        assert_eq!(odd.bg, own_bg_alt, "odd parity cell bg");
+        assert_eq!(odd.fg, own_bg, "odd parity fg matches neighbor bg");
+    }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_glyph_style.rs</FILE>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>
