@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-lowering-map.md</FILE> - <DESC>Live lowering map from important V2 surfaces/families into the V3 schema and capability catalog. This is the execution companion for Chapter 57.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Seed the lowering phase with the highest-value mappings so implementation can start from explicit migration contracts rather than ad hoc policy.</WCTX> -->
-<!-- <CLOG>0.1.0: initial lowering map. Covers envelope/time/style/interaction/spatial-shader/apply_to/content-tree normalizations and marks the highest-risk family classes as human-review-required.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Extended through the first ambiguity-resolution batch so the lowering map now covers not only the straightforward mappings but also the classes that originally required explicit human review.</WCTX> -->
+<!-- <CLOG>0.2.0: resolve LM-12 human-review-required cases by writing explicit lowering rules for wrappers, hybrid templates, same-name cross-lane families, rule-engine families, field-rendering wrappers, and celebratory particle generators.
+0.1.0: initial lowering map. Covers envelope/time/style/interaction/spatial-shader/apply_to/content-tree normalizations and marks the highest-risk family classes as human-review-required.</CLOG> -->
 
 # tui-vfx V3 lowering map
 
@@ -26,7 +27,7 @@ It records the current lowering contract from important V2 surfaces into the V3 
 | LM-09 | split-flap variants | RESOLVED | lower into one renderer tree |
 | LM-10 | filter-side subtree families | RESOLVED | lower against capability catalog |
 | LM-11 | scene layers + procedural sources | RESOLVED | direct layer homes + schema_ref |
-| LM-12 | edge cases requiring human review | OPEN | living list |
+| LM-12 | edge cases requiring human review | RESOLVED | explicit lowering rules added |
 
 ---
 
@@ -123,16 +124,72 @@ Lower by capability-catalog family rather than by one-name-per-file legacy ident
 
 ---
 
-## 3. Human-review-required cases
+## 3. Resolved ambiguity-heavy lowering rules (LM-12)
 
-These should not be blindly auto-lowered:
+### LM-12.1 — Wrapper / router families
 
-- wrapper/router families
-- hybrid templates
-- same-name cross-lane families
-- field-rendering wrappers
-- rule-engine families with large rule tables
-- any future celebratory particle family
+Examples:
+- style-native spatial wrappers
+- style-side hosts of other capability families
+
+Lowering rule:
+- keep them on their native lane
+- represent the hosted family inside payload structure
+- do **not** lower them into fake new top-level StepKinds
+
+### LM-12.2 — Hybrid templates
+
+Examples:
+- wipe + fade transition templates
+- materialize variants
+- field-rendering wrappers with upstream source shaders
+
+Lowering rule:
+- lower to explicit `parallel` / `sequence` tree forms composed of already-known leaf kinds
+- do not force them into one flattened primitive payload
+- preserve them as reusable composition templates in docs/catalog/governance where useful
+
+### LM-12.3 — Same-name cross-lane families
+
+Examples:
+- `crt` filter vs `crt` sampler
+- `sub_cell_shake` shader vs `sub_cell_shake` filter
+
+Lowering rule:
+- treat same-name cross-lane families as distinct unless implementation/code evidence proves they are the same substrate with wrappers
+- name collisions are documentation/governance problems first, not automatic collapse signals
+
+### LM-12.4 — Field-rendering wrappers
+
+Examples:
+- `subcell_light_*`
+
+Lowering rule:
+- lower as a wrapper category over an upstream field source
+- preserve both:
+  - the renderer payload
+  - and the upstream source-producing sibling subtree
+- do not collapse them into standalone simple filter leaves
+
+### LM-12.5 — Rule-engine families
+
+Examples:
+- `glyph_style`
+
+Lowering rule:
+- keep them on the existing operational lane
+- classify them as rule-engine payload families in docs/catalog/governance
+- normalize repeated phase payloads where possible, but do not pretend they are ordinary scalar payloads
+
+### LM-12.6 — Celebratory particle generators
+
+Examples:
+- Madeira fireworks
+
+Lowering rule:
+- do not force a fake lowering onto existing sweep/texture families
+- classify as a future procedural generator subtree
+- keep omitted from current concrete migration targets unless and until the new generator family exists
 
 ---
 
@@ -140,9 +197,9 @@ These should not be blindly auto-lowered:
 
 Next lowering work should focus on:
 
-- populating LM-12 with concrete remaining edge cases as implementation begins
 - validating that lowering rules are sufficient for normalized IR construction
-- checking whether any family still forces schema changes rather than simple lowering/normalization
+- identifying any implementation spikes that still force schema revision rather than lowering/normalization
+- keeping this map current as real implementation begins
 
 <!-- <FILE>docs/design/tui-vfx-v3-lowering-map.md</FILE> -->
 <!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
