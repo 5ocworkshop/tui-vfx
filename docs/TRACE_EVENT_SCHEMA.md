@@ -1,6 +1,6 @@
 <!-- <FILE>docs/TRACE_EVENT_SCHEMA.md</FILE> - <DESC>Canonical schema reference for TraceEvent + TraceEnvelope shipped in tui-vfx-debug::inspection (since 0.9.0)</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Sub-plan B Phase B.1 — extend the schema reference with the shared TraceEmitter/TraceFrameContext stamping contract used by the compositor bridge and future recipe-side emitters, while preserving the canonical event/envelope tables.</WCTX> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Sub-plan B Phase B.5 — sync the schema reference with the concrete recipes-side emit-site paths now that lifecycle, resolution, and composition events are wired through their B.5 helpers.</WCTX> -->
 <!-- <CLOG>0.2.0: document TraceFrameContext + TraceEmitter as the shared stamping authority for TraceEnvelope emission across bridge/composer emit sites.
 0.1.0: initial AI-consumption schema reference covering all 18 TraceEvent variants across the four stages (lifecycle / resolution / composition / pipeline), envelope fields, stage mask semantics, NDJSON format, determinism.</CLOG> -->
 
@@ -46,9 +46,11 @@ within that frame.
 
 ## 2. Lifecycle stage — `StageMask::LIFECYCLE`
 
-Source: `tui-vfx-recipes::manager` (emitters land in Sub-plan C).
+Source: `tui-vfx-recipes::manager` — concrete B.5 emit sites live in `src/manager/mod.rs` and forward via `src/manager/fnc_emit_lifecycle_event.rs`.
 
 ### `LifecyclePhaseEntered { id, phase, t_ms }`
+
+**Emit site:** `tui-vfx-recipes/src/manager/mod.rs` (`tick` phase-change branch) via `tui-vfx-recipes/src/manager/fnc_emit_lifecycle_event.rs`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -57,6 +59,8 @@ Source: `tui-vfx-recipes::manager` (emitters land in Sub-plan C).
 | `t_ms` | `u64` | Elapsed milliseconds since manager start (also duplicated in envelope for convenience). |
 
 ### `LifecyclePhaseTransition { id, from, to, t_ms, eased_progress }`
+
+**Emit site:** `tui-vfx-recipes/src/manager/mod.rs` (`tick` transition-progress branch) via `tui-vfx-recipes/src/manager/fnc_emit_lifecycle_event.rs`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -68,6 +72,8 @@ Source: `tui-vfx-recipes::manager` (emitters land in Sub-plan C).
 
 ### `LifecycleDismissed { id, reason, t_ms }`
 
+**Emit site:** `tui-vfx-recipes/src/manager/mod.rs` (`pending_lifecycle_events` drain after out-of-tick `dismiss()`) via `tui-vfx-recipes/src/manager/fnc_emit_lifecycle_event.rs`.
+
 | Field | Type | Description |
 |---|---|---|
 | `id` | `RecipeId` | Recipe identity. |
@@ -76,6 +82,8 @@ Source: `tui-vfx-recipes::manager` (emitters land in Sub-plan C).
 
 ### `LifecycleHeld { id, until_ms }`
 
+**Emit site:** `tui-vfx-recipes/src/manager/mod.rs` (`pending_lifecycle_events` drain after out-of-tick `hold()`) via `tui-vfx-recipes/src/manager/fnc_emit_lifecycle_event.rs`.
+
 | Field | Type | Description |
 |---|---|---|
 | `id` | `RecipeId` | Recipe identity. |
@@ -83,9 +91,11 @@ Source: `tui-vfx-recipes::manager` (emitters land in Sub-plan C).
 
 ## 3. Resolution stage — `StageMask::RESOLUTION`
 
-Source: `tui-vfx-recipes::scene` (emitters land in Sub-plan B/C).
+Source: `tui-vfx-recipes::scene` — concrete B.5 emit sites live in `src/scene/orc_compose_scene.rs` and `src/scene/procedural/cls_procedural_registry.rs`, forwarding via `src/scene/fnc_emit_resolution_event.rs`.
 
 ### `AssetResolved { name, found, fallback_reason }`
+
+**Emit site:** `tui-vfx-recipes/src/scene/orc_compose_scene.rs` (`emit_resolution`) via `tui-vfx-recipes/src/scene/fnc_emit_resolution_event.rs`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -95,6 +105,8 @@ Source: `tui-vfx-recipes::scene` (emitters land in Sub-plan B/C).
 
 ### `ProceduralResolved { source_id, resolved, fallback_id }`
 
+**Emit site:** `tui-vfx-recipes/src/scene/procedural/cls_procedural_registry.rs` (`resolve_with_trace`) via `tui-vfx-recipes/src/scene/fnc_emit_resolution_event.rs`.
+
 | Field | Type | Description |
 |---|---|---|
 | `source_id` | `String` | Recipe-declared procedural source identifier. |
@@ -102,6 +114,8 @@ Source: `tui-vfx-recipes::scene` (emitters land in Sub-plan B/C).
 | `fallback_id` | `Option<String>` | Fallback id used when the primary was missing. |
 
 ### `TokenResolved { input, output, missing_keys }`
+
+**Emit site:** `tui-vfx-recipes/src/scene/orc_compose_scene.rs` (`emit_resolution`) via `tui-vfx-recipes/src/scene/fnc_emit_resolution_event.rs`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -111,6 +125,8 @@ Source: `tui-vfx-recipes::scene` (emitters land in Sub-plan B/C).
 
 ### `RecipeBindingResolved { selector, recipe_id, theme }`
 
+**Emit site:** `tui-vfx-recipes/src/scene/orc_compose_scene.rs` (`emit_recipe_binding`) via `tui-vfx-recipes/src/scene/fnc_emit_resolution_event.rs`.
+
 | Field | Type | Description |
 |---|---|---|
 | `selector` | `String` | Selector string that triggered the binding. |
@@ -119,9 +135,11 @@ Source: `tui-vfx-recipes::scene` (emitters land in Sub-plan B/C).
 
 ## 4. Composition stage — `StageMask::COMPOSITION`
 
-Source: `tui-vfx-recipes::scene` scene composer (emitters land in Sub-plan B).
+Source: `tui-vfx-recipes::scene` scene composer — concrete B.5 emit sites live in `src/scene/orc_compose_scene.rs`, forwarding via `src/scene/fnc_emit_composition_event.rs`.
 
 ### `LayerStarted { layer_id, z, source_kind, target_rect }`
+
+**Emit site:** `tui-vfx-recipes/src/scene/orc_compose_scene.rs` (`emit_started`) via `tui-vfx-recipes/src/scene/fnc_emit_composition_event.rs`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -131,6 +149,8 @@ Source: `tui-vfx-recipes::scene` scene composer (emitters land in Sub-plan B).
 | `target_rect` | `Rect` | Target rectangle in the destination surface. |
 
 ### `LayerCellPainted { layer_id, x, y, glyph, role }`
+
+**Emit site:** `tui-vfx-recipes/src/scene/orc_compose_scene.rs` (`overlay`) via `tui-vfx-recipes/src/scene/fnc_emit_composition_event.rs`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -142,6 +162,8 @@ Source: `tui-vfx-recipes::scene` scene composer (emitters land in Sub-plan B).
 
 ### `LayerCompleted { layer_id, cells_painted, cells_skipped, fallback }`
 
+**Emit site:** `tui-vfx-recipes/src/scene/orc_compose_scene.rs` (`emit_completed`) via `tui-vfx-recipes/src/scene/fnc_emit_composition_event.rs`.
+
 | Field | Type | Description |
 |---|---|---|
 | `layer_id` | `LayerId` | Owning layer. |
@@ -150,6 +172,8 @@ Source: `tui-vfx-recipes::scene` scene composer (emitters land in Sub-plan B).
 | `fallback` | `bool` | Whether a fallback source was used. |
 
 ### `LayerSkipped { layer_id, reason }`
+
+**Emit site:** `tui-vfx-recipes/src/scene/orc_compose_scene.rs` (`emit_skipped`) via `tui-vfx-recipes/src/scene/fnc_emit_composition_event.rs`.
 
 | Field | Type | Description |
 |---|---|---|
@@ -262,4 +286,4 @@ Per spec §9.6:
 - Future additive variants must preserve `#[non_exhaustive]` so client code using wildcard arms continues to compile.
 
 <!-- <FILE>docs/TRACE_EVENT_SCHEMA.md</FILE> - <DESC>Canonical schema reference for TraceEvent + TraceEnvelope</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
