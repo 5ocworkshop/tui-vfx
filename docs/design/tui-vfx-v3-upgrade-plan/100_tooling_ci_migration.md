@@ -105,6 +105,8 @@ An exhaustive tooling inventory was conducted as part of the debug-recipes migra
 
 5. **Dual-load vs clean-cutover choice is the tooling lever for Chapter 50.** The plan's clean-break framing (see `30_why_now.md`) suggests the tools also cut over wholesale. The alternative — parser dispatch on `schema_version` to load both — is cheap and preserves Chapter 50's mainline-corpus track. The two are compatible; the parser dispatches, the critical set uses the mechanical translator, the mainline corpus is re-authored. Choosing dispatch keeps the preview/demo able to show both while the mainline transitions. Default lean: **dispatch-on-schema_version in the parser; every other tool cuts over to V3 wholesale once its V3 support lands.**
 
+6. **Temporary mixed-schema shims must be retired explicitly at endgame.** During the cutover, some helper seams may project V3 documents back into legacy compatibility types to keep old validator/test/example surfaces working while deeper runtime ports are still in flight. That is acceptable only as a transitional aid. Before declaring the V3 cutover complete and removing V2 support, audit for these shims (for example mixed-schema config projection helpers) and delete them rather than letting them become permanent compatibility sediment.
+
 ## 40 — Release checklist (tooling slice)
 
 V3 does not ship until each of the following is green:
