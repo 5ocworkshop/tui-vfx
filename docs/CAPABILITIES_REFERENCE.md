@@ -27,7 +27,7 @@ One-screen overview. Names link to the per-section detail below.
 
 **Masks** (transition shapes, 12 types) — [`None`](#masks-transition-shapes), [`Wipe`](#masks-transition-shapes) (16 directions), [`Dissolve`](#masks-transition-shapes), [`Checkers`](#masks-transition-shapes), [`Blinds`](#masks-transition-shapes), [`Iris`](#masks-transition-shapes), [`Diamond`](#masks-transition-shapes), [`NoiseDither`](#masks-transition-shapes), [`Materialize`](#masks-transition-shapes), [`PathReveal`](#masks-transition-shapes), [`Radial`](#masks-transition-shapes), [`Cellular`](#masks-transition-shapes)
 
-**Filters** (post-processing, 27 types) — basic: [`None`](#filters-post-processing), [`Dim`](#filters-post-processing), [`Invert`](#filters-post-processing), [`Tint`](#filters-post-processing), [`Greyscale`](#filters-post-processing) · ambient: [`Vignette`](#filters-post-processing), [`PatternFill`](#filters-post-processing), [`BrailleDust`](#filters-post-processing), [`CharsetNoise`](#filters-post-processing) · retro: [`Crt`](#filters-post-processing), [`InterlaceCurtain`](#filters-post-processing) · motion: [`MotionBlur`](#filters-post-processing) · sub-cell: [`ColorBridgedShade`](#filters-post-processing), [`SubPixelBar`](#filters-post-processing), [`SubcellLight`](#filters-post-processing), [`SubCellShake`](#filters-post-processing), [`RigidShake`](#filters-post-processing) · indicators: [`HoverBar`](#filters-post-processing), [`UnderlineWipe`](#filters-post-processing), [`BracketEmphasis`](#filters-post-processing), [`DotIndicator`](#filters-post-processing), [`EdgeGrow`](#filters-post-processing) · stylistic: [`PillButton`](#filters-post-processing) · animated: [`GlistenSweep`](#filters-post-processing), [`KittScanner`](#filters-post-processing), [`ShadeScanner`](#filters-post-processing)
+**Filters** (post-processing, 28 types) — basic: [`None`](#filters-post-processing), [`Dim`](#filters-post-processing), [`Invert`](#filters-post-processing), [`Tint`](#filters-post-processing), [`Greyscale`](#filters-post-processing) · ambient: [`Vignette`](#filters-post-processing), [`PatternFill`](#filters-post-processing), [`BrailleDust`](#filters-post-processing), [`CharsetNoise`](#filters-post-processing) · retro: [`Crt`](#filters-post-processing), [`InterlaceCurtain`](#filters-post-processing) · motion: [`MotionBlur`](#filters-post-processing) · sub-cell: [`ColorBridgedShade`](#filters-post-processing), [`SubPixelBar`](#filters-post-processing), [`SubcellLight`](#filters-post-processing), [`SubCellShake`](#filters-post-processing), [`RigidShake`](#filters-post-processing) · indicators: [`HoverBar`](#filters-post-processing), [`UnderlineWipe`](#filters-post-processing), [`BracketEmphasis`](#filters-post-processing), [`DotIndicator`](#filters-post-processing), [`EdgeGrow`](#filters-post-processing) · stylistic: [`PillButton`](#filters-post-processing) · animated: [`GlistenSweep`](#filters-post-processing), [`KittScanner`](#filters-post-processing), [`ShadeScanner`](#filters-post-processing) · content-aware: [`GlyphStyle`](#filters-post-processing)
 
 **Samplers** (coordinate distortion, 7 types) — [`None`](#samplers-coordinate-distortion), [`SineWave`](#samplers-coordinate-distortion), [`Ripple`](#samplers-coordinate-distortion), [`Shredder`](#samplers-coordinate-distortion), [`FaultLine`](#samplers-coordinate-distortion), [`Crt`](#samplers-coordinate-distortion), [`CrtJitter`](#samplers-coordinate-distortion)
 
@@ -126,6 +126,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **GlistenSweep** | Diagonal 45° brightness sweep (hover shine) | `boost` (u8, additive), `band_width` (f32, diagonal fraction), `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
 | **KittScanner** | Horizontal scanner sweep (KITT/Larson or one-way lighthouse wrap) | `boost` (u8), `band_width`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
 | **ShadeScanner** | Ping-pong scanner that dims text with shade overlay | `shade_color`, `bps`, `progress` |
+| **GlyphStyle** | Per-glyph-category fg/bg overrides via char-membership rules | `rules`: `[{chars, fg, bg}]` first-match-wins; unmatched cells unchanged |
 
 ### PatternType Variants
 
@@ -447,6 +448,52 @@ aesthetic intent, not a recipe field. Drive color through `base_style`.
 - `progress`: 0.0..1.0, set to 1.0 to activate
 - Simpler than KittScanner (no boost, no band_width, no powerline options) — this is a dimming sweep, not a brightening sweep
 - Ideal for "reading" effects, progressive-reveal teases, subtle attention cues
+
+### Content-Aware Filter
+
+**GlyphStyle** — Per-glyph-category fg/bg overrides via char-membership rules.
+For each cell, evaluates rules in declaration order and applies the first
+rule whose `chars` set contains the cell's character. Cells that match no
+rule pass through unchanged. Designed for content transformers that emit
+mixed glyph categories in a single output stream — color each category
+independently without per-cell `RoleMap` plumbing.
+
+- `rules`: `Vec<GlyphStyleRule>` — each rule is `{ chars, fg?, bg? }`
+- `chars`: a `String` of characters this rule matches (any match triggers); order inside the string doesn't matter
+- `fg` / `bg`: optional `ColorConfig` overrides; omit to leave that channel untouched
+- First-match-wins: order rules from most-specific to least-specific
+- Unmatched cells are unchanged (no implicit catch-all; add a final rule with the chars you want as a fallback if you need one)
+
+Primary motivation: `SplitFlap` boards emit block (`█▓▒░`), hinge
+(`▀▔—▁▄`), letter (A-Z, 0-9, …), and turned-preview glyphs (`Ⱡꓭ⊥∩…`)
+in one stream. A 2-3-rule `GlyphStyle` filter lets each category have
+its own color — block/hinge get a slightly-lighter card-face grey,
+letters get a darker board-card grey, turned previews get dimmer fg —
+producing the depth-tone Solari-board aesthetic without any role
+tagging. Useful equally for `GlyphCascade`, `Scramble`, `Redact`, or
+any other transformer that mixes character categories.
+
+```json
+{
+  "type": "glyph_style",
+  "rules": [
+    { "chars": "█▓▒░▀▔—▁▄",
+      "fg": {"type": "rgb", "r": 180, "g": 180, "b": 180},
+      "bg": {"type": "rgb", "r":  48, "g":  48, "b":  48} },
+    { "chars": "ⱯꓭƆꓷƎℲ⅁ꓘ⅂Ԁꓤ⊥∩Λ⅄Ɛ",
+      "fg": {"type": "rgb", "r": 150, "g": 150, "b": 150} },
+    { "chars": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?·→:-/",
+      "bg": {"type": "rgb", "r":  28, "g":  28, "b":  28} }
+  ]
+}
+```
+
+Composes naturally with the existing pipeline order
+(`Sampler → Shadow → Element → Masks → Filters → Shaders`): GlyphStyle
+runs in the Filters stage and modifies fg/bg before any per-region
+shaders apply, so a downstream `BorderSweep` or `LinearGradient`
+shader still sees and overlays its effect on whatever fg/bg
+GlyphStyle settled on.
 
 ### Living-Texture Filters
 
