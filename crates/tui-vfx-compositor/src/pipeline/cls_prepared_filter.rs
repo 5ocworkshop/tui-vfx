@@ -866,6 +866,7 @@ pub(crate) fn prepare_filter(
                     chars: rule.chars.chars().collect(),
                     fg: rule.fg.map(|c| c.into()),
                     bg: rule.bg.map(|c| c.into()),
+                    bg_alternate: rule.bg_alternate.map(|c| c.into()),
                 })
                 .collect();
             Some(PreparedFilter::GlyphStyle(GlyphStyle::new(resolved)))

@@ -167,6 +167,13 @@ pub struct GlyphStyleRule {
     /// Override background color. Omit to leave bg untouched.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bg: Option<ColorConfig>,
+    /// Optional alternate background for `(x + y) % 2 == 1` cells —
+    /// produces a coordinate-checkerboard bg modulation bounded by this
+    /// rule's char set. Use a slightly different shade of `bg` for a
+    /// subtle card-edge perception (real-Solari bezel suggestion); leave
+    /// unset for uniform bg behavior.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bg_alternate: Option<ColorConfig>,
 }
 
 /// Controls which cells CharsetNoise affects.
