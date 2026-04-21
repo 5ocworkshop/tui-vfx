@@ -126,7 +126,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **GlistenSweep** | Diagonal 45° brightness sweep (hover shine) | `boost` (u8, additive), `band_width` (f32, diagonal fraction), `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
 | **KittScanner** | Horizontal scanner sweep (KITT/Larson or one-way lighthouse wrap) | `boost` (u8), `band_width`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
 | **ShadeScanner** | Ping-pong scanner that dims text with shade overlay | `shade_color`, `bps`, `progress` |
-| **GlyphStyle** | Per-glyph-category fg/bg overrides via char-membership rules | `rules`: `[{chars, fg, bg}]` first-match-wins; unmatched cells unchanged |
+| **GlyphStyle** | Per-glyph-category fg/bg overrides via char-membership rules | `rules`: `[{chars, fg, bg, bg_alternate?}]` first-match-wins; unmatched cells unchanged. `bg_alternate` enables a coordinate-checkerboard bg modulation bounded by char match (subtle card-edge perception). |
 
 ### PatternType Variants
 
@@ -458,9 +458,10 @@ rule pass through unchanged. Designed for content transformers that emit
 mixed glyph categories in a single output stream — color each category
 independently without per-cell `RoleMap` plumbing.
 
-- `rules`: `Vec<GlyphStyleRule>` — each rule is `{ chars, fg?, bg? }`
+- `rules`: `Vec<GlyphStyleRule>` — each rule is `{ chars, fg?, bg?, bg_alternate? }`
 - `chars`: a `String` of characters this rule matches (any match triggers); order inside the string doesn't matter
 - `fg` / `bg`: optional `ColorConfig` overrides; omit to leave that channel untouched
+- `bg_alternate`: optional `ColorConfig` — when set, cells with odd `(x + y)` parity use this color instead of `bg`, producing a coordinate-checkerboard bg modulation. Bounded by the rule's char match — only matched cells alternate, so applying it to a "letter cells" rule gives just-perceptible per-card edges without painting the whole board. Real-Solari bezel suggestion at zero compute cost.
 - First-match-wins: order rules from most-specific to least-specific
 - Unmatched cells are unchanged (no implicit catch-all; add a final rule with the chars you want as a fallback if you need one)
 
@@ -483,10 +484,15 @@ any other transformer that mixes character categories.
     { "chars": "ⱯꓭƆꓷƎℲ⅁ꓘ⅂Ԁꓤ⊥∩Λ⅄Ɛ",
       "fg": {"type": "rgb", "r": 150, "g": 150, "b": 150} },
     { "chars": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?·→:-/",
-      "bg": {"type": "rgb", "r":  28, "g":  28, "b":  28} }
+      "bg":           {"type": "rgb", "r": 28, "g": 28, "b": 28},
+      "bg_alternate": {"type": "rgb", "r": 36, "g": 36, "b": 36} }
   ]
 }
 ```
+
+The `bg_alternate` on the third rule gives the letter cells a subtle
+checkerboard alternation — adjacent cards read as distinct without
+the alternation reading as a visible pattern.
 
 Composes naturally with the existing pipeline order
 (`Sampler → Shadow → Element → Masks → Filters → Shaders`): GlyphStyle
