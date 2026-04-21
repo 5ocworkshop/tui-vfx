@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-capability-catalog.md</FILE> - <DESC>Live capability catalog for V3. Classifies families into primitives, composed primitives, wrappers, hybrid templates, and policy variants, and records canonical payload direction and implementation notes as the leaf catalog is hardened.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Execution artifact for the capability-catalog phase. Starts with the first resolved batch so the phase is truly underway rather than only planned.</WCTX> -->
-<!-- <CLOG>0.1.0: initial catalog and tracker. Seeds the first six resolved families from the existing audit conclusions: reveal geometry, segmented/tiled visibility, procedural breakup masks, wave displacement, fracture displacement, and style fades.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Execution artifact for the capability-catalog phase. Extended through the second batch, resolving the highest-value filter-side clusters that the audit identified as the next implementation hinge point.</WCTX> -->
+<!-- <CLOG>0.2.0: resolve batch 2 (CC-07..CC-12): indicator/progress emphasis, traveling-band/sweep, pattern/procedural texture filters, motion-treatment filters, field-rendering wrappers, and the vignette family.
+0.1.0: initial catalog and tracker. Seeds the first six resolved families from the existing audit conclusions: reveal geometry, segmented/tiled visibility, procedural breakup masks, wave displacement, fracture displacement, and style fades.</CLOG> -->
 
 # tui-vfx V3 capability catalog
 
@@ -24,12 +25,12 @@ Its purpose is to make the leaf catalog explicit before large-scale migration or
 | CC-04 | Wave displacement | RESOLVED | Primitive subtree |
 | CC-05 | Fracture / segmented displacement | RESOLVED | Primitive subtree |
 | CC-06 | Style fades | RESOLVED | Primitive subtree with policy variants |
-| CC-07 | Indicator / progress emphasis | OPEN | next batch |
-| CC-08 | Traveling-band / sweep | OPEN | next batch |
-| CC-09 | Pattern / procedural texture filters | OPEN | next batch |
-| CC-10 | Motion-treatment filters | OPEN | next batch |
-| CC-11 | Field-rendering wrappers | OPEN | next batch |
-| CC-12 | Vignette family | OPEN | next batch |
+| CC-07 | Indicator / progress emphasis | RESOLVED | Render-mode subtree |
+| CC-08 | Traveling-band / sweep | RESOLVED | Shared sweep substrate |
+| CC-09 | Pattern / procedural texture filters | RESOLVED | Pattern + procedural subtrees |
+| CC-10 | Motion-treatment filters | RESOLVED | Distinct motion-treatment subtree |
+| CC-11 | Field-rendering wrappers | RESOLVED | Hybrid wrapper category |
+| CC-12 | Vignette family | RESOLVED | Falloff-treatment subtree |
 | CC-13 | Style dwell modulation | OPEN | later |
 | CC-14 | Typography-window style effects | OPEN | later |
 | CC-15 | Typewriter + cursor subtree | OPEN | later |
@@ -122,7 +123,7 @@ Each family entry records:
 ### CC-04 — Wave displacement
 
 - **lane:** sampler
-n- **classification:** primitive subtree
+- **classification:** primitive subtree
 - **canonical subtree:** `wave_displacement`
 - **collapsed source families:**
   - `ripple`
@@ -178,20 +179,164 @@ n- **classification:** primitive subtree
 - **rationale:**
   - the authoring distinction is mostly source/target fade policy, not a different leaf algebra
 
+
+### CC-07 — Indicator / progress emphasis
+
+- **lane:** filter
+- **classification:** primitive subtree with render-mode variants
+- **canonical subtree:** `progress_emphasis`
+- **collapsed source families:**
+  - `dot_indicator`
+  - `bracket_emphasis`
+  - `underline_wipe`
+  - `hover_bar`
+  - `sub_pixel_bar`
+  - `edge_grow`
+- **shared payload axes:**
+  - progress / coverage
+  - anchor / edge / row offset / margin
+  - render mode
+  - color policy
+  - optional polish
+- **recommended implementation stance:**
+  - one deeper emphasis substrate with multiple render modes
+  - keep family names as authored modes/presets where discoverability helps
+  - runtime bindings on progress remain orthogonal to render mode
+- **rationale:**
+  - the families differ mainly in how progress is rendered (symbolic, underline, edge-growth, eighths, block glyphs), not in the deeper authored concept
+
+### CC-08 — Traveling-band / sweep
+
+- **lane:** filter + shader
+- **classification:** primitive subtree with lane-specific wrappers
+- **canonical subtree:** `traveling_band`
+- **collapsed source families:**
+  - filters: `glisten_sweep`, `kitt_scanner`, `shade_scanner`
+  - shaders: `border_sweep`, `glisten_band`, `reflect` (partial sibling)
+- **shared payload axes:**
+  - band width / length
+  - speed / direction / ping-pong policy
+  - boost / blend / dim policy
+  - separator/background policy
+  - progress control
+- **recommended implementation stance:**
+  - one shared sweep substrate at the conceptual level
+  - lane-specific wrappers for filter-side treatment vs shader-side coloration
+  - same runtime-binding and loop semantics reused across the family
+- **rationale:**
+  - the audit repeatedly showed these are variations on one traveling-band idea with different visual treatment policies
+
+### CC-09 — Pattern / procedural texture filters
+
+- **lane:** filter
+- **classification:** split into two sibling subtrees
+- **canonical subtree A:** `pattern_treatment`
+- **canonical subtree B:** `procedural_texture`
+- **collapsed source families:**
+  - pattern treatment:
+    - `pattern_fill`
+    - `interlace_curtain`
+  - procedural texture:
+    - `braille_dust`
+    - `charset_noise`
+    - `matrix_rain`
+- **shared payload axes:**
+  - Pattern treatment:
+    - pattern family
+    - spacing / density
+    - glyph or row treatment
+    - empty-only / affect policy
+  - Procedural texture:
+    - density
+    - seed
+    - rate / hz
+    - drift / churn / trail policy
+    - glyph set / preset
+- **recommended implementation stance:**
+  - keep pattern-treatment and procedural-texture as siblings, not one merged family
+  - rule-driven filters remain separate (see CC-17)
+- **rationale:**
+  - the audit showed two distinct computational models: deterministic pattern application versus time-varying generated texture fields
+
+### CC-10 — Motion-treatment filters
+
+- **lane:** filter
+- **classification:** primitive subtree
+- **canonical subtree:** `motion_treatment`
+- **collapsed source families:**
+  - `motion_blur`
+  - `rigid_shake`
+  - `sub_cell_shake` (filter variant)
+- **shared payload axes:**
+  - direction / oscillation policy
+  - amplitude / trail length
+  - decay / damping / pause semantics
+  - loop timing
+  - geometry assumptions (margins, inner width, edge-only behavior)
+- **recommended implementation stance:**
+  - shared top-level subtree, but do not over-collapse the actual payloads
+  - `rigid_shake` remains a rich motion family with stronger runtime-control support than the simpler directional blur
+- **rationale:**
+  - these filters all operate as post-render motion treatments, but their internal computational models are not identical enough to flatten into one generic payload
+
+### CC-11 — Field-rendering wrappers
+
+- **lane:** filter (with upstream shader/signal sources)
+- **classification:** wrapper / hybrid category
+- **canonical subtree:** `field_renderer`
+- **collapsed source families:**
+  - `subcell_light_background_braille`
+  - `subcell_light_foreground_horizontal`
+  - `subcell_light_temporal_braille`
+- **shared payload axes:**
+  - render mode
+  - sample source
+  - threshold
+  - dither policy
+  - blank-cell policy
+  - upstream source field contract
+- **recommended implementation stance:**
+  - treat as wrappers that interpret upstream fields rather than as standalone leaf filters
+  - allow them to compose naturally with shader-defined source fields and future procedural field sources
+- **rationale:**
+  - these files are some of the clearest examples in the corpus that a family can be best understood as a renderer over another family’s output, not as an independent primitive leaf
+
+### CC-12 — Vignette family
+
+- **lane:** filter
+- **classification:** primitive subtree with policy variants
+- **canonical subtree:** `falloff_treatment`
+- **collapsed source families:**
+  - `vignette`
+  - `vignette_dithered`
+  - `vignette_side_pair`
+  - `vignette_temporal_soften`
+- **shared payload axes:**
+  - strength
+  - radius
+  - side/orientation policy
+  - spatial dither policy
+  - temporal softening policy
+- **recommended implementation stance:**
+  - one richer falloff-treatment family rather than separate top-level vignette names
+  - preserve directional and temporal policies as explicit payload axes
+- **rationale:**
+  - the audit showed vignette is not one single leaf effect but a family of edge-falloff policies
+
 ---
 
 ## 4. Immediate next batch
 
 The next 4–6 families to resolve should be:
 
-1. indicator / progress emphasis
-2. traveling-band / sweep
-3. pattern / procedural texture filters
-4. motion-treatment filters
-5. field-rendering wrappers
-6. vignette family
+1. style dwell modulation
+2. typography-window style effects
+3. typewriter + cursor subtree
+4. split-flap renderer tree
+5. rule-engine families
+6. cross-lane paired capabilities
 
-These are the highest-value remaining filter-side clusters.
+These are the highest-value remaining style/content/higher-order clusters.
 
 ---
 
