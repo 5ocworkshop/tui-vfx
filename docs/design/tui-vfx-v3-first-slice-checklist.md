@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-first-slice-checklist.md</FILE> - <DESC>Execution checklist for the first concrete V3 implementation slice.</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>Tracks the first code-facing work package after schema/catalog/lowering/IR/validator planning. Updated now that FS-01 through FS-08 all have real code footholds or focused passing tests in the new V3 module.</WCTX> -->
-<!-- <CLOG>0.6.0: mark FS-08 explicitly in progress and keep the first-slice checklist aligned with the now-documented V3 scaffolding module headers/footers.
+<!-- <VERS>VERSION: 0.7.0</VERS> -->
+<!-- <WCTX>Tracks the first code-facing work package after schema/catalog/lowering/IR/validator planning. Updated now that FS-01/FS-02 have public entry surfaces and FS-03 through FS-08 have focused structural helpers with passing tests.</WCTX> -->
+<!-- <CLOG>0.7.0: record the new public V3 parse/normalize entry points and their focused passing tests for FS-01/FS-02.
+0.6.0: mark FS-08 explicitly in progress and keep the first-slice checklist aligned with the now-documented V3 scaffolding module headers/footers.
 0.5.0: mark FS-06/FS-07/FS-08 as in progress after the first hint-validation, scene-normalization, and canonical IR dump helpers landed in `tui-vfx-recipes::v3` with focused passing tests.
 0.4.0: mark FS-03/FS-04/FS-05 as in progress after the first normalization helpers landed in `tui-vfx-recipes::v3::normalize` and their focused unit tests passed.
 0.3.0: record initial verification signal for FS-01/FS-02 after the V3 scaffold compiled under `cargo check --lib` and the focused parse unit test passed.
@@ -14,8 +15,8 @@
 
 | ID | Work item | Status | Notes |
 |---|---|---|---|
-| FS-01 | Authoring schema parse types | IN_PROGRESS | Initial `src/v3::authoring` scaffold added in `tui-vfx-recipes`; focused parse unit test passes |
-| FS-02 | Normalized IR core types | IN_PROGRESS | Initial `src/v3::normalized` scaffold added in `tui-vfx-recipes`; library compile check completed |
+| FS-01 | Authoring schema parse types | IN_PROGRESS | Initial `src/v3::authoring` scaffold plus public `parse_v3_document` entry surface in `tui-vfx-recipes`; focused parse tests pass |
+| FS-02 | Normalized IR core types | IN_PROGRESS | Initial `src/v3::normalized` scaffold plus public `normalize_v3_document` entry surface in `tui-vfx-recipes`; focused normalize-entry test passes |
 | FS-03 | Region-ref resolution | IN_PROGRESS | Initial normalization helper implemented in `tui-vfx-recipes::v3::normalize`; focused unit test passes |
 | FS-04 | `cell_run` / `cell_runs` canonicalization | IN_PROGRESS | Initial canonicalization helper implemented in `tui-vfx-recipes::v3::normalize`; focused unit test passes |
 | FS-05 | Style normalization pass | IN_PROGRESS | Initial `base_style` → `base_style_override` normalization implemented in `tui-vfx-recipes::v3::normalize`; focused unit test passes |
