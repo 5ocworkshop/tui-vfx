@@ -1,7 +1,14 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan.md</FILE> - <DESC>Draft V3 tui-vfx upgrade plan — migrating tui-vfx-recipes from the current flat pipeline schema to a uniform tree schema with a unified Scope primitive, Pattern-as-separable-axis as the internal shader model, and the William Morris "useful or beautiful" principle as corpus philosophy. Evolving hub where V3 scope, decisions, and open questions accumulate.</DESC> -->
-<!-- <VERS>VERSION: 0.8.1</VERS> -->
-<!-- <WCTX>Capture the distribution/packaging concern for recipes and themes (embedded vs disk vs hybrid) as deferred-design territory with V3 loader constraints that preserve the option.</WCTX> -->
-<!-- <CLOG>0.8.1: add distribution-and-packaging deferred-design section naming the embedded-vs-disk-vs-hybrid design space; note V3 loaders / fragment resolvers / tokenization APIs must accept byte-source abstractions (not assume filesystem) to preserve the option.
+<!-- <VERS>VERSION: 0.15.0</VERS> -->
+<!-- <WCTX>Follow-up sweep after resolving Concerns A-F: (1) hygiene items flagged in the GT-Design lead review memo — correct "Three principles" text to "Five principles" (the plan added Principles 4 and 5 after the "Three" language was written), update the overview statement from "20 items" to "21 items" (Open Q #21 was added in the Deferred section), add a Decisions-reached framing note clarifying that "adopted" means direction is committed while implementation specifics may still be in flight for Decisions that carry their own track. (2) Reviewer-opinion annotations on every Open Question (1-21) and Open Q #21 in the Deferred section — each framed as "one input, question remains open" so the reviewer's recommendations are captured for later discussion without closing the questions prematurely. For Open Qs already informed by Concerns A-F (Q2/B, Q12/F, Q14/D, Q18/C), opinions are noted as load-bearing inputs to those resolutions.</WCTX> -->
+<!-- <CLOG>0.15.0: hygiene sweep and reviewer-opinion annotations. Hygiene: correct "Three principles" → "Five principles" at line 59 (Principle 4 added v0.5.0, Principle 5 added v0.6.0); update overview "20 items" → "21 items" with note about Q #21's placement in Deferred; add Decisions-reached framing paragraph clarifying "adopted" semantics and pointing at Decisions 5 and 8 as examples of adopted-direction + implementation-specifics pairings. Reviewer opinions: append a compact "Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open)" block to each of Open Qs 1-20 and to Open Q #21 in the Deferred metadata section. For Qs 2, 12, 14, 18 (already resolved as Concerns B, F, D, C respectively), annotation notes the reviewer input as load-bearing for the existing resolution while leaving implementation-level sub-questions open.
+0.14.0: resolve Concern F from the GT-Design lead review memo — shadow / offscreen / probe/trace compatibility promoted from open risk to V3 release gate. Rewrite Open Q #12 with explicit release-gate framing. Enumerate six gate criteria: canonical shadow fixtures, offscreen/slide fixtures, probe snapshots, trace expectations, GT-Design integration fixtures, role-aware lowering correctness. Establish that V3 does not ship without green on each criterion for the designated critical set. Cross-link to Concern B (critical-set carve-out is the evaluation mechanism — B is infrastructure and workflow, F is the gate criteria the infrastructure evaluates). Retain implementation-level sub-questions (per-criterion tolerance spec, gate ownership, whitelist discipline, recapture cadence, escalation path) with default leans. This is the final load-bearing concern from the lead review memo's six-item list (A-F).
+0.13.0: resolve Concern E from the GT-Design lead review memo — scene-layer pipelines written as if half-landed. Retitle Decision 5 from "adopt" to "direction adopted, dedicated V3 implementation track." Add Status paragraph clarifying that the live `RaSceneLayer` schema has no `pipeline` field and that adopting the direction commits V3 to real schema/runtime feature work. Update "Two levels of scoping" bullet 1 to reference the new `pipeline: Option<VfxPipelineConfig>` field (additive, on the post-rename `VfxSceneLayer`). Update line 441 bullet to future-tense ("will gain a new per-layer `pipeline` field"). Replace "Architectural guidance" subsection with "V3 implementation track" enumerating schema extension, parser/deserializer, validator, compositor composition-order, per-layer caching, trace taxonomy, migration fixtures, and documentation work items. Add "Decisions the implementation track will need to resolve" subsection with default leans for precedence, hint visibility, blend mode, and empty-pipeline semantics. Add "What this decision adopts and what it does not" subsection separating adopted direction from non-binding defaults. Cross-link migration fixtures to Concern B's critical-set carve-out (layered recipes are natural critical-set candidates because rendering equivalence is most at risk when composing multiple pipelines per frame).
+0.12.0: resolve Concern D from the GT-Design lead review memo — tokenization/runtime-binding conflation on wrong axis. Flip the primary organizing axis from domain (text vs structured) to temporal lifetime (load-time vs per-frame). Load-time Substitutions and per-frame RuntimeBindings are two distinct API surfaces at the tui-vfx-recipes boundary; each handles text and structured domains internally. Optional RecipeContext umbrella wrapper available for ergonomic one-call passing. Rewrite Decision 6 "Relationship to tokenization" paragraph to align ParamValue::Constant ↔ Substitutions and ParamValue::RuntimeBinding ↔ RuntimeBindings. Rewrite Open Q #14 "Text vs structured — the fundamental split" subsection as "Load-time Substitutions vs per-frame RuntimeBindings — the fundamental split" with rationale (lifetimes determine failure modes; live-code evidence; usage concentration on the 2×2 diagonal). Update Open Q #14 sub-questions to reflect per-surface failure models, asset-resolution home, and procedural-params composition. Split token-contract-discovery into per-surface contracts (requires_substitutions, requires_bindings) with per-surface introspection APIs. Update Decision 8 builder-interaction sub-question. Update movie-composer deferred cross-reference to describe per-scene Substitutions at scene load and per-scene RuntimeBindings for timeline-driven animation.
+0.11.0: resolve Concern C from the GT-Design lead review memo — role-domain overload. Split "role" into four distinct types: RoleTag (per-cell render role, existing in tui-vfx-types, unchanged), ThemeRole (Scope variant renamed from Scope::Role in Decision 1 — now Scope::ThemeRole), RoutingRole (new V3 step-level behavior hint), SurfaceIntent (new V3 recipe-level hosting hint). Rewrite Open Q #18 around the four-type split with consumer/value-set distinction, motivating use cases per type, hints-vs-contracts discipline common to both new types, vocabulary-collision note, and scene-layer role_tag audit note. Update Decision 1 summary (line 164) and body (line 253) to reflect ThemeRole rename. Update Deferred movie-composer cross-reference to call out SurfaceIntent explicitly under Principle 5 framing. Update metadata section relationship-to-#18 paragraph to reference the two new types. Four-type split rather than the reviewer's three-axis grouping because step-level and recipe-level hints have different consumers and don't collapse cleanly.
+0.10.0: resolve Concern B from the GT-Design lead review memo — migration strategy split-brain. Rewrite Open Q #2 to describe the three-phase Curate → Re-author → Validate model with explicit prereq (validator infrastructure, mechanical translator for carve-out only), mainline-corpus track, and critical/fixture carve-out track. Rewrite Recipe migration workflow section in Deferred to align with Open Q #2 and document per-phase implementation mechanics. Correct stale "200-300 recipes" count; reference authoritative inventory step as blocking prerequisite. Phase ordering (curate-first) is deliberate: reduces problem space before translation, makes re-authoring a briefing-infrastructure forcing function rather than a JSON-reshape task, honors the library's AI-assisted-authoring-as-primary-pathway framing.
+0.9.0: resolve Concern A from the GT-Design lead review memo — ParamValue<T> structural contradiction. Split step-parameter inputs into ParamValue<T> (external value sources, 3 variants: Constant / RuntimeBinding / SignalGraph) and HintRef<T> (pipeline-internal step-output references, Decision 7), composed at field sites via StepInput<T> = ParamValue<T> | HintRef<T>. Revise Constraint-vs-permissiveness bullet; revise Decision 6 decision statement and "authors learn one mechanism" bullet; rewrite Decision 7 "Interaction with signal-driven parameters" subsection to declare the split and drop the ParamValue::StepOutput language; update Open Q #16 preamble to reference HintRef<T>.
+0.8.1: add distribution-and-packaging deferred-design section naming the embedded-vs-disk-vs-hybrid design space; note V3 loaders / fragment resolvers / tokenization APIs must accept byte-source abstractions (not assume filesystem) to preserve the option.
 0.8.0: add recipe migration workflow + recipe metadata fields sections under Deferred; clarify architectural home of named compositions (Tier 1 Rust factories, Tier 2 theme-scoped fragments, Tier 3 app-scoped fragments) inside Decision 2 so recipes compose freely across tiers.
 0.7.0: add "V3 is a clean break" framing under Why Now; revise Decision 2 (primitives are default; named compositions earn their place, not backwards-compat sugar); revise Open Q #2 (clean cutover preferred over long compatibility shim); revise Open Q #15 (lean comprehensive vocabulary refresh); sharpen the rocketsplash rename from "pending decision" to "just do it"; revise Open Q #14 framing to drop load-time/runtime compatibility hedging.
 0.6.0: add Principle 5 (meaning-low-policy-high), Decision 8 (canonical upstream semantic seam), Open Q #19 (Preview naming), Open Q #20 (surface-identity vs substrate), feedback cross-reference section; strengthen "why" rationale across Decisions 1-7 and key Open Qs; add constraint-vs-permissiveness design discipline note.
@@ -27,7 +34,7 @@ The document structure:
 4. **Why now** — the concrete drivers that prompted V3 instead of incremental changes.
 5. **Decisions reached (1–8)** — structural choices with "adopted" direction; each carries rationale.
 6. **Shape sketches** — flat-vs-tree JSON comparisons for three representative cases.
-7. **Open questions** — 20 items needing resolution before implementation starts, each with stakes explained.
+7. **Open questions** — 21 items needing resolution before implementation starts, each with stakes explained. Open Q #21 (recipe metadata) is introduced in the Deferred-design section alongside the metadata field proposal; it is non-blocking for V3 core.
 8. **Deferred design rounds** — things that don't block V3 but V3 decisions must not foreclose.
 9. **Appendix workflows** — shader audit, corpus curation, structural translation, executed in a future session.
 
@@ -50,7 +57,7 @@ The developer's proposed principle — *"Meaning should live as low as possible.
 
 ## Guiding philosophy
 
-Three principles shape V3 design and will outlast the specific schema decisions below. They are the durable framing; the schema changes are how we apply the framing to the current surface.
+Five principles shape V3 design and will outlast the specific schema decisions below. They are the durable framing; the schema changes are how we apply the framing to the current surface. Principles 1–3 (Morris, Pipe-culture chain-ability, Widgets-and-the-grid) were added in the initial plan draft; Principle 4 (Authoring-affordance preservation) was added in v0.5.0 codifying Intention 51; Principle 5 (Meaning low, policy high) was added in v0.6.0 from the weak-seams feedback session.
 
 ### Principle 1 — The Morris principle
 
@@ -149,7 +156,7 @@ Examples of each:
 - **Universal tokenization (Open Q #14) is permissive** — any string field can contain `{{tokens}}`, loader coerces at parse time. Why permissive: because restricting "which fields are templated" via per-field opt-in flags is structural overhead for no real authoring gain. The alternative (mark each field as templated) doubles the schema surface with no expressiveness win. The risk of unresolved tokens is bounded by strict-mode validation, which catches missing substitutions loudly at load time.
 - **Scene-layer source kinds (Decision 5) are a closed enum** (Text, Image, Procedural, Card). Why closed: adding a new source kind requires runtime support (rasterizer, validator, format loader) — it's not just a schema tweak. Extension through the `Procedural` generator registry instead (procedural `source_id` is open-string for generator names, with the registry vouching for each).
 - **Step output hints (Decision 7) use a defined namespace** (`displacement`, `sampled_color`, `cell_density`, etc.). Why bounded but not fully closed: downstream bindings need name stability (a step that claims to produce `displacement` must always produce that hint shape), but the namespace itself can grow additively as new hint kinds are needed. Not a closed enum; not fully open either.
-- **`ParamValue<T>` (Decision 6) is a closed three-variant type** (Constant, RuntimeBinding, SignalGraph). Why closed: every step must know how to resolve a `ParamValue<T>` regardless of which variant, and new variants would require every step to learn new resolution semantics. The signal-graph variant itself is open via `mixed-signals` composition, so expressiveness isn't limited — just the outer enum.
+- **`ParamValue<T>` and `HintRef<T>` (Decisions 6 and 7) are two related closed types**, composed at field sites via `StepInput<T> = ParamValue<T> | HintRef<T>`. `ParamValue<T>` has three variants (Constant, RuntimeBinding, SignalGraph) covering external value sources; `HintRef<T>` references named step outputs within the same pipeline evaluation. Why closed on both and why kept distinct rather than collapsed into a single four-variant `ParamValue<T>`: the two types have different resolution paths (external substitution/evaluation vs producer lookup against the hint namespace) and different validator work (binding contract discovery vs tree-walk producer verification), and they live at different layers per Principle 5 (external value sources are app policy flowing in; step-output refs are meaning flowing within the pipeline). Fields that only make sense with one side narrow to the appropriate type. The signal-graph variant itself is open via `mixed-signals` composition, so expressiveness isn't limited — just the outer enums.
 
 Future V3 decisions should surface this discipline explicitly: if a proposal adds a closed type, it should answer "why is this correctness-load-bearing"; if it adds permissiveness, it should answer "why is the cost of 'wrong' bounded here." Getting this balance wrong pulls the library toward either excessive ceremony (every field rigidly typed past utility) or magic-soup (no invariants, debugging becomes guesswork).
 
@@ -159,7 +166,7 @@ Migrate the `tui-vfx-recipes` authoring schema from its current flat shape (per-
 
 Three distinct but related changes, with the intent of landing all three in a single schema version bump (V3) rather than fragmenting the migration:
 
-1. **Unified `Scope` primitive** carried on every step (closed algebraic type: area / channel / content / role / custom / And/Or/Not composition).
+1. **Unified `Scope` primitive** carried on every step (closed algebraic type: area / channel / content / theme-role / custom / And/Or/Not composition).
 2. **Pattern-as-separable-axis** as the internal shader model (`ColoredOverlay { color, pattern, intensity }` with `Pattern` as an open enum of spatial distributions), with named factories (`Diffusion`, `ConcealedLight`, etc.) retained as JSON surface sugar.
 3. **Tree authoring schema** replacing flat `pipeline.{mask, filter, sampler, styles}` slots with a recursive `Step | Sequence | Parallel` structure.
 
@@ -241,6 +248,8 @@ The migration drivers are not speculative — each one surfaced concretely durin
 
 ## Decisions reached
 
+Eight structural decisions with adopted direction. "Adopted" means the direction is committed for V3; implementation specifics may still be in flight for Decisions that carry their own track (notably Decisions 5 and 8, which name explicit sub-questions or implementation-track work). Any Decision whose title includes "implementation track" or "formalize during V3" has adopted-direction + implementation-time-specifics as an intentional pairing, not a hedge. The sub-questions inside each Decision are where implementation choices remain; the decision itself is not contingent on those sub-questions resolving in any particular direction.
+
 ### 1. Unified `Scope` primitive — adopt
 
 Every step in the pipeline carries a `scope: Scope` field defaulting to `All`. `Scope` is a closed algebraic type with variants covering the targeting axes we currently express through scattered mechanisms:
@@ -248,7 +257,7 @@ Every step in the pipeline carries a `scope: Scope` field defaulting to `All`. `
 - **Area:** `All`, `Outer(margins)`, `Inner(margins)`, `Rect(x, y, w, h)`, `RectExclude(...)`
 - **Channel:** `Background`, `Foreground` (replaces `apply_to`)
 - **Content:** `Text`, `NonEmpty`, `GlyphMatches(pattern)` (replaces embedded `GlyphStyle.rules`)
-- **Role:** `Role("primary")`, `Role("surface")` (theme-resolved at load; replaces `StyleRegion::BackgroundOnly`-style semantic targeting)
+- **Theme-role:** `ThemeRole("primary")`, `ThemeRole("surface")` (theme-resolved at load; replaces `StyleRegion::BackgroundOnly`-style semantic targeting). Named `ThemeRole` rather than `Role` to keep this scope variant distinct from the other "role" concepts V3 distinguishes: the per-cell `RoleTag` in `tui-vfx-types` (`Background`, `Text`, `Border`, `Shadow`, etc.), the step-level `RoutingRole` (Open Q #18), and the recipe-level `SurfaceIntent` (Open Q #18). Four separate types by design — see Open Q #18 for the full framing.
 - **Custom:** `Predicate(fn)` as an escape hatch for cell-level custom logic
 - **Composition:** `And([...])`, `Or([...])`, `Not(...)` for algebraic combination
 
@@ -403,13 +412,15 @@ No recipe JSON files are affected — type renames are Rust-side only; the recip
 
 The `Gtd*` prefix convention in gt-design (Intention 48) establishes the rule: prefix wire-format and contract types to provide grep-anchor / disambiguation / crate-identity value. The same logic applies to `tui-vfx-recipes` wire-format types — `rg Vfx` becomes as useful as `rg Gtd` is today. Three chars (`Vfx`) is a fair tax for the context-preserving property. `TVfx` adds no information beyond `Vfx` and costs an extra character; dropping the prefix entirely loses the grep-anchor. `Vfx` is also pronounceable ("vee-eff-ex"), which matters for how people refer to the library in speech. Bundling with V3 means one rename event instead of two; deferring pays the "what does Ra mean?" cost in every new-contributor onboarding.
 
-### 5. Scene layers carry their own pipelines — adopt
+### 5. Scene layers carry their own pipelines — direction adopted, dedicated V3 implementation track
 
 The V3 tree schema describes *pipelines within a layer*; V3 also needs to integrate with the scene-layer model introduced in Sub-plan B.1 (`RaSceneConfig.layers: Vec<RaSceneLayer>`) plus the per-layer pipeline extension proposed in the flag-animation PRD (primitive 1 at `/usr/projects/tui-vfx/PRD-FLAG-ANIMATION.md`).
 
+**Status: direction adopted, feature not yet landed.** The live `RaSceneLayer` schema today carries `id`, `z`, `placement`, `source`, `role_tag`, `overflow`, and `visibility`. There is **no per-layer `pipeline` field** in the current schema. Adopting the scene-layer pipeline direction means committing to a real additive schema/runtime feature with its own implementation track inside V3 — schema extension, parser/deserializer updates, validator work, compositor composition-order decisions, trace-taxonomy additions, and migration fixtures. This is not a rearrangement of existing code; it is the feature work itself. The rest of this Decision describes what the feature looks like; the "V3 implementation track" subsection below enumerates the work items and the decisions the track will need to resolve.
+
 **Two levels of scoping:**
 
-1. **Scene-level** — which *layer* does a step apply to? Handled by `RaSceneLayer.pipeline` (optional per-layer pipeline).
+1. **Scene-level** — which *layer* does a step apply to? Handled by a new `pipeline: Option<VfxPipelineConfig>` field on `VfxSceneLayer` (additive schema change; see implementation track below). Post-rename per Decision 4, the enclosing type is `VfxSceneLayer` rather than today's `RaSceneLayer`.
 2. **Cell-level** — which *cells within a layer* does a step target? Handled by the V3 unified Scope primitive (Decision 1).
 
 These are complementary, not competing. A recipe with multiple scene layers runs each layer's pipeline (if present) before the recipe-global pipeline. Layer-level pipelines can carry the full V3 tree structure; scope primitives inside those pipelines target cells within that layer.
@@ -434,7 +445,7 @@ These source kinds are **orthogonal to** and **compose with** the V3 decisions:
 
 - Procedural `params` are a `serde_json::Value` today. In V3, `params` values can themselves be `ParamValue<T>` (Decision 6) — so a procedural generator's color/density/seed can bind to app-supplied runtime values. Example: a `solid_color` procedural with `{"color": {"binding": "brand"}}` produces a background whose color updates from app state.
 - Image sources can carry tokenized asset references (Open Q #14) — `{"image_name": "{{logo}}"}` resolves to bytes provided by the app's `Substitutions`.
-- Scene layers can have per-layer `pipeline` (PRD primitive 1 — already covered above) that applies unified-scope pipeline steps to the layer's composed cells.
+- Scene layers will gain a new per-layer `pipeline` field (PRD primitive 1 — additive schema change enumerated in the implementation track below) that applies unified-scope pipeline steps to the layer's composed cells.
 
 **Composability example — logo-on-flag-wave.** The flag-animation PRD's forcing-function recipe is a flag, but *every* primitive is general-purpose. The flag-wave sampler applies to any layer; the layer source determines what's waving. Swapping the flag image for a different braille image — the gt-design logo, a product wordmark, a seal, an emoji portrait — requires only swapping the `source` field:
 
@@ -467,13 +478,34 @@ Rocketsplash (sister project at `/usr/projects/rocketsplash`) is the authoring t
 
 The rename is not formally part of V3's Rust-side Ra→Vfx work, but it affects the scene-layer image source schema — V3's `Image` kind discriminator must enumerate the format family with the final names. Given rocketsplash is also effectively pre-release (consumed only by rocketsplash-rt), the rename carries negligible migration cost and should just happen: **`.rss` → `.rsi`, `.rsf` stays, `.rsb` is the new braille-supersampled format from PRD primitive 4.** The `.rss` → `.rsi` rename eliminates the RSS (Really Simple Syndication) collision that confuses file managers, IDEs, and search engines. V3's `Image` kind enumerates the final three-letter family (`.rsi`, `.rsb`, `.rsf`).
 
-**Architectural guidance:**
+**V3 implementation track.**
 
-- Layer pipeline overrides recipe pipeline for that layer's composed cells. Same "layer wins where it applies" rule the compositor already uses for shadow role tagging.
-- Compositor work per frame scales with layers × stages; per-layer cache keys are needed (tests already anticipate this per `test_per_layer_cache.rs`).
-- Trace taxonomy: `TraceEvent::LayerPipelineApplied { layer_id, stage }` so `pipeline-validator --probe` can diff per-layer stages.
+Adopting per-layer pipelines as direction is not the same as the feature existing. The track inside V3 that delivers it has these work items:
 
-This is a direct adoption of PRD primitive 1, framed as an integration decision with V3 rather than a standalone feature.
+- **Schema extension.** Add `pipeline: Option<VfxPipelineConfig>` to `VfxSceneLayer`. Additive — existing layers without a pipeline continue to compose as they do today. Serde defaults to `None`.
+- **Parser / deserializer updates.** Recipe loader accepts the new field. JSON fixtures updated; V3 schema documentation regenerated.
+- **Validator work.** Per-layer pipeline validates against the same V3 tree invariants the recipe-global pipeline does. Additional per-layer checks: scope coherence within the layer's geometry; `HintRef<T>` producer resolution scoped to the layer's own hint namespace (default per Open Q #16 — same-layer-only visibility); validator errors that point at the offending layer id rather than the recipe root.
+- **Compositor composition-order decisions.** A recipe with N layers runs up to N+1 pipelines per frame (N per-layer, 1 recipe-global). Default precedence when both apply: layer pipeline runs first on the layer's composed cells; recipe-global pipeline runs second on the composited result (global wraps layer output). Blend mode at layer boundaries uses the layer's existing `placement` / `z` semantics.
+- **Per-layer caching.** Compositor work per frame scales with layers × stages; per-layer cache keys are required to avoid redundant recomputation when only one layer's parameters changed. Tests already anticipate this pattern (`test_per_layer_cache.rs`). Cache-key design includes layer id + pipeline hash + relevant runtime bindings.
+- **Trace taxonomy additions.** New `TraceEvent::LayerPipelineApplied { layer_id, stage }` and related events so `pipeline-validator --probe` can diff per-layer stages independently. Existing trace fixtures regenerated to include layer-level granularity where applicable.
+- **Migration fixtures.** At least one fixture per source kind (Text, Image, Procedural, Card) with a non-trivial layer pipeline, to catch regressions in the critical-set fixture track (Concern B's carve-out — layered recipes are natural critical-set candidates because rendering equivalence is most at risk when the feature composes multiple pipelines per frame). Layered recipes without per-layer pipelines are also fixture-captured so additive-schema backward-compat is honored for layers that predate the feature.
+- **Documentation.** SKILLS.md and authoring guides updated to teach the two-level scoping model (scene-level via layer pipeline, cell-level via scope primitive). The logo-on-flag-wave composability example above becomes canonical teaching material.
+
+**Decisions the implementation track will need to resolve** (flagged here; settled during implementation):
+
+- **Layer vs global precedence.** Does the layer pipeline run *before* the recipe-global pipeline (layer-first, both run) or *instead of* the global for that layer's cells (layer-replaces)? Default lean: layer-first — both run; layer is inner, global is outer. Layer-replaces is available as an opt-in per-layer mode only if a concrete use case surfaces.
+- **Hint visibility across layers.** A `HintRef<T>` inside layer A's pipeline — can it reference a hint produced by layer B's pipeline? Default lean per Open Q #16: same-layer-only; each layer is its own hint namespace. Cross-layer reads require explicit export/import semantics if the use case surfaces. The reviewer's lean on Open Q #16 aligns with this default.
+- **Layer blend mode at composition.** When a layer's composed cells meet the global composition result, what blend happens? Default lean: alpha-over based on the layer's `placement` / `z` semantics — same as today's layer composition without pipelines. The pipeline's per-cell output replaces the layer's un-piped cells; composition with other layers is unchanged.
+- **Empty-pipeline semantics.** `Some(VfxPipelineConfig { steps: [] })` vs `None` — do they behave identically? Default lean: yes, both are no-ops. If an explicit empty pipeline proves distinguishable at runtime for trace/debug purposes, document the divergence.
+
+**What this decision adopts and what it does not:**
+
+- **Adopted direction.** Per-layer pipelines are part of V3. The schema extension lands. The two-level scoping model (scene × cell) is the canonical mental model for V3 composition. The logo-on-flag-wave example above is the canonical composability demonstration.
+- **Not adopted as structural assumptions.** The precedence, cache-key, trace-event, and blend-mode defaults above are carried forward from the PRD primitive 1 analysis and from prior draft wording. They are the starting leans for the implementation track; the track may choose differently if implementation pressure surfaces. None are binding without track confirmation.
+
+**Addresses Concern E of the 2026-04-21 GT-Design lead review memo** — scene-layer pipelines were previously described as a natural extension of the existing scene schema when in fact the `pipeline` field does not exist yet and the feature requires real schema/parser/validator/compositor/trace/fixture work. This revision calls out the implementation track explicitly, separates adopted direction from non-binding defaults, and lists the decisions the track will need to resolve.
+
+This adopts PRD primitive 1 as a **dedicated V3 implementation track**, not as an integration detail.
 
 **Why scene layers and unified Scope are two levels, not one:**
 
@@ -494,11 +526,13 @@ V3 parameters cannot be assumed scalar constants. Some real authoring intents re
 - The flag-animation PRD formalizes `SpatialSignalSpec` for 2D-aware signal graphs — the same concept applied to internally-composed values (not runtime-bound, but graph-composed from spatial/temporal inputs).
 - The ambient-halo exploration in `docs/internal/specs/relative-light-architecture.md` asked informally for "runtime color binding" — this is the same mechanism.
 
-**Decision:** V3 treats every step-level parameter as a `ParamValue<T>` that can be one of:
+**Decision:** V3 introduces `ParamValue<T>` as the uniform type for step-level parameters sourced from outside the current pipeline evaluation. A `ParamValue<T>` is one of:
 
 1. **Constant** — a scalar value, the 80% default case.
 2. **Runtime-bound** — a reference to a named app-supplied value (`{"binding": "<name>"}`), resolved per-frame by the app. Matches the existing `BindableValue` machinery; V3 formalizes it uniformly across all step types, not per-filter-or-shader ad-hoc.
 3. **Signal-graph** — a composed signal expression, evaluated per-cell-per-frame. Uses `mixed-signals` primitives (consumed, not duplicated, per Architectural framing above). For 2D-aware signals, extends `mixed-signals` upstream (Path B) rather than living in tui-vfx.
+
+A fourth class of step-parameter input — references to named outputs of other steps in the same pipeline — is covered by `HintRef<T>` in Decision 7, modeled as a separate closed type rather than a `ParamValue<T>` variant. At field sites the two compose via `StepInput<T> = ParamValue<T> | HintRef<T>`, so step-parameter fields accept either form uniformly unless they narrow to one side for domain reasons. See Decision 7's *Interaction with signal-driven parameters* subsection for the split's rationale.
 
 **What this unlocks:**
 
@@ -515,14 +549,14 @@ Today, `BindableValue` is used by a handful of specific shaders (matrix_rain, hi
 
 Uniformity across step types means:
 
-- **Authors learn one mechanism.** `ParamValue<T>` with three variants. Works the same way whether the step is a filter, a sampler, or a shader. No "does this specific shader support binding?" question.
+- **Authors learn one mechanism per input class.** `ParamValue<T>` with three variants for external values; `HintRef<T>` for pipeline-internal step-output references (Decision 7); `StepInput<T>` as the field-site sum so most step parameters accept either form uniformly. Works the same way whether the step is a filter, a sampler, or a shader. No "does this specific shader support binding?" question.
 - **The canonical builder (Decision 8) handles binding resolution uniformly.** Every step gets per-frame binding resolution through the same pipeline; individual step types don't re-implement the machinery.
 - **Validators can reason about bindings across the whole recipe.** "Which bindings does this recipe require?" becomes a tree walk, not a union of per-shader knowledge.
 - **The future movie-composer layer (deferred-design) gets uniform animation access.** A script can inject values into any ParamValue in any recipe without caring which specific shader's parameter it's reaching.
 
 The alternative (keep per-shader bindings, add them to more shaders over time) pays the same cost repeatedly for every new shader and every new use case. Generalization pays once.
 
-**Relationship to tokenization (Open Q #14).** Decision 6 covers the *structured-value* substitution domain (typed parameters: colors, numbers, signal graphs). Tokenization (Open Q #14) covers the *text-content* substitution domain (`{{name}}` in string fields). Both share a single app-provided `Substitutions` context at the `tui-vfx-recipes` boundary; they expose different typed methods for the two domains. The temporal dimension (load-time vs per-frame) is orthogonal — either domain can resolve at either time via the same context.
+**Relationship to tokenization (Open Q #14).** Decision 6's `ParamValue<T>` has two variants that bridge this boundary: `Constant` resolves at load time via `Substitutions`; `RuntimeBinding { name }` resolves per-frame via `RuntimeBindings`. Load-time `Substitutions` and per-frame `RuntimeBindings` are two distinct API surfaces at the `tui-vfx-recipes` boundary (see Open Q #14 for the full framing). The primary organizing axis is *temporal lifetime* — not the domain split (text vs structured) the earlier draft framing used — because lifetimes determine failure modes: load-time misses are strict-mode hard errors, per-frame misses are graceful-fallback soft errors, and those cannot be collapsed onto a single API without losing precision. Each surface handles both content domains internally (text tokens and structured values). Decision 6's variants and Open Q #14's surfaces are two views of the same split: `ParamValue::Constant` ↔ `Substitutions`; `ParamValue::RuntimeBinding` ↔ `RuntimeBindings`.
 
 ### 7. Step output hints as a first-class primitive — adopt
 
@@ -548,13 +582,18 @@ An alternative to hint names would be explicit step references — a step binds 
 
 The cost of named hints is that they require a defined namespace (which hints exist). That namespace grows additively and carefully — new hint kinds are added as real use cases surface, not pre-emptively.
 
-**Interaction with signal-driven parameters:**
+**Interaction with signal-driven parameters — the `ParamValue<T>` / `HintRef<T>` split:**
 
-- `ParamValue::RuntimeBinding { name }` references app-supplied values.
-- `ParamValue::StepOutput { hint, producer_ref? }` references a named hint from an upstream step in the same pipeline.
-- Both resolve to per-cell-per-frame scalar/color/vector values.
+Step-output references are modeled as a distinct closed type, `HintRef<T>`, rather than as a fourth variant of `ParamValue<T>` (Decision 6). The two cover materially different concerns and have different resolution paths and validator work:
 
-**Open for later design:** resolution rules when multiple upstream steps produce the same named hint (first-producer-wins vs last vs explicit reference), and whether hints can compose (e.g., "displacement multiplied by a scalar signal"). Not blocking V3 direction; needs settling before V3 implementation.
+- `ParamValue<T>` covers external value sources: `Constant`, `RuntimeBinding { name }` (app-supplied), `SignalGraph` (composed expression from `mixed-signals`). Resolution crosses the engine boundary (substitution contract, signal evaluation). Validator surfaces the binding contract — the set of app-supplied values this recipe requires.
+- `HintRef<T>` covers pipeline-internal references: `{ hint, producer_ref? }` reads a named hint from an upstream step in the same pipeline evaluation. Resolution is a producer lookup against the hint namespace. Validator walks the tree to confirm at least one producer exists and the hint's shape matches `T`.
+
+At field sites the two compose via `StepInput<T> = ParamValue<T> | HintRef<T>`, so step-parameter fields accept either form uniformly unless domain reasons narrow them (e.g., a shader's `blend_mode` probably only accepts `ParamValue<BlendMode>`; a `DisplacementShade`'s `input` field only accepts `HintRef<Displacement>`). Both resolve to per-cell-per-frame scalar/color/vector values at render time; the split is about *where the value comes from*, not what it is.
+
+Why split and not a single four-variant `ParamValue<T>`: external value sources are app policy flowing in; step-output refs are meaning flowing within the pipeline (Principle 5). They have different lifetimes (cross-boundary vs intra-pipeline), different failure modes (missing binding contract vs producer-not-found), and different tooling paths (binding-contract discovery vs hint-graph inspection). Collapsing them into one type forces every field, validator, and tool to reason about cases that don't apply to it. Keeping them distinct keeps each type's rules tight and each error message precise.
+
+**Open for later design:** resolution rules when multiple upstream steps produce the same named hint (first-producer-wins vs last vs explicit reference vs validator-forbidden-ambiguity — see Open Q #16), and whether hint refs can compose in-schema (e.g., "displacement multiplied by a scalar signal") or whether composition only happens via an intermediate step. Not blocking V3 direction; needs settling before V3 implementation.
 
 ### 8. Canonical upstream semantic seam — adopt, formalize during V3
 
@@ -588,7 +627,7 @@ The goal isn't "use upstream rendering directly." It's "use upstream *semantics*
 - Does the canonical builder live in `tui-vfx-recipes` or in a new sibling crate? Probably the former to keep the seam close to the schema; up for confirmation during implementation design.
 - What's the public surface? A single `fn build_playback_item(config: &VfxRecipeConfig) -> Result<PlaybackItem, Err>` plus the typed `PlaybackItem` output? Or a builder pattern? Or a trait consumers can implement / wrap? Probably the simplest function + struct that works.
 - How are post-builder customizations expressed? gt-design sometimes legitimately needs to adjust the item before rendering (e.g., inject theme-resolved values into placeholder slots). The contract should accommodate documented extension points without re-inventing the whole item.
-- How does the canonical builder interact with tokenization (Open Q #14) and binding resolution (Decision 6)? Probably: tokenization runs before the builder (so the builder sees a fully-substituted config); binding resolution runs at render time after the builder has produced an item.
+- How does the canonical builder interact with the two `tui-vfx-recipes` boundary surfaces (Open Q #14)? `Substitutions` (load-time) runs before the builder, so the builder sees a fully-substituted config; `RuntimeBindings` (per-frame) is evaluated at render time after the builder has produced a playback item. Binding-contract discovery happens at the builder stage so consumers can inspect the per-frame contract before starting playback.
 
 **Addresses feedback items:** 1 (duplicated semantic conversion), 8 (seam conventional rather than structural). Directly enables retiring the parallel translation code in `gtd-ratatui/src/recipes/{item,planner,player}.rs`.
 
@@ -692,32 +731,59 @@ These are not rhetorical — each represents a real design choice not yet settle
 
 Tachyonfx collapses mask/filter/sampler/style into one `Effect` with naming by factory function. Our working assumption is that the four kinds survive as enum variants on the unified Step because they represent genuinely different operations (reveal vs post-process vs texture-overlay vs style-transform), and the distinction aids authoring comprehension. But if after implementation we find the boundary is mushy — e.g., a mask with scope is indistinguishable from a filter with a cell-clear payload — we may want to collapse further. Preserving the distinction is the safe starting position; reducing later is easier than splitting later.
 
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** keep the `kind` discriminator. *"The distinction is still useful for comprehension, validation, documentation, and tooling. You can always collapse later if the boundaries truly prove artificial."*
+
 ### 2. Migration strategy and schema versioning
 
-**V3 is a clean cutover — V2 is not carried forward as a loadable format (see Why Now framing).** The entire shipped recipe corpus migrates in one pass during V3 implementation; V3 is the new floor. No compatibility shim, no deprecation window, no dual loader path.
+**V3 is a clean cutover — V2 is not carried forward as a loadable format (see Why Now framing).** The entire shipped recipe corpus migrates during V3 implementation; V3 is the new floor. No compatibility shim, no deprecation window, no dual loader path.
 
-What this means concretely:
+Migration is a three-phase human-directed workflow rather than a mechanical translator pass over the whole corpus. Phase ordering is deliberate: curation reduces the problem space before any translation labor is spent on it; AI re-authoring instruments the briefing infrastructure the library will rely on going forward; validator checks are the last gate rather than an intermediate artifact.
 
-- The V2 → V3 migration is a **one-time, one-way corpus rewrite**, not an ongoing runtime concern.
-- A **migration script / tool** (bash or Rust) runs over `recipes/` once to produce V3-shaped files. The script may be interactive for recipes that require human judgment (classifying named shaders per Workflow A, choosing between primitive and earned-named form, etc.).
-- The script's output is reviewed and committed; V2 files are deleted.
-- V3 ships with validator and probe infrastructure that only understands V3. No V2 path in the runtime code.
+**Prereq (part of V3 implementation proper, not migration phases).** The V3 validator infrastructure (Open Q #9) is built before migration phase 3 runs. The narrow-scope mechanical translator used only in the critical-recipe carve-out (below) is also built as part of V3 implementation work, not as migration tooling.
 
-Sub-questions that still need resolution during implementation:
+**Mainline corpus (the large majority of retained recipes):**
 
-- Is the migration fully scriptable, or does it need human touch-points? Likely a hybrid — most mechanical renames are scriptable; shader-classification decisions from Workflow A need human review; structural tree reshaping is mostly mechanical.
-- Does V3 ship a `validate-v2` migration helper that reads V2 recipes and produces a migration plan, or is the migration done via direct hand-authored scripts + human review? Probably the latter for the one-time V2 → V3 migration; validator infrastructure in V3 targets V3.
-- Probe-equivalence testing: does the pre-migration V2 recipe corpus probe-diff equivalent after V3 migration? Worth establishing for critical recipes (splash, the default-recipe set) to catch silent semantic drift during the migration.
+1. **Curate — human Morris filter over the full V2 corpus.** For each V2 recipe, decide: port / consolidate / archive / delete. This phase collapses the problem space — recipes that don't earn a V3 slot are not translated. Output: the retained set with per-recipe disposition and rationale. Workflow B in the sibling audit-workflow doc is this phase. Running curation first matters because it prevents pouring translation labor into recipes that will be archived or deleted, and because it keeps the curation conversation focused on "does this earn its place?" rather than "did the translation succeed?"
+
+2. **Re-author — Claude translates each retained recipe from V2 intent to V3 form under explicit authoring briefing.** This is not a mechanical reshape; it is a capability test for V3's AI-authoring pathway (the primary composition mode per Decision 3's rationale). Where Claude struggles, the briefing infrastructure (SKILLS.md, prompt scaffolds, on-disk vocabulary references, authoring guides) has a gap — which is exactly the gap every future author (human or AI) will hit when writing a new V3 recipe from scratch. Briefing improvements land alongside the recipes that surface them; the migration is deliberately used as a forcing function for briefing quality. Claude's output is reviewed by the human in the loop before commit. Re-authoring is also where latent V3 primitive gaps surface: a V2 recipe that can't be cleanly re-authored in V3 is evidence that V3 is missing a primitive, a Pattern variant, a hint kind, or a binding mechanism — those gaps route back to V3 implementation work, not to ad-hoc recipe workarounds.
+
+3. **Validate — V3 validator runs on every re-authored recipe.** Validator covers schema shape, scope coherence, hint-namespace membership (HintRef<T> producer verification), fragment addressability, binding-contract discovery, and required-field presence. Validator failures block merge for the affected recipe. Semantic drift from V2 to V3 is often *intended* at this stage — re-authoring is allowed to improve on the V2 version, that's part of the point — so the mainline validator checks well-formedness rather than rendering equivalence.
+
+**Critical / fixture carve-out (small designated set — expected ~5–15 recipes).**
+
+For recipes where downstream consumers or test infrastructure depend on specific rendering behavior, AI re-authoring alone is insufficient: "similar but subtly different" V3 output is a silent visual regression for apps upgrading to V3, and a correctness break for probe tests whose purpose is to pin rendering. The designated set routes through a parallel track:
+
+1. **Capture V2-rendered fixtures before any migration work begins.** Cheap insurance; run once against current V2 corpus. Checked in.
+2. **Mechanical translator produces V3 for the designated set only.** Deterministic transformations: tree reshaping, Ra→Vfx rename, scope/phase wrapping, ParamValue/HintRef/StepInput handling, default population. Does not attempt curation.
+3. **Fixture-equivalence gate.** V3 render must match V2 fixture within tolerance (tolerance is per-recipe-kind: exact for probe-validation fixtures, perceptual-delta for splash-class visuals, structural for scenes with deliberate V3 improvements). Drift is either a translator bug (fix) or intended V3-only behavior (document and whitelist).
+4. Curatorial review still applies to the critical set — Morris filter, naming, metadata — but rendering is preserved by the gate.
+
+Candidate critical-set members: the probe-validation corpus (by definition — these recipes exist to pin rendering), the splash family (gt-design ships specific splash visuals apps depend on), and any recipe that app-level docs or release notes currently cite as a specific visual contract. Membership is designated explicitly per-recipe with written justification; inclusion is not the default.
+
+**What this resolves.** Addresses Concern B of the 2026-04-21 GT-Design lead review memo — the prior draft split-brained between Open Q #2 ("script with human exceptions") and the Recipe migration workflow section in Deferred ("manual curation, bulk translation is not the goal"). Both framings had partial truth; this three-phase model unifies them by sequencing curation first (problem reduction via Morris filter), AI authoring second (instrumenting the future-author pathway per Decision 3's stated primary composition mode), and validation third (well-formedness via built validator), with a fixture track for the subset where rendering equivalence is load-bearing. The reviewer's drift-audit concern is addressed at two levels: validator + curatorial review for the mainline, fixture equivalence for the critical set.
+
+**Sub-questions that still need resolution during implementation:**
+
+- **Authoritative inventory step (blocking prerequisite).** Before curation begins, an inventory pass produces a checked-in manifest of all recipe files with classification (candidate / debug / probe / test / deprecated / generated). Current filesystem evidence suggests the main corpus is >500 files, well above prior "200–300" estimates. Inventory gates all scope and schedule assumptions.
+- **Critical-set membership discipline.** Who designates inclusion; how each member's inclusion is justified per-recipe; whether the set is frozen at migration start or can grow during migration as additional rendering contracts surface.
+- **Fixture-tolerance specification.** Pixel-perfect vs percentage-delta vs structural-equivalence vs probe-event match. Probably a mix by recipe kind; concrete specification needed before the carve-out runs.
+- **Briefing-improvement commit discipline.** When re-authoring surfaces a briefing gap, does the fix land as a separate commit before the recipe, alongside it, or in a batch at phase-end? Probably alongside, with the motivating recipe cited in the commit message.
 
 **Future versioning after V3 ships** is a separate concern. If V3 attracts external consumers (currently: none), V4 migration will need the compatibility discipline that V3 does not need to carry. That's a future-plan concern, not a V3 concern.
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — input behind Concern B's resolution):** hybrid migration (mechanical translation + human review + fixture/probe equivalence for critical recipes), explicitly NOT purely manual Claude-led rewrite of the whole corpus. This was load-bearing for the three-phase model (Curate → Re-author → Validate with critical-set carve-out) captured above. Implementation-mechanics sub-questions remain open.
 
 ### 3. Phase-scoping shape: per-step field vs container
 
 Currently proposed: each step carries `phase: Enter | Dwell | Exit | All`. Alternative: phase is a container (`Phase::Dwell(...)`) wrapping its children. Per-step field is flatter and matches the scope-field pattern (both are metadata on an atom). Container is more readable at a glance (the tree clearly segments by phase). The two shapes are isomorphic. Decision pending readability review against the appendix translations.
 
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** per-step field, with container propagation. *"This matches the scope model, keeps the normalized shape regular, and still allows readable grouping."* Aligns with the plan's current lean.
+
 ### 4. Composition combine semantics — explicit or defaulted
 
 Current flat schema has implicit filter ordering ("applied in order") and explicit mask combine modes (`All | Any`). Tree `Parallel` containers could carry a `combine: Chain | Union | Intersect | Replace` policy, or combine could be per-kind with sensible defaults. Authoring ergonomics strongly prefer per-kind defaults; safety-net arguments lean toward explicit-at-container. Probably: per-kind defaults with container override available, but the exact default table needs discussion.
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** per-kind defaults plus explicit container override. Also strongly recommends a **normalized internal form** where the effective combine is explicit after parsing/canonicalization, so tooling and tests don't have to re-infer defaults.
 
 ### 5. Named-factory and compositional JSON coexistence
 
@@ -727,9 +793,13 @@ Both `{"type": "diffusion", ...}` and `{"type": "colored_overlay", "pattern": {.
 - Allow themes to mix both in the same recipe, or enforce consistency?
 - Provide a canonicalization tool to convert named → compositional for inspection?
 
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** yes, support both; validate equivalence; provide canonicalization tooling. Property-test equivalence for curated pairs; canonicalize for inspection/debugging; teach named factories for curated presets; teach primitive/compositional form for advanced/custom authoring. Allow mixing in one recipe, but don't make mixing the default teaching style.
+
 ### 6. Scope primitive — open-closed tension
 
 Closed algebraic enum is safer, validatable, and cacheable (cf. tachyonfx's static/dynamic analyzer with bitmask caching). Closure-based escape hatches (`PositionFn`, `EvalCell`) are powerful but uncacheable and resist static validation. We need both: closed variants for 95% of authoring intents, escape hatches for the novel 5%. The open question is the boundary. One proposal: closed variants are directly JSON-encodable; closure escapes require Rust-side registration (the recipe references a named predicate registered at compile time, not an arbitrary eval string).
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** closed enum with registered escape hatch — *"the right balance for caching, validation, and authoring predictability."* Aligns with the plan's current lean.
 
 ### 7. Relationship to `RecipeSceneCanvas` (Intention 50)
 
@@ -740,12 +810,16 @@ The tree-schema migration is nominally independent of the in-GTD recipe-playback
 
 Each has different risk profile and different blocking structure. Needs explicit decision.
 
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** do not make GTD substrate sequencing the blocker for upstream V3 core work. Upstream should stabilize first (canonical semantic seam, naming cleanup, token/binding contracts, normalized execution model); GTD then adapts `RecipeSceneCanvas` to that seam.
+
 ### 8. Unblock order for Relative Light explorations
 
 Ambient halo and ember-felt are both easier to express in V3. Do we:
 - Block both on V3 (delays them but keeps recipes consistent).
 - Ship them in V2 first, migrate later (unblocks the work but increases migration corpus).
 - Ship them in V2 but gate them behind feature flags so migration is clean.
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** do not ship productized V2 versions if V3 is clearly the right substrate. Continue exploration as isolated R&D fixtures, debug recipes, or lab-only prototypes — not as user-facing V2 contracts that would immediately need migration.
 
 ### 9. Validator redesign
 
@@ -755,9 +829,13 @@ Tree schemas need different validation than flat schemas. New rules to design:
 - Scope-propagation conflict detection (child declares scope X, parent propagates Y; precedence rule?).
 - Migration validation: V2 → V3 auto-migration must preserve probe-equivalence on the full recipe corpus.
 
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** this is **core V3 work, not support work.** Validator scope: scope coherence, tree/container invariants, hint ambiguity, fragment addressability, token/binding contracts, migration equivalence for critical fixtures. Also validate a **canonical normalized IR**, not only raw authoring syntax — that keeps the validator durable across future schema evolution.
+
 ### 10. Viewer still worth building independently
 
 Even with tree authoring, a visual renderer of a pipeline (inspector / debugger / recipe explorer) is valuable. In an earlier conversation turn the viewer was proposed as a *substitute* for tree authoring; we rejected that. But the viewer has independent value — does it stay on the backlog as its own project, or does it fold into a broader "recipe tooling" initiative post-V3?
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** yes, but build it on the normalized execution graph / canonical IR, not directly on author sugar. *"That will make it much more durable across future schema evolution."* Pairs with Q9's "validate normalized IR" point — viewer and validator can share the IR surface.
 
 ### 11. Docs, SKILLS.md, and generator updates
 
@@ -772,9 +850,40 @@ Every existing doc page that references schema fields needs updating:
 
 The generator infrastructure (`just docs-gen`, drift checks) must be updated in the same cutover. Bounded but non-trivial work; plan needs to budget for it.
 
-### 12. Shadow rendering, offscreen composition, probe/trace compatibility
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** must ship in the same cutover as the schema change. Especially important: generated API docs, validator/tracing docs, AI/LLM guidance, migration notes, and canonical examples. Aligns with the plan's current lean (same-cutover).
 
-Tachyonfx-style composition trees interact with offscreen buffers and shadow passes differently from flat pipelines. Our `tui-vfx-shadow` crate and the probe/trace infrastructure will likely need adaptation. Scope unknown until we start implementing — flagged as a risk area, not a blocker.
+### 12. Shadow rendering, offscreen composition, probe/trace compatibility — V3 release gate
+
+The V3 tree schema, the per-layer pipeline feature (Decision 5's implementation track), and the uniform step vocabulary (Decision 3) all touch infrastructure that downstream consumers — gt-design in particular — depend on for correctness at final render truth: shadow fidelity, offscreen composition behavior, role-aware lowering, trace/probe observability, factory-canonical final rendering. The prior draft flagged these as "a risk area, not a blocker." That framing was wrong — if V3 regresses these, the schema improvements don't pay back, and the 2026-04-21 GT-Design lead review memo specifically escalates this to release-gate status (Concern F).
+
+**Decision: these are V3 release-gate criteria, not open risk items.** V3 does not ship without green on each gate criterion for the designated-critical-set of consumers and recipes.
+
+**Gate criteria (what must be green before V3 ships):**
+
+1. **Canonical shadow fixtures.** Every shipped shadow primitive (depth-based, elevation-based, glow/bloom, directional) has a captured pre-migration fixture from V2 rendering and a post-migration V3 render. Delta is either within tolerance, documented-and-whitelisted as intended V3 behavior, or blocking.
+2. **Offscreen / slide fixtures.** Representative recipes that use offscreen composition (multi-pass rendering, buffered intermediate stages, slide-in/slide-out transitions) have captured fixtures covering pre-migration and post-migration render. Same tolerance + whitelist + blocking model.
+3. **Probe snapshots.** The `vfx-probe-validation` corpus — by definition the recipes that exist to pin rendering behavior — passes probe-equivalence against pre-migration captures. Any probe diff is either a translator bug, an intended V3-only behavior change (documented), or blocking.
+4. **Trace expectations.** The trace/probe infrastructure emits events at the same granularity and with the same semantic content as V2 for representative flows. Schema additions (e.g., `TraceEvent::LayerPipelineApplied` from Decision 5) are allowed; removals or semantic shifts are either documented or blocking.
+5. **GT-Design integration fixtures.** Representative gt-design surfaces (splash family, default recipe set, toast family, modal family, any recipe that app-level docs or release notes cite as a specific visual contract) render identically within tolerance against pre-migration captures. Failures route through Concern B's critical-set carve-out's fixture-equivalence gate.
+6. **Role-aware lowering correctness.** The canonical builder (Decision 8) produces playback items whose role-aware handling (`RoleTag` at the render layer, not the new `RoutingRole` / `SurfaceIntent` hint types from Open Q #18) matches V2 for the fixture set. Documented whitelist is allowed only where V3's role-domain split (Concern C) deliberately changes behavior.
+
+**Relationship to Concern B's critical-set carve-out:**
+
+Concern B's critical-set fixture track is the *mechanism* by which gate criteria 1–5 are evaluated. The critical set includes the recipes named above plus any specific recipe a consumer designates as rendering-load-bearing. The fixture-equivalence gate runs as part of V3 CI and blocks release on failure.
+
+Concern B handles *how* fixtures are captured, translated, and diffed; Concern F (this release gate) handles *what* must be captured and *what counts as passing*. The two are complementary: Concern B is infrastructure and workflow, Concern F is the specific gate criteria the infrastructure evaluates.
+
+**Remaining implementation-level questions** (these are what this Open Question still covers, post-release-gate commitment):
+
+- **Per-criterion tolerance specification.** Pixel-perfect, percentage-delta, perceptual-delta, structural, or probe-event match? Each criterion likely has its own tolerance shape. Default lean: probe-validation corpus is exact (by definition); shadow / offscreen / GTD-integration fixtures are perceptual-delta with per-recipe calibration; trace events are structural equivalence with documented additions allowed.
+- **Gate ownership.** Who designates the GT-Design representative surfaces? Who maintains the whitelist of documented intended changes? Probably gt-design's lead for GTD-integration surfaces and the V3 implementer for everything else, coordinated via explicit commit-and-PR workflow.
+- **Whitelist discipline.** A whitelist entry documents *why* a V2→V3 behavior change is intended. Entries must be legible to a downstream maintainer auditing gate output six months later — rationale, affected recipes, expected before/after behavior. Whitelist-as-commit-message is insufficient; whitelist-as-structured-manifest is the bar.
+- **Recapture cadence.** If a V2 fixture is stale (the V2 rendering itself changed since capture), does the gate recapture automatically or require explicit human approval? Lean: explicit approval, because silent recapture masks regression.
+- **Gate-fail escalation.** When a gate criterion fails during V3 implementation, what's the escalation path? Lean: block the V3 release milestone; route diagnosis to the owning track (compositor, trace, shadow crate); resolve-or-whitelist-or-defer-critical-set-membership explicitly before resuming.
+
+**Addresses Concern F of the 2026-04-21 GT-Design lead review memo** — shadow/offscreen/trace compatibility promoted from "open risk" to explicit V3 release gate with enumerated criteria. Cross-links to Concern B (critical/fixture carve-out is the evaluation mechanism).
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — input behind Concern F's resolution):** release gate, not optional polish. One input among several; the implementation-level sub-questions above (tolerance spec, gate ownership, whitelist discipline, recapture cadence, escalation path) remain open.
 
 ### 13. Partial-phase spans (PhaseSet granularity)
 
@@ -784,36 +893,52 @@ V3 should support `phase: PhaseSet` where PhaseSet is any subset of `{Enter, Dwe
 
 Open: does the PhaseSet shape live at the step level (every step can phase-scope) or only on containers (Parallel/Sequence containers carry phase membership that propagates to children)? Per-step is more expressive; container-scoped is more readable. Both could coexist with propagation rules.
 
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** yes, support `PhaseSet`, and keep it available at the step level. Container propagation can exist too, but don't make container-only the model. Aligns with the plan's per-step lean.
+
 ### 14. Tokenization ownership and contract discovery
 
 Today, field tokenization happens at the app layer. Concrete example: `gtd_ratatui::splash::Substitutions` (at `crates/gtd-ratatui/src/splash/cls_substitutions.rs`) provides `{{app_name}}`, `{{version}}`, `{{system_name}}` Mustache-style tokens that gt-design's splash runtime resolves before handing the recipe to tui-vfx. Similar tokenization needs show up in other consumers ad-hoc.
 
 **Direction:** move this to a `tui-vfx-recipes`-boundary API. One typed `Substitutions` builder; one `load_with_substitutions` entry point; every consumer speaks the same tokenization vocabulary; validators and probes can reason about token references uniformly. The load stage inserts right after JSON parse, before SSOT resolution — the existing SSOT loader stays intact.
 
-**Text vs structured — the fundamental split.**
+**Load-time `Substitutions` vs per-frame `RuntimeBindings` — the fundamental split.**
 
-Tokens and bindings divide by *domain*, not temporal phase:
+V3 exposes two distinct API surfaces at the `tui-vfx-recipes` boundary, divided by *temporal lifetime* rather than by content domain:
 
-- **Tokens = visible text substitution.** `{{app_name}}` in a message field, `{{version}}` in a title. Mustache-style within string fields.
-- **Bindings (Decision 6) = structured-value parameters.** Colors, numbers, objects — typed values flowing into step parameters via `BindableValue` / `ParamValue::RuntimeBinding`.
+- **`Substitutions` (load-time).** Handles all substitution that resolves once when a recipe is loaded. Text tokens (`{{app_name}}`, `{{version}}` — Mustache-style within string fields), asset bytes (images, fonts), and structured values set once at app startup (e.g., a brand color fixed at launch). Resolution happens right after JSON parse, before SSOT resolution and before the canonical builder (Decision 8) produces a playback item. Strict-mode by default: missing references produce loud, early failures with contract listing. `Substitutions` corresponds to `ParamValue::Constant` at the type level — both are "value known at load time."
 
-Both use the same app-provided `Substitutions` context; they expose different method families (text token registration vs typed value registration). Temporal phase (load-time vs per-frame) is orthogonal — both tokens and bindings can in principle be set-once or updated-per-frame via the shared context.
+- **`RuntimeBindings` (per-frame).** Handles typed values that update each render — focus target, scroll velocity, app state, signal-driven shader params. Corresponds to Decision 6's `ParamValue::RuntimeBinding { name }` and today's `BindableValue` machinery. Set per-frame or set-on-change; a binding remains active until overwritten. Failure mode: a missing binding at frame N falls back to last-known-good, a declared default, or a validator-declared fallback; it does not hard-fail rendering. Strict-mode is not meaningful for values expected to update dynamically.
+
+Why temporal lifetime is the primary axis rather than text vs structured:
+
+- **Lifetimes determine failure modes.** Load-time misses are hard errors; per-frame misses are graceful fallbacks. Collapsing onto one API loses that precision.
+- **Live-code evidence.** GTD today already splits along the temporal axis — `gtd_ratatui::splash::Substitutions` (load-time, handles text + assets) and `BindableValue` (per-frame, handles structured values). The V3 canonical API preserves this mental model and upgrades it from ad-hoc per-consumer to shared at the `tui-vfx-recipes` boundary.
+- **Usage is concentrated diagonally on the 2×2 of (text/structured) × (load/per-frame).** Load-time text (`{{app_name}}`) and per-frame structured (focus target) are the dominant cells; load-time structured (brand color set once) is common too; per-frame text is rare and typically handled via dynamic widgets rather than recipe substitution. Organizing the API by temporal axis matches actual usage; organizing by domain would cross-cut the common paths.
+
+Both surfaces handle both content domains internally — text and structured values appear in each API as distinct method families (`Substitutions::with_string`, `with_color`, `with_image`; `RuntimeBindings::set_color`, `set_number`, `set_vec2`). The domain distinction is a method-family split *within* each surface, not across them.
+
+**Optional umbrella wrapper.** Consumers that want to pass both surfaces through one value can use an umbrella type (candidate name: `RecipeContext { subs: Substitutions, bindings: RuntimeBindings }`). The umbrella is ergonomic sugar; the lifetimes and failure modes remain explicit in the wrapped types.
+
+Addresses Concern D of the 2026-04-21 GT-Design lead review memo (tokenization and runtime bindings coordinated but distinct) and feedback item 7 (intake layer complex — the raw/resolved/template-backed/runtime-param-injected pathways consolidate into the two-surface shape).
 
 **Sub-questions to resolve during implementation:**
 
-- **Partial vs whole-value substitution.** `"message": "Hello {{name}}"` is partial; `"duration_ms": "{{ms}}"` is whole-value requiring type coercion. Loader needs to be schema-aware to handle both.
-- **Can tokens resolve to objects?** Probably scalar-first (strings, numbers, colors, assets); object substitution (e.g., a whole pipeline fragment) only if a concrete use case demands it.
-- **Unresolved token policy.** Caller-configurable: strict (fail on missing), relaxed (leave literal). Default: strict for structural fields (non-string types), relaxed for string fields.
-- **Does the substitutions API include asset resolution** (images, fonts)? Probably yes — `with_image(name, bytes)`, `with_font(name, bytes)` alongside `with_string`, `with_number`, `with_color`. Single Substitutions carries all value kinds.
-- **Relationship to procedural `params`.** Procedural source params can use both tokens and bindings (e.g., `{"color": {"binding": "brand"}}` or `{"seed": "{{random_seed}}"}`). They should compose transparently.
+- **Partial vs whole-value substitution (`Substitutions` only).** `"message": "Hello {{name}}"` is partial string substitution; `"duration_ms": "{{ms}}"` is whole-value requiring type coercion. The `Substitutions` loader is schema-aware and handles both. `RuntimeBindings` is always whole-value typed — no partial-string semantics at render time.
+- **Can load-time substitutions resolve to objects?** Probably scalar-first (strings, numbers, colors, assets); object substitution (e.g., a whole pipeline fragment) only if a concrete use case demands it. `RuntimeBindings` is scalar-only by construction — bindings resolve to typed values, not structural JSON.
+- **Unresolved-reference policy — different per surface.** `Substitutions`: strict by default; a missing token produces a load-time failure with contract listing. Caller-configurable relaxed mode for string fields leaves literal `{{token}}` in output. `RuntimeBindings`: no strict-mode; a missing binding at frame N falls back to last-known-good or a validator-declared default. The two surfaces have different failure models and must not share one policy knob.
+- **Asset resolution lives in `Substitutions` only.** `Substitutions::with_image(name, bytes)`, `with_font(name, bytes)` alongside the text and structured-value methods. Assets don't update per frame in any use case we've surfaced; if a future need genuinely wants per-frame asset swap, it routes through `RuntimeBindings` with a typed asset-handle binding rather than re-uploading bytes every frame.
+- **Relationship to procedural `params`.** Procedural source params can reference both surfaces. `{"seed": "{{random_seed}}"}` is `Substitutions` (load-time); `{"color": {"binding": "brand"}}` is `RuntimeBindings` (per-frame). They compose transparently because the procedural generator sees the final resolved value regardless of which surface provided it.
 
-**Token contract discovery.** Once universal tokenization exists, consumers need to discover what tokens a recipe expects — especially for marketplace/third-party recipes where the consumer didn't author the recipe. Three complementary mechanisms:
+**Contract discovery — two contracts, one per surface.** Once the two-surface API exists, consumers need to discover what each surface expects — especially for marketplace/third-party recipes where the consumer didn't author the recipe. Per-surface discovery mechanisms:
 
-1. **Recipes declare their contract explicitly.** Extending the PRD's `requires_primitives` pattern: `requires_tokens: { app_name: "string", brand_color: { type: "color", default: "#4080FF" } }` + `requires_bindings: { density: { type: "number", range: [0.0, 1.0] } }`. Validators cross-check that every `{{token}}` in the JSON has a `requires_tokens` entry, and that consumer `Substitutions` satisfy required keys.
-2. **Runtime introspection API.** `vfx_recipes::introspect_tokens(json) -> TokenContract` for consumers that didn't author the recipe. Useful for editors, generic players, capability negotiation.
-3. **Strict-mode loader by default.** Missing tokens produce loud errors listing what's expected and what's supplied, not silent wrong behavior.
+1. **Recipes declare both contracts explicitly.** Extending the PRD's `requires_primitives` pattern: `requires_substitutions: { app_name: "string", brand_color: { type: "color", default: "#4080FF" }, logo: { type: "image" } }` + `requires_bindings: { density: { type: "number", range: [0.0, 1.0] }, focus_target: { type: "vec2" } }`. The two fields are declared separately because their failure modes differ — an unsatisfied `requires_substitutions` fails at load; an unsatisfied `requires_bindings` is a per-frame contract the consumer must uphold.
+2. **Validators cross-check contracts.** Every `{{token}}` and load-time structured reference has a `requires_substitutions` entry; every `ParamValue::RuntimeBinding { name }` has a `requires_bindings` entry. Validator surfaces the per-surface binding contract uniformly across the recipe tree.
+3. **Runtime introspection APIs.** `vfx_recipes::introspect_substitutions(json) -> SubstitutionContract` and `vfx_recipes::introspect_bindings(json) -> BindingContract` for consumers that didn't author the recipe (editors, generic players, capability negotiation).
+4. **Strict-mode `Substitutions` loader by default.** Missing substitutions produce loud errors listing what's expected and what's supplied, not silent wrong behavior. `RuntimeBindings` has no strict-mode equivalent; per-frame misses are graceful fallbacks by construction.
 
-Optional fourth mechanism: compile-time code generation from `requires_tokens` (proc-macro or `build.rs`) producing typed `Substitutions` structs for consumers that ship against specific recipe versions. Niche; runtime API is enough for most cases.
+Optional fifth mechanism: compile-time code generation from `requires_substitutions` and `requires_bindings` (proc-macro or `build.rs`) producing typed `Substitutions` and `RuntimeBindings` structs for consumers that ship against specific recipe versions. Niche; runtime APIs are enough for most cases.
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — input behind Concern D's resolution):** move the API upstream, but separate load-time substitutions from runtime bindings. Plus: explicit declared contracts, strict-mode default, introspection API, byte-based asset resolution. This was load-bearing for the two-surface split captured above. Implementation-mechanics sub-questions remain open.
 
 ### 15. Vocabulary refresh scope — comprehensive is the right default
 
@@ -838,9 +963,18 @@ Principle 3 names the tension: vocabulary still carries notification archaeology
 
 Decision for specific renames gets finalized with the translation study (Workflow C in the sibling audit-workflow doc) in hand. The study will reveal which terms genuinely generalize and which carry notification weight the authoring should shed.
 
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** comprehensive-but-selective — a meaningful divergence from the plan's current "comprehensive (full pass)" default. Specific leans:
+- **Rename** `auto_dismiss_ms` (aligns with plan)
+- **Probably rename / rework** `continuous` (aligns with plan)
+- **Rename** preview seam nouns/modules (Open Q #19 — aligns with plan)
+- **Keep `anchor`** unless semantics change — in a ratatui/grid context, anchor is already a good geometry term (plan currently leans rename)
+- **Keep `enter/dwell/exit`** unless translation study proves they are actively misleading (plan currently leans evaluate-and-possibly-rename)
+
+From a ratatui-centric consumer perspective, the reviewer argues `anchor` and `enter/dwell/exit` generalize better than the plan gives them credit for. Worth resolving during the translation-study phase.
+
 ### 16. Cross-step hint resolution rules
 
-Decision 7 establishes step output hints as first-class. Multiple implementation questions remain:
+Decision 7 establishes step output hints as first-class, modeled as the distinct `HintRef<T>` type (see the `ParamValue<T>` / `HintRef<T>` split in Decisions 6 and 7). Multiple implementation questions remain for `HintRef<T>` semantics:
 
 - **Multiple producers:** when two upstream steps in the same pipeline produce hints with the same name, which wins? Options: first-producer, last-producer, explicit reference by producer ID, compositor-error (forbidden ambiguity).
 - **Hint composition:** can a step bind to "displacement from step A multiplied by the signal from step B"? This compounds Decisions 6 and 7 in a way that might need special syntax.
@@ -848,6 +982,14 @@ Decision 7 establishes step output hints as first-class. Multiple implementation
 - **Hint lifetime:** do hints persist across frames, or are they recomputed every frame? Probably the latter, but the validator needs to enforce it.
 
 These are implementation-level questions but they affect schema shape — the answers determine whether hint references are bare names (`displacement`) or scoped (`layer.flag.displacement`).
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):**
+- Visibility defaults to **same pipeline / same layer only**
+- Cross-layer reads require explicit export/import semantics if they exist at all
+- Hint lifetime is per-frame / ephemeral
+- **Multiple producers for the same visible hint should be a validator error unless explicitly qualified** — not "first wins" or "last wins" silently. *"That is too brittle."*
+
+Decision 5's implementation track (Concern E) already defaults to same-layer-only hint visibility, aligning with this lean.
 
 ### 17. Primitive library / `$use` fragment composition
 
@@ -900,38 +1042,67 @@ Each is distinct and non-substitutable. With only `extends`, you can't share a f
 - **Theme-scoped vs global fragments.** A theme may want its own named fragments ("grimoire.ember_support", "harbor.hidden_rail_shell") that only exist within that theme's namespace. Should those live in the global primitive catalog alongside library-wide shared fragments, or in a theme-scoped namespace? Theme-scoped is probably right — grimoire's ember-support doesn't belong in the harbor recipe set — but the shape needs discussion.
 - **Justification bar and approval mechanism.** Consistent with Decision 2's "earn their place" principle: what's the threshold for promoting a pattern to a shared fragment? "Used in three recipes" is a rule-of-three heuristic but not the whole answer — some fragments should be named after one use if they encode a specific design judgment worth locking in. A lightweight authoring guideline (e.g., every new fragment carries a `justification:` field explaining what it locks in) beats a committee review.
 
-### 18. Semantic role tags as uniform optional metadata
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** yes, but keep v1 minimal and non-blocking — one fragment mechanism, flattened at load time, parameterization via the same substitution system (Open Q #14 / Concern D), no fragment inheritance in v1 unless a real case demands it, strict addressability + introspection from day one.
 
-Scene layers already carry `role_tag: RoleTag` today (introduced in Sub-plan B.1). The question for V3 is whether the same optional-role-tag pattern should extend uniformly across other schema elements — pipeline steps, recipes, content effects — to give downstream consumers a consistent routing vocabulary.
+### 18. Step-level `RoutingRole` and recipe-level `SurfaceIntent` — two consumer-hint types, not one
 
-**Motivating use cases:**
+"Role" is overloaded in the V3 surface and needs a sharper split before implementation. V3 distinguishes **four** separate role-shaped concepts; Open Q #18 is about the two that are new in V3 (the other two exist or are renamed elsewhere):
 
-- **Accessibility / reduced-motion routing.** A step tagged `role: decoration` can be skipped under reduced-motion; `role: affordance` or `role: feedback` is preserved. Today this requires per-widget hard-coded rules.
-- **Performance tiering.** On slow terminals, drop steps with `role: decoration` but keep functional roles.
-- **Screen-reader dispatch.** `role: alert` content triggers ARIA-equivalent announcement; `role: decoration` is silent.
-- **Theme routing.** Themes could define that `role: alert` maps to one visual treatment and `role: info` to another — a richer form of color-role semantics.
-- **Probe/trace filtering.** Role-tagged paths become filterable in the debugging surface.
-- **Recipe categorization.** A recipe tagged `role: splash` / `toast` / `transition` / `ambient` / `movie` informs consumers how to host it.
+| # | Type | Scope of application | Home | Status |
+|---|---|---|---|---|
+| 1 | `RoleTag` | Per-cell render role on cells produced by sources | `tui-vfx-types` | Existing — unchanged |
+| 2 | `ThemeRole` | Theme-resolved semantic cell targeting via `Scope::ThemeRole(...)` | `tui-vfx-recipes` scope module | Decision 1 variant (renamed from `Role` in v0.11.0) |
+| 3 | **`RoutingRole`** | **Per-step behavior hint** | `tui-vfx-recipes` step field | **Open Q #18 — this question** |
+| 4 | **`SurfaceIntent`** | **Per-recipe hosting hint** | `tui-vfx-recipes` recipe field | **Open Q #18 — this question** |
 
-**Design choices:**
+`RoutingRole` and `SurfaceIntent` are kept as separate types rather than collapsed into a single `Role` field because their consumers, value sets, and evaluation contexts differ:
 
-- **Open vs closed vocabulary.** Closed = fixed list, safer validation. Open = any string, more flexible. Recommended hybrid: canonical enum with `Custom(String)` escape hatch. Canonical entries get documented meanings; custom entries pass through for experimental use.
-- **Hints vs contracts.** Are roles consumer-facing hints (may or may not be honored) or enforced contracts (must be honored)? Strong lean: **hints.** Preserves composability (a movie-player consumer doesn't need to understand every role a theme author invented); validators warn on unknown roles but don't reject recipes.
-- **Where roles apply.** Scene layer (exists as `role_tag`), pipeline step, recipe-level, content effect. Uniform `role: Option<Role>` field across all, with context-aware validation.
-- **Containment interaction.** If a step has `role: decoration` and its parent has `role: content`, what wins? Probably neither — roles describe what each element *is*, not inheritance. A decorative step inside a content container is simultaneously both things; downstream consumers decide how to combine.
-- **Relationship to other "role" concepts.** The word is overloaded — semantic color roles (M3), `StyleRegion`, `component_theme_ref`. V3 must avoid collision either by using a different name (e.g., `routing_role`, `semantic_tag`) or by explicit consolidation with whichever existing role concept is the best match.
+- **`RoutingRole`** governs *what kind of work a step does within a recipe*. Consumers are runtime behavior engines — reduced-motion skipping, performance tiering, screen-reader dispatch, probe/trace filtering. Working vocabulary: `content`, `affordance`, `feedback`, `alert`, `decoration`.
+- **`SurfaceIntent`** governs *what container a recipe belongs in when hosted*. Consumers are the surface/hosting policy layer (gt-design's surface identity choice per Open Q #20, movie player's scene placement, toast manager's lifecycle policy). Working vocabulary: `splash`, `toast`, `modal`, `transition`, `ambient`, `movie`.
 
-**Canonical vocabulary candidates** (starting list for pressure-testing, not commitments):
+A splash recipe (`SurfaceIntent::Splash`) can contain many steps, some of which are `RoutingRole::Decoration` and some `RoutingRole::Content`. These value sets don't correspond — collapsing the two types would force the hosting layer to reason about step-level values it doesn't care about, and the reduced-motion engine to reason about recipe-level values it doesn't care about. Principle 5 applies: `RoutingRole` is policy about *how steps behave*, `SurfaceIntent` is policy about *how recipes are hosted*. Different layers earn different types.
 
-| Role | Where applies | Routing implication |
+**Motivating use cases (RoutingRole):**
+
+- **Accessibility / reduced-motion routing.** A step tagged `RoutingRole::Decoration` can be skipped under reduced-motion; `RoutingRole::Affordance` or `RoutingRole::Feedback` is preserved. Today this requires per-widget hard-coded rules.
+- **Performance tiering.** On slow terminals, drop steps with `RoutingRole::Decoration` but keep functional roles.
+- **Screen-reader dispatch.** A step's `RoutingRole::Alert` triggers ARIA-equivalent announcement; `RoutingRole::Decoration` is silent.
+- **Probe/trace filtering.** Routing-tagged paths become filterable in the debugging surface.
+
+**Motivating use cases (SurfaceIntent):**
+
+- **Surface-identity dispatch.** `SurfaceIntent::Toast` informs gt-design that the recipe wants a toast-class surface (lifecycle, chrome, placement); `SurfaceIntent::Splash` asks for a splash-class surface. Coordinates with Open Q #20 (surface identity vs neutral substrate).
+- **Movie-composer scene placement.** A movie player scheduling recipes as timeline scenes uses `SurfaceIntent::Movie` or `SurfaceIntent::Transition` to inform placement and lifecycle.
+- **Lifecycle-policy defaults.** `SurfaceIntent::Modal` might inherit different `auto_dismiss_ms` defaults than `SurfaceIntent::Toast`.
+
+**Design choices common to both types:**
+
+- **Open vs closed vocabulary.** Closed = fixed list, safer validation. Open = any string, more flexible. Recommended hybrid for both: canonical enum with `Custom(String)` escape hatch. Canonical entries get documented meanings; custom entries pass through for experimental use.
+- **Hints vs contracts.** Both are **consumer hints, not contracts.** Validators warn on unknown values but don't reject recipes. Preserves composability — a movie player doesn't need to honor every `RoutingRole` a theme author invents, and a toast surface doesn't need to handle every hypothetical `SurfaceIntent`.
+- **Containment interaction (RoutingRole specifically).** If a step has `RoutingRole::Decoration` and its parent container has `RoutingRole::Content`, what wins? Neither — roles describe what each element *is*, not inheritance. A decorative step inside a content container is simultaneously both things; downstream consumers decide how to combine. Validator may warn on contradictory nesting but does not enforce.
+
+**What these do NOT collapse into:**
+
+- `RoleTag` — a per-cell render vocabulary for the compositor (Background, Text, Shadow, etc.). Not extended upward to step or recipe levels.
+- `ThemeRole` — a scope selector variant (Decision 1). Not the same as `RoutingRole` or `SurfaceIntent`; it targets cells by theme binding, it does not hint behavior or hosting.
+- Recipe metadata tags (`use_cases`, `aesthetic_tags` — see Open Q #21 / metadata fields section). `use_cases: ["splash"]` and `SurfaceIntent::Splash` may reinforce each other but serve different purposes: metadata is for discovery, `SurfaceIntent` is for routing.
+
+**Vocabulary-collision note.** `RoleTag::Decoration` (a per-cell render role) and `RoutingRole::Decoration` (a step-level behavior hint) share a name but mean different things. This is acceptable — context disambiguates — but if the overlap proves confusing in practice, renaming one side (e.g., `RoutingRole::Accent`, or `RoleTag::Ornament`) is a cheap fix during implementation. Overlap in vocabulary is allowed only where the concepts truly coincide.
+
+**Working canonical vocabulary (starting list for pressure-testing, not commitments):**
+
+| Type | Canonical values | Routing/hosting implication |
 |---|---|---|
-| `alert` / `warning` / `error` / `info` | Recipe, content effect | Screen-reader priority; color routing |
-| `affordance` / `feedback` | Step, content effect | Preserved under reduced-motion |
-| `decoration` | Step, layer | Dropped under reduced-motion or low-perf |
-| `background` / `foreground` / `content` | Layer | Relative-light scrim, text-contrast guards |
-| `splash` / `toast` / `transition` / `ambient` / `scene` / `movie` | Recipe | Lifecycle-policy dispatch |
+| `RoutingRole` | `content`, `affordance`, `feedback`, `alert`, `decoration` | Reduced-motion skipping, perf tier, screen-reader priority, probe filter |
+| `SurfaceIntent` | `splash`, `toast`, `modal`, `transition`, `ambient`, `movie` | Surface-identity dispatch, lifecycle-policy defaults, scene placement |
 
-Overlap risk: some candidates (`arriving` / `present` / `departing`) collide with phase vocabulary. Phase and role should have disjoint meanings — phase is *when*, role is *what the element is*.
+**Phase-vocabulary collision avoidance (RoutingRole).** Candidate values like `arriving` / `present` / `departing` that were floated in earlier drafts overlap with phase vocabulary (`enter` / `dwell` / `exit`). Phase and routing role must have disjoint meanings — phase is *when*, routing role is *what the element is*. Avoid naming routing-role values that describe temporal position.
+
+**Scene-layer `role_tag: RoleTag` audit note (implementation-level concern, not blocking V3 direction).** The scene-layer field introduced in Sub-plan B.1 binds `RoleTag` (per-cell render role). Under the four-type split it's worth auditing whether that field is genuinely naming a per-cell render role or whether it's secretly carrying `RoutingRole`-shaped or `SurfaceIntent`-shaped intent while wearing `RoleTag`'s clothes. If the scene-layer role is closer to "this layer is an alert" than "this layer's cells render as alert-ish content," the field may need retyping during V3 implementation. Flag only; resolution during implementation design.
+
+**Addresses feedback items:** 4 (distributed policy — partially, through explicit hint-vs-contract discipline), plus Concern C of the 2026-04-21 GT-Design lead review memo (role-domain split).
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — input behind Concern C's resolution):** yes to routing metadata; explicit "no" to collapsing into the existing `RoleTag` domain. Floated four candidate names (`routing_role`, `surface_intent`, `playback_role`, `semantic_tag`). This was load-bearing for the four-type split captured above. Sub-questions (canonical vocabulary content, scene-layer `role_tag` audit) remain open.
 
 ### 19. "Preview" naming for the canonical engine seam
 
@@ -969,6 +1140,8 @@ V3 is already rewriting the recipe schema and renaming the `Ra*` prefix (Decisio
 
 Addresses feedback items: 6 (naming doesn't match abstraction), upstream-relevant point 2.
 
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** rename now. Module path → `playback`; manager → `PlaybackManager`; seam type → possibly `PlaybackItem`, but also worth considering **`PlaybackPlan` / `PlaybackUnit`** as more future-proof once scenes and multi-layer content are first-class. Would not keep `Preview*` on the seam.
+
 ### 20. Surface identity vs neutral substrate — `RecipeSceneCanvas` overload
 
 `RecipeSceneCanvas` today does two different jobs:
@@ -1000,9 +1173,11 @@ Getting this right enables correct component-level inheritance for family-specif
 
 - Decision 5 (scene layers) — each family-specific surface could have default scene-layer composition; recipes don't re-invent shell geometry.
 - Decision 8 (canonical upstream seam) — the canonical builder's output is neutral; surface identity is applied *after* the builder in gt-design's policy layer. Clean separation.
-- Open Q #18 (role tags) — `role` on the recipe ("splash" / "toast" / "transition") may inform default surface identity when gt-design wraps. Needs coordination so role and surface identity don't double-encode the same thing.
+- Open Q #18 (`RoutingRole` / `SurfaceIntent`) — `SurfaceIntent` on the recipe (`splash` / `toast` / `transition` / etc.) informs gt-design's surface-identity choice when wrapping. The hint-vs-contract discipline (Open Q #18) keeps `SurfaceIntent` as a consumer hint that surface-identity layers wrap rather than inherit verbatim — Principle 5 applies (upstream meaning, downstream policy). Coordination with Open Q #20 ensures `SurfaceIntent` and gt-design surface identity don't double-encode the same thing.
 
 Addresses feedback items: 2 (preview surface identity too generic), 4 (distributed policy — in part).
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** choose **option A**. Keep `RecipeSceneCanvas` as the neutral substrate family; gt-design wraps with family-specific surface identities. *"That aligns with GTD's current steering best: RecipeSceneCanvas is the substrate family, surface identity is higher-level policy, and internal variants (`RawRecipeSceneCanvas`, `ResolvedRecipeSceneCanvas`) can exist without changing that public conceptual split."* Aligns with the plan's strong lean.
 
 ## Deferred for later design rounds
 
@@ -1051,21 +1226,40 @@ SceneBeat ::= {
 
 - Recipes should not assume they own their own clock. A movie scene might inject a shared clock or a substitution-resolved clock.
 - Recipes should not assume they own their full duration. A movie might start a recipe and transition it out before its natural `auto_dismiss_ms` fires.
-- The substitution / tokenization API (open Q 14) must support per-scene parameter overrides cleanly.
-- `ParamValue::RuntimeBinding` (Decision 6) should remain usable at the movie level (movie supplies values to recipe bindings, orchestrating animation across scenes).
+- The two-surface substitution API (Open Q #14 — `Substitutions` load-time, `RuntimeBindings` per-frame) must support per-scene parameter overrides cleanly. Per-scene `Substitutions` resolve at scene load (each scene in the movie can have its own load-time context); per-scene `RuntimeBindings` let the movie player drive per-frame values mid-scene (e.g., animating a recipe parameter across a scripted timeline).
+- `ParamValue::RuntimeBinding` (Decision 6) remains usable at the movie level — a movie player supplies values to recipe `RuntimeBindings`, orchestrating animation across scenes without requiring per-recipe customization.
 
 **Not in scope for V3 plan.** Captured here so the future design has a home.
 
 ### Recipe migration workflow
 
-V2 → V3 is a clean cutover (Open Q #2), executed manually and deliberately rather than via an automated migration pass. The intended workflow:
+The canonical migration framing lives in Open Q #2's three-phase model (Curate → Re-author → Validate, with a fixture-equivalence carve-out for designated critical recipes). This section covers implementation-level workflow mechanics that don't affect V3 structural decisions but need resolution before the migration runs.
 
-1. **Per-recipe review.** The user reviews each V2 recipe in the corpus one at a time (the corpus audit is Workflow B in the sibling audit-workflow doc). For each recipe, the user decides: migrate to V3, consolidate with a sibling, archive, or delete. Morris principle (useful or beautiful) is the filter.
-2. **On-demand translation.** When the user decides a recipe should migrate, they point Claude at the V2 JSON; Claude reads the old format and writes the V3 equivalent, applying the new schema (tree structure, unified scope, ParamValue, etc.). Claude also categorizes the new recipe per V3's metadata vocabulary (see below) — aesthetic tags, related theme, intended use cases, etc.
-3. **Validation.** Each translated V3 recipe passes through `pipeline-validator` and gains confidence via `--debug-recipes-qc` fingerprinting before being considered migrated.
-4. **Bulk translation is not the goal.** The migration is a curatorial opportunity, not a throughput task — per-recipe attention is deliberate, and most recipes getting a closer look is a feature not a cost.
+**Curation-phase mechanics:**
 
-This is a human-in-the-loop workflow, not a script. The corpus is small enough (200–300 recipes) and the judgment calls are subtle enough (Morris filter, naming decisions, categorization) that full automation would sacrifice quality for speed we don't need. The translation is mechanical where it can be (structural tree reshaping), judgment where it must be (aesthetic classification, earned-name decisions).
+- The curation phase is Workflow B in the sibling audit-workflow doc. It runs over the complete inventoried V2 corpus; inventory is its own blocking prerequisite (current filesystem evidence suggests >500 files, authoritative count still pending).
+- Per-recipe disposition (port / consolidate / archive / delete) is captured in a checked-in manifest with rationale. Disposition categories align with Workflow B's exit criteria in the audit-workflow doc.
+- Morris principle (useful or beautiful) is the filter. A recipe with no clear use case and no aesthetic justification is a candidate for archive or delete, not automatic port.
+
+**Re-authoring-phase mechanics:**
+
+- Claude is pointed at the V2 JSON and at the retained-set disposition. The authoring briefing (SKILLS.md, on-disk vocabulary references, prompt scaffolds, authoring guides) drives V3 recipe generation. Claude also authors the V3 metadata block (aesthetic_tags, use_cases, related_themes, etc. — see the "Recipe metadata fields" section below) per Open Q #21.
+- When Claude struggles on a recipe — unclear vocabulary, missing primitive, ambiguous scope semantics, briefing docs that don't cover the case — the symptom is a briefing gap. Fix is a briefing-document update; recipe retry follows. Briefing improvements commit alongside the recipes that motivated them, with the recipe cited as evidence in the commit message.
+- Bulk automation is deliberately rejected for the mainline corpus. Per-recipe attention is the point — it is how the library's AI-authoring pathway earns its stripes. Most recipes getting a closer look is a feature, not a cost.
+
+**Validation-phase mechanics:**
+
+- The V3 validator (Open Q #9) runs on every re-authored recipe. Schema well-formedness, scope coherence, hint-namespace membership, fragment addressability, binding-contract discovery, required-field presence.
+- `pipeline-validator --debug-recipes-qc` fingerprinting supplements validator coverage for recipes that opted into QC fingerprint gating. Fingerprint drift is surfaced but not auto-blocking for mainline recipes — re-authoring may legitimately shift fingerprint output when the new recipe intentionally renders differently.
+- Validator failures block merge for the affected recipe. Re-author and re-validate until green.
+
+**Critical-set carve-out mechanics (fixture track):**
+
+- Pre-migration fixture capture for the designated set uses the existing probe / snapshot infrastructure. Captured artifacts are checked in before the corpus reshape begins.
+- The mechanical translator for this set is narrow-scope tooling: tree reshaping, Ra→Vfx rename, ParamValue/HintRef/StepInput wrapping, default population. It does not attempt curation; it does not run over non-critical recipes.
+- Fixture-equivalence gate tolerance is per-recipe-kind (exact for probe-validation; perceptual-delta for splash-class visuals; structural for scenes with deliberate V3 improvements). Tolerance choice is documented alongside each fixture.
+
+**Not in scope for V3 plan:** specific tool/script authoring, prompt scaffolding refinement, fixture tolerance calibration, per-recipe briefing improvement cadence. Captured here so the future implementation has a home.
 
 ### Recipe metadata fields for discovery and categorization
 
@@ -1115,9 +1309,9 @@ Candidate fields (not all required; open to expansion as authoring needs surface
 - **AI-assisted authoring quality improves.** When generating or modifying recipes, Claude can filter by `aesthetic_tags` to find reference examples that match the intent. Lower hallucination risk, higher coherence.
 - **Intentional choices become visible.** `authoring_notes` is where the author writes "I chose this specific parameter tuning because..." — the rationale that otherwise lives only in commit messages or author memory.
 
-**Relationship to Open Q #18 (semantic role tags):**
+**Relationship to Open Q #18 (`RoutingRole` / `SurfaceIntent`):**
 
-Role tags (Open Q #18) are about *downstream routing* — they tell consumers how to treat the recipe at render time (accessibility dispatch, reduced-motion handling, screen-reader priority). Metadata tags (this field) are about *discovery and categorization* — they tell authors and tools how to find and understand the recipe. Different purposes, different fields, should stay separate. They may overlap in specific values (`use_cases: ["splash"]` and `role: "splash"` could reinforce each other), but the role field is optional-routing-hint and the metadata field is optional-discovery-tag.
+`RoutingRole` (step-level) and `SurfaceIntent` (recipe-level) from Open Q #18 are *downstream routing and hosting hints* — they tell consumers how to treat steps and recipes at render/host time (accessibility dispatch, reduced-motion handling, screen-reader priority, surface-identity choice). Metadata tags (this field) are about *discovery and categorization* — they tell authors and tools how to find and understand the recipe. Different purposes, different fields, should stay separate. They may overlap in specific values (`use_cases: ["splash"]` and `SurfaceIntent::Splash` reinforce each other for the same recipe), but the Open Q #18 fields are optional routing/hosting hints while metadata fields are optional discovery tags.
 
 **This is a new Open Question (#21) pending its own discussion on vocabulary and required-vs-optional:**
 
@@ -1125,6 +1319,8 @@ Role tags (Open Q #18) are about *downstream routing* — they tell consumers ho
 - What's the aesthetic tag vocabulary? Open-string or closed-enum? Probably hybrid — canonical list with custom values allowed.
 - Does validation enforce anything beyond schema-shape (e.g., "every recipe must have at least one `use_case`")?
 - Does metadata live inside `config` or as a sibling to it? Probably sibling — metadata is about the recipe, not the playback contract.
+
+**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** keep metadata non-blocking for V3 core. `use_cases` should likely be required; most other fields can be optional initially. Discovery metadata (this field) should stay clearly separate from runtime routing metadata (`RoutingRole` / `SurfaceIntent` per Open Q #18). Aligns with the plan's current lean.
 
 ### Retrospective corrections
 
