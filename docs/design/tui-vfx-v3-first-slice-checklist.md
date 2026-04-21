@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-first-slice-checklist.md</FILE> - <DESC>Execution checklist for the first concrete V3 implementation slice.</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>Tracks the first code-facing work package after schema/catalog/lowering/IR/validator planning. Updated now that the first canonicalization and validation helpers for the V3 spine have landed in code with focused passing tests.</WCTX> -->
-<!-- <CLOG>0.5.0: mark FS-06/FS-07/FS-08 as in progress after the first hint-validation, scene-normalization, and canonical IR dump helpers landed in `tui-vfx-recipes::v3` with focused passing tests.
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>Tracks the first code-facing work package after schema/catalog/lowering/IR/validator planning. Updated now that FS-01 through FS-08 all have real code footholds or focused passing tests in the new V3 module.</WCTX> -->
+<!-- <CLOG>0.6.0: mark FS-08 explicitly in progress and keep the first-slice checklist aligned with the now-documented V3 scaffolding module headers/footers.
+0.5.0: mark FS-06/FS-07/FS-08 as in progress after the first hint-validation, scene-normalization, and canonical IR dump helpers landed in `tui-vfx-recipes::v3` with focused passing tests.
 0.4.0: mark FS-03/FS-04/FS-05 as in progress after the first normalization helpers landed in `tui-vfx-recipes::v3::normalize` and their focused unit tests passed.
 0.3.0: record initial verification signal for FS-01/FS-02 after the V3 scaffold compiled under `cargo check --lib` and the focused parse unit test passed.
 0.2.0: mark FS-01 and FS-02 as in progress after adding initial V3 authoring-schema and normalized-IR scaffolding module in tui-vfx-recipes.
