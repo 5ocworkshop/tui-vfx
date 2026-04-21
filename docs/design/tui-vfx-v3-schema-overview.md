@@ -5,7 +5,7 @@
 
 # tui-vfx V3 Schema Overview
 
-This document is the **narrative companion** to:
+This document is the **narrative companion** to the current build-target schema baseline:
 
 - `docs/design/tui-vfx-v3-schema-draft.json`
 
@@ -51,8 +51,12 @@ Authoring / library scale
    └─ emits concrete recipes
 
 Concrete recipe envelope
-└─ identity / metadata / contracts
-   └─ config
+├─ identity / metadata / contracts
+│  ├─ requires_tokens?
+│  ├─ requires_bindings?
+│  ├─ requires_assets?
+│  └─ requires_primitives?
+└─ config
 
 Renderer trees inside config
 ├─ content.effect
@@ -96,6 +100,7 @@ Recipe
 ├─ requires_tokens?
 ├─ requires_bindings?
 ├─ requires_assets?
+├─ requires_primitives?
 └─ config
    ├─ message?
    ├─ content?
@@ -108,6 +113,8 @@ Recipe
    ├─ clock?
    ├─ base_style?
    ├─ regions?
+   ├─ theme?
+   ├─ shadow?
    ├─ scene?
    │  └─ layers[]
    │     ├─ id
@@ -413,12 +420,14 @@ They are narrower than that.
 
 ### 11.1 Ballistic celebratory particles / fireworks
 
-The Madeira crate’s fireworks are not faithfully representable using the currently covered existing primitives.
+The Madeira crate’s fireworks are not faithfully representable using the previously covered existing primitives alone.
 
-That suggests a real future capability family such as:
+The current schema direction now gives them a **conceptual home** as a procedural generator subtree such as:
 
 - `ballistic_fireworks`
 - `celebratory_particles`
+
+What remains open is implementation/tooling support, not where they belong in the tree. This is therefore a follow-on capability, not a blocker on the current core build target.
 
 ### 11.2 Further region compression
 
@@ -427,13 +436,15 @@ The first layer is clear (`cell_run`, `cell_runs`, `region_ref`), but bigger rec
 ### 11.3 Implementation of the normalized IR
 
 The architectural decision is clear.
-The implementation still needs to be built.
+The implementation still needs to be built. This is a tooling follow-on, not a reason to keep the concrete schema wire shape unstable.
 
 ---
 
 ## 12. Build-against posture
 
-The schema is ready to be treated as a serious build-target if consumers adopt these practical rules:
+The schema is now intended to be treated as the current build-target baseline. That does not mean every future extension is finished; it means the core concrete tree/leaf structure is stable enough to implement against while the remaining items are treated as explicit extension backlog.
+
+Practical rules for builders:
 
 1. Keep StepKinds small.
 2. Treat many families as policy variants inside deeper trees.
@@ -481,6 +492,15 @@ It is mostly about:
 - and implementation/tooling around normalized IR
 
 ## 15. Reconciliation against the multi-chapter V3 upgrade plan
+
+For the current build-target baseline, the schema now explicitly locks the following concrete choices unless later steering revises them:
+
+- keep `config` as the render-relevant envelope
+- keep `layout.anchor` as the concrete field name
+- keep `lifecycle.auto_dismiss_ms` as the concrete field name
+- keep a small StepKind algebra
+- keep `style_effect` as the home for scoped style patches and wrappers
+
 
 This overview is intended to **tighten** the plan, not to contradict it.
 

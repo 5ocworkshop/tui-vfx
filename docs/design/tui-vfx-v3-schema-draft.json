@@ -1,23 +1,26 @@
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example with # comment annotations. Stripping lines starting with `#` yields valid JSON representing a canonical V3 recipe.</DESC>
-# <VERS>VERSION: 0.2.0</VERS>
-# <WCTX>Synthesized draft schema after comparing two parallel migration memos, a full manual local audit of the debug corpus, a large-recipe curveball pass, and a code-derived Madeira Flag draft. This revision makes the top-down tree/leaf posture explicit and optimizes for deep shared substrates, renderer trees, hybrid templates, and maintainable discovery.</WCTX>
+# <VERS>VERSION: 0.3.0</VERS>
+# <WCTX>Synthesized build-target schema after comparing two parallel migration memos, a full manual local audit of the debug corpus, a large-recipe curveball pass, and a code-derived Madeira Flag draft. This revision locks the recommended concrete tree/leaf structure for implementation planning while leaving only explicit extension backlogs open.</WCTX>
+# <CLOG>0.3.0: MAJOR — promote the schema draft to a build-target baseline. Lock the recommended concrete field homes/names for implementation planning (anchor retained, auto_dismiss_ms retained, extends/metadata/contracts treated as settled core shape), clarify that normalized IR is a tooling architecture rather than a schema blocker, and reframe the remaining items as extension backlog rather than core-schema instability.
 # <CLOG>0.2.0: MAJOR — synthesis pass after dual-auditor review. Makes the top-down authoring model explicit: config envelope retained for authoring, content and scene layers treated as renderer trees, pipeline limited to structural nodes + operational leaves, and policy variants kept inside payloads rather than promoted to new step kinds by reflex. Adds explicit subtree guidance, wrapper/router conventions, region-compression pressure notes, style-effect first-class guidance, base_style.modifiers example, and expanded open-gap list including family/template authoring, hybrid transition templates, rule-engine families, celebratory particle generators, and canonical normalized IR.</CLOG>
 
 # ============================================================================
 # tui-vfx V3 schema — DRAFT
 # ----------------------------------------------------------------------------
 # This file is a specification-by-example of the draft V3 recipe schema.
-# It is the first consolidation of everything surfaced during the debug-recipes
-# migration into a single coherent shape. It is NOT a final schema — it is a
-# starting point for review against a second auditor's ~60 observations.
+# It is the current implementation-target schema baseline after the dual-auditor
+# synthesis pass. Future revisions may refine or extend it, but the concrete
+# field homes and example wire shape below are the active build contract.
 #
 # Lines starting with `#` are comments. Stripping them (e.g. `grep -v '^\s*#'`)
 # yields a syntactically valid JSON document that serves as the canonical
 # example V3 recipe.
 #
-# This document is DRAFT. Where a decision is not yet settled, the comments
-# enumerate candidate resolutions and name the migration log's schema question
-# (Q1–Q34). Companion documents:
+# This document is the current build-target baseline. Comments may still
+# preserve migration-history context and future-extension notes, but the
+# concrete field homes and example wire shapes below are now the recommended
+# implementation target unless later steering explicitly changes them.
+# Companion documents:
 #   - docs/design/tui-vfx-v3-upgrade-plan.md           — intent + Decisions 1–8
 #   - docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md
 #                                                       — schema journal, drift,
@@ -56,6 +59,16 @@
 # It is "can the schema encode it with an elegant capability tree that stays
 # discoverable and maintainable as the library grows?"
 # ============================================================================
+# STABILITY POLICY FOR BUILDERS
+# ----------------------------------------------------------------------------
+# - Builders should treat the concrete wire shape in this file as the current
+#   implementation target for V3 work.
+# - Comments that mention future extensions or alternative ideas are backlog
+#   notes, not indications that the core wire shape is still undecided.
+# - The normalized IR described elsewhere is a tooling/implementation layer
+#   above this author-facing schema, not a prerequisite for writing parsers or
+#   runtime models against the concrete fields below.
+# ============================================================================
 
 {
   # =========================================================================
@@ -87,7 +100,7 @@
   # ^ ISO date. When the recipe was last reviewed/edited.
 
   # =========================================================================
-  # 2. EXTENDS — recipe inheritance (Open Q #17)
+  # 2. EXTENDS — recipe inheritance
   # =========================================================================
   # Optional. If present, the named recipe is loaded first, this recipe's
   # config is deep-merged onto it per Intention 39 (tagged-union variant
@@ -105,7 +118,7 @@
   #   composition — each recipe used at most one.
 
   # =========================================================================
-  # 3. METADATA BLOCK — discovery + categorization (Open Q #21)
+  # 3. METADATA BLOCK — discovery + categorization
   # =========================================================================
   # Optional but recommended for the shipped corpus. Not consumed by the
   # rendering pipeline; purely for library-scale navigation, validator
@@ -251,8 +264,8 @@
       "width": 40,
       "height": 3,
       "anchor": "center",
-      # ^ Q7 (deferred): `anchor` may rename to `placement` in the
-      #   vocabulary refresh sweep. Holding V2 spelling until the sweep.
+      # ^ Locked for the current build-target baseline. `anchor` remains the
+      #   concrete field name in V3.
 
       "mode": "fixed"
       # ^ "fixed" (width/height honored) | "fullscreen" (fill viewport).
@@ -264,7 +277,7 @@
       # ^ Milliseconds after enter completion before exit begins.
       #   0 = no auto-dismiss (caller-controlled).
       #   999999 = effectively never (used for ambient/dwelling recipes).
-      #   Q7 (deferred): may rename to `duration_ms` in the sweep.
+      #   Locked for the current build-target baseline as `auto_dismiss_ms`.
     },
 
     "border": {
@@ -309,22 +322,21 @@
     # `StyleEffect` steps at the head of the pipeline with their scope —
     # see the 5.7 pipeline.step examples below.
     #
-    # Modifiers (Gap — minor from final audit): V3 should accept
-    # `modifiers: ["bold", "italic", "underline"]` here to preserve V2's
-    # added_modifiers / removed_modifiers. Currently unmapped; migration
-    # did not explicitly test.
+    # Modifiers are in-contract for the current build-target baseline. V3 uses
+    # one canonical positive list (`modifiers`) instead of V2's
+    # added_modifiers / removed_modifiers split.
+
 
     "base_style": {
       "foreground": { "type": "rgb", "r": 200, "g": 220, "b": 255 },
       # ^ Color variants: rgb (r/g/b 0-255), named (white/black/red/green/
       #   blue/yellow/magenta/cyan/light_red/light_green/light_blue/
-      #   light_yellow/light_cyan/light_magenta), reset.
+      #   light_yellow/light_cyan/light_magenta), transparent, reset.
       "background": { "type": "rgb", "r": 10, "g": 15, "b": 30 },
       # ^ Q27: V2 occasionally had bare {r,g,b} without the "type" tag;
       #   V3 normalizes to tagged form.
       "modifiers": ["bold"]
-      # ^ Resolved addition from the audit. Replaces V2's added_modifiers /
-      #   removed_modifiers split with one canonical positive list.
+      # ^ Canonical V3 shape for style modifiers.
     },
 
     # -----------------------------------------------------------------------
@@ -351,8 +363,8 @@
       "victory_patch": {
         "kind": "cell_runs",
         "runs": [
-          { "y": 2, "x_start": 10, "x_end": 42 },
-          { "y": 3, "x_start": 10, "x_end": 42 }
+          { "y": 1, "x_start": 10, "x_end": 38 },
+          { "y": 2, "x_start": 10, "x_end": 38 }
         ]
       }
     },
@@ -382,7 +394,8 @@
     # Canonical example: madeira-flag recipe.
     #
     # When `scene.layers` is present, `message` + `content` at the recipe
-    # level are ignored; each layer provides its own content source. The
+    # level are ignored; each layer provides its own content source. Layers
+    # may also carry `placement`, `surface`, and `pipeline` siblings. The
     # top-level `pipeline` applies AFTER per-layer pipelines complete, to
     # the composed cell grid.
     #
@@ -390,52 +403,40 @@
     # (`schema_ref`) for validator-visible typed params, and sibling-anchored
     # placement is a first-class scene capability rather than a side note.
 
-    "scene": {
-      "layers": [
-        {
-          "id": "backdrop",
-          # ^ Stable identifier. Referenced by sibling-anchored placement
-          #   and role-tag tooling.
-          "role_tag": "background",
-          # ^ Q18 (V3 plan): semantic routing hint. Canonical values:
-          #   background | foreground | content | decoration | affordance |
-          #   feedback | alert | splash | toast | transition | ambient |
-          #   scene | movie. Hints-not-contracts; validators warn on
-          #   unknowns but don't reject.
-          "source": {
-            "type": "procedural",
-            "source_id": "solid_color_fade",
-            "schema_ref": "procedural.solid_color_fade.v1",
-            # ^ Resolved direction: procedural sources keep a stable `source_id`
-            #   plus a validator-visible schema registry key. Concrete `params`
-            #   remain data, but tooling validates them against the registered
-            #   per-generator schema rather than treating them as opaque blobs.
-            "params": {
-              "target_color": { "type": "rgb", "r": 5, "g": 5, "b": 15 },
-              "fade_in_duration_ms": 250,
-              "peak_alpha": 0.85
-            }
-          }
-          # Per-layer pipeline may be present; see scene-layer madeira-flag
-          # example for the flag layer's sampler+shader pipeline with
-          # step-output-hint wiring (Decision 7).
-        },
-        {
-          "id": "text_stack",
-          "role_tag": "content",
-          "source": {
-            "type": "card",
-            "title": "{{app_name}}",
-            "body": "Line one\nLine two",
-            "placement": {
-              "anchor": "below_sibling",
-              "sibling_id": "backdrop",
-              "offset_rows": 2
-            }
-          }
-        }
-      ]
-    },
+    "scene": null,
+    # ^ The canonical stripped JSON keeps `scene` null so the root-level
+    #   `message` + `content` remain semantically active in this one concrete
+    #   example. Scene layers are still part of the schema; a commented example
+    #   shape follows immediately below.
+    #
+    # Example scene-layer shape:
+    # "scene": {
+    #   "layers": [
+    #     {
+    #       "id": "backdrop",
+    #       "role_tag": "background",
+    #       "source": {
+    #         "type": "procedural",
+    #         "source_id": "solid_color_fade",
+    #         "schema_ref": "procedural.solid_color_fade.v1",
+    #         "params": { "target_color": { "type": "rgb", "r": 5, "g": 5, "b": 15 } }
+    #       },
+    #       "placement": { "anchor": "fill" }
+    #     },
+    #     {
+    #       "id": "text_stack",
+    #       "role_tag": "content",
+    #       "source": { "type": "card", "title": "{{app_name}}", "body": "Line one\nLine two" },
+    #       "placement": { "anchor": "below_sibling", "sibling_id": "backdrop", "offset_rows": 2 },
+    #       "surface": {
+    #         "base_style": {
+    #           "foreground": { "type": "rgb", "r": 240, "g": 248, "b": 255 },
+    #           "background": { "type": "transparent" }
+    #         }
+    #       }
+    #     }
+    #   ]
+    # },
 
     # -----------------------------------------------------------------------
     # 5.6 Pipeline — the per-cell operation tree (Decision 3)
@@ -470,23 +471,9 @@
         #   back_in/out/in_out, elastic_in/out/in_out, bounce_in/out/in_out.
         #   See recipes/easing/ for per-easing debug recipes.
 
-        # ---- GAPS (final audit, requires plan-level decision) -----------
-        # "enter_snap":   { "type": "round" },
-        # ^ V2 `pipeline.enter.snapping: {type}`. Quantization policy for
-        #   motion-path + offscreen trajectories. Gap — minor.
-        #
-        # "motion_path":  { "type": "linear" | "arc" | "bezier" | "spring" | ... },
-        # ^ V2 `pipeline.enter.motion_path`. Geometry-aware entrance/exit
-        #   trajectory. MAJOR GAP — no V3 home yet. Options:
-        #     (a) extend pipeline.timing with motion_path (leaned toward)
-        #     (b) new MotionPath step kind
-        #     (c) drive via Decision 5 scene-layer placement
-        #
-        # "from":         { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
-        # "to":           { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
-        # ^ V2 slide-in/slide-out origin/destination. Paired with motion_path.
-        #   MAJOR GAP — tied to motion_path resolution.
-        # -----------------------------------------------------------------
+        # Motion-path/offscreen/snap home is resolved in this draft:
+        # all of them live on `pipeline.timing` as recipe-envelope motion
+        # metadata. The remaining work is implementation, not schema-home.
       },
 
       # -------------------------------------------------------------------
@@ -499,7 +486,9 @@
       # The tree shape:
       #   Pipeline  ::= Step | { "kind": "parallel", "children": [Step...] }
       #                        | { "kind": "sequence", "children": [Step...] }
-      #   Step      ::= { "kind": StepKind, "scope"?: Scope, "phase"?: Phase, "payload": Payload }
+      #   Step      ::= { "kind": StepKind, "scope"?: Scope, "phase"?: Phase,
+#                    "clock"?: Clock, "interaction"?: InteractionMeta,
+#                    "payload": Payload }
       #   StepKind  ::= "mask" | "sampler" | "filter" | "style_effect" | "shader"
       #                | "parallel" | "sequence"
       #   Phase     ::= "enter" | "dwell" | "exit" | "all"  (default "all")
@@ -673,7 +662,8 @@
             "kind": "style_effect",
             "scope": { "kind": "border" },
             "payload": {
-              "base_style": {
+              "type": "base_style_override",
+              "style": {
                 "foreground": { "type": "cyan" },
                 "background": { "type": "rgb", "r": 20, "g": 40, "b": 60 }
               }
@@ -708,7 +698,8 @@
               {
                 "kind": "style_effect",
                 "payload": {
-                  "base_style": {
+                  "type": "base_style_override",
+                  "style": {
                     "foreground": { "type": "white" },
                     "background": { "type": "reset" }
                   }
@@ -738,9 +729,9 @@
               # ^ The producer declares its hint name. Downstream consumers
               #   bind to it via Decision 7.
               "signal": {
-                # Q3/Q31: SignalGraph shape is still tentative. Current
-                # draft uses a hybrid of flat leaves + compositional
-                # children. See 5.9 below for the full vocabulary.
+                # Resolved draft stance: wrapper-based SignalGraph with
+                # compositional nodes and hint-readable leaves. See 5.9
+                # below for the full vocabulary.
                 "kind": "sine",
                 "spatial_frequency": { "x": 8.0, "y": 0.0 },
                 "temporal_frequency_hz": 0.382,
@@ -869,7 +860,8 @@
 # concrete wrapper-based draft stance for build-against purposes. If upstream
 # mixed-signals eventually prefers a different wire format, canonicalization
 # should adapt raw recipes into the normalized IR rather than forcing authors
-# to rewrite the conceptual model.
+# to rewrite the conceptual model. The conceptual model itself is now treated
+# as settled enough to implement against.
 #
 #   SignalGraphNode ::=
 #     # --- Leaves (canonical mixed-signals primitives) ------------------
@@ -1003,7 +995,8 @@
 #  A. Canonical normalized IR
 #     - Validator, viewer, migration-equivalence tests, and future tooling
 #       should operate on a canonical normalized IR rather than raw authoring
-#       syntax.
+#       syntax. This is a tooling architecture decision, not a blocker on the
+#       concrete schema wire shape.
 #     - Reason: several concepts intentionally have multiple ergonomic
 #       authoring shapes (region refs, wrapper nodes, hybrid templates,
 #       named-factory vs primitive-form, style-native spatial wrappers).
@@ -1041,29 +1034,29 @@
 # - template + variants authoring remains above the concrete recipe tree
 #
 # ============================================================================
-# 6. GAPS REQUIRING PLAN-LEVEL DECISION
+# 6. EXTENSION BACKLOG / NON-BLOCKING FOLLOW-ONS
 # ============================================================================
 # These are cases the migration surfaced as V3-unfixable-without-plan-work.
 # Each has a reference to the final audit section of the migration log.
 #
-# Remaining gaps after the current synthesis pass:
+# Remaining follow-on extensions after the current synthesis pass:
 #
-#   A. Celebratory ballistic particles / fireworks as a likely new generator family.
-#      - not faithfully expressible from the currently covered primitives
-#      - likely belongs as a new procedural generator subtree, not a forced composition
+#   A. Celebratory ballistic particles / fireworks still need real implementation.
+#      - the schema now models the family as a procedural generator subtree
+#      - what remains open is runtime/validator/tooling support, not the conceptual home
 #
 #   B. Region compression / derived selectors may need richer follow-on forms.
 #      - `cell_run` / `cell_runs` + `region_ref` are the first resolved layer
 #      - future large corpora may still motivate glyph-patch / segment abstractions
 #
-#   C. Canonical normalized IR remains an implementation/tooling task.
-#      - the architectural decision is resolved
-#      - the concrete implementation still needs to be built
+#   C. Canonical normalized IR implementation remains a tooling task.
+#      - the schema decision is resolved
+#      - the implementation still needs to be built
 #
 # DROP-RECOMMENDED:
 #   - pipeline.animation_type (V2 vestigial; no observed behavior).
 
 # ============================================================================
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example</DESC>
-# <VERS>END OF VERSION: 0.2.0</VERS>
+# <VERS>END OF VERSION: 0.3.0</VERS>
 # ============================================================================
