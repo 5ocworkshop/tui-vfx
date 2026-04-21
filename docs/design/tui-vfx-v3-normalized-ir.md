@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-normalized-ir.md</FILE> - <DESC>Working design note for the V3 normalized IR. Defines the execution-facing representation the validator, viewer, and runtime should converge on after lowering and canonicalization.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Initial seed after schema hardening, capability cataloging, and lowering-rule definition. This document is deliberately closer to implementation concerns than the author-facing schema draft.</WCTX> -->
-<!-- <CLOG>0.1.0: initial normalized-IR note. Establishes the first-pass canonicalization goals and a candidate IR shape.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Initial seed after schema hardening, capability cataloging, and lowering-rule definition. This document is deliberately closer to implementation concerns than the author-facing schema draft. It now also frames the compiled execution-plan follow-on explicitly.</WCTX> -->
+<!-- <CLOG>0.2.0: add explicit performance posture and compiled execution-plan follow-on guidance.
+0.1.0: initial normalized-IR note. Establishes the first-pass canonicalization goals and a candidate IR shape.</CLOG> -->
 
 # tui-vfx V3 normalized IR
 
@@ -144,3 +145,54 @@ That would let execution code grow under a stable contract.
 
 <!-- <FILE>docs/design/tui-vfx-v3-normalized-ir.md</FILE> -->
 <!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+
+
+## 7. Performance posture of the current IR
+
+The current normalized IR should be understood as a **load/build-time canonical form**, not yet as the final per-frame execution plan.
+
+That distinction matters for performance.
+
+### What is already good
+
+- normalization happens off the render hot path
+- region refs are resolved before execution
+- defaults and inheritance are made explicit before runtime
+- hint validation happens at validation/build time rather than during frame rendering
+
+### What should not be assumed yet
+
+The current normalized IR still uses dynamic carriers (`serde_json::Value` and other flexible forms) in places where a future render-loop-facing structure will likely want tighter typing and more compact representations.
+
+That is acceptable for this phase because the normalized IR's job is:
+- structural canonicalization
+- validator/viewer/tooling stability
+- migration-equivalence reasoning
+
+not final-frame execution efficiency.
+
+### Recommended future step
+
+After the normalized IR is stable, introduce a **compiled execution plan** layer that:
+- replaces dynamic payload access in hot paths
+- compacts selectors where useful
+- preserves shared scope artifacts in cache-friendly forms
+- avoids repeating canonicalization work per frame
+
+In other words:
+
+```text
+Authoring schema
+  -> normalized IR
+    -> compiled execution plan
+      -> render loop
+```
+
+This lets the schema stay expressive and the runtime stay fast.
+
+## 8. Companion follow-on
+
+The compiled-plan follow-on for this IR is documented in:
+
+- `docs/design/tui-vfx-v3-upgrade-plan/62_compiled_execution_plan.md`
+- `docs/design/tui-vfx-v3-compiled-execution-plan.md`
