@@ -1,7 +1,8 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Add a top-level writing-style directive. Applies to MARKETING.md, READMEs, rustdoc, commit messages, chapter docs, schema annotations — every place we write prose. Triggered by a review pass on MARKETING.md v0.2.1 where phrasing like "surgical control," "nothing else in the terminal-UI ecosystem," and multi-clause "this is the feature that makes X" sentences were flagged as marketing voice rather than developer voice. The directive is placed near the top so it's prominent before the numbered intentions; it's not numbered because it governs how the rest of the document is written, not what it says.</WCTX>
-<!-- <CLOG>0.2.0: MINOR — add "Writing style" section between the provenance note and the numbered intentions. Covers: no marketing voice, no grandiose framing, no filler, be specific, one idea per sentence. Includes the "why" (developers filter for signal; grandiose framing reads as insecurity; schema regularity applies to prose).</CLOG>
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Add an explicit SSOT intention for shared infrastructure, especially the recipe loader/semantic seam. Triggered by active V3 migration work where version detection, dispatch, normalization, validation, and compile routing were at risk of being duplicated across tools rather than remaining centralized in tui-vfx-recipes.</WCTX>
+<!-- <CLOG>0.3.0: MINOR — add Intention 26 (single source of truth over parallel seams), with the loader architecture called out as the concrete example.
+0.2.0: MINOR — add "Writing style" section between the provenance note and the numbered intentions. Covers: no marketing voice, no grandiose framing, no filler, be specific, one idea per sentence. Includes the "why" (developers filter for signal; grandiose framing reads as insecurity; schema regularity applies to prose).</CLOG>
 <!-- <CLOG>0.1.0: initial draft. 29 numbered intentions organized into identity / architecture / discipline / philosophy clusters. Top-of-mind intentions called out (1, 3, 9, 20, 23, 24). Cross-references to V3 upgrade plan and MARKETING.md where relevant. Derived from gt-design steering/INTENTIONS.md v0.52.0 with selective adaptation.</CLOG> -->
 
 # Intentions
@@ -257,6 +258,20 @@ Rules:
 Why: validation infrastructure is the single highest-leverage category of work in any long-lived project. Every check gets reused at zero marginal cost on every subsequent build. Manual audits cost time every time; mechanical checks cost time once. This intention is the explicit counter-force against "defer automation to later" — later never arrives.
 
 Related: Intention 24 gates *ergonomic helpers* that do not earn their place. Intention 25 actively pursues *validation infrastructure* that prevents classes of failure. Both rules must pass for any additive change; the overlap is zero because they target disjoint categories.
+
+## 26. Prefer a Single Source of Truth Over Parallel Seams
+
+When multiple consumers need the same semantic operation, the default answer is a single upstream implementation, not multiple parallel ones.
+
+Rules:
+
+1. **Shared semantics live once.** Version detection, loader dispatch, normalization, validation, compile-to-execution-plan, and similar semantic seams should have one canonical upstream implementation. Tools and downstream consumers call that seam; they do not rebuild it locally.
+2. **Do not create parallel loaders.** If two binaries need to load recipes, the answer is not "write another loader for the second binary." The answer is to improve the canonical loader surface until both binaries can use it.
+3. **Abstract at the seam, not at the call sites.** Repeated branching in tools ("if V2 do X, if V3 do Y") is a signal that the upstream seam is incomplete. Fix the seam rather than proliferating policy in consumers.
+4. **SSOT beats convenience duplication.** A local shortcut that duplicates semantic logic is only cheaper today. It becomes long-term drift, conflicting fixes, and silent behavior mismatches.
+5. **Preserve escape hatches without forking meaning.** Specialized consumers may still have policy-specific wrappers, but those wrappers compose over the canonical seam rather than replacing it.
+
+Why: duplicated semantic seams are how drift becomes normal. The V2→V3 migration work made this concrete: schema-version detection, version-aware dispatch, load/normalize/validate/compile routing, and canonical playback semantics all want to spread into tools unless they are explicitly centralized. SSOT is the durable counter-force. The loader architecture is the clearest example — there should be one canonical loader family in `tui-vfx-recipes`, not multiple parallel loaders across binaries.
 
 ## 26. Consolidation Must Preserve Individual-Item Addressability
 
