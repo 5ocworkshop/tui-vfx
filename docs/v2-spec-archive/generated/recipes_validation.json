@@ -1,0 +1,102 @@
+{
+  "summary": {
+    "total_recipes": 5,
+    "files_with_errors": 5,
+    "files_with_warnings": 0,
+    "error_count": 10,
+    "warning_count": 0,
+    "info_count": 0
+  },
+  "recipes": [
+    {
+      "path": "/usr/projects/gt-design/crates/gtd-ratatui/src/splash/recipes/gt_splash.json",
+      "id": "gt.default_splash",
+      "title": "GT Design System default splash",
+      "extends": [],
+      "issues": [
+        {
+          "severity": "error",
+          "path": "$.version",
+          "message": "Missing required field"
+        },
+        {
+          "severity": "error",
+          "path": "$.config.pipeline",
+          "message": "Missing pipeline object"
+        }
+      ]
+    },
+    {
+      "path": "/usr/projects/gt-design/crates/gtd-ratatui/src/splash/recipes/splash_looping_demo.json",
+      "id": "gt.splash_looping_demo",
+      "title": "Looping splash (hero / demo mode)",
+      "extends": [],
+      "issues": [
+        {
+          "severity": "error",
+          "path": "$.version",
+          "message": "Missing required field"
+        },
+        {
+          "severity": "error",
+          "path": "$.config.pipeline",
+          "message": "Missing pipeline object"
+        }
+      ]
+    },
+    {
+      "path": "/usr/projects/gt-design/crates/gtd-ratatui/src/splash/recipes/splash_minimal.json",
+      "id": "gt.splash_minimal",
+      "title": "Minimal splash",
+      "extends": [],
+      "issues": [
+        {
+          "severity": "error",
+          "path": "$.version",
+          "message": "Missing required field"
+        },
+        {
+          "severity": "error",
+          "path": "$.config.pipeline",
+          "message": "Missing pipeline object"
+        }
+      ]
+    },
+    {
+      "path": "/usr/projects/gt-design/crates/gtd-ratatui/src/splash/recipes/splash_with_pool.json",
+      "id": "gt.splash_with_pool",
+      "title": "Splash with rotating tagline pool",
+      "extends": [],
+      "issues": [
+        {
+          "severity": "error",
+          "path": "$.version",
+          "message": "Missing required field"
+        },
+        {
+          "severity": "error",
+          "path": "$.config.pipeline",
+          "message": "Missing pipeline object"
+        }
+      ]
+    },
+    {
+      "path": "/usr/projects/gt-design/crates/gtd-ratatui/src/splash/recipes/splash_with_preset.json",
+      "id": "gt.splash_with_preset",
+      "title": "Splash with curated preset bundles",
+      "extends": [],
+      "issues": [
+        {
+          "severity": "error",
+          "path": "$.version",
+          "message": "Missing required field"
+        },
+        {
+          "severity": "error",
+          "path": "$.config.pipeline",
+          "message": "Missing pipeline object"
+        }
+      ]
+    }
+  ]
+}

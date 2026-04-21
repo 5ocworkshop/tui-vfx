@@ -1,0 +1,798 @@
+# <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example with # comment annotations. Stripping lines starting with `#` yields valid JSON representing a canonical V3 recipe.</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>Initial consolidation of everything surfaced during the debug-recipes migration into a single coherent draft schema. Intended as the starting point for review against a second auditor's ~60 observations.</WCTX>
+# <CLOG>0.1.0: initial draft. Consolidates V3 plan Decisions 1–8 + Open Q #14/#17/#18/#21 + migration-log schema questions Q1–Q34 + drift table D1–D7 + final V2↔V3 audit into a single specification-by-example. Includes inline gap list for plan-level decisions (motion_path + offscreen from/to, SignalGraph JSON shape) and minor gaps (modifiers, snapping, procedural typed params, sibling-anchored placement, wave_correlated shading, fractional sub-cell primitive, ParamValue-typed Scope coords).</CLOG>
+
+# ============================================================================
+# tui-vfx V3 schema — DRAFT
+# ----------------------------------------------------------------------------
+# This file is a specification-by-example of the draft V3 recipe schema.
+# It is the first consolidation of everything surfaced during the debug-recipes
+# migration into a single coherent shape. It is NOT a final schema — it is a
+# starting point for review against a second auditor's ~60 observations.
+#
+# Lines starting with `#` are comments. Stripping them (e.g. `grep -v '^\s*#'`)
+# yields a syntactically valid JSON document that serves as the canonical
+# example V3 recipe.
+#
+# This document is DRAFT. Where a decision is not yet settled, the comments
+# enumerate candidate resolutions and name the migration log's schema question
+# (Q1–Q34). Companion documents:
+#   - docs/design/tui-vfx-v3-upgrade-plan.md           — intent + Decisions 1–8
+#   - docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md
+#                                                       — schema journal, drift,
+#                                                         final V2↔V3 audit
+# ============================================================================
+
+{
+  # =========================================================================
+  # 1. TOP-LEVEL IDENTITY
+  # =========================================================================
+  # Every recipe is a self-contained JSON document with a stable identity.
+  # These fields are recipe-level metadata and never participate in the
+  # pipeline / scope / step semantics below.
+
+  "schema_version": 3,
+  # ^ Integer. Always 3 for V3 recipes. V2 used 1. The version is a hard gate:
+  #   the V3 loader only loads 3; V2 recipes must be migrated before load.
+  #   See V3 plan §"Why now" for the clean-break rationale.
+
+  "id": "example.canonical.v3_recipe",
+  # ^ Dotted-identifier string. Unique per recipe; convention is
+  #   `<family>.<subfamily>.<variant>`. Used for references + tooling.
+
+  "title": "Canonical V3 Recipe",
+  # ^ Human-readable short title. One line.
+
+  "description": "A representative V3 recipe exercising every major schema facet, annotated with per-field semantics.",
+  # ^ 1-3 sentences. What the recipe does + any distinctive design choice.
+
+  "version": "3.0.0",
+  # ^ SemVer. Bumps on material recipe changes. Convention carried from V2.
+
+  "last_updated": "2026-04-21",
+  # ^ ISO date. When the recipe was last reviewed/edited.
+
+  # =========================================================================
+  # 2. EXTENDS — recipe inheritance (Open Q #17)
+  # =========================================================================
+  # Optional. If present, the named recipe is loaded first, this recipe's
+  # config is deep-merged onto it per Intention 39 (tagged-union variant
+  # changes replace entire sub-objects; no field-level leak across variants).
+  # The wargames/ hierarchy exercises this extensively — a 57-recipe tree
+  # extending 10 templates.
+  #
+  # Paths are repo-relative. Recipe loaders resolve this before applying
+  # the rest of the envelope.
+
+  "extends": null,
+  # ^ null | string. Example: "themes/new_wopr_fullscreen_cyan.json".
+  #   Mutually composable with requires_tokens / requires_bindings / $use
+  #   (Open Q #17) though the migration did not exercise multi-mechanism
+  #   composition — each recipe used at most one.
+
+  # =========================================================================
+  # 3. METADATA BLOCK — discovery + categorization (Open Q #21)
+  # =========================================================================
+  # Optional but recommended for the shipped corpus. Not consumed by the
+  # rendering pipeline; purely for library-scale navigation, validator
+  # heuristics, and the Morris audit (Principle 1).
+
+  "metadata": {
+    "aesthetic_tags": ["warm", "refined", "composed"],
+    # ^ Open-vocabulary list. Canonical tokens seen across the corpus include:
+    #   warm, cool, soft, premium, theatric, restrained, minimal, maximal,
+    #   retro, modern, matrix, noir, crt, glitch, phosphor, breathing,
+    #   meditative, urgent, calm. Not a closed enum; authors can extend.
+
+    "mood": "calm",
+    # ^ Single-word emotional tone. Candidates: welcoming, urgent,
+    #   meditative, energetic, refined, calm, playful.
+
+    "related_themes": ["theme-neutral"],
+    # ^ Which gt-design themes this recipe pairs with, or "theme-neutral"
+    #   for recipes that aren't theme-bound. Used for discovery.
+
+    "use_cases": ["debug_preview", "reference"],
+    # ^ Canonical authoring contexts this recipe exemplifies. Examples:
+    #   splash, toast, error-toast, modal-reveal, hover_indicator,
+    #   scene_transition, ambient_background, training_demo,
+    #   debug_preview, primitive_reference, named_composition_reference.
+
+    "maturity_era": "mature",
+    # ^ Which development era this recipe represents — helps the Morris
+    #   audit (Workflow B). Values: basic, theatric, mature, professional,
+    #   impressively-theatric, experimental.
+
+    "authoring_notes": "Brief intent line or design rationale for readers.",
+    # ^ Free-form. Important for recipes that encode non-obvious tuning or
+    #   reference specific design judgment (e.g., concealed_light's
+    #   source_cutoff+edge_width combo).
+
+    "last_reviewed": "2026-04-21"
+    # ^ ISO date. When the recipe was last validated against current design
+    #   standards. For the Morris audit.
+  },
+
+  # =========================================================================
+  # 4. CONTRACT DISCOVERY — tokens, bindings, assets (Open Q #14)
+  # =========================================================================
+  # Optional. When present, declares what app-provided values this recipe
+  # expects. Validators cross-check that every {{token}} reference in the
+  # JSON has a requires_tokens entry and that runtime bindings are declared
+  # in requires_bindings. Strict-mode loader fails loud if the caller's
+  # Substitutions context doesn't satisfy required keys.
+  #
+  # All three blocks are optional; recipes that need nothing from the app
+  # omit them entirely.
+
+  "requires_tokens": {
+    # ^ Mustache-style string substitutions into string fields.
+    "app_name": { "type": "string", "default": "My App" },
+    "brand_color_hex": { "type": "string", "default": "#4080FF" }
+  },
+
+  "requires_bindings": {
+    # ^ Typed structured-value bindings (ParamValue::RuntimeBinding targets).
+    "progress": { "type": "number", "default": 0.0, "range": [0.0, 1.0] },
+    "direction": { "type": "enum", "values": ["forward", "reverse", "ping_pong"], "default": "forward" },
+    "hovered_row_y": { "type": "u16", "default": 0 }
+  },
+
+  "requires_assets": {
+    # ^ Asset references (images, fonts) resolved via Substitutions.with_image
+    #   / with_font at the tui-vfx-recipes boundary.
+    "logo": { "type": "image", "format": "rsb", "canonical_path": "assets/logo.rsb" }
+  },
+
+  # =========================================================================
+  # 5. CONFIG — the recipe body
+  # =========================================================================
+  # All of the recipe's rendering-relevant data lives under `config`. The
+  # distinction from the top-level block is that `config` is what flows into
+  # the canonical PlaybackItem builder (Decision 8); everything above is
+  # metadata for discovery, inheritance, and validation.
+
+  "config": {
+
+    # -----------------------------------------------------------------------
+    # 5.1 Content — the message and optional content effect
+    # -----------------------------------------------------------------------
+    # `message` is the string rendered into the recipe's cells. Multi-line
+    # via \n. Mustache tokens ({{app_name}}) are resolved per requires_tokens
+    # before rendering.
+
+    "message": "Welcome, {{app_name}}",
+
+    # `content` (optional) is the content effect — a content-layer factory
+    # that controls HOW the message becomes cells (typewriter, scramble,
+    # marquee, mirror, morph, dissolve, glitch_shift, split_flap,
+    # glyph_cascade, numeric, odometer, redact, slide_shift, wrap_indicator).
+    # See Q25 for the home decision: sibling of pipeline for root recipes;
+    # per-layer in scene-layer recipes.
+
+    "content": {
+      "mode": "enter_only",
+      # ^ Tagged-union: enter_only | dwell_only | loop | all. Gates when
+      #   the content effect is active relative to the recipe lifecycle.
+
+      "effect": {
+        "type": "typewriter",
+        "speed_variance": 0.2,
+        "cursor": {
+          "character": "|",
+          "blink_interval": 500,
+          "show_while_typing": 1.0,
+          "show_after_complete": 1.0
+          # ^ Factory-internal nested sub-config. Each content-effect type
+          #   owns its own payload shape. V3 preserves V2 factory payloads
+          #   verbatim; no restructuring required.
+        }
+      }
+    },
+
+    # -----------------------------------------------------------------------
+    # 5.2 Layout, lifecycle, border
+    # -----------------------------------------------------------------------
+    # Recipe-level geometry and timing envelope.
+
+    "layout": {
+      "width": 40,
+      "height": 3,
+      "anchor": "center",
+      # ^ Q7 (deferred): `anchor` may rename to `placement` in the
+      #   vocabulary refresh sweep. Holding V2 spelling until the sweep.
+
+      "mode": "fixed"
+      # ^ "fixed" (width/height honored) | "fullscreen" (fill viewport).
+      #   For "fullscreen" the width/height fields are ignored.
+    },
+
+    "lifecycle": {
+      "auto_dismiss_ms": 6000
+      # ^ Milliseconds after enter completion before exit begins.
+      #   0 = no auto-dismiss (caller-controlled).
+      #   999999 = effectively never (used for ambient/dwelling recipes).
+      #   Q7 (deferred): may rename to `duration_ms` in the sweep.
+    },
+
+    "border": {
+      "type": "rounded",
+      # ^ Tagged-union: none | plain | rounded | double | thick.
+      "trim": "none"
+      # ^ trim policy for border corners. none | ...
+    },
+
+    # -----------------------------------------------------------------------
+    # 5.3 Clock — continuous temporal basis (D1 drift)
+    # -----------------------------------------------------------------------
+    # Optional. V3 renames V2's `time` block to `clock` per Q4. A recipe
+    # that declares a clock exposes a looping temporal context that
+    # SignalGraph nodes inside the pipeline inherit as their default
+    # temporal basis (Q3). Recipes without a clock see signals evaluate
+    # against the recipe's own elapsed time.
+    #
+    # Clock is orthogonal to runtime bindings: clock drives signal
+    # evaluation; bindings bypass the clock and are resolved from app state.
+
+    "clock": {
+      "loop": true,
+      "period_ms": 4200
+      # ^ The canonical cycle. Signals inside the pipeline inherit this
+      #   period unless they explicitly override via their own period_ms.
+    },
+
+    # -----------------------------------------------------------------------
+    # 5.4 Base style — recipe-wide default fg/bg (Q1 hybrid resolution)
+    # -----------------------------------------------------------------------
+    # The fg/bg colors the recipe starts with, before any pipeline step
+    # operates. Optional — a recipe with no `base_style` inherits the
+    # terminal canvas colors.
+    #
+    # For single-scope recipes (most of the corpus) this sibling-of-pipeline
+    # form is sufficient. For multi-scope recipes where different scopes
+    # need different base styles (V2's `styles: [...]` array), authors add
+    # `StyleEffect` steps at the head of the pipeline with their scope —
+    # see the 5.7 pipeline.step examples below.
+    #
+    # Modifiers (Gap — minor from final audit): V3 should accept
+    # `modifiers: ["bold", "italic", "underline"]` here to preserve V2's
+    # added_modifiers / removed_modifiers. Currently unmapped; migration
+    # did not explicitly test.
+
+    "base_style": {
+      "foreground": { "type": "rgb", "r": 200, "g": 220, "b": 255 },
+      # ^ Color variants: rgb (r/g/b 0-255), named (white/black/red/green/
+      #   blue/yellow/magenta/cyan/light_red/light_green/light_blue/
+      #   light_yellow/light_cyan/light_magenta), reset.
+      "background": { "type": "rgb", "r": 10, "g": 15, "b": 30 }
+      # ^ Q27: V2 occasionally had bare {r,g,b} without the "type" tag;
+      #   V3 normalizes to tagged form.
+    },
+
+    # -----------------------------------------------------------------------
+    # 5.5 Scene layers (Decision 5) — multi-source composition
+    # -----------------------------------------------------------------------
+    # Optional. Present only when the recipe composes multiple content
+    # sources (backdrop + image + text stack + procedural + ...).
+    # Canonical example: madeira-flag recipe.
+    #
+    # When `scene.layers` is present, `message` + `content` at the recipe
+    # level are ignored; each layer provides its own content source. The
+    # top-level `pipeline` applies AFTER per-layer pipelines complete, to
+    # the composed cell grid.
+    #
+    # Gaps: procedural generator `params` are currently opaque
+    # (serde_json::Value) — Q30 surfaces whether V3 wants typed schemas
+    # per generator_id. Q33 flags sibling-anchored placement
+    # (anchor: "below_sibling", sibling_id: "...") as a new V3 capability.
+
+    "scene": {
+      "layers": [
+        {
+          "id": "backdrop",
+          # ^ Stable identifier. Referenced by sibling-anchored placement
+          #   and role-tag tooling.
+          "role_tag": "background",
+          # ^ Q18 (V3 plan): semantic routing hint. Canonical values:
+          #   background | foreground | content | decoration | affordance |
+          #   feedback | alert | splash | toast | transition | ambient |
+          #   scene | movie. Hints-not-contracts; validators warn on
+          #   unknowns but don't reject.
+          "source": {
+            "type": "procedural",
+            "source_id": "solid_color_fade",
+            "params": {
+              "target_color": { "type": "rgb", "r": 5, "g": 5, "b": 15 },
+              "fade_in_duration_ms": 250,
+              "peak_alpha": 0.85
+            }
+          }
+          # Per-layer pipeline may be present; see scene-layer madeira-flag
+          # example for the flag layer's sampler+shader pipeline with
+          # step-output-hint wiring (Decision 7).
+        },
+        {
+          "id": "text_stack",
+          "role_tag": "content",
+          "source": {
+            "type": "card",
+            "title": "{{app_name}}",
+            "body": "Line one\nLine two",
+            "placement": {
+              "anchor": "below_sibling",
+              "sibling_id": "backdrop",
+              "offset_rows": 2
+            }
+          }
+        }
+      ]
+    },
+
+    # -----------------------------------------------------------------------
+    # 5.6 Pipeline — the per-cell operation tree (Decision 3)
+    # -----------------------------------------------------------------------
+    # The pipeline carries the recipe's per-cell operations plus timing
+    # envelope. Required; even effect-free recipes have a pipeline with
+    # `timing` and no `step` (Q22).
+
+    "pipeline": {
+
+      # -------------------------------------------------------------------
+      # 5.6.1 Timing — enter/exit motion envelope
+      # -------------------------------------------------------------------
+      # Required. The motion curve governing how the recipe appears and
+      # disappears. Q2: this is recipe-level metadata, NOT a Step — the
+      # envelope applies whole-recipe; per-cell operations live in `step`.
+
+      "timing": {
+        "enter_ms": 500,
+        "exit_ms": 400,
+        "enter_ease": "quad_out",
+        "exit_ease": "quad_in"
+        # ^ Easing vocabulary from mixed-signals: linear, quad_in/out/in_out,
+        #   cubic_in/out/in_out, quart_in/out/in_out, quint_in/out/in_out,
+        #   sine_in/out/in_out, expo_in/out/in_out, circ_in/out/in_out,
+        #   back_in/out/in_out, elastic_in/out/in_out, bounce_in/out/in_out.
+        #   See recipes/easing/ for per-easing debug recipes.
+
+        # ---- GAPS (final audit, requires plan-level decision) -----------
+        # "enter_snap":   { "type": "round" },
+        # ^ V2 `pipeline.enter.snapping: {type}`. Quantization policy for
+        #   motion-path + offscreen trajectories. Gap — minor.
+        #
+        # "motion_path":  { "type": "linear" | "arc" | "bezier" | "spring" | ... },
+        # ^ V2 `pipeline.enter.motion_path`. Geometry-aware entrance/exit
+        #   trajectory. MAJOR GAP — no V3 home yet. Options:
+        #     (a) extend pipeline.timing with motion_path (leaned toward)
+        #     (b) new MotionPath step kind
+        #     (c) drive via Decision 5 scene-layer placement
+        #
+        # "from":         { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
+        # "to":           { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
+        # ^ V2 slide-in/slide-out origin/destination. Paired with motion_path.
+        #   MAJOR GAP — tied to motion_path resolution.
+        # -----------------------------------------------------------------
+      },
+
+      # -------------------------------------------------------------------
+      # 5.6.2 Step — the per-cell operation tree
+      # -------------------------------------------------------------------
+      # Optional (Q22). Absent for effect-free recipes (e.g. baseline.json).
+      # Present as either a single Step, a Parallel container, or a
+      # Sequence container (Decision 3).
+      #
+      # The tree shape:
+      #   Pipeline  ::= Step | { "kind": "parallel", "children": [Step...] }
+      #                        | { "kind": "sequence", "children": [Step...] }
+      #   Step      ::= { "kind": StepKind, "scope"?: Scope, "phase"?: Phase, "payload": Payload }
+      #   StepKind  ::= "mask" | "sampler" | "filter" | "style_effect" | "shader"
+      #                | "parallel" | "sequence"
+      #   Phase     ::= "enter" | "dwell" | "exit" | "all"  (default "all")
+      #   Scope     — see 5.7 below (default { "kind": "all" })
+      #
+      # Scope and phase propagate down through container children unless a
+      # child overrides explicitly. Parallel children all run concurrently;
+      # Sequence children run in declared order.
+
+      "step": {
+        "kind": "parallel",
+        "children": [
+          # ---- Example 1: a named-composition shader at dwell --------
+          {
+            "kind": "shader",
+            "scope": { "kind": "channel", "value": "background" },
+            "phase": "all",
+            "payload": {
+              # Named-composition factories preserve V2 payload shape
+              # verbatim (Decision 2: "V3 ships with primitive-only
+              # authoring as the default surface. Named compositions exist
+              # as a second surface but start empty and accrue entries
+              # only when a specific composition encodes design judgment
+              # worth preserving as a named contract.")
+              "type": "concealed_light",
+              "color": { "type": "rgb", "r": 244, "g": 226, "b": 196 },
+              "source": "top",
+              "spread": 4,
+              "edge_width": 1,
+              "source_cutoff": 0.2,
+              "intensity": 0.32
+            }
+          },
+
+          # ---- Example 2: primitive-form shader (Decision 2) ---------
+          {
+            "kind": "shader",
+            "scope": { "kind": "channel", "value": "background" },
+            "payload": {
+              "type": "colored_overlay",
+              # ^ Canonical V3 primitive. ColoredOverlay { color, pattern,
+              #   intensity } where Pattern is an open enum of spatial
+              #   distributions. See Q8 for Pattern catalog.
+              "pattern": {
+                "kind": "radial_from_corner",
+                # ^ Pattern variants surfaced in the migration (proposed):
+                #   radial_from_corner { source, radius, softness, edge_firmness }
+                #   perimeter_halo { radius, falloff }          (Q8)
+                #   edge_shadow { edges: [...], radius, falloff }  (Q5)
+                #   — plus others as new shader-to-primitive reductions land.
+                "source": "center",
+                "radius": 8,
+                "softness": 0.7,
+                "edge_firmness": 0.2
+              },
+              "color": { "type": "rgb", "r": 236, "g": 214, "b": 186 },
+              "intensity": 0.28
+              # ^ intensity is ParamValue<f32> — can be constant, binding,
+              #   or signal. See 5.8 below.
+            }
+          },
+
+          # ---- Example 3: sibling primitive — GradientOverlay (Q6) ----
+          {
+            "kind": "shader",
+            "scope": { "kind": "all" },
+            "payload": {
+              "type": "gradient_overlay",
+              # ^ Sibling primitive to colored_overlay. ColoredOverlay has
+              #   a single color; GradientOverlay carries multi-stop colors.
+              #   Decision 2's orthogonal dimensions.
+              "gradient": {
+                "stops": [
+                  [0.0, { "type": "rgb", "r": 255, "g": 100, "b": 50 }],
+                  [1.0, { "type": "rgb", "r": 50, "g": 100, "b": 255 }]
+                ],
+                "space": "rgb"
+                # ^ space: rgb | hsl (future: oklch if mcu-terminal-color
+                #   supports it).
+              },
+              "angle_deg": 45.0,
+              "intensity": 1.0
+            }
+          },
+
+          # ---- Example 4: filter step with phase + scope ---------------
+          {
+            "kind": "filter",
+            "phase": "enter",
+            "scope": { "kind": "all" },
+            "payload": {
+              "type": "tint",
+              "color": { "type": "rgb", "r": 100, "g": 200, "b": 255 },
+              "strength": 0.3
+            }
+          },
+
+          # ---- Example 5: mask step with phase -------------------------
+          {
+            "kind": "mask",
+            "phase": "enter",
+            "payload": {
+              "type": "wipe",
+              "direction": "left_to_right",
+              "soft_edge": true
+            }
+          },
+
+          # ---- Example 6: sampler step (note phase_offset, not phase) --
+          {
+            "kind": "sampler",
+            "phase": "enter",
+            "payload": {
+              "type": "sine_wave",
+              "axis": "y",
+              "amplitude": 0.3,
+              "frequency": 2.0,
+              "speed": 1.0,
+              "phase_offset": 0.0
+              # ^ Q29: V2 `phase` payload field renamed to `phase_offset`
+              #   to avoid collision with step-level `phase`.
+            }
+          },
+
+          # ---- Example 7: style_effect step (Q1 hybrid) ---------------
+          # Multi-scope recipes lift V2's styles[] array to StyleEffect
+          # steps at the head of the pipeline. Each StyleEffect establishes
+          # fg/bg defaults for its scope before subsequent steps operate.
+          {
+            "kind": "style_effect",
+            "scope": { "kind": "border" },
+            "payload": {
+              "base_style": {
+                "foreground": { "type": "cyan" },
+                "background": { "type": "rgb", "r": 20, "g": 40, "b": 60 }
+              }
+            }
+          },
+
+          # ---- Example 8: style_effect with canvas-aware fade ---------
+          {
+            "kind": "style_effect",
+            "phase": "exit",
+            "scope": { "kind": "all" },
+            "payload": {
+              "type": "fade_out",
+              "easing": "quad_in",
+              "to": {
+                "kind": "color",
+                # ^ Tagged-union: { kind: canvas } (default, fade to
+                #   terminal canvas color) | { kind: color, color: ... }
+                #   (explicit target color).
+                "color": { "type": "rgb", "r": 18, "g": 28, "b": 40 }
+              }
+            }
+          },
+
+          # ---- Example 9: nested parallel with shared scope ----------
+          # Containers propagate scope to children. This inner parallel
+          # inherits `kind: content, value: text` from its parent below.
+          {
+            "kind": "parallel",
+            "scope": { "kind": "content", "value": "text" },
+            "children": [
+              {
+                "kind": "style_effect",
+                "payload": {
+                  "base_style": {
+                    "foreground": { "type": "white" },
+                    "background": { "type": "reset" }
+                  }
+                }
+              },
+              {
+                "kind": "shader",
+                "payload": {
+                  "type": "highlighter",
+                  "color": { "type": "rgb", "r": 255, "g": 255, "b": 100 }
+                }
+              }
+            ]
+          },
+
+          # ---- Example 10: Decision 7 — step output hints -------------
+          # Step that emits a named hint (sampler) + downstream step that
+          # binds to that hint by name (shader). The hint namespace is
+          # bounded-but-growing: displacement, sampled_color, cell_density,
+          # alpha_mask, and others as real use cases surface.
+          {
+            "kind": "sampler",
+            "scope": { "kind": "all" },
+            "payload": {
+              "type": "spatial_signal",
+              "emits_hint": "displacement",
+              # ^ The producer declares its hint name. Downstream consumers
+              #   bind to it via Decision 7.
+              "signal": {
+                # Q3/Q31: SignalGraph shape is still tentative. Current
+                # draft uses a hybrid of flat leaves + compositional
+                # children. See 5.9 below for the full vocabulary.
+                "kind": "sine",
+                "spatial_frequency": { "x": 8.0, "y": 0.0 },
+                "temporal_frequency_hz": 0.382,
+                "amplitude": 0.15,
+                "offset": 0.0
+              },
+              "axis": "y"
+            }
+          },
+          {
+            "kind": "shader",
+            "scope": { "kind": "all" },
+            "payload": {
+              "type": "displacement_shade",
+              "binds": {
+                "displacement": "displacement"
+                # ^ Consumer binds its internal input "displacement" to the
+                #   hint also named "displacement". The factory's
+                #   deserializer validates that some upstream sibling
+                #   actually emits this hint.
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+
+  # ^ end of top-level recipe object
+}
+
+# ============================================================================
+# 5.7 SCOPE PRIMITIVE — closed algebraic type (Decision 1, Q23)
+# ============================================================================
+# Scope is uniformly attachable to every Step. Default when omitted:
+# { "kind": "all" }. All variants below are canonical as of this draft.
+#
+#   Scope ::=
+#     # --- Recipe-wide + channel ----------------------------------------
+#     { "kind": "all" }
+#     { "kind": "channel", "value": "foreground" | "background" }
+#
+#     # --- Area variants (from Decision 1 + Q23 extensions) ------------
+#     { "kind": "border" }                                       # Q23: BorderOnly
+#     { "kind": "outer", "margins": { "top": N, "right": N, ... } }
+#     { "kind": "inner", "margins": { "top": N, "right": N, ... } }
+#     { "kind": "rect", "x": X, "y": Y, "w": W, "h": H }
+#     { "kind": "rect_exclude", "x": X, "y": Y, "w": W, "h": H }
+#
+#     # --- Axis-selector variants (Q23 additions) ---------------------
+#     { "kind": "cell", "x": X, "y": Y }              # X, Y are u16 OR ParamValue<u16>
+#     { "kind": "cells", "cells": [{ "x": X, "y": Y }, ...] }
+#     { "kind": "rows", "rows": [0, 1, 7, 8] }
+#     { "kind": "row_range", "start": 0, "end": 3 }
+#     { "kind": "columns", "columns": [10, 27, 45] }
+#     { "kind": "column_range", "start": 0, "end": 18 }
+#
+#     # --- Content / glyph predicates ----------------------------------
+#     { "kind": "content", "value": "text" | "non_empty" }
+#     { "kind": "glyph_matches", "pattern": <regex-string> }
+#
+#     # --- Semantic-role (theme-resolved at load) ----------------------
+#     { "kind": "role", "value": "primary" | "surface" | ... }
+#
+#     # --- Escape hatch for novel cases ---------------------------------
+#     { "kind": "predicate", "ref": <registered-predicate-name> }
+#     # ^ Closed — requires Rust-side registration, not arbitrary eval.
+#
+#     # --- Algebraic combination ---------------------------------------
+#     { "kind": "and", "children": [Scope, Scope, ...] }
+#     { "kind": "or",  "children": [Scope, Scope, ...] }
+#     { "kind": "not", "child": Scope }
+#
+# Notes:
+# - Cell coords (x/y in `cell` variants, and inside `cells`) accept either
+#   raw u16 or ParamValue<u16> (i.e., { "binding": "...", "default": N }).
+#   This enables run-time cell targeting — see the style_cell_position
+#   _binding debug recipe.
+# - Q10: scope alone expresses V2's apply_to vocabulary. `{kind: "channel",
+#   value: "background"}` == V2 apply_to=background; `{kind: "all"}` ==
+#   apply_to=both. ColoredOverlay tints all channels in scope by default.
+# - Q15 (deferred): V2's highlighter.row_mask is scope-encoding inside the
+#   factory. Future V3 should lift to step.scope = {kind: "rows"} and
+#   remove row_mask from the factory payload.
+
+# ============================================================================
+# 5.8 ParamValue<T> — runtime bindings + signals (Decision 6, Q11/Q21)
+# ============================================================================
+# Any typed parameter on any Step's payload accepts one of three forms.
+# This is the V3 generalization of V2's ad-hoc `{field, field_binding}`
+# parallel-field pattern.
+#
+#   ParamValue<T> ::=
+#     # --- Constant (the common case) -----------------------------------
+#     T                                                  # e.g. 1.5, "forward", { "type": "rgb", "r": 100, "g": 200, "b": 255 }
+#
+#     # --- RuntimeBinding (app-supplied per-frame) ----------------------
+#     { "binding": <name>, "default": T }
+#     # ^ `default` preserves V2's offline-validator fallback. Without it
+#     #   every binding recipe fails offline validation. Strongly recommended.
+#
+#     # --- SignalGraph (Decision 6; shape tentative, see Q3) ------------
+#     { "signal": SignalGraphNode }
+#
+# Enum-typed bindings (Q12): prefer variant strings (e.g. "forward") over
+# V2's u16 ordinals for self-documenting wire format.
+#
+# ColoredOverlay.intensity being ParamValue<f32> is what lets a primitive-
+# form recipe replace V2's per-shader `mode: "breath"` / `mode: "drift"`
+# flags with a SignalGraph on intensity — no factory-specific modulation
+# flags needed.
+
+# ============================================================================
+# 5.9 SignalGraph node vocabulary (tentative, Q3 + Q31)
+# ============================================================================
+# V3 consumes mixed-signals (Intention 40). The JSON shape below is the
+# draft surface over mixed-signals' primitive catalog. Not yet settled —
+# needs alignment with mixed-signals' own JSON surface when it stabilizes.
+#
+#   SignalGraphNode ::=
+#     # --- Leaves (canonical mixed-signals primitives) ------------------
+#     { "kind": "constant", "value": T }
+#     { "kind": "sine",
+#       "spatial_frequency": { "x": Fx, "y": Fy },      # optional — 1D signals omit
+#       "temporal_frequency_hz": Hz,                    # optional — static signals omit
+#       "clock_ref": "config.clock",                    # optional — default inheritance
+#       "amplitude": A,
+#       "phase_shift": Radians,
+#       "offset": Offset }
+#     { "kind": "triangle", ... }
+#     { "kind": "ramp", ... }
+#     { "kind": "keyframes", "points": [[t, v], ...] }
+#     { "kind": "noise", "seed": N, "scale": S }
+#     { "kind": "spatial_noise", "seed": N, "frequency": { "x": Fx, "y": Fy } }
+#
+#     # --- Spatial-coordinate leaves (Q31 extension) -------------------
+#     { "kind": "sample_norm_x" }        # 0..1 per cell x
+#     { "kind": "sample_norm_y" }        # 0..1 per cell y
+#     { "kind": "sample_cell_x" }        # raw cell x
+#     { "kind": "sample_cell_y" }
+#
+#     # --- Envelopes / physics -----------------------------------------
+#     { "kind": "adsr", "attack_ms": A, "decay_ms": D, "sustain": S, "release_ms": R }
+#     { "kind": "damped_spring", "stiffness": K, "damping": C, "mass": M, "initial_velocity": V0 }
+#
+#     # --- Compositional operators (mixed-signals) ---------------------
+#     { "kind": "add", "children": [SignalGraphNode, SignalGraphNode, ...] }
+#     { "kind": "multiply", "children": [...] }
+#     { "kind": "mix", "a": SignalGraphNode, "b": SignalGraphNode, "t": SignalGraphNode }
+#     { "kind": "normalize", "child": SignalGraphNode }
+#     { "kind": "remap", "child": SignalGraphNode, "from": [a, b], "to": [c, d] }
+#     { "kind": "clamp", "child": SignalGraphNode, "min": X, "max": Y }
+#
+#     # --- Runtime binding inside a graph (permissive composition) -----
+#     { "kind": "binding", "name": <name>, "default": T }
+#
+# Open questions specific to SignalGraph:
+# - Q3: Should the top-level ParamValue shape wrap signals as
+#   { "signal": SignalGraphNode } (wrapper approach, currently drafted) or
+#   allow the SignalGraphNode directly where a T is expected (transparent
+#   approach)? Wrapper is more verbose but lets ParamValue stay a tagged
+#   union; transparent requires disambiguation on { "kind": ... } presence.
+# - Q31: Spatial leaves (sample_norm_x etc.) must originate in
+#   mixed-signals for the whole approach to hold — otherwise V3 invents
+#   signal surface which Intention 40 forbids. Extending mixed-signals
+#   upstream is the proposed path.
+# - Q32: Step-output-hints (displacement, sampled_color, cell_density)
+#   need a way to feed back into SignalGraphs so a shader can shade
+#   per-cell by a sibling sampler's output. Proposal: a
+#   { "kind": "hint", "name": "displacement" } leaf that reads the hint
+#   at the cell being evaluated.
+
+# ============================================================================
+# 6. GAPS REQUIRING PLAN-LEVEL DECISION
+# ============================================================================
+# These are cases the migration surfaced as V3-unfixable-without-plan-work.
+# Each has a reference to the final audit section of the migration log.
+#
+# MAJOR gaps (loader cannot ship without these):
+#   A. motion_path + offscreen from/to (final audit #3, #4)
+#      V2 `pipeline.<phase>.motion_path: {type}` + `from`/`to` offscreen.
+#      Recipes arrive/depart via geometry-aware trajectories (linear, arc,
+#      bezier, spring, bounce, etc.) that V3's pipeline.timing currently
+#      can't express. Options:
+#        (a) extend pipeline.timing with a motion_path field
+#        (b) introduce a MotionPath step kind
+#        (c) drive via Decision 5 scene-layer placement
+#      Lean: (a). Per Intention 38, trial-deserialize against
+#      tui-vfx-geometry::PathType for validation.
+#
+#   B. SignalGraph JSON shape (final audit #6, Q3)
+#      Used pervasively (breath, drift, pulse, spatial_signal).
+#      Needs mixed-signals alignment.
+#
+# MINOR gaps (less urgent, can ship V3 with these as TBD):
+#   C. base_style.modifiers (bold/italic/underline) — final audit #1.
+#   D. pipeline timing snapping (round/floor/ceil) — final audit #2.
+#   E. Procedural-generator typed params per generator_id — Q30.
+#   F. Sibling-anchored scene-layer placement — Q33.
+#   G. wave_correlated shading (primitive vs SignalGraph) — Q32.
+#   H. fractional_stripe_overlay / sub-cell primitive — Q34.
+#   I. Scope coords as ParamValue<u16> — Q29 (partially documented above).
+#
+# DROP-RECOMMENDED:
+#   - pipeline.animation_type (V2 vestigial; no observed behavior).
+
+# ============================================================================
+# <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example</DESC>
+# <VERS>END OF VERSION: 0.1.0</VERS>
+# ============================================================================

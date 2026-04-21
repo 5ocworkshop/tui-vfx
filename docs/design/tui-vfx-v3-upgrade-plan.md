@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan.md</FILE> - <DESC>Draft V3 tui-vfx upgrade plan — migrating tui-vfx-recipes from the current flat pipeline schema to a uniform tree schema with a unified Scope primitive, Pattern-as-separable-axis as the internal shader model, and the William Morris "useful or beautiful" principle as corpus philosophy. Evolving hub where V3 scope, decisions, and open questions accumulate.</DESC> -->
-<!-- <VERS>VERSION: 0.15.0</VERS> -->
-<!-- <WCTX>Follow-up sweep after resolving Concerns A-F: (1) hygiene items flagged in the GT-Design lead review memo — correct "Three principles" text to "Five principles" (the plan added Principles 4 and 5 after the "Three" language was written), update the overview statement from "20 items" to "21 items" (Open Q #21 was added in the Deferred section), add a Decisions-reached framing note clarifying that "adopted" means direction is committed while implementation specifics may still be in flight for Decisions that carry their own track. (2) Reviewer-opinion annotations on every Open Question (1-21) and Open Q #21 in the Deferred section — each framed as "one input, question remains open" so the reviewer's recommendations are captured for later discussion without closing the questions prematurely. For Open Qs already informed by Concerns A-F (Q2/B, Q12/F, Q14/D, Q18/C), opinions are noted as load-bearing inputs to those resolutions.</WCTX> -->
-<!-- <CLOG>0.15.0: hygiene sweep and reviewer-opinion annotations. Hygiene: correct "Three principles" → "Five principles" at line 59 (Principle 4 added v0.5.0, Principle 5 added v0.6.0); update overview "20 items" → "21 items" with note about Q #21's placement in Deferred; add Decisions-reached framing paragraph clarifying "adopted" semantics and pointing at Decisions 5 and 8 as examples of adopted-direction + implementation-specifics pairings. Reviewer opinions: append a compact "Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open)" block to each of Open Qs 1-20 and to Open Q #21 in the Deferred metadata section. For Qs 2, 12, 14, 18 (already resolved as Concerns B, F, D, C respectively), annotation notes the reviewer input as load-bearing for the existing resolution while leaving implementation-level sub-questions open.
+<!-- <VERS>VERSION: 0.16.0</VERS> -->
+<!-- <WCTX>Add explicit "Tooling and CI migration — release-blocking work" section before the Appendix, surfacing the full inventory of V2-schema-touching components (~36 total: 6 Rust type/loader, 6 template machinery, 7 doc generators, 8 validators+CI, 3 preview/demo, 6 authoring guides) and making the tooling cutover a first-class release track rather than an implied follow-on. Integrates with Concern B (critical-set carve-out) and Concern F (release-gate criteria) via sequencing note; adds explicit release checklist.</WCTX> -->
+<!-- <CLOG>0.16.0: add "Tooling and CI migration" section (release-blocking work) before the Appendix. Enumerates V2-schema-touching components across Rust types/loaders, parser/template machinery, xtask docs generators (gen_effect_schemas / gen_ai_context are the largest), pipeline-validator + debug-recipes QC + recipe-probe + tui-vfx-trace, preview/demo binaries, and authoring guides. Flags "minor changes" as understating the work — pipeline-validator alone is substantial due to its custom rule language and 18-test-file suite encoding V2 semantics. Sequences the tooling cutover with Concerns B and F (tooling must be V3-ready before F's gate can run; B's critical-set carve-out executes through the tools). Recommends parser dispatch on schema_version for the transition window while everything else cuts over wholesale. Adds explicit release checklist for the tooling slice.
+0.15.0: hygiene sweep and reviewer-opinion annotations. Hygiene: correct "Three principles" → "Five principles" at line 59 (Principle 4 added v0.5.0, Principle 5 added v0.6.0); update overview "20 items" → "21 items" with note about Q #21's placement in Deferred; add Decisions-reached framing paragraph clarifying "adopted" semantics and pointing at Decisions 5 and 8 as examples of adopted-direction + implementation-specifics pairings. Reviewer opinions: append a compact "Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open)" block to each of Open Qs 1-20 and to Open Q #21 in the Deferred metadata section. For Qs 2, 12, 14, 18 (already resolved as Concerns B, F, D, C respectively), annotation notes the reviewer input as load-bearing for the existing resolution while leaving implementation-level sub-questions open.
 0.14.0: resolve Concern F from the GT-Design lead review memo — shadow / offscreen / probe/trace compatibility promoted from open risk to V3 release gate. Rewrite Open Q #12 with explicit release-gate framing. Enumerate six gate criteria: canonical shadow fixtures, offscreen/slide fixtures, probe snapshots, trace expectations, GT-Design integration fixtures, role-aware lowering correctness. Establish that V3 does not ship without green on each criterion for the designated critical set. Cross-link to Concern B (critical-set carve-out is the evaluation mechanism — B is infrastructure and workflow, F is the gate criteria the infrastructure evaluates). Retain implementation-level sub-questions (per-criterion tolerance spec, gate ownership, whitelist discipline, recapture cadence, escalation path) with default leans. This is the final load-bearing concern from the lead review memo's six-item list (A-F).
 0.13.0: resolve Concern E from the GT-Design lead review memo — scene-layer pipelines written as if half-landed. Retitle Decision 5 from "adopt" to "direction adopted, dedicated V3 implementation track." Add Status paragraph clarifying that the live `RaSceneLayer` schema has no `pipeline` field and that adopting the direction commits V3 to real schema/runtime feature work. Update "Two levels of scoping" bullet 1 to reference the new `pipeline: Option<VfxPipelineConfig>` field (additive, on the post-rename `VfxSceneLayer`). Update line 441 bullet to future-tense ("will gain a new per-layer `pipeline` field"). Replace "Architectural guidance" subsection with "V3 implementation track" enumerating schema extension, parser/deserializer, validator, compositor composition-order, per-layer caching, trace taxonomy, migration fixtures, and documentation work items. Add "Decisions the implementation track will need to resolve" subsection with default leans for precedence, hint visibility, blend mode, and empty-pipeline semantics. Add "What this decision adopts and what it does not" subsection separating adopted direction from non-binding defaults. Cross-link migration fixtures to Concern B's critical-set carve-out (layered recipes are natural critical-set candidates because rendering equivalence is most at risk when composing multiple pipelines per frame).
 0.12.0: resolve Concern D from the GT-Design lead review memo — tokenization/runtime-binding conflation on wrong axis. Flip the primary organizing axis from domain (text vs structured) to temporal lifetime (load-time vs per-frame). Load-time Substitutions and per-frame RuntimeBindings are two distinct API surfaces at the tui-vfx-recipes boundary; each handles text and structured domains internally. Optional RecipeContext umbrella wrapper available for ergonomic one-call passing. Rewrite Decision 6 "Relationship to tokenization" paragraph to align ParamValue::Constant ↔ Substitutions and ParamValue::RuntimeBinding ↔ RuntimeBindings. Rewrite Open Q #14 "Text vs structured — the fundamental split" subsection as "Load-time Substitutions vs per-frame RuntimeBindings — the fundamental split" with rationale (lifetimes determine failure modes; live-code evidence; usage concentration on the 2×2 diagonal). Update Open Q #14 sub-questions to reflect per-surface failure models, asset-resolution home, and procedural-params composition. Split token-contract-discovery into per-surface contracts (requires_substitutions, requires_bindings) with per-surface introspection APIs. Update Decision 8 builder-interaction sub-question. Update movie-composer deferred cross-reference to describe per-scene Substitutions at scene load and per-scene RuntimeBindings for timeline-driven animation.
@@ -1378,6 +1379,86 @@ V3 Decision 6 formalizes `ParamValue::RuntimeBinding` uniformly across all step 
 - Does the substitution API (open Q 14) unify with binding resolution, or stay distinct as string-vs-typed-value mechanisms?
 
 Defer until Decision 6 implementation exposes the real shape.
+
+## Tooling and CI migration — release-blocking work
+
+V3 is a clean break at the schema and loader level; it is also a clean break at the surrounding tooling level. The tools and CI that keep the V2 schema honest — validators, preview/demo, doc generators, probe/trace, authoring guides, template-expansion machinery — all read or write V2-shape data and will either continue serving V2 alongside V3 during the cutover or cut over to V3 wholesale. This section names that work explicitly so it does not get missed, and flags which pieces are "repoint the deserializer" vs. which need real design effort.
+
+An exhaustive tooling inventory was conducted as part of the debug-recipes migration exercise (full report in `docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md`). The list below is the summary plus the plan implications.
+
+### Inventory
+
+**Rust type definitions + loaders (6 components):**
+
+1. `tui-vfx-recipes/src/recipe_schema/config.rs` — the wire-format ground truth (`RaRecipeConfig` and every nested type). V3 renames to `VfxRecipeConfig` per Decision 4; the type surface changes substantially because Decision 3 restructures the pipeline as a tree and Decision 1 replaces scattered scoping fields with the unified Scope primitive. **Substantial.**
+2. `tui-vfx-style/src/models/` — 50+ shader type definitions. Pattern-as-separable-axis (Decision 2) requires a structural reorganization from "every shader is an enum variant" to "named compositions are Rust factories that produce `ColoredOverlay + Pattern` trees". **Substantial.**
+3. `tui-vfx-compositor/src/types/` — `FilterSpec`, `MaskSpec`, `SamplerSpec`, `MaskCombineMode`. Type definitions mostly stable; recipe loading paths need the V3 path. **Moderate.**
+4. `tui-vfx-content/src/pool/` — `ContentEffect`, `EffectPool`, `TextPool`, `ImagePool`. Type definitions stable. **Moderate.**
+5. `tui-vfx-geometry/src/types/` — `EasingCurve`, `MotionSpec`, `TransitionSpec`. Motion and easing types stable; the `motion_path` gap (final audit) is where this crate may gain new variants. **Moderate, pending motion_path resolution.**
+6. `tui-vfx-probe/src/` — probe introspection reads the live recipe config. Impacts the Decision F trace taxonomy. **Substantial.**
+
+**Parser + template machinery (6 functions):**
+
+- `fnc_expand_variants.rs`, `fnc_resolve_recipe_template.rs`, `fnc_deep_merge_json.rs`, `fnc_resolve_template_path.rs`, `fnc_validate_template_refs.rs`, `parser.rs` (`json_recipe_dyn_*` entry points). The `extends` + `template + variants` machinery mostly carries forward. The parser entry point needs version dispatch during the cutover window, or wholesale cutover if V3 ships clean-break (Concern B). **Mostly moderate; parser.rs is substantial.**
+
+**Doc generators (7 subcommands + templates):**
+
+- `xtask docs generate` and its sub-generators (`gen_effect_schemas`, `gen_json`, `gen_markdown`, `gen_ai_context`, `gen_api`) produce `docs/generated/{CAPABILITIES.md, capabilities.json, effect_schemas.json, ai-context.md, API.md}`. Every shader variant is enumerated in these artifacts.
+- `gen_effect_schemas.rs` in particular enumerates V2's `SpatialShaderType` variants. V3's Pattern-as-axis reorganization requires a full rewrite of this generator: the output must describe primitives (`ColoredOverlay` + `Pattern` enum) and named compositions (Tier 1 Rust factories) as two distinct surfaces rather than a single flat enum.
+- `docs/templates/capabilities.toml` is the editorial master paired with rustdoc. Authors will need to re-document V3 effects or update entries. Related to Intention 28 (documentation is a first-class automated engineering contract).
+- `gen_ai_context.rs` — the AI orientation doc. V3 rewrites every recipe structure example. **Substantial across the board; `gen_effect_schemas` and `gen_ai_context` are the largest.**
+
+**Validators + CI gates (8 tools):**
+
+- `pipeline-validator` — 6 validation stages (parse, profile, render, shader, output, debug-recipes-qc), 18 test files, custom rule language. Core parsing stage is V2-locked. **Substantial** and gates on Open Q #12's release criteria (Concern F). Concern B's critical-set infrastructure is built on top.
+- `recipe-probe` — probe diagnostic reports for cell focus, motion, operational analysis. 10 test files exercising scene/continuous/clock features. **Substantial.**
+- `tui-vfx-trace` — trace capture. Trace event taxonomy may change with V3's scene-layer work (Decision 5 implementation track). **Moderate-to-substantial.**
+- `recipe_schema/validator/` (embedded validator rules) — scene/continuous rule enforcement. **Moderate.**
+- `recipe_schema/tests/` (18 test files) — encode V2 semantics. **Substantial** — parallel V3 test suite required.
+- `fnc_run_debug_recipes_qc.rs` — 400+ recipe QC pass. Depends on V2 deserialization. Gates Concern F's release criteria. **Substantial.**
+- `Justfile` recipes (`just check`, gates). **Trivial** as task runners; CI will need new V3 gates.
+- `.github/workflows/` — CI wiring. Trivial structurally; content updates follow the validator/gen work above.
+
+**Preview / demo binaries (3 surfaces):**
+
+- `fnc_preview_from_config.rs` (~19KB) — the preview widget generator. Recipe-to-UI rendering. **Substantial.** Customer-facing.
+- `cargo run --example demo` — the public demo. Loads `recipes/` and drives the UI. **Substantial.** Must accept both V2 and V3 during cutover, or cut over wholesale under Concern B's clean-break discipline.
+- `fnc_render_preview_item.rs` (~17KB) — per-frame rendering layer. **Moderate.**
+
+**Authoring guides (6 documents):**
+
+- `docs/RECIPE_AUTHORING_WORKFLOW.md`, `tui-vfx-recipes/docs/schema/SCHEMA_REFERENCE.md`, `tui-vfx-recipes/docs/scene/AUTHORING_GUIDE.md`, `tui-vfx-recipes/docs/scene/PROCEDURAL_SOURCES.md`, `docs/generated/ai-context.md` (generated), `docs/PIPELINE_VALIDATOR_LLM_GUIDE.md`. Every example recipe, every structural reference, every field description must be rewritten for the V3 tree schema + primitives-by-default model. **Substantial across the board.** Related to Intention 28.
+
+**Impact tally:** ~36 components total. Rough split: 4 trivial, 10 moderate, 22 substantial.
+
+### Plan implications
+
+1. **"Minor changes" understates the work.** The sub-agent inventory surfaced that pipeline-validator + `fnc_run_debug_recipes_qc.rs` alone are a substantial review cycle (6 validation stages, custom rule language, implicit V2 semantics in rule design). Treating them as "repoint the deserializer" will miss the validation rules that encode V2 behavior. Similarly, `fnc_preview_from_config` + demo are customer-facing; every live recipe load depends on them. The tooling cutover is not a trivial follow-on to the schema cutover; it is a first-class release track.
+
+2. **The tooling migration sequences with Open Q #12 (Concern F) and Open Q #2 (Concern B).** Concern F defines release-gate criteria (shadow/offscreen/probe/trace compatibility for the critical set); those criteria are *evaluated by* the validator/probe/trace tooling. Concern B's critical-set carve-out is executed *by* that same tooling. The tools must be V3-ready before the Concern F gate can even run. This creates a sequencing: (a) tooling V3 support lands first, (b) critical-set migration runs through the tools under Concern B, (c) Concern F gate evaluates green.
+
+3. **Doc generators are authorship infrastructure.** Intention 28 ("documentation is a first-class automated engineering contract") means `gen_effect_schemas`, `gen_ai_context`, and the SKILLS.md / ai-context.md flow are not afterthoughts — they are part of the release surface. V3 does not ship without its doc pipeline producing V3-shape artifacts.
+
+4. **The `extends` + `template+variants` machinery is mostly free.** Deep-merge, template path resolution, circular-ref detection are schema-agnostic. They carry forward with minor adjustments. The Stage 5 wargames migration (66 files) confirmed this — V3 `extends` worked unchanged.
+
+5. **Dual-load vs clean-cutover choice is the tooling lever for Concern B.** The plan's clean-break framing (Why Now) suggests the tools also cut over wholesale. The alternative — parser dispatch on `schema_version` to load both — is cheap and preserves Concern B's mainline-corpus track. The two are compatible; the parser dispatches, the critical set uses the mechanical translator, the mainline corpus is re-authored. Choosing dispatch keeps the preview/demo able to show both while the mainline transitions. Default lean: **dispatch-on-schema_version in the parser; every other tool cuts over to V3 wholesale once its V3 support lands.**
+
+### Explicit release checklist (tooling slice)
+
+V3 does not ship until each of the following is green:
+
+- [ ] `tui-vfx-recipes/src/recipe_schema/config.rs` exposes V3 types + V2 types behind a `schema_version` dispatch, or cuts over wholesale.
+- [ ] `tui-vfx-style/src/models/` restructured per Decision 2 (primitives + Tier 1 factories).
+- [ ] `pipeline-validator` understands V3 and passes Concern F's gate criteria for the critical set.
+- [ ] `recipe-probe` and `tui-vfx-trace` produce V3-aware reports; trace event taxonomy finalized (Decision 5 implementation track).
+- [ ] `fnc_run_debug_recipes_qc.rs` passes against the V3 debug-recipes corpus.
+- [ ] `xtask docs generate` produces V3-shape `effect_schemas.json`, `capabilities.json`, `ai-context.md`, `CAPABILITIES.md`.
+- [ ] `docs/RECIPE_AUTHORING_WORKFLOW.md`, `SCHEMA_REFERENCE.md`, `AUTHORING_GUIDE.md`, `PROCEDURAL_SOURCES.md`, `PIPELINE_VALIDATOR_LLM_GUIDE.md` rewritten for V3.
+- [ ] `docs/templates/capabilities.toml` editorial entries match the V3 effect surface.
+- [ ] `cargo run --example demo` loads V3 recipes from the migrated corpus; optional V2 dual-load behind a feature flag per Concern B's transition-window semantics.
+- [ ] CI gates in `.github/workflows/` and `Justfile` updated to run V3 validation.
+
+Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail.
 
 ## Appendix — audits and curation
 
