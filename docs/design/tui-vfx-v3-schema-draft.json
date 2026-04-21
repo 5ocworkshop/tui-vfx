@@ -1,7 +1,7 @@
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example with # comment annotations. Stripping lines starting with `#` yields valid JSON representing a canonical V3 recipe.</DESC>
-# <VERS>VERSION: 0.1.0</VERS>
-# <WCTX>Initial consolidation of everything surfaced during the debug-recipes migration into a single coherent draft schema. Intended as the starting point for review against a second auditor's ~60 observations.</WCTX>
-# <CLOG>0.1.0: initial draft. Consolidates V3 plan Decisions 1–8 + Open Q #14/#17/#18/#21 + migration-log schema questions Q1–Q34 + drift table D1–D7 + final V2↔V3 audit into a single specification-by-example. Includes inline gap list for plan-level decisions (motion_path + offscreen from/to, SignalGraph JSON shape) and minor gaps (modifiers, snapping, procedural typed params, sibling-anchored placement, wave_correlated shading, fractional sub-cell primitive, ParamValue-typed Scope coords).</CLOG>
+# <VERS>VERSION: 0.2.0</VERS>
+# <WCTX>Synthesized draft schema after comparing two parallel migration memos, a full manual local audit of the debug corpus, a large-recipe curveball pass, and a code-derived Madeira Flag draft. This revision makes the top-down tree/leaf posture explicit and optimizes for deep shared substrates, renderer trees, hybrid templates, and maintainable discovery.</WCTX>
+# <CLOG>0.2.0: MAJOR — synthesis pass after dual-auditor review. Makes the top-down authoring model explicit: config envelope retained for authoring, content and scene layers treated as renderer trees, pipeline limited to structural nodes + operational leaves, and policy variants kept inside payloads rather than promoted to new step kinds by reflex. Adds explicit subtree guidance, wrapper/router conventions, region-compression pressure notes, style-effect first-class guidance, base_style.modifiers example, and expanded open-gap list including family/template authoring, hybrid transition templates, rule-engine families, celebratory particle generators, and canonical normalized IR.</CLOG>
 
 # ============================================================================
 # tui-vfx V3 schema — DRAFT
@@ -22,6 +22,39 @@
 #   - docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md
 #                                                       — schema journal, drift,
 #                                                         final V2↔V3 audit
+# ============================================================================
+# TOP-DOWN AUTHORING MODEL (synthesized after dual audit)
+# ----------------------------------------------------------------------------
+# V3 now has a recommended authoring posture:
+#
+#   1. Higher-level family/template authoring (outside this concrete schema)
+#      - one template + variants may emit many concrete recipes
+#      - keep this above the concrete recipe tree
+#
+#   2. Concrete recipe envelope (this document)
+#      - identity / discovery / contracts at the top level
+#      - `config` retained as the authoring envelope for render-relevant data
+#
+#   3. Renderer trees inside `config`
+#      - `content.effect` is a renderer subtree, not just a bag of leaf params
+#      - `scene.layers[]` are renderer trees with per-layer sources + pipelines
+#
+#   4. Pipeline tree
+#      - structural nodes: `parallel`, `sequence`
+#      - operational leaf kinds: `mask`, `sampler`, `filter`, `shader`,
+#        `style_effect`
+#
+#   5. Policy variants stay inside payloads whenever possible
+#      - prefer one deep family with policy axes over many flat sibling names
+#      - e.g. split_flap, typewriter+cursor, vignette, edge-grow, sweep families
+#
+#   6. Hybrid templates and wrapper/router nodes are real concepts
+#      - some recipes are best modeled as reusable compositions, not as one leaf
+#      - some nodes host another capability family (e.g. style-native spatial)
+#
+# The practical design target is not just "can the schema encode the corpus?"
+# It is "can the schema encode it with an elegant capability tree that stays
+# discoverable and maintainable as the library grows?"
 # ============================================================================
 
 {
@@ -185,8 +218,11 @@
           "show_while_typing": 1.0,
           "show_after_complete": 1.0
           # ^ Factory-internal nested sub-config. Each content-effect type
-          #   owns its own payload shape. V3 preserves V2 factory payloads
-          #   verbatim; no restructuring required.
+          #   owns its own payload shape. Important synthesis result: many
+          #   content recipe names are best understood as policy variants
+          #   inside deeper renderer trees (e.g. split_flap board-system,
+          #   typewriter + nested cursor policy spaces), not as separate
+          #   top-level families.
         }
       }
     },
@@ -265,9 +301,42 @@
       # ^ Color variants: rgb (r/g/b 0-255), named (white/black/red/green/
       #   blue/yellow/magenta/cyan/light_red/light_green/light_blue/
       #   light_yellow/light_cyan/light_magenta), reset.
-      "background": { "type": "rgb", "r": 10, "g": 15, "b": 30 }
+      "background": { "type": "rgb", "r": 10, "g": 15, "b": 30 },
       # ^ Q27: V2 occasionally had bare {r,g,b} without the "type" tag;
       #   V3 normalizes to tagged form.
+      "modifiers": ["bold"]
+      # ^ Resolved addition from the audit. Replaces V2's added_modifiers /
+      #   removed_modifiers split with one canonical positive list.
+    },
+
+    # -----------------------------------------------------------------------
+    # 5.4.1 Regions registry — reusable / compressed selectors
+    # -----------------------------------------------------------------------
+    # Optional. Large real recipes (status bars, staged banners, scoreboard
+    # boards) become unwieldy when they spell every targeted cell literally.
+    # V3 now recommends a reusable region registry so the authored pipeline can
+    # refer to semantic names instead of giant inline `Cells` arrays.
+    #
+    # The registry entries are themselves Scope values. This means region
+    # definitions can use primitive selectors (rows, row_range, cell_runs,
+    # cells, border, content, ...) or compose other region refs indirectly
+    # through `and` / `or` at the usage site.
+
+    "regions": {
+      "title_band": { "kind": "row_range", "start": 0, "end": 1 },
+      "left_status_segment": {
+        "kind": "cell_runs",
+        "runs": [
+          { "y": 0, "x_start": 0, "x_end": 22 }
+        ]
+      },
+      "victory_patch": {
+        "kind": "cell_runs",
+        "runs": [
+          { "y": 2, "x_start": 10, "x_end": 42 },
+          { "y": 3, "x_start": 10, "x_end": 42 }
+        ]
+      }
     },
 
     # -----------------------------------------------------------------------
@@ -448,7 +517,25 @@
             }
           },
 
-          # ---- Example 3: sibling primitive — GradientOverlay (Q6) ----
+          # ---- Example 3: scoped style lane / style patch ------------
+          {
+            "kind": "style_effect",
+            "scope": { "kind": "region_ref", "value": "title_band" },
+            "phase": "all",
+            "payload": {
+              "type": "base_style_override",
+              # ^ Resolved style-lane decision from the audit: scoped style
+              #   patches stay inside `style_effect` rather than forcing a
+              #   second top-level base-style mechanism or a new StepKind.
+              "style": {
+                "foreground": { "type": "rgb", "r": 240, "g": 248, "b": 255 },
+                "background": { "type": "rgb", "r": 18, "g": 24, "b": 40 },
+                "modifiers": ["bold"]
+              }
+            }
+          },
+
+          # ---- Example 4: sibling primitive — GradientOverlay (Q6) ----
           {
             "kind": "shader",
             "scope": { "kind": "all" },
@@ -638,10 +725,13 @@
 #     # --- Axis-selector variants (Q23 additions) ---------------------
 #     { "kind": "cell", "x": X, "y": Y }              # X, Y are u16 OR ParamValue<u16>
 #     { "kind": "cells", "cells": [{ "x": X, "y": Y }, ...] }
+#     { "kind": "cell_run", "y": Y, "x_start": X0, "x_end": X1 }
+#     { "kind": "cell_runs", "runs": [{ "y": Y, "x_start": X0, "x_end": X1 }, ...] }
 #     { "kind": "rows", "rows": [0, 1, 7, 8] }
 #     { "kind": "row_range", "start": 0, "end": 3 }
 #     { "kind": "columns", "columns": [10, 27, 45] }
 #     { "kind": "column_range", "start": 0, "end": 18 }
+#     { "kind": "region_ref", "value": <named-region-id> }
 #
 #     # --- Content / glyph predicates ----------------------------------
 #     { "kind": "content", "value": "text" | "non_empty" }
@@ -664,6 +754,12 @@
 #   raw u16 or ParamValue<u16> (i.e., { "binding": "...", "default": N }).
 #   This enables run-time cell targeting — see the style_cell_position
 #   _binding debug recipe.
+# - `cell_run` / `cell_runs` are the first compression-oriented selectors
+#   promoted into the concrete schema. They are aimed at long status bars,
+#   big staged banners, and any recipe where contiguous cells are the real
+#   authored concept.
+# - `region_ref` lets large recipes define readable semantic regions under
+#   `config.regions` and reference them throughout the pipeline.
 # - Q10: scope alone expresses V2's apply_to vocabulary. `{kind: "channel",
 #   value: "background"}` == V2 apply_to=background; `{kind: "all"}` ==
 #   apply_to=both. ColoredOverlay tints all channels in scope by default.
@@ -758,6 +854,108 @@
 #   { "kind": "hint", "name": "displacement" } leaf that reads the hint
 #   at the cell being evaluated.
 
+# 5.10 SUBTREE GUIDANCE — what should collapse vs what should stay distinct
+# ============================================================================
+# The audit suggests a stable top-down subtree posture:
+#
+#   Reveal / visibility
+#     - reveal geometry
+#     - segmented/tiled visibility
+#     - procedural breakup / visibility fields
+#     - hybrid reveal-field compositions
+#
+#   Displacement / resampling
+#     - wave displacement
+#     - fracture / segmented displacement
+#     - crt-resampling
+#
+#   Filter-side families
+#     - indicator / progress emphasis
+#     - traveling-band / sweep
+#     - pattern / procedural texture
+#     - motion-treatment filters
+#     - field-rendering wrappers
+#     - rule-engine families
+#
+#   Style-side families
+#     - transition fades
+#     - target-aware fades
+#     - color transforms
+#     - typography-window effects
+#     - dwell modulation
+#     - scoped style lanes / style patches
+#
+#   Content-side renderer trees
+#     - split-flap board / renderer system
+#     - typewriter + nested cursor renderer subtree
+#     - representational formatting / content transforms
+#
+# The schema intentionally does NOT hardcode these as enums at the step-kind
+# level. They are governance guidance for how to organize payload families and
+# docs, not a new explosion of top-level leaf kinds.
+#
+# 5.11 FACTORY-INTERNAL / WRAPPER CONVENTIONS
+# ============================================================================
+# Some concepts are intentionally carried inside payloads or source-layer
+# structures rather than promoted to new StepKinds:
+#
+# - tagged-union payload discriminators
+#   Example: focus_field.shape = rect | ellipse
+# - dual-color / multi-color payloads
+#   Example: glisten_band.head + tail
+# - nested policy spaces inside deep renderers
+#   Example: split_flap charset / rolling_flip / from_message
+# - wrapper/router nodes
+#   Example: style_effect(type=spatial, shader=...)
+# - field-rendering wrappers over upstream sources
+#   Example: subcell-light interpreting an upstream shader-defined field
+# - cross-lane paired capabilities
+#   Example: rigid_shake filter + rigid_shake_style
+#
+# Promotion rule: only elevate a concept to the schema surface when keeping it
+# payload-internal materially harms interoperability, discovery, validation, or
+# authoring ergonomics.
+#
+# Authoring-scale note (outside concrete recipe shape):
+# - template + variants authoring remains important, but it sits ABOVE the
+#   concrete recipe tree rather than inside one recipe's StepKind algebra.
+#
+# 5.12 AUTHORING-SCALE INFRASTRUCTURE (resolved direction)
+# ============================================================================
+# Two cross-cutting decisions from the dual-auditor synthesis are now the
+# recommended direction even though they sit partly outside the concrete JSON:
+#
+#  A. Canonical normalized IR
+#     - Validator, viewer, migration-equivalence tests, and future tooling
+#       should operate on a canonical normalized IR rather than raw authoring
+#       syntax.
+#     - Reason: several concepts intentionally have multiple ergonomic
+#       authoring shapes (region refs, wrapper nodes, hybrid templates,
+#       named-factory vs primitive-form, style-native spatial wrappers).
+#     - The raw recipe remains the authoring surface; normalized IR is the
+#       tool-facing surface.
+#
+#  B. Template + variants authoring sits ABOVE the concrete recipe tree
+#     - Family/template authoring (e.g. easing-family style expansion) is a
+#       separate layer that emits concrete V3 recipes.
+#     - This concrete schema remains for a single realized recipe; it does not
+#       absorb template+variants into the StepKind algebra.
+#
+# 5.13 RULE-ENGINE / GOVERNANCE NOTE
+# ============================================================================
+# Some payload families are better treated as rule engines or governed
+# sub-catalogs than as primitive-vs-composition debates.
+#
+# Example: `glyph_style`
+# - large rule tables
+# - repeated across phases
+# - rule ordering matters
+# - behaves more like a mini rules engine than a small effect leaf
+#
+# The concrete schema still hosts these as payloads on the existing step kind
+# (`filter` in this case), but library governance/docs should recognize them as
+# a distinct category.
+#
 # ============================================================================
 # 6. GAPS REQUIRING PLAN-LEVEL DECISION
 # ============================================================================
@@ -788,11 +986,18 @@
 #   G. wave_correlated shading (primitive vs SignalGraph) — Q32.
 #   H. fractional_stripe_overlay / sub-cell primitive — Q34.
 #   I. Scope coords as ParamValue<u16> — Q29 (partially documented above).
+#   J. Region compression / derived selectors for large `Cells` lists.
+#   K. Scoped style-lane model beyond `base_style` + style_effect leaves.
+#   L. Higher-level template + variants authoring above concrete recipes.
+#   M. Hybrid transition templates as reusable composition forms.
+#   N. Rule-engine families (e.g. glyph_style) as a first-class docs/governance category.
+#   O. Ballistic celebratory particles / fireworks as a likely new generator family.
+#   P. Canonical normalized IR for validator/viewer/tooling.
 #
 # DROP-RECOMMENDED:
 #   - pipeline.animation_type (V2 vestigial; no observed behavior).
 
 # ============================================================================
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example</DESC>
-# <VERS>END OF VERSION: 0.1.0</VERS>
+# <VERS>END OF VERSION: 0.2.0</VERS>
 # ============================================================================
