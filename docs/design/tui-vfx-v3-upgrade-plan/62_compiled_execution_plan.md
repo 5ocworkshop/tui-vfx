@@ -103,6 +103,7 @@ The compilation pass should:
 - preserve operational lane identity
 - compact literal selector cases where cheap and obvious
 - fall back to the normalized selector when a scope remains dynamic
+- prefer consuming normalized IR in the main load/compile seam so the phase does not pay avoidable whole-recipe clone costs
 
 ### 30.3 First consumer-seam propagation
 
@@ -130,6 +131,7 @@ The initial compiled plan should focus on the selectors that are:
 Examples:
 
 - literal `cells`
+- literal `cell_run`
 - literal `rows`
 - literal `row_range`
 - literal `columns`
@@ -141,6 +143,8 @@ Everything else can initially remain:
 - normalized-scope-backed
 
 That is enough to prove the phase without over-generalizing too early.
+
+To keep these opportunities available, normalization should preserve compact span selectors rather than eagerly exploding them into individual cells.
 
 ---
 

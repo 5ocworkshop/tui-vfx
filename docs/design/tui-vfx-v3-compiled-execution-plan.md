@@ -122,6 +122,7 @@ The first compiled-plan pass should only compact what is:
 ### First literal selector cases
 
 - literal `cells`
+- literal `cell_run`
 - literal `rows`
 - literal `row_range`
 - literal `columns`
@@ -141,6 +142,15 @@ If a selector is not fully literal, the compiled plan should keep:
 
 That keeps the first compiled plan safe and incremental.
 
+### Preservation rule
+
+To keep the best compaction opportunities available, normalization should preserve compact selector forms such as:
+
+- `cell_run`
+- `cell_runs`
+
+rather than eagerly exploding them into flat cell lists.
+
 ---
 
 ## 5. What this buys us
@@ -151,6 +161,7 @@ Even this conservative first compiled plan buys:
 - a clearer execution seam for later family work
 - a better place to hang future cache-friendly artifacts
 - a better performance story than “execute directly from normalized IR forever”
+- fewer avoidable whole-recipe clones when load/compile paths can consume normalized IR directly
 
 ---
 
