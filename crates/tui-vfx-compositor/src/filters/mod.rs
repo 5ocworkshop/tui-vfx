@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/mod.rs</FILE> - <DESC>Filter implementations (internal)</DESC>
-// <VERS>VERSION: 2.7.0</VERS>
-// <WCTX>Phase 0 P0.4 — add FadeToCanvas exit filter</WCTX>
-// <CLOG>Add cls_fade_to_canvas filter module</CLOG>
+// <VERS>VERSION: 2.8.0</VERS>
+// <WCTX>Add cls_glyph_style module — per-glyph-category style overrides via char-membership rules (primary consumer: SplitFlap boards needing distinct colors for block/hinge/letter/turned glyph categories)</WCTX>
+// <CLOG>MINOR: register cls_glyph_style alongside the existing 30 filters</CLOG>
 
 pub(crate) mod cls_bracket_emphasis;
 pub(crate) mod cls_braille_dust;
@@ -13,6 +13,7 @@ pub(crate) mod cls_dot_indicator;
 pub(crate) mod cls_edge_grow;
 pub(crate) mod cls_fade_to_canvas;
 pub(crate) mod cls_glisten_sweep;
+pub(crate) mod cls_glyph_style;
 pub(crate) mod cls_greyscale;
 pub(crate) mod cls_hover_bar;
 pub(crate) mod cls_interlace_curtain;

@@ -14,6 +14,7 @@ use crate::filters::cls_dot_indicator::DotIndicator;
 use crate::filters::cls_edge_grow::EdgeGrow;
 use crate::filters::cls_fade_to_canvas::FadeToCanvas;
 use crate::filters::cls_glisten_sweep::GlistenSweep;
+use crate::filters::cls_glyph_style::{GlyphStyle, GlyphStyleRule as GlyphStyleRuleImpl};
 use crate::filters::cls_greyscale::Greyscale;
 use crate::filters::cls_hover_bar::HoverBar;
 use crate::filters::cls_interlace_curtain::InterlaceCurtain;
@@ -69,6 +70,7 @@ pub(crate) enum PreparedFilter {
     GlistenSweep(GlistenSweep),
     KittScanner(KittScanner),
     ShadeScanner(ShadeScanner),
+    GlyphStyle(GlyphStyle),
 }
 
 impl PreparedFilter {
@@ -163,6 +165,9 @@ impl PreparedFilter {
             PreparedFilter::ShadeScanner(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
+            PreparedFilter::GlyphStyle(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
         }
     }
 
@@ -195,6 +200,7 @@ impl PreparedFilter {
             PreparedFilter::GlistenSweep(_) => "GlistenSweep",
             PreparedFilter::KittScanner(_) => "KittScanner",
             PreparedFilter::ShadeScanner(_) => "ShadeScanner",
+            PreparedFilter::GlyphStyle(_) => "GlyphStyle",
         }
     }
 }
@@ -849,6 +855,20 @@ pub(crate) fn prepare_filter(
                 .with_bps(*bps)
                 .with_progress(evaluated_progress);
             Some(PreparedFilter::ShadeScanner(filter))
+        }
+        FilterSpec::GlyphStyle { rules } => {
+            // Resolve ColorConfig → Color per rule at prepare time; the
+            // inner GlyphStyleRule (filter impl) holds concrete colors
+            // while the spec-side rule holds unresolved ColorConfig.
+            let resolved: Vec<GlyphStyleRuleImpl> = rules
+                .iter()
+                .map(|rule| GlyphStyleRuleImpl {
+                    chars: rule.chars.chars().collect(),
+                    fg: rule.fg.map(|c| c.into()),
+                    bg: rule.bg.map(|c| c.into()),
+                })
+                .collect();
+            Some(PreparedFilter::GlyphStyle(GlyphStyle::new(resolved)))
         }
     }
 }

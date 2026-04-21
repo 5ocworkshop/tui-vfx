@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.9.0</VERS>
-// <WCTX>Phase 0 P0.C followup — add damping_scale_binding on RigidShake so severity can also scale the shake decay curve alongside num_shakes_binding, plus FadeToCanvas.canvas_color_binding for live terminal-background tracking</WCTX>
-// <CLOG>Add FilterSpec::RigidShake.damping_scale_binding: Option<String> resolved to f32 at prepare time, clamped 0.1..=10.0, and multiplied element-wise into the 8-element damping array. Missing or out-of-range bindings fall back to the unscaled static damping curve. Also adds FilterSpec::FadeToCanvas.canvas_color_binding from the sibling O-P0.B commit
+// <VERS>VERSION: 3.10.0</VERS>
+// <WCTX>Add GlyphStyle filter variant for per-glyph-category style overrides. Primary consumer: SplitFlap boards needing distinct colors for block/hinge/letter/turned glyph categories — each rule declares a char-membership set + optional fg/bg/modifier overrides, first-match-wins semantics, unmatched cells unchanged. Includes new GlyphStyleRule struct.</WCTX>
+// <CLOG>MINOR: new pub struct GlyphStyleRule { chars, fg, bg, modifiers } with serde + ConfigSchema derives; new FilterSpec::GlyphStyle { rules: Vec<GlyphStyleRule> } variant. Backward-compatible — existing recipes unaffected.
 
 //! # Filter Specifications
 //!
@@ -139,6 +139,34 @@ pub struct CharsetNoiseGradientStop {
     pub at: f32,
     /// Pool of characters at this position.
     pub chars: String,
+}
+
+/// One rule in a [`FilterSpec::GlyphStyle`] filter.
+///
+/// Each rule declares a set of characters plus optional fg/bg/modifier
+/// overrides. The filter evaluates rules in declaration order and applies
+/// the first one whose `chars` set contains the cell's character.
+/// Unmatched cells pass through unchanged.
+///
+/// The primary use case is content transformers that emit mixed glyph
+/// categories — e.g. SplitFlap emits block glyphs (`█▓▒░`), hinge glyphs
+/// (`▀▔—▁▄`), letter glyphs, and (when `flip_preview` is on) turned-letter
+/// glyphs in a single output stream. One `GlyphStyle` filter with 2-4
+/// rules gives each category its own color without any per-cell RoleMap
+/// plumbing.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GlyphStyleRule {
+    /// Characters this rule matches. Supplied as a single string for
+    /// authoring convenience — any character in the string triggers the
+    /// rule. Order inside the string does not matter.
+    pub chars: String,
+    /// Override foreground color. Omit to leave fg untouched.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fg: Option<ColorConfig>,
+    /// Override background color. Omit to leave bg untouched.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bg: Option<ColorConfig>,
 }
 
 /// Controls which cells CharsetNoise affects.
@@ -936,6 +964,34 @@ pub enum FilterSpec {
         #[serde(default)]
         progress: BindableValue,
     },
+    /// Per-glyph-category style override via char-membership rules.
+    ///
+    /// For each cell, the first rule whose `chars` set contains the
+    /// cell's character applies its fg/bg/modifier overrides. Cells
+    /// whose character matches no rule pass through unchanged.
+    ///
+    /// Designed for content transformers that emit mixed glyph
+    /// categories in a single stream — e.g. SplitFlap boards where
+    /// block/hinge glyphs (`█▓▒░▀▔—▁▄`), letter glyphs, and (when
+    /// `flip_preview` is on) turned-preview glyphs should each have
+    /// their own color without any per-cell role-map plumbing.
+    ///
+    /// # Example
+    ///
+    /// ```json
+    /// {
+    ///   "type": "glyph_style",
+    ///   "rules": [
+    ///     { "chars": "█▓▒░▀▔—▁▄",
+    ///       "fg": {"type":"rgb","r":210,"g":210,"b":210},
+    ///       "bg": {"type":"rgb","r":42,"g":42,"b":42} }
+    ///   ]
+    /// }
+    /// ```
+    GlyphStyle {
+        /// Rules evaluated in declaration order (first match wins).
+        rules: Vec<GlyphStyleRule>,
+    },
 }
 
 /// Direction of motion blur trail.
@@ -1474,6 +1530,7 @@ impl FilterSpec {
             FilterSpec::GlistenSweep { .. } => "GlistenSweep",
             FilterSpec::KittScanner { .. } => "KittScanner",
             FilterSpec::ShadeScanner { .. } => "ShadeScanner",
+            FilterSpec::GlyphStyle { .. } => "GlyphStyle",
         }
     }
 
@@ -1525,6 +1582,9 @@ impl FilterSpec {
             FilterSpec::KittScanner { .. } => "Horizontal ping-pong scanner effect (KITT/Larson)",
             FilterSpec::ShadeScanner { .. } => {
                 "Ping-pong scanner that dims text with shade overlay"
+            }
+            FilterSpec::GlyphStyle { .. } => {
+                "Per-glyph-category fg/bg override via char-membership rules"
             }
         }
     }
@@ -1819,6 +1879,9 @@ impl FilterSpec {
                 ("bps", format!("{} Hz", bps)),
                 ("progress", format!("{:?}", progress)),
             ],
+            FilterSpec::GlyphStyle { rules } => {
+                vec![("rules", format!("{} rule(s)", rules.len()))]
+            }
         }
     }
 }
