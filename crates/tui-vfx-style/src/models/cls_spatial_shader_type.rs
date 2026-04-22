@@ -9,6 +9,19 @@
 //! time, and animation state. They add visual texture and dynamic effects
 //! to widget content.
 //!
+//! ## Migration note
+//!
+//! `SpatialShaderType` is the **current flat implementation surface** for
+//! spatial shaders. Under the V3 plan (Decision 2), this catalog is expected to
+//! evolve toward:
+//!
+//! - deeper primitive / substrate families
+//! - earned named factories or presets
+//! - clearer separation between primitive capability and policy composition
+//!
+//! So this enum should be read as the live migration surface, not as proof that
+//! the final V3 conceptual model is "one flat list forever."
+//!
 //! ## Shader Categories
 //!
 //! ### Gradients & Fills

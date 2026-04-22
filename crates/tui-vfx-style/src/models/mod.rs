@@ -5,6 +5,21 @@
 // 2.2.0: MINOR — register fnc_style_region_should_style and fnc_style_region_bounding_rect modules so callers can invoke the predicates as free functions (or reach them via the delegating methods on StyleRegion).
 // 2.1.0: Register cls_cursor_shader module and public re-exports for CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail</CLOG>
 
+//! Style/shader model surface for `tui-vfx-style`.
+//!
+//! ## Migration note
+//!
+//! This module currently re-exports a flat style/shader model surface centered
+//! around `SpatialShaderType`. Under the V3 plan, that flat surface is expected
+//! to be reclassified into deeper primitive families plus earned named
+//! factories/presets. The current export layout is therefore the live migration
+//! surface, not the final conceptual claim.
+//!
+//! See:
+//! - `docs/design/tui-vfx-v3-upgrade-plan/40_decisions.md` (Decision 2)
+//! - `docs/design/tui-vfx-v3-capability-catalog.md`
+//! - `docs/design/tui-vfx-v3-style-model-restructure-inventory.md`
+
 pub mod cls_affordance_wake_shader;
 pub mod cls_ambient_occlusion_shader;
 pub mod cls_barber_pole_shader;
