@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.2.0</VERS> -->
+<!-- <VERS>VERSION: 1.3.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.2.0: add a dedicated V3 cursor family surface so the future-decision bucket is narrowed to the last explicit special-case holdout.
+<!-- <CLOG>1.3.0: add a dedicated V3 stripe-motion family so the last future-decision holdout also has a real grouped V3 home.
+1.2.0: add a dedicated V3 cursor family surface so the future-decision bucket is narrowed to the last explicit special-case holdout.
 1.1.0: add the first grouped V3 stochastic-texture family so the future-decision bucket is narrowed to the truly special-case leftovers.
 1.0.0: add the first grouped V3 gradient-reveal family so the primitive bucket is fully represented by grouped V3 subfamilies.
 0.9.0: add the first grouped V3 edge-distortion family so the remaining glitch/edge micro-treatment subgroup is also moving into real V3 code.
@@ -208,10 +209,11 @@ Outstanding style-model buckets for follow-on slices:
   - completed subgroup: motion-field (`PulseWave`, `Radar`, `Orbit`)
   - completed subgroup: edge-distortion (`GlitchLines`, `ChromaticEdge`, `SubCellShake`)
   - completed subgroup: gradient-reveal (`LinearGradient`, `RevealWipe`)
-- [~] category needing explicit future decision
+- [x] category needing explicit future decision
   - completed subgroup: stochastic-texture (`NeonFlicker`, `StochasticSparkle`)
   - completed special-case family: cursor
-  - remaining candidates: `BarberPole`
+  - completed special-case family: stripe-motion (`BarberPole`)
+  - remaining candidates: none
 - [ ] any additional cross-family refactors needed once runtime wiring begins
   - e.g. shared builder/lowering helpers for `models::v3`
 
@@ -231,4 +233,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
