@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.5.4</VERS> -->
+<!-- <VERS>VERSION: 1.5.5</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md).</WCTX> -->
-<!-- <CLOG>1.5.4: record that the browser demo can now start on an explicit recipe path and advertises direct-V3 snapshot mode in the UI/task runner for faster parity audits.
+<!-- <CLOG>1.5.5: record that the first direct V3 visual path is now phase/sample-aware, so play_recipe/demo can scrub and auto-advance the supported subset instead of freezing on one fixed dwell sample.
+1.5.4: record that the browser demo can now start on an explicit recipe path and advertises direct-V3 snapshot mode in the UI/task runner for faster parity audits.
 1.5.3: record that the browser demo now understands the same direct rendered V3 snapshot subset as play_recipe, even though the full native animated V3 preview path is still outstanding.
 1.5.2: record that the legacy play_recipe visual surface now prefers a direct rendered V3 snapshot for the supported compiled bridge subset before falling back to paired legacy fixtures.
 1.5.1: record that direct validator/recipe probe lifecycle analysis now preserves grouped effect/shader family labels alongside concrete effect names.
@@ -130,7 +131,9 @@ The tooling migration is no longer purely theoretical. The following cutover sea
 - **Customer-facing preview/demo seam**
   - the public demo/player and diagnostic example players now route through an upstream cutover-aware preview helper instead of assembling transitional policy at the call sites
   - `play_recipe` now prefers a direct rendered V3 snapshot for the supported compiled bridge subset before falling back to paired legacy fixtures
-  - `demo` now understands that same direct rendered V3 snapshot subset for visual browsing, can start on an explicit recipe path for faster audit loops, and advertises direct-V3 snapshot mode in the browser UI; it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
+  - `demo` now understands that same direct rendered V3 snapshot subset for visual browsing, can start on an explicit recipe path for faster audit loops, and advertises direct-V3 snapshot mode in the browser UI
+  - that direct visual subset is now phase/sample-aware: `play_recipe` and `demo` can auto-advance or scrub the supported compiled-V3 bridge subset across enter/dwell/exit samples instead of freezing on one fixed dwell frame
+  - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`
   - `recipe-probe`
@@ -184,10 +187,10 @@ V3 does not ship until each of the following is green:
 - [ ] `docs/RECIPE_AUTHORING_WORKFLOW.md`, `SCHEMA_REFERENCE.md`, `AUTHORING_GUIDE.md`, `PROCEDURAL_SOURCES.md`, `PIPELINE_VALIDATOR_LLM_GUIDE.md` rewritten for V3.
 - [ ] `docs/templates/capabilities.toml` editorial entries match the V3 effect surface.
 - [ ] `cargo run --example demo` loads V3 recipes from the migrated corpus; optional V2 dual-load behind a feature flag per Chapter 50's transition-window semantics.
-      _Current state: `play_recipe` and `demo` can now visually render the supported direct V3 bridge subset as a static rendered snapshot, but the full browser experience is still not a native animated V3 preview path._
+      _Current state: `play_recipe` and `demo` can now visually render the supported direct V3 bridge subset with phase/sample-aware scrubbing and auto-advance, but the full browser experience is still not a native animated V3 preview path._
 - [ ] CI gates in `.github/workflows/` and `Justfile` updated to run V3 validation.
 
 Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail, and to the frozen V2 spec archive (`docs/v2-spec-archive/`) for historical reference.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.5.4</VERS> -->
+<!-- <VERS>END OF VERSION: 1.5.5</VERS> -->
