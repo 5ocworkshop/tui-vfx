@@ -43,7 +43,7 @@ implementation should be added here as they are confirmed.
 At the time of this inventory seed, the remaining non-archive `Ra*` references
 in `tui-vfx` proper are mostly:
 
-### 2.1 Planning / design docs
+### 2.1 Decision / planning docs (expected during cutover)
 
 - `docs/design/tui-vfx-v3-upgrade-plan/40_decisions.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md`
@@ -58,7 +58,11 @@ Most of these are expected because they describe either:
 - the explicit rename decision itself
 - open migration work
 
-### 2.2 Library-side code comments / rustdocs
+These should be updated only when wording genuinely becomes misleading, not by
+blind search/replace. Many mentions are correctly describing historical V2
+artifacts.
+
+### 2.2 Live library-side code comments / rustdocs (migration-bearing)
 
 - `crates/tui-vfx-types/src/recipe_id.rs`
 - `crates/tui-vfx-types/src/layer_id.rs`
@@ -66,12 +70,23 @@ Most of these are expected because they describe either:
 These are live code comments that should track the V3 direction rather than
 teaching stale names as the future target.
 
-### 2.3 Working prompts / kickoff docs
+### 2.3 Working prompts / kickoff docs (migration-bearing)
 
 - `docs/design/ai-native-tooling-kickoff-prompt.md`
 
 These should talk about the V3 naming direction while still acknowledging the
 cutover state when necessary.
+
+### 2.4 PRD / working-note references (case-by-case)
+
+- `PRD-FLAG-ANIMATION.md`
+- `URGENT_TODO.md`
+
+These are not stable API/reference docs, but they are also not historical
+archives. They need explicit review before each rename slice:
+
+- if they are describing **future** V3 surface, prefer `Vfx*`
+- if they are describing **current legacy implementation**, keep `Ra*`
 
 ---
 
@@ -84,6 +99,14 @@ archives or explicitly describe the V2 world:
 - archived migration snapshots / historical logs that are explicitly about V2
 
 Those should not be mass-renamed.
+
+This also means:
+
+- `Ra*` mentions inside quoted V2 JSON examples
+- references that are explicitly explaining V2 semantics
+
+should remain until the surrounding historical context is intentionally
+rewritten.
 
 ---
 
@@ -110,9 +133,28 @@ The rename should proceed in this order:
    - remove cutover caveats that were temporarily needed while both naming
      worlds coexisted
 
+## 5. Next concrete rename-bearing bucket
+
+The next actual rename-bearing bucket is **not** the archive or the decision
+chapters themselves.
+
+It is:
+
+1. live prompts / working docs that still frame `Ra*` as if it were the
+   future-facing vocabulary
+2. the `tui-vfx-recipes` public Rust type surface where the real rename will
+   eventually land
+
+In other words:
+
+- keep historical V2 discussion accurate
+- keep decision docs explicit about the rename
+- continue removing stale future-facing `Ra*` wording from live guidance
+- then execute the real Rust-side rename in `tui-vfx-recipes`
+
 ---
 
-## 5. Current rule during cutover
+## 6. Current rule during cutover
 
 Until the full rename lands:
 
