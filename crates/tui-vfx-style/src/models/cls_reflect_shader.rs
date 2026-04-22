@@ -1,3 +1,13 @@
+//! Reflective traveling-band / sweep shader.
+//!
+//! ## V3 family note
+//!
+//! `ReflectShader` belongs to the broader traveling-band / sweep family
+//! identified in the V3 capability catalog and style-model restructure
+//! inventory. It is currently implemented as a direct flat variant, but it is
+//! a likely candidate for future convergence with sibling sweep-style shaders
+//! such as `BorderSweep`, `GlistenBand`, `TracePropagation`, and `TracePath`.
+//!
 // <FILE>tui-vfx-style/src/models/cls_reflect_shader.rs</FILE> - <DESC>Reflect (sheen) shader implementation</DESC>
 // <VERS>VERSION: 1.0.1</VERS>
 // <WCTX>Fix shader speed bug — speed field was truncating sweep range</WCTX>

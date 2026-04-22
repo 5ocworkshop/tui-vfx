@@ -1,3 +1,13 @@
+//! Authored-path traveling-band / sweep shader.
+//!
+//! ## V3 family note
+//!
+//! `TracePathShader` belongs to the broader traveling-band / sweep family
+//! identified in the V3 capability catalog and style-model restructure
+//! inventory. It is currently implemented as a direct flat variant, but it is
+//! a likely candidate for future convergence with sibling sweep-style shaders
+//! such as `BorderSweep`, `Reflect`, `GlistenBand`, and `TracePropagation`.
+//!
 // <FILE>tui-vfx-style/src/models/cls_trace_path_shader.rs</FILE> - <DESC>TracePath shader implementation</DESC>
 // <VERS>VERSION: 1.0.0</VERS>
 // <WCTX>Introduce authored routed traces as the deterministic foundation for later auto-routing</WCTX>

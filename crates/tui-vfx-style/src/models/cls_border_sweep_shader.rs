@@ -1,3 +1,13 @@
+//! Border-focused traveling-band / sweep shader.
+//!
+//! ## V3 family note
+//!
+//! `BorderSweepShader` belongs to the broader traveling-band / sweep family
+//! identified in the V3 capability catalog and style-model restructure
+//! inventory. It is currently a direct flat-variant implementation, but it is a
+//! likely candidate for future convergence with sibling sweep-style shaders such
+//! as `Reflect`, `GlistenBand`, `TracePropagation`, and `TracePath`.
+//!
 // <FILE>tui-vfx-style/src/models/cls_border_sweep_shader.rs</FILE> - <DESC>Border sweep shader implementation</DESC>
 // <VERS>VERSION: 1.1.2</VERS>
 // <WCTX>Fix sticky wrap/corner artifacts in border sweeps. The old perimeter unwrap used an approximate position formula that could assign left-edge cells positions beyond the perimeter, making them light at the wrong time and creating visible end-of-loop stickiness.</WCTX>

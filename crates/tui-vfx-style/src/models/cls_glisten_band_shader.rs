@@ -1,3 +1,13 @@
+//! Glisten-band traveling-band / sweep shader.
+//!
+//! ## V3 family note
+//!
+//! `GlistenBandShader` belongs to the broader traveling-band / sweep family
+//! identified in the V3 capability catalog and style-model restructure
+//! inventory. It is currently implemented as a direct flat variant, but it is
+//! a likely candidate for future convergence with sibling sweep-style shaders
+//! such as `BorderSweep`, `Reflect`, `TracePropagation`, and `TracePath`.
+//!
 // <FILE>tui-vfx-style/src/models/cls_glisten_band_shader.rs</FILE> - <DESC>GlistenBand shader implementation</DESC>
 // <VERS>VERSION: 2.2.0</VERS>
 // <WCTX>Phase 0 P0.A followup — reconnect the vestigial speed field so it modulates the t-driven sweep rate, then add speed_binding for per-frame runtime overrides</WCTX>

@@ -1,3 +1,13 @@
+//! Routed traveling-band / sweep shader over inferred lanes.
+//!
+//! ## V3 family note
+//!
+//! `TracePropagationShader` belongs to the broader traveling-band / sweep
+//! family identified in the V3 capability catalog and style-model restructure
+//! inventory. It is currently implemented as a direct flat variant, but it is
+//! a likely candidate for future convergence with sibling sweep-style shaders
+//! such as `BorderSweep`, `Reflect`, `GlistenBand`, and `TracePath`.
+//!
 // <FILE>tui-vfx-style/src/models/cls_trace_propagation_shader.rs</FILE> - <DESC>TracePropagation shader implementation</DESC>
 // <VERS>VERSION: 1.0.0</VERS>
 // <WCTX>Introduce orthogonal signal-flow visualization for schematic and PCB-inspired themes</WCTX>
