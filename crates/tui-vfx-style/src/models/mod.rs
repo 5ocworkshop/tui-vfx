@@ -142,6 +142,7 @@ pub use v3::{
     VfxAffordanceWakeZone, VfxConcealedLightMode, VfxConcealedLightSource, VfxDiffusionMode,
     VfxDiffusionSource, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxGuidanceCueShader,
     VfxMaterialLightApplyTo, VfxMaterialLightBehavior, VfxMaterialLightShader,
+    VfxMotionFieldBehavior, VfxMotionFieldDirection, VfxMotionFieldShader,
     VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
     VfxProgressEmphasisRowMask, VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast,
     VfxSurfaceDepthBehavior, VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection,
