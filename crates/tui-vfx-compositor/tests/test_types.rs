@@ -5,6 +5,8 @@
 
 #[path = "types/test_bindable_value.rs"]
 mod test_bindable_value;
+#[path = "types/test_composition_options.rs"]
+mod test_composition_options;
 #[path = "types/test_composition_spec.rs"]
 mod test_composition_spec;
 #[path = "types/test_filter_spec.rs"]

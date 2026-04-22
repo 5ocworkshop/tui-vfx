@@ -39,6 +39,7 @@ pub fn render_pipeline_with_spec(
         shader_layers.push(ShaderWithRegion {
             shader: shader_ref,
             region: layer.region.clone(),
+            v3_family: Some(layer.v3_shader_family()),
         });
     }
 

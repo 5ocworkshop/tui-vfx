@@ -12,7 +12,7 @@ use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
 use std::borrow::Cow;
 use std::sync::Arc;
-use tui_vfx_style::models::StyleRegion;
+use tui_vfx_style::models::{StyleRegion, VfxSpatialShaderFamily};
 use tui_vfx_style::traits::{ShaderRuntimeParams, StyleShader};
 use tui_vfx_types::Rect;
 
@@ -21,6 +21,9 @@ use tui_vfx_types::Rect;
 pub struct ShaderWithRegion<'a> {
     pub shader: &'a dyn StyleShader,
     pub region: StyleRegion,
+    /// Optional grouped V3 family identity when this layer came through a
+    /// lowering-aware construction seam.
+    pub v3_family: Option<VfxSpatialShaderFamily>,
 }
 
 /// Composition options with full spec support.
@@ -177,7 +180,11 @@ impl<'a> CompositionOptions<'a> {
 
     /// Add a shader with its region constraint.
     pub fn with_shader_layer(mut self, shader: &'a dyn StyleShader, region: StyleRegion) -> Self {
-        self.shader_layers.push(ShaderWithRegion { shader, region });
+        self.shader_layers.push(ShaderWithRegion {
+            shader,
+            region,
+            v3_family: None,
+        });
         self
     }
 
@@ -203,6 +210,15 @@ impl<'a> CompositionOptions<'a> {
     pub fn with_runtime_params(mut self, runtime_params: Arc<ShaderRuntimeParams>) -> Self {
         self.runtime_params = runtime_params;
         self
+    }
+
+    /// Returns the grouped V3 family form for shader layers that were built
+    /// through a lowering-aware seam.
+    pub fn v3_shader_families(&self) -> Vec<VfxSpatialShaderFamily> {
+        self.shader_layers
+            .iter()
+            .filter_map(|layer| layer.v3_family.clone())
+            .collect()
     }
 
     /// Control whether unfilled cells preserve destination content.
