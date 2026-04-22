@@ -4,7 +4,7 @@
 // <CLOG>0.2.0: add grouped-V3 construction coverage through CompositionSpec::try_push_v3_shader_family and CompositionSpec::try_with_v3_shader_family.
 // Add coverage for CompositionSpec::v3_shader_families across empty, primitive, and composed shader-layer sets.</CLOG>
 
-use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec};
+use tui_vfx_compositor::pipeline::{CompositionPlaybackTiming, CompositionSpec, ShaderLayerSpec};
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, GlowShader, SpatialShaderType, StyleRegion,
     VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
@@ -74,6 +74,21 @@ fn composition_spec_can_append_grouped_v3_shader_family_via_builder() {
         .expect("lowers");
 
     assert_eq!(spec.v3_shader_families(), vec![family]);
+}
+
+#[test]
+fn composition_spec_can_apply_shared_playback_timing() {
+    let timing = CompositionPlaybackTiming::new(
+        1.5,
+        Some(1.2),
+        Some(mixed_signals::traits::Phase::Active),
+    );
+    let mut spec = CompositionSpec::default();
+    spec.apply_playback_timing(timing);
+
+    assert_eq!(spec.t, 1.0);
+    assert_eq!(spec.loop_t, Some(1.0));
+    assert_eq!(spec.phase, Some(mixed_signals::traits::Phase::Active));
 }
 
 // <FILE>tui-vfx-compositor/tests/types/test_composition_spec.rs</FILE> - <DESC>Tests for CompositionSpec V3 family lowering helpers</DESC>

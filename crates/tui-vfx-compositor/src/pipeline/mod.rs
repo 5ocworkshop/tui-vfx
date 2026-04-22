@@ -4,6 +4,7 @@
 // <CLOG>Add cls_prepare_context module holding the per-frame PrepareContext bundle</CLOG>
 
 pub mod cls_composition_options;
+pub mod cls_composition_playback_timing;
 pub mod cls_composition_spec;
 mod cls_prepare_context;
 mod cls_prepared_filter;
@@ -19,6 +20,7 @@ pub mod orc_render_pipeline;
 
 pub use crate::types::ShadowSpec;
 pub use cls_composition_options::{CompositionOptions, ShaderWithRegion};
+pub use cls_composition_playback_timing::CompositionPlaybackTiming;
 pub use cls_composition_spec::CompositionSpec;
 pub use cls_render_area::RenderArea;
 pub use cls_shader_layer_spec::ShaderLayerSpec;

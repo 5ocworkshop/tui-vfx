@@ -6,6 +6,7 @@
 // 0.4.0: MAJOR — new signature carries `source_roles: &RoleMap` after `source`, and destination becomes `&mut SemanticScene` (was `&mut dyn Grid`). Callers without role information reach for `RoleMap::all_background(w, h)` and `SemanticScene::from_grid_with_default_role(grid, RoleTag::Background)`.</CLOG>
 
 use crate::pipeline::cls_composition_options::{CompositionOptions, ShaderWithRegion};
+use crate::pipeline::cls_composition_playback_timing::CompositionPlaybackTiming;
 use crate::pipeline::cls_composition_spec::CompositionSpec;
 use crate::pipeline::orc_render_pipeline::render_pipeline;
 use crate::traits::pipeline_inspector::CompositorInspector;
@@ -57,11 +58,14 @@ pub fn render_pipeline_with_spec(
         shadow: spec.shadow.clone(),
         shadow_element_rect: None,
         preserve_unfilled: spec.preserve_unfilled,
-        t: spec.t,
-        loop_t: spec.loop_t,
-        phase: spec.phase,
         runtime_params: spec.runtime_params.clone().into(),
-    };
+        ..Default::default()
+    }
+    .with_playback_timing(CompositionPlaybackTiming::new(
+        spec.t,
+        spec.loop_t,
+        spec.phase,
+    ));
 
     render_pipeline(
         source,

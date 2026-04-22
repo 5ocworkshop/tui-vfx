@@ -19,6 +19,7 @@ use tui_vfx_style::models::{
 };
 use tui_vfx_style::traits::{ShaderRuntimeParams, StyleShader};
 use tui_vfx_types::Rect;
+use super::cls_composition_playback_timing::CompositionPlaybackTiming;
 
 /// A shader paired with its region constraint.
 /// Each shader can target a different region (e.g., BorderOnly, TextOnly, Rows).
@@ -66,6 +67,21 @@ impl<'a> ShaderWithRegion<'a> {
                 shader_index + 1
             ),
         }
+    }
+}
+
+impl<'a> CompositionOptions<'a> {
+    /// Apply one shared playback timing bundle to these composition options.
+    pub fn apply_playback_timing(&mut self, timing: CompositionPlaybackTiming) {
+        self.t = timing.t;
+        self.loop_t = timing.loop_t;
+        self.phase = timing.phase;
+    }
+
+    /// Convenience builder for attaching shared playback timing.
+    pub fn with_playback_timing(mut self, timing: CompositionPlaybackTiming) -> Self {
+        self.apply_playback_timing(timing);
+        self
     }
 }
 

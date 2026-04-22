@@ -5,7 +5,9 @@
 // <CLOG>0.3.0: add grouped-V3 shader-family constructors so serializable composition specs can be built directly from grouped spatial families during cutover.
 // Include shadow/preserve_unfilled fields for spec parity</CLOG>
 
-use crate::pipeline::cls_shader_layer_spec::ShaderLayerSpec;
+use crate::pipeline::{
+    cls_composition_playback_timing::CompositionPlaybackTiming, cls_shader_layer_spec::ShaderLayerSpec,
+};
 use crate::types::{FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, ShadowSpec};
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
@@ -84,6 +86,18 @@ impl Default for CompositionSpec {
 }
 
 impl CompositionSpec {
+    /// Apply one shared playback timing bundle to this composition spec.
+    pub fn apply_playback_timing(&mut self, timing: CompositionPlaybackTiming) {
+        self.t = timing.t;
+        self.loop_t = timing.loop_t;
+        self.phase = timing.phase;
+    }
+
+    /// Convenience builder for attaching shared playback timing.
+    pub fn with_playback_timing(mut self, timing: CompositionPlaybackTiming) -> Self {
+        self.apply_playback_timing(timing);
+        self
+    }
 
     /// Push one grouped V3 spatial family into this composition spec by
     /// lowering it through the executable legacy shader surface.

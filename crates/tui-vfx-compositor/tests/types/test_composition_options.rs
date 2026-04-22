@@ -4,7 +4,7 @@
 // <CLOG>0.2.0: add grouped-V3 runtime-construction coverage through ShaderWithRegion::try_from_v3_shader_family and CompositionOptions::try_with_v3_shader_family.
 // Add coverage for CompositionOptions::v3_shader_families across unknown and known shader-layer construction paths.</CLOG>
 
-use tui_vfx_compositor::pipeline::{CompositionOptions, ShaderWithRegion};
+use tui_vfx_compositor::pipeline::{CompositionOptions, CompositionPlaybackTiming, ShaderWithRegion};
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, GlowShader, StyleRegion, VfxSpatialComposedPrimitive,
     VfxSpatialPrimitive, VfxSpatialShaderFamily,
@@ -85,6 +85,20 @@ fn shader_with_region_can_build_from_grouped_v3_family() {
 
     assert_eq!(layer.v3_family, Some(family));
     assert_eq!(layer.shader_label.as_deref(), Some("BorderSweep"));
+}
+
+#[test]
+fn composition_options_can_apply_shared_playback_timing() {
+    let timing = CompositionPlaybackTiming::new(
+        1.3,
+        Some(1.4),
+        Some(mixed_signals::traits::Phase::End),
+    );
+    let options = CompositionOptions::default().with_playback_timing(timing);
+
+    assert_eq!(options.t, 1.0);
+    assert_eq!(options.loop_t, Some(1.0));
+    assert_eq!(options.phase, Some(mixed_signals::traits::Phase::End));
 }
 
 // <FILE>tui-vfx-compositor/tests/types/test_composition_options.rs</FILE> - <DESC>Tests for CompositionOptions V3 family exposure helpers</DESC>
