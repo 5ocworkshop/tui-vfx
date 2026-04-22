@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.5.1</VERS> -->
+<!-- <VERS>VERSION: 1.5.2</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md).</WCTX> -->
-<!-- <CLOG>1.5.1: record that direct validator/recipe probe lifecycle analysis now preserves grouped effect/shader family labels alongside concrete effect names.
+<!-- <CLOG>1.5.2: record that the legacy play_recipe visual surface now prefers a direct rendered V3 snapshot for the supported compiled bridge subset before falling back to paired legacy fixtures.
+1.5.1: record that direct validator/recipe probe lifecycle analysis now preserves grouped effect/shader family labels alongside concrete effect names.
 1.5.0: record that the first scene-bearing direct V3 subset now also supports bridgeable layer-local scene pipelines through the shared scene-source builder.
 1.4.0: record that the direct recipe-probe V3 bridge now also emits operational and motion analysis for timeline-capable runs within the supported subset.
 1.3.0: record that recipe-probe now also accepts the supported compiled V3 bridge subset, producing direct ProbeSceneSpec evidence without forcing every V3 probe request through paired legacy fallback.
@@ -126,6 +127,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - one helper that can bridge a current V3 recipe path through its paired `_DEPRECATED_` legacy fixture when a legacy runtime surface still needs to operate
 - **Customer-facing preview/demo seam**
   - the public demo/player and diagnostic example players now route through an upstream cutover-aware preview helper instead of assembling transitional policy at the call sites
+  - `play_recipe` now prefers a direct rendered V3 snapshot for the supported compiled bridge subset before falling back to paired legacy fixtures; `demo` is still on the transitional preview-manager path and has not yet absorbed the same direct visual V3 subset
 - **Reporting/tool surfaces**
   - `pipeline-validator`
   - `recipe-probe`
@@ -179,9 +181,10 @@ V3 does not ship until each of the following is green:
 - [ ] `docs/RECIPE_AUTHORING_WORKFLOW.md`, `SCHEMA_REFERENCE.md`, `AUTHORING_GUIDE.md`, `PROCEDURAL_SOURCES.md`, `PIPELINE_VALIDATOR_LLM_GUIDE.md` rewritten for V3.
 - [ ] `docs/templates/capabilities.toml` editorial entries match the V3 effect surface.
 - [ ] `cargo run --example demo` loads V3 recipes from the migrated corpus; optional V2 dual-load behind a feature flag per Chapter 50's transition-window semantics.
+      _Current state: `play_recipe` can now visually render the supported direct V3 bridge subset as a static rendered snapshot, but the full browser demo is still on the older cutover/legacy preview path._
 - [ ] CI gates in `.github/workflows/` and `Justfile` updated to run V3 validation.
 
 Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail, and to the frozen V2 spec archive (`docs/v2-spec-archive/`) for historical reference.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.5.1</VERS> -->
+<!-- <VERS>END OF VERSION: 1.5.2</VERS> -->
