@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>VERSION: 2.3.0</VERS>
+// <VERS>VERSION: 2.4.0</VERS>
 // <WCTX>Sub-plan A Phase A.2 audit-1 remediation — register two additional `fnc_style_region_*` sibling modules that carry the custom Deserialize impl and the hand-written ConfigSchema impl extracted from cls_style_region.rs</WCTX>
-// <CLOG>2.3.0: MINOR — register fnc_style_region_deserialize and fnc_style_region_schema modules. The Rust impls are global at module scope, so merely declaring the modules is sufficient for them to take effect; no additional re-exports are needed.
+// <CLOG>2.4.0: expose the first real V3-side family surface under models::v3 and re-export the traveling-band family types while the legacy flat shader surface remains intact for cutover.
+// 2.3.0: MINOR — register fnc_style_region_deserialize and fnc_style_region_schema modules. The Rust impls are global at module scope, so merely declaring the modules is sufficient for them to take effect; no additional re-exports are needed.
 // 2.2.0: MINOR — register fnc_style_region_should_style and fnc_style_region_bounding_rect modules so callers can invoke the predicates as free functions (or reach them via the delegating methods on StyleRegion).
 // 2.1.0: Register cls_cursor_shader module and public re-exports for CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail</CLOG>
 
@@ -19,6 +20,11 @@
 //! - `docs/design/tui-vfx-v3-upgrade-plan/40_decisions.md` (Decision 2)
 //! - `docs/design/tui-vfx-v3-capability-catalog.md`
 //! - `docs/design/tui-vfx-v3-style-model-restructure-inventory.md`
+//!
+//! Real V3-side family files now live under [`crate::models::v3`]. Those
+//! parallel modules should grow as each family is actively migrated, while the
+//! legacy flat surface remains available for current playback and cutover
+//! compatibility.
 
 pub mod cls_affordance_wake_shader;
 pub mod cls_ambient_occlusion_shader;
@@ -62,15 +68,16 @@ pub mod cls_style_effect;
 pub mod cls_style_layer;
 pub mod cls_style_region;
 pub mod cls_style_transition;
-pub mod fnc_style_region_bounding_rect;
-pub mod fnc_style_region_deserialize;
-pub mod fnc_style_region_schema;
-pub mod fnc_style_region_should_style;
 pub mod cls_sub_cell_shake_shader;
 pub mod cls_trace_common;
 pub mod cls_trace_path_shader;
 pub mod cls_trace_propagation_shader;
 pub mod cls_wayfinding_node_shader;
+pub mod fnc_style_region_bounding_rect;
+pub mod fnc_style_region_deserialize;
+pub mod fnc_style_region_schema;
+pub mod fnc_style_region_should_style;
+pub mod v3;
 
 #[cfg(test)]
 pub(crate) mod test_support;
@@ -131,6 +138,10 @@ pub use cls_trace_path_shader::TracePathShader;
 pub use cls_trace_propagation_shader::TracePropagationShader;
 pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader};
 pub use tui_vfx_geometry::easing::EasingType;
+pub use v3::{
+    VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
+    VfxTravelingBandDirection, VfxTravelingBandShader,
+};
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>END OF VERSION: 2.2.0</VERS>
+// <VERS>END OF VERSION: 2.4.0</VERS>
