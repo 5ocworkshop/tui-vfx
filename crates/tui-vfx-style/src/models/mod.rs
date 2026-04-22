@@ -139,8 +139,9 @@ pub use cls_trace_propagation_shader::TracePropagationShader;
 pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader};
 pub use tui_vfx_geometry::easing::EasingType;
 pub use v3::{
-    VfxAffordanceWakeZone, VfxConcealedLightMode, VfxConcealedLightSource, VfxDiffusionMode,
-    VfxDiffusionSource, VfxEdgeDistortionAxis, VfxEdgeDistortionBehavior, VfxEdgeDistortionShader,
+    VfxAffordanceWakeZone, VfxConcealedLightMode, VfxConcealedLightSource, VfxCursorMode,
+    VfxCursorPrimary, VfxCursorShader, VfxCursorTrail, VfxDiffusionMode, VfxDiffusionSource,
+    VfxEdgeDistortionAxis, VfxEdgeDistortionBehavior, VfxEdgeDistortionShader,
     VfxGradientRevealBehavior, VfxGradientRevealShader, VfxGuidanceCueApplyTo,
     VfxGuidanceCueBehavior, VfxGuidanceCueShader, VfxMaterialLightApplyTo,
     VfxMaterialLightBehavior, VfxMaterialLightShader, VfxMotionFieldBehavior,
