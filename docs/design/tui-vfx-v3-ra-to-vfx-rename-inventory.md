@@ -77,16 +77,15 @@ teaching stale names as the future target.
 These should talk about the V3 naming direction while still acknowledging the
 cutover state when necessary.
 
-### 2.4 PRD / working-note references (case-by-case)
+### 2.4 Retired working notes
 
-- `PRD-FLAG-ANIMATION.md`
-- `URGENT_TODO.md`
+Previously-active working notes such as the flag-animation PRD and the old
+urgent TODO have now been retired into:
 
-These are not stable API/reference docs, but they are also not historical
-archives. They need explicit review before each rename slice:
+- `recyclebin/docs/design/PRD-FLAG-ANIMATION.md`
+- `recyclebin/docs/design/URGENT_TODO.md`
 
-- if they are describing **future** V3 surface, prefer `Vfx*`
-- if they are describing **current legacy implementation**, keep `Ra*`
+They are no longer part of the active rename-bearing bucket.
 
 ---
 
