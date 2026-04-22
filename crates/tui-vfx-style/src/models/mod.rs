@@ -139,12 +139,13 @@ pub use cls_trace_propagation_shader::TracePropagationShader;
 pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader};
 pub use tui_vfx_geometry::easing::EasingType;
 pub use v3::{
-    VfxConcealedLightMode, VfxConcealedLightSource, VfxDiffusionMode, VfxDiffusionSource,
+    VfxAffordanceWakeZone, VfxConcealedLightMode, VfxConcealedLightSource, VfxDiffusionMode,
+    VfxDiffusionSource, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxGuidanceCueShader,
     VfxMaterialLightApplyTo, VfxMaterialLightBehavior, VfxMaterialLightShader,
     VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
     VfxProgressEmphasisRowMask, VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast,
     VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
-    VfxTravelingBandDirection, VfxTravelingBandShader,
+    VfxTravelingBandDirection, VfxTravelingBandShader, VfxWayfindingNode,
 };
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
