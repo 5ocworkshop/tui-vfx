@@ -40,6 +40,7 @@ pub fn render_pipeline_with_spec(
             shader: shader_ref,
             region: layer.region.clone(),
             v3_family: Some(layer.v3_shader_family()),
+            shader_label: Some(layer.shader.name().to_string()),
         });
     }
 
