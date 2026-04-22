@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.15.0</VERS> -->
+<!-- <VERS>VERSION: 1.16.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.15.0: record that CompositionSpec can now accept grouped V3 spatial families directly via serializable runtime constructors.
+<!-- <CLOG>1.16.0: record that recipe probe-spec construction now consumes grouped V3 spatial family constructors directly for spatial style effects and cursor shaders.
+1.15.0: record that CompositionSpec can now accept grouped V3 spatial families directly via serializable runtime constructors.
 1.14.0: record that CompositionOptions can now accept grouped V3 spatial families directly via runtime-facing constructors.
 1.13.0: record the first grouped-V3-to-legacy reverse lowering seam plus a runtime-facing ShaderLayerSpec constructor for grouped spatial families.
 1.12.0: record that operational analysis and sqlite-backed probe analysis rows now carry grouped V3 style-effect family labels.
@@ -243,6 +244,7 @@ Outstanding style-model buckets for follow-on slices:
     - [x] grouped V3 spatial families can lower back into executable legacy shaders via ShaderLayerSpec::try_from_v3_shader_family()
     - [x] CompositionOptions can accept grouped V3 spatial families directly via runtime-facing constructors
     - [x] CompositionSpec can accept grouped V3 spatial families directly via serializable runtime constructors
+    - [x] recipe probe-spec construction consumes grouped V3 spatial family constructors directly
   - [~] broader runtime wiring against `models::v3` family surfaces
     - [x] first compiled-plan -> CompositionSpec bridge in `tui-vfx-recipes`
     - [x] deterministic V3 demo example run for a valid shader recipe
@@ -264,4 +266,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.15.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.16.0</VERS> -->
