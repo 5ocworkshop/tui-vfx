@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.6.0</VERS> -->
+<!-- <VERS>VERSION: 1.6.1</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md).</WCTX> -->
-<!-- <CLOG>1.6.0: record that the direct compiled-V3 visual bridge now renders border-aware source surfaces and honors base_style_override steps, unblocking representative complex scoped recipes in the preferred playback path.
+<!-- <CLOG>1.6.1: record that the direct scene bridge now preserves authored scene visibility and z-order semantics, so representative scene-bearing playback stays on the preferred audit path.
+1.6.0: record that the direct compiled-V3 visual bridge now renders border-aware source surfaces and honors base_style_override steps, unblocking representative complex scoped recipes in the preferred playback path.
 1.5.9: record that the direct compiled-V3 visual bridge now honors top-level base_style and text-role targeting, so baseline/text-scoped recipes are closer to intended playback in the preferred audit surface.
 1.5.8: record that the direct compiled-V3 visual bridge now also honors top-level content effects, so the preferred playback path advances beyond raw message text toward fuller recipe semantics.
 1.5.7: record that the direct compiled-V3 visual bridge now also applies non-spatial style effects, so the preferred playback path is no longer spatial-only.
@@ -142,6 +143,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - the direct visual bridge now also honors top-level content effects (for example typewriter/marquee-style text transformations), so recipe playback is no longer limited to raw static message text
   - the same bridge now also honors top-level base_style and marks text cells with semantic roles, so baseline recipes and `content.text`-scoped playback are closer to intended behavior in demo/play_recipe
   - the direct source surface is now border-aware and the bridge honors `base_style_override` steps too, which unblocks representative complex scoped recipes such as `complex_layered_shaders` and `complex_diamond_highlight` in the preferred playback path
+  - the direct scene bridge now preserves authored scene-layer visibility and z-order semantics, so representative scene-bearing recipes can stay on the same preferred audit surfaces instead of falling back to external reconstruction
   - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`
@@ -202,4 +204,4 @@ V3 does not ship until each of the following is green:
 Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail, and to the frozen V2 spec archive (`docs/v2-spec-archive/`) for historical reference.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.6.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.6.1</VERS> -->
