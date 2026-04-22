@@ -1,10 +1,13 @@
 // <FILE>tui-vfx-style/src/models/v3/test_try_lower_v3_spatial_shader_family.rs</FILE> - <DESC>Focused tests for grouped V3 spatial families lowering back into the legacy runtime surface</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Decision 2 runtime follow-on — prove grouped V3 spatial shader families can lower back into the current executable legacy shader surface for representative primitive and composed families.</WCTX>
-// <CLOG>0.1.0: add grouped-V3-to-legacy lowering coverage plus one explicit unsupported-color-policy case.</CLOG>
+// <CLOG>0.2.0: broaden grouped-V3-to-legacy lowering coverage across representative primitive and composed family clusters.
+// 0.1.0: add grouped-V3-to-legacy lowering coverage plus one explicit unsupported-color-policy case.</CLOG>
 
 use crate::models::{
-    BorderSweepShader, GlowShader, HighlighterShader, SpatialShaderType,
+    BarberPoleShader, BorderSweepShader, CursorShader, DiffusionShader, FocusedRowGradientShader,
+    GlitchLinesShader, GlowShader, Gradient, HighlighterShader, LinearGradientShader,
+    NeonFlickerShader, PulseWaveShader, SpatialShaderType,
 };
 use crate::models::v3::{VfxSpatialShaderFamily, try_lower_v3_spatial_shader_family};
 
@@ -32,6 +35,75 @@ fn roundtrips_traveling_band_border_family_back_to_legacy_shader() {
     assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
 }
 
+
+#[test]
+fn roundtrips_material_light_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::Diffusion(DiffusionShader::default());
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
+
+#[test]
+fn roundtrips_guidance_cue_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader::default());
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
+
+#[test]
+fn roundtrips_motion_field_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::PulseWave(PulseWaveShader::default());
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
+
+#[test]
+fn roundtrips_edge_distortion_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::GlitchLines(GlitchLinesShader::default());
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
+
+#[test]
+fn roundtrips_gradient_reveal_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::LinearGradient(LinearGradientShader::new(Gradient::default()));
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
+
+#[test]
+fn roundtrips_stochastic_texture_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::NeonFlicker(NeonFlickerShader::default());
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
+
+#[test]
+fn roundtrips_cursor_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::Cursor(CursorShader::default());
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
+
+#[test]
+fn roundtrips_stripe_motion_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::BarberPole(BarberPoleShader {
+        speed: 1.0,
+        stripe_width: 2,
+        gap_width: 2,
+        color: crate::models::ColorConfig::Red,
+    });
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
 #[test]
 fn rejects_unrepresentable_traveling_band_color_policy_for_border_variant() {
     let mut family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&SpatialShaderType::BorderSweep(BorderSweepShader::default()));
@@ -46,4 +118,4 @@ fn rejects_unrepresentable_traveling_band_color_policy_for_border_variant() {
 }
 
 // <FILE>tui-vfx-style/src/models/v3/test_try_lower_v3_spatial_shader_family.rs</FILE> - <DESC>Focused tests for grouped V3 spatial families lowering back into the legacy runtime surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
