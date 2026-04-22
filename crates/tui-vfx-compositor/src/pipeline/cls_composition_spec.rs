@@ -1,14 +1,15 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_composition_spec.rs</FILE>
 // <DESC>Serializable composition spec for render pipeline</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Add shadow and preserve_unfilled to CompositionSpec</WCTX>
-// <CLOG>Include shadow/preserve_unfilled fields for spec parity</CLOG>
+// <CLOG>0.3.0: add grouped-V3 shader-family constructors so serializable composition specs can be built directly from grouped spatial families during cutover.
+// Include shadow/preserve_unfilled fields for spec parity</CLOG>
 
 use crate::pipeline::cls_shader_layer_spec::ShaderLayerSpec;
 use crate::types::{FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, ShadowSpec};
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
-use tui_vfx_style::models::VfxSpatialShaderFamily;
+use tui_vfx_style::models::{TryLowerV3SpatialShaderError, VfxSpatialShaderFamily};
 use tui_vfx_style::traits::ShaderRuntimeParams;
 
 /// Serializable composition specification for render pipeline bindings.
@@ -83,6 +84,29 @@ impl Default for CompositionSpec {
 }
 
 impl CompositionSpec {
+
+    /// Push one grouped V3 spatial family into this composition spec by
+    /// lowering it through the executable legacy shader surface.
+    pub fn try_push_v3_shader_family(
+        &mut self,
+        family: &VfxSpatialShaderFamily,
+        region: tui_vfx_style::models::StyleRegion,
+    ) -> Result<(), TryLowerV3SpatialShaderError> {
+        self.shader_layers
+            .push(ShaderLayerSpec::try_from_v3_shader_family(family, region)?);
+        Ok(())
+    }
+
+    /// Convenience builder for appending one grouped V3 spatial family.
+    pub fn try_with_v3_shader_family(
+        mut self,
+        family: &VfxSpatialShaderFamily,
+        region: tui_vfx_style::models::StyleRegion,
+    ) -> Result<Self, TryLowerV3SpatialShaderError> {
+        self.try_push_v3_shader_family(family, region)?;
+        Ok(self)
+    }
+
     /// Returns the grouped V3 family form of every spatial shader layer in this
     /// composition spec.
     pub fn v3_shader_families(&self) -> Vec<VfxSpatialShaderFamily> {
@@ -99,4 +123,4 @@ fn default_preserve_unfilled() -> bool {
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_composition_spec.rs</FILE>
 // <DESC>Serializable composition spec for render pipeline</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

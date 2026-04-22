@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/tests/types/test_composition_spec.rs</FILE> - <DESC>Tests for CompositionSpec V3 family lowering helpers</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>First runtime-facing wiring slice for the central style-family seam — ensure composition specs can expose grouped V3 families without changing the legacy execution path.</WCTX>
-// <CLOG>Add coverage for CompositionSpec::v3_shader_families across empty, primitive, and composed shader-layer sets.</CLOG>
+// <CLOG>0.2.0: add grouped-V3 construction coverage through CompositionSpec::try_push_v3_shader_family and CompositionSpec::try_with_v3_shader_family.
+// Add coverage for CompositionSpec::v3_shader_families across empty, primitive, and composed shader-layer sets.</CLOG>
 
 use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec};
 use tui_vfx_style::models::{
@@ -48,5 +49,32 @@ fn composition_spec_exposes_mixed_v3_shader_families() {
     ));
 }
 
+
+#[test]
+fn composition_spec_can_push_grouped_v3_shader_family() {
+    let family = VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::SurfaceDepth((&GlowShader::default()).into()));
+    let mut spec = CompositionSpec::default();
+    spec.try_push_v3_shader_family(&family, StyleRegion::All).expect("lowers");
+
+    assert_eq!(spec.v3_shader_families(), vec![family]);
+}
+
+#[test]
+fn composition_spec_can_append_grouped_v3_shader_family_via_builder() {
+    let border = BorderSweepShader {
+        speed: 1.0,
+        length: 3,
+        color: ColorConfig::Red,
+        position_binding: None,
+    };
+    let family = VfxSpatialShaderFamily::ComposedPrimitive(VfxSpatialComposedPrimitive::TravelingBand((&border).into()));
+
+    let spec = CompositionSpec::default()
+        .try_with_v3_shader_family(&family, StyleRegion::All)
+        .expect("lowers");
+
+    assert_eq!(spec.v3_shader_families(), vec![family]);
+}
+
 // <FILE>tui-vfx-compositor/tests/types/test_composition_spec.rs</FILE> - <DESC>Tests for CompositionSpec V3 family lowering helpers</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
