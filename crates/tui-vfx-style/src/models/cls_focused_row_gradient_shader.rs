@@ -1,3 +1,12 @@
+//! Focused-row gradient shader — likely an earned named factory/composition.
+//!
+//! ## V3 family note
+//!
+//! `FocusedRowGradientShader` is currently a direct flat variant in the live
+//! style surface, but the V3 capability catalog and style-model restructure
+//! inventory classify it as a likely earned named factory/composition rather
+//! than a forever-flat primitive leaf.
+//!
 // <FILE>tui-vfx-style/src/models/cls_focused_row_gradient_shader.rs</FILE> - <DESC>btop-inspired focused row gradient shader</DESC>
 // <VERS>VERSION: 1.2.0</VERS>
 // <WCTX>Adding screen coordinate context to shaders</WCTX>

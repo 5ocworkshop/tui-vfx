@@ -1,3 +1,12 @@
+//! Wayfinding-node shader — likely an earned named factory/composition.
+//!
+//! ## V3 family note
+//!
+//! `WayfindingNodeShader` is currently a direct flat variant in the live style
+//! surface, but the V3 capability catalog and style-model restructure inventory
+//! classify it as a likely earned named factory/composition rather than a
+//! forever-flat primitive leaf.
+//!
 // <FILE>crates/tui-vfx-style/src/models/cls_wayfinding_node_shader.rs</FILE> - <DESC>Calm node-based wayfinding shader for breadcrumbs, steps, and junction emphasis</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>Introduce a practical application-oriented node guidance primitive distinct from routed signal traces</WCTX>

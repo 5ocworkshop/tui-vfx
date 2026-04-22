@@ -1,3 +1,12 @@
+//! Affordance-wake shader — likely an earned named factory/composition.
+//!
+//! ## V3 family note
+//!
+//! `AffordanceWakeShader` is currently a direct flat variant in the live style
+//! surface, but the V3 capability catalog and style-model restructure inventory
+//! classify it as a likely earned named factory/composition rather than a
+//! forever-flat primitive leaf.
+//!
 // <FILE>crates/tui-vfx-style/src/models/cls_affordance_wake_shader.rs</FILE> - <DESC>Latent affordance wake shader for dormant-to-active edge, corner, and rail cues</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>Introduce a low-noise reveal-on-need primitive for secondary affordances</WCTX>

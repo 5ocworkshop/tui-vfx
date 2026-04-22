@@ -1,3 +1,12 @@
+//! Edge-sheen shader — likely an earned named factory/composition.
+//!
+//! ## V3 family note
+//!
+//! `EdgeSheenShader` is currently a direct flat variant in the live style
+//! surface, but the V3 capability catalog and style-model restructure inventory
+//! classify it as a likely earned named factory/composition rather than a
+//! forever-flat primitive leaf.
+//!
 // <FILE>tui-vfx-style/src/models/cls_edge_sheen_shader.rs</FILE> - <DESC>EdgeSheen shader implementation</DESC>
 // <VERS>VERSION: 1.0.0</VERS>
 // <WCTX>Introduce a calmer premium shell sheen distinct from Reflect</WCTX>

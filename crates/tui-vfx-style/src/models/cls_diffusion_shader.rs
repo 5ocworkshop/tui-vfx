@@ -1,3 +1,12 @@
+//! Diffusion shader — likely an earned named factory/composition.
+//!
+//! ## V3 family note
+//!
+//! `DiffusionShader` is currently a direct flat variant in the live style
+//! surface, but the V3 capability catalog and style-model restructure inventory
+//! classify it as a likely earned named factory/composition rather than a
+//! forever-flat primitive leaf.
+//!
 // <FILE>crates/tui-vfx-style/src/models/cls_diffusion_shader.rs</FILE> - <DESC>Soft diffusion shader for textile, paper, and frosted material light</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>Introduce a static-first material-light diffusion primitive distinct from glow, sparkle, and flicker</WCTX>

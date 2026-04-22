@@ -1,3 +1,12 @@
+//! Concealed-light shader — likely an earned named factory/composition.
+//!
+//! ## V3 family note
+//!
+//! `ConcealedLightShader` is currently a direct flat variant in the live style
+//! surface, but the V3 capability catalog and style-model restructure inventory
+//! classify it as a likely earned named factory/composition rather than a
+//! forever-flat primitive leaf.
+//!
 // <FILE>crates/tui-vfx-style/src/models/cls_concealed_light_shader.rs</FILE> - <DESC>Concealed architectural light shader for hidden-source shell lighting</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>Introduce a static-first architectural light primitive distinct from glow, sheen, and gradients</WCTX>
