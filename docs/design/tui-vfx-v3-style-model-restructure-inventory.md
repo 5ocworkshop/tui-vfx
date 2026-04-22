@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.0.0: add the first grouped V3 gradient-reveal family so the primitive bucket is fully represented by grouped V3 subfamilies.
+<!-- <CLOG>1.1.0: add the first grouped V3 stochastic-texture family so the future-decision bucket is narrowed to the truly special-case leftovers.
+1.0.0: add the first grouped V3 gradient-reveal family so the primitive bucket is fully represented by grouped V3 subfamilies.
 0.9.0: add the first grouped V3 edge-distortion family so the remaining glitch/edge micro-treatment subgroup is also moving into real V3 code.
 0.8.0: add the first grouped V3 motion-field family so the primitive scan/pulse/orbit subgroup is also moving into real V3 code during active family work.
 0.7.0: add the first grouped V3 surface-depth family so the primitive depth/surface subgroup is also moving into real V3 code rather than waiting behind later cleanup.
@@ -126,6 +127,8 @@ the primitive/factory split is implemented:
 - `Cursor`
 - `StochasticSparkle`
 
+  Seeded subgroup in `crates/tui-vfx-style/src/models/v3/cls_vfx_stochastic_texture_shader.rs` for `NeonFlicker` + `StochasticSparkle`.
+
 ---
 
 ## 4. Recommended next code-facing slice in `tui-vfx-style`
@@ -204,8 +207,9 @@ Outstanding style-model buckets for follow-on slices:
   - completed subgroup: motion-field (`PulseWave`, `Radar`, `Orbit`)
   - completed subgroup: edge-distortion (`GlitchLines`, `ChromaticEdge`, `SubCellShake`)
   - completed subgroup: gradient-reveal (`LinearGradient`, `RevealWipe`)
-- [ ] category needing explicit future decision
-  - current candidates: `BarberPole`, `NeonFlicker`, `Cursor`, `StochasticSparkle`
+- [~] category needing explicit future decision
+  - completed subgroup: stochastic-texture (`NeonFlicker`, `StochasticSparkle`)
+  - remaining candidates: `BarberPole`, `Cursor`
 - [ ] any additional cross-family refactors needed once runtime wiring begins
   - e.g. shared builder/lowering helpers for `models::v3`
 
@@ -225,4 +229,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
