@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md).</WCTX> -->
-<!-- <CLOG>1.3.0: record that recipe-probe now also accepts the supported compiled V3 bridge subset, producing direct ProbeSceneSpec evidence without forcing every V3 probe request through paired legacy fallback.
+<!-- <CLOG>1.4.0: record that the direct recipe-probe V3 bridge now also emits operational and motion analysis for timeline-capable runs within the supported subset.
+1.3.0: record that recipe-probe now also accepts the supported compiled V3 bridge subset, producing direct ProbeSceneSpec evidence without forcing every V3 probe request through paired legacy fallback.
 1.2.0: record that tui-vfx-trace now also accepts the supported compiled V3 bridge subset, emitting real pipeline TraceReports instead of forcing every V3 trace request through legacy fallback.
 1.1.0: record that supported compiled V3 recipes now reach the deterministic compositor bridge in both the dedicated V3 demo and pipeline-validator output stage while broader V3 runtime/probe coverage remains outstanding.
 1.0.0: initial extraction from the monolith.</CLOG> -->
@@ -140,7 +141,7 @@ The current stance is:
   - the dedicated `v3_play_recipe` example
   - `pipeline-validator --stage output` for the supported bridge subset
 - supported compiled V3 plans can also reach `tui-vfx-trace` for the same bridge subset, emitting real pipeline trace envelopes without pretending full V3 preview/scene parity has already landed
-- supported compiled V3 plans can also reach `recipe-probe` for that same subset, producing direct `ProbeSceneSpec` frame/timeline/diff evidence instead of always deferring to paired legacy runtime fallback
+- supported compiled V3 plans can also reach `recipe-probe` for that same subset, producing direct `ProbeSceneSpec` frame/timeline/diff evidence and operational/motion analysis where the direct probe outputs already support it instead of always deferring to paired legacy runtime fallback
 - those bridges are explicit and temporary
 
 That distinction matters for Chapter 60’s release gates: “current V3 corpus can be inspected and audited” is **not** the same claim as “the runtime path is fully V3-native.”
@@ -154,7 +155,7 @@ V3 does not ship until each of the following is green:
 - [ ] `pipeline-validator` understands V3 and passes Chapter 60's gate criteria for the critical set.  
       _Current state: supported compiled V3 recipes now progress through parse/profile/render/shader/output and exercise the deterministic compositor bridge; rules/probe/critical-set parity remain outstanding._
 - [ ] `recipe-probe` and `tui-vfx-trace` produce V3-aware reports; trace event taxonomy finalized (Decision 5 implementation track).  
-      _Current state: both `recipe-probe` and `tui-vfx-trace` now accept the supported compiled V3 bridge subset directly; scene parity, richer probe analyses, and broader trace semantics remain outstanding._
+      _Current state: both `recipe-probe` and `tui-vfx-trace` now accept the supported compiled V3 bridge subset directly; `recipe-probe` also carries operational/motion analysis for that subset where available. Scene parity, lifecycle-analysis parity, and broader trace semantics remain outstanding._
 - [ ] `fnc_run_debug_recipes_qc.rs` passes against the V3 debug-recipes corpus.
 - [ ] `xtask docs generate` produces V3-shape `effect_schemas.json`, `capabilities.json`, `ai-context.md`, `CAPABILITIES.md`.
 - [ ] `tui-vfx-recipes` provides a repo-local `docs-v3-generate` / `docs-v3-check` path for the new `src/v3` spine until the broader generator story is unified.
@@ -166,4 +167,4 @@ V3 does not ship until each of the following is green:
 Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail, and to the frozen V2 spec archive (`docs/v2-spec-archive/`) for historical reference.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->
