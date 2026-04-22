@@ -5,6 +5,7 @@
 // 12.0.0: MAJOR signature change for role-aware targeting.</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
+use super::cls_composition_playback_timing::CompositionPlaybackTiming;
 use super::cls_prepare_context::PrepareContext;
 use super::cls_prepared_filter::{PreparedFilter, prepare_filters};
 use super::cls_prepared_mask::{PreparedMask, prepare_masks};
@@ -90,9 +91,10 @@ pub fn render_pipeline(
     }
 
     // SLOW PATH: Effects are active
+    let timing = CompositionPlaybackTiming::from_options(&options);
     let sampler = prepare_sampler(options.t, &options.sampler_spec);
     let prepared_masks = prepare_masks(options.masks.as_ref());
-    let loop_t = options.loop_t.unwrap_or(options.t);
+    let loop_t = timing.effective_loop_t();
     let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
     let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
 
@@ -226,11 +228,12 @@ fn render_pipeline_with_shadow(
     let shadow_only_buffer = buffer.clone();
 
     // Prepare effects for element rendering
+    let timing = CompositionPlaybackTiming::from_options(&options);
     let sampler = prepare_sampler(options.t, &options.sampler_spec);
-    let loop_t = options.loop_t.unwrap_or(options.t);
+    let loop_t = timing.effective_loop_t();
     let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
     let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
-    let shader_t = options.loop_t.unwrap_or(options.t).clamp(0.0, 1.0);
+    let shader_t = timing.shader_t();
     // Arc-wrap the source role map once so per-cell ShaderContext cloning
     // is a cheap atomic refcount bump instead of a RoleMap allocation.
     let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());
@@ -592,7 +595,7 @@ fn render_loop(
     loop_t: f64,
 ) {
     let (w16, h16) = (width as u16, height as u16);
-    let shader_t = options.loop_t.unwrap_or(options.t).clamp(0.0, 1.0);
+    let shader_t = CompositionPlaybackTiming::from_options(options).shader_t();
     let mask_t = compute_mask_t(options);
     // Arc-wrap the source role map once for cheap per-cell Arc::clone.
     let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());
@@ -672,7 +675,7 @@ fn render_loop_inspected(
     inspector: &mut dyn CompositorInspector,
 ) {
     let (w16, h16) = (width as u16, height as u16);
-    let shader_t = options.loop_t.unwrap_or(options.t).clamp(0.0, 1.0);
+    let shader_t = CompositionPlaybackTiming::from_options(options).shader_t();
     let mask_t = compute_mask_t(options);
     // Arc-wrap the source role map once for cheap per-cell Arc::clone.
     let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());

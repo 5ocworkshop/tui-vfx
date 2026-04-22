@@ -157,6 +157,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - render-plan-derived content timing is now starting to centralize too: `RenderPlanPlaybackTiming` owns content progress and `SignalContext` derivation for preview/probe consumers instead of duplicating that lifecycle/clock logic at each caller
   - scene-layer timing ownership is starting to centralize too: `SceneCtx::effective_clock_t()` and `ProceduralCtx` clock helpers now own loop-vs-phase clock selection for scene text/procedural behavior instead of leaving that fallback logic duplicated at layer/source call sites
   - compositor/probe timing derivation is now starting to centralize as well: `CompositionPlaybackTiming` owns effective loop/shader progress derivation and is used by compositor and probe consumers instead of repeating `loop_t.unwrap_or(t)` timing policy at each call site
+  - probe/runtime binding observability now follows that same seam: compositor and probe shader/binding diagnostics both derive timing through `CompositionPlaybackTiming`, and probe shader trace enrichment now understands family-prefixed shader labels produced by the newer grouped-V3 paths
   - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`

@@ -4,7 +4,7 @@
 // <CLOG>0.7.0: MINOR — migrate call to the new `render_pipeline_with_spec` signature. Source roles default to `RoleMap::all_background(w, h)` (probe has no semantic info). Destination is lifted into a `SemanticScene` via `SemanticScene::from_grid_with_default_role`; after the pipeline runs, we extract the grid back via `grid_mut()` clone for downstream probe analysis (probe still speaks `Grid`, not `SemanticScene`).</CLOG>
 
 use serde_json::{Value, json};
-use tui_vfx_compositor::pipeline::CompositionSpec;
+use tui_vfx_compositor::pipeline::{CompositionPlaybackTiming, CompositionSpec};
 use tui_vfx_compositor::pipeline::render_pipeline_with_spec;
 use tui_vfx_types::{Grid, RoleMap, RoleTag, SemanticScene};
 
@@ -318,7 +318,13 @@ fn trace_event_details(
     let Some(effect_name) = effect_name else {
         return (None, Vec::new());
     };
-    let normalized_effect_name = effect_name.split('#').next().unwrap_or(effect_name);
+    let normalized_effect_name = effect_name
+        .split('#')
+        .next()
+        .unwrap_or(effect_name)
+        .rsplit(':')
+        .next()
+        .unwrap_or(effect_name);
 
     match stage {
         "sampler" => match composition.sampler_spec.as_ref() {
@@ -349,6 +355,7 @@ fn trace_event_details(
                 .iter()
                 .filter(|layer| variant_name_from_debug(&layer.shader) == normalized_effect_name)
                 .map(|layer| {
+                    let timing = CompositionPlaybackTiming::from_spec(composition);
                     let ctx = tui_vfx_style::traits::ShaderContext::new(
                         0,
                         0,
@@ -356,7 +363,7 @@ fn trace_event_details(
                         0,
                         0,
                         0,
-                        composition.loop_t.unwrap_or(composition.t),
+                        timing.effective_loop_t(),
                         composition.phase,
                         Some(composition.runtime_params.clone().into()),
                     );

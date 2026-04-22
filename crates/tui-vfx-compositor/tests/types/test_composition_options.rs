@@ -101,5 +101,19 @@ fn composition_options_can_apply_shared_playback_timing() {
     assert_eq!(options.phase, Some(mixed_signals::traits::Phase::End));
 }
 
+#[test]
+fn composition_playback_timing_from_options_falls_back_to_phase_progress() {
+    let options = CompositionOptions::default()
+        .with_playback_timing(CompositionPlaybackTiming::new(
+            0.4,
+            None,
+            Some(mixed_signals::traits::Phase::Start),
+        ));
+    let timing = CompositionPlaybackTiming::from_options(&options);
+
+    assert_eq!(timing.effective_loop_t(), 0.4);
+    assert_eq!(timing.shader_t(), 0.4);
+}
+
 // <FILE>tui-vfx-compositor/tests/types/test_composition_options.rs</FILE> - <DESC>Tests for CompositionOptions V3 family exposure helpers</DESC>
 // <VERS>END OF VERSION: 0.2.0</VERS>

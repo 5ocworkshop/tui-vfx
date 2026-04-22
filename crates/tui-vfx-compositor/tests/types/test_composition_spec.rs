@@ -91,5 +91,18 @@ fn composition_spec_can_apply_shared_playback_timing() {
     assert_eq!(spec.phase, Some(mixed_signals::traits::Phase::Active));
 }
 
+#[test]
+fn composition_playback_timing_from_spec_exposes_effective_loop_and_shader_progress() {
+    let spec = CompositionSpec::default().with_playback_timing(CompositionPlaybackTiming::new(
+        0.25,
+        Some(0.75),
+        Some(mixed_signals::traits::Phase::Active),
+    ));
+    let timing = CompositionPlaybackTiming::from_spec(&spec);
+
+    assert_eq!(timing.effective_loop_t(), 0.75);
+    assert_eq!(timing.shader_t(), 0.75);
+}
+
 // <FILE>tui-vfx-compositor/tests/types/test_composition_spec.rs</FILE> - <DESC>Tests for CompositionSpec V3 family lowering helpers</DESC>
 // <VERS>END OF VERSION: 0.2.0</VERS>

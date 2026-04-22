@@ -3,7 +3,7 @@
 // <WCTX>Runtime-binding observability for probe debugging</WCTX>
 // <CLOG>NEW: Convert composition runtime params and shader binding declarations/resolutions into a structured probe runtime context</CLOG>
 
-use tui_vfx_compositor::pipeline::CompositionSpec;
+use tui_vfx_compositor::pipeline::{CompositionPlaybackTiming, CompositionSpec};
 use tui_vfx_style::traits::ShaderRuntimeParamValue;
 
 use crate::{ProbeRuntimeContext, ProbeRuntimeParam};
@@ -32,6 +32,7 @@ pub fn runtime_context_from_composition(
         .shader_layers
         .iter()
         .flat_map(|layer| {
+            let timing = CompositionPlaybackTiming::from_spec(composition);
             let ctx = tui_vfx_style::traits::ShaderContext::new(
                 0,
                 0,
@@ -39,7 +40,7 @@ pub fn runtime_context_from_composition(
                 0,
                 0,
                 0,
-                composition.loop_t.unwrap_or(composition.t),
+                timing.effective_loop_t(),
                 composition.phase,
                 Some(composition.runtime_params.clone().into()),
             );
