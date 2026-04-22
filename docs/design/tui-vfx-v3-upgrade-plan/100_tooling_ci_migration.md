@@ -152,6 +152,7 @@ The current stance is:
 - supported compiled V3 plans can also reach `tui-vfx-trace` for the same bridge subset, emitting real pipeline trace envelopes without pretending full V3 preview/scene parity has already landed
 - `tui-vfx-trace` now also accepts that same first scene-bearing subset through the shared direct bridge path
 - supported compiled V3 plans can also reach `recipe-probe` for that same subset, producing direct `ProbeSceneSpec` frame/timeline/diff evidence and operational/motion analysis where the direct probe outputs already support it instead of always deferring to paired legacy runtime fallback
+  - stock procedural scene sources are now covered across those first scene-bearing direct tool paths, not only card-backed layers
 - those bridges are explicit and temporary
 
 That distinction matters for Chapter 60’s release gates: “current V3 corpus can be inspected and audited” is **not** the same claim as “the runtime path is fully V3-native.”
