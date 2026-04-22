@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>VERSION: 2.3.0</VERS>
-// <WCTX>feat/cursor-primitive T28: register SpatialShaderType::Cursor(CursorShader) — variant + dispatch match arms (style_at / name / terse_description / key_parameters) + doc-table entry under "Animated Effects". No runtime bindings today; follow StochasticSparkle precedent for the minimal dispatch.</WCTX>
-// <CLOG>MINOR: add Cursor variant wrapping CursorShader; extend StyleShader, name(), terse_description(), key_parameters() match arms; doc-table row added under Animated Effects</CLOG>
+// <VERS>VERSION: 2.4.0</VERS>
+// <WCTX>Keep representative V3-authored shader payload normalization close to executable shader semantics so direct-V3 callers can stop carrying primitive-form alias rewrites and binding-object extraction themselves.</WCTX>
+// <CLOG>2.4.0: add SpatialShaderType::try_from_v3_payload for engine-owned V3 shader payload normalization (primitive aliases, representative binding-object fields, and compatibility fallbacks).</CLOG>
 
 //! # Spatial Shader Types
 //!
@@ -99,6 +99,7 @@ use crate::traits::{
     ShaderContext, ShaderRuntimeBindingRequest, ShaderRuntimeBindingResolution, StyleShader,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::{self, Value};
 use tui_vfx_types::Style;
 /// Spatial shader types for per-cell style computation.
 ///
@@ -249,6 +250,111 @@ impl StyleShader for SpatialShaderType {
 }
 
 impl SpatialShaderType {
+    /// Build a runnable spatial shader from a V3-authored payload shape.
+    ///
+    /// This constructor accepts the current authoring/migration payload forms
+    /// that still need compatibility normalization before they can execute on
+    /// the flat runtime shader surface. Keeping those translations here moves
+    /// V3 payload ownership closer to the executable shader semantics instead
+    /// of leaving every alias in higher-level bridge code.
+    pub fn try_from_v3_payload(mut payload: Value) -> serde_json::Result<Self> {
+        if let Value::Object(ref mut object) = payload {
+            let payload_type = object
+                .get("type")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+
+            if payload_type == "fractional_stripe_overlay" {
+                object.clear();
+                object.insert("type".into(), serde_json::json!("barber_pole"));
+                object.insert("color".into(), serde_json::json!({"type":"white"}));
+                object.insert("speed".into(), serde_json::json!(1.0));
+                object.insert("stripe_width".into(), serde_json::json!(1));
+                object.insert("gap_width".into(), serde_json::json!(1));
+            }
+            if payload_type == "gradient_overlay" {
+                object.insert("type".into(), Value::String("linear_gradient".into()));
+                object.remove("intensity");
+                object.remove("apply_to");
+            }
+            if payload_type == "colored_overlay" {
+                normalize_colored_overlay_payload(object);
+            }
+
+            match payload_type.as_str() {
+                "highlighter" => {
+                    extract_binding_object(object, "speed", "speed_binding");
+                    extract_binding_object(object, "blend_strength", "blend_strength_binding");
+                    extract_binding_object(object, "direction", "direction_binding");
+                }
+                "glisten_band" => {
+                    extract_binding_object(object, "speed", "speed_binding");
+                    extract_binding_object(object, "blend_strength", "blend_strength_binding");
+                    extract_binding_object(object, "direction", "direction_binding");
+                }
+                "pulse_wave" => {
+                    extract_binding_object(object, "frequency", "frequency_binding");
+                }
+                "concealed_light" => {
+                    if let Some(spread) = object.get("spread").cloned() {
+                        if spread.get("signal").is_some() {
+                            if let Some(default) = signal_default_f32(&spread) {
+                                object.insert(
+                                    "spread".into(),
+                                    serde_json::json!(default.round().clamp(1.0, 255.0) as u8),
+                                );
+                            }
+                            object.insert("mode".into(), serde_json::json!("drift"));
+                            object.insert("pulse_speed".into(), serde_json::json!(1.0));
+                        }
+                    }
+                }
+                "border_sweep" => {
+                    extract_binding_object(object, "position", "position_binding");
+                }
+                "focus_field" => {
+                    extract_binding_object(object, "center_x", "center_x_binding");
+                    extract_binding_object(object, "center_y", "center_y_binding");
+                    extract_binding_object(object, "rect_x", "rect_x_binding");
+                    extract_binding_object(object, "rect_y", "rect_y_binding");
+                    extract_binding_object(object, "rect_width", "rect_width_binding");
+                    extract_binding_object(object, "rect_height", "rect_height_binding");
+                }
+                "affordance_wake" => {
+                    extract_binding_object(object, "progress", "progress_binding");
+                }
+                "wayfinding_node" => {
+                    extract_binding_object(object, "current_index", "current_index_binding");
+                }
+                "focused_row_gradient" => {
+                    extract_binding_object(object, "selected_row", "selected_row_binding");
+                    extract_binding_object(
+                        object,
+                        "selected_row_ratio",
+                        "selected_row_ratio_binding",
+                    );
+                }
+                _ => {}
+            }
+
+            if matches!(
+                payload_type.as_str(),
+                "bevel"
+                    | "barber_pole"
+                    | "border_sweep"
+                    | "pulse_wave"
+                    | "linear_gradient"
+                    | "glow"
+                    | "ambient_occlusion"
+            ) {
+                object.remove("apply_to");
+            }
+        }
+
+        serde_json::from_value(payload)
+    }
+
     /// Returns the shader type name as a string.
     pub fn name(&self) -> &'static str {
         match self {
@@ -577,6 +683,160 @@ impl SpatialShaderType {
                 ("trail_len", format!("{}", s.trail.len())),
             ],
         }
+    }
+}
+
+fn extract_binding_object(
+    object: &mut serde_json::Map<String, Value>,
+    field: &str,
+    binding_field: &str,
+) {
+    let Some(binding_value) = object.get(field).cloned() else {
+        return;
+    };
+    let Value::Object(binding_obj) = binding_value else {
+        return;
+    };
+    let binding_name = binding_obj.get("binding").and_then(Value::as_str);
+    let default_value = binding_obj.get("default").cloned();
+    if let Some(binding_name) = binding_name {
+        object.insert(binding_field.to_string(), Value::String(binding_name.to_string()));
+    }
+    if let Some(default_value) = default_value {
+        object.insert(field.to_string(), default_value);
+    } else {
+        object.remove(field);
+    }
+}
+
+fn signal_default_f32(value: &Value) -> Option<f32> {
+    value.get("signal")?.get("offset")?.as_f64().map(|v| v as f32)
+}
+
+fn signal_implies_looping(value: &Value) -> bool {
+    value.get("signal").and_then(|s| s.get("kind")).and_then(Value::as_str) == Some("sine")
+}
+
+fn edges_to_ao(edges: &[Value]) -> &'static str {
+    let strs: Vec<&str> = edges.iter().filter_map(Value::as_str).collect();
+    let has = |x| strs.contains(&x);
+    if has("bottom") && has("right") && strs.len() == 2 {
+        "bottom_right"
+    } else if has("top") && has("left") && strs.len() == 2 {
+        "top_left"
+    } else if has("top") && has("bottom") && has("left") && has("right") {
+        "all"
+    } else {
+        "all"
+    }
+}
+
+fn source_to_diffusion(source: &str) -> &'static str {
+    match source {
+        "center" => "center",
+        "top" => "top",
+        "bottom" => "bottom",
+        "left" => "left",
+        "right" => "right",
+        "top_left" => "top_left",
+        "top_right" => "top_right",
+        "bottom_left" => "bottom_left",
+        "bottom_right" => "bottom_right",
+        _ => "center",
+    }
+}
+
+fn normalize_colored_overlay_payload(obj: &mut serde_json::Map<String, Value>) {
+    let Some(pattern) = obj.get("pattern").and_then(Value::as_object) else {
+        return;
+    };
+    let kind = pattern.get("kind").and_then(Value::as_str).unwrap_or("");
+    let color = obj.get("color").cloned().unwrap_or(serde_json::json!({"type":"white"}));
+    let intensity = obj.get("intensity").cloned().unwrap_or(serde_json::json!(1.0));
+    let apply_to = obj.get("apply_to").cloned();
+    match kind {
+        "perimeter_halo" => {
+            let radius = pattern.get("radius").cloned().unwrap_or(serde_json::json!(2));
+            let falloff = pattern
+                .get("falloff")
+                .cloned()
+                .unwrap_or(serde_json::json!("quadratic"));
+            let mut next = serde_json::Map::new();
+            next.insert("type".into(), serde_json::json!("glow"));
+            next.insert("color".into(), color);
+            next.insert("radius".into(), radius);
+            next.insert("falloff".into(), falloff);
+            next.insert(
+                "intensity".into(),
+                signal_default_f32(&intensity)
+                    .map(|value| serde_json::json!(value))
+                    .unwrap_or(intensity),
+            );
+            if signal_implies_looping(&obj.get("intensity").cloned().unwrap_or_default()) {
+                next.insert("pulse_speed".into(), serde_json::json!(1.0));
+            }
+            *obj = next;
+        }
+        "edge_shadow" => {
+            let radius = pattern.get("radius").cloned().unwrap_or(serde_json::json!(2));
+            let falloff = pattern
+                .get("falloff")
+                .cloned()
+                .unwrap_or(serde_json::json!("quadratic"));
+            let edges = pattern
+                .get("edges")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            let mut next = serde_json::Map::new();
+            next.insert("type".into(), serde_json::json!("ambient_occlusion"));
+            next.insert("radius".into(), radius);
+            next.insert("falloff".into(), falloff);
+            next.insert(
+                "intensity".into(),
+                signal_default_f32(&intensity)
+                    .map(|value| serde_json::json!(value))
+                    .unwrap_or(intensity),
+            );
+            next.insert("shadow_color".into(), color);
+            next.insert("edges".into(), serde_json::json!(edges_to_ao(&edges)));
+            *obj = next;
+        }
+        "radial_from_corner" => {
+            let radius = pattern.get("radius").cloned().unwrap_or(serde_json::json!(6));
+            let softness = pattern
+                .get("softness")
+                .cloned()
+                .unwrap_or(serde_json::json!(0.55));
+            let edge_firmness = pattern
+                .get("edge_firmness")
+                .cloned()
+                .unwrap_or(serde_json::json!(0.2));
+            let source = pattern.get("source").and_then(Value::as_str).unwrap_or("center");
+            let mut next = serde_json::Map::new();
+            next.insert("type".into(), serde_json::json!("diffusion"));
+            next.insert("source".into(), serde_json::json!(source_to_diffusion(source)));
+            next.insert("color".into(), color);
+            next.insert("radius".into(), radius);
+            next.insert("softness".into(), softness);
+            next.insert("edge_firmness".into(), edge_firmness);
+            next.insert(
+                "intensity".into(),
+                signal_default_f32(&intensity)
+                    .map(|value| serde_json::json!(value))
+                    .unwrap_or(intensity),
+            );
+            if let Some(apply_to) = apply_to {
+                next.insert("apply_to".into(), apply_to);
+            }
+            if signal_implies_looping(&obj.get("intensity").cloned().unwrap_or_default()) {
+                next.insert("mode".into(), serde_json::json!("breath"));
+                next.insert("drift_speed".into(), serde_json::json!(1.0));
+                next.insert("drift_amount".into(), serde_json::json!(0.2));
+            }
+            *obj = next;
+        }
+        _ => {}
     }
 }
 
