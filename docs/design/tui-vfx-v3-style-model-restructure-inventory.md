@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.23.0</VERS> -->
+<!-- <VERS>VERSION: 1.24.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.23.0: record that AnimationProfile legacy fallback conversion now also consumes grouped V3 overall-effect values when synthesizing StyleLayer entries.
+<!-- <CLOG>1.24.0: record that preview_from_recipe_config and PreviewItem now accept grouped overall-effect values directly for enter/dwell/exit styles.
+1.23.0: record that AnimationProfile legacy fallback conversion now also consumes grouped V3 overall-effect values when synthesizing StyleLayer entries.
 1.22.0: add the first grouped overall-effect executable value seam plus StyleLayer constructors that lower grouped V3 effects back into StyleEffect.
 1.21.0: record broadened grouped-V3-to-legacy lowering coverage across representative primitive and composed family clusters.
 1.20.0: record that direct probe pipeline inventory now carries grouped V3 spatial shader family labels.
@@ -259,6 +260,7 @@ Outstanding style-model buckets for follow-on slices:
     - [x] grouped-V3-to-legacy lowering coverage spans representative primitive and composed family clusters
     - [x] grouped overall style-effect values can lower back into StyleEffect and feed StyleLayer constructors
     - [x] AnimationProfile legacy fallback conversion uses grouped V3 overall-effect values
+    - [x] PreviewItem / preview_from_recipe_config can use grouped V3 overall-effect values directly
   - [~] broader runtime wiring against `models::v3` family surfaces
     - [x] first compiled-plan -> CompositionSpec bridge in `tui-vfx-recipes`
     - [x] deterministic V3 demo example run for a valid shader recipe
@@ -280,4 +282,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.23.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.24.0</VERS> -->
