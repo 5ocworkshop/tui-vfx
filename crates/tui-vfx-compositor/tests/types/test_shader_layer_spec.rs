@@ -42,3 +42,18 @@ fn shader_layer_spec_exposes_primitive_v3_family() {
 
 // <FILE>tui-vfx-compositor/tests/types/test_shader_layer_spec.rs</FILE> - <DESC>Tests for ShaderLayerSpec V3 family lowering helpers</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>
+
+#[test]
+fn shader_layer_spec_can_build_from_v3_shader_family() {
+    let family = tui_vfx_style::models::VfxSpatialShaderFamily::from_legacy_spatial_shader(
+        &tui_vfx_style::models::SpatialShaderType::Glow(tui_vfx_style::models::GlowShader::default()),
+    );
+
+    let spec = ShaderLayerSpec::try_from_v3_shader_family(
+        &family,
+        tui_vfx_style::models::StyleRegion::All,
+    )
+    .expect("lowers");
+
+    assert!(matches!(spec.shader, tui_vfx_style::models::SpatialShaderType::Glow(_)));
+}

@@ -153,9 +153,9 @@ pub use v3::{
     VfxStochasticTextureBehavior, VfxStochasticTextureShader, VfxStripeMotionBehavior,
     VfxStripeMotionShader, VfxSurfaceDepthBehavior, VfxSurfaceDepthEdges,
     VfxSurfaceDepthLightDirection, VfxSurfaceDepthShader, VfxTextureSegmentMode, VfxTextureTarget,
-    VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
+    TryLowerV3SpatialShaderError, VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
     VfxTravelingBandDirection, VfxTravelingBandShader, VfxWayfindingNode,
-    lower_legacy_spatial_shader,
+    lower_legacy_spatial_shader, try_lower_v3_spatial_shader_family,
 };
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>

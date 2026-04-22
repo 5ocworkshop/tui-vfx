@@ -33,10 +33,12 @@ pub mod enum_vfx_spatial_primitive;
 pub mod enum_vfx_spatial_shader_family;
 pub mod enum_vfx_stochastic_texture_behavior;
 pub mod enum_vfx_style_effect_family;
+pub mod enum_try_lower_v3_spatial_shader_error;
 pub mod enum_vfx_stripe_motion_behavior;
 pub mod enum_vfx_surface_depth_behavior;
 pub mod enum_vfx_traveling_band_behavior;
 pub mod fnc_lower_legacy_spatial_shader;
+pub mod fnc_try_lower_v3_spatial_shader_family;
 
 pub use cls_vfx_cursor_shader::VfxCursorShader;
 pub use cls_vfx_edge_distortion_shader::VfxEdgeDistortionShader;
@@ -71,6 +73,7 @@ pub use enum_vfx_spatial_shader_family::VfxSpatialShaderFamily;
 pub use enum_vfx_stochastic_texture_behavior::{
     VfxStochasticTextureBehavior, VfxTextureSegmentMode, VfxTextureTarget,
 };
+pub use enum_try_lower_v3_spatial_shader_error::TryLowerV3SpatialShaderError;
 pub use enum_vfx_style_effect_family::VfxStyleEffectFamily;
 pub use enum_vfx_stripe_motion_behavior::VfxStripeMotionBehavior;
 pub use enum_vfx_surface_depth_behavior::{
@@ -81,6 +84,7 @@ pub use enum_vfx_traveling_band_behavior::{
     VfxTravelingBandDirection,
 };
 pub use fnc_lower_legacy_spatial_shader::lower_legacy_spatial_shader;
+pub use fnc_try_lower_v3_spatial_shader_family::try_lower_v3_spatial_shader_family;
 
 #[cfg(test)]
 mod test_vfx_cursor_shader;
@@ -104,6 +108,8 @@ mod test_vfx_stochastic_texture_shader;
 mod test_vfx_stripe_motion_shader;
 #[cfg(test)]
 mod test_vfx_surface_depth_shader;
+#[cfg(test)]
+mod test_try_lower_v3_spatial_shader_family;
 #[cfg(test)]
 mod test_vfx_traveling_band_shader;
 
