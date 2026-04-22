@@ -283,6 +283,7 @@ fn build_pipeline_inventory(composition: &CompositionSpec) -> ProbePipelineInven
             .collect(),
         style_count: 0,
         style_effects: Vec::new(),
+        style_effect_families: Vec::new(),
         content_count: 0,
         content_effects: Vec::new(),
     }
