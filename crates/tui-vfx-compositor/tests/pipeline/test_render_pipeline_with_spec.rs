@@ -19,6 +19,7 @@ use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, SpatialShaderType, StyleRegion,
     VfxSpatialComposedPrimitive, VfxSpatialShaderFamily,
 };
+use tui_vfx_style::traits::StyleShader;
 use tui_vfx_style::traits::cls_shader_context::ShaderRuntimeParams;
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid};
 
@@ -50,6 +51,33 @@ fn assert_grids_equal(left: &OwnedGrid, right: &OwnedGrid) {
             );
         }
     }
+}
+
+fn assert_grouped_family_matches_legacy_runtime<T>(
+    shader: T,
+    family: VfxSpatialShaderFamily,
+    t: f64,
+) where
+    T: StyleShader + Clone,
+{
+    let source = create_source_grid(8, 5, 'S');
+    let mut dest_options = OwnedGrid::new(8, 5);
+    let mut dest_spec = OwnedGrid::new(8, 5);
+
+    let mut options = CompositionOptions::default()
+        .try_with_v3_shader_family(&family, &shader, StyleRegion::All)
+        .expect("grouped family should lower");
+    options.t = t;
+
+    let mut spec = CompositionSpec::default()
+        .try_with_v3_shader_family(&family, StyleRegion::All)
+        .expect("grouped family should lower");
+    spec.t = t;
+
+    render_pipeline_legacy(&source, &mut dest_options, 8, 5, 0, 0, options, None);
+    render_pipeline_with_spec_legacy(&source, &mut dest_spec, 8, 5, 0, 0, &spec, None);
+
+    assert_grids_equal(&dest_options, &dest_spec);
 }
 
 #[test]
@@ -139,6 +167,101 @@ fn test_render_pipeline_with_spec_matches_grouped_v3_options_shader_layer() {
     render_pipeline_with_spec_legacy(&source, &mut dest_spec, 8, 5, 0, 0, &spec, None);
 
     assert_grids_equal(&dest_options, &dest_spec);
+}
+
+#[test]
+fn test_render_pipeline_with_spec_matches_grouped_v3_options_across_representative_families() {
+    let glow = tui_vfx_style::models::GlowShader::default();
+    assert_grouped_family_matches_legacy_runtime(
+        glow.clone(),
+        VfxSpatialShaderFamily::Primitive(
+            tui_vfx_style::models::VfxSpatialPrimitive::SurfaceDepth((&glow).into()),
+        ),
+        0.5,
+    );
+
+    let pulse = tui_vfx_style::models::PulseWaveShader::default();
+    assert_grouped_family_matches_legacy_runtime(
+        pulse.clone(),
+        VfxSpatialShaderFamily::Primitive(
+            tui_vfx_style::models::VfxSpatialPrimitive::MotionField((&pulse).into()),
+        ),
+        0.5,
+    );
+
+    let glitch = tui_vfx_style::models::GlitchLinesShader::default();
+    assert_grouped_family_matches_legacy_runtime(
+        glitch.clone(),
+        VfxSpatialShaderFamily::Primitive(
+            tui_vfx_style::models::VfxSpatialPrimitive::EdgeDistortion((&glitch).into()),
+        ),
+        0.5,
+    );
+
+    let gradient = tui_vfx_style::models::LinearGradientShader::new(
+        tui_vfx_style::models::Gradient::default(),
+    );
+    assert_grouped_family_matches_legacy_runtime(
+        gradient.clone(),
+        VfxSpatialShaderFamily::Primitive(
+            tui_vfx_style::models::VfxSpatialPrimitive::GradientReveal((&gradient).into()),
+        ),
+        0.0,
+    );
+
+    let highlighter = tui_vfx_style::models::HighlighterShader::default();
+    assert_grouped_family_matches_legacy_runtime(
+        highlighter.clone(),
+        VfxSpatialShaderFamily::ComposedPrimitive(
+            tui_vfx_style::models::VfxSpatialComposedPrimitive::ProgressEmphasis(
+                (&highlighter).into(),
+            ),
+        ),
+        0.5,
+    );
+
+    let diffusion = tui_vfx_style::models::DiffusionShader::default();
+    assert_grouped_family_matches_legacy_runtime(
+        diffusion.clone(),
+        VfxSpatialShaderFamily::ComposedPrimitive(
+            tui_vfx_style::models::VfxSpatialComposedPrimitive::MaterialLight((&diffusion).into()),
+        ),
+        0.5,
+    );
+
+    let guidance = tui_vfx_style::models::FocusedRowGradientShader::default();
+    assert_grouped_family_matches_legacy_runtime(
+        guidance.clone(),
+        VfxSpatialShaderFamily::ComposedPrimitive(
+            tui_vfx_style::models::VfxSpatialComposedPrimitive::GuidanceCue((&guidance).into()),
+        ),
+        0.5,
+    );
+
+    let stochastic = tui_vfx_style::models::NeonFlickerShader::default();
+    assert_grouped_family_matches_legacy_runtime(
+        stochastic.clone(),
+        VfxSpatialShaderFamily::ComposedPrimitive(
+            tui_vfx_style::models::VfxSpatialComposedPrimitive::StochasticTexture(
+                (&stochastic).into(),
+            ),
+        ),
+        0.5,
+    );
+
+    let stripe = tui_vfx_style::models::BarberPoleShader {
+        speed: 1.0,
+        stripe_width: 2,
+        gap_width: 2,
+        color: ColorConfig::Red,
+    };
+    assert_grouped_family_matches_legacy_runtime(
+        stripe.clone(),
+        VfxSpatialShaderFamily::ComposedPrimitive(
+            tui_vfx_style::models::VfxSpatialComposedPrimitive::StripeMotion((&stripe).into()),
+        ),
+        0.5,
+    );
 }
 
 #[test]
