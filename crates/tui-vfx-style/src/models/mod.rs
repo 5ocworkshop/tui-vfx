@@ -144,8 +144,9 @@ pub use v3::{
     VfxMaterialLightApplyTo, VfxMaterialLightBehavior, VfxMaterialLightShader,
     VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
     VfxProgressEmphasisRowMask, VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast,
-    VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
-    VfxTravelingBandDirection, VfxTravelingBandShader, VfxWayfindingNode,
+    VfxSurfaceDepthBehavior, VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection,
+    VfxSurfaceDepthShader, VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior,
+    VfxTravelingBandColor, VfxTravelingBandDirection, VfxTravelingBandShader, VfxWayfindingNode,
 };
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
