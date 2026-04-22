@@ -140,14 +140,15 @@ pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, Wayf
 pub use tui_vfx_geometry::easing::EasingType;
 pub use v3::{
     VfxAffordanceWakeZone, VfxConcealedLightMode, VfxConcealedLightSource, VfxDiffusionMode,
-    VfxDiffusionSource, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxGuidanceCueShader,
-    VfxMaterialLightApplyTo, VfxMaterialLightBehavior, VfxMaterialLightShader,
-    VfxMotionFieldBehavior, VfxMotionFieldDirection, VfxMotionFieldShader,
-    VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
-    VfxProgressEmphasisRowMask, VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast,
-    VfxSurfaceDepthBehavior, VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection,
-    VfxSurfaceDepthShader, VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior,
-    VfxTravelingBandColor, VfxTravelingBandDirection, VfxTravelingBandShader, VfxWayfindingNode,
+    VfxDiffusionSource, VfxEdgeDistortionAxis, VfxEdgeDistortionBehavior, VfxEdgeDistortionShader,
+    VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxGuidanceCueShader, VfxMaterialLightApplyTo,
+    VfxMaterialLightBehavior, VfxMaterialLightShader, VfxMotionFieldBehavior,
+    VfxMotionFieldDirection, VfxMotionFieldShader, VfxProgressEmphasisApplyTo,
+    VfxProgressEmphasisDirection, VfxProgressEmphasisMode, VfxProgressEmphasisRowMask,
+    VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast, VfxSurfaceDepthBehavior,
+    VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection, VfxSurfaceDepthShader,
+    VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
+    VfxTravelingBandDirection, VfxTravelingBandShader, VfxWayfindingNode,
 };
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>

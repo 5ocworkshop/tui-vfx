@@ -10,12 +10,14 @@
 //! current playback and downstream compatibility until the broader cutover is
 //! complete.
 
+pub mod cls_vfx_edge_distortion_shader;
 pub mod cls_vfx_guidance_cue_shader;
 pub mod cls_vfx_material_light_shader;
 pub mod cls_vfx_motion_field_shader;
 pub mod cls_vfx_progress_emphasis_shader;
 pub mod cls_vfx_surface_depth_shader;
 pub mod cls_vfx_traveling_band_shader;
+pub mod enum_vfx_edge_distortion_behavior;
 pub mod enum_vfx_guidance_cue_behavior;
 pub mod enum_vfx_material_light_behavior;
 pub mod enum_vfx_motion_field_behavior;
@@ -23,12 +25,14 @@ pub mod enum_vfx_progress_emphasis_behavior;
 pub mod enum_vfx_surface_depth_behavior;
 pub mod enum_vfx_traveling_band_behavior;
 
+pub use cls_vfx_edge_distortion_shader::VfxEdgeDistortionShader;
 pub use cls_vfx_guidance_cue_shader::VfxGuidanceCueShader;
 pub use cls_vfx_material_light_shader::VfxMaterialLightShader;
 pub use cls_vfx_motion_field_shader::VfxMotionFieldShader;
 pub use cls_vfx_progress_emphasis_shader::VfxProgressEmphasisShader;
 pub use cls_vfx_surface_depth_shader::VfxSurfaceDepthShader;
 pub use cls_vfx_traveling_band_shader::VfxTravelingBandShader;
+pub use enum_vfx_edge_distortion_behavior::{VfxEdgeDistortionAxis, VfxEdgeDistortionBehavior};
 pub use enum_vfx_guidance_cue_behavior::{
     VfxAffordanceWakeZone, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxWayfindingNode,
 };
@@ -49,6 +53,8 @@ pub use enum_vfx_traveling_band_behavior::{
     VfxTravelingBandDirection,
 };
 
+#[cfg(test)]
+mod test_vfx_edge_distortion_shader;
 #[cfg(test)]
 mod test_vfx_guidance_cue_shader;
 #[cfg(test)]
