@@ -46,7 +46,7 @@
 
 use crate::models::{
     ColorConfig, ColorSpace, FadeApplyTo, FadeSpec, FadeTarget, SpatialShaderType,
-    v3::{VfxSpatialShaderFamily, lower_legacy_spatial_shader},
+    v3::{VfxSpatialShaderFamily, VfxStyleEffectFamily, lower_legacy_spatial_shader},
 };
 use crate::traits::{StyleInterpolator, StyleShader};
 use crate::utils::{
@@ -703,6 +703,25 @@ impl StyleEffect {
         match self {
             StyleEffect::Spatial { shader } => Some(lower_legacy_spatial_shader(shader)),
             _ => None,
+        }
+    }
+
+    /// Returns the grouped V3 family form of this style effect.
+    pub fn v3_effect_family(&self) -> VfxStyleEffectFamily {
+        match self {
+            StyleEffect::FadeIn { .. } | StyleEffect::FadeOut { .. } | StyleEffect::ColorFade { .. } => {
+                VfxStyleEffectFamily::StyleFade
+            }
+            StyleEffect::Pulse { .. }
+            | StyleEffect::Rainbow { .. }
+            | StyleEffect::NeonFlicker { .. }
+            | StyleEffect::ColorShift { .. } => VfxStyleEffectFamily::StyleModulation,
+            StyleEffect::ItalicWindow { .. } => VfxStyleEffectFamily::TypographyWindow,
+            StyleEffect::Glitch { .. } => VfxStyleEffectFamily::StyleInstability,
+            StyleEffect::RigidShakeStyle { .. } => VfxStyleEffectFamily::PairedCapability,
+            StyleEffect::Spatial { shader } => {
+                VfxStyleEffectFamily::Spatial(lower_legacy_spatial_shader(shader))
+            }
         }
     }
 

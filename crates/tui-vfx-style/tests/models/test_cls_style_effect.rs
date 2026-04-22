@@ -7,7 +7,7 @@ use tui_vfx_geometry::easing::EasingType;
 use tui_vfx_geometry::types::EasingCurve;
 use tui_vfx_style::models::{
     FadeApplyTo, StyleEffect, VfxSpatialComposedPrimitive, VfxSpatialPrimitive,
-    VfxSpatialShaderFamily,
+    VfxSpatialShaderFamily, VfxStyleEffectFamily,
 };
 use tui_vfx_style::traits::StyleInterpolator;
 use tui_vfx_types::{Color, Style};
@@ -113,6 +113,50 @@ fn test_spatial_effect_can_lower_to_primitive_family() {
             VfxSpatialPrimitive::SurfaceDepth(_)
         ))
     ));
+}
+
+#[test]
+fn test_fade_effect_exposes_v3_effect_family() {
+    let effect = StyleEffect::FadeIn {
+        apply_to: FadeApplyTo::Foreground,
+        ease: EasingCurve::Type(EasingType::Linear),
+        from: tui_vfx_style::models::FadeTarget::Black,
+    };
+
+    assert_eq!(effect.v3_effect_family(), VfxStyleEffectFamily::StyleFade);
+}
+
+#[test]
+fn test_style_modulation_effect_exposes_v3_effect_family() {
+    let effect = StyleEffect::Rainbow { speed: 1.0 };
+    assert_eq!(effect.v3_effect_family(), VfxStyleEffectFamily::StyleModulation);
+}
+
+#[test]
+fn test_spatial_effect_exposes_v3_effect_family() {
+    let effect = StyleEffect::Spatial {
+        shader: tui_vfx_style::models::SpatialShaderType::Glow(
+            tui_vfx_style::models::GlowShader::default(),
+        ),
+    };
+
+    assert!(matches!(
+        effect.v3_effect_family(),
+        VfxStyleEffectFamily::Spatial(VfxSpatialShaderFamily::Primitive(
+            VfxSpatialPrimitive::SurfaceDepth(_)
+        ))
+    ));
+}
+
+#[test]
+fn test_paired_style_effect_exposes_v3_effect_family() {
+    let effect = StyleEffect::RigidShakeStyle {
+        shake_period: 0.25,
+        num_shakes: 2,
+        pause_duration: 0.5,
+    };
+
+    assert_eq!(effect.v3_effect_family(), VfxStyleEffectFamily::PairedCapability);
 }
 
 // <FILE>tui-vfx-style/tests/models/test_cls_style_effect.rs</FILE> - <DESC>Integration tests for StyleEffect</DESC>

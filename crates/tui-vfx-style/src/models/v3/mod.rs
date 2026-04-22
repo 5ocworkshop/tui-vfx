@@ -32,6 +32,7 @@ pub mod enum_vfx_spatial_composed_primitive;
 pub mod enum_vfx_spatial_primitive;
 pub mod enum_vfx_spatial_shader_family;
 pub mod enum_vfx_stochastic_texture_behavior;
+pub mod enum_vfx_style_effect_family;
 pub mod enum_vfx_stripe_motion_behavior;
 pub mod enum_vfx_surface_depth_behavior;
 pub mod enum_vfx_traveling_band_behavior;
@@ -70,6 +71,7 @@ pub use enum_vfx_spatial_shader_family::VfxSpatialShaderFamily;
 pub use enum_vfx_stochastic_texture_behavior::{
     VfxStochasticTextureBehavior, VfxTextureSegmentMode, VfxTextureTarget,
 };
+pub use enum_vfx_style_effect_family::VfxStyleEffectFamily;
 pub use enum_vfx_stripe_motion_behavior::VfxStripeMotionBehavior;
 pub use enum_vfx_surface_depth_behavior::{
     VfxSurfaceDepthBehavior, VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection,
