@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.3.0: add a dedicated V3 stripe-motion family so the last future-decision holdout also has a real grouped V3 home.
+<!-- <CLOG>1.4.0: add the central legacy-to-V3 style-family lowering seam so runtime wiring can target one SSOT family enum instead of ad hoc per-family helpers.
+1.3.0: add a dedicated V3 stripe-motion family so the last future-decision holdout also has a real grouped V3 home.
 1.2.0: add a dedicated V3 cursor family surface so the future-decision bucket is narrowed to the last explicit special-case holdout.
 1.1.0: add the first grouped V3 stochastic-texture family so the future-decision bucket is narrowed to the truly special-case leftovers.
 1.0.0: add the first grouped V3 gradient-reveal family so the primitive bucket is fully represented by grouped V3 subfamilies.
@@ -214,8 +215,9 @@ Outstanding style-model buckets for follow-on slices:
   - completed special-case family: cursor
   - completed special-case family: stripe-motion (`BarberPole`)
   - remaining candidates: none
-- [ ] any additional cross-family refactors needed once runtime wiring begins
-  - e.g. shared builder/lowering helpers for `models::v3`
+- [~] any additional cross-family refactors needed once runtime wiring begins
+  - [x] central legacy `SpatialShaderType -> VfxSpatialShaderFamily` lowering seam
+  - [ ] runtime wiring against `models::v3` family surfaces
 
 ## 5. Current rule during the restructure
 
@@ -233,4 +235,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->

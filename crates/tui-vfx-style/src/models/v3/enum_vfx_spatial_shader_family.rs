@@ -1,0 +1,22 @@
+// <FILE>tui-vfx-style/src/models/v3/enum_vfx_spatial_shader_family.rs</FILE> - <DESC>Central V3 representation for spatial shaders across primitive and composed layers</DESC>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Decision 2 migration slice — once all grouped family surfaces exist, expose a central style-family seam that also encodes the primitive-vs-composed split.</WCTX>
+// <CLOG>Promote the central V3 style-family enum to wrap explicit primitive and composed-primitive layers.</CLOG>
+
+//! Central V3 representation for spatial shaders across primitive and composed layers.
+
+use crate::models::v3::{VfxSpatialComposedPrimitive, VfxSpatialPrimitive};
+use serde::{Deserialize, Serialize};
+
+/// Top-level V3 representation for a spatial shader after family lowering.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(tag = "layer", rename_all = "snake_case", deny_unknown_fields)]
+pub enum VfxSpatialShaderFamily {
+    /// Primitive-layer spatial shader.
+    Primitive(VfxSpatialPrimitive),
+    /// Composed-primitive spatial shader.
+    ComposedPrimitive(VfxSpatialComposedPrimitive),
+}
+
+// <FILE>tui-vfx-style/src/models/v3/enum_vfx_spatial_shader_family.rs</FILE> - <DESC>Central V3 representation for spatial shaders across primitive and composed layers</DESC>
+// <VERS>END OF VERSION: 0.2.0</VERS>

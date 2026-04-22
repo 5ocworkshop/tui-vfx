@@ -28,10 +28,14 @@ pub mod enum_vfx_guidance_cue_behavior;
 pub mod enum_vfx_material_light_behavior;
 pub mod enum_vfx_motion_field_behavior;
 pub mod enum_vfx_progress_emphasis_behavior;
+pub mod enum_vfx_spatial_composed_primitive;
+pub mod enum_vfx_spatial_primitive;
+pub mod enum_vfx_spatial_shader_family;
 pub mod enum_vfx_stochastic_texture_behavior;
 pub mod enum_vfx_stripe_motion_behavior;
 pub mod enum_vfx_surface_depth_behavior;
 pub mod enum_vfx_traveling_band_behavior;
+pub mod fnc_lower_legacy_spatial_shader;
 
 pub use cls_vfx_cursor_shader::VfxCursorShader;
 pub use cls_vfx_edge_distortion_shader::VfxEdgeDistortionShader;
@@ -48,7 +52,8 @@ pub use enum_vfx_cursor_behavior::{VfxCursorMode, VfxCursorPrimary, VfxCursorTra
 pub use enum_vfx_edge_distortion_behavior::{VfxEdgeDistortionAxis, VfxEdgeDistortionBehavior};
 pub use enum_vfx_gradient_reveal_behavior::{VfxGradientRevealBehavior, VfxRevealDirection};
 pub use enum_vfx_guidance_cue_behavior::{
-    VfxAffordanceWakeZone, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxWayfindingNode,
+    VfxAffordanceWakeZone, VfxFocusFieldShape, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior,
+    VfxWayfindingNode,
 };
 pub use enum_vfx_material_light_behavior::{
     VfxConcealedLightMode, VfxConcealedLightSource, VfxDiffusionMode, VfxDiffusionSource,
@@ -59,6 +64,9 @@ pub use enum_vfx_progress_emphasis_behavior::{
     VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
     VfxProgressEmphasisRowMask, VfxProgressEmphasisTextContrast,
 };
+pub use enum_vfx_spatial_composed_primitive::VfxSpatialComposedPrimitive;
+pub use enum_vfx_spatial_primitive::VfxSpatialPrimitive;
+pub use enum_vfx_spatial_shader_family::VfxSpatialShaderFamily;
 pub use enum_vfx_stochastic_texture_behavior::{
     VfxStochasticTextureBehavior, VfxTextureSegmentMode, VfxTextureTarget,
 };
@@ -70,6 +78,7 @@ pub use enum_vfx_traveling_band_behavior::{
     VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
     VfxTravelingBandDirection,
 };
+pub use fnc_lower_legacy_spatial_shader::lower_legacy_spatial_shader;
 
 #[cfg(test)]
 mod test_vfx_cursor_shader;
@@ -85,6 +94,8 @@ mod test_vfx_material_light_shader;
 mod test_vfx_motion_field_shader;
 #[cfg(test)]
 mod test_vfx_progress_emphasis_shader;
+#[cfg(test)]
+mod test_vfx_spatial_shader_family;
 #[cfg(test)]
 mod test_vfx_stochastic_texture_shader;
 #[cfg(test)]

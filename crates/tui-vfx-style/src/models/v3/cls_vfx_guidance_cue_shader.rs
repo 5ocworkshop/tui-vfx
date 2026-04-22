@@ -9,12 +9,13 @@
 //! guidance cues that currently live as separate flat variants.
 
 use crate::models::v3::enum_vfx_guidance_cue_behavior::{
-    VfxAffordanceWakeZone, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxWayfindingNode,
+    VfxAffordanceWakeZone, VfxFocusFieldShape, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior,
+    VfxWayfindingNode,
 };
 use crate::models::{
     AffordanceWakeApplyTo, AffordanceWakeShader, AffordanceWakeZone, ApplyToColor,
-    FocusedRowGradientShader, SpatialShaderType, WayfindingNode, WayfindingNodeApplyTo,
-    WayfindingNodeShader,
+    FocusFieldApplyTo, FocusFieldShader, FocusFieldShape, FocusedRowGradientShader,
+    SpatialShaderType, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 use serde::{Deserialize, Serialize};
 
@@ -32,6 +33,7 @@ impl VfxGuidanceCueShader {
     pub fn from_legacy_spatial_shader(shader: &SpatialShaderType) -> Option<Self> {
         match shader {
             SpatialShaderType::FocusedRowGradient(shader) => Some(Self::from(shader)),
+            SpatialShaderType::FocusField(shader) => Some(Self::from(shader)),
             SpatialShaderType::AffordanceWake(shader) => Some(Self::from(shader)),
             SpatialShaderType::WayfindingNode(shader) => Some(Self::from(shader)),
             _ => None,
@@ -51,6 +53,36 @@ impl From<&FocusedRowGradientShader> for VfxGuidanceCueShader {
                 bright_color: shader.bright_color.clone(),
                 dim_color: shader.dim_color.clone(),
                 apply_to: shader.apply_to.into(),
+            },
+        }
+    }
+}
+
+impl From<&FocusFieldShader> for VfxGuidanceCueShader {
+    fn from(shader: &FocusFieldShader) -> Self {
+        Self {
+            behavior: VfxGuidanceCueBehavior::FocusField {
+                color: shader.color.clone(),
+                shape: shader.shape.into(),
+                center_x: shader.center_x,
+                center_y: shader.center_y,
+                center_x_binding: shader.center_x_binding.clone(),
+                center_y_binding: shader.center_y_binding.clone(),
+                radius_x: shader.radius_x,
+                radius_y: shader.radius_y,
+                rect_x: shader.rect_x,
+                rect_y: shader.rect_y,
+                rect_width: shader.rect_width,
+                rect_height: shader.rect_height,
+                rect_x_binding: shader.rect_x_binding.clone(),
+                rect_y_binding: shader.rect_y_binding.clone(),
+                rect_width_binding: shader.rect_width_binding.clone(),
+                rect_height_binding: shader.rect_height_binding.clone(),
+                feather: shader.feather,
+                falloff: shader.falloff,
+                intensity: shader.intensity,
+                apply_to: shader.apply_to.into(),
+                pulse_speed: shader.pulse_speed,
             },
         }
     }
@@ -99,6 +131,25 @@ impl From<ApplyToColor> for VfxGuidanceCueApplyTo {
             ApplyToColor::Foreground => Self::Foreground,
             ApplyToColor::Background => Self::Background,
             ApplyToColor::Both => Self::Both,
+        }
+    }
+}
+
+impl From<FocusFieldShape> for VfxFocusFieldShape {
+    fn from(value: FocusFieldShape) -> Self {
+        match value {
+            FocusFieldShape::Ellipse => Self::Ellipse,
+            FocusFieldShape::Rect => Self::Rect,
+        }
+    }
+}
+
+impl From<FocusFieldApplyTo> for VfxGuidanceCueApplyTo {
+    fn from(value: FocusFieldApplyTo) -> Self {
+        match value {
+            FocusFieldApplyTo::Foreground => Self::Foreground,
+            FocusFieldApplyTo::Background => Self::Background,
+            FocusFieldApplyTo::Both => Self::Both,
         }
     }
 }

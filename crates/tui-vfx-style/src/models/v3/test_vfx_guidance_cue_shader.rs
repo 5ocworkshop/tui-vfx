@@ -4,14 +4,14 @@
 // <CLOG>Extract focused conversion tests for VfxGuidanceCueShader into a dedicated sibling file.</CLOG>
 
 use super::{
-    VfxAffordanceWakeZone, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxGuidanceCueShader,
-    VfxWayfindingNode,
+    VfxAffordanceWakeZone, VfxFocusFieldShape, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior,
+    VfxGuidanceCueShader, VfxWayfindingNode,
 };
 use crate::models::ColorConfig;
 use crate::models::{
     AffordanceWakeApplyTo, AffordanceWakeShader, AffordanceWakeZone, ApplyToColor,
-    FocusedRowGradientShader, SpatialShaderType, WayfindingNode, WayfindingNodeApplyTo,
-    WayfindingNodeShader,
+    FocusFieldApplyTo, FocusFieldShader, FocusFieldShape, FocusedRowGradientShader,
+    SpatialShaderType, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 #[test]
@@ -39,6 +39,61 @@ fn converts_focused_row_gradient_into_v3_guidance_surface() {
             bright_color: ColorConfig::White,
             dim_color: ColorConfig::Black,
             apply_to: VfxGuidanceCueApplyTo::Both,
+        }
+    );
+}
+
+#[test]
+fn converts_focus_field_into_v3_guidance_surface() {
+    let legacy = FocusFieldShader {
+        color: ColorConfig::Cyan,
+        shape: FocusFieldShape::Rect,
+        center_x: 10,
+        center_y: 4,
+        center_x_binding: Some("cx".to_string()),
+        center_y_binding: Some("cy".to_string()),
+        radius_x: 8,
+        radius_y: 3,
+        rect_x: 2,
+        rect_y: 1,
+        rect_width: 12,
+        rect_height: 5,
+        rect_x_binding: Some("rx".to_string()),
+        rect_y_binding: None,
+        rect_width_binding: Some("rw".to_string()),
+        rect_height_binding: Some("rh".to_string()),
+        feather: 2,
+        falloff: crate::models::FalloffType::Quadratic,
+        intensity: 0.4,
+        apply_to: FocusFieldApplyTo::Both,
+        pulse_speed: 1.1,
+    };
+
+    let converted = VfxGuidanceCueShader::from(&legacy);
+    assert_eq!(
+        converted.behavior,
+        VfxGuidanceCueBehavior::FocusField {
+            color: ColorConfig::Cyan,
+            shape: VfxFocusFieldShape::Rect,
+            center_x: 10,
+            center_y: 4,
+            center_x_binding: Some("cx".to_string()),
+            center_y_binding: Some("cy".to_string()),
+            radius_x: 8,
+            radius_y: 3,
+            rect_x: 2,
+            rect_y: 1,
+            rect_width: 12,
+            rect_height: 5,
+            rect_x_binding: Some("rx".to_string()),
+            rect_y_binding: None,
+            rect_width_binding: Some("rw".to_string()),
+            rect_height_binding: Some("rh".to_string()),
+            feather: 2,
+            falloff: crate::models::FalloffType::Quadratic,
+            intensity: 0.4,
+            apply_to: VfxGuidanceCueApplyTo::Both,
+            pulse_speed: 1.1,
         }
     );
 }

@@ -42,6 +42,19 @@ pub enum VfxAffordanceWakeZone {
     BottomRail,
 }
 
+/// Shape policy for focus-field guidance.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum VfxFocusFieldShape {
+    /// Elliptical focus field.
+    #[default]
+    Ellipse,
+    /// Rectangular focus field.
+    Rect,
+}
+
 /// Node payload for wayfinding guidance.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]
@@ -80,6 +93,71 @@ pub enum VfxGuidanceCueBehavior {
         /// Channel-target policy.
         #[serde(default)]
         apply_to: VfxGuidanceCueApplyTo,
+    },
+    /// Point/ellipse or pane/rect-following focus field.
+    FocusField {
+        /// Cue tint.
+        color: ColorConfig,
+        /// Shape policy.
+        #[serde(default)]
+        shape: VfxFocusFieldShape,
+        /// Static ellipse center x.
+        #[serde(default)]
+        center_x: u16,
+        /// Static ellipse center y.
+        #[serde(default)]
+        center_y: u16,
+        /// Optional runtime binding overriding the center x.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        center_x_binding: Option<String>,
+        /// Optional runtime binding overriding the center y.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        center_y_binding: Option<String>,
+        /// Ellipse radius x.
+        #[config(default = 10)]
+        radius_x: u16,
+        /// Ellipse radius y.
+        #[config(default = 4)]
+        radius_y: u16,
+        /// Static rect x.
+        #[serde(default)]
+        rect_x: u16,
+        /// Static rect y.
+        #[serde(default)]
+        rect_y: u16,
+        /// Static rect width.
+        #[config(default = 12)]
+        rect_width: u16,
+        /// Static rect height.
+        #[config(default = 5)]
+        rect_height: u16,
+        /// Optional runtime binding overriding rect x.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        rect_x_binding: Option<String>,
+        /// Optional runtime binding overriding rect y.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        rect_y_binding: Option<String>,
+        /// Optional runtime binding overriding rect width.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        rect_width_binding: Option<String>,
+        /// Optional runtime binding overriding rect height.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        rect_height_binding: Option<String>,
+        /// Feather width in cells.
+        #[config(default = 3)]
+        feather: u8,
+        /// Falloff curve.
+        #[serde(default)]
+        falloff: FalloffType,
+        /// Intensity multiplier.
+        #[config(default = 0.22)]
+        intensity: f32,
+        /// Channel-target policy.
+        #[serde(default)]
+        apply_to: VfxGuidanceCueApplyTo,
+        /// Optional pulse speed.
+        #[serde(default)]
+        pulse_speed: f32,
     },
     /// Dormant-to-active edge/corner wake cue.
     AffordanceWake {
