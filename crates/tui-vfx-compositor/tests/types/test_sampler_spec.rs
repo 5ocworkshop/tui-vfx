@@ -106,5 +106,44 @@ fn test_sampler_spec_crt_jitter_serde_roundtrip() {
     assert_eq!(spec, parsed);
 }
 
+#[test]
+fn test_sampler_spec_can_build_from_v3_sine_wave_payload() {
+    let spec = SamplerSpec::try_from_v3_payload(serde_json::json!({
+        "type": "sine_wave",
+        "axis": "y",
+        "amplitude": 2.0,
+        "frequency": 1.5,
+        "speed": 2.0,
+        "phase_offset": 0.25
+    }))
+    .unwrap();
+
+    match spec {
+        SamplerSpec::SineWave { phase, .. } => {
+            assert_eq!(phase, SignalOrFloat::Static(0.25));
+        }
+        other => panic!("expected SineWave, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_sampler_spec_can_build_from_v3_ripple_center_payload() {
+    let spec = SamplerSpec::try_from_v3_payload(serde_json::json!({
+        "type": "ripple",
+        "amplitude": 1.5,
+        "wavelength": 4.0,
+        "speed": 2.0,
+        "center": { "kind": "center" }
+    }))
+    .unwrap();
+
+    match spec {
+        SamplerSpec::Ripple { center, .. } => {
+            assert_eq!(center, RippleCenter::Center);
+        }
+        other => panic!("expected Ripple, got {other:?}"),
+    }
+}
+
 // <FILE>tui-vfx-compositor/tests/types/test_sampler_spec.rs</FILE> - <DESC>Tests for SamplerSpec</DESC>
 // <VERS>END OF VERSION: 1.0.0 - 2025-12-18T22:40:00Z</VERS>

@@ -146,6 +146,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - the direct source surface is now border-aware and the bridge honors `base_style_override` steps too, which unblocks representative complex scoped recipes such as `complex_layered_shaders` and `complex_diamond_highlight` in the preferred playback path
   - the direct scene bridge now preserves authored scene-layer visibility and z-order semantics, so representative scene-bearing recipes can stay on the same preferred audit surfaces instead of falling back to external reconstruction
   - the preferred direct bridge now also honors authored clock/lifecycle loop semantics and remaining debug-corpus compatibility aliases (`gradient_overlay`, style payload aliases, defaulted bound-cell scopes), which unblocks previously failing representative complex/style recipes on the same path
+  - sampler and filter compatibility lowering is now starting to move out of recipes-local JSON shims and into engine-owned executable constructors (`SamplerSpec::try_from_v3_payload`, `FilterSpec::try_from_v3_payload`), which is a better path toward truly V3-native runtime ownership than keeping every authored alias in the recipes bridge forever
   - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`
@@ -168,6 +169,7 @@ The current stance is:
   - that supported subset now also includes content/glyph/boolean selector scopes when they can be evaluated against the compiled envelope `source_text`
   - the dedicated `v3_play_recipe` example can now also render a first scene-bearing subset by lowering simple compiled scene layers through the existing stock scene composer before applying any bridgeable root pipeline
   - that first scene-bearing subset now includes stock procedural sources resolved through the real procedural registry, not only card-backed layers
+  - the representative non-deprecated debug corpus on the preferred direct-output path is now effectively cleared, with the remaining caveat that one experimental `fractional_stripe_overlay` shape is still approximated through a bridge shim rather than executed by a fully native V3 primitive
   - that first scene-bearing subset also includes simple text layers, and those card/procedural/text source families are now covered across the direct tool lanes
   - that first scene-bearing subset also supports a bridgeable root pipeline layered over the composed scene, not only scene-only recipes
   - that first scene-bearing subset now also supports bridgeable layer-local scene pipelines on those simple scene layers through the shared scene-source builder, not only scene-only layers plus a root pipeline

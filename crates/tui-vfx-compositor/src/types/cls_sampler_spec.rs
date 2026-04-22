@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_sampler_spec.rs</FILE> - <DESC>SamplerSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 2.5.1</VERS>
-// <WCTX>Rustfmt normalization for sampler spec docs</WCTX>
-// <CLOG>Apply formatting updates after clippy run</CLOG>
+// <VERS>VERSION: 2.6.0</VERS>
+// <WCTX>Keep V3 compatibility lowering as close to executable sampler semantics as possible so direct-V3 callers stop carrying phase_offset and ripple-center normalization themselves.</WCTX>
+// <CLOG>2.6.0: add SamplerSpec::try_from_v3_payload for engine-owned sine-wave and ripple payload normalization from V3-authored forms.</CLOG>
 
 //! # Sampler Specifications
 //!
@@ -42,6 +42,7 @@
 
 use mixed_signals::types::SignalOrFloat;
 use serde::{Deserialize, Serialize};
+use serde_json::{self, Value};
 
 /// Axis for directional effects.
 #[derive(
@@ -521,6 +522,66 @@ fn default_pendulum_phase_spread() -> SignalOrFloat {
 }
 
 impl SamplerSpec {
+    /// Build a runtime sampler spec from a V3-authored payload shape.
+    ///
+    /// This keeps V3 alias handling near the executable sampler surface
+    /// instead of repeating `phase_offset` and ripple-center tagged-union
+    /// normalization in every higher-level bridge caller.
+    pub fn try_from_v3_payload(mut payload: Value) -> serde_json::Result<Self> {
+        if let Value::Object(ref mut object) = payload {
+            let payload_type = object
+                .get("type")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or_default();
+            match payload_type {
+                "sine_wave" => {
+                    if object.contains_key("phase_offset") && !object.contains_key("phase") {
+                        if let Some(phase) = object.remove("phase_offset") {
+                            object.insert("phase".into(), phase);
+                        }
+                    }
+                }
+                "ripple" => {
+                    if let Some(center) = object.get("center").cloned() {
+                        if let Value::Object(center_object) = center {
+                            if center_object
+                                .get("kind")
+                                .and_then(serde_json::Value::as_str)
+                                == Some("center")
+                            {
+                                object.insert(
+                                    "center".into(),
+                                    Value::String("center".to_string()),
+                                );
+                            } else if center_object
+                                .get("kind")
+                                .and_then(serde_json::Value::as_str)
+                                == Some("cell")
+                            {
+                                object.insert(
+                                    "center".into(),
+                                    serde_json::json!({
+                                        "x": center_object
+                                            .get("x")
+                                            .and_then(serde_json::Value::as_u64)
+                                            .unwrap_or(0),
+                                        "y": center_object
+                                            .get("y")
+                                            .and_then(serde_json::Value::as_u64)
+                                            .unwrap_or(0),
+                                    }),
+                                );
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        serde_json::from_value(payload)
+    }
+
     /// Returns the sampler type name as a string.
     pub fn name(&self) -> &'static str {
         match self {

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.11.0</VERS>
-// <WCTX>Add fg_alternate to GlyphStyleRule — symmetric to bg_alternate. Primary consumer: HBF sparse_update recipe, where the flap block rule wants its face colour to carry the neighbor cell's bg shade for a subtle depth/shadow read while cells spin. Cross-assigning fg/fg_alternate to bg_alternate/bg lands the effect.</WCTX>
-// <CLOG>MINOR: GlyphStyleRule grows pub fg_alternate: Option<ColorConfig> with serde #[serde(default, skip_serializing_if = "Option::is_none")]. Backward-compatible — recipes without the field keep v3.10.0 semantics.
+// <VERS>VERSION: 3.12.0</VERS>
+// <WCTX>Keep V3 compatibility lowering as close to executable filter semantics as possible so direct-V3 callers stop carrying rigid-shake binding-object normalization themselves.</WCTX>
+// <CLOG>3.12.0: add FilterSpec::try_from_v3_payload for engine-owned rigid-shake binding/default lowering from V3-authored payloads.
 
 //! # Filter Specifications
 //!
@@ -71,6 +71,7 @@ use super::cls_hover_bar_position::HoverBarPosition;
 use super::cls_mask_spec::WipeDirection;
 use mixed_signals::types::SignalOrFloat;
 use serde::{Deserialize, Serialize};
+use serde_json::{self, Value};
 use tui_vfx_style::models::ColorConfig;
 
 /// Pattern types for filling cells.
@@ -1513,6 +1514,56 @@ fn default_shade_scanner_bps() -> f32 {
 }
 
 impl FilterSpec {
+    /// Build a runtime filter spec from a V3-authored payload shape.
+    ///
+    /// This keeps V3 compatibility normalization near the executable filter
+    /// surface instead of scattering rigid-shake binding-object lowering
+    /// across higher-level bridge callers.
+    pub fn try_from_v3_payload(mut payload: Value) -> serde_json::Result<Self> {
+        if let Value::Object(ref mut object) = payload {
+            let payload_type = object
+                .get("type")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or_default();
+            if payload_type == "rigid_shake" {
+                if let Some(num_shakes) = object.get("num_shakes").cloned() {
+                    if let Value::Object(binding_obj) = num_shakes {
+                        if let Some(binding_name) = binding_obj
+                            .get("binding")
+                            .and_then(serde_json::Value::as_str)
+                        {
+                            object.insert(
+                                "num_shakes_binding".into(),
+                                Value::String(binding_name.to_string()),
+                            );
+                        }
+                        if let Some(default_value) = binding_obj.get("default").cloned() {
+                            object.insert("num_shakes".into(), default_value);
+                        } else {
+                            object.remove("num_shakes");
+                        }
+                    }
+                }
+                if let Some(damping_scale) = object.get("damping_scale").cloned() {
+                    if let Value::Object(binding_obj) = damping_scale {
+                        if let Some(binding_name) = binding_obj
+                            .get("binding")
+                            .and_then(serde_json::Value::as_str)
+                        {
+                            object.insert(
+                                "damping_scale_binding".into(),
+                                Value::String(binding_name.to_string()),
+                            );
+                        }
+                        object.remove("damping_scale");
+                    }
+                }
+            }
+        }
+
+        serde_json::from_value(payload)
+    }
+
     /// Returns the filter type name as a string.
     pub fn name(&self) -> &'static str {
         match self {

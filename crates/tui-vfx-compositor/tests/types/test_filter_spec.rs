@@ -126,6 +126,35 @@ fn test_filter_spec_edge_grow_serde_roundtrip() {
     assert_eq!(spec, parsed);
 }
 
+#[test]
+fn test_filter_spec_can_build_from_v3_rigid_shake_binding_payload() {
+    let spec = FilterSpec::try_from_v3_payload(serde_json::json!({
+        "type": "rigid_shake",
+        "shake_period": 0.29,
+        "num_shakes": { "binding": "error_severity", "default": 4 },
+        "pause_duration": 0.52,
+        "max_eighths": 12,
+        "base_eighths": 3,
+        "damping": [1.0, 0.7, 0.45, 0.25],
+        "damping_scale": { "binding": "severity_decay", "default": 1.0 }
+    }))
+    .unwrap();
+
+    match spec {
+        FilterSpec::RigidShake {
+            num_shakes,
+            num_shakes_binding,
+            damping_scale_binding,
+            ..
+        } => {
+            assert_eq!(num_shakes, 4);
+            assert_eq!(num_shakes_binding.as_deref(), Some("error_severity"));
+            assert_eq!(damping_scale_binding.as_deref(), Some("severity_decay"));
+        }
+        other => panic!("expected RigidShake, got {other:?}"),
+    }
+}
+
 // =============================================================================
 // ApplyTo PascalCase alias tests
 // =============================================================================
