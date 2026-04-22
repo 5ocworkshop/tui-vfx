@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.9.0</VERS> -->
+<!-- <VERS>VERSION: 1.10.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.9.0: record that recipe inspector/reporting seams now consume grouped V3 effect-family labels from extracted style layers.
+<!-- <CLOG>1.10.0: record that validator/probe stage reporting now carries grouped V3 style-effect family labels from runtime style interpolation.
+1.9.0: record that recipe inspector/reporting seams now consume grouped V3 effect-family labels from extracted style layers.
 1.8.0: extend the grouped V3 effect-family seam to StyleLayer so enter/dwell/exit effects can flow through one ordered family surface during runtime wiring.
 1.7.0: add the first grouped V3 family seam for non-spatial style effects so runtime wiring can classify overall style effects through one SSOT family surface.
 1.6.0: record the first end-to-end compiled V3 demo bridge in tui-vfx-recipes so the runtime-wiring tracker reflects that a valid V3 recipe can already exercise the compositor through the bridge subset.
@@ -231,6 +232,7 @@ Outstanding style-model buckets for follow-on slices:
     - [x] `StyleEffect::v3_effect_family()` for grouped non-spatial style-effect identity
     - [x] `StyleLayer::v3_effect_families()` for enter/dwell/exit grouped effect identity
     - [x] recipe TraceInspector/ValidationInspector consume grouped effect-family labels from extracted style layers
+    - [x] validator/probe stage reporting carries grouped effect-family labels from active style interpolation
   - [~] broader runtime wiring against `models::v3` family surfaces
     - [x] first compiled-plan -> CompositionSpec bridge in `tui-vfx-recipes`
     - [x] deterministic V3 demo example run for a valid shader recipe
@@ -252,4 +254,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.9.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.10.0</VERS> -->
