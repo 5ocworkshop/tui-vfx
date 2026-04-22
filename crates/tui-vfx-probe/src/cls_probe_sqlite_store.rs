@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-probe/src/cls_probe_sqlite_store.rs</FILE> - <DESC>In-memory SQLite index for probe playback data</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.5.0</VERS>
 // <WCTX>Background snapshot storage for trace-event SQLite queries</WCTX>
-// <CLOG>MINOR: Extend the SQLite store with probe_diagnostics rows so report-level warnings/errors can be sliced via SQL alongside frame/trace and operational-analysis data</CLOG>
+// <CLOG>0.5.0: persist optional effect-family labels in probe_analysis_effects rows so SQL queries can slice grouped V3 style categories.
+// MINOR: Extend the SQLite store with probe_diagnostics rows so report-level warnings/errors can be sliced via SQL alongside frame/trace and operational-analysis data</CLOG>
 
 use rusqlite::types::ValueRef;
 use rusqlite::{Connection, params};
@@ -358,6 +359,7 @@ impl ProbeSqliteStore {
                 sample_t real,
                 stage text not null,
                 effect text not null,
+                family text,
                 configured integer not null,
                 configured_instances integer not null,
                 touched_cells integer not null,
@@ -612,7 +614,7 @@ impl ProbeSqliteStore {
                 .flatten()
             {
                 self.conn.execute(
-                    "insert into probe_analysis_effects(run_id, scope, phase, sample_t, stage, effect, configured, configured_instances, touched_cells, observed_event_count, status) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                    "insert into probe_analysis_effects(run_id, scope, phase, sample_t, stage, effect, family, configured, configured_instances, touched_cells, observed_event_count, status) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
                     params![
                         run_id,
                         scope,
@@ -620,6 +622,7 @@ impl ProbeSqliteStore {
                         sample_t,
                         stage.get("stage").and_then(Value::as_str).unwrap_or("unknown"),
                         effect.get("effect").and_then(Value::as_str).unwrap_or("unknown"),
+                        effect.get("family").and_then(Value::as_str),
                         effect.get("configured").and_then(Value::as_bool).map(i64::from).unwrap_or_default(),
                         effect.get("configured_instances").and_then(Value::as_u64).unwrap_or_default() as i64,
                         effect.get("touched_cells").and_then(Value::as_u64).unwrap_or_default() as i64,
@@ -635,4 +638,4 @@ impl ProbeSqliteStore {
 }
 
 // <FILE>crates/tui-vfx-probe/src/cls_probe_sqlite_store.rs</FILE> - <DESC>In-memory SQLite index for probe playback data</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

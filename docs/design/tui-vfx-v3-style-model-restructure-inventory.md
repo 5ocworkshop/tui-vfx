@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.11.0</VERS> -->
+<!-- <VERS>VERSION: 1.12.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.11.0: record that unified probe pipeline inventory now carries grouped V3 style-effect family labels for active non-spatial style effects.
+<!-- <CLOG>1.12.0: record that operational analysis and sqlite-backed probe analysis rows now carry grouped V3 style-effect family labels.
+1.11.0: record that unified probe pipeline inventory now carries grouped V3 style-effect family labels for active non-spatial style effects.
 1.10.0: record that validator/probe stage reporting now carries grouped V3 style-effect family labels from runtime style interpolation.
 1.9.0: record that recipe inspector/reporting seams now consume grouped V3 effect-family labels from extracted style layers.
 1.8.0: extend the grouped V3 effect-family seam to StyleLayer so enter/dwell/exit effects can flow through one ordered family surface during runtime wiring.
@@ -235,6 +236,7 @@ Outstanding style-model buckets for follow-on slices:
     - [x] recipe TraceInspector/ValidationInspector consume grouped effect-family labels from extracted style layers
     - [x] validator/probe stage reporting carries grouped effect-family labels from active style interpolation
     - [x] unified probe pipeline inventory carries grouped effect-family labels for active non-spatial style effects
+    - [x] operational analysis + sqlite-backed probe analysis rows carry grouped style-effect family labels
   - [~] broader runtime wiring against `models::v3` family surfaces
     - [x] first compiled-plan -> CompositionSpec bridge in `tui-vfx-recipes`
     - [x] deterministic V3 demo example run for a valid shader recipe
@@ -256,4 +258,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.12.0</VERS> -->
