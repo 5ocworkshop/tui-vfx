@@ -153,6 +153,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - compositor-facing timing assignment is now starting to centralize too: `CompositionPlaybackTiming` and the shared timing-application helpers on `CompositionSpec` / `CompositionOptions` reduce ad hoc `t`/`loop_t`/`phase` wiring at callers while the native runtime boundary is still in transition
   - the direct V3 scene bridge now reuses the stock scene composition loop with a post-paint hook for layer-local pipelines, which moves more scene ordering/visibility/overlay ownership back into the scene subsystem instead of duplicating it in the V3 bridge
   - non-spatial style-effect application over rendered semantic scenes is now starting to move inward too: `apply_style_effects_to_scene(...)` in `tui-vfx-style` owns the region-aware post-render mutation loop that the direct V3 bridge previously kept locally
+  - source-surface construction for direct compiled V3 playback is now starting to centralize too: `build_v3_source_surface(...)` owns content resolution, border painting, role tagging, and base-style override application instead of leaving that stack embedded inside one renderer helper
   - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`
