@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md).</WCTX> -->
-<!-- <CLOG>1.0.0: initial extraction from the monolith.</CLOG> -->
+<!-- <CLOG>1.1.0: record that supported compiled V3 recipes now reach the deterministic compositor bridge in both the dedicated V3 demo and pipeline-validator output stage while broader V3 runtime/probe coverage remains outstanding.
+1.0.0: initial extraction from the monolith.</CLOG> -->
 
 # 100 — Tooling and CI migration — release-blocking work
 
@@ -133,6 +134,9 @@ The current stance is:
 
 - structural V3 loading / normalization / validation / compile seams exist
 - transitional legacy-runtime bridges exist where required for active audit and migration workflows
+- supported compiled V3 plans can already bridge into `CompositionSpec`, render deterministically through the compositor, and surface grouped shader families plus a stable render hash in:
+  - the dedicated `v3_play_recipe` example
+  - `pipeline-validator --stage output` for the supported bridge subset
 - those bridges are explicit and temporary
 
 That distinction matters for Chapter 60’s release gates: “current V3 corpus can be inspected and audited” is **not** the same claim as “the runtime path is fully V3-native.”
@@ -143,7 +147,8 @@ V3 does not ship until each of the following is green:
 
 - [ ] `tui-vfx-recipes/src/recipe_schema/config.rs` exposes V3 types + V2 types behind a `schema_version` dispatch, or cuts over wholesale.
 - [ ] `tui-vfx-style/src/models/` restructured per Decision 2 (primitives + Tier 1 factories).
-- [ ] `pipeline-validator` understands V3 and passes Chapter 60's gate criteria for the critical set.
+- [ ] `pipeline-validator` understands V3 and passes Chapter 60's gate criteria for the critical set.  
+      _Current state: supported compiled V3 recipes now progress through parse/profile/render/shader/output and exercise the deterministic compositor bridge; rules/probe/critical-set parity remain outstanding._
 - [ ] `recipe-probe` and `tui-vfx-trace` produce V3-aware reports; trace event taxonomy finalized (Decision 5 implementation track).
 - [ ] `fnc_run_debug_recipes_qc.rs` passes against the V3 debug-recipes corpus.
 - [ ] `xtask docs generate` produces V3-shape `effect_schemas.json`, `capabilities.json`, `ai-context.md`, `CAPABILITIES.md`.

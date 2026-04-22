@@ -1,7 +1,8 @@
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>VERSION: 1.4.0</VERS> -->
-<!-- <WCTX>Hotfix H3 validator ergonomics: document multi-phase/all selection, --frames sweeps, structured JSON dump output, verbose resolution/border-trim traces, and the build-once/direct-binary workflow.</WCTX> -->
-<!-- <CLOG>1.4.0: MINOR — add H3 ergonomics guidance for phase lists/all, --frames, --format json dump mode, -vvv resolution/border-trim traces, and the build-once/direct-binary matrix workflow.
+<!-- <VERS>VERSION: 1.5.0</VERS> -->
+<!-- <WCTX>Hotfix H3 validator ergonomics: document multi-phase/all selection, --frames sweeps, structured JSON dump output, verbose resolution/border-trim traces, the build-once/direct-binary workflow, and the first supported compiled-V3 validator bridge subset.</WCTX> -->
+<!-- <CLOG>1.5.0: MINOR — document the first supported compiled-V3 validator bridge subset: parse/profile/render/shader/output now work for bridgeable compiled V3 recipes and emit deterministic render hashes instead of stopping at parse.
+1.4.0: MINOR — add H3 ergonomics guidance for phase lists/all, --frames, --format json dump mode, -vvv resolution/border-trim traces, and the build-once/direct-binary matrix workflow.
 1.3.0: MINOR — add "Relationship to tui-vfx-trace (Sub-plan B)" section so validator's recipe-authoring scope is distinguished from the unified inspection trace stream.
 1.2.0: MINOR — Add an authority split for Preview / validator / probe, document --debug-recipes-qc, and explain that concrete GTD bridge exports are valid upstream recipe inputs after token resolution</CLOG> -->
 
@@ -51,6 +52,35 @@ Those surfaces are complementary:
 - Preview answers **“does the canonical player look correct to a human?”**
 
 Do not move GTD display-truth semantics into validator acceptance. Upstream validator/probe accept **resolved concrete recipe payloads** as normal recipe JSON, but GTD token resolution remains GTD-owned.
+
+## Current V3 bridge subset
+
+`pipeline-validator` is no longer V3-parse-only.
+
+For the current **supported compiled V3 bridge subset** (recipes whose compiled
+plans can lower into `CompositionSpec`), the validator now progresses through:
+
+- parse
+- profile
+- render
+- shader
+- output
+
+and the output stage emits deterministic bridge evidence such as:
+
+- grouped V3 shader-family identity
+- `render_hash`
+- `non_empty_cells`
+
+This is a real runtime exercise through the compositor, not just a structural
+load check.
+
+It is still a **subset**:
+
+- unsupported compiled V3 shapes fail explicitly at the compositor-bridge seam
+- rules/probe/trace parity for V3 remains ongoing work
+- legacy preview scheduling semantics are not yet fully reproduced by the V3
+  bridge path
 
 ## The flags that matter
 
@@ -181,4 +211,4 @@ Fix: use true point-to-segment Euclidean distance, including the parallel offset
 - `tools/pipeline-validator/src/stages/functions/fnc_sample_buffer_cells.rs` (in tui-vfx-recipes) — the grid-map and per-row dump implementations
 
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.5.0</VERS> -->
