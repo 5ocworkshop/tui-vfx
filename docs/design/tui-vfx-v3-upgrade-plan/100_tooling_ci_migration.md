@@ -144,6 +144,7 @@ The current stance is:
   - that supported subset now also includes channel-scoped filters/shaders/style-effects where the payload can lower into an existing runtime `apply_to` contract
   - that supported subset now also includes content/glyph/boolean selector scopes when they can be evaluated against the compiled envelope `source_text`
   - the dedicated `v3_play_recipe` example can now also render a first scene-bearing subset by lowering simple compiled scene layers through the existing stock scene composer before applying any bridgeable root pipeline
+  - `pipeline-validator --stage output` now also exercises that same first scene-bearing subset
   - `pipeline-validator --dump --stage output --format json` now also emits one deterministic structured dump sample for that same supported bridge subset
   - `pipeline-validator --probe` now also accepts that same supported bridge subset directly, producing direct `ProbeSceneSpec` evidence instead of forcing paired legacy runtime fallback
 - supported compiled V3 plans can also reach `tui-vfx-trace` for the same bridge subset, emitting real pipeline trace envelopes without pretending full V3 preview/scene parity has already landed
