@@ -49,6 +49,8 @@ mod test_cls_style_transition;
 mod test_fnc_style_region_should_style;
 #[path = "models/test_fnc_style_region_bounding_rect.rs"]
 mod test_fnc_style_region_bounding_rect;
+#[path = "models/test_fnc_apply_style_effects_to_scene.rs"]
+mod test_fnc_apply_style_effects_to_scene;
 #[path = "models/test_style_region_legacy_parse_round_trip.rs"]
 mod test_style_region_legacy_parse_round_trip;
 #[path = "models/test_cls_wayfinding_node_shader.rs"]
