@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 0.9.0</VERS> -->
+<!-- <VERS>VERSION: 1.0.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>0.9.0: add the first grouped V3 edge-distortion family so the remaining glitch/edge micro-treatment subgroup is also moving into real V3 code.
+<!-- <CLOG>1.0.0: add the first grouped V3 gradient-reveal family so the primitive bucket is fully represented by grouped V3 subfamilies.
+0.9.0: add the first grouped V3 edge-distortion family so the remaining glitch/edge micro-treatment subgroup is also moving into real V3 code.
 0.8.0: add the first grouped V3 motion-field family so the primitive scan/pulse/orbit subgroup is also moving into real V3 code during active family work.
 0.7.0: add the first grouped V3 surface-depth family so the primitive depth/surface subgroup is also moving into real V3 code rather than waiting behind later cleanup.
 0.6.0: add an explicit completed/outstanding tracker so the style-model migration state is resumable without rediscovering which grouped V3 family files already exist.
@@ -72,6 +73,8 @@ These look like true reusable substrates or very close siblings of one:
 
 - `LinearGradient`
 - `RevealWipe`
+
+  Seeded together in `crates/tui-vfx-style/src/models/v3/cls_vfx_gradient_reveal_shader.rs`.
 - `Glow`
 - `AmbientOcclusion`
 - `Bevel`
@@ -196,12 +199,11 @@ Completed real V3-side family surfaces:
 
 Outstanding style-model buckets for follow-on slices:
 
-- [~] primitive / substrate-aligned cluster
+- [x] primitive / substrate-aligned cluster
   - completed subgroup: surface-depth (`Glow`, `AmbientOcclusion`, `Bevel`)
   - completed subgroup: motion-field (`PulseWave`, `Radar`, `Orbit`)
   - completed subgroup: edge-distortion (`GlitchLines`, `ChromaticEdge`, `SubCellShake`)
-  - likely subfamilies still to split deliberately rather than as one catch-all file
-  - remaining candidates: `LinearGradient`, `RevealWipe`
+  - completed subgroup: gradient-reveal (`LinearGradient`, `RevealWipe`)
 - [ ] category needing explicit future decision
   - current candidates: `BarberPole`, `NeonFlicker`, `Cursor`, `StochasticSparkle`
 - [ ] any additional cross-family refactors needed once runtime wiring begins
@@ -223,4 +225,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.9.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
