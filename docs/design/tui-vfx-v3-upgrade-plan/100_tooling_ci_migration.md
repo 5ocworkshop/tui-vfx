@@ -107,6 +107,36 @@ An exhaustive tooling inventory was conducted as part of the debug-recipes migra
 
 6. **Temporary mixed-schema shims must be retired explicitly at endgame.** During the cutover, some helper seams may project V3 documents back into legacy compatibility types to keep old validator/test/example surfaces working while deeper runtime ports are still in flight. That is acceptable only as a transitional aid. Before declaring the V3 cutover complete and removing V2 support, audit for these shims (for example mixed-schema config projection helpers) and delete them rather than letting them become permanent compatibility sediment.
 
+## 35 — Current implemented cutover state (`tui-vfx-recipes`)
+
+The tooling migration is no longer purely theoretical. The following cutover seams are already in place in `tui-vfx-recipes`:
+
+- **Centralized version-aware dispatch**
+  - path-based dispatch for legacy vs V3 recipe files
+  - in-memory dispatch for raw JSON strings / `serde_json::Value`
+- **Centralized legacy runtime seam**
+  - one helper for “load one playable legacy recipe”
+- **Explicit cutover bridge**
+  - one helper that can bridge a current V3 recipe path through its paired `_DEPRECATED_` legacy fixture when a legacy runtime surface still needs to operate
+- **Customer-facing preview/demo seam**
+  - the public demo/player and diagnostic example players now route through an upstream cutover-aware preview helper instead of assembling transitional policy at the call sites
+- **Reporting/tool surfaces**
+  - `pipeline-validator`
+  - `recipe-probe`
+  - `tui-vfx-trace`
+  - the debug-recipes QC path
+  now all use explicit shared seams and, where necessary, surface that they are temporarily bridged through legacy runtime truth rather than pretending full V3 runtime support already exists
+
+This is meaningful progress, but it is **not yet equivalent to native V3 runtime support**.
+
+The current stance is:
+
+- structural V3 loading / normalization / validation / compile seams exist
+- transitional legacy-runtime bridges exist where required for active audit and migration workflows
+- those bridges are explicit and temporary
+
+That distinction matters for Chapter 60’s release gates: “current V3 corpus can be inspected and audited” is **not** the same claim as “the runtime path is fully V3-native.”
+
 ## 40 — Release checklist (tooling slice)
 
 V3 does not ship until each of the following is green:
