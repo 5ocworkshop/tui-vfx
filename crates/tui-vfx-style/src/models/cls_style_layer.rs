@@ -3,7 +3,9 @@
 // <WCTX>Multi-layer style support for per-region effects</WCTX>
 // <CLOG>Initial implementation of StyleLayer for multi-region styling</CLOG>
 
-use crate::models::{StyleEffect, StyleRegion, VfxStyleEffectFamily};
+use crate::models::{
+    StyleEffect, StyleRegion, TryLowerV3StyleEffectError, VfxStyleEffectFamily, VfxStyleEffectValue,
+};
 use serde::{Deserialize, Serialize};
 
 /// A style layer combines a region constraint with phase-specific effects.
@@ -54,6 +56,40 @@ impl StyleLayer {
             region,
             ..Default::default()
         }
+    }
+
+
+    /// Set the enter effect from a grouped V3 overall-effect value with optional region override.
+    pub fn try_with_v3_enter(
+        mut self,
+        effect: &VfxStyleEffectValue,
+        region: Option<StyleRegion>,
+    ) -> Result<Self, TryLowerV3StyleEffectError> {
+        self.enter_effect = Some(effect.try_to_legacy_style_effect()?);
+        self.enter_region = region;
+        Ok(self)
+    }
+
+    /// Set the dwell effect from a grouped V3 overall-effect value with optional region override.
+    pub fn try_with_v3_dwell(
+        mut self,
+        effect: &VfxStyleEffectValue,
+        region: Option<StyleRegion>,
+    ) -> Result<Self, TryLowerV3StyleEffectError> {
+        self.dwell_effect = Some(effect.try_to_legacy_style_effect()?);
+        self.dwell_region = region;
+        Ok(self)
+    }
+
+    /// Set the exit effect from a grouped V3 overall-effect value with optional region override.
+    pub fn try_with_v3_exit(
+        mut self,
+        effect: &VfxStyleEffectValue,
+        region: Option<StyleRegion>,
+    ) -> Result<Self, TryLowerV3StyleEffectError> {
+        self.exit_effect = Some(effect.try_to_legacy_style_effect()?);
+        self.exit_region = region;
+        Ok(self)
     }
 
     /// Set the enter effect with optional region override.

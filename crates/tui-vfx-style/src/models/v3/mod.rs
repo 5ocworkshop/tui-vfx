@@ -33,7 +33,9 @@ pub mod enum_vfx_spatial_primitive;
 pub mod enum_vfx_spatial_shader_family;
 pub mod enum_vfx_stochastic_texture_behavior;
 pub mod enum_vfx_style_effect_family;
+pub mod enum_vfx_style_effect_value;
 pub mod enum_try_lower_v3_spatial_shader_error;
+pub mod enum_try_lower_v3_style_effect_error;
 pub mod enum_vfx_stripe_motion_behavior;
 pub mod enum_vfx_surface_depth_behavior;
 pub mod enum_vfx_traveling_band_behavior;
@@ -74,7 +76,9 @@ pub use enum_vfx_stochastic_texture_behavior::{
     VfxStochasticTextureBehavior, VfxTextureSegmentMode, VfxTextureTarget,
 };
 pub use enum_try_lower_v3_spatial_shader_error::TryLowerV3SpatialShaderError;
+pub use enum_try_lower_v3_style_effect_error::TryLowerV3StyleEffectError;
 pub use enum_vfx_style_effect_family::VfxStyleEffectFamily;
+pub use enum_vfx_style_effect_value::VfxStyleEffectValue;
 pub use enum_vfx_stripe_motion_behavior::VfxStripeMotionBehavior;
 pub use enum_vfx_surface_depth_behavior::{
     VfxSurfaceDepthBehavior, VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection,
@@ -108,6 +112,8 @@ mod test_vfx_stochastic_texture_shader;
 mod test_vfx_stripe_motion_shader;
 #[cfg(test)]
 mod test_vfx_surface_depth_shader;
+#[cfg(test)]
+mod test_vfx_style_effect_value;
 #[cfg(test)]
 mod test_try_lower_v3_spatial_shader_family;
 #[cfg(test)]

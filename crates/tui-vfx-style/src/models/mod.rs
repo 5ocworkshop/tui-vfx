@@ -149,7 +149,7 @@ pub use v3::{
     VfxProgressEmphasisDirection, VfxProgressEmphasisMode, VfxProgressEmphasisRowMask,
     VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast, VfxRevealDirection,
     VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
-    VfxStyleEffectFamily,
+    TryLowerV3StyleEffectError, VfxStyleEffectFamily, VfxStyleEffectValue,
     VfxStochasticTextureBehavior, VfxStochasticTextureShader, VfxStripeMotionBehavior,
     VfxStripeMotionShader, VfxSurfaceDepthBehavior, VfxSurfaceDepthEdges,
     VfxSurfaceDepthLightDirection, VfxSurfaceDepthShader, VfxTextureSegmentMode, VfxTextureTarget,
