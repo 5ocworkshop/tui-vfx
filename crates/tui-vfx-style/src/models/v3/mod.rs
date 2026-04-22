@@ -10,15 +10,24 @@
 //! current playback and downstream compatibility until the broader cutover is
 //! complete.
 
+pub mod cls_vfx_progress_emphasis_shader;
 pub mod cls_vfx_traveling_band_shader;
+pub mod enum_vfx_progress_emphasis_behavior;
 pub mod enum_vfx_traveling_band_behavior;
 
+pub use cls_vfx_progress_emphasis_shader::VfxProgressEmphasisShader;
 pub use cls_vfx_traveling_band_shader::VfxTravelingBandShader;
+pub use enum_vfx_progress_emphasis_behavior::{
+    VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
+    VfxProgressEmphasisRowMask, VfxProgressEmphasisTextContrast,
+};
 pub use enum_vfx_traveling_band_behavior::{
     VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
     VfxTravelingBandDirection,
 };
 
+#[cfg(test)]
+mod test_vfx_progress_emphasis_shader;
 #[cfg(test)]
 mod test_vfx_traveling_band_shader;
 
