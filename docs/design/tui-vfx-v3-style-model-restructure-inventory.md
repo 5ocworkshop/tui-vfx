@@ -262,6 +262,7 @@ Outstanding style-model buckets for follow-on slices:
     - [x] AnimationProfile legacy fallback conversion uses grouped V3 overall-effect values
     - [x] PreviewItem / preview_from_recipe_config can use grouped V3 overall-effect values directly
     - [x] legacy PreviewItem enter/dwell/exit setters route through grouped V3 overall-effect values internally
+    - [x] unified recipe-probe active non-spatial style effect descriptors carry grouped V3 overall-effect values
   - [~] broader runtime wiring against `models::v3` family surfaces
     - [x] first compiled-plan -> CompositionSpec bridge in `tui-vfx-recipes`
     - [x] deterministic V3 demo example run for a valid shader recipe
