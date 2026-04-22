@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.26.0</VERS> -->
+<!-- <VERS>VERSION: 1.27.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.26.0: record that validator probe-mode lifecycle aggregation now preserves grouped family labels for executable probe analysis rows.
+<!-- <CLOG>1.27.0: record that the direct compiled-V3 visual bridge now applies non-spatial style effects in the preferred playback surfaces instead of remaining spatial-only.
+1.26.0: record that validator probe-mode lifecycle aggregation now preserves grouped family labels for executable probe analysis rows.
 1.24.0: record that preview_from_recipe_config and PreviewItem now accept grouped overall-effect values directly for enter/dwell/exit styles.
 1.23.0: record that AnimationProfile legacy fallback conversion now also consumes grouped V3 overall-effect values when synthesizing StyleLayer entries.
 1.22.0: add the first grouped overall-effect executable value seam plus StyleLayer constructors that lower grouped V3 effects back into StyleEffect.
@@ -265,6 +266,7 @@ Outstanding style-model buckets for follow-on slices:
     - [x] legacy PreviewItem enter/dwell/exit setters route through grouped V3 overall-effect values internally
     - [x] unified recipe-probe active non-spatial style effect descriptors carry grouped V3 overall-effect values
     - [x] pipeline-validator probe-mode lifecycle aggregation preserves grouped family labels in executable analysis rows
+    - [x] direct compiled-V3 visual playback applies non-spatial style effects in demo/play_recipe instead of remaining spatial-only
   - [~] broader runtime wiring against `models::v3` family surfaces
     - [x] first compiled-plan -> CompositionSpec bridge in `tui-vfx-recipes`
     - [x] deterministic V3 demo example run for a valid shader recipe
@@ -286,4 +288,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.26.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.27.0</VERS> -->

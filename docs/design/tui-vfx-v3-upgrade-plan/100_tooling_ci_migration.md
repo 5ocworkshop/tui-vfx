@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.5.6</VERS> -->
+<!-- <VERS>VERSION: 1.5.7</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md).</WCTX> -->
-<!-- <CLOG>1.5.6: record that demo now exposes an explicit schema-version line in Recipe Info so mixed V2/V3 playback during cutover is obvious during audits.
+<!-- <CLOG>1.5.7: record that the direct compiled-V3 visual bridge now also applies non-spatial style effects, so the preferred playback path is no longer spatial-only.
+1.5.6: record that demo now exposes an explicit schema-version line in Recipe Info so mixed V2/V3 playback during cutover is obvious during audits.
 1.5.5: record that the first direct V3 visual path is now phase/sample-aware, so play_recipe/demo can scrub and auto-advance the supported subset instead of freezing on one fixed dwell sample.
 1.5.4: record that the browser demo can now start on an explicit recipe path and advertises direct-V3 snapshot mode in the UI/task runner for faster parity audits.
 1.5.3: record that the browser demo now understands the same direct rendered V3 snapshot subset as play_recipe, even though the full native animated V3 preview path is still outstanding.
@@ -134,6 +135,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - `play_recipe` now prefers a direct rendered V3 snapshot for the supported compiled bridge subset before falling back to paired legacy fixtures
   - `demo` now understands that same direct rendered V3 snapshot subset for visual browsing, can start on an explicit recipe path for faster audit loops, advertises direct-V3 snapshot mode in the browser UI, and shows the active schema version in Recipe Info so mixed cutover playback stays obvious during audits
   - that direct visual subset is now phase/sample-aware: `play_recipe` and `demo` can auto-advance or scrub the supported compiled-V3 bridge subset across enter/dwell/exit samples instead of freezing on one fixed dwell frame
+  - the same direct visual bridge now also applies non-spatial style effects (for example pulse/fade/modulation-style lanes), so the preferred playback path is no longer spatial-only
   - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`
@@ -194,4 +196,4 @@ V3 does not ship until each of the following is green:
 Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail, and to the frozen V2 spec archive (`docs/v2-spec-archive/`) for historical reference.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.5.6</VERS> -->
+<!-- <VERS>END OF VERSION: 1.5.7</VERS> -->
