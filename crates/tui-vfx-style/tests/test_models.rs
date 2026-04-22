@@ -37,6 +37,8 @@ mod test_cls_linear_gradient_shader;
 mod test_cls_neon_flicker_shader;
 #[path = "models/test_cls_style_effect.rs"]
 mod test_cls_style_effect;
+#[path = "models/test_cls_style_layer.rs"]
+mod test_cls_style_layer;
 #[path = "models/test_cls_style_region.rs"]
 mod test_cls_style_region;
 #[path = "models/test_cls_style_transition.rs"]

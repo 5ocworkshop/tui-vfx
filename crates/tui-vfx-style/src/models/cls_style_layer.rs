@@ -3,7 +3,7 @@
 // <WCTX>Multi-layer style support for per-region effects</WCTX>
 // <CLOG>Initial implementation of StyleLayer for multi-region styling</CLOG>
 
-use crate::models::{StyleEffect, StyleRegion};
+use crate::models::{StyleEffect, StyleRegion, VfxStyleEffectFamily};
 use serde::{Deserialize, Serialize};
 
 /// A style layer combines a region constraint with phase-specific effects.
@@ -75,6 +75,41 @@ impl StyleLayer {
         self.exit_effect = Some(effect);
         self.exit_region = region;
         self
+    }
+
+
+    /// Returns the grouped V3 family form of the enter effect, when present.
+    pub fn enter_v3_effect_family(&self) -> Option<VfxStyleEffectFamily> {
+        self.enter_effect
+            .as_ref()
+            .map(StyleEffect::v3_effect_family)
+    }
+
+    /// Returns the grouped V3 family form of the dwell effect, when present.
+    pub fn dwell_v3_effect_family(&self) -> Option<VfxStyleEffectFamily> {
+        self.dwell_effect
+            .as_ref()
+            .map(StyleEffect::v3_effect_family)
+    }
+
+    /// Returns the grouped V3 family form of the exit effect, when present.
+    pub fn exit_v3_effect_family(&self) -> Option<VfxStyleEffectFamily> {
+        self.exit_effect
+            .as_ref()
+            .map(StyleEffect::v3_effect_family)
+    }
+
+    /// Returns grouped V3 family identity for every configured phase effect in
+    /// enter → dwell → exit order.
+    pub fn v3_effect_families(&self) -> Vec<VfxStyleEffectFamily> {
+        [
+            self.enter_v3_effect_family(),
+            self.dwell_v3_effect_family(),
+            self.exit_v3_effect_family(),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
     }
 
     /// Get the effective region for the enter effect.
