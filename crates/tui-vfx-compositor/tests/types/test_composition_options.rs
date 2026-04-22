@@ -32,6 +32,7 @@ fn composition_options_reports_known_v3_shader_families() {
         v3_family: Some(VfxSpatialShaderFamily::ComposedPrimitive(
             VfxSpatialComposedPrimitive::TravelingBand((&border).into()),
         )),
+        shader_label: Some("BorderSweep".to_string()),
     });
     options.shader_layers.push(ShaderWithRegion {
         shader: &glow,
@@ -39,6 +40,7 @@ fn composition_options_reports_known_v3_shader_families() {
         v3_family: Some(VfxSpatialShaderFamily::Primitive(
             VfxSpatialPrimitive::SurfaceDepth((&glow).into()),
         )),
+        shader_label: Some("Glow".to_string()),
     });
 
     let families = options.v3_shader_families();

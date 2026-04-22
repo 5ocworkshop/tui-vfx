@@ -15,9 +15,7 @@ use tui_vfx_compositor::traits::cls_inspection_sink_bridge::{
 use tui_vfx_compositor::traits::pipeline_inspector::CompositorInspector;
 use tui_vfx_compositor::types::cls_filter_spec::FilterSpec;
 use tui_vfx_compositor::types::cls_mask_spec::MaskSpec;
-use tui_vfx_debug::inspection::{
-    StageMask, TraceEvent, TraceFilter, TraceSelector, TraceSink,
-};
+use tui_vfx_debug::inspection::{StageMask, TraceEvent, TraceFilter, TraceSelector, TraceSink};
 use tui_vfx_types::{
     Cell, Color, Grid, Modifiers, OwnedGrid, RecipeId, RoleMap, RoleTag, SemanticScene, Style,
 };
@@ -123,7 +121,8 @@ fn minimal_options<'a>() -> CompositionOptions<'a> {
 fn bridge_produces_trace_events_for_every_rendered_cell() {
     let source = small_source(4, 3);
     let source_roles = RoleMap::all_background(4, 3);
-    let mut dest = SemanticScene::from_grid_with_default_role(OwnedGrid::new(8, 4), RoleTag::Background);
+    let mut dest =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(8, 4), RoleTag::Background);
 
     let sink = Arc::new(TraceSink::new(TraceFilter::accept_all()));
     let ctx = TraceFrameContext::new(0, 0).with_recipe_id(RecipeId::from("bridge.test"));
@@ -164,7 +163,8 @@ fn bridge_produces_trace_events_for_every_rendered_cell() {
         .filter(|e| matches!(e.event, TraceEvent::CellRendered { .. }))
         .count();
     assert_eq!(
-        cell_rendered_count, 4 * 3,
+        cell_rendered_count,
+        4 * 3,
         "expected 12 CellRendered events (4x3 source)"
     );
 
@@ -188,7 +188,8 @@ fn bridge_produces_trace_events_for_every_rendered_cell() {
 fn existing_compositor_inspector_impls_keep_working() {
     let source = small_source(4, 3);
     let source_roles = RoleMap::all_background(4, 3);
-    let mut dest = SemanticScene::from_grid_with_default_role(OwnedGrid::new(8, 4), RoleTag::Background);
+    let mut dest =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(8, 4), RoleTag::Background);
 
     let mut inspector = CountingInspector::default();
     render_pipeline(
@@ -205,10 +206,18 @@ fn existing_compositor_inspector_impls_keep_working() {
 
     // The minimal config has no mask, no shader, no filter, no shadow:
     // the inspector should only observe sampler + cell callbacks.
-    assert_eq!(inspector.cells, 4 * 3, "every cell reports on_cell_rendered");
+    assert_eq!(
+        inspector.cells,
+        4 * 3,
+        "every cell reports on_cell_rendered"
+    );
     // Sampler fires on every (x, y) pair even in the minimal config
     // (inspected path always calls on_sampler_applied).
-    assert_eq!(inspector.sampler, 4 * 3, "every cell reports on_sampler_applied");
+    assert_eq!(
+        inspector.sampler,
+        4 * 3,
+        "every cell reports on_sampler_applied"
+    );
     assert_eq!(inspector.mask, 0);
     assert_eq!(inspector.shader, 0);
     assert_eq!(inspector.filter, 0);
@@ -219,7 +228,8 @@ fn existing_compositor_inspector_impls_keep_working() {
 fn bridge_short_circuits_with_none_stage_filter() {
     let source = small_source(4, 3);
     let source_roles = RoleMap::all_background(4, 3);
-    let mut dest = SemanticScene::from_grid_with_default_role(OwnedGrid::new(8, 4), RoleTag::Background);
+    let mut dest =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(8, 4), RoleTag::Background);
 
     // Filter that only accepts LIFECYCLE events — PIPELINE is masked off.
     let filter = TraceFilter {
@@ -254,3 +264,68 @@ fn bridge_short_circuits_with_none_stage_filter() {
 
 // <FILE>crates/tui-vfx-compositor/tests/test_inspection_sink_bridge.rs</FILE> - <DESC>Bridge integration test</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>
+
+#[test]
+fn bridge_reports_v3_family_in_shader_label_when_available() {
+    use tui_vfx_compositor::pipeline::cls_composition_options::ShaderWithRegion;
+    use tui_vfx_style::models::{
+        BorderSweepShader, ColorConfig, StyleRegion, VfxSpatialComposedPrimitive,
+        VfxSpatialShaderFamily, VfxTravelingBandShader,
+    };
+
+    let source = small_source(4, 3);
+    let source_roles = RoleMap::all_background(4, 3);
+    let mut dest =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(8, 4), RoleTag::Background);
+
+    let sink = Arc::new(TraceSink::new(TraceFilter::accept_all()));
+    let ctx = TraceFrameContext::new(0, 0).with_recipe_id(RecipeId::from("bridge.shader.family"));
+    let mut bridge = InspectionSinkBridge::from_trace_sink(sink.clone(), ctx);
+
+    let shader = BorderSweepShader {
+        speed: 1.0,
+        length: 3,
+        color: ColorConfig::Red,
+        position_binding: None,
+    };
+    let options = CompositionOptions {
+        shader_layers: SmallVec::from_vec(vec![ShaderWithRegion {
+            shader: &shader,
+            region: StyleRegion::All,
+            v3_family: Some(VfxSpatialShaderFamily::ComposedPrimitive(
+                VfxSpatialComposedPrimitive::TravelingBand(VfxTravelingBandShader::from(&shader)),
+            )),
+            shader_label: Some("BorderSweep".to_string()),
+        }]),
+        ..minimal_options()
+    };
+
+    render_pipeline(
+        &source,
+        &source_roles,
+        &mut dest,
+        4,
+        3,
+        0,
+        0,
+        options,
+        Some(&mut bridge),
+    );
+
+    let report = sink.snapshot();
+    let shader_names: Vec<String> = report
+        .envelopes
+        .iter()
+        .filter_map(|envelope| match &envelope.event {
+            TraceEvent::ShaderApplied { shader, .. } => Some(shader.clone()),
+            _ => None,
+        })
+        .collect();
+
+    assert!(
+        shader_names
+            .iter()
+            .any(|name| name.starts_with("traveling_band:BorderSweep#")),
+        "expected at least one shader event label to include the grouped V3 family, got {shader_names:?}"
+    );
+}

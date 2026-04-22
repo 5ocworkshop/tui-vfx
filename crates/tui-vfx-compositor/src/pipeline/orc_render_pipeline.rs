@@ -200,7 +200,13 @@ fn render_pipeline_with_shadow(
                 width as u16,
                 height as u16,
             );
-            (ext_width, ext_height, elem_offset_x, elem_offset_y, element_rect)
+            (
+                ext_width,
+                ext_height,
+                elem_offset_x,
+                elem_offset_y,
+                element_rect,
+            )
         };
 
     // Create working buffer for shadow + element
@@ -386,7 +392,9 @@ fn render_pipeline_with_shadow(
                             *cell
                         } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
                             match shadow_spec.config.composite_mode {
-                                ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
+                                ShadowCompositeMode::GlyphOverlay => {
+                                    blend_shadow_cell(cell, dest_cell)
+                                }
                                 ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
                                     cell,
                                     dest_cell,
@@ -455,18 +463,15 @@ fn render_pipeline_with_shadow(
                         .is_none_or(|source_cell| source_cell.is_empty());
                     let element_left_ni = usize::from(element_rect.x);
                     let element_top_ni = usize::from(element_rect.y);
-                    let element_right_ni =
-                        element_left_ni + usize::from(element_rect.width);
-                    let element_bottom_ni =
-                        element_top_ni + usize::from(element_rect.height);
+                    let element_right_ni = element_left_ni + usize::from(element_rect.width);
+                    let element_bottom_ni = element_top_ni + usize::from(element_rect.height);
                     let in_element_ni = x >= element_left_ni
                         && x < element_right_ni
                         && y >= element_top_ni
                         && y < element_bottom_ni;
-                    let shadow_has_coverage_ni = shadow_cell
-                        .is_some_and(|shadow_cell| !shadow_cell.is_empty());
-                    let shadow_region_candidate_ni =
-                        !in_element_ni && shadow_has_coverage_ni;
+                    let shadow_has_coverage_ni =
+                        shadow_cell.is_some_and(|shadow_cell| !shadow_cell.is_empty());
+                    let shadow_region_candidate_ni = !in_element_ni && shadow_has_coverage_ni;
 
                     let final_cell = if shadow_element_rect.is_some() {
                         let source_empty = source_empty_ni;
@@ -513,7 +518,9 @@ fn render_pipeline_with_shadow(
                             *cell
                         } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
                             match shadow_spec.config.composite_mode {
-                                ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
+                                ShadowCompositeMode::GlyphOverlay => {
+                                    blend_shadow_cell(cell, dest_cell)
+                                }
                                 ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
                                     cell,
                                     dest_cell,
@@ -561,11 +568,8 @@ fn effective_shadow_rect(
     match &config.source_region {
         None => Some(element_rect),
         Some(role) => {
-            let envelope = tui_vfx_shadow::extract_shadow_envelope(
-                source,
-                source_roles,
-                Some(role.clone()),
-            );
+            let envelope =
+                tui_vfx_shadow::extract_shadow_envelope(source, source_roles, Some(role.clone()));
             envelope.bounding_rect()
         }
     }
@@ -866,7 +870,7 @@ fn apply_shaders_inspected(
                 local_y,
                 before_style,
                 new_style,
-                &format!("{}#{}", layer.shader.name(), shader_index + 1),
+                &layer.inspector_shader_label(shader_index),
             );
         }
     }

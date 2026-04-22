@@ -223,6 +223,7 @@ Outstanding style-model buckets for follow-on slices:
     - [x] `ShaderLayerSpec::v3_shader_family()`
     - [x] `CompositionSpec::v3_shader_families()`
     - [x] `CompositionOptions::v3_shader_families()`
+    - [x] family-aware shader labels in inspected render callbacks
   - [ ] broader runtime wiring against `models::v3` family surfaces
 
 ## 5. Current rule during the restructure

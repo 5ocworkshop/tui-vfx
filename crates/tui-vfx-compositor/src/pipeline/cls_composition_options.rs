@@ -24,6 +24,28 @@ pub struct ShaderWithRegion<'a> {
     /// Optional grouped V3 family identity when this layer came through a
     /// lowering-aware construction seam.
     pub v3_family: Option<VfxSpatialShaderFamily>,
+    /// Optional stable shader label captured by a higher-level construction seam
+    /// (for example `ShaderLayerSpec` while the legacy flat enum is still in use).
+    pub shader_label: Option<String>,
+}
+
+impl ShaderWithRegion<'_> {
+    /// Build the shader label used by inspector/debug surfaces.
+    pub fn inspector_shader_label(&self, shader_index: usize) -> String {
+        match &self.v3_family {
+            Some(family) => format!(
+                "{}:{}#{}",
+                family.family_label(),
+                self.shader_label.as_deref().unwrap_or(self.shader.name()),
+                shader_index + 1
+            ),
+            None => format!(
+                "{}#{}",
+                self.shader_label.as_deref().unwrap_or(self.shader.name()),
+                shader_index + 1
+            ),
+        }
+    }
 }
 
 /// Composition options with full spec support.
@@ -184,6 +206,7 @@ impl<'a> CompositionOptions<'a> {
             shader,
             region,
             v3_family: None,
+            shader_label: None,
         });
         self
     }
