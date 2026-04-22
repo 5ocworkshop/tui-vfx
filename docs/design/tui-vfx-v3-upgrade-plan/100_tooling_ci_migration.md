@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.5.0</VERS> -->
+<!-- <VERS>VERSION: 1.5.1</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md).</WCTX> -->
-<!-- <CLOG>1.5.0: record that the first scene-bearing direct V3 subset now also supports bridgeable layer-local scene pipelines through the shared scene-source builder.
+<!-- <CLOG>1.5.1: record that direct validator/recipe probe lifecycle analysis now preserves grouped effect/shader family labels alongside concrete effect names.
+1.5.0: record that the first scene-bearing direct V3 subset now also supports bridgeable layer-local scene pipelines through the shared scene-source builder.
 1.4.0: record that the direct recipe-probe V3 bridge now also emits operational and motion analysis for timeline-capable runs within the supported subset.
 1.3.0: record that recipe-probe now also accepts the supported compiled V3 bridge subset, producing direct ProbeSceneSpec evidence without forcing every V3 probe request through paired legacy fallback.
 1.2.0: record that tui-vfx-trace now also accepts the supported compiled V3 bridge subset, emitting real pipeline TraceReports instead of forcing every V3 trace request through legacy fallback.
@@ -156,6 +157,7 @@ The current stance is:
 - supported compiled V3 plans can also reach `tui-vfx-trace` for the same bridge subset, emitting real pipeline trace envelopes without pretending full V3 preview/scene parity has already landed
 - `tui-vfx-trace` now also accepts that same first scene-bearing subset through the shared direct bridge path
 - supported compiled V3 plans can also reach `recipe-probe` for that same subset, producing direct `ProbeSceneSpec` frame/timeline/diff evidence and operational/motion analysis where the direct probe outputs already support it instead of always deferring to paired legacy runtime fallback
+  - direct lifecycle operational-analysis rows now also preserve grouped effect/shader family labels alongside concrete effect names, so probe/validator SQL slices can reason about grouped cutover identity without reclassification
   - stock procedural scene sources are now covered across those first scene-bearing direct tool paths, not only card-backed layers
 - those bridges are explicit and temporary
 
@@ -182,4 +184,4 @@ V3 does not ship until each of the following is green:
 Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail, and to the frozen V2 spec archive (`docs/v2-spec-archive/`) for historical reference.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.5.1</VERS> -->
