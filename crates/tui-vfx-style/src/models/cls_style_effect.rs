@@ -46,6 +46,7 @@
 
 use crate::models::{
     ColorConfig, ColorSpace, FadeApplyTo, FadeSpec, FadeTarget, SpatialShaderType,
+    v3::{VfxSpatialShaderFamily, lower_legacy_spatial_shader},
 };
 use crate::traits::{StyleInterpolator, StyleShader};
 use crate::utils::{
@@ -692,6 +693,15 @@ impl StyleEffect {
     pub fn shader(&self) -> Option<&dyn StyleShader> {
         match self {
             StyleEffect::Spatial { shader } => Some(shader),
+            _ => None,
+        }
+    }
+
+    /// Returns the grouped V3 family form of the spatial shader, when this
+    /// style effect is spatial.
+    pub fn spatial_shader_family(&self) -> Option<VfxSpatialShaderFamily> {
+        match self {
+            StyleEffect::Spatial { shader } => Some(lower_legacy_spatial_shader(shader)),
             _ => None,
         }
     }

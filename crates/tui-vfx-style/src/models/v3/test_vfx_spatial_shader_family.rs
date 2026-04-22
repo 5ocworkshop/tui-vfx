@@ -4,8 +4,8 @@
 // <CLOG>Update the central lowering tests to validate the primitive/composed split and cover the FocusField guidance case.</CLOG>
 
 use super::{
-    lower_legacy_spatial_shader, VfxSpatialComposedPrimitive, VfxSpatialPrimitive,
-    VfxSpatialShaderFamily,
+    VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
+    lower_legacy_spatial_shader,
 };
 use crate::models::{
     BarberPoleShader, BorderSweepShader, ColorConfig, CursorShader, CursorShaderMode,

@@ -11,6 +11,8 @@ mod test_filter_spec;
 mod test_mask_spec;
 #[path = "types/test_sampler_spec.rs"]
 mod test_sampler_spec;
+#[path = "types/test_shader_layer_spec.rs"]
+mod test_shader_layer_spec;
 
 // <FILE>tui-vfx-compositor/tests/test_types.rs</FILE> - <DESC>Test entry point for types</DESC>
 // <VERS>END OF VERSION: 1.2.0</VERS>

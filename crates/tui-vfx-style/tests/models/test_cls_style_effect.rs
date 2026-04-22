@@ -5,7 +5,10 @@
 
 use tui_vfx_geometry::easing::EasingType;
 use tui_vfx_geometry::types::EasingCurve;
-use tui_vfx_style::models::{FadeApplyTo, StyleEffect};
+use tui_vfx_style::models::{
+    FadeApplyTo, StyleEffect, VfxSpatialComposedPrimitive, VfxSpatialPrimitive,
+    VfxSpatialShaderFamily,
+};
 use tui_vfx_style::traits::StyleInterpolator;
 use tui_vfx_types::{Color, Style};
 #[test]
@@ -72,6 +75,44 @@ fn test_glitch_zero_intensity() {
     };
     let result = effect.calculate(0.5, base);
     assert_eq!(result, base);
+}
+
+#[test]
+fn test_spatial_effect_exposes_v3_family() {
+    let effect = StyleEffect::Spatial {
+        shader: tui_vfx_style::models::SpatialShaderType::Highlighter(
+            tui_vfx_style::models::HighlighterShader::default(),
+        ),
+    };
+
+    assert!(matches!(
+        effect.spatial_shader_family(),
+        Some(VfxSpatialShaderFamily::ComposedPrimitive(
+            VfxSpatialComposedPrimitive::ProgressEmphasis(_)
+        ))
+    ));
+}
+
+#[test]
+fn test_non_spatial_effect_has_no_v3_family() {
+    let effect = StyleEffect::Rainbow { speed: 1.0 };
+    assert_eq!(effect.spatial_shader_family(), None);
+}
+
+#[test]
+fn test_spatial_effect_can_lower_to_primitive_family() {
+    let effect = StyleEffect::Spatial {
+        shader: tui_vfx_style::models::SpatialShaderType::Glow(
+            tui_vfx_style::models::GlowShader::default(),
+        ),
+    };
+
+    assert!(matches!(
+        effect.spatial_shader_family(),
+        Some(VfxSpatialShaderFamily::Primitive(
+            VfxSpatialPrimitive::SurfaceDepth(_)
+        ))
+    ));
 }
 
 // <FILE>tui-vfx-style/tests/models/test_cls_style_effect.rs</FILE> - <DESC>Integration tests for StyleEffect</DESC>
