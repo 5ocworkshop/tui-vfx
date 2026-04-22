@@ -149,6 +149,7 @@ The current stance is:
   - `pipeline-validator --probe` now also accepts that same supported bridge subset directly, producing direct `ProbeSceneSpec` evidence instead of forcing paired legacy runtime fallback
   - `recipe-probe` now also accepts that same first scene-bearing subset through the direct `ProbeSceneSpec` bridge
 - supported compiled V3 plans can also reach `tui-vfx-trace` for the same bridge subset, emitting real pipeline trace envelopes without pretending full V3 preview/scene parity has already landed
+- `tui-vfx-trace` now also accepts that same first scene-bearing subset through the shared direct bridge path
 - supported compiled V3 plans can also reach `recipe-probe` for that same subset, producing direct `ProbeSceneSpec` frame/timeline/diff evidence and operational/motion analysis where the direct probe outputs already support it instead of always deferring to paired legacy runtime fallback
 - those bridges are explicit and temporary
 
