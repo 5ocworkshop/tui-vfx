@@ -141,6 +141,7 @@ The current stance is:
   - the dedicated `v3_play_recipe` example
   - `pipeline-validator --stage output` for the supported bridge subset
   - that supported subset now explicitly includes rect / rect-exclude spatial scopes by expanding them into concrete cell selections against the compiled layout dimensions
+  - `pipeline-validator --dump --stage output --format json` now also emits one deterministic structured dump sample for that same supported bridge subset
 - supported compiled V3 plans can also reach `tui-vfx-trace` for the same bridge subset, emitting real pipeline trace envelopes without pretending full V3 preview/scene parity has already landed
 - supported compiled V3 plans can also reach `recipe-probe` for that same subset, producing direct `ProbeSceneSpec` frame/timeline/diff evidence and operational/motion analysis where the direct probe outputs already support it instead of always deferring to paired legacy runtime fallback
 - those bridges are explicit and temporary

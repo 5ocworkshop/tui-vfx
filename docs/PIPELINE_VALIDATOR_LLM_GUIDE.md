@@ -82,6 +82,17 @@ It is still a **subset**:
 - legacy preview scheduling semantics are not yet fully reproduced by the V3
   bridge path
 
+For this same supported subset, validator JSON dump mode now also works:
+
+```bash
+cargo run -q -p pipeline-validator -- \
+  --dump --stage output --format json \
+  recipes/debug_recipes/shaders/compositions/shader_barber_pole.json
+```
+
+Today that emits one deterministic `compiled_bridge` sample rather than the
+full legacy preview-scheduler matrix.
+
 ## The flags that matter
 
 - **`--rules --stages`** — the standard pre-flight: parses, validates against rules, runs the profile/render/shader/output stages. Use this first.
