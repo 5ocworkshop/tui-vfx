@@ -5,7 +5,9 @@
 
 //! Opaque identifier for a scene layer.
 //!
-//! Produced by the recipe schema (`RaSceneLayer::id`) and consumed by
+//! Produced by the recipe schema (`VfxSceneLayer::id` in the V3 naming
+//! direction; legacy surfaces may still mention `RaSceneLayer` during the
+//! cutover) and consumed by
 //! trace selectors / inspection sinks. `LayerId` is opaque: foreign code
 //! compares two `LayerId`s for equality or extracts the name via
 //! `as_str()`, but cannot otherwise inspect or mutate the inner string.

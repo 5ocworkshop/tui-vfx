@@ -5,7 +5,9 @@
 
 //! Opaque identifier for a recipe instance.
 //!
-//! Produced by the recipe envelope (`RaRecipeConfig::id`) and consumed
+//! Produced by the recipe envelope (`VfxRecipeConfig::id` in the V3 naming
+//! direction; legacy surfaces may still mention `RaRecipeConfig` during the
+//! cutover) and consumed
 //! by trace selectors / inspection sinks. `RecipeId` is opaque: foreign
 //! code compares two `RecipeId`s for equality or extracts the name via
 //! `as_str()`, but cannot otherwise inspect or mutate the inner string.
