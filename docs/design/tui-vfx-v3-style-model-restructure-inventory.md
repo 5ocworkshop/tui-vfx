@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.5.0</VERS> -->
+<!-- <VERS>VERSION: 1.6.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.5.0: record the first runtime-facing consumers of the central style-family seam so the tracker distinguishes model-only prep from actual wiring progress.
+<!-- <CLOG>1.6.0: record the first end-to-end compiled V3 demo bridge in tui-vfx-recipes so the runtime-wiring tracker reflects that a valid V3 recipe can already exercise the compositor through the bridge subset.
+1.5.0: record the first runtime-facing consumers of the central style-family seam so the tracker distinguishes model-only prep from actual wiring progress.
 1.4.0: add the central legacy-to-V3 style-family lowering seam so runtime wiring can target one SSOT family enum instead of ad hoc per-family helpers.
 1.3.0: add a dedicated V3 stripe-motion family so the last future-decision holdout also has a real grouped V3 home.
 1.2.0: add a dedicated V3 cursor family surface so the future-decision bucket is narrowed to the last explicit special-case holdout.
@@ -224,7 +225,10 @@ Outstanding style-model buckets for follow-on slices:
     - [x] `CompositionSpec::v3_shader_families()`
     - [x] `CompositionOptions::v3_shader_families()`
     - [x] family-aware shader labels in inspected render callbacks
-  - [ ] broader runtime wiring against `models::v3` family surfaces
+  - [~] broader runtime wiring against `models::v3` family surfaces
+    - [x] first compiled-plan -> CompositionSpec bridge in `tui-vfx-recipes`
+    - [x] deterministic V3 demo example run for a valid shader recipe
+    - [ ] broader lane support beyond the current bridge subset
 
 ## 5. Current rule during the restructure
 
@@ -242,4 +246,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.6.0</VERS> -->
