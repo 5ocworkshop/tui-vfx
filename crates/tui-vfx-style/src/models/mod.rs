@@ -139,6 +139,8 @@ pub use cls_trace_propagation_shader::TracePropagationShader;
 pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader};
 pub use tui_vfx_geometry::easing::EasingType;
 pub use v3::{
+    VfxConcealedLightMode, VfxConcealedLightSource, VfxDiffusionMode, VfxDiffusionSource,
+    VfxMaterialLightApplyTo, VfxMaterialLightBehavior, VfxMaterialLightShader,
     VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
     VfxProgressEmphasisRowMask, VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast,
     VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,

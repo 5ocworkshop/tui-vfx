@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>0.3.0: add the first real V3-side progress/emphasis family surface alongside the traveling-band files so active family work keeps producing grouped V3 code.
+<!-- <CLOG>0.4.0: add the first real V3-side material-light family surface so the earned-factory cluster is also moving into grouped V3 code, not just tagged legacy files.
+0.3.0: add the first real V3-side progress/emphasis family surface alongside the traveling-band files so active family work keeps producing grouped V3 code.
 0.2.0: record the first real V3-side family files under crates/tui-vfx-style/src/models/v3/ so active family work produces parallel migration code, not just future-facing notes.
 0.1.0: initial inventory. Classifies the current shader catalog into capability buckets and identifies the next migration-bearing code surface in tui-vfx proper.</CLOG> -->
 
@@ -84,6 +85,7 @@ library-level name even if they are internally built from a deeper substrate:
 - `Diffusion`
 - `ConcealedLight`
 - `EdgeSheen`
+  - seeded in `crates/tui-vfx-style/src/models/v3/cls_vfx_material_light_shader.rs`
 - `AffordanceWake`
 - `WayfindingNode`
 - `FocusedRowGradient`
@@ -151,6 +153,8 @@ Current real V3-side family files:
 - `crates/tui-vfx-style/src/models/v3/enum_vfx_traveling_band_behavior.rs`
 - `crates/tui-vfx-style/src/models/v3/cls_vfx_progress_emphasis_shader.rs`
 - `crates/tui-vfx-style/src/models/v3/enum_vfx_progress_emphasis_behavior.rs`
+- `crates/tui-vfx-style/src/models/v3/cls_vfx_material_light_shader.rs`
+- `crates/tui-vfx-style/src/models/v3/enum_vfx_material_light_behavior.rs`
 
 ---
 
@@ -170,4 +174,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
