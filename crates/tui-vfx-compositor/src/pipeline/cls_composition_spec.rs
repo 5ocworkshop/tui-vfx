@@ -8,6 +8,7 @@ use crate::pipeline::cls_shader_layer_spec::ShaderLayerSpec;
 use crate::types::{FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, ShadowSpec};
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
+use tui_vfx_style::models::VfxSpatialShaderFamily;
 use tui_vfx_style::traits::ShaderRuntimeParams;
 
 /// Serializable composition specification for render pipeline bindings.
@@ -78,6 +79,17 @@ impl Default for CompositionSpec {
             phase: None,
             runtime_params: ShaderRuntimeParams::default(),
         }
+    }
+}
+
+impl CompositionSpec {
+    /// Returns the grouped V3 family form of every spatial shader layer in this
+    /// composition spec.
+    pub fn v3_shader_families(&self) -> Vec<VfxSpatialShaderFamily> {
+        self.shader_layers
+            .iter()
+            .map(ShaderLayerSpec::v3_shader_family)
+            .collect()
     }
 }
 

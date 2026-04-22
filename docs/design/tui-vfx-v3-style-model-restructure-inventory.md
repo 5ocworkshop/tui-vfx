@@ -221,6 +221,7 @@ Outstanding style-model buckets for follow-on slices:
   - [~] first runtime-facing consumers
     - [x] `StyleEffect::spatial_shader_family()`
     - [x] `ShaderLayerSpec::v3_shader_family()`
+    - [x] `CompositionSpec::v3_shader_families()`
   - [ ] broader runtime wiring against `models::v3` family surfaces
 
 ## 5. Current rule during the restructure
