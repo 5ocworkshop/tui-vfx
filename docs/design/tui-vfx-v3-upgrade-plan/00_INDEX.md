@@ -120,6 +120,7 @@ The monolithic `docs/design/tui-vfx-v3-upgrade-plan.md` (v0.16.0) is the source 
 ### Companion documents
 
 - `docs/design/tui-vfx-v3-upgrade-audit-workflow.md` — Workflows A / B / C referenced from `110_appendix_audits.md`
+- `docs/design/tui-vfx-v3-ra-to-vfx-rename-inventory.md` — Working inventory for the Rust-side `Ra* -> Vfx*` rename adopted in Decision 4.
 - `docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md` — The debug-recipes migration exercise that pressure-tested the draft schema. Contains the evolving schema-question journal (Q1–Q34), the running drift table (D1–D7), and the final V2↔V3 coverage audit.
 - `docs/design/tui-vfx-v3-schema-draft.json` — Specification-by-example of the draft V3 recipe schema with inline `#` comments. Stripping comment lines yields valid JSON.
 - `feedback/2026-04-21-gtd-tui-vfx-weak-seams-feedback.md` (in gt-design repo) — The weak-seams review cited in Chapter 30's feedback cross-reference.
