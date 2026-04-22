@@ -155,6 +155,8 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - non-spatial style-effect application over rendered semantic scenes is now starting to move inward too: `apply_style_effects_to_scene(...)` in `tui-vfx-style` owns the region-aware post-render mutation loop that the direct V3 bridge previously kept locally
   - source-surface construction for direct compiled V3 playback is now starting to centralize too: `build_v3_source_surface(...)` owns content resolution, border painting, role tagging, and base-style override application instead of leaving that stack embedded inside one renderer helper
   - render-plan-derived content timing is now starting to centralize too: `RenderPlanPlaybackTiming` owns content progress and `SignalContext` derivation for preview/probe consumers instead of duplicating that lifecycle/clock logic at each caller
+  - scene-layer timing ownership is starting to centralize too: `SceneCtx::effective_clock_t()` and `ProceduralCtx` clock helpers now own loop-vs-phase clock selection for scene text/procedural behavior instead of leaving that fallback logic duplicated at layer/source call sites
+  - compositor/probe timing derivation is now starting to centralize as well: `CompositionPlaybackTiming` owns effective loop/shader progress derivation and is used by compositor and probe consumers instead of repeating `loop_t.unwrap_or(t)` timing policy at each call site
   - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`
