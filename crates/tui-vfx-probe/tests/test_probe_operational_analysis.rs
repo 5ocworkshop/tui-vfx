@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_operational_analysis.rs</FILE> - <DESC>Regression tests for direct probe operational analysis</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>TDD for direct compositor-stage success/failure summaries layered on top of probe reports</WCTX>
-// <CLOG>MINOR: Assert that direct per-effect analysis discloses configured_instances so SQL consumers can tell when a row is a unique effect versus a same-name aggregate</CLOG>
+// <CLOG>0.3.0: assert grouped V3 shader-family labels flow into direct probe operational-analysis rows.
+// MINOR: Assert that direct per-effect analysis discloses configured_instances so SQL consumers can tell when a row is a unique effect versus a same-name aggregate</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::CompositionSpec;
@@ -10,6 +11,7 @@ use tui_vfx_probe::{
     ProbeCellSelector, ProbeGridSpec, ProbeOperationalStatus, ProbePhase, ProbePoint, ProbeRequest,
     ProbeSceneSpec, collect_probe_operational_analysis, run_probe,
 };
+use tui_vfx_style::models::{BorderSweepShader, ColorConfig, SpatialShaderType, StyleRegion};
 use tui_vfx_types::{Cell, Color, Modifiers};
 
 fn make_grid(width: u16, height: u16, ch: char) -> ProbeGridSpec {
@@ -20,6 +22,27 @@ fn make_grid(width: u16, height: u16, ch: char) -> ProbeGridSpec {
             Cell::styled(ch, Color::WHITE, Color::BLACK, Modifiers::NONE);
             (width as usize) * (height as usize)
         ],
+    }
+}
+
+fn shader_scene() -> ProbeSceneSpec {
+    ProbeSceneSpec {
+        source: make_grid(4, 3, 'S'),
+        destination: make_grid(8, 6, ' '),
+        widget_offset: ProbePoint { x: 1, y: 1 },
+        composition: CompositionSpec {
+            shader_layers: vec![tui_vfx_compositor::pipeline::ShaderLayerSpec {
+                shader: SpatialShaderType::BorderSweep(BorderSweepShader {
+                    speed: 1.0,
+                    length: 2,
+                    color: ColorConfig::Red,
+                    position_binding: None,
+                }),
+                region: StyleRegion::All,
+            }],
+            t: 0.5,
+            ..CompositionSpec::default()
+        },
     }
 }
 
@@ -54,6 +77,26 @@ fn test_collect_probe_operational_analysis_reports_success_for_filter_stage() {
         && stage.observed_event_count > 0
         && stage.effects.iter().any(|effect| effect.effect == "Dim#1"
             && effect.configured_instances == 1
+            && effect.status == ProbeOperationalStatus::Success)));
+}
+
+#[test]
+fn test_collect_probe_operational_analysis_reports_shader_family_for_shader_stage() {
+    let report = run_probe(
+        &shader_scene(),
+        &ProbeRequest {
+            phase: ProbePhase::Dwelling,
+            sample_t: 0.5,
+            cells: ProbeCellSelector::Modified,
+            with_causation: true,
+        },
+    )
+    .expect("report should build");
+
+    let analysis = collect_probe_operational_analysis("frame", &[report]);
+    assert!(analysis.stages.iter().any(|stage| stage.stage == "shader"
+        && stage.effects.iter().any(|effect| effect.effect == "BorderSweep#1"
+            && effect.family.as_deref() == Some("traveling_band")
             && effect.status == ProbeOperationalStatus::Success)));
 }
 
@@ -103,4 +146,4 @@ fn test_collect_probe_operational_analysis_reports_failure_for_bad_border_scene(
 }
 
 // <FILE>crates/tui-vfx-probe/tests/test_probe_operational_analysis.rs</FILE> - <DESC>Regression tests for direct probe operational analysis</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

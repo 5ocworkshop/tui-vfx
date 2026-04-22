@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-probe/src/fnc_collect_probe_operational_analysis.rs</FILE> - <DESC>Collect operational analysis from direct probe reports</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Direct engine stage-by-stage success/failure reporting</WCTX>
-// <CLOG>MINOR: Track how many configured elements share the same effect name so per-effect rows can disclose aggregation ambiguity for duplicate same-name instances</CLOG>
+// <CLOG>0.4.0: carry grouped V3 shader-family labels into shader-stage operational rows so direct probe analysis can report category identity as well as concrete names.
+// MINOR: Track how many configured elements share the same effect name so per-effect rows can disclose aggregation ambiguity for duplicate same-name instances</CLOG>
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -61,13 +62,16 @@ pub fn collect_probe_operational_analysis(
         let configured_effects = configured_effects_for_stage(stage, reports);
         let mut effect_rows = configured_effects
             .iter()
-            .map(|(effect, configured_instances)| {
-                let (effect_touched_cells, effect_event_count) = effects
-                    .get(effect)
+            .map(|(effect, configured_instances, family)| {
+                let aliases = configured_effect_aliases(effect, family.as_deref());
+                let (effect_touched_cells, effect_event_count) = aliases
+                    .iter()
+                    .find_map(|alias| effects.get(alias))
                     .map(|(cells, count)| (cells.len(), *count))
                     .unwrap_or_default();
                 ProbeEffectOperationalAnalysis {
                     effect: effect.clone(),
+                    family: family.clone(),
                     configured: true,
                     configured_instances: *configured_instances,
                     touched_cells: effect_touched_cells,
@@ -83,12 +87,16 @@ pub fn collect_probe_operational_analysis(
         for (effect, (cells, count)) in effects {
             if configured_effects
                 .iter()
-                .any(|(configured_effect, _)| configured_effect == &effect)
+                .flat_map(|(configured_effect, _, family)| {
+                    configured_effect_aliases(configured_effect, family.as_deref())
+                })
+                .any(|configured_effect| configured_effect == effect)
             {
                 continue;
             }
             effect_rows.push(ProbeEffectOperationalAnalysis {
                 effect,
+                family: None,
                 configured: false,
                 configured_instances: 0,
                 touched_cells: cells.len(),
@@ -163,35 +171,57 @@ fn configured_count_for_stage(stage: &str, reports: &[ProbeReport]) -> usize {
         .unwrap_or_default()
 }
 
-fn configured_effects_for_stage(stage: &str, reports: &[ProbeReport]) -> Vec<(String, usize)> {
-    let mut effects = BTreeMap::new();
+fn configured_effects_for_stage(
+    stage: &str,
+    reports: &[ProbeReport],
+) -> Vec<(String, usize, Option<String>)> {
+    let mut effects: BTreeMap<String, (usize, Option<String>)> = BTreeMap::new();
     for report in reports {
         match stage {
             "sampler" => {
                 for effect in &report.pipeline.sampler_effects {
-                    *effects.entry(effect.clone()).or_insert(0usize) += 1;
+                    let entry = effects.entry(effect.clone()).or_insert((0usize, None));
+                    entry.0 += 1;
                 }
             }
             "mask" => {
                 for effect in &report.pipeline.mask_effects {
-                    *effects.entry(effect.clone()).or_insert(0usize) += 1;
+                    let entry = effects.entry(effect.clone()).or_insert((0usize, None));
+                    entry.0 += 1;
                 }
             }
             "shader" => {
-                for effect in &report.pipeline.shader_effects {
-                    *effects.entry(effect.clone()).or_insert(0usize) += 1;
+                for (index, effect) in report.pipeline.shader_effects.iter().enumerate() {
+                    let family = report.pipeline.shader_families.get(index).cloned();
+                    let entry = effects.entry(effect.clone()).or_insert((0usize, family.clone()));
+                    entry.0 += 1;
+                    if entry.1.is_none() {
+                        entry.1 = family;
+                    }
                 }
             }
             "filter" => {
                 for effect in &report.pipeline.filter_effects {
-                    *effects.entry(effect.clone()).or_insert(0usize) += 1;
+                    let entry = effects.entry(effect.clone()).or_insert((0usize, None));
+                    entry.0 += 1;
                 }
             }
             _ => {}
         }
     }
-    effects.into_iter().collect()
+    effects
+        .into_iter()
+        .map(|(effect, (instances, family))| (effect, instances, family))
+        .collect()
+}
+
+fn configured_effect_aliases(effect: &str, family: Option<&str>) -> Vec<String> {
+    let mut aliases = vec![effect.to_string()];
+    if let Some(family) = family {
+        aliases.push(format!("{family}:{effect}"));
+    }
+    aliases
 }
 
 // <FILE>crates/tui-vfx-probe/src/fnc_collect_probe_operational_analysis.rs</FILE> - <DESC>Collect operational analysis from direct probe reports</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

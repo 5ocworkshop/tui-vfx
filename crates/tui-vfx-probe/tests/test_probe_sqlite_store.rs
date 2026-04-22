@@ -178,6 +178,7 @@ fn test_sqlite_store_indexes_operational_analysis_rows() {
                         "effects": [
                             {
                                 "effect": "Dim",
+                                "family": null,
                                 "configured": true,
                                 "configured_instances": 1,
                                 "touched_cells": 6,
@@ -210,12 +211,13 @@ fn test_sqlite_store_indexes_operational_analysis_rows() {
                         "touched_cells": 12,
                         "observed_event_count": 12,
                         "observed_effects": ["Dim"],
-                        "effects": [
-                            {
-                                "effect": "Dim",
-                                "configured": true,
-                                "configured_instances": 1,
-                                "touched_cells": 12,
+                                "effects": [
+                                    {
+                                        "effect": "Dim",
+                                        "family": null,
+                                        "configured": true,
+                                        "configured_instances": 1,
+                                        "touched_cells": 12,
                                 "observed_event_count": 12,
                                 "status": "success"
                             }
@@ -246,6 +248,7 @@ fn test_sqlite_store_indexes_operational_analysis_rows() {
                                 "effects": [
                                     {
                                         "effect": "Dim",
+                                        "family": null,
                                         "configured": true,
                                         "configured_instances": 1,
                                         "touched_cells": 4,
@@ -279,10 +282,11 @@ fn test_sqlite_store_indexes_operational_analysis_rows() {
         .unwrap();
     assert_eq!(lifecycle_rows[0]["count"], 1);
     let effect_rows = store
-        .query_json("select count(*) as count, max(configured_instances) as max_instances from probe_analysis_effects where effect = 'Dim'")
+        .query_json("select count(*) as count, max(configured_instances) as max_instances, max(family) as family from probe_analysis_effects where effect = 'Dim'")
         .unwrap();
     assert_eq!(effect_rows[0]["count"], 3);
     assert_eq!(effect_rows[0]["max_instances"], 1);
+    assert!(effect_rows[0]["family"].is_null());
 }
 
 #[test]
