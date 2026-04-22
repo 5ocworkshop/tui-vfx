@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_composition_options.rs</FILE> - <DESC>Composition options for render pipeline</DESC>
-// <VERS>VERSION: 3.1.0</VERS>
+// <VERS>VERSION: 3.2.0</VERS>
 // <WCTX>Shadow corner transparency handling</WCTX>
-// <CLOG>Add preserve_unfilled flag to control shadow corner bleed-through behavior</CLOG>
+// <CLOG>3.2.0: add grouped-V3 shader-layer constructors so runtime callers can execute V3 spatial family values through CompositionOptions without rebuilding legacy shaders at each call site.
+// Add preserve_unfilled flag to control shadow corner bleed-through behavior</CLOG>
 
 use crate::types::MaskCombineMode;
 use crate::types::cls_filter_spec::FilterSpec;
@@ -12,7 +13,10 @@ use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
 use std::borrow::Cow;
 use std::sync::Arc;
-use tui_vfx_style::models::{StyleRegion, VfxSpatialShaderFamily};
+use tui_vfx_style::models::{
+    StyleRegion, TryLowerV3SpatialShaderError, VfxSpatialShaderFamily,
+    try_lower_v3_spatial_shader_family,
+};
 use tui_vfx_style::traits::{ShaderRuntimeParams, StyleShader};
 use tui_vfx_types::Rect;
 
@@ -29,7 +33,24 @@ pub struct ShaderWithRegion<'a> {
     pub shader_label: Option<String>,
 }
 
-impl ShaderWithRegion<'_> {
+impl<'a> ShaderWithRegion<'a> {
+
+    /// Build a shader-layer entry directly from a grouped V3 spatial family by
+    /// lowering it into the current executable legacy shader surface.
+    pub fn try_from_v3_shader_family(
+        family: &VfxSpatialShaderFamily,
+        shader: &'a dyn StyleShader,
+        region: StyleRegion,
+    ) -> Result<Self, TryLowerV3SpatialShaderError> {
+        let legacy = try_lower_v3_spatial_shader_family(family)?;
+        Ok(Self {
+            shader,
+            region,
+            v3_family: Some(family.clone()),
+            shader_label: Some(legacy.name().to_string()),
+        })
+    }
+
     /// Build the shader label used by inspector/debug surfaces.
     pub fn inspector_shader_label(&self, shader_index: usize) -> String {
         match &self.v3_family {
@@ -200,6 +221,19 @@ impl<'a> CompositionOptions<'a> {
         self
     }
 
+
+    /// Add a grouped V3 spatial family plus its executable shader reference.
+    pub fn try_with_v3_shader_family(
+        mut self,
+        family: &VfxSpatialShaderFamily,
+        shader: &'a dyn StyleShader,
+        region: StyleRegion,
+    ) -> Result<Self, TryLowerV3SpatialShaderError> {
+        self.shader_layers
+            .push(ShaderWithRegion::try_from_v3_shader_family(family, shader, region)?);
+        Ok(self)
+    }
+
     /// Add a shader with its region constraint.
     pub fn with_shader_layer(mut self, shader: &'a dyn StyleShader, region: StyleRegion) -> Self {
         self.shader_layers.push(ShaderWithRegion {
@@ -255,4 +289,4 @@ impl<'a> CompositionOptions<'a> {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_composition_options.rs</FILE> - <DESC>Composition options for render pipeline</DESC>
-// <VERS>END OF VERSION: 3.1.0</VERS>
+// <VERS>END OF VERSION: 3.2.0</VERS>
