@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-probe/src/cls_probe_pipeline_inventory.rs</FILE> - <DESC>Configured pipeline inventory DTO for probe reports</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Phase-1 pipeline probe scaffolding</WCTX>
-// <CLOG>0.3.0: add grouped V3 style-effect family labels so probe reports can surface overall style categories alongside concrete style effect labels.
+// <CLOG>0.4.0: add grouped V3 spatial shader family labels so probe reports can surface overall shader categories alongside concrete shader effect labels.
+// 0.3.0: add grouped V3 style-effect family labels so probe reports can surface overall style categories alongside concrete style effect labels.
 // MINOR: Add configured pipeline element name lists so analysis can report success/failure per concrete sampler, mask, shader, filter, style, and content effect instead of only per stage</CLOG>
 
 use serde::{Deserialize, Serialize};
@@ -22,6 +23,8 @@ pub struct ProbePipelineInventory {
     pub shader_count: usize,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub shader_effects: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub shader_families: Vec<String>,
     pub style_count: usize,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub style_effects: Vec<String>,
@@ -34,4 +37,4 @@ pub struct ProbePipelineInventory {
 }
 
 // <FILE>crates/tui-vfx-probe/src/cls_probe_pipeline_inventory.rs</FILE> - <DESC>Configured pipeline inventory DTO for probe reports</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

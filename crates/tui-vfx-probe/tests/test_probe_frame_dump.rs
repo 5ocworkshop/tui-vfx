@@ -147,6 +147,13 @@ fn test_run_probe_modified_selector_reports_only_shader_touched_cells() {
     let report = run_probe(&scene, &request).expect("probe should succeed");
 
     assert!(!report.cells.is_empty());
+    assert!(
+        report
+            .pipeline
+            .shader_families
+            .iter()
+            .any(|family| family == "traveling_band")
+    );
     assert!(report.cells.iter().all(|cell| {
         cell.last_touch
             .as_ref()

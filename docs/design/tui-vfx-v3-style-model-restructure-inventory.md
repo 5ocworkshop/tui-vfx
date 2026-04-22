@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> - <DESC>Working inventory for the current flat style/shader model surface and its planned V3 restructuring under Decision 2. Maps the live `SpatialShaderType` catalog to the capability-catalog clusters and notes which groups are likely to become primitives, earned factories, or wrappers.</DESC> -->
-<!-- <VERS>VERSION: 1.19.0</VERS> -->
+<!-- <VERS>VERSION: 1.20.0</VERS> -->
 <!-- <WCTX>Decision 2 adopts Pattern-as-separable-axis and an earned-factory model, but the live `tui-vfx-style` code still exports a flat `SpatialShaderType` enum. This inventory is the first execution artifact for migrating that live code surface deliberately.</WCTX> -->
-<!-- <CLOG>1.19.0: record broadened grouped-spatial runtime equivalence coverage across representative primitive and composed families in spec-driven rendering tests.
+<!-- <CLOG>1.20.0: record that direct probe pipeline inventory now carries grouped V3 spatial shader family labels.
+1.19.0: record broadened grouped-spatial runtime equivalence coverage across representative primitive and composed families in spec-driven rendering tests.
 1.18.0: record that render_pipeline_with_spec now consumes grouped-V3-aware ShaderWithRegion construction instead of rebuilding spec shader layers ad hoc.
 1.17.0: record that the compiled-plan bridge now also consumes grouped V3 spatial family constructors directly via CompositionSpec.
 1.16.0: record that recipe probe-spec construction now consumes grouped V3 spatial family constructors directly for spatial style effects and cursor shaders.
@@ -251,6 +252,7 @@ Outstanding style-model buckets for follow-on slices:
     - [x] compiled-plan -> CompositionSpec bridge consumes grouped V3 spatial family constructors directly
     - [x] render_pipeline_with_spec consumes grouped-V3-aware ShaderWithRegion construction directly
     - [x] representative primitive and composed family equivalence coverage exists for grouped-V3 spec-driven rendering
+    - [x] direct probe pipeline inventory carries grouped V3 spatial shader family labels
   - [~] broader runtime wiring against `models::v3` family surfaces
     - [x] first compiled-plan -> CompositionSpec bridge in `tui-vfx-recipes`
     - [x] deterministic V3 demo example run for a valid shader recipe
@@ -272,4 +274,4 @@ That keeps the style surface moving toward the V3 model without pretending the
 restructure is already complete.
 
 <!-- <FILE>docs/design/tui-vfx-v3-style-model-restructure-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.19.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.20.0</VERS> -->

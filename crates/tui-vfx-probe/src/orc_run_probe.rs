@@ -281,6 +281,11 @@ fn build_pipeline_inventory(composition: &CompositionSpec) -> ProbePipelineInven
                 format!("{}#{}", variant_name_from_debug(&layer.shader), index + 1)
             })
             .collect(),
+        shader_families: composition
+            .v3_shader_families()
+            .into_iter()
+            .map(|family| family.family_label().to_string())
+            .collect(),
         style_count: 0,
         style_effects: Vec::new(),
         style_effect_families: Vec::new(),
