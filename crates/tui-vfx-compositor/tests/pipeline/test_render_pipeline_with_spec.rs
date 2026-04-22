@@ -1,8 +1,9 @@
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Sub-plan A Phase A.2.3 — route every call-site through the `_legacy` shim wrapper so these tests keep speaking the old `&mut OwnedGrid` call shape</WCTX>
-// <CLOG>0.5.0: MINOR — switch to `_legacy` shim helpers; no behavior change.
+// <CLOG>0.6.0: add grouped-V3 construction coverage so render_pipeline_with_spec matches grouped-family runtime callers as well as legacy layer literals.
+// 0.5.0: MINOR — switch to `_legacy` shim helpers; no behavior change.
 // 0.4.0: Track the new runtime_params field in CompositionSpec fixtures so spec-equivalence coverage keeps compiling as the runtime shader context surface evolves</CLOG>
 
 #[path = "test_helpers.rs"]
@@ -14,7 +15,10 @@ use tui_vfx_compositor::pipeline::{
 };
 use tui_vfx_compositor::types::{MaskCombineMode, ShadowSpec};
 use tui_vfx_shadow::{ShadowConfig, ShadowEdges};
-use tui_vfx_style::models::{BorderSweepShader, ColorConfig, SpatialShaderType, StyleRegion};
+use tui_vfx_style::models::{
+    BorderSweepShader, ColorConfig, SpatialShaderType, StyleRegion,
+    VfxSpatialComposedPrimitive, VfxSpatialShaderFamily,
+};
 use tui_vfx_style::traits::cls_shader_context::ShaderRuntimeParams;
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid};
 
@@ -98,6 +102,38 @@ fn test_render_pipeline_with_spec_matches_options_shader_layer() {
         phase: None,
         runtime_params: ShaderRuntimeParams::default(),
     };
+
+    render_pipeline_legacy(&source, &mut dest_options, 8, 5, 0, 0, options, None);
+    render_pipeline_with_spec_legacy(&source, &mut dest_spec, 8, 5, 0, 0, &spec, None);
+
+    assert_grids_equal(&dest_options, &dest_spec);
+}
+
+#[test]
+fn test_render_pipeline_with_spec_matches_grouped_v3_options_shader_layer() {
+    let source = create_source_grid(8, 5, 'S');
+    let mut dest_options = OwnedGrid::new(8, 5);
+    let mut dest_spec = OwnedGrid::new(8, 5);
+
+    let shader = BorderSweepShader {
+        speed: 1.0,
+        length: 3,
+        color: ColorConfig::Red,
+        position_binding: None,
+    };
+    let family = VfxSpatialShaderFamily::ComposedPrimitive(
+        VfxSpatialComposedPrimitive::TravelingBand((&shader).into()),
+    );
+
+    let mut options = CompositionOptions::default()
+        .try_with_v3_shader_family(&family, &shader, StyleRegion::All)
+        .expect("grouped family should lower");
+    options.t = 0.5;
+
+    let mut spec = CompositionSpec::default()
+        .try_with_v3_shader_family(&family, StyleRegion::All)
+        .expect("grouped family should lower");
+    spec.t = 0.5;
 
     render_pipeline_legacy(&source, &mut dest_options, 8, 5, 0, 0, options, None);
     render_pipeline_with_spec_legacy(&source, &mut dest_spec, 8, 5, 0, 0, &spec, None);
@@ -230,4 +266,4 @@ fn test_render_pipeline_with_spec_matches_options_shadow_grade_underlying() {
 
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

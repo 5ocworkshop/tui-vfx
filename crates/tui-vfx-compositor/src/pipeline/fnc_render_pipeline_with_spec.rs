@@ -1,8 +1,9 @@
 // <FILE>tui-vfx-compositor/src/pipeline/fnc_render_pipeline_with_spec.rs</FILE>
 // <DESC>Render pipeline wrapper for CompositionSpec</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.5.0</VERS>
 // <WCTX>Sub-plan A Phase A.2.2 — role-aware signature: accept `&RoleMap` and `&mut SemanticScene` matching the role-aware contract of render_pipeline</WCTX>
-// <CLOG>0.4.0: MAJOR — new signature carries `source_roles: &RoleMap` after `source`, and destination becomes `&mut SemanticScene` (was `&mut dyn Grid`). Callers without role information reach for `RoleMap::all_background(w, h)` and `SemanticScene::from_grid_with_default_role(grid, RoleTag::Background)`.</CLOG>
+// <CLOG>0.5.0: build ShaderWithRegion entries through grouped-V3-aware runtime constructors so spec-driven rendering consumes the same spatial family seam as newer callers.
+// 0.4.0: MAJOR — new signature carries `source_roles: &RoleMap` after `source`, and destination becomes `&mut SemanticScene` (was `&mut dyn Grid`). Callers without role information reach for `RoleMap::all_background(w, h)` and `SemanticScene::from_grid_with_default_role(grid, RoleTag::Background)`.</CLOG>
 
 use crate::pipeline::cls_composition_options::{CompositionOptions, ShaderWithRegion};
 use crate::pipeline::cls_composition_spec::CompositionSpec;
@@ -36,12 +37,15 @@ pub fn render_pipeline_with_spec(
 
     for (index, layer) in spec.shader_layers.iter().enumerate() {
         let shader_ref: &dyn StyleShader = &shader_storage[index];
-        shader_layers.push(ShaderWithRegion {
-            shader: shader_ref,
-            region: layer.region.clone(),
-            v3_family: Some(layer.v3_shader_family()),
-            shader_label: Some(layer.shader.name().to_string()),
-        });
+        let family = layer.v3_shader_family();
+        shader_layers.push(
+            ShaderWithRegion::try_from_v3_shader_family(
+                &family,
+                shader_ref,
+                layer.region.clone(),
+            )
+            .expect("spec shader layers should lower through the grouped V3 runtime seam"),
+        );
     }
 
     let options = CompositionOptions {
@@ -74,4 +78,4 @@ pub fn render_pipeline_with_spec(
 
 // <FILE>tui-vfx-compositor/src/pipeline/fnc_render_pipeline_with_spec.rs</FILE>
 // <DESC>Render pipeline wrapper for CompositionSpec</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>
