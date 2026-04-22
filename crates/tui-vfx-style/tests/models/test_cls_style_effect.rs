@@ -159,5 +159,50 @@ fn test_paired_style_effect_exposes_v3_effect_family() {
     assert_eq!(effect.v3_effect_family(), VfxStyleEffectFamily::PairedCapability);
 }
 
+#[test]
+fn test_style_effect_can_build_from_v3_non_spatial_alias_payloads() {
+    let pulse = StyleEffect::try_from_v3_payload(serde_json::json!({
+        "type": "pulse",
+        "frequency": 2.0,
+        "pulse_color": { "type": "rgb", "r": 255, "g": 100, "b": 100 }
+    }))
+    .unwrap();
+    let rainbow = StyleEffect::try_from_v3_payload(serde_json::json!({
+        "type": "rainbow",
+        "rotation_speed": 1.0
+    }))
+    .unwrap();
+
+    assert!(matches!(pulse, StyleEffect::Pulse { frequency: 2.0, .. }));
+    assert!(matches!(rainbow, StyleEffect::Rainbow { speed: 1.0 }));
+}
+
+#[test]
+fn test_style_effect_can_build_from_v3_spatial_payload() {
+    let effect = StyleEffect::try_from_v3_payload(serde_json::json!({
+        "type": "spatial",
+        "shader": {
+            "type": "gradient_overlay",
+            "gradient": {
+                "stops": [
+                    [0.0, {"type":"black"}],
+                    [1.0, {"type":"white"}]
+                ],
+                "space": "rgb"
+            },
+            "angle_deg": 90.0,
+            "intensity": 1.0
+        }
+    }))
+    .unwrap();
+
+    assert!(matches!(
+        effect,
+        StyleEffect::Spatial {
+            shader: tui_vfx_style::models::SpatialShaderType::LinearGradient(_)
+        }
+    ));
+}
+
 // <FILE>tui-vfx-style/tests/models/test_cls_style_effect.rs</FILE> - <DESC>Integration tests for StyleEffect</DESC>
 // <VERS>END OF VERSION: 0.4.0</VERS>

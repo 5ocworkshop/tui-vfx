@@ -53,6 +53,7 @@ use crate::utils::{
     blend_style_to_color, blend_style_to_color_in_space, darken, rainbow_style, shift_style_hsl,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::{self, Value};
 use tui_vfx_geometry::types::EasingCurve;
 use tui_vfx_types::{Color, RigidShakeTiming, Style};
 /// Style effects that modify text appearance over time.
@@ -690,6 +691,44 @@ impl StyleInterpolator for StyleEffect {
     }
 }
 impl StyleEffect {
+    /// Build a runnable style effect from a V3-authored payload shape.
+    ///
+    /// This keeps representative V3 alias handling and spatial-shader
+    /// delegation close to the executable style-effect surface instead of
+    /// requiring each bridge caller to rewrite style payloads first.
+    pub fn try_from_v3_payload(mut payload: Value) -> serde_json::Result<Self> {
+        if let Value::Object(ref mut object) = payload {
+            let payload_type = object
+                .get("type")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+
+            if payload_type == "pulse" && object.contains_key("pulse_color") && !object.contains_key("color")
+            {
+                if let Some(color) = object.remove("pulse_color") {
+                    object.insert("color".into(), color);
+                }
+            }
+            if payload_type == "rainbow"
+                && object.contains_key("rotation_speed")
+                && !object.contains_key("speed")
+            {
+                if let Some(speed) = object.remove("rotation_speed") {
+                    object.insert("speed".into(), speed);
+                }
+            }
+            if payload_type == "spatial" {
+                if let Some(shader_payload) = object.remove("shader") {
+                    let shader = SpatialShaderType::try_from_v3_payload(shader_payload)?;
+                    object.insert("shader".into(), serde_json::to_value(shader)?);
+                }
+            }
+        }
+
+        serde_json::from_value(payload)
+    }
+
     pub fn shader(&self) -> Option<&dyn StyleShader> {
         match self {
             StyleEffect::Spatial { shader } => Some(shader),

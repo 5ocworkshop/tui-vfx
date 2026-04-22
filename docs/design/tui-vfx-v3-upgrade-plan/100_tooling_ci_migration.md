@@ -148,6 +148,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - the preferred direct bridge now also honors authored clock/lifecycle loop semantics and remaining debug-corpus compatibility aliases (`gradient_overlay`, style payload aliases, defaulted bound-cell scopes), which unblocks previously failing representative complex/style recipes on the same path
   - sampler and filter compatibility lowering is now starting to move out of recipes-local JSON shims and into engine-owned executable constructors (`SamplerSpec::try_from_v3_payload`, `FilterSpec::try_from_v3_payload`), which is a better path toward truly V3-native runtime ownership than keeping every authored alias in the recipes bridge forever
   - representative shader payload compatibility is now starting to move the same direction too: `SpatialShaderType::try_from_v3_payload` owns primitive-form alias normalization, representative binding-object extraction, and compatibility fallbacks that the recipes bridge previously had to inline itself
+  - non-spatial style-effect payload handling is now starting to move with it: `StyleEffect::try_from_v3_payload` owns representative V3 alias handling and delegates spatial sub-payloads through the engine-owned shader constructor instead of relying on recipes-local pre-rewrites
   - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`
