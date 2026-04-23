@@ -1,5 +1,52 @@
 # Experimental Subagent Packet
 
+## Current cycle
+
+Cycle 5 of 10.
+
+This cycle is a first-read comprehension check for a blocker-scoped V3 tooling/validator lane in `/usr/projects/tui-vfx-recipes`.
+Do not widen into the whole V3 migration.
+Do not treat `mixed-signals` as the default destination unless the docs force a lower signal/math substrate move.
+Do not propose implementation work.
+The only writable experiment files are:
+- `/usr/projects/tui-vfx/steering/experiments/model-compare/gpt54mini-medium-packet.md`
+- `/usr/projects/tui-vfx/steering/experiments/model-compare/gpt54mini-medium-results.md`
+
+### Grounding first
+
+Before answering any question, the helper must ground itself by stating:
+- which exact docs it read
+- what repo-boundary facts it extracted
+- what the write-scope facts are
+- what it believes is directly stated versus inferred
+- what it will **not** assume
+
+This cycle is specifically checking whether the helper builds context properly before it answers.
+
+After grounding, stop and say `READY FOR QUESTIONS`.
+Do not answer the fixed or adaptive questions in the first response.
+
+### Current repo evidence from orientation
+
+The latest orientation snapshot for `/usr/projects/tui-vfx-recipes` surfaced these current hotspots:
+- `src/probe/mod.rs`
+- `src/preview/mod.rs`
+- `src/recipe_schema/mod.rs`
+
+The helper may treat those as candidate lane anchors only if the docs support them.
+Do not invent a lane outside the evidence above.
+
+### Grounded candidate lane
+
+Current repo inspection supports this validator-seam candidate:
+- `/usr/projects/tui-vfx-recipes/src/recipe_schema/mod.rs`
+- `/usr/projects/tui-vfx-recipes/src/recipe_schema/validator/mod.rs`
+- `/usr/projects/tui-vfx-recipes/src/recipe_schema/validator/fnc_validate_continuous_block.rs`
+- `/usr/projects/tui-vfx-recipes/src/recipe_schema/validator/fnc_validate_scene_block.rs`
+- `/usr/projects/tui-vfx-recipes/tests/recipe_schema.rs`
+
+Keep preview/probe adjacent, not primary, unless the helper can justify them from the docs and repo evidence.
+
 ## Task first
 Find one blocker-scoped V3 tooling/validator lane in `/usr/projects/tui-vfx-recipes`.
 Stay narrow. Do not widen into the whole V3 migration.
@@ -68,6 +115,16 @@ Your report must include:
 - candidate source/test file paths if the docs support them
 - if the docs support candidate tests, give the smallest runnable command you would actually use from the repo root
 
+## Grounding-only stop point
+Your first response should end after these headings only:
+- `Docs read in order:`
+- `Orientation snapshots consulted:`
+- `Additional repo inspection performed:`
+- `Why the candidate paths are justified:`
+- `READY FOR QUESTIONS`
+
+Do not answer the fixed or adaptive questions in the first response.
+
 ## Response discipline
 - Use the docs and this packet as the source of truth.
 - Answer the fixed questions directly.
@@ -80,3 +137,9 @@ Your report must include:
 
 ## Task reminder
 Your task is still: identify one blocker-scoped V3 tooling/validator lane in `/usr/projects/tui-vfx-recipes` without broadening into the whole V3 migration.
+
+## Adaptive questions for cycle 5
+
+1. Does the grounded candidate lane stay on the validator seam, or does it need preview/probe as a primary dependency?
+2. Which exact source and test paths are in scope for that lane?
+3. What exact verification command should validate that lane from the repo root?

@@ -1,14 +1,40 @@
 # Experimental Subagent Packet
 
+## Important experimental rule
+You are not being asked to start the work task itself.
+
+First:
+- read the packet and required docs
+- perform all grounding work
+- identify the grounded candidate lane
+- stop and report that you are READY for questions
+
+Do not answer the fixed 7 or adaptive 3 questions yet.
+The researcher will ask those after you have finished grounding.
+
+## Task first
+Find one blocker-scoped V3 tooling/validator lane in `/usr/projects/tui-vfx-recipes`.
+Stay narrow. Do not widen into the whole V3 migration.
+
 ## Objective
-Identify the next blocker-scoped V3 tooling/validator task inside `/usr/projects/tui-vfx-recipes` and report the exact write scope, verification commands, and risks without broadening into the whole V3 migration.
+Identify the next blocker-scoped V3 tooling/validator task inside `/usr/projects/tui-vfx-recipes` and report the exact write scope, verification commands, and risks.
+
+Current working hypothesis:
+- the concrete blocker lane is recipe-debug-filter validation in `recipes/debug_recipes/filters/*.json`
+- the first documented gate is `pipeline-validator --rules --stages <path>`
+- the current regression anchor is `tests/test_filter_recipe_coverage.rs`
+- the minimum stable working set is the filter JSONs plus that coverage test
 
 ## Success condition
-Return one narrow recommended blocker lane with:
+Return exactly one recommended blocker lane with:
 - exact files to touch
 - exact verification commands
 - notable risks
 - no scope widening into unrelated V3 migration work
+- no alternative lane dump
+- exact path strings, not just repo names or concepts
+- if a concrete lane can be named, include the smallest likely source/test file set; if not, say why not
+- if the docs support a concrete lane, name it explicitly rather than staying abstract
 
 ## Mode
 BLOCKER_MODE
@@ -18,13 +44,18 @@ BLOCKER_MODE
 - read-only analysis unless the packet explicitly says otherwise
 - exact file/path identification
 - exact verification-command identification
+- repo-boundary judgment using the must-read docs and orientation snapshots
 
 ## Out of scope
 - broad V3 migration planning
 - family-wide normalization passes
 - `mixed-signals` extraction
 - recipe/debug recipe authoring work unless directly named
+- any recipe directories outside `recipes/debug_recipes/filters/` unless the docs explicitly justify expansion
 - runtime behavior changes
+- edits to `ORCHESTRATION.md` or the shared briefing unless the 10-cycle evidence is already strong and the experiment is complete
+- implementation work of any kind
+- `src/` or `tools/` code changes unless the docs explicitly justify crossing out of recipe JSON validation
 
 ## Must-read docs
 1. `/usr/projects/tui-vfx/steering/INTENTIONS.md`
@@ -41,6 +72,7 @@ BLOCKER_MODE
 - `mixed-signals` owns reusable signal/math substrate only.
 - `tui-vfx` owns renderer/effect semantics.
 - `tui-vfx-recipes` owns recipe authoring truth, validator/tooling, compiled seams, preview/validator bridges, and generated V3 schema/docs surfaces.
+- If a candidate task is still a validator/tooling boundary issue, keep it in `tui-vfx-recipes` unless the docs clearly demand lower signal/math substrate.
 
 ## Performance reminder
 If the candidate blocker touches a hot path, call out the hot-path risk explicitly instead of giving only generic performance advice.
@@ -52,6 +84,31 @@ Your report must include:
 - exact out-of-scope items
 - exact verification commands
 - the biggest likely mistake if rushed
+- one blocker-lane recommendation only
+- shell-ready command text for verification, not generic descriptions
+- candidate source/test file paths if the docs support them
+- if the docs support candidate tests, give the smallest runnable command you would actually use from the repo root
+- prefer the repo's documented validator/test commands over invented alternatives
+
+## Grounding-only stop point
+Your first response should end after these headings only:
+- `Docs read in order:`
+- `Orientation snapshots consulted:`
+- `Additional repo inspection performed:`
+- `Why the candidate paths are justified:`
+- `READY FOR QUESTIONS`
+
+Do not answer the fixed or adaptive questions in the first response.
+
+## Response discipline
+- Use the docs and this packet as the source of truth.
+- Answer the fixed questions directly.
+- Use the adaptive questions to show what you learned from the docs, not generic opinions.
+- Quote or paraphrase the actual instruction that supports each answer.
+- Prefer concrete file/path language over conceptual summaries.
+- If the packet does not justify a concrete path, say so explicitly instead of substituting a repo name.
+- Do not invent file paths; only name them when the docs or repo evidence support them.
+- Do not omit runnable verification text if a candidate test set is supported.
 
 ## Task reminder
 Your task is still: identify one blocker-scoped V3 tooling/validator lane in `/usr/projects/tui-vfx-recipes` without broadening into the whole V3 migration.

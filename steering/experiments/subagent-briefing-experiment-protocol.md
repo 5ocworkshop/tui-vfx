@@ -18,6 +18,7 @@ That file is the source-of-truth packet for each cycle. Each cycle must revise t
 - Test the real artifact, not just wrapper prompt wording.
 - Use a NEW helper every cycle.
 - Close the helper immediately after feedback is collected.
+- Require the helper to do all grounding work before answering any evaluation questions.
 - Keep the evaluation questions mostly stable so cycle-to-cycle results are comparable.
 - Add adaptive questions based on previously observed failure modes.
 - Record actual comprehension, not just opinion.
@@ -74,13 +75,14 @@ A cycle only counts if all of the following happen:
 1. Edit the on-disk experimental packet file.
 2. Spawn a NEW medium helper agent.
 3. Give the helper the packet file path and require it to read the packet plus the referenced docs.
-4. Require the helper to answer the fixed 7 comprehension questions.
-5. Require the helper to answer the adaptive 3 questions for that cycle.
-6. Collect the helper response.
-7. Close that helper.
-8. Score the response.
-9. Update the results log.
-10. Revise the packet file for the next cycle.
+4. Require the helper to perform all grounding work for the packet but not start any implementation/work task and not answer the comprehension questions yet.
+5. Require the helper to stop after grounding and report that it is READY for questions.
+6. Ask the fixed 7 comprehension questions and the adaptive 3 questions only after the helper has completed grounding and declared readiness.
+7. Collect the helper response to the 10 questions.
+8. Close that helper.
+9. Score the response.
+10. Update the results log.
+11. Revise the packet file for the next cycle.
 
 If any step is missing, do not count the cycle.
 
@@ -93,10 +95,13 @@ Helper should not:
 - implement code
 - broaden scope
 - perform unrelated research
+- answer the 10 evaluation questions before grounding is complete
 
 Helper should:
 - read the packet and cited docs carefully
-- answer the comprehension questions concretely
+- perform all grounding work first
+- stop and say it is ready before the researcher asks the 10 questions
+- answer the comprehension questions concretely only after the researcher asks them
 - identify likely misunderstandings if rushed
 - quote or paraphrase the actual instructions it relied on
 
@@ -184,6 +189,7 @@ For each cycle record:
 - cycle number
 - helper id
 - packet revision summary
+- whether the helper completed grounding before the questions
 - adaptive questions used and why
 - fixed-question score
 - adaptive-question score
