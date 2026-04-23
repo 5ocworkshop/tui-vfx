@@ -98,3 +98,10 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 - `42-madeira-performance-and-60fps-audit.md`
 - `43-madeira-release-readiness-checklist.md`
 - `44-madeira-fully-operational-and-vetted-signoff.md`
+- `45-probe-validator-ordered-preview-truth-fix.md`
+- `46-procedural-layer-frame-equivalence-regression.md`
+- `47-tui-vfx-trace-signalcontext-compile-fix.md`
+- `48-madeira-ballistic-fireworks-procedural-support.md`
+- `49-scene-layer-compile-normalize-proof-fix.md`
+- `50-demo-info-panel-overflow-fix.md`
+- `STATUS.md`

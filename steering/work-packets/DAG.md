@@ -282,3 +282,20 @@ The packet library now reaches all the way from immediate V3 tooling blockers th
 - Madeira auditing and staged implementation
 - Madeira operational, visual, and performance vetting
 - final Madeira release-readiness and signoff
+
+
+## Session-harvested follow-on nodes
+- `WP45` — probe/validator ordered-preview truth fix
+- `WP46` — procedural-layer frame-equivalence regression
+- `WP47` — tui-vfx-trace SignalContext compile fix
+- `WP48` — Madeira ballistic fireworks procedural support
+- `WP49` — scene-layer compile-normalize proof fix
+- `WP50` — demo info-panel overflow fix
+
+### Dependency notes
+- `WP45` follows the probe/validator consistency audit.
+- `WP46` follows the procedural determinism audit.
+- `WP47` follows the procedural determinism audit and only repairs the stale trace proof seam.
+- `WP48` follows the Madeira fireworks/effect audit and should precede broader fireworks parity work.
+- `WP49` follows the Madeira scene-semantics audit where the stale compile-normalize proof was identified.
+- `WP50` follows the demo UX/control work and addresses the next discovered UX defect in the same surface.
