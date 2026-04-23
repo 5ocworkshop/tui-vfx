@@ -8,13 +8,15 @@
 //! forever-flat primitive leaf.
 //!
 // <FILE>crates/tui-vfx-style/src/models/cls_diffusion_shader.rs</FILE> - <DESC>Soft diffusion shader for textile, paper, and frosted material light</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Introduce a static-first material-light diffusion primitive distinct from glow, sparkle, and flicker</WCTX>
-// <CLOG>Add DiffusionShader with source geometry, softness, edge discipline, and optional low-amplitude breathing/drift modes</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Move the reusable radial/corner diffusion geometry onto the shared mixed-signals surface-distance substrate while keeping diffusion-specific lighting semantics local.</WCTX>
+// <CLOG>0.2.0: use mixed-signals SurfaceDistanceSignal for center/corner source geometry and add regression coverage against the pre-refactor distance formulas.
+// 0.1.0: Add DiffusionShader with source geometry, softness, edge discipline, and optional low-amplitude breathing/drift modes</CLOG>
 
 use crate::models::{ColorConfig, ColorSpace, FalloffType};
 use crate::traits::{ShaderContext, StyleShader};
 use crate::utils::fnc_blend_colors::blend_colors;
+use mixed_signals::prelude::{CellDistanceSignal, Signal, SignalContext};
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -133,20 +135,29 @@ impl DiffusionShader {
         let max_y = height.saturating_sub(1) as f32;
         let x = x as f32;
         let y = y as f32;
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(width, height)
+            .with_cell_position(x as u16, y as u16);
         match self.source {
-            DiffusionSource::Center => {
-                let cx = max_x / 2.0;
-                let cy = max_y / 2.0;
-                ((x - cx).powi(2) + (y - cy).powi(2)).sqrt()
-            }
+            DiffusionSource::Center => CellDistanceSignal::radius_from(0.5, 0.5)
+                .sample_with_context(0.0, &signal_ctx)
+                * ((max_x / 2.0).powi(2) + (max_y / 2.0).powi(2)).sqrt(),
             DiffusionSource::Top => y,
             DiffusionSource::Bottom => max_y - y,
             DiffusionSource::Left => x,
             DiffusionSource::Right => max_x - x,
-            DiffusionSource::TopLeft => (x.powi(2) + y.powi(2)).sqrt(),
-            DiffusionSource::TopRight => ((max_x - x).powi(2) + y.powi(2)).sqrt(),
-            DiffusionSource::BottomLeft => (x.powi(2) + (max_y - y).powi(2)).sqrt(),
-            DiffusionSource::BottomRight => ((max_x - x).powi(2) + (max_y - y).powi(2)).sqrt(),
+            DiffusionSource::TopLeft => CellDistanceSignal::radius_from(0.0, 0.0)
+                .sample_with_context(0.0, &signal_ctx)
+                * (max_x.powi(2) + max_y.powi(2)).sqrt(),
+            DiffusionSource::TopRight => CellDistanceSignal::radius_from(1.0, 0.0)
+                .sample_with_context(0.0, &signal_ctx)
+                * (max_x.powi(2) + max_y.powi(2)).sqrt(),
+            DiffusionSource::BottomLeft => CellDistanceSignal::radius_from(0.0, 1.0)
+                .sample_with_context(0.0, &signal_ctx)
+                * (max_x.powi(2) + max_y.powi(2)).sqrt(),
+            DiffusionSource::BottomRight => CellDistanceSignal::radius_from(1.0, 1.0)
+                .sample_with_context(0.0, &signal_ctx)
+                * (max_x.powi(2) + max_y.powi(2)).sqrt(),
         }
     }
 
@@ -249,5 +260,64 @@ impl StyleShader for DiffusionShader {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn old_source_distance(source: DiffusionSource, x: u16, y: u16, width: u16, height: u16) -> f32 {
+        let max_x = width.saturating_sub(1) as f32;
+        let max_y = height.saturating_sub(1) as f32;
+        let x = x as f32;
+        let y = y as f32;
+        match source {
+            DiffusionSource::Center => {
+                let cx = max_x / 2.0;
+                let cy = max_y / 2.0;
+                ((x - cx).powi(2) + (y - cy).powi(2)).sqrt()
+            }
+            DiffusionSource::Top => y,
+            DiffusionSource::Bottom => max_y - y,
+            DiffusionSource::Left => x,
+            DiffusionSource::Right => max_x - x,
+            DiffusionSource::TopLeft => (x.powi(2) + y.powi(2)).sqrt(),
+            DiffusionSource::TopRight => ((max_x - x).powi(2) + y.powi(2)).sqrt(),
+            DiffusionSource::BottomLeft => (x.powi(2) + (max_y - y).powi(2)).sqrt(),
+            DiffusionSource::BottomRight => ((max_x - x).powi(2) + (max_y - y).powi(2)).sqrt(),
+        }
+    }
+
+    #[test]
+    fn source_distance_matches_pre_refactor_geometry() {
+        let sources = [
+            DiffusionSource::Center,
+            DiffusionSource::Top,
+            DiffusionSource::Bottom,
+            DiffusionSource::Left,
+            DiffusionSource::Right,
+            DiffusionSource::TopLeft,
+            DiffusionSource::TopRight,
+            DiffusionSource::BottomLeft,
+            DiffusionSource::BottomRight,
+        ];
+
+        for source in sources {
+            let shader = DiffusionShader {
+                source,
+                ..Default::default()
+            };
+            for y in 0..8_u16 {
+                for x in 0..12_u16 {
+                    let old = old_source_distance(source, x, y, 12, 8);
+                    let new = shader.source_distance(x, y, 12, 8);
+                    assert!(
+                        (old - new).abs() < 0.001,
+                        "source={source:?} x={x} y={y} old={old} new={new}"
+                    );
+                }
+            }
+        }
+    }
+}
+
 // <FILE>crates/tui-vfx-style/src/models/cls_diffusion_shader.rs</FILE> - <DESC>Soft diffusion shader for textile, paper, and frosted material light</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
