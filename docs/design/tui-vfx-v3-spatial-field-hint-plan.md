@@ -310,6 +310,48 @@ Those would primarily help with:
 But those should be added only as the next semantic work proves they are needed,
 not preemptively as surface-area expansion.
 
+### 5.6 Spotlight / cone feature candidate
+
+There is one higher-level candidate worth keeping explicitly in view:
+
+- a **spotlight / cone field primitive**
+
+Why it matters:
+
+- it is an impressive downstream demo candidate
+- it serves application TUIs as well as lightweight game/story work
+- it benefits from animated origin + angle changes
+- it is a natural consumer-facing way to express “swept light path” behavior
+
+The intended downstream use case is:
+
+- a GT-Design surface that approximates a moving spotlight on the screen
+- the spotlight can be placed on-screen or off-screen
+- rotating the spotlight changes the direction/path of the emitted cone
+- downstream shading / masking / emphasis stages respond to that moving cone
+
+This should **not** be the first thing added to `mixed-signals`.
+
+The recommended order remains:
+
+1. land the lower-level spatial leaves
+2. vet typed field/hint chaining through D
+3. continue through full C
+4. then evaluate whether a higher-level spotlight/cone primitive has earned a
+   first-class place in `mixed-signals`
+
+Why defer the primitive:
+
+- the lower-level leaves may already make it ergonomic enough to author the
+  cone field without a dedicated node
+- if they do not, the spotlight/cone primitive becomes a justified
+  higher-level addition rather than speculative surface area
+
+So the spotlight/cone should remain an explicit **design target** and showcase
+goal, but it should only become a first-class `mixed-signals` primitive if the
+foundational leaves prove insufficient or if it clearly serves multiple use
+cases beyond the initial showcase.
+
 ---
 
 ## 5.4 Proposed schema changes
