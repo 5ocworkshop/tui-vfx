@@ -61,6 +61,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `f6ef333` / `99a42f5`
 - `54-v3-mixed-signals-signalgraph-and-time-alignment.md`
   - landed via `983249f` / `45c61f1`
+- `57-v3-live-naming-and-vocabulary-cleanup.md`
+  - landed via `cd4b88c`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -102,7 +104,6 @@ These packets produced accepted non-code outputs that should be treated as harve
 - `52-madeira-direct-preview-allocation-cache-slice.md`
 - `55-v3-spatial-leaves-and-field-hint-threading.md`
 - `56-v3-motion-path-and-offscreen-origin-support.md`
-- `57-v3-live-naming-and-vocabulary-cleanup.md`
 - `58-v3-ra-to-vfx-public-surface-rename-tranche.md`
 - `60-v3-doc-autogen-and-authoring-guide-cutover.md`
 
