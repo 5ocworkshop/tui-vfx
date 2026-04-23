@@ -77,6 +77,8 @@ impl Mask for Spotlight {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::masks::cls_wipe::Wipe;
+    use crate::types::cls_mask_spec::WipeDirection;
 
     fn old_distance(shape: IrisShape, x: u16, y: u16, w: u16, h: u16) -> f32 {
         let cx = w as f32 / 2.0;
@@ -178,6 +180,26 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn spotlight_circle_is_not_equivalent_to_center_out_wipe_on_square_surfaces() {
+        let spotlight = Spotlight::new(IrisShape::Circle, false);
+        let wipe = Wipe::new(WipeDirection::HorizontalCenterOut, false);
+
+        assert!(!spotlight.is_visible(5, 0, 11, 11, 0.5));
+        assert!(wipe.is_visible(5, 0, 11, 11, 0.5));
+    }
+
+    #[test]
+    fn spotlight_diamond_is_not_equivalent_to_center_out_wipe_on_square_surfaces() {
+        let spotlight = Spotlight::new(IrisShape::Diamond, false);
+        let wipe = Wipe::new(WipeDirection::HorizontalCenterOut, false);
+
+        // Diamond reveal depends on both axes; a horizontal center-out wipe
+        // reveals the full center column immediately.
+        assert!(!spotlight.is_visible(5, 0, 11, 11, 0.5));
+        assert!(wipe.is_visible(5, 0, 11, 11, 0.5));
     }
 }
 
