@@ -41,6 +41,10 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `0370ce7`
 - `41-madeira-visual-vetting-protocol.md`
   - landed via `fbcfe5f`
+- `38-madeira-validator-probe-truth-hardening.md`
+  - landed via `8e11d71`
+- `39-madeira-reference-fixtures-and-baselines.md`
+  - landed via `c1e8a0f`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -71,8 +75,16 @@ These packets produced accepted non-code outputs that should be treated as harve
   - established must-have gates before broadening Madeira work
 - `36-madeira-fireworks-effect-parity-audit.md`
   - identified `ballistic_fireworks` support as the clearest next effect-capability tranche
+- `14-probe-validator-consistency-audit.md`
+  - found probe/validator mostly aligned on bridge support but not on fixed-sample timing caveat disclosure
+- `40-madeira-end-to-end-operational-check.md`
+  - operational path mostly green, but next blocker remained diagnostic-truth / stale diag example surfaces
+- `42-madeira-performance-and-60fps-audit.md`
+  - Madeira is operational enough to audit but still at risk for sustained 60 FPS due to direct-preview structural overhead
 
 ## New follow-on packets created from audit learnings
+- `51-madeira-diagnostic-example-previewitem-option-fix.md`
+- `52-madeira-direct-preview-allocation-cache-slice.md`
 
 ## Notes
 - Packet completion is tied to real commits on `master`, not just plausible subagent responses.

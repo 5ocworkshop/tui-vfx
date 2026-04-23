@@ -299,3 +299,18 @@ The packet library now reaches all the way from immediate V3 tooling blockers th
 - `WP48` follows the Madeira fireworks/effect audit and should precede broader fireworks parity work.
 - `WP49` follows the Madeira scene-semantics audit where the stale compile-normalize proof was identified.
 - `WP50` follows the demo UX/control work and addresses the next discovered UX defect in the same surface.
+
+
+## Post-Madeira-diagnostics packet nodes
+- `WP51` — Madeira diagnostic example PreviewItem Option fix
+- `WP52` — Madeira direct-preview allocation/cache slice
+
+## Post-Madeira-diagnostics dependency notes
+- `WP51` depends on Packet 40 because it repairs the exact bounded diagnostic-surface blocker identified there.
+- `WP52` depends on Packet 42 because it follows the performance audit's recommended next optimization seam.
+- `WP43` should follow `WP41` and `WP42` now that visual protocol and performance audit outputs exist.
+- `WP44` still depends on `WP40`, `WP41`, `WP42`, and `WP43`.
+
+## Post-Madeira-diagnostics collision notes
+- `WP51` collides with preview/diagnostic example surfaces only and should stay out of runtime redesign.
+- `WP52` collides with direct-preview/render-path optimization work and should not overlap with other preview-path implementation lanes.
