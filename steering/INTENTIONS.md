@@ -1,7 +1,8 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Add an explicit SSOT intention for shared infrastructure, especially the recipe loader/semantic seam. Triggered by active V3 migration work where version detection, dispatch, normalization, validation, and compile routing were at risk of being duplicated across tools rather than remaining centralized in tui-vfx-recipes.</WCTX>
-<!-- <CLOG>0.3.0: MINOR — add Intention 26 (single source of truth over parallel seams), with the loader architecture called out as the concrete example.
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Add an explicit bottom-up layer-language intention so cross-repo design discussions keep one stack model: mixed-signals lower, tui-vfx in the middle, user-facing apps higher.</WCTX>
+<!-- <CLOG>0.4.0: MINOR — add Intention 30 (use bottom-up layer language consistently across mixed-signals, tui-vfx, tui-vfx-recipes, gt-design, and consuming apps).
+0.3.0: MINOR — add Intention 26 (single source of truth over parallel seams), with the loader architecture called out as the concrete example.
 0.2.0: MINOR — add "Writing style" section between the provenance note and the numbered intentions. Covers: no marketing voice, no grandiose framing, no filler, be specific, one idea per sentence. Includes the "why" (developers filter for signal; grandiose framing reads as insecurity; schema regularity applies to prose).</CLOG>
 <!-- <CLOG>0.1.0: initial draft. 29 numbered intentions organized into identity / architecture / discipline / philosophy clusters. Top-of-mind intentions called out (1, 3, 9, 20, 23, 24). Cross-references to V3 upgrade plan and MARKETING.md where relevant. Derived from gt-design steering/INTENTIONS.md v0.52.0 with selective adaptation.</CLOG> -->
 
@@ -137,7 +138,6 @@ is the shared primitive generator; `tui-vfx` is the rendering/effect system that
 consumes those primitives.
 
 ## 10. Clean-Sheet Naming and Ergonomics Reset at Version Boundaries
-
 Major-version boundaries are deliberate moments to clean up naming that evolved under rapid scope changes. When legacy names conflict with clarity or ergonomics, we prefer the clearer clean-sheet name and provide migration notes rather than preserving confusing historical naming by inertia.
 
 Why: incremental renames accumulate costs — each one is a breaking change, each one pays the migration tax for just its own rename. Bundled renames at version boundaries pay the breaking-change cost once and let the whole naming surface move forward together. V3 is this moment for tui-vfx — the `Ra*` → `Vfx*` prefix rename (Decision 4), the "preview" seam naming (Open Q #19), the vocabulary refresh (Open Q #15) all ride in one cutover.
@@ -361,7 +361,26 @@ Rules:
 
 Why: a project that describes itself inconsistently loses the trust of both contributors and consumers. Keeping MARKETING and INTENTIONS as peers — one outward-facing, one inward-facing — acknowledges that both audiences matter and prevents either document from silently drifting.
 
+## 30. Layer language is bottom-up across the ecosystem
+
+When we describe architectural direction across `mixed-signals`, `tui-vfx`,
+`tui-vfx-recipes`, `gt-design`, and consuming applications, we use one shared
+bottom-up stack model:
+
+- **lower** = closer to foundational libraries
+- **higher** = closer to the user-facing application
+
+That means:
+
+- `mixed-signals` is lower than `tui-vfx`
+- `tui-vfx` is lower than recipe/design-system consumers
+- applications are the highest layer
+
+Why: V3 work now crosses multiple repos constantly. Shared layer language keeps
+discussions about "push this lower" or "keep that higher" unambiguous and makes
+ownership decisions easier to review.
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
