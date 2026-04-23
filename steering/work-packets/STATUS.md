@@ -45,6 +45,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `8e11d71`
 - `39-madeira-reference-fixtures-and-baselines.md`
   - landed via `c1e8a0f`
+- `51-madeira-diagnostic-example-previewitem-option-fix.md`
+  - landed via `1025a75`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -83,7 +85,6 @@ These packets produced accepted non-code outputs that should be treated as harve
   - Madeira is operational enough to audit but still at risk for sustained 60 FPS due to direct-preview structural overhead
 
 ## New follow-on packets created from audit learnings
-- `51-madeira-diagnostic-example-previewitem-option-fix.md`
 - `52-madeira-direct-preview-allocation-cache-slice.md`
 
 ## Notes
