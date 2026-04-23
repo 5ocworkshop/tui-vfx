@@ -1,5 +1,8 @@
 # Packet 36 — Madeira fireworks/effect parity audit
 
+## Task first
+Separate Madeira’s effect/fireworks gaps from its scene-semantic gaps and recommend the next effect-focused slice.
+
 ## Objective
 Audit the fireworks/effect layers of Madeira separately from scene semantics so we know which remaining gaps are visual/effect capability issues rather than scene-composition issues.
 
@@ -14,15 +17,28 @@ BLOCKER_MODE
 - effect gaps are separated from scene/placement gaps
 - one next effect-focused implementation slice is recommended
 
-## In scope
+## Task-scope paths for grounding
 - `/usr/projects/tui-vfx-recipes/recipes/madeira_flag/madeira_flag.json`
 - effect-bearing scene layer/pipeline sections of the Madeira recipe
 - supporting compile/render/probe/validator seams only as evidence
+
+## Exact write scope
+- none by default; this is an audit packet
 
 ## Out of scope
 - implementing the fixes
 - broad scene-semantics work
 - general recipe corpus work
+
+## Must-read docs in order
+1. Madeira audit outputs
+2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
+3. `/usr/projects/gt-design/.omx/context/v3-managed-briefing-20260423T170500Z.md`
+4. `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-recipe-vocabulary.md`
+
+## Repo-boundary guardrails
+- Keep this packet at the audit/recommendation level.
+- Separate effect-capability issues from scene/placement issues.
 
 ## Verification required
 - exact commands showing what Madeira currently proves today

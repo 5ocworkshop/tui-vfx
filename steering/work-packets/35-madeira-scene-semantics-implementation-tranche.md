@@ -20,16 +20,32 @@ BLOCKER_MODE
 - exact affected Madeira behavior is proven with focused evidence
 - no broad scene-system rewrite
 
-## In scope
+## Task-scope paths for grounding
 - only the exact scene/compile/render files named by the prior Madeira audit packet
 - only the one tranche explicitly chosen before dispatch
 - the narrowest tests/probes needed to prove the fix
+
+## Exact write scope
+- only the exact scene/compile/render files named by the prior audit
+- only the smallest proof/test surfaces required by the tranche
 
 ## Out of scope
 - fireworks/effect tuning outside the selected scene seam
 - unrelated scene-layer cleanup
 - broad Madeira implementation
 - debug recipe corpus work unless directly required as proof
+
+## Must-read docs in order
+1. chosen Madeira scene-semantic audit outputs
+2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
+3. `/usr/projects/gt-design/.omx/context/v3-managed-briefing-20260423T170500Z.md`
+4. `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-recipe-vocabulary.md`
+5. `/usr/projects/global_prompts/standards/40_ofpf_standards.md`
+6. `/usr/projects/global_prompts/standards/50_tdd_protocol.md`
+
+## Repo-boundary guardrails
+- Keep unrelated Madeira gaps out.
+- Do not broaden this scene tranche into general Madeira implementation.
 
 ## Recommended first steps
 1. Restate the exact chosen scene-semantic gap.

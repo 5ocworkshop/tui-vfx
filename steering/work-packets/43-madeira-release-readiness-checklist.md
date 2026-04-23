@@ -1,5 +1,8 @@
 # Packet 43 — Madeira release readiness checklist
 
+## Task first
+Assemble the concrete release-readiness checklist for Madeira using evidence from the operational, visual, performance, and baseline work.
+
 ## Objective
 Assemble the concrete release-readiness checklist for Madeira once it approaches operational parity.
 
@@ -18,12 +21,26 @@ BLOCKER_MODE
 - each item has a clear pass/fail condition
 - must-haves are separated from nice-to-haves
 
-## In scope
+## Task-scope paths for grounding
 - Madeira-related proof surfaces and docs only
+
+## Exact write scope
+- the checklist artifact only
+- the smallest supporting note/reference if needed
 
 ## Out of scope
 - implementing checklist items in this packet
 - broad feature work
+
+## Must-read docs in order
+1. current Madeira operational/visual/performance audit outputs
+2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
+3. `/usr/projects/gt-design/.omx/context/v3-managed-briefing-20260423T170500Z.md`
+4. `/usr/projects/global_prompts/standards/50_tdd_protocol.md`
+
+## Repo-boundary guardrails
+- Keep this packet on readiness criteria only.
+- Separate must-haves from nice-to-haves explicitly.
 
 ## Verification required
 - checklist items must be tied to exact commands, artifacts, or human review steps
