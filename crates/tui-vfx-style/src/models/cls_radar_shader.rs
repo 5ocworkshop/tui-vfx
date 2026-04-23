@@ -1,10 +1,12 @@
 // <FILE>tui-vfx-style/src/models/cls_radar_shader.rs</FILE> - <DESC>Radar sweep shader implementation</DESC>
-// <VERS>VERSION: 1.0.1</VERS>
-// <WCTX>Fix shader speed bug — speed field was truncating sweep range</WCTX>
-// <CLOG>Remove self.speed from positional computation; caller controls sweep rate via loop_t</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Refactor representative polar field math onto the shared mixed-signals spatial coordinate substrate now that angle sampling is available there.</WCTX>
+// <CLOG>1.1.0: use mixed-signals `sample_angle` for the per-cell polar angle instead of open-coding local atan2 math inside the shader.
+// 1.0.1: Remove self.speed from positional computation; caller controls sweep rate via loop_t</CLOG>
 
 use crate::models::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
+use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
@@ -20,12 +22,10 @@ impl StyleShader for RadarShader {
     fn style_at(&self, ctx: &ShaderContext, base: Style) -> Style {
         let t = ctx.t as f32;
 
-        let cx = ctx.width as f32 / 2.0;
-        let cy = ctx.height as f32 / 2.0;
-        let dx = ctx.local_x as f32 - cx;
-        let dy = ctx.local_y as f32 - cy;
-        // Angle in 0..2PI
-        let angle = dy.atan2(dx).rem_euclid(std::f32::consts::TAU);
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(ctx.width, ctx.height)
+            .with_cell_position(ctx.local_x, ctx.local_y);
+        let angle = SpatialCoordinateSignal::sample_angle().sample_with_context(0.0, &signal_ctx);
         // Current sweep angle
         let sweep = (t * std::f32::consts::TAU).rem_euclid(std::f32::consts::TAU);
         // Difference
@@ -51,5 +51,34 @@ impl StyleShader for RadarShader {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn radar_shader_distinguishes_cells_by_angle() {
+        let shader = RadarShader {
+            speed: 1.0,
+            tail_length: 0.5,
+            color: ColorConfig::Red,
+        };
+        let base = Style {
+            fg: Color::rgb(20, 20, 20),
+            bg: Color::rgb(0, 0, 0),
+            mods: Default::default(),
+        };
+
+        let lit_ctx = ShaderContext::new(4, 2, 9, 5, 0, 0, 0.0, None, None);
+        let dark_ctx = ShaderContext::new(0, 2, 9, 5, 0, 0, 0.0, None, None);
+
+        let lit = shader.style_at(&lit_ctx, base);
+        let dark = shader.style_at(&dark_ctx, base);
+
+        assert_ne!(lit, dark);
+        assert_eq!(lit.fg, Color::from(shader.color));
+        assert_eq!(dark.fg, base.fg);
+    }
+}
+
 // <FILE>tui-vfx-style/src/models/cls_radar_shader.rs</FILE> - <DESC>Radar sweep shader implementation</DESC>
-// <VERS>END OF VERSION: 1.0.1</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

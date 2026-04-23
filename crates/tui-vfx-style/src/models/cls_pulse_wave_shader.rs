@@ -1,12 +1,13 @@
 // <FILE>tui-vfx-style/src/models/cls_pulse_wave_shader.rs</FILE> - <DESC>Spatial pulse wave with rippling color</DESC>
-// <VERS>VERSION: 1.4.0</VERS>
-// <WCTX>Phase 0 P0.3 — add frequency_binding for runtime-parameter wave frequency override</WCTX>
-// <CLOG>Add frequency_binding: Option<String> and thread an explicit frequency parameter through blend_at so style_at can resolve the binding once per frame</CLOG>
+// <VERS>VERSION: 1.5.0</VERS>
+// <WCTX>Phase 0 P0.3 follow-on — refactor representative position/radius field math onto the shared mixed-signals spatial coordinate substrate now that those leaves exist.</WCTX>
+// <CLOG>1.5.0: use mixed-signals spatial coordinate leaves for horizontal/vertical/radial/diagonal wave phase derivation instead of open-coding normalized coordinate math in the shader.
+// Add frequency_binding: Option<String> and thread an explicit frequency parameter through blend_at so style_at can resolve the binding once per frame</CLOG>
 
 use crate::models::{ColorConfig, ColorSpace};
 use crate::traits::{ShaderContext, StyleShader};
 use crate::utils::blend_colors;
-use mixed_signals::prelude::{Signal, SignalExt, Sine};
+use mixed_signals::prelude::{Signal, SignalContext, SignalExt, Sine, SpatialCoordinateSignal};
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -72,26 +73,17 @@ impl Default for PulseWaveShader {
 impl PulseWaveShader {
     /// Calculate wave phase at a position.
     fn wave_phase(&self, x: u16, y: u16, width: u16, height: u16) -> f32 {
-        let nx = if width > 0 {
-            x as f32 / width as f32
-        } else {
-            0.0
-        };
-        let ny = if height > 0 {
-            y as f32 / height as f32
-        } else {
-            0.0
-        };
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(width, height)
+            .with_cell_position(x, y);
+        let nx = SpatialCoordinateSignal::sample_norm_x().sample_with_context(0.0, &signal_ctx);
+        let ny = SpatialCoordinateSignal::sample_norm_y().sample_with_context(0.0, &signal_ctx);
 
         match self.direction {
             WaveDirection::Horizontal => nx,
             WaveDirection::Vertical => ny,
-            WaveDirection::Radial => {
-                // Distance from center, normalized
-                let cx = nx - 0.5;
-                let cy = ny - 0.5;
-                (cx * cx + cy * cy).sqrt() * 2.0
-            }
+            WaveDirection::Radial => SpatialCoordinateSignal::sample_radius()
+                .sample_with_context(0.0, &signal_ctx),
             WaveDirection::Diagonal => (nx + ny) / 2.0,
         }
     }

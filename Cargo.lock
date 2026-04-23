@@ -623,9 +623,7 @@ checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
 
 [[package]]
 name = "mixed-signals"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50234d576ea94431df9704abb5563fdb4a1ac76564d7a21d4002573e4b684cf2"
+version = "0.2.3"
 dependencies = [
  "rand",
  "rand_chacha",
@@ -1244,6 +1242,7 @@ version = "0.11.0"
 dependencies = [
  "serde",
  "serde_json",
+ "tui-vfx-core",
 ]
 
 [[package]]
