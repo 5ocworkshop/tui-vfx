@@ -27,6 +27,10 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `67a2766`
 - `25-v3-debug-recipes-filter-family-tranche.md`
   - first tranche landed via `11a321d`
+- `47-tui-vfx-trace-signalcontext-compile-fix.md`
+  - landed via `797cac1`
+- `49-scene-layer-compile-normalize-proof-fix.md`
+  - landed via `13c99d3`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -61,9 +65,7 @@ These packets produced accepted non-code outputs that should be treated as harve
 ## New follow-on packets created from audit learnings
 - `45-probe-validator-ordered-preview-truth-fix.md`
 - `46-procedural-layer-frame-equivalence-regression.md`
-- `47-tui-vfx-trace-signalcontext-compile-fix.md`
 - `48-madeira-ballistic-fireworks-procedural-support.md`
-- `49-scene-layer-compile-normalize-proof-fix.md`
 - `50-demo-info-panel-overflow-fix.md`
 
 ## Notes
