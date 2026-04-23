@@ -37,6 +37,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `a198ddb`
 - `50-demo-info-panel-overflow-fix.md`
   - landed via `145bcd2`
+- `48-madeira-ballistic-fireworks-procedural-support.md`
+  - landed via `0370ce7`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -69,7 +71,6 @@ These packets produced accepted non-code outputs that should be treated as harve
   - identified `ballistic_fireworks` support as the clearest next effect-capability tranche
 
 ## New follow-on packets created from audit learnings
-- `48-madeira-ballistic-fireworks-procedural-support.md`
 
 ## Notes
 - Packet completion is tied to real commits on `master`, not just plausible subagent responses.
