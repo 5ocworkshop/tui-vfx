@@ -101,6 +101,32 @@ When touching debug recipes:
 - do not create separate recipe categories just because a recipe is runtime-bound or procedural
 - directory structure should follow what the recipe demonstrates, not merely how a value is driven
 
+When updating a shader/filter/mask/sampler/style/content effect or other
+primitive/effect family:
+- update the corresponding debug recipe(s) in the same tranche whenever the
+  visual semantics, naming, timing, authoring vocabulary, or parameter story
+  are affected
+- normalize the family in one pass when possible:
+  - shared math substrate
+  - timing semantics
+  - vocabulary/comments/naming
+  - rustdocs/public docs
+  - matching debug recipes/descriptions/layouts
+- when repeated reusable math patterns are discovered, apply the boundary rule:
+  - if the math is signal/math substrate
+  - and it is reusable across 3+ real use cases
+  - and it is not inherently tied to one renderer/effect semantic
+  - then move it into `mixed-signals` instead of re-rolling it locally
+- if the pattern is effect/render semantics, keep it in `tui-vfx` /
+  `tui-vfx-recipes` and only extract the lower reusable math
+- ensure those debug recipes remain high-quality references with:
+  - clear descriptions
+  - correct body text
+  - adequate layout/contrast
+  - representative timing/variation
+- treat this as part of the definition of done for that family update, not as
+  optional follow-up polish
+
 ## 8. Timing / architecture rules currently in force
 
 - cadence-driven motion should use monotonic elapsed time, not reset-on-loop normalized time
