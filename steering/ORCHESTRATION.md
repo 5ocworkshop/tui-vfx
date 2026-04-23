@@ -158,6 +158,9 @@ The leader should keep useful agent lanes queued so agent slots stay productive.
 
 Rules:
 - always have the next bounded task packet ready before an agent finishes when possible
+- prioritize reviewing and responding to agent completions over continuing long local work
+- do direct work in the gaps between agent reviews, not at the expense of leaving completed agents idle
+- if local work is more than a step or two from a natural pause, stop and switch focus when agents finish so the queue keeps moving
 - review completed agent work promptly
 - accept and integrate good work quickly
 - send work back for refinement when it does not yet meet steering or verification standards

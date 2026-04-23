@@ -123103,7 +123103,7 @@
             "name": "CharsetNoise"
           },
           {
-            "description": "Deterministic procedural digital-rain field.\n\nSynthesizes coherent per-column falling streams directly in the\ncompositor filter path. Each column derives stream presence, speed,\ntrail length, glyph churn, and head position from `(x, t, seed)`,\navoiding widget-owned persistent state while still reading as Matrix\nrain instead of generic noise.\n\n`density` and `speed_multiplier` use `BindableValue`, making them\nsuitable first-class runtime controls for dynamic recipes.",
+            "description": "Deterministic procedural digital-rain field.\n\nSynthesizes coherent per-column falling streams directly in the\ncompositor filter path. Each column derives stream presence, speed,\ntrail length, glyph churn, and head position from `(x, t, seed)`,\navoiding widget-owned persistent state while still reading as Matrix\nrain instead of generic noise.\n\n`density` and `speed_multiplier` use `BindableValue`, making them\nsuitable first-class runtime controls for runtime-bound recipes.",
             "fields": [
               {
                 "json_key": null,
@@ -187254,7 +187254,7 @@
           "name": "KittScanner"
         },
         "matrix_rain": {
-          "description": "Deterministic procedural digital-rain field.\n\nSynthesizes coherent per-column falling streams directly in the\ncompositor filter path. Each column derives stream presence, speed,\ntrail length, glyph churn, and head position from `(x, t, seed)`,\navoiding widget-owned persistent state while still reading as Matrix\nrain instead of generic noise.\n\n`density` and `speed_multiplier` use `BindableValue`, making them\nsuitable first-class runtime controls for dynamic recipes.",
+          "description": "Deterministic procedural digital-rain field.\n\nSynthesizes coherent per-column falling streams directly in the\ncompositor filter path. Each column derives stream presence, speed,\ntrail length, glyph churn, and head position from `(x, t, seed)`,\navoiding widget-owned persistent state while still reading as Matrix\nrain instead of generic noise.\n\n`density` and `speed_multiplier` use `BindableValue`, making them\nsuitable first-class runtime controls for runtime-bound recipes.",
           "fields": [
             {
               "json_key": null,

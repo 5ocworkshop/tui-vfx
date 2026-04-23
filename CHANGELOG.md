@@ -1,7 +1,7 @@
 <!-- <FILE>CHANGELOG.md</FILE> - <DESC>Release history for tui-vfx</DESC> -->
-<!-- <VERS>VERSION: 1.17.0</VERS> -->
-<!-- <WCTX>Sub-plan A Phase A.5 — documentation consistency pass + end-to-end integration test; consolidates A.1-A.4 as one coherent Unreleased section and adds the cross-phase regression net.</WCTX> -->
-<!-- <CLOG>1.17.0: PATCH — Phase A.5 consolidation: add "Sub-plan A (recipe scene composer foundation) — final composition check" summary at the head of the Unreleased block; point at the end-to-end integration test and the Sub-plan A handoff doc. No new public API introduced by A.5; existing A.1-A.4 entries preserved in order.
+<!-- <VERS>VERSION: 1.17.1</VERS> -->
+<!-- <WCTX>Sub-plan A Phase A.5 follow-up — docs/tests naming consistency pass for runtime-bound recipe terminology after removing the legacy dedicated recipe category.</WCTX> -->
+<!-- <CLOG>1.17.1: PATCH — update live docs/tests wording from legacy category references to runtime-bound/topic-based naming after the dedicated recipe-category removal. 1.17.0: PATCH — Phase A.5 consolidation: add "Sub-plan A (recipe scene composer foundation) — final composition check" summary at the head of the Unreleased block; point at the end-to-end integration test and the Sub-plan A handoff doc. No new public API introduced by A.5; existing A.1-A.4 entries preserved in order.
 1.16.0: add Unreleased entry for Phase A.4 — tui-vfx-debug inspection module (TraceEvent / TraceEnvelope / TraceSelector / TraceFilter / StageMask / InspectionSink / TraceSink / TraceReport with NDJSON round-trip); additive InspectionSinkBridge in tui-vfx-compositor so CompositorInspector callbacks forward into any InspectionSink; criterion dev-dep + two benches; workspace bumped 0.8.0 → 0.9.0. CompositorInspector stays at crates/tui-vfx-compositor/src/traits/pipeline_inspector.rs.
 1.15.0: add Unreleased entry for Phase A.3 — role-aware ShaderContext, ShadowConfig.source_region, fnc_extract_shadow_envelope + CellMask, render_shadow_into_scene, shadow-stage RoleTag::Shadow write-back; workspace bumped 0.7.0 → 0.8.0. ShadowConfig is no longer Copy (RoleTag::Custom carries Arc<str>).
 1.14.0: add Unreleased entry for the Phase A.2 hard cutover: render_pipeline* signature change (adds &RoleMap source and &mut SemanticScene destination); StyleRegion legacy bare variants removed from the Rust enum (serde back-compat preserved via custom Deserialize); workspace version bumped 0.6.0 → 0.7.0.
@@ -380,7 +380,7 @@ matches their existing semantics for `Boolean`/`Text`.
 ## 0.4.0 — 2026-04-14
 
 This release lands the **Phase 0 binding generalization** for gt-design's
-dynamic recipe story: filter parameters, cell-region coordinates, shader
+runtime-bound recipe story: filter parameters, cell-region coordinates, shader
 parameters, and select integer counters can now resolve from a
 `ShaderRuntimeParams` map at render time, letting apps drive effect
 parameters from live widget state (scroll progress, hover index, error

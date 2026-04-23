@@ -1,7 +1,7 @@
 <!-- <FILE>docs/COMPOSED_CAPABILITIES.md</FILE> - <DESC>Curated catalog of composed capabilities harvested from the tui-vfx-recipes corpus</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Full corpus audit rewrite: 630 recipes read end-to-end across debug_recipes, gt-design (restrained/mid-range/bold), gt-design-codex, experimental/subtle-light, toolkit (core/sizzle/showcase), modern_design, vfx-probe-validation, root, wargames, haiku_recipes1, sonnet_recipes1, scandi-edge, scandi-inspired, midcentury-modern, dynamic, easing, examples. Designer-eye verdicts recorded per recipe in /tmp/audit_log.md.</WCTX> -->
-<!-- <CLOG>MAJOR: Full rewrite from scratch after complete corpus reading. Replaces v0.1 shortlist-based draft that mis-cited Highlighter and omitted Motion Path as a composition axis. New structure: (1) Composition axes with example citations, (2) Foundational/subtle section with verified A+B→X recipes, (3) Variant-rich option-set treasure, (4) Hero/thematic showcase pruned of weak picks, (5) Refinement opportunities with specific parameter deltas.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.1</VERS> -->
+<!-- <WCTX>Full corpus audit rewrite: 630 recipes read end-to-end across debug_recipes, gt-design (restrained/mid-range/bold), gt-design-codex, experimental/subtle-light, toolkit (core/sizzle/showcase), modern_design, vfx-probe-validation, root, wargames, haiku_recipes1, sonnet_recipes1, scandi-edge, scandi-inspired, midcentury-modern, easing, examples (including the runtime-bound Matrix rain pair). Designer-eye verdicts recorded per recipe in /tmp/audit_log.md.</WCTX> -->
+<!-- <CLOG>0.2.1: PATCH — rename legacy category references to runtime-bound/topic-based wording and update Matrix rain citations to the current `_runtime_bound` filenames. 0.2.0: MAJOR — Full rewrite from scratch after complete corpus reading. Replaces v0.1 shortlist-based draft that mis-cited Highlighter and omitted Motion Path as a composition axis. New structure: (1) Composition axes with example citations, (2) Foundational/subtle section with verified A+B→X recipes, (3) Variant-rich option-set treasure, (4) Hero/thematic showcase pruned of weak picks, (5) Refinement opportunities with specific parameter deltas.</CLOG> -->
 
 # Composed Capabilities
 
@@ -273,9 +273,9 @@ Isolated demos live in `recipes/physics_*.json`; composed demos in `slingshot_el
 
 ### 3.4 `filter.matrix_rain` — modes and runtime knobs
 
-- `mode: "classic"` (fixed-grid, Japanese kana glyph set) — `digital_rain_matrix_classic_static.json` / `_dynamic.json`.
-- Free mode with `preset: "matrix"` and per-cell speed/trail min/max — `digital_rain_matrix_modern_static.json` / `_dynamic.json`.
-- Full runtime bindings on `density` and `speed_multiplier` in the `_dynamic` variants (§2.7).
+- `mode: "classic"` (fixed-grid, Japanese kana glyph set) — `digital_rain_matrix_classic_static.json` / `examples/digital_rain_matrix_classic_runtime_bound.json`.
+- Free mode with `preset: "matrix"` and per-cell speed/trail min/max — `digital_rain_matrix_modern_static.json` / `examples/digital_rain_matrix_modern_runtime_bound.json`.
+- Full runtime bindings on `density` and `speed_multiplier` in the runtime-bound Matrix rain variants (§2.7).
 
 ### 3.5 Progress-indicator palettes (25+ distinct treatments)
 
