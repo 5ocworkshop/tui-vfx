@@ -137,6 +137,18 @@ Why: this is the practical rule that keeps crate boundaries clean. `mixed-signal
 is the shared primitive generator; `tui-vfx` is the rendering/effect system that
 consumes those primitives.
 
+When downstream adoption discovers a genuinely different geometric model, the
+default response is:
+
+- move the generic reusable spatial math into `mixed-signals`
+- keep effect semantics in `tui-vfx`
+- represent the new geometry as an explicit foundational basis, not as a silent
+  semantic mutation of an older leaf
+
+Why: overloading an existing primitive to mean two different geometric things
+creates hidden drift. A new explicit basis keeps both the substrate and the
+effect code legible.
+
 ## 10. Clean-Sheet Naming and Ergonomics Reset at Version Boundaries
 Major-version boundaries are deliberate moments to clean up naming that evolved under rapid scope changes. When legacy names conflict with clarity or ergonomics, we prefer the clearer clean-sheet name and provide migration notes rather than preserving confusing historical naming by inertia.
 
