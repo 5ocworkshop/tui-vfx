@@ -1,10 +1,12 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_radial.rs</FILE>
 // <DESC>Radial mask revealing from configurable origin</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>Effect parity: Mask enhancements</WCTX>
-// <CLOG>Initial implementation of Radial mask</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Refactor arbitrary-origin radial reveal math onto the shared mixed-signals surface-distance substrate now that configurable origin sampling exists there.</WCTX>
+// <CLOG>1.1.0: use mixed-signals SurfaceDistanceSignal for normalized origin-relative radial distance instead of open-coding distance-to-corners logic locally.
+// 1.0.0: Initial implementation of Radial mask</CLOG>
 
 use crate::traits::mask::Mask;
+use mixed_signals::prelude::{Signal, SignalContext, SurfaceDistanceSignal};
 use serde::{Deserialize, Serialize};
 
 /// Origin point for radial reveal.
@@ -94,25 +96,11 @@ impl Mask for Radial {
         }
 
         let (origin_x, origin_y) = self.origin.as_fraction();
-
-        // Calculate the origin point in pixel coordinates
-        let ox = origin_x * w as f32;
-        let oy = origin_y * h as f32;
-
-        // Calculate distance from origin (normalized by max possible distance)
-        let dx = x as f32 - ox;
-        let dy = y as f32 - oy;
-        let distance = (dx * dx + dy * dy).sqrt();
-
-        // Calculate max distance from origin to any corner
-        let max_distance = calculate_max_distance(ox, oy, w as f32, h as f32);
-
-        // Normalize distance
-        let normalized_dist = if max_distance > 0.0 {
-            distance / max_distance
-        } else {
-            0.0
-        };
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(w, h)
+            .with_cell_position(x, y);
+        let normalized_dist =
+            SurfaceDistanceSignal::radius_from(origin_x, origin_y).sample_with_context(0.0, &signal_ctx);
 
         if self.soft_edge {
             // Soft edge: use smooth transition
@@ -132,20 +120,6 @@ impl Mask for Radial {
             normalized_dist < progress
         }
     }
-}
-
-/// Calculate the maximum distance from origin to any corner of the rectangle.
-fn calculate_max_distance(ox: f32, oy: f32, w: f32, h: f32) -> f32 {
-    let corners = [(0.0, 0.0), (w, 0.0), (0.0, h), (w, h)];
-
-    corners
-        .iter()
-        .map(|(cx, cy)| {
-            let dx = cx - ox;
-            let dy = cy - oy;
-            (dx * dx + dy * dy).sqrt()
-        })
-        .fold(0.0_f32, f32::max)
 }
 
 #[cfg(test)]
@@ -202,4 +176,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/masks/cls_radial.rs</FILE>
 // <DESC>Radial mask revealing from configurable origin</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

@@ -1,11 +1,13 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_materialize.rs</FILE>
 // <DESC>Organic materialization mask with radial bias and deterministic noise</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>New richer coalesce-like pipeline reveal primitive</WCTX>
-// <CLOG>Add Materialize mask combining origin-biased distance fields, chunking, deterministic noise, and optional soft edge blending</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Refactor arbitrary-origin surface distance math onto the shared mixed-signals substrate now that configurable origin sampling exists there.</WCTX>
+// <CLOG>1.1.0: use mixed-signals SurfaceDistanceSignal for normalized origin-biased distance instead of open-coding distance-to-corners logic inside Materialize.
+// 1.0.0: Add Materialize mask combining origin-biased distance fields, chunking, deterministic noise, and optional soft edge blending</CLOG>
 
 use crate::masks::cls_radial::RadialOrigin;
 use crate::traits::mask::Mask;
+use mixed_signals::prelude::{Signal, SignalContext, SurfaceDistanceSignal};
 use std::hash::{Hash, Hasher};
 
 /// Organic reveal mask that materializes content from an origin with noisy breakup.
@@ -63,29 +65,10 @@ impl Materialize {
 
     fn normalized_distance(&self, x: u16, y: u16, w: u16, h: u16) -> f32 {
         let (origin_x, origin_y) = self.origin.as_fraction();
-        let ox = origin_x * w as f32;
-        let oy = origin_y * h as f32;
-        let dx = x as f32 - ox;
-        let dy = y as f32 - oy;
-        let distance = (dx * dx + dy * dy).sqrt();
-
-        let corners = [
-            (0.0, 0.0),
-            (w as f32, 0.0),
-            (0.0, h as f32),
-            (w as f32, h as f32),
-        ];
-        let max_distance = corners
-            .iter()
-            .map(|(cx, cy)| {
-                let dx = cx - ox;
-                let dy = cy - oy;
-                (dx * dx + dy * dy).sqrt()
-            })
-            .fold(0.0_f32, f32::max)
-            .max(1.0);
-
-        (distance / max_distance).clamp(0.0, 1.0)
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(w, h)
+            .with_cell_position(x, y);
+        SurfaceDistanceSignal::radius_from(origin_x, origin_y).sample_with_context(0.0, &signal_ctx)
     }
 
     fn threshold(&self, x: u16, y: u16, w: u16, h: u16) -> f32 {
@@ -150,6 +133,13 @@ mod tests {
     }
 
     #[test]
+    fn corner_origin_biases_corner_first() {
+        let mask = Materialize::new(RadialOrigin::TopLeft, 3, 1, 0.0, false);
+        assert!(mask.is_visible(0, 0, 10, 10, 0.15));
+        assert!(!mask.is_visible(9, 9, 10, 10, 0.15));
+    }
+
+    #[test]
     fn chunking_keeps_cells_together() {
         let mask = Materialize::new(RadialOrigin::Center, 42, 2, 0.3, false);
         let a = mask.threshold(2, 2, 12, 12);
@@ -160,4 +150,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/masks/cls_materialize.rs</FILE>
 // <DESC>Organic materialization mask with radial bias and deterministic noise</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>
