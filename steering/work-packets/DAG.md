@@ -342,3 +342,14 @@ The packet library now reaches all the way from immediate V3 tooling blockers th
 - `WP56` collides with motion/runtime/schema files and should not overlap with other motion-path or preview-path refactors.
 - `WP57` and `WP58` both touch naming/vocabulary surfaces; keep the live-doc cleanup tranche separate from the public Rust rename tranche.
 - `WP59` and `WP60` both affect docs/rustdoc/generation surfaces; avoid running them in parallel unless the write scopes are clearly separated.
+
+
+## Madeira-reference audit packet node
+- `WP61` — Madeira reference-repo faithfulness audit
+
+## Madeira-reference dependency notes
+- `WP61` should follow the current Madeira operational, visual, and readiness evidence (`WP40`, `WP41`, `WP43`) because it compares the live V3 recipe against `/usr/projects/madeira-flag` using the latest proof surfaces.
+- `WP61` can inform `WP44` signoff and any future Madeira corrective implementation slice.
+
+## Madeira-reference collision notes
+- `WP61` is primarily audit-only and can run in parallel with non-Madeira implementation lanes, but should avoid overlapping with another packet that is actively retuning Madeira visuals at the same time.

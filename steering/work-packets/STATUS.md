@@ -63,6 +63,12 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `983249f` / `45c61f1`
 - `57-v3-live-naming-and-vocabulary-cleanup.md`
   - landed via `cd4b88c`
+- `60-v3-doc-autogen-and-authoring-guide-cutover.md`
+  - landed via `c06289a`
+- `26-debug-recipes-content-family-tranche.md`
+  - landed via `dd9ebff`
+- `52-madeira-direct-preview-allocation-cache-slice.md`
+  - landed via `3a235f7`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -101,11 +107,10 @@ These packets produced accepted non-code outputs that should be treated as harve
   - Madeira is operational enough to audit but still at risk for sustained 60 FPS due to direct-preview structural overhead
 
 ## New follow-on packets created from audit learnings
-- `52-madeira-direct-preview-allocation-cache-slice.md`
+- `61-madeira-reference-repo-faithfulness-audit.md`
 - `55-v3-spatial-leaves-and-field-hint-threading.md`
 - `56-v3-motion-path-and-offscreen-origin-support.md`
 - `58-v3-ra-to-vfx-public-surface-rename-tranche.md`
-- `60-v3-doc-autogen-and-authoring-guide-cutover.md`
 
 ## Notes
 - Packet completion is tied to real commits on `master`, not just plausible subagent responses.
