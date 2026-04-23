@@ -28,12 +28,11 @@ Never dispatch a subagent without explicitly requiring it to read the relevant g
 Read order matters. Put the highest-value steering files first so the most
 important principles remain near the top of the agent's context window.
 
-Required first-pass steering read order for this project family:
+Required first-pass steering read order for subagents:
 1. `/usr/projects/tui-vfx/steering/INTENTIONS.md`
 2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
 3. `/usr/projects/mixed-signals/steering/INTENTIONS.md` when touching lower signal/math substrate
-4. `/usr/projects/tui-vfx/steering/ORCHESTRATION.md`
-5. current shared briefing document for the active lane
+4. current shared briefing document for the active lane
 
 Second-pass supporting docs:
 - `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-recipe-vocabulary.md`
@@ -42,6 +41,12 @@ Second-pass supporting docs:
 - `/usr/projects/global_prompts/standards/60_file_centric_execution.md`
 - `/usr/projects/global_prompts/standards/65_subagent_orchestration.md`
 - additional task-specific design/schema docs as needed
+
+Leader note:
+- this ORCHESTRATION file is primarily leader-facing
+- subagents should not normally be told to read it directly
+- instead, the leader should distill the relevant orchestration rules into the
+  active briefing and the concrete task packet
 
 Reflection step before action:
 - after reading the first-pass steering docs, the subagent should briefly
