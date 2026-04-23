@@ -263,9 +263,13 @@
     "layout": {
       "width": 40,
       "height": 3,
+      "exterior_margin": 0,
       "anchor": "center",
       # ^ Locked for the current build-target baseline. `anchor` remains the
       #   concrete field name in V3.
+      # ^ `exterior_margin` is the generic host-spacing / breathing-room
+      #   control. It is especially useful when a rect host sits near a
+      #   viewport edge and needs visible room for attached shadows.
 
       "mode": "fixed"
       # ^ "fixed" (width/height honored) | "fullscreen" (fill viewport).
@@ -377,14 +381,45 @@
     #   resolution layers without forcing theme semantics into every payload.
 
     "shadow": {
-      "kind": "soft",
-      "opacity": 0.25,
-      "offset": { "x": 0, "y": 1 },
-      "blur_radius": 1
+      "style": "half_block",
+      "color": { "type": "rgba", "r": 0, "g": 0, "b": 0, "a": 160 },
+      "offset": { "x": 2, "y": 1 },
+      "inset": { "x": 0, "y": 0 },
+      "edges": ["right", "bottom"],
+      "soft_edges": true,
+      "source_region": "Border",
+      "composite": {
+        "mode": "grade_underlying",
+        "grade": {
+          "fg_dim_strength": 0.40,
+          "bg_dim_strength": 0.58,
+          "fg_desaturate_strength": 0.30,
+          "bg_desaturate_strength": 0.42,
+          "fg_tint_strength": 0.10,
+          "bg_tint_strength": 0.18,
+          "preserve_fg_alpha": true,
+          "preserve_bg_alpha": true,
+          "replacement_char": "·"
+        }
+      }
     },
-    # ^ Optional. V2 exposed shadow as a top-level recipe concern. V3 keeps it
-    #   as an optional envelope-level visual treatment rather than forcing each
-    #   recipe to synthesize shadows from lower-level primitives.
+    # ^ Optional. Shadow remains an envelope-level authored surface for the
+    #   whole composed recipe. This draft now reflects the real upstream shadow
+    #   capability surface rather than a placeholder blur stub.
+    #
+    #   As built in code, this now maps directly to the typed upstream
+    #   `tui_vfx_compositor::types::ShadowSpec` /
+    #   `tui_vfx_shadow::ShadowConfig` surface.
+    #
+    #   Important fields:
+    #   - `style` mirrors the shared shadow renderer families
+    #   - `color` carries transparent-shadow alpha explicitly
+    #   - `source_region` restricts extrusion to role-tagged source cells
+    #   - `composite.mode` distinguishes glyph-overlay from grade-underlying
+    #
+    #   These are the typed shadow fields after load-time substitution. Caller
+    #   tokenization lives at the `tui-vfx-recipes` boundary; the schema itself
+    #   describes the resolved form.
 
     # -----------------------------------------------------------------------
     # 5.5 Scene layers (Decision 5) — multi-source composition
@@ -421,17 +456,53 @@
     #         "schema_ref": "procedural.solid_color_fade.v1",
     #         "params": { "target_color": { "type": "rgb", "r": 5, "g": 5, "b": 15 } }
     #       },
-    #       "placement": { "anchor": "fill" }
+    #       "placement": {
+    #         "anchor": "fill",
+    #         "z": 0
+    #       }
     #     },
     #     {
     #       "id": "text_stack",
     #       "role_tag": "content",
     #       "source": { "type": "card", "title": "{{app_name}}", "body": "Line one\nLine two" },
-    #       "placement": { "anchor": "below_sibling", "sibling_id": "backdrop", "offset_rows": 2 },
+    #       "placement": {
+    #         "anchor": "below_sibling",
+    #         "sibling_id": "backdrop",
+    #         "offset_rows": 2,
+    #         "z": 2,
+    #         "motion": {
+    #           "enter": {
+    #             "duration_ms": 700,
+    #             "easing": "quad_out",
+    #             "route": { "type": "arc", "bulge": -0.2 },
+    #             "dynamics": [
+    #               { "type": "pendulum", "amplitude": 8, "oscillations": 2, "damping": 2.0 }
+    #             ],
+    #             "from": { "type": "offscreen", "direction": "from_top" },
+    #             "to": { "type": "anchor", "anchor": "center" },
+    #             "relative_to": "backdrop",
+    #             "follow": { "mode": "maintain_offset", "lag_ms": 80 },
+    #             "phase_offset_ms": 40,
+    #             "target_anchor": "top_left",
+    #             "edge_crossing": { "edge": "top", "border": "vanish", "shadow": "fade" }
+    #           }
+    #         }
+    #       },
     #       "surface": {
+    #         # As built on the native V3 scene path, `surface.base_style` and
+    #         # `surface.shadow` now flow through scene-layer runtime execution
+    #         # rather than being ignored as dead authoring payload.
     #         "base_style": {
     #           "foreground": { "type": "rgb", "r": 240, "g": 248, "b": 255 },
     #           "background": { "type": "transparent" }
+    #         },
+    #         "shadow": {
+    #           "style": "half_block",
+    #           "color": { "type": "rgba", "r": 0, "g": 0, "b": 0, "a": 150 },
+    #           "offset": { "x": 2, "y": 1 },
+    #           "edges": ["right", "bottom"],
+    #           "soft_edges": true,
+    #           "source_region": "Border"
     #         }
     #       }
     #     }
@@ -439,42 +510,78 @@
     # },
 
     # -----------------------------------------------------------------------
-    # 5.6 Pipeline — the per-cell operation tree (Decision 3)
+    # 5.6 Motion + pipeline — recipe envelope motion plus per-cell operation tree
     # -----------------------------------------------------------------------
-    # The pipeline carries the recipe's per-cell operations plus timing
-    # envelope. Required; even effect-free recipes have a pipeline with
-    # `timing` and no `step` (Q22).
+    # The recipe now carries two distinct concerns:
+    # - `motion` owns recipe-envelope geometry over time
+    # - `pipeline` owns per-cell operations and per-step clocks
+    #
+    # This keeps whole-object motion out of the effect-step tree while still
+    # allowing scene layers to carry their own local motion under placement.
+
+    "motion": {
+      "enter": {
+        "duration_ms": 500,
+        "easing": "quad_out",
+        "route": { "type": "linear" },
+        "dynamics": [],
+        "from": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
+        "via": null,
+        "to": { "type": "anchor", "anchor": "bottom_right" },
+        "relative_to": null,
+        "follow": null,
+        "phase_offset_ms": null,
+        "target_anchor": null,
+        "edge_crossing": { "edge": "top", "border": "vanish", "shadow": "fade" },
+        "snap": { "type": "round" },
+        "quantize_steps": null
+      },
+      "exit": {
+        "duration_ms": 400,
+        "easing": "quad_in",
+        "route": { "type": "linear" },
+        "dynamics": [],
+        "from": { "type": "anchor", "anchor": "bottom_right" },
+        "via": null,
+        "to": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
+        "relative_to": null,
+        "follow": null,
+        "phase_offset_ms": null,
+        "target_anchor": null,
+        "edge_crossing": { "edge": "top", "border": "vanish", "shadow": "fade" },
+        "snap": { "type": "round" },
+        "quantize_steps": null
+      }
+      # ^ `route` is the carrier path through cell space.
+      # ^ `dynamics` layers motion treatment over that route (spring, bounce,
+      #   pendulum, friction, projectile, orbit, attractor, etc.).
+      # ^ `from` / `via` / `to` use the `PlacementSpec` family.
+      # ^ `layout.exterior_margin` remains the generic host-spacing / gutter
+      #   control when a host needs breathing room near the viewport edge
+      #   (for example to visibly accommodate attached shadows).
+      #   This is also where the legacy-equivalent extra positioning capability
+      #   lives in V3:
+      #   - separate entry anchor  -> `enter.from = {type: anchor, ...}`
+      #   - separate exit anchor   -> `exit.to   = {type: anchor, ...}`
+      #   - custom entry position  -> `enter.from = PlacementSpec`
+      #   - custom exit position   -> `exit.to   = PlacementSpec`
+      #
+      #   These fields are the generic typed hooks for caller-supplied dynamic
+      #   positioning too. The API boundary may populate them through
+      #   substitutions/bindings, but the schema itself remains typed and
+      #   toast-agnostic.
+      # ^ `relative_to` / `follow` / `phase_offset_ms` / `target_anchor`
+      #   are the first relational-choreography fields for scene-aware motion.
+      # ^ `edge_crossing` carries the viewport edge involved plus the border/
+      #   shadow behavior to apply there while the moving host is clipped.
+      #
+      # These are the typed motion fields after load-time substitution.
+      # Callers may populate them via `Substitutions` at the API boundary, but
+      # the author-facing schema and normalized runtime model operate on the
+      # resolved typed form.
+    },
 
     "pipeline": {
-
-      # -------------------------------------------------------------------
-      # 5.6.1 Timing — enter/exit motion envelope
-      # -------------------------------------------------------------------
-      # Required. The motion curve governing how the recipe appears and
-      # disappears. Q2: this is recipe-level metadata, NOT a Step — the
-      # envelope applies whole-recipe; per-cell operations live in `step`.
-
-      "timing": {
-        "enter_ms": 500,
-        "exit_ms": 400,
-        "enter_ease": "quad_out",
-        "exit_ease": "quad_in",
-        "enter_path": { "type": "linear" },
-        "exit_path": { "type": "linear" },
-        "enter_from": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
-        "exit_to": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
-        "enter_snap": { "type": "round" },
-        "exit_snap": { "type": "round" }
-        # ^ Easing vocabulary from mixed-signals: linear, quad_in/out/in_out,
-        #   cubic_in/out/in_out, quart_in/out/in_out, quint_in/out/in_out,
-        #   sine_in/out/in_out, expo_in/out/in_out, circ_in/out/in_out,
-        #   back_in/out/in_out, elastic_in/out/in_out, bounce_in/out/in_out.
-        #   See recipes/easing/ for per-easing debug recipes.
-
-        # Motion-path/offscreen/snap home is resolved in this draft:
-        # all of them live on `pipeline.timing` as recipe-envelope motion
-        # metadata. The remaining work is implementation, not schema-home.
-      },
 
       # -------------------------------------------------------------------
       # 5.6.2 Step — the per-cell operation tree
@@ -798,6 +905,8 @@
 #
 #     # --- Semantic-role (theme-resolved at load) ----------------------
 #     { "kind": "role", "value": "primary" | "surface" | ... }
+#     # As built: role scopes now lower directly into role-aware runtime
+#     # regions on the active V3 path (for example border/text/background).
 #
 #     # --- Escape hatch for novel cases ---------------------------------
 #     { "kind": "predicate", "ref": <registered-predicate-name> }
@@ -884,6 +993,10 @@
 #     { "kind": "sample_norm_y" }        # 0..1 per cell y
 #     { "kind": "sample_cell_x" }        # raw cell x
 #     { "kind": "sample_cell_y" }
+#     { "kind": "sample_centered_x" }    # -1..1 centered x
+#     { "kind": "sample_centered_y" }    # -1..1 centered y
+#     { "kind": "sample_radius" }        # 0..1 normalized radial distance
+#     { "kind": "sample_angle" }         # 0..TAU angle around center
 #
 #     # --- Envelopes / physics -----------------------------------------
 #     { "kind": "adsr", "attack_ms": A, "decay_ms": D, "sustain": S, "release_ms": R }
@@ -905,8 +1018,10 @@
 #
 # Resolved draft stance:
 # - ParamValue uses the wrapper form `{ "signal": ... }`.
-# - Spatial-coordinate leaves (`sample_norm_x`, etc.) are part of the draft
-#   conceptual surface and should be upstreamed/aligned with mixed-signals.
+# - Spatial-coordinate leaves (`sample_norm_x`, `sample_centered_x`,
+#   `sample_radius`, etc.) are part of the draft conceptual surface and should
+#   be upstreamed/aligned with mixed-signals rather than re-implemented as
+#   per-effect bespoke math.
 # - Pipeline step-output hints are readable inside graphs via `kind = hint`.
 
 # 5.10 SUBTREE GUIDANCE — what should collapse vs what should stay distinct
@@ -1027,7 +1142,8 @@
 # a distinct category.
 #
 # Resolved architecture notes from this synthesis batch:
-# - motion-path / from / to / snapping live on `pipeline.timing`
+# - recipe-envelope motion lives on `config.motion`
+# - layer-local motion lives on `scene.layers[*].placement.motion`
 # - procedural generators use `source_id` + `schema_ref` + typed params
 # - sibling-anchored scene placement is a first-class scene capability
 # - canonical normalized IR is the recommended tooling-facing representation

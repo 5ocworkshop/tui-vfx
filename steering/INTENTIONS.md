@@ -110,6 +110,32 @@ Why: `rg Vfx` becomes the grep-anchor for the wire-format surface — the set of
 
 Why: signal-primitive duplication is the failure mode. V3 consumes signals; V3 does not invent signals. The flag-animation PRD's `SpatialSignalSpec` is the canonical example — upstream extension (Path B: `Signal2d` trait in mixed-signals) is primary; local implementation (Path A: `SpatialSignalSpec` in tui-vfx-compositor) is fallback only if upstream velocity genuinely blocks V3 delivery. The same rule applies for any future signal capability tui-vfx needs.
 
+Additional boundary rule:
+
+- if a new capability is fundamentally **signal/math substrate**
+- and it is applicable to **three or more use cases**
+- and it is not inherently tied to tui-vfx rendering semantics
+
+then it should be added to `mixed-signals`, not re-rolled locally in tui-vfx.
+
+Examples that likely belong upstream:
+
+- spatial coordinate leaves
+- centered/radial/angle field primitives
+- other reusable authored signal-graph math
+
+Examples that should stay in tui-vfx:
+
+- shaders
+- masks
+- filters
+- samplers
+- terminal/glyph rendering behaviors
+
+Why: this is the practical rule that keeps crate boundaries clean. `mixed-signals`
+is the shared primitive generator; `tui-vfx` is the rendering/effect system that
+consumes those primitives.
+
 ## 10. Clean-Sheet Naming and Ergonomics Reset at Version Boundaries
 
 Major-version boundaries are deliberate moments to clean up naming that evolved under rapid scope changes. When legacy names conflict with clarity or ergonomics, we prefer the clearer clean-sheet name and provide migration notes rather than preserving confusing historical naming by inertia.
@@ -129,6 +155,29 @@ Why: extraction catches drift mechanically — if a field changes shape, the gen
 Rustdoc coverage on public surfaces is mandatory, not optional. Public types, functions, traits, fields, enums/variants, and behavior-critical contracts must have meaningful rustdoc entries explaining intent, constraints, and usage. Generated API and schema docs are release-gating artifacts; drift and coverage checks run in CI and through `just` workflows. Code changes that affect behavior or contracts are incomplete unless accompanying rustdoc and documentation-generation inputs are updated and validation passes.
 
 Why: undocumented public surface is a perpetual tax on every new consumer who has to guess at intent, constraints, and failure modes. The generator plus drift-check infrastructure pays once; it catches undocumented additions on every subsequent build at zero marginal cost. This is the canonical example of Intention 25 applied to documentation.
+
+## 12A. V3 Schema-Bearing Rust Types Must Meet V2-Grade Generation Standards
+
+For work in both `tui-vfx` and `tui-vfx-recipes`, V3 schema-bearing Rust types must be maintained to the same standard V2 established for schema/doc generation.
+
+This is a hard requirement.
+
+Rules:
+
+1. Any Rust type that defines or materially shapes the V3 authoring/runtime schema surface must carry enough code-side metadata to participate directly in:
+   - schema generation
+   - API doc generation
+   - capability/reference doc generation
+   - validation/drift tooling
+2. The default expectation is:
+   - meaningful rustdoc on public schema-bearing items
+   - `ConfigSchema` derivation, or an explicit schema implementation when derive is insufficient
+   - serde shape correctness
+   - field-level metadata where the generators and validators depend on it
+3. Do not leave V3 schema-bearing types as thin undocumented DTOs unless the DTO is intentionally private and not part of the schema-defining surface.
+4. Reuse and adapt the existing generation/validation tools in `tui-vfx` and `tui-vfx-recipes` wherever possible rather than inventing parallel checks. If the current tools don't cover a new V3 type cleanly, extend the toolchain so the code remains the source of truth.
+
+Why: the project already auto-generates substantial documentation from code, not just raw schema output. If V3 schema-bearing types fall below the V2 standard, generated artifacts drift, validation weakens, and the code stops being the reliable source of truth across both repositories.
 
 ## 13. `justfile` / `xtask` Is the Workflow Entry Point
 

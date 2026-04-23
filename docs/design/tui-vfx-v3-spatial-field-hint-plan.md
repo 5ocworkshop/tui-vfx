@@ -291,9 +291,10 @@ They were chosen because they are:
 - small enough not to bloat `mixed-signals`
 - directly useful in both application TUI work and lightweight game/story work
 
-### 5.5 What the next likely spatial leaves are for
+### 5.5 Additional spatial leaves now chosen for the 0.2.3 substrate
 
-If later phases justify more spatial leaves, the strongest next candidates are:
+To support the current post-bridge field/hint work and the near-term showcase
+goals, the next spatial leaves are now part of the intended substrate:
 
 - `sample_centered_x`
 - `sample_centered_y`
@@ -307,8 +308,19 @@ Those would primarily help with:
 - orbit / spiral / directional field logic
 - centered composition beats for cinematic or game-style motion
 
-But those should be added only as the next semantic work proves they are needed,
-not preemptively as surface-area expansion.
+These are still considered foundational rather than “feature bloat” because:
+
+- `sample_centered_*` supports symmetry-based motion and centered composition
+  beats
+- `sample_radius` supports shockwaves, radial reveals, and spotlight falloff
+- `sample_angle` supports radar sweeps, rotational fields, and animated light
+  paths
+
+The current recommendation is therefore:
+
+- land **all three tiers** of spatial leaves in `mixed-signals`
+- then use those leaves to simplify bespoke downstream spatial math where that
+  math is clearly reusable
 
 ### 5.6 Spotlight / cone feature candidate
 
@@ -330,27 +342,27 @@ The intended downstream use case is:
 - rotating the spotlight changes the direction/path of the emitted cone
 - downstream shading / masking / emphasis stages respond to that moving cone
 
-This should **not** be the first thing added to `mixed-signals`.
+This should be treated as a **design target** in the current plan.
 
-The recommended order remains:
+The recommended sequencing is:
 
-1. land the lower-level spatial leaves
+1. land the lower-level spatial leaves (all three tiers)
 2. vet typed field/hint chaining through D
 3. continue through full C
-4. then evaluate whether a higher-level spotlight/cone primitive has earned a
+4. use the resulting substrate to implement a spotlight/cone showcase in a
+   downstream application
+5. only then decide whether a dedicated spotlight/cone primitive has earned a
    first-class place in `mixed-signals`
 
-Why defer the primitive:
+Why this is still the right order:
 
-- the lower-level leaves may already make it ergonomic enough to author the
-  cone field without a dedicated node
+- the lower-level leaves may already make spotlight/cone authoring ergonomic
+  enough
 - if they do not, the spotlight/cone primitive becomes a justified
   higher-level addition rather than speculative surface area
 
-So the spotlight/cone should remain an explicit **design target** and showcase
-goal, but it should only become a first-class `mixed-signals` primitive if the
-foundational leaves prove insufficient or if it clearly serves multiple use
-cases beyond the initial showcase.
+So the spotlight/cone remains an explicit **showcase target** and a likely
+future justification point, but not yet an automatic primitive commitment.
 
 ---
 
