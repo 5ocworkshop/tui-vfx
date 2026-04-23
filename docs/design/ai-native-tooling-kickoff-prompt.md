@@ -27,9 +27,10 @@ You are working across two sibling Rust workspaces:
   per-cell transformation hooks. **The new observability library and its
   CLI entry point belong here.**
 - **`/usr/projects/tui-vfx-recipes`** (recipes + adapter): the recipe
-  schema surface (V3 direction: `VfxRecipeConfig`; legacy code may still
-  expose `RaRecipeConfig` during cutover), preview manager, rendering
-  integration with ratatui, the
+  schema surface uses `VfxRecipeConfig` as the V3 target naming (legacy
+  `Ra*` mentions should now be treated as migration-state references,
+  not the live target), preview manager, rendering integration with
+  ratatui, the
   existing `pipeline-validator` CLI, the `StageInspector` wrapper, and
   a 101-recipe debug + demo corpus under `recipes/debug_recipes/` and
   `recipes/gt-design-codex/`. **This is where the recipe adapter CLI
