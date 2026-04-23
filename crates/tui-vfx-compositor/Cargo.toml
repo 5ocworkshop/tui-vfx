@@ -20,9 +20,6 @@ readme = "README.md"
 tui-vfx-types.workspace = true
 # Small vector for inline allocation (no heap for ≤N effects)
 smallvec.workspace = true
-# Logic/Math dependencies
-rand.workspace = true
-rand_chacha = "0.3"
 # Serialization
 serde.workspace = true
 serde_json = "1.0"
