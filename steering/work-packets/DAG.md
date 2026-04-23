@@ -243,3 +243,42 @@ This DAG should be updated whenever:
 - `WP30`/`WP31`/`WP32` belong to the orchestration/experimentation track and should be coordinated with the current briefing experiment.
 - `WP33` is mostly audit-only and can often run in parallel with bounded implementation lanes if the evidence sources are stable.
 - `WP34` is planning/checklist work and should follow the relevant audits rather than compete with implementation on the same files.
+
+
+## Madeira-completion packet nodes
+- `WP35` — Madeira scene semantics implementation tranche
+- `WP36` — Madeira fireworks/effect parity audit
+- `WP37` — Madeira fireworks/effect implementation tranche
+- `WP38` — Madeira validator/probe truth hardening
+- `WP39` — Madeira reference fixtures and baselines
+- `WP40` — Madeira end-to-end operational check
+- `WP41` — Madeira visual vetting protocol
+- `WP42` — Madeira performance and 60 FPS audit
+- `WP43` — Madeira release readiness checklist
+- `WP44` — Madeira fully operational and vetted signoff
+
+## Madeira-completion dependency notes
+- `WP35` depends on `WP07`/`WP08` and any deeper scene-semantic audit such as `WP20`.
+- `WP36` should follow the baseline Madeira parity audit and can run after `WP07` if scene-vs-effect separation is still unclear.
+- `WP37` depends on `WP36`.
+- `WP38` should follow at least one Madeira implementation tranche so diagnostic truth can be tested against real improvements.
+- `WP39` should follow at least one Madeira implementation tranche and ideally after `WP38` if the truth surfaces changed.
+- `WP40` depends on enough implementation/baseline truth to make an end-to-end check meaningful.
+- `WP41` should follow once Madeira is visually substantial enough to review coherently.
+- `WP42` depends on enough operational behavior being present to make performance auditing meaningful.
+- `WP43` depends on `WP40`, `WP41`, and `WP42`.
+- `WP44` depends on `WP43` and the must-have checklist being executable.
+
+## Madeira-completion collision notes
+- `WP35` and `WP37` may collide with overlapping scene/effect seams in Madeira-adjacent runtime files; do not run them in parallel if they touch the same compile/render surfaces.
+- `WP38` can overlap with validator/probe files and should not run in parallel with other diagnostic-surface changes in the same files.
+- `WP39` may touch baseline tests and artifacts that later operational checks depend on.
+- `WP40`, `WP41`, `WP42`, `WP43`, and `WP44` are mostly audit/checklist/signoff oriented and should generally follow implementation slices rather than compete with them.
+
+## How far the packet library now extends
+The packet library now reaches all the way from immediate V3 tooling blockers through:
+- validator/probe/docs/schema hardening
+- debug-recipe audits and cleanup tranches
+- Madeira auditing and staged implementation
+- Madeira operational, visual, and performance vetting
+- final Madeira release-readiness and signoff

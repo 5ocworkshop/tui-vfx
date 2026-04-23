@@ -74,3 +74,13 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 - `32-post-experiment-delegation-strategy-refresh.md`
 - `33-v3-end-to-end-readiness-audit.md`
 - `34-pre-madeira-implementation-checklist.md`
+- `35-madeira-scene-semantics-implementation-tranche.md`
+- `36-madeira-fireworks-effect-parity-audit.md`
+- `37-madeira-fireworks-effect-implementation-tranche.md`
+- `38-madeira-validator-probe-truth-hardening.md`
+- `39-madeira-reference-fixtures-and-baselines.md`
+- `40-madeira-end-to-end-operational-check.md`
+- `41-madeira-visual-vetting-protocol.md`
+- `42-madeira-performance-and-60fps-audit.md`
+- `43-madeira-release-readiness-checklist.md`
+- `44-madeira-fully-operational-and-vetted-signoff.md`
