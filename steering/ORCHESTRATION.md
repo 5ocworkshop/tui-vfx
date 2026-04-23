@@ -69,15 +69,20 @@ Prefer OFPF tools first for exploration and targeted reads. Fall back to narrow 
 
 ## 4. Work packet format
 
-Each subagent packet should include:
-- objective / success condition
-- exact write scope
-- explicit out-of-scope items
-- stop condition
-- required docs to read first
-- verification expected
-- requirement to use full paths in report
-- performance reminder when relevant
+Each subagent packet should include, in this preferred order:
+1. task first (one-sentence assignment)
+2. why this matters
+3. success condition
+4. mode (`BLOCKER_MODE` / `FAMILY_MODE` when relevant)
+5. exact task-scope paths used for grounding
+6. exact write scope
+7. explicit out-of-scope items
+8. must-read docs in order
+9. repo-boundary guardrails
+10. first steps / grounding instructions
+11. verification expected (exact shell-ready commands when possible)
+12. reporting contract
+13. closing task reminder
 
 Use medium `gpt-5.4` subagents by default for bounded tasks.
 Keep up to 5 useful lanes busy when independent work exists.
@@ -89,12 +94,27 @@ Work packet quality rule:
   assignee can stay accurate without guessing at repo boundaries or widening
   scope
 - do not over-specify to the point that the packet is doing the work itself
+- explicitly separate:
+  - `task-scope paths` = the files/areas the agent grounded on to understand the
+    problem
+  - `write scope` = the smallest justified set of files they may actually edit
+- require exact path strings rather than repo-name-only summaries whenever the
+  packet can support that level of specificity
+- require shell-ready verification commands rather than conceptual “run tests”
+  summaries whenever the packet can support that level of specificity
 - when in doubt, add:
   - clearer in-scope / out-of-scope bullets
   - explicit repo-boundary reminders
   - explicit first steps
   - exact verification commands
   - a closing task reminder
+
+Grounding-first rule for research/evaluation packets:
+- if the packet is testing comprehension or prompt quality, require the helper
+  to complete all grounding work first
+- then require the helper to stop and declare `READY FOR QUESTIONS`
+- only after that should the evaluator ask comprehension questions
+- do not score answers from a helper that skipped the grounding-first stop point
 
 ## 5. Path discipline
 
@@ -255,16 +275,20 @@ What to adjust:
 - prompt templates for recurring task families
 
 Preferred task-packet ordering for bounded lanes:
-1. objective / success condition
+1. task first
 2. why this matters
-3. exact write scope
-4. explicit out-of-scope items
-5. must-read docs
-6. repo orientation commands
-7. architectural boundary reminders
-8. hot-path/performance reminders
-9. required verification
-10. reporting contract
+3. success condition
+4. mode
+5. task-scope grounding paths
+6. exact write scope
+7. explicit out-of-scope items
+8. must-read docs
+9. repo-boundary reminders
+10. first steps / grounding instructions
+11. hot-path/performance reminders
+12. required verification
+13. reporting contract
+14. closing task reminder
 
 Institutionalization rule:
 - when a retrospective yields a durable lesson, update this file and, if
