@@ -174,6 +174,35 @@ This is the main reason the V3 tree can remain elegant.
 
 The audit strongly supports the following grouping posture.
 
+---
+
+## 5.x Field/hint chaining posture
+
+One of the most important post-bridge execution goals is the ability for one
+step to produce data that later steps can reuse.
+
+The intended author-facing schema posture is:
+
+- spatially varying values are authored as **signal graphs**
+- step-to-step reuse is authored via small **producer/consumer fields**
+  (`emits_hint`, `binds`)
+- consumers remain ordinary V3 leaves (`sampler`, `shader`, `filter`,
+  `style_effect`) rather than introducing a separate “graph stage” step kind
+
+This keeps the tree ergonomic while letting the runtime grow a stronger typed
+execution substrate underneath.
+
+Near-term, this should be delivered in a bounded D-style lane.
+Once validated, it should continue into the full C-style architecture where
+typed field/hint chaining becomes a general V3 execution capability rather than
+just a showcase-specific special case.
+
+The clearest first-class showcase target for this work is the original
+`/usr/projects/madeira-flag` demo. The V3 goal is not merely “roughly similar”;
+once the new field/hint substrate is vetted, the project should be able to
+re-create that demo as a recipe using the new execution capabilities and use it
+as a public reference for what the richer V3 tree can express.
+
 ### 5.1 Reveal / visibility
 
 ```text
@@ -474,7 +503,15 @@ Current reconciliation stance:
 | `time` | normalized to `config.clock` |
 | style-layer `clock` | normalized to per-step `clock` override |
 | `theme` | explicit envelope-level home |
-| `shadow` | explicit envelope-level home |
+| `shadow` | explicit recipe-envelope home plus scene-layer `surface.shadow` |
+| `scene layer styling` | scene-layer `surface.base_style` and `surface.shadow` now execute on the native V3 scene lane |
+| `scene layer channels` | scene-layer local pipelines can now run alongside `surface.*`, including channel-scoped filter cases on the native V3 scene lane |
+| `role-scoped pipeline targeting` | `scope = { kind: "role", value: ... }` now lowers directly into role-aware runtime regions on the active V3 path |
+| `outer/inner area scopes` | `scope = { kind: "outer"|"inner", margins: ... }` now lowers directly into concrete runtime regions on the active V3 path |
+| `content selectors` | `scope = { kind: "content", value: "text" | "non_empty" }` now lowers directly into concrete runtime regions on the active V3 path |
+| `predicate selectors` | `scope = { kind: "predicate", ref: ... }` now lowers through the active builtin predicate registry on the direct V3 path |
+| `scene lane stack` | combined surface styling, shadow, local pipeline, and relational motion now have validated native V3 fixtures |
+| `scene layer role scopes` | scene-layer local pipelines now have validated role-scoped targeting coverage on the native V3 path |
 | `scene` | explicit first-class scene-layer home |
 | `requires_primitives` | explicit contract/discovery home |
 | singular `style` and plural `styles` | one normal form: tree of `style_effect` / `base_style_override` / sibling `shader` steps |
@@ -524,7 +561,25 @@ This overview is intended to **tighten** the plan, not to contradict it.
 
 ### Places where this synthesis intentionally chooses a direction
 
-- Motion-path / offscreen home: `pipeline.timing`
+- Motion home: `config.motion.{enter,exit}` for recipe-envelope motion and
+  `scene.layers[*].placement.motion.{enter,exit}` for layer-local choreography
+  - `route` carries the spatial carrier path
+  - `dynamics[]` carries motion treatment layered over that route
+  - `from` / `via` / `to` carry `PlacementSpec`-shaped origin / waypoint / destination payloads
+    - this is where legacy-equivalent extra positioning lives too:
+      - separate entry anchor
+      - separate exit anchor
+      - custom entry position/spec
+      - custom exit position/spec
+    - those remain generic placement capabilities, not toast-specific V3 fields
+    - they are also the right typed hooks for caller-supplied substitution/binding at the API boundary
+  - `relative_to` / `follow` / `phase_offset_ms` / `target_anchor` carry the first relational choreography surface
+  - `edge_crossing` carries both the viewport edge and the border/shadow behavior at that edge
+  - `snap` carries `SnappingStrategy`-shaped quantization payloads
+  - caller tokenization is boundary work; the schema describes resolved typed motion
+- `layout.exterior_margin` remains the generic host-spacing control when a
+  rect host needs breathing room near the viewport edge — especially for
+  visible attached shadows
 - No separate Timer primitive in core V3 for now
 - Pools/presets above the concrete tree, not inside it
 - Region compression starts with `cell_run`, `cell_runs`, and `region_ref`

@@ -23,6 +23,14 @@ It is now mostly about **semantics**:
 The immediate forcing function is the `madeira_flag` first-class V3 recipe, but
 this plan is intentionally broader than a single showcase.
 
+The canonical external reference implementation for this work is:
+
+- `/usr/projects/madeira-flag`
+- especially `/usr/projects/madeira-flag/examples/demo.rs`
+
+That demo should be treated as the ground-truth experiential target for the
+first full field/hint showcase pass.
+
 ---
 
 ## 1. Design goal
@@ -47,7 +55,8 @@ In short:
 
 ## 2. Recommended path
 
-Use **architecture C** implemented via **strategy D**.
+Use **strategy D as the near-term execution goal**, explicitly aiming to
+graduate into **full architecture C** once the substrate is proven.
 
 ### Architecture target (C)
 
@@ -57,7 +66,7 @@ Build a generic field/hint system:
 - downstream steps bind to typed upstream outputs
 - shader/filter/sampler consumers read those outputs without recomputing them
 
-### Delivery strategy (D)
+### Near-term execution strategy (D)
 
 Implement that architecture incrementally:
 
@@ -70,6 +79,34 @@ Implement that architecture incrementally:
 
 This is the strongest path to a reusable foundation without freezing progress
 behind a giant all-at-once runtime rewrite.
+
+### What “fully vetted” means before moving from D to full C
+
+The system should not be considered ready for the full-C rollout until it has
+proven all of these inside the bounded D implementation lane:
+
+- mixed-signals spatial-coordinate leaves are implemented and stable
+- layer/runtime seams all carry consistent spatial signal context
+- one typed field/hint producer works end to end
+- at least one displacement consumer and one shading consumer bind to the same
+  upstream field
+- a first-class consumer (`madeira_flag`) uses that field/hint path in a way
+  that is meaningfully closer to its intended semantics than the current
+  approximation rewrite
+
+Once those are true, the work should continue into **full C**, meaning:
+
+- field/hint chaining is treated as a general V3 execution substrate
+- more downstream consumers are migrated to read typed hints
+- one-off approximations are retired where the new substrate can replace them
+
+So the real sequencing is:
+
+```text
+near-term D (bounded validation lane)
+  -> vet the substrate
+    -> continue into full C
+```
 
 ---
 
@@ -226,6 +263,85 @@ These are intentionally small additions with high leverage.
 
 ---
 
+## 5.4 Proposed schema changes
+
+The schema changes should be additive, tree-shaped, and ergonomic.
+
+### A. Signal graph leaves
+
+The author-facing `SignalGraphNode` surface should grow the spatial-coordinate
+leaves already drafted conceptually:
+
+- `sample_norm_x`
+- `sample_norm_y`
+- `sample_cell_x`
+- `sample_cell_y`
+
+These should remain **leaves**, not wrappers, so they compose naturally inside
+existing `add` / `multiply` / `mix` graphs.
+
+### B. Step-output hint fields
+
+The current draft already points in the right direction:
+
+- producer-side: `emits_hint`
+- consumer-side: `binds`
+
+That should remain the ergonomic surface.
+
+Recommended near-term D shape:
+
+- producer declares `emits_hint: <name>`
+- consumer declares `binds: { <input_name>: <hint_name> }`
+- validator enforces same-pipeline visibility and duplicate-producer errors
+
+### C. Typed runtime interpretation behind the same schema
+
+The *schema* does not need to expose runtime storage classes like
+`ScalarFieldHint` or `Vec2FieldHint` directly yet.
+
+Instead:
+
+- keep the author-facing fields small and ergonomic
+- let the runtime/type system infer or assign the underlying typed hint class
+
+That preserves a clean tree while still enabling a strong internal
+implementation.
+
+### D. Consumer payload ergonomics
+
+Consumers should follow the existing leaf pattern:
+
+```text
+step
+  -> kind
+  -> scope
+  -> payload
+```
+
+not a special “graph stage” wrapper.
+
+So a future displacement-aware shader should still look like a normal shader
+leaf whose payload includes:
+
+- `type`
+- `binds`
+- family-specific payload fields
+
+This keeps the tree consistent with the rest of V3.
+
+### E. Showcase recipe posture
+
+First-class recipes like `madeira_flag` should:
+
+- use the currently supported runtime subset in executable payloads until the
+  richer field/hint substrate lands
+- preserve the richer intended semantics in `authoring_notes`
+- be upgraded back to the fuller chained semantics once the D substrate is
+  vetted and the work proceeds into full C
+
+---
+
 ## 6. Layer-model threading requirements
 
 The new signals should not be special-cased in one seam.
@@ -375,6 +491,23 @@ It is just the clearest first one.
 
 - move the flag from approximation subset back toward its intended semantics
 - keep fireworks procedural until/if they justify a more general particle-field substrate
+
+### Phase 6 — showcase parity and demonstration
+
+After the bounded D implementation is vetted and the work continues into full
+C, the project should explicitly re-create the `/usr/projects/madeira-flag`
+demo as a first-class V3 recipe showcase using the new capabilities:
+
+- spatial signal field generation
+- typed hint/field propagation
+- displacement from upstream fields
+- field-correlated shading
+- scene-layer composition
+
+The point is not only compatibility.
+It is also to create a **showcase recipe** that demonstrates why the new
+substrate matters and gives the project a strong “look what V3 can do now”
+reference artifact.
 
 ---
 
