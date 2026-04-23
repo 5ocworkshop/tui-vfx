@@ -1,0 +1,379 @@
+<!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
+<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <WCTX>Created after repeated V3 migration and debug-fixture reviews surfaced vocabulary drift around center/edges, reveal direction, origin semantics, and the distinction between cell-space and surface-space geometry.</WCTX> -->
+<!-- <CLOG>0.1.0: initial recipe-vocabulary guide covering lifecycle terms, reveal-geometry terms, direction/origin/shape vocabulary, spatial-basis vocabulary, enter/exit relationship language, and the rule that canonical docs/examples use one preferred spelling even when serde aliases remain for compatibility.</CLOG> -->
+
+# tui-vfx V3 recipe vocabulary
+
+This document defines the **canonical vocabulary** for V3 recipe authoring and
+for the docs/examples that teach it.
+
+Its purpose is to stop vocabulary drift before it spreads across:
+
+- schema comments
+- authoring guides
+- debug recipes
+- validators
+- runtime implementations
+- future AI authoring helpers
+
+## 1. Ground rule
+
+When multiple spellings or mental models exist, we choose **one canonical term**
+for docs and examples.
+
+Compatibility aliases may still exist in serde or migration code, but:
+
+> new docs, examples, and recipe-writing guidance should teach the canonical
+> term, not the alias set.
+
+## 2. Lifecycle vocabulary
+
+Canonical author-facing phase words:
+
+- `enter`
+- `dwell`
+- `exit`
+- `all`
+
+Canonical runtime-state words:
+
+- `Entering`
+- `Dwelling`
+- `Exiting`
+- `Finished`
+
+Rules:
+
+- use **`enter` / `dwell` / `exit`** in recipe JSON
+- use **`Entering` / `Dwelling` / `Exiting`** only for runtime/state-machine
+  discussion
+- do not invent parallel synonyms like `arrive`, `present`, `leave` in recipe
+  docs unless a future steering decision explicitly renames them
+
+## 3. Enter/exit relationship vocabulary
+
+When discussing how exit relates to enter, use these words:
+
+- **same direction**
+  - enter and exit use the same directional payload
+- **opposite direction**
+  - exit uses the inverse directional payload
+- **complementary geometry**
+  - exit uses the natural complement of the enter geometry
+  - example: `horizontal_center_out` → `horizontal_edges_in`
+
+Important:
+
+- these are currently **authoring guidance terms**, not first-class schema
+  fields
+- the schema already supports them by giving enter and exit independent payloads
+
+## 4. Reveal-geometry vocabulary
+
+Use these canonical axis names for reveal geometry:
+
+- **direction**
+  - which way a reveal/sweep progresses
+- **origin**
+  - the point a radial/path/cellular effect grows from
+- **shape**
+  - the aperture/geometry class
+- **orientation**
+  - whether slats/bands/segments are horizontal or vertical
+- **path**
+  - an authored trajectory such as spiral or radial sweep
+
+These terms should stay distinct.
+
+Example:
+
+- `wipe` is primarily a **direction** vocabulary
+- `radial` is primarily an **origin** vocabulary
+- `iris` is primarily a **shape** vocabulary
+- `blinds` is primarily an **orientation** vocabulary
+- `path_reveal` is primarily a **path** vocabulary
+
+## 5. Canonical wipe-direction vocabulary
+
+For `wipe`, the canonical direction set is:
+
+### Cardinal
+- `left_to_right`
+- `right_to_left`
+- `top_to_bottom`
+- `bottom_to_top`
+
+### Diagonal
+- `top_left_to_bottom_right`
+- `top_right_to_bottom_left`
+- `bottom_left_to_top_right`
+- `bottom_right_to_top_left`
+
+### Center/edge paired geometry
+- `horizontal_center_out`
+- `vertical_center_out`
+- `horizontal_edges_in`
+- `vertical_edges_in`
+
+Compatibility aliases such as:
+
+- `from_left`
+- `from_right`
+- `from_top`
+- `from_bottom`
+
+may remain for compatibility, but they are **not** the preferred teaching
+surface.
+
+## 6. Origin vocabulary
+
+For origin-driven families, use:
+
+- `center`
+- `top_left`
+- `top_right`
+- `bottom_left`
+- `bottom_right`
+- `custom { x, y }`
+
+Use **origin** when the payload is fundamentally about where the effect grows
+from.
+
+Use **source** only when the effect is modeling a light/emission/source concept
+rather than a general reveal origin.
+
+## 7. Shape vocabulary
+
+For aperture/reveal shapes, canonical terms are:
+
+- `circle`
+- `diamond`
+- `box`
+
+Prefer `box` over ad-hoc synonyms like `square` in the primitive vocabulary
+when the implementation really means axis-aligned rectangular aperture.
+
+## 8. Direction vocabularies by subsystem
+
+Not every subsystem should reuse the same direction words.
+
+### Reveal geometry
+Use:
+- `left_to_right`
+- `right_to_left`
+- `center_out`
+- `edges_in`
+- etc.
+
+### Traveling / band / sweep progression
+Use:
+- `forward`
+- `reverse`
+- `ping_pong`
+
+### Wave / field orientation
+Use:
+- `horizontal`
+- `vertical`
+- `radial`
+- `diagonal`
+
+### Motion/offscreen placement
+Use:
+- `from_left`
+- `from_right`
+- `from_top`
+- `from_bottom`
+- corner forms where needed
+
+That split should remain intentional. Do not collapse all direction terms into
+one giant enum vocabulary.
+
+## 9. Spatial-basis vocabulary
+
+This is now a load-bearing distinction.
+
+### Cell-space / cell-lattice basis
+
+Use when geometry is defined over:
+
+- the sampled cell lattice
+- `0 .. width-1`
+- `0 .. height-1`
+
+Canonical terms:
+
+- **cell-space**
+- **cell-lattice**
+
+Examples:
+
+- `sample_norm_x`
+- `sample_centered_x`
+- `sample_radius`
+- `CellDistanceSignal::radius_from`
+
+### Surface-space / frame-space basis
+
+Use when geometry is defined over:
+
+- the continuous frame/surface
+- optical falloff
+- aperture/light-field semantics
+
+Canonical terms:
+
+- **surface-space**
+- **frame-space**
+
+Examples:
+
+- `sample_surface_centered_x`
+- `sample_surface_radius`
+- `SurfaceDistanceSignal::radius_from`
+- `SurfaceAngleSignal::angle_from`
+
+Rule:
+
+> when a consumer needs a genuinely different geometric model, add a new
+> explicit basis instead of silently mutating the semantics of an existing leaf.
+
+## 10. Debug-recipe naming vocabulary
+
+For debug-recipe body text:
+
+- first line = human-readable effect/test name
+  - example: `Mask: Iris Effect`
+- second line = concise behavioral cue
+  - example: `Circle open /\nDiamond close`
+
+The cue should be:
+
+- concise
+- useful
+- free of filler like `Watch`
+
+## 11. Practical authoring rule
+
+When writing or reviewing recipes, ask:
+
+1. Am I using the canonical vocabulary for this subsystem?
+2. Am I accidentally mixing two different geometric bases?
+3. Am I using a compatibility alias where the canonical spelling should be
+   taught instead?
+4. Does the debug/reference fixture explain the intended behavior clearly using
+   the same vocabulary the schema/docs use?
+
+If the answer to any of those is "no", fix the vocabulary before adding more
+examples or abstractions on top.
+
+## 12. Visual reference — rect vocabulary
+
+Use this diagram when discussing rect-local geometry:
+
+```text
+top edge
+┌──────────────────────────────┐
+│ top_left       top_center    │ top_right
+│                              │
+│ left edge      center        │ right edge
+│               (cx, cy)       │
+│                              │
+│ bottom_left   bottom_center  │ bottom_right
+└──────────────────────────────┘
+bottom edge
+```
+
+Canonical rect terms:
+
+- **top edge / bottom edge / left edge / right edge**
+- **top_left / top_center / top_right**
+- **bottom_left / bottom_center / bottom_right**
+- **center**
+- **center row / center column**
+
+For wipe-style vocabulary:
+
+- `horizontal_center_out`
+  - starts at the **center column**
+  - expands toward the **left edge** and **right edge**
+- `horizontal_edges_in`
+  - starts at the **left/right edges**
+  - collapses toward the **center column**
+- `vertical_center_out`
+  - starts at the **center row**
+  - expands toward the **top edge** and **bottom edge**
+- `vertical_edges_in`
+  - starts at the **top/bottom edges**
+  - collapses toward the **center row**
+
+For radial/iris vocabulary:
+
+- **origin** is a point like `center`, `top_left`, or `custom{x,y}`
+- **shape** is the aperture geometry like `circle`, `diamond`, `box`
+
+## 13. Visual reference — scene vocabulary
+
+Use this diagram when discussing scene-layer placement and composition:
+
+```text
+frame / viewport
+┌────────────────────────────────────────────┐
+│                                            │
+│  scene canvas                              │
+│  ┌──────────────────────────────────────┐  │
+│  │ layer A rect                         │  │
+│  │ ┌──────────────────────────────────┐ │  │
+│  │ │ content/source for layer A       │ │  │
+│  │ └──────────────────────────────────┘ │  │
+│  └──────────────────────────────────────┘  │
+│                                            │
+│                  ┌──────────────────────┐  │
+│                  │ layer B rect         │  │
+│                  │ sibling/overlay      │  │
+│                  └──────────────────────┘  │
+│                                            │
+└────────────────────────────────────────────┘
+```
+
+Canonical scene terms:
+
+- **frame** / **viewport**
+  - the available render area
+- **scene canvas**
+  - the shared composition space inside the frame
+- **layer**
+  - one placed content/source block in the scene
+- **layer rect**
+  - the placed bounds of one layer
+- **source**
+  - what the layer renders from (`text`, `image`, `procedural`, etc.)
+- **placement**
+  - how the layer rect is positioned
+- **surface**
+  - the visual/structural surface treatment of the layer
+- **overflow**
+  - what happens when content exceeds the layer rect
+- **visibility**
+  - when/how the layer participates in rendering
+- **sibling**
+  - another layer used as a relative placement or follow reference
+
+When discussing relational placement:
+
+- **relative_to**
+  - the sibling layer being referenced
+- **target_anchor**
+  - the anchor on that target/sibling layer
+- **follow**
+  - how the placed layer tracks the sibling over time
+- **phase_offset_ms**
+  - timing offset for choreography, not geometry
+
+These diagrams are intentionally simple. They exist to keep our words grounded
+in one shared visual model while we continue normalizing schema, fixtures, and
+runtime behavior.
+
+<!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring</DESC> -->
+<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->

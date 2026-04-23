@@ -8,6 +8,7 @@
 This document is the **narrative companion** to the current build-target schema baseline:
 
 - `docs/design/tui-vfx-v3-schema-draft.json`
+- `docs/design/tui-vfx-v3-recipe-vocabulary.md`
 
 The JSON schema draft is the specification-by-example.
 This document explains the **why** behind the structure, the intended tree shape, and the authoring philosophy that should survive even after comments are stripped from the JSON.

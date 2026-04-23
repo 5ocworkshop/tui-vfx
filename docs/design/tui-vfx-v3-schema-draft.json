@@ -22,6 +22,9 @@
 # implementation target unless later steering explicitly changes them.
 # Companion documents:
 #   - docs/design/tui-vfx-v3-upgrade-plan.md           — intent + Decisions 1–8
+#   - docs/design/tui-vfx-v3-recipe-vocabulary.md      — canonical vocabulary,
+#                                                         rect/scene diagrams,
+#                                                         basis language
 #   - docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md
 #                                                       — schema journal, drift,
 #                                                         final V2↔V3 audit
