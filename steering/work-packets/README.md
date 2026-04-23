@@ -8,6 +8,14 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 - Keep one agent per packet unless the packet explicitly says otherwise.
 - Keep the agent list clean: once a packet is accepted/committed or rejected/abandoned, close that agent.
 
+## Packet lifecycle
+- A packet is **not complete** when an agent merely returns a plausible answer.
+- A packet becomes complete only when the related work is actually committed on
+  `master`.
+- After the related commit is visible on `master`, remove or archive that
+  packet from the active work-packet queue/index so the active backlog matches
+  real remaining work.
+
 ## Shared must-read order for subagents
 1. `/usr/projects/tui-vfx/steering/INTENTIONS.md`
 2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`

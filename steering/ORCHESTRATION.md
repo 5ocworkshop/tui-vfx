@@ -233,6 +233,14 @@ When agent work is accepted into the main working tree:
   it into the main line prematurely
 - once accepted work is committed, close the finished agent to free the slot
 
+Work-packet lifecycle rule:
+- do not treat a packet as complete just because an agent response looked good
+- a packet becomes complete only after the related work is actually committed on
+  `master`
+- once the related commit is visible on `master`, remove or archive the packet
+  from the active work-packet queue so the live backlog reflects real remaining
+  work
+
 ## 11. Refresh rule after context reset
 
 If context is compacted or partially lost, reread:
