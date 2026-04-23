@@ -48,7 +48,7 @@ tui-vfx-shadow = { path = "crates/tui-vfx-shadow", version = "0.11.0" }
 tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.11.0" }
 
 # External dependencies (preserve versions from source crates)
-mixed-signals = { path = "../mixed-signals", version = "0.2.3" }
+mixed-signals = { path = "../mixed-signals", version = "0.3.0" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 smallvec = "1.11"
