@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 use tui_vfx_style::models::{
     SpatialShaderType, StyleRegion, TryLowerV3SpatialShaderError, VfxSpatialShaderFamily,
-    lower_legacy_spatial_shader, try_lower_v3_spatial_shader_family,
+    try_lower_v3_spatial_shader_family,
 };
 
 /// Serializable shader layer specification for pipeline bindings.
@@ -42,6 +42,6 @@ impl ShaderLayerSpec {
 
     /// Returns the grouped V3 family form of this shader layer's spatial shader.
     pub fn v3_shader_family(&self) -> VfxSpatialShaderFamily {
-        lower_legacy_spatial_shader(&self.shader)
+        self.shader.v3_spatial_shader_family()
     }
 }

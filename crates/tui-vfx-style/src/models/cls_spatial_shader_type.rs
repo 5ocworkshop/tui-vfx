@@ -22,6 +22,29 @@
 //! So this enum should be read as the live migration surface, not as proof that
 //! the final V3 conceptual model is "one flat list forever."
 //!
+//! The practical cutover seam already exists in the grouped V3 family surface:
+//!
+//! - `LinearGradient`, `RevealWipe` → `gradient_reveal` primitive family
+//! - `Glow`, `AmbientOcclusion`, `Bevel` → `surface_depth` primitive family
+//! - `PulseWave`, `Radar`, `Orbit` → `motion_field` primitive family
+//! - `GlitchLines`, `ChromaticEdge`, `SubCellShake` → `edge_distortion`
+//!   primitive family
+//! - `BorderSweep`, `Reflect`, `GlistenBand`, `TracePropagation`, `TracePath`
+//!   → `traveling_band` composed family
+//! - `Highlighter` → `progress_emphasis` composed family
+//! - `Diffusion`, `ConcealedLight`, `EdgeSheen` → `material_light` composed
+//!   family
+//! - `FocusedRowGradient`, `FocusField`, `AffordanceWake`, `WayfindingNode`
+//!   → `guidance_cue` composed family
+//! - `NeonFlicker`, `StochasticSparkle` → `stochastic_texture` composed family
+//! - `BarberPole` → `stripe_motion` composed family
+//! - `Cursor` → `cursor` composed family
+//!
+//! Callers that need the grouped V3 view should prefer
+//! [`SpatialShaderType::v3_spatial_shader_family`] or
+//! [`SpatialShaderType::v3_family_label`] instead of re-classifying variants
+//! ad hoc.
+//!
 //! ## Shader Categories
 //!
 //! ### Gradients & Fills
@@ -93,7 +116,7 @@ use crate::models::{
     cls_stochastic_sparkle_shader::StochasticSparkleShader,
     cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
     cls_trace_propagation_shader::TracePropagationShader,
-    cls_wayfinding_node_shader::WayfindingNodeShader,
+    cls_wayfinding_node_shader::WayfindingNodeShader, VfxSpatialShaderFamily,
 };
 use crate::traits::{
     ShaderContext, ShaderRuntimeBindingRequest, ShaderRuntimeBindingResolution, StyleShader,
@@ -387,6 +410,20 @@ impl SpatialShaderType {
             SpatialShaderType::ChromaticEdge(_) => "ChromaticEdge",
             SpatialShaderType::Cursor(_) => "Cursor",
         }
+    }
+
+    /// Return the grouped V3 family form of this legacy flat shader.
+    ///
+    /// This is the preferred cutover seam for downstream callers that need the
+    /// primitive-vs-composed V3 classification without re-matching every legacy
+    /// enum variant locally.
+    pub fn v3_spatial_shader_family(&self) -> VfxSpatialShaderFamily {
+        VfxSpatialShaderFamily::from_legacy_spatial_shader(self)
+    }
+
+    /// Return the stable grouped V3 family label for this shader.
+    pub fn v3_family_label(&self) -> &'static str {
+        self.v3_spatial_shader_family().family_label()
     }
 
     /// Returns a brief human-readable description of what this shader does.

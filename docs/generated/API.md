@@ -38,7 +38,8 @@ supports shadows and `preserve_unfilled`.
 ```rust
 pub fn render_pipeline(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     width: usize,
     height: usize,
     offset_x: usize,
@@ -55,7 +56,8 @@ pub fn render_pipeline(
 ```rust
 pub fn render_pipeline_with_area(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     area: RenderArea,
     options: CompositionOptions<'_>,
     inspector: Option<&mut dyn CompositorInspector>,
@@ -69,7 +71,8 @@ Convenience overload using `RenderArea { width, height, offset_x, offset_y }`.
 ```rust
 pub fn render_pipeline_with_spec(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     width: usize,
     height: usize,
     offset_x: usize,
@@ -86,7 +89,8 @@ Uses `CompositionSpec` (serializable) and `SpatialShaderType` layers, including 
 ```rust
 pub fn render_pipeline_with_spec_area(
     source: &dyn Grid,
-    dest: &mut dyn Grid,
+    source_roles: &RoleMap,
+    destination: &mut SemanticScene,
     area: RenderArea,
     spec: &CompositionSpec,
     inspector: Option<&mut dyn CompositorInspector>,
@@ -309,7 +313,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `HoverBar` | Progress-driven partial bar indicator for hover states | `base_eighths`, `max_eighths`, `position`, `progress` |
 | `InterlaceCurtain` | Scanline/interlace effect for backdrop dimming | `density`, `dim_factor`, `scroll_speed` |
 | `Invert` | Invert colors | `apply_to` |
-| `KittScanner` | Horizontal ping-pong scanner effect (KITT/Larson) | `boost`, `band_width`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
+| `KittScanner` | Horizontal ping-pong scanner effect (KITT/Larson) | `boost`, `band_width`, `bpm`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
 | `MotionBlur` | Motion blur trail effect with directional dimming | `trail_length`, `opacity_decay`, `direction` |
 | `None` | No filter effect | - |
 | `PatternFill` | Pattern fill effect for background textures | `pattern`, `color`, `only_empty` |
@@ -581,7 +585,7 @@ pub enum ContentEffect {
     Scramble { resolve_pace: Static(0.0), charset: Alphanumeric, seed: 42 },
     ScrambleGlitchShift { resolve_pace: Static(0.0), charset: Alphanumeric, scramble_seed: 42, shift_amount: 4, glitch_start: Static(0.0), glitch_end: Static(0.0) },
     SlideShift { start_col: 0, end_col: 0, start_row: 0, shift_col: 0, shift_width: 1, row_shift: 0, line_mode: Block, flow_mode: StayShifted },
-    SplitFlap { speed: Static(0.0), cascade: Static(0.0), cycles: Static(0.0), jitter: 0, charset: Alpha, settle_overshoot: false, leading_blocks: 0, settle_hinge: false, spring_settle: false, authentic_timing: false, from_message: None, rolling_flip: false },
+    SplitFlap { speed: Static(0.0), cascade: Static(0.0), cycles: Static(0.0), jitter: 0, charset: Alpha, settle_overshoot: false, leading_blocks: 0, settle_hinge: false, spring_settle: false, authentic_timing: false, from_message: None, rolling_flip: false, flip_preview: false, flip_flicker: false, dispersion: Legacy },
     Typewriter { speed_variance: Static(0.0) },
     WrapIndicator { prefix: » , suffix:  « },
 }

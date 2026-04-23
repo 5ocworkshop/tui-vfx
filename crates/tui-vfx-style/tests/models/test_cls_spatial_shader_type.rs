@@ -5,7 +5,7 @@
 
 use tui_vfx_style::models::{
     AmbientOcclusionShader, ConcealedLightMode, DiffusionMode, HighlighterDirection,
-    LinearGradientShader, SpatialShaderType,
+    LinearGradientShader, SpatialShaderType, VfxSpatialShaderFamily,
 };
 
 #[test]
@@ -130,4 +130,21 @@ fn spatial_shader_type_can_build_from_v3_binding_and_signal_payloads() {
         }
         other => panic!("expected Diffusion, got {other:?}"),
     }
+}
+
+#[test]
+fn spatial_shader_type_exposes_grouped_v3_family_seam() {
+    let primitive = SpatialShaderType::Glow(Default::default());
+    let composed = SpatialShaderType::BorderSweep(Default::default());
+
+    assert_eq!(primitive.v3_family_label(), "surface_depth");
+    assert_eq!(composed.v3_family_label(), "traveling_band");
+    assert!(matches!(
+        primitive.v3_spatial_shader_family(),
+        VfxSpatialShaderFamily::Primitive(_)
+    ));
+    assert!(matches!(
+        composed.v3_spatial_shader_family(),
+        VfxSpatialShaderFamily::ComposedPrimitive(_)
+    ));
 }

@@ -567,6 +567,24 @@
             "doc": "Replace the intermediate-letter walk with a continuous\nrolling-card animation. Each walk step plays through the\n6-frame `█→▀→▔→—→▁→▄` hinge rotation, so the viewer sees\ncards physically tumbling over each other throughout the\nwalk instead of watching the alphabet flicker past. The\ntarget letter is revealed only at progress=1.0. Best paired\nwith low `cycles` (0.2–0.5) and longer animation durations\nso each rotation has enough frames to read as a flip.",
             "name": "rolling_flip",
             "ty": "bool"
+          },
+          {
+            "default": "false",
+            "doc": "Substitute the `▔` hinge frame with the Unicode 180°-turned\ntarget glyph so viewers catch a brief upside-down preview of\nthe arriving letter mid-flip. Requires `settle_hinge: true`.\nFalls back silently for targets without an honest turned form\n(Q, J, digits 1/2/4/5/7, non-ASCII). Default: false.",
+            "name": "flip_preview",
+            "ty": "bool"
+          },
+          {
+            "default": "false",
+            "doc": "Replace the ordered hinge sequence with per-column-hashed\nrandom draws from a pool of block/hinge/letter glyphs,\nproducing chaotic mechanical flicker (~30Hz). Requires\n`settle_hinge: true`. Opt-in — this is perceptible flicker\nand may be uncomfortable for motion-sensitive viewers.\nDefault: false.",
+            "name": "flip_flicker",
+            "ty": "bool"
+          },
+          {
+            "default": "Legacy",
+            "doc": "Dispersion pattern — how per-column start delays are\ndistributed across the board. `Legacy` (default) preserves\npre-3.2.0 cascade+authentic_timing behavior; the other\nvariants (cascade/authentic/simultaneous/random/center_out/\nedge_in/shuffled) override the old knobs with their own\ndelay curve.",
+            "name": "dispersion",
+            "ty": "SplitFlapDispersion"
           }
         ],
         "premium": false,
@@ -1155,7 +1173,7 @@
         ]
       },
       "KittScanner": {
-        "ai_hint": "Horizontal ping-pong scanner (KITT/Larson scanner) effect.\nboost: brightness increase (default 50).\nband_width: scanner column width (0.15 default, 0.0-0.5).\nbps: beats per second for ping-pong cycle (1.0 = 2 second full cycle).\nprogress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).\nmotion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nFull-height scanning column with smooth ping-pong motion.\nClassic Knight Rider aesthetic for retro sci-fi hover states.",
+        "ai_hint": "Horizontal ping-pong scanner (KITT/Larson scanner) effect.\nboost: brightness increase (default 50).\nband_width: scanner column width (0.15 default, 0.0-0.5).\nbpm: optional human-friendly beats-per-minute cadence; overrides bps when present.\nbps: beats per second for ping-pong cycle (1.2 default = 72 BPM healthy resting cadence).\nprogress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).\nmotion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nCadence-driven motion uses monotonic elapsed time; bpm/bps set the scanner rate independently of recipe loop period.\nClassic Knight Rider aesthetic for retro sci-fi hover states.",
         "complexity": "simple",
         "energy": "moderate",
         "name": "KittScanner",
@@ -1174,8 +1192,14 @@
             "ty": "f32"
           },
           {
-            "default": "1 Hz",
-            "doc": "Beats per second for ping-pong cycle",
+            "default": "72 BPM",
+            "doc": "Human-readable cadence in beats per minute.\n\nWhen present, this is converted to `bps` via\n[`kitt_bps_from_bpm`] and takes\nprecedence over the raw `bps` field. This is the friendlier option\nwhen matching human tempos such as resting-heart cadences.",
+            "name": "bpm",
+            "ty": "Option<f32>"
+          },
+          {
+            "default": "1.2 Hz",
+            "doc": "Beats per second for the ping-pong oscillator.\n\nIn `ping_pong` mode, one full smooth return loop takes `2 / bps`\nseconds. Cadence-driven callers should feed monotonic elapsed time\ninto the scanner so the sweep stays smooth even when higher-layer\nrecipe clocks wrap. Defaults to `1.2` (72 BPM, a healthy\nresting-adult cadence).",
             "name": "bps",
             "ty": "f32"
           },
