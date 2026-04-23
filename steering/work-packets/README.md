@@ -62,3 +62,15 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 - `20-madeira-scene-semantics-audit.md`
 - `21-filter-family-native-only-fixtures-audit.md`
 - `22-work-packet-library-maintenance.md`
+- `23-madeira-first-implementation-slice.md`
+- `24-madeira-second-slice-template.md`
+- `25-v3-debug-recipes-filter-family-tranche.md`
+- `26-debug-recipes-content-family-tranche.md`
+- `27-validator-json-shape-hardening.md`
+- `28-v3-tooling-command-reference.md`
+- `29-v3-handoffs-and-operator-guides.md`
+- `30-codex-spark-doc-task-experiment.md`
+- `31-codex-spark-doc-task-runner.md`
+- `32-post-experiment-delegation-strategy-refresh.md`
+- `33-v3-end-to-end-readiness-audit.md`
+- `34-pre-madeira-implementation-checklist.md`

@@ -205,3 +205,41 @@ This DAG should be updated whenever:
 - `WP18` may collide with preview/probe timing changes.
 - `WP19` and `WP20` can collide with scene-bearing implementation lanes.
 - `WP22` collides with any broad packet-library rewrite and should follow the experiment winner.
+
+
+## Further-ahead packet nodes
+- `WP23` — Madeira first implementation slice
+- `WP24` — Madeira second-slice template
+- `WP25` — V3 debug-recipes filter-family cleanup tranche
+- `WP26` — debug-recipes content-family cleanup tranche
+- `WP27` — validator JSON shape hardening
+- `WP28` — V3 tooling command reference
+- `WP29` — V3 handoffs and operator guides
+- `WP30` — codex-spark doc-task experiment design
+- `WP31` — codex-spark doc-task trial runner
+- `WP32` — post-experiment delegation strategy refresh
+- `WP33` — V3 end-to-end readiness audit
+- `WP34` — pre-Madeira implementation checklist
+
+## Further-ahead dependency notes
+- `WP23` depends on `WP07` and `WP08`.
+- `WP24` depends on `WP23`.
+- `WP25` depends softly on `WP10` or `WP21` to identify the correct tranche.
+- `WP26` depends on a content-family shortlist/audit.
+- `WP27` depends softly on validator stage stabilization (`WP04`, `WP13`).
+- `WP28` depends softly on current command surfaces stabilizing; best after `WP01`, `WP04`, `WP05`, and `WP13`.
+- `WP29` depends softly on the current blocker landscape being accurate; best after major tooling blockers settle.
+- `WP30` should follow the main briefing experiment convergence.
+- `WP31` depends on `WP30`.
+- `WP32` depends on the experiment family results (`WP02`, `WP03`, and any spark trial results).
+- `WP33` depends softly on the major tooling blockers being updated so the readiness matrix is meaningful.
+- `WP34` depends on `WP07`, `WP08`, and the broader V3 readiness evidence in `WP33`.
+
+## Further-ahead collision notes
+- `WP23`/`WP24`/future Madeira slices will likely collide heavily with scene-bearing compile/render files.
+- `WP25` and `WP26` may collide with future debug-recipe QC or corpus cleanup lanes.
+- `WP27` collides with validator/probe JSON-focused work.
+- `WP28` and `WP29` are docs/handoff oriented and can often run in parallel with code lanes if they stay read-heavy or docs-only.
+- `WP30`/`WP31`/`WP32` belong to the orchestration/experimentation track and should be coordinated with the current briefing experiment.
+- `WP33` is mostly audit-only and can often run in parallel with bounded implementation lanes if the evidence sources are stable.
+- `WP34` is planning/checklist work and should follow the relevant audits rather than compete with implementation on the same files.
