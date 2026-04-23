@@ -84,12 +84,20 @@ Each subagent packet should include, in this preferred order:
 12. reporting contract
 13. closing task reminder
 
-Use medium `gpt-5.4` subagents by default for bounded tasks.
-Keep up to 5 useful lanes busy when independent work exists.
+Default post-experiment stance:
+- use `gpt-5.4-mini` with `reasoning_effort: medium` as the default bounded-work
+  helper when the packet is concrete
+- reserve `gpt-5.4` with `reasoning_effort: medium` for ambiguity, multi-system
+  judgment, or higher-cost implementation mistakes
+- use `gpt-5.3-codex-spark` with `reasoning_effort: low` only for low-context,
+  doc-only helper lanes
+- keep up to 5 useful lanes busy when independent work exists
 
 Work packet quality rule:
 - write packets for a junior-but-capable engineer who is not deeply familiar
   with the project
+- packet quality is the first lever; improve packet specificity before jumping
+  to a bigger model
 - include enough detail, map, guardrails, and verification direction that the
   assignee can stay accurate without guessing at repo boundaries or widening
   scope
@@ -102,6 +110,10 @@ Work packet quality rule:
   packet can support that level of specificity
 - require shell-ready verification commands rather than conceptual “run tests”
   summaries whenever the packet can support that level of specificity
+- if the packet cannot justify an exact path or command yet, say that it is not
+  concrete enough instead of inventing one
+- if the packet names exact verification commands, the assignee should run or
+  report those exact commands rather than swapping in broader substitutes
 - when in doubt, add:
   - clearer in-scope / out-of-scope bullets
   - explicit repo-boundary reminders
@@ -109,39 +121,71 @@ Work packet quality rule:
   - exact verification commands
   - a closing task reminder
 
-Current model-use summary from live session evidence:
-- `gpt-5.4-mini` with `reasoning_effort: medium` is the current default
-  bounded-work model
+Post-experiment evidence trace:
+- `/usr/projects/tui-vfx/steering/experiments/subagent-briefing-experiment-results.md`
+  showed packet quality, exact pathing, and exact verification wording were the
+  main drivers of stable bounded-lane performance
+- `/usr/projects/tui-vfx/steering/experiments/model-compare/mini-medium-results.md`
+  showed the smaller helper was unreliable on underspecified packets and became
+  stable once the lane, scope, and command contract were made concrete
+- `/usr/projects/tui-vfx/steering/experiments/model-compare/gpt54mini-medium-results.md`
+  showed the corrected mini-medium setup is the best default for concrete
+  bounded lanes, including blocker-scoped validator/tooling work
+- `/usr/projects/tui-vfx/steering/experiments/model-compare/gpt54-medium-results.md`
+  and `/usr/projects/tui-vfx/steering/experiments/model-compare/frontier-low-results.md`
+  showed frontier helpers stay strong on harder boundary judgment but tend to
+  need more prompting pressure to stay exact on paths, commands, and final
+  recommendation shape
+- codex-spark operational learnings from the doc-task experiment family remain
+  stable: use spark for low-context doc surfaces only, not for runtime lanes or
+  broad repo-context work
+
+Current model/task routing after the experiment family closed:
+- `gpt-5.4-mini` with `reasoning_effort: medium` is the operational default
+  bounded-work model when the packet is concrete
   - use it for:
-    - audits
-    - targeted tests
-    - validator/tooling seams
+    - blocker-scoped audits
+    - targeted tests and validator/tooling seams
     - bounded fixture/doc cleanup
-    - small-to-medium implementation slices
+    - small-to-medium implementation slices with clear file ownership
+    - packet-driven doc/process lanes that still need boundary discipline
+  - avoid using it as the first choice when:
+    - the lane is still ambiguous across repos or layers
+    - the packet cannot yet name the smallest justified write scope
+    - the task depends on non-trivial architectural tradeoff judgment
   - expected review level:
     - normal review always required
-    - closer review for interaction semantics, keybindings, and nuanced UX
-- `gpt-5.3-codex-spark` with `reasoning_effort: low` is currently best treated
-  as a fast doc-oriented helper
+    - closer review for interaction semantics, keybindings, nuanced UX, and any
+      lane where the packet still leaves real ambiguity
+- `gpt-5.3-codex-spark` with `reasoning_effort: low` is a fast doc-only helper
+  for low-context surfaces
   - use it for:
     - compact operator docs
     - command references
     - handoff notes
     - small experiment/protocol drafts
-    - other low-context doc-only tasks
+    - narrow steering/process edits that do not require broad repo-memory
   - avoid using it by default for:
     - runtime code changes
-    - subtle architectural judgment
-    - anything that needs broad repository context retention
+    - architectural or ownership judgment
+    - packets that need sustained multi-doc synthesis or broad repository
+      context retention
   - expected review level:
-    - moderate review for path correctness, scope truth, and wording accuracy
-- `gpt-5.4` with `reasoning_effort: medium` should be reserved for harder
-  bounded lanes where `gpt-5.4-mini` is likely to underperform
+    - moderate review for wording accuracy, path correctness, scope truth, and
+      final doc completeness
+- `gpt-5.4` with `reasoning_effort: medium` is the escalation model for harder
+  bounded lanes
   - use it for:
     - trickier architectural audits
     - more ambiguous multi-system seams
+    - packets that need the leader to resolve competing repo-boundary signals
     - harder implementation slices where the cost of a wrong move is higher
-  - do not use it reflexively when `gpt-5.4-mini` is sufficient
+  - review implication:
+    - expect a higher exactness-review burden on bounded packets; specifically
+      check that the helper named exact paths, exact commands, and a filled
+      final recommendation instead of abstract summaries
+  - do not use it reflexively when `gpt-5.4-mini` plus a better packet is
+    sufficient
 
 Grounding-first rule for research/evaluation packets:
 - if the packet is testing comprehension or prompt quality, require the helper

@@ -30,7 +30,8 @@ These are the files/areas you should use to understand the problem before you de
 - `[full path]`
 
 ## Exact write scope
-Only edit these paths unless the packet explicitly authorizes a nearby extension:
+Only edit these paths unless the packet explicitly authorizes a nearby extension.
+If the packet cannot justify exact paths yet, say that the write scope is not concrete enough instead of inventing paths:
 - `[full path]`
 - `[full path]`
 - `[full path]`
@@ -74,12 +75,12 @@ Do not widen into:
 - If this is not a hot-path-sensitive lane, say so explicitly.
 
 ## Verification required
-Run exactly:
+Run exactly. Only list commands the packet/docs actually justify:
 - `[shell-ready command]`
 - `[shell-ready command]`
 - `[shell-ready command]`
 
-If a command fails, classify it as:
+If a command fails, report that exact failure before considering any follow-up command, then classify it as:
 - in-scope failure
 - expected downstream fallout
 - or blocker
