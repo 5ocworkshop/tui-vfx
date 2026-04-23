@@ -86,6 +86,14 @@ These packets produced accepted non-code outputs that should be treated as harve
 
 ## New follow-on packets created from audit learnings
 - `52-madeira-direct-preview-allocation-cache-slice.md`
+- `53-v3-family-models-critical-cutover.md`
+- `54-v3-mixed-signals-signalgraph-and-time-alignment.md`
+- `55-v3-spatial-leaves-and-field-hint-threading.md`
+- `56-v3-motion-path-and-offscreen-origin-support.md`
+- `57-v3-live-naming-and-vocabulary-cleanup.md`
+- `58-v3-ra-to-vfx-public-surface-rename-tranche.md`
+- `59-v3-rustdoc-gap-closure-for-schema-apis.md`
+- `60-v3-doc-autogen-and-authoring-guide-cutover.md`
 
 ## Notes
 - Packet completion is tied to real commits on `master`, not just plausible subagent responses.

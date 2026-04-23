@@ -314,3 +314,31 @@ The packet library now reaches all the way from immediate V3 tooling blockers th
 ## Post-Madeira-diagnostics collision notes
 - `WP51` collides with preview/diagnostic example surfaces only and should stay out of runtime redesign.
 - `WP52` collides with direct-preview/render-path optimization work and should not overlap with other preview-path implementation lanes.
+
+
+## Post-V3-program-status packet nodes
+- `WP53` — V3 family-models critical cutover
+- `WP54` — V3 mixed-signals signal-graph and time alignment
+- `WP55` — V3 spatial leaves and field-hint threading
+- `WP56` — V3 motion-path and offscreen-origin support
+- `WP57` — V3 live naming and vocabulary cleanup
+- `WP58` — V3 Ra→Vfx public-surface rename tranche
+- `WP59` — V3 rustdoc gap closure for schema-bearing APIs
+- `WP60` — V3 doc-autogen and authoring-guide cutover
+
+## Post-V3-program-status dependency notes
+- `WP53` follows the remaining Chapter 100 family-model blocker in `tui-vfx-style/src/models/` and should coordinate with any still-open family cleanup lanes such as `WP05` and `WP26`.
+- `WP54` follows the migration-log major gap around signal-graph JSON shape and should precede or explicitly frame downstream mixed-signals/V3 field work.
+- `WP55` follows `WP54` and the spatial-field-hint plan; it is the first execution-facing tranche for mixed-signals spatial leaves and recipes-side threading.
+- `WP56` follows the motion spec and migration-log major gap for `motion_path` plus offscreen `from/to`.
+- `WP57` follows the rename inventory's "live docs/comments/prompts first" rule and should precede the larger Rust public-surface rename.
+- `WP58` follows `WP57` and the rename inventory's public-surface rename order.
+- `WP59` follows the current V3 docs/autogen gap evidence in `docs/generated/V3_API.md`.
+- `WP60` follows Chapter 100's unresolved doc-generator / guide / CI blockers and should coordinate with `WP59` when both touch generated artifacts.
+
+## Post-V3-program-status collision notes
+- `WP53` can collide with style-model / capability-doc / doc-generator work and should not overlap with other broad `tui-vfx-style` restructuring.
+- `WP54` and `WP55` can collide across `mixed-signals` and recipes/runtime signal consumers; sequence them unless the write scopes are explicitly disjoint.
+- `WP56` collides with motion/runtime/schema files and should not overlap with other motion-path or preview-path refactors.
+- `WP57` and `WP58` both touch naming/vocabulary surfaces; keep the live-doc cleanup tranche separate from the public Rust rename tranche.
+- `WP59` and `WP60` both affect docs/rustdoc/generation surfaces; avoid running them in parallel unless the write scopes are clearly separated.
