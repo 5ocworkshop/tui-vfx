@@ -423,14 +423,20 @@ Rules:
    lane, not in the individual primitive directories. Primitive directories are
    for understanding the primitive itself; combination directories are for
    understanding interaction between primitives.
+8. Every debug recipe must have a description that tells the viewer what they
+   should expect to see. The description is part of the fixture contract,
+   because it appears in demo/explorer UI and gives the human checker an
+   explicit statement of intended behavior.
 
 Why: debug recipes are how contributors, reviewers, and downstream integrators
 build intuition. They also give maintainers and downstream developers a known
 set of working reference recipes to benchmark against during release work and
 regression investigation. A fixture that technically exercises the code but
- visually conceals the effect fails its job as a reference artifact. Keeping
- single-primitive references separate from combinations is how the library
- avoids losing diagnostic clarity as the corpus grows.
+visually conceals the effect fails its job as a reference artifact. Keeping
+single-primitive references separate from combinations is how the library
+avoids losing diagnostic clarity as the corpus grows. A missing or vague
+description removes the human-side acceptance criteria that makes the fixture
+useful in the demo UI.
 
 ---
 
