@@ -261,6 +261,55 @@ Suggested meaning:
 
 These are intentionally small additions with high leverage.
 
+### 5.4 Why these first spatial leaves were added
+
+These first leaves are not “features for feature's sake.”
+They were added because they unlock a broad class of reusable authored effects
+with a very small amount of new substrate:
+
+- `sample_norm_x` / `sample_norm_y`
+  - useful for edge-to-edge waves
+  - useful for progressions across a surface
+  - useful for directional reveals and sweeps
+  - useful for “strong on one side, weak on the other” motion fields
+- `sample_cell_x` / `sample_cell_y`
+  - useful for deterministic grid-aware effects
+  - useful for game-like tile/cell logic
+  - useful for procedural noise layouts that need stable integer coordinates
+
+In practical terms, these make it possible to author:
+
+- cloth / banner / flag waves
+- lighting falloff tied to position
+- procedural sweeps and beats across a HUD or UI shell
+- simple game-field effects without custom closures
+
+They were chosen because they are:
+
+- foundational
+- broadly reusable
+- small enough not to bloat `mixed-signals`
+- directly useful in both application TUI work and lightweight game/story work
+
+### 5.5 What the next likely spatial leaves are for
+
+If later phases justify more spatial leaves, the strongest next candidates are:
+
+- `sample_centered_x`
+- `sample_centered_y`
+- `sample_radius`
+- `sample_angle`
+
+Those would primarily help with:
+
+- radial shockwaves
+- spotlight / cone-like lighting
+- orbit / spiral / directional field logic
+- centered composition beats for cinematic or game-style motion
+
+But those should be added only as the next semantic work proves they are needed,
+not preemptively as surface-area expansion.
+
 ---
 
 ## 5.4 Proposed schema changes
