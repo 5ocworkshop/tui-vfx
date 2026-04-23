@@ -1,9 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_vignette.rs</FILE> - <DESC>Vignette filter with proper spatial radial gradient</DESC>
-// <VERS>VERSION: 3.0.1</VERS>
-// <WCTX>Fix brightness jump at animation completion</WCTX>
-// <CLOG>Use round() instead of truncation in color math to prevent off-by-one errors</CLOG>
+// <VERS>VERSION: 3.1.0</VERS>
+// <WCTX>Adopt the new mixed-signals surface-space basis for optical falloff consumers where the mapping is now direct and verified.</WCTX>
+// <CLOG>3.1.0: use mixed-signals sample_surface_radius for classic all-sides vignette evaluation instead of open-coding frame-center distance math.
+// 3.0.1: Use round() instead of truncation in color math to prevent off-by-one errors</CLOG>
 
 use crate::traits::filter::Filter;
+use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 use tui_vfx_types::{Cell, Color};
 
 /// Which edge a directional vignette can originate from.
@@ -135,21 +137,13 @@ impl Filter for Vignette {
             return;
         }
 
-        // Calculate center coordinates
-        let cx = width as f32 / 2.0;
-        let cy = height as f32 / 2.0;
-
-        // Calculate distance from cell to center
-        let dx = x as f32 - cx;
-        let dy = y as f32 - cy;
-        let dist = (dx * dx + dy * dy).sqrt();
-
-        // Calculate maximum possible distance (corner to center)
-        let max_dist = (cx * cx + cy * cy).sqrt();
-
         let dim_factor = if self.sides.is_empty() {
+            let signal_ctx = SignalContext::new(0, 0)
+                .with_dimensions(width, height)
+                .with_cell_position(x, y);
             // Normalize distance (0.0 at center, 1.0 at corner)
-            let norm_dist = if max_dist > 0.0 { dist / max_dist } else { 0.0 };
+            let norm_dist = SpatialCoordinateSignal::sample_surface_radius()
+                .sample_with_context(0.0, &signal_ctx);
             let norm_dist = (norm_dist + self.dither_offset(x, y, t)).clamp(0.0, 1.0);
 
             if norm_dist > self.radius {
@@ -320,4 +314,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_vignette.rs</FILE> - <DESC>Vignette filter with proper spatial radial gradient</DESC>
-// <VERS>END OF VERSION: 3.0.1</VERS>
+// <VERS>END OF VERSION: 3.1.0</VERS>
