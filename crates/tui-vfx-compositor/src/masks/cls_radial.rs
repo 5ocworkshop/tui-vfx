@@ -125,6 +125,8 @@ impl Mask for Radial {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::masks::cls_wipe::Wipe;
+    use crate::types::cls_mask_spec::WipeDirection;
 
     #[test]
     fn test_radial_origin_fractions() {
@@ -171,6 +173,19 @@ mod tests {
         assert!(mask.is_visible(0, 0, 10, 10, 0.1));
         // Far corner should not be visible at low progress
         assert!(!mask.is_visible(9, 9, 10, 10, 0.1));
+    }
+
+    #[test]
+    fn radial_is_not_equivalent_to_center_out_wipe_on_square_surfaces() {
+        let radial = Radial::from_center();
+        let wipe = Wipe::new(WipeDirection::HorizontalCenterOut, false);
+
+        // On a square surface at 50% progress, a radial reveal should still
+        // hide top-center because it is outside the circular threshold, while
+        // a center-out wipe reveals it immediately because only horizontal
+        // distance matters.
+        assert!(!radial.is_visible(5, 0, 11, 11, 0.5));
+        assert!(wipe.is_visible(5, 0, 11, 11, 0.5));
     }
 }
 
