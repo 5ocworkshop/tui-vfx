@@ -184,6 +184,12 @@ These are implementation-level questions but they affect schema shape — the an
 
 Decision 5's implementation track already defaults to same-layer-only hint visibility, aligning with this lean.
 
+**Why this matters more now:** once the compiled V3 path has no remaining
+compiled-path replay callsites, cross-step hint semantics become one of the
+main blockers to claiming a fully independent V3 pathway. At that stage the
+largest remaining gaps are no longer “bridge plumbing” gaps, but semantic ones
+like hint visibility, producer conflicts, and downstream binding rules.
+
 ## 170 — Q#17: Primitive library / `$use` fragment composition
 
 The schema already supports two hierarchical composition mechanisms, both shipping and in production use:
@@ -292,7 +298,7 @@ Introduced as part of the deferred-design recipe metadata section (Chapter 90 §
 
 **Status: MAJOR GAP** flagged in the debug-recipes migration log's final audit and in the schema draft's gap list. Promoting it here to plan-level first-class status.
 
-**The gap.** V2 recipes support motion-path-aware arrival and departure via `pipeline.{enter,exit}.motion_path: {type}` where the type enum covers linear, arc, bezier, spring, bounce, projectile, pendulum, and other PathType variants owned by `tui-vfx-geometry`. V2 also supports `pipeline.{enter,exit}.{from,to}: {type: offscreen, margin_cells, direction}` for slide-in / slide-out origins and destinations. V3's `pipeline.timing` currently holds only `enter_ms`, `exit_ms`, `enter_ease`, `exit_ease` — easings are covered (Decision 3) but geometry-aware trajectories and offscreen origins/destinations have no home.
+**The gap.** V2 recipes support motion-path-aware arrival and departure via `pipeline.{enter,exit}.motion_path: {type}` where the type enum covers linear, arc, bezier, spring, bounce, projectile, pendulum, and other PathType variants owned by `tui-vfx-geometry`. V2 also supports `pipeline.{enter,exit}.{from,to}: {type: offscreen, margin_cells, direction}` for slide-in / slide-out origins and destinations. The earlier V3 sketches only covered easing/timing; the newer direction promotes motion into its own first-class subtree so geometry-aware trajectories and screen-edge behavior have a clean home.
 
 **Why easings are covered and motion_path is not.** Easings are 1D scalar curves over normalized time; they fit into `enter_ease` / `exit_ease` as strings referencing the `mixed-signals` easing catalog. Motion paths are 2D trajectories through cell space — a recipe sliding in on an arc from off-screen top-left doesn't resolve to a scalar time curve; it's a spatial path the compositor drives the recipe's geometry along. The two are different kinds of animation primitive.
 
@@ -300,22 +306,32 @@ Introduced as part of the deferred-design recipe metadata section (Chapter 90 §
 
 **Options for V3 resolution:**
 
-**(A) Extend `pipeline.timing` with motion_path and offscreen fields.**
+**(A) Add a first-class `config.motion.{enter,exit}` subtree, with matching scene-layer `placement.motion`.**
 
 ```json
-"pipeline": {
-  "timing": {
-    "enter_ms": 500, "exit_ms": 400,
-    "enter_ease": "quad_out", "exit_ease": "quad_in",
-    "enter_path": { "type": "arc", ... },
-    "exit_path":  { "type": "linear" },
-    "enter_from": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
-    "exit_to":    { "type": "offscreen", "margin_cells": 0, "direction": "from_top" }
+"config": {
+  "motion": {
+    "enter": {
+      "duration_ms": 500,
+      "easing": "quad_out",
+      "route": { "type": "arc", ... },
+      "dynamics": [],
+      "from": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
+      "edge_crossing": { "edge": "top", "border": "vanish", "shadow": "fade" }
+    },
+    "exit": {
+      "duration_ms": 400,
+      "easing": "quad_in",
+      "route": { "type": "linear" },
+      "dynamics": [],
+      "to": { "type": "offscreen", "margin_cells": 0, "direction": "from_top" },
+      "edge_crossing": { "edge": "top", "border": "vanish", "shadow": "fade" }
+    }
   }
 }
 ```
 
-Keeps motion coupled with timing where it conceptually belongs (both describe the "how does this recipe appear and leave"). Path types trial-deserialize against `tui-vfx-geometry::PathType` per Intention 38. Offscreen origin/destination types are their own closed enum (offscreen + direction + margin).
+Keeps motion as a first-class authoring subtree without overloading the per-cell pipeline. `route` carries the carrier path, `dynamics[]` carries motion treatment layered over that route, and offscreen / edge-crossing behavior stay attached to the same motion phase object.
 
 **(B) Introduce a `MotionPath` step kind.**
 
@@ -327,16 +343,17 @@ Feels philosophically cleaner (uniform Step vocabulary) but couples motion seman
 
 `VfxSceneLayer.placement` already carries spatial composition for scene layers. Extending it with entry/exit animation (`placement.enter_from`, `placement.exit_to`, `placement.enter_path`) keeps geometry concerns together and leverages the existing Decision 5 implementation track. But this only covers scene-layer recipes; recipes without explicit scene layers would need a different mechanism.
 
-**Default lean: (A).** Motion path is recipe-level (governs the whole recipe's arrival/departure), not step-level, and not layer-level exclusively. Option (A) keeps motion as a first-class timing concern, avoids a new step kind with special validation, and avoids forcing every recipe into scene-layer framing. The `pipeline.timing` shape grows from 4 fields to 8, which is acceptable for a load-bearing V3 concern.
+**Default lean: (A).** Motion is recipe-level for whole-object movement and scene-layer-level for internal choreography. A dedicated `config.motion` / `placement.motion` home keeps geometry concerns together, avoids a fake step kind, and leaves the per-cell pipeline focused on effects rather than placement.
 
 **Gate criteria affected.** Criterion 2 (offscreen / slide fixtures) in Chapter 60 already enumerates offscreen/slide behavior as a release gate. Motion-path resolution is a prerequisite for that gate being pass-able at all — if V3 can't express motion-path recipes, the fixtures can't be translated.
 
 **Sub-questions** (post-shape-decision):
-- Does `enter_path` default to `linear` when absent, preserving today's default? Probably yes.
-- Does `enter_from` default to the recipe's own bounding box (i.e., no off-screen origin, just appear in place)? Probably yes.
-- How does motion_path interact with scene-layer per-layer placement (Decision 5)? Layer-level placement probably wins for the layer's own trajectory; recipe-level path applies to the whole composed result.
-- What happens when a motion_path references PathType variants that tui-vfx-geometry hasn't implemented yet? Trial-deserialize fails loudly; recipe rejected at load time (strict-mode).
-- Does motion_path accept `ParamValue<PathSpec>` for runtime-bound trajectories? Probably not in V3 initial; static paths only. Add in a future iteration if real demand surfaces.
+- Does `route` default to `linear` when absent? Probably yes.
+- Do `from` / `to` default to the host's resting placement when absent? Probably yes.
+- Should `via` be public in V3 initial even if the corpus uses it lightly? Probably yes, because Bezier and richer choreography need it.
+- Should `edge_crossing.edge` be normalized from placements when omitted? Probably yes.
+- How do `route` and `dynamics[]` map current `PathType` variants such as spring, bounce, pendulum, friction, orbit, projectile, and attractor? Needs an explicit compatibility table.
+- Does motion reserve a future signal-driven hook from `mixed-signals`? It should at least leave room for it in the normalized / compiled model.
 
 **Reviewer's opinion:** not yet solicited; this Open Question was added in v1.0.0 of this chapter (promoting the migration-log gap to plan-level status). Flag for next review cycle.
 
@@ -346,7 +363,7 @@ Feels philosophically cleaner (uniform Step vocabulary) but couples motion seman
 
 **Where timing lives today:**
 
-1. **`pipeline.timing`** — recipe-level enter/exit envelope (`enter_ms`, `exit_ms`, `enter_ease`, `exit_ease`). Owns whole-recipe lifecycle.
+1. **`config.motion`** — recipe-level enter/exit envelope. Owns whole-recipe geometry over time.
 2. **`mixed-signals` temporal basis** — per-signal `temporal_frequency_hz`, `clock_ref`, keyframe time bases, ADSR envelopes. Owns signal-graph evaluation.
 3. **Per-effect opt-in durations** — individual effects (some content transformers like `typewriter`, `scramble`, `morph`; some filters) carry their own duration fields. Owns localized per-step timing.
 
@@ -354,7 +371,7 @@ Three mechanisms means "how long does this one effect take" has three possible a
 
 **The question.** Is a unified `Timer<T>` primitive worth introducing, and if so where does it sit?
 
-- **(A) Step-level optional Timer field.** Every step optionally carries `timer: { duration_ms, delay_ms, easing, interpolation }`. Subsumes the three mechanisms above. Cost: overlap with `mixed-signals` envelopes (ADSR is already a timer-shaped signal) and with `pipeline.timing`.
+- **(A) Step-level optional Timer field.** Every step optionally carries `timer: { duration_ms, delay_ms, easing, interpolation }`. Subsumes the three mechanisms above. Cost: overlap with `mixed-signals` envelopes (ADSR is already a timer-shaped signal) and with recipe-envelope `config.motion`.
 - **(B) Timer as a `StepInput<T>` sibling.** Alongside `ParamValue<T>` (external values) and `HintRef<T>` (pipeline-internal refs), a third type for time-parameterized inputs. Keeps `ParamValue<T>` clean. Cost: a fourth concept at the field site; collapses less.
 - **(C) Status quo with clearer docs.** Keep three mechanisms, document which one to reach for when. No new primitive. Cost: author decision tree stays three-branched; competitive gap with tachyonfx remains.
 
@@ -366,7 +383,7 @@ Three mechanisms means "how long does this one effect take" has three possible a
 
 **Sub-questions if we unify:**
 
-- Scope — step-level only, or also recipe-level (subsuming `pipeline.timing`)?
+- Scope — step-level only, or also recipe-level (subsuming `config.motion`)?
 - Relationship to `mixed-signals` envelopes. Is a Timer just a specific envelope shape, or a distinct primitive? If distinct, how do authors choose between them?
 - Migration impact for V2's existing per-effect duration fields.
 - Interaction with `ParamValue<T>` — can a Timer's `duration_ms` be a `ParamValue<u32>`, bindable to app state?

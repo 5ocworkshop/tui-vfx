@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/62_compiled_execution_plan.md</FILE> - <DESC>Chapter 62 — compiled execution-plan phase. Defines the follow-on after the first normalized-IR slice: introduce a tighter execution-facing plan that compacts common selectors, reduces dynamic branching, and gives later runtime work a more performance-minded target.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Follows Chapter 61's first implementation slice. The normalized IR is the canonical structural contract; this phase adds a compiled plan layer so later runtime work does not treat the normalized IR itself as the final hot-path representation.</WCTX> -->
-<!-- <CLOG>1.0.0: initial chapter. Establishes the compiled execution-plan phase, its goals, minimum deliverables, performance posture, and the first consumer seams that should grow in parallel with the V2 pathway.</CLOG> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Follows Chapter 61's first implementation slice. The normalized IR is the canonical structural contract; this phase adds a compiled plan layer so later runtime work does not treat the normalized IR itself as the final hot-path representation. Updated to reflect the active implementation strategy: execute supported compiled trees directly first, and consult the legacy replay bridge only as fallback.</WCTX> -->
+<!-- <CLOG>1.1.0: document the active direct-path strategy — ordered compiled-step execution first, replay-contract fallback second — so the implementation plan matches the current migration direction.
+1.0.0: initial chapter. Establishes the compiled execution-plan phase, its goals, minimum deliverables, performance posture, and the first consumer seams that should grow in parallel with the V2 pathway.</CLOG> -->
 
 # 62 — Compiled Execution Plan
 
@@ -117,6 +118,52 @@ The compiled-plan phase should start mirroring the V2 consumer path upward:
 This keeps the migration lane honest:
 the new structure should not exist only in isolated helper modules.
 
+### 30.4 Direct-path execution gate
+
+The near-term migration strategy should prefer:
+
+1. **execute supported compiled trees directly**
+2. **fall back to the replay-contract / compositor bridge only for unsupported trees**
+
+That ordering matters.
+
+If the replay-contract builder runs first, bridge-era limits can reject authored
+trees the compiled plan could already execute directly.
+
+So the execution gate should be:
+
+```text
+compiled tree
+  -> ordered/direct executor when supported
+  -> replay-contract bridge only when not yet supported
+```
+
+This is the shortest path from the transitional V2/V3 bridge to a truly
+independent V3 pathway.
+
+### 30.5 Native-path milestone after bridge-call retirement
+
+When the compiled execution path reaches **zero**
+`render_pipeline_with_spec(...)` callsites under `src/v3/compile/`, that
+should be treated as a concrete migration milestone.
+
+At that point:
+
+- the compiled path is no longer structurally dependent on the old replay
+  helper
+- native-coverage regressions should be made visible with focused
+  classification / fixture guards
+- the remaining roadmap should pivot toward the still-open semantic gaps:
+  - hint-driven chaining
+  - broader overlap/conflict semantics for overlapping branches
+  - general arbitrary cross-family ordering
+
+In other words:
+
+> after the last compiled-path replay callsite is gone, “finish V3” stops
+> meaning “remove hidden bridges” and starts meaning “close the remaining
+> semantic gaps.”
+
 ---
 
 ## 40 — First selector compaction targets
@@ -193,6 +240,7 @@ This phase is in place when:
 - common literal scopes are compacted
 - the new plan is exposed through the same shallow seam family that V2 uses
 - at least one shallow tool/example consumes the V3 compiled path
+- supported trees can execute directly before the replay-contract bridge is consulted
 
 ---
 
@@ -204,4 +252,4 @@ The execution companion documents for this phase are:
 - `docs/design/tui-vfx-v3-first-slice-checklist.md`
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/62_compiled_execution_plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->

@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> - <DESC>Working design note for the initial V3 compiled execution plan. Defines the layer between normalized IR and later runtime family execution, especially the first selector-compaction rules and consumer seams.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Follows the normalized-IR design note. This document is intentionally implementation-facing and performance-minded without yet committing to the final runtime representation for every family.</WCTX> -->
-<!-- <CLOG>0.1.0: initial compiled-plan note. Establishes the first compiled-plan shape, compaction strategy, and migration seam expectations.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Follows the normalized-IR design note. This document is intentionally implementation-facing and performance-minded without yet committing to the final runtime representation for every family. Updated to reflect the active migration strategy: use the compiled tree as an execution source directly when possible, and use the replay bridge only as fallback.</WCTX> -->
+<!-- <CLOG>0.2.0: document the current direct-execution migration strategy so the working note matches the implementation direction.
+0.1.0: initial compiled-plan note. Establishes the first compiled-plan shape, compaction strategy, and migration seam expectations.</CLOG> -->
 
 # tui-vfx V3 compiled execution plan
 
@@ -55,6 +56,9 @@ CompiledRecipePlan
 ├─ identity
 ├─ contracts
 ├─ envelope
+│  ├─ motion_host?
+│  ├─ attached_shadow?
+│  └─ visual_envelope?
 ├─ scene?
 │  └─ layers[]
 │     ├─ id
@@ -107,6 +111,24 @@ CompiledLeafStep
 - `phase` remains explicit
 - `scope` may now be compacted
 - `payload` can remain structurally flexible in the first pass
+
+## 3.1 Envelope motion + shadow compilation
+
+The compiled execution plan should not lose the recipe-envelope motion/shadow
+model introduced in the author-facing V3 drafts.
+
+At minimum, the compiled envelope should preserve:
+
+- normalized recipe motion
+- normalized scene-layer motion
+- attached shadow ownership
+- host / visual envelope data needed for shared screen-edge handling
+
+That compiled envelope data is what later runtime passes should consume when
+making:
+- border trim decisions
+- shadow fade / clip decisions
+- probe / validator motion-boundary diagnostics
 
 ---
 
@@ -165,6 +187,54 @@ Even this conservative first compiled plan buys:
 
 ---
 
+## 5.1 Direct execution before bridge fallback
+
+The compiled execution plan should not be treated as a staging format that is
+immediately collapsed back into the old replay-contract shape.
+
+The active migration direction should be:
+
+```text
+compiled tree
+  -> direct ordered executor when supported
+  -> replay-contract bridge only when not yet supported
+```
+
+Why:
+
+- some authored trees are already easier to execute directly than to lower into
+  the old replay buckets
+- the replay contract still carries bridge-era limits (for example, bucketed
+  sampler restrictions)
+- building the bridge first can reject trees that the direct compiled executor
+  could already run
+
+So the compiled plan is not only a future optimization seam.
+It is also the immediate route toward an independent V3 execution path.
+
+### 5.2 Current migration milestone
+
+The migration should explicitly recognize the point where the compiled V3 path
+no longer contains any `render_pipeline_with_spec(...)` callsites under
+`src/v3/compile/`.
+
+That milestone matters because it means:
+
+- the compiled-path execution seam is no longer delegating back into the old
+  compositor replay helper as an implementation crutch
+- remaining V3 gaps are now primarily about **semantics**, not “one more hidden
+  bridge call”
+- future regressions should be treated as regressions in native coverage, not
+  as acceptable fallback behavior
+
+Once that milestone is reached, the main remaining execution work shifts to:
+
+- hint-driven cross-step chaining
+- broader overlap/conflict semantics for overlapping parallel branches
+- general arbitrary cross-family order preservation
+
+---
+
 ## 6. What is still intentionally deferred
 
 The first compiled plan does **not** settle:
@@ -194,4 +264,4 @@ To keep the phase real, it should propagate through the same shallow seam family
 That is the minimal proof that the compiled plan is becoming part of the real public pathway rather than staying trapped in an internal helper module.
 
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
