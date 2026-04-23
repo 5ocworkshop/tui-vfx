@@ -30,6 +30,9 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 ## Shared execution expectations
 - Start with `ofpf-orientation` on the repos in scope.
 - Prefer OFPF tools before broad grep/sed sweeps.
+- Keep `task-scope paths` separate from `write scope`.
+- Prefer exact path strings and shell-ready verification commands whenever the
+  packet is concrete enough to support them.
 - Respect repo boundaries:
   - `mixed-signals` = reusable signal/math substrate
   - `tui-vfx` = effect/render semantics
@@ -38,6 +41,9 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 - Do not widen the assignment to the whole V3 migration.
 - If you touch a hot path, call out performance risks against the 16.7 ms / 60 FPS budget.
 - Use full paths in reports.
+
+## Packet template
+- `/usr/projects/tui-vfx/steering/TASK_PACKET_TEMPLATE.md`
 
 ## Packet index
 1. `01-v3-schema-docs-freshness.md`

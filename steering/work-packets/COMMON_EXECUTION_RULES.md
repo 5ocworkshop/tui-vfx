@@ -23,11 +23,37 @@ Assume the assigned subagent is a junior-but-capable engineer:
 Every final report should include:
 - docs read confirmation
 - 3 short reflection bullets
+- exact task-scope paths used for grounding
 - changed files (full paths)
 - exact commands run
 - pass/fail outcome per command
 - blocker or handoff notes
 - performance risks noticed
+
+## Scope split rule
+Every packet should make a clear distinction between:
+- `task-scope paths` = the files/areas the assignee must ground on
+- `write scope` = the smallest justified set of files they may actually edit
+
+Do not rely on repo names alone when the packet can support exact path strings.
+Do not rely on conceptual “run tests” language when the packet can support exact
+shell-ready verification commands.
+
+## Preferred packet shape
+The preferred packet structure is:
+1. task first
+2. why this matters
+3. success condition
+4. mode
+5. task-scope paths for grounding
+6. exact write scope
+7. explicit out-of-scope items
+8. must-read docs
+9. repo-boundary guardrails
+10. first steps / grounding instructions
+11. exact verification commands
+12. reporting contract
+13. closing task reminder
 
 ## Performance checklist
 If the packet touches runtime/render paths, explicitly check for:
