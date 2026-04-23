@@ -1,10 +1,12 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_spotlight.rs</FILE> - <DESC>Spotlight (Iris) mask implementation</DESC>
-// <VERS>VERSION: 1.1.0 - 2025-12-23</VERS>
-// <WCTX>Pipeline configuration fix</WCTX>
-// <CLOG>Added shape and soft_edge config fields</CLOG>
+// <VERS>VERSION: 1.2.0 - 2026-04-23</VERS>
+// <WCTX>Refactor center-relative mask math onto the shared mixed-signals spatial substrate where the mapping is direct.</WCTX>
+// <CLOG>1.2.0: use mixed-signals centered coordinate leaves and radial distance for spotlight distance evaluation instead of open-coding center-relative coordinate math.
+// 1.1.0: Added shape and soft_edge config fields</CLOG>
 
 use crate::traits::mask::Mask;
 use crate::types::cls_mask_spec::IrisShape;
+use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 
 /// Spotlight/Iris mask - reveals from center outward.
 pub struct Spotlight {
@@ -28,13 +30,23 @@ impl Spotlight {
 
     /// Calculate distance from center based on shape
     fn distance(&self, x: u16, y: u16, w: u16, h: u16) -> f32 {
-        let cx = w as f32 / 2.0;
-        let cy = h as f32 / 2.0;
-        let dx = x as f32 - cx;
-        let dy = y as f32 - cy;
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(w, h)
+            .with_cell_position(x, y);
+        let dx =
+            SpatialCoordinateSignal::sample_centered_x().sample_with_context(0.0, &signal_ctx)
+                * (w as f32 / 2.0);
+        let dy =
+            SpatialCoordinateSignal::sample_centered_y().sample_with_context(0.0, &signal_ctx)
+                * (h as f32 / 2.0);
 
         match self.shape {
-            IrisShape::Circle => (dx * dx + dy * dy).sqrt(),
+            IrisShape::Circle => {
+                let max_distance =
+                    ((w as f32 / 2.0).powi(2) + (h as f32 / 2.0).powi(2)).sqrt();
+                SpatialCoordinateSignal::sample_radius().sample_with_context(0.0, &signal_ctx)
+                    * max_distance
+            }
             IrisShape::Diamond => dx.abs() + dy.abs(),
             IrisShape::Box => dx.abs().max(dy.abs()),
         }
@@ -113,4 +125,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/masks/cls_spotlight.rs</FILE> - <DESC>Spotlight (Iris) mask implementation</DESC>
-// <VERS>END OF VERSION: 1.1.0 - 2025-12-23</VERS>
+// <VERS>END OF VERSION: 1.2.0 - 2026-04-23</VERS>
