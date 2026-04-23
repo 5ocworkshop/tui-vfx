@@ -47,6 +47,12 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `c1e8a0f`
 - `51-madeira-diagnostic-example-previewitem-option-fix.md`
   - landed via `1025a75`
+- `31-codex-spark-doc-task-runner.md`
+  - landed via `58d2f63`
+- `32-post-experiment-delegation-strategy-refresh.md`
+  - landed via `c71e6be`
+- `43-madeira-release-readiness-checklist.md`
+  - landed via `09ad811`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
