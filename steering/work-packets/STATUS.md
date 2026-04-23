@@ -55,7 +55,10 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `09ad811`
 - `05-debug-recipes-qc-v3.md`
   - landed via `76b924d`
+- `59-v3-rustdoc-gap-closure-for-schema-apis.md`
   - landed via `ab25485`
+- `53-v3-family-models-critical-cutover.md`
+  - landed via `f6ef333` / `99a42f5`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -95,7 +98,6 @@ These packets produced accepted non-code outputs that should be treated as harve
 
 ## New follow-on packets created from audit learnings
 - `52-madeira-direct-preview-allocation-cache-slice.md`
-- `53-v3-family-models-critical-cutover.md`
 - `54-v3-mixed-signals-signalgraph-and-time-alignment.md`
 - `55-v3-spatial-leaves-and-field-hint-threading.md`
 - `56-v3-motion-path-and-offscreen-origin-support.md`
