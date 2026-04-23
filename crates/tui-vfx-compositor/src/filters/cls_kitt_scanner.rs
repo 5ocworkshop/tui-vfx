@@ -16,6 +16,10 @@ use tui_vfx_types::{Cell, Color};
 /// ping-pong pattern, but one-way wrap modes are also supported for
 /// lighthouse-style beams.
 ///
+/// In ping-pong mode, one full smooth return cycle takes `2 / bps` seconds.
+/// Authoring clocks that want a seamless loop should align their period to that
+/// full cycle rather than truncating it mid-sine.
+///
 /// # Usage
 ///
 /// Apply to interactive elements for a retro sci-fi hover effect:
@@ -42,7 +46,10 @@ pub struct KittScanner {
     pub band_width: f32,
     /// Animation progress (0.0 = inactive, 1.0 = fully active)
     pub progress: f32,
-    /// Beats per second for ping-pong cycle (default: 1.0 = 2 beats per cycle)
+    /// Beats per second for the ping-pong oscillator.
+    ///
+    /// In ping-pong mode, one full left-right-left loop takes `2 / bps`
+    /// seconds, so `bps = 1.0` means a 2-second full return cycle.
     pub bps: f32,
     /// Motion mode controlling whether the scanner ping-pongs or wraps one-way.
     pub motion_mode: ScannerMotionMode,
@@ -564,13 +571,13 @@ mod tests {
         // Classic powerline arrows
         assert!(is_powerline_separator('\u{E0B0}')); //
         assert!(is_powerline_separator('\u{E0B2}')); //
-        // Bubble/rounded
+                                                     // Bubble/rounded
         assert!(is_powerline_separator('\u{E0B4}')); //
         assert!(is_powerline_separator('\u{E0B6}')); //
-        // Flame
+                                                     // Flame
         assert!(is_powerline_separator('\u{E0C0}')); // pixel
         assert!(is_powerline_separator('\u{E0C8}')); // flame
-        // Wave
+                                                     // Wave
         assert!(is_powerline_separator('\u{E0D2}')); // wave
 
         // Non-separators

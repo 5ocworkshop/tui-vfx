@@ -939,7 +939,11 @@ pub enum FilterSpec {
         /// Width of the scanner band (0.0-0.5 of total width)
         #[serde(default = "default_kitt_band_width")]
         band_width: f32,
-        /// Beats per second for ping-pong cycle
+        /// Beats per second for the ping-pong oscillator.
+        ///
+        /// In `ping_pong` mode, one full smooth return loop takes `2 / bps`
+        /// seconds. Authoring clocks should align their loop period to that
+        /// full cycle when a seamless reset matters.
         #[serde(default = "default_kitt_bps")]
         bps: f32,
         /// Animation progress (0.0 = inactive, 1.0 = fully active).
