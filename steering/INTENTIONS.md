@@ -416,12 +416,21 @@ Rules:
 5. If a debug recipe visually aliases another primitive, treat that as a
    fixture-design problem to fix — not automatic evidence that the primitive
    semantics are wrong.
+6. There should be at least one **base reference recipe per individual
+   primitive/effect** in its representative directory. If a primitive has
+   meaningful variations, add one fixture per variation there.
+7. Recipes that combine multiple effects belong in a **compositions/combined**
+   lane, not in the individual primitive directories. Primitive directories are
+   for understanding the primitive itself; combination directories are for
+   understanding interaction between primitives.
 
 Why: debug recipes are how contributors, reviewers, and downstream integrators
 build intuition. They also give maintainers and downstream developers a known
 set of working reference recipes to benchmark against during release work and
 regression investigation. A fixture that technically exercises the code but
-visually conceals the effect fails its job as a reference artifact.
+ visually conceals the effect fails its job as a reference artifact. Keeping
+ single-primitive references separate from combinations is how the library
+ avoids losing diagnostic clarity as the corpus grows.
 
 ---
 
