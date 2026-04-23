@@ -82,6 +82,20 @@ Each subagent packet should include:
 Use medium `gpt-5.4` subagents by default for bounded tasks.
 Keep up to 5 useful lanes busy when independent work exists.
 
+Work packet quality rule:
+- write packets for a junior-but-capable engineer who is not deeply familiar
+  with the project
+- include enough detail, map, guardrails, and verification direction that the
+  assignee can stay accurate without guessing at repo boundaries or widening
+  scope
+- do not over-specify to the point that the packet is doing the work itself
+- when in doubt, add:
+  - clearer in-scope / out-of-scope bullets
+  - explicit repo-boundary reminders
+  - explicit first steps
+  - exact verification commands
+  - a closing task reminder
+
 ## 5. Path discipline
 
 The orchestration root is `/usr/projects/gt-design`, but active implementation may be primarily in:
