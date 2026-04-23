@@ -109,6 +109,40 @@ Work packet quality rule:
   - exact verification commands
   - a closing task reminder
 
+Current model-use summary from live session evidence:
+- `gpt-5.4-mini` with `reasoning_effort: medium` is the current default
+  bounded-work model
+  - use it for:
+    - audits
+    - targeted tests
+    - validator/tooling seams
+    - bounded fixture/doc cleanup
+    - small-to-medium implementation slices
+  - expected review level:
+    - normal review always required
+    - closer review for interaction semantics, keybindings, and nuanced UX
+- `gpt-5.3-codex-spark` with `reasoning_effort: low` is currently best treated
+  as a fast doc-oriented helper
+  - use it for:
+    - compact operator docs
+    - command references
+    - handoff notes
+    - small experiment/protocol drafts
+    - other low-context doc-only tasks
+  - avoid using it by default for:
+    - runtime code changes
+    - subtle architectural judgment
+    - anything that needs broad repository context retention
+  - expected review level:
+    - moderate review for path correctness, scope truth, and wording accuracy
+- `gpt-5.4` with `reasoning_effort: medium` should be reserved for harder
+  bounded lanes where `gpt-5.4-mini` is likely to underperform
+  - use it for:
+    - trickier architectural audits
+    - more ambiguous multi-system seams
+    - harder implementation slices where the cost of a wrong move is higher
+  - do not use it reflexively when `gpt-5.4-mini` is sufficient
+
 Grounding-first rule for research/evaluation packets:
 - if the packet is testing comprehension or prompt quality, require the helper
   to complete all grounding work first
