@@ -1,8 +1,8 @@
 # Task Packet Template
 
-Purpose: reusable template for bounded subagent packets after the briefing experiments.
+Purpose: reusable template for bounded subagent packets and follow-on tranches.
 
-Use this template when dispatching a real subagent lane. Fill in the bracketed fields and delete any sections that truly do not apply.
+Use this template when dispatching a real subagent lane. Fill in the bracketed fields and delete any sections that truly do not apply. If the lane is not concrete enough to name exact paths or commands, say so instead of guessing.
 
 ---
 
@@ -21,10 +21,10 @@ By the end of this packet:
 - [specific outcome 3]
 
 ## Mode
-[BLOCKER_MODE or FAMILY_MODE]
+[BLOCKER_MODE by default; FAMILY_MODE only when the packet is explicitly family-wide]
 
 ## Task-scope paths for grounding
-These are the files/areas you should use to understand the problem before you decide what the write scope is:
+These are the exact files/areas you should use to understand the problem before you decide what the write scope is:
 - `[full path]`
 - `[full path]`
 - `[full path]`
@@ -41,35 +41,40 @@ Do not widen into:
 - `[out-of-scope item]`
 - `[out-of-scope item]`
 - `[out-of-scope item]`
+- whole V3 migration
+- unrelated orchestration policy or experiment-protocol redesign
+- runtime/library code unless this packet explicitly owns it
 
 ## Must-read docs in order
 1. `/usr/projects/tui-vfx/steering/INTENTIONS.md`
 2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
 3. `/usr/projects/mixed-signals/steering/INTENTIONS.md` when relevant
-4. the active shared briefing in `/usr/projects/gt-design/.omx/context/`
+4. the active shared briefing file in `/usr/projects/gt-design/.omx/context/` (use the exact file path named by the packet)
 5. `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-recipe-vocabulary.md`
 6. `/usr/projects/global_prompts/standards/40_ofpf_standards.md`
 7. `/usr/projects/global_prompts/standards/50_tdd_protocol.md`
 8. `/usr/projects/global_prompts/standards/60_file_centric_execution.md`
 9. `/usr/projects/global_prompts/standards/65_subagent_orchestration.md`
-10. `[packet-specific extra doc if needed]`
+10. `/usr/projects/tui-vfx/steering/work-packets/COMMON_EXECUTION_RULES.md`
+11. `[packet-specific extra doc if needed]`
 
 ## Repo-boundary guardrails
 - `mixed-signals` owns reusable signal/math substrate only.
 - `tui-vfx` owns renderer/effect semantics.
 - `tui-vfx-recipes` owns recipe truth, tooling, validator/probe/preview, compiled seams, and generated V3 docs.
+- Do not revise `ORCHESTRATION.md` or experiment protocols unless this packet explicitly owns that surface.
 - [any lane-specific boundary note]
 
 ## First steps / grounding instructions
-1. Run `ofpf-orientation` on the repos in scope.
-2. Read the must-read docs in order.
+1. Run `ofpf-orientation` on each repo in scope.
+2. Read the must-read docs in order before broader file reads.
 3. Restate briefly:
    - what belongs in which repo
    - what counts as done
    - what the biggest scope risk is
 4. Do the narrowest repo inspection needed before editing.
 
-## Performance / hot-path reminders
+## Hot-path watchpoints
 - [lane-specific hot-path risk]
 - [lane-specific hot-path risk]
 - If this is not a hot-path-sensitive lane, say so explicitly.
@@ -79,6 +84,7 @@ Run exactly. Only list commands the packet/docs actually justify:
 - `[shell-ready command]`
 - `[shell-ready command]`
 - `[shell-ready command]`
+Prefer documented validator/test commands over invented alternatives.
 
 If a command fails, report that exact failure before considering any follow-up command, then classify it as:
 - in-scope failure
