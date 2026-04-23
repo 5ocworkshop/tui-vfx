@@ -53,6 +53,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `c71e6be`
 - `43-madeira-release-readiness-checklist.md`
   - landed via `09ad811`
+- `05-debug-recipes-qc-v3.md`
+  - landed via `76b924d`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
