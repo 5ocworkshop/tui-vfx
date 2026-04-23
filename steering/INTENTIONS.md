@@ -433,6 +433,8 @@ Rules:
      `Iris Effect`) so the viewer knows what primitive is being discussed
    - second line: a short behavioral cue when the effect benefits from explicit
      viewer guidance
+   Avoid unnecessary prefatory words like `Watch` when the intent is already
+   obvious from context; they add clutter without adding meaning.
 10. Debug-recipe layout must comfortably contain its body text. If the chosen
    label + behavioral cue does not fit cleanly, increase the fixture size or
    retune the content. Do not leave clipped, cramped, or ambiguously wrapped
