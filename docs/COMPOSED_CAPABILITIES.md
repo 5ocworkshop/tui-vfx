@@ -24,7 +24,7 @@ Recipes compose effects along six orthogonal axes. Reading a recipe means notici
 | 5 | **Motion path** | *How the notification rectangle travels* in screen space | `pipeline.{enter,exit}.motion_path` and `from`/`to` |
 | 6 | **Runtime bindings** | *External signals* that drive shader/filter parameters at runtime | `{ "binding": "<name>" }` on numeric fields |
 
-The first five are present in recipe v1; the sixth (runtime bindings) is proven in production by `recipes/dynamic/digital_rain_matrix_*_dynamic.json` and by `btop_focused_row_dynamic_list.json` (row-target selection binding).
+The first five are present in recipe v1; the sixth (runtime bindings) is proven in production by `recipes/examples/digital_rain_matrix_*_runtime_bound.json` and by `examples/btop_focused_row_live_list.json` (row-target selection binding).
 
 ---
 
@@ -106,8 +106,8 @@ These are the composed patterns a GT Design adopter can adopt immediately: each 
 
 **Pattern.** Shader / filter numeric fields accept `{ "binding": "<signal-name>" }` in place of a literal. At runtime, a host surface drives the signal and the effect reshapes continuously. Bindings let the *same* recipe become a spectrum of behaviours without rebuilding.
 
-- `recipes/dynamic/digital_rain_matrix_modern_dynamic.json` — `filter.matrix_rain` takes `density: { "binding": "density" }` and `speed_multiplier: { "binding": "speed_multiplier" }`. The classic variant does the same. This is the canonical demonstration of P0 runtime binding.
-- `recipes/btop_focused_row_dynamic_list.json` — focused-row region binds to a `current_index` external signal, allowing a list's selection to drive a `highlighter` row-target live.
+- `recipes/examples/digital_rain_matrix_modern_runtime_bound.json` — `filter.matrix_rain` takes `density: { "binding": "density" }` and `speed_multiplier: { "binding": "speed_multiplier" }`. The classic variant does the same. This is the canonical demonstration of P0 runtime binding.
+- `recipes/examples/btop_focused_row_live_list.json` — focused-row region binds to a `current_index` external signal, allowing a list's selection to drive a `highlighter` row-target live.
 - Bindings exist on `shader_*`-level fields too (`progress_binding`, `direction_binding`, `position_binding`, `center_x/y_binding`, `num_shakes_binding`, `damping_scale_binding`) — see the debug_recipes/complex/ binding-exercise recipes.
 
 **Axes used.** Runtime binding × any other primitive. This is the axis that makes a recipe *reactive* rather than parameter-frozen.

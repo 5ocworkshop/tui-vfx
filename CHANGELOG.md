@@ -363,7 +363,7 @@ against 0.4.0 parses against 0.5.0 unchanged, and the three new
 ### Deferred
 
 Nothing. After this release every Phase 0 engine prerequisite in
-prompt #157 is fully landed. The `btop_focused_row_dynamic_list.json`
+prompt #157 is fully landed. The `btop_focused_row_live_list.json`
 reproducibility acceptance bullet remains deferred to Phase 5 per
 the prompt — that is a recipe-authoring item, not an engine gap.
 

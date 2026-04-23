@@ -1,11 +1,12 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_kitt_scanner.rs</FILE>
 // <DESC>Horizontal ping-pong scanner effect like KITT from Knight Rider</DESC>
-// <VERS>VERSION: 1.7.0</VERS>
-// <WCTX>Add boost_separator_bg for continuous powerline backgrounds</WCTX>
-// <CLOG>Add boost_separator_bg toggle for powerlines with non-terminal backgrounds</CLOG>
+// <VERS>VERSION: 1.8.0</VERS>
+// <WCTX>Add human-friendly cadence authoring support</WCTX>
+// <CLOG>1.8.0: add bpm-based authoring support and reset the default cadence to a healthy resting-adult 72 BPM while keeping the runtime filter expressed in bps internally.
+// 1.7.0: add boost_separator_bg toggle for powerlines with non-terminal backgrounds.</CLOG>
 
 use crate::traits::filter::Filter;
-use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode};
+use crate::types::cls_filter_spec::{kitt_bps_from_bpm, ApplyTo, ScannerMotionMode};
 use crate::utils::is_powerline_separator;
 use tui_vfx_types::{Cell, Color};
 
@@ -17,8 +18,8 @@ use tui_vfx_types::{Cell, Color};
 /// lighthouse-style beams.
 ///
 /// In ping-pong mode, one full smooth return cycle takes `2 / bps` seconds.
-/// Authoring clocks that want a seamless loop should align their period to that
-/// full cycle rather than truncating it mid-sine.
+/// Cadence-driven callers should feed monotonic elapsed time into the filter so
+/// the sweep stays smooth even when higher-layer recipe clocks wrap.
 ///
 /// # Usage
 ///
@@ -49,7 +50,7 @@ pub struct KittScanner {
     /// Beats per second for the ping-pong oscillator.
     ///
     /// In ping-pong mode, one full left-right-left loop takes `2 / bps`
-    /// seconds, so `bps = 1.0` means a 2-second full return cycle.
+    /// seconds, so `bps = 1.2` (72 BPM) means a 1.667-second full return cycle.
     pub bps: f32,
     /// Motion mode controlling whether the scanner ping-pongs or wraps one-way.
     pub motion_mode: ScannerMotionMode,
@@ -68,7 +69,7 @@ impl Default for KittScanner {
             boost: 50,
             band_width: 0.15,
             progress: 0.0,
-            bps: 1.0, // 1 beat/sec means 2 seconds for full ping-pong
+            bps: Self::bps_from_bpm(72.0), // healthy resting-adult cadence
             motion_mode: ScannerMotionMode::PingPong,
             apply_to: ApplyTo::Both,
             powerline_mode: false,
@@ -78,6 +79,11 @@ impl Default for KittScanner {
 }
 
 impl KittScanner {
+    /// Convert beats per minute into beats per second.
+    pub fn bps_from_bpm(bpm: f32) -> f32 {
+        kitt_bps_from_bpm(bpm)
+    }
+
     /// Create a new KittScanner with default settings.
     pub fn new() -> Self {
         Self::default()
@@ -104,6 +110,12 @@ impl KittScanner {
     /// Set the beats per second.
     pub fn with_bps(mut self, bps: f32) -> Self {
         self.bps = bps.max(0.1);
+        self
+    }
+
+    /// Set the cadence in human-readable beats per minute.
+    pub fn with_bpm(mut self, bpm: f32) -> Self {
+        self.bps = Self::bps_from_bpm(bpm);
         self
     }
 
@@ -261,7 +273,7 @@ mod tests {
         assert_eq!(filter.boost, 50);
         assert_eq!(filter.band_width, 0.15);
         assert_eq!(filter.progress, 0.0);
-        assert_eq!(filter.bps, 1.0);
+        assert_eq!(filter.bps, 1.2);
     }
 
     #[test]
@@ -333,14 +345,19 @@ mod tests {
             .with_boost(80)
             .with_band_width(0.25)
             .with_progress(0.75)
-            .with_bps(2.0)
+            .with_bpm(96.0)
             .with_motion_mode(ScannerMotionMode::ForwardWrap);
 
         assert_eq!(filter.boost, 80);
         assert_eq!(filter.band_width, 0.25);
         assert_eq!(filter.progress, 0.75);
-        assert_eq!(filter.bps, 2.0);
+        assert_eq!(filter.bps, 1.6);
         assert_eq!(filter.motion_mode, ScannerMotionMode::ForwardWrap);
+    }
+
+    #[test]
+    fn bps_from_bpm_converts_human_rate() {
+        assert!((KittScanner::bps_from_bpm(72.0) - 1.2).abs() < 0.001);
     }
 
     #[test]

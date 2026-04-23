@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> - <DESC>Working design note for the initial V3 compiled execution plan. Defines the layer between normalized IR and later runtime family execution, especially the first selector-compaction rules and consumer seams.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Follows the normalized-IR design note. This document is intentionally implementation-facing and performance-minded without yet committing to the final runtime representation for every family. Updated to reflect the active migration strategy: use the compiled tree as an execution source directly when possible, and use the replay bridge only as fallback.</WCTX> -->
-<!-- <CLOG>0.2.0: document the current direct-execution migration strategy so the working note matches the implementation direction.
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Keep the compiled execution-plan note aligned with the as-built timing model by requiring execution-facing data to preserve both normalized progress and monotonic elapsed time for cadence-sensitive consumers.</WCTX> -->
+<!-- <CLOG>0.3.0: clarify that execution-facing timing must preserve normalized phase/loop progress separately from monotonic elapsed time, and that cadence-driven motion reads elapsed time.
+0.2.0: document the current direct-execution migration strategy so the working note matches the implementation direction.
 0.1.0: initial compiled-plan note. Establishes the first compiled-plan shape, compaction strategy, and migration seam expectations.</CLOG> -->
 
 # tui-vfx V3 compiled execution plan
@@ -95,6 +96,7 @@ CompiledLeafStep
 ├─ phase
 ├─ scope
 ├─ clock?
+├─ timing_view?
 ├─ interaction?
 ├─ payload
 └─ provenance?
@@ -110,7 +112,21 @@ CompiledLeafStep
   - `style_effect`
 - `phase` remains explicit
 - `scope` may now be compacted
+- `timing_view` should preserve both normalized progress and monotonic elapsed
+  time for the active execution slice
 - `payload` can remain structurally flexible in the first pass
+
+### Timing-view rule
+
+Execution-facing timing should not collapse to one scalar. The compiled/runtime
+path should keep:
+
+- normalized progress values for lifecycle/phase-aware interpolation
+- monotonic elapsed time for cadence-sensitive motion
+
+This matters because normalized progress may reset at loop boundaries while
+elapsed time does not. Cadence-driven filters and scanners should read elapsed
+time directly instead of rebuilding cadence from loop progress.
 
 ## 3.1 Envelope motion + shadow compilation
 
@@ -212,6 +228,10 @@ Why:
 So the compiled plan is not only a future optimization seam.
 It is also the immediate route toward an independent V3 execution path.
 
+That direct path should preserve timing truth as well as tree shape. A direct
+executor that drops elapsed time and keeps only normalized loop progress would
+recreate the same cadence discontinuities the migration is meant to remove.
+
 ### 5.2 Current migration milestone
 
 The migration should explicitly recognize the point where the compiled V3 path
@@ -264,4 +284,4 @@ To keep the phase real, it should propagate through the same shallow seam family
 That is the minimal proof that the compiled plan is becoming part of the real public pathway rather than staying trapped in an internal helper module.
 
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->

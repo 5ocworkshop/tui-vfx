@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> - <DESC>Design plan for spatial signals, typed field hints, and first-class chained visual fields in V3</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Record the post-bridge architectural plan for moving from replay-seam cleanup into the deeper semantic work needed for Madeira-flag-class V3 recipes and future complex chained animations, now including the discovered need for two explicit spatial bases rather than one overloaded radius primitive.</WCTX> -->
-<!-- <CLOG>0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model by separating normalized phase/loop progress from monotonic elapsed time and making cadence-driven consumers explicitly depend on elapsed time.</WCTX> -->
+<!-- <CLOG>0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
 
 # tui-vfx V3 spatial field + hint plan
 
@@ -178,8 +178,17 @@ The current `SignalContext` already carries:
 
 - `width`
 - `height`
-- phase / phase_t / loop_t / absolute_t
+- `phase`
+- normalized progress values (`phase_t`, `loop_t`)
+- monotonic elapsed time (`absolute_t`)
 - `char_index`
+
+The distinction is load-bearing:
+
+- `phase_t` and `loop_t` are normalized progress values and may reset when a
+  phase or loop restarts
+- `absolute_t` is monotonic elapsed time from playback start and does not reset
+  at loop boundaries
 
 but it did **not** initially carry per-cell coordinates.
 
@@ -562,7 +571,9 @@ They should be threaded consistently through the places that already build
 `ProceduralCtx.signal_ctx` should carry:
 
 - dimensions
-- phase / phase_t / loop_t / absolute_t
+- `phase`
+- normalized progress values (`phase_t`, `loop_t`)
+- monotonic elapsed time (`absolute_t`)
 - and, when a procedural source evaluates per-cell signals, the source should be
   able to derive a cell-local context via `with_cell_position`
 
@@ -589,6 +600,18 @@ spatial-coordinate leaves.
 The key rule is:
 
 > one meaning for spatial context, everywhere.
+
+That includes timing semantics. Preview and runtime paths should expose the
+same two timing views:
+
+- normalized phase/loop progress for lifecycle-aware interpolation and
+  phase-gated execution
+- monotonic elapsed time for cadence-driven motion and signal consumers
+
+Cadence-driven families such as scanner sweeps or BPM-driven oscillation should
+consume elapsed time (`absolute_t`), not reset-on-loop normalized progress.
+Using loop progress for cadence hides discontinuities until the loop boundary
+and then reintroduces them as visible timing jumps.
 
 ---
 

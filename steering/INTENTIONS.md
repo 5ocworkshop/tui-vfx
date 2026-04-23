@@ -1,7 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>Add an explicit debug-recipe presentation intention so reference fixtures are authored to clearly show the intended effect, not just to minimally exercise the primitive. This follows recent mask-fixture audits where wide/short layouts visually aliased distinct reveal types.</WCTX>
-<!-- <CLOG>0.5.0: MINOR — add Intention 31 (debug recipes must use layouts, sizing, contrast, and content that clearly show the intended effect). 0.4.0: MINOR — add Intention 30 (use bottom-up layer language consistently across mixed-signals, tui-vfx, tui-vfx-recipes, gt-design, and consuming apps).
+<!-- <VERS>VERSION: 0.5.1</VERS> -->
+<!-- <WCTX>Remove the explicit layer-language intention so the file stays focused on architectural boundaries, vocabulary normalization, and debug-recipe quality.</WCTX> -->
+<!-- <CLOG>0.5.1: PATCH — remove the explicit bottom-up layer-language intention; keep the rest of the steering file focused on architectural boundaries and execution discipline. 0.5.0: MINOR — add Intention 31 (debug recipes must use layouts, sizing, contrast, and content that clearly show the intended effect).
 0.3.0: MINOR — add Intention 26 (single source of truth over parallel seams), with the loader architecture called out as the concrete example.
 0.2.0: MINOR — add "Writing style" section between the provenance note and the numbered intentions. Covers: no marketing voice, no grandiose framing, no filler, be specific, one idea per sentence. Includes the "why" (developers filter for signal; grandiose framing reads as insecurity; schema regularity applies to prose).</CLOG>
 <!-- <CLOG>0.1.0: initial draft. 29 numbered intentions organized into identity / architecture / discipline / philosophy clusters. Top-of-mind intentions called out (1, 3, 9, 20, 23, 24). Cross-references to V3 upgrade plan and MARKETING.md where relevant. Derived from gt-design steering/INTENTIONS.md v0.52.0 with selective adaptation.</CLOG> -->
@@ -373,24 +373,27 @@ Rules:
 
 Why: a project that describes itself inconsistently loses the trust of both contributors and consumers. Keeping MARKETING and INTENTIONS as peers — one outward-facing, one inward-facing — acknowledges that both audiences matter and prevents either document from silently drifting.
 
-## 30. Layer language is bottom-up across the ecosystem
+## 30. Normalize vocabulary while normalizing math
 
-When we describe architectural direction across `mixed-signals`, `tui-vfx`,
-`tui-vfx-recipes`, `gt-design`, and consuming applications, we use one shared
-bottom-up stack model:
+When a shader, mask, filter, sampler, or related effect file is being touched
+for shared-math extraction or geometry normalization, review the file's
+terminology in the same pass and normalize it toward the canonical vocabulary.
 
-- **lower** = closer to foundational libraries
-- **higher** = closer to the user-facing application
+Rules:
 
-That means:
+1. If the edit already changes the geometry/math substrate, also check whether
+   the file is using drifting words for direction, origin, shape, basis, or
+   enter/exit relationship.
+2. Prefer updating the file to the canonical vocabulary in the same workset
+   rather than leaving the math modernized but the terminology stale.
+3. If the file exposes user-facing docs/comments/rustdocs, align them with the
+   canonical vocabulary guide while the context is fresh.
+4. If the right term is unclear, update the vocabulary guide first or in the
+   same tranche, then normalize the file to match it.
 
-- `mixed-signals` is lower than `tui-vfx`
-- `tui-vfx` is lower than recipe/design-system consumers
-- applications are the highest layer
-
-Why: V3 work now crosses multiple repos constantly. Shared layer language keeps
-discussions about "push this lower" or "keep that higher" unambiguous and makes
-ownership decisions easier to review.
+Why: math normalization without vocabulary normalization leaves half the drift
+in place. The point of the current review lane is not only to share geometry
+primitives, but also to keep the language around those primitives coherent.
 
 ## 31. Debug recipes are visual reference fixtures, not minimal smoke cases
 
@@ -462,4 +465,4 @@ ergonomics of the library itself, so they must feel intentionally professional.
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.1</VERS> -->

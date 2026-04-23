@@ -370,13 +370,14 @@ complexity = "simple"
 ai_hint = """Horizontal ping-pong scanner (KITT/Larson scanner) effect.
 boost: brightness increase (default 50).
 band_width: scanner column width (0.15 default, 0.0-0.5).
-bps: beats per second for ping-pong cycle (1.0 = 2 second full cycle).
+bpm: optional human-friendly beats-per-minute cadence; overrides bps when present.
+bps: beats per second for ping-pong cycle (1.2 default = 72 BPM healthy resting cadence).
 progress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).
 motion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).
 apply_to: which channel to boost (fg, bg, or both) when not in powerline mode.
 powerline_mode: true to handle powerline separators safely.
 boost_separator_bg: true to also boost separator backgrounds for continuous powerlines.
-Full-height scanning column with smooth ping-pong motion.
+Cadence-driven motion uses monotonic elapsed time; bpm/bps set the scanner rate independently of recipe loop period.
 Classic Knight Rider aesthetic for retro sci-fi hover states."""
 
 [effects.filters.ShadeScanner]

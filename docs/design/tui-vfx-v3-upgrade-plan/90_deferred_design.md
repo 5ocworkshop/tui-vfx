@@ -167,9 +167,9 @@ Candidate prior art: `rust-embed` (directory embedding via proc-macro), `include
 
 ## 80 — Dynamic recipe formalization
 
-Two recipes at `recipes/dynamic/` today (`digital_rain_matrix_classic_dynamic.json`, `digital_rain_matrix_modern_dynamic.json`) use `{"binding": "<name>"}` for runtime-driven parameters. This works but is ad-hoc — the `/dynamic/` directory convention isn't canonical; the binding syntax is per-shader not uniform; and validators don't specially treat "recipes that require runtime bindings" as a category.
+Two current runtime-bound Matrix rain examples (`recipes/examples/digital_rain_matrix_classic_runtime_bound.json`, `recipes/examples/digital_rain_matrix_modern_runtime_bound.json`) use `{"binding": "<name>"}` for runtime-driven parameters. This works, but the old `/dynamic/` directory convention was ad-hoc; the binding syntax was per-shader not uniform; and validators did not specially treat "recipes that require runtime bindings" as a category.
 
-V3 Decision 6 formalizes `ParamValue::RuntimeBinding` uniformly across all step types. Once that lands, dynamic recipes stop being a separate category — they become recipes that use `RuntimeBinding` values in their parameters. The `/dynamic/` directory becomes either a convention for recipes expecting app-side values, or collapses entirely (any recipe can use bindings; the directory structure follows topic, not binding-presence).
+V3 Decision 6 formalizes `ParamValue::RuntimeBinding` uniformly across all step types. Once that lands, dynamic recipes stop being a separate category — they become recipes that use `RuntimeBinding` values in their parameters. The dedicated `/dynamic/` directory can collapse entirely (any recipe can use bindings; the directory structure follows topic, not binding-presence).
 
 **Related open questions** (not blocking V3 direction):
 

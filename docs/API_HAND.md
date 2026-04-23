@@ -442,7 +442,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `DotIndicator` | Dot/bullet marker | `indicator_char: char`, `position: HoverBarPosition`, `color`, `bg_color`, `progress` |
 | `PillButton` | Pill button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten: bool`, `progress` |
 | `GlistenSweep` | Diagonal 45° highlight sweep | `boost: u8`, `band_width: f32`, `speed: f32`, `progress: f32`, `powerline_mode: bool`, `boost_separator_bg: bool` |
-| `KittScanner` | Horizontal scanner sweep (ping-pong or one-way wrap) | `boost: u8`, `band_width: f32`, `bps: f32`, `progress: f32`, `motion_mode`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool` |
+| `KittScanner` | Horizontal scanner sweep (ping-pong or one-way wrap) | `boost: u8`, `band_width: f32`, `bpm: Option<f32>`, `bps: f32`, `progress: f32`, `motion_mode`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool` |
 | `ShadeScanner` | Ping-pong scanner w/ shade overlay | `shade_color`, `bps: f32`, `progress: f32` |
 
 ### ApplyTo
@@ -481,9 +481,13 @@ See `cls_mask_spec.rs::WipeDirection`.
   (shader) is a color oscillation effect.
 - **GlistenSweep / KittScanner** do not have a `color` field — they apply an additive
   `boost` (u8) to existing cell colors, so drive palette through `base_style` and use
-  the filter only for temporal motion. `KittScanner.bps` is "beats per second", not a
-  conventional `speed` field. `KittScanner.motion_mode` now controls whether the
-  scan ping-pongs (`ping_pong`) or wraps one-way (`forward_wrap` / `reverse_wrap`).
+  the filter only for temporal motion. `KittScanner` now accepts either
+  human-readable `bpm` or raw `bps`; `bpm` takes precedence when both are set, and
+  the default cadence is 72 BPM (`bps = 1.2`). Cadence-driven motion uses
+  monotonic elapsed time, so recipe loop period only controls how often the
+  surrounding recipe repeats. `KittScanner.motion_mode` controls whether the
+  scan ping-pongs (`ping_pong`) or wraps one-way (`forward_wrap` /
+  `reverse_wrap`).
 - **ShadeScanner** is a dimming sweep (no `boost`), not a brightening sweep like its
   `KittScanner` neighbor.
 - **Progress-driven filters** (`HoverBar`, `UnderlineWipe`, `BracketEmphasis`,

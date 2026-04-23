@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Companion document to tui-vfx-v3-schema-draft.json. Captures the higher-level structure, philosophy, and reasoning that should remain available after comments are stripped from the JSON specification-by-example.</WCTX> -->
-<!-- <CLOG>0.1.0: initial schema overview after the dual-auditor synthesis pass. Establishes the top-down tree model, capability-family guidance, hybrid/wrapper conventions, and authoring/tooling layers.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Keep the schema overview aligned with the as-built V3 timing model by documenting the separate roles of normalized phase/loop progress and monotonic elapsed time.</WCTX> -->
+<!-- <CLOG>0.2.0: document the as-built timing model so normalized phase/loop progress stays distinct from monotonic elapsed time and cadence-driven motion is described correctly. 0.1.0: initial schema overview after the dual-auditor synthesis pass. Establishes the top-down tree model, capability-family guidance, hybrid/wrapper conventions, and authoring/tooling layers.</CLOG> -->
 
 # tui-vfx V3 Schema Overview
 
@@ -85,6 +85,33 @@ Many current recipes that appear to be separate “families” are actually bett
 
 - one **deeper renderer tree**, plus
 - many **policy variants** inside it
+
+### 2.1 Timing model posture
+
+The as-built V3 timing model keeps two related but different concepts available
+at runtime:
+
+- **normalized progress**
+  - `phase_t` and `loop_t`
+  - useful for lifecycle-aware interpolation, phase-gated execution, and any
+    effect whose meaning is "where am I inside this authored phase/loop?"
+- **monotonic elapsed time**
+  - `absolute_t`
+  - useful for cadence-driven motion whose continuity must survive loop
+    boundaries
+
+These are not interchangeable. Normalized progress may reset when a phase or
+loop restarts. Elapsed time does not. That distinction is part of the runtime
+contract, not an implementation detail.
+
+Authoring implication:
+
+- `config.clock` remains the schema home for authored timing configuration
+- runtime execution still needs both normalized progress and elapsed time after
+  that clock is resolved
+- cadence-driven families such as `kitt_scanner`, scanner sweeps, and BPM-led
+  oscillation should consume elapsed time rather than deriving cadence from
+  reset-on-loop progress
 
 ---
 
@@ -501,7 +528,7 @@ Current reconciliation stance:
 | `layout` | kept under `config.layout` |
 | `lifecycle` | kept under `config.lifecycle` |
 | `border` | kept under `config.border` |
-| `time` | normalized to `config.clock` |
+| `time` | normalized to `config.clock`, while runtime still keeps both normalized progress and monotonic elapsed time |
 | style-layer `clock` | normalized to per-step `clock` override |
 | `theme` | explicit envelope-level home |
 | `shadow` | explicit recipe-envelope home plus scene-layer `surface.shadow` |
@@ -520,7 +547,7 @@ Current reconciliation stance:
 | legacy `spatial_shader` | migrate to `style_effect(type=spatial, shader=...)` or sibling `shader` |
 | `text_pool`, `effect_pool`, `preset_pool`, `image_pool`, `font_pool` | treated as authoring-scale template/family/content-source machinery above the concrete recipe tree |
 | `animation_type` | drop-recommended vestigial V2 surface |
-| `continuous` | replaced by `phase = all` + clocked step / renderer-tree timing rather than a separate top-level mode |
+| `continuous` | replaced by `phase = all` + clocked step / renderer-tree timing rather than a separate top-level mode; cadence-driven motion still consumes elapsed time |
 
 The remaining intentionally unresolved V2-era pressure is no longer “where does this field go?”
 It is mostly about:
@@ -601,4 +628,4 @@ In practice, these two docs should be read together:
 - use this overview to understand why that shape is organized the way it is
 
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

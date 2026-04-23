@@ -124,7 +124,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **EdgeGrow** | Generalized edge growth/stretch indicator | `rest_eighths`, `peak_eighths`, `edge`, `fill_color`, `bg_color`, `progress`, `margin_width` |
 | **PillButton** | Pill-shaped button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten`, `progress` |
 | **GlistenSweep** | Diagonal 45° brightness sweep (hover shine) | `boost` (u8, additive), `band_width` (f32, diagonal fraction), `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
-| **KittScanner** | Horizontal scanner sweep (KITT/Larson or one-way lighthouse wrap) | `boost` (u8), `band_width`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
+| **KittScanner** | Horizontal scanner sweep (KITT/Larson or one-way lighthouse wrap) | `boost` (u8), `band_width`, `bpm?`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
 | **ShadeScanner** | Ping-pong scanner that dims text with shade overlay | `shade_color`, `bps`, `progress` |
 | **GlyphStyle** | Per-glyph-category fg/bg overrides via char-membership rules | `rules`: `[{chars, fg, bg, bg_alternate?}]` first-match-wins; unmatched cells unchanged. `bg_alternate` enables a coordinate-checkerboard bg modulation bounded by char match (subtle card-edge perception). |
 
@@ -434,11 +434,13 @@ aesthetic intent, not a recipe field. Drive color through `base_style`.
 **KittScanner** — Horizontal scanner sweep:
 - `boost`: Additive u8 brightness boost under the band (default 50)
 - `band_width`: Width of the scanner band as fraction of total width (default 0.15, typical 0.0..0.5)
-- `bps`: Beats per second for the scanner cycle (default 1.0) — **not** `speed`
+- `bpm`: Optional human-readable beats-per-minute cadence. When present, it overrides `bps`
+- `bps`: Beats per second for the scanner cycle (default 1.2 = 72 BPM) — **not** `speed`
 - `progress`: 0.0..1.0, set to 1.0 to activate
 - `motion_mode`: `ping_pong` (classic KITT/Larson), `forward_wrap`, or `reverse_wrap`
 - `apply_to`: Which color component to boost (fg / bg / both, default Both)
 - `powerline_mode` / `boost_separator_bg`: See GlistenSweep
+- Cadence-driven motion uses monotonic elapsed time. In `ping_pong` mode, one full return cycle is `120 / bpm` ms (or `2 / bps` seconds), but recipe loop period only controls how often the surrounding recipe repeats.
 - Use a red base style for the classic KITT/Larson or lighthouse look — the boost is additive, not replacement
 - Ideal for status bars, alert indicators, ambient attention-getters
 

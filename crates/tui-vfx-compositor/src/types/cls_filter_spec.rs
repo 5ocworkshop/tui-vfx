@@ -939,11 +939,21 @@ pub enum FilterSpec {
         /// Width of the scanner band (0.0-0.5 of total width)
         #[serde(default = "default_kitt_band_width")]
         band_width: f32,
+        /// Human-readable cadence in beats per minute.
+        ///
+        /// When present, this is converted to `bps` via
+        /// [`kitt_bps_from_bpm`] and takes
+        /// precedence over the raw `bps` field. This is the friendlier option
+        /// when matching human tempos such as resting-heart cadences.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        bpm: Option<f32>,
         /// Beats per second for the ping-pong oscillator.
         ///
         /// In `ping_pong` mode, one full smooth return loop takes `2 / bps`
-        /// seconds. Authoring clocks should align their loop period to that
-        /// full cycle when a seamless reset matters.
+        /// seconds. Cadence-driven callers should feed monotonic elapsed time
+        /// into the scanner so the sweep stays smooth even when higher-layer
+        /// recipe clocks wrap. Defaults to `1.2` (72 BPM, a healthy
+        /// resting-adult cadence).
         #[serde(default = "default_kitt_bps")]
         bps: f32,
         /// Animation progress (0.0 = inactive, 1.0 = fully active).
@@ -1496,8 +1506,17 @@ fn default_kitt_band_width() -> f32 {
     0.15
 }
 
+/// Convert a human-readable KITT cadence from beats per minute into beats per
+/// second.
+///
+/// The returned value is clamped to a small positive floor so authored values
+/// cannot silently freeze the scanner.
+pub fn kitt_bps_from_bpm(bpm: f32) -> f32 {
+    (bpm / 60.0).max(0.1)
+}
+
 fn default_kitt_bps() -> f32 {
-    1.0
+    kitt_bps_from_bpm(72.0)
 }
 
 fn default_kitt_apply_to() -> ApplyTo {
@@ -1923,6 +1942,7 @@ impl FilterSpec {
             FilterSpec::KittScanner {
                 boost,
                 band_width,
+                bpm,
                 bps,
                 progress,
                 motion_mode,
@@ -1932,6 +1952,11 @@ impl FilterSpec {
             } => vec![
                 ("boost", format!("{}", boost)),
                 ("band_width", format!("{}", band_width)),
+                (
+                    "bpm",
+                    bpm.map(|value| format!("{value} BPM"))
+                        .unwrap_or_else(|| "none".to_string()),
+                ),
                 ("bps", format!("{} Hz", bps)),
                 ("progress", format!("{:?}", progress)),
                 ("motion_mode", format!("{:?}", motion_mode)),
