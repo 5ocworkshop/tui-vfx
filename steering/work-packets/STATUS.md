@@ -39,6 +39,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `145bcd2`
 - `48-madeira-ballistic-fireworks-procedural-support.md`
   - landed via `0370ce7`
+- `41-madeira-visual-vetting-protocol.md`
+  - landed via `fbcfe5f`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
