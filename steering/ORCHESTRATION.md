@@ -25,24 +25,36 @@ Do not outsource core architectural judgment or final verification.
 
 Never dispatch a subagent without explicitly requiring it to read the relevant governing docs first.
 
-Minimum must-read set for this project family:
-- `/usr/projects/tui-vfx/steering/ORCHESTRATION.md`
-- current shared briefing document for the active lane
-- `/usr/projects/tui-vfx/steering/INTENTIONS.md`
-- `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
+Read order matters. Put the highest-value steering files first so the most
+important principles remain near the top of the agent's context window.
+
+Required first-pass steering read order for this project family:
+1. `/usr/projects/tui-vfx/steering/INTENTIONS.md`
+2. `/usr/projects/tui-vfx-recipes/steering/INTENTIONS.md`
+3. `/usr/projects/mixed-signals/steering/INTENTIONS.md` when touching lower signal/math substrate
+4. `/usr/projects/tui-vfx/steering/ORCHESTRATION.md`
+5. current shared briefing document for the active lane
+
+Second-pass supporting docs:
 - `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-recipe-vocabulary.md`
 - `/usr/projects/global_prompts/standards/40_ofpf_standards.md`
 - `/usr/projects/global_prompts/standards/50_tdd_protocol.md`
 - `/usr/projects/global_prompts/standards/60_file_centric_execution.md`
 - `/usr/projects/global_prompts/standards/65_subagent_orchestration.md`
-- `/usr/projects/mixed-signals/steering/INTENTIONS.md` when touching lower signal/math substrate
 - additional task-specific design/schema docs as needed
+
+Reflection step before action:
+- after reading the first-pass steering docs, the subagent should briefly
+  restate to itself (and later in the report if useful) the key repo-boundary
+  rules and the definition of done for the assigned lane
+- only then should it move on to orientation commands and deeper code reading
 
 Every subagent prompt must explicitly instruct the agent to say it read those docs in the final report.
 
 ## 3. Orientation first
 
-Before deeper reads, subagents should start with orientation snapshots for the repos in scope:
+After the first-pass steering read and short reflection, subagents should take
+orientation snapshots for the repos in scope before deeper code reads:
 - `ofpf-orientation --root /usr/projects/tui-vfx`
 - `ofpf-orientation --root /usr/projects/tui-vfx-recipes`
 - `ofpf-orientation --root /usr/projects/mixed-signals`
