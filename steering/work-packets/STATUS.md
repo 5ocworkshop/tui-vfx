@@ -31,6 +31,12 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `797cac1`
 - `49-scene-layer-compile-normalize-proof-fix.md`
   - landed via `13c99d3`
+- `45-probe-validator-ordered-preview-truth-fix.md`
+  - landed via `e644646`
+- `46-procedural-layer-frame-equivalence-regression.md`
+  - landed via `a198ddb`
+- `50-demo-info-panel-overflow-fix.md`
+  - landed via `145bcd2`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -63,10 +69,7 @@ These packets produced accepted non-code outputs that should be treated as harve
   - identified `ballistic_fireworks` support as the clearest next effect-capability tranche
 
 ## New follow-on packets created from audit learnings
-- `45-probe-validator-ordered-preview-truth-fix.md`
-- `46-procedural-layer-frame-equivalence-regression.md`
 - `48-madeira-ballistic-fireworks-procedural-support.md`
-- `50-demo-info-panel-overflow-fix.md`
 
 ## Notes
 - Packet completion is tied to real commits on `master`, not just plausible subagent responses.
