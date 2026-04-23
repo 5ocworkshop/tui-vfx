@@ -139,6 +139,20 @@ Flag or avoid:
 
 Subagents should call out hot-path risks even in audit lanes.
 
+## 6A. Key-binding safety rule
+
+When a task touches keyboard bindings:
+- first inspect the current key map / handlers / help text before assigning a
+  new binding
+- do this even if the task instructions suggest a specific key
+- if the requested key is already in use, do not silently override it
+- choose an alternate key that minimizes collisions and report:
+  - the collision you found
+  - the alternate key you chose
+  - why that alternate was safer
+- update help text and any on-screen binding references together with the code
+- treat keybinding collisions as a correctness issue, not a cosmetic one
+
 ## 7. Debug-recipe rules
 
 When touching debug recipes:

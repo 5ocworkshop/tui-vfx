@@ -62,6 +62,16 @@ If the packet touches runtime/render paths, explicitly check for:
 - recomputation that can be hoisted
 - normalized-time vs elapsed-time confusion in cadence-bearing code
 
+## Key-binding checklist
+If the packet touches keyboard bindings:
+- inspect the current binding/handler/help surfaces first
+- do not assume a requested key is free just because the task says to use it
+- if there is a collision, choose an alternate key and report:
+  - the collision
+  - the alternate key
+  - why the alternate is safer
+- update help text and visible keybinding references with the code change
+
 ## Debug recipe rules
 If a packet explicitly includes debug recipes, enforce:
 - clear description text
