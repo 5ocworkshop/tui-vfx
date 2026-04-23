@@ -1,10 +1,12 @@
 // <FILE>tui-vfx-style/src/models/cls_glow_shader.rs</FILE> - <DESC>Multi-cell bloom/halo glow effect around widget edges</DESC>
-// <VERS>VERSION: 1.0.3</VERS>
-// <WCTX>Consolidate style test helpers</WCTX>
-// <CLOG>Fix time-aware ShaderContext helper import</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Shared spatial-math normalization</WCTX>
+// <CLOG>1.1.0: use mixed-signals cell-edge-distance helpers for the nearest-edge calculation so glow shares the same boundary math vocabulary as other edge-aware effects.
+// 1.0.3: fix time-aware ShaderContext helper import.</CLOG>
 
 use crate::models::{ColorConfig, FalloffType};
 use crate::traits::{ShaderContext, StyleShader};
+use mixed_signals::math::cell_distance_to_nearest_edge;
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -56,19 +58,10 @@ impl Default for GlowShader {
 }
 
 impl GlowShader {
-    /// Calculate the minimum distance from the cell to any edge.
+    /// Calculate the minimum distance from the cell to any edge in the
+    /// discrete cell-lattice basis.
     fn distance_to_edge(&self, x: u16, y: u16, width: u16, height: u16) -> f32 {
-        let x = x as f32;
-        let y = y as f32;
-        let w = (width.saturating_sub(1)) as f32;
-        let h = (height.saturating_sub(1)) as f32;
-
-        let dist_top = y;
-        let dist_bottom = h - y;
-        let dist_left = x;
-        let dist_right = w - x;
-
-        dist_top.min(dist_bottom).min(dist_left).min(dist_right)
+        cell_distance_to_nearest_edge(x, y, width, height)
     }
 
     /// Calculate pulse-modulated intensity based on animation time.

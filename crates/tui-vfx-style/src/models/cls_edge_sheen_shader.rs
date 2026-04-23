@@ -8,13 +8,15 @@
 //! forever-flat primitive leaf.
 //!
 // <FILE>tui-vfx-style/src/models/cls_edge_sheen_shader.rs</FILE> - <DESC>EdgeSheen shader implementation</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>Introduce a calmer premium shell sheen distinct from Reflect</WCTX>
-// <CLOG>Add EdgeSheen spatial shader with edge width, perimeter band, and corner emphasis</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Shared spatial-math normalization</WCTX>
+// <CLOG>1.1.0: use mixed-signals nearest-edge and Manhattan-distance helpers so edge-sheen shares the common boundary-distance vocabulary with other perimeter effects.
+// 1.0.0: add EdgeSheen spatial shader with edge width, perimeter band, and corner emphasis.</CLOG>
 
 use crate::models::{ColorConfig, ColorSpace};
 use crate::traits::{ShaderContext, StyleShader};
 use crate::utils::fnc_blend_colors::blend_colors;
+use mixed_signals::math::{cell_distance_to_nearest_edge, manhattan_distance_2d};
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -106,10 +108,7 @@ impl Default for EdgeSheenShader {
 
 impl EdgeSheenShader {
     fn distance_to_edge(&self, x: u16, y: u16, width: u16, height: u16) -> u16 {
-        let max_x = width.saturating_sub(1);
-        let max_y = height.saturating_sub(1);
-        x.min(max_x.saturating_sub(x))
-            .min(y.min(max_y.saturating_sub(y)))
+        cell_distance_to_nearest_edge(x, y, width, height) as u16
     }
 
     fn perimeter_position(&self, x: u16, y: u16, width: u16, height: u16) -> f32 {
@@ -138,10 +137,10 @@ impl EdgeSheenShader {
         let y = y as f32;
 
         let distances = [
-            x + y,
-            (max_x - x) + y,
-            x + (max_y - y),
-            (max_x - x) + (max_y - y),
+            manhattan_distance_2d(x, y),
+            manhattan_distance_2d(max_x - x, y),
+            manhattan_distance_2d(x, max_y - y),
+            manhattan_distance_2d(max_x - x, max_y - y),
         ];
         let nearest = distances
             .iter()
