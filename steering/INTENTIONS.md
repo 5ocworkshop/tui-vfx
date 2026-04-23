@@ -1,7 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>Add an explicit bottom-up layer-language intention so cross-repo design discussions keep one stack model: mixed-signals lower, tui-vfx in the middle, user-facing apps higher.</WCTX>
-<!-- <CLOG>0.4.0: MINOR — add Intention 30 (use bottom-up layer language consistently across mixed-signals, tui-vfx, tui-vfx-recipes, gt-design, and consuming apps).
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>Add an explicit debug-recipe presentation intention so reference fixtures are authored to clearly show the intended effect, not just to minimally exercise the primitive. This follows recent mask-fixture audits where wide/short layouts visually aliased distinct reveal types.</WCTX>
+<!-- <CLOG>0.5.0: MINOR — add Intention 31 (debug recipes must use layouts, sizing, contrast, and content that clearly show the intended effect). 0.4.0: MINOR — add Intention 30 (use bottom-up layer language consistently across mixed-signals, tui-vfx, tui-vfx-recipes, gt-design, and consuming apps).
 0.3.0: MINOR — add Intention 26 (single source of truth over parallel seams), with the loader architecture called out as the concrete example.
 0.2.0: MINOR — add "Writing style" section between the provenance note and the numbered intentions. Covers: no marketing voice, no grandiose framing, no filler, be specific, one idea per sentence. Includes the "why" (developers filter for signal; grandiose framing reads as insecurity; schema regularity applies to prose).</CLOG>
 <!-- <CLOG>0.1.0: initial draft. 29 numbered intentions organized into identity / architecture / discipline / philosophy clusters. Top-of-mind intentions called out (1, 3, 9, 20, 23, 24). Cross-references to V3 upgrade plan and MARKETING.md where relevant. Derived from gt-design steering/INTENTIONS.md v0.52.0 with selective adaptation.</CLOG> -->
@@ -392,7 +392,38 @@ Why: V3 work now crosses multiple repos constantly. Shared layer language keeps
 discussions about "push this lower" or "keep that higher" unambiguous and makes
 ownership decisions easier to review.
 
+## 31. Debug recipes are visual reference fixtures, not minimal smoke cases
+
+`debug_recipes/` exists so humans can clearly see what a primitive or composed
+effect is doing while the implementation evolves. Those recipes are not just
+"does it render?" smoke cases; they are visual reference fixtures and release
+reference baselines.
+
+Rules:
+
+1. Debug recipes should use a layout that makes the intended effect legible.
+   If a wide/short panel makes a radial or iris reveal read like a wipe, the
+   recipe should use a squarer canvas or add a companion geometry-clarity
+   fixture.
+2. Recipe size should be large enough for the effect to read. Tiny canvases that
+   collapse the effect into noise are not acceptable reference fixtures.
+3. Color, contrast, and content should be chosen to reveal the effect clearly.
+   Border, foreground, background, and message choices should help the viewer
+   understand what is happening, not hide it.
+4. When a legacy-parity fixture must keep an awkward presentation for
+   comparison, add a companion fixture that shows the effect more clearly rather
+   than forcing one recipe to do both jobs badly.
+5. If a debug recipe visually aliases another primitive, treat that as a
+   fixture-design problem to fix — not automatic evidence that the primitive
+   semantics are wrong.
+
+Why: debug recipes are how contributors, reviewers, and downstream integrators
+build intuition. They also give maintainers and downstream developers a known
+set of working reference recipes to benchmark against during release work and
+regression investigation. A fixture that technically exercises the code but
+visually conceals the effect fails its job as a reference artifact.
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
