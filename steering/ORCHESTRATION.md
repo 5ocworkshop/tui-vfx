@@ -192,3 +192,64 @@ Rules:
 - send work back for refinement when it does not yet meet steering or verification standards
 - once a workset is accepted and committed (or clearly no longer needed), close the agent to free the slot
 - prefer keeping up to 5 useful bounded lanes busy rather than letting completed agents linger idle
+
+## 13. Recursive self-improvement loop
+
+The leader should periodically improve the orchestration approach itself rather
+than treating prompts/briefings as fixed.
+
+Cadence:
+- after roughly every 5 completed work packets, pause for a short retrospective
+- also run the retrospective sooner if there is obvious prompt drift, repeated
+  cleanup, repeated scope creep, or repeated verification gaps
+
+What to review:
+- which task packets came back cleanly and why
+- which packets needed correction and why
+- whether the task scope was too broad or too vague
+- whether architectural boundary rules were too buried
+- whether performance guidance was too generic for the hot path
+- whether the agent needed more explicit out-of-scope instructions
+- whether the verification contract was specific enough
+- whether the ordering of prompt sections helped or hurt
+
+What to adjust:
+- wording
+- ordering
+- level of detail
+- definition-of-done bullets
+- out-of-scope bullets
+- verification checklist
+- explicit “if you see X, do Y” rails
+- prompt templates for recurring task families
+
+Preferred task-packet ordering for bounded lanes:
+1. objective / success condition
+2. why this matters
+3. exact write scope
+4. explicit out-of-scope items
+5. must-read docs
+6. repo orientation commands
+7. architectural boundary reminders
+8. hot-path/performance reminders
+9. required verification
+10. reporting contract
+
+Institutionalization rule:
+- when a retrospective yields a durable lesson, update this file and, if
+  currently relevant, the active shared briefing document
+- do not keep repeating the same orchestration mistake across cycles if the
+  lesson can be captured once here
+
+Quality rubric for reviewing medium-agent output:
+- correctness of the main claim
+- adherence to write scope
+- respect for architecture boundaries
+- verification quality
+- performance awareness
+- reporting clarity
+
+Escalation rule:
+- if the same type of issue appears in 2 or more recent packets, treat it as a
+  briefing/prompt design failure and fix the orchestration materials before
+  dispatching more similar work
