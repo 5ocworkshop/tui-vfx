@@ -427,6 +427,11 @@ Rules:
    should expect to see. The description is part of the fixture contract,
    because it appears in demo/explorer UI and gives the human checker an
    explicit statement of intended behavior.
+9. Debug-recipe body text should follow a deliberate, standardized pattern.
+   The message is not filler; it is part of the fixture presentation. Prefer a
+   short effect label or family cue on the first line and a short behavioral
+   cue on the second line when the effect benefits from explicit viewer
+   guidance.
 
 Why: debug recipes are how contributors, reviewers, and downstream integrators
 build intuition. They also give maintainers and downstream developers a known
@@ -436,7 +441,8 @@ visually conceals the effect fails its job as a reference artifact. Keeping
 single-primitive references separate from combinations is how the library
 avoids losing diagnostic clarity as the corpus grows. A missing or vague
 description removes the human-side acceptance criteria that makes the fixture
-useful in the demo UI.
+useful in the demo UI. A standardized message pattern makes the corpus easier to
+scan, compare, and review without every fixture inventing its own presentation language.
 
 ---
 
