@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> - <DESC>Design plan for spatial signals, typed field hints, and first-class chained visual fields in V3</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Record the post-bridge architectural plan for moving from replay-seam cleanup into the deeper semantic work needed for Madeira-flag-class V3 recipes and future complex chained animations.</WCTX> -->
-<!-- <CLOG>0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Record the post-bridge architectural plan for moving from replay-seam cleanup into the deeper semantic work needed for Madeira-flag-class V3 recipes and future complex chained animations, now including the discovered need for two explicit spatial bases rather than one overloaded radius primitive.</WCTX> -->
+<!-- <CLOG>0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
 
 # tui-vfx V3 spatial field + hint plan
 
@@ -167,7 +167,7 @@ The missing piece is the execution substrate between those families.
 ### 3.2 What is still missing
 
 #### Missing in `mixed-signals`
-The main missing signal primitives are spatial-coordinate leaves:
+The first missing signal primitives were spatial-coordinate leaves:
 
 - `sample_norm_x`
 - `sample_norm_y`
@@ -181,7 +181,28 @@ The current `SignalContext` already carries:
 - phase / phase_t / loop_t / absolute_t
 - `char_index`
 
-but it does **not** currently carry per-cell coordinates.
+but it did **not** initially carry per-cell coordinates.
+
+That first tranche is now landed.
+
+The next missing conceptual piece is more subtle:
+
+- a second spatial basis for **continuous frame / surface geometry**
+
+The current cell-space leaves are correct for:
+
+- radar
+- ripple / pulse-wave
+- many authored per-cell field graphs
+
+But adoption work against vignette/optical-falloff consumers showed that some
+effects want a different basis:
+
+- not “where is this sampled cell on the discrete lattice?”
+- but “where is this point on the continuous surface/frame geometry?”
+
+That distinction should be treated as foundational rather than as one
+effect-local quirk.
 
 #### Missing in V3 runtime
 The main missing execution pieces are:
@@ -261,7 +282,76 @@ Suggested meaning:
 
 These are intentionally small additions with high leverage.
 
-### 5.4 Why these first spatial leaves were added
+### 5.4 A new discovery: there are two valid spatial bases
+
+The current audit/adoption pass found that we should explicitly model **two**
+spatial bases in `mixed-signals`:
+
+#### A. Cell basis
+
+This is the basis the current leaves use.
+
+Good for:
+
+- `sample_norm_x`
+- `sample_norm_y`
+- `sample_cell_x`
+- `sample_cell_y`
+- `sample_centered_x`
+- `sample_centered_y`
+- `sample_radius`
+- `sample_angle`
+
+Semantics:
+
+- tied to the discrete sampled cell lattice
+- normalized against `0 .. width-1` / `0 .. height-1`
+- ideal for authored field graphs, displacement fields, sweeps, and radar-like
+  or ripple-like motion
+
+#### B. Surface / frame basis
+
+This is the next foundational extension we should add.
+
+Recommended companion leaves:
+
+- `sample_surface_centered_x`
+- `sample_surface_centered_y`
+- `sample_surface_radius`
+
+Possible later companion:
+
+- `sample_surface_angle`
+
+Semantics:
+
+- tied to the continuous frame/surface geometry
+- center derived from the frame rather than from the edge-inclusive sampled
+  cell lattice
+- ideal for optical falloff, diffusion-style lighting, spotlight illumination,
+  and vignette-like effects
+
+### 5.5 Why this should be additive, not a semantic redefinition
+
+We should **not** redefine the existing `sample_radius` leaf.
+
+Why:
+
+- it already has coherent cell-space meaning
+- it is already useful for real downstream uses
+- changing it would silently break effects that are correctly using the
+  existing basis
+
+The better design is:
+
+- keep the current cell-basis leaves as they are
+- add explicit surface/frame-basis companion leaves
+- let downstream effects choose the correct basis intentionally
+
+That gives us a cleaner and more maintainable substrate than trying to force
+one “radius” primitive to satisfy two different geometric models.
+
+### 5.6 Why these first spatial leaves were added
 
 These first leaves are not “features for feature's sake.”
 They were added because they unlock a broad class of reusable authored effects
@@ -291,7 +381,7 @@ They were chosen because they are:
 - small enough not to bloat `mixed-signals`
 - directly useful in both application TUI work and lightweight game/story work
 
-### 5.5 Additional spatial leaves now chosen for the 0.2.3 substrate
+### 5.7 Additional spatial leaves now chosen for the 0.2.3 substrate
 
 To support the current post-bridge field/hint work and the near-term showcase
 goals, the next spatial leaves are now part of the intended substrate:
@@ -322,7 +412,13 @@ The current recommendation is therefore:
 - then use those leaves to simplify bespoke downstream spatial math where that
   math is clearly reusable
 
-### 5.6 Spotlight / cone feature candidate
+And after that:
+
+- add the explicit **surface/frame-basis** companions for optical/illumination
+  consumers
+- then continue the downstream audit with both bases available
+
+### 5.8 Spotlight / cone feature candidate
 
 There is one higher-level candidate worth keeping explicitly in view:
 
@@ -366,7 +462,7 @@ future justification point, but not yet an automatic primitive commitment.
 
 ---
 
-## 5.4 Proposed schema changes
+## 5.9 Proposed schema changes
 
 The schema changes should be additive, tree-shaped, and ergonomic.
 
@@ -379,6 +475,16 @@ leaves already drafted conceptually:
 - `sample_norm_y`
 - `sample_cell_x`
 - `sample_cell_y`
+- `sample_centered_x`
+- `sample_centered_y`
+- `sample_radius`
+- `sample_angle`
+
+And the next additive family should be the companion surface-space leaves:
+
+- `sample_surface_centered_x`
+- `sample_surface_centered_y`
+- `sample_surface_radius`
 
 These should remain **leaves**, not wrappers, so they compose naturally inside
 existing `add` / `multiply` / `mix` graphs.
