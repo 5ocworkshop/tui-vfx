@@ -53,6 +53,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `c71e6be`
 - `43-madeira-release-readiness-checklist.md`
   - landed via `09ad811`
+- `24-madeira-second-slice-template.md`
+  - landed via `8c1be16`
 - `05-debug-recipes-qc-v3.md`
   - landed via `76b924d`
 - `59-v3-rustdoc-gap-closure-for-schema-apis.md`
