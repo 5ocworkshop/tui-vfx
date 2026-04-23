@@ -190,12 +190,13 @@ For each cycle record:
 - helper id
 - packet revision summary
 - whether the helper completed grounding before the questions
-- adaptive questions used and why
+- the exact 7 fixed and 3 adaptive questions used
 - fixed-question score
 - adaptive-question score
 - what the helper got wrong
 - what improved vs previous cycle
 - what you changed next
+- a full feedback section capturing the helper's grounding response and the full answer set, or a faithful verbatim transcript/appendix reference
 
 ## Final convergence criteria
 
@@ -214,6 +215,7 @@ At the end of the 10 cycles, provide:
 - exact cycle count
 - exact helper ids used
 - per-cycle log summary
+- enough full helper feedback in the results log that a human can audit what each helper actually said
 - strongest successful packet changes
 - recurring failure modes that remained
 - recommended permanent changes to:
