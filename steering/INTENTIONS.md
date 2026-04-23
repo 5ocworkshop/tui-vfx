@@ -428,10 +428,19 @@ Rules:
    because it appears in demo/explorer UI and gives the human checker an
    explicit statement of intended behavior.
 9. Debug-recipe body text should follow a deliberate, standardized pattern.
-   The message is not filler; it is part of the fixture presentation. Prefer a
-   short effect label or family cue on the first line and a short behavioral
-   cue on the second line when the effect benefits from explicit viewer
-   guidance.
+   The message is not filler; it is part of the fixture presentation. Prefer:
+   - first line: the actual human-readable test/effect name (for example
+     `Iris Effect`) so the viewer knows what primitive is being discussed
+   - second line: a short behavioral cue when the effect benefits from explicit
+     viewer guidance
+10. Debug-recipe layout must comfortably contain its body text. If the chosen
+   label + behavioral cue does not fit cleanly, increase the fixture size or
+   retune the content. Do not leave clipped, cramped, or ambiguously wrapped
+   text in a reference fixture.
+11. Debug recipes are part of the first-quality impression of the library.
+   They should be professional, correct, visually clean, free of obvious
+   presentation mistakes, useful as references, and instantly understandable in
+   their content.
 
 Why: debug recipes are how contributors, reviewers, and downstream integrators
 build intuition. They also give maintainers and downstream developers a known
@@ -441,8 +450,12 @@ visually conceals the effect fails its job as a reference artifact. Keeping
 single-primitive references separate from combinations is how the library
 avoids losing diagnostic clarity as the corpus grows. A missing or vague
 description removes the human-side acceptance criteria that makes the fixture
-useful in the demo UI. A standardized message pattern makes the corpus easier to
-scan, compare, and review without every fixture inventing its own presentation language.
+useful in the demo UI. Including the test/effect name on-screen also makes it
+much easier to match a rendered fixture back to its file during browsing,
+comparison, and regression triage. If the text does not fit the surface, the
+fixture stops serving as a trustworthy visual reference. These demos are also
+the baseline many new users will use to judge the quality, consistency, and
+ergonomics of the library itself, so they must feel intentionally professional.
 
 ---
 
