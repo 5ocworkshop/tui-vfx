@@ -1,9 +1,11 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_path_reveal.rs</FILE> - <DESC>Path-based reveal mask</DESC>
-// <VERS>VERSION: 1.0.0 - 2025-12-23</VERS>
-// <WCTX>Gun barrel spiral reveal implementation</WCTX>
-// <CLOG>Initial implementation with Spiral path support</CLOG>
+// <VERS>VERSION: 1.1.0 - 2026-04-23</VERS>
+// <WCTX>Refactor center-based polar reveal math onto the shared mixed-signals surface-space distance and angle substrate now that both primitives exist.</WCTX>
+// <CLOG>1.1.0: use mixed-signals SurfaceDistanceSignal and SurfaceAngleSignal for center-based polar geometry instead of open-coding radius/atan2 math locally.
+// 1.0.0: Initial implementation with Spiral path support</CLOG>
 
 use crate::traits::mask::Mask;
+use mixed_signals::prelude::{Signal, SignalContext, SurfaceAngleSignal, SurfaceDistanceSignal};
 use std::f32::consts::{PI, TAU};
 
 /// Direction for spiral reveals.
@@ -88,21 +90,17 @@ impl PathReveal {
     /// Calculate the reveal threshold for a cell.
     /// Returns a value 0.0-1.0 indicating when this cell should be revealed.
     fn reveal_threshold(&self, x: u16, y: u16, w: u16, h: u16) -> f32 {
-        // Center of the widget
-        let cx = w as f32 / 2.0;
-        let cy = h as f32 / 2.0;
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(w, h)
+            .with_cell_position(x, y);
 
-        // Cell position relative to center
-        let dx = x as f32 - cx;
-        let dy = y as f32 - cy;
-
-        // Polar coordinates from center
-        // Note: dy is negated so that "up" (negative y) is angle 0
-        let r = (dx * dx + dy * dy).sqrt();
-        let theta = (-dy).atan2(dx); // Angle from center, 0 = right, PI/2 = up
-
-        // Maximum radius to cover the widget
-        let max_r = ((cx * cx) + (cy * cy)).sqrt();
+        // Center-based surface polar coordinates
+        let max_r = ((w as f32 / 2.0).powi(2) + (h as f32 / 2.0).powi(2)).sqrt();
+        let r =
+            SurfaceDistanceSignal::radius_from(0.5, 0.5).sample_with_context(0.0, &signal_ctx)
+                * max_r;
+        let theta =
+            SurfaceAngleSignal::angle_from(0.5, 0.5).sample_with_context(0.0, &signal_ctx);
 
         match &self.path {
             RevealPathType::Spiral {
@@ -287,4 +285,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/masks/cls_path_reveal.rs</FILE> - <DESC>Path-based reveal mask</DESC>
-// <VERS>END OF VERSION: 1.0.0 - 2025-12-23</VERS>
+// <VERS>END OF VERSION: 1.1.0 - 2026-04-23</VERS>
