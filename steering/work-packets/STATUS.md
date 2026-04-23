@@ -55,6 +55,7 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `09ad811`
 - `05-debug-recipes-qc-v3.md`
   - landed via `76b924d`
+  - landed via `ab25485`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -100,7 +101,6 @@ These packets produced accepted non-code outputs that should be treated as harve
 - `56-v3-motion-path-and-offscreen-origin-support.md`
 - `57-v3-live-naming-and-vocabulary-cleanup.md`
 - `58-v3-ra-to-vfx-public-surface-rename-tranche.md`
-- `59-v3-rustdoc-gap-closure-for-schema-apis.md`
 - `60-v3-doc-autogen-and-authoring-guide-cutover.md`
 
 ## Notes
