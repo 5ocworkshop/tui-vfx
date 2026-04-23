@@ -1,9 +1,11 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_crt_sampler.rs</FILE> - <DESC>CRT sampler with curvature and jitter</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>WG10: Pipeline Parameter Completeness</WCTX>
-// <CLOG>New sampler implementing SamplerSpec::Crt { curvature, jitter }</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Refactor centered coordinate math onto the shared mixed-signals spatial substrate now that those leaves exist.</WCTX>
+// <CLOG>1.1.0: use mixed-signals centered coordinate leaves for CRT barrel distortion input instead of open-coding the -1..1 coordinate remap locally.
+// 1.0.0: New sampler implementing SamplerSpec::Crt { curvature, jitter }</CLOG>
 
 use crate::traits::sampler::Sampler;
+use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 
 /// CRT monitor screen distortion sampler.
 ///
@@ -52,9 +54,13 @@ impl Sampler for CrtSampler {
             return Some((dest_x, dest_y));
         }
 
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(width, height)
+            .with_cell_position(dest_x, dest_y);
+
         // Normalize coordinates to -1..1 range centered on screen
-        let nx = (dest_x as f32 / width as f32) * 2.0 - 1.0;
-        let ny = (dest_y as f32 / height as f32) * 2.0 - 1.0;
+        let nx = SpatialCoordinateSignal::sample_centered_x().sample_with_context(0.0, &signal_ctx);
+        let ny = SpatialCoordinateSignal::sample_centered_y().sample_with_context(0.0, &signal_ctx);
 
         // Apply barrel distortion (CRT curvature)
         let (curved_x, curved_y) = if self.curvature > 0.001 {
@@ -136,4 +142,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_crt_sampler.rs</FILE> - <DESC>CRT sampler with curvature and jitter</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

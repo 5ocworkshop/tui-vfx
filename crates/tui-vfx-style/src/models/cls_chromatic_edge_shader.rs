@@ -1,8 +1,10 @@
 // <FILE>tui-vfx-style/src/models/cls_chromatic_edge_shader.rs</FILE> - <DESC>Edge-based chromatic aberration approximation</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Integrate ChromaticEdgeShader with spatial shader runtime</WCTX>
-// <CLOG>Add StyleShader implementation for ChromaticEdgeShader</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Refactor representative normalized edge-position math onto the shared mixed-signals spatial substrate now that those leaves exist.</WCTX>
+// <CLOG>1.2.0: use mixed-signals normalized coordinate leaves for horizontal/vertical edge distance calculations instead of open-coding local width/height normalization.
+// 1.1.0: Add StyleShader implementation for ChromaticEdgeShader</CLOG>
 
+use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 use crate::traits::{ShaderContext, StyleShader};
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
@@ -92,16 +94,13 @@ impl ChromaticEdgeShader {
             return (0.0, 0.0);
         }
 
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(width, height)
+            .with_cell_position(x, y);
         let normalized_pos = if self.horizontal {
-            if width == 0 {
-                0.5
-            } else {
-                x as f32 / width as f32
-            }
-        } else if height == 0 {
-            0.5
+            SpatialCoordinateSignal::sample_norm_x().sample_with_context(0.0, &signal_ctx)
         } else {
-            y as f32 / height as f32
+            SpatialCoordinateSignal::sample_norm_y().sample_with_context(0.0, &signal_ctx)
         };
 
         // Calculate distance from edges (0 at edges, 0.5 at center)
@@ -246,4 +245,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_chromatic_edge_shader.rs</FILE> - <DESC>Edge-based chromatic aberration approximation</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>
