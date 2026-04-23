@@ -171,3 +171,37 @@ This DAG should be updated whenever:
 - a packet is completed
 - a packet scope changes materially
 - a newly discovered blocker inserts a new prerequisite edge
+
+
+## Additional packet nodes
+- `WP13` — V3 rules-stage coverage expansion
+- `WP14` — probe/validator consistency audit
+- `WP15` — generated docs freshness gate hardening
+- `WP16` — recipe_schema validator boundary audit
+- `WP17` — centralized loader dispatch audit
+- `WP18` — preview/probe scheduling parity audit
+- `WP19` — scene procedural determinism audit
+- `WP20` — Madeira scene semantics audit
+- `WP21` — filter family native-only fixtures audit
+- `WP22` — work-packet library maintenance
+
+## Additional dependency notes
+- `WP13` depends softly on `WP04`/`bf08c44` because it extends the restored V3 rules stage.
+- `WP14` depends softly on `WP04`, `WP05`, and `WP13` because validator truth should stabilize before cross-surface consistency auditing.
+- `WP15` depends softly on `WP01`; run `WP01` first if freshness is currently red.
+- `WP16` is independent of most runtime lanes and can run as a read-heavy blocker audit.
+- `WP17` is a read-heavy audit and can run in parallel with most non-loader implementation lanes.
+- `WP18` depends softly on the recent timing normalization work and should not overlap with new timing implementation in the same files.
+- `WP19` is mostly independent but should not overlap with scene/procedural implementation lanes touching the same tests.
+- `WP20` depends softly on `WP07`; it is a deeper Madeira follow-on audit.
+- `WP21` depends softly on `WP10`; use `WP10` first if a broader corpus-priority view is still missing.
+- `WP22` depends on the briefing experiment converging and on `WP03` if a reusable template is introduced.
+
+## Additional collision notes
+- `WP13` collides with `WP04` and partially with `WP05` in validator tool files.
+- `WP14` is mostly audit-only but may inspect the same files as `WP04`/`WP05`; safest as read-only while those are active.
+- `WP15` collides with `WP01` around docs generator/gate files.
+- `WP17` may collide with future loader refactor lanes in `src/recipe/` and `src/v3/fnc_load_*`.
+- `WP18` may collide with preview/probe timing changes.
+- `WP19` and `WP20` can collide with scene-bearing implementation lanes.
+- `WP22` collides with any broad packet-library rewrite and should follow the experiment winner.

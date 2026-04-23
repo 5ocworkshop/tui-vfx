@@ -52,3 +52,13 @@ Purpose: pre-authored, handoff-ready packets for bounded subagent lanes once the
 10. `10-debug-recipe-corpus-normalization-audit.md`
 11. `11-motion-disabled-demo-ux.md`
 12. `12-native-replay-hot-path-audit.md`
+- `13-v3-rules-stage-coverage-expansion.md`
+- `14-probe-validator-consistency-audit.md`
+- `15-generated-docs-freshness-gate-hardening.md`
+- `16-recipe-schema-validator-boundary-audit.md`
+- `17-centralized-loader-dispatch-audit.md`
+- `18-preview-probe-scheduling-parity-audit.md`
+- `19-scene-procedural-determinism-audit.md`
+- `20-madeira-scene-semantics-audit.md`
+- `21-filter-family-native-only-fixtures-audit.md`
+- `22-work-packet-library-maintenance.md`
