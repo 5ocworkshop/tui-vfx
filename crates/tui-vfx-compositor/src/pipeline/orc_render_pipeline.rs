@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.1.3</VERS>
-// <WCTX>Phase 1a perf — hoist shader region resolution and the shader area Rect out of the per-cell apply_shaders / apply_shaders_inspected functions. The doc on StyleRegion::Cell states the hot loop should resolve bindings once per layer per frame; the code was doing it once per cell per layer. Fix the mismatch.</WCTX>
-// <CLOG>12.1.3: PATCH — resolve layer.region once per layer at the top of render_pipeline_with_shadow / render_loop / render_loop_inspected, pass the pre-resolved &[Cow<StyleRegion>] and the frame-constant Rect into apply_shaders / apply_shaders_inspected. Eliminates per-cell match + evaluate()×2 (for the Cell{Binding,Binding} case) and per-cell match + Cow::Borrowed wrap (for every other variant). ~150-300 μs/frame on 80×24 with 2 shader layers.
+// <VERS>VERSION: 12.1.4</VERS>
+// <WCTX>Phase 1a perf — hoist the frame-constant element-rect bounds out of both write-back loops in render_pipeline_with_shadow. Same doc-intent-vs-code discipline as 12.1.3.</WCTX>
+// <CLOG>12.1.4: PATCH — hoist element_left / element_top / element_right / element_bottom above the inspected/non-inspected write-back branch split. Both branches previously recomputed them per cell via usize::from(element_rect.x/y/width/height); element_rect is frame-constant. The non-inspected shadow_element_rect.is_none() branch had a parallel per-cell in_element built from elem_offset_x + width directly; replaced with in_element_ni (same value post-hoist). ~5-10 μs/frame on 80×24 + shadow.
+// 12.1.3: PATCH — resolve layer.region once per layer at the top of render_pipeline_with_shadow / render_loop / render_loop_inspected, pass the pre-resolved &[Cow<StyleRegion>] and the frame-constant Rect into apply_shaders / apply_shaders_inspected. Eliminates per-cell match + evaluate()×2 (for the Cell{Binding,Binding} case) and per-cell match + Cow::Borrowed wrap (for every other variant). ~150-300 μs/frame on 80×24 with 2 shader layers.
 // 12.1.2: PATCH — introduce a thread-local ROLES_ARC_CACHE plus a cached_roles_arc() helper that reuses the previously built Arc<RoleMap> when (ptr, generation, width, height) matches the cached entry. Used from all three per-call roles_arc sites: render_pipeline_with_shadow, render_loop, and render_loop_inspected. Behavior unchanged; steady-state per-frame source_roles.clone() drops to zero for workloads that keep a long-lived RoleMap across frames. Memo §2.
 // 12.1.1: PATCH — replace the fresh OwnedGrid::new + buffer.clone() pair in render_pipeline_with_shadow with two thread-local GridPool checkouts plus a cells-slice copy. Behavior unchanged; steady-state per-shadowed-frame allocations go from 2+ to 0 once pool buckets are warm. Memo §1 and §3.
 // 12.1.0: MINOR — Phase A.3 additions. (a) render_pipeline_with_shadow now takes `destination: &mut SemanticScene` (was &mut dyn Grid) so it can write RoleTag::Shadow into the destination role map for every cell identified as a shadow region candidate. (b) apply_shaders/apply_shaders_inspected gain a `roles_arc: &Arc<RoleMap>` parameter; the ShaderContext struct literals now include the `roles` field cloned from this Arc. (c) render_loop and render_loop_inspected build the Arc<RoleMap> once per invocation (a single RoleMap clone) so per-cell Arc::clone is cheap. (d) new effective_shadow_rect() helper consults config.source_region via extract_shadow_envelope; returns None for no-match (shadow stage skipped). Non-inspected shadow path pre-computes the in_element_ni / shadow_has_coverage_ni flags so shadow-region writes can be tracked for role tagging regardless of composite mode branch.
@@ -376,6 +377,13 @@ fn render_pipeline_with_shadow(
     // in the destination's RoleMap after the grid-write phase completes.
     let mut shadow_role_writes: Vec<(u16, u16)> = Vec::new();
 
+    // Element bounds are frame-constant; both write-back branches used to
+    // recompute them per cell.
+    let element_left = usize::from(element_rect.x);
+    let element_top = usize::from(element_rect.y);
+    let element_right = element_left + usize::from(element_rect.width);
+    let element_bottom = element_top + usize::from(element_rect.height);
+
     // Grid-write phase: borrow the destination's grid mutably for the
     // duration of the pixel copy loop. The `destination: &mut SemanticScene`
     // argument re-borrows once the grid phase is done so we can write
@@ -408,10 +416,6 @@ fn render_pipeline_with_shadow(
                     let source_empty = source
                         .get(x, y)
                         .is_none_or(|source_cell| source_cell.is_empty());
-                    let element_left = usize::from(element_rect.x);
-                    let element_top = usize::from(element_rect.y);
-                    let element_right = element_left + usize::from(element_rect.width);
-                    let element_bottom = element_top + usize::from(element_rect.height);
                     let in_element = x >= element_left
                         && x < element_right
                         && y >= element_top
@@ -543,19 +547,18 @@ fn render_pipeline_with_shadow(
                     let dest_x = offset_x + x;
                     let dest_y = offset_y + y;
 
-                    // Non-inspected path needs to compute these locally too
-                    // so we can tag shadow-region writes below.
+                    // Non-inspected path needs these locally for the shadow-
+                    // region classification below. element_left/top/right/
+                    // bottom are hoisted above the if/else; source_empty,
+                    // in_element, shadow_has_coverage, and
+                    // shadow_region_candidate are genuinely per-cell.
                     let source_empty_ni = source
                         .get(x, y)
                         .is_none_or(|source_cell| source_cell.is_empty());
-                    let element_left_ni = usize::from(element_rect.x);
-                    let element_top_ni = usize::from(element_rect.y);
-                    let element_right_ni = element_left_ni + usize::from(element_rect.width);
-                    let element_bottom_ni = element_top_ni + usize::from(element_rect.height);
-                    let in_element_ni = x >= element_left_ni
-                        && x < element_right_ni
-                        && y >= element_top_ni
-                        && y < element_bottom_ni;
+                    let in_element_ni = x >= element_left
+                        && x < element_right
+                        && y >= element_top
+                        && y < element_bottom;
                     let shadow_has_coverage_ni =
                         shadow_cell.is_some_and(|shadow_cell| !shadow_cell.is_empty());
                     let shadow_region_candidate_ni = !in_element_ni && shadow_has_coverage_ni;
@@ -595,29 +598,20 @@ fn render_pipeline_with_shadow(
                         } else {
                             *cell
                         }
-                    } else {
-                        let in_element = x >= elem_offset_x
-                            && x < elem_offset_x + width
-                            && y >= elem_offset_y
-                            && y < elem_offset_y + height;
-
-                        if in_element {
-                            *cell
-                        } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
-                            match shadow_spec.config.composite_mode {
-                                ShadowCompositeMode::GlyphOverlay => {
-                                    blend_shadow_cell(cell, dest_cell)
-                                }
-                                ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
-                                    cell,
-                                    dest_cell,
-                                    shadow_spec.config.color,
-                                    &grade_config,
-                                ),
-                            }
-                        } else {
-                            *cell
+                    } else if in_element_ni {
+                        *cell
+                    } else if let Some(dest_cell) = dest.get(dest_x, dest_y) {
+                        match shadow_spec.config.composite_mode {
+                            ShadowCompositeMode::GlyphOverlay => blend_shadow_cell(cell, dest_cell),
+                            ShadowCompositeMode::GradeUnderlying => grade_shadow_cell(
+                                cell,
+                                dest_cell,
+                                shadow_spec.config.color,
+                                &grade_config,
+                            ),
                         }
+                    } else {
+                        *cell
                     };
 
                     dest.set(dest_x, dest_y, final_cell);
@@ -1028,4 +1022,4 @@ fn blend_shadow_cell(shadow_cell: &Cell, dest_cell: &Cell) -> Cell {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>END OF VERSION: 12.1.3</VERS>
+// <VERS>END OF VERSION: 12.1.4</VERS>
