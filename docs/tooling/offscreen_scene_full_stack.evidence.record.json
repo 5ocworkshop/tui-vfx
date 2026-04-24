@@ -1,0 +1,32 @@
+{
+  "schema": "tui_vfx_v3_release_gate_evidence.v1",
+  "fixture_id": "offscreen_scene_full_stack",
+  "gate": "offscreen",
+  "status": "fail",
+  "captured_at": "2026-04-24T18:33:01Z",
+  "recipe": {
+    "repo": "tui-vfx-recipes",
+    "path": "recipes/debug_recipes/scene/scene_layer_full_stack.json"
+  },
+  "tool_runs": [
+    {
+      "evidence_type": "probe_report_json",
+      "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/scene/scene_layer_full_stack.json --format json --phase dwelling --sample-t 1.0 --with-causation",
+      "artifact": "artifacts/release-gates/offscreen_scene_full_stack/probe_report.json",
+      "artifact_sha256": "e052545538a33763536d9872d60804dc467b96ed18387644c161310d050934c5",
+      "status": "pass"
+    },
+    {
+      "evidence_type": "trace_report_json",
+      "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/scene/scene_layer_full_stack.json --format report",
+      "artifact": "artifacts/release-gates/offscreen_scene_full_stack/trace_report.json",
+      "artifact_sha256": "525d91c27e75dd9db1ee8d17d4030c36c0ed251417fc8f0acac092eee09d7eb3",
+      "status": "pass"
+    }
+  ],
+  "review": {
+    "owner": "tui-vfx implementation lead",
+    "approval_required": false,
+    "notes": "recipe-probe again produced diagnostics=[] with inactive pre-compositor stages, so the offscreen fixture has command-backed probe evidence without stage failures. tui-vfx-trace emitted summary.total_envelopes=1441 with dropped=0. The gate stays fail until the manifest-required render_capture_png artifact is captured and compared."
+  }
+}

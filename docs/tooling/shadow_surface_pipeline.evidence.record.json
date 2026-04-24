@@ -1,0 +1,32 @@
+{
+  "schema": "tui_vfx_v3_release_gate_evidence.v1",
+  "fixture_id": "shadow_surface_pipeline",
+  "gate": "shadow",
+  "status": "fail",
+  "captured_at": "2026-04-24T18:33:01Z",
+  "recipe": {
+    "repo": "tui-vfx-recipes",
+    "path": "recipes/debug_recipes/scene/scene_layer_surface_shadow_pipeline.json"
+  },
+  "tool_runs": [
+    {
+      "evidence_type": "probe_report_json",
+      "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/scene/scene_layer_surface_shadow_pipeline.json --format json --phase dwelling --sample-t 1.0 --with-causation",
+      "artifact": "artifacts/release-gates/shadow_surface_pipeline/probe_report.json",
+      "artifact_sha256": "321dcdab1ed1028d4a06b0fef775ea46874388f3204fd6706b1c09e640c55ff4",
+      "status": "pass"
+    },
+    {
+      "evidence_type": "trace_report_json",
+      "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/scene/scene_layer_surface_shadow_pipeline.json --format report",
+      "artifact": "artifacts/release-gates/shadow_surface_pipeline/trace_report.json",
+      "artifact_sha256": "9b32a1501c90cf345fc2c148f52a79b987a995576ced67864486990bf6cc8f9a",
+      "status": "pass"
+    }
+  ],
+  "review": {
+    "owner": "tui-vfx implementation lead",
+    "approval_required": false,
+    "notes": "recipe-probe captured a pre-compositor snapshot with diagnostics=[] and all stages inactive, which matches the probe surface stripping compositor-owned effects. tui-vfx-trace emitted summary.total_envelopes=1021 with dropped=0. The fixture remains fail until the manifest-required render_capture_png artifact is captured and classified."
+  }
+}
