@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/post-release/INDEX.md</FILE> - <DESC>Index of post-release V3 capability ideas that are intentionally deferred until the core V3 release is stable.</DESC> -->
-<!-- <VERS>VERSION: 0.1.1</VERS> -->
+<!-- <VERS>VERSION: 0.1.2</VERS> -->
 <!-- <WCTX>Collect deferred capability specs without mixing post-release creative work into the active V3 release gate.</WCTX> -->
-<!-- <CLOG>0.1.1: add braille dotfield toolkit plan.</CLOG> -->
+<!-- <CLOG>0.1.2: add weather ambient field spec.</CLOG> -->
 
 # Post-release capability specs
 
@@ -16,6 +16,9 @@ until V3 playback, validation, docs, and recipe migration are stable.
 - [Glyph actor procedural spec](glyph-actor-procedural-spec.md) — ASCII/Unicode
   stick-figure actors that can move, pose, perch, jump, and compose with V3
   motion routes and effects.
+- [Weather ambient field spec](weather-ambient-field-spec.md) — rain, snow,
+  wind, fog, lightning, and time-of-day lighting as composable V3 ambient
+  ingredients.
 
 ## Rules
 
@@ -27,4 +30,4 @@ until V3 playback, validation, docs, and recipe migration are stable.
   glyph rendering and effect semantics stay in `tui-vfx` / `tui-vfx-recipes`.
 
 <!-- <FILE>docs/design/post-release/INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.2</VERS> -->
