@@ -1,0 +1,24 @@
+{
+  "schema": "tui_vfx_v3_release_gate_evidence.v1",
+  "fixture_id": "probe_wormhole_pageant",
+  "gate": "probe",
+  "status": "pass",
+  "captured_at": "2026-04-24T18:06:40Z",
+  "recipe": {
+    "repo": "tui-vfx-recipes",
+    "path": "recipes/vfx-probe-validation/wormhole_pageant.json"
+  },
+  "tool_runs": [
+    {
+      "evidence_type": "probe_report_json",
+      "command": "cargo run -q -p recipe-probe -- recipes/vfx-probe-validation/wormhole_pageant.json --format json --phase dwelling --sample-t 1.0 --with-causation",
+      "artifact": "artifacts/release-gates/probe_wormhole_pageant/probe_report.json",
+      "status": "pass"
+    }
+  ],
+  "review": {
+    "owner": "tui-vfx tooling lead",
+    "approval_required": false,
+    "notes": "Probe report ran cleanly. analysis.status=success, lifecycle_analysis.status=success, frame_count=1."
+  }
+}

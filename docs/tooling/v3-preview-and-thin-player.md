@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/v3-preview-and-thin-player.md</FILE> - <DESC>As-built V3 preview surfaces and thin-player direction.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.1.1</VERS> -->
 <!-- <WCTX>Document the existing V3 preview/player surfaces and keep the future movie/thin-player lane aligned with the grid-first architecture.</WCTX> -->
-<!-- <CLOG>0.1.0: initial guide mapping demo/play_recipe/v3_play_recipe/direct snapshots to the future thin-player boundary.</CLOG> -->
+<!-- <CLOG>0.1.1: note v3_play_recipe --json as the agent-readable direct V3 snapshot mode.</CLOG> -->
 
 # V3 preview and thin player surface
 
@@ -15,7 +15,7 @@ only then choose an output adapter.
 |---|---|---|
 | Interactive browser | `/usr/projects/tui-vfx-recipes/examples/demo.rs` | Human browsing and visual sign-off. |
 | Interactive single recipe | `/usr/projects/tui-vfx-recipes/examples/play_recipe.rs` | Human playback of one recipe. |
-| Minimal V3 inspector | `/usr/projects/tui-vfx-recipes/examples/v3_play_recipe.rs` | Parse, normalize, compile, render deterministically, print render hash. |
+| Minimal V3 inspector | `/usr/projects/tui-vfx-recipes/examples/v3_play_recipe.rs` | Parse, normalize, compile, render deterministically, and emit either text or `--json` snapshot summaries. |
 | Direct V3 snapshot state | `/usr/projects/tui-vfx-recipes/src/preview/cls_direct_v3_preview_state.rs` | Maintains sampled timing and rendered snapshot for supported V3 recipes. |
 | Direct snapshot composer | `/usr/projects/tui-vfx-recipes/src/preview/fnc_render_direct_v3_snapshot.rs` | Composes a direct V3 snapshot into a ratatui buffer at the adapter boundary. |
 | Diagnostic dump | `/usr/projects/tui-vfx-recipes/examples/diag_render_dump.rs` | Machine-friendly rendered cell dump for focused debugging. |
@@ -38,6 +38,12 @@ small CLI that:
 4. prints text, JSON summaries, or probe-compatible artifacts,
 5. optionally sends pairs of frames to the existing frame-diff tooling.
 
+For the current thin-player slice, the quickest agent-readable command is:
+
+```text
+cargo run -q --example v3_play_recipe -- --json recipes/debug_recipes/shaders/primitives/shader_orbit.json
+```
+
 ## Boundary rules
 
 - Do not make recipes own their clock.
@@ -48,4 +54,4 @@ small CLI that:
   snapshot path. Do not create a parallel recipe interpreter.
 
 <!-- <FILE>docs/tooling/v3-preview-and-thin-player.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->
