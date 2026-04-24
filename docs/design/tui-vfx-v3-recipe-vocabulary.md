@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.2.5</VERS> -->
-<!-- <WCTX>Make after-hours creative exploration a required recipe-authoring lane and capture missing ingredient ideas.</WCTX> -->
-<!-- <CLOG>0.2.5: require after-hours creative lab and add future-ingredient wishlist vocabulary.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.7</VERS> -->
+<!-- <WCTX>Add iterative design-compass vocabulary for theme recipe inspiration.</WCTX> -->
+<!-- <CLOG>0.2.7: define provisional 60/30/10 inspiration trio guidance for recipe authors.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
 
@@ -45,6 +45,7 @@ Recipe ingredients include:
 - progress and timer treatments
 - runtime bindings and tokens
 - assets
+- border/envelope and outer-shape treatments
 - icons, glyphs, symbols, emoji, and optional Nerd Font glyphs
 - I/O producer/consumer links
 - host-edge affordances when an adapter supports them
@@ -70,6 +71,23 @@ Icon/glyph guidance:
   decorative stickers
 - when multiple recipes in a set use icons, check that the icon language is
   consistent enough to feel related but distinct enough to serve each event
+
+
+Border/envelope/outer-shape guidance:
+
+- treat borders as recipe ingredients, not default chrome: built-in ratatui
+  borders, custom single-glyph overrides, fully authored ASCII/Unicode borders,
+  and border color/weight/timing can all change the nudge
+- use fractional-cell, block, braille, and other dense glyphs to suggest
+  non-rectangular silhouettes when the design earns it: parallelograms, angled
+  banners, notched cards, pop-art bursts, badges, or softened corners
+- the goal is not novelty for its own sake; the shape should improve tone,
+  attention, or recognition while preserving readability
+- btop-style craft is the reference spirit: many small, careful visual decisions
+  can convey dense information and personality inside a terminal grid
+- think like an artist as well as a terminal developer; if a fractional-cell
+  border idea needs new rendering support, record it as a future-ingredient
+  wishlist item instead of discarding it
 
 Similarity rule:
 
@@ -102,6 +120,19 @@ Whimsy vocabulary:
 - use **future-ingredient wishlist** for creative ideas that require a new
   primitive, math capability, shader/filter/sampler, procedural source, path, or
   content-animation feature before they can be expressed well
+
+Design-compass vocabulary:
+
+- use **60/30/10 inspiration trio** for the early, weighted design direction a
+  recipe author derives from theme research: primary inspiration, secondary
+  inspiration, and accent inspiration
+- the trio is a provisional creative hypothesis, not a coding-style requirement
+  lock; authors should refine it when ingredient discovery or combination work
+  reveals a stronger direction
+- use **updated 60/30/10** when documenting how the design compass changed and
+  why the revision improves recipe decisions
+- the point is to make the creative direction visible, discussable, and
+  improvable before JSON is written
 
 Rules:
 
@@ -462,4 +493,4 @@ in one shared visual model while we continue normalizing schema, fixtures, and
 runtime behavior.
 
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.7</VERS> -->

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-ingredients-reference-plan.md</FILE> - <DESC>Plan and template for a standardized V3 recipe ingredients reference</DESC> -->
-<!-- <VERS>VERSION: 0.1.4</VERS> -->
-<!-- <WCTX>Include future-ingredient wishlist capture for creative ideas beyond the current ingredient catalog.</WCTX> -->
-<!-- <CLOG>0.1.4: add future-ingredient wishlist guidance for missing primitive/math discoveries.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.5</VERS> -->
+<!-- <WCTX>Add border/envelope and outer-shape ingredient coverage to the reference plan.</WCTX> -->
+<!-- <CLOG>0.1.5: add border/envelope and fractional-cell silhouette reference guidance.</CLOG> -->
 
 # V3 Recipe Ingredients Reference Plan
 
@@ -31,8 +31,8 @@ The reference should help humans and AI authors answer:
 This is different from development tooling documentation. Validators, probes,
 trace CLIs, and preview players are **development tools**. Content transforms,
 masks, shaders, filters, motion routes, procedurals, bindings, timers, progress
-treatments, icons/glyphs/symbols/emoji, and I/O chains are **recipe
-ingredients**.
+treatments, border/envelope and outer-shape treatments,
+icons/glyphs/symbols/emoji, and I/O chains are **recipe ingredients**.
 
 ## 2. Standard ingredient entry format
 
@@ -42,8 +42,8 @@ Every ingredient entry should use this format:
 ## Ingredient Name
 
 Kind: content | motion_route | easing | mask | shader | filter | sampler |
-      procedural_source | binding | progress_timer | icon_glyph | asset |
-      io_chain | host_edge_affordance
+      procedural_source | binding | progress_timer | border_envelope |
+      icon_glyph | asset | io_chain | host_edge_affordance
 
 One-line concept:
   ...
@@ -98,9 +98,10 @@ Initial catalog sections:
 8. Procedural sources
 9. Progress and timer ingredients
 10. Runtime bindings, tokens, and assets
-11. Icons, glyphs, symbols, emoji, and optional Nerd Font glyphs
-12. I/O chain ingredients
-13. Host-edge affordances
+11. Border/envelope and outer-shape ingredients
+12. Icons, glyphs, symbols, emoji, and optional Nerd Font glyphs
+13. I/O chain ingredients
+14. Host-edge affordances
 
 Each section should start with a short chooser table:
 
@@ -142,6 +143,7 @@ sun patch + GlistenBand + concealed light + slow cubic_out settle
    - progress/timer ingredients
    - procedural sources
    - I/O chain patterns
+   - border/envelope and outer-shape ingredients
    - icon/glyph ingredients
 3. Link each ingredient to at least one debug recipe or probe fixture.
 4. Add validation notes where schema spelling or probe bridge behavior is easy
@@ -164,7 +166,27 @@ Guidance:
 - If a recipe uses an emoji, document why it fits the tone and whether it may
   need an alternate glyph for restrained/professional contexts.
 
-## 7. Recipe-set similarity checks
+
+## 7. Border/envelope and outer-shape baseline
+
+Borders and envelopes are ingredients, not just rectangular chrome. The
+reference should cover:
+
+- built-in ratatui border styles and when they are enough
+- custom single-character border overrides
+- fully authored ASCII/Unicode borders for deliberate motifs
+- border color, timing, and weight as part of the nudge
+- fractional-cell, block, braille, and dense-glyph edge treatments that can
+  imply angled or non-cell-shaped silhouettes
+- examples such as parallelogram cards, notched labels, pop-art bursts, and
+  soft-corner illusions
+
+The quality bar is high: breaking the rectangle should feel intentional, legible,
+and useful. Encourage btop-style craft—small visual decisions that carry dense
+meaning—rather than novelty borders for their own sake. If a shape idea needs
+new rendering support, capture it in the future-ingredient wishlist.
+
+## 8. Recipe-set similarity checks
 
 Ingredient references should help authors build a set of recipes, not only a
 single recipe. A recipe set should be checked for accidental sameness:
@@ -183,7 +205,7 @@ format and vary border color, icon, texture, position, or animation intensity,
 document that as a **recipe family** with variants. Do not count each variant as
 a distinct recipe concept unless the assignment asks for variant coverage.
 
-## 8. Open questions
+## 9. Open questions
 
 - Should the first catalog be hand-maintained, generated from rustdoc/schema, or
   hybrid?
@@ -194,7 +216,7 @@ a distinct recipe concept unless the assignment asks for variant coverage.
 - How should host-edge affordances be represented while adapter support remains
   boundary-specific?
 
-## 9. Future-ingredient wishlist
+## 10. Future-ingredient wishlist
 
 The creative lab should not be constrained to only what exists today. If an
 author finds a compelling idea that requires missing support, record it as a
@@ -214,4 +236,4 @@ Wishlist entries are not implementation commitments. They are a discovery
 surface for enriching the library.
 
 # <FILE>docs/design/tui-vfx-v3-recipe-ingredients-reference-plan.md</FILE> - <DESC>Plan and template for a standardized V3 recipe ingredients reference</DESC>
-<!-- <VERS>END OF VERSION: 0.1.4</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.5</VERS> -->
