@@ -1,7 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.5.2</VERS> -->
-<!-- <WCTX>Keep durable steering guidance focused on architectural boundaries, canonical vocabulary, authoring ergonomics, debug-recipe quality, and schema-language consistency.</WCTX> -->
-<!-- <CLOG>0.5.2: add schema-field vocabulary alignment as a durable naming rule for docs, directories, fixtures, and examples.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.3</VERS> -->
+<!-- <WCTX>Keep durable steering guidance focused on architectural boundaries, canonical vocabulary, authoring ergonomics, index hygiene, debug-recipe quality, and schema-language consistency.</WCTX> -->
+<!-- <CLOG>0.5.3: add durable INDEX.md hygiene rule for moved, promoted, or archived docs.</CLOG> -->
 
 # Intentions
 
@@ -487,7 +487,37 @@ words. Ambiguous or varied language around defined fields makes the API feel
 less coherent, increases AI-authoring error rates, and forces humans to ask
 whether two different terms imply two different behaviors.
 
+
+## 33. Documentation Indexes Are Navigation Contracts
+
+Every `INDEX.md` file is a navigation contract for a busy repository, not a
+best-effort table of contents. When docs move, split, merge, promote from plan
+to core documentation, or get archived as closed-out design history, update the
+nearest relevant index in the same workset.
+
+Rules:
+
+1. If a file path changes, update every index that pointed at the old path before
+   committing.
+2. If a planning document becomes durable core documentation, add or move its
+   link into the core docs index rather than leaving it discoverable only through
+   the V3 planning tree.
+3. If a document becomes transient/closed-out history, say so in the index or
+   move it to an archive section instead of letting stale status masquerade as
+   live guidance.
+4. Keep index descriptions short and concrete. They should answer "start here
+   or not?" without making the reader inspect every file.
+5. Treat missing index updates as a documentation bug, especially in V3 work
+   where plans, as-built docs, generated docs, and tooling guides all coexist.
+
+Why: large repos punish treasure hunts. Indexes are how humans and AI agents
+recover context quickly without grep archaeology. Keeping them current preserves
+trust, reduces duplicate work, and prevents old planning notes from pretending
+to be today's map. The occasional joke is welcome; a stale map with a funny hat
+is still a stale map.
+
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.3</VERS> -->
