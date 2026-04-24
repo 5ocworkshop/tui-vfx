@@ -133,6 +133,8 @@ These packets produced accepted non-code outputs that should be treated as harve
   - Madeira is operational enough to audit but still at risk for sustained 60 FPS due to direct-preview structural overhead
 - `61-madeira-reference-repo-faithfulness-audit.md`
   - found the current Madeira direct output is still not faithful enough to `/usr/projects/madeira-flag`, with the next corrective slice at the direct scene-output fidelity seam
+- `44-madeira-fully-operational-and-vetted-signoff.md`
+  - final evidence-backed signoff decision recorded as `not ready`; next blocker is the remaining layer-local scene-stage diagnostic-truth gap in the final operational analysis surface
 
 ## New follow-on packets created from audit learnings
 
