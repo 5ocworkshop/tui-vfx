@@ -103,6 +103,8 @@ These packets produced accepted non-code outputs that should be treated as harve
   - identified zero-reference native-only fixtures as the next cleanup tranche, with Kitt as quality benchmark
 - `22-work-packet-library-maintenance.md`
   - classified packet-library compliance and rewrite needs
+- `23-madeira-first-implementation-slice.md`
+  - superseded by Packet 61/62; retain as historical Madeira entry point only
 - `33-v3-end-to-end-readiness-audit.md`
   - readiness high on audited seams; top blockers remain Madeira parity and broader corpus normalization
 - `34-pre-madeira-implementation-checklist.md`

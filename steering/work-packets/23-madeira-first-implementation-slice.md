@@ -6,6 +6,8 @@ Implement exactly the first Madeira slice chosen by the audit/plan work, and not
 ## Objective
 Implement the first concrete Madeira-facing gap identified by the Madeira audit/plan packets once the audit work is complete.
 
+> **Supersession note (2026-04-24):** Packet 23 is no longer the active live Madeira lane; the workstream now continues via Packet 24 → Packet 61 → Packet 62.
+
 ## Why this matters
 The Madeira work only becomes real once we start closing one gap at a time. This packet is the first execution lane after the audit/planning packets establish the exact seam.
 

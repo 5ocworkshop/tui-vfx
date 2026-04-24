@@ -348,6 +348,7 @@ The packet library now reaches all the way from immediate V3 tooling blockers th
 - `WP61` — Madeira reference-repo faithfulness audit
 
 ## Madeira-reference dependency notes
+- `WP23` is now effectively superseded by the later Madeira audit/corrective chain (`WP61` -> `WP62`); keep it as the historical first-slice entry point, not the active execution lane.
 - `WP61` should follow the current Madeira operational, visual, and readiness evidence (`WP40`, `WP41`, `WP43`) because it compares the live V3 recipe against `/usr/projects/madeira-flag` using the latest proof surfaces.
 - `WP61` can inform `WP44` signoff and any future Madeira corrective implementation slice.
 
