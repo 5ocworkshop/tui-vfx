@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.22.0</VERS>
-<!-- <WCTX>Add a one-screen Quick Scan up front so authors see the entire primitive inventory without scrolling 985 lines; surface the gt-design /recipe-author skill as the intent-to-primitive mapping front door so this document can lean into being the parameter reference rather than an authoring guide.</WCTX>
-<!-- <CLOG>1.22.0: PATCH — note that `tui-vfx-recipes` now supports top-level `config.shadow` upstream (validator/probe parity) and cross-link the recipe-authoring shadow flow from the Shadows section.
+<!-- <VERS>VERSION: 1.23.0</VERS>
+<!-- <WCTX>Add V3 pathway guidance so human and AI recipe authors understand first-class recipe I/O, cross-family chaining, runtime bindings, procedural scene sources, scene layers, and debug tooling in addition to the primitive catalog.</WCTX>
+<!-- <CLOG>1.23.0: MINOR — add V3 pathway capabilities section with first-class I/O chaining examples, runtime binding/asset contracts, procedural scene-source details, scene/source contract notes, and authoring/debugging guidance for new human and AI recipe authors.
+1.22.0: PATCH — note that `tui-vfx-recipes` now supports top-level `config.shadow` upstream (validator/probe parity) and cross-link the recipe-authoring shadow flow from the Shadows section.
 1.21.0: MINOR — add 'Quick Scan' (one-screen primitive inventory by category) after the TOC; add banner at top noting that intent-to-primitive selection lives in the gt-design /recipe-author skill.
 1.20.0: PATCH — Phase A.5 consistency pass: add "Unified Inspection Foundation (v0.9.0+)" cross-reference at the recommended-debugging-split section so consumers discover the new TraceEvent / TraceSink / InspectionSink surface from this document (full schema in docs/TRACE_EVENT_SCHEMA.md).
 1.19.0: MINOR — add "Role-Aware Pipeline Signature (v0.7.0+)" and "StyleRegion Targeting" subsections describing the new `&RoleMap` + `&mut SemanticScene` parameters and the Role(RoleTag) variant. Note back-compat via legacy bare-string Deserialize.
@@ -54,8 +55,9 @@ One-screen overview. Names link to the per-section detail below.
 5. [Style Effects (Temporal Animations)](#style-effects-temporal-animations)
 6. [Content Transformers (Text Effects)](#content-transformers-text-effects)
 7. [Shadows](#shadows)
-8. [Composition Pipeline](#composition-pipeline)
-9. [Observability & Debugging](#observability--debugging)
+8. [V3 Recipe Pathway Capabilities](#v3-recipe-pathway-capabilities)
+9. [Composition Pipeline](#composition-pipeline)
+10. [Observability & Debugging](#observability--debugging)
 
 ---
 
@@ -884,6 +886,383 @@ Since Hotfix H2 (2026-04-20), `tui-vfx-recipes` exposes this upstream surface di
 
 ---
 
+
+## V3 Recipe Pathway Capabilities
+
+V3 recipes are the compositional authoring pathway for `tui-vfx-recipes` and
+GT-Design. The primitive inventory above still matters, but V3 adds a higher
+level of control: recipes can declare scene layers, source surfaces, runtime
+contracts, and explicit data flow between effects. Treat this section as the
+capability map for deciding whether a recipe should be a simple single-effect
+preview, a chained effect system, or a scene-level composition.
+
+### What V3 adds beyond the primitive catalog
+
+| Capability | What it means for authors | Use when |
+|------------|---------------------------|----------|
+| **First-class effect I/O** | Pipeline steps can declare `io.outputs` and `io.inputs` so one effect produces a named hint/signal and later effects consume it. | A sampler/filter/shader/style effect should be driven by another effect instead of duplicating timing math. |
+| **Ordered step trees** | `sequence` preserves authored order; later siblings can consume earlier outputs. `parallel` snapshots sibling inputs and exposes outputs after the join. | You need predictable data dependencies or safe batching. |
+| **Cross-family chaining** | Samplers, masks, filters, shaders, style effects, and content steps can pass hints across family boundaries. | A field, scalar, mask, or style decision should influence a different visual lane. |
+| **Scene layers** | Recipes can define multiple layers, each with `source`, `placement`, `surface`, `visibility`, and layer-local `pipeline`. | Build cards, overlays, procedural backdrops, badges, captions, or composed hero scenes. |
+| **Runtime contracts** | `requires_bindings`, `requires_tokens`, and `requires_assets` document host-supplied inputs and file-backed assets. | The host should drive focus, hover, progress, text, colors, or asset selection without code changes. |
+| **Binding-resolved params** | Any procedural/source param can contain `{ "binding": "key", "default": value }`; the compiled scene path resolves it once per frame before rendering. | The same recipe needs to react to host state while keeping procedural sources deterministic. |
+| **Procedural sources** | Scene layers can render deterministic stock or host-registered generators such as spinners, breathe/pulse fields, fireworks, or file-backed braille dotfields. | Content should be generated from parameters/assets rather than hand-coded as an app-specific widget. |
+| **Canonical inspection** | `pipeline-validator --dump-normalized`, `--strict-contracts`, and `--lowering-report` expose normalized IR, contract usage, and migration/lowering evidence. | You need to debug or review what the recipe actually means after normalization. |
+
+### First-class I/O: the central V3 superpower
+
+V3 I/O turns effects from isolated decorations into a signal graph. A producer
+step names an output; a later consumer references that output. The runtime can
+then preserve the dependency, batch safe independent branches, and reject invalid
+cross-feeds.
+
+Minimal shape:
+
+```json
+{
+  "kind": "sequence",
+  "children": [
+    {
+      "kind": "sampler",
+      "scope": { "kind": "all" },
+      "io": {
+        "outputs": [{ "hint": "wave_field", "kind": "scalar" }]
+      },
+      "payload": { "type": "spatial_signal", "signal": { "type": "sample_norm_x" } }
+    },
+    {
+      "kind": "sampler",
+      "scope": { "kind": "all" },
+      "io": {
+        "inputs": [{ "input": "amplitude", "hint": "wave_field", "kind": "scalar" }]
+      },
+      "payload": { "type": "sine_wave", "axis": "y", "frequency": 1.5 }
+    },
+    {
+      "kind": "shader",
+      "scope": { "kind": "all" },
+      "io": {
+        "inputs": [{ "input": "intensity", "hint": "wave_field", "kind": "scalar" }]
+      },
+      "payload": { "type": "diffusion", "source": "right" }
+    }
+  ]
+}
+```
+
+Authoring rule of thumb:
+
+- Use **outputs** for reusable values: scalar progress, spatial fields, masks,
+  displacement maps, focus/falloff fields, or semantic activity flags.
+- Use **inputs** when another step should react to that value.
+- Use `sequence` when step B must see step A's output.
+- Use `parallel` when siblings are independent; outputs become visible after the
+  parallel join.
+- Keep names semantic (`wave_field`, `focus_falloff`, `hover_progress`) rather
+  than implementation-shaped (`sampler_1_output`).
+
+### Chaining examples that V2 could not express cleanly
+
+#### 1. One spatial field drives both displacement and light
+
+A sampler emits `wave_field`; a downstream sampler uses it to displace cells;
+a shader uses the same field to shade the wave crest. This creates a coherent
+“one force, two manifestations” effect: the text moves and brightens from the
+same signal.
+
+```text
+sampler(spatial_signal) -> wave_field
+  -> sampler(sine_wave, amplitude=wave_field)
+  -> shader(diffusion, intensity=wave_field)
+```
+
+Use for water ripples, heat shimmer, sonar sweeps, magical materialization, or
+music-reactive UI.
+
+Concrete fixture family: `complex_field_hint_displace_shade.json` and related
+field-hint debug recipes.
+
+#### 2. A filter derives a mask-like scalar that drives a shader
+
+A filter can re-emit a computed scalar (`dim_factor`, `edge_progress`,
+`scan_position`) and a later shader can use that value for color, glow, or
+highlight intensity. This lets an operational effect become an aesthetic driver.
+
+```text
+filter(kitt_scanner) -> scan_position
+  -> shader(border_sweep, input=scan_position)
+```
+
+Use for scanner bars that also light the border, hover rails that also wake
+secondary affordances, or error shakes that also italicize/highlight text.
+
+#### 3. Parallel branches compute independent signals, then a post-join consumer combines them
+
+Parallel is safe for independent producers: each branch sees the same input
+snapshot, then outputs are joined. A later step can consume both.
+
+```text
+parallel {
+  sampler(focus_field) -> focus_falloff
+  filter(hover_bar) -> hover_progress
+}
+shader(affordance_wake, inputs=[focus_falloff, hover_progress])
+```
+
+Use for rich focus states where cursor position, hover progress, and selection
+state each contribute without one branch accidentally reading another branch's
+partial output.
+
+Concrete fixture family: `v3_scheduler_parallel_join_sampler_style.json` and
+post-join sampler/style tests.
+
+#### 4. Content output drives downstream visual treatment
+
+A content transformer can expose progress or activity, then downstream filters
+or shaders can react. For example, a typewriter reveal can emit current reveal
+progress; a highlighter shader can follow the revealed edge and a cursor/wake
+filter can trail behind it.
+
+```text
+content(typewriter) -> reveal_progress
+  -> shader(highlighter, input=reveal_progress)
+  -> filter(cursor_wake, input=reveal_progress)
+```
+
+Use for typing assistants, command palettes, onboarding copy, terminal tutorial
+flows, and “decrypting” dashboards where the visual treatment follows text
+semantics instead of a separate clock.
+
+Concrete fixture family: `content_typewriter_io_filter_shader.json`.
+
+### Runtime bindings, tokens, and assets
+
+V3 recipes can be host-driven without requiring new Rust code for each variant.
+Declare external dependencies at the top level:
+
+```json
+{
+  "requires_bindings": {
+    "hover_progress": { "type": "number", "default": 0.0 },
+    "selected_row": { "type": "number", "default": 0 },
+    "show_hint": { "type": "bool", "default": true },
+    "wave_speed": { "type": "number", "default": 1.0, "range": [0.0, 4.0] }
+  },
+  "requires_tokens": {
+    "headline": { "type": "string", "default": "READY" }
+  },
+  "requires_assets": {
+    "madeira_flag_base": {
+      "type": "braille_dotfield",
+      "format": "tui-vfx.braille_flag_asset.v1",
+      "canonical_path": "recipes/madeira_flag/assets/base_flag_dots.json"
+    }
+  }
+}
+```
+
+Use bindings for live host state (hover, selection, progress, time-varying
+controls). Use tokens for text or theme substitutions. Use assets for external
+visual data such as a braille dotfield, icon grid, image-derived source, or
+procedural source seed data.
+
+The current binding rules authors should remember:
+
+- Declare every host-supplied key in `requires_bindings`; `--strict-contracts`
+  rejects runtime binding use that is not declared.
+- Use binding leaves inside source/procedural params when the host should drive a
+  value: `{ "binding": "wave_speed", "default": 1.0 }`. The compiled V3 scene
+  path resolves these leaves once per frame, before the procedural source or
+  effect receives its payload.
+- Use `visibility.predicate` with either a declared bare key (`"show_hint"`) or
+  an explicit `"binding:show_hint"` when a layer should appear/disappear from
+  host state.
+- Use `{{token_name}}` for text/theme template substitutions and `{{ asset_key
+  }}` for contract-backed asset paths. `asset.ref` / `asset.key` may name a
+  `requires_assets` entry directly when a source supports it, but the placeholder
+  form makes the dependency visible where it is used.
+- Keep runtime bindings distinct from step I/O hints: bindings come from the
+  host/contract boundary; I/O hints are produced by effects inside the same
+  per-frame pipeline.
+
+Example: a scene layer can hide/show from host state while its procedural source
+is still driven by a separate runtime binding:
+
+```json
+{
+  "id": "flag",
+  "visibility": { "predicate": "show_hint" },
+  "source": {
+    "type": "procedural",
+    "spec": {
+      "source_id": "braille_flag_field",
+      "params": {
+        "asset": {
+          "path": "{{ madeira_flag_base }}",
+          "format": "tui-vfx.braille_flag_asset.v1"
+        },
+        "wave": {
+          "speed": { "binding": "wave_speed", "default": 1.0 }
+        }
+      }
+    }
+  }
+}
+```
+
+### Procedural sources and asset-backed content
+
+Procedural scene sources let a recipe generate content from parameters, host
+bindings, and external assets. They are the V3 escape from one-off demo code:
+write or register a deterministic source once, then vary it through recipe data.
+
+Stock source ids currently include:
+
+| Source id | Capability | Typical use |
+|-----------|------------|-------------|
+| `braille_spinner` / `dots_spinner` / `line_spinner` | Small deterministic loading indicators. | Inline waits, badges, status affordances. |
+| `breathe` / `pulse` | Ambient clock-driven fills/highlights. | Low-motion background life, selection emphasis. |
+| `solid_color_fade` | Full-canvas color underlay/backdrop helper used by scene recipes that own their canvas. | Backdrops, recipe-owned black/blue surfaces, fade-in underlays. |
+| `ballistic_fireworks` | Deterministic particle-style fireworks from palette, spawn zones, timing, gravity, and seed params. | Celebratory scenes and hero moments. |
+| `braille_flag_field` | File-backed braille dotfield resampled into a waving, shaded flag-like surface. | Asset-agnostic image/flag/banner demos. |
+| `fallback_procedural` | Visible deterministic fallback for unknown ids. | Debugging missing registrations; not intended as authored output. |
+
+Procedural authoring rules:
+
+- Sources must be deterministic for the same `clock`, target rect, params,
+  assets, and bindings; do not hide wall-clock or mutable state in them.
+- Sources should be tiny-rect safe (`1×1` must not panic) and tag painted cells
+  as procedural/semantic roles so downstream scopes can target them.
+- Transparent overlay sources should leave unpainted cells empty and visible
+  glyphs transparent-background unless the recipe deliberately owns the canvas.
+- Recipe-owned canvas mode is explicit: add a backdrop/base surface so
+  transparent procedural cells reveal the intended black/blue/etc. underlay
+  rather than the host preview substrate.
+- Prefer file-backed assets for reusable visual material. The Madeira flag base
+  art lives in `recipes/madeira_flag/assets/base_flag_dots.json`, is declared in
+  `requires_assets.madeira_flag_base`, and is loaded through the generic
+  `braille_flag_field` path rather than embedded in Rust.
+- Hosts can install additional sources through a procedural registry; authored
+  recipes should still expose their variable inputs as params/bindings/assets so
+  humans and AI tools can inspect and mutate them.
+
+The Madeira flag recipe is the current reference for asset-backed procedural
+scene work: the base flag dotfield is file-backed, the flag wave speed and
+fireworks enablement are runtime-bound, text lines are tokenized, and the same
+V3 pathway can load a different compatible dotfield asset without adding
+Madeira-specific Rust code.
+
+### Scene layers and layer-local pipelines
+
+A V3 scene recipe can compose multiple sources:
+
+```json
+{
+  "config": {
+    "scene": {
+      "layers": [
+      {
+        "id": "backdrop",
+        "source": { "type": "procedural", "spec": { "source_id": "solid_color_fade" } },
+        "placement": { "type": "anchor", "spec": { "anchor": "center" } }
+      },
+        {
+          "id": "flag",
+          "source": { "type": "procedural", "spec": { "source_id": "braille_flag_field" } },
+          "placement": { "type": "absolute", "spec": { "rect": { "x": 1, "y": 0, "width": 40, "height": 17 } } },
+          "pipeline": { "step": { "kind": "shader", "payload": { "type": "glisten_band" } } }
+        }
+      ]
+    }
+  }
+}
+```
+
+Layer capabilities:
+
+- `source`: text, card, image-like, or procedural content.
+- `placement`: anchor or absolute geometry, optionally sibling-relative through
+  `sibling_id`, `offset_rows`, and `offset_cols`.
+- `surface`: base style and attached shadow owned by the layer.
+- `visibility`: phase or binding-driven layer visibility.
+- `role_tag`: semantic tagging (`content`, `background`, `decoration`, etc.) for
+  role scopes, shadows, and downstream reasoning.
+- `pipeline`: layer-local sampler/mask/filter/shader/style/content chain; hints
+  produced here are local to that layer pipeline rather than automatically
+  shared across sibling layers.
+- `timing`: optional layer-local enter/exit duration, delay, and easing so a
+  scene can choreograph surfaces without moving logic back into application
+  code.
+
+Use scene layers when the design has independently meaningful surfaces:
+background firework field + flag + label text; modal card + badge + tooltip;
+status panel + animated border + inline command hint.
+
+### Validation and inspection commands for authors
+
+Run these while authoring V3 recipes:
+
+```bash
+cd /usr/projects/tui-vfx-recipes
+
+# See canonical normalized V3 IR and discovered contract usage.
+cargo run -q -p pipeline-validator -- \
+  --dump-normalized --format json recipes/path/to/recipe.json
+
+# Enforce declared runtime bindings/tokens/assets.
+cargo run -q -p pipeline-validator -- \
+  --rules --strict-contracts recipes/path/to/recipe.json
+
+# Inspect lowering/migration evidence and human-review flags.
+cargo run -q -p pipeline-validator -- \
+  --lowering-report --format json recipes/path/to/recipe.json
+
+# Probe rendered behavior and timeline/output summaries.
+cargo run -q -p pipeline-validator -- \
+  --probe --format json recipes/path/to/recipe.json
+```
+
+### Choosing the right V3 shape
+
+- **Single primitive preview:** one leaf step, no I/O. Best for documenting a
+  mask/filter/shader/style/content primitive.
+- **Simple chain:** one `sequence`; producer before consumer. Best for “this
+  thing drives that thing.”
+- **Parallel producers + post-join consumer:** one `parallel` followed by a
+  consumer. Best for independent field/scalar generation.
+- **Scene recipe:** `scene.layers[]` with optional layer-local pipelines. Best
+  for composed UI surfaces and asset/procedural demos.
+- **Host-driven recipe:** declare `requires_bindings`, `requires_tokens`, and
+  `requires_assets`. Best for downstream design-system integration.
+- **Procedural/asset recipe:** use a deterministic `source_id` plus file-backed
+  assets and binding-resolved params. Best when the authored visual should be
+  reusable with different artwork, palettes, speeds, or enablement gates.
+- **Semantic surface recipe:** use role-tagged scene layers, role scopes, and
+  role-aware shadows when the visual depends on meaning (`border`, `content`,
+  `decoration`) rather than raw rectangles.
+
+### Coverage reminders for human and AI authors
+
+Before inventing new code, check whether the desired result can be expressed by
+combining these existing V3 surfaces:
+
+- source layers for separate semantic surfaces
+- bindings for host state
+- tokens for text/theme substitutions
+- assets for visual material that should live outside Rust
+- procedural sources for deterministic generated content
+- step I/O for effect-to-effect signal flow
+- scopes/roles for targeting
+- timing/lifecycle fields for choreography
+- validator/probe/lowering reports for proof
+
+If one of those surfaces almost fits but lacks a narrow primitive, add the
+smallest reusable primitive/source and document its contract. Avoid returning to
+demo-specific Rust for things that can be recipe data, a file-backed asset, or a
+parameterized procedural source.
+
+---
+
 ## Composition Pipeline
 
 **Source:** `crates/tui-vfx-compositor/src/pipeline/cls_composition_options.rs`
@@ -1062,4 +1441,4 @@ Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EV
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.22.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.23.0</VERS> -->
