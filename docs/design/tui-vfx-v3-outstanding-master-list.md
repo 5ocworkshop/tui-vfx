@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.7</VERS> -->
+<!-- <VERS>VERSION: 0.14.8</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.14.7: mark the packaged thin-player slice complete-initial.</CLOG> -->
+<!-- <CLOG>0.14.8: mark V3-VIEW01 and V3-REGION01 complete-initial after verified recipe-side work.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -22,9 +22,9 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Complete initial / broaden later | Scene-layer motion now feeds edge-crossing border and attached-shadow policy; shared helper coverage proves diagonal/two-edge blanking directly. Follow-up: broaden full scene-layer corpus fixtures as needed. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Complete initial / broaden later | mixed-signals already has surface/frame-space basis; `tui-vfx-recipes` commits `c5190f1`, `7b2246f`, and `e52a510` prove and expose `sample_surface_radius`, `sample_surface_radius_from`, and `sample_surface_angle_from` through V3 native filter rendering plus primitive-first debug recipes. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
-| V3-REGION01 | Region compression follow-up | Outstanding | Resolve larger-corpus pressure beyond current region refs/runs. |
+| V3-REGION01 | Region compression follow-up | Complete initial / broaden later | `tui-vfx-recipes` commit `a2ef9f3` proves `cell_run`, `cell_runs`, and `region_ref` across authoring/schema, normalized IR, validation, compiled bridge, output stage, and a primitive-first debug recipe. Broaden only if larger corpus pressure appears. |
 | V3-NAME01/PREVIEW01 | V3 naming cutover work | Parser/schema and first playback alias slices complete / import migration outstanding | Scene/continuous/clock, main `config.rs`, parser wrappers, recipe internals, and public preview-boundary aliases now expose canonical `Vfx*`/`Playback*`/frame names while preserving compatibility aliases. Next slice: move imports/usages in risk order, then consider a future module-path shim. |
-| V3-VIEW01 | Normalized IR viewer/explorer | Outstanding / implementation slice scoped | Scope around normalized execution graph after IR contract is stable. First slice should add an offline `pipeline-validator` normalized execution-graph explorer built on existing normalized loading/dump surfaces, without schema or runtime coupling. |
+| V3-VIEW01 | Normalized IR viewer/explorer | Complete initial / broaden later | `tui-vfx-recipes` commit `a2ef9f3` adds offline `pipeline-validator --explore-normalized` for human-readable normalized execution-graph outlines over existing normalized loading/dump surfaces. Broaden later only for richer formats or UI. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / thin-player complete-initial | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Packaged `tui-vfx-player` now exists in `tui-vfx-recipes` with text/JSON summary modes over existing preview/cutover APIs; remaining TOOL01 work is broader command/docs/CI cutover, not thin-player packaging. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
@@ -186,6 +186,8 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-DOCS01-QDOC01-COMPLETE | Complete initial | Focused V3 docs lifecycle/status reconciliation updated the V3 index, lifecycle plan, and upgrade-plan index; local Markdown link audit over `docs/design` and `docs/tooling` checked 70 files with 0 broken local links. |
 | V3-CI02-HEADLESS01 | Complete evidence checkpoint | Headless release-gate records now document passing probe/lowering/trace evidence where available and classify remaining `render_capture_png` gaps as blocked-on-explicit-owner-visual-capture; `probe_midnight_switchboard` remains the technical blocker to fix. |
 | V3-TOOL01-THINPLAYER-PACKAGE | Complete initial | `tui-vfx-recipes` commit `c4401ff`: packaged `tui-vfx-player` workspace package provides text and `--json` recipe playback summaries through existing preview/cutover APIs while preserving legacy fallback. |
+| V3-VIEW01-EXPLORER | Complete initial | `tui-vfx-recipes` commit `a2ef9f3`: `pipeline-validator --explore-normalized` prints identity, contracts, scene layers, and pipeline step-tree summaries without changing normalized IR schema or runtime paths. |
+| V3-REGION01-COMPLETE-INITIAL | Complete initial | `tui-vfx-recipes` commit `a2ef9f3`: region-compression support is proven from authoring/schema through normalized/compiled/output bridge, with `shader_region_compression_scope.json` as the debug fixture. |
 
 ## Hard policy: V2 removal is last
 
@@ -277,4 +279,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.7</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.8</VERS> -->
