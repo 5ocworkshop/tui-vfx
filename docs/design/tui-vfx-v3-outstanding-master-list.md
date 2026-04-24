@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.10.0</VERS> -->
-<!-- <WCTX>Move completed Ralph DAG batch lanes out of the active queue so the punch list remains an accurate source of outstanding V3 work.</WCTX> -->
-<!-- <CLOG>0.10.0: move completed/complete-initial DAG batch work into a completed section, including recipe inventory, VC-10 review queue, release-gate manifest, motion compatibility table, metadata/timing doc follow-through, and earlier edge-tooling initial slices. 0.9.0: add V3 execution DAG pointer for parallel track dispatch and dependency management. 0.8.0: record accepted timing and metadata decision from tui-vfx-v3-timing-and-metadata-decision.md: no universal Timer primitive for V3; optional metadata with non-authoritative intent hints and debug-recipe expected-visual guidance. 0.7.0: record accepted capability governance from tui-vfx-v3-capability-governance-decision.md, including promotion ladder and rule-of-three factory-internal promotion. 0.6.0: record accepted scope/composition decision from tui-vfx-v3-scope-composition-decision.md, including intersect/replace scope modes, deferred union, and explicit normalized combine/merge semantics. 0.5.0: record accepted release-gate policy from tui-vfx-v3-release-gate-policy.md, including outcome states, whitelist ownership, GTD owner approval for product-visible drift, and no automatic fixture recapture. 0.4.0: record accepted provisional migration outcome policy from tui-vfx-v3-migration-outcome-policy.md, including owner-audit caveat and no legacy recipe removal. 0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
+<!-- <VERS>VERSION: 0.11.0</VERS> -->
+<!-- <WCTX>Move the latest committed VC-09, VC-01/03, motion, and docgen slices into completed/complete-initial status while keeping broader follow-on lanes visible.</WCTX> -->
+<!-- <CLOG>0.11.0: record committed slices for BSOD VC-09 exact evidence, migration outcome reporting, VC-01 metadata shape validation, VC-03 dual-style survivor validation, diagonal offscreen motion fixture/compiled parity, and V3 docs-generation landing page. 0.10.0: move completed/complete-initial DAG batch work into a completed section, including recipe inventory, VC-10 review queue, release-gate manifest, motion compatibility table, metadata/timing doc follow-through, and earlier edge-tooling initial slices. 0.9.0: add V3 execution DAG pointer for parallel track dispatch and dependency management. 0.8.0: record accepted timing and metadata decision from tui-vfx-v3-timing-and-metadata-decision.md: no universal Timer primitive for V3; optional metadata with non-authoritative intent hints and debug-recipe expected-visual guidance. 0.7.0: record accepted capability governance from tui-vfx-v3-capability-governance-decision.md, including promotion ladder and rule-of-three factory-internal promotion. 0.6.0: record accepted scope/composition decision from tui-vfx-v3-scope-composition-decision.md, including intersect/replace scope modes, deferred union, and explicit normalized combine/merge semantics. 0.5.0: record accepted release-gate policy from tui-vfx-v3-release-gate-policy.md, including outcome states, whitelist ownership, GTD owner approval for product-visible drift, and no automatic fixture recapture. 0.4.0: record accepted provisional migration outcome policy from tui-vfx-v3-migration-outcome-policy.md, including owner-audit caveat and no legacy recipe removal. 0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -14,13 +14,11 @@ considered stable and before any V2 fallback/removal work is considered.
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
 | V3-T01 | Tooling docs hub | In progress | Expand `docs/tooling/` into the canonical map for validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, and docs-generation surfaces. |
-| V3-M01 | VC-09 migration-equivalence harness | Outstanding / active | Pair-level status/evidence buckets exist; continue until critical recipes have equivalence or accepted-replacement evidence. Current work must keep legacy recipes in place pending owner audit. |
+| V3-M01 | VC-09 migration-equivalence harness | In progress / canary exact | BSOD V2↔V3 canary now reports exact output and probe match; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
-| V3-M03 | Migration outcome reporting | In progress | Build on the inventory manifest and VC-09 evidence to report `equivalent` / `replacement` / `retired`, rationale, evidence status, and owner-review flags. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Outstanding | Finish stricter authoring schema diagnostics and style normalization validation; VC-10 review queue is already seeded. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Outstanding | Treat normalized IR as validator/viewer/equivalence target and prove canonicalized equivalence for curated authoring forms. |
 | V3-CI02 | Release-gate evidence capture / compare | Outstanding | The release-gate manifest exists; next work is pass/fail/whitelist-needed evidence capture using existing probe/render/trace tooling. |
-| V3-MOTION02 | Offscreen/slide fixture support | Outstanding | Validate representative V3 slide/offscreen fixtures, including diagonal and edge-crossing cases identified by the compatibility table. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Outstanding | Implement/prove host-bound motion envelope, transparent shadow behavior, and directional edge-crossing semantics together. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Outstanding | Surface/frame-space signal basis and richer field/showcase consumers remain follow-up beyond the landed cell-space field-hint proofs. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
@@ -87,12 +85,10 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-VC01 | Finish authoring schema validation diagnostics | `pipeline-validator` surfaces stricter authoring-shape diagnostics and schema reports without breaking compatible recipes unexpectedly. |
 | V3-VC03 | Finish style normalization validation | Validator proves no dual style forms survive normalized IR. |
 | V3-M01 | Continue VC-09 migration-equivalence harness | Use provisional `equivalent` / `replacement` / `retired` tracks; keep all legacy files in place pending owner audit. |
-| V3-M03 | Implement migration outcome reporting | Inventory/equivalence tooling can report track, rationale, evidence status, and owner-audit-needed flags. |
 | V3-CI02 | Capture / compare release-gate evidence | Gates produce pass/fail/whitelist-needed output with render/probe/trace evidence. |
 | V3-C01 | Canonical normalized IR as explicit artifact | Normalized IR is treated as the validator/viewer/equivalence target, with serializable output where tooling needs it. |
 | V3-C02 | Canonicalization/property-test tooling | Named-factory and compositional forms can canonicalize to the same normalized form for curated pairs. |
 | V3-VIEW01 | Normalized IR viewer/explorer backlog | Viewer work is scoped around normalized execution graph, not raw authoring syntax. |
-| V3-MOTION02 | Offscreen/slide fixture support | Representative slide/offscreen recipes can be expressed and validated in V3, including the multi-edge/diagonal cases found by the compatibility table. |
 | V3-REGION01 | Region compression follow-up | `cell_run`, `cell_runs`, `region_ref`, and any larger-corpus compression pressure are implemented or deferred with evidence. |
 | V3-NAME01 | `Ra*` → `Vfx*` inventory execution | Rename-bearing buckets are worked down methodically while preserving compatibility/deprecation guidance during V3 cutover. |
 | V3-PREVIEW01 | Preview seam naming migration plan | Execute `Preview*` -> `Playback*`/chosen name with re-exports and docs after inventory/risk ordering is complete. |
@@ -110,7 +106,7 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-SHADOW01 | Implement/prove transparent shadow and host-bound shadow model | Shadow docs require explicit transparent shadow, host attachment, and motion-edge integration rather than accidental underlay behavior. |
 | V3-EDGE01 | Implement/prove directional vanishing-edge behavior | Motion/offscreen edge crossing must drive border vanish/preserve and shadow fade/clip/preserve based on the active clipped edge. |
 | V3-TOOL01 | Work down Chapter 100 release checklist | V3 support for schema dispatch/cutover, `pipeline-validator`, `recipe-probe`, `tui-vfx-trace`, debug QC, docs generation, authoring docs, demo, and CI. |
-| V3-DOCGEN01 | V3-shape generated docs pipeline | `xtask docs generate` and recipe-side docs-v3 generator/check path produce V3-shaped schemas/capabilities/AI context. |
+| V3-DOCGEN01 | V3-shape generated docs pipeline | Generated-doc landing page now advertises recipe-side V3 entry points; broader schema/capabilities/AI-context generation and drift checks remain follow-up. |
 | V3-TRACE01 | Trace/probe parity for broader V3 subset | Recipe-probe and tui-vfx-trace already accept supported compiled V3 subsets; scene parity, lifecycle-analysis parity, and broader trace semantics remain. |
 | V3-DEMO01 | Full native animated V3 demo/browser path | Demo/play_recipe render supported direct V3 bridge subset; full browser experience for migrated V3 corpus remains outstanding. |
 | V3-AUTH01 | V3 authoring-guide rewrite | Rewrite authoring workflow, schema reference, scene guide, procedural sources, and pipeline-validator LLM guide for V3 tree schema and primitive/default model. |
@@ -140,6 +136,12 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-MOTION01 | Complete | `docs/design/tui-vfx-v3-motion-compatibility-table.md`; commit `3ea0d35`. |
 | V3-META01 | Complete initial | Debug QC warns when fixtures lack `metadata.expected_visual`; schema/docs aligned to accepted optional metadata policy; commits `fd4da75` and `2fb4a37`. |
 | V3-TIME01 | Complete initial | Schema/hand docs explain distributed timing and no universal V3 Timer primitive; commit `2fb4a37`. |
+| V3-VC09-BSOD | Complete initial | `tui-vfx-recipes` commit `fe55beb`: BSOD canary reports exact output and probe match through `--migration-equivalence-report`. |
+| V3-M03 | Complete initial | `tui-vfx-recipes` commit `fe55beb`: migration report emits `track`, `rationale`, `evidence_status`, owner-review flags, and retired-row handling. |
+| V3-MOTION02 | Complete initial | `tui-vfx-recipes` commit `fe55beb` plus `tui-vfx` commit `50481b8`: diagonal offscreen fixture, lowering/probe tests, and compiled top-left/bottom-right two-edge parity. |
+| V3-VC03 | Complete initial | `tui-vfx-recipes` commit `2a7b216` and `tui-vfx` commit `4c19f0c`: validator rejects dual legacy/canonical style forms in normalized leaf payloads. |
+| V3-VC01 | Complete initial | `tui-vfx-recipes` commit `dac3a67`: optional authoring metadata shape validation for `intent_hints`, `visual_tags`, and `expected_visual`. |
+| V3-DOCGEN01A | Complete initial | `tui-vfx-recipes` commit `1a32b56`: generated docs landing page names `just docs-v3-generate`, `just docs-v3-check`, `V3_API.md`, and `v3_api.json`. |
 
 ## Hard policy: V2 removal is last
 
@@ -231,4 +233,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.10.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.0</VERS> -->
