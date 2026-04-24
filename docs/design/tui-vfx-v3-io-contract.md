@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-io-contract.md</FILE> - <DESC>Phase 0 / 0A semantic lock for V3 producer/consumer I/O: author-facing vocabulary, value kinds, visibility rules, runtime integration posture, and prove-out obligations.</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
 <!-- <WCTX>Lock the first-release V3 I/O semantics before validator/runtime/family migration work fans out, and keep the contract aligned with landed as-built proofs.</WCTX> -->
-<!-- <CLOG>0.5.0: record the mask consumer proof where a checkers mask consumes a value from a filter sourced output. 0.4.0: record explicit sourced io.outputs for non-spatial leaves so filters, masks, shaders, and style effects can publish bound payload fields downstream. 0.3.0: record dotted first-class io.inputs for nested wrapper payloads such as spatial style-effect shader intensity. 0.2.0: add the as-built Phase 4 shared field-hint consumer proof and point at the recipe-side debug fixture/docs. 0.1.0: initial Phase 0 / 0A contract. Defines first-release author vocabulary, value kinds, sequence-vs-parallel visibility, per-frame lifetime, duplicate-producer rule, runtime-param integration posture, and stage-level debug-recipe obligations.</CLOG> -->
+<!-- <CLOG>0.6.0: record the scene-layer-local proof where the same sourced-output chain runs inside scene.layers[].pipeline. 0.5.0: record the mask consumer proof where a checkers mask consumes a value from a filter sourced output. 0.4.0: record explicit sourced io.outputs for non-spatial leaves so filters, masks, shaders, and style effects can publish bound payload fields downstream. 0.3.0: record dotted first-class io.inputs for nested wrapper payloads such as spatial style-effect shader intensity. 0.2.0: add the as-built Phase 4 shared field-hint consumer proof and point at the recipe-side debug fixture/docs. 0.1.0: initial Phase 0 / 0A contract. Defines first-release author vocabulary, value kinds, sequence-vs-parallel visibility, per-frame lifetime, duplicate-producer rule, runtime-param integration posture, and stage-level debug-recipe obligations.</CLOG> -->
 
 # tui-vfx V3 I/O contract
 
@@ -80,6 +80,7 @@ That means:
 
 - root pipeline does not implicitly read layer-pipeline hints
 - one scene layer does not implicitly read another layer's hints
+- a single `scene.layers[].pipeline` may use the same sequence-local producer / consumer chain as the root pipeline
 - cross-layer or cross-pipeline exchange is out of scope for the first release
 
 ### 4.2 Sequence semantics
@@ -306,6 +307,7 @@ Canonical proof artifact:
 
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/complex_filter_reemits_field_hint.json`
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/complex_filter_to_mask_sourced_output.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_layer_io_filter_shader.json`
 
 ## 13. Non-goals for the first release
 
@@ -318,4 +320,4 @@ Not part of the first-release contract:
 - renaming the public author vocabulary without a separate migration plan
 
 <!-- <FILE>docs/design/tui-vfx-v3-io-contract.md</FILE> - <DESC>Phase 0 / 0A semantic lock for V3 producer/consumer I/O</DESC> -->
-<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->

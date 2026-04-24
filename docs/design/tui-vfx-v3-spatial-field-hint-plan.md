@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> - <DESC>Design plan for spatial signals, typed field hints, and first-class chained visual fields in V3</DESC> -->
-<!-- <VERS>VERSION: 0.9.0</VERS> -->
+<!-- <VERS>VERSION: 0.10.0</VERS> -->
 <!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model and landed shared-consumer proofs, so the next tranche starts from the remaining showcase/runtime gaps instead of repeating complete field-hint work.</WCTX> -->
-<!-- <CLOG>0.9.0: record the mask consumer proof where a sourced output drives checkers.cell_size. 0.8.0: record the sourced-output proof where a filter consumes a field, re-emits its bound payload field, and drives a downstream shader. 0.7.0: record the nested style-effect shader consumer proof where dotted io.inputs bind an upstream field hint into payload.shader.intensity. 0.6.0: record the first Phase 5 Madeira asset-contract slice: braille flag artwork now resolves through requires_assets and has a scene debug fixture proving the reusable token path. 0.5.0: record the Phase 4 shared field-hint proof where one spatial_signal drives both displacement and field-correlated shading through a sequenced recipe-side debug fixture. 0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
+<!-- <CLOG>0.10.0: record the scene-layer-local proof where spatial_signal, filter sourced output, and shader consumer run inside one scene layer pipeline. 0.9.0: record the mask consumer proof where a sourced output drives checkers.cell_size. 0.8.0: record the sourced-output proof where a filter consumes a field, re-emits its bound payload field, and drives a downstream shader. 0.7.0: record the nested style-effect shader consumer proof where dotted io.inputs bind an upstream field hint into payload.shader.intensity. 0.6.0: record the first Phase 5 Madeira asset-contract slice: braille flag artwork now resolves through requires_assets and has a scene debug fixture proving the reusable token path. 0.5.0: record the Phase 4 shared field-hint proof where one spatial_signal drives both displacement and field-correlated shading through a sequenced recipe-side debug fixture. 0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
 
 # tui-vfx V3 spatial field + hint plan
 
@@ -754,6 +754,7 @@ consumers remain open.**
 - nested wrapper consumer ✅ (`style_effect` spatial shader binding `shader.intensity` through dotted `io.inputs`)
 - middle-of-chain non-spatial producer ✅ (`filter` re-emitting a bound payload field through `io.outputs[].source`)
 - mask consumer ✅ (`checkers.cell_size` bound from a sourced filter output)
+- scene-layer-local I/O chain ✅ (same sourced-output substrate inside one `scene.layers[].pipeline`)
 - showcase/braille-dotfield consumers remain follow-up work
 
 As-built proof artifacts:
@@ -762,6 +763,7 @@ As-built proof artifacts:
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/shaders/style_field_hint_spatial_shader.json`
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/complex_filter_reemits_field_hint.json`
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/complex_filter_to_mask_sourced_output.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_layer_io_filter_shader.json`
 - `/usr/projects/tui-vfx-recipes/docs/V3_FIELD_HINT_CONSUMERS.md`
 
 The canonical chain is `Sequence[spatial_signal producer, sine_wave sampler,
@@ -786,6 +788,12 @@ A fourth proof covers masks: `Sequence[dim filter, checkers mask]` publishes
 `payload.factor` as `checker_size`, then binds that value into
 `checkers.cell_size`. This keeps mask consumers on the same sourced-output /
 first-class-input path without introducing a mask-specific binding mechanism.
+
+A fifth proof covers scene-layer-local execution: inside one
+`scene.layers[].pipeline`, a `spatial_signal` publishes `layer_field`, a dim
+filter consumes it into `payload.factor` and publishes `layer_shade`, and a
+diffusion shader consumes `layer_shade` into `intensity`. The visibility remains
+same-layer; this is not a cross-layer exchange contract.
 
 ### Phase 5 — restore richer `madeira_flag`
 
@@ -840,4 +848,4 @@ In one sentence:
 That is the most foundational path for future complex V3 animations.
 
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.10.0</VERS> -->
