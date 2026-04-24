@@ -98,6 +98,9 @@ Work packet quality rule:
   with the project
 - packet quality is the first lever; improve packet specificity before jumping
   to a bigger model
+- the experiment showed that exact path strings and exact verification wording
+  are what keep bounded lanes stable, so name them whenever the docs support
+  them
 - include enough detail, map, guardrails, and verification direction that the
   assignee can stay accurate without guessing at repo boundaries or widening
   scope
