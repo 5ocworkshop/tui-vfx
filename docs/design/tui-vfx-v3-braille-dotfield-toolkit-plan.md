@@ -1,13 +1,18 @@
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> - <DESC>Design plan for a generalized braille-dotfield source/toolkit in V3, using the Madeira flag as the first proving consumer.</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>Tonight's immediate need is not a universal shader/effect migration but a faithful recipe-side recreation of the madeira-flag crate. The key lesson from that crate is that the flag is not an image-layer effect stack; it is a braille-dot-native field with wave displacement and correlated shading applied before final terminal-cell emission. This doc captures the near-term implementation shape and the longer-term reusable toolkit direction.</WCTX> -->
-<!-- <CLOG>0.4.0: update the recommendation after implementation review — stop planning interim Madeira-specific source hacks and explicitly choose the generalized full braille-dotfield implementation now, with the Madeira flag as the first proving consumer. 0.3.0: add ANSI block/flow diagrams for the crate workflow, the near-term scene-layer implementation path, and the long-term toolkit layering so the design is easier to execute and discuss. 0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>Track the braille-dotfield toolkit direction as it moves from Madeira planning into an as-built reusable, contract-backed recipe asset path with wave displacement and correlated shading applied before final terminal-cell emission.</WCTX> -->
+<!-- <CLOG>0.5.0: record the as-built Phase 5 asset-contract slice: Madeira now resolves braille-dotfield artwork through requires_assets, plus a scene debug recipe locks the reusable asset-token path. 0.4.0: update the recommendation after implementation review — stop planning interim Madeira-specific source hacks and explicitly choose the generalized full braille-dotfield implementation now, with the Madeira flag as the first proving consumer. 0.3.0: add ANSI block/flow diagrams for the crate workflow, the near-term scene-layer implementation path, and the long-term toolkit layering so the design is easier to execute and discuss. 0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
 
 # tui-vfx V3 braille-dotfield toolkit plan
 
 ## Status
 
-Draft, implementation-oriented.
+Implementation-oriented. The first reusable slice has landed in
+`tui-vfx-recipes`: `braille_flag_field` loads validated braille-dotfield rows at
+V3 recipe-load time, Madeira selects its base artwork through
+`requires_assets.madeira_flag_base`, and
+`recipes/debug_recipes/scene/scene_braille_flag_asset_token.json` locks the
+asset-token path.
 
 ## Purpose
 
@@ -238,20 +243,19 @@ It is not a file-backed raster or a prepacked terminal image.
 Wave amplitude increases with normalized x.
 The left side is mostly anchored; the right side is the moving edge.
 
-### D. The source is recipe-owned geometry, not a file-backed image
+### D. The source is recipe-owned dotfield data, not a hidden Rust fallback
 
-The current recipe uses `requires_assets.madeira_flag_rsb`, but the source crate
-does not load a file-backed image at all. It procedurally authors the flag into
-a dot lattice and then renders from that authored field.
+The as-built V3 recipe now uses `requires_assets.madeira_flag_base` and
+`source.spec.params.asset.path = "{{ madeira_flag_base }}"`. V3 loading resolves
+that contract entry, validates the `tui-vfx.braille_flag_asset.v1` file, and
+embeds the rows before frame rendering.
 
-That means the long-term truthful recipe representation should move away from
-"image-like source with a Madeira-specific fallback" and toward one of:
+That keeps the long-term truthful representation: the source content lives in
+recipe-owned data and the reusable source logic applies wave displacement,
+shading, overscan, and braille emission. It is no longer Rust-encoded Madeira
+artwork, and changing the base visual asset is a recipe-data operation.
 
-- a procedural dotfield source that authors its own geometry from recipe params
-- or a future first-class dotfield source whose authored content still lives in
-  recipe space
-
-The key rule is:
+The key rule remains:
 
 > the canonical flag content should live in recipe-owned data or source logic,
 > not in a hidden Rust-only Madeira fallback path.
@@ -741,7 +745,9 @@ existing procedural/source surface proves structurally insufficient.
 ### First proving consumer
 
 Use the Madeira flag as the first consumer of the generalized toolkit rather
-than as a one-off implementation lane.
+than as a one-off implementation lane. The first asset-contract proof has now
+landed; richer parity work should build on that reusable path rather than
+reintroducing Madeira-specific artwork in Rust.
 
 ---
 
@@ -754,12 +760,13 @@ without wasting effort, then the correct plan is:
 2. build the generalized braille-dotfield primitives immediately
 3. build reusable displacement/shading/overscan dotfield transforms
 4. expose a recipe-facing procedural source family on top of them
-5. implement `braille_flag_field` as the first consumer
-6. use the resulting implementation to prove the toolkit on a real showcase
+5. implement `braille_flag_field` as the first consumer ✅
+6. select its artwork through `requires_assets` so the showcase remains asset-agnostic ✅
+7. use the resulting implementation to prove richer showcase parity on Madeira
 
 That is the shortest honest path from the current state to a recipe-side flag
 that actually behaves like the source crate **and** leaves behind reusable
 foundation instead of disposable interim work.
 
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> - <DESC>Design plan for spatial signals, typed field hints, and first-class chained visual fields in V3</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
 <!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model and landed shared-consumer proofs, so the next tranche starts from the remaining showcase/runtime gaps instead of repeating complete field-hint work.</WCTX> -->
-<!-- <CLOG>0.5.0: record the Phase 4 shared field-hint proof where one spatial_signal drives both displacement and field-correlated shading through a sequenced recipe-side debug fixture. 0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
+<!-- <CLOG>0.6.0: record the first Phase 5 Madeira asset-contract slice: braille flag artwork now resolves through requires_assets and has a scene debug fixture proving the reusable token path. 0.5.0: record the Phase 4 shared field-hint proof where one spatial_signal drives both displacement and field-correlated shading through a sequenced recipe-side debug fixture. 0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
 
 # tui-vfx V3 spatial field + hint plan
 
@@ -765,8 +765,20 @@ modified the output.
 
 ### Phase 5 — restore richer `madeira_flag`
 
-- move the flag from approximation subset back toward its intended semantics
+**Status: first asset-agnostic Madeira slice landed; richer showcase parity still
+in progress.**
+
+- move the flag from approximation subset back toward its intended semantics ✅
+  first step: contract-backed braille-dotfield artwork
 - keep fireworks procedural until/if they justify a more general particle-field substrate
+- keep building toward richer Madeira parity on top of the reusable
+  `braille_flag_field` path instead of re-embedding artwork in Rust
+
+As-built proof artifacts:
+
+- `/usr/projects/tui-vfx-recipes/recipes/madeira_flag/madeira_flag.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_braille_flag_asset_token.json`
+- `/usr/projects/tui-vfx-recipes/docs/scene/PROCEDURAL_SOURCES.md`
 
 ### Phase 6 — showcase parity and demonstration
 
