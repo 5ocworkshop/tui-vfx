@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Track the live V3 punch list, separated into owner decisions and autonomous execution, with accepted naming decisions now moved from decision-needed to execution lanes.</WCTX> -->
-<!-- <CLOG>0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Track the live V3 punch list, separated into owner decisions and autonomous execution, with accepted naming and phase-scoping decisions moved from decision-needed to execution lanes.</WCTX> -->
+<!-- <CLOG>0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -54,6 +54,7 @@ accepted direction and moved into implementation/doc cutover work.
 | V3-Q19 | Canonical playback seam naming | `PlaybackPlan`, `PlaybackController`, `src/playback/`, `V3FrameSnapshot`, `render_v3_frame_to_buffer`. |
 | V3-T05 | Thin player and future movie-layer naming | `tui-vfx-player` for the small recipe player/tool; `gtd-movie` for future scripted movie/timeline composition. |
 | V3-NAME-POLICY | Public/wire-format V3 prefix | `Vfx*`; keep `Ra*` only as hidden/deprecated cutover aliases where required. |
+| V3-Q03/Q13 | Phase scoping and partial phase spans | Steps and containers may both declare `phase`; effective phase is inherited by intersection; default is `all`; normalized IR emits explicit `PhaseSet`. |
 
 ## Needs project-owner decision / input
 
@@ -62,7 +63,6 @@ irreversible decisions on these without project-owner input.
 
 | ID | Decision needed | Why owner input matters |
 |---|---|---|
-| V3-Q03 | Phase scoping final authoring shape: per-step field, container propagation, or both | Affects schema ergonomics and examples. Current lean is per-step plus container propagation. |
 | V3-Q04 | Composition combine defaults / override policy | Authoring ergonomics vs explicitness. Implementation can normalize defaults, but the visible authoring policy is product-facing. |
 | V3-Q07 | GTD `RecipeSceneCanvas` sequencing relative to upstream V3 | Upstream can keep moving, but GTD adoption order is a downstream product/workflow decision. |
 | V3-Q08 | Relative Light explorations: V3-only, lab-only V2, or feature-gated V2 | Decides whether new work enters the migration corpus. Current plan leans lab-only until V3. |
@@ -114,6 +114,7 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-SCHED01 | Scheduler/batching final strategy | Keep semantic proofs green, preserve `Sequence` feed-forward and `Parallel` snapshot isolation, and only optimize when render-hash drift guards prove safety. |
 | V3-BIND01 | Broader runtime binding evaluation | Extend runtime binding support beyond currently proven shader/procedural/scene-visibility seams where the corpus needs it. |
 | V3-HINT01 | Hint graph rules hardening | Duplicate producer, visibility, lifetime, and value-kind errors are enforced consistently in validator and runtime. |
+| V3-PHASE01 | Implement accepted phase-scoping rule | Validator/canonicalizer accept single phase and phase arrays, apply inherited intersection, reject empty effective phase, and emit explicit normalized `PhaseSet`. |
 | V3-SPATIAL01 | Add/prove surface-frame spatial basis if still missing | Mixed-signals has cell-space leaves; docs call out continuous surface/frame geometry leaves as the next additive substrate for optical falloff/spotlight-style consumers. |
 | V3-SPATIAL02 | Restore richer Madeira/showcase parity | Re-create the Madeira demo as a first-class V3 showcase using field generation, typed hints, displacement, field-correlated shading, and scene-layer composition. |
 | V3-SHADOW01 | Implement/prove transparent shadow and host-bound shadow model | Shadow docs require explicit transparent shadow, host attachment, and motion-edge integration rather than accidental underlay behavior. |

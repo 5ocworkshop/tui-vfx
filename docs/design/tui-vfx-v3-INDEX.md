@@ -16,7 +16,8 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 4. [V3 schema draft](tui-vfx-v3-schema-draft.json)
 5. [V3 I/O contract](tui-vfx-v3-io-contract.md)
 6. [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
-7. [Tooling hub](../tooling/INDEX.md)
+7. [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
+8. [Tooling hub](../tooling/INDEX.md)
 
 ## Architecture and decisions
 
@@ -27,6 +28,7 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 - [V3 scheduler batching plan](tui-vfx-v3-scheduler-batching-plan.md)
 - [V3 validator canonicalization checklist](tui-vfx-v3-validator-canonicalization-checklist.md)
 - [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
+- [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
 
 ## Authoring vocabulary and schema
 
