@@ -1,7 +1,7 @@
 <!-- <FILE>docs/recipes/RECIPE_SCHEMA_SUMMARY.md</FILE> - <DESC>Observed JSON recipe schema summary</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Document the highlighter-vs-focus_field choice for per-region static bg paint: highlighter sweeps with phase t and produces a visible wipe-in at every enter→dwell boundary, focus_field is geometric and stays put</WCTX> -->
-<!-- <CLOG>MINOR: Extend the per-region bg callout with concrete shader recommendations — focus_field for static fills, highlighter only when a sweep is desired — and explain the phase-restart wipe-in artifact authors hit when they reach for highlighter as a flat-paint tool. Also add: enter and dwell are independent t clocks, so any t-driven shader needs to be set on both phases</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Document layout/grid-size authoring constraints plus the highlighter-vs-focus_field choice for per-region static bg paint.</WCTX> -->
+<!-- <CLOG>0.4.0: Add layout/grid-size guidance: fullscreen adapts to caller-provided grids, fixed size stays intentional, and absolute coordinates are widget-local defaults unless runtime-bound. 0.3.0: Extend the per-region bg callout with concrete shader recommendations — focus_field for static fills, highlighter only when a sweep is desired — and explain the phase-restart wipe-in artifact authors hit when they reach for highlighter as a flat-paint tool. Also add: enter and dwell are independent t clocks, so any t-driven shader needs to be set on both phases</CLOG> -->
 
 # Recipe JSON Schema Summary (Observed)
 
@@ -25,6 +25,16 @@ terminal-specific perception, cell ownership, and compositing constraints.
 ## `layout`
 - Typical keys: `width`, `height`, `anchor`, optional `mode`, optional `wrap`.
 - Evidence: `../tui-vfx-recipes/recipes/progress_scanner.json:10-14`.
+- Grid-size rule: tui-vfx renders to the caller-provided destination grid/`Rect`;
+  terminal resize handling belongs to the host app or preview adapter.
+- `mode: "fullscreen"` should be authored when the recipe is intended to adapt
+  to whatever grid size the host supplies. The host provides a new grid after
+  resize; the recipe renders again against that size.
+- Fixed `width`/`height` should be treated as an intentional fixed-size object
+  inside the destination grid. Do not expect fixed recipes to reflow unless the
+  recipe uses runtime bindings or explicit grid-aware layout/source rules.
+- Absolute cell coordinates are widget-local defaults. Bind positions or derive
+  them from layout when they need to follow a resizable host surface.
 
 ## `lifecycle`
 - Observed key: `auto_dismiss_ms`.
@@ -113,4 +123,4 @@ Workaround pattern:
   - Evidence: `../tui-vfx-recipes/recipes/hll_leave_server.json:99-103`.
 
 <!-- <FILE>docs/recipes/RECIPE_SCHEMA_SUMMARY.md</FILE> - <DESC>Observed JSON recipe schema summary</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->

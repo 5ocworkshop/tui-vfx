@@ -1,7 +1,7 @@
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
-<!-- <WCTX>Clarify the canonical role of Preview, validator, and probe surfaces inside the staged authoring loop</WCTX> -->
-<!-- <CLOG>MINOR: Add a “which tool proves what” split, including upstream-native debug-recipes QC and Preview as the canonical player for final visual sign-off</CLOG> -->
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
+<!-- <WCTX>Clarify the canonical role of Preview, validator, and probe surfaces inside the staged authoring loop; add grid-size/adaptive-layout guidance for V3 authors.</WCTX> -->
+<!-- <CLOG>1.4.0: Add grid-size/adaptive-layout guidance: tui-vfx renders to caller-provided grids, host apps own resize events, and authors should choose fullscreen/relative/bound positions intentionally. 1.3.0: Add a “which tool proves what” split, including upstream-native debug-recipes QC and Preview as the canonical player for final visual sign-off</CLOG> -->
 
 # Recipe Authoring Workflow
 
@@ -71,6 +71,34 @@ to a single final recipe file for normal browsing and use.
    - run probe timeline/diff
    - run manual visual QA
    - flatten the proven composition back to one final file
+
+
+## Grid size and adaptive authoring
+
+`tui-vfx` renders to the grid/`Rect` supplied by its caller. It does not need
+to know that a terminal resize happened; the host app, Ratatui integration,
+preview runner, or validator supplies a new target grid and asks the recipe to
+render again.
+
+Authoring implications:
+
+- Use `layout.mode: "fullscreen"` when the recipe should fill whatever grid the
+  host provides. In V3, this is the natural adaptive path: resize changes the
+  target grid, not the recipe identity.
+- Use fixed `width`/`height` deliberately when the recipe is designed to stay a
+  fixed-size object inside a larger grid. Fixed recipes may be centered, anchored,
+  clipped, or padded by the host/layout rules rather than magically reflowing.
+- Treat absolute cell positions as widget-local defaults. If a position must track
+  a changing host layout, expose it through runtime bindings or derive it from
+  grid-aware layout/source rules instead of baking one terminal size into the
+  recipe.
+- Test important recipes at more than one grid size. Preserve phase/sample time
+  when comparing sizes so you are testing layout adaptation rather than animation
+  restart behavior.
+
+The library core should remain area-in/grid-out. Terminal event polling, resize
+events, and decisions like "restart vs preserve phase" belong to host adapters
+and preview tools.
 
 ## Effective debugging loop
 
@@ -168,4 +196,4 @@ prefer to:
 - [PIPELINE_PROBE_WISHLIST.md](PIPELINE_PROBE_WISHLIST.md)
 
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->
