@@ -77,6 +77,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `e58e828`
 - `60-v3-doc-autogen-and-authoring-guide-cutover.md`
   - landed via `c06289a`
+- `62-madeira-direct-scene-output-fidelity-fix.md`
+  - landed via `c415e55`
 - `26-debug-recipes-content-family-tranche.md`
   - landed via `dd9ebff`
 - `52-madeira-direct-preview-allocation-cache-slice.md`
@@ -105,8 +107,10 @@ These packets produced accepted non-code outputs that should be treated as harve
   - identified zero-reference native-only fixtures as the next cleanup tranche, with Kitt as quality benchmark
 - `22-work-packet-library-maintenance.md`
   - classified packet-library compliance and rewrite needs
+- `09-scene-layer-native-bridge-parity.md`
+  - audit found the elapsed-time parity seam already green for scene-layer native replay; no new code slice required there
 - `23-madeira-first-implementation-slice.md`
-  - superseded by Packet 61/62; retain as historical Madeira entry point only
+  - superseded by the later Madeira audit/corrective chain; retain only as the historical first-slice entry point
 - `33-v3-end-to-end-readiness-audit.md`
   - readiness high on audited seams; top blockers remain Madeira parity and broader corpus normalization
 - `34-pre-madeira-implementation-checklist.md`
@@ -124,7 +128,6 @@ These packets produced accepted non-code outputs that should be treated as harve
 
 ## New follow-on packets created from audit learnings
 - `63-v3-displacement-and-shading-hint-consumers.md`
-- `62-madeira-direct-scene-output-fidelity-fix.md`
 - `56-v3-motion-path-and-offscreen-origin-support.md`
 
 ## Notes
