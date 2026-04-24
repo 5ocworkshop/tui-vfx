@@ -1,0 +1,32 @@
+{
+  "schema": "tui_vfx_v3_release_gate_evidence.v1",
+  "fixture_id": "gtd_toast_success_restrained",
+  "gate": "gtd_integration",
+  "status": "fail",
+  "captured_at": "2026-04-24T22:50:18Z",
+  "recipe": {
+    "repo": "tui-vfx-recipes",
+    "path": "recipes/gt-design/restrained/R01_fuji_enso_success.json"
+  },
+  "tool_runs": [
+    {
+      "evidence_type": "probe_report_json",
+      "command": "./target/debug/recipe-probe recipes/gt-design/restrained/R01_fuji_enso_success.json --format json --phase dwelling --sample-t 1.0 --with-causation",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/R01_fuji_enso_success.probe.json",
+      "artifact_sha256": "b6958472d070c57fb04e8242a4692d2470da09ce4d5c53543f6b64e7c5ad03d9",
+      "status": "fail",
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=failure, lifecycle_analysis.combined.status=failure, diagnostics=0, stages: content=failure observed=0, shader=success observed=54."
+    },
+    {
+      "evidence_type": "gtd_surface_capture",
+      "command": "NOT RUN: GT-Design representative preview/capture flow requires explicit project-owner/GTD lead fixture and visual capture approval; GUI/X11/Zutty/Xvfb capture is out of scope for this refresh.",
+      "status": "fail",
+      "observed_output_summary": "blocked-on-explicit-owner-gtd-visual-capture: provisional GTD fixture selection and product-visible capture approval remain owner decisions; no visual capture was generated or guessed."
+    }
+  ],
+  "review": {
+    "owner": "project owner / GTD lead",
+    "approval_required": true,
+    "notes": "Provisional GTD representative record added for inventory truth. Headless probe command was run and is recorded as failing where configured stages had no observed events; required gtd_surface_capture remains blocked on explicit owner fixture/capture approval. No GUI/X11/Zutty/Xvfb capture was run."
+  }
+}

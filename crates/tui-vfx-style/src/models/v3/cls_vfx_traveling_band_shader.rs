@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/v3/cls_vfx_traveling_band_shader.rs</FILE> - <DESC>V3 traveling-band family shader surface</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Decision 2 migration slice — create a real V3 traveling-band family surface now, grouped by family while keeping the legacy flat shader variants intact for current playback and staged cutover.</WCTX>
-// <CLOG>Introduce VfxTravelingBandShader plus lossless legacy-family conversion helpers for BorderSweep, Reflect, GlistenBand, TracePropagation, and TracePath.</CLOG>
+// <CLOG>Lift legacy border, reflect, trace_propagation, and trace_path head/tail fields into the V3 traveling-band head_tail color policy losslessly.</CLOG>
 
 //! V3 family surface for traveling-band / sweep shaders.
 //!
@@ -53,9 +53,11 @@ impl From<&BorderSweepShader> for VfxTravelingBandShader {
     fn from(shader: &BorderSweepShader) -> Self {
         Self {
             speed: shader.speed,
-            color: VfxTravelingBandColor::Solid {
-                color: shader.color.clone(),
-            },
+            color: traveling_band_color_from_legacy(
+                &shader.color,
+                shader.head.as_ref(),
+                shader.tail.as_ref(),
+            ),
             behavior: VfxTravelingBandBehavior::Border {
                 length: shader.length,
                 position_binding: shader.position_binding.clone(),
@@ -68,12 +70,14 @@ impl From<&ReflectShader> for VfxTravelingBandShader {
     fn from(shader: &ReflectShader) -> Self {
         Self {
             speed: shader.speed,
-            color: VfxTravelingBandColor::Solid {
-                color: shader.color.clone(),
-            },
+            color: traveling_band_color_from_legacy(
+                &shader.color,
+                shader.head.as_ref(),
+                shader.tail.as_ref(),
+            ),
             behavior: VfxTravelingBandBehavior::Reflect {
-                gap: 20.0,
-                width: 2.0,
+                gap: shader.gap,
+                width: shader.width,
             },
         }
     }
@@ -106,9 +110,11 @@ impl From<&TracePropagationShader> for VfxTravelingBandShader {
     fn from(shader: &TracePropagationShader) -> Self {
         Self {
             speed: shader.speed,
-            color: VfxTravelingBandColor::Solid {
-                color: shader.color.clone(),
-            },
+            color: traveling_band_color_from_legacy(
+                &shader.color,
+                shader.head.as_ref(),
+                shader.tail.as_ref(),
+            ),
             behavior: VfxTravelingBandBehavior::TracePropagation {
                 grid_spacing: shader.grid_spacing,
                 line_width: shader.line_width,
@@ -125,9 +131,11 @@ impl From<&TracePathShader> for VfxTravelingBandShader {
     fn from(shader: &TracePathShader) -> Self {
         Self {
             speed: shader.speed,
-            color: VfxTravelingBandColor::Solid {
-                color: shader.color.clone(),
-            },
+            color: traveling_band_color_from_legacy(
+                &shader.color,
+                shader.head.as_ref(),
+                shader.tail.as_ref(),
+            ),
             behavior: VfxTravelingBandBehavior::TracePath {
                 tail_length: shader.tail_length,
                 vertical_weight: shader.vertical_weight,
@@ -140,6 +148,22 @@ impl From<&TracePathShader> for VfxTravelingBandShader {
                 paths: shader.paths.clone(),
             },
         }
+    }
+}
+
+fn traveling_band_color_from_legacy(
+    color: &crate::models::ColorConfig,
+    head: Option<&crate::models::ColorConfig>,
+    tail: Option<&crate::models::ColorConfig>,
+) -> VfxTravelingBandColor {
+    match (head, tail) {
+        (None, None) => VfxTravelingBandColor::Solid {
+            color: color.clone(),
+        },
+        _ => VfxTravelingBandColor::HeadTail {
+            head: head.unwrap_or(color).clone(),
+            tail: tail.unwrap_or(color).clone(),
+        },
     }
 }
 
@@ -183,4 +207,4 @@ impl From<TraceTailMode> for VfxTracePathTailMode {
 }
 
 // <FILE>tui-vfx-style/src/models/v3/cls_vfx_traveling_band_shader.rs</FILE> - <DESC>V3 traveling-band family shader surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>VERSION: 2.14.0</VERS>
-// <WCTX>Phase 0 P0.B followup — resolve FadeToCanvas.canvas_color_binding from a ShaderRuntimeParamValue::Rgb entry at prepare time</WCTX>
-// <CLOG>Thread canvas_color_binding through the FadeToCanvas prepare arm: if the binding is present and resolves to an Rgb runtime param, use it as the prepared canvas color; otherwise fall back to the static ColorConfig. Adds four new inline tests covering resolution, missing-binding fallback, non-Rgb-kind fallback, and no-binding passthrough</CLOG>
+// <VERS>VERSION: 2.15.0</VERS>
+// <WCTX>V3 FILTERS lane hardening — prove every FilterSpec variant survives the engine-owned V3 payload bridge and prepares into a concrete PreparedFilter arm</WCTX>
+// <CLOG>Add one audit test that exercises every FilterSpec variant through try_from_v3_payload + prepare_filter so bridge/preparation drift is caught in one place.</CLOG>
 
 use super::cls_prepare_context::PrepareContext;
 use crate::filters::cls_bracket_emphasis::BracketEmphasis;
@@ -905,6 +905,7 @@ mod tests {
     use super::*;
     use crate::types::BindableValue;
     use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode};
+    use serde_json::json;
     use tui_vfx_style::traits::ShaderRuntimeParams;
 
     fn kitt_spec_with_progress(progress: BindableValue) -> FilterSpec {
@@ -1041,6 +1042,200 @@ mod tests {
         let mut rp = ShaderRuntimeParams::new();
         rp.insert(key, value);
         rp
+    }
+
+    #[test]
+    fn v3_payload_prepare_smoke_covers_all_filter_variants() {
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.25, &rp);
+        let cases = [
+            ("none", json!({ "type": "none" }), None),
+            (
+                "dim",
+                json!({ "type": "dim", "factor": 0.25, "apply_to": "both" }),
+                Some("Dim"),
+            ),
+            (
+                "invert",
+                json!({ "type": "invert", "apply_to": "foreground" }),
+                Some("Invert"),
+            ),
+            (
+                "tint",
+                json!({
+                    "type": "tint",
+                    "color": { "type": "rgb", "r": 255, "g": 32, "b": 32 },
+                    "strength": 0.3,
+                    "apply_to": "background"
+                }),
+                Some("Tint"),
+            ),
+            (
+                "fade_to_canvas",
+                json!({
+                    "type": "fade_to_canvas",
+                    "canvas_color": { "type": "rgb", "r": 8, "g": 12, "b": 20 },
+                    "strength": 1.0,
+                    "apply_to": "both"
+                }),
+                Some("FadeToCanvas"),
+            ),
+            ("vignette", json!({ "type": "vignette" }), Some("Vignette")),
+            ("crt", json!({ "type": "crt" }), Some("Crt")),
+            (
+                "pattern_fill",
+                json!({
+                    "type": "pattern_fill",
+                    "pattern": { "type": "single", "char": "." }
+                }),
+                Some("PatternFill"),
+            ),
+            (
+                "greyscale",
+                json!({ "type": "greyscale", "apply_to": "both" }),
+                Some("Greyscale"),
+            ),
+            (
+                "braille_dust",
+                json!({ "type": "braille_dust" }),
+                Some("BrailleDust"),
+            ),
+            (
+                "charset_noise",
+                json!({ "type": "charset_noise" }),
+                Some("CharsetNoise"),
+            ),
+            (
+                "matrix_rain",
+                json!({ "type": "matrix_rain" }),
+                Some("MatrixRain"),
+            ),
+            (
+                "interlace_curtain",
+                json!({ "type": "interlace_curtain" }),
+                Some("InterlaceCurtain"),
+            ),
+            (
+                "motion_blur",
+                json!({ "type": "motion_blur" }),
+                Some("MotionBlur"),
+            ),
+            (
+                "color_bridged_shade",
+                json!({ "type": "color_bridged_shade" }),
+                Some("ColorBridgedShade"),
+            ),
+            (
+                "sub_pixel_bar",
+                json!({ "type": "sub_pixel_bar" }),
+                Some("SubPixelBar"),
+            ),
+            (
+                "subcell_light",
+                json!({ "type": "subcell_light" }),
+                Some("SubcellLight"),
+            ),
+            (
+                "sub_cell_shake",
+                json!({ "type": "sub_cell_shake" }),
+                Some("SubCellShake"),
+            ),
+            (
+                "rigid_shake",
+                json!({ "type": "rigid_shake" }),
+                Some("RigidShake"),
+            ),
+            (
+                "hover_bar",
+                json!({ "type": "hover_bar" }),
+                Some("HoverBar"),
+            ),
+            (
+                "underline_wipe",
+                json!({ "type": "underline_wipe" }),
+                Some("UnderlineWipe"),
+            ),
+            (
+                "bracket_emphasis",
+                json!({ "type": "bracket_emphasis" }),
+                Some("BracketEmphasis"),
+            ),
+            (
+                "dot_indicator",
+                json!({ "type": "dot_indicator" }),
+                Some("DotIndicator"),
+            ),
+            (
+                "edge_grow",
+                json!({ "type": "edge_grow" }),
+                Some("EdgeGrow"),
+            ),
+            (
+                "pill_button",
+                json!({ "type": "pill_button" }),
+                Some("PillButton"),
+            ),
+            (
+                "glisten_sweep",
+                json!({ "type": "glisten_sweep" }),
+                Some("GlistenSweep"),
+            ),
+            (
+                "kitt_scanner",
+                json!({ "type": "kitt_scanner" }),
+                Some("KittScanner"),
+            ),
+            (
+                "shade_scanner",
+                json!({ "type": "shade_scanner" }),
+                Some("ShadeScanner"),
+            ),
+            (
+                "glyph_style",
+                json!({
+                    "type": "glyph_style",
+                    "rules": [{
+                        "chars": "Glyph",
+                        "fg": { "type": "rgb", "r": 220, "g": 240, "b": 255 }
+                    }]
+                }),
+                Some("GlyphStyle"),
+            ),
+        ];
+
+        let mut prepared_variant_count = 0usize;
+        for (label, payload, expected_prepared_name) in cases {
+            let spec = FilterSpec::try_from_v3_payload(payload.clone()).unwrap_or_else(|err| {
+                panic!("{label} V3 payload should parse: {payload:?}: {err}")
+            });
+            let prepared = prepare_filter(&spec, &ctx);
+            match expected_prepared_name {
+                None => assert!(
+                    prepared.is_none(),
+                    "{label} should stay unprepared because FilterSpec::None is a no-op"
+                ),
+                Some(expected_name) => {
+                    let prepared = prepared
+                        .unwrap_or_else(|| panic!("{label} should prepare into {expected_name}"));
+                    assert_eq!(
+                        prepared.name(),
+                        expected_name,
+                        "{label} should prepare into the matching PreparedFilter arm"
+                    );
+                    assert_eq!(
+                        spec.name(),
+                        expected_name,
+                        "{label} should preserve the public FilterSpec name"
+                    );
+                    prepared_variant_count += 1;
+                }
+            }
+        }
+
+        assert_eq!(
+            prepared_variant_count, 28,
+            "all non-None FilterSpec variants should prepare successfully"
+        );
     }
 
     #[test]

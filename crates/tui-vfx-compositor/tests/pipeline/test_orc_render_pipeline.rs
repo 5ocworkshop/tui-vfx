@@ -13,7 +13,7 @@ use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;
 use tui_vfx_compositor::pipeline::{CompositionOptions, ShadowSpec};
 use tui_vfx_compositor::types::{
-    ApplyTo, FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, WipeDirection,
+    ApplyTo, Axis, FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, WipeDirection,
 };
 use tui_vfx_shadow::{ShadowConfig, ShadowEdges};
 use tui_vfx_types::{Cell, Color, Grid, GridExt, OwnedGrid};
@@ -30,6 +30,26 @@ fn create_source_grid(width: usize, height: usize, fill_char: char) -> OwnedGrid
                 ..Default::default()
             };
             grid.set(x, y, cell);
+        }
+    }
+    grid
+}
+
+fn create_coordinate_grid(width: usize, height: usize) -> OwnedGrid {
+    let mut grid = OwnedGrid::new(width, height);
+    for y in 0..height {
+        for x in 0..width {
+            let idx = y * width + x;
+            grid.set(
+                x,
+                y,
+                Cell {
+                    ch: char::from(b'A' + idx as u8),
+                    fg: Color::WHITE,
+                    bg: Color::BLACK,
+                    ..Default::default()
+                },
+            );
         }
     }
     grid
@@ -419,6 +439,116 @@ fn test_sampler_none_passthrough() {
 
     // Content should pass through unchanged
     assert_eq!(dest.get(0, 0).unwrap().ch, 'X');
+}
+
+#[test]
+fn test_sampler_chain_applies_in_declared_order() {
+    let source = create_coordinate_grid(6, 4);
+    let mut gravity_then_pendulum = OwnedGrid::new(6, 4);
+    let mut pendulum_then_gravity = OwnedGrid::new(6, 4);
+    let gravity = SamplerSpec::Gravity {
+        axis: Axis::X,
+        acceleration: SignalOrFloat::Static(2.0),
+        terminal_velocity: SignalOrFloat::Static(2.0),
+    };
+    let pendulum = SamplerSpec::Pendulum {
+        axis: Axis::Y,
+        amplitude: SignalOrFloat::Static(1.0),
+        speed: SignalOrFloat::Static(0.0),
+        phase_spread: SignalOrFloat::Static(std::f32::consts::FRAC_PI_2),
+    };
+
+    render_pipeline_legacy(
+        &source,
+        &mut gravity_then_pendulum,
+        6,
+        4,
+        0,
+        0,
+        CompositionOptions::default()
+            .with_samplers(vec![gravity.clone(), pendulum.clone()])
+            .with_playback_timing(
+                tui_vfx_compositor::pipeline::CompositionPlaybackTiming::new(1.0, None, None),
+            ),
+        None,
+    );
+    render_pipeline_legacy(
+        &source,
+        &mut pendulum_then_gravity,
+        6,
+        4,
+        0,
+        0,
+        CompositionOptions::default()
+            .with_samplers(vec![pendulum, gravity])
+            .with_playback_timing(
+                tui_vfx_compositor::pipeline::CompositionPlaybackTiming::new(1.0, None, None),
+            ),
+        None,
+    );
+
+    assert_eq!(
+        gravity_then_pendulum.get(1, 1).unwrap().ch,
+        source.get(2, 1).unwrap().ch,
+        "gravity should feed its shifted x coordinate into the pendulum sampler",
+    );
+    assert_eq!(
+        pendulum_then_gravity.get(1, 1).unwrap().ch,
+        source.get(2, 2).unwrap().ch,
+        "reversing the chain should change the sampled source cell deterministically",
+    );
+    assert_ne!(
+        gravity_then_pendulum.get(1, 1),
+        pendulum_then_gravity.get(1, 1),
+        "sampler order should remain stable and observable",
+    );
+}
+
+#[test]
+fn test_sampler_chain_skips_cells_when_any_sampler_returns_none() {
+    let source = create_coordinate_grid(4, 4);
+    let mut dest = OwnedGrid::new(4, 4);
+    dest.fill(Cell {
+        ch: '.',
+        ..Default::default()
+    });
+
+    render_pipeline_legacy(
+        &source,
+        &mut dest,
+        4,
+        4,
+        0,
+        0,
+        CompositionOptions::default()
+            .with_samplers(vec![
+                SamplerSpec::Gravity {
+                    axis: Axis::X,
+                    acceleration: SignalOrFloat::Static(2.0),
+                    terminal_velocity: SignalOrFloat::Static(2.0),
+                },
+                SamplerSpec::Gravity {
+                    axis: Axis::X,
+                    acceleration: SignalOrFloat::Static(-8.0),
+                    terminal_velocity: SignalOrFloat::Static(8.0),
+                },
+            ])
+            .with_playback_timing(
+                tui_vfx_compositor::pipeline::CompositionPlaybackTiming::new(1.0, None, None),
+            ),
+        None,
+    );
+
+    assert_eq!(
+        dest.get(0, 0).unwrap().ch,
+        '.',
+        "cells rejected by a later sampler in the chain should be skipped",
+    );
+    assert_eq!(
+        dest.get(3, 0).unwrap().ch,
+        source.get(0, 0).unwrap().ch,
+        "cells that survive the full chain should still render",
+    );
 }
 
 // ============================================================================

@@ -9,17 +9,18 @@
 //! such as `BorderSweep`, `Reflect`, `GlistenBand`, and `TracePath`.
 //!
 // <FILE>tui-vfx-style/src/models/cls_trace_propagation_shader.rs</FILE> - <DESC>TracePropagation shader implementation</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
+// <VERS>VERSION: 1.1.0</VERS>
 // <WCTX>Introduce orthogonal signal-flow visualization for schematic and PCB-inspired themes</WCTX>
-// <CLOG>Add TracePropagation spatial shader with grid lanes, configurable origin, and traveling pulse tail</CLOG>
+// <CLOG>Add optional head/tail colors so V3 traveling-band head_tail lowering can execute losslessly for trace propagation.</CLOG>
 
 use crate::models::{
-    ColorConfig,
+    ColorConfig, ColorSpace,
     cls_trace_common::{
         TraceApplyTo, TraceOrigin, blend_trace_target, max_distance_from_origin, origin_point,
     },
 };
 use crate::traits::{ShaderContext, StyleShader};
+use crate::utils::fnc_blend_colors::blend_colors;
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -31,8 +32,14 @@ use tui_vfx_types::{Color, Style};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]
 pub struct TracePropagationShader {
-    /// Trace pulse color.
+    /// Solid-color fallback used when `head` / `tail` are absent.
     pub color: ColorConfig,
+    /// Optional leading-edge color for V3 `head_tail` traveling-band lowering.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub head: Option<ColorConfig>,
+    /// Optional trailing-tail color for V3 `head_tail` traveling-band lowering.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tail: Option<ColorConfig>,
 
     /// Propagation speed multiplier.
     #[serde(default = "default_speed")]
@@ -87,6 +94,8 @@ impl Default for TracePropagationShader {
     fn default() -> Self {
         Self {
             color: ColorConfig::Cyan,
+            head: None,
+            tail: None,
             speed: default_speed(),
             grid_spacing: default_grid_spacing(),
             line_width: default_line_width(),
@@ -117,6 +126,23 @@ impl TracePropagationShader {
         let horizontal = Self::axis_distance(y, self.grid_spacing) <= threshold;
         (vertical, horizontal)
     }
+
+    fn head_color(&self) -> &ColorConfig {
+        self.head.as_ref().unwrap_or(&self.color)
+    }
+
+    fn tail_color(&self) -> &ColorConfig {
+        self.tail.as_ref().unwrap_or(&self.color)
+    }
+
+    fn band_color(&self, intensity: f32) -> Color {
+        blend_colors(
+            Color::from(self.tail_color().clone()),
+            Color::from(self.head_color().clone()),
+            intensity.clamp(0.0, 1.0),
+            ColorSpace::Rgb,
+        )
+    }
 }
 
 impl StyleShader for TracePropagationShader {
@@ -145,7 +171,7 @@ impl StyleShader for TracePropagationShader {
         let band_factor = 1.0 - (behind_head / self.tail_length);
         let intersection_factor = if vertical && horizontal { 1.15 } else { 1.0 };
         let alpha = (band_factor * self.intensity * intersection_factor).clamp(0.0, 1.0);
-        let trace_color: Color = self.color.into();
+        let trace_color = self.band_color(band_factor);
 
         let mut style = base;
         match self.apply_to {
@@ -202,6 +228,8 @@ mod tests {
                 g: 255,
                 b: 200,
             },
+            head: None,
+            tail: None,
             speed: 1.0,
             grid_spacing: 4,
             line_width: 1,
@@ -220,6 +248,8 @@ mod tests {
     fn serde_roundtrip_preserves_values() {
         let shader = TracePropagationShader {
             color: ColorConfig::Green,
+            head: Some(ColorConfig::White),
+            tail: Some(ColorConfig::Black),
             speed: 1.5,
             grid_spacing: 5,
             line_width: 2,
@@ -232,7 +262,34 @@ mod tests {
         let parsed: TracePropagationShader = serde_json::from_str(&json).unwrap();
         assert_eq!(shader, parsed);
     }
+
+    #[test]
+    fn head_tail_policy_blends_tail_toward_head_along_the_pulse() {
+        let shader = TracePropagationShader {
+            color: ColorConfig::Green,
+            head: Some(ColorConfig::White),
+            tail: Some(ColorConfig::Black),
+            speed: 1.0,
+            grid_spacing: 4,
+            line_width: 1,
+            tail_length: 5.0,
+            intensity: 1.0,
+            origin: TraceOrigin::TopLeft,
+            apply_to: TraceApplyTo::Foreground,
+        };
+        let base = Style::default();
+        let t = 4.0 / 27.0;
+
+        assert_eq!(
+            shader.style_at(&make_ctx_at(4, 0, 12, 12, t), base).fg,
+            Color::WHITE
+        );
+        assert_eq!(
+            shader.style_at(&make_ctx_at(0, 0, 12, 12, t), base).fg,
+            Color::rgb(50, 50, 50)
+        );
+    }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_trace_propagation_shader.rs</FILE> - <DESC>TracePropagation shader implementation</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

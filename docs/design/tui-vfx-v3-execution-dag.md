@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-execution-dag.md</FILE> - <DESC>Dependency DAG for remaining tui-vfx V3 work, separating autonomous parallel tracks from owner-blocked decisions.</DESC> -->
-<!-- <VERS>VERSION: 0.1.2</VERS> -->
+<!-- <VERS>VERSION: 0.1.3</VERS> -->
 <!-- <WCTX>Keep the execution DAG aligned with current completed-initial slices while preserving it as the remaining-work dependency map.</WCTX> -->
-<!-- <CLOG>0.1.2: add current-status guidance so agents do not redispatch completed first slices.</CLOG> -->
+<!-- <CLOG>0.1.3: name Horseman as the current packaged thin-player surface.</CLOG> -->
 
 # V3 execution DAG
 
@@ -111,7 +111,7 @@ Purpose: provide the tools and evidence needed to trust V3.
 Tasks:
 
 - `D1-TOOLING-DOCS`: expand `docs/tooling/`.
-- `D2-PLAYER`: tighten thin V3 player / eventual `tui-vfx-player` surface.
+- `D2-PLAYER`: keep the packaged `tui-vfx-horseman` thin V3 player/headless summary surface aligned with the playback seam.
 - `D3-PROBE-DIFF`: keep probe database/frame-diff docs and surfaces aligned.
 - `D4-TRACE-PARITY`: broader V3 trace/probe parity.
 - `D5-RELEASE-MANIFESTS`: release-gate fixture manifests.

@@ -1,10 +1,11 @@
 // <FILE>tui-vfx-compositor/tests/types/test_composition_spec.rs</FILE> - <DESC>Tests for CompositionSpec V3 family lowering helpers</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>First runtime-facing wiring slice for the central style-family seam — ensure composition specs can expose grouped V3 families without changing the legacy execution path.</WCTX>
-// <CLOG>0.2.0: add grouped-V3 construction coverage through CompositionSpec::try_push_v3_shader_family and CompositionSpec::try_with_v3_shader_family.
-// Add coverage for CompositionSpec::v3_shader_families across empty, primitive, and composed shader-layer sets.</CLOG>
+// <CLOG>0.3.0: add sampler-chain compatibility coverage for legacy and ordered CompositionSpec paths.</CLOG>
 
+use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::{CompositionPlaybackTiming, CompositionSpec, ShaderLayerSpec};
+use tui_vfx_compositor::types::{Axis, SamplerSpec};
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, GlowShader, SpatialShaderType, StyleRegion,
     VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
@@ -25,6 +26,8 @@ fn composition_spec_exposes_mixed_v3_shader_families() {
                     speed: 1.0,
                     length: 3,
                     color: ColorConfig::Red,
+                    head: None,
+                    tail: None,
                     position_binding: None,
                 }),
                 region: StyleRegion::All,
@@ -67,6 +70,8 @@ fn composition_spec_can_append_grouped_v3_shader_family_via_builder() {
         speed: 1.0,
         length: 3,
         color: ColorConfig::Red,
+        head: None,
+        tail: None,
         position_binding: None,
     };
     let family = VfxSpatialShaderFamily::ComposedPrimitive(
@@ -105,5 +110,42 @@ fn composition_playback_timing_from_spec_exposes_effective_loop_and_shader_progr
     assert_eq!(timing.shader_t(), 0.75);
 }
 
+#[test]
+fn composition_spec_effective_samplers_fall_back_to_legacy_field() {
+    let gravity = SamplerSpec::Gravity {
+        axis: Axis::X,
+        acceleration: SignalOrFloat::Static(2.0),
+        terminal_velocity: SignalOrFloat::Static(2.0),
+    };
+    let spec = CompositionSpec {
+        sampler_spec: Some(gravity.clone()),
+        ..CompositionSpec::default()
+    };
+
+    assert_eq!(spec.effective_samplers(), vec![gravity]);
+    assert!(spec.has_active_sampler());
+}
+
+#[test]
+fn composition_spec_push_sampler_preserves_order_and_compatibility_mirror() {
+    let gravity = SamplerSpec::Gravity {
+        axis: Axis::X,
+        acceleration: SignalOrFloat::Static(2.0),
+        terminal_velocity: SignalOrFloat::Static(2.0),
+    };
+    let pendulum = SamplerSpec::Pendulum {
+        axis: Axis::Y,
+        amplitude: SignalOrFloat::Static(1.0),
+        speed: SignalOrFloat::Static(0.0),
+        phase_spread: SignalOrFloat::Static(std::f32::consts::FRAC_PI_2),
+    };
+    let mut spec = CompositionSpec::default();
+    spec.push_sampler(gravity.clone());
+    spec.push_sampler(pendulum.clone());
+
+    assert_eq!(spec.effective_samplers(), vec![gravity.clone(), pendulum]);
+    assert_eq!(spec.sampler_spec, Some(gravity));
+}
+
 // <FILE>tui-vfx-compositor/tests/types/test_composition_spec.rs</FILE> - <DESC>Tests for CompositionSpec V3 family lowering helpers</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

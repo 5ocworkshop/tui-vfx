@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.13.0</VERS> -->
+<!-- <VERS>VERSION: 1.14.0</VERS> -->
 <!-- <WCTX>Add the accepted V3 timing and metadata decision to the root documentation index.</WCTX> -->
-<!-- <CLOG>1.13.0: add the V3 timing and metadata decision pointer for Q21/Q23 closure.
+<!-- <CLOG>1.14.0: add the root CAPABILITIES guide to the main docs navigation.
+1.13.0: add the V3 timing and metadata decision pointer for Q21/Q23 closure.
 1.12.0: add the V3 outstanding master list and first-class tooling hub pointers.
 1.11.0: add PIPELINE_TRACE_LLM_GUIDE.md, add tui-vfx-trace to the recipe-authoring ownership split, and keep the existing inspection-foundation references intact.
 1.10.0: add Unified inspection foundation subsection pointing at tui-vfx-debug::inspection and TRACE_EVENT_SCHEMA.md; update pipeline-probe + validator guide entries with cross-reference to the inspection surface.
@@ -74,6 +75,10 @@ disturbing existing direct implementors (`ProbeInspector`,
 
 Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 
+## V3 orientation
+
+- [../CAPABILITIES.md](../CAPABILITIES.md) — Root V3 capability orientation for human and AI authors; distinguishes hand-maintained guidance from generated inventory.
+
 ## V3 planning and tooling
 
 - [design/tui-vfx-v3-INDEX.md](design/tui-vfx-v3-INDEX.md) — Single landing page for V3 planning, schema, I/O, migration, tooling, and outstanding work.
@@ -119,4 +124,4 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.13.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.14.0</VERS> -->

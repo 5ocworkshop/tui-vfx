@@ -4,14 +4,16 @@
 <!-- <CLOG>MINOR: Update the docs section so README reflects that pipeline-probe now supports frame dumps, timelines, and frame diffs for direct engine scenes</CLOG> -->
 # tui-vfx
 
-Cell-based visual effects for terminal UIs.
-Don't just draw text. Direct the screen.
+gt-design-first scene rendering and VFX infrastructure for terminal UIs.
+Open, extensible, grid-first.
 
-`tui-vfx` is a framework-agnostic compositing engine for terminal UIs. It treats the
-terminal grid like a texture: you provide content, then apply a chain of effects to
-produce the final frame. The pipeline supports masks, filters, samplers, shaders, and
-content transformers, all operating over a simple `Grid` trait that you can implement
-for any terminal rendering framework.
+`tui-vfx` is the Rust scene renderer, VFX compositor, and recipe-driven animation
+runtime behind gt-design's palette, theme, motion, animation, and visual-effects
+surfaces. It is documented and framework-agnostic so other grid-based consumers can
+use the same architecture: provide content, then apply scene layers and effect
+pipelines to produce the final frame. The pipeline supports masks, filters,
+samplers, shaders, and content transformers, all operating over a simple `Grid`
+trait that you can implement for any terminal rendering framework.
 
 [![Crates.io](https://img.shields.io/crates/v/tui-vfx.svg)](https://crates.io/crates/tui-vfx)
 [![License](https://img.shields.io/crates/l/tui-vfx.svg)](https://github.com/5ocworkshop/tui-vfx/blob/main/LICENSE)

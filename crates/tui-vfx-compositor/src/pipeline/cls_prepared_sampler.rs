@@ -1,8 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs</FILE> - <DESC>Prepared sampler enum for pipeline rendering</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
+// <VERS>VERSION: 1.4.0</VERS>
 // <WCTX>feat/content-ergonomics: clean up pre-existing workspace clippy lint</WCTX>
-// <CLOG>1.3.0: prepare and dispatch SamplerSpec::RadialTwist through the render pipeline.
-// Drop redundant f32-to-f32 casts on Gravity::new arguments (clippy::unnecessary_cast)</CLOG>
+// <CLOG>1.4.0: prepare ordered sampler chains and sample them left-to-right.</CLOG>
 
 use crate::samplers::cls_bounce::Bounce;
 use crate::samplers::cls_crt_jitter::CrtJitter;
@@ -17,6 +16,7 @@ use crate::samplers::cls_sine_wave::SineWave;
 use crate::traits::sampler::Sampler;
 use crate::types::cls_sampler_spec::SamplerSpec;
 use mixed_signals::traits::SignalContext;
+use smallvec::SmallVec;
 
 pub(crate) enum PreparedSampler {
     None,
@@ -75,6 +75,38 @@ impl PreparedSampler {
             PreparedSampler::RadialTwist(_) => "RadialTwist",
         }
     }
+}
+
+pub(crate) fn prepare_samplers(
+    t: f64,
+    sampler_specs: &[SamplerSpec],
+) -> SmallVec<[PreparedSampler; 2]> {
+    sampler_specs
+        .iter()
+        .map(|sampler_spec| prepare_sampler(t, &Some(sampler_spec.clone())))
+        .collect()
+}
+
+pub(crate) fn sample_sampler_chain(
+    samplers: &[PreparedSampler],
+    x: u16,
+    y: u16,
+    width: u16,
+    height: u16,
+    t: f64,
+) -> (Option<u16>, Option<u16>) {
+    let mut current_x = x;
+    let mut current_y = y;
+    for sampler in samplers {
+        match sampler.sample(current_x, current_y, width, height, t) {
+            (Some(next_x), Some(next_y)) => {
+                current_x = next_x;
+                current_y = next_y;
+            }
+            _ => return (None, None),
+        }
+    }
+    (Some(current_x), Some(current_y))
 }
 
 pub(crate) fn prepare_sampler(t: f64, sampler_spec: &Option<SamplerSpec>) -> PreparedSampler {
@@ -213,4 +245,4 @@ pub(crate) fn prepare_sampler(t: f64, sampler_spec: &Option<SamplerSpec>) -> Pre
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs</FILE> - <DESC>Prepared sampler enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 1.3.0</VERS>
+// <VERS>END OF VERSION: 1.4.0</VERS>

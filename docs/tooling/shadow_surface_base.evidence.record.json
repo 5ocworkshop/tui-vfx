@@ -3,7 +3,7 @@
   "fixture_id": "shadow_surface_base",
   "gate": "shadow",
   "status": "pass",
-  "captured_at": "2026-04-24T19:56:36Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/scene/scene_layer_surface_shadow.json"
@@ -12,10 +12,11 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/scene/scene_layer_surface_shadow.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "/tmp/tui-vfx-release-gates/shadow_surface_base/probe_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/shadow_surface_base/probe_report.json",
       "artifact_generated": false,
       "status": "pass",
-      "observed_output_summary": "Probe exit 0 at tui-vfx-recipes@bf2ee98; diagnostics=[], analysis.status=success, frame_count=1, non_empty_cells=35/320."
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0.",
+      "artifact_sha256": "57bdcc088ee2d9ae7e00e75f5c04c2f0d6872110506a726748a0dfcb8969be96"
     },
     {
       "evidence_type": "render_capture_png",

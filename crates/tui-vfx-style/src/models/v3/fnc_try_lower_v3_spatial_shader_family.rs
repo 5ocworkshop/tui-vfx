@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/v3/fnc_try_lower_v3_spatial_shader_family.rs</FILE> - <DESC>Lower grouped V3 spatial shader families back into the executable legacy runtime surface</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Decision 2 runtime follow-on — grouped V3 spatial shader families are now modeled explicitly, and runtime-facing seams need a reversible bridge back into SpatialShaderType while the legacy executable surface remains in place.</WCTX>
-// <CLOG>0.1.0: add a fallible grouped-V3-to-legacy lowering seam plus convenience methods on VfxSpatialShaderFamily.</CLOG>
+// <CLOG>0.3.0: lower V3 traveling-band head_tail colors into backward-compatible legacy shader head/tail fields for border, reflect, trace_propagation, and trace_path.</CLOG>
 
 //! Lower grouped V3 spatial shader families back into the executable legacy
 //! runtime surface.
@@ -95,19 +95,25 @@ fn try_lower_traveling_band(
             length,
             position_binding,
         } => {
-            let color = solid_color("border", &shader.color)?;
+            let (color, head, tail) = legacy_traveling_band_colors(&shader.color);
             Ok(SpatialShaderType::BorderSweep(BorderSweepShader {
                 speed: shader.speed,
                 length: *length,
                 color,
+                head,
+                tail,
                 position_binding: position_binding.clone(),
             }))
         }
-        VfxTravelingBandBehavior::Reflect { .. } => {
-            let color = solid_color("reflect", &shader.color)?;
+        VfxTravelingBandBehavior::Reflect { gap, width } => {
+            let (color, head, tail) = legacy_traveling_band_colors(&shader.color);
             Ok(SpatialShaderType::Reflect(ReflectShader {
                 speed: shader.speed,
                 color,
+                head,
+                tail,
+                gap: *gap,
+                width: *width,
             }))
         }
         VfxTravelingBandBehavior::GlistenBand {
@@ -148,10 +154,12 @@ fn try_lower_traveling_band(
             origin,
             apply_to,
         } => {
-            let color = solid_color("trace_propagation", &shader.color)?;
+            let (color, head, tail) = legacy_traveling_band_colors(&shader.color);
             Ok(SpatialShaderType::TracePropagation(
                 TracePropagationShader {
                     color,
+                    head,
+                    tail,
                     speed: shader.speed,
                     grid_spacing: *grid_spacing,
                     line_width: *line_width,
@@ -173,9 +181,11 @@ fn try_lower_traveling_band(
             apply_to,
             paths,
         } => {
-            let color = solid_color("trace_path", &shader.color)?;
+            let (color, head, tail) = legacy_traveling_band_colors(&shader.color);
             Ok(SpatialShaderType::TracePath(TracePathShader {
                 color,
+                head,
+                tail,
                 speed: shader.speed,
                 tail_length: *tail_length,
                 vertical_weight: *vertical_weight,
@@ -191,18 +201,18 @@ fn try_lower_traveling_band(
     }
 }
 
-fn solid_color(
-    behavior: &'static str,
+fn legacy_traveling_band_colors(
     color: &VfxTravelingBandColor,
-) -> Result<crate::models::ColorConfig, TryLowerV3SpatialShaderError> {
+) -> (
+    crate::models::ColorConfig,
+    Option<crate::models::ColorConfig>,
+    Option<crate::models::ColorConfig>,
+) {
     match color {
-        VfxTravelingBandColor::Solid { color } => Ok(color.clone()),
-        VfxTravelingBandColor::HeadTail { .. } => Err(
-            TryLowerV3SpatialShaderError::UnsupportedTravelingBandColorPolicy {
-                behavior,
-                color_policy: "head_tail",
-            },
-        ),
+        VfxTravelingBandColor::Solid { color } => (color.clone(), None, None),
+        VfxTravelingBandColor::HeadTail { head, tail } => {
+            (head.clone(), Some(head.clone()), Some(tail.clone()))
+        }
     }
 }
 
@@ -972,4 +982,4 @@ impl From<VfxTracePathTailMode> for TraceTailMode {
 }
 
 // <FILE>tui-vfx-style/src/models/v3/fnc_try_lower_v3_spatial_shader_family.rs</FILE> - <DESC>Lower grouped V3 spatial shader families back into the executable legacy runtime surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

@@ -3,7 +3,7 @@
   "fixture_id": "probe_alarm_lighthouse",
   "gate": "probe",
   "status": "pass",
-  "captured_at": "2026-04-24T18:00:05Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/vfx-probe-validation/alarm_lighthouse.json"
@@ -12,8 +12,10 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/vfx-probe-validation/alarm_lighthouse.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "artifacts/release-gates/probe_alarm_lighthouse/probe_report.json",
-      "status": "pass"
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/probe_alarm_lighthouse/probe_report.json",
+      "status": "pass",
+      "artifact_sha256": "1a4c8b5a7c378b163b7572c01a0b0618950cff366d3d3676538b25fa169e8ecb",
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0, stages: style=success observed=308, filter=success observed=308."
     }
   ],
   "review": {

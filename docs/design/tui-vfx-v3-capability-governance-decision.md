@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-capability-governance-decision.md</FILE> - <DESC>Accepted V3 capability catalog and factory-internal promotion governance decision.</DESC> -->
 <!-- <VERS>VERSION: 0.1.0</VERS> -->
 <!-- <WCTX>Record the project-owner-approved governance rules for promoting capabilities to primitives, variants, earned-name compositions, or public schema from factory-internal conventions.</WCTX> -->
-<!-- <CLOG>0.1.0: initial accepted promotion ladder and rule-of-three factory-internal promotion process.</CLOG> -->
+<!-- <CLOG>0.1.1: standardize ladder wording and add checklist-level review hooks for factory-internal conventions.</CLOG> -->
 
 # V3 capability governance decision
 
@@ -35,7 +35,7 @@ Accepted wording:
 | Base primitive | Existing primitives cannot express the behavior; it introduces a genuinely new rendering/math class. |
 | Variant | Existing primitive class is right, but a reusable sub-shape is missing. |
 | Earned-name composition | Behavior is expressible from primitives, but the parameter bundle encodes reusable design judgment. |
-| Factory-internal | Shared by fewer than three factories or not yet stable enough for public schema. |
+| Factory-internal convention | Shared by fewer than three factories or not yet stable enough for public schema. |
 | Deferred | Interesting, but no clear recurring authoring need yet. |
 
 ### Promotion rules
@@ -47,6 +47,9 @@ Accepted wording:
 - Public schema promotion is sticky.
 - Demotion of public schema uses deprecation and migration guidance, not silent
   removal.
+- Use the full ladder terms in authoring docs and capability catalog entries.
+  Do not collapse them into generic "primitive" or "variant" language when the
+  distinction matters for promotion review.
 
 ## 2. Factory-internal promotion process
 
@@ -92,6 +95,9 @@ If the convention does not meet the bar:
 - keep it out of public schema
 - document it as factory-internal where relevant
 - avoid teaching it as an authoring primitive
+- leave a review hook in the owning authoring or evaluation doc with the factory
+  count and the next trigger, so the next pass can revisit it without creating a
+  registry
 - revisit when usage evidence changes
 
 ## Examples
@@ -101,7 +107,7 @@ If the convention does not meet the bar:
 | New coordinate/math basis reused across effects | Base primitive or substrate variant | New semantic class or reusable math surface. |
 | A new radial pattern used by multiple shaders | Variant | Existing pattern primitive class remains right. |
 | A named polished shader recipe with tuned defaults | Earned-name composition | Encodes design judgment over primitives. |
-| `text_contrast` used only by highlighter | Factory-internal | Not enough reuse yet. |
+| `text_contrast` used only by highlighter | Factory-internal convention | Not enough reuse yet. |
 | Stateful particle simulation with no immediate recipe need | Deferred | Interesting but not yet earned. |
 
 ## Plan impact

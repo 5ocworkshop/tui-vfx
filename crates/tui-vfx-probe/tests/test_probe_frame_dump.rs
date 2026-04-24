@@ -129,6 +129,8 @@ fn test_run_probe_modified_selector_reports_only_shader_touched_cells() {
                     speed: 1.0,
                     length: 2,
                     color: ColorConfig::Red,
+                    head: None,
+                    tail: None,
                     position_binding: None,
                 }),
                 region: StyleRegion::All,

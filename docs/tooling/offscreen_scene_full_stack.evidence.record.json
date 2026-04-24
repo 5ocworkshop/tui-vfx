@@ -3,7 +3,7 @@
   "fixture_id": "offscreen_scene_full_stack",
   "gate": "offscreen",
   "status": "fail",
-  "captured_at": "2026-04-24T20:35:00Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/scene/scene_layer_full_stack.json"
@@ -12,16 +12,18 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/scene/scene_layer_full_stack.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "artifacts/release-gates/offscreen_scene_full_stack/probe_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/offscreen_scene_full_stack/probe_report.json",
       "artifact_sha256": "e052545538a33763536d9872d60804dc467b96ed18387644c161310d050934c5",
-      "status": "pass"
+      "status": "pass",
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0."
     },
     {
       "evidence_type": "trace_report_json",
       "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/scene/scene_layer_full_stack.json --format report",
-      "artifact": "artifacts/release-gates/offscreen_scene_full_stack/trace_report.json",
-      "artifact_sha256": "525d91c27e75dd9db1ee8d17d4030c36c0ed251417fc8f0acac092eee09d7eb3",
-      "status": "pass"
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/offscreen_scene_full_stack/trace_report.json",
+      "artifact_sha256": "b69f284284c6ec2f75073eabf2da1f97fb67ad7fdba85b1eec34595d50fde380",
+      "status": "pass",
+      "observed_output_summary": "Headless trace report exit 0; summary.total_envelopes=1506, dropped=0, fallbacks={'assets': 0, 'procedurals': 0, 'layers': 0}."
     },
     {
       "evidence_type": "render_capture_png",
@@ -33,6 +35,6 @@
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "Headless probe and trace evidence pass: probe diagnostics=[] and trace summary.total_envelopes=1441 with dropped=0. Overall fixture remains fail because required render_capture_png is blocked-on-explicit-owner-visual-capture after owner direction to stop all X11/Zutty/demo-window capture work."
+    "notes": "Headless evidence refreshed and passes. Overall fixture remains blocked until explicit owner-approved visual capture supplies the required render_capture_png; no GUI/X11/Zutty/Xvfb capture was run for this refresh."
   }
 }

@@ -14,12 +14,11 @@ use super::cls_grid_pool::GridPool;
 use super::cls_prepare_context::PrepareContext;
 use super::cls_prepared_filter::{PreparedFilter, prepare_filters};
 use super::cls_prepared_mask::{PreparedMask, prepare_masks};
-use super::cls_prepared_sampler::{PreparedSampler, prepare_sampler};
+use super::cls_prepared_sampler::{PreparedSampler, prepare_samplers, sample_sampler_chain};
 use super::cls_render_area::RenderArea;
 use super::fnc_check_masks::check_prepared_masks;
 use super::fnc_grade_shadow_cell::grade_shadow_cell;
 use crate::traits::pipeline_inspector::CompositorInspector;
-use crate::types::cls_sampler_spec::SamplerSpec;
 use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
 use std::borrow::Cow;
@@ -129,10 +128,8 @@ pub fn render_pipeline(
     }
 
     // FAST PATH: Check if we can copy directly without effects.
-    let has_sampler = options
-        .sampler_spec
-        .as_ref()
-        .is_some_and(|s| !matches!(s, SamplerSpec::None));
+    let effective_sampler_specs = options.effective_samplers();
+    let has_sampler = options.has_active_sampler();
     let has_masks = !options.masks.is_empty();
     let has_filters = !options.filters.is_empty();
     let has_shaders = !options.shader_layers.is_empty();
@@ -151,7 +148,17 @@ pub fn render_pipeline(
 
     // SLOW PATH: Effects are active
     let timing = CompositionPlaybackTiming::from_options(&options);
-    let sampler = prepare_sampler(options.t, &options.sampler_spec);
+    let samplers = prepare_samplers(options.t, effective_sampler_specs.as_ref());
+    let sampler_label = if samplers.is_empty() {
+        String::from("None#1")
+    } else {
+        samplers
+            .iter()
+            .enumerate()
+            .map(|(index, sampler)| format!("{}#{}", sampler.name(), index + 1))
+            .collect::<Vec<_>>()
+            .join(" -> ")
+    };
     let prepared_masks = prepare_masks(options.masks.as_ref());
     let loop_t = timing.effective_loop_t();
     let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
@@ -170,10 +177,11 @@ pub fn render_pipeline(
             offset_x,
             offset_y,
             &options,
-            &sampler,
+            &samplers,
             &prepared_masks,
             &prepared_filters,
             loop_t,
+            &sampler_label,
             inspector,
         );
     } else {
@@ -186,7 +194,7 @@ pub fn render_pipeline(
             offset_x,
             offset_y,
             &options,
-            &sampler,
+            &samplers,
             &prepared_masks,
             &prepared_filters,
             loop_t,
@@ -302,7 +310,8 @@ fn render_pipeline_with_shadow(
 
     // Prepare effects for element rendering
     let timing = CompositionPlaybackTiming::from_options(&options);
-    let sampler = prepare_sampler(options.t, &options.sampler_spec);
+    let effective_sampler_specs = options.effective_samplers();
+    let samplers = prepare_samplers(options.t, effective_sampler_specs.as_ref());
     let loop_t = timing.effective_loop_t();
     let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
     let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
@@ -328,10 +337,11 @@ fn render_pipeline_with_shadow(
             let (local_x, local_y) = (x as u16, y as u16);
 
             // Sample coordinates (sampler operates on element dimensions)
-            let (src_x, src_y) = match sampler.sample(local_x, local_y, w16, h16, options.t) {
-                (Some(sx), Some(sy)) => (sx, sy),
-                _ => continue,
-            };
+            let (src_x, src_y) =
+                match sample_sampler_chain(&samplers, local_x, local_y, w16, h16, options.t) {
+                    (Some(sx), Some(sy)) => (sx, sy),
+                    _ => continue,
+                };
 
             // Get source cell
             let Some(source_cell) = source.get(src_x as usize, src_y as usize) else {
@@ -667,7 +677,7 @@ fn render_loop(
     offset_x: usize,
     offset_y: usize,
     options: &CompositionOptions<'_>,
-    sampler: &PreparedSampler,
+    samplers: &SmallVec<[PreparedSampler; 2]>,
     prepared_masks: &SmallVec<[PreparedMask; 2]>,
     prepared_filters: &SmallVec<[PreparedFilter; 3]>,
     loop_t: f64,
@@ -691,10 +701,11 @@ fn render_loop(
             let (local_x, local_y) = (x as u16, y as u16);
 
             // Sample coordinates
-            let (src_x, src_y) = match sampler.sample(local_x, local_y, w16, h16, options.t) {
-                (Some(sx), Some(sy)) => (sx, sy),
-                _ => continue,
-            };
+            let (src_x, src_y) =
+                match sample_sampler_chain(samplers, local_x, local_y, w16, h16, options.t) {
+                    (Some(sx), Some(sy)) => (sx, sy),
+                    _ => continue,
+                };
 
             // Check mask visibility
             if !check_prepared_masks(
@@ -756,10 +767,11 @@ fn render_loop_inspected(
     offset_x: usize,
     offset_y: usize,
     options: &CompositionOptions<'_>,
-    sampler: &PreparedSampler,
+    samplers: &SmallVec<[PreparedSampler; 2]>,
     prepared_masks: &SmallVec<[PreparedMask; 2]>,
     prepared_filters: &SmallVec<[PreparedFilter; 3]>,
     loop_t: f64,
+    sampler_label: &str,
     inspector: &mut dyn CompositorInspector,
 ) {
     let (w16, h16) = (width as u16, height as u16);
@@ -781,14 +793,9 @@ fn render_loop_inspected(
             let (local_x, local_y) = (x as u16, y as u16);
 
             // Sample coordinates
-            let (src_local_x, src_local_y) = sampler.sample(local_x, local_y, w16, h16, options.t);
-            inspector.on_sampler_applied(
-                local_x,
-                local_y,
-                src_local_x,
-                src_local_y,
-                &format!("{}#1", sampler.name()),
-            );
+            let (src_local_x, src_local_y) =
+                sample_sampler_chain(samplers, local_x, local_y, w16, h16, options.t);
+            inspector.on_sampler_applied(local_x, local_y, src_local_x, src_local_y, sampler_label);
 
             let (src_x, src_y) = match (src_local_x, src_local_y) {
                 (Some(sx), Some(sy)) => (sx, sy),

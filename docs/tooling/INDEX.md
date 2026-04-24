@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/INDEX.md</FILE> - <DESC>Tooling documentation index for tui-vfx and tui-vfx-recipes.</DESC> -->
-<!-- <VERS>VERSION: 0.2.1</VERS> -->
-<!-- <WCTX>Make the V3 tooling hub a command-first start page that maps the as-built validator, probe, diff/database, preview/player, resize, edge-ingestion, command-capture, trace, and docs-generation surfaces.</WCTX> -->
-<!-- <CLOG>0.2.1: tighten the hub into a canonical surface map with status notes, grouped command families, and a release-gate link.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.2</VERS> -->
+<!-- <WCTX>Make the V3 tooling hub a command-first start page that maps the as-built validator, probe, diff/database, preview/player, resize, edge-ingestion, command-capture, trace, docs-generation, and headless smoke surfaces.</WCTX> -->
+<!-- <CLOG>0.2.2: align the packaged lightweight player docs on tui-vfx-horseman and split headless evidence from interactive playback.</CLOG> -->
 
 # Tooling documentation
 
@@ -28,7 +28,8 @@ deeper guide when you need more detail.
 | Validation plus probe in one flow | `pipeline-validator --probe ... <recipe.json>` | as-built | Validator owns recipe parsing/rules; delegated output is structured probe evidence. |
 | Direct engine scene probe | `cargo run -q -p tui-vfx-probe --bin pipeline-probe -- --input <scene.json> ...` from `/usr/projects/tui-vfx` | engine-level | `ProbeSceneSpec`; not recipe-aware. |
 | Frame diff and SQLite xray | `recipe-probe --diff-to <t> --sqlite-query '<sql>' <recipe.json>` | diff/database | Reuse existing probe report/database shape. Do not invent a parallel diff format. |
-| Unified lifecycle/trace evidence | `cargo run -q -p tui-vfx-trace -- --recipe <recipe.json> --format report` | trace | Recipe trace CLI for lifecycle/resolution/composition/pipeline evidence. |
+| Unified lifecycle/trace evidence | `cargo run -q -p tui-vfx-trace -- --recipe <recipe.json> --format report` | trace | Headless recipe trace CLI for lifecycle/resolution/composition/pipeline evidence. |
+| Lightweight player summary / corpus readiness | `cargo run -q -p tui-vfx-horseman -- (--corpus <dir> | <recipe.json>) [--json]` | headless player | Packaged non-interactive summary surface. The command and package are both `tui-vfx-horseman`; do not document the discarded temporary player name. |
 | Human preview/browser | `cargo run --example demo -- [recipe.json]` | preview/player | Interactive ratatui browser and visual sign-off. |
 | Fullscreen single-recipe preview | `cargo run --example play_recipe -- <recipe.json>` | preview/player | Human isolation of one recipe; terminal lifecycle stays in the example/player. |
 | Minimal V3 inspector/player | `cargo run --example v3_play_recipe -- <v3-recipe.json>` | example-level | Prints normalized IR and deterministic render metadata for supported V3 recipes. |
@@ -36,13 +37,15 @@ deeper guide when you need more detail.
 | Resize contract evidence | `cargo run --example diag_resize_preserve_phase -- [recipe.json]` | host-owned resize | Shows host-owned resize rerendering with preserved phase/time. No core resize loop. |
 | Offline command-output capture | `cargo run -q -p recipe-source-capture -- --output <artifact.json> -- <cmd> ...` | offline-only | Authoring/tooling capture only. Runtime recipe playback must not spawn commands. |
 | Generated capabilities/API docs | `just docs-generate`, `just docs-check`, `just docs-validate`, `just docs-api`, `just docs-api-check`, `just docs-api-validate` from `/usr/projects/tui-vfx` | generated docs | `xtask`/`just` pipeline for generated docs and drift checks. |
+| Headless Chapter 100 smoke | `cd /usr/projects/tui-vfx-recipes && just v3-headless-smoke` | as-built | Headless release-gate rehearsal for Chapter 100. Composes validator, debug-QC, probe, trace, and docs freshness checks while keeping a legacy fallback probe in the same run. |
 
 Status shorthand used above:
 
 - `as-built` means the surface already exists and should be reused as the first
   stop.
 - `engine-level` means the command operates on engine inputs, not recipes.
-- `preview/player` means the host owns terminal lifecycle and playback.
+- `headless player` means non-interactive summary/corpus evidence; it does not enter raw mode or provide full-color playback.
+- `preview/player` means the host owns terminal lifecycle and full-color interactive playback.
 - `offline-only` means the command captures authoring data but must not run
   during recipe playback.
 - `generated docs` means the command checks or emits generated documentation
@@ -127,7 +130,24 @@ cargo run -q -p tui-vfx-trace -- \
 Use trace output for lifecycle/stage questions that are broader than a single
 frame diff.
 
-### Preview or inspect playback
+### Headless summary or full-color playback
+
+```bash
+cd /usr/projects/tui-vfx-recipes
+cargo run -q -p tui-vfx-horseman -- \
+  recipes/debug_recipes/content/content_slide_shift.json \
+  --json
+
+cargo run -q -p tui-vfx-horseman -- \
+  --corpus recipes/debug_recipes/content \
+  --json
+```
+
+Use `tui-vfx-horseman` for lightweight headless summaries and corpus-readiness
+evidence. It reuses the demo/player preview seam, but it is not the full-color
+interactive browser. The command and package are both `tui-vfx-horseman`; use that name in docs and scripts so the tool is not confused with full-color playback.
+
+### Full-color preview or playback
 
 ```bash
 cd /usr/projects/tui-vfx-recipes
@@ -137,9 +157,11 @@ cargo run --example v3_play_recipe -- recipes/debug_recipes/complex/v3_cross_fam
 cargo run --example diag_render_dump -- recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json 1.0
 ```
 
-Preview examples are host/player surfaces. They may own terminal lifecycle,
-keyboard events, and ratatui buffers. They should not move those responsibilities
-into the compositor or recipe schema.
+Preview examples are full-color host/player surfaces. They may own terminal
+lifecycle, keyboard events, and ratatui buffers. They should not move those
+responsibilities into the compositor or recipe schema. Use the headless
+validator/probe/trace/`tui-vfx-horseman` lanes when the evidence only needs
+structured summaries rather than interactive visual sign-off.
 
 ### Verify resize behavior
 
@@ -213,11 +235,11 @@ live in `/usr/projects/tui-vfx-recipes/docs/`.
 - ANSI source ingestion is still an adapter/tooling lane. The offline command
   capture tool exists; broader ANSI-to-grid source ingestion needs a separate
   as-built guide when implemented.
-- The thin V3 player remains example-level (`v3_play_recipe`, direct V3 preview
-  state, and diagnostic dumps). A packaged `tui-vfx-player` command should reuse
-  those paths rather than inventing a recipe interpreter.
+- The packaged lightweight player is `tui-vfx-horseman` (package: `tui-vfx-horseman`). It remains a headless summary/corpus
+  surface and should keep reusing the existing preview/cutover paths rather than
+  becoming a second renderer or recipe interpreter.
 - Frame/database evidence should continue to reuse probe reports and SQLite xray
   tables unless a concrete missing field forces a schema extension.
 
 <!-- <FILE>docs/tooling/INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.2</VERS> -->

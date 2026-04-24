@@ -3,7 +3,7 @@
   "fixture_id": "probe_midnight_switchboard",
   "gate": "probe",
   "status": "pass",
-  "captured_at": "2026-04-24T21:02:32Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/vfx-probe-validation/midnight_switchboard.json"
@@ -12,10 +12,10 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/vfx-probe-validation/midnight_switchboard.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "/tmp/tui-vfx-release-gates/probe_midnight_switchboard/probe_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/probe_midnight_switchboard/probe_report.json",
       "artifact_sha256": "6a6cf51a29ce286ae198492d4dcc5d11d40d08a275bbc39d7daa7c0ef96181a0",
       "status": "pass",
-      "observed_output_summary": "Probe command exits 0 and report analysis.combined.status=success plus lifecycle_analysis.combined.status=success. Configured Pulse#1, BorderSweep#1, and UnderlineWipe#1 all report nonzero observed_event_count after the recipe-side observability and effect-label matching fix."
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0, stages: style=success observed=350, shader=success observed=350, filter=success observed=350."
     }
   ],
   "review": {

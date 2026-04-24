@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/v3/test_vfx_traveling_band_shader.rs</FILE> - <DESC>Focused tests for the V3 traveling-band family surface</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Decision 2 migration slice — keep the first real V3 family surface regression-covered while the legacy flat shader surface remains operational during cutover.</WCTX>
-// <CLOG>Extract the VfxTravelingBandShader conversion tests into a dedicated sibling file to keep the production family surface OFPF-compliant.</CLOG>
+// <CLOG>Add regression coverage for legacy border sweep head/tail fields lifting back into the V3 traveling-band head_tail policy.</CLOG>
 
 use super::{
     VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
@@ -17,6 +17,8 @@ fn converts_border_sweep_into_v3_family_surface() {
         speed: 1.5,
         length: 7,
         color: ColorConfig::Cyan,
+        head: None,
+        tail: None,
         position_binding: Some("progress".to_string()),
     };
 
@@ -33,6 +35,27 @@ fn converts_border_sweep_into_v3_family_surface() {
         VfxTravelingBandBehavior::Border {
             length: 7,
             position_binding: Some("progress".to_string()),
+        }
+    );
+}
+
+#[test]
+fn converts_border_sweep_head_tail_fields_into_v3_head_tail_color_policy() {
+    let legacy = BorderSweepShader {
+        speed: 1.5,
+        length: 7,
+        color: ColorConfig::Cyan,
+        head: Some(ColorConfig::White),
+        tail: Some(ColorConfig::Black),
+        position_binding: Some("progress".to_string()),
+    };
+
+    let converted = VfxTravelingBandShader::from(&legacy);
+    assert_eq!(
+        converted.color,
+        VfxTravelingBandColor::HeadTail {
+            head: ColorConfig::White,
+            tail: ColorConfig::Black,
         }
     );
 }
@@ -73,4 +96,4 @@ fn returns_none_for_non_traveling_band_legacy_variant() {
 }
 
 // <FILE>tui-vfx-style/src/models/v3/test_vfx_traveling_band_shader.rs</FILE> - <DESC>Focused tests for the V3 traveling-band family surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

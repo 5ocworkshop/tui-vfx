@@ -3,7 +3,7 @@
   "fixture_id": "shadow_surface_pipeline",
   "gate": "shadow",
   "status": "pass",
-  "captured_at": "2026-04-24T19:56:36Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/scene/scene_layer_surface_shadow_pipeline.json"
@@ -12,16 +12,18 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/scene/scene_layer_surface_shadow_pipeline.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "artifacts/release-gates/shadow_surface_pipeline/probe_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/shadow_surface_pipeline/probe_report.json",
       "artifact_sha256": "321dcdab1ed1028d4a06b0fef775ea46874388f3204fd6706b1c09e640c55ff4",
-      "status": "pass"
+      "status": "pass",
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0."
     },
     {
       "evidence_type": "trace_report_json",
       "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/scene/scene_layer_surface_shadow_pipeline.json --format report",
-      "artifact": "artifacts/release-gates/shadow_surface_pipeline/trace_report.json",
-      "artifact_sha256": "9b32a1501c90cf345fc2c148f52a79b987a995576ced67864486990bf6cc8f9a",
-      "status": "pass"
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/shadow_surface_pipeline/trace_report.json",
+      "artifact_sha256": "18db7389432923c4164731b5d04edb9b582705f558ecfe6328d5be6132660cbf",
+      "status": "pass",
+      "observed_output_summary": "Headless trace report exit 0; summary.total_envelopes=1070, dropped=0, fallbacks={'assets': 0, 'procedurals': 0, 'layers': 0}."
     },
     {
       "evidence_type": "render_capture_png",

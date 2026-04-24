@@ -131,5 +131,125 @@ pub(crate) fn prepare_masks(masks: &[MaskSpec]) -> SmallVec<[PreparedMask; 2]> {
     prepared
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::masks::{
+        cls_cellular::CellularPattern,
+        cls_path_reveal::{RevealPathType, SpiralDirection},
+        cls_radial::RadialOrigin,
+    };
+    use crate::types::{DitherMatrix, IrisShape, Orientation, WipeDirection};
+
+    #[test]
+    fn test_prepare_mask_covers_every_mask_variant() {
+        let cases = vec![
+            (MaskSpec::None, "None"),
+            (
+                MaskSpec::Wipe {
+                    reveal: Some(WipeDirection::LeftToRight),
+                    hide: None,
+                    direction: None,
+                    soft_edge: true,
+                },
+                "Wipe",
+            ),
+            (
+                MaskSpec::Dissolve {
+                    seed: 1,
+                    chunk_size: 2,
+                },
+                "Dissolve",
+            ),
+            (MaskSpec::Checkers { cell_size: 2 }, "Checkers"),
+            (
+                MaskSpec::Blinds {
+                    orientation: Orientation::Vertical,
+                    count: 4,
+                },
+                "Blinds",
+            ),
+            (
+                MaskSpec::Iris {
+                    shape: IrisShape::Box,
+                    soft_edge: true,
+                },
+                "Iris",
+            ),
+            (MaskSpec::Diamond { soft_edge: true }, "Diamond"),
+            (
+                MaskSpec::Materialize {
+                    origin: RadialOrigin::Center,
+                    seed: 5,
+                    chunk_size: 2,
+                    noise: 0.2,
+                    soft_edge: true,
+                },
+                "Materialize",
+            ),
+            (
+                MaskSpec::NoiseDither {
+                    seed: 9,
+                    matrix: DitherMatrix::Bayer8,
+                },
+                "NoiseDither",
+            ),
+            (
+                MaskSpec::PathReveal {
+                    path: RevealPathType::Spiral {
+                        rotations: 3.0,
+                        direction: SpiralDirection::Clockwise,
+                    },
+                    soft_edge: false,
+                },
+                "PathReveal",
+            ),
+            (
+                MaskSpec::Radial {
+                    origin: RadialOrigin::BottomRight,
+                    soft_edge: true,
+                },
+                "Radial",
+            ),
+            (
+                MaskSpec::Cellular {
+                    pattern: CellularPattern::Hexagonal,
+                    seed: 3,
+                    cell_count: 12,
+                },
+                "Cellular",
+            ),
+        ];
+
+        for (spec, expected_name) in cases {
+            assert_eq!(
+                prepare_mask(&spec).name(),
+                expected_name,
+                "expected {expected_name} for {spec:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_prepare_mask_applies_hide_wipe_resolution() {
+        let prepared = prepare_mask(&MaskSpec::Wipe {
+            reveal: Some(WipeDirection::LeftToRight),
+            hide: Some(WipeDirection::RightToLeft),
+            direction: Some(WipeDirection::TopToBottom),
+            soft_edge: false,
+        });
+
+        assert_eq!(prepared.name(), "Wipe");
+        assert!(
+            prepared.is_visible(2, 0, 5, 1, 1.0),
+            "hide wipes should be fully visible at exit start"
+        );
+        assert!(
+            !prepared.is_visible(2, 0, 5, 1, 0.0),
+            "hide wipes should be hidden at exit end after prepare_mask resolves invert=true"
+        );
+    }
+}
+
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_mask.rs</FILE> - <DESC>Prepared mask enum for pipeline rendering</DESC>
 // <VERS>END OF VERSION: 1.1.0</VERS>

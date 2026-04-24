@@ -18,6 +18,8 @@ fn lowers_border_sweep_into_composed_traveling_band_family() {
         speed: 1.0,
         length: 4,
         color: ColorConfig::Cyan,
+        head: None,
+        tail: None,
         position_binding: None,
     });
 

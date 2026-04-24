@@ -1,10 +1,8 @@
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
+// <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>Sub-plan A Phase A.2.3 — route every call-site through the `_legacy` shim wrapper so these tests keep speaking the old `&mut OwnedGrid` call shape</WCTX>
-// <CLOG>0.6.0: add grouped-V3 construction coverage so render_pipeline_with_spec matches grouped-family runtime callers as well as legacy layer literals.
-// 0.5.0: MINOR — switch to `_legacy` shim helpers; no behavior change.
-// 0.4.0: Track the new runtime_params field in CompositionSpec fixtures so spec-equivalence coverage keeps compiling as the runtime shader context surface evolves</CLOG>
+// <CLOG>0.7.0: add sampler-chain equivalence coverage for spec-vs-options rendering.</CLOG>
 
 #[path = "test_helpers.rs"]
 mod test_helpers;
@@ -12,10 +10,11 @@ use test_helpers::{
     render_pipeline_legacy, render_pipeline_with_spec_area_legacy, render_pipeline_with_spec_legacy,
 };
 
+use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::{
     CompositionOptions, CompositionSpec, RenderArea, ShaderLayerSpec,
 };
-use tui_vfx_compositor::types::{MaskCombineMode, ShadowSpec};
+use tui_vfx_compositor::types::{Axis, MaskCombineMode, SamplerSpec, ShadowSpec};
 use tui_vfx_shadow::{ShadowConfig, ShadowEdges};
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, SpatialShaderType, StyleRegion, VfxSpatialComposedPrimitive,
@@ -36,6 +35,26 @@ fn create_source_grid(width: usize, height: usize, fill_char: char) -> OwnedGrid
                 ..Default::default()
             };
             grid.set(x, y, cell);
+        }
+    }
+    grid
+}
+
+fn create_coordinate_grid(width: usize, height: usize) -> OwnedGrid {
+    let mut grid = OwnedGrid::new(width, height);
+    for y in 0..height {
+        for x in 0..width {
+            let idx = y * width + x;
+            grid.set(
+                x,
+                y,
+                Cell {
+                    ch: char::from(b'A' + idx as u8),
+                    fg: Color::WHITE,
+                    bg: Color::BLACK,
+                    ..Default::default()
+                },
+            );
         }
     }
     grid
@@ -107,6 +126,8 @@ fn test_render_pipeline_with_spec_matches_options_shader_layer() {
         speed: 1.0,
         length: 3,
         color: ColorConfig::Red,
+        head: None,
+        tail: None,
         position_binding: None,
     };
     let spec_shader = shader.clone();
@@ -118,6 +139,7 @@ fn test_render_pipeline_with_spec_matches_options_shader_layer() {
 
     let spec = CompositionSpec {
         sampler_spec: None,
+        samplers: Vec::new(),
         masks: Vec::new(),
         mask_combine_mode: MaskCombineMode::All,
         filters: Vec::new(),
@@ -149,6 +171,8 @@ fn test_render_pipeline_with_spec_matches_grouped_v3_options_shader_layer() {
         speed: 1.0,
         length: 3,
         color: ColorConfig::Red,
+        head: None,
+        tail: None,
         position_binding: None,
     };
     let family = VfxSpatialShaderFamily::ComposedPrimitive(
@@ -297,6 +321,47 @@ fn test_render_pipeline_with_spec_area_matches_options() {
 }
 
 #[test]
+fn test_render_pipeline_with_spec_matches_options_sampler_chain() {
+    let source = create_coordinate_grid(6, 4);
+    let mut dest_options = OwnedGrid::new(6, 4);
+    let mut dest_spec = OwnedGrid::new(6, 4);
+    let gravity = SamplerSpec::Gravity {
+        axis: Axis::X,
+        acceleration: SignalOrFloat::Static(2.0),
+        terminal_velocity: SignalOrFloat::Static(2.0),
+    };
+    let pendulum = SamplerSpec::Pendulum {
+        axis: Axis::Y,
+        amplitude: SignalOrFloat::Static(1.0),
+        speed: SignalOrFloat::Static(0.0),
+        phase_spread: SignalOrFloat::Static(std::f32::consts::FRAC_PI_2),
+    };
+
+    let mut options =
+        CompositionOptions::default().with_samplers(vec![gravity.clone(), pendulum.clone()]);
+    options.t = 1.0;
+
+    let spec = CompositionSpec {
+        sampler_spec: Some(gravity),
+        samplers: vec![
+            SamplerSpec::Gravity {
+                axis: Axis::X,
+                acceleration: SignalOrFloat::Static(2.0),
+                terminal_velocity: SignalOrFloat::Static(2.0),
+            },
+            pendulum,
+        ],
+        t: 1.0,
+        ..CompositionSpec::default()
+    };
+
+    render_pipeline_legacy(&source, &mut dest_options, 6, 4, 0, 0, options, None);
+    render_pipeline_with_spec_legacy(&source, &mut dest_spec, 6, 4, 0, 0, &spec, None);
+
+    assert_grids_equal(&dest_options, &dest_spec);
+}
+
+#[test]
 fn test_render_pipeline_with_spec_matches_options_shadow() {
     let source = create_source_grid(6, 4, 'S');
     let mut dest_options = OwnedGrid::new(6, 4);
@@ -316,6 +381,7 @@ fn test_render_pipeline_with_spec_matches_options_shadow() {
 
     let spec = CompositionSpec {
         sampler_spec: None,
+        samplers: Vec::new(),
         masks: Vec::new(),
         mask_combine_mode: MaskCombineMode::All,
         filters: Vec::new(),
@@ -371,6 +437,7 @@ fn test_render_pipeline_with_spec_matches_options_shadow_grade_underlying() {
 
     let spec = CompositionSpec {
         sampler_spec: None,
+        samplers: Vec::new(),
         masks: Vec::new(),
         mask_combine_mode: MaskCombineMode::All,
         filters: Vec::new(),
@@ -391,4 +458,4 @@ fn test_render_pipeline_with_spec_matches_options_shadow_grade_underlying() {
 
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

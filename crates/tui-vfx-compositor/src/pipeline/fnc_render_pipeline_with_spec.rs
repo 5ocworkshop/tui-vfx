@@ -47,6 +47,7 @@ pub fn render_pipeline_with_spec(
 
     let options = CompositionOptions {
         sampler_spec: spec.sampler_spec.clone(),
+        samplers: Cow::Owned(spec.effective_samplers()),
         masks: Cow::Borrowed(spec.masks.as_slice()),
         mask_combine_mode: spec.mask_combine_mode,
         filters: Cow::Borrowed(spec.filters.as_slice()),

@@ -38,6 +38,7 @@ If the packet cannot justify exact paths yet, say that the write scope is not co
 
 ## Explicit out of scope
 Do not widen into:
+- `steering/ORCHESTRATION.md` or any leader-only orchestration policy; subagents should not read or use it
 - `[out-of-scope item]`
 - `[out-of-scope item]`
 - `[out-of-scope item]`
@@ -62,8 +63,26 @@ Do not widen into:
 - `mixed-signals` owns reusable signal/math substrate only.
 - `tui-vfx` owns renderer/effect semantics.
 - `tui-vfx-recipes` owns recipe truth, tooling, validator/probe/preview, compiled seams, and generated V3 docs.
-- Do not revise `ORCHESTRATION.md` or experiment protocols unless this packet explicitly owns that surface.
+- Do not read or revise `ORCHESTRATION.md`; it is leader-only orchestration context and will confuse bounded worker lanes.
+- Do not revise experiment protocols unless this packet explicitly owns that surface.
 - [any lane-specific boundary note]
+
+## Pipeline-touch definition of done
+If this packet touches a shader, filter, mask, sampler, style, content effect,
+motion route, shadow, scope, binding, or adjacent V3 pipeline file:
+- move primitive reusable math/signal substrate to `mixed-signals` when it is
+  renderer-agnostic and useful to 3+ real callers
+- keep renderer/effect semantics in `tui-vfx` / `tui-vfx-recipes`
+- normalize timing language and implementation (`elapsed`/absolute time for
+  cadence, normalized phase/loop progress for phase)
+- update rustdocs for public/schema-bearing items and generated-doc inputs when
+  schema/API surfaces change
+- align comments/docs/rustdocs/fixtures with canonical V3 vocabulary
+- update primitive-first debug/reference recipes when visual semantics, timing,
+  names, or parameters change
+- prefer adding validator/probe/test coverage for any drift class discovered
+- keep `<CLOG>` entries to the latest one- or two-line summary and update
+  relevant `INDEX.md` files when docs move or become canonical
 
 ## First steps / grounding instructions
 1. Run `ofpf-orientation` on each repo in scope.

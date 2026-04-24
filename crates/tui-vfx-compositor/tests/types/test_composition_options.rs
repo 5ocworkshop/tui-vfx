@@ -1,12 +1,13 @@
 // <FILE>tui-vfx-compositor/tests/types/test_composition_options.rs</FILE> - <DESC>Tests for CompositionOptions V3 family exposure helpers</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Runtime-facing seam extension — ensure CompositionOptions can report grouped V3 shader families when layers were constructed through a lowering-aware path, without changing the legacy shader application path.</WCTX>
-// <CLOG>0.2.0: add grouped-V3 runtime-construction coverage through ShaderWithRegion::try_from_v3_shader_family and CompositionOptions::try_with_v3_shader_family.
-// Add coverage for CompositionOptions::v3_shader_families across unknown and known shader-layer construction paths.</CLOG>
+// <CLOG>0.3.0: add sampler-chain compatibility coverage for legacy and ordered CompositionOptions paths.</CLOG>
 
+use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::{
     CompositionOptions, CompositionPlaybackTiming, ShaderWithRegion,
 };
+use tui_vfx_compositor::types::{Axis, SamplerSpec};
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, GlowShader, StyleRegion, VfxSpatialComposedPrimitive,
     VfxSpatialPrimitive, VfxSpatialShaderFamily,
@@ -25,6 +26,8 @@ fn composition_options_reports_known_v3_shader_families() {
         speed: 1.0,
         length: 3,
         color: ColorConfig::Red,
+        head: None,
+        tail: None,
         position_binding: None,
     };
     let glow = GlowShader::default();
@@ -79,6 +82,8 @@ fn shader_with_region_can_build_from_grouped_v3_family() {
         speed: 1.0,
         length: 3,
         color: ColorConfig::Red,
+        head: None,
+        tail: None,
         position_binding: None,
     };
     let family = VfxSpatialShaderFamily::ComposedPrimitive(
@@ -114,5 +119,44 @@ fn composition_playback_timing_from_options_falls_back_to_phase_progress() {
     assert_eq!(timing.shader_t(), 0.4);
 }
 
+#[test]
+fn composition_options_effective_samplers_fall_back_to_legacy_field() {
+    let gravity = SamplerSpec::Gravity {
+        axis: Axis::X,
+        acceleration: SignalOrFloat::Static(2.0),
+        terminal_velocity: SignalOrFloat::Static(2.0),
+    };
+    let options = CompositionOptions {
+        sampler_spec: Some(gravity.clone()),
+        ..CompositionOptions::default()
+    };
+
+    assert_eq!(options.effective_samplers().as_ref(), &[gravity]);
+    assert!(options.has_active_sampler());
+}
+
+#[test]
+fn composition_options_with_samplers_preserves_declared_order() {
+    let gravity = SamplerSpec::Gravity {
+        axis: Axis::X,
+        acceleration: SignalOrFloat::Static(2.0),
+        terminal_velocity: SignalOrFloat::Static(2.0),
+    };
+    let pendulum = SamplerSpec::Pendulum {
+        axis: Axis::Y,
+        amplitude: SignalOrFloat::Static(1.0),
+        speed: SignalOrFloat::Static(0.0),
+        phase_spread: SignalOrFloat::Static(std::f32::consts::FRAC_PI_2),
+    };
+    let options =
+        CompositionOptions::default().with_samplers(vec![gravity.clone(), pendulum.clone()]);
+
+    assert_eq!(
+        options.effective_samplers().as_ref(),
+        &[gravity.clone(), pendulum]
+    );
+    assert_eq!(options.sampler_spec, Some(gravity));
+}
+
 // <FILE>tui-vfx-compositor/tests/types/test_composition_options.rs</FILE> - <DESC>Tests for CompositionOptions V3 family exposure helpers</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

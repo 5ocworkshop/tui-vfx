@@ -3,7 +3,7 @@
   "fixture_id": "role_scope_scene_pipeline",
   "gate": "role_aware_lowering",
   "status": "fail",
-  "captured_at": "2026-04-24T20:35:00Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json"
@@ -12,18 +12,18 @@
     {
       "evidence_type": "lowering_report_json",
       "command": "cargo run -q -p pipeline-validator -- --lowering-report --format json recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json",
-      "artifact": "/tmp/tui-vfx-release-gates/role_scope_scene_pipeline/lowering_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/role_scope_scene_pipeline/lowering_report.json",
       "artifact_sha256": "bf1701d8c96b06e5700cf6761a189c0c2ae51a1fe3606316ae52998cb393f3af",
       "status": "pass",
-      "observed_output_summary": "Lowering report exit 0; summary automatic=4, human_review_required=0, not_applicable=1, human_review_needed=[]."
+      "observed_output_summary": "Headless lowering report exit 0; summary automatic=4, human_review_required=0, not_applicable=1, human_review_needed=[]."
     },
     {
       "evidence_type": "trace_report_json",
       "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json --format report",
-      "artifact": "/tmp/tui-vfx-release-gates/role_scope_scene_pipeline/trace_report.json",
-      "artifact_sha256": "483f11d7c426a567746458b587d3883688352df5729ee10c4c3fadbe7c59f0ce",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/role_scope_scene_pipeline/trace_report.json",
+      "artifact_sha256": "1a56be62c0faaf1daf87a6e43b227f4d2e0367953fcb5cfab9f95ef7f78575ea",
       "status": "pass",
-      "observed_output_summary": "Trace report exit 0; summary.total_envelopes=961, dropped=0, fallbacks assets/procedurals/layers all 0."
+      "observed_output_summary": "Headless trace report exit 0; summary.total_envelopes=1010, dropped=0, fallbacks={'assets': 0, 'procedurals': 0, 'layers': 0}."
     },
     {
       "evidence_type": "render_capture_png",
@@ -35,6 +35,6 @@
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "Headless lowering and trace evidence pass with no human-review-needed queue and no dropped trace envelopes. Overall fixture remains fail until owner-approved visual capture supplies the required render_capture_png."
+    "notes": "Headless evidence refreshed and passes. Overall fixture remains blocked until explicit owner-approved visual capture supplies the required render_capture_png; no GUI/X11/Zutty/Xvfb capture was run for this refresh."
   }
 }

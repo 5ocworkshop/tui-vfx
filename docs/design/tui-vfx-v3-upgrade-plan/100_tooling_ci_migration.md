@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.6.3</VERS> -->
+<!-- <VERS>VERSION: 1.6.4</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (`../tui-vfx-v3-upgrade-debug-recipes-migration-log.md`).</WCTX> -->
-<!-- <CLOG>1.6.3: fix the migration-log references to use the sibling docs/design path from the chapter directory.</CLOG> -->
+<!-- <CLOG>1.6.4: name tui-vfx-horseman as the packaged lightweight player and separate headless summaries from interactive preview.</CLOG> -->
 
 # 100 — Tooling and CI migration — release-blocking work
 
@@ -120,6 +120,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - one helper that can bridge a current V3 recipe path through its paired `_DEPRECATED_` legacy fixture when a legacy runtime surface still needs to operate
 - **Customer-facing preview/demo seam**
   - the public demo/player and diagnostic example players now route through an upstream cutover-aware preview helper instead of assembling transitional policy at the call sites
+  - the packaged lightweight player command is `tui-vfx-horseman`; it ships as `tui-vfx-horseman` and reports headless summary/corpus-readiness evidence rather than full-color interactive playback
   - `play_recipe` now prefers a direct rendered V3 snapshot for the supported compiled bridge subset before falling back to paired legacy fixtures
   - `demo` now understands that same direct rendered V3 snapshot subset for visual browsing, can start on an explicit recipe path for faster audit loops, advertises direct-V3 snapshot mode in the browser UI, and shows the active schema version in Recipe Info so mixed cutover playback stays obvious during audits
   - that direct visual subset is now phase/sample-aware: `play_recipe` and `demo` can auto-advance or scrub the supported compiled-V3 bridge subset across enter/dwell/exit samples instead of freezing on one fixed dwell frame
@@ -141,7 +142,7 @@ The tooling migration is no longer purely theoretical. The following cutover sea
   - scene-layer timing ownership is starting to centralize too: `SceneCtx::effective_clock_t()` and `ProceduralCtx` clock helpers now own loop-vs-phase clock selection for scene text/procedural behavior instead of leaving that fallback logic duplicated at layer/source call sites
   - compositor/probe timing derivation is now starting to centralize as well: `CompositionPlaybackTiming` owns effective loop/shader progress derivation and is used by compositor and probe consumers instead of repeating `loop_t.unwrap_or(t)` timing policy at each call site
   - probe/runtime binding observability now follows that same seam: compositor and probe shader/binding diagnostics both derive timing through `CompositionPlaybackTiming`, and probe shader trace enrichment now understands family-prefixed shader labels produced by the newer grouped-V3 paths
-  - it still uses the older preview-manager path for legacy recipes and is not yet a fully native animated V3 preview surface
+  - `tui-vfx-horseman` is intentionally non-interactive and still uses the older preview-manager path for legacy recipes; the full-color browser/player path is not yet a fully native animated V3 preview surface
 - **Reporting/tool surfaces**
   - `pipeline-validator`
   - `recipe-probe`
@@ -196,10 +197,11 @@ V3 does not ship until each of the following is green:
 - [ ] `docs/RECIPE_AUTHORING_WORKFLOW.md`, `SCHEMA_REFERENCE.md`, `AUTHORING_GUIDE.md`, `PROCEDURAL_SOURCES.md`, `PIPELINE_VALIDATOR_LLM_GUIDE.md` rewritten for V3.
 - [ ] `docs/templates/capabilities.toml` editorial entries match the V3 effect surface.
 - [ ] `cargo run --example demo` loads V3 recipes from the migrated corpus; optional V2 dual-load behind a feature flag per Chapter 50's transition-window semantics.
-      _Current state: `play_recipe` and `demo` can now visually render the supported direct V3 bridge subset with phase/sample-aware scrubbing and auto-advance, but the full browser experience is still not a native animated V3 preview path._
+      _Current state: `play_recipe` and `demo` can now visually render the supported direct V3 bridge subset with phase/sample-aware scrubbing and auto-advance; `tui-vfx-horseman` can summarize single recipes and corpus readiness headlessly through the same cutover seam. The full browser experience is still not a native animated V3 preview path._
 - [ ] CI gates in `.github/workflows/` and `Justfile` updated to run V3 validation.
+      _Current state: `tui-vfx-recipes` now exposes `just v3-headless-smoke`, which composes strict-contracts validation, debug-QC, trace/probe, and recipes-side docs freshness checks without GUI capture while keeping a legacy fallback probe in the same run. The broader GitHub Actions wiring still needs to adopt that target._
 
 Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail, and to the frozen V2 spec archive (`docs/v2-spec-archive/`) for historical reference.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.6.3</VERS> -->
+<!-- <VERS>END OF VERSION: 1.6.4</VERS> -->

@@ -3,7 +3,7 @@
   "fixture_id": "offscreen_content_slide_shift",
   "gate": "offscreen",
   "status": "pass",
-  "captured_at": "2026-04-24T20:05:00Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/content/content_slide_shift.json"
@@ -12,10 +12,11 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/content/content_slide_shift.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "/tmp/tui-vfx-release-gates/offscreen_content_slide_shift/probe_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/offscreen_content_slide_shift/probe_report.json",
       "artifact_generated": false,
       "status": "pass",
-      "observed_output_summary": "Probe exit 0 at tui-vfx-recipes@e6e9da5; analysis.status=success, frame_count=1, diagnostics=[]."
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0.",
+      "artifact_sha256": "bc42a416f5c12f7d9d03ba35dad32c2532e82e953b1788381bcd3d2c054c53b5"
     },
     {
       "evidence_type": "render_capture_png",

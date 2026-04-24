@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>Sub-plan A Phase A.2.3 — migrate to role-aware render_pipeline_with_spec signature</WCTX>
-// <CLOG>0.7.0: MINOR — migrate call to the new `render_pipeline_with_spec` signature. Source roles default to `RoleMap::all_background(w, h)` (probe has no semantic info). Destination is lifted into a `SemanticScene` via `SemanticScene::from_grid_with_default_role`; after the pipeline runs, we extract the grid back via `grid_mut()` clone for downstream probe analysis (probe still speaks `Grid`, not `SemanticScene`).</CLOG>
+// <CLOG>0.8.0: inventory and trace-parameter lookup now read the full effective sampler chain so multi-sampler specs no longer disappear behind the legacy single-sampler mirror.</CLOG>
 
 use serde_json::{Value, json};
 use tui_vfx_compositor::pipeline::render_pipeline_with_spec;
@@ -248,15 +248,20 @@ pub fn run_probe(
 }
 
 fn build_pipeline_inventory(composition: &CompositionSpec) -> ProbePipelineInventory {
+    let effective_samplers = composition
+        .effective_samplers()
+        .into_iter()
+        .filter(|sampler| !matches!(sampler, tui_vfx_compositor::types::SamplerSpec::None))
+        .collect::<Vec<_>>();
     ProbePipelineInventory {
-        sampler: composition
-            .sampler_spec
-            .as_ref()
+        sampler: effective_samplers
+            .first()
             .map(|sampler| format!("{sampler:?}")),
-        sampler_effects: composition
-            .sampler_spec
+        sampler_count: effective_samplers.len(),
+        sampler_effects: effective_samplers
             .iter()
-            .map(|sampler| format!("{}#1", variant_name_from_debug(sampler)))
+            .enumerate()
+            .map(|(index, sampler)| format!("{}#{}", variant_name_from_debug(sampler), index + 1))
             .collect(),
         mask_count: composition.masks.len(),
         mask_effects: composition
@@ -327,12 +332,15 @@ fn trace_event_details(
         .unwrap_or(effect_name);
 
     match stage {
-        "sampler" => match composition.sampler_spec.as_ref() {
-            Some(sampler) if variant_name_from_debug(sampler) == normalized_effect_name => {
-                (serde_json::to_value(sampler).ok(), Vec::new())
-            }
-            _ => (None, Vec::new()),
-        },
+        "sampler" => serialize_matches(
+            composition
+                .effective_samplers()
+                .into_iter()
+                .filter(|sampler| !matches!(sampler, tui_vfx_compositor::types::SamplerSpec::None))
+                .filter(|sampler| variant_name_from_debug(sampler) == normalized_effect_name)
+                .map(|sampler| serde_json::to_value(sampler).unwrap_or(Value::Null))
+                .collect(),
+        ),
         "mask" => serialize_matches(
             composition
                 .masks
@@ -441,4 +449,4 @@ pub fn run_probe_diff(
 }
 
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

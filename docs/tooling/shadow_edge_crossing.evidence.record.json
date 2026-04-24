@@ -3,7 +3,7 @@
   "fixture_id": "shadow_edge_crossing",
   "gate": "shadow",
   "status": "pass",
-  "captured_at": "2026-04-24T19:56:36Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/motion_routes/toast_shadow_edge_crossing.json"
@@ -12,18 +12,20 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/motion_routes/toast_shadow_edge_crossing.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "/tmp/tui-vfx-release-gates/shadow_edge_crossing/probe_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/shadow_edge_crossing/probe_report.json",
       "artifact_generated": false,
       "status": "pass",
-      "observed_output_summary": "Probe exit 0 at tui-vfx-recipes@bf2ee98; diagnostics=[], analysis.status=success, frame_count=1, non_empty_cells=130/130."
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0.",
+      "artifact_sha256": "1644d22f6b9491eac7e9ff3a6806da16931218284a4d11d5ab4f449b113c3cd6"
     },
     {
       "evidence_type": "trace_report_json",
       "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/motion_routes/toast_shadow_edge_crossing.json --format report",
-      "artifact": "/tmp/tui-vfx-release-gates/shadow_edge_crossing/trace_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/shadow_edge_crossing/trace_report.json",
       "artifact_generated": false,
       "status": "pass",
-      "observed_output_summary": "Trace exit 0 at tui-vfx-recipes@bf2ee98; total_envelopes=261, dropped=0, stage_counts={lifecycle:1, resolution:0, composition:0, pipeline:260, total:261}."
+      "observed_output_summary": "Headless trace report exit 0; summary.total_envelopes=261, dropped=0, fallbacks={'assets': 0, 'procedurals': 0, 'layers': 0}.",
+      "artifact_sha256": "ad7880a303dc5983e01d0f8a8b7fb6df75b565ef0c8e4f4056b88d6d56666ff7"
     },
     {
       "evidence_type": "render_capture_png",

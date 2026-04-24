@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_mask_spec.rs</FILE> - <DESC>MaskSpec enum with full parameters</DESC>
-// <VERS>VERSION: 2.3.1</VERS>
-// <WCTX>Fix doctest imports for mask example</WCTX>
-// <CLOG>Add missing WipeDirection and IrisShape imports to docs</CLOG>
+// <VERS>VERSION: 2.3.2</VERS>
+// <WCTX>V3 MASK lane hardening</WCTX>
+// <CLOG>Add focused coverage for missing PathReveal/Radial/Cellular serde and wipe resolution semantics</CLOG>
 
 //! # Mask Specifications
 //!
@@ -753,5 +753,128 @@ impl MaskSpec {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::masks::cls_path_reveal::{RevealPathType, SpiralDirection};
+
+    #[test]
+    fn mask_spec_path_reveal_serde_roundtrip() {
+        let spec = MaskSpec::PathReveal {
+            path: RevealPathType::Spiral {
+                rotations: 1.75,
+                direction: SpiralDirection::CounterClockwise,
+            },
+            soft_edge: true,
+        };
+
+        let json = serde_json::to_string(&spec).unwrap();
+        let parsed: MaskSpec = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(spec, parsed);
+    }
+
+    #[test]
+    fn mask_spec_radial_serde_roundtrip() {
+        let spec = MaskSpec::Radial {
+            origin: RadialOrigin::Custom { x: 0.25, y: 0.75 },
+            soft_edge: true,
+        };
+
+        let json = serde_json::to_string(&spec).unwrap();
+        let parsed: MaskSpec = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(spec, parsed);
+    }
+
+    #[test]
+    fn mask_spec_cellular_serde_roundtrip() {
+        let spec = MaskSpec::Cellular {
+            pattern: CellularPattern::Organic,
+            seed: 17,
+            cell_count: 12,
+        };
+
+        let json = serde_json::to_string(&spec).unwrap();
+        let parsed: MaskSpec = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(spec, parsed);
+    }
+
+    #[test]
+    fn resolve_wipe_prefers_hide_and_marks_inverted() {
+        let spec = MaskSpec::Wipe {
+            reveal: Some(WipeDirection::LeftToRight),
+            hide: Some(WipeDirection::BottomToTop),
+            direction: Some(WipeDirection::TopToBottom),
+            soft_edge: true,
+        };
+
+        let resolved = spec.resolve_wipe().expect("wipe resolves");
+
+        assert_eq!(
+            resolved,
+            ResolvedWipe {
+                direction: WipeDirection::BottomToTop,
+                invert: true,
+            }
+        );
+        assert!(spec.should_invert());
+    }
+
+    #[test]
+    fn resolve_wipe_uses_reveal_then_direction_then_default() {
+        let reveal = MaskSpec::Wipe {
+            reveal: Some(WipeDirection::RightToLeft),
+            hide: None,
+            direction: Some(WipeDirection::TopToBottom),
+            soft_edge: false,
+        };
+        assert_eq!(
+            reveal.resolve_wipe(),
+            Some(ResolvedWipe {
+                direction: WipeDirection::RightToLeft,
+                invert: false,
+            })
+        );
+
+        let direction = MaskSpec::Wipe {
+            reveal: None,
+            hide: None,
+            direction: Some(WipeDirection::TopToBottom),
+            soft_edge: false,
+        };
+        assert_eq!(
+            direction.resolve_wipe(),
+            Some(ResolvedWipe {
+                direction: WipeDirection::TopToBottom,
+                invert: false,
+            })
+        );
+
+        let defaulted = MaskSpec::Wipe {
+            reveal: None,
+            hide: None,
+            direction: None,
+            soft_edge: false,
+        };
+        assert_eq!(
+            defaulted.resolve_wipe(),
+            Some(ResolvedWipe {
+                direction: WipeDirection::LeftToRight,
+                invert: false,
+            })
+        );
+    }
+
+    #[test]
+    fn mask_spec_none_deserializes_from_v3_payload_shape() {
+        let parsed: MaskSpec = serde_json::from_value(serde_json::json!({ "type": "none" }))
+            .expect("none variant should deserialize from V3 payload shape");
+
+        assert_eq!(parsed, MaskSpec::None);
+    }
+}
+
 // <FILE>tui-vfx-compositor/src/types/cls_mask_spec.rs</FILE> - <DESC>MaskSpec enum with full parameters</DESC>
-// <VERS>END OF VERSION: 2.3.1</VERS>
+// <VERS>END OF VERSION: 2.3.2</VERS>

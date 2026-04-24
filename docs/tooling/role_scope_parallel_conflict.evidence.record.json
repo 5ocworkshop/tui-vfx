@@ -3,7 +3,7 @@
   "fixture_id": "role_scope_parallel_conflict",
   "gate": "role_aware_lowering",
   "status": "pass",
-  "captured_at": "2026-04-24T18:14:25Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/complex/complex_parallel_role_scopes.json"
@@ -12,23 +12,26 @@
     {
       "evidence_type": "lowering_report_json",
       "command": "cargo run -q -p pipeline-validator -- --lowering-report --format json recipes/debug_recipes/complex/complex_parallel_role_scopes.json",
-      "artifact": "artifacts/release-gates/role_scope_parallel_conflict/lowering_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/role_scope_parallel_conflict/lowering_report.json",
       "artifact_sha256": "f6f06dcc3fb0f3b3da54f913acba4f650e8c19eaa4a0118adaf7af39bdce346c",
-      "status": "pass"
+      "status": "pass",
+      "observed_output_summary": "Headless lowering report exit 0; summary automatic=3, human_review_required=0, not_applicable=2, human_review_needed=[]."
     },
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/complex/complex_parallel_role_scopes.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "artifacts/release-gates/role_scope_parallel_conflict/probe_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/role_scope_parallel_conflict/probe_report.json",
       "artifact_sha256": "38c2756c9755cb36c32b7daf5789e5e2a9db2e664a9c6de31757b0ff92cc61c2",
-      "status": "pass"
+      "status": "pass",
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0."
     },
     {
       "evidence_type": "trace_report_json",
       "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/complex/complex_parallel_role_scopes.json --format report",
-      "artifact": "artifacts/release-gates/role_scope_parallel_conflict/trace_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/role_scope_parallel_conflict/trace_report.json",
       "artifact_sha256": "e7ef9dd0590b1ad5f88f8df9ae2d3bb98e5e5f9cd1a547f6c8d52250b3c295b9",
-      "status": "pass"
+      "status": "pass",
+      "observed_output_summary": "Headless trace report exit 0; summary.total_envelopes=361, dropped=0, fallbacks={'assets': 0, 'procedurals': 0, 'layers': 0}."
     }
   ],
   "review": {

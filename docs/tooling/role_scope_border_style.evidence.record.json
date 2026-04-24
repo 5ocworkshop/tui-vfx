@@ -3,7 +3,7 @@
   "fixture_id": "role_scope_border_style",
   "gate": "role_aware_lowering",
   "status": "fail",
-  "captured_at": "2026-04-24T20:35:00Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/styles/style_role_scope_border.json"
@@ -12,10 +12,10 @@
     {
       "evidence_type": "lowering_report_json",
       "command": "cargo run -q -p pipeline-validator -- --lowering-report --format json recipes/debug_recipes/styles/style_role_scope_border.json",
-      "artifact": "/tmp/tui-vfx-release-gates/role_scope_border_style/lowering_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/role_scope_border_style/lowering_report.json",
       "artifact_sha256": "97b30e8d605ef1460d2ca8a40043773197521aeb729618fe4d56ff2eb667fce2",
       "status": "pass",
-      "observed_output_summary": "Lowering report exit 0; summary automatic=3, human_review_required=0, not_applicable=2, human_review_needed=[]."
+      "observed_output_summary": "Headless lowering report exit 0; summary automatic=3, human_review_required=0, not_applicable=2, human_review_needed=[]."
     },
     {
       "evidence_type": "render_capture_png",
@@ -27,6 +27,6 @@
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "Headless lowering evidence passes with no human-review-needed queue. Overall fixture remains fail until owner-approved visual capture supplies the required render_capture_png."
+    "notes": "Headless evidence refreshed and passes. Overall fixture remains blocked until explicit owner-approved visual capture supplies the required render_capture_png; no GUI/X11/Zutty/Xvfb capture was run for this refresh."
   }
 }

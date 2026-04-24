@@ -1,9 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_composition_spec.rs</FILE>
 // <DESC>Serializable composition spec for render pipeline</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Add shadow and preserve_unfilled to CompositionSpec</WCTX>
-// <CLOG>0.3.0: add grouped-V3 shader-family constructors so serializable composition specs can be built directly from grouped spatial families during cutover.
-// Include shadow/preserve_unfilled fields for spec parity</CLOG>
+// <CLOG>0.4.0: add ordered sampler chains while preserving the legacy single-sampler field.</CLOG>
 
 use crate::pipeline::{
     cls_composition_playback_timing::CompositionPlaybackTiming,
@@ -19,9 +18,23 @@ use tui_vfx_style::traits::ShaderRuntimeParams;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CompositionSpec {
-    /// Sampler specification (single - chaining deferred to future PRD).
+    /// Legacy single-sampler specification.
+    ///
+    /// Kept for backwards compatibility with older callers. New callers should
+    /// prefer [`CompositionSpec::samplers`] when sampler ordering matters. If
+    /// `samplers` is non-empty, it is the authoritative ordered chain and this
+    /// field is treated as a compatibility mirror.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sampler_spec: Option<SamplerSpec>,
+
+    /// Ordered sampler chain applied before masks, shaders, and filters.
+    ///
+    /// Each sampler consumes the coordinates produced by the previous sampler.
+    /// If any sampler rejects a cell, the cell is skipped. When this vector is
+    /// empty, the legacy `sampler_spec` field remains the effective single
+    /// sampler for backwards compatibility.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub samplers: Vec<SamplerSpec>,
 
     /// Mask specifications - combined via mask_combine_mode.
     #[serde(default)]
@@ -72,6 +85,7 @@ impl Default for CompositionSpec {
     fn default() -> Self {
         Self {
             sampler_spec: None,
+            samplers: Vec::new(),
             masks: Vec::new(),
             mask_combine_mode: MaskCombineMode::All,
             filters: Vec::new(),
@@ -87,6 +101,37 @@ impl Default for CompositionSpec {
 }
 
 impl CompositionSpec {
+    /// Return the effective ordered sampler chain.
+    ///
+    /// `samplers` is authoritative when populated. Otherwise the legacy
+    /// `sampler_spec` is exposed as a one-item chain.
+    pub fn effective_samplers(&self) -> Vec<SamplerSpec> {
+        if !self.samplers.is_empty() {
+            return self.samplers.clone();
+        }
+        self.sampler_spec.iter().cloned().collect()
+    }
+
+    /// True when the effective sampler chain contains at least one active
+    /// sampler.
+    pub fn has_active_sampler(&self) -> bool {
+        self.effective_samplers()
+            .iter()
+            .any(|sampler| !matches!(sampler, SamplerSpec::None))
+    }
+
+    /// Push a sampler into the ordered sampler chain.
+    ///
+    /// The first sampler is mirrored into `sampler_spec` so older readers still
+    /// see that a sampler is configured while newer readers use `samplers` for
+    /// the full ordered chain.
+    pub fn push_sampler(&mut self, sampler: SamplerSpec) {
+        if self.sampler_spec.is_none() {
+            self.sampler_spec = Some(sampler.clone());
+        }
+        self.samplers.push(sampler);
+    }
+
     /// Apply one shared playback timing bundle to this composition spec.
     pub fn apply_playback_timing(&mut self, timing: CompositionPlaybackTiming) {
         self.t = timing.t;
@@ -138,4 +183,4 @@ fn default_preserve_unfilled() -> bool {
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_composition_spec.rs</FILE>
 // <DESC>Serializable composition spec for render pipeline</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

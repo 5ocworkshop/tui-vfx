@@ -29,7 +29,7 @@ recipe authoring guides, and migration notes.
 | Module path | `src/preview/` for canonical seam | `src/playback/` | Keep demo/preview examples named preview/demo where accurate; rename the engine seam. |
 | Rendered frame | `DirectV3PreviewSnapshot` | `V3FrameSnapshot` | A frame/grid snapshot can serve preview, probe, movie, CI, and static export surfaces. |
 | Buffer adapter helper | `render_direct_v3_snapshot` | `render_v3_frame_to_buffer` | Adapter-boundary function name should state that it renders one frame snapshot into a buffer. |
-| Thin recipe player | `thin player`, possible movie naming | `tui-vfx-player` | The small CLI/tooling layer is a player, not the deferred movie composer. |
+| Thin recipe player | `thin player`, possible movie naming | `tui-vfx-horseman` | The small CLI/tooling layer is a player, not the deferred movie composer. |
 | Future scripted movie layer | `gtd-movie` / `tui-vfx-movie` | `gtd-movie` | Reserve for higher-order scripted multi-scene movies/timelines above recipes. |
 | Lifecycle duration | `auto_dismiss_ms` | `duration_ms` | Neutral across toast, splash, ambient, modal, and movie-beat contexts. |
 | Timeline stagger | `enter_delay_ms`, `exit_delay_ms` | `enter_offset_ms`, `exit_offset_ms` | Offset means placement on a timeline. Delay sounds like blocking duration. |
@@ -67,7 +67,7 @@ Use this vocabulary when adding or renaming public/schema-bearing V3 surfaces:
 - `PlaybackRegistry` — future plan storage/indexing owner, if needed.
 - `V3FrameSnapshot` — one rendered frame/grid snapshot.
 - `FrameDiff` — comparison of two rendered frame snapshots.
-- `tui-vfx-player` — small recipe playback CLI/tool surface.
+- `tui-vfx-horseman` — small recipe playback CLI/tool surface.
 - `gtd-movie` — future scripted movie/timeline layer.
 
 ## Cutover rules
@@ -93,7 +93,7 @@ This closes the active naming-decision portion of:
 - Open Q #19 — canonical preview/playback seam naming.
 - Open Q #18 — routing/hosting hint naming, with `StepIntent` and
   `SurfaceIntent` as canonical terms.
-- Chapter 90 movie-composer naming split: `tui-vfx-player` now,
+- Chapter 90 movie-composer naming split: `tui-vfx-horseman` now,
   `gtd-movie` later.
 
 Implementation remains a separate execution lane: rename code, rustdocs,

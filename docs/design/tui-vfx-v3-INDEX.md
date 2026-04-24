@@ -1,14 +1,32 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.5.6</VERS> -->
+<!-- <VERS>VERSION: 0.5.8</VERS> -->
 <!-- <WCTX>Keep the V3 landing page current with active authoring, schema, tooling, lifecycle, and deferred post-release capability docs.</WCTX> -->
-<!-- <CLOG>0.5.6: add sibling authoring-doc route after the V3 ladder and vocabulary references.</CLOG> -->
+<!-- <CLOG>0.5.8: add a tiny route to the root V3 capabilities orientation.
+0.5.7: add lifecycle status buckets so agents can distinguish live guidance, retained history, and canonical core docs.</CLOG> -->
 
 # V3 documentation index
 
 Start here when working on tui-vfx V3. This page points to the durable planning
 chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 
+## Status legend
+
+- **Canonical core docs** are live guidance: use them as the current contract or
+  accepted decision record.
+- **Active work surfaces** still drive implementation, validation, migration, or
+  release-gate follow-up.
+- **Retained history** preserves rationale or closed-out planning context. Read it
+  for background, but prefer the canonical docs and active trackers for current
+  instructions.
+- **Post-release/deferred specs** are useful ideas that must not be treated as V3
+  release blockers.
+
+For the complete non-destructive classification map, see the
+[V3 docs lifecycle/elevation plan](tui-vfx-v3-docs-lifecycle-plan.md).
+
 ## Start here
+
+These are live entry points, not historical notes.
 
 1. [V3 outstanding master punch list](tui-vfx-v3-outstanding-master-list.md)
 2. [V3 execution DAG](tui-vfx-v3-execution-dag.md)
@@ -27,6 +45,61 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 15. [V3 capability governance decision](tui-vfx-v3-capability-governance-decision.md)
 16. [V3 timing and metadata decision](tui-vfx-v3-timing-and-metadata-decision.md)
 17. [Tooling hub](../tooling/INDEX.md)
+
+## Canonical core docs and accepted decisions
+
+Use these as current V3 guidance.
+
+- [V3 upgrade-plan chapter index](tui-vfx-v3-upgrade-plan/00_INDEX.md) — retained chapter hub with pinned Schema V3.0 reference; current work is tracked by this index, the lifecycle plan, and the master punch list.
+- [V3 schema overview](tui-vfx-v3-schema-overview.md)
+- [V3 schema draft](tui-vfx-v3-schema-draft.json)
+- [V3 I/O contract](tui-vfx-v3-io-contract.md)
+- [V3 recipe vocabulary](tui-vfx-v3-recipe-vocabulary.md)
+- [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
+- [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
+- [V3 migration outcome policy](tui-vfx-v3-migration-outcome-policy.md)
+- [V3 release-gate policy](tui-vfx-v3-release-gate-policy.md)
+- [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
+- [V3 capability governance decision](tui-vfx-v3-capability-governance-decision.md)
+- [V3 timing and metadata decision](tui-vfx-v3-timing-and-metadata-decision.md)
+
+## Active work surfaces
+
+These still shape implementation, validation, migration, or release-gate follow-up.
+
+- [V3 outstanding master punch list](tui-vfx-v3-outstanding-master-list.md)
+- [V3 execution DAG](tui-vfx-v3-execution-dag.md)
+- [V3 docs lifecycle/elevation plan](tui-vfx-v3-docs-lifecycle-plan.md)
+- [V3 capability catalog](tui-vfx-v3-capability-catalog.md)
+- [V3 lowering map](tui-vfx-v3-lowering-map.md)
+- [V3 normalized IR](tui-vfx-v3-normalized-ir.md)
+- [V3 compiled execution plan](tui-vfx-v3-compiled-execution-plan.md)
+- [V3 scheduler batching plan](tui-vfx-v3-scheduler-batching-plan.md)
+- [V3 validator canonicalization checklist](tui-vfx-v3-validator-canonicalization-checklist.md)
+- [V3 cross-family coverage plan](tui-vfx-v3-cross-family-coverage-plan.md)
+- [V3 spatial field hint plan](tui-vfx-v3-spatial-field-hint-plan.md)
+- [V3 scene content integration plan](tui-vfx-v3-scene-content-integration-plan.md)
+- [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
+- [V3 recipe ingredients reference plan](tui-vfx-v3-recipe-ingredients-reference-plan.md)
+- [V3 release-gate manifest seed](tui-vfx-v3-release-gate-manifest.md)
+- [V3 first slice checklist](tui-vfx-v3-first-slice-checklist.md)
+
+## Retained historical/planning records
+
+Read these for rationale or closed-out context. Do not treat stale `draft`,
+`open question`, or `deferred` language here as current task status without
+checking the master punch list and lifecycle plan.
+
+- [V3 upgrade-plan chapter index](tui-vfx-v3-upgrade-plan/00_INDEX.md)
+- [V3 motion spec](tui-vfx-v3-motion-spec.md)
+- [V3 motion compatibility table](tui-vfx-v3-motion-compatibility-table.md)
+- [V3 shadow spec](tui-vfx-v3-shadow-spec.md)
+- [V3 vanishing edge spec](tui-vfx-v3-vanishing-edge-spec.md)
+- [V3 migration findings memo](tui-vfx-v3-migration-findings-memo-claude.md)
+- [V3 upgrade audit workflow](tui-vfx-v3-upgrade-audit-workflow.md)
+- [V3 upgrade debug recipes migration log](tui-vfx-v3-upgrade-debug-recipes-migration-log.md)
+- [V3 naming implementation inventory](tui-vfx-v3-naming-implementation-inventory.md)
+- [V3 legacy Ra-to-Vfx rename inventory](tui-vfx-v3-ra-to-vfx-rename-inventory.md)
 
 ## Architecture and decisions
 
@@ -91,6 +164,10 @@ primitive behavior.
 - [V3 first slice checklist](tui-vfx-v3-first-slice-checklist.md)
 - [V3 outstanding master punch list](tui-vfx-v3-outstanding-master-list.md)
 
+## Capability orientation
+
+- [Root capabilities guide](../../CAPABILITIES.md) — hand-maintained V3 capability orientation; use generated capability docs for extracted inventory facts.
+
 ## Specialized capability plans
 
 - [V3 capability catalog](tui-vfx-v3-capability-catalog.md)
@@ -113,4 +190,4 @@ primitive behavior.
   semantics belong in `tui-vfx` / `tui-vfx-recipes`.
 
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.6</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.8</VERS> -->

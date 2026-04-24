@@ -62,6 +62,8 @@ fn test_spatial_shader_name_returns_nonempty() {
             speed: 1.0,
             length: 5,
             color: ColorConfig::Cyan,
+            head: None,
+            tail: None,
             position_binding: None,
         }),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
@@ -74,6 +76,7 @@ fn test_spatial_shader_name_returns_nonempty() {
         SpatialShaderType::Reflect(ReflectShader {
             speed: 2.0,
             color: ColorConfig::White,
+            ..ReflectShader::default()
         }),
         SpatialShaderType::GlitchLines(GlitchLinesShader::default()),
         SpatialShaderType::NeonFlicker(NeonFlickerShader::default()),
@@ -119,6 +122,8 @@ fn test_spatial_shader_description_returns_nonempty() {
             speed: 1.0,
             length: 5,
             color: ColorConfig::Cyan,
+            head: None,
+            tail: None,
             position_binding: None,
         }),
         SpatialShaderType::EdgeSheen(EdgeSheenShader::default()),
@@ -131,6 +136,7 @@ fn test_spatial_shader_description_returns_nonempty() {
         SpatialShaderType::Reflect(ReflectShader {
             speed: 2.0,
             color: ColorConfig::White,
+            ..ReflectShader::default()
         }),
         SpatialShaderType::GlitchLines(GlitchLinesShader::default()),
         SpatialShaderType::NeonFlicker(NeonFlickerShader::default()),

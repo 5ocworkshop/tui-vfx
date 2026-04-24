@@ -3,7 +3,7 @@
   "fixture_id": "trace_propagation_primitive",
   "gate": "trace",
   "status": "pass",
-  "captured_at": "2026-04-24T18:06:40Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/shaders/primitives/shader_trace_propagation.json"
@@ -12,8 +12,10 @@
     {
       "evidence_type": "trace_report_json",
       "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/shaders/primitives/shader_trace_propagation.json --format report",
-      "artifact": "artifacts/release-gates/trace_propagation_primitive/trace_report.json",
-      "status": "pass"
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/trace_propagation_primitive/trace_report.json",
+      "status": "pass",
+      "artifact_sha256": "56a74ed723e41f405c5371f056a6ef90d6cdec8de7c40b38b9180ff0f534a935",
+      "observed_output_summary": "Headless trace report exit 0; summary.total_envelopes=1801, dropped=0, fallbacks={'assets': 0, 'procedurals': 0, 'layers': 0}."
     }
   ],
   "review": {

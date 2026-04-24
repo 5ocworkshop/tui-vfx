@@ -3,7 +3,7 @@
   "fixture_id": "trace_scene_role_scope",
   "gate": "trace",
   "status": "pass",
-  "captured_at": "2026-04-24T18:14:25Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json"
@@ -12,16 +12,18 @@
     {
       "evidence_type": "trace_report_json",
       "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json --format report",
-      "artifact": "artifacts/release-gates/trace_scene_role_scope/trace_report.json",
-      "artifact_sha256": "483f11d7c426a567746458b587d3883688352df5729ee10c4c3fadbe7c59f0ce",
-      "status": "pass"
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/trace_scene_role_scope/trace_report.json",
+      "artifact_sha256": "1a56be62c0faaf1daf87a6e43b227f4d2e0367953fcb5cfab9f95ef7f78575ea",
+      "status": "pass",
+      "observed_output_summary": "Headless trace report exit 0; summary.total_envelopes=1010, dropped=0, fallbacks={'assets': 0, 'procedurals': 0, 'layers': 0}."
     },
     {
       "evidence_type": "lowering_report_json",
       "command": "cargo run -q -p pipeline-validator -- --lowering-report --format json recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json",
-      "artifact": "artifacts/release-gates/trace_scene_role_scope/lowering_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/trace_scene_role_scope/lowering_report.json",
       "artifact_sha256": "bf1701d8c96b06e5700cf6761a189c0c2ae51a1fe3606316ae52998cb393f3af",
-      "status": "pass"
+      "status": "pass",
+      "observed_output_summary": "Headless lowering report exit 0; summary automatic=4, human_review_required=0, not_applicable=1, human_review_needed=[]."
     }
   ],
   "review": {

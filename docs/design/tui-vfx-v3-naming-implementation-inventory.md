@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-naming-implementation-inventory.md</FILE> - <DESC>Working cutover inventory for the accepted V3 naming slate across schema, playback seams, frame snapshots, adapter helpers, and thin-player/tooling surfaces.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.1</VERS> -->
 <!-- <WCTX>V3-NAME01/PREVIEW01 needs a concrete cross-repo cutover map before any broad rename. This document records the accepted naming slate, the current file/symbol buckets in tui-vfx, tui-vfx-recipes, and gt-design, and the compatibility plan so later work can move in deliberate slices.</WCTX> -->
-<!-- <CLOG>0.2.0: expand the inventory into concrete repo/file/symbol buckets and add the compat/re-export plan for the accepted naming slate.</CLOG> -->
+<!-- <CLOG>0.2.1: update Horseman from docs target to packaged CLI and remove stale thin-player placeholder wording.</CLOG> -->
 
 # V3 naming cutover inventory
 
@@ -13,7 +13,7 @@ It follows the accepted slate in
 - canonical `Preview*` engine seams become `Playback*`.
 - `DirectV3PreviewSnapshot` becomes `V3FrameSnapshot`.
 - `render_direct_v3_snapshot` becomes `render_v3_frame_to_buffer`.
-- the thin CLI/tooling surface is `tui-vfx-player`.
+- the thin CLI/tooling surface is `tui-vfx-horseman`.
 
 No broad rename was performed while producing this inventory.
 
@@ -27,7 +27,7 @@ No broad rename was performed while producing this inventory.
 | `src/preview/` canonical seam path | `src/playback/` | Keep a `preview` shim only while downstream imports are still moving. |
 | `DirectV3PreviewSnapshot` | `V3FrameSnapshot` | One rendered frame/grid snapshot can serve preview, probe, movie, CI, and static export surfaces. |
 | `render_direct_v3_snapshot` | `render_v3_frame_to_buffer` | Adapter-boundary function should state that it renders one frame snapshot into a buffer. |
-| thin player / movie-layer naming | `tui-vfx-player` | Use player vocabulary for the small CLI/tool surface; reserve movie for the deferred scripted layer. |
+| thin player / movie-layer naming | `tui-vfx-horseman` | Use player vocabulary for the small CLI/tool surface; reserve movie for the deferred scripted layer. |
 | `render_compiled_plan_for_preview*` | `render_compiled_plan_for_playback*` | Canonical playback-space helper family. |
 | `PreviewRecipeBridge` | `PlaybackRecipeBridge` | Bridge/helper name should follow the seam vocabulary unless a later decision narrows it. |
 | `DirectV3PreviewState` | `V3PlaybackState` or `V3PlaybackControllerState` | Provisional until the exact ownership split is finalized. |
@@ -154,7 +154,7 @@ Current role:
 - **Playback seam:** define the real `PlaybackPlan`, `PlaybackController`, and `PlaybackRecipeBridge` names, then keep old `Preview*` exports as compatibility shims until examples, tests, tooling, and generated docs move.
 - **Snapshot/buffer path:** define `V3FrameSnapshot` as the canonical frame DTO and `render_v3_frame_to_buffer` as the canonical adapter helper. Keep `DirectV3PreviewSnapshot` and `render_direct_v3_snapshot` as wrappers or aliases for the transition window.
 - **Module path:** move the canonical implementation toward `src/playback/`, but keep `src/preview/` as a compatibility module until downstream imports are updated.
-- **Thin-player surface:** `tui-vfx-player` is currently a documentation target, not a live binary name in these repos. Any early CLI should reuse the canonical playback/frame APIs instead of inventing a second preview interpreter.
+- **Thin-player surface:** `tui-vfx-horseman` is the packaged headless CLI in `tui-vfx-recipes/tools/tui-vfx-horseman`. It reuses the canonical playback/frame APIs instead of inventing a second preview interpreter.
 - **Downstream consumers:** keep `gt-design` on its existing `RecipePlayback*` names unless a concrete compile or docs issue proves that a follow-on rename is needed.
 
 ## 4. Risk order and next execution slices
@@ -163,7 +163,7 @@ Current role:
 2. **Bucket A / `tui-vfx-recipes` preview/playback seam** — rename the live seam and the direct V3 frame DTO/helper family.
 3. **Bucket B / `tui-vfx` docs and tooling refs** — refresh the decision docs, punch list, and thin-player docs after the code names settle.
 4. **Bucket C / `gt-design` compatibility check** — adjust only if the canonical names create confusion or a real compile/docs issue.
-5. **Thin-player packaging** — decide whether the first live `tui-vfx-player` implementation is a docs-only placeholder or a small binary wrapper after the seam names are stable.
+5. **Thin-player packaging** — keep the packaged `tui-vfx-horseman` docs and examples aligned with the live Cargo package name.
 
 ### Next execution slice recommendation
 
@@ -173,21 +173,24 @@ modules. That lands the `Vfx*` public schema foundation first and keeps the
 later `Preview*` → `Playback*` rename anchored on the accepted wire-format
 vocabulary.
 
-## 5. Current target-name absence
+## 5. Current target-name status
+
+Exact searches found live packaged Horseman definitions under
+`tui-vfx-recipes/tools/tui-vfx-horseman`; keep that spelling as the only
+documented command/package name for the lightweight headless summary surface.
 
 Exact searches found no live definitions in the target repos yet for:
 
 - `PlaybackPlan`
 - `V3FrameSnapshot`
 - `render_v3_frame_to_buffer`
-- `tui-vfx-player`
 - `PlaybackController`
 - `PlaybackRecipeBridge`
 
 Implication:
 
-- the rename will introduce these names rather than reconcile existing duplicate definitions
-- docs already carry the accepted targets, but code still needs the actual definitions
+- the remaining rename will introduce these playback/frame names rather than reconcile existing duplicate definitions
+- docs already carry the accepted targets, but code still needs the actual playback/frame definitions
 - `PlaybackPlan` is the canonical loaded/renderable unit in the decision slate, not a synonym for the downstream `RecipePlaybackPlan` in gt-design
 
 ## 6. Notes on the current inventory read
@@ -197,4 +200,4 @@ Implication:
 - The accepted `Preview*` → `Playback*` cutover is still a rename plan, not a V2 retirement plan.
 
 <!-- <FILE>docs/design/tui-vfx-v3-naming-implementation-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.1</VERS> -->

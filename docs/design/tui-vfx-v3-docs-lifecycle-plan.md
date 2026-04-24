@@ -1,11 +1,11 @@
 <!-- <FILE>docs/design/tui-vfx-v3-docs-lifecycle-plan.md</FILE> - <DESC>Provisional V3 docs lifecycle/elevation plan: classifies live docs into core reference, active plan, retained record, stale-status cleanup, and later archive/merge buckets without moving or rewriting anything yet.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.1</VERS> -->
 <!-- <WCTX>Track the V3 docs lifecycle map and the current status of stale-status/link reconciliation without moving or rewriting docs broadly.</WCTX> -->
-<!-- <CLOG>0.2.0: record link audit outcome and mark first-slice/validator stale-status cleanup complete.</CLOG> -->
+<!-- <CLOG>0.2.1: clarify active follow-up after docs lifecycle reconciliation and add missing V3 docs to lifecycle buckets.</CLOG> -->
 
 # V3 docs lifecycle / elevation plan
 
-> Status: complete initial classification plus focused stale-status/link reconciliation. No docs are moved, deleted, archived, or broadly rewritten in this pass.
+> Status: current classification map, with initial index/lifecycle reconciliation complete. Remaining docs-lifecycle work is active follow-up; no docs are moved, deleted, archived, or broadly rewritten in this pass.
 
 This file turns the V3-DOCS01 punch-list item into a concrete, non-destructive
 classification map. It keeps the focus on docs lifecycle and elevation, not on
@@ -17,6 +17,8 @@ broader punch-list execution.
 - Keep tui-vfx focused on architecture and docs that belong to tui-vfx.
 - Do not pull tui-vfx-recipes owner policy into this repo.
 - Treat the buckets below as recommendations, not final ownership decisions.
+- When a retained record says `draft`, `deferred`, or `open question`, verify
+  current status against the master punch list before creating work from it.
 
 ## 1) Durable core docs
 
@@ -42,6 +44,8 @@ canonical reference surfaces or accepted decision records.
   and distributed timing policy.
 - `docs/design/tui-vfx-v3-release-gate-policy.md` — accepted release-gate
   policy.
+- `docs/design/tui-vfx-v3-migration-outcome-policy.md` — accepted migration
+  outcome classification policy while owner recipe audit remains pending.
 
 ## 2) Active implementation plans
 
@@ -77,6 +81,12 @@ proofs, or validator/runtime follow-through.
   manifest seed.
 - `docs/design/tui-vfx-v3-release-gate-manifest.seed.json` — machine-readable
   manifest companion seed.
+- `docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md` — active
+  release-blocking tooling/CI checklist.
+- `docs/design/tui-vfx-v3-upgrade-plan/63_edge_ingestion_runtime_adapters.md`
+  and `63a_eira_05_grapheme_storage_review.md` — edge tooling and grapheme
+  review status surfaces; most effect/path primitives are complete, while docs,
+  tooling, and adapter follow-up can still be active.
 
 ## 3) Design records to retain
 
@@ -96,17 +106,19 @@ particular shape, even when they are no longer the active work surface.
 - `docs/design/tui-vfx-v3-upgrade-plan/60_testing_release_gates.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/61_first_implementation_slice.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/62_compiled_execution_plan.md`
-- `docs/design/tui-vfx-v3-upgrade-plan/63_edge_ingestion_runtime_adapters.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/70_shape_sketches.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/90_deferred_design.md`
-- `docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/110_appendix_audits.md`
 - `docs/design/tui-vfx-v3-motion-spec.md` — draft motion design note.
 - `docs/design/tui-vfx-v3-shadow-spec.md` — draft shadow design note.
 - `docs/design/tui-vfx-v3-vanishing-edge-spec.md` — draft viewport-edge note.
 - `docs/design/post-release/braille-dotfield-toolkit-plan.md` — post-release
   strategy note.
+- `docs/design/post-release/glyph-actor-procedural-spec.md` — post-release
+  procedural spec.
+- `docs/design/post-release/weather-ambient-field-spec.md` — post-release
+  ambient-field spec.
 - `docs/design/tui-vfx-v3-migration-findings-memo-claude.md` — migration
   findings memo.
 - `docs/design/tui-vfx-v3-upgrade-audit-workflow.md` — audit/curation workflows
@@ -152,26 +164,33 @@ owners confirm the final cutover shape.
   `docs/design/tui-vfx-v3-migration-findings-memo-claude.md` → possible future
   synthesis record if the remaining schema-history detail can be frozen into one
   retained history artifact.
+- `docs/design/post-release/*.md` → keep separate and deferred unless the owner
+  promotes one into an active post-V3 workstream.
 - `docs/design/tui-vfx-v3-style-model-restructure-inventory.md` → may later be
   collapsed into the capability/normalized-IR record set once implementation
   stops needing a separate inventory.
 
 ## Focused link/status audit outcome
 
+- Current status buckets are reflected in `docs/design/tui-vfx-v3-INDEX.md` so
+  agents can distinguish canonical live docs, active follow-up, retained history,
+  and post-release/deferred specs from the landing page.
 - Local Markdown links under `docs/design/**/*.md` and `docs/tooling/**/*.md`
   pass the focused checker used for this ticket.
 - No broken local Markdown targets remained to repair in this pass.
 - No missing historical/external Markdown links remained that needed conversion
   to plain text in this pass.
-- The V3 landing page now links this lifecycle plan from the start-here section,
-  so the docs lifecycle lane is discoverable from the canonical index.
+- The V3 landing page links this lifecycle plan from the start-here section, so
+  the docs lifecycle lane is discoverable from the canonical index.
 
-## Remaining watch items
+## Active follow-up / remaining watch items
 
 - Historical design records still intentionally use words such as `draft`,
   `deferred`, and `open question` where they describe retained history or
   explicitly post-release territory. Do not bulk-normalize those terms without
   owner approval.
+- Keep auditing lifecycle status as active V3 docs change; this file is a map,
+  not a one-time archive operation.
 - `V3-M02`, `V3-CI02`, `V3-M01`, and final V2 retirement statuses remain active
   project work, not docs-hygiene drift.
 - Keep downstream consumer policy out of this repo; tui-vfx owns architecture

@@ -1,13 +1,13 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.5.3</VERS> -->
-<!-- <WCTX>Keep durable steering guidance focused on architectural boundaries, canonical vocabulary, authoring ergonomics, index hygiene, debug-recipe quality, and schema-language consistency.</WCTX> -->
-<!-- <CLOG>0.5.3: add durable INDEX.md hygiene rule for moved, promoted, or archived docs.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.6</VERS> -->
+<!-- <WCTX>Keep durable steering guidance focused on architectural boundaries, canonical vocabulary, authoring ergonomics, index hygiene, debug-recipe quality, schema-language consistency, and architecture-first onboarding.</WCTX> -->
+<!-- <CLOG>0.5.6: add comparison guardrail so architecture-first positioning does not erase effects-pipeline competitiveness.</CLOG> -->
 
 # Intentions
 
 This file captures top-down decisions that steer implementation of tui-vfx. It is the durable framing that outlasts any individual release or schema version.
 
-**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), and every additive change must earn its place through real value (Intention 24).
+**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), and onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35).
 
 **Companion:** `steering/MARKETING.md` answers *how we describe what we've built*; this file answers *how we decide what to build*. The two stay in sync; when they diverge, they must be brought back into agreement.
 
@@ -517,7 +517,87 @@ to be today's map. The occasional joke is welcome; a stale map with a funny hat
 is still a stale map.
 
 
+## 34. Pipeline-touch changes carry full family obligations
+
+When a V3 shader, filter, mask, sampler, style, content effect, motion route,
+shadow, scope, binding, or adjacent pipeline file is touched, treat the edit as
+family work rather than a one-line local patch. The implementation, vocabulary,
+docs, fixtures, and validation evidence must move together.
+
+Rules:
+
+1. **Shared math goes down, effect semantics stay here.** If the touched code
+   reveals reusable signal/math substrate that is primitive, renderer-agnostic,
+   and useful to three or more real callers, promote that substrate to
+   `mixed-signals`. Keep renderer/effect semantics in `tui-vfx` or
+   `tui-vfx-recipes`.
+2. **Normalize time deliberately.** Keep normalized phase/loop progress
+   separate from monotonic elapsed time. Cadence-driven motion uses elapsed
+   time; loop progress remains available for phase-based effects. Do not patch
+   timing bugs with recipe-period hacks.
+3. **Update rustdocs and generated-doc inputs.** Public items, schema-bearing
+   types, fields, enum variants, and behavior-critical contracts touched by the
+   change need meaningful rustdoc. If the change affects generated schema/API
+   docs, update the code-side metadata or curated inputs and run the relevant
+   drift/coverage validation before claiming the work is done.
+4. **Use canonical vocabulary while the file is open.** Align code comments,
+   docs, recipe names, fixture directories, and rustdocs with the V3 vocabulary
+   guide. Do not add convenient synonyms for schema terms.
+5. **Refresh debug/reference recipes when semantics change.** If visual
+   semantics, naming, timing, authoring parameters, or parameter defaults change,
+   add or update the simplest primitive-first debug recipe plus any composition
+   fixture needed to show the interaction clearly.
+6. **Prefer mechanical validation over memory.** When the edit exposes a drift
+   class or missing invariant, add or extend the validator/probe/test/gate that
+   would catch it next time, unless doing so would be disproportionate to the
+   change.
+7. **Respect metadata and index hygiene.** Keep `<CLOG>` entries to the latest
+   one- or two-line summary, and update relevant `INDEX.md` files when docs or
+   documented surfaces move, split, merge, or become canonical.
+
+Why: pipeline capability is the beating heart of V3. A shader or mask can be
+made to compile locally while still leaving stale timing language, undocumented
+schema fields, missing fixtures, duplicated math, or untested authoring
+behavior behind it. Those debts are hardest to detect after context has cooled.
+Pipeline-touch work is therefore complete only when the family is coherent
+across implementation, generated documentation, hand documentation, recipes,
+and validation evidence.
+
+
+## 35. Lead onboarding with the architectural identity
+
+When introducing tui-vfx to a human or AI author, start with the architecture:
+tui-vfx is a high-performance Rust terminal scene renderer, VFX compositor, and
+recipe-driven animation runtime for grid-based UIs. Do not lead with
+"effects library" as the primary frame unless the task is specifically about
+the low-level post-processing surface.
+
+Rules:
+
+1. The first sentence in prompts, READMEs, marketing notes, and agent briefings
+   should establish the scene-renderer / VFX-compositor / recipe-runtime mental
+   model before listing individual effects.
+2. Treat flagship recipes such as Madeira as primary usage examples of the scene
+   renderer, not as advanced optional curiosities.
+3. When asking an AI author to inspect or use tui-vfx, direct it to ask the
+   architecture questions first: where is the scene model, how are layers
+   composed, how does the animation clock work, how do recipes drive rendering,
+   and where do pipeline stages consume and produce data?
+4. Keep "effects" language accurate but subordinate. The post-processing effect
+   layer exists, but it is one surface inside the broader V3 renderer/runtime.
+5. When comparing tui-vfx to adjacent effects libraries, do not create a false
+   layer split where they "do effects" and tui-vfx "does scenes." tui-vfx is
+   feature-competitive in the effects/compositor lane and also owns the broader
+   scene-renderer and recipe-runtime architecture.
+
+Why: framing determines search strategy. An "effects library" prompt sends an
+author looking for `apply_effect(grid, params)` APIs and encourages confirmation
+bias when those APIs are found. The architecture-first prompt sends the author
+to the scene graph, composition model, clock, recipe runtime, and flagship
+recipes first. That is the map needed to use V3 seriously.
+
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.3</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.6</VERS> -->

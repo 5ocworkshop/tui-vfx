@@ -15,6 +15,7 @@ use tui_vfx_compositor::traits::cls_inspection_sink_bridge::{
 use tui_vfx_compositor::traits::pipeline_inspector::CompositorInspector;
 use tui_vfx_compositor::types::cls_filter_spec::FilterSpec;
 use tui_vfx_compositor::types::cls_mask_spec::MaskSpec;
+use tui_vfx_compositor::types::cls_sampler_spec::SamplerSpec;
 use tui_vfx_debug::inspection::{StageMask, TraceEvent, TraceFilter, TraceSelector, TraceSink};
 use tui_vfx_types::{
     Cell, Color, Grid, Modifiers, OwnedGrid, RecipeId, RoleMap, RoleTag, SemanticScene, Style,
@@ -103,6 +104,7 @@ fn minimal_options<'a>() -> CompositionOptions<'a> {
     // the inspected render_loop path (which fires per-cell callbacks).
     CompositionOptions {
         sampler_spec: None,
+        samplers: Cow::Borrowed(&[] as &[SamplerSpec]),
         masks: Cow::Borrowed(&[] as &[MaskSpec]),
         mask_combine_mode: Default::default(),
         filters: Cow::Borrowed(&[] as &[FilterSpec]),
@@ -286,6 +288,8 @@ fn bridge_reports_v3_family_in_shader_label_when_available() {
         speed: 1.0,
         length: 3,
         color: ColorConfig::Red,
+        head: None,
+        tail: None,
         position_binding: None,
     };
     let options = CompositionOptions {

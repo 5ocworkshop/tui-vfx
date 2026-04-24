@@ -1,8 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_composition_options.rs</FILE> - <DESC>Composition options for render pipeline</DESC>
-// <VERS>VERSION: 3.2.0</VERS>
+// <VERS>VERSION: 3.3.0</VERS>
 // <WCTX>Shadow corner transparency handling</WCTX>
-// <CLOG>3.2.0: add grouped-V3 shader-layer constructors so runtime callers can execute V3 spatial family values through CompositionOptions without rebuilding legacy shaders at each call site.
-// Add preserve_unfilled flag to control shadow corner bleed-through behavior</CLOG>
+// <CLOG>3.3.0: add ordered sampler chains while preserving the legacy single-sampler option.</CLOG>
 
 use super::cls_composition_playback_timing::CompositionPlaybackTiming;
 use crate::types::MaskCombineMode;
@@ -102,8 +101,19 @@ impl<'a> CompositionOptions<'a> {
 ///
 /// For example, a 30x12 element with shadow offset (2, 1) renders to a 32x13 area.
 pub struct CompositionOptions<'a> {
-    /// Sampler specification (single - chaining deferred to future PRD)
+    /// Legacy single-sampler specification.
+    ///
+    /// Kept for existing callers. New code that needs deterministic sampler
+    /// composition should use [`CompositionOptions::samplers`]. If `samplers`
+    /// is non-empty, it is the authoritative ordered chain.
     pub sampler_spec: Option<SamplerSpec>,
+
+    /// Ordered sampler chain applied before masks, shaders, and filters.
+    ///
+    /// Each sampler consumes the coordinates produced by the previous sampler.
+    /// If any sampler rejects a cell, the cell is skipped. When empty,
+    /// `sampler_spec` remains the effective single sampler for compatibility.
+    pub samplers: Cow<'a, [SamplerSpec]>,
 
     /// Mask specifications - combined via mask_combine_mode.
     pub masks: Cow<'a, [MaskSpec]>,
@@ -166,6 +176,7 @@ impl Default for CompositionOptions<'_> {
     fn default() -> Self {
         Self {
             sampler_spec: None,
+            samplers: Cow::Borrowed(&[]),
             masks: Cow::Borrowed(&[]),
             mask_combine_mode: MaskCombineMode::All,
             filters: Cow::Borrowed(&[]),
@@ -182,6 +193,55 @@ impl Default for CompositionOptions<'_> {
 }
 
 impl<'a> CompositionOptions<'a> {
+    /// Return the effective sampler chain for this render call.
+    pub fn effective_samplers(&self) -> Cow<'_, [SamplerSpec]> {
+        if !self.samplers.is_empty() {
+            return Cow::Borrowed(self.samplers.as_ref());
+        }
+        match &self.sampler_spec {
+            Some(sampler) => Cow::Owned(vec![sampler.clone()]),
+            None => Cow::Borrowed(&[]),
+        }
+    }
+
+    /// True when the effective sampler chain contains at least one active
+    /// sampler.
+    pub fn has_active_sampler(&self) -> bool {
+        self.effective_samplers()
+            .iter()
+            .any(|sampler| !matches!(sampler, SamplerSpec::None))
+    }
+
+    /// Set the ordered sampler chain.
+    pub fn with_samplers(mut self, samplers: impl Into<Cow<'a, [SamplerSpec]>>) -> Self {
+        self.samplers = samplers.into();
+        if self.sampler_spec.is_none() {
+            self.sampler_spec = self.samplers.first().cloned();
+        }
+        self
+    }
+
+    /// Add a sampler to the ordered sampler chain.
+    pub fn with_sampler(mut self, sampler: SamplerSpec) -> Self {
+        if self.sampler_spec.is_none() {
+            self.sampler_spec = Some(sampler.clone());
+        }
+        match &mut self.samplers {
+            Cow::Borrowed([]) => {
+                self.samplers = Cow::Owned(vec![sampler]);
+            }
+            Cow::Borrowed(existing) => {
+                let mut owned = existing.to_vec();
+                owned.push(sampler);
+                self.samplers = Cow::Owned(owned);
+            }
+            Cow::Owned(existing) => {
+                existing.push(sampler);
+            }
+        }
+        self
+    }
+
     /// Add a single mask (convenience method).
     pub fn with_mask(mut self, mask: MaskSpec) -> Self {
         match &mut self.masks {
@@ -305,4 +365,4 @@ impl<'a> CompositionOptions<'a> {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_composition_options.rs</FILE> - <DESC>Composition options for render pipeline</DESC>
-// <VERS>END OF VERSION: 3.2.0</VERS>
+// <VERS>END OF VERSION: 3.3.0</VERS>

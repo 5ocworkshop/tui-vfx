@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/fnc_collect_probe_operational_analysis.rs</FILE> - <DESC>Collect operational analysis from direct probe reports</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.5.0</VERS>
 // <WCTX>Direct engine stage-by-stage success/failure reporting</WCTX>
-// <CLOG>0.4.0: carry grouped V3 shader-family labels into shader-stage operational rows so direct probe analysis can report category identity as well as concrete names.
-// MINOR: Track how many configured elements share the same effect name so per-effect rows can disclose aggregation ambiguity for duplicate same-name instances</CLOG>
+// <CLOG>0.5.0: treat ordered sampler-chain labels as matches for their configured sampler rows and count all configured samplers in probe-stage summaries.</CLOG>
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -13,6 +12,7 @@ use crate::{
 
 const STAGES: [&str; 4] = ["sampler", "mask", "shader", "filter"];
 
+/// Collect stage-by-stage operational analysis from one or more direct probe reports.
 pub fn collect_probe_operational_analysis(
     scope: &str,
     reports: &[ProbeReport],
@@ -63,12 +63,8 @@ pub fn collect_probe_operational_analysis(
         let mut effect_rows = configured_effects
             .iter()
             .map(|(effect, configured_instances, family)| {
-                let aliases = configured_effect_aliases(effect, family.as_deref());
-                let (effect_touched_cells, effect_event_count) = aliases
-                    .iter()
-                    .find_map(|alias| effects.get(alias))
-                    .map(|(cells, count)| (cells.len(), *count))
-                    .unwrap_or_default();
+                let (effect_touched_cells, effect_event_count) =
+                    observed_counts_for_configured_effect(effect, &effects);
                 ProbeEffectOperationalAnalysis {
                     effect: effect.clone(),
                     family: family.clone(),
@@ -85,13 +81,9 @@ pub fn collect_probe_operational_analysis(
             })
             .collect::<Vec<_>>();
         for (effect, (cells, count)) in effects {
-            if configured_effects
-                .iter()
-                .flat_map(|(configured_effect, _, family)| {
-                    configured_effect_aliases(configured_effect, family.as_deref())
-                })
-                .any(|configured_effect| configured_effect == effect)
-            {
+            if configured_effects.iter().any(|(configured_effect, _, _)| {
+                observed_effect_matches_configured(&effect, configured_effect)
+            }) {
                 continue;
             }
             effect_rows.push(ProbeEffectOperationalAnalysis {
@@ -161,7 +153,7 @@ fn configured_count_for_stage(stage: &str, reports: &[ProbeReport]) -> usize {
     reports
         .iter()
         .map(|report| match stage {
-            "sampler" => usize::from(report.pipeline.sampler.is_some()),
+            "sampler" => report.pipeline.sampler_count,
             "mask" => report.pipeline.mask_count,
             "shader" => report.pipeline.shader_count,
             "filter" => report.pipeline.filter_count,
@@ -217,13 +209,33 @@ fn configured_effects_for_stage(
         .collect()
 }
 
-fn configured_effect_aliases(effect: &str, family: Option<&str>) -> Vec<String> {
-    let mut aliases = vec![effect.to_string()];
-    if let Some(family) = family {
-        aliases.push(format!("{family}:{effect}"));
+fn observed_counts_for_configured_effect(
+    configured_effect: &str,
+    effects: &BTreeMap<String, (BTreeSet<(usize, u16, u16)>, usize)>,
+) -> (usize, usize) {
+    let mut touched_cells = BTreeSet::new();
+    let mut event_count = 0usize;
+    for (observed_effect, (cells, count)) in effects {
+        if observed_effect_matches_configured(observed_effect, configured_effect) {
+            touched_cells.extend(cells.iter().copied());
+            event_count += count;
+        }
     }
-    aliases
+    (touched_cells.len(), event_count)
+}
+
+fn effect_label_matches(observed_effect: &str, configured_effect: &str) -> bool {
+    observed_effect == configured_effect
+        || observed_effect
+            .rsplit_once(':')
+            .is_some_and(|(_, suffix)| suffix == configured_effect)
+}
+
+fn observed_effect_matches_configured(observed_effect: &str, configured_effect: &str) -> bool {
+    observed_effect
+        .split(" -> ")
+        .any(|segment| effect_label_matches(segment, configured_effect))
 }
 
 // <FILE>crates/tui-vfx-probe/src/fnc_collect_probe_operational_analysis.rs</FILE> - <DESC>Collect operational analysis from direct probe reports</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

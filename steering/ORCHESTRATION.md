@@ -260,6 +260,8 @@ primitive/effect family:
   - timing semantics
   - vocabulary/comments/naming
   - rustdocs/public docs
+  - generated-doc/schema metadata and drift checks when public or
+    schema-bearing surfaces change
   - matching debug recipes/descriptions/layouts
 - when repeated reusable math patterns are discovered, apply the boundary rule:
   - if the math is signal/math substrate
@@ -284,6 +286,8 @@ primitive/effect family:
 - move reusable math/signal substrate lower into `mixed-signals`
 - keep effect semantics in `tui-vfx` / `tui-vfx-recipes`
 - when a truly different geometric model appears, add an explicit new basis rather than mutating old primitive semantics
+- treat missing rustdocs, missing generated-doc inputs, stale debug recipes, or
+  unvalidated schema drift as incomplete pipeline-family work
 
 ## 9. Repo-state expectations
 

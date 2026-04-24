@@ -9,12 +9,13 @@
 //! as `Reflect`, `GlistenBand`, `TracePropagation`, and `TracePath`.
 //!
 // <FILE>tui-vfx-style/src/models/cls_border_sweep_shader.rs</FILE> - <DESC>Border sweep shader implementation</DESC>
-// <VERS>VERSION: 1.1.2</VERS>
+// <VERS>VERSION: 1.2.0</VERS>
 // <WCTX>Fix sticky wrap/corner artifacts in border sweeps. The old perimeter unwrap used an approximate position formula that could assign left-edge cells positions beyond the perimeter, making them light at the wrong time and creating visible end-of-loop stickiness.</WCTX>
-// <CLOG>Replace approximate perimeter position mapping with a unique clockwise border-cell index, keep speed as a scalar for time-driven sweeps, and add regression coverage for left-edge non-stickiness plus speed scaling.</CLOG>
+// <CLOG>Add optional head/tail colors so V3 traveling-band head_tail lowering can execute without changing solid-color border sweep behavior.</CLOG>
 
-use crate::models::ColorConfig;
+use crate::models::{ColorConfig, ColorSpace};
 use crate::traits::{ShaderContext, StyleShader};
+use crate::utils::fnc_blend_colors::blend_colors;
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -25,7 +26,14 @@ pub struct BorderSweepShader {
     pub speed: f32,
     #[config(default = 5)]
     pub length: u16,
+    /// Solid-color fallback used when `head` / `tail` are absent.
     pub color: ColorConfig,
+    /// Optional leading-edge color for V3 `head_tail` traveling-band lowering.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub head: Option<ColorConfig>,
+    /// Optional trailing-tail color for V3 `head_tail` traveling-band lowering.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tail: Option<ColorConfig>,
     /// Optional runtime parameter key used to override the sweep position
     /// at render time. When present, the compositor looks up this key in
     /// `ShaderRuntimeParams` and uses the resolved value (a normalized
@@ -42,8 +50,33 @@ impl Default for BorderSweepShader {
             speed: 1.0,
             length: 5,
             color: ColorConfig::White,
+            head: None,
+            tail: None,
             position_binding: None,
         }
+    }
+}
+
+impl BorderSweepShader {
+    fn has_head_tail_policy(&self) -> bool {
+        self.head.is_some() || self.tail.is_some()
+    }
+
+    fn head_color(&self) -> &ColorConfig {
+        self.head.as_ref().unwrap_or(&self.color)
+    }
+
+    fn tail_color(&self) -> &ColorConfig {
+        self.tail.as_ref().unwrap_or(&self.color)
+    }
+
+    fn band_color(&self, intensity: f32) -> Color {
+        blend_colors(
+            Color::from(self.tail_color().clone()),
+            Color::from(self.head_color().clone()),
+            intensity.clamp(0.0, 1.0),
+            ColorSpace::Rgb,
+        )
     }
 }
 
@@ -91,12 +124,20 @@ impl StyleShader for BorderSweepShader {
             Some(ratio) => (ratio * perimeter as f32).rem_euclid(perimeter as f32),
             None => (t * self.speed * perimeter as f32).rem_euclid(perimeter as f32),
         };
-        let dist = (sweep_pos - pos)
-            .abs()
-            .min(perimeter as f32 - (sweep_pos - pos).abs());
         let mut style = base;
-        if dist < self.length as f32 {
-            style.fg = Color::from(self.color);
+        if self.has_head_tail_policy() {
+            let behind_head = (sweep_pos - pos).rem_euclid(perimeter as f32);
+            if behind_head < self.length as f32 {
+                let intensity = 1.0 - (behind_head / self.length.max(1) as f32);
+                style.fg = self.band_color(intensity);
+            }
+        } else {
+            let dist = (sweep_pos - pos)
+                .abs()
+                .min(perimeter as f32 - (sweep_pos - pos).abs());
+            if dist < self.length as f32 {
+                style.fg = Color::from(self.color.clone());
+            }
         }
         style
     }
@@ -133,6 +174,8 @@ mod binding_tests {
             speed: 1.0,
             length: 2,
             color: ColorConfig::Red,
+            head: None,
+            tail: None,
             position_binding: Some("sweep".to_string()),
         };
         let mut params = ShaderRuntimeParams::new();
@@ -153,6 +196,8 @@ mod binding_tests {
             speed: 1.0,
             length: 2,
             color: ColorConfig::Red,
+            head: None,
+            tail: None,
             position_binding: Some("missing".to_string()),
         };
         let without_binding = BorderSweepShader {
@@ -173,6 +218,8 @@ mod binding_tests {
             speed: 0.5,
             length: 1,
             color: ColorConfig::Red,
+            head: None,
+            tail: None,
             position_binding: None,
         };
         let normal = BorderSweepShader {
@@ -200,6 +247,8 @@ mod binding_tests {
             speed: 1.0,
             length: 1,
             color: ColorConfig::Red,
+            head: None,
+            tail: None,
             position_binding: None,
         };
         let ctx = ctx_at(0, 1, 0.0, ShaderRuntimeParams::new());
@@ -211,7 +260,28 @@ mod binding_tests {
             "left edge must not light at t=0 unless the sweep actually reaches the end of the perimeter"
         );
     }
+
+    #[test]
+    fn head_tail_policy_colors_the_clockwise_head_and_tail_losslessly() {
+        let shader = BorderSweepShader {
+            speed: 1.0,
+            length: 3,
+            color: ColorConfig::Red,
+            head: Some(ColorConfig::White),
+            tail: Some(ColorConfig::Black),
+            position_binding: Some("sweep".to_string()),
+        };
+        let mut params = ShaderRuntimeParams::new();
+        params.insert("sweep", ShaderRuntimeParamValue::Float(2.0 / 26.0));
+        let base = tui_vfx_types::Style::default();
+
+        let head = shader.style_at(&ctx_at(2, 0, 0.0, params.clone()), base);
+        let tail = shader.style_at(&ctx_at(1, 0, 0.0, params), base);
+
+        assert_eq!(head.fg, Color::WHITE);
+        assert_eq!(tail.fg, Color::rgb(169, 169, 169));
+    }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_border_sweep_shader.rs</FILE> - <DESC>Border sweep shader implementation</DESC>
-// <VERS>END OF VERSION: 1.1.2</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

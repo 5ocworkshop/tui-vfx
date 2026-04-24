@@ -16,6 +16,8 @@ fn shader_layer_spec_exposes_composed_v3_family() {
             speed: 1.0,
             length: 3,
             color: ColorConfig::Red,
+            head: None,
+            tail: None,
             position_binding: None,
         }),
         region: StyleRegion::All,

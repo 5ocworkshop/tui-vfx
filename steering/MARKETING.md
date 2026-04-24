@@ -1,13 +1,7 @@
 <!-- <FILE>steering/MARKETING.md</FILE> - <DESC>Marketing positioning and feature hierarchy for tui-vfx — 30s/60s/90s descriptions, primary/secondary/tertiary feature layers, callouts for uniquely powerful capabilities. The project's north star for how we describe ourselves.</DESC> -->
-<!-- <VERS>VERSION: 0.3.2</VERS> -->
-<!-- <WCTX>Drop the "This is not an afterthought — it's the primary composition pathway the library is optimized for" sentence from the AI-authoring callout. Defensive framing flagged during the v0.3.1 review; the preceding two sentences carry the claim on their own.</WCTX> -->
-<!-- <CLOG>0.3.2: PATCH — remove one sentence from the AI-authoring callout.</CLOG>
-<!-- <CLOG>0.3.1: PATCH — add "As bullets:" alternate under each of the 30s / 60s / 90s sections. Paragraph versions unchanged.</CLOG>
-<!-- <CLOG>0.3.0: MINOR — restructure primaries (merge #3 + #6 → new #3 on three-level composability); rewrite two callouts into one composability callout with concrete example; add "Where we sit in the ecosystem" section naming tachyonfx; add status note to 90s; writing-style cleanup pass on remaining callouts.</CLOG>
-<!-- <CLOG>0.2.2: PATCH — add "compositor sits between layout and terminal render: cells in, cells out" framing to the 60s and 90s descriptions. One sentence each; no other changes.</CLOG>
-<!-- <CLOG>0.2.1: PATCH — replace rect-derived framings of line-range and single-cell targeting with their first-class primitive names (RowRange/Rows, ColumnRange/Columns, Cell/Cells). Surface ParamValue-bound cell coords as a distinct capability. Applies to primary feature #2 and the "Precision targeting" callout.</CLOG>
-<!-- <CLOG>0.2.0: MINOR — expand per-cell scope vocabulary with explicit rect / line-range / single-cell examples; add new primary feature for effect chaining (tree pipelines + named hints); add new primary feature for path-driven motion; add 60fps performance goal to secondary features; add three new unique-capability callouts (effect chaining, content-along-paths, 60fps release gate); update 30/60/90s descriptions to mention precision targeting and motion. No structural reorganization — surgical additions aligned to existing primary/secondary/tertiary and callout-style conventions.</CLOG>
-<!-- <CLOG>0.1.0: initial draft. 30s / 60s / 90s descriptions; primary / secondary / tertiary feature hierarchy; callouts for uniquely powerful capabilities. Authored as north-star alignment artifact, not final copy.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.7</VERS> -->
+<!-- <WCTX>Keep marketing positioning aligned with V3's scene-renderer, VFX compositor, and recipe-runtime scope without over-promising beyond implementation evidence.</WCTX> -->
+<!-- <CLOG>0.3.7: record the suite-framing tension and gt-design-first product truth without turning it into a public marketing push.</CLOG> -->
 
 # Marketing — tui-vfx positioning and feature hierarchy
 
@@ -16,6 +10,68 @@
 **tui-vfx is a visual effects library for terminal user interfaces.**
 
 The 90-second description below is canonical. The 30- and 60-second versions are compressions of it, useful at different moments (elevator ride, README opening, talk abstract). If the three descriptions ever disagree on fact or framing, the 90s wins and the shorter versions get re-derived.
+
+### TBD positioning refinement
+
+The current "visual effects library" framing undersells the V3 architecture. It
+can cause readers — especially AI authors — to treat tui-vfx as a garnish layer
+instead of a recipe-driven scene system. V3 is better introduced as a
+Rust-native, high-performance scene renderer plus VFX composition plus a recipe
+runtime/authoring contract, designed to sustain a 60 fps terminal animation
+budget.
+
+Candidate full framing:
+
+> **tui-vfx is a high-performance Rust terminal scene renderer, VFX compositor,
+> and recipe-driven animation runtime for grid-based UIs.**
+
+Candidate shorter framing:
+
+> **tui-vfx is a high-performance Rust scene renderer and VFX engine for
+> terminal UIs, built for 60 fps recipe-driven animation.**
+
+TBD: re-derive the 30s / 60s / 90s descriptions from this framing once the
+pipeline audit confirms the exact V3 as-built capability boundary.
+
+Why this matters operationally: the first sentence sets the reader's search
+strategy. "Effects library" primes an author to look for post-processing calls
+over existing content (`apply_effect(grid, params)`) and to stop once those APIs
+are found. "Scene renderer, VFX compositor, and animation runtime" primes the
+right questions: where is the scene graph, what is the composition model, how
+does the animation clock work, how do recipes drive the renderer? It also makes
+flagship recipes such as Madeira read as primary usage examples rather than
+advanced optional references. For future AI-authoring sessions, lead with the
+architectural identity before pointing at source or examples; it shapes the map
+the model uses to read everything else.
+
+Guardrail for comparisons: this repositioning must not imply that tui-vfx
+vacates the effects/compositor lane. Projects such as tachyonfx are strongest
+when described as Ratatui-native effects and animation libraries over rendered
+buffers. tui-vfx is also feature-competitive in that effects pipeline space:
+filters, masks, samplers, shaders, shadows, style/content effects, scope
+targeting, sequencing, parallel composition, timing, and probe/trace evidence
+are core product surfaces, not incidental garnish. The distinction is that
+tui-vfx contains that lane inside a larger recipe-driven scene renderer and
+animation runtime. A fair contrast is **shared effects/composition overlap plus
+tui-vfx's broader scene/runtime architecture**, not "tachyonfx does effects;
+tui-vfx does scenes." They may stack in some applications, but tui-vfx should be
+positioned as capable of owning the effects/compositor role itself.
+
+Suite-framing tension: tui-vfx does not split cleanly along the same lines as
+many adjacent crates. One honest mental model is a small suite:
+
+1. scene renderer
+2. VFX/effects compositor
+3. recipe runtime and authoring/validation system
+
+Each piece should be strong enough to stand in its lane; together they form the
+ecosystem gt-design needs for advanced experiences. Avoid overcomplicating the
+public story, though. The primary product truth is pragmatic: tui-vfx exists to
+serve gt-design's palette, theme, motion, animation, and VFX needs. It is open,
+documented, extensible, and ecosystem-agnostic because those qualities make the
+architecture better and may help others, not because the project needs a broad
+marketing campaign. The strongest public demonstration will be gt-design using
+tui-vfx as the cornerstone for polished terminal experiences.
 
 ---
 

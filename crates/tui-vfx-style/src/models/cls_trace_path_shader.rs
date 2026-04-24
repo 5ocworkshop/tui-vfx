@@ -9,18 +9,19 @@
 //! such as `BorderSweep`, `Reflect`, `GlistenBand`, and `TracePropagation`.
 //!
 // <FILE>tui-vfx-style/src/models/cls_trace_path_shader.rs</FILE> - <DESC>TracePath shader implementation</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
+// <VERS>VERSION: 1.1.0</VERS>
 // <WCTX>Introduce authored routed traces as the deterministic foundation for later auto-routing</WCTX>
-// <CLOG>Add TracePath spatial shader with explicit orthogonal polylines, per-route delay, and turn emphasis</CLOG>
+// <CLOG>Add optional head/tail colors so V3 traveling-band head_tail lowering can execute losslessly for authored trace paths.</CLOG>
 
 use crate::models::{
-    ColorConfig,
+    ColorConfig, ColorSpace,
     cls_trace_common::{
         TraceApplyTo, TracePolyline, blend_trace_target, project_onto_polyline,
         weighted_polyline_total_length, weighted_progress_for_projection,
     },
 };
 use crate::traits::{ShaderContext, StyleShader};
+use crate::utils::fnc_blend_colors::blend_colors;
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -45,8 +46,14 @@ pub enum TraceTailMode {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]
 pub struct TracePathShader {
-    /// Trace pulse color.
+    /// Solid-color fallback used when `head` / `tail` are absent.
     pub color: ColorConfig,
+    /// Optional leading-edge color for V3 `head_tail` traveling-band lowering.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub head: Option<ColorConfig>,
+    /// Optional trailing-tail color for V3 `head_tail` traveling-band lowering.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tail: Option<ColorConfig>,
 
     /// Travel speed multiplier for the pulse head.
     #[serde(default = "default_speed")]
@@ -126,6 +133,8 @@ impl Default for TracePathShader {
     fn default() -> Self {
         Self {
             color: ColorConfig::Cyan,
+            head: None,
+            tail: None,
             speed: default_speed(),
             tail_length: default_tail_length(),
             vertical_weight: default_vertical_weight(),
@@ -164,6 +173,23 @@ impl TracePathShader {
         }
     }
 
+    fn head_color(&self) -> &ColorConfig {
+        self.head.as_ref().unwrap_or(&self.color)
+    }
+
+    fn tail_color(&self) -> &ColorConfig {
+        self.tail.as_ref().unwrap_or(&self.color)
+    }
+
+    fn band_color(&self, intensity: f32) -> Color {
+        blend_colors(
+            Color::from(self.tail_color().clone()),
+            Color::from(self.head_color().clone()),
+            intensity.clamp(0.0, 1.0),
+            ColorSpace::Rgb,
+        )
+    }
+
     fn apply_channel(&self, base: Style, trace_color: Color, alpha: f32) -> Style {
         let mut style = base;
         match self.apply_to {
@@ -197,10 +223,10 @@ impl StyleShader for TracePathShader {
             return base;
         }
 
-        let trace_color: Color = self.color.into();
         let cell_x = ctx.local_x as f32;
         let cell_y = ctx.local_y as f32;
         let mut best_alpha = 0.0_f32;
+        let mut best_color = Color::TRANSPARENT;
 
         for path in &self.paths {
             let Some(projection) = project_onto_polyline(cell_x, cell_y, path) else {
@@ -268,13 +294,16 @@ impl StyleShader for TracePathShader {
 
             let alpha =
                 (path_factor * thickness_factor * self.intensity * junction_factor).clamp(0.0, 1.0);
-            best_alpha = best_alpha.max(alpha);
+            if alpha > best_alpha {
+                best_alpha = alpha;
+                best_color = self.band_color(path_factor);
+            }
         }
 
         if best_alpha <= 0.0 {
             base
         } else {
-            self.apply_channel(base, trace_color, best_alpha)
+            self.apply_channel(base, best_color, best_alpha)
         }
     }
 
@@ -334,6 +363,8 @@ mod tests {
                 g: 255,
                 b: 200,
             },
+            head: None,
+            tail: None,
             speed: 1.0,
             tail_length: 6.0,
             vertical_weight: 1.0,
@@ -371,6 +402,8 @@ mod tests {
     fn serde_roundtrip_preserves_values() {
         let shader = TracePathShader {
             color: ColorConfig::Green,
+            head: Some(ColorConfig::White),
+            tail: Some(ColorConfig::Black),
             speed: 1.5,
             tail_length: 9.0,
             vertical_weight: 1.8,
@@ -386,7 +419,33 @@ mod tests {
         let parsed: TracePathShader = serde_json::from_str(&json).unwrap();
         assert_eq!(shader, parsed);
     }
+
+    #[test]
+    fn head_tail_policy_blends_tail_toward_head_along_authored_paths() {
+        let shader = TracePathShader {
+            color: ColorConfig::Green,
+            head: Some(ColorConfig::White),
+            tail: Some(ColorConfig::Black),
+            speed: 1.0,
+            tail_length: 2.0,
+            intensity: 1.0,
+            apply_to: TraceApplyTo::Foreground,
+            paths: vec![demo_path()],
+            ..TracePathShader::default()
+        };
+        let base = Style::default();
+        let t = 2.0 / 9.0;
+
+        assert_eq!(
+            shader.style_at(&make_ctx_at(2, 0, 8, 4, t), base).fg,
+            Color::WHITE
+        );
+        assert_eq!(
+            shader.style_at(&make_ctx_at(0, 0, 8, 4, t), base).fg,
+            Color::TRANSPARENT
+        );
+    }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_trace_path_shader.rs</FILE> - <DESC>TracePath shader implementation</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

@@ -3,7 +3,7 @@
   "fixture_id": "offscreen_follow_lag",
   "gate": "offscreen",
   "status": "fail",
-  "captured_at": "2026-04-24T20:35:00Z",
+  "captured_at": "2026-04-24T22:50:18Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json"
@@ -12,10 +12,10 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "/tmp/tui-vfx-release-gates/offscreen_follow_lag/probe_report.json",
+      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/offscreen_follow_lag/probe_report.json",
       "artifact_sha256": "9870b3e1e56c367589e821108f0dd6ceb176ea8cd21ecd011d526980388d92ba",
       "status": "pass",
-      "observed_output_summary": "Probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, frame_count=1, diagnostics=[]."
+      "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0."
     },
     {
       "evidence_type": "render_capture_png",
@@ -27,6 +27,6 @@
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "Headless probe evidence passes. Overall fixture remains fail because required render_capture_png is blocked-on-explicit-owner-visual-capture after owner direction to stop all X11/Zutty/demo-window capture work."
+    "notes": "Headless evidence refreshed and passes. Overall fixture remains blocked until explicit owner-approved visual capture supplies the required render_capture_png; no GUI/X11/Zutty/Xvfb capture was run for this refresh."
   }
 }
