@@ -1,11 +1,12 @@
 // <FILE>tui-vfx-compositor/src/pipeline/mod.rs</FILE> - <DESC>Pipeline module</DESC>
-// <VERS>VERSION: 7.5.0</VERS>
-// <WCTX>Phase 0 P0.1 — progress_binding infrastructure</WCTX>
-// <CLOG>Add cls_prepare_context module holding the per-frame PrepareContext bundle</CLOG>
+// <VERS>VERSION: 7.5.1</VERS>
+// <WCTX>Phase 1a perf — register cls_grid_pool for render-pipeline buffer reuse</WCTX>
+// <CLOG>7.5.1: PATCH — register cls_grid_pool module (internal, thread-local buffer pool)</CLOG>
 
 pub mod cls_composition_options;
 pub mod cls_composition_playback_timing;
 pub mod cls_composition_spec;
+mod cls_grid_pool;
 mod cls_prepare_context;
 mod cls_prepared_filter;
 mod cls_prepared_mask;
@@ -30,4 +31,4 @@ pub use fnc_render_pipeline_with_spec_area::render_pipeline_with_spec_area;
 pub use orc_render_pipeline::{render_pipeline, render_pipeline_with_area};
 
 // <FILE>tui-vfx-compositor/src/pipeline/mod.rs</FILE> - <DESC>Pipeline module</DESC>
-// <VERS>END OF VERSION: 7.5.0</VERS>
+// <VERS>END OF VERSION: 7.5.1</VERS>
