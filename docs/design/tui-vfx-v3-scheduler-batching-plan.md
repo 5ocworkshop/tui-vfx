@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-scheduler-batching-plan.md</FILE> - <DESC>Execution plan for the next V3 slice after scene/content proofs: scheduler boundaries, parallel join semantics, and batching readiness.</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
 <!-- <WCTX>Start the scheduler/batching follow-on after V3 I/O, scene/content, and Madeira sidebar proofs landed.</WCTX> -->
-<!-- <CLOG>0.4.0: record the first bounded SCHED-04 executor optimization and render-hash drift gate.
+<!-- <CLOG>0.5.0: record the expanded XFC-03 mixed-family overlap guard and render-hash drift gate.
+0.4.0: record the first bounded SCHED-04 executor optimization and render-hash drift gate.
 0.3.0: add the SCHED-03 batching-readiness classification matrix, machine-checkable audit record, and SCHED-04 entry gates.
 0.2.0: record the scheduler-facing filter-to-mask join fixture and root topology truth surface as the next completed semantic slice before batching optimization.
 0.1.0: initial scheduler/batching execution plan with SCHED-01 parallel-join I/O proof as the first bounded slice.</CLOG> -->
@@ -129,8 +130,10 @@ Machine-checkable entry gates for SCHED-04:
 4. Any optimization proves no render-hash drift for:
    - `v3_io_parallel_merge_shader.json`
    - `v3_scheduler_parallel_join_filter_mask.json`
+   - `v3_scheduler_parallel_join_sampler_style.json`
    - `v3_scheduler_batch_safe_channel_shader_style.json`
    - `complex_parallel_overlap_conflict_snapshot.json`
+   - `v3_scheduler_overlap_conflict_mixed_family.json`
 
 ### SCHED-04 — first bounded batching optimization
 
@@ -163,7 +166,9 @@ As-built behavior:
   - `v3_scheduler_batch_safe_channel_shader_style.json`
   - `v3_io_parallel_merge_shader.json`
   - `v3_scheduler_parallel_join_filter_mask.json`
+  - `v3_scheduler_parallel_join_sampler_style.json`
   - `complex_parallel_overlap_conflict_snapshot.json`
+  - `v3_scheduler_overlap_conflict_mixed_family.json`
 
 ## Verification baseline
 
@@ -200,8 +205,9 @@ git diff --check
 - root topology truth is visible in validator/probe/QC output for scheduler fixtures
 - later batching work has a tested safe/unsafe classification path
 - first bounded executor optimization has a render-hash drift gate over safe,
-  hint-join, and conflict fixtures
+  hint-join, post-join sampler/style, legacy conflict, and mixed-family
+  overlap-conflict fixtures
 - docs distinguish current semantic proofs from future optimization work
 
 <!-- <FILE>docs/design/tui-vfx-v3-scheduler-batching-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->

@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> - <DESC>Working design note for the initial V3 compiled execution plan. Defines the layer between normalized IR and later runtime family execution, especially the first selector-compaction rules and consumer seams.</DESC> -->
-<!-- <VERS>VERSION: 0.17.0</VERS> -->
+<!-- <VERS>VERSION: 0.18.0</VERS> -->
 <!-- <WCTX>Keep the compiled execution-plan note aligned with the as-built timing model, Parallel semantics, and landed field-hint consumer proofs.</WCTX> -->
-<!-- <CLOG>0.17.0: record XFC-02 post-Parallel sampler/style-effect consumer coverage.
+<!-- <CLOG>0.18.0: record XFC-03 mixed-family overlap/conflict guard coverage.
+0.17.0: record XFC-02 post-Parallel sampler/style-effect consumer coverage.
 0.16.0: record XFC-01 root cross-family sequence coverage across sampler/filter/mask/shader/style-effect lanes.
 0.15.0: point the post-SCHED-04 execution work at the cross-family coverage plan.
 0.14.0: record the first bounded SCHED-04 Parallel snapshot-batch helper optimization.
@@ -284,7 +285,7 @@ The main remaining execution work now shifts to:
 - general arbitrary cross-family order preservation, now backed by both `v3_io_parallel_merge_shader.json` and `v3_scheduler_parallel_join_filter_mask.json` and expanded through the XFC plan
 - final scheduling / batching strategy tracked in `tui-vfx-v3-scheduler-batching-plan.md`; SCHED-03 now provides the machine-checkable safe/serial classification record, and SCHED-04 has landed the first bounded optimization by collapsing duplicate `Parallel` branch loops into one snapshot-batch helper with render-hash drift guards
 
-XFC-01 has now landed the first broader family-mix proof: `v3_cross_family_sequence_disjoint.json` keeps sampler, filter, mask, shader, and style-effect leaves in one root `Sequence`, with a spatial-signal hint feeding both sampler displacement and shader intensity, and a filter sourced output feeding a checker mask. Probe/QC truth surfaces pin the family counts and authored I/O edges. XFC-02 extends the scheduler-facing side with `v3_scheduler_parallel_join_sampler_style.json`, where a `Parallel`-emitted scalar becomes visible after the join to sampler and spatial style-effect consumers while remaining `serial_required/hint_output_join_semantics`.
+XFC-01 has now landed the first broader family-mix proof: `v3_cross_family_sequence_disjoint.json` keeps sampler, filter, mask, shader, and style-effect leaves in one root `Sequence`, with a spatial-signal hint feeding both sampler displacement and shader intensity, and a filter sourced output feeding a checker mask. Probe/QC truth surfaces pin the family counts and authored I/O edges. XFC-02 extends the scheduler-facing side with `v3_scheduler_parallel_join_sampler_style.json`, where a `Parallel`-emitted scalar becomes visible after the join to sampler and spatial style-effect consumers while remaining `serial_required/hint_output_join_semantics`. XFC-03 closes the overlap guard with `v3_scheduler_overlap_conflict_mixed_family.json`, where mask/filter/shader/style-effect branches overlap under one `Parallel` and remain `serial_required/overlapping_output_conflict_authored_order` with render-hash drift coverage.
 
 ---
 
@@ -317,4 +318,4 @@ To keep the phase real, it should propagate through the same shallow seam family
 That is the minimal proof that the compiled plan is becoming part of the real public pathway rather than staying trapped in an internal helper module.
 
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.17.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.18.0</VERS> -->
