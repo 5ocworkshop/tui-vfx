@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Keep the schema overview aligned with the as-built V3 timing model by documenting the separate roles of normalized phase/loop progress and monotonic elapsed time.</WCTX> -->
-<!-- <CLOG>0.2.0: document the as-built timing model so normalized phase/loop progress stays distinct from monotonic elapsed time and cadence-driven motion is described correctly. 0.1.0: initial schema overview after the dual-auditor synthesis pass. Establishes the top-down tree model, capability-family guidance, hybrid/wrapper conventions, and authoring/tooling layers.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Keep the schema overview aligned with accepted Q#21/Q#23 follow-through by documenting the distributed timing model and the current V3 metadata vocabulary for authors.</WCTX> -->
+<!-- <CLOG>0.3.0: document accepted metadata/timing follow-through for current-target V3 docs: optional metadata now points authors at `intent_hints`, `expected_visual`, and `visual_tags`, and timing guidance explicitly describes the distributed V3 model without a Timer primitive. 0.2.0: document the as-built timing model so normalized phase/loop progress stays distinct from monotonic elapsed time and cadence-driven motion is described correctly. 0.1.0: initial schema overview after the dual-auditor synthesis pass. Establishes the top-down tree model, capability-family guidance, hybrid/wrapper conventions, and authoring/tooling layers.</CLOG> -->
 
 # tui-vfx V3 Schema Overview
 
@@ -107,11 +107,32 @@ contract, not an implementation detail.
 Authoring implication:
 
 - `config.clock` remains the schema home for authored timing configuration
+- recipe/pipeline lifecycle timing still owns enter/dwell/exit envelope timing
+- effect-local timing remains local when an individual effect owns its own cadence
 - runtime execution still needs both normalized progress and elapsed time after
   that clock is resolved
 - cadence-driven families such as `kitt_scanner`, scanner sweeps, and BPM-led
   oscillation should consume elapsed time rather than deriving cadence from
   reset-on-loop progress
+
+### 2.2 Metadata posture
+
+V3 metadata is optional and non-rendering. When authors choose to add it, the
+current-target vocabulary is:
+
+- `metadata.intent_hints` for discovery hints only; hosts/manifests still own
+  routing and binding policy
+- `metadata.expected_visual` for the plain-language viewer expectation,
+  especially on debug/reference fixtures
+- `metadata.visual_tags` for visual/motion/family/technique search tags
+
+Migration-era names such as `use_cases` and `aesthetic_tags` may still appear in
+old memos or corpus files, but they are not the target vocabulary for current
+V3 docs, schema examples, or new authoring guidance.
+
+For debug/reference fixtures, `description` remains the required short summary
+and `metadata.expected_visual` is the strongly recommended companion that tells
+reviewers what they should see.
 
 ---
 
@@ -608,7 +629,7 @@ This overview is intended to **tighten** the plan, not to contradict it.
 - `layout.exterior_margin` remains the generic host-spacing control when a
   rect host needs breathing room near the viewport edge — especially for
   visible attached shadows
-- No separate Timer primitive in core V3 for now
+- No separate Timer primitive in core V3; timing stays distributed across lifecycle/pipeline timing, `config.clock`, and effect-local timing
 - Pools/presets above the concrete tree, not inside it
 - Region compression starts with `cell_run`, `cell_runs`, and `region_ref`
 - Scoped style patches stay inside `style_effect`, not a new top-level kind
