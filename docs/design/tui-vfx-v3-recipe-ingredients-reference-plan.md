@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-ingredients-reference-plan.md</FILE> - <DESC>Plan and template for a standardized V3 recipe ingredients reference</DESC> -->
-<!-- <VERS>VERSION: 0.1.5</VERS> -->
-<!-- <WCTX>Add border/envelope and outer-shape ingredient coverage to the reference plan.</WCTX> -->
-<!-- <CLOG>0.1.5: add border/envelope and fractional-cell silhouette reference guidance.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.6</VERS> -->
+<!-- <WCTX>Capture resolved defaults from staged theme-authoring questions.</WCTX> -->
+<!-- <CLOG>0.1.6: add resolved authoring defaults for bindings, progress, glyphs, host affordances, paths, I/O, and border craft.</CLOG> -->
 
 # V3 Recipe Ingredients Reference Plan
 
@@ -216,7 +216,31 @@ a distinct recipe concept unless the assignment asks for variant coverage.
 - How should host-edge affordances be represented while adapter support remains
   boundary-specific?
 
-## 10. Future-ingredient wishlist
+## 10. Resolved defaults from staged authoring runs
+
+Recurring questions from the Eichler/Stuttgart staged runs should be treated as
+resolved authoring defaults unless a host integration explicitly overrides them:
+
+- host-edge affordances are adapter-owned, opt-in secondary signals; never the
+  only visible feedback path
+- Unicode/text fallback is required; Nerd Font is an optional host/profile
+  enhancement
+- reduced motion must preserve meaning through lower amplitude, shorter travel,
+  fewer loops, or static emphasis
+- bindings need defaults and narrow names so previews and validators can run
+  without live host data
+- `progress` is completed fraction (`0.0` not started, `1.0` complete); use
+  separate names for remaining time, debt, or queue depth
+- stable route families are defaults; dramatic routes such as orbit,
+  figure-eight, helix/corkscrew, attractor, and radial twist require an earned
+  reason and a calmer fallback
+- I/O chains should start with one producer and one or two visible consumers;
+  avoid hidden timing coupling
+- fractional-cell, braille, and custom-border treatments are accent craft with
+  plain-border fallbacks
+- assets should be replaceable declared inputs, not hardcoded demo assumptions
+
+## 11. Future-ingredient wishlist
 
 The creative lab should not be constrained to only what exists today. If an
 author finds a compelling idea that requires missing support, record it as a
@@ -236,4 +260,4 @@ Wishlist entries are not implementation commitments. They are a discovery
 surface for enriching the library.
 
 # <FILE>docs/design/tui-vfx-v3-recipe-ingredients-reference-plan.md</FILE> - <DESC>Plan and template for a standardized V3 recipe ingredients reference</DESC>
-<!-- <VERS>END OF VERSION: 0.1.5</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.6</VERS> -->
