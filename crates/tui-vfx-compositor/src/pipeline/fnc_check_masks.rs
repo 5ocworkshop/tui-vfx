@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/fnc_check_masks.rs</FILE> - <DESC>Mask visibility checking with optional inspector</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Audit fixes - address OAI peer review findings</WCTX>
-// <CLOG>Clamp blend ratio to 0.0-1.0 to prevent inverted thresholds</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Phase 1a perf — short-circuit mask evaluation on the non-inspector path. The previous implementation always eagerly evaluated every mask before delegating to combine_results; combine_results could short-circuit the combination but not the underlying is_visible calls.</WCTX>
+// <CLOG>1.2.0: MINOR — non-inspector path now iterates masks.iter() directly with .all() or .any() for MaskCombineMode::All / Any, so later masks are not evaluated once the outcome is decided. Inspector path unchanged (must report every mask). Blend mode still collects because it needs the count. Removes one SmallVec allocation per cell for the All/Any cases.
+// 1.1.0: Clamp blend ratio to 0.0-1.0 to prevent inverted thresholds</CLOG>
 
 use super::cls_prepared_mask::{PreparedMask, prepare_masks};
 use crate::traits::pipeline_inspector::CompositorInspector;
@@ -36,9 +37,10 @@ pub(crate) fn check_prepared_masks(
         return true;
     }
 
-    // Collect results, optionally reporting to inspector
-    let results: SmallVec<[bool; 2]> = if let Some(inspector) = inspector {
-        masks
+    // Inspector path: must evaluate every mask so every one is reported,
+    // regardless of combine_mode. Collect and delegate to combine_results.
+    if let Some(inspector) = inspector {
+        let results: SmallVec<[bool; 2]> = masks
             .iter()
             .enumerate()
             .map(|(index, mask)| {
@@ -51,15 +53,27 @@ pub(crate) fn check_prepared_masks(
                 );
                 visible
             })
-            .collect()
-    } else {
-        masks
-            .iter()
-            .map(|mask| mask.is_visible(local_x, local_y, width, height, t))
-            .collect()
-    };
+            .collect();
+        return combine_results(&results, combine_mode);
+    }
 
-    combine_results(&results, combine_mode)
+    // Non-inspector path: short-circuit mask evaluation when the outcome
+    // is already decided.
+    match combine_mode {
+        MaskCombineMode::All => masks
+            .iter()
+            .all(|mask| mask.is_visible(local_x, local_y, width, height, t)),
+        MaskCombineMode::Any => masks
+            .iter()
+            .any(|mask| mask.is_visible(local_x, local_y, width, height, t)),
+        MaskCombineMode::Blend { .. } => {
+            let results: SmallVec<[bool; 2]> = masks
+                .iter()
+                .map(|mask| mask.is_visible(local_x, local_y, width, height, t))
+                .collect();
+            combine_results(&results, combine_mode)
+        }
+    }
 }
 
 /// Combine mask results according to the combine mode.
@@ -110,4 +124,4 @@ pub fn check_masks(
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/fnc_check_masks.rs</FILE> - <DESC>Mask visibility checking with optional inspector</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>
