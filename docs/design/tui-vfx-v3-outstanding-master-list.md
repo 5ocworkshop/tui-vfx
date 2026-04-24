@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.11</VERS> -->
+<!-- <VERS>VERSION: 0.14.12</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work, authoring-doc lifecycle status, and explicitly deferred post-release specs.</WCTX> -->
-<!-- <CLOG>0.14.11: mark V3-DOCGEN01 and V3-DEMO01 complete-initial after verified recipe-side slices.</CLOG> -->
+<!-- <CLOG>0.14.12: record VC-09 provisional blocker and V3 trace lifecycle scene-composition slice.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -14,7 +14,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
 | V3-T01 | Tooling docs hub | Complete initial / ongoing | Canonical command map now covers validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, docs generation, and release-gate evidence; expand only as new tooling lands. |
-| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear`, `wargames_defcon`, `complex_full_pipeline`, `complex_multi_sampler`, `complex_layered_shaders`, `mask_iris`, `baseline`, `content_slide_shift`, and `content_glitch_shift` now have truthful evidence rows; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
+| V3-M01 | VC-09 migration-equivalence harness | Complete initial / owner-audit blocked for complete-final | `tui-vfx-recipes` commit `d2fe1e4` carries the current 10-pair critical evidence group plus machine-readable provisional buckets and `OWNER-RECIPE-AUDIT`. Continue only curated critical evidence until the owner recipe audit resolves keep/rewrite/retire classifications; keep legacy files in place. |
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Complete initial / broaden later | Metadata shape diagnostics now include `related_themes`; style normalization validation has a first pass. Broaden remaining optional metadata/schema-report coverage as corpus pressure appears. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists, curated payload alias equivalence tests prove first canonicalization pairs, and normalized IR now emits explicit phase/scope/combine metadata. Broader property/corpus coverage remains follow-up. |
@@ -95,7 +95,7 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-SHADOW01 | Implement/prove transparent shadow and host-bound shadow model | Shadow docs require explicit transparent shadow, host attachment, and motion-edge integration rather than accidental underlay behavior. |
 | V3-EDGE01 | Implement/prove directional vanishing-edge behavior | Motion/offscreen edge crossing must drive border vanish/preserve and shadow fade/clip/preserve based on the active clipped edge. |
 | V3-TOOL01 | Work down Chapter 100 release checklist | V3 support for schema dispatch/cutover, `pipeline-validator`, `recipe-probe`, `tui-vfx-trace`, debug QC, docs generation, authoring docs, demo, and CI. |
-| V3-TRACE01 | Trace/probe parity for broader V3 subset | Recipe-probe and tui-vfx-trace already accept supported compiled V3 subsets; scene parity, lifecycle-analysis parity, and broader trace semantics remain. |
+| V3-TRACE01 | Trace/probe parity for broader V3 subset | `tui-vfx-recipes` commit `d2fe1e4` adds lifecycle-sampled compiled-V3 scene-composition trace events. Continue toward broader lifecycle-analysis parity and trace semantics; do not mark complete-final yet. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
 
@@ -179,6 +179,8 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-PREVIEW01-IMPORTS | Complete initial | `tui-vfx-recipes` commit `8a2eca7`: examples, tests, and tooling imports/use sites now use canonical `PlaybackPlan`, `PlaybackController`, `PlaybackRecipeBridge`, `V3FrameSnapshot`, and `render_v3_frame_to_buffer` where safe while retaining `Preview*` compatibility seams. |
 | V3-SHOW01-MADEIRA-HEADLESS | Complete initial | `tui-vfx-recipes` commit `8a2eca7`: Madeira has diagnostic-clean headless strict/probe/player evidence and `docs/scene/MADEIRA_HEADLESS_PARITY.md`; visual owner review remains separate. |
 | V3-DEMO01-HEADLESS-PLAYER | Complete initial | `tui-vfx-recipes` commit `bffe815`: `tui-vfx-player --corpus <dir> --json` checks recursive V3 recipe discovery/loading through the demo/player seam, warning on fallback or load errors; demo tests cover disk refresh/reload behavior without GUI playback. |
+| V3-M01-CRITICAL-GROUP | Complete initial / owner-audit blocked | `tui-vfx-recipes` commit `d2fe1e4`: VC-09 report includes the current 10-pair critical evidence group, provisional owner-audit buckets, and explicit `OWNER-RECIPE-AUDIT` blocker for complete-final corpus claims. |
+| V3-TRACE01-SCENE-LIFECYCLE | Complete slice | `tui-vfx-recipes` commit `d2fe1e4`: compiled V3 trace runs sample enter/dwell/exit frames and emit scene-composition events that respect lifecycle-gated layer visibility. Broader trace parity remains active. |
 
 ## Hard policy: V2 removal is last
 
@@ -270,4 +272,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.11</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.12</VERS> -->
