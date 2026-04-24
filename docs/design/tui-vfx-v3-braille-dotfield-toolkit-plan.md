@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> - <DESC>Design plan for a generalized braille-dotfield source/toolkit in V3, using the Madeira flag as the first proving consumer.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
 <!-- <WCTX>Tonight's immediate need is not a universal shader/effect migration but a faithful recipe-side recreation of the madeira-flag crate. The key lesson from that crate is that the flag is not an image-layer effect stack; it is a braille-dot-native field with wave displacement and correlated shading applied before final terminal-cell emission. This doc captures the near-term implementation shape and the longer-term reusable toolkit direction.</WCTX> -->
-<!-- <CLOG>0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
+<!-- <CLOG>0.3.0: add ANSI block/flow diagrams for the crate workflow, the near-term scene-layer implementation path, and the long-term toolkit layering so the design is easier to execute and discuss. 0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
 
 # tui-vfx V3 braille-dotfield toolkit plan
 
@@ -96,6 +96,110 @@ The longer-term recommendation is:
 - extract that source into a reusable **braille-dotfield toolkit**
 - make dotfield construction, displacement, shading, and emission reusable
   primitives for future recipe-side consumers
+
+---
+
+## ANSI block/flow diagrams
+
+### A. Source crate workflow (`/usr/projects/madeira-flag`)
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ logical flag rect in terminal cells                         │
+└──────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│ derive internal dot lattice                                 │
+│ width  = cells_w * 2                                        │
+│ height = cells_h * 4                                        │
+└──────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│ draw static Madeira pattern directly into dot lattice       │
+│ - triband                                                    │
+│ - red cross pattée                                           │
+│ - inner white cross                                          │
+└──────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│ compute shared wave field in dot space                      │
+│ amplitude grows toward right edge                           │
+└──────────────────────────────────────────────────────────────┘
+                    │                               │
+                    │                               │
+                    ▼                               ▼
+┌──────────────────────────────┐      ┌──────────────────────────────┐
+│ displacement consumer        │      │ shading consumer             │
+│ src_dot_y = dot_y - wave     │      │ shade = f(wave)             │
+└──────────────────────────────┘      └──────────────────────────────┘
+                    │                               │
+                    └───────────────┬───────────────┘
+                                    ▼
+┌──────────────────────────────────────────────────────────────┐
+│ emit one braille cell                                        │
+│ - gather 8 dot bits                                           │
+│ - average sampled color                                        │
+│ - apply correlated shade                                       │
+│ - output braille char + fg color                               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### B. Near-term recipe/scene implementation path
+
+```text
+SceneLayer(flag)
+    │
+    ├── source.type = procedural
+    │       source_id = braille_flag_field
+    │
+    ├── params own:
+    │       - flag colors
+    │       - cross geometry
+    │       - wave harmonics / speed
+    │       - shading constants
+    │       - overscan policy
+    │
+    └── frame(ctx)
+            │
+            ├── build or cache 2×4 dot lattice
+            ├── draw static flag pattern
+            ├── compute shared wave field
+            ├── displace through dot lattice
+            ├── shade from same field
+            ├── emit braille glyphs
+            └── paint with transparent bg
+```
+
+### C. Long-term generalized toolkit layering
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ Layer 3: recipe-facing sources                               │
+│ - braille_flag_field                                          │
+│ - future braille banners / dataviz / decorative scenes        │
+└──────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│ Layer 2: dotfield transforms                                 │
+│ - displacement by field                                       │
+│ - shading by field                                            │
+│ - masking / thresholding                                      │
+│ - future erosion / noise / deposition                         │
+└──────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────────────┐
+│ Layer 1: braille-dotfield primitives                         │
+│ - BrailleDotCanvas                                            │
+│ - dot ordering / glyph emission                               │
+│ - overscan helpers                                             │
+│ - dotfield utilities                                           │
+└──────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -631,4 +735,4 @@ That is the shortest honest path from the current state to a recipe-side flag
 that actually behaves like the source crate.
 
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
