@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.3</VERS> -->
+<!-- <VERS>VERSION: 0.14.4</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.14.3: record the thin-player scope assessment and VC-09 content_glitch commit hash.</CLOG> -->
+<!-- <CLOG>0.14.4: record the normalized IR explorer scope assessment for V3-VIEW01.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -24,7 +24,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
 | V3-REGION01 | Region compression follow-up | Outstanding | Resolve larger-corpus pressure beyond current region refs/runs. |
 | V3-NAME01/PREVIEW01 | V3 naming cutover work | Parser/schema and first playback alias slices complete / import migration outstanding | Scene/continuous/clock, main `config.rs`, parser wrappers, recipe internals, and public preview-boundary aliases now expose canonical `Vfx*`/`Playback*`/frame names while preserving compatibility aliases. Next slice: move imports/usages in risk order, then consider a future module-path shim. |
-| V3-VIEW01 | Normalized IR viewer/explorer | Outstanding | Scope around normalized execution graph after IR contract is stable. |
+| V3-VIEW01 | Normalized IR viewer/explorer | Outstanding / implementation slice scoped | Scope around normalized execution graph after IR contract is stable. First slice should add an offline `pipeline-validator` normalized execution-graph explorer built on existing normalized loading/dump surfaces, without schema or runtime coupling. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / implementation slice scoped | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Thin-player assessment says the gap is packaging/surface consolidation: add a `tools/tui-vfx-player` wrapper over existing preview/player APIs without `gtd-movie` semantics. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
@@ -182,6 +182,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-CI02-OFFSCREEN-CONTENT01 | Complete evidence refresh | `offscreen_content_slide_shift.evidence.record.json` now includes a `render_capture_png` entry with SHA-256 `edd3a3544a6e6fc92a015edc72628cbafbade599d13502fc89c4b85234968fb2`; `offscreen_follow_lag` remains the stale offscreen capture. |
 | V3-QDOC01-LINKS01 | Complete initial | Broken historical V3 doc links in the upgrade audit workflow and tooling/appendix chapters were repaired or converted to plain-text historical references; broader stale-status reconciliation remains under V3-DOCS01. |
 | V3-TOOL01-THINPLAYER-SCOPE | Complete assessment | Thin player gap is packaging/surface consolidation, not engine work: first implementation slice should add `tools/tui-vfx-player` around existing `play_recipe`/`v3_play_recipe` behavior while avoiding `gtd-movie` timeline/composer semantics. |
+| V3-VIEW01-SCOPE | Complete assessment | Normalized IR viewer gap is presentation, not schema work: first implementation slice should add an offline `pipeline-validator` normalized execution-graph explorer over existing normalized IR loader/dump APIs. |
 
 ## Hard policy: V2 removal is last
 
@@ -273,4 +274,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.3</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.4</VERS> -->
