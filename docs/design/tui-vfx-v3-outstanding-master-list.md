@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.11.3</VERS> -->
-<!-- <WCTX>Keep the braille dotfield lane pointing at the post-release strategy section while the broader V3 queue remains visible.</WCTX> -->
-<!-- <CLOG>0.11.3: point V3-BRAILLE01 at the braille-dotfield post-release strategy section in the toolkit plan.</CLOG> -->
+<!-- <VERS>VERSION: 0.11.4</VERS> -->
+<!-- <WCTX>Move the latest tooling, braille strategy, easing fixtures, motion route naming, trace, and canonicalization proof slices into completed/complete-initial status while keeping true follow-on work visible.</WCTX> -->
+<!-- <CLOG>0.11.4: record completed tooling, braille strategy, easing fixture, motion route, trace, and canonicalization proof checkpoints.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -13,11 +13,11 @@ considered stable and before any V2 fallback/removal work is considered.
 
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
-| V3-T01 | Tooling docs hub | In progress | Expand `docs/tooling/` into the canonical map for validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, and docs-generation surfaces. |
-| V3-M01 | VC-09 migration-equivalence harness | In progress / canary exact | BSOD V2↔V3 canary now reports exact output and probe match; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
+| V3-T01 | Tooling docs hub | Complete initial / ongoing | Canonical command map now covers validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, docs generation, and release-gate evidence; expand only as new tooling lands. |
+| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear` is now a truthful partial fixture with output mismatch + probe match; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Outstanding | Finish stricter authoring schema diagnostics and style normalization validation; VC-10 review queue is already seeded. |
-| V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Outstanding | Treat normalized IR as validator/viewer/equivalence target and prove canonicalized equivalence for curated authoring forms. |
+| V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists and curated payload alias equivalence tests prove first canonicalization pairs; broader property/corpus coverage remains follow-up. |
 | V3-CI02 | Release-gate evidence capture / compare | Outstanding | The release-gate manifest exists; next work is pass/fail/whitelist-needed evidence capture using existing probe/render/trace tooling, starting with the command-backed `probe_alarm_lighthouse` smoke record. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Outstanding | Implement/prove host-bound motion envelope, transparent shadow behavior, and directional edge-crossing semantics together. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Outstanding | Surface/frame-space signal basis and richer field/showcase consumers remain follow-up beyond the landed cell-space field-hint proofs. |
@@ -30,7 +30,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
 | V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
-| V3-BRAILLE01 | Braille dotfield strategy | Post-release / strategy needed | Review current braille/dotfield support plus usage in `/usr/projects/bgraph` and `/usr/projects/rocketsplash`; develop an extensible procedural strategy for animation, drawing, negative-space text, pixie-dust trails, starbursts, and other sub-cell effects. |
+| V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `tui-vfx-v3-braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
 | V3-R99 | Final V2 retirement plan | Blocked by design | Only after migration, stability, downstream adaptation, and owner approval. |
 
 ## Resolved owner decisions
@@ -82,13 +82,12 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | ID | Work to complete | Definition of done |
 |---|---|---|
 | V3-I01 | Keep the V3 docs index current | `docs/design/tui-vfx-v3-INDEX.md` is the single start page for V3 work and links every major plan/tooling/migration doc. |
-| V3-T01 | Expand the tooling docs hub | `docs/tooling/` maps validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, and docs generation with concrete commands. |
 | V3-VC01 | Finish authoring schema validation diagnostics | `pipeline-validator` surfaces stricter authoring-shape diagnostics and schema reports without breaking compatible recipes unexpectedly. |
 | V3-VC03 | Finish style normalization validation | Validator proves no dual style forms survive normalized IR. |
 | V3-M01 | Continue VC-09 migration-equivalence harness | Use provisional `equivalent` / `replacement` / `retired` tracks; keep all legacy files in place pending owner audit. |
 | V3-CI02 | Capture / compare release-gate evidence | Gates produce pass/fail/whitelist-needed output with render/probe/trace evidence. |
 | V3-C01 | Canonical normalized IR as explicit artifact | Normalized IR is treated as the validator/viewer/equivalence target; `pipeline-validator --dump-normalized --format json` now advertises the `tui_vfx.pipeline_validator.normalized_ir_dump.v1` envelope contract in `docs/contracts/normalized_ir_dump.v1.schema.json`. |
-| V3-C02 | Canonicalization/property-test tooling | Named-factory and compositional forms can canonicalize to the same normalized form for curated pairs. |
+| V3-C02-FOLLOW | Broaden canonicalization/property-test tooling | Extend beyond the first curated payload alias equivalence tests into named-factory/compositional pairs as the corpus demands. |
 | V3-VIEW01 | Normalized IR viewer/explorer backlog | Viewer work is scoped around normalized execution graph, not raw authoring syntax. |
 | V3-REGION01 | Region compression follow-up | `cell_run`, `cell_runs`, `region_ref`, and any larger-corpus compression pressure are implemented or deferred with evidence. |
 | V3-NAME01 | `Ra*` → `Vfx*` inventory execution | Rename-bearing buckets are worked down methodically while preserving compatibility/deprecation guidance during V3 cutover. |
@@ -113,7 +112,6 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-AUTH01 | V3 authoring-guide rewrite | Rewrite authoring workflow, schema reference, scene guide, procedural sources, and pipeline-validator LLM guide for V3 tree schema and primitive/default model. |
 | V3-QDOC01 | Reconcile stale status docs | Some older first-slice/status docs still say `IN_PROGRESS`; update or annotate after verifying current as-built state. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. |
-| V3-BRAILLE01 | Develop post-release braille dotfield strategy | See `docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md#16-post-release-strategy` for current support, bgraph/rocketsplash review, ownership boundaries, creative procedural lanes, diagrams, and post-release phases. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
 
 ## Completed / complete-initial work
@@ -144,6 +142,14 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-VC03 | Complete initial | `tui-vfx-recipes` commit `2a7b216` and `tui-vfx` commit `4c19f0c`: validator rejects dual legacy/canonical style forms in normalized leaf payloads. |
 | V3-VC01 | Complete initial | `tui-vfx-recipes` commit `dac3a67`: optional authoring metadata shape validation for `intent_hints`, `visual_tags`, and `expected_visual`. |
 | V3-DOCGEN01A | Complete initial | `tui-vfx-recipes` commit `1a32b56`: generated docs landing page names `just docs-v3-generate`, `just docs-v3-check`, `V3_API.md`, and `v3_api.json`. |
+| V3-T01 | Complete initial | `tui-vfx` commit `421b6e7`: `docs/tooling/INDEX.md` is now the canonical V3 tooling command map and links release-gate evidence records. |
+| V3-BRAILLE01 | Complete strategy | `tui-vfx` commit `421b6e7`: post-release dotfield strategy captures bgraph/rocketsplash inspiration, ownership boundaries, creative procedural lanes, ANSI diagrams, and phased follow-up work. |
+| V3-LANG01 | Complete initial | `tui-vfx` commit `b4ba71c` and `tui-vfx-recipes` commit `7572f86`: schema-field vocabulary is now a steering rule and authoring docs use `motion_routes` for `motion.route` fixtures. |
+| V3-EASING01 | Complete initial | `tui-vfx-recipes` commit `7572f86`: all 29 legacy easing source names have matching V3 debug fixtures under `recipes/debug_recipes/easings/` with `metadata.expected_visual` and `EASING:` body labels. |
+| V3-MOTIONROUTE01 | Complete initial | `tui-vfx-recipes` commit `7572f86` and `tui-vfx` commit `2ac8cc8`: route/path fixtures moved to `recipes/debug_recipes/motion_routes/`, tests and release-gate references updated. |
+| V3-TRACE01A | Complete initial | `tui-vfx-recipes` commit `50c3547`: direct compiled-V3 trace runs emit trace-local lifecycle phase markers and tooling docs no longer treat the surface as blocked. |
+| V3-C02A | Complete initial | `tui-vfx-recipes` commit `50c3547`: curated payload alias tests prove `pulse_color`→`color` and `rotation_speed`→`speed` canonicalize equivalently. |
+| V3-VC09-EASE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `23200fa`: `ease_linear` is tracked as a truthful VC-09 partial with output mismatch, probe match, and owner-review-required evidence. |
 
 ## Hard policy: V2 removal is last
 
@@ -235,4 +241,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.11.3</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.4</VERS> -->
