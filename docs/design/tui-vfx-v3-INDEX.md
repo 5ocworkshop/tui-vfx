@@ -20,7 +20,8 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 8. [V3 migration outcome policy](tui-vfx-v3-migration-outcome-policy.md)
 9. [V3 release-gate policy](tui-vfx-v3-release-gate-policy.md)
 10. [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
-11. [Tooling hub](../tooling/INDEX.md)
+11. [V3 capability governance decision](tui-vfx-v3-capability-governance-decision.md)
+12. [Tooling hub](../tooling/INDEX.md)
 
 ## Architecture and decisions
 
@@ -73,6 +74,7 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 ## Specialized capability plans
 
 - [V3 capability catalog](tui-vfx-v3-capability-catalog.md)
+- [V3 capability governance decision](tui-vfx-v3-capability-governance-decision.md)
 - [V3 braille dotfield toolkit plan](tui-vfx-v3-braille-dotfield-toolkit-plan.md)
 
 ## Rules of thumb
