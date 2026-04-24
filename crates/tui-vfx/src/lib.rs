@@ -190,7 +190,7 @@ pub mod prelude {
     // Shadow - shadow rendering
     pub use tui_vfx_shadow::{
         ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowGradeConfig, ShadowStyle,
-        render_shadow, render_shadow_simple,
+        render_shadow, render_shadow_into_scene, render_shadow_simple,
     };
 }
 

@@ -40,7 +40,7 @@ use serde::{Deserialize, Serialize};
 ///     ..Default::default()
 /// };
 /// ```
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(default)]
 pub struct ShadowGradeConfig {
     /// Foreground dimming strength (0.0–1.0).

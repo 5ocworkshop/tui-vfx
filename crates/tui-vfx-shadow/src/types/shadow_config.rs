@@ -55,7 +55,7 @@ use super::{ShadowCompositeMode, ShadowEdges, ShadowGradeConfig, ShadowStyle};
 ///     .with_edges(ShadowEdges::BOTTOM_RIGHT)
 ///     .with_soft_edges(true);
 /// ```
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(default)]
 pub struct ShadowConfig {
     /// Shadow rendering style.
@@ -85,6 +85,7 @@ pub struct ShadowConfig {
     pub surface_color: Option<Color>,
 
     /// Which edges to render shadow on.
+    #[config(opaque)]
     pub edges: ShadowEdges,
 
     /// Whether to use soft edges (half-blocks at shadow boundaries).

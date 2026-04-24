@@ -15,6 +15,21 @@ pub fn interpolate_position(from: Position, to: Position, t: f64, path: &PathTyp
     let t = t.clamp(0.0, 1.0);
     let t32 = t as f32;
     match *path {
+        PathType::Composed {
+            ref route,
+            ref dynamics,
+        } => {
+            let (base_x, base_y) = interpolate_position(from, to, t, route);
+            let (linear_x, linear_y) = interpolate_position(from, to, t, &PathType::Linear);
+            let mut out_x = base_x;
+            let mut out_y = base_y;
+            for dynamic in dynamics {
+                let (dyn_x, dyn_y) = interpolate_position(from, to, t, dynamic);
+                out_x += dyn_x - linear_x;
+                out_y += dyn_y - linear_y;
+            }
+            (out_x, out_y)
+        }
         PathType::Linear | PathType::Squash | PathType::Hover => (
             lerp(from.x as f32, to.x as f32, t32),
             lerp(from.y as f32, to.y as f32, t32),

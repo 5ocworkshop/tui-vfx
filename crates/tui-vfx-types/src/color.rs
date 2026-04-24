@@ -5,6 +5,8 @@
 
 //! RGBA color type with alpha channel for compositing.
 
+use tui_vfx_core::{ConfigSchema, FieldMeta, Range, ScalarValue, SchemaField, SchemaNode};
+
 /// RGBA color with alpha channel for compositing.
 ///
 /// Unlike framework-specific color types, this includes an alpha channel
@@ -20,6 +22,36 @@ pub struct Color {
     pub b: u8,
     /// Alpha channel (0=transparent, 255=opaque)
     pub a: u8,
+}
+
+impl ConfigSchema for Color {
+    fn schema() -> SchemaNode {
+        let u8_field = |name: &str, description: &str| {
+            SchemaField::new(
+                name,
+                u8::schema(),
+                FieldMeta {
+                    description: Some(description.to_string()),
+                    range: Some(Range::new(
+                        Some(ScalarValue::number("0")),
+                        Some(ScalarValue::number("255")),
+                    )),
+                    ..Default::default()
+                },
+            )
+        };
+        SchemaNode::Struct {
+            name: "Color".to_string(),
+            description: Some("RGBA color with alpha compositing support".to_string()),
+            json_name: None,
+            fields: vec![
+                u8_field("r", "Red channel (0-255)"),
+                u8_field("g", "Green channel (0-255)"),
+                u8_field("b", "Blue channel (0-255)"),
+                u8_field("a", "Alpha channel (0-255)"),
+            ],
+        }
+    }
 }
 
 impl Color {

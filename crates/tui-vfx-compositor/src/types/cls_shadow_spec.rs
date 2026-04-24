@@ -45,7 +45,7 @@ use tui_vfx_shadow::ShadowConfig;
 ///     ..Default::default()
 /// };
 /// ```
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 pub struct ShadowSpec {
     /// The shadow configuration from tui-vfx-shadow.
     #[serde(flatten)]

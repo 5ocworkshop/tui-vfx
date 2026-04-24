@@ -29,12 +29,8 @@ use tui_vfx_compositor::traits::cls_inspection_sink_bridge::{
 use tui_vfx_debug::inspection::{
     StageMask, TraceEvent, TraceFilter, TraceReport, TraceSelector, TraceSink,
 };
-use tui_vfx_style::models::{
-    ColorSpace, Gradient, LinearGradientShader, StyleRegion,
-};
-use tui_vfx_types::{
-    Cell, Color, Grid, OwnedGrid, RecipeId, RoleMap, RoleTag, SemanticScene,
-};
+use tui_vfx_style::models::{ColorSpace, Gradient, LinearGradientShader, StyleRegion};
+use tui_vfx_types::{Cell, Color, Grid, OwnedGrid, RecipeId, RoleMap, RoleTag, SemanticScene};
 
 /// Build a 10×6 source grid and paired role map used by the test.
 ///
@@ -118,8 +114,7 @@ fn foundation_end_to_end_proves_all_phases_compose() {
     // Destination surface: larger than the source so the shadow has
     // somewhere to extrude into (shadow offset is (+2, +1)).
     let dest_grid = OwnedGrid::new(14, 9);
-    let mut dest_scene =
-        SemanticScene::from_grid_with_default_role(dest_grid, RoleTag::Background);
+    let mut dest_scene = SemanticScene::from_grid_with_default_role(dest_grid, RoleTag::Background);
 
     // Border-targeted shader: should paint only rows 0 and 5.
     let shader = shader_blue();

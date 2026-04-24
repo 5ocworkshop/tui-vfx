@@ -820,6 +820,7 @@ pub(crate) fn prepare_filter(
         FilterSpec::KittScanner {
             boost,
             band_width,
+            bpm,
             bps,
             progress,
             motion_mode,
@@ -830,15 +831,21 @@ pub(crate) fn prepare_filter(
             let evaluated_progress = progress
                 .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
                 .unwrap_or(0.0);
-            let filter = KittScanner::new()
-                .with_boost(*boost)
-                .with_band_width(*band_width)
-                .with_bps(*bps)
-                .with_progress(evaluated_progress)
-                .with_motion_mode(*motion_mode)
-                .with_apply_to(*apply_to)
-                .with_powerline_mode(*powerline_mode)
-                .with_boost_separator_bg(*boost_separator_bg);
+            let filter = {
+                let base = KittScanner::new()
+                    .with_boost(*boost)
+                    .with_band_width(*band_width)
+                    .with_progress(evaluated_progress)
+                    .with_motion_mode(*motion_mode)
+                    .with_apply_to(*apply_to)
+                    .with_powerline_mode(*powerline_mode)
+                    .with_boost_separator_bg(*boost_separator_bg);
+                if let Some(bpm) = bpm {
+                    base.with_bpm(*bpm)
+                } else {
+                    base.with_bps(*bps)
+                }
+            };
             Some(PreparedFilter::KittScanner(filter))
         }
         FilterSpec::ShadeScanner {
@@ -896,15 +903,16 @@ mod tests {
     //! the crate.
 
     use super::*;
-    use crate::types::BindableValue;
     use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode};
+    use crate::types::BindableValue;
     use tui_vfx_style::traits::ShaderRuntimeParams;
 
     fn kitt_spec_with_progress(progress: BindableValue) -> FilterSpec {
         FilterSpec::KittScanner {
             boost: 50,
             band_width: 0.15,
-            bps: 1.0,
+            bpm: None,
+            bps: 1.2,
             progress,
             motion_mode: ScannerMotionMode::default(),
             apply_to: ApplyTo::Both,
@@ -992,6 +1000,33 @@ mod tests {
         };
         assert_eq!(fa.progress, 0.25);
         assert_eq!(fb.progress, 0.9);
+    }
+
+    #[test]
+    fn kitt_scanner_bpm_overrides_bps_when_present() {
+        let rp = ShaderRuntimeParams::new();
+        let ctx = PrepareContext::new(0.0, &rp);
+
+        let spec = FilterSpec::KittScanner {
+            boost: 50,
+            band_width: 0.15,
+            bpm: Some(84.0),
+            bps: 9.9,
+            progress: BindableValue::static_f32(1.0),
+            motion_mode: ScannerMotionMode::default(),
+            apply_to: ApplyTo::Both,
+            powerline_mode: false,
+            boost_separator_bg: false,
+        };
+        let prepared = prepare_filter(&spec, &ctx).expect("KittScanner prepares");
+
+        match prepared {
+            PreparedFilter::KittScanner(filter) => assert!((filter.bps - 1.4).abs() < 0.001),
+            other => panic!(
+                "expected PreparedFilter::KittScanner, got {:?}",
+                std::mem::discriminant(&other)
+            ),
+        }
     }
 
     // --- Binding coverage for the remaining 8 lifted filters ----------------

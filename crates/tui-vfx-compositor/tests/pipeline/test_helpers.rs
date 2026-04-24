@@ -6,8 +6,8 @@
 #![allow(dead_code)]
 
 use tui_vfx_compositor::pipeline::{
-    CompositionOptions, CompositionSpec, RenderArea, render_pipeline, render_pipeline_with_spec,
-    render_pipeline_with_spec_area,
+    render_pipeline, render_pipeline_with_spec, render_pipeline_with_spec_area, CompositionOptions,
+    CompositionSpec, RenderArea,
 };
 use tui_vfx_compositor::traits::pipeline_inspector::CompositorInspector;
 use tui_vfx_types::{Grid, OwnedGrid, RoleMap, RoleTag, SemanticScene};

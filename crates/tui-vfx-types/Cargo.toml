@@ -18,6 +18,7 @@ categories = ["data-structures"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"], optional = true }
+tui-vfx-core = { path = "../tui-vfx-core" }
 
 [dev-dependencies]
 serde_json = "1.0"
