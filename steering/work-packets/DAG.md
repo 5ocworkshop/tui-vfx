@@ -365,3 +365,14 @@ The packet library now reaches all the way from immediate V3 tooling blockers th
 
 ## Madeira-direct-output collision notes
 - `WP62` collides with any packet actively retuning Madeira scene rendering or preview behavior and should not overlap with broader Madeira implementation lanes in the same files.
+
+
+## Typed-hint consumer follow-on packet node
+- `WP63` — V3 displacement and shading hint consumers
+
+## Typed-hint consumer dependency notes
+- `WP63` follows `WP55` because the first producer/consumer runtime seam is now established and the next tranche is a richer consumer (displacement or shading).
+- `WP63` is the likely prerequisite before the richer Madeira flag-wave/shading fidelity work can be claimed on the typed-hint path.
+
+## Typed-hint consumer collision notes
+- `WP63` collides with other V3 compile/runtime field-hint work and should not overlap with parallel edits in the same direct-path execution files.

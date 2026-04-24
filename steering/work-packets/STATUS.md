@@ -69,6 +69,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `f6ef333` / `99a42f5`
 - `54-v3-mixed-signals-signalgraph-and-time-alignment.md`
   - landed via `983249f` / `45c61f1`
+- `55-v3-spatial-leaves-and-field-hint-threading.md`
+  - landed via `758d332` / `a94ad59` / `3bf40d8`
 - `57-v3-live-naming-and-vocabulary-cleanup.md`
   - landed via `cd4b88c`
 - `58-v3-ra-to-vfx-public-surface-rename-tranche.md`
@@ -121,8 +123,8 @@ These packets produced accepted non-code outputs that should be treated as harve
   - found the current Madeira direct output is still not faithful enough to `/usr/projects/madeira-flag`, with the next corrective slice at the direct scene-output fidelity seam
 
 ## New follow-on packets created from audit learnings
+- `63-v3-displacement-and-shading-hint-consumers.md`
 - `62-madeira-direct-scene-output-fidelity-fix.md`
-- `55-v3-spatial-leaves-and-field-hint-threading.md`
 - `56-v3-motion-path-and-offscreen-origin-support.md`
 
 ## Notes

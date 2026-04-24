@@ -717,17 +717,32 @@ for step-to-step reuse.
 
 ### Phase 3 — typed field hints
 
-**Status: next active tranche.**
+**Status: first vertical slice landed.**
 
 - add typed field/hint storage in the V3 runtime
 - make validator/runtime agreement explicit
 - support producer/consumer execution ordering within a bounded vertical slice
 
+The first bounded runtime slice now exists on the direct compiled V3 path:
+
+- compiled leaf steps retain `emits_hint` / `binds` metadata
+- a pure `spatial_signal` producer can emit a named hint
+- a later consumer can bind that hint into a real runtime field
+- the current proof slice is a sequenced producer → `dim` filter consumer on
+  the direct path
+
+This is intentionally narrow. It proves that step-to-step hint wiring is now
+operational for one bounded pair without claiming that the whole typed field
+architecture is complete.
+
 ### Phase 4 — first real consumer pair
 
-- one field producer
-- one displacement consumer
-- one shading consumer
+**Status: first bounded pair landed; richer consumers still open.**
+
+- one field producer ✅
+- one real downstream consumer ✅
+- displacement consumer ❌
+- shading consumer ❌
 
 ### Phase 5 — restore richer `madeira_flag`
 
