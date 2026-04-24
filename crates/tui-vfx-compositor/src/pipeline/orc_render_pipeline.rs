@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.1.1</VERS>
-// <WCTX>Phase 1a perf — pool the shadow-path working buffers via cls_grid_pool so the per-frame OwnedGrid allocation drops to zero in steady state.</WCTX>
-// <CLOG>12.1.1: PATCH — replace the fresh OwnedGrid::new + buffer.clone() pair in render_pipeline_with_shadow with two thread-local GridPool checkouts plus a cells-slice copy. Behavior unchanged; steady-state per-shadowed-frame allocations go from 2+ to 0 once pool buckets are warm. Memo §1 and §3.
+// <VERS>VERSION: 12.1.2</VERS>
+// <WCTX>Phase 1a perf — cache the Arc<RoleMap> built for each render call across consecutive frames, keyed on (source ptr, generation, width, height), so a stable RoleMap stops triggering a full Vec<RoleId> clone every frame.</WCTX>
+// <CLOG>12.1.2: PATCH — introduce a thread-local ROLES_ARC_CACHE plus a cached_roles_arc() helper that reuses the previously built Arc<RoleMap> when (ptr, generation, width, height) matches the cached entry. Used from all three per-call roles_arc sites: render_pipeline_with_shadow, render_loop, and render_loop_inspected. Behavior unchanged; steady-state per-frame source_roles.clone() drops to zero for workloads that keep a long-lived RoleMap across frames. Memo §2.
+// 12.1.1: PATCH — replace the fresh OwnedGrid::new + buffer.clone() pair in render_pipeline_with_shadow with two thread-local GridPool checkouts plus a cells-slice copy. Behavior unchanged; steady-state per-shadowed-frame allocations go from 2+ to 0 once pool buckets are warm. Memo §1 and §3.
 // 12.1.0: MINOR — Phase A.3 additions. (a) render_pipeline_with_shadow now takes `destination: &mut SemanticScene` (was &mut dyn Grid) so it can write RoleTag::Shadow into the destination role map for every cell identified as a shadow region candidate. (b) apply_shaders/apply_shaders_inspected gain a `roles_arc: &Arc<RoleMap>` parameter; the ShaderContext struct literals now include the `roles` field cloned from this Arc. (c) render_loop and render_loop_inspected build the Arc<RoleMap> once per invocation (a single RoleMap clone) so per-cell Arc::clone is cheap. (d) new effective_shadow_rect() helper consults config.source_region via extract_shadow_envelope; returns None for no-match (shadow stage skipped). Non-inspected shadow path pre-computes the in_element_ni / shadow_has_coverage_ni flags so shadow-region writes can be tracked for role tagging regardless of composite mode branch.
 // 12.0.0: MAJOR signature change for role-aware targeting.</CLOG>
 
@@ -19,10 +20,62 @@ use crate::traits::pipeline_inspector::CompositorInspector;
 use crate::types::cls_sampler_spec::SamplerSpec;
 use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
+use std::cell::RefCell;
 use std::sync::Arc;
 use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
 use tui_vfx_style::traits::ShaderContext;
 use tui_vfx_types::{Cell, Grid, Rect, RoleMap, RoleTag, SemanticScene, Style};
+
+// Thread-local cache for the Arc<RoleMap> the shader context receives.
+//
+// Each render call used to rebuild Arc::new(source_roles.clone()) — a full
+// RoleMap clone every frame. Typical workloads keep a long-lived RoleMap
+// across frames and mutate it rarely; the cache detects that steady state
+// via the combination of source pointer, RoleMap::generation(), and
+// dimensions, and returns a cheap Arc::clone instead of a fresh
+// Vec<RoleId> copy. Keyed on (ptr, generation, width, height) to cover
+// both stable-map-across-frames and defensive detection of pointer reuse.
+thread_local! {
+    static ROLES_ARC_CACHE: RefCell<Option<CachedRolesArc>> = const { RefCell::new(None) };
+}
+
+struct CachedRolesArc {
+    source_ptr: *const RoleMap,
+    generation: u64,
+    width: u16,
+    height: u16,
+    arc: Arc<RoleMap>,
+}
+
+/// Reuse a previously built `Arc<RoleMap>` when the source `RoleMap`
+/// appears unchanged since the last call on this thread; otherwise
+/// rebuild it and update the cache.
+fn cached_roles_arc(source_roles: &RoleMap) -> Arc<RoleMap> {
+    let ptr = source_roles as *const RoleMap;
+    let generation = source_roles.generation();
+    let width = source_roles.width();
+    let height = source_roles.height();
+    ROLES_ARC_CACHE.with(|cell| {
+        let mut slot = cell.borrow_mut();
+        if let Some(cached) = slot.as_ref()
+            && cached.source_ptr == ptr
+            && cached.generation == generation
+            && cached.width == width
+            && cached.height == height
+        {
+            return Arc::clone(&cached.arc);
+        }
+        let arc = Arc::new(source_roles.clone());
+        *slot = Some(CachedRolesArc {
+            source_ptr: ptr,
+            generation,
+            width,
+            height,
+            arc: Arc::clone(&arc),
+        });
+        arc
+    })
+}
 
 /// Render pipeline with full spec support and optional inspector.
 ///
@@ -252,7 +305,7 @@ fn render_pipeline_with_shadow(
     let shader_t = timing.shader_t();
     // Arc-wrap the source role map once so per-cell ShaderContext cloning
     // is a cheap atomic refcount bump instead of a RoleMap allocation.
-    let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());
+    let roles_arc: Arc<RoleMap> = cached_roles_arc(source_roles);
 
     // Render element content to buffer (on top of shadow)
     let (w16, h16) = (width as u16, height as u16);
@@ -614,7 +667,7 @@ fn render_loop(
     let shader_t = CompositionPlaybackTiming::from_options(options).shader_t();
     let mask_t = compute_mask_t(options);
     // Arc-wrap the source role map once for cheap per-cell Arc::clone.
-    let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());
+    let roles_arc: Arc<RoleMap> = cached_roles_arc(source_roles);
 
     for y in 0..height {
         for x in 0..width {
@@ -694,7 +747,7 @@ fn render_loop_inspected(
     let shader_t = CompositionPlaybackTiming::from_options(options).shader_t();
     let mask_t = compute_mask_t(options);
     // Arc-wrap the source role map once for cheap per-cell Arc::clone.
-    let roles_arc: Arc<RoleMap> = Arc::new(source_roles.clone());
+    let roles_arc: Arc<RoleMap> = cached_roles_arc(source_roles);
 
     for y in 0..height {
         for x in 0..width {
