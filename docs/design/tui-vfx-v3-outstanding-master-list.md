@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.12.9</VERS> -->
+<!-- <VERS>VERSION: 0.13.0</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.12.9: align C3/C4 checkpoint with direct diagonal helper proof.</CLOG> -->
+<!-- <CLOG>0.13.0: record shadow captures, spatial origin proof, config naming slice, and baseline VC-09 evidence.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -18,12 +18,12 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Complete initial / broaden later | Metadata shape diagnostics now include `related_themes`; style normalization validation has a first pass. Broaden remaining optional metadata/schema-report coverage as corpus pressure appears. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists, curated payload alias equivalence tests prove first canonicalization pairs, and normalized IR now emits explicit phase/scope/combine metadata. Broader property/corpus coverage remains follow-up. |
-| V3-CI02 | Release-gate evidence capture / compare | In progress / mixed evidence | Offscreen D6 fixtures now pass after `tui-vfx-recipes` commit `e6e9da5`; shadow gates still need required `render_capture_png` evidence despite clean probe/trace commands. |
+| V3-CI02 | Release-gate evidence capture / compare | In progress / mixed evidence | Offscreen D6 fixtures pass after `tui-vfx-recipes` commit `e6e9da5`; shadow capture sidecars now include required `render_capture_png` artifacts. Continue working remaining release-gate pass/fail/whitelist records. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Complete initial / broaden later | Scene-layer motion now feeds edge-crossing border and attached-shadow policy; shared helper coverage proves diagonal/two-edge blanking directly. Follow-up: broaden full scene-layer corpus fixtures as needed. |
-| V3-SPATIAL01 | Spatial field substrate follow-ons | Complete initial / origin leaves follow-up | mixed-signals already has surface/frame-space basis; `tui-vfx-recipes` commit `c5190f1` proves `sample_surface_radius` through V3 native filter rendering. Next: prove configurable-origin leaves (`sample_surface_radius_from`, `sample_surface_angle_from`) and docs/debug discovery. |
+| V3-SPATIAL01 | Spatial field substrate follow-ons | Complete initial / docs/debug discovery follow-up | mixed-signals already has surface/frame-space basis; `tui-vfx-recipes` commits `c5190f1` and `7b2246f` prove `sample_surface_radius`, `sample_surface_radius_from`, and `sample_surface_angle_from` through V3 native filter rendering. Next: docs/debug recipe discovery if the authoring corpus needs it. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
 | V3-REGION01 | Region compression follow-up | Outstanding | Resolve larger-corpus pressure beyond current region refs/runs. |
-| V3-NAME01/PREVIEW01 | V3 naming cutover work | First schema slice complete / broader cutover outstanding | Scene/continuous/clock schema now have canonical `Vfx*` definitions with hidden `Ra*` aliases. Next slices: main `config.rs`, parser wrappers, then preview/playback seam names. |
+| V3-NAME01/PREVIEW01 | V3 naming cutover work | Config schema slice complete / broader cutover outstanding | Scene/continuous/clock and main `config.rs` schema surfaces now have canonical `Vfx*` definitions with hidden `Ra*` aliases. Next slices: parser wrappers/import cleanup, then preview/playback seam names. |
 | V3-VIEW01 | Normalized IR viewer/explorer | Outstanding | Scope around normalized execution graph after IR contract is stable. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / partial docs evidence | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Thin-player/current V3 surface map is documented; packaged `tui-vfx-player` remains outstanding. |
@@ -155,6 +155,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-VC09-MULTISAMPLER01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `bf2ee98`: `complex_multi_sampler` is tracked as partial-match replacement evidence with output-only owner review. |
 | V3-VC09-LAYEREDSHADERS01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9630bc1`: `complex_layered_shaders` is tracked as replacement evidence with output+probe mismatch owner review. |
 | V3-VC09-MASKIRIS01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9630bc1`: `mask_iris` is tracked as replacement evidence with output+probe mismatch owner review. |
+| V3-VC09-BASELINE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `58b34be`: `baseline` is tracked as partial-match replacement evidence with output-only owner review. |
 | V3-BEZIER01 | Complete | `tui-vfx-recipes` commit `752dd5e`: custom Bezier easing fixture now uses a distinct overshoot cubic-bezier curve and validates through parser, validator, and probe paths. |
 | V3-PHASE01 | Complete initial | `tui-vfx-recipes` commit `39aae98`: single phase and phase arrays parse, inherited phase intersections normalize into explicit `PhaseSet`, empty effective phase sets fail validation, compiled leaves carry PhaseSet, and generated V3 docs are current. |
 | V3-HINT01 | Complete initial | `tui-vfx-recipes` commit `ec25b34`: build and ordered runtime paths share hard failures for duplicate producers, missing producers, and declared hint kind mismatches. |
@@ -167,6 +168,9 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-SPATIAL01-SURFACE-RADIUS | Complete initial | `tui-vfx-recipes` commit `c5190f1`: existing mixed-signals `sample_surface_radius` leaf parses through V3 recipe payloads and affects native filter rendering. |
 | V3-D6-OFFSCREEN-FIXTURES | Complete evidence refresh | `tui-vfx-recipes` commit `e6e9da5` and `tui-vfx` evidence update: `content_slide_shift` and `scene_layer_follow_lag` now probe clean with empty diagnostics. |
 | V3-NAME01-SCHEMA-A | Complete initial | `tui-vfx-recipes` commit `a9d92e3`: scene/continuous/clock schema types use canonical `Vfx*` definitions with hidden `Ra*` compatibility aliases. |
+| V3-NAME01-SCHEMA-CONFIG | Complete initial | `tui-vfx-recipes` commit `ebc3eb0`: main `config.rs` schema definitions use canonical `Vfx*` names with hidden `Ra*` compatibility aliases and unchanged serde/wire fields. |
+| V3-SPATIAL01-ORIGIN-LEAVES | Complete initial | `tui-vfx-recipes` commit `7b2246f`: `sample_surface_radius_from` and `sample_surface_angle_from` both affect native V3 filter rendering through authored recipe payloads. |
+| V3-D6-SHADOW-CAPTURES | Complete evidence refresh | Shadow release-gate sidecars now include required `render_capture_png` artifacts with checked SHA-256 values for base, edge-crossing, and pipeline fixtures. |
 | V3-VC01-RELATED | Complete initial | `tui-vfx-recipes` commit `ec25b34`: `pipeline-validator --rules` surfaces malformed `metadata.related_themes` with path-style parse diagnostics. |
 | V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
 
