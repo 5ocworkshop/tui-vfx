@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.12.5</VERS> -->
+<!-- <VERS>VERSION: 0.12.6</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.12.5: add layered shader and mask iris VC-09 evidence checkpoints.</CLOG> -->
+<!-- <CLOG>0.12.6: record naming inventory and fresh D6 evidence status.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -18,12 +18,12 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Complete initial / broaden later | Metadata shape diagnostics now include `related_themes`; style normalization validation has a first pass. Broaden remaining optional metadata/schema-report coverage as corpus pressure appears. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists, curated payload alias equivalence tests prove first canonicalization pairs, and normalized IR now emits explicit phase/scope/combine metadata. Broader property/corpus coverage remains follow-up. |
-| V3-CI02 | Release-gate evidence capture / compare | Outstanding | The release-gate manifest exists; next work is pass/fail/whitelist-needed evidence capture using existing probe/render/trace tooling, starting with the command-backed `probe_alarm_lighthouse` smoke record. |
+| V3-CI02 | Release-gate evidence capture / compare | In progress / failing evidence | Fresh D6 records in `tui-vfx` commit `c765fa8` replace stale transient-build data. Current blockers: offscreen diagnostics still fail, and shadow gates need required `render_capture_png` evidence despite clean probe/trace commands. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Outstanding | Implement/prove host-bound motion envelope, transparent shadow behavior, and directional edge-crossing semantics together. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Outstanding | Surface/frame-space signal basis and richer field/showcase consumers remain follow-up beyond the landed cell-space field-hint proofs. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
 | V3-REGION01 | Region compression follow-up | Outstanding | Resolve larger-corpus pressure beyond current region refs/runs. |
-| V3-NAME01/PREVIEW01 | V3 naming cutover work | Outstanding / decided | Execute the accepted naming slate in `tui-vfx-v3-naming-normalization-decisions.md`: `Vfx*`, `PlaybackPlan`, `PlaybackController`, `V3FrameSnapshot`, `tui-vfx-player`, etc. |
+| V3-NAME01/PREVIEW01 | V3 naming cutover work | Inventory complete / implementation outstanding | `tui-vfx-v3-naming-implementation-inventory.md` now maps accepted targets and risk order. Next slice: `tui-vfx-recipes/src/recipe_schema/**` `Ra*`→`Vfx*` foundation with aliases before preview/playback seam rename. |
 | V3-VIEW01 | Normalized IR viewer/explorer | Outstanding | Scope around normalized execution graph after IR contract is stable. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. |
@@ -160,6 +160,8 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-HINT01 | Complete initial | `tui-vfx-recipes` commit `ec25b34`: build and ordered runtime paths share hard failures for duplicate producers, missing producers, and declared hint kind mismatches. |
 | V3-SCOPE01 | Complete initial | `tui-vfx-recipes` commit `ec25b34`: authoring/normalization/generated docs support `scope_mode: intersect|replace`, normalized IR emits authored/effective scopes, and validation rejects empty static intersections plus replace-without-authored-scope. |
 | V3-COMBINE01 | Complete initial | `tui-vfx-recipes` commit `bf2ee98`: normalized IR emits explicit sequence/parallel combine, merge, leaf-family defaults, and conservative parallel overlap classifications. |
+| V3-NAME01-INV | Complete initial | `tui-vfx` commit `c765fa8`: accepted naming slate has concrete repo/file/symbol buckets, compatibility/re-export guidance, risk order, and next rename slice. |
+| V3-CI02-D6-REFRESH | Complete evidence refresh | `tui-vfx` commit `c765fa8`: stale D6 sidecars replaced with fresh truthful failing evidence for offscreen diagnostics and missing shadow render-capture gates. |
 | V3-VC01-RELATED | Complete initial | `tui-vfx-recipes` commit `ec25b34`: `pipeline-validator --rules` surfaces malformed `metadata.related_themes` with path-style parse diagnostics. |
 | V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
 
