@@ -1,13 +1,13 @@
 <!-- <FILE>docs/design/tui-vfx-v3-scene-content-integration-plan.md</FILE> - <DESC>Execution plan for the next V3 integration slice after shader/effects I/O: scene-layer procedural/braille and content composition.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Plan the next V3-only tranche after the shader/filter/mask/style-effect I/O path has root and scene-layer proofs, keeping Madeira and content composition as reusable proving grounds.</WCTX> -->
-<!-- <CLOG>0.3.0: mark SC-02 complete after the typewriter-to-filter/shader I/O proof and compiled content QC truth landed in tui-vfx-recipes. 0.2.0: mark SC-01 complete after the asset-backed braille_flag_field runtime wave proof landed in tui-vfx-recipes. 0.1.0: initial execution plan for scene/content integration, including debug-recipe obligations, rustdoc/docs deliverables, verification commands, and sub-agent lanes.</CLOG> -->
+<!-- <CLOG>0.4.0: mark the Madeira showcase sidebar complete after binding-backed scene visibility and layered text parity landed in tui-vfx-recipes. 0.3.0: mark SC-02 complete after the typewriter-to-filter/shader I/O proof and compiled content QC truth landed in tui-vfx-recipes. 0.2.0: mark SC-01 complete after the asset-backed braille_flag_field runtime wave proof landed in tui-vfx-recipes. 0.1.0: initial execution plan for scene/content integration, including debug-recipe obligations, rustdoc/docs deliverables, verification commands, and sub-agent lanes.</CLOG> -->
 
 # tui-vfx V3 scene/content integration plan
 
 ## Status
 
-Active follow-on after the V3 shader/effects I/O tranche. SC-01 and SC-02 are complete; SC-03/SC-04 are satisfied for those proofs, leaving broader scheduler/batching and richer showcase parity as the next planning area.
+Active follow-on after the V3 shader/effects I/O tranche. SC-01, SC-02, and SC-03 are complete; SC-04/SC-05 are satisfied for those proofs, leaving broader scheduler/batching as the next planning area.
 
 The completed I/O tranche proves first-class producer/consumer chaining across:
 
@@ -36,6 +36,9 @@ The slice has two user-visible proving seams:
 2. **Content + downstream pipeline seam** — a bounded content effect, starting
    with `typewriter`, generates source cells before a downstream V3 pipeline
    effect chain transforms them.
+3. **Showcase runtime visibility seam** — optional scene content, starting with
+   Madeira's hint line, is gated by recipe-declared runtime bindings rather
+   than Rust demo branches.
 
 ## Non-goals
 
@@ -105,7 +108,38 @@ Debug recipe requirement:
 - It must show content output flowing into downstream effects, not merely a
   static text card with a shader.
 
-### SC-03 — scene/probe/tooling visibility
+### SC-03 — Madeira showcase runtime visibility/sidebar
+
+**Status: complete.**
+
+As-built artifacts:
+
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_layer_visibility_binding_io.json`
+- `/usr/projects/tui-vfx-recipes/recipes/madeira_flag/madeira_flag.json`
+- `/usr/projects/tui-vfx-recipes/src/v3/compile/fnc_build_scene_source_from_compiled_plan.rs`
+- `/usr/projects/tui-vfx-recipes/src/recipe_schema/scene/enum_ra_layer_visibility.rs`
+- `/usr/projects/tui-vfx-recipes/docs/scene/AUTHORING_GUIDE.md`
+- `/usr/projects/tui-vfx-recipes/docs/V3_FIELD_HINT_CONSUMERS.md`
+
+Deliverables completed:
+
+- Compiled V3 now resolves `visibility.predicate` against
+  `requires_bindings`/`ShaderRuntimeParams` at the scene bridge seam and lowers
+  the result to the existing scene runtime's `true`/`false` predicate strings.
+- The new debug recipe proves a runtime-gated scene layer can still run a
+  layer-local sampler → filter sourced-output → shader I/O chain when visible.
+- The Madeira recipe no longer flattens all copy into one card. Greeting,
+  subtext, location, and hint are independent text layers with per-line style
+  data; `show_hint` gates the hint layer without changing Rust code.
+
+Debug recipe requirement:
+
+- `scene_layer_visibility_binding_io.json` proves both binding-driven layer
+  visibility and two-effect I/O composition inside the visible layer.
+
+### SC-04 — scene/probe/tooling visibility
+
+**Status: complete for SC-01 through SC-03.**
 
 Deliverables:
 
@@ -114,7 +148,9 @@ Deliverables:
 - Add focused tests only if the new fixtures reveal a missing probe/validator
   signal; otherwise keep this as docs/tooling verification.
 
-### SC-04 — as-built docs and rustdoc pass
+### SC-05 — as-built docs and rustdoc pass
+
+**Status: complete for SC-01 through SC-03.**
 
 Deliverables:
 
@@ -163,13 +199,12 @@ git diff --check
 
 ## Completion criteria
 
-- SC-01 and SC-02 have committed debug recipes, deterministic tests, docs, and
+- SC-01, SC-02, and SC-03 have committed debug recipes, deterministic tests, docs, and
   verification evidence.
-- Runtime inputs and content effects are proven as scene/content integration
-  seams, not as ad hoc Madeira-only behavior.
-- The next remaining V3 risk is clearly narrowed to broader scheduler/batching
-  and richer showcase parity, not missing first proof of scene/content
-  composition.
+- Runtime inputs, content effects, and binding-gated optional scene layers are
+  proven as scene/content integration seams, not as ad hoc Madeira-only behavior.
+- The next remaining V3 risk is clearly narrowed to broader scheduler/batching,
+  not missing first proof of scene/content composition or Madeira sidebar parity.
 
 <!-- <FILE>docs/design/tui-vfx-v3-scene-content-integration-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
