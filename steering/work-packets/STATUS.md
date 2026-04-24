@@ -89,6 +89,8 @@ These packets produced accepted work that is already committed on `master`.
   - fulfilled by the later fireworks/runtime corrective slices via `0370ce7` / `c415e55`
 - `56-v3-motion-path-and-offscreen-origin-support.md`
   - landed across the bounded motion/runtime tranche via `5cbb8b4` / `ecaeda6` / `ded7b9c` / `c4d70ba` / `d79bd48`
+- `63-v3-displacement-and-shading-hint-consumers.md`
+  - landed via `23dd208`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -133,7 +135,6 @@ These packets produced accepted non-code outputs that should be treated as harve
   - found the current Madeira direct output is still not faithful enough to `/usr/projects/madeira-flag`, with the next corrective slice at the direct scene-output fidelity seam
 
 ## New follow-on packets created from audit learnings
-- `63-v3-displacement-and-shading-hint-consumers.md`
 
 ## Notes
 - Packet completion is tied to real commits on `master`, not just plausible subagent responses.
