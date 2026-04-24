@@ -51,6 +51,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `58d2f63`
 - `32-post-experiment-delegation-strategy-refresh.md`
   - landed via `c71e6be`
+- `02-briefing-experiment-integration.md`
+  - landed via `d8056f6` / `c349b62`
 - `03-task-packet-template-integration.md`
   - landed via `887413f`
 - `43-madeira-release-readiness-checklist.md`
