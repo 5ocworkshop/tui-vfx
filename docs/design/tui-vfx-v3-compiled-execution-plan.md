@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> - <DESC>Working design note for the initial V3 compiled execution plan. Defines the layer between normalized IR and later runtime family execution, especially the first selector-compaction rules and consumer seams.</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <VERS>VERSION: 0.9.0</VERS> -->
 <!-- <WCTX>Keep the compiled execution-plan note aligned with the as-built timing model, Parallel semantics, and landed field-hint consumer proofs.</WCTX> -->
-<!-- <CLOG>0.8.0: record that scene procedural sources now have an asset-backed runtime-input proof through braille_flag_field wave speed. 0.7.0: record that scene-layer-local pipelines now have a direct compiled I/O proof using the same sourced-output chain. 0.6.0: record the mask sourced-output consumer proof as part of the direct compiled execution coverage matrix. 0.5.0: record the sourced-output direct execution proof that lets a filter publish a bound field to a later shader consumer. 0.4.0: record that authored-order Parallel overlap semantics and the shared field-hint displacement/shading proof have landed, leaving arbitrary cross-family scheduling and broader family coverage as follow-up.
+<!-- <CLOG>0.9.0: record that top-level content effects now have a content-before-pipeline proof feeding a sourced-output filter/shader chain. 0.8.0: record that scene procedural sources now have an asset-backed runtime-input proof through braille_flag_field wave speed. 0.7.0: record that scene-layer-local pipelines now have a direct compiled I/O proof using the same sourced-output chain. 0.6.0: record the mask sourced-output consumer proof as part of the direct compiled execution coverage matrix. 0.5.0: record the sourced-output direct execution proof that lets a filter publish a bound field to a later shader consumer. 0.4.0: record that authored-order Parallel overlap semantics and the shared field-hint displacement/shading proof have landed, leaving arbitrary cross-family scheduling and broader family coverage as follow-up.
 0.3.0: clarify that execution-facing timing must preserve normalized phase/loop progress separately from monotonic elapsed time, and that cadence-driven motion reads elapsed time.
 0.2.0: document the current direct-execution migration strategy so the working note matches the implementation direction.
 0.1.0: initial compiled-plan note. Establishes the first compiled-plan shape, compaction strategy, and migration seam expectations.</CLOG> -->
@@ -264,10 +264,13 @@ Recent as-built follow-up has landed two more execution proofs:
 - scene procedural sources can consume runtime-bound JSON params, proven by
   `scene_braille_flag_runtime_wave.json` changing `braille_flag_field` wave speed
   over the same `requires_assets` dotfield
+- top-level content effects resolve before downstream pipeline execution, proven
+  by `content_typewriter_io_filter_shader.json` where typewriter output feeds a
+  sourced-output filter/shader chain
 
 The main remaining execution work now shifts to:
 
-- broader family coverage for hint-driven consumers, especially content and richer showcase-specific braille/field consumers
+- broader family coverage for hint-driven consumers, especially richer showcase-specific braille/field consumers
 - general arbitrary cross-family order preservation
 - final scheduling / batching strategy once the family coverage matrix is larger
 
@@ -302,4 +305,4 @@ To keep the phase real, it should propagate through the same shallow seam family
 That is the minimal proof that the compiled plan is becoming part of the real public pathway rather than staying trapped in an internal helper module.
 
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.9.0</VERS> -->
