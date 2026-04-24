@@ -1,7 +1,10 @@
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> - <DESC>Design plan for a generalized braille-dotfield source/toolkit in V3, using the Madeira flag as the first proving consumer.</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
 <!-- <WCTX>Track the braille-dotfield toolkit direction as it moves from Madeira planning into an as-built reusable, contract-backed recipe asset path with wave displacement and correlated shading applied before final terminal-cell emission.</WCTX> -->
-<!-- <CLOG>0.5.0: record the as-built Phase 5 asset-contract slice: Madeira now resolves braille-dotfield artwork through requires_assets, plus a scene debug recipe locks the reusable asset-token path. 0.4.0: update the recommendation after implementation review — stop planning interim Madeira-specific source hacks and explicitly choose the generalized full braille-dotfield implementation now, with the Madeira flag as the first proving consumer. 0.3.0: add ANSI block/flow diagrams for the crate workflow, the near-term scene-layer implementation path, and the long-term toolkit layering so the design is easier to execute and discuss. 0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
+<!-- <CLOG>0.6.0: record the scene procedural runtime-input proof for braille_flag_field wave speed. 0.5.0: record the as-built Phase 5 asset-contract slice: Madeira now resolves braille-dotfield artwork through requires_assets, plus a scene debug recipe locks the reusable asset-token path. A follow-up debug fixture,
+`recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json`, proves the
+same asset-backed source can take `wave_speed` from a V3 `requires_bindings`
+runtime input without adding Madeira-specific Rust plumbing. 0.4.0: update the recommendation after implementation review — stop planning interim Madeira-specific source hacks and explicitly choose the generalized full braille-dotfield implementation now, with the Madeira flag as the first proving consumer. 0.3.0: add ANSI block/flow diagrams for the crate workflow, the near-term scene-layer implementation path, and the long-term toolkit layering so the design is easier to execute and discuss. 0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
 
 # tui-vfx V3 braille-dotfield toolkit plan
 
@@ -12,7 +15,10 @@ Implementation-oriented. The first reusable slice has landed in
 V3 recipe-load time, Madeira selects its base artwork through
 `requires_assets.madeira_flag_base`, and
 `recipes/debug_recipes/scene/scene_braille_flag_asset_token.json` locks the
-asset-token path.
+asset-token path. A follow-up debug fixture,
+`recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json`, proves the
+same asset-backed source can take `wave_speed` from a V3 `requires_bindings`
+runtime input without adding Madeira-specific Rust plumbing.
 
 ## Purpose
 
@@ -26,6 +32,7 @@ broader:
 - braille-native scene sources
 - subcell procedural content
 - shared-field displacement + shading
+- host/runtime-controlled procedural parameters such as wave speed
 - future dataviz / decorative / atmospheric consumers that want to operate in a
   2×4 dot lattice instead of only at terminal-cell granularity
 
@@ -96,6 +103,7 @@ The updated recommendation is:
   - dotfield transforms
   - overscan-aware rendering
   - shared-field displacement + shading
+- host/runtime-controlled procedural parameters such as wave speed
   - scene/recipe integration
 
 In other words:
@@ -769,4 +777,4 @@ that actually behaves like the source crate **and** leaves behind reusable
 foundation instead of disposable interim work.
 
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->

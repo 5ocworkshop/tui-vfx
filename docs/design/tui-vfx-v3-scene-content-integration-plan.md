@@ -1,13 +1,13 @@
 <!-- <FILE>docs/design/tui-vfx-v3-scene-content-integration-plan.md</FILE> - <DESC>Execution plan for the next V3 integration slice after shader/effects I/O: scene-layer procedural/braille and content composition.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Plan the next V3-only tranche after the shader/filter/mask/style-effect I/O path has root and scene-layer proofs, keeping Madeira and content composition as reusable proving grounds.</WCTX> -->
-<!-- <CLOG>0.1.0: initial execution plan for scene/content integration, including debug-recipe obligations, rustdoc/docs deliverables, verification commands, and sub-agent lanes.</CLOG> -->
+<!-- <CLOG>0.2.0: mark SC-01 complete after the asset-backed braille_flag_field runtime wave proof landed in tui-vfx-recipes. 0.1.0: initial execution plan for scene/content integration, including debug-recipe obligations, rustdoc/docs deliverables, verification commands, and sub-agent lanes.</CLOG> -->
 
 # tui-vfx V3 scene/content integration plan
 
 ## Status
 
-Active follow-on after the V3 shader/effects I/O tranche.
+Active follow-on after the V3 shader/effects I/O tranche. SC-01 is complete; SC-02 content + downstream pipeline proof is the next implementation slice.
 
 The completed I/O tranche proves first-class producer/consumer chaining across:
 
@@ -48,6 +48,15 @@ The slice has two user-visible proving seams:
 ## Work packages
 
 ### SC-01 — braille-dotfield runtime input proof
+
+**Status: complete.**
+
+As-built artifacts:
+
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json`
+- `/usr/projects/tui-vfx-recipes/src/v3/compile/test_render_compiled_plan_deterministically.rs`
+- `/usr/projects/tui-vfx-recipes/docs/scene/PROCEDURAL_SOURCES.md`
+- `/usr/projects/tui-vfx-recipes/docs/scene/AUTHORING_GUIDE.md`
 
 Deliverables:
 
@@ -144,8 +153,8 @@ git diff --check
 
 ## Completion criteria
 
-- SC-01 and SC-02 each have a committed debug recipe, deterministic tests, docs,
-  and verification evidence.
+- SC-01 has a committed debug recipe, deterministic tests, docs, and
+  verification evidence. SC-02 remains open and must meet the same bar.
 - Runtime inputs and content effects are proven as scene/content integration
   seams, not as ad hoc Madeira-only behavior.
 - The next remaining V3 risk is clearly narrowed to broader scheduler/batching
@@ -153,4 +162,4 @@ git diff --check
   composition.
 
 <!-- <FILE>docs/design/tui-vfx-v3-scene-content-integration-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
