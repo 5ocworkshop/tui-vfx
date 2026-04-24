@@ -1,10 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.5.1</VERS> -->
-<!-- <WCTX>Remove the explicit layer-language intention so the file stays focused on architectural boundaries, vocabulary normalization, and debug-recipe quality.</WCTX> -->
-<!-- <CLOG>0.5.1: PATCH — remove the explicit bottom-up layer-language intention; keep the rest of the steering file focused on architectural boundaries and execution discipline. 0.5.0: MINOR — add Intention 31 (debug recipes must use layouts, sizing, contrast, and content that clearly show the intended effect).
-0.3.0: MINOR — add Intention 26 (single source of truth over parallel seams), with the loader architecture called out as the concrete example.
-0.2.0: MINOR — add "Writing style" section between the provenance note and the numbered intentions. Covers: no marketing voice, no grandiose framing, no filler, be specific, one idea per sentence. Includes the "why" (developers filter for signal; grandiose framing reads as insecurity; schema regularity applies to prose).</CLOG>
-<!-- <CLOG>0.1.0: initial draft. 29 numbered intentions organized into identity / architecture / discipline / philosophy clusters. Top-of-mind intentions called out (1, 3, 9, 20, 23, 24). Cross-references to V3 upgrade plan and MARKETING.md where relevant. Derived from gt-design steering/INTENTIONS.md v0.52.0 with selective adaptation.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.2</VERS> -->
+<!-- <WCTX>Keep durable steering guidance focused on architectural boundaries, canonical vocabulary, authoring ergonomics, debug-recipe quality, and schema-language consistency.</WCTX> -->
+<!-- <CLOG>0.5.2: add schema-field vocabulary alignment as a durable naming rule for docs, directories, fixtures, and examples.</CLOG> -->
 
 # Intentions
 
@@ -462,7 +459,35 @@ fixture stops serving as a trustworthy visual reference. These demos are also
 the baseline many new users will use to judge the quality, consistency, and
 ergonomics of the library itself, so they must feel intentionally professional.
 
+
+## 32. Schema Field Vocabulary Is the Naming Anchor
+
+When docs, directory names, fixture names, examples, rustdocs, and authoring
+guidance refer to a defined V3 schema concept, use the schema field's canonical
+vocabulary unless there is a deliberate migration/deprecation reason not to.
+
+Rules:
+
+1. Prefer exact schema terms over near synonyms. If the field is `motion.route`,
+   name the reference lane `motion_routes`, not `motion_paths`, unless the doc is
+   explicitly discussing a lower-level path primitive.
+2. Keep adjacent concepts visibly distinct. `easings/` is for easing functions;
+   `motion_routes/` is for route/path-shape fixtures that use `motion.route`.
+3. When a rename opportunity appears during V3 work, align the human-facing name
+   with the canonical field vocabulary in the same slice when the blast radius is
+   small and testable.
+4. Avoid introducing new aliases in prose, file paths, or recipe IDs unless the
+   alias is part of an explicit compatibility story.
+5. If the canonical schema term feels wrong, fix the schema vocabulary decision
+   or document the exception; do not let local docs drift into a parallel dialect.
+
+Why: consistency builds trust. Authors learn the system faster when the file
+tree, examples, docs, rustdocs, validators, and schema fields all use the same
+words. Ambiguous or varied language around defined fields makes the API feel
+less coherent, increases AI-authoring error rates, and forces humans to ask
+whether two different terms imply two different behaviors.
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.2</VERS> -->
