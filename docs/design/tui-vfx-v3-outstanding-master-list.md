@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.12</VERS> -->
-<!-- <WCTX>Keep the V3 master punch list aligned with active work, authoring-doc lifecycle status, and explicitly deferred post-release specs.</WCTX> -->
-<!-- <CLOG>0.14.12: record VC-09 provisional blocker and V3 trace lifecycle scene-composition slice.</CLOG> -->
+<!-- <VERS>VERSION: 0.14.13</VERS> -->
+<!-- <WCTX>Keep the V3 master punch list aligned with active work, question-closure status, and explicitly deferred post-release specs.</WCTX> -->
+<!-- <CLOG>0.14.13: mark Chapter 80 question closure complete-initial with remaining owner/downstream blockers separated.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -25,7 +25,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / thin-player complete-initial | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Packaged `tui-vfx-player` now exists in `tui-vfx-recipes` with text/JSON summary modes over existing preview/cutover APIs; remaining TOOL01 work is broader command/docs/CI cutover, not thin-player packaging. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
-| V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
+| V3-Q01 | Chapter 80 open-question closure | Complete initial / owner decisions remain | Chapter 80 now has a current closure ledger separating accepted/implemented questions, active implementation-shaped questions, and owner/downstream decisions. Remaining owner decisions stay listed below rather than blocking upstream V3 execution. |
 | V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `post-release/braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
 | V3-GLYPHACTOR01 | Glyph actor procedural | Post-release spec captured | `docs/design/post-release/glyph-actor-procedural-spec.md`; implementation waits until core V3 release/migration stability. |
 | V3-WEATHER01 | Weather ambient fields | Post-release spec captured | `docs/design/post-release/weather-ambient-field-spec.md`; rain/snow/wind/fog/lightning/time-of-day ingredients are deferred until after V3 core stability. |
@@ -181,6 +181,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-DEMO01-HEADLESS-PLAYER | Complete initial | `tui-vfx-recipes` commit `bffe815`: `tui-vfx-player --corpus <dir> --json` checks recursive V3 recipe discovery/loading through the demo/player seam, warning on fallback or load errors; demo tests cover disk refresh/reload behavior without GUI playback. |
 | V3-M01-CRITICAL-GROUP | Complete initial / owner-audit blocked | `tui-vfx-recipes` commit `d2fe1e4`: VC-09 report includes the current 10-pair critical evidence group, provisional owner-audit buckets, and explicit `OWNER-RECIPE-AUDIT` blocker for complete-final corpus claims. |
 | V3-TRACE01-SCENE-LIFECYCLE | Complete slice | `tui-vfx-recipes` commit `d2fe1e4`: compiled V3 trace runs sample enter/dwell/exit frames and emit scene-composition events that respect lifecycle-gated layer visibility. Broader trace parity remains active. |
+| V3-Q01-CH80-LEDGER | Complete initial | Chapter 80 open questions now include a current closure ledger for accepted/implemented, active implementation-shaped, and owner/downstream decision questions so agents do not rediscover settled decisions. |
 
 ## Hard policy: V2 removal is last
 
@@ -272,4 +273,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.12</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.13</VERS> -->

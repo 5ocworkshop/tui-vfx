@@ -1,16 +1,36 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md</FILE> - <DESC>Chapter 80 — the 27 open questions that must resolve before V3 implementation, plus reviewer-opinion annotations from the 2026-04-21 GT-Design lead review memo. Each question names both the question and what's at stake in choosing different answers.</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
-<!-- <WCTX>Close Q#21 recipe metadata fields and Q#23 timer story after owner approval. Q#21 resolves to optional non-rendering metadata with debug/reference expected-visual guidance. Q#23 resolves to distributed timing for V3 rather than a universal Timer primitive.</WCTX> -->
-<!-- <CLOG>1.3.0: MINOR — mark Q#21 and Q#23 accepted, pointing to the canonical timing/metadata decision record.</CLOG> -->
-<!-- <CLOG>1.2.0: MINOR — add Open Q #24 (canonical normalized IR), Q#25 primitive catalog governance, Q#26 content-effect Decision-2 parity, Q#27 factory payload opacity governance from the debug-recipes migration findings memo.</CLOG> -->
-<!-- <CLOG>1.1.0: MINOR — add Open Q #23 on timer primitive vs distributed timing mechanisms. Three-option framing (step-level Timer field, `StepInput<T>` sibling, status quo with clearer docs). Surfaced cases where the distributed model strains: per-step durations in `Sequence`, staggered entrances, content-effect timing.</CLOG> -->
-<!-- <CLOG>1.0.0: initial extraction from the monolith with new Open Q #22 added covering motion_path / arc / bezier / spring trajectories and offscreen from/to, previously flagged only as a major gap in the migration log final audit and schema draft. Easings themselves are covered in Decision 3 (pipeline.timing); the gap is the geometry-aware trajectory primitives and offscreen origin/destination semantics.</CLOG> -->
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
+<!-- <WCTX>Track Chapter 80 question closure against implemented V3 slices, accepted decisions, and owner-blocked product decisions so the chapter remains useful during execution.</WCTX> -->
+<!-- <CLOG>1.4.0: add a current closure ledger that separates accepted/implemented, active, and owner-blocked questions.</CLOG> -->
 
 # 80 — Open questions that must resolve before implementation
 
 These are not rhetorical — each represents a real design choice not yet settled. Ordered roughly by impact on the plan shape.
 
 Reviewer-opinion annotations reference the 2026-04-21 GT-Design lead review memo, captured as "one input, question remains open" so the reviewer's recommendations are visible without closing the questions prematurely. For questions already informed by Concerns A–F (Q2/B, Q12/F, Q14/D, Q18/C), the reviewer input is load-bearing for the existing resolution while implementation-level sub-questions remain open.
+
+## Current closure ledger
+
+This chapter started as a design-question queue. During V3 execution, several
+questions have moved from "open" to "accepted and implemented enough to build
+against." Keep the detailed historical sections below, but use this ledger for
+current planning and dispatch.
+
+| Question(s) | Current status | Current home / next action |
+|---|---|---|
+| Q#2, Q#14, Q#18 | Resolved by promoted concerns | Chapter 50 migration workflow, token/binding contract, and routing/surface intent vocabulary remain the canonical homes. |
+| Q#3, Q#13 | Accepted / implemented initial | Phase belongs on steps and may be inherited from containers by intersection; normalized IR emits explicit `PhaseSet`. |
+| Q#4 | Accepted / implemented initial | Authoring uses per-kind defaults; normalized IR emits explicit combine/merge semantics. |
+| Q#10, Q#24 | Accepted / implemented initial | Normalized IR is the durable validator/viewer/equivalence target; `pipeline-validator --dump-normalized` and `--explore-normalized` are current surfaces. |
+| Q#11 | Active via tooling/docs lanes | Recipe-local generated docs, authoring guide, tooling map, and player docs are complete-initial; broader unified capabilities/AI-context generation remains under V3-TOOL01. |
+| Q#12 | Active release gate | Headless evidence is current; remaining gaps are owner-approved visual capture / GTD representative fixtures. |
+| Q#15, Q#19 | Accepted / implemented initial | Canonical vocabulary and playback names are in place with compatibility aliases retained. |
+| Q#16 | Active semantics lane | Duplicate producer / missing producer / kind mismatch hard failures exist; broader hint visibility/import/export semantics remain a validator/runtime hardening lane. |
+| Q#21, Q#23 | Accepted | Metadata is optional and non-rendering; timing stays distributed rather than adding a universal Timer primitive. |
+| Q#22 | Accepted / implemented initial | Motion routes, offscreen/edge-crossing language, and debug recipes exist; broader shadow/edge/showcase polish remains active. |
+| Q#25, Q#27 | Accepted direction | Promotion ladder and rule-of-three review are canonical; GOV01/GOV02 are implementing durable docs/process hooks. |
+| Q#1, Q#5, Q#6, Q#9, Q#17, Q#26 | Still implementation-shaped | Continue to resolve through validator/canonicalization, recipe pressure, and authoring docs rather than owner-only decisions. |
+| Q#7, Q#8, Q#20 | Owner/downstream decisions | Upstream V3 may continue; GTD sequencing, Relative Light productization, and `RecipeSceneCanvas` downstream role need owner confirmation. |
 
 ## 10 — Q#1: Does the `kind` discriminator survive?
 
@@ -488,4 +508,4 @@ Three mechanisms means "how long does this one effect take" has three possible a
 **Reviewer's opinion:** not yet solicited. Flag for next review cycle. The Q15 row_mask precedent is load-bearing — that concrete migration case should inform how the governance rule handles ambiguity.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->
