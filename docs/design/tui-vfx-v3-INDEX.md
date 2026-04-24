@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.5.5</VERS> -->
-<!-- <WCTX>Keep the V3 landing page current with active docs and deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.5.5: promote the V3 docs lifecycle plan into the start-here navigation.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.6</VERS> -->
+<!-- <WCTX>Keep the V3 landing page current with active authoring, schema, tooling, lifecycle, and deferred post-release capability docs.</WCTX> -->
+<!-- <CLOG>0.5.6: add sibling authoring-doc route after the V3 ladder and vocabulary references.</CLOG> -->
 
 # V3 documentation index
 
@@ -45,10 +45,18 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 
 ## Authoring vocabulary and schema
 
+Start recipe authoring in the sibling ten-section ladder:
+`../../../tui-vfx-recipes/docs/scene/AUTHORING_GUIDE.md`. Then use the links below
+for canonical words, exact schema facts, ingredient governance, and specialized
+primitive behavior.
+
 - [V3 recipe vocabulary](tui-vfx-v3-recipe-vocabulary.md)
 - [V3 recipe ingredients reference plan](tui-vfx-v3-recipe-ingredients-reference-plan.md)
 - [V3 schema overview](tui-vfx-v3-schema-overview.md)
 - [V3 schema draft](tui-vfx-v3-schema-draft.json)
+- Sibling hand-maintained schema companion: `../../../tui-vfx-recipes/docs/schema/SCHEMA_REFERENCE.md`
+- Sibling generated V3 API inventory: `../../../tui-vfx-recipes/docs/generated/V3_API.md`
+- Sibling procedural source catalog: `../../../tui-vfx-recipes/docs/scene/PROCEDURAL_SOURCES.md`
 - [V3 motion spec](tui-vfx-v3-motion-spec.md)
 - [V3 motion compatibility table](tui-vfx-v3-motion-compatibility-table.md)
 - [V3 shadow spec](tui-vfx-v3-shadow-spec.md)
@@ -105,4 +113,4 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
   semantics belong in `tui-vfx` / `tui-vfx-recipes`.
 
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.5</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.6</VERS> -->

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Keep the schema overview aligned with accepted Q#21/Q#23 follow-through by documenting the distributed timing model and the current V3 metadata vocabulary for authors.</WCTX> -->
-<!-- <CLOG>0.3.0: document accepted metadata/timing follow-through for current-target V3 docs: optional metadata now points authors at `intent_hints`, `expected_visual`, and `visual_tags`, and timing guidance explicitly describes the distributed V3 model without a Timer primitive. 0.2.0: document the as-built timing model so normalized phase/loop progress stays distinct from monotonic elapsed time and cadence-driven motion is described correctly. 0.1.0: initial schema overview after the dual-auditor synthesis pass. Establishes the top-down tree model, capability-family guidance, hybrid/wrapper conventions, and authoring/tooling layers.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.1</VERS> -->
+<!-- <WCTX>Keep the schema overview aligned with the accepted V3 vocabulary, distributed timing model, metadata posture, and sibling authoring docs.</WCTX> -->
+<!-- <CLOG>0.3.1: align schema overview with recipe-ingredient vocabulary and sibling authoring references.</CLOG> -->
 
 # tui-vfx V3 Schema Overview
 
@@ -9,6 +9,8 @@ This document is the **narrative companion** to the current build-target schema 
 
 - `docs/design/tui-vfx-v3-schema-draft.json`
 - `docs/design/tui-vfx-v3-recipe-vocabulary.md`
+- sibling authoring ladder: `../../../tui-vfx-recipes/docs/scene/AUTHORING_GUIDE.md`
+- sibling generated API facts: `../../../tui-vfx-recipes/docs/generated/V3_API.md`
 
 The JSON schema draft is the specification-by-example.
 This document explains the **why** behind the structure, the intended tree shape, and the authoring philosophy that should survive even after comments are stripped from the JSON.
@@ -80,6 +82,13 @@ Payload / policy space
 ```
 
 This is the most important conceptual move in the V3 design.
+
+For authoring prose, call the things a recipe combines **recipe ingredients**:
+content transforms, motion routes, masks, shaders, filters, samplers, procedural
+sources, bindings, assets, and host-edge affordances. Use **capability** for
+engineering inventory/governance and **development tools** for validator/probe/
+trace/player CLIs. This keeps design discussion playful without letting the
+schema sprout a synonym garden.
 
 Many current recipes that appear to be separate “families” are actually better modeled as:
 

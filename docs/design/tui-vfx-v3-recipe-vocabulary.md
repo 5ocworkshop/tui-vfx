@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.2.8</VERS> -->
-<!-- <WCTX>Keep author-facing timing terminology centered on enter/dwell/exit phases.</WCTX> -->
-<!-- <CLOG>0.2.8: rename the old timing heading to phase vocabulary.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.9</VERS> -->
+<!-- <WCTX>Keep author-facing terminology centered on recipe ingredients, schema field vocabulary, and enter/dwell/exit phases.</WCTX> -->
+<!-- <CLOG>0.2.9: add sibling authoring-doc routing for ingredients, schema, procedural sources, and tooling.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
 
@@ -28,6 +28,16 @@ Compatibility aliases may still exist in serde or migration code, but:
 > term, not the alias set.
 
 ## 2. Recipe ingredient vocabulary
+
+Authoring-doc route:
+
+- learn the full recipe ladder in `../../../tui-vfx-recipes/docs/scene/AUTHORING_GUIDE.md`
+- check exact fields in `../../../tui-vfx-recipes/docs/schema/SCHEMA_REFERENCE.md`
+  plus generated `../../../tui-vfx-recipes/docs/generated/V3_API.md`
+- use `../../../tui-vfx-recipes/docs/scene/PROCEDURAL_SOURCES.md` for stock
+  procedural ingredients
+- use `../../../tui-vfx-recipes/docs/V3_TOOLING_COMMAND_REFERENCE.md` for
+  validator/probe/trace/player commands
 
 Use **recipe ingredients** as the canonical author-facing term for the
 capabilities authors combine to create a recipe.
@@ -144,7 +154,24 @@ Rules:
 - avoid **toolbox**, **toolchest**, or generic **tools** when the intended
   meaning is recipe ingredients
 
-## 3. Phase vocabulary
+## 3. Capability promotion ladder vocabulary
+
+Use the accepted V3 promotion ladder when deciding how public an ingredient
+name should become:
+
+- **base primitive** — schema/runtime concept with direct authoring support
+- **variant** — named parameterization inside a base primitive
+- **earned-name composition** — stable combination promoted because authors use
+  it often enough to deserve a name
+- **factory-internal convention** — repeated pattern held inside a factory or
+  recipe family while it proves demand
+- **deferred** — good idea, but not a public V3 ingredient yet
+
+Promotion is sticky. Do not mint a public ingredient name because one recipe
+looks cute in isolation. Use the rule-of-three review trigger from the V3
+capability governance decision before promoting factory-internal conventions.
+
+## 4. Phase vocabulary
 
 Canonical author-facing phase words:
 
@@ -168,7 +195,7 @@ Rules:
 - do not invent parallel synonyms like `arrive`, `present`, `leave` in recipe
   docs unless a future steering decision explicitly renames them
 
-## 4. Enter/exit relationship vocabulary
+## 5. Enter/exit relationship vocabulary
 
 When discussing how exit relates to enter, use these words:
 
@@ -186,7 +213,7 @@ Important:
   fields
 - the schema already supports them by giving enter and exit independent payloads
 
-## 5. Reveal-geometry vocabulary
+## 6. Reveal-geometry vocabulary
 
 Use these canonical axis names for reveal geometry:
 
@@ -211,7 +238,7 @@ Example:
 - `blinds` is primarily an **orientation** vocabulary
 - `path_reveal` is primarily a **path** vocabulary
 
-## 6. Canonical wipe-direction vocabulary
+## 7. Canonical wipe-direction vocabulary
 
 For `wipe`, the canonical direction set is:
 
@@ -243,7 +270,7 @@ Compatibility aliases such as:
 may remain for compatibility, but they are **not** the preferred teaching
 surface.
 
-## 7. Origin vocabulary
+## 8. Origin vocabulary
 
 For origin-driven families, use:
 
@@ -493,4 +520,4 @@ in one shared visual model while we continue normalizing schema, fixtures, and
 runtime behavior.
 
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.8</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.9</VERS> -->

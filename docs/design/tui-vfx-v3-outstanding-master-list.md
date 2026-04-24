@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.9</VERS> -->
-<!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.14.9: mark midnight probe, playback import, and Madeira headless parity slices complete-initial.</CLOG> -->
+<!-- <VERS>VERSION: 0.14.10</VERS> -->
+<!-- <WCTX>Keep the V3 master punch list aligned with active work, authoring-doc lifecycle status, and explicitly deferred post-release specs.</WCTX> -->
+<!-- <CLOG>0.14.10: mark V3-AUTH01-FOLLOW complete-initial after sibling authoring-doc reconciliation.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -98,7 +98,6 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-DOCGEN01 | V3-shape generated docs pipeline | Generated-doc landing page now advertises recipe-side V3 entry points; broader schema/capabilities/AI-context generation and drift checks remain follow-up. |
 | V3-TRACE01 | Trace/probe parity for broader V3 subset | Recipe-probe and tui-vfx-trace already accept supported compiled V3 subsets; scene parity, lifecycle-analysis parity, and broader trace semantics remain. |
 | V3-DEMO01 | Full native animated V3 demo/browser path | Demo/play_recipe render supported direct V3 bridge subset; full browser experience for migrated V3 corpus remains outstanding. |
-| V3-AUTH01-FOLLOW | V3 authoring-doc sibling follow-ons | Scene authoring guide is complete-initial; reconcile schema reference, procedural sources, pipeline-validator LLM guide, and authoring workflow docs around the same V3 ladder and vocabulary. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
 
@@ -162,6 +161,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-D6-SHADOW-CAPTURES | Complete evidence refresh | Shadow release-gate sidecars now include required `render_capture_png` artifacts with checked SHA-256 values for base, edge-crossing, and pipeline fixtures. |
 | V3-VC01-RELATED | Complete initial | `tui-vfx-recipes` commit `ec25b34`: `pipeline-validator --rules` surfaces malformed `metadata.related_themes` with path-style parse diagnostics. |
 | V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
+| V3-AUTH01-FOLLOW | Complete initial | Sibling authoring docs now point from the ten-section scene guide to canonical vocabulary, schema/generated API references, procedural source catalog, tooling/validator guidance, and debug fixture standards. Future lifecycle/elevation work can still promote deeper generated ingredient catalogs. |
 | V3-PREVIEW01-ALIASES | Complete initial | `tui-vfx-recipes` commit `e52a510`: public preview boundary and prelude now expose `PlaybackPlan`, `PlaybackController`, `PlaybackRecipeBridge`, `V3FrameSnapshot`, and `render_v3_frame_to_buffer` compatibility aliases while preserving legacy `Preview*` names. |
 | V3-SPATIAL01-DEBUG | Complete initial | `tui-vfx-recipes` commit `e52a510`: primitive-first debug recipes now demonstrate `sample_surface_radius`, `sample_surface_radius_from`, and `sample_surface_angle_from` through V3 filter dimming with validator/probe/debug-QC evidence. |
 | V3-VC09-CONTENTSLIDE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `e52a510`: `content_slide_shift` is tracked as replacement evidence with output+probe mismatch owner-review status. |
@@ -270,4 +270,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.9</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.10</VERS> -->
