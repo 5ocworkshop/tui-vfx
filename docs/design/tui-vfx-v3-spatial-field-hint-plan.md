@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> - <DESC>Design plan for spatial signals, typed field hints, and first-class chained visual fields in V3</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model and the work that has already landed, so the next tranche starts from typed field hints rather than repeating already-complete spatial-leaf/context-threading work.</WCTX> -->
-<!-- <CLOG>0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model and landed shared-consumer proofs, so the next tranche starts from the remaining showcase/runtime gaps instead of repeating complete field-hint work.</WCTX> -->
+<!-- <CLOG>0.5.0: record the Phase 4 shared field-hint proof where one spatial_signal drives both displacement and field-correlated shading through a sequenced recipe-side debug fixture. 0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
 
 # tui-vfx V3 spatial field + hint plan
 
@@ -117,6 +117,7 @@ The current `tui-vfx` stack already provides a large amount of reusable power.
 ### 3.1 Existing strengths
 
 #### Spatial shaders
+
 The runtime already has many shading families that operate over the rendered
 surface, including:
 
@@ -132,6 +133,7 @@ This means **dynamic shading is already a strong foundation**. We do not need to
 invent a new shading framework from scratch.
 
 #### Filters
+
 The filter layer already supports:
 
 - color-domain postprocess work
@@ -140,12 +142,14 @@ The filter layer already supports:
 - several runtime-bound parameters
 
 #### Samplers
+
 The sampler layer already supports:
 
 - coordinate displacement / resampling
 - wave / ripple / fault / CRT / pendulum / gravity classes
 
 #### Scene + layering
+
 The recipes-side V3 path now supports:
 
 - typed scene layers
@@ -154,6 +158,7 @@ The recipes-side V3 path now supports:
 - direct preview-path composition without recipes-side compositor replay
 
 #### Runtime seams
+
 The current codebase already has:
 
 - compiled V3 plans
@@ -167,6 +172,7 @@ The missing piece is the execution substrate between those families.
 ### 3.2 What is still missing
 
 #### Missing in `mixed-signals`
+
 The first missing signal primitives were spatial-coordinate leaves:
 
 - `sample_norm_x`
@@ -214,6 +220,7 @@ That distinction should be treated as foundational rather than as one
 effect-local quirk.
 
 #### Missing in V3 runtime
+
 The main missing execution pieces are:
 
 - typed per-step field outputs / hints
@@ -515,7 +522,7 @@ Recommended near-term D shape:
 
 ### C. Typed runtime interpretation behind the same schema
 
-The *schema* does not need to expose runtime storage classes like
+The _schema_ does not need to expose runtime storage classes like
 `ScalarFieldHint` or `Vec2FieldHint` directly yet.
 
 Instead:
@@ -737,12 +744,24 @@ architecture is complete.
 
 ### Phase 4 — first real consumer pair
 
-**Status: first bounded pair landed; richer consumers still open.**
+**Status: generic shared field-hint pair landed; showcase-specific richer
+consumers remain open.**
 
 - one field producer ✅
 - one real downstream consumer ✅
-- displacement consumer ❌
-- shading consumer ❌
+- displacement consumer ✅ (`sine_wave.amplitude` bound to a shared field)
+- field-correlated shading consumer ✅ (`diffusion.intensity` bound to the same field)
+- showcase/braille-dotfield consumers remain follow-up work
+
+As-built proof artifacts:
+
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/complex_field_hint_displace_shade.json`
+- `/usr/projects/tui-vfx-recipes/docs/V3_FIELD_HINT_CONSUMERS.md`
+
+The canonical chain is `Sequence[spatial_signal producer, sine_wave sampler,
+diffusion shader]`: the sampler consumes the shared field for displacement, and
+the shader consumes the same field for correlated shading after the sampler has
+modified the output.
 
 ### Phase 5 — restore richer `madeira_flag`
 
@@ -751,9 +770,9 @@ architecture is complete.
 
 ### Phase 6 — showcase parity and demonstration
 
-After the bounded D implementation is vetted and the work continues into full
-C, the project should explicitly re-create the `/usr/projects/madeira-flag`
-demo as a first-class V3 recipe showcase using the new capabilities:
+After the generic Phase 4 proof, the project should explicitly re-create the
+`/usr/projects/madeira-flag` demo as a first-class V3 recipe showcase using the
+new capabilities:
 
 - spatial signal field generation
 - typed hint/field propagation

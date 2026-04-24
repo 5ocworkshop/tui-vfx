@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-io-contract.md</FILE> - <DESC>Phase 0 / 0A semantic lock for V3 producer/consumer I/O: author-facing vocabulary, value kinds, visibility rules, runtime integration posture, and prove-out obligations.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Lock the first-release V3 I/O semantics before validator/runtime/family migration work fans out. This is the architectural contract the rollout executes against.</WCTX> -->
-<!-- <CLOG>0.1.0: initial Phase 0 / 0A contract. Defines first-release author vocabulary, value kinds, sequence-vs-parallel visibility, per-frame lifetime, duplicate-producer rule, runtime-param integration posture, and stage-level debug-recipe obligations.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Lock the first-release V3 I/O semantics before validator/runtime/family migration work fans out, and keep the contract aligned with landed as-built proofs.</WCTX> -->
+<!-- <CLOG>0.2.0: add the as-built Phase 4 shared field-hint consumer proof and point at the recipe-side debug fixture/docs. 0.1.0: initial Phase 0 / 0A contract. Defines first-release author vocabulary, value kinds, sequence-vs-parallel visibility, per-frame lifetime, duplicate-producer rule, runtime-param integration posture, and stage-level debug-recipe obligations.</CLOG> -->
 
 # tui-vfx V3 I/O contract
 
@@ -232,6 +232,25 @@ Author-facing debug/key-parameter output formats static diffusion intensity as a
 number and signal-backed intensity as `signal(<kind>)`, avoiding raw Rust debug
 output in docs and inspection surfaces.
 
+### Shared field-hint consumer chain
+
+The recipe-side V3 direct path now has an as-built proof that one authored
+`spatial_signal` hint can feed two downstream consumers in the same `Sequence`:
+
+1. a `spatial_signal` sampler emits `wave_field`
+2. a `sine_wave` sampler binds `amplitude` to `wave_field` for displacement
+3. a `diffusion` shader binds `intensity` to `wave_field` for correlated
+   material-light shading
+
+Canonical proof artifacts live in the sibling recipe repo:
+
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/complex_field_hint_displace_shade.json`
+- `/usr/projects/tui-vfx-recipes/docs/V3_FIELD_HINT_CONSUMERS.md`
+
+This proof preserves the contract boundaries above: same pipeline, same layer,
+per-frame ephemeral hints, `Sequence` feed-forward, and `Parallel` snapshot
+isolation.
+
 ## 13. Non-goals for the first release
 
 Not part of the first-release contract:
@@ -243,4 +262,4 @@ Not part of the first-release contract:
 - renaming the public author vocabulary without a separate migration plan
 
 <!-- <FILE>docs/design/tui-vfx-v3-io-contract.md</FILE> - <DESC>Phase 0 / 0A semantic lock for V3 producer/consumer I/O</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

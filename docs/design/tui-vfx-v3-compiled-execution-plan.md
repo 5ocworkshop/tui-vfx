@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> - <DESC>Working design note for the initial V3 compiled execution plan. Defines the layer between normalized IR and later runtime family execution, especially the first selector-compaction rules and consumer seams.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Keep the compiled execution-plan note aligned with the as-built timing model by requiring execution-facing data to preserve both normalized progress and monotonic elapsed time for cadence-sensitive consumers.</WCTX> -->
-<!-- <CLOG>0.3.0: clarify that execution-facing timing must preserve normalized phase/loop progress separately from monotonic elapsed time, and that cadence-driven motion reads elapsed time.
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Keep the compiled execution-plan note aligned with the as-built timing model, Parallel semantics, and landed field-hint consumer proofs.</WCTX> -->
+<!-- <CLOG>0.4.0: record that authored-order Parallel overlap semantics and the shared field-hint displacement/shading proof have landed, leaving arbitrary cross-family scheduling and broader family coverage as follow-up.
+0.3.0: clarify that execution-facing timing must preserve normalized phase/loop progress separately from monotonic elapsed time, and that cadence-driven motion reads elapsed time.
 0.2.0: document the current direct-execution migration strategy so the working note matches the implementation direction.
 0.1.0: initial compiled-plan note. Establishes the first compiled-plan shape, compaction strategy, and migration seam expectations.</CLOG> -->
 
@@ -142,6 +143,7 @@ At minimum, the compiled envelope should preserve:
 
 That compiled envelope data is what later runtime passes should consume when
 making:
+
 - border trim decisions
 - shadow fade / clip decisions
 - probe / validator motion-boundary diagnostics
@@ -247,11 +249,19 @@ That milestone matters because it means:
 - future regressions should be treated as regressions in native coverage, not
   as acceptable fallback behavior
 
-Once that milestone is reached, the main remaining execution work shifts to:
+Recent as-built follow-up has landed two more execution proofs:
 
-- hint-driven cross-step chaining
-- broader overlap/conflict semantics for overlapping parallel branches
+- overlapping `Parallel` branches are snapshot-isolated and merge conflicts in
+  authored order, with the later branch winning overlapping output conflicts
+- one `spatial_signal` hint can feed both a displacement sampler and a
+  field-correlated shader in the same authored `Sequence`
+
+The main remaining execution work now shifts to:
+
+- broader family coverage for hint-driven consumers, especially showcase-specific
+  braille/field consumers
 - general arbitrary cross-family order preservation
+- final scheduling / batching strategy once the family coverage matrix is larger
 
 ---
 
@@ -284,4 +294,4 @@ To keep the phase real, it should propagate through the same shallow seam family
 That is the minimal proof that the compiled plan is becoming part of the real public pathway rather than staying trapped in an internal helper module.
 
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
