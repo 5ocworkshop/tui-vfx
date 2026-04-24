@@ -2,7 +2,7 @@
 
 ## Current cycle
 
-Cycle 5 of 10.
+Cycle 19 of 19.
 
 This cycle is a first-read comprehension check for a blocker-scoped V3 tooling/validator lane in `/usr/projects/tui-vfx-recipes`.
 Do not widen into the whole V3 migration.
@@ -33,8 +33,11 @@ The latest orientation snapshot for `/usr/projects/tui-vfx-recipes` surfaced the
 - `src/preview/mod.rs`
 - `src/recipe_schema/mod.rs`
 
+`src/recipe_schema/mod.rs` is the core seam.
+`src/probe/mod.rs` and `src/preview/mod.rs` are hubs that stay adjacent unless the docs force them into the primary lane.
 The helper may treat those as candidate lane anchors only if the docs support them.
 Do not invent a lane outside the evidence above.
+The previous run confirmed the correct mini-medium setup. This continuation cycle is summary-first: check whether the helper can lead with the lane summary, then still name the smallest edit target and proof command.
 
 ### Grounded candidate lane
 
@@ -61,8 +64,10 @@ Return exactly one recommended blocker lane with:
 - notable risks
 - no scope widening into unrelated V3 migration work
 - no alternative lane dump
-- exact path strings, not just repo names or concepts
-- if a concrete lane can be named, include the smallest likely source/test file set; if not, say why not
+ - exact path strings, not just repo names or concepts
+ - if a concrete lane can be named, include the smallest likely source/test file set; if not, say why not
+ - if preview/probe are not primary, say so explicitly and explain why the seam stays in recipe_schema
+ - if a verification command is suggested, make it the narrowest command that still validates the lane from the repo root
 
 ## Mode
 BLOCKER_MODE
@@ -138,8 +143,8 @@ Do not answer the fixed or adaptive questions in the first response.
 ## Task reminder
 Your task is still: identify one blocker-scoped V3 tooling/validator lane in `/usr/projects/tui-vfx-recipes` without broadening into the whole V3 migration.
 
-## Adaptive questions for cycle 5
+## Adaptive questions for cycle 19
 
-1. Does the grounded candidate lane stay on the validator seam, or does it need preview/probe as a primary dependency?
-2. Which exact source and test paths are in scope for that lane?
-3. What exact verification command should validate that lane from the repo root?
+1. What is the exact boundary decision for the lane in one sentence?
+2. If only one validator rule changed, what is the smallest concrete edit target?
+3. What exact repo-root verification command proves the lane?

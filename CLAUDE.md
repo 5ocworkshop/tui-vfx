@@ -1,18 +1,23 @@
 <!-- <FILE>CLAUDE.md</FILE> - <DESC>Project-root orientation for Claude (and other coding agents) entering this repository. Points at the steering docs, the active design work, sibling projects, tooling entry points, and the load-bearing don'ts. Kept short so it's read before editing.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Initial creation. Previously a new session had to be told by a human which files to read first. The two steering docs (MARKETING.md, INTENTIONS.md) cover positioning and philosophy; they don't cover sibling-project paths, tooling entry points, or "what's in flight." This file closes that gap with a compact orientation pointer.</WCTX> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Add a hard "Before your first response" checklist at the top. v0.1.0's "read the steering docs" wording was soft enough that sessions rationalized skipping it on summary-style questions. The checklist makes orientation an explicit precondition of the first reply, not a background suggestion.</WCTX> -->
+<!-- <CLOG>0.2.0: MINOR — prepend imperative orientation checklist; replace soft "read the steering docs" opening with a numbered precondition list covering ofpf-status, MARKETING.md, INTENTIONS.md, and ofpf-orientation. No structural changes below that section.</CLOG> -->
 <!-- <CLOG>0.1.0: initial project-root orientation file.</CLOG> -->
 
 # tui-vfx — Claude orientation
 
-This repo is a visual effects library for terminal UIs. Before editing or answering repo questions, read the steering docs — they define positioning, philosophy, and writing style.
+This repo is a visual effects library for terminal UIs.
 
-## First reads
+## Before your first response — do all four
 
-- **`steering/MARKETING.md`** — what tui-vfx is, feature hierarchy, competitive positioning vs tachyonfx, current status. Canonical description is the 90-second form.
-- **`steering/INTENTIONS.md`** — 29 durable engineering and architectural intentions. The **Writing style** section at the top applies to all docs, commits, rustdoc, and review prose — no marketing voice, no grandiose framing, one idea per sentence.
+This is a precondition, not a suggestion. "Simple" questions (summaries, quick lookups, one-line answers) are not exempt. If you think orientation is overkill for this particular question, that is the failure mode — do it anyway.
 
-Run `ofpf-orientation` for the architecture graph before reading code. The global `~/.claude/CLAUDE.md` covers the OFPF methodology and `ofpf-*` tooling that's the primary interface for this repo.
+1. **Run `ofpf-status`** — confirms the librarian daemon is healthy. If it errors, surface that before answering; most repo questions are unreliable without it.
+2. **Read `steering/MARKETING.md`** — what tui-vfx is, feature hierarchy, competitive positioning vs tachyonfx, current status. The 90-second form is canonical; shorter forms are compressions of it.
+3. **Read `steering/INTENTIONS.md`** — 29 durable engineering and architectural intentions. The **Writing style** section at the top governs all docs, commits, rustdoc, and review prose — no marketing voice, no grandiose framing, one idea per sentence.
+4. **Run `ofpf-orientation`** — architecture graph. Required before reading code; optional but useful before answering design questions.
+
+The global `~/.claude/CLAUDE.md` covers the OFPF methodology and `ofpf-*` tooling that's the primary interface for this repo — read it if the concepts above (librarian, `ofpf-*`, OFPF file prefixes) are unfamiliar.
 
 ## Active design work
 

@@ -14,6 +14,13 @@ Return exactly one recommended blocker lane with:
 - notable risks
 - no scope widening into unrelated V3 migration work
 
+## Experiment write files
+This experiment may edit only:
+- `/usr/projects/tui-vfx/steering/experiments/model-compare/frontier-low-packet.md`
+- `/usr/projects/tui-vfx/steering/experiments/model-compare/frontier-low-results.md`
+
+No other files are writable during the experiment.
+
 ## Mode
 BLOCKER_MODE
 
@@ -63,6 +70,26 @@ Your report must include:
 - Answer the fixed questions directly.
 - Use the adaptive questions to show what you learned from the docs, not generic opinions.
 - Quote or paraphrase the actual instruction that supports each answer.
+
+## Fixed questions to answer
+1. From the docs and packet, what is the assignment in one sentence?
+2. What exact files/paths are in scope for this task?
+3. What exact things are out of scope?
+4. Which repo owns the main concern, and why?
+5. Is this blocker-scoped or family-scoped work, and why?
+6. What exact verification is required before reporting completion?
+7. What is the most likely mistake you would make if you rushed this task?
+
+For each fixed answer, include:
+- Answer
+- Source file(s)
+- Evidence phrase or rule
+- Implication for the task
+
+## Cycle 10 adaptive questions
+1. What is the assignment in one sentence?
+2. Which exact paths may be edited in this experiment?
+3. What exact wording should a compliant answer use if verification commands are still pending?
 
 ## Task reminder
 Your task is still: identify one blocker-scoped V3 tooling/validator lane in `/usr/projects/tui-vfx-recipes` without broadening into the whole V3 migration.
