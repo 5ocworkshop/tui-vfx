@@ -1,11 +1,13 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.3 — shadow stage writes RoleTag::Shadow into destination RoleMap for shadow-region cells; ShaderContext carries the source role map via Arc<RoleMap>; ShadowConfig.source_region honoured via extract_shadow_envelope.</WCTX>
-// <CLOG>12.1.0: MINOR — Phase A.3 additions. (a) render_pipeline_with_shadow now takes `destination: &mut SemanticScene` (was &mut dyn Grid) so it can write RoleTag::Shadow into the destination role map for every cell identified as a shadow region candidate. (b) apply_shaders/apply_shaders_inspected gain a `roles_arc: &Arc<RoleMap>` parameter; the ShaderContext struct literals now include the `roles` field cloned from this Arc. (c) render_loop and render_loop_inspected build the Arc<RoleMap> once per invocation (a single RoleMap clone) so per-cell Arc::clone is cheap. (d) new effective_shadow_rect() helper consults config.source_region via extract_shadow_envelope; returns None for no-match (shadow stage skipped). Non-inspected shadow path pre-computes the in_element_ni / shadow_has_coverage_ni flags so shadow-region writes can be tracked for role tagging regardless of composite mode branch.
+// <VERS>VERSION: 12.1.1</VERS>
+// <WCTX>Phase 1a perf — pool the shadow-path working buffers via cls_grid_pool so the per-frame OwnedGrid allocation drops to zero in steady state.</WCTX>
+// <CLOG>12.1.1: PATCH — replace the fresh OwnedGrid::new + buffer.clone() pair in render_pipeline_with_shadow with two thread-local GridPool checkouts plus a cells-slice copy. Behavior unchanged; steady-state per-shadowed-frame allocations go from 2+ to 0 once pool buckets are warm. Memo §1 and §3.
+// 12.1.0: MINOR — Phase A.3 additions. (a) render_pipeline_with_shadow now takes `destination: &mut SemanticScene` (was &mut dyn Grid) so it can write RoleTag::Shadow into the destination role map for every cell identified as a shadow region candidate. (b) apply_shaders/apply_shaders_inspected gain a `roles_arc: &Arc<RoleMap>` parameter; the ShaderContext struct literals now include the `roles` field cloned from this Arc. (c) render_loop and render_loop_inspected build the Arc<RoleMap> once per invocation (a single RoleMap clone) so per-cell Arc::clone is cheap. (d) new effective_shadow_rect() helper consults config.source_region via extract_shadow_envelope; returns None for no-match (shadow stage skipped). Non-inspected shadow path pre-computes the in_element_ni / shadow_has_coverage_ni flags so shadow-region writes can be tracked for role tagging regardless of composite mode branch.
 // 12.0.0: MAJOR signature change for role-aware targeting.</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
 use super::cls_composition_playback_timing::CompositionPlaybackTiming;
+use super::cls_grid_pool::GridPool;
 use super::cls_prepare_context::PrepareContext;
 use super::cls_prepared_filter::{PreparedFilter, prepare_filters};
 use super::cls_prepared_mask::{PreparedMask, prepare_masks};
@@ -20,7 +22,7 @@ use smallvec::SmallVec;
 use std::sync::Arc;
 use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
 use tui_vfx_style::traits::ShaderContext;
-use tui_vfx_types::{Cell, Grid, OwnedGrid, Rect, RoleMap, RoleTag, SemanticScene, Style};
+use tui_vfx_types::{Cell, Grid, Rect, RoleMap, RoleTag, SemanticScene, Style};
 
 /// Render pipeline with full spec support and optional inspector.
 ///
@@ -211,8 +213,12 @@ fn render_pipeline_with_shadow(
             )
         };
 
-    // Create working buffer for shadow + element
-    let mut buffer = OwnedGrid::new(ext_width, ext_height);
+    // Check out the two working buffers (shadow + element composite, and a
+    // post-shadow snapshot) from the thread-local GridPool. Both return to
+    // the pool on drop at the end of this function, so steady-state
+    // allocation traffic on the render thread stays at zero.
+    let mut buffer_guard = GridPool::checkout(ext_width, ext_height);
+    let mut shadow_only_guard = GridPool::checkout(ext_width, ext_height);
 
     // Render shadow to buffer (uses animation progress for fade sync).
     // Phase A.3: if `config.source_region` is set, the shadow stage
@@ -223,9 +229,19 @@ fn render_pipeline_with_shadow(
     let effective_shadow_rect =
         effective_shadow_rect(source, source_roles, element_rect, &shadow_spec.config);
     if let Some(rect) = effective_shadow_rect {
-        render_shadow(&mut buffer, rect, &shadow_spec.config, options.t);
+        render_shadow(buffer_guard.as_mut(), rect, &shadow_spec.config, options.t);
     }
-    let shadow_only_buffer = buffer.clone();
+
+    // Snapshot the post-shadow grid into the second buffer so the element
+    // pass can keep mutating `buffer` without losing the shadow-only view.
+    // copy_from_slice is a single memcpy; no allocation.
+    shadow_only_guard
+        .as_mut()
+        .cells_mut()
+        .copy_from_slice(buffer_guard.as_ref().cells());
+
+    let buffer = buffer_guard.as_mut();
+    let shadow_only_buffer = shadow_only_guard.as_ref();
 
     // Prepare effects for element rendering
     let timing = CompositionPlaybackTiming::from_options(&options);

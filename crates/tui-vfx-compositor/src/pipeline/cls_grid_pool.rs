@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_grid_pool.rs</FILE> - <DESC>Thread-local OwnedGrid pool for the render-pipeline hot path</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1a perf work — eliminate per-frame OwnedGrid allocation in orc_render_pipeline</WCTX>
-// <CLOG>0.1.0: initial GridPool + PooledGrid RAII guard with inline unit tests</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Phase 1a perf work — pool is now wired into orc_render_pipeline; drop the cfg_attr(not(test), allow(dead_code)) scaffold</WCTX>
+// <CLOG>0.1.1: PATCH — remove cfg_attr(not(test), allow(dead_code)); GridPool is consumed by render_pipeline_with_shadow as of orc_render_pipeline 12.1.1.
+// 0.1.0: initial GridPool + PooledGrid RAII guard with inline unit tests</CLOG>
 
 //! # GridPool
 //!
@@ -23,8 +24,6 @@
 //! the pool is already borrowed (nested-access edge case), the grid is
 //! dropped rather than returned. The next checkout allocates a fresh grid —
 //! pooling is a soft optimisation, never a correctness requirement.
-
-#![cfg_attr(not(test), allow(dead_code))]
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -183,4 +182,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_grid_pool.rs</FILE> - <DESC>Thread-local OwnedGrid pool for the render-pipeline hot path</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>
