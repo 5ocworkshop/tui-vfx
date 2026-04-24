@@ -19,7 +19,8 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 7. [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
 8. [V3 migration outcome policy](tui-vfx-v3-migration-outcome-policy.md)
 9. [V3 release-gate policy](tui-vfx-v3-release-gate-policy.md)
-10. [Tooling hub](../tooling/INDEX.md)
+10. [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
+11. [Tooling hub](../tooling/INDEX.md)
 
 ## Architecture and decisions
 
@@ -31,6 +32,7 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 - [V3 validator canonicalization checklist](tui-vfx-v3-validator-canonicalization-checklist.md)
 - [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
 - [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
+- [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
 
 ## Authoring vocabulary and schema
 

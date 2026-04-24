@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>Track the live V3 punch list, separated into owner decisions and autonomous execution, with accepted naming, phase-scoping, migration outcome, and release-gate policy decisions moved from decision-needed to execution lanes.</WCTX> -->
-<!-- <CLOG>0.5.0: record accepted release-gate policy from tui-vfx-v3-release-gate-policy.md, including outcome states, whitelist ownership, GTD owner approval for product-visible drift, and no automatic fixture recapture. 0.4.0: record accepted provisional migration outcome policy from tui-vfx-v3-migration-outcome-policy.md, including owner-audit caveat and no legacy recipe removal. 0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>Track the live V3 punch list, separated into owner decisions and autonomous execution, with accepted naming, phase-scoping, migration outcome, release-gate, scope, and composition decisions moved from decision-needed to execution lanes.</WCTX> -->
+<!-- <CLOG>0.6.0: record accepted scope/composition decision from tui-vfx-v3-scope-composition-decision.md, including intersect/replace scope modes, deferred union, and explicit normalized combine/merge semantics. 0.5.0: record accepted release-gate policy from tui-vfx-v3-release-gate-policy.md, including outcome states, whitelist ownership, GTD owner approval for product-visible drift, and no automatic fixture recapture. 0.4.0: record accepted provisional migration outcome policy from tui-vfx-v3-migration-outcome-policy.md, including owner-audit caveat and no legacy recipe removal. 0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -57,6 +57,8 @@ accepted direction and moved into implementation/doc cutover work.
 | V3-Q03/Q13 | Phase scoping and partial phase spans | Steps and containers may both declare `phase`; effective phase is inherited by intersection; default is `all`; normalized IR emits explicit `PhaseSet`. |
 | V3-M03 | Migration outcome tracks | Use `equivalent`, `replacement`, and `retired` tracks. Classification is subject to owner recipe audit, and legacy recipe files must not be removed. |
 | V3-RG02 | Release-gate tolerance / whitelist ownership | Use structured manifests. Project-visible visual drift and GTD fixture selection require owner approval; library/tooling failures can be classified/fixed by implementation/tooling owners. |
+| V3-Q04 | Composition combine defaults | Authoring uses per-kind defaults; normalized IR emits explicit combine/merge semantics; `sequence` is feed-forward and `parallel` is snapshot-isolated with post-join merge. |
+| V3-Q28 | Scope composition precedence | Scope inheritance defaults to `intersect`; explicit `replace` is allowed; `union` is deferred until real recipes prove it is needed. |
 
 ## Needs project-owner decision / input
 
@@ -65,13 +67,11 @@ irreversible decisions on these without project-owner input.
 
 | ID | Decision needed | Why owner input matters |
 |---|---|---|
-| V3-Q04 | Composition combine defaults / override policy | Authoring ergonomics vs explicitness. Implementation can normalize defaults, but the visible authoring policy is product-facing. |
 | V3-Q07 | GTD `RecipeSceneCanvas` sequencing relative to upstream V3 | Upstream can keep moving, but GTD adoption order is a downstream product/workflow decision. |
 | V3-Q08 | Relative Light explorations: V3-only, lab-only V2, or feature-gated V2 | Decides whether new work enters the migration corpus. Current plan leans lab-only until V3. |
 | V3-Q20 | Confirm `RecipeSceneCanvas` remains neutral substrate only | Current plan strongly leans yes, with gt-design wrapping it in family-specific surfaces. |
 | V3-Q21 | Recipe metadata required/optional policy | `use_cases` may become required; other metadata likely optional. This affects authoring burden and discovery quality. |
 | V3-Q23 | Timer model: keep distributed timing or introduce first-class Timer | A first-class timer would reshape step authoring and content-effect timing. Current plan leans defer/status quo with clear docs. |
-| V3-Q28 | Scope composition precedence | Chapter 90 still calls out parent/child propagated scope precedence. Current guess is intersection, but it needs translation-study confirmation. |
 | V3-Q25 | Primitive catalog promotion governance owner | Need final rule for when a capability becomes a primitive, pattern variant, earned-name composition, or factory-internal detail. |
 | V3-Q27 | Factory-internal-to-schema-surface promotion process | Prevents ad-hoc promotion during later authoring-guide passes. |
 | V3-M02 | Which recipes are being kept, migrated, rewritten, or dropped | Deferred until owner recipe audit later today. Work around with provisional classifications only. |
@@ -116,6 +116,8 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-BIND01 | Broader runtime binding evaluation | Extend runtime binding support beyond currently proven shader/procedural/scene-visibility seams where the corpus needs it. |
 | V3-HINT01 | Hint graph rules hardening | Duplicate producer, visibility, lifetime, and value-kind errors are enforced consistently in validator and runtime. |
 | V3-PHASE01 | Implement accepted phase-scoping rule | Validator/canonicalizer accept single phase and phase arrays, apply inherited intersection, reject empty effective phase, and emit explicit normalized `PhaseSet`. |
+| V3-SCOPE01 | Implement accepted scope inheritance rule | Validator/canonicalizer support `scope_mode: intersect|replace`, reject empty static intersections and invalid replace-without-child-scope, and emit authored/effective scopes. |
+| V3-COMBINE01 | Implement accepted combine defaults | Normalizer emits explicit effective combine/merge semantics for sequence, parallel, masks, filters, shaders, samplers, and overlap classes. |
 | V3-SPATIAL01 | Add/prove surface-frame spatial basis if still missing | Mixed-signals has cell-space leaves; docs call out continuous surface/frame geometry leaves as the next additive substrate for optical falloff/spotlight-style consumers. |
 | V3-SPATIAL02 | Restore richer Madeira/showcase parity | Re-create the Madeira demo as a first-class V3 showcase using field generation, typed hints, displacement, field-correlated shading, and scene-layer composition. |
 | V3-SHADOW01 | Implement/prove transparent shadow and host-bound shadow model | Shadow docs require explicit transparent shadow, host attachment, and motion-edge integration rather than accidental underlay behavior. |
