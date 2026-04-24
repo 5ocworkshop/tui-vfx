@@ -115,7 +115,8 @@ Tasks:
 - `D3-PROBE-DIFF`: keep probe database/frame-diff docs and surfaces aligned.
 - `D4-TRACE-PARITY`: broader V3 trace/probe parity.
 - `D5-RELEASE-MANIFESTS`: release-gate fixture manifests.
-- `D6-RELEASE-EVIDENCE`: release-gate evidence capture/compare.
+- `D6-RELEASE-EVIDENCE`: release-gate evidence capture/compare. See
+  [`release-gate-evidence.md`](../tooling/release-gate-evidence.md).
 - `D7-CI-CUTOVER`: Chapter 100 tooling/CI checklist.
 
 Dependencies:
@@ -333,4 +334,4 @@ Dispatch these tracks now; they have minimal cross-track dependency:
   downstream.
 
 <!-- <FILE>docs/design/tui-vfx-v3-execution-dag.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->
