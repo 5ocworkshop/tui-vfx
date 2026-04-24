@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.0</VERS> -->
+<!-- <VERS>VERSION: 0.14.3</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.14.0: record playback alias, spatial debug fixture, VC-09, and release-gate inventory checkpoints.</CLOG> -->
+<!-- <CLOG>0.14.3: record the thin-player scope assessment and VC-09 content_glitch commit hash.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -14,11 +14,11 @@ considered stable and before any V2 fallback/removal work is considered.
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
 | V3-T01 | Tooling docs hub | Complete initial / ongoing | Canonical command map now covers validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, docs generation, and release-gate evidence; expand only as new tooling lands. |
-| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear`, `wargames_defcon`, `complex_full_pipeline`, `complex_multi_sampler`, `complex_layered_shaders`, `mask_iris`, `baseline`, and `content_slide_shift` now have truthful evidence rows; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
+| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear`, `wargames_defcon`, `complex_full_pipeline`, `complex_multi_sampler`, `complex_layered_shaders`, `mask_iris`, `baseline`, `content_slide_shift`, and `content_glitch_shift` now have truthful evidence rows; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Complete initial / broaden later | Metadata shape diagnostics now include `related_themes`; style normalization validation has a first pass. Broaden remaining optional metadata/schema-report coverage as corpus pressure appears. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists, curated payload alias equivalence tests prove first canonicalization pairs, and normalized IR now emits explicit phase/scope/combine metadata. Broader property/corpus coverage remains follow-up. |
-| V3-CI02 | Release-gate evidence capture / compare | In progress / mixed evidence | Latest inventory shows 9 complete-pass records, 2 explicit fails, 2 stale/incomplete offscreen records missing `render_capture_png`, and 6 missing records. Next: clear dirty/build blockers, capture remaining offscreen render PNGs, and plan GTD representative captures. |
+| V3-CI02 | Release-gate evidence capture / compare | In progress / mixed evidence | `offscreen_content_slide_shift` now has required `render_capture_png`; remaining inventory is 10 complete-pass records, 2 explicit fails, 1 stale/incomplete offscreen record (`offscreen_follow_lag`), and 6 missing records. Next: clear the follow-lag build blocker and plan GTD representative captures. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Complete initial / broaden later | Scene-layer motion now feeds edge-crossing border and attached-shadow policy; shared helper coverage proves diagonal/two-edge blanking directly. Follow-up: broaden full scene-layer corpus fixtures as needed. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Complete initial / broaden later | mixed-signals already has surface/frame-space basis; `tui-vfx-recipes` commits `c5190f1`, `7b2246f`, and `e52a510` prove and expose `sample_surface_radius`, `sample_surface_radius_from`, and `sample_surface_angle_from` through V3 native filter rendering plus primitive-first debug recipes. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
@@ -26,10 +26,10 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-NAME01/PREVIEW01 | V3 naming cutover work | Parser/schema and first playback alias slices complete / import migration outstanding | Scene/continuous/clock, main `config.rs`, parser wrappers, recipe internals, and public preview-boundary aliases now expose canonical `Vfx*`/`Playback*`/frame names while preserving compatibility aliases. Next slice: move imports/usages in risk order, then consider a future module-path shim. |
 | V3-VIEW01 | Normalized IR viewer/explorer | Outstanding | Scope around normalized execution graph after IR contract is stable. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
-| V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / partial docs evidence | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Thin-player/current V3 surface map is documented; packaged `tui-vfx-player` remains outstanding. |
+| V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / implementation slice scoped | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Thin-player assessment says the gap is packaging/surface consolidation: add a `tools/tui-vfx-player` wrapper over existing preview/player APIs without `gtd-movie` semantics. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
-| V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial / follow-up queued | `tui-vfx-v3-docs-lifecycle-plan.md` classifies docs; latest inventory confirms V3/tooling indexes are intact but flags broken historical links in upgrade-audit/workflow docs and upgrade-plan appendices. Next follow-up: V3-QDOC01 stale checklist/link reconciliation. |
+| V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial / follow-up queued | `tui-vfx-v3-docs-lifecycle-plan.md` classifies docs; V3/tooling indexes are intact and the first broken historical links in upgrade-audit/workflow docs and upgrade-plan appendices are repaired. Next follow-up: broader stale checklist/status reconciliation. |
 | V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
 | V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `post-release/braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
 | V3-GLYPHACTOR01 | Glyph actor procedural | Post-release spec captured | `docs/design/post-release/glyph-actor-procedural-spec.md`; implementation waits until core V3 release/migration stability. |
@@ -177,7 +177,11 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-PREVIEW01-ALIASES | Complete initial | `tui-vfx-recipes` commit `e52a510`: public preview boundary and prelude now expose `PlaybackPlan`, `PlaybackController`, `PlaybackRecipeBridge`, `V3FrameSnapshot`, and `render_v3_frame_to_buffer` compatibility aliases while preserving legacy `Preview*` names. |
 | V3-SPATIAL01-DEBUG | Complete initial | `tui-vfx-recipes` commit `e52a510`: primitive-first debug recipes now demonstrate `sample_surface_radius`, `sample_surface_radius_from`, and `sample_surface_angle_from` through V3 filter dimming with validator/probe/debug-QC evidence. |
 | V3-VC09-CONTENTSLIDE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `e52a510`: `content_slide_shift` is tracked as replacement evidence with output+probe mismatch owner-review status. |
+| V3-VC09-CONTENTGLITCH01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `4b939fe`: `content_glitch_shift` is tracked as replacement evidence with output+probe mismatch owner-review status. |
 | V3-CI02-INVENTORY01 | Complete inventory checkpoint | Release-gate inventory found 9 complete-pass records, 2 explicit fails, 2 stale/incomplete records, and 6 missing records; remaining offscreen/GTD/role-scope captures stay active under V3-CI02. |
+| V3-CI02-OFFSCREEN-CONTENT01 | Complete evidence refresh | `offscreen_content_slide_shift.evidence.record.json` now includes a `render_capture_png` entry with SHA-256 `edd3a3544a6e6fc92a015edc72628cbafbade599d13502fc89c4b85234968fb2`; `offscreen_follow_lag` remains the stale offscreen capture. |
+| V3-QDOC01-LINKS01 | Complete initial | Broken historical V3 doc links in the upgrade audit workflow and tooling/appendix chapters were repaired or converted to plain-text historical references; broader stale-status reconciliation remains under V3-DOCS01. |
+| V3-TOOL01-THINPLAYER-SCOPE | Complete assessment | Thin player gap is packaging/surface consolidation, not engine work: first implementation slice should add `tools/tui-vfx-player` around existing `play_recipe`/`v3_play_recipe` behavior while avoiding `gtd-movie` timeline/composer semantics. |
 
 ## Hard policy: V2 removal is last
 
@@ -269,4 +273,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.3</VERS> -->

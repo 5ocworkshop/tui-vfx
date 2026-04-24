@@ -16,11 +16,20 @@
       "artifact_generated": false,
       "status": "pass",
       "observed_output_summary": "Probe exit 0 at tui-vfx-recipes@e6e9da5; analysis.status=success, frame_count=1, diagnostics=[]."
+    },
+    {
+      "evidence_type": "render_capture_png",
+      "command": "xvfb-run -a -s '-screen 0 1200x700x24' sh -lc 'fixture=offscreen_content_slide_shift; recipe=recipes/debug_recipes/content/content_slide_shift.json; out=/tmp/tui-vfx-release-gates/$fixture/render_capture.png; log=/tmp/tui-vfx-release-gates/$fixture/demo-zutty.log; mkdir -p /tmp/tui-vfx-release-gates/$fixture; zutty -quiet -title \"${fixture}_demo\" -font DejaVuSansMono -geometry 120x34 -e bash -lc \"cd /usr/projects/tui-vfx-recipes && cargo run -q --example demo -- $recipe\" >\"$log\" 2>&1 & pid=$!; sleep 5; xwd -root -silent | convert xwd:- png:\"$out\"; sha256sum \"$out\"; kill \"$pid\" || true; wait \"$pid\" || true'",
+      "artifact": "/tmp/tui-vfx-release-gates/offscreen_content_slide_shift/render_capture.png",
+      "artifact_generated": true,
+      "artifact_sha256": "edd3a3544a6e6fc92a015edc72628cbafbade599d13502fc89c4b85234968fb2",
+      "status": "pass",
+      "observed_output_summary": "Capture exit 0 via the existing demo preview workflow under Zutty/Xvfb; visible direct V3 snapshot rendered and saved to render_capture.png."
     }
   ],
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "Validated after fixture correction in tui-vfx-recipes@e6e9da5. Probe command exits 0 with analysis.status=success and no diagnostics, so this offscreen fixture now passes."
+    "notes": "Validated after fixture correction in tui-vfx-recipes@e6e9da5. Probe command exits 0 with analysis.status=success and no diagnostics, and the existing demo capture workflow now provides the required visible render_capture_png artifact under Zutty/Xvfb. This fixture now passes."
   }
 }

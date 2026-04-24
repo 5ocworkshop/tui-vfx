@@ -1,30 +1,13 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
-<!-- <VERS>VERSION: 1.6.2</VERS> -->
-<!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md).</WCTX> -->
-<!-- <CLOG>1.6.2: record that the preferred direct V3 bridge now honors authored clock/lifecycle loop semantics plus remaining debug-corpus compatibility aliases, unblocking the last representative style/complex fixtures on the main playback path.
-1.6.1: record that the direct scene bridge now preserves authored scene visibility and z-order semantics, so representative scene-bearing playback stays on the preferred audit path.
-1.6.0: record that the direct compiled-V3 visual bridge now renders border-aware source surfaces and honors base_style_override steps, unblocking representative complex scoped recipes in the preferred playback path.
-1.5.9: record that the direct compiled-V3 visual bridge now honors top-level base_style and text-role targeting, so baseline/text-scoped recipes are closer to intended playback in the preferred audit surface.
-1.5.8: record that the direct compiled-V3 visual bridge now also honors top-level content effects, so the preferred playback path advances beyond raw message text toward fuller recipe semantics.
-1.5.7: record that the direct compiled-V3 visual bridge now also applies non-spatial style effects, so the preferred playback path is no longer spatial-only.
-1.5.6: record that demo now exposes an explicit schema-version line in Recipe Info so mixed V2/V3 playback during cutover is obvious during audits.
-1.5.5: record that the first direct V3 visual path is now phase/sample-aware, so play_recipe/demo can scrub and auto-advance the supported subset instead of freezing on one fixed dwell sample.
-1.5.4: record that the browser demo can now start on an explicit recipe path and advertises direct-V3 snapshot mode in the UI/task runner for faster parity audits.
-1.5.3: record that the browser demo now understands the same direct rendered V3 snapshot subset as play_recipe, even though the full native animated V3 preview path is still outstanding.
-1.5.2: record that the legacy play_recipe visual surface now prefers a direct rendered V3 snapshot for the supported compiled bridge subset before falling back to paired legacy fixtures.
-1.5.1: record that direct validator/recipe probe lifecycle analysis now preserves grouped effect/shader family labels alongside concrete effect names.
-1.5.0: record that the first scene-bearing direct V3 subset now also supports bridgeable layer-local scene pipelines through the shared scene-source builder.
-1.4.0: record that the direct recipe-probe V3 bridge now also emits operational and motion analysis for timeline-capable runs within the supported subset.
-1.3.0: record that recipe-probe now also accepts the supported compiled V3 bridge subset, producing direct ProbeSceneSpec evidence without forcing every V3 probe request through paired legacy fallback.
-1.2.0: record that tui-vfx-trace now also accepts the supported compiled V3 bridge subset, emitting real pipeline TraceReports instead of forcing every V3 trace request through legacy fallback.
-1.1.0: record that supported compiled V3 recipes now reach the deterministic compositor bridge in both the dedicated V3 demo and pipeline-validator output stage while broader V3 runtime/probe coverage remains outstanding.
-1.0.0: initial extraction from the monolith.</CLOG> -->
+<!-- <VERS>VERSION: 1.6.3</VERS> -->
+<!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (`../tui-vfx-v3-upgrade-debug-recipes-migration-log.md`).</WCTX> -->
+<!-- <CLOG>1.6.3: fix the migration-log references to use the sibling docs/design path from the chapter directory.</CLOG> -->
 
 # 100 — Tooling and CI migration — release-blocking work
 
 V3 is a clean break at the schema and loader level; it is also a clean break at the surrounding tooling level. The tools and CI that keep the V2 schema honest — validators, preview/demo, doc generators, probe/trace, authoring guides, template-expansion machinery — all read or write V2-shape data and will either continue serving V2 alongside V3 during the cutover or cut over to V3 wholesale. This chapter names that work explicitly so it does not get missed, and flags which pieces are "repoint the deserializer" vs. which need real design effort.
 
-An exhaustive tooling inventory was conducted as part of the debug-recipes migration exercise (full report in `docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md`). The V2 schema specs themselves are archived at `docs/v2-spec-archive/`. The list below is the summary plus the plan implications.
+An exhaustive tooling inventory was conducted as part of the debug-recipes migration exercise (full report in `../tui-vfx-v3-upgrade-debug-recipes-migration-log.md`). The V2 schema specs themselves are archived at `docs/v2-spec-archive/`. The list below is the summary plus the plan implications.
 
 ## 10 — Inventory map
 
@@ -219,4 +202,4 @@ V3 does not ship until each of the following is green:
 Each item is cross-referenced back to the sub-agent's inventory in the migration log for implementation-level detail, and to the frozen V2 spec archive (`docs/v2-spec-archive/`) for historical reference.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.6.2</VERS> -->
+<!-- <VERS>END OF VERSION: 1.6.3</VERS> -->

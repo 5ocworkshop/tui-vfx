@@ -1,13 +1,11 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-audit-workflow.md</FILE> - <DESC>Deferred-execution workflow for the three audits that feed the V3 tui-vfx upgrade: (A) shader catalog decomposition — per-shader evaluation of whether each named shader is a trivial primitive composition or earns its name; (B) recipe corpus curation under the William Morris "useful or beautiful" principle — audit every recipe and classify port/retire; (C) structural translation sample — re-express 6–8 representative recipes in the proposed tree shape to stress-test the structure. All three are deferred to a future session and are not blocking current work.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.3.1</VERS> -->
 <!-- <WCTX>Integrate six operational-realism recommendations from the 2026-04-21 GT-Design lead review memo: (1) stale scope estimates corrected — debug shaders 52 → 54 live files with some _DEPRECATED_, main corpus 200-300 → >500 pending authoritative inventory; (2) Workflow A restructured family-first (shader family as unit of audit with variants nested); (3) Workflow B split into active-vs-archive corpus outputs earlier; (4) mini-Workflow-C pilot (2-3 recipes) added as early de-risk step; (5) explicit exit criteria added per workflow; (6) sequencing revised to Inventory → mini-C pilot → A → B → full C. Adds a new Workflow 0 (authoritative inventory) as blocking prerequisite for Workflows A and B. Cross-links to main plan's Concern B (curate-first migration) where relevant.</WCTX> -->
-<!-- <CLOG>0.3.0: integrate the 2026-04-21 GT-Design lead review memo's six operational-realism recommendations. Add Workflow 0 (authoritative inventory) as blocking prerequisite — produces checked-in manifest of all recipe files with classification (candidate / debug / probe / test / deprecated / generated). Correct stale scope estimates throughout (52 → 54 debug shader files; 200-300 → >500 main corpus files). Restructure Workflow A as family-first audit (canonical shader family as unit, variants nested underneath) rather than file-first. Restructure Workflow B with explicit active-vs-archive corpus split, producing two inventories (v3-active-corpus and v2-archive-corpus) with per-recipe disposition, rationale category, cross-references, validator-coverage flag. Add mini-Workflow-C pilot section (2-3 representative recipes translated up front) to surface structural schema issues before A and B commit to assumptions. Add explicit exit criteria per workflow (A: classification + primitive-gap notes + preserved-name rationale + deprecated-file accounting; B: active and archive lists + per-recipe rationale + archived-recipe validator-coverage rule; C: representative translations + enumerated schema questions + readiness judgment). Revise sequencing recommendation from A → B → C to Inventory → mini-C pilot → A → B → full C. Cross-link to main plan's Concern B (curate-first migration model).
-0.2.0: rename to tui-vfx-v3-upgrade-audit-workflow.md; update cross-refs to the renamed main plan.
-0.1.0: initial draft. All three workflows captured with tour-order proposals, output-format templates, and decision frameworks. Sequencing recommendation included. Execution deferred.</CLOG> -->
+<!-- <CLOG>0.3.1: point plan references at the chapter index and keep the Relative Light RFC as a plain-text historical reference because the target lives outside this repo.</CLOG> -->
 
 # V3 Pipeline Migration — Audit & Curation Workflows
 
-> **Status: deferred.** Three audit workflows captured here for execution in a future session. None are blocking current work. Together they produce the empirical inputs required to resolve several open questions in the main plan ([`./tui-vfx-v3-upgrade-plan.md`](./tui-vfx-v3-upgrade-plan.md)).
+> **Status: deferred.** Three audit workflows captured here for execution in a future session. None are blocking current work. Together they produce the empirical inputs required to resolve several open questions in the main plan ([`./tui-vfx-v3-upgrade-plan/00_INDEX.md`](./tui-vfx-v3-upgrade-plan/00_INDEX.md)).
 
 ## Context
 
@@ -34,7 +32,7 @@ Each recommendation is integrated into the appropriate workflow section below.
 
 ## Relationship to the main plan's Concern B
 
-The main plan's [Concern B resolution](./tui-vfx-v3-upgrade-plan.md) frames the V3 migration as three phases (Curate → Re-author → Validate with a critical-set fixture carve-out). This doc's workflows map onto Concern B's phases:
+The main plan's [Concern B resolution](./tui-vfx-v3-upgrade-plan/00_INDEX.md) frames the V3 migration as three phases (Curate → Re-author → Validate with a critical-set fixture carve-out). This doc's workflows map onto Concern B's phases:
 
 - **Workflow 0 (authoritative inventory)** is the blocking prerequisite for Concern B's curation phase.
 - **Workflow B (corpus curation)** *is* Concern B's curation phase — Morris filter over the inventoried corpus producing the retained set with dispositions.
@@ -390,7 +388,7 @@ If there's pressure to establish the port list before the primitive catalog is f
 
 When picking this up in a future session:
 
-1. **Re-read the main plan doc first** (`./tui-vfx-v3-upgrade-plan.md`) — the open questions may have evolved since this workflow doc was written.
+1. **Re-read the main plan chapter index first** (`./tui-vfx-v3-upgrade-plan/00_INDEX.md`) — the open questions may have evolved since this workflow doc was written.
 2. **Check git history for any changes in `/usr/projects/tui-vfx-recipes/recipes/`** — the shader catalog may have grown, and new recipes may have been added that affect the corpus audit scope.
 3. **Verify the demo binary still works** — `cargo run --example demo` in the tui-vfx-recipes workspace. If the example has been renamed or refactored, the invocation in Workflow A needs updating.
 4. **Confirm the William Morris principle still matches the user's curation intent.** The principle as stated here was agreed in a single session and may want refinement once applied to real recipes.
@@ -398,9 +396,9 @@ When picking this up in a future session:
 
 ## Cross-references
 
-- Main plan: [`./tui-vfx-v3-upgrade-plan.md`](./tui-vfx-v3-upgrade-plan.md) — the V3 migration direction this workflow supports
+- Main plan: [`./tui-vfx-v3-upgrade-plan/00_INDEX.md`](./tui-vfx-v3-upgrade-plan/00_INDEX.md) — the V3 migration direction this workflow supports
 - Steering principles: Intention 46 (library changes earn their place) — aligns with the "earned names" logic in Workflow A and the Morris principle in Workflow B
-- Relative Light architecture RFC: [`../specs/relative-light-architecture.md`](../specs/relative-light-architecture.md) — the ember-felt and ambient-halo explorations that motivated parts of the V3 design
+- Relative Light architecture RFC: historical gt-design reference at `docs/internal/specs/relative-light-architecture.md` — the ember-felt and ambient-halo explorations that motivated parts of the V3 design
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-audit-workflow.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.1</VERS> -->

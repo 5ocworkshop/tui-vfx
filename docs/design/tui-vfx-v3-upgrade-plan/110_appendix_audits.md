@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/110_appendix_audits.md</FILE> - <DESC>Chapter 110 — appendix: the three audit workflows (A shader catalog, B corpus curation, C structural translation sample) that produce empirical inputs the plan can't answer abstractly. Lives as a sibling document; this chapter summarizes and cross-references.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
+<!-- <VERS>VERSION: 1.0.1</VERS> -->
 <!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Appendix — audits and curation" section. Thin chapter that points at the sibling docs/design/tui-vfx-v3-upgrade-audit-workflow.md file; the three audits produce their own sibling appendix files when executed.</WCTX> -->
-<!-- <CLOG>1.0.0: initial extraction from the monolith.</CLOG> -->
+<!-- <CLOG>1.0.1: fix the debug-recipes migration-log reference to the sibling path from the chapter directory.</CLOG> -->
 
 # 110 — Appendix — audits and curation
 
@@ -19,7 +19,7 @@ The V3 migration depends on three audit workflows that will produce the empirica
   - `../tui-vfx-v3-upgrade-appendix-corpus-audit.md` (from Workflow B)
   - `../tui-vfx-v3-upgrade-appendix-structural-translations.md` (from Workflow C)
 
-The debug-recipes migration exercise (docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md) served as a pre-execution pressure test for all three workflows, validating the tree schema against the debug corpus's single-capability recipes and surfacing 34 schema questions (Q1–Q34 in the migration-log journal) that the full audits will need to address at corpus scale.
+The debug-recipes migration exercise (`../tui-vfx-v3-upgrade-debug-recipes-migration-log.md`) served as a pre-execution pressure test for all three workflows, validating the tree schema against the debug corpus's single-capability recipes and surfacing 34 schema questions (Q1–Q34 in the migration-log journal) that the full audits will need to address at corpus scale.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/110_appendix_audits.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.0.1</VERS> -->
