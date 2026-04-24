@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-validator-canonicalization-checklist.md</FILE> - <DESC>Execution checklist for the V3 validator/canonicalization phase. Tracks the minimum checks and canonical outputs needed before broad family runtime implementation should proceed.</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>VC-05 now has initial normalized scene-layer structural validation, so duplicate layer IDs and bad sibling placement references fail before runtime composition.</WCTX> -->
-<!-- <CLOG>0.5.0: mark VC-05 complete-initial after normalized scene-layer duplicate-ID and sibling-reference validation landed in tui-vfx-recipes. 0.4.0: mark VC-06 complete after pipeline-validator --rules --strict-contracts and V3 debug-corpus requires_bindings declarations landed in tui-vfx-recipes. 0.3.0: mark VC-06 complete-initial after normalized contract declaration checks and contract_usage reporting landed in tui-vfx-recipes; shift the next validator slice to corpus-compatible strict contract gates. 0.2.0: mark VC-08 complete after pipeline-validator --dump-normalized landed in tui-vfx-recipes; convert the tracker from all-open seed state to an as-built plan for the remaining validator/canonicalization work. 0.1.0: initial checklist. Seeds the concrete validation/canonicalization work items following the schema, catalog, lowering, and normalized-IR phases.</CLOG> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>VC-02 now has initial normalized scope/range validation, so impossible literal row/column/cell-run ranges and non-positive rect dimensions fail before execution while dynamic binding-backed ranges remain runtime-resolved.</WCTX> -->
+<!-- <CLOG>0.6.0: mark VC-02 complete-initial after normalized literal scope sanity validation landed in tui-vfx-recipes. 0.5.0: mark VC-05 complete-initial after normalized scene-layer duplicate-ID and sibling-reference validation landed in tui-vfx-recipes. 0.4.0: mark VC-06 complete after pipeline-validator --rules --strict-contracts and V3 debug-corpus requires_bindings declarations landed in tui-vfx-recipes. 0.3.0: mark VC-06 complete-initial after normalized contract declaration checks and contract_usage reporting landed in tui-vfx-recipes; shift the next validator slice to corpus-compatible strict contract gates. 0.2.0: mark VC-08 complete after pipeline-validator --dump-normalized landed in tui-vfx-recipes; convert the tracker from all-open seed state to an as-built plan for the remaining validator/canonicalization work. 0.1.0: initial checklist. Seeds the concrete validation/canonicalization work items following the schema, catalog, lowering, and normalized-IR phases.</CLOG> -->
 
 # tui-vfx V3 validator / canonicalization checklist
 
@@ -10,7 +10,7 @@
 | ID    | Check area                          | Status           | Notes                                                                                                                                                                                                                        |
 | ----- | ----------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | VC-01 | Authoring schema validation         | IN_PROGRESS      | V3 parse/load path exists in `tui-vfx-recipes::v3`; remaining work is stricter authoring-shape diagnostics and schema-report surfacing in tools                                                                              |
-| VC-02 | Region-ref / compression resolution | IN_PROGRESS      | Initial normalized scope/region canonicalization exists; remaining work is coverage for unresolved refs and impossible resolved ranges                                                                                       |
+| VC-02 | Region-ref / compression resolution | COMPLETE_INITIAL | Region refs/cycles already fail in normalization; normalized validation now rejects impossible literal row/column/cell-run ranges and non-positive rect dimensions while allowing dynamic binding-backed scope values        |
 | VC-03 | Style normalization validation      | IN_PROGRESS      | Initial `base_style` normalization exists; remaining work is validation that no dual style forms survive normalized IR                                                                                                       |
 | VC-04 | Hint producer/consumer validation   | COMPLETE_INITIAL | First-class I/O plus legacy `emits_hint`/`binds` validation covers sequence visibility, parallel isolation, duplicate producers, missing producers, and value-kind mismatches                                                |
 | VC-05 | Scene-layer placement validation    | COMPLETE_INITIAL | Normalized validation rejects duplicate scene layer IDs, self-sibling placement, and unknown sibling placement references; remaining work is impossible geometry/surface diagnostics                                         |
@@ -26,7 +26,9 @@ The original go/no-go rule was to avoid broad runtime family work until VC-01,
 VC-02, VC-03, VC-04, VC-05, VC-07, and VC-08 had credible implementation
 plans or initial code. That bar is now mostly met for the direct V3 path:
 
-- VC-01/02/03/05 have first-pass code paths and focused tests.
+- VC-01/03 have first-pass code paths and focused tests.
+- VC-02/05 now have initial hard validation for the highest-risk structural
+  mistakes.
 - VC-04 has meaningful I/O visibility and kind-validation coverage.
 - VC-08 has both library and CLI inspection surfaces.
 - VC-07 still needs the clearest remaining validator-side plan before migration
@@ -37,7 +39,27 @@ execution plan, the validator follow-on should be incremental and non-breaking:
 add diagnostics/reporting first, then promote specific contract mistakes to hard
 errors after the V3 debug corpus is compatible.
 
-## Completed initial VC-06 slice: contract discovery validation
+## Completed initial VC-02 slice: literal scope/range validation
+
+VC-02 now rejects impossible static scopes after region refs and selector sugar
+normalize:
+
+1. **Resolved-region baseline**
+   - unresolved region refs and region-ref cycles already fail during
+     normalization.
+   - validator scope checks run after that normalized form is available.
+2. **Literal range sanity**
+   - `row_range` and `column_range` reject literal `start > end`.
+   - `cell_run`/`cell_runs` reject literal `x_start > x_end`.
+   - `rect`/`rect_exclude` reject literal non-positive `w` or `h`.
+3. **Runtime-binding compatibility**
+   - dynamic JSON leaves such as `{ "binding": "x0" }` remain validation-time
+     permissive because host-provided runtime params are unavailable during
+     normalization.
+   - runtime range validation can be added later if a concrete runtime-param
+     context is explicitly available.
+
+## Completed VC-06 slice: contract discovery validation
 
 VC-06 now connects the working I/O pathway, asset-backed Madeira flag work,
 and normalized inspection surface:
@@ -63,15 +85,14 @@ and normalized inspection surface:
      binding or template-placeholder usage while normal `--rules` stays
      backward-compatible.
 
-## Next slices after VC-06
+## Next slices after VC-02/VC-05
 
-1. **VC-02 region strict diagnostics:** unresolved region references already fail, but impossible literal ranges and coordinate sanity should become hard load/validation errors.
-2. **VC-05 geometry/surface diagnostics:** duplicate IDs and sibling placement refs now fail; next scene validation should cover impossible geometry and surface-shape mistakes.
-3. **VC-07 lowering invariants:** add a report that says which lowerings were
+1. **VC-05 geometry/surface diagnostics:** duplicate IDs and sibling placement refs now fail; next scene validation should cover impossible geometry and surface-shape mistakes.
+2. **VC-07 lowering invariants:** add a report that says which lowerings were
    automatic, which were lossy, and which require human review.
-4. **VC-09 migration-equivalence harness:** compare critical V2/V3 pairs through
+3. **VC-09 migration-equivalence harness:** compare critical V2/V3 pairs through
    normalized intent and render/probe evidence.
-5. **VC-10 human-review-needed report:** turn unresolved lowering classes into a
+4. **VC-10 human-review-needed report:** turn unresolved lowering classes into a
    machine-readable queue for migration work.
 
 ## Tooling evidence
@@ -91,11 +112,10 @@ Expected verification lane for the next validator slice:
 cargo fmt --all --check
 cargo test -p tui-vfx-recipes v3::validate
 cargo test -p pipeline-validator
-cargo run -q -p pipeline-validator -- --rules --strict-contracts \
-  recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json
+cargo test -p tui-vfx-recipes
 python3 tools/fnc_generate_v3_docs.py --check
 git diff --check
 ```
 
 <!-- <FILE>docs/design/tui-vfx-v3-validator-canonicalization-checklist.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
