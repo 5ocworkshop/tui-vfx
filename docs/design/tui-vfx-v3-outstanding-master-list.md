@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Track the live V3 punch list, separated into owner decisions and autonomous execution, with accepted naming and phase-scoping decisions moved from decision-needed to execution lanes.</WCTX> -->
-<!-- <CLOG>0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Track the live V3 punch list, separated into owner decisions and autonomous execution, with accepted naming, phase-scoping, and migration outcome decisions moved from decision-needed to execution lanes.</WCTX> -->
+<!-- <CLOG>0.4.0: record accepted provisional migration outcome policy from tui-vfx-v3-migration-outcome-policy.md, including owner-audit caveat and no legacy recipe removal. 0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -21,8 +21,8 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-E01 | ANSI source ingestion | Complete initial | ANSI-styled text normalizes into grid/source data and feeds downstream V3 chains; no terminal lifecycle in runtime. |
 | V3-E02 | Offline command-output capture | Complete initial | `recipe-source-capture` captures offline command output into artifacts; runtime recipe execution does not spawn commands. |
 | V3-E03 | Grapheme/wide-cell review | Complete initial | As-built Unicode/wide-cell stance is documented; deeper storage changes are deferred. |
-| V3-M01 | VC-09 migration-equivalence harness | Outstanding | Continue until critical kept recipes have equivalence or accepted replacement evidence. |
-| V3-M02 | Kept-recipe migration/rewrite | Outstanding | Migrate or rewrite all recipes we are keeping before V2 removal is even planned. |
+| V3-M01 | VC-09 migration-equivalence harness | Outstanding / unblocked provisionally | Use accepted `equivalent` / `replacement` / `retired` tracks while owner audit is pending; do not remove legacy recipes. |
+| V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only. |
 | V3-VC01/03/10 | Validator/canonicalization follow-ons | Outstanding | Finish stricter schema/style diagnostics and human-review-needed queue. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Outstanding | Treat normalized IR as validator/viewer/equivalence target and prove canonicalized equivalence for curated forms. |
 | V3-RG01/RG02 | Release-gate fixtures/evidence | Outstanding | Build Chapter 60 manifests and resolve tolerance/whitelist ownership. |
@@ -55,6 +55,7 @@ accepted direction and moved into implementation/doc cutover work.
 | V3-T05 | Thin player and future movie-layer naming | `tui-vfx-player` for the small recipe player/tool; `gtd-movie` for future scripted movie/timeline composition. |
 | V3-NAME-POLICY | Public/wire-format V3 prefix | `Vfx*`; keep `Ra*` only as hidden/deprecated cutover aliases where required. |
 | V3-Q03/Q13 | Phase scoping and partial phase spans | Steps and containers may both declare `phase`; effective phase is inherited by intersection; default is `all`; normalized IR emits explicit `PhaseSet`. |
+| V3-M03 | Migration outcome tracks | Use `equivalent`, `replacement`, and `retired` tracks. Classification is subject to owner recipe audit, and legacy recipe files must not be removed. |
 
 ## Needs project-owner decision / input
 
@@ -73,8 +74,7 @@ irreversible decisions on these without project-owner input.
 | V3-Q25 | Primitive catalog promotion governance owner | Need final rule for when a capability becomes a primitive, pattern variant, earned-name composition, or factory-internal detail. |
 | V3-Q27 | Factory-internal-to-schema-surface promotion process | Prevents ad-hoc promotion during later authoring-guide passes. |
 | V3-RG02 | Release-gate tolerance/whitelist ownership | Chapter 60 needs human approval for tolerance model, whitelist stewardship, stale-fixture recapture policy, and GTD representative surfaces. |
-| V3-M02 | Which recipes are being kept, migrated, rewritten, or dropped | V2 cannot be retired until the kept set is known and migrated/re-authored. This is product/library curation, not just engineering. |
-| V3-M03 | Which V2 recipes require strict migration equivalence versus accepted V3 replacement behavior | Some V3 rewrites should improve the effect rather than match V2 cell-for-cell. The equivalence harness needs that policy. |
+| V3-M02 | Which recipes are being kept, migrated, rewritten, or dropped | Deferred until owner recipe audit later today. Work around with provisional classifications only. |
 | V3-E04 | Whether ANSI/command capture should support live capture later or remain offline-only | Current guidance is offline-only for runtime determinism. A live mode would be a higher-level host/tool policy decision. |
 | V3-F01 | Celebratory particles / fireworks priority | Schema has a conceptual home, but implementation priority and required fidelity are product/capability choices. |
 | V3-PKG01 | Recipe/theme distribution and packaging source model | Chapter 90 defers registry/archive/embedded/remote source design; V3 should preserve byte-source abstractions but not choose packaging without owner input. |
@@ -98,7 +98,8 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-E03 | Complete grapheme/wide-cell review | Complete initial; deeper storage model remains deferred until a later explicit redesign. |
 | V3-VC01 | Finish authoring schema validation diagnostics | `pipeline-validator` surfaces stricter authoring-shape diagnostics and schema reports without breaking compatible recipes unexpectedly. |
 | V3-VC03 | Finish style normalization validation | Validator proves no dual style forms survive normalized IR. |
-| V3-M01 | Continue VC-09 migration-equivalence harness | Harness keeps improving until critical recipe evidence is actionable. |
+| V3-M01 | Continue VC-09 migration-equivalence harness | Use provisional `equivalent` / `replacement` / `retired` tracks; keep all legacy files in place pending owner audit. |
+| V3-M03 | Implement migration outcome reporting | Inventory/equivalence tooling can report track, rationale, evidence status, and owner-audit-needed flags. |
 | V3-VC10 | Add human-review-needed report | Lowering/migration classes that need manual review become a machine-readable queue. |
 | V3-CI01 | Build release-gate fixture manifests | Chapter 60 critical sets are represented as manifests for shadow, offscreen, probe, trace, GTD integration, and role-aware lowering. |
 | V3-CI02 | Capture / compare release-gate evidence | Gates produce pass/fail/whitelist-needed output with render/probe/trace evidence. |
