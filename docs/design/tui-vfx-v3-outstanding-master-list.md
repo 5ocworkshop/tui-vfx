@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
-<!-- <WCTX>Move owner-approved timer and recipe metadata policy decisions out of owner-decision status and into resolved decisions plus autonomous implementation/doc lanes.</WCTX> -->
-<!-- <CLOG>0.8.0: record accepted timing and metadata decision from tui-vfx-v3-timing-and-metadata-decision.md: no universal Timer primitive for V3; optional metadata with non-authoritative intent hints and debug-recipe expected-visual guidance. 0.7.0: record accepted capability governance from tui-vfx-v3-capability-governance-decision.md, including promotion ladder and rule-of-three factory-internal promotion. 0.6.0: record accepted scope/composition decision from tui-vfx-v3-scope-composition-decision.md, including intersect/replace scope modes, deferred union, and explicit normalized combine/merge semantics. 0.5.0: record accepted release-gate policy from tui-vfx-v3-release-gate-policy.md, including outcome states, whitelist ownership, GTD owner approval for product-visible drift, and no automatic fixture recapture. 0.4.0: record accepted provisional migration outcome policy from tui-vfx-v3-migration-outcome-policy.md, including owner-audit caveat and no legacy recipe removal. 0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
+<!-- <VERS>VERSION: 0.9.0</VERS> -->
+<!-- <WCTX>Add a pointer to the V3 execution DAG so the master punch list can be worked down through explicit parallel tracks and dependencies.</WCTX> -->
+<!-- <CLOG>0.9.0: add V3 execution DAG pointer for parallel track dispatch and dependency management. 0.8.0: record accepted timing and metadata decision from tui-vfx-v3-timing-and-metadata-decision.md: no universal Timer primitive for V3; optional metadata with non-authoritative intent hints and debug-recipe expected-visual guidance. 0.7.0: record accepted capability governance from tui-vfx-v3-capability-governance-decision.md, including promotion ladder and rule-of-three factory-internal promotion. 0.6.0: record accepted scope/composition decision from tui-vfx-v3-scope-composition-decision.md, including intersect/replace scope modes, deferred union, and explicit normalized combine/merge semantics. 0.5.0: record accepted release-gate policy from tui-vfx-v3-release-gate-policy.md, including outcome states, whitelist ownership, GTD owner approval for product-visible drift, and no automatic fixture recapture. 0.4.0: record accepted provisional migration outcome policy from tui-vfx-v3-migration-outcome-policy.md, including owner-audit caveat and no legacy recipe removal. 0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -14,6 +14,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
 | V3-P0 | V2 retention policy | Done / policy captured | V2 removal is final-only and requires explicit approval after kept recipes migrate or rewrite. |
+| V3-DAG01 | Execution DAG | Complete initial | `docs/design/tui-vfx-v3-execution-dag.md` separates owner-blocked decisions from autonomous parallel tracks and final gates. |
 | V3-T01 | Tooling docs hub | In progress | Seeded under `docs/tooling/`; expand as tooling lanes land. |
 | V3-T02 | Probe database / frame diff map | Complete initial | Existing probe diff + SQLite xray surfaces are documented as the reuse target; no duplicate diff system. |
 | V3-T03 | Thin V3 preview/player | Complete initial | Existing thin surfaces are mapped; canonical future small CLI/tool name is `tui-vfx-player`; full scripted movie composer is `gtd-movie` and remains deferred. |
@@ -82,6 +83,8 @@ irreversible decisions on these without project-owner input.
 | V3-R99 | Final V2 retirement approval | V2 removal is explicitly final-only after migration/rewrite, stability, downstream adaptation, and owner approval. |
 
 ## Autonomous execution queue
+
+Use the [V3 execution DAG](tui-vfx-v3-execution-dag.md) to choose work that can run in parallel without cross-track blockers.
 
 These items have enough guidance in `steering/INTENTIONS.md`, the V3 plan, and
 the tooling/authoring docs for agents to keep moving without more owner input.
@@ -232,4 +235,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.9.0</VERS> -->
