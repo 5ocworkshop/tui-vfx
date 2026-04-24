@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.12.1</VERS> -->
+<!-- <VERS>VERSION: 0.12.2</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.12.1: mark V3-PHASE01 complete after PhaseSet implementation.</CLOG> -->
+<!-- <CLOG>0.12.2: add VC-09 complex pipeline evidence checkpoint.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -14,7 +14,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
 | V3-T01 | Tooling docs hub | Complete initial / ongoing | Canonical command map now covers validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, docs generation, and release-gate evidence; expand only as new tooling lands. |
-| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear` and `wargames_defcon` now have truthful owner-review-required output+probe mismatch evidence; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
+| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear`, `wargames_defcon`, and `complex_full_pipeline` now have truthful owner-review-required output+probe mismatch evidence; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Outstanding | Finish stricter authoring schema diagnostics and style normalization validation; VC-10 review queue is already seeded. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists and curated payload alias equivalence tests prove first canonicalization pairs; broader property/corpus coverage remains follow-up. |
@@ -154,6 +154,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-C02A | Complete initial | `tui-vfx-recipes` commit `50c3547`: curated payload alias tests prove `pulse_color`→`color` and `rotation_speed`→`speed` canonicalize equivalently. |
 | V3-VC09-EASE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9cc4497`: `ease_linear` is tracked as owner-review-required output+probe mismatch evidence. |
 | V3-VC09-WARGAMES01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9cc4497`: `wargames_defcon` is tracked as owner-review-required output+probe mismatch evidence for the next critical-pair slice. |
+| V3-VC09-COMPLEX01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `d68ce00`: `complex_full_pipeline` is tracked as owner-review-required output+probe mismatch replacement evidence. |
 | V3-BEZIER01 | Complete | `tui-vfx-recipes` commit `752dd5e`: custom Bezier easing fixture now uses a distinct overshoot cubic-bezier curve and validates through parser, validator, and probe paths. |
 | V3-PHASE01 | Complete initial | `tui-vfx-recipes` commit `39aae98`: single phase and phase arrays parse, inherited phase intersections normalize into explicit `PhaseSet`, empty effective phase sets fail validation, compiled leaves carry PhaseSet, and generated V3 docs are current. |
 | V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
@@ -248,4 +249,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.12.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.2</VERS> -->
