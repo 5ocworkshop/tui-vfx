@@ -2,8 +2,8 @@
   "schema": "tui_vfx_v3_release_gate_evidence.v1",
   "fixture_id": "offscreen_follow_lag",
   "gate": "offscreen",
-  "status": "stale",
-  "captured_at": "2026-04-24T19:04:07Z",
+  "status": "fail",
+  "captured_at": "2026-04-24T19:15:48Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json"
@@ -14,13 +14,13 @@
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json --format json --phase dwelling --sample-t 1.0 --with-causation",
       "artifact": "/tmp/tui-vfx-release-gates/offscreen_follow_lag/probe_report.json",
       "artifact_generated": false,
-      "status": "stale",
-      "observed_output_summary": "stale record: command was captured while tui-vfx-recipes had transient uncommitted compile errors; rerun after the compiled-path checkpoint before classifying this gate."
+      "status": "fail",
+      "observed_output_summary": "Probe exit 0 at tui-vfx-recipes@bf2ee98; analysis.status=failure, diagnostics=[alpha_on_top_border], frame_count=1."
     }
   ],
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "Stale evidence record retained as a breadcrumb only: the command was run during a transient uncommitted compile break that has since been fixed in tui-vfx-recipes commit bf2ee98. Rerun this fixture before using it for release-gate status."
+    "notes": "Validated against tui-vfx-recipes@bf2ee98 and tui-vfx@c08b8a3. Probe command exited 0, but analysis.status=failure with alpha_on_top_border diagnostic, so this fixture remains fail."
   }
 }

@@ -1,11 +1,11 @@
-<!-- <FILE>docs/design/tui-vfx-v3-naming-implementation-inventory.md</FILE> - <DESC>Implementation inventory for the accepted V3 naming slate covering Ra to Vfx, Preview to Playback, frame snapshots, render helpers, and player seams.</DESC> -->
-<!-- <VERS>VERSION: 0.1.1</VERS> -->
-<!-- <WCTX>V3-NAME01/PREVIEW01 needs an exact inventory before any broad rename. This document records current symbols, files, buckets, order, and risks so the later cutover can be staged rather than performed by blind search/replace.</WCTX> -->
-<!-- <CLOG>0.1.1: clarify the next actionable rename bucket and keep Bucket C provisional until seam names are final.</CLOG> -->
+<!-- <FILE>docs/design/tui-vfx-v3-naming-implementation-inventory.md</FILE> - <DESC>Working cutover inventory for the accepted V3 naming slate across schema, playback seams, frame snapshots, adapter helpers, and thin-player/tooling surfaces.</DESC> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>V3-NAME01/PREVIEW01 needs a concrete cross-repo cutover map before any broad rename. This document records the accepted naming slate, the current file/symbol buckets in tui-vfx, tui-vfx-recipes, and gt-design, and the compatibility plan so later work can move in deliberate slices.</WCTX> -->
+<!-- <CLOG>0.2.0: expand the inventory into concrete repo/file/symbol buckets and add the compat/re-export plan for the accepted naming slate.</CLOG> -->
 
-# V3 naming implementation inventory
+# V3 naming cutover inventory
 
-This is the implementation inventory for `V3-NAME01` and `V3-PREVIEW01`.
+This is the cutover inventory for `V3-NAME01` and `V3-PREVIEW01`.
 It follows the accepted slate in
 [`tui-vfx-v3-naming-normalization-decisions.md`](tui-vfx-v3-naming-normalization-decisions.md):
 
@@ -17,253 +17,184 @@ It follows the accepted slate in
 
 No broad rename was performed while producing this inventory.
 
-## Scope buckets
+## 1. Accepted target slate
 
-### Bucket A — `Ra*` public/wire-format schema surface in `tui-vfx-recipes`
+| Current / question | Accepted target | Cutover note |
+|---|---|---|
+| `Ra*` public/wire-format types | `Vfx*` | Keep `Ra*` as compatibility aliases during cutover where needed. |
+| `PreviewItem` / `RecipeItem` / `PlaybackItem` candidates | `PlaybackPlan` | The seam object is a load-ready/renderable plan, not a demo item. |
+| `PreviewManager` | `PlaybackController` | Use when the type owns time, state, scrubbing, or frame advancement. |
+| `src/preview/` canonical seam path | `src/playback/` | Keep a `preview` shim only while downstream imports are still moving. |
+| `DirectV3PreviewSnapshot` | `V3FrameSnapshot` | One rendered frame/grid snapshot can serve preview, probe, movie, CI, and static export surfaces. |
+| `render_direct_v3_snapshot` | `render_v3_frame_to_buffer` | Adapter-boundary function should state that it renders one frame snapshot into a buffer. |
+| thin player / movie-layer naming | `tui-vfx-player` | Use player vocabulary for the small CLI/tool surface; reserve movie for the deferred scripted layer. |
+| `render_compiled_plan_for_preview*` | `render_compiled_plan_for_playback*` | Canonical playback-space helper family. |
+| `PreviewRecipeBridge` | `PlaybackRecipeBridge` | Bridge/helper name should follow the seam vocabulary unless a later decision narrows it. |
+| `DirectV3PreviewState` | `V3PlaybackState` or `V3PlaybackControllerState` | Provisional until the exact ownership split is finalized. |
 
-Primary file: `tui-vfx-recipes/src/recipe_schema/config.rs`.
+## 2. Current live buckets by repo
 
-Current public definitions:
+### 2.1 `tui-vfx-recipes`: live schema surface and preview seam
 
-- `RaLayoutMode` at `src/recipe_schema/config.rs:41`
-- `RaAnimationType` at `src/recipe_schema/config.rs:64`
-- `RaLayoutConfig` at `src/recipe_schema/config.rs:99`
-- `RaLifecycleConfig` at `src/recipe_schema/config.rs:176`
-- `RaBorderType` at `src/recipe_schema/config.rs:225`
-- `RaBorderTrim` at `src/recipe_schema/config.rs:262`
-- `RaTitlePosition` at `src/recipe_schema/config.rs:287`
-- `RaTitleAlignment` at `src/recipe_schema/config.rs:318`
-- `RaPaddingConfig` at `src/recipe_schema/config.rs:340`
-- `RaCustomBorderChars` at `src/recipe_schema/config.rs:377`
-- `RaFrameContent` at `src/recipe_schema/config.rs:447`
-- `RaBorderConfig` at `src/recipe_schema/config.rs:518`
-- `RaContentMode` at `src/recipe_schema/config.rs:623`
-- `RaContentConfig` at `src/recipe_schema/config.rs:643`
-- `RaTimeConfig` at `src/recipe_schema/config.rs:769`
-- `RaTransitionConfig` at `src/recipe_schema/config.rs:803`
-- `RaMaskConfig` at `src/recipe_schema/config.rs:1013`
-- `RaSamplerConfig` at `src/recipe_schema/config.rs:1078`
-- `RaFilterConfig` at `src/recipe_schema/config.rs:1121`
-- `RaApplyTo` at `src/recipe_schema/config.rs:1167`
-- `RaStyleEffect` at `src/recipe_schema/config.rs:1196`
-- `RaBaseStyle` at `src/recipe_schema/config.rs:1583`
-- `RaStylePipelineConfig` at `src/recipe_schema/config.rs:1631`
-- `RaPipelineConfig` at `src/recipe_schema/config.rs:1721`
-- `RaRecipeConfig` at `src/recipe_schema/config.rs:1988`
+This is the highest-risk bucket. It contains the current public `Ra*` schema
+surface, the current `preview` seam, and the V3 deterministic render helpers.
 
-Additional public definitions / aliases under `src/recipe_schema`:
+Representative schema files:
 
-- `RaClock` at `src/recipe_schema/enum_ra_clock.rs:13`
-- `RaContinuousConfig` at `src/recipe_schema/cls_ra_continuous_config.rs:15`
-- `RaJsonRecipeDefinition` at `src/recipe_schema/parser.rs:18`
-- `RaJsonRecipeDyn` at `src/recipe_schema/parser.rs:39`
-- `RaImageAspect` at `src/recipe_schema/scene/cls_ra_image_source.rs:13`
-- `RaImageSource` at `src/recipe_schema/scene/cls_ra_image_source.rs:22`
-- `RaCardSource` compatibility alias at `src/recipe_schema/scene/cls_ra_card_source.rs:39`
-- `RaContentSource` compatibility alias at `src/recipe_schema/scene/enum_ra_content_source.rs:23`
-- `RaLayerOverflow` at `src/recipe_schema/scene/enum_ra_layer_overflow.rs:12`
-- `RaAnsiSource` compatibility alias at `src/recipe_schema/scene/cls_ra_ansi_source.rs:32`
-- `RaSceneConfig` at `src/recipe_schema/scene/cls_ra_scene_config.rs:16`
-- `RaLayerVisibility` at `src/recipe_schema/scene/enum_ra_layer_visibility.rs:16`
-- `RaSceneLayer` at `src/recipe_schema/scene/cls_ra_scene_layer.rs:17`
-- `RaSceneFitPolicy` at `src/recipe_schema/scene/enum_ra_scene_fit_policy.rs:12`
-- `RaAnchoredPlacement` at `src/recipe_schema/scene/enum_ra_layer_placement.rs:17`
-- `RaAbsolutePlacement` at `src/recipe_schema/scene/enum_ra_layer_placement.rs:49`
-- `RaLayerPlacement` at `src/recipe_schema/scene/enum_ra_layer_placement.rs:62`
-- `RaLayerSurface` at `src/recipe_schema/scene/cls_ra_layer_surface.rs:18`
-- `RaProceduralSource` at `src/recipe_schema/scene/cls_ra_procedural_source.rs:11`
-- `RaTextAlignment` compatibility alias at `src/recipe_schema/scene/cls_ra_text_source.rs:42`
-- `RaTextSource` compatibility alias at `src/recipe_schema/scene/cls_ra_text_source.rs:45`
+```text
+tui-vfx-recipes/src/recipe_schema/config.rs
+tui-vfx-recipes/src/recipe_schema/mod.rs
+tui-vfx-recipes/src/recipe_schema/parser.rs
+tui-vfx-recipes/src/recipe_schema/validator/*
+tui-vfx-recipes/src/recipe_schema/scene/*
+```
 
-Recommended target shape:
+Representative schema symbols:
 
-- Rename real definitions to `Vfx*`.
-- Keep `pub use Vfx* as Ra*` compatibility aliases where external users or V2 cutover tooling still need old names.
-- Keep serde field names unchanged unless a separate schema decision explicitly changes JSON shape.
-- Treat existing `Vfx* as Ra*` aliases as already partially migrated; do not invert them back to concrete `Ra*` definitions.
+- `RaRecipeConfig`, `RaPipelineConfig`, `RaStylePipelineConfig`, `RaMaskConfig`, `RaFilterConfig`, `RaSamplerConfig`, `RaStyleEffect`, `RaBaseStyle`, `RaClock`, `RaContinuousConfig`, `RaSceneConfig`, `RaLifecycleConfig`, `RaContentConfig`
+- `RaJsonRecipeDefinition`, `RaJsonRecipeDyn`
+- `RaSceneLayer`, `RaSceneConfig`, `RaSceneFitPolicy`, `RaLayerPlacement`, `RaLayerOverflow`, `RaLayerVisibility`
+- `RaImageSource`, `RaProceduralSource`, `RaCardSource`, `RaTextSource`, `RaContentSource`, `RaLayerSurface`
 
-Risk bucket: **high**. This is the main public/wire-format surface and must be paired with rustdocs, generated docs, and deprecation guidance.
+Current preview/playback seam files:
 
-### Bucket B — `Ra*` consumers that must move with Bucket A
+```text
+tui-vfx-recipes/src/preview/cls_preview_item.rs
+tui-vfx-recipes/src/preview/cls_preview_manager.rs
+tui-vfx-recipes/src/preview/cls_preview_recipe_bridge.rs
+tui-vfx-recipes/src/preview/cls_direct_v3_preview_snapshot.rs
+tui-vfx-recipes/src/preview/cls_direct_v3_preview_state.rs
+tui-vfx-recipes/src/preview/fnc_preview_from_config.rs
+tui-vfx-recipes/src/preview/fnc_preview_from_recipe_path.rs
+tui-vfx-recipes/src/preview/fnc_render_direct_v3_snapshot.rs
+tui-vfx-recipes/src/preview/fnc_render_preview_item.rs
+tui-vfx-recipes/src/preview/mod.rs
+tui-vfx-recipes/src/v3/compile/fnc_render_compiled_plan_deterministically.rs
+```
 
-Files currently importing or naming `Ra*` outside direct definitions include:
+Current consumer buckets around that seam:
 
-- `src/preview/cls_direct_v3_preview_state.rs` — `RaLayoutConfig`, `RaLayoutMode`
-- `src/preview/fnc_resolve_content_text.rs` — `RaContentMode`
-- `src/preview/fnc_preview_from_config.rs` — `RaRecipeConfig`, `RaApplyTo`, `RaStyleEffect`, layout/border/title enums, `RaBaseStyle`
-- `src/preview/cls_preview_item.rs` — `RaContentMode`
-- `src/recipe/fnc_from_value.rs` — `RaJsonRecipeDefinition`
-- `src/recipe/types.rs` — `RaRecipeConfig`, `RaJsonRecipeDefinition`
-- `src/manager/mod.rs` — `RaSceneConfig`
-- `src/scene/fnc_layer_cache_key.rs` — `RaSceneLayer`, `RaContentSource`
-- `src/v3/compile/cls_compiled_recipe_plan.rs` — scene/content/placement/surface/overflow/visibility/fit-policy `Ra*` types
-- `src/v3/compile/fnc_build_composition_spec_from_compiled_plan.rs` — `RaBaseStyle`
-- `src/v3/compile/fnc_execute_compiled_step_tree_to_scene.rs` — `RaBaseStyle`
-- `src/v3/compile/fnc_render_compiled_plan_deterministically.rs` — `RaLayoutConfig`, `RaLayoutMode`
+```text
+tui-vfx-recipes/examples/demo.rs
+tui-vfx-recipes/examples/play_recipe.rs
+tui-vfx-recipes/examples/diag_render_dump.rs
+tui-vfx-recipes/examples/diag_timeline_dump.rs
+tui-vfx-recipes/examples/v3_play_recipe.rs
+tui-vfx-recipes/tests/*
+tui-vfx-recipes/tools/tui-vfx-trace/src/orc_run_trace.rs
+tui-vfx-recipes/src/probe/*
+```
 
-Recommended target shape:
+Recommended cutover shape:
 
-- Update internal imports/usages to canonical `Vfx*` names after definitions exist.
-- Leave compatibility aliases only for external migration and historical V2 docs, not for newly-written internal code.
+- rename the real `Ra*` definitions to `Vfx*`
+- keep `pub use Vfx* as Ra*` compatibility aliases for the schema surface until the final cutover gate
+- add `PlaybackPlan` / `PlaybackController` / `PlaybackRecipeBridge` / `V3FrameSnapshot` / `render_v3_frame_to_buffer` alongside the old names, then move internal imports to the canonical names
+- keep `src/preview/` as a temporary compatibility re-export while `src/playback/` becomes the canonical module path
+- keep serde field names unchanged unless a separate schema decision explicitly changes JSON shape
 
-Risk bucket: **medium-high** because these consumers span legacy preview, V3 compile/render, scene, probe, and manager paths.
+Risk bucket: **high**.
 
-### Bucket C — canonical playback seam currently named preview
+### 2.2 `tui-vfx`: docs, plans, and tooling references
 
-Current public definitions / exports:
+This repo mostly holds the accepted naming decisions, the punch list, and the
+tooling docs that still talk about the seam as preview/player.
 
-- `src/preview/cls_preview_item.rs:29` — `PreviewItem`
-- `src/preview/cls_preview_manager.rs:24` — `PreviewManager`
-- `src/preview/cls_preview_recipe_bridge.rs:14` — `PreviewRecipeBridge`
-- `src/preview/cls_direct_v3_preview_snapshot.rs:17` — `DirectV3PreviewSnapshot`
-- `src/preview/cls_direct_v3_preview_state.rs:27` — `DirectV3PreviewState`
-- `src/preview/fnc_preview_from_config.rs:104` — `preview_from_recipe_config`
-- `src/preview/fnc_preview_from_config.rs:110` — `preview_from_recipe_config_with_resolution_log`
-- `src/preview/fnc_preview_from_config.rs:461` — `preview_for_recipe_id`
-- `src/preview/fnc_preview_from_recipe_path.rs:19` — `preview_from_recipe_path_with_cutover_fallback`
-- `src/preview/fnc_render_preview_item.rs:169` — `render_preview_item`
-- `src/preview/fnc_render_preview_item.rs:286` — `render_preview_item_inspected`
-- `src/preview/fnc_render_direct_v3_snapshot.rs:37` — `render_direct_v3_snapshot`
-- `src/preview/mod.rs:55-66` — public preview exports
-- `src/prelude.rs:57-58` — prelude re-exports
-- `src/lib.rs` — top-level preview module docs and export surface
+Representative files:
 
-Accepted target names:
+```text
+tui-vfx/docs/design/tui-vfx-v3-naming-normalization-decisions.md
+tui-vfx/docs/design/tui-vfx-v3-outstanding-master-list.md
+tui-vfx/docs/design/tui-vfx-v3-upgrade-plan/40_decisions.md
+tui-vfx/docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md
+tui-vfx/docs/design/tui-vfx-v3-execution-dag.md
+tui-vfx/docs/design/tui-vfx-v3-migration-findings-memo-claude.md
+tui-vfx/docs/tooling/INDEX.md
+tui-vfx/docs/tooling/v3-preview-and-thin-player.md
+tui-vfx/docs/RECIPE_PROBE_GUIDE.md
+```
 
-- `PreviewItem` -> `PlaybackPlan`
-- `PreviewManager` -> `PlaybackController`
-- `PreviewRecipeBridge` -> likely `PlaybackRecipeBridge` or `RecipePlaybackBridge`; use `PlaybackRecipeBridge` unless owner picks a shorter bridge name during cutover.
-- `DirectV3PreviewState` -> likely `V3PlaybackState` or `V3PlaybackControllerState`; use a compatibility alias until the owner confirms whether stateful direct V3 scrubbing belongs under the broader `PlaybackController` name.
-- `DirectV3PreviewSnapshot` -> `V3FrameSnapshot`
-- `render_direct_v3_snapshot` -> `render_v3_frame_to_buffer`
-- `src/preview/` -> `src/playback/` for canonical engine seams.
+Current role:
 
-Risk bucket: **high**. The old names are used by examples, tests, probe, trace, validator, prelude, and generated docs. Stage this separately from Bucket A if possible.
+- source of the accepted naming slate
+- source of the migration narrative
+- place to remove stale future-facing `Preview*` language after the code rename lands
+- place to keep historical V2 references accurate when the surrounding text is intentionally historical
 
-### Bucket D — V3 compile/render functions that contain `preview`
+### 2.3 `gt-design`: downstream consumer vocabulary and integration points
 
-Current public functions in `src/v3/compile/fnc_render_compiled_plan_deterministically.rs`:
+This repo already uses `RecipePlayback*` vocabulary. It is not the same rename
+event as tui-vfx's `Preview*` → `Playback*`, but it is relevant because the
+compatibility plan must not collide with the downstream names that already
+exist.
 
-- `render_compiled_plan_for_preview` at line 40
-- `render_compiled_plan_for_preview_sampled` at line 54
-- `render_compiled_plan_for_preview_timed` at line 75
-- `render_compiled_plan_for_preview_timed_with_overrides` at line 98
-- `render_compiled_plan_for_preview_area_timed` at line 241
-- `render_compiled_plan_for_preview_area_timed_with_overrides` at line 268
+Representative files:
 
-Related private helpers:
+```text
+gt-design/crates/gtd-ratatui/src/recipes/types.rs
+gt-design/crates/gtd-ratatui/src/recipes/player.rs
+gt-design/crates/gtd-ratatui/src/recipes/planner.rs
+gt-design/crates/gtd-ratatui/src/recipes/mod.rs
+gt-design/crates/gtd-ratatui/src/prelude.rs
+gt-design/crates/gtd-ratatui/src/lib.rs
+gt-design/examples/motion_lab/cls_lab_state.rs
+gt-design/examples/v2recipes_lab/*
+gt-design/docs/api/generated/public/l4/10_ratatui.md
+```
 
-- `render_preview_snapshot` at line 481
-- `render_ordered_preview_if_supported` at line 557
+Current role:
 
-Current return type: `DirectV3PreviewSnapshot`.
+- downstream UI/runtime code already names its own plan/player abstractions
+- any new tui-vfx aliases should avoid creating ambiguous duplicate terms in the downstream consumer surface
+- this repo is a compatibility-check bucket, not the primary rename bucket
 
-Recommended target names:
+## 3. Compatibility / re-export plan
 
-- `render_compiled_plan_for_playback*` for canonical playback-space functions.
-- Return `V3FrameSnapshot` after Bucket C snapshot rename.
-- Keep deprecated `render_compiled_plan_for_preview*` aliases/re-exports for a cutover window if downstream tools still import them.
+- **Schema surface:** define the real `Vfx*` types in `tui-vfx-recipes`, then keep `pub use Vfx* as Ra*` aliases during cutover. Do not change serde field names unless a separate schema decision says to.
+- **Playback seam:** define the real `PlaybackPlan`, `PlaybackController`, and `PlaybackRecipeBridge` names, then keep old `Preview*` exports as compatibility shims until examples, tests, tooling, and generated docs move.
+- **Snapshot/buffer path:** define `V3FrameSnapshot` as the canonical frame DTO and `render_v3_frame_to_buffer` as the canonical adapter helper. Keep `DirectV3PreviewSnapshot` and `render_direct_v3_snapshot` as wrappers or aliases for the transition window.
+- **Module path:** move the canonical implementation toward `src/playback/`, but keep `src/preview/` as a compatibility module until downstream imports are updated.
+- **Thin-player surface:** `tui-vfx-player` is currently a documentation target, not a live binary name in these repos. Any early CLI should reuse the canonical playback/frame APIs instead of inventing a second preview interpreter.
+- **Downstream consumers:** keep `gt-design` on its existing `RecipePlayback*` names unless a concrete compile or docs issue proves that a follow-on rename is needed.
 
-Risk bucket: **medium-high**. These functions are public V3 execution seams and appear in generated API docs and direct V3 tests.
+## 4. Risk order and next execution slices
 
-### Bucket E — currently absent target names
+1. **Bucket A / `tui-vfx-recipes` schema surface** — highest risk, broadest fan-out.
+2. **Bucket A / `tui-vfx-recipes` preview/playback seam** — rename the live seam and the direct V3 frame DTO/helper family.
+3. **Bucket B / `tui-vfx` docs and tooling refs** — refresh the decision docs, punch list, and thin-player docs after the code names settle.
+4. **Bucket C / `gt-design` compatibility check** — adjust only if the canonical names create confusion or a real compile/docs issue.
+5. **Thin-player packaging** — decide whether the first live `tui-vfx-player` implementation is a docs-only placeholder or a small binary wrapper after the seam names are stable.
 
-Exact searches found no live definitions/usages yet for these accepted target names:
+### Next execution slice recommendation
 
-- `CompositionPlan`
+Start with the `tui-vfx-recipes/src/recipe_schema/**` bucket, especially
+`src/recipe_schema/config.rs`, `src/recipe_schema/mod.rs`, and the `scene/`
+modules. That lands the `Vfx*` public schema foundation first and keeps the
+later `Preview*` → `Playback*` rename anchored on the accepted wire-format
+vocabulary.
+
+## 5. Current target-name absence
+
+Exact searches found no live definitions in the target repos yet for:
+
 - `PlaybackPlan`
 - `V3FrameSnapshot`
 - `render_v3_frame_to_buffer`
 - `tui-vfx-player`
+- `PlaybackController`
+- `PlaybackRecipeBridge`
 
-Implication: the rename will introduce these names rather than reconcile existing duplicate definitions. `CompositionPlan` is also not part of the accepted final slate except as a searched planning term; avoid introducing it unless a separate architecture decision chooses it.
+Implication:
 
-Risk bucket: **low for collision**, **medium for docs** because generated and hand-maintained docs must be updated after code introduces the new names.
+- the rename will introduce these names rather than reconcile existing duplicate definitions
+- docs already carry the accepted targets, but code still needs the actual definitions
+- `PlaybackPlan` is the canonical loaded/renderable unit in the decision slate, not a synonym for the downstream `RecipePlaybackPlan` in gt-design
 
-### Bucket F — tooling, examples, tests, and generated docs consumers
+## 6. Notes on the current inventory read
 
-Representative current consumers of `PreviewItem`, `PreviewManager`, direct snapshot rendering, and compiled plan preview functions:
-
-- Examples: `examples/demo.rs`, `examples/play_recipe.rs`, `examples/diag_render_dump.rs`, `examples/diag_timeline_dump.rs`
-- Tests: `tests/manager/*`, `tests/integration/*`, `tests/scene/*`, `tests/test_canvas_compositing.rs`, `tests/test_motion_rect_*`, `tests/test_matrix_rain_recipes.rs`
-- Probe/runtime code: `src/probe/*`, `src/rendering/*`, `src/manager/mod.rs`
-- Tools: `tools/pipeline-validator/src/**`, `tools/tui-vfx-trace/src/orc_run_trace.rs`, `tools/recipe-probe/src/main.rs`
-- Generated docs: `docs/generated/V3_API.md`, `docs/generated/v3_api.json`
-
-Recommended handling:
-
-- Update source and tests in the same bucket as the symbol they depend on.
-- Regenerate generated docs after the Rust rename; do not hand-edit generated artifacts except as a last-resort temporary note.
-- Keep examples named `demo` or `play_recipe` where those are human preview/player tools; only rename engine seam imports and types.
-
-Risk bucket: **medium**. Wide fan-out, but mostly mechanical once compatibility aliases exist.
-
-## Recommended rename order
-
-1. **Introduce canonical aliases first, no behavior change.**
-   - Add `Vfx*` aliases or renamed definitions with `Ra*` compatibility aliases for schema-bearing types.
-   - Add `V3FrameSnapshot` / `render_v3_frame_to_buffer` aliases around the current direct snapshot type/helper.
-   - Add `PlaybackPlan` / `PlaybackController` aliases around current preview plan/controller if a zero-behavior compatibility pass is needed.
-
-2. **Move internal code to canonical imports.**
-   - Update V3 compile/render and playback/preview internals to use `Vfx*`, `V3FrameSnapshot`, and playback names.
-   - Keep old names available only as compatibility exports.
-
-3. **Rename module path last within the seam.**
-   - Move `src/preview/` to `src/playback/` only after symbol aliases are stable.
-   - Keep `pub mod preview` or re-export shim temporarily if downstream code still imports `tui_vfx_recipes::preview`.
-
-4. **Update tools/examples/tests.**
-   - Pipeline validator, trace, recipe-probe, examples, and tests should import canonical names.
-   - Human-facing preview/demo terminology may remain when it describes the UX, not the engine seam.
-
-5. **Regenerate docs and add migration notes.**
-   - Refresh generated API/schema docs.
-   - Add deprecation tables from old names to new names.
-   - Remove stale future-facing `Ra*`/`Preview*` guidance, but leave historical V2/archive references accurate.
-
-6. **Remove compatibility aliases only at a later V3 cutover gate.**
-   - Do not remove V2 support or old aliases as part of the initial rename unless the owner explicitly approves the breaking cleanup.
-
-## Next bucket to work
-
-If the next bucket needs to be picked now, start with **Bucket A**.
-
-Reason:
-
-- its target `Vfx*` names are fully enumerated here
-- the change is still a schema surface, so the rename can be staged behind compatibility aliases
-- the follow-on `Ra*` consumer updates in Bucket B can move in lockstep once Bucket A exists
-
-Do **not** treat Bucket C as the next bucket unless the seam-name decision is narrowed further. `PreviewRecipeBridge` and `DirectV3PreviewState` still have provisional replacement names, so that bucket carries more naming ambiguity than the schema surface.
-
-## Blockers and cautions
-
-- Owner decision is already accepted for the main naming slate, but `DirectV3PreviewState` and `PreviewRecipeBridge` do not have exact accepted replacement names. Treat recommended replacements as provisional.
-- `PlaybackPlan` collides conceptually with existing `CompiledRecipePlan`; the cutover should document whether `PlaybackPlan` is the public loaded/renderable wrapper and `CompiledRecipePlan` remains an internal V3 compile artifact.
-- `CompositionPlan` was searched but is not currently present and is not the accepted seam name. Do not introduce it by accident.
-- Archive paths such as `docs/v2-spec-archive/**` and historical decision docs may correctly retain old names.
-- Keep V2 support intact. Naming cutover is not V2 retirement.
-
-## Commands used
-
-```sh
-/usr/local/bin/ofpf-orientation --root /usr/projects/tui-vfx
-/usr/local/bin/ofpf-orientation --root /usr/projects/tui-vfx-recipes
-cat /usr/projects/tui-vfx/steering/INTENTIONS.md \
-  /usr/projects/tui-vfx/steering/ORCHESTRATION.md \
-  /usr/projects/tui-vfx/docs/design/tui-vfx-v3-naming-normalization-decisions.md \
-  /usr/projects/tui-vfx/docs/design/tui-vfx-v3-outstanding-master-list.md \
-  /usr/projects/tui-vfx/docs/design/tui-vfx-v3-execution-dag.md
-rg -n --hidden -g '!target' -g '!*.lock' '<target symbol patterns>' \
-  /usr/projects/tui-vfx /usr/projects/tui-vfx-recipes
-rg -n '^pub (struct|enum|type|trait) Ra[A-Z]|^pub use .* as Ra[A-Z]' \
-  src/recipe_schema src/v3 src/preview src/recipe src/manager src/scene
-rg -n '^pub (struct|enum|type|trait) .*Preview|^pub fn .*preview|^pub use .*Preview|^pub use .*preview' \
-  src tools examples tests
-rg -n '\b(CompiledRecipePlan|RecipePlan|CompositionPlan|PlaybackPlan|DirectV3PreviewSnapshot|render_direct_v3_snapshot|render_compiled_plan_for_preview|PreviewRecipeBridge|PreviewItem|PreviewManager)\b' \
-  src tools examples tests
-```
+- Archive paths such as `docs/v2-spec-archive/**` and the retired notes in `recyclebin/**` may keep historical `Ra*` / `Preview*` wording.
+- `PlaybackPlan` is accepted in the naming slate, but its eventual relationship to `CompiledRecipePlan` should be documented when the code rename lands.
+- The accepted `Preview*` → `Playback*` cutover is still a rename plan, not a V2 retirement plan.
 
 <!-- <FILE>docs/design/tui-vfx-v3-naming-implementation-inventory.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
