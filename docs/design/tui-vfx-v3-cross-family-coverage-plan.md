@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-cross-family-coverage-plan.md</FILE> - <DESC>Execution plan for the next V3 tranche after I/O and scheduler proofs: cross-family ordering, broader consumer coverage, and truth-surface evidence.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Start the post-SCHED-04 V3 integration slice. The direct executor now has I/O, scene/content, Madeira asset/runtime visibility, scheduler join semantics, and a first bounded Parallel optimization; the next risk is broader family coverage without reopening those foundations.</WCTX> -->
-<!-- <CLOG>0.1.0: initial cross-family coverage plan with XFC stages, debug-recipe obligations, rustdoc/as-built docs requirements, and verification baseline.</CLOG> -->
+<!-- <CLOG>0.2.0: mark XFC-01 complete after the root cross-family ordered sequence fixture and truth-surface tests landed in tui-vfx-recipes.
+0.1.0: initial cross-family coverage plan with XFC stages, debug-recipe obligations, rustdoc/as-built docs requirements, and verification baseline.</CLOG> -->
 
 # tui-vfx V3 cross-family coverage plan
 
@@ -38,7 +39,15 @@ The tranche proves that recipes can combine sampler, filter, mask, shader, and s
 
 ### XFC-01 — cross-family sequence proof
 
-**Status: planned.**
+**Status: complete.**
+
+As-built artifacts:
+
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/v3_cross_family_sequence_disjoint.json`
+- `/usr/projects/tui-vfx-recipes/src/v3/compile/test_render_compiled_plan_deterministically.rs`
+- `/usr/projects/tui-vfx-recipes/tests/test_debug_recipes_qc.rs`
+- `/usr/projects/tui-vfx-recipes/tools/pipeline-validator/tests/test_v3_probe_mode.rs`
+- `/usr/projects/tui-vfx-recipes/docs/V3_FIELD_HINT_CONSUMERS.md`
 
 Deliverables:
 
@@ -148,11 +157,11 @@ Known generated-doc warnings are acceptable only when they match the current doc
 
 ## Completion criteria
 
-- Cross-family sequence, parallel-join, and overlap/conflict behavior have committed debug recipes and deterministic tests.
+- XFC-01 has a committed cross-family sequence debug recipe and deterministic/probe/QC tests; parallel-join and overlap/conflict behavior remain XFC-02/XFC-03 follow-ups.
 - Existing SCHED-01 through SCHED-04 fixtures keep their render hashes.
 - Probe/QC output makes the family mix and scheduler semantics visible to reviewers.
 - Rustdoc and hand-maintained docs describe the as-built system.
 - The next V3 risk is narrowed to a specific release-gate area such as motion-path/offscreen support or timing-model rationalization, not generic cross-family execution uncertainty.
 
 <!-- <FILE>docs/design/tui-vfx-v3-cross-family-coverage-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
