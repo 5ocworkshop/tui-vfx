@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Created after repeated V3 migration and debug-fixture reviews surfaced vocabulary drift around center/edges, reveal direction, origin semantics, and the distinction between cell-space and surface-space geometry.</WCTX> -->
-<!-- <CLOG>0.1.0: initial recipe-vocabulary guide covering lifecycle terms, reveal-geometry terms, direction/origin/shape vocabulary, spatial-basis vocabulary, enter/exit relationship language, and the rule that canonical docs/examples use one preferred spelling even when serde aliases remain for compatibility.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Standardize the author-facing term "recipe ingredients" for capabilities authors combine inside recipes.</WCTX> -->
+<!-- <CLOG>0.2.0: add recipe ingredients as the canonical authoring term for recipe capabilities.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
 
@@ -27,7 +27,47 @@ Compatibility aliases may still exist in serde or migration code, but:
 > new docs, examples, and recipe-writing guidance should teach the canonical
 > term, not the alias set.
 
-## 2. Lifecycle vocabulary
+## 2. Recipe ingredient vocabulary
+
+Use **recipe ingredients** as the canonical author-facing term for the
+capabilities authors combine to create a recipe.
+
+Recipe ingredients include:
+
+- content transforms
+- motion routes and dynamics
+- easings
+- masks
+- shaders
+- filters
+- samplers
+- procedural sources
+- progress and timer treatments
+- runtime bindings and tokens
+- assets
+- I/O producer/consumer links
+- host-edge affordances when an adapter supports them
+
+Why this term:
+
+- **ingredient** implies composition, taste, restraint, and pairing
+- it avoids overloading **tools**, which should mean development utilities such
+  as validators, probes, trace CLIs, and preview players
+- it avoids the vague **capabilities** when speaking to recipe authors
+- it helps authors think in combinations: ingredients create micro-experiences,
+  not piles of effects
+
+Rules:
+
+- use **recipe ingredients** or **ingredients** in authoring docs, AI briefs,
+  and theme-recipe prompts
+- use **development tools** for validator/probe/trace/preview CLIs
+- use **capability** when discussing library surface area, planning coverage, or
+  engineering inventory
+- avoid **toolbox**, **toolchest**, or generic **tools** when the intended
+  meaning is recipe ingredients
+
+## 3. Lifecycle vocabulary
 
 Canonical author-facing phase words:
 
@@ -51,7 +91,7 @@ Rules:
 - do not invent parallel synonyms like `arrive`, `present`, `leave` in recipe
   docs unless a future steering decision explicitly renames them
 
-## 3. Enter/exit relationship vocabulary
+## 4. Enter/exit relationship vocabulary
 
 When discussing how exit relates to enter, use these words:
 
@@ -69,7 +109,7 @@ Important:
   fields
 - the schema already supports them by giving enter and exit independent payloads
 
-## 4. Reveal-geometry vocabulary
+## 5. Reveal-geometry vocabulary
 
 Use these canonical axis names for reveal geometry:
 
@@ -94,7 +134,7 @@ Example:
 - `blinds` is primarily an **orientation** vocabulary
 - `path_reveal` is primarily a **path** vocabulary
 
-## 5. Canonical wipe-direction vocabulary
+## 6. Canonical wipe-direction vocabulary
 
 For `wipe`, the canonical direction set is:
 
@@ -126,7 +166,7 @@ Compatibility aliases such as:
 may remain for compatibility, but they are **not** the preferred teaching
 surface.
 
-## 6. Origin vocabulary
+## 7. Origin vocabulary
 
 For origin-driven families, use:
 
@@ -143,7 +183,7 @@ from.
 Use **source** only when the effect is modeling a light/emission/source concept
 rather than a general reveal origin.
 
-## 7. Shape vocabulary
+## 8. Shape vocabulary
 
 For aperture/reveal shapes, canonical terms are:
 
@@ -154,7 +194,7 @@ For aperture/reveal shapes, canonical terms are:
 Prefer `box` over ad-hoc synonyms like `square` in the primitive vocabulary
 when the implementation really means axis-aligned rectangular aperture.
 
-## 8. Direction vocabularies by subsystem
+## 9. Direction vocabularies by subsystem
 
 Not every subsystem should reuse the same direction words.
 
@@ -190,7 +230,7 @@ Use:
 That split should remain intentional. Do not collapse all direction terms into
 one giant enum vocabulary.
 
-## 9. Spatial-basis vocabulary
+## 10. Spatial-basis vocabulary
 
 This is now a load-bearing distinction.
 
@@ -239,7 +279,7 @@ Rule:
 > when a consumer needs a genuinely different geometric model, add a new
 > explicit basis instead of silently mutating the semantics of an existing leaf.
 
-## 10. Debug-recipe naming vocabulary
+## 11. Debug-recipe naming vocabulary
 
 For debug-recipe body text:
 
@@ -254,7 +294,7 @@ The cue should be:
 - useful
 - free of filler like `Watch`
 
-## 11. Practical authoring rule
+## 12. Practical authoring rule
 
 When writing or reviewing recipes, ask:
 
@@ -268,7 +308,7 @@ When writing or reviewing recipes, ask:
 If the answer to any of those is "no", fix the vocabulary before adding more
 examples or abstractions on top.
 
-## 12. Visual reference — rect vocabulary
+## 13. Visual reference — rect vocabulary
 
 Use this diagram when discussing rect-local geometry:
 
@@ -313,7 +353,7 @@ For radial/iris vocabulary:
 - **origin** is a point like `center`, `top_left`, or `custom{x,y}`
 - **shape** is the aperture geometry like `circle`, `diamond`, `box`
 
-## 13. Visual reference — scene vocabulary
+## 14. Visual reference — scene vocabulary
 
 Use this diagram when discussing scene-layer placement and composition:
 

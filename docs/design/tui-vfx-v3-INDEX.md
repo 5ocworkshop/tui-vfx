@@ -45,6 +45,7 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 ## Authoring vocabulary and schema
 
 - [V3 recipe vocabulary](tui-vfx-v3-recipe-vocabulary.md)
+- [V3 recipe ingredients reference plan](tui-vfx-v3-recipe-ingredients-reference-plan.md)
 - [V3 schema overview](tui-vfx-v3-schema-overview.md)
 - [V3 schema draft](tui-vfx-v3-schema-draft.json)
 - [V3 motion spec](tui-vfx-v3-motion-spec.md)
