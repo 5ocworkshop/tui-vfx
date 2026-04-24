@@ -85,7 +85,7 @@ never recapture silently.
 | --- | --- | --- | --- |
 | `shadow_surface_base` | `tui-vfx-recipes:recipes/debug_recipes/scene/scene_layer_surface_shadow.json` | `render_capture_png`, `probe_report_json` | Base scene-level shadow truth surface. Implementation-lead owned. |
 | `shadow_surface_pipeline` | `tui-vfx-recipes:recipes/debug_recipes/scene/scene_layer_surface_shadow_pipeline.json` | `render_capture_png`, `probe_report_json`, `trace_report_json` | Covers shadow behavior with the scene-layer pipeline active. |
-| `shadow_edge_crossing` | `tui-vfx-recipes:recipes/debug_recipes/motion/toast_shadow_edge_crossing.json` | `render_capture_png`, `probe_report_json`, `trace_report_json` | Critical bridge between shadow, motion envelope, and vanishing-edge behavior. |
+| `shadow_edge_crossing` | `tui-vfx-recipes:recipes/debug_recipes/motion_routes/toast_shadow_edge_crossing.json` | `render_capture_png`, `probe_report_json`, `trace_report_json` | Critical bridge between shadow, motion envelope, and vanishing-edge behavior. |
 
 ### 2. Offscreen / slide gate
 
@@ -93,7 +93,7 @@ never recapture silently.
 | --- | --- | --- | --- |
 | `offscreen_content_slide_shift` | `tui-vfx-recipes:recipes/debug_recipes/content/content_slide_shift.json` | `render_capture_png`, `probe_report_json` | Smallest clear slide fixture. Good first smoke target. |
 | `offscreen_scene_full_stack` | `tui-vfx-recipes:recipes/debug_recipes/scene/scene_layer_full_stack.json` | `render_capture_png`, `probe_report_json`, `trace_report_json` | Multi-layer/offscreen composition coverage. |
-| `offscreen_follow_lag` | `tui-vfx-recipes:recipes/debug_recipes/motion/scene_layer_follow_lag.json` | `render_capture_png`, `probe_report_json` | Motion/offscreen behavior without GTD-product coupling. |
+| `offscreen_follow_lag` | `tui-vfx-recipes:recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json` | `render_capture_png`, `probe_report_json` | Motion/offscreen behavior without GTD-product coupling. |
 
 ### 3. Probe gate
 

@@ -124,7 +124,7 @@
       "gate": "shadow",
       "recipe": {
         "repo": "tui-vfx-recipes",
-        "path": "recipes/debug_recipes/motion/toast_shadow_edge_crossing.json"
+        "path": "recipes/debug_recipes/motion_routes/toast_shadow_edge_crossing.json"
       },
       "required_evidence_types": [
         "render_capture_png",
@@ -168,7 +168,7 @@
       "gate": "offscreen",
       "recipe": {
         "repo": "tui-vfx-recipes",
-        "path": "recipes/debug_recipes/motion/scene_layer_follow_lag.json"
+        "path": "recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json"
       },
       "required_evidence_types": [
         "render_capture_png",

@@ -172,7 +172,7 @@ This is doc-only, low risk, and removes a real source of future drift.
 
 Representative debug fixture for the diagonal offscreen case:
 
-- `recipes/debug_recipes/motion/toast_shadow_diagonal_edge_crossing.json`
+- `recipes/debug_recipes/motion_routes/toast_shadow_diagonal_edge_crossing.json`
 
 ### Smallest safe implementation/test follow-up
 
