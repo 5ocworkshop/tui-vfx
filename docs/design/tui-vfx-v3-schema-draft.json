@@ -592,7 +592,9 @@
 
       "timing": {
         "enter_ms": 120,
+        "enter_delay_ms": 0,
         "exit_ms": 200,
+        "exit_delay_ms": 0,
         "enter_ease": "linear",
         "exit_ease": "linear"
       },
@@ -601,6 +603,10 @@
       #   milliseconds. `enter_ease` / `exit_ease` preserve authoring and
       #   migration intent for the phase envelope; individual leaves may still
       #   carry their own effect-local easing fields.
+      # ^ `enter_delay_ms` / `exit_delay_ms` are optional stagger offsets,
+      #   especially for scene-layer pipelines. They let a fullscreen recipe
+      #   keep the canvas present while child layers begin or release their
+      #   phase-scoped effects at different times.
       # ^ Fullscreen / whole-canvas use case: these timings provide alternate
       #   enter and exit phases even when there is no visible host enter/exit
       #   animation. A fullscreen effect usually already owns the entire grid,
