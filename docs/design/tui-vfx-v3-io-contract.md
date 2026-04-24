@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-io-contract.md</FILE> - <DESC>Phase 0 / 0A semantic lock for V3 producer/consumer I/O: author-facing vocabulary, value kinds, visibility rules, runtime integration posture, and prove-out obligations.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Lock the first-release V3 I/O semantics before validator/runtime/family migration work fans out, and keep the contract aligned with landed as-built proofs.</WCTX> -->
-<!-- <CLOG>0.3.0: record dotted first-class io.inputs for nested wrapper payloads such as spatial style-effect shader intensity. 0.2.0: add the as-built Phase 4 shared field-hint consumer proof and point at the recipe-side debug fixture/docs. 0.1.0: initial Phase 0 / 0A contract. Defines first-release author vocabulary, value kinds, sequence-vs-parallel visibility, per-frame lifetime, duplicate-producer rule, runtime-param integration posture, and stage-level debug-recipe obligations.</CLOG> -->
+<!-- <CLOG>0.4.0: record explicit sourced io.outputs for non-spatial leaves so filters, masks, shaders, and style effects can publish bound payload fields downstream. 0.3.0: record dotted first-class io.inputs for nested wrapper payloads such as spatial style-effect shader intensity. 0.2.0: add the as-built Phase 4 shared field-hint consumer proof and point at the recipe-side debug fixture/docs. 0.1.0: initial Phase 0 / 0A contract. Defines first-release author vocabulary, value kinds, sequence-vs-parallel visibility, per-frame lifetime, duplicate-producer rule, runtime-param integration posture, and stage-level debug-recipe obligations.</CLOG> -->
 
 # tui-vfx V3 I/O contract
 
@@ -281,6 +281,31 @@ Canonical proof artifact:
 
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/shaders/style_field_hint_spatial_shader.json`
 
+### Sourced outputs for middle-of-chain leaves
+
+First-class `io.outputs` may include a `source` path. The recipe-side direct
+path reads that dot-separated path from the payload after input binding has
+been applied and registers that value as the output hint. This is the generic
+producer form for non-`spatial_signal` leaves that need to publish a value
+downstream.
+
+```json
+{
+  "kind": "filter",
+  "io": {
+    "inputs": [{ "input": "factor", "hint": "dim_factor", "kind": "scalar" }],
+    "outputs": [
+      { "hint": "shade_factor", "kind": "scalar", "source": "factor" }
+    ]
+  },
+  "payload": { "type": "dim", "apply_to": "background" }
+}
+```
+
+Canonical proof artifact:
+
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/complex_filter_reemits_field_hint.json`
+
 ## 13. Non-goals for the first release
 
 Not part of the first-release contract:
@@ -292,4 +317,4 @@ Not part of the first-release contract:
 - renaming the public author vocabulary without a separate migration plan
 
 <!-- <FILE>docs/design/tui-vfx-v3-io-contract.md</FILE> - <DESC>Phase 0 / 0A semantic lock for V3 producer/consumer I/O</DESC> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
