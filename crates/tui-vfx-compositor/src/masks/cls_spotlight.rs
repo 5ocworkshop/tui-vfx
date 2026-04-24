@@ -43,8 +43,7 @@ impl Spotlight {
 
         match self.shape {
             IrisShape::Circle => {
-                let max_distance =
-                    ((w as f32 / 2.0).powi(2) + (h as f32 / 2.0).powi(2)).sqrt();
+                let max_distance = ((w as f32 / 2.0).powi(2) + (h as f32 / 2.0).powi(2)).sqrt();
                 SpatialCoordinateSignal::sample_surface_radius()
                     .sample_with_context(0.0, &signal_ctx)
                     * max_distance
@@ -93,7 +92,15 @@ mod tests {
         }
     }
 
-    fn old_visible(shape: IrisShape, soft_edge: bool, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool {
+    fn old_visible(
+        shape: IrisShape,
+        soft_edge: bool,
+        x: u16,
+        y: u16,
+        w: u16,
+        h: u16,
+        progress: f64,
+    ) -> bool {
         let progress = progress as f32;
         let dist = old_distance(shape, x, y, w, h);
         let max_dim = w.max(h) as f32;

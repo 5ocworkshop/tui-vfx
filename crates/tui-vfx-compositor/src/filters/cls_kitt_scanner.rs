@@ -6,7 +6,7 @@
 // 1.7.0: add boost_separator_bg toggle for powerlines with non-terminal backgrounds.</CLOG>
 
 use crate::traits::filter::Filter;
-use crate::types::cls_filter_spec::{kitt_bps_from_bpm, ApplyTo, ScannerMotionMode};
+use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode, kitt_bps_from_bpm};
 use crate::utils::is_powerline_separator;
 use tui_vfx_types::{Cell, Color};
 
@@ -588,13 +588,13 @@ mod tests {
         // Classic powerline arrows
         assert!(is_powerline_separator('\u{E0B0}')); //
         assert!(is_powerline_separator('\u{E0B2}')); //
-                                                     // Bubble/rounded
+        // Bubble/rounded
         assert!(is_powerline_separator('\u{E0B4}')); //
         assert!(is_powerline_separator('\u{E0B6}')); //
-                                                     // Flame
+        // Flame
         assert!(is_powerline_separator('\u{E0C0}')); // pixel
         assert!(is_powerline_separator('\u{E0C8}')); // flame
-                                                     // Wave
+        // Wave
         assert!(is_powerline_separator('\u{E0D2}')); // wave
 
         // Non-separators

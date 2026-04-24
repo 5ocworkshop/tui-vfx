@@ -16,7 +16,10 @@ struct RecordingSink {
 
 impl RecordingSink {
     fn snapshot(&self) -> Vec<TraceEnvelope> {
-        self.envelopes.lock().expect("recording sink mutex poisoned").clone()
+        self.envelopes
+            .lock()
+            .expect("recording sink mutex poisoned")
+            .clone()
     }
 }
 
@@ -54,7 +57,10 @@ fn shared_emitter_assigns_monotonic_seq_numbers_across_borrowers() {
     borrower_a.emit(sample_event("c"));
 
     let envelopes = sink.snapshot();
-    let seqs: Vec<u32> = envelopes.iter().map(|envelope| envelope.seq_in_frame).collect();
+    let seqs: Vec<u32> = envelopes
+        .iter()
+        .map(|envelope| envelope.seq_in_frame)
+        .collect();
     assert_eq!(seqs, vec![0, 1, 2]);
     assert!(envelopes.iter().all(|envelope| envelope.frame_no == 7));
     assert!(envelopes.iter().all(|envelope| envelope.t_ms == 42));

@@ -66,14 +66,18 @@ impl TraceSelector {
     pub fn matches(&self, envelope: &TraceEnvelope) -> bool {
         match self {
             TraceSelector::All => true,
-            TraceSelector::Cell { x, y } => cell_xy(&envelope.event)
-                .is_some_and(|(ex, ey)| ex == *x && ey == *y),
-            TraceSelector::Rect(r) => cell_xy(&envelope.event)
-                .is_some_and(|(ex, ey)| rect_contains(r, ex, ey)),
-            TraceSelector::Role(role) => event_role(&envelope.event)
-                .is_some_and(|ev_role| ev_role == role),
-            TraceSelector::Layer(layer) => event_layer_id(&envelope.event)
-                .is_some_and(|ev_layer| ev_layer == layer),
+            TraceSelector::Cell { x, y } => {
+                cell_xy(&envelope.event).is_some_and(|(ex, ey)| ex == *x && ey == *y)
+            }
+            TraceSelector::Rect(r) => {
+                cell_xy(&envelope.event).is_some_and(|(ex, ey)| rect_contains(r, ex, ey))
+            }
+            TraceSelector::Role(role) => {
+                event_role(&envelope.event).is_some_and(|ev_role| ev_role == role)
+            }
+            TraceSelector::Layer(layer) => {
+                event_layer_id(&envelope.event).is_some_and(|ev_layer| ev_layer == layer)
+            }
             TraceSelector::Recipe(recipe) => envelope
                 .recipe_id
                 .as_ref()
@@ -119,7 +123,10 @@ fn event_layer_id(event: &TraceEvent) -> Option<&LayerId> {
 /// Inclusive containment check for `Rect` (x in [rect.x, rect.x+width),
 /// y in [rect.y, rect.y+height)).
 fn rect_contains(rect: &Rect, x: u16, y: u16) -> bool {
-    x >= rect.x && x < rect.x.saturating_add(rect.width) && y >= rect.y && y < rect.y.saturating_add(rect.height)
+    x >= rect.x
+        && x < rect.x.saturating_add(rect.width)
+        && y >= rect.y
+        && y < rect.y.saturating_add(rect.height)
 }
 
 // <FILE>crates/tui-vfx-debug/src/inspection/cls_trace_selector.rs</FILE> - <DESC>TraceSelector</DESC>

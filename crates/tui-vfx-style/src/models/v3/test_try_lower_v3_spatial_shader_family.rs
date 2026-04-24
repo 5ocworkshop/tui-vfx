@@ -4,12 +4,12 @@
 // <CLOG>0.2.0: broaden grouped-V3-to-legacy lowering coverage across representative primitive and composed family clusters.
 // 0.1.0: add grouped-V3-to-legacy lowering coverage plus one explicit unsupported-color-policy case.</CLOG>
 
+use crate::models::v3::{VfxSpatialShaderFamily, try_lower_v3_spatial_shader_family};
 use crate::models::{
     BarberPoleShader, BorderSweepShader, CursorShader, DiffusionShader, FocusedRowGradientShader,
     GlitchLinesShader, GlowShader, Gradient, HighlighterShader, LinearGradientShader,
     NeonFlickerShader, PulseWaveShader, SpatialShaderType,
 };
-use crate::models::v3::{VfxSpatialShaderFamily, try_lower_v3_spatial_shader_family};
 
 #[test]
 fn roundtrips_surface_depth_family_back_to_legacy_shader() {
@@ -34,7 +34,6 @@ fn roundtrips_traveling_band_border_family_back_to_legacy_shader() {
 
     assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
 }
-
 
 #[test]
 fn roundtrips_material_light_family_back_to_legacy_shader() {
@@ -106,8 +105,13 @@ fn roundtrips_stripe_motion_family_back_to_legacy_shader() {
 }
 #[test]
 fn rejects_unrepresentable_traveling_band_color_policy_for_border_variant() {
-    let mut family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&SpatialShaderType::BorderSweep(BorderSweepShader::default()));
-    if let VfxSpatialShaderFamily::ComposedPrimitive(crate::models::VfxSpatialComposedPrimitive::TravelingBand(shader)) = &mut family {
+    let mut family = VfxSpatialShaderFamily::from_legacy_spatial_shader(
+        &SpatialShaderType::BorderSweep(BorderSweepShader::default()),
+    );
+    if let VfxSpatialShaderFamily::ComposedPrimitive(
+        crate::models::VfxSpatialComposedPrimitive::TravelingBand(shader),
+    ) = &mut family
+    {
         shader.color = crate::models::VfxTravelingBandColor::HeadTail {
             head: crate::models::ColorConfig::White,
             tail: crate::models::ColorConfig::Black,

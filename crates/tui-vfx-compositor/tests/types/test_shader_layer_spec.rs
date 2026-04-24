@@ -46,7 +46,9 @@ fn shader_layer_spec_exposes_primitive_v3_family() {
 #[test]
 fn shader_layer_spec_can_build_from_v3_shader_family() {
     let family = tui_vfx_style::models::VfxSpatialShaderFamily::from_legacy_spatial_shader(
-        &tui_vfx_style::models::SpatialShaderType::Glow(tui_vfx_style::models::GlowShader::default()),
+        &tui_vfx_style::models::SpatialShaderType::Glow(
+            tui_vfx_style::models::GlowShader::default(),
+        ),
     );
 
     let spec = ShaderLayerSpec::try_from_v3_shader_family(
@@ -55,5 +57,8 @@ fn shader_layer_spec_can_build_from_v3_shader_family() {
     )
     .expect("lowers");
 
-    assert!(matches!(spec.shader, tui_vfx_style::models::SpatialShaderType::Glow(_)));
+    assert!(matches!(
+        spec.shader,
+        tui_vfx_style::models::SpatialShaderType::Glow(_)
+    ));
 }

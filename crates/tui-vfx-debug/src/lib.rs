@@ -31,8 +31,8 @@
 //! disturbing existing direct implementors.
 
 mod config;
-mod logger;
 pub mod inspection;
+mod logger;
 
 pub use config::{LogLevel, ModuleConfig};
 pub use logger::{DebugLogger, LogEntry, Logger, create_logger, get_global_logger};

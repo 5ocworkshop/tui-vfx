@@ -40,12 +40,8 @@ pub fn render_pipeline_with_spec(
         let shader_ref: &dyn StyleShader = &shader_storage[index];
         let family = layer.v3_shader_family();
         shader_layers.push(
-            ShaderWithRegion::try_from_v3_shader_family(
-                &family,
-                shader_ref,
-                layer.region.clone(),
-            )
-            .expect("spec shader layers should lower through the grouped V3 runtime seam"),
+            ShaderWithRegion::try_from_v3_shader_family(&family, shader_ref, layer.region.clone())
+                .expect("spec shader layers should lower through the grouped V3 runtime seam"),
         );
     }
 

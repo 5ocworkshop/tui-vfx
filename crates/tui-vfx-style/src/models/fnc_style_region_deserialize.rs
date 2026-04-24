@@ -53,7 +53,9 @@ impl From<StyleRegionShadow> for StyleRegion {
             StyleRegionShadow::Cells(v) => StyleRegion::Cells(v),
             StyleRegionShadow::Column(c) => StyleRegion::Column(c),
             StyleRegionShadow::Columns(v) => StyleRegion::Columns(v),
-            StyleRegionShadow::ColumnRange { start, end } => StyleRegion::ColumnRange { start, end },
+            StyleRegionShadow::ColumnRange { start, end } => {
+                StyleRegion::ColumnRange { start, end }
+            }
             StyleRegionShadow::Modulo {
                 axis,
                 modulus,

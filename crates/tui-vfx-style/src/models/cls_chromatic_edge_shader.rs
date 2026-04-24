@@ -4,8 +4,8 @@
 // <CLOG>1.2.0: use mixed-signals normalized coordinate leaves for horizontal/vertical edge distance calculations instead of open-coding local width/height normalization.
 // 1.1.0: Add StyleShader implementation for ChromaticEdgeShader</CLOG>
 
-use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 use crate::traits::{ShaderContext, StyleShader};
+use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 

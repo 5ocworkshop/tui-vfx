@@ -99,8 +99,8 @@ impl Mask for Radial {
         let signal_ctx = SignalContext::new(0, 0)
             .with_dimensions(w, h)
             .with_cell_position(x, y);
-        let normalized_dist =
-            SurfaceDistanceSignal::radius_from(origin_x, origin_y).sample_with_context(0.0, &signal_ctx);
+        let normalized_dist = SurfaceDistanceSignal::radius_from(origin_x, origin_y)
+            .sample_with_context(0.0, &signal_ctx);
 
         if self.soft_edge {
             // Soft edge: use smooth transition

@@ -93,9 +93,7 @@ impl RoleInterner {
             RoleTag::Decoration => RoleId::new(10),
             RoleTag::Procedural => RoleId::new(11),
             RoleTag::Custom(name) => {
-                if let Some(existing) =
-                    self.custom_names.iter().position(|n| n == name)
-                {
+                if let Some(existing) = self.custom_names.iter().position(|n| n == name) {
                     RoleId::new(FIRST_CLASS_COUNT + existing as u16)
                 } else {
                     let idx = self.custom_names.len() as u16;

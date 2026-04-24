@@ -34,8 +34,7 @@ fn pipeline_with_all_background_roles_runs_cleanly() {
     let source = filled(6, 4, 'X');
     let source_roles = RoleMap::all_background(6, 4);
     let dest_grid = OwnedGrid::new(6, 4);
-    let mut dest_scene =
-        SemanticScene::from_grid_with_default_role(dest_grid, RoleTag::Background);
+    let mut dest_scene = SemanticScene::from_grid_with_default_role(dest_grid, RoleTag::Background);
     render_pipeline(
         &source,
         &source_roles,
@@ -69,8 +68,7 @@ fn striped_source_and_roles(w: u16, h: u16) -> (OwnedGrid, RoleMap) {
 fn render_with_shader(region: StyleRegion) -> SemanticScene {
     let (source, source_roles) = striped_source_and_roles(6, 4);
     let dest_grid = OwnedGrid::new(6, 4);
-    let mut dest_scene =
-        SemanticScene::from_grid_with_default_role(dest_grid, RoleTag::Background);
+    let mut dest_scene = SemanticScene::from_grid_with_default_role(dest_grid, RoleTag::Background);
     // LinearGradientShader paints every cell its predicate selects — a
     // reliable witness to whether the role predicate admitted each cell.
     let shader = LinearGradientShader {

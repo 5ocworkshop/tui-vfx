@@ -119,7 +119,12 @@ impl CellMask {
         if !any {
             return None;
         }
-        Some(Rect::new(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1))
+        Some(Rect::new(
+            min_x,
+            min_y,
+            max_x - min_x + 1,
+            max_y - min_y + 1,
+        ))
     }
 
     /// Count the number of cells set to `true`.
@@ -191,9 +196,7 @@ pub fn extract_shadow_envelope<G: Grid + ?Sized>(
             // Consult the source grid for non-emptiness. Outside the
             // grid's dimensions we treat the cell as empty.
             let cell_nonempty = match source_grid.get(x as usize, y as usize) {
-                Some(cell) => {
-                    cell.ch != ' ' || cell.bg.a != 0 || cell.fg.a != 0
-                }
+                Some(cell) => cell.ch != ' ' || cell.bg.a != 0 || cell.fg.a != 0,
                 None => false,
             };
             if !cell_nonempty {

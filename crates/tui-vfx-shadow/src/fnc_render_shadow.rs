@@ -199,11 +199,7 @@ pub fn render_shadow_into_scene<G: Grid + ?Sized>(
     let effective_rect = match &config.source_region {
         None => element_rect,
         Some(role) => {
-            let envelope = extract_shadow_envelope(
-                source_grid,
-                source_roles,
-                Some(role.clone()),
-            );
+            let envelope = extract_shadow_envelope(source_grid, source_roles, Some(role.clone()));
             match envelope.bounding_rect() {
                 Some(rect) => rect,
                 None => {

@@ -4,6 +4,7 @@
 // <CLOG>3.2.0: add grouped-V3 shader-layer constructors so runtime callers can execute V3 spatial family values through CompositionOptions without rebuilding legacy shaders at each call site.
 // Add preserve_unfilled flag to control shadow corner bleed-through behavior</CLOG>
 
+use super::cls_composition_playback_timing::CompositionPlaybackTiming;
 use crate::types::MaskCombineMode;
 use crate::types::cls_filter_spec::FilterSpec;
 use crate::types::cls_mask_spec::MaskSpec;
@@ -19,7 +20,6 @@ use tui_vfx_style::models::{
 };
 use tui_vfx_style::traits::{ShaderRuntimeParams, StyleShader};
 use tui_vfx_types::Rect;
-use super::cls_composition_playback_timing::CompositionPlaybackTiming;
 
 /// A shader paired with its region constraint.
 /// Each shader can target a different region (e.g., BorderOnly, TextOnly, Rows).
@@ -35,7 +35,6 @@ pub struct ShaderWithRegion<'a> {
 }
 
 impl<'a> ShaderWithRegion<'a> {
-
     /// Build a shader-layer entry directly from a grouped V3 spatial family by
     /// lowering it into the current executable legacy shader surface.
     pub fn try_from_v3_shader_family(
@@ -237,7 +236,6 @@ impl<'a> CompositionOptions<'a> {
         self
     }
 
-
     /// Add a grouped V3 spatial family plus its executable shader reference.
     pub fn try_with_v3_shader_family(
         mut self,
@@ -246,7 +244,9 @@ impl<'a> CompositionOptions<'a> {
         region: StyleRegion,
     ) -> Result<Self, TryLowerV3SpatialShaderError> {
         self.shader_layers
-            .push(ShaderWithRegion::try_from_v3_shader_family(family, shader, region)?);
+            .push(ShaderWithRegion::try_from_v3_shader_family(
+                family, shader, region,
+            )?);
         Ok(self)
     }
 

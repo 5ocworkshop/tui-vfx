@@ -68,12 +68,12 @@ pub mod cls_style_effect;
 pub mod cls_style_layer;
 pub mod cls_style_region;
 pub mod cls_style_transition;
-pub mod fnc_apply_style_effects_to_scene;
 pub mod cls_sub_cell_shake_shader;
 pub mod cls_trace_common;
 pub mod cls_trace_path_shader;
 pub mod cls_trace_propagation_shader;
 pub mod cls_wayfinding_node_shader;
+pub mod fnc_apply_style_effects_to_scene;
 pub mod fnc_style_region_bounding_rect;
 pub mod fnc_style_region_deserialize;
 pub mod fnc_style_region_schema;
@@ -133,17 +133,18 @@ pub use cls_style_effect::StyleEffect;
 pub use cls_style_layer::StyleLayer;
 pub use cls_style_region::{CellCoord, ModuloAxis, StyleRegion};
 pub use cls_style_transition::StyleTransition;
-pub use fnc_apply_style_effects_to_scene::apply_style_effects_to_scene;
 pub use cls_sub_cell_shake_shader::{ShakeAxis, SubCellShakeShader};
 pub use cls_trace_common::{TraceApplyTo, TraceOrigin, TracePoint, TracePolyline};
 pub use cls_trace_path_shader::TracePathShader;
 pub use cls_trace_propagation_shader::TracePropagationShader;
 pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader};
+pub use fnc_apply_style_effects_to_scene::apply_style_effects_to_scene;
 pub use tui_vfx_geometry::easing::EasingType;
 pub use v3::{
-    VfxAffordanceWakeZone, VfxConcealedLightMode, VfxConcealedLightSource, VfxCursorMode,
-    VfxCursorPrimary, VfxCursorShader, VfxCursorTrail, VfxDiffusionMode, VfxDiffusionSource,
-    VfxEdgeDistortionAxis, VfxEdgeDistortionBehavior, VfxEdgeDistortionShader, VfxFocusFieldShape,
+    TryLowerV3SpatialShaderError, TryLowerV3StyleEffectError, VfxAffordanceWakeZone,
+    VfxConcealedLightMode, VfxConcealedLightSource, VfxCursorMode, VfxCursorPrimary,
+    VfxCursorShader, VfxCursorTrail, VfxDiffusionMode, VfxDiffusionSource, VfxEdgeDistortionAxis,
+    VfxEdgeDistortionBehavior, VfxEdgeDistortionShader, VfxFocusFieldShape,
     VfxGradientRevealBehavior, VfxGradientRevealShader, VfxGuidanceCueApplyTo,
     VfxGuidanceCueBehavior, VfxGuidanceCueShader, VfxMaterialLightApplyTo,
     VfxMaterialLightBehavior, VfxMaterialLightShader, VfxMotionFieldBehavior,
@@ -151,13 +152,13 @@ pub use v3::{
     VfxProgressEmphasisDirection, VfxProgressEmphasisMode, VfxProgressEmphasisRowMask,
     VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast, VfxRevealDirection,
     VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
-    TryLowerV3StyleEffectError, VfxStyleEffectFamily, VfxStyleEffectValue,
     VfxStochasticTextureBehavior, VfxStochasticTextureShader, VfxStripeMotionBehavior,
-    VfxStripeMotionShader, VfxSurfaceDepthBehavior, VfxSurfaceDepthEdges,
-    VfxSurfaceDepthLightDirection, VfxSurfaceDepthShader, VfxTextureSegmentMode, VfxTextureTarget,
-    TryLowerV3SpatialShaderError, VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
-    VfxTravelingBandDirection, VfxTravelingBandShader, VfxWayfindingNode,
-    lower_legacy_spatial_shader, try_lower_v3_spatial_shader_family,
+    VfxStripeMotionShader, VfxStyleEffectFamily, VfxStyleEffectValue, VfxSurfaceDepthBehavior,
+    VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection, VfxSurfaceDepthShader,
+    VfxTextureSegmentMode, VfxTextureTarget, VfxTracePathTailMode, VfxTravelingBandApplyTo,
+    VfxTravelingBandBehavior, VfxTravelingBandColor, VfxTravelingBandDirection,
+    VfxTravelingBandShader, VfxWayfindingNode, lower_legacy_spatial_shader,
+    try_lower_v3_spatial_shader_family,
 };
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>

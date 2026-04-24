@@ -65,16 +65,19 @@ fn style_layer_reports_spatial_family_through_grouped_effect_seam() {
     );
 }
 
-
 #[test]
 fn style_layer_can_accept_grouped_v3_non_spatial_effects() {
-    let effect = VfxStyleEffectValue::from_legacy_style_effect(&StyleEffect::Rainbow { speed: 1.0 });
+    let effect =
+        VfxStyleEffectValue::from_legacy_style_effect(&StyleEffect::Rainbow { speed: 1.0 });
 
     let layer = StyleLayer::new(StyleRegion::All)
         .try_with_v3_dwell(&effect, None)
         .expect("lowers");
 
-    assert_eq!(layer.v3_effect_families(), vec![VfxStyleEffectFamily::StyleModulation]);
+    assert_eq!(
+        layer.v3_effect_families(),
+        vec![VfxStyleEffectFamily::StyleModulation]
+    );
 }
 
 #[test]
@@ -91,9 +94,9 @@ fn style_layer_can_accept_grouped_v3_spatial_effects() {
 
     assert!(matches!(
         layer.dwell_v3_effect_family(),
-        Some(VfxStyleEffectFamily::Spatial(VfxSpatialShaderFamily::Primitive(
-            VfxSpatialPrimitive::SurfaceDepth(_)
-        )))
+        Some(VfxStyleEffectFamily::Spatial(
+            VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::SurfaceDepth(_))
+        ))
     ));
 }
 
@@ -107,7 +110,10 @@ fn style_layer_rejects_mismatched_grouped_v3_effect_variants() {
 
     assert!(matches!(
         error,
-        TryLowerV3StyleEffectError::MismatchedVariant { expected_family: "style_fade", actual_effect: "Rainbow" }
+        TryLowerV3StyleEffectError::MismatchedVariant {
+            expected_family: "style_fade",
+            actual_effect: "Rainbow"
+        }
     ));
 }
 // <FILE>tui-vfx-style/tests/models/test_cls_style_layer.rs</FILE> - <DESC>Integration tests for StyleLayer's grouped V3 effect-family seam</DESC>

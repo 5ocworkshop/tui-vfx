@@ -23,7 +23,7 @@ use test_helpers::render_pipeline_with_spec_legacy;
 
 use mixed_signals::prelude::SignalContext;
 use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec};
-use tui_vfx_content::cursor::{fnc_build_cursor_shader, Cursor, CursorState};
+use tui_vfx_content::cursor::{Cursor, CursorState, fnc_build_cursor_shader};
 use tui_vfx_content::transformers::Typewriter;
 use tui_vfx_style::models::SpatialShaderType;
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid};

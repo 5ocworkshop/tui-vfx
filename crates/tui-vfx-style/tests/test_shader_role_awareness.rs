@@ -79,7 +79,11 @@ fn shader_can_read_role_for_current_cell() {
         mods: Default::default(),
     };
     let styled = shader.style_at(&ctx, base);
-    assert_eq!(styled.fg, Color::RED, "Border cell should receive match_color");
+    assert_eq!(
+        styled.fg,
+        Color::RED,
+        "Border cell should receive match_color"
+    );
 }
 
 #[test]

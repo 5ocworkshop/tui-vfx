@@ -9,8 +9,16 @@ use tui_vfx_types::{Cell, Color, Grid, Modifiers, OwnedGrid, RoleMap, RoleTag, S
 #[test]
 fn apply_style_effects_to_scene_respects_style_regions() {
     let mut grid = OwnedGrid::new(2, 1);
-    grid.set(0, 0, Cell::styled('A', Color::RED, Color::BLACK, Modifiers::NONE));
-    grid.set(1, 0, Cell::styled('B', Color::RED, Color::BLACK, Modifiers::NONE));
+    grid.set(
+        0,
+        0,
+        Cell::styled('A', Color::RED, Color::BLACK, Modifiers::NONE),
+    );
+    grid.set(
+        1,
+        0,
+        Cell::styled('B', Color::RED, Color::BLACK, Modifiers::NONE),
+    );
     let mut roles = RoleMap::all_background(2, 1);
     roles.set((0, 0), RoleTag::Text);
     let mut scene = SemanticScene::new(grid, roles);
@@ -35,16 +43,17 @@ fn apply_style_effects_to_scene_respects_style_regions() {
 #[test]
 fn apply_style_effects_to_scene_uses_loop_t_for_modulation_effects() {
     let mut grid = OwnedGrid::new(1, 1);
-    grid.set(0, 0, Cell::styled('A', Color::RED, Color::BLACK, Modifiers::NONE));
+    grid.set(
+        0,
+        0,
+        Cell::styled('A', Color::RED, Color::BLACK, Modifiers::NONE),
+    );
     let roles = RoleMap::all_background(1, 1);
     let mut scene = SemanticScene::new(grid, roles);
 
     apply_style_effects_to_scene(
         &mut scene,
-        &[(
-            StyleEffect::Rainbow { speed: 1.0 },
-            StyleRegion::All,
-        )],
+        &[(StyleEffect::Rainbow { speed: 1.0 }, StyleRegion::All)],
         0.0,
         Some(0.5),
     );

@@ -49,12 +49,14 @@ fn composition_spec_exposes_mixed_v3_shader_families() {
     ));
 }
 
-
 #[test]
 fn composition_spec_can_push_grouped_v3_shader_family() {
-    let family = VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::SurfaceDepth((&GlowShader::default()).into()));
+    let family = VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::SurfaceDepth(
+        (&GlowShader::default()).into(),
+    ));
     let mut spec = CompositionSpec::default();
-    spec.try_push_v3_shader_family(&family, StyleRegion::All).expect("lowers");
+    spec.try_push_v3_shader_family(&family, StyleRegion::All)
+        .expect("lowers");
 
     assert_eq!(spec.v3_shader_families(), vec![family]);
 }
@@ -67,7 +69,9 @@ fn composition_spec_can_append_grouped_v3_shader_family_via_builder() {
         color: ColorConfig::Red,
         position_binding: None,
     };
-    let family = VfxSpatialShaderFamily::ComposedPrimitive(VfxSpatialComposedPrimitive::TravelingBand((&border).into()));
+    let family = VfxSpatialShaderFamily::ComposedPrimitive(
+        VfxSpatialComposedPrimitive::TravelingBand((&border).into()),
+    );
 
     let spec = CompositionSpec::default()
         .try_with_v3_shader_family(&family, StyleRegion::All)
@@ -78,11 +82,8 @@ fn composition_spec_can_append_grouped_v3_shader_family_via_builder() {
 
 #[test]
 fn composition_spec_can_apply_shared_playback_timing() {
-    let timing = CompositionPlaybackTiming::new(
-        1.5,
-        Some(1.2),
-        Some(mixed_signals::traits::Phase::Active),
-    );
+    let timing =
+        CompositionPlaybackTiming::new(1.5, Some(1.2), Some(mixed_signals::traits::Phase::Active));
     let mut spec = CompositionSpec::default();
     spec.apply_playback_timing(timing);
 

@@ -6,7 +6,8 @@
 // Include shadow/preserve_unfilled fields for spec parity</CLOG>
 
 use crate::pipeline::{
-    cls_composition_playback_timing::CompositionPlaybackTiming, cls_shader_layer_spec::ShaderLayerSpec,
+    cls_composition_playback_timing::CompositionPlaybackTiming,
+    cls_shader_layer_spec::ShaderLayerSpec,
 };
 use crate::types::{FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, ShadowSpec};
 use mixed_signals::traits::Phase;

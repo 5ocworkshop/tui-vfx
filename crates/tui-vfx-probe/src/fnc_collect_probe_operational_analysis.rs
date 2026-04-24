@@ -193,7 +193,9 @@ fn configured_effects_for_stage(
             "shader" => {
                 for (index, effect) in report.pipeline.shader_effects.iter().enumerate() {
                     let family = report.pipeline.shader_families.get(index).cloned();
-                    let entry = effects.entry(effect.clone()).or_insert((0usize, family.clone()));
+                    let entry = effects
+                        .entry(effect.clone())
+                        .or_insert((0usize, family.clone()));
                     entry.0 += 1;
                     if entry.1.is_none() {
                         entry.1 = family;

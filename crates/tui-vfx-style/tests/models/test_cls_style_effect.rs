@@ -129,7 +129,10 @@ fn test_fade_effect_exposes_v3_effect_family() {
 #[test]
 fn test_style_modulation_effect_exposes_v3_effect_family() {
     let effect = StyleEffect::Rainbow { speed: 1.0 };
-    assert_eq!(effect.v3_effect_family(), VfxStyleEffectFamily::StyleModulation);
+    assert_eq!(
+        effect.v3_effect_family(),
+        VfxStyleEffectFamily::StyleModulation
+    );
 }
 
 #[test]
@@ -156,7 +159,10 @@ fn test_paired_style_effect_exposes_v3_effect_family() {
         pause_duration: 0.5,
     };
 
-    assert_eq!(effect.v3_effect_family(), VfxStyleEffectFamily::PairedCapability);
+    assert_eq!(
+        effect.v3_effect_family(),
+        VfxStyleEffectFamily::PairedCapability
+    );
 }
 
 #[test]

@@ -1,14 +1,14 @@
-<!-- <FILE>docs/design/tui-vfx-v3-ra-to-vfx-rename-inventory.md</FILE> - <DESC>Working inventory for the Rust-side Ra→Vfx rename. Enumerates the wire-format type families slated to change under Decision 4 and notes where the remaining live references currently sit during cutover.</DESC> -->
+<!-- <FILE>docs/design/tui-vfx-v3-ra-to-vfx-rename-inventory.md</FILE> - <DESC>Working inventory for the Rust-side legacy `Ra*`→`Vfx*` rename. Enumerates the wire-format type families slated to change under Decision 4 and notes where the remaining live references currently sit during cutover.</DESC> -->
 <!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Chapter 40 Decision 4 explicitly adopts the Ra→Vfx rename but defers the exhaustive inventory to a follow-on planning pass. This file is that inventory seed so the rename can proceed methodically instead of by ad hoc grep sessions.</WCTX> -->
+<!-- <WCTX>Chapter 40 Decision 4 explicitly adopts the legacy `Ra*`→`Vfx*` rename but defers the exhaustive inventory to a follow-on planning pass. This file is that inventory seed so the rename can proceed methodically instead of by ad hoc grep sessions.</WCTX> -->
 <!-- <CLOG>0.1.0: initial inventory. Captures the adopted rename targets from Chapter 40 and records the currently observed live-reference buckets in tui-vfx proper.</CLOG> -->
 
-# tui-vfx V3 Ra→Vfx rename inventory
+# tui-vfx V3 legacy `Ra*`→`Vfx*` rename inventory
 
 This document is a working inventory for the Rust-side rename adopted in:
 
 - `docs/design/tui-vfx-v3-upgrade-plan/40_decisions.md`
-  - **Decision 4: Rename `Ra*` prefix to `Vfx*`**
+  - **Decision 4: Rename the legacy `Ra*` prefix to `Vfx*`**
 
 The goal is to make the rename executable in deliberate slices instead of
 re-deriving the same grep output every time work resumes.

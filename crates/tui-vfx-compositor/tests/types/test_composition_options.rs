@@ -4,7 +4,9 @@
 // <CLOG>0.2.0: add grouped-V3 runtime-construction coverage through ShaderWithRegion::try_from_v3_shader_family and CompositionOptions::try_with_v3_shader_family.
 // Add coverage for CompositionOptions::v3_shader_families across unknown and known shader-layer construction paths.</CLOG>
 
-use tui_vfx_compositor::pipeline::{CompositionOptions, CompositionPlaybackTiming, ShaderWithRegion};
+use tui_vfx_compositor::pipeline::{
+    CompositionOptions, CompositionPlaybackTiming, ShaderWithRegion,
+};
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, GlowShader, StyleRegion, VfxSpatialComposedPrimitive,
     VfxSpatialPrimitive, VfxSpatialShaderFamily,
@@ -53,11 +55,11 @@ fn composition_options_reports_known_v3_shader_families() {
     assert!(matches!(families[1], VfxSpatialShaderFamily::Primitive(_)));
 }
 
-
 #[test]
 fn composition_options_can_add_grouped_v3_shader_family_directly() {
     let glow = GlowShader::default();
-    let family = VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::SurfaceDepth((&glow).into()));
+    let family =
+        VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::SurfaceDepth((&glow).into()));
 
     let options = CompositionOptions::default()
         .try_with_v3_shader_family(&family, &glow, StyleRegion::All)
@@ -65,7 +67,10 @@ fn composition_options_can_add_grouped_v3_shader_family_directly() {
 
     let families = options.v3_shader_families();
     assert_eq!(families, vec![family]);
-    assert_eq!(options.shader_layers[0].shader_label.as_deref(), Some("Glow"));
+    assert_eq!(
+        options.shader_layers[0].shader_label.as_deref(),
+        Some("Glow")
+    );
 }
 
 #[test]
@@ -89,11 +94,8 @@ fn shader_with_region_can_build_from_grouped_v3_family() {
 
 #[test]
 fn composition_options_can_apply_shared_playback_timing() {
-    let timing = CompositionPlaybackTiming::new(
-        1.3,
-        Some(1.4),
-        Some(mixed_signals::traits::Phase::End),
-    );
+    let timing =
+        CompositionPlaybackTiming::new(1.3, Some(1.4), Some(mixed_signals::traits::Phase::End));
     let options = CompositionOptions::default().with_playback_timing(timing);
 
     assert_eq!(options.t, 1.0);
@@ -103,12 +105,9 @@ fn composition_options_can_apply_shared_playback_timing() {
 
 #[test]
 fn composition_playback_timing_from_options_falls_back_to_phase_progress() {
-    let options = CompositionOptions::default()
-        .with_playback_timing(CompositionPlaybackTiming::new(
-            0.4,
-            None,
-            Some(mixed_signals::traits::Phase::Start),
-        ));
+    let options = CompositionOptions::default().with_playback_timing(
+        CompositionPlaybackTiming::new(0.4, None, Some(mixed_signals::traits::Phase::Start)),
+    );
     let timing = CompositionPlaybackTiming::from_options(&options);
 
     assert_eq!(timing.effective_loop_t(), 0.4);

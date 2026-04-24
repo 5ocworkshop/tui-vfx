@@ -23,7 +23,10 @@ fn envelope_json_round_trip() {
     let back: TraceEnvelope = serde_json::from_str(&json).expect("deserialize envelope");
     assert_eq!(back.frame_no, 42);
     assert_eq!(back.t_ms, 700);
-    assert_eq!(back.recipe_id.as_ref().map(|r| r.as_str()), Some("splash.v2"));
+    assert_eq!(
+        back.recipe_id.as_ref().map(|r| r.as_str()),
+        Some("splash.v2")
+    );
     assert_eq!(back.seq_in_frame, 7);
     match back.event {
         TraceEvent::CellRendered { x, y, .. } => {

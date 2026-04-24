@@ -58,7 +58,6 @@ impl StyleLayer {
         }
     }
 
-
     /// Set the enter effect from a grouped V3 overall-effect value with optional region override.
     pub fn try_with_v3_enter(
         mut self,
@@ -113,7 +112,6 @@ impl StyleLayer {
         self
     }
 
-
     /// Returns the grouped V3 family form of the enter effect, when present.
     pub fn enter_v3_effect_family(&self) -> Option<VfxStyleEffectFamily> {
         self.enter_effect
@@ -130,9 +128,7 @@ impl StyleLayer {
 
     /// Returns the grouped V3 family form of the exit effect, when present.
     pub fn exit_v3_effect_family(&self) -> Option<VfxStyleEffectFamily> {
-        self.exit_effect
-            .as_ref()
-            .map(StyleEffect::v3_effect_family)
+        self.exit_effect.as_ref().map(StyleEffect::v3_effect_family)
     }
 
     /// Returns grouped V3 family identity for every configured phase effect in

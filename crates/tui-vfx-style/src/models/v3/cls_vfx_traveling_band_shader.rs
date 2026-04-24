@@ -15,9 +15,9 @@ use crate::models::v3::enum_vfx_traveling_band_behavior::{
     VfxTravelingBandDirection,
 };
 use crate::models::{
-    cls_trace_path_shader::TraceTailMode, BorderSweepShader, GlistenApplyTo, GlistenBandShader,
-    GlistenDirection, ReflectShader, SpatialShaderType, TraceApplyTo, TracePathShader,
-    TracePropagationShader,
+    BorderSweepShader, GlistenApplyTo, GlistenBandShader, GlistenDirection, ReflectShader,
+    SpatialShaderType, TraceApplyTo, TracePathShader, TracePropagationShader,
+    cls_trace_path_shader::TraceTailMode,
 };
 use serde::{Deserialize, Serialize};
 

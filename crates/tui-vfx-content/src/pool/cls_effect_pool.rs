@@ -40,9 +40,7 @@ use crate::types::ContentEffect;
 /// let chosen = pool.pick();
 /// assert!(chosen.is_some());
 /// ```
-#[derive(
-    Clone, Debug, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
-)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 pub struct EffectPool {
     /// Pool entries.
     #[serde(default)]
@@ -106,7 +104,10 @@ mod tests {
     #[test]
     fn first_only_returns_first_effect() {
         let pool = EffectPool::new(vec![tw(), sc()], PoolPolicy::FirstOnly);
-        assert!(matches!(pool.pick(), Some(ContentEffect::Typewriter { .. })));
+        assert!(matches!(
+            pool.pick(),
+            Some(ContentEffect::Typewriter { .. })
+        ));
     }
 
     #[test]

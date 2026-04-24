@@ -704,7 +704,9 @@ impl StyleEffect {
                 .unwrap_or_default()
                 .to_string();
 
-            if payload_type == "pulse" && object.contains_key("pulse_color") && !object.contains_key("color")
+            if payload_type == "pulse"
+                && object.contains_key("pulse_color")
+                && !object.contains_key("color")
             {
                 if let Some(color) = object.remove("pulse_color") {
                     object.insert("color".into(), color);
@@ -748,9 +750,9 @@ impl StyleEffect {
     /// Returns the grouped V3 family form of this style effect.
     pub fn v3_effect_family(&self) -> VfxStyleEffectFamily {
         match self {
-            StyleEffect::FadeIn { .. } | StyleEffect::FadeOut { .. } | StyleEffect::ColorFade { .. } => {
-                VfxStyleEffectFamily::StyleFade
-            }
+            StyleEffect::FadeIn { .. }
+            | StyleEffect::FadeOut { .. }
+            | StyleEffect::ColorFade { .. } => VfxStyleEffectFamily::StyleFade,
             StyleEffect::Pulse { .. }
             | StyleEffect::Rainbow { .. }
             | StyleEffect::NeonFlicker { .. }

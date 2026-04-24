@@ -10,9 +10,7 @@ use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use tui_vfx_debug::inspection::{
     InspectionSink, TraceEnvelope, TraceEvent, TraceFilter, TraceSink,
 };
-use tui_vfx_types::{
-    Cell, Color, LayerId, Modifiers, RecipeId, Rect, RoleTag, Style,
-};
+use tui_vfx_types::{Cell, Color, LayerId, Modifiers, RecipeId, Rect, RoleTag, Style};
 
 const WIDTH: u16 = 80;
 const HEIGHT: u16 = 24;

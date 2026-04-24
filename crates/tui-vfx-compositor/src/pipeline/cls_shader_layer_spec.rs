@@ -27,7 +27,6 @@ pub struct ShaderLayerSpec {
 // <VERS>END OF VERSION: 0.2.0</VERS>
 
 impl ShaderLayerSpec {
-
     /// Build a shader-layer spec directly from a grouped V3 spatial family by
     /// lowering it back into the current executable legacy shader surface.
     pub fn try_from_v3_shader_family(

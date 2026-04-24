@@ -33,7 +33,8 @@ pub fn apply_style_effects_to_scene(
                 let mut style = VfxStyle::new(cell.fg, cell.bg, cell.mods);
                 for (effect, region) in effects {
                     if region.should_style(x as u16, y as u16, role.clone(), area) {
-                        style = effect.calculate(style_effect_progress(effect, phase_t, loop_t), style);
+                        style =
+                            effect.calculate(style_effect_progress(effect, phase_t, loop_t), style);
                     }
                 }
                 scene.grid_mut().set(

@@ -23,7 +23,10 @@ pub enum TryLowerV3SpatialShaderError {
 impl fmt::Display for TryLowerV3SpatialShaderError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::UnsupportedTravelingBandColorPolicy { behavior, color_policy } => write!(
+            Self::UnsupportedTravelingBandColorPolicy {
+                behavior,
+                color_policy,
+            } => write!(
                 f,
                 "traveling-band behavior `{behavior}` cannot lower the color policy `{color_policy}` into the legacy runtime surface"
             ),

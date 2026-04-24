@@ -4,11 +4,12 @@
 // <CLOG>0.3.0: add family_label() for runtime-facing seams.
 // 0.2.0: promote the central V3 style-family enum to wrap explicit primitive and composed-primitive layers.</CLOG>
 
-//! Central V3 representation for spatial shaders across primitive and composed layers.
+//! Canonical grouped V3 representation for spatial shaders across primitive
+//! and composed layers.
 //!
-//! This enum is the cross-family lowering target for the legacy flat
-//! `SpatialShaderType` catalog. It preserves grouped family boundaries while
-//! giving downstream code one stable seam to target during cutover.
+//! This enum is the lowering target for the legacy flat `SpatialShaderType`
+//! catalog. It preserves the primitive/composed split while giving downstream
+//! code one stable seam for docs, debug output, and runtime inspection.
 
 use crate::models::v3::{VfxSpatialComposedPrimitive, VfxSpatialPrimitive};
 use serde::{Deserialize, Serialize};

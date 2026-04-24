@@ -10,7 +10,7 @@
 //! surfaces now, leave the legacy V2-era variants operational for current
 //! playback, and retire the old surface only once the wider migration is ready.
 
-use crate::models::{cls_trace_common::TraceOrigin, cls_trace_common::TracePolyline, ColorConfig};
+use crate::models::{ColorConfig, cls_trace_common::TraceOrigin, cls_trace_common::TracePolyline};
 use serde::{Deserialize, Serialize};
 
 /// Shared channel-target surface for V3 traveling-band shaders.

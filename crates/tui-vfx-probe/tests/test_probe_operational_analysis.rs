@@ -94,10 +94,14 @@ fn test_collect_probe_operational_analysis_reports_shader_family_for_shader_stag
     .expect("report should build");
 
     let analysis = collect_probe_operational_analysis("frame", &[report]);
-    assert!(analysis.stages.iter().any(|stage| stage.stage == "shader"
-        && stage.effects.iter().any(|effect| effect.effect == "BorderSweep#1"
-            && effect.family.as_deref() == Some("traveling_band")
-            && effect.status == ProbeOperationalStatus::Success)));
+    assert!(analysis.stages.iter().any(|stage| {
+        stage.stage == "shader"
+            && stage.effects.iter().any(|effect| {
+                effect.effect == "BorderSweep#1"
+                    && effect.family.as_deref() == Some("traveling_band")
+                    && effect.status == ProbeOperationalStatus::Success
+            })
+    }));
 }
 
 #[test]

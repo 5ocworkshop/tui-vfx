@@ -3,12 +3,12 @@
 // <WCTX>Decision 2 follow-on — extend the grouped V3 family seam beyond spatial shaders so runtime wiring can reason about all style-effect categories through one family surface.</WCTX>
 // <CLOG>0.1.0: add a canonical V3 family enum for style effects covering fades, modulation, typography windows, instability, paired capabilities, and spatial families.</CLOG>
 
-//! Central V3 family representation for style effects.
+//! Canonical grouped V3 family representation for style effects.
 //!
-//! This keeps non-spatial style effects on the same family-oriented migration path
-//! as spatial shaders. During the transition, the legacy [`crate::models::StyleEffect`]
-//! enum remains the executable surface; this enum provides the grouped V3 identity that
-//! downstream runtime/debug/doc seams can consume without re-classifying effects ad hoc.
+//! This keeps non-spatial style effects aligned with the grouped spatial shader
+//! seam. During cutover, the legacy [`crate::models::StyleEffect`] enum remains
+//! the executable surface; this enum provides stable grouped identity for docs,
+//! debug output, and runtime wiring.
 
 use serde::{Deserialize, Serialize};
 

@@ -337,8 +337,7 @@ pub mod types;
 // Re-export main functions
 pub use fnc_extract_shadow_envelope::{CellMask, extract_shadow_envelope};
 pub use fnc_render_shadow::{
-    render_shadow, render_shadow_gradient_colors, render_shadow_into_scene,
-    render_shadow_simple,
+    render_shadow, render_shadow_gradient_colors, render_shadow_into_scene, render_shadow_simple,
 };
 
 // Re-export types at crate root for convenience

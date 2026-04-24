@@ -9,6 +9,7 @@
 //! `Diffusion`, `ConcealedLight`, and `EdgeSheen` in the legacy flat catalog.
 
 use crate::models::{ColorConfig, FalloffType};
+use mixed_signals::types::SignalOrFloat;
 use serde::{Deserialize, Serialize};
 
 /// Shared channel-target surface for V3 material-light shaders.
@@ -110,8 +111,8 @@ pub enum VfxMaterialLightBehavior {
         #[serde(default)]
         falloff: FalloffType,
         /// Blend strength.
-        #[config(default = 0.2)]
-        intensity: f32,
+        #[serde(default = "default_diffusion_intensity")]
+        intensity: SignalOrFloat,
         /// Target channel(s).
         #[serde(default)]
         apply_to: VfxMaterialLightApplyTo,
@@ -180,6 +181,10 @@ pub enum VfxMaterialLightBehavior {
         #[serde(default)]
         apply_to: VfxMaterialLightApplyTo,
     },
+}
+
+fn default_diffusion_intensity() -> SignalOrFloat {
+    SignalOrFloat::Static(0.2)
 }
 
 // <FILE>tui-vfx-style/src/models/v3/enum_vfx_material_light_behavior.rs</FILE> - <DESC>V3 material-light family behavior surface</DESC>

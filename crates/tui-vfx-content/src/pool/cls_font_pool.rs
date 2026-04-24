@@ -84,20 +84,14 @@ mod tests {
 
     #[test]
     fn random_picks_a_valid_name() {
-        let pool = FontPool::new(
-            vec!["a".into(), "b".into(), "c".into()],
-            PoolPolicy::Random,
-        );
+        let pool = FontPool::new(vec!["a".into(), "b".into(), "c".into()], PoolPolicy::Random);
         let picked = pool.pick().unwrap();
         assert!(["a", "b", "c"].contains(&picked));
     }
 
     #[test]
     fn serde_roundtrip() {
-        let pool = FontPool::new(
-            vec!["one".into(), "two".into()],
-            PoolPolicy::Random,
-        );
+        let pool = FontPool::new(vec!["one".into(), "two".into()], PoolPolicy::Random);
         let json = serde_json::to_string(&pool).unwrap();
         let back: FontPool = serde_json::from_str(&json).unwrap();
         assert_eq!(pool, back);

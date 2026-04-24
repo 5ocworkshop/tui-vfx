@@ -25,7 +25,7 @@
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use tui_vfx_compositor::pipeline::{render_pipeline, CompositionOptions, ShadowSpec};
+use tui_vfx_compositor::pipeline::{CompositionOptions, ShadowSpec, render_pipeline};
 use tui_vfx_shadow::ShadowConfig;
 use tui_vfx_types::{Color, OwnedGrid, RoleMap, RoleTag, SemanticScene};
 

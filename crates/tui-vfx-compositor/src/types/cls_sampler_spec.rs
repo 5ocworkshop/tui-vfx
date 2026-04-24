@@ -552,10 +552,7 @@ impl SamplerSpec {
                             .and_then(serde_json::Value::as_str)
                             == Some("center")
                         {
-                            object.insert(
-                                "center".into(),
-                                Value::String("center".to_string()),
-                            );
+                            object.insert("center".into(), Value::String("center".to_string()));
                         } else if center_object
                             .get("kind")
                             .and_then(serde_json::Value::as_str)

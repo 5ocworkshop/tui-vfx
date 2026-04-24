@@ -49,7 +49,9 @@ adopted V3 direction in:
 - `docs/design/tui-vfx-v3-capability-catalog.md`
 
 The goal is to make the eventual `tui-vfx-style` restructure executable in
-deliberate slices rather than by repeated ad hoc reclassification.
+deliberate slices rather than by repeated ad hoc reclassification. The live
+flat `SpatialShaderType` surface remains the contract until the grouped V3
+families are fully wired.
 
 ---
 

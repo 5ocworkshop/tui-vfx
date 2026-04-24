@@ -50,14 +50,7 @@ fn _compile_assert_render_pipeline_with_area(
     options: CompositionOptions<'_>,
     inspector: Option<&mut dyn CompositorInspector>,
 ) {
-    render_pipeline_with_area(
-        source,
-        source_roles,
-        destination,
-        area,
-        options,
-        inspector,
-    );
+    render_pipeline_with_area(source, source_roles, destination, area, options, inspector);
 }
 
 /// Compile-time assertion for `render_pipeline_with_spec`.
@@ -96,14 +89,7 @@ fn _compile_assert_render_pipeline_with_spec_area(
     spec: &CompositionSpec,
     inspector: Option<&mut dyn CompositorInspector>,
 ) {
-    render_pipeline_with_spec_area(
-        source,
-        source_roles,
-        destination,
-        area,
-        spec,
-        inspector,
-    );
+    render_pipeline_with_spec_area(source, source_roles, destination, area, spec, inspector);
 }
 
 // Runtime smoke tests: the signature assertions above are dead code — we
@@ -169,17 +155,7 @@ fn render_pipeline_with_spec_smoke() {
     let dest = OwnedGrid::new(2, 2);
     let mut scene = SemanticScene::from_grid_with_default_role(dest, RoleTag::Background);
     let spec = CompositionSpec::default();
-    render_pipeline_with_spec(
-        &source,
-        &source_roles,
-        &mut scene,
-        2,
-        2,
-        0,
-        0,
-        &spec,
-        None,
-    );
+    render_pipeline_with_spec(&source, &source_roles, &mut scene, 2, 2, 0, 0, &spec, None);
 }
 
 #[test]

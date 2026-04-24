@@ -11,7 +11,7 @@
 //! per-cell mask). A `Some(role)` source_region restricts the mask to cells
 //! whose role matches. Tiny rectangles (1x1, 2x1) must not panic.
 
-use tui_vfx_shadow::{CellMask, extract_shadow_envelope};
+use tui_vfx_shadow::extract_shadow_envelope;
 use tui_vfx_types::{Cell, Grid, OwnedGrid, Rect, RoleMap, RoleTag};
 
 fn filled(width: usize, height: usize, fill_rect: Rect) -> OwnedGrid {
@@ -24,12 +24,7 @@ fn filled(width: usize, height: usize, fill_rect: Rect) -> OwnedGrid {
     g
 }
 
-fn roles_with_rect(
-    width: u16,
-    height: u16,
-    rect: Rect,
-    role: RoleTag,
-) -> RoleMap {
+fn roles_with_rect(width: u16, height: u16, rect: Rect, role: RoleTag) -> RoleMap {
     let mut r = RoleMap::empty(width, height);
     for y in rect.y..rect.y + rect.height {
         for x in rect.x..rect.x + rect.width {

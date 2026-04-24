@@ -903,8 +903,8 @@ mod tests {
     //! the crate.
 
     use super::*;
-    use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode};
     use crate::types::BindableValue;
+    use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode};
     use tui_vfx_style::traits::ShaderRuntimeParams;
 
     fn kitt_spec_with_progress(progress: BindableValue) -> FilterSpec {

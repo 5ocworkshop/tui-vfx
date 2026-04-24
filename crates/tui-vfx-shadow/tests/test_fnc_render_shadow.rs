@@ -19,9 +19,7 @@
 use tui_vfx_shadow::{
     ShadowConfig, ShadowEdges, ShadowStyle, render_shadow, render_shadow_into_scene,
 };
-use tui_vfx_types::{
-    Cell, Color, Grid, OwnedGrid, Rect, RoleMap, RoleTag, SemanticScene,
-};
+use tui_vfx_types::{Cell, Color, Grid, OwnedGrid, Rect, RoleMap, RoleTag, SemanticScene};
 
 fn filled_grid(width: usize, height: usize, rect: Rect) -> OwnedGrid {
     let mut g = OwnedGrid::new(width, height);
@@ -67,10 +65,8 @@ fn back_compat_none_source_region_matches_legacy_render() {
     // produce the same shadow cells on the underlying grid.
     let source_grid = filled_grid(20, 10, element_rect);
     let source_roles = RoleMap::empty(20, 10);
-    let mut scene = SemanticScene::from_grid_with_default_role(
-        OwnedGrid::new(20, 10),
-        RoleTag::Background,
-    );
+    let mut scene =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(20, 10), RoleTag::Background);
     render_shadow_into_scene(
         &source_grid,
         &source_roles,
@@ -99,10 +95,8 @@ fn shadow_stage_writes_shadow_role_tag_at_produced_cells() {
     let element_rect = Rect::new(5, 2, 8, 4);
     let source_grid = filled_grid(20, 10, element_rect);
     let source_roles = RoleMap::empty(20, 10);
-    let mut scene = SemanticScene::from_grid_with_default_role(
-        OwnedGrid::new(20, 10),
-        RoleTag::Background,
-    );
+    let mut scene =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(20, 10), RoleTag::Background);
     let config = card_config();
 
     render_shadow_into_scene(
@@ -120,8 +114,7 @@ fn shadow_stage_writes_shadow_role_tag_at_produced_cells() {
     for y in 0..scene.grid().height() {
         for x in 0..scene.grid().width() {
             if let Some(cell) = scene.grid().get(x, y) {
-                let produced =
-                    cell.ch != ' ' || cell.bg.a != 0 || cell.fg.a != 0;
+                let produced = cell.ch != ' ' || cell.bg.a != 0 || cell.fg.a != 0;
                 if produced {
                     let role = scene.role((x as u16, y as u16));
                     assert_eq!(
@@ -157,10 +150,8 @@ fn source_region_border_restricts_extrusion_to_role_bbox() {
         }
     }
 
-    let mut scene = SemanticScene::from_grid_with_default_role(
-        OwnedGrid::new(20, 10),
-        RoleTag::Background,
-    );
+    let mut scene =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(20, 10), RoleTag::Background);
     let config = card_config().with_source_region(RoleTag::Border);
     render_shadow_into_scene(
         &source_grid,
@@ -181,8 +172,7 @@ fn source_region_border_restricts_extrusion_to_role_bbox() {
                 .grid()
                 .get(x as usize, y as usize)
                 .expect("cell in bounds");
-            let produced =
-                cell.ch != ' ' || cell.bg.a != 0 || cell.fg.a != 0;
+            let produced = cell.ch != ' ' || cell.bg.a != 0 || cell.fg.a != 0;
             assert!(
                 !produced,
                 "shadow leaked below border bbox at ({x},{y}): {:?}",
@@ -201,10 +191,8 @@ fn source_region_with_no_matches_produces_no_shadow() {
     let source_grid = filled_grid(20, 10, full_rect);
     // Whole grid is Text, so Border source_region will match nothing.
     let source_roles = RoleMap::new_with_default(20, 10, RoleTag::Text);
-    let mut scene = SemanticScene::from_grid_with_default_role(
-        OwnedGrid::new(20, 10),
-        RoleTag::Background,
-    );
+    let mut scene =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(20, 10), RoleTag::Background);
     let config = card_config().with_source_region(RoleTag::Border);
 
     render_shadow_into_scene(
@@ -224,10 +212,8 @@ fn tiny_1x1_source_does_not_panic() {
     let element_rect = Rect::new(0, 0, 1, 1);
     let source_grid = filled_grid(4, 4, element_rect);
     let source_roles = RoleMap::all_background(4, 4);
-    let mut scene = SemanticScene::from_grid_with_default_role(
-        OwnedGrid::new(4, 4),
-        RoleTag::Background,
-    );
+    let mut scene =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(4, 4), RoleTag::Background);
     let config = card_config();
     render_shadow_into_scene(
         &source_grid,
@@ -245,10 +231,8 @@ fn tiny_2x1_source_does_not_panic() {
     let element_rect = Rect::new(0, 0, 2, 1);
     let source_grid = filled_grid(6, 4, element_rect);
     let source_roles = RoleMap::all_background(6, 4);
-    let mut scene = SemanticScene::from_grid_with_default_role(
-        OwnedGrid::new(6, 4),
-        RoleTag::Background,
-    );
+    let mut scene =
+        SemanticScene::from_grid_with_default_role(OwnedGrid::new(6, 4), RoleTag::Background);
     let config = card_config();
     render_shadow_into_scene(
         &source_grid,

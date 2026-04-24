@@ -38,7 +38,10 @@ fn lifecycle_phase_transition_round_trips() {
         t_ms: 100,
         eased_progress: 0.5,
     };
-    assert!(matches!(round_trip(&ev), TraceEvent::LifecyclePhaseTransition { .. }));
+    assert!(matches!(
+        round_trip(&ev),
+        TraceEvent::LifecyclePhaseTransition { .. }
+    ));
 }
 
 #[test]
@@ -48,7 +51,10 @@ fn lifecycle_dismissed_round_trips() {
         reason: "timeout".into(),
         t_ms: 200,
     };
-    assert!(matches!(round_trip(&ev), TraceEvent::LifecycleDismissed { .. }));
+    assert!(matches!(
+        round_trip(&ev),
+        TraceEvent::LifecycleDismissed { .. }
+    ));
 }
 
 #[test]
@@ -77,7 +83,10 @@ fn procedural_resolved_round_trips() {
         resolved: true,
         fallback_id: Some("spinner.dot".into()),
     };
-    assert!(matches!(round_trip(&ev), TraceEvent::ProceduralResolved { .. }));
+    assert!(matches!(
+        round_trip(&ev),
+        TraceEvent::ProceduralResolved { .. }
+    ));
 }
 
 #[test]
@@ -97,7 +106,10 @@ fn recipe_binding_resolved_round_trips() {
         recipe_id: RecipeId::from("splash.v2"),
         theme: "harbor".into(),
     };
-    assert!(matches!(round_trip(&ev), TraceEvent::RecipeBindingResolved { .. }));
+    assert!(matches!(
+        round_trip(&ev),
+        TraceEvent::RecipeBindingResolved { .. }
+    ));
 }
 
 #[test]
@@ -120,7 +132,10 @@ fn layer_cell_painted_round_trips() {
         glyph: '▓',
         role: RoleTag::Border,
     };
-    assert!(matches!(round_trip(&ev), TraceEvent::LayerCellPainted { .. }));
+    assert!(matches!(
+        round_trip(&ev),
+        TraceEvent::LayerCellPainted { .. }
+    ));
 }
 
 #[test]
@@ -207,7 +222,10 @@ fn shadow_cell_applied_round_trips() {
         source_role: Some(RoleTag::Border),
         source_empty: false,
     };
-    assert!(matches!(round_trip(&ev), TraceEvent::ShadowCellApplied { .. }));
+    assert!(matches!(
+        round_trip(&ev),
+        TraceEvent::ShadowCellApplied { .. }
+    ));
 }
 
 #[test]

@@ -82,8 +82,9 @@ impl PulseWaveShader {
         match self.direction {
             WaveDirection::Horizontal => nx,
             WaveDirection::Vertical => ny,
-            WaveDirection::Radial => SpatialCoordinateSignal::sample_radius()
-                .sample_with_context(0.0, &signal_ctx),
+            WaveDirection::Radial => {
+                SpatialCoordinateSignal::sample_radius().sample_with_context(0.0, &signal_ctx)
+            }
             WaveDirection::Diagonal => (nx + ny) / 2.0,
         }
     }

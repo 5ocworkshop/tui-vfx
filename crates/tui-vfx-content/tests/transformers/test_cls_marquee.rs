@@ -28,8 +28,8 @@ fn test_signal_ctx() -> SignalContext {
 #[test]
 fn test_scroll_start() {
     let tx = Marquee::new(5, mixed_signals::prelude::SignalOrFloat::Static(1.0)); // Width 5
-                                                                                  // "Hello World"
-                                                                                  // t=0 -> "Hello"
+    // "Hello World"
+    // t=0 -> "Hello"
     assert_eq!(
         tx.transform("Hello World", 0.0, &test_signal_ctx()),
         "Hello"

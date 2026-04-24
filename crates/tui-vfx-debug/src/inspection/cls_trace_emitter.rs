@@ -66,7 +66,10 @@ impl TraceEmitter {
 
     /// Replace the active frame context and reset the per-frame sequence.
     pub fn begin_frame(&self, frame: TraceFrameContext) {
-        *self.frame.write().expect("TraceEmitter frame lock poisoned") = frame;
+        *self
+            .frame
+            .write()
+            .expect("TraceEmitter frame lock poisoned") = frame;
         self.seq.store(0, Ordering::Relaxed);
     }
 

@@ -216,6 +216,5 @@ impl StyleRegion {
     }
 }
 
-
 // <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum</DESC>
 // <VERS>END OF VERSION: 5.1.0</VERS>

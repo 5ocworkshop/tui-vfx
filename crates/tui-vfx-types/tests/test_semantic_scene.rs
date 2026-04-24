@@ -4,7 +4,7 @@
 // <CLOG>0.1.0: TDD red tests for new/with_metadata/from_grid_with_default_role, Buffer-style accessors, dimension-mismatch panic.</CLOG>
 
 use tui_vfx_types::{
-    Cell, Grid, OwnedGrid, Rect, RecipeId, RoleMap, RoleTag, SceneMetadata, SemanticScene,
+    Cell, Grid, OwnedGrid, RecipeId, Rect, RoleMap, RoleTag, SceneMetadata, SemanticScene,
 };
 
 fn simple_grid(w: usize, h: usize) -> OwnedGrid {

@@ -9,11 +9,11 @@
 //! gives the V3 migration a place to absorb related progress/emphasis effects
 //! without keeping the legacy effect name as the permanent conceptual root.
 
+use crate::models::ColorConfig;
 use crate::models::v3::enum_vfx_progress_emphasis_behavior::{
     VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
     VfxProgressEmphasisRowMask, VfxProgressEmphasisTextContrast,
 };
-use crate::models::ColorConfig;
 use crate::models::{
     HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
     HighlighterShader, SpatialShaderType, TextContrast,

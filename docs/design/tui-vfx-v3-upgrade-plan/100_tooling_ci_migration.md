@@ -69,7 +69,7 @@ An exhaustive tooling inventory was conducted as part of the debug-recipes migra
 
 ### 10 — Rust type definitions + loaders (6 components)
 
-1. `tui-vfx-recipes/src/recipe_schema/config.rs` — the wire-format ground truth (`RaRecipeConfig` and every nested type). V3 renames to `VfxRecipeConfig` per Decision 4; the type surface changes substantially because Decision 3 restructures the pipeline as a tree and Decision 1 replaces scattered scoping fields with the unified Scope primitive. **Substantial.**
+1. `tui-vfx-recipes/src/recipe_schema/config.rs` — the legacy wire-format ground truth (`RaRecipeConfig` and every nested type). V3 renames that root type to `VfxRecipeConfig` per Decision 4; the type surface changes substantially because Decision 3 restructures the pipeline as a tree and Decision 1 replaces scattered scoping fields with the unified Scope primitive. **Substantial.**
 2. `tui-vfx-style/src/models/` — 50+ shader type definitions. Pattern-as-separable-axis (Decision 2) requires a structural reorganization from "every shader is an enum variant" to "named compositions are Rust factories that produce `ColoredOverlay + Pattern` trees". **Substantial.**
 3. `tui-vfx-compositor/src/types/` — `FilterSpec`, `MaskSpec`, `SamplerSpec`, `MaskCombineMode`. Type definitions mostly stable; recipe loading paths need the V3 path. **Moderate.**
 4. `tui-vfx-content/src/pool/` — `ContentEffect`, `EffectPool`, `TextPool`, `ImagePool`. Type definitions stable. **Moderate.**
@@ -83,7 +83,7 @@ An exhaustive tooling inventory was conducted as part of the debug-recipes migra
 ### 30 — Doc generators (7 subcommands + templates)
 
 - `xtask docs generate` and its sub-generators (`gen_effect_schemas`, `gen_json`, `gen_markdown`, `gen_ai_context`, `gen_api`) produce `docs/generated/{CAPABILITIES.md, capabilities.json, effect_schemas.json, ai-context.md, API.md}`. Every shader variant is enumerated in these artifacts.
-- `gen_effect_schemas.rs` in particular enumerates V2's `SpatialShaderType` variants. V3's Pattern-as-axis reorganization requires a full rewrite of this generator: the output must describe primitives (`ColoredOverlay` + `Pattern` enum) and named compositions (Tier 1 Rust factories) as two distinct surfaces rather than a single flat enum.
+- `gen_effect_schemas.rs` in particular enumerates the legacy `SpatialShaderType` variants. V3's Pattern-as-axis reorganization requires a full rewrite of this generator: the output must describe primitives (`ColoredOverlay` + `Pattern` enum) and named compositions (Tier 1 Rust factories) as two distinct surfaces rather than a single flat enum.
 - `docs/templates/capabilities.toml` is the editorial master paired with rustdoc. Authors will need to re-document V3 effects or update entries. Related to Intention 28 (documentation is a first-class automated engineering contract).
 - `gen_ai_context.rs` — the AI orientation doc. V3 rewrites every recipe structure example. **Substantial across the board; `gen_effect_schemas` and `gen_ai_context` are the largest.**
 

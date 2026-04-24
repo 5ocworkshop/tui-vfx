@@ -34,9 +34,7 @@
 
 use std::sync::Arc;
 
-use tui_vfx_debug::inspection::{
-    InspectionSink, StageMask, TraceEmitter, TraceEvent, TraceSink,
-};
+use tui_vfx_debug::inspection::{InspectionSink, StageMask, TraceEmitter, TraceEvent, TraceSink};
 use tui_vfx_types::{Cell, Style};
 
 use super::pipeline_inspector::CompositorInspector;
@@ -161,7 +159,14 @@ impl CompositorInspector for InspectionSinkBridge {
         });
     }
 
-    fn on_filter_applied(&mut self, x: u16, y: u16, before: &Cell, after: &Cell, filter_name: &str) {
+    fn on_filter_applied(
+        &mut self,
+        x: u16,
+        y: u16,
+        before: &Cell,
+        after: &Cell,
+        filter_name: &str,
+    ) {
         self.emit(TraceEvent::FilterApplied {
             x,
             y,
@@ -171,13 +176,7 @@ impl CompositorInspector for InspectionSinkBridge {
         });
     }
 
-    fn on_shadow_cell_applied(
-        &mut self,
-        x: u16,
-        y: u16,
-        shadow_cell: &Cell,
-        source_empty: bool,
-    ) {
+    fn on_shadow_cell_applied(&mut self, x: u16, y: u16, shadow_cell: &Cell, source_empty: bool) {
         self.emit(TraceEvent::ShadowCellApplied {
             x,
             y,

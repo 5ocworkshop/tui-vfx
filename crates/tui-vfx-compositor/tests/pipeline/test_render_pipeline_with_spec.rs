@@ -8,7 +8,9 @@
 
 #[path = "test_helpers.rs"]
 mod test_helpers;
-use test_helpers::{render_pipeline_legacy, render_pipeline_with_spec_legacy, render_pipeline_with_spec_area_legacy};
+use test_helpers::{
+    render_pipeline_legacy, render_pipeline_with_spec_area_legacy, render_pipeline_with_spec_legacy,
+};
 
 use tui_vfx_compositor::pipeline::{
     CompositionOptions, CompositionSpec, RenderArea, ShaderLayerSpec,
@@ -16,8 +18,8 @@ use tui_vfx_compositor::pipeline::{
 use tui_vfx_compositor::types::{MaskCombineMode, ShadowSpec};
 use tui_vfx_shadow::{ShadowConfig, ShadowEdges};
 use tui_vfx_style::models::{
-    BorderSweepShader, ColorConfig, SpatialShaderType, StyleRegion,
-    VfxSpatialComposedPrimitive, VfxSpatialShaderFamily,
+    BorderSweepShader, ColorConfig, SpatialShaderType, StyleRegion, VfxSpatialComposedPrimitive,
+    VfxSpatialShaderFamily,
 };
 use tui_vfx_style::traits::StyleShader;
 use tui_vfx_style::traits::cls_shader_context::ShaderRuntimeParams;
@@ -183,9 +185,9 @@ fn test_render_pipeline_with_spec_matches_grouped_v3_options_across_representati
     let pulse = tui_vfx_style::models::PulseWaveShader::default();
     assert_grouped_family_matches_legacy_runtime(
         pulse.clone(),
-        VfxSpatialShaderFamily::Primitive(
-            tui_vfx_style::models::VfxSpatialPrimitive::MotionField((&pulse).into()),
-        ),
+        VfxSpatialShaderFamily::Primitive(tui_vfx_style::models::VfxSpatialPrimitive::MotionField(
+            (&pulse).into(),
+        )),
         0.5,
     );
 

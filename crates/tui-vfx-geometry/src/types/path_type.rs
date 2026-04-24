@@ -4,7 +4,9 @@
 // <CLOG>Added Projectile, Friction, Orbit, Pendulum variants using mixed-signals physics</CLOG>
 
 use serde::{Deserialize, Serialize};
-use tui_vfx_core::{ConfigSchema, FieldMeta, Range, ScalarValue, SchemaField, SchemaNode, SchemaVariant};
+use tui_vfx_core::{
+    ConfigSchema, FieldMeta, Range, ScalarValue, SchemaField, SchemaNode, SchemaVariant,
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
@@ -172,37 +174,146 @@ impl ConfigSchema for PathType {
             json_name: Some("type".to_string()),
             tag_field: Some("type".to_string()),
             variants: vec![
-                SchemaVariant::Unit { name: "Linear".to_string(), description: Some("Straight-line motion".to_string()), json_value: Some("linear".to_string()) },
+                SchemaVariant::Unit {
+                    name: "Linear".to_string(),
+                    description: Some("Straight-line motion".to_string()),
+                    json_value: Some("linear".to_string()),
+                },
                 SchemaVariant::Struct {
                     name: "Composed".to_string(),
-                    description: Some("Carrier route plus one or more dynamic treatments".to_string()),
+                    description: Some(
+                        "Carrier route plus one or more dynamic treatments".to_string(),
+                    ),
                     json_value: Some("composed".to_string()),
                     fields: vec![
                         SchemaField::new(
                             "route",
-                            SchemaNode::Opaque { type_name: "PathType".to_string() },
-                            FieldMeta { description: Some("Base carrier route".to_string()), ..Default::default() },
+                            SchemaNode::Opaque {
+                                type_name: "PathType".to_string(),
+                            },
+                            FieldMeta {
+                                description: Some("Base carrier route".to_string()),
+                                ..Default::default()
+                            },
                         ),
                         SchemaField::new(
                             "dynamics",
-                            SchemaNode::Vec { item: Box::new(SchemaNode::Opaque { type_name: "PathType".to_string() }) },
-                            FieldMeta { description: Some("Dynamic path treatments layered over the route".to_string()), ..Default::default() },
+                            SchemaNode::Vec {
+                                item: Box::new(SchemaNode::Opaque {
+                                    type_name: "PathType".to_string(),
+                                }),
+                            },
+                            FieldMeta {
+                                description: Some(
+                                    "Dynamic path treatments layered over the route".to_string(),
+                                ),
+                                ..Default::default()
+                            },
                         ),
                     ],
                 },
-                SchemaVariant::Struct { name: "Arc".to_string(), description: Some("Arc path with bulge factor".to_string()), json_value: Some("arc".to_string()), fields: vec![f32_field("bulge", "Arc bulge factor")] },
-                SchemaVariant::Struct { name: "Bezier".to_string(), description: Some("Quadratic bezier motion path".to_string()), json_value: Some("bezier".to_string()), fields: vec![f32_field("control_x", "Bezier control X"), f32_field("control_y", "Bezier control Y")] },
-                SchemaVariant::Struct { name: "Spring".to_string(), description: Some("Spring-like settling path".to_string()), json_value: Some("spring".to_string()), fields: vec![f32_field("stiffness", "Spring stiffness"), f32_field("damping", "Spring damping")] },
-                SchemaVariant::Struct { name: "Bounce".to_string(), description: Some("Bouncy overshoot path".to_string()), json_value: Some("bounce".to_string()), fields: vec![u8_field("bounces", "Number of bounces", Some(3), Some(0), Some(12)), f32_field("decay", "Bounce decay factor")] },
-                SchemaVariant::Unit { name: "Squash".to_string(), description: Some("Squash-like settling path".to_string()), json_value: Some("squash".to_string()) },
-                SchemaVariant::Unit { name: "Hover".to_string(), description: Some("Hover-like motion treatment".to_string()), json_value: Some("hover".to_string()) },
-                SchemaVariant::Struct { name: "Rectilinear".to_string(), description: Some("Axis-aligned L-shaped travel".to_string()), json_value: Some("rectilinear".to_string()), fields: vec![SchemaField::new("x_first", bool::schema(), FieldMeta { description: Some("Whether to travel X before Y".to_string()), ..Default::default() })] },
-                SchemaVariant::Struct { name: "Spiral".to_string(), description: Some("Spiral path".to_string()), json_value: Some("spiral".to_string()), fields: vec![f32_field("rotations", "Number of spiral rotations")] },
-                SchemaVariant::Struct { name: "Step".to_string(), description: Some("Stepped motion".to_string()), json_value: Some("step".to_string()), fields: vec![u8_field("steps", "Number of steps", Some(5), None, None)] },
-                SchemaVariant::Struct { name: "Projectile".to_string(), description: Some("Ballistic projectile path".to_string()), json_value: Some("projectile".to_string()), fields: vec![f32_field("arc_height", "Projectile arc height"), f32_field("gravity", "Projectile gravity")] },
-                SchemaVariant::Struct { name: "Friction".to_string(), description: Some("Frictional deceleration path".to_string()), json_value: Some("friction".to_string()), fields: vec![f32_field("drag", "Friction drag coefficient")] },
-                SchemaVariant::Struct { name: "Orbit".to_string(), description: Some("Orbital/circular path".to_string()), json_value: Some("orbit".to_string()), fields: vec![f32_field("revolutions", "Orbit revolutions"), f32_field("direction", "Orbit direction sign")] },
-                SchemaVariant::Struct { name: "Pendulum".to_string(), description: Some("Pendulum oscillation path".to_string()), json_value: Some("pendulum".to_string()), fields: vec![f32_field("amplitude", "Pendulum amplitude"), f32_field("oscillations", "Pendulum oscillations"), f32_field("damping", "Pendulum damping")] },
+                SchemaVariant::Struct {
+                    name: "Arc".to_string(),
+                    description: Some("Arc path with bulge factor".to_string()),
+                    json_value: Some("arc".to_string()),
+                    fields: vec![f32_field("bulge", "Arc bulge factor")],
+                },
+                SchemaVariant::Struct {
+                    name: "Bezier".to_string(),
+                    description: Some("Quadratic bezier motion path".to_string()),
+                    json_value: Some("bezier".to_string()),
+                    fields: vec![
+                        f32_field("control_x", "Bezier control X"),
+                        f32_field("control_y", "Bezier control Y"),
+                    ],
+                },
+                SchemaVariant::Struct {
+                    name: "Spring".to_string(),
+                    description: Some("Spring-like settling path".to_string()),
+                    json_value: Some("spring".to_string()),
+                    fields: vec![
+                        f32_field("stiffness", "Spring stiffness"),
+                        f32_field("damping", "Spring damping"),
+                    ],
+                },
+                SchemaVariant::Struct {
+                    name: "Bounce".to_string(),
+                    description: Some("Bouncy overshoot path".to_string()),
+                    json_value: Some("bounce".to_string()),
+                    fields: vec![
+                        u8_field("bounces", "Number of bounces", Some(3), Some(0), Some(12)),
+                        f32_field("decay", "Bounce decay factor"),
+                    ],
+                },
+                SchemaVariant::Unit {
+                    name: "Squash".to_string(),
+                    description: Some("Squash-like settling path".to_string()),
+                    json_value: Some("squash".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Hover".to_string(),
+                    description: Some("Hover-like motion treatment".to_string()),
+                    json_value: Some("hover".to_string()),
+                },
+                SchemaVariant::Struct {
+                    name: "Rectilinear".to_string(),
+                    description: Some("Axis-aligned L-shaped travel".to_string()),
+                    json_value: Some("rectilinear".to_string()),
+                    fields: vec![SchemaField::new(
+                        "x_first",
+                        bool::schema(),
+                        FieldMeta {
+                            description: Some("Whether to travel X before Y".to_string()),
+                            ..Default::default()
+                        },
+                    )],
+                },
+                SchemaVariant::Struct {
+                    name: "Spiral".to_string(),
+                    description: Some("Spiral path".to_string()),
+                    json_value: Some("spiral".to_string()),
+                    fields: vec![f32_field("rotations", "Number of spiral rotations")],
+                },
+                SchemaVariant::Struct {
+                    name: "Step".to_string(),
+                    description: Some("Stepped motion".to_string()),
+                    json_value: Some("step".to_string()),
+                    fields: vec![u8_field("steps", "Number of steps", Some(5), None, None)],
+                },
+                SchemaVariant::Struct {
+                    name: "Projectile".to_string(),
+                    description: Some("Ballistic projectile path".to_string()),
+                    json_value: Some("projectile".to_string()),
+                    fields: vec![
+                        f32_field("arc_height", "Projectile arc height"),
+                        f32_field("gravity", "Projectile gravity"),
+                    ],
+                },
+                SchemaVariant::Struct {
+                    name: "Friction".to_string(),
+                    description: Some("Frictional deceleration path".to_string()),
+                    json_value: Some("friction".to_string()),
+                    fields: vec![f32_field("drag", "Friction drag coefficient")],
+                },
+                SchemaVariant::Struct {
+                    name: "Orbit".to_string(),
+                    description: Some("Orbital/circular path".to_string()),
+                    json_value: Some("orbit".to_string()),
+                    fields: vec![
+                        f32_field("revolutions", "Orbit revolutions"),
+                        f32_field("direction", "Orbit direction sign"),
+                    ],
+                },
+                SchemaVariant::Struct {
+                    name: "Pendulum".to_string(),
+                    description: Some("Pendulum oscillation path".to_string()),
+                    json_value: Some("pendulum".to_string()),
+                    fields: vec![
+                        f32_field("amplitude", "Pendulum amplitude"),
+                        f32_field("oscillations", "Pendulum oscillations"),
+                        f32_field("damping", "Pendulum damping"),
+                    ],
+                },
             ],
         }
     }

@@ -101,10 +101,7 @@ mod tests {
 
     #[test]
     fn random_returns_one_of_the_items() {
-        let pool = TextPool::new(
-            vec!["a".into(), "b".into(), "c".into()],
-            PoolPolicy::Random,
-        );
+        let pool = TextPool::new(vec!["a".into(), "b".into(), "c".into()], PoolPolicy::Random);
         let chosen = pool.pick().unwrap();
         assert!(["a", "b", "c"].contains(&chosen));
     }
@@ -124,28 +121,19 @@ mod tests {
 
     #[test]
     fn sanitization_strips_newlines_and_tabs() {
-        let pool = TextPool::new(
-            vec!["line\nbreak\there".into()],
-            PoolPolicy::FirstOnly,
-        );
+        let pool = TextPool::new(vec!["line\nbreak\there".into()], PoolPolicy::FirstOnly);
         assert_eq!(pool.pick(), Some("linebreakhere"));
     }
 
     #[test]
     fn unicode_graphemes_survive_sanitization() {
-        let pool = TextPool::new(
-            vec!["こんにちは 🚀".into()],
-            PoolPolicy::FirstOnly,
-        );
+        let pool = TextPool::new(vec!["こんにちは 🚀".into()], PoolPolicy::FirstOnly);
         assert_eq!(pool.pick(), Some("こんにちは 🚀"));
     }
 
     #[test]
     fn serde_roundtrip() {
-        let pool = TextPool::new(
-            vec!["one".into(), "two".into()],
-            PoolPolicy::Random,
-        );
+        let pool = TextPool::new(vec!["one".into(), "two".into()], PoolPolicy::Random);
         let json = serde_json::to_string(&pool).unwrap();
         let back: TextPool = serde_json::from_str(&json).unwrap();
         assert_eq!(pool, back);

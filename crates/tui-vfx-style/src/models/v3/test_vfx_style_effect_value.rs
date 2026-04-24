@@ -3,8 +3,8 @@
 // <WCTX>Decision 2 runtime follow-on — prove grouped V3 overall effect values can round-trip back into StyleEffect for representative non-spatial and spatial families.</WCTX>
 // <CLOG>0.1.0: add grouped overall style-effect roundtrip coverage plus one mismatched-variant failure case.</CLOG>
 
-use crate::models::{StyleEffect, VfxStyleEffectValue};
 use crate::models::v3::{TryLowerV3StyleEffectError, VfxStyleEffectFamily};
+use crate::models::{StyleEffect, VfxStyleEffectValue};
 
 #[test]
 fn roundtrips_style_fade_value_back_to_legacy_effect() {
@@ -44,7 +44,10 @@ fn rejects_mismatched_non_spatial_grouped_value() {
 
     assert!(matches!(
         grouped.try_to_legacy_style_effect(),
-        Err(TryLowerV3StyleEffectError::MismatchedVariant { expected_family: "style_fade", actual_effect: "Rainbow" })
+        Err(TryLowerV3StyleEffectError::MismatchedVariant {
+            expected_family: "style_fade",
+            actual_effect: "Rainbow"
+        })
     ));
 }
 

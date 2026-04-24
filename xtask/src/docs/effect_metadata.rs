@@ -374,7 +374,7 @@ fn extract_sampler_metadata() -> HashMap<String, EffectMetadata> {
 
 fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
     use tui_vfx_style::models::{
-        cls_affordance_wake_shader::AffordanceWakeShader,
+        Gradient, LinearGradientShader, cls_affordance_wake_shader::AffordanceWakeShader,
         cls_ambient_occlusion_shader::AmbientOcclusionShader,
         cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
         cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
@@ -389,7 +389,7 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         cls_stochastic_sparkle_shader::StochasticSparkleShader,
         cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
         cls_trace_propagation_shader::TracePropagationShader,
-        cls_wayfinding_node_shader::WayfindingNodeShader, Gradient, LinearGradientShader,
+        cls_wayfinding_node_shader::WayfindingNodeShader,
     };
     use tui_vfx_types::Color;
 

@@ -96,11 +96,9 @@ impl PathReveal {
 
         // Center-based surface polar coordinates
         let max_r = ((w as f32 / 2.0).powi(2) + (h as f32 / 2.0).powi(2)).sqrt();
-        let r =
-            SurfaceDistanceSignal::radius_from(0.5, 0.5).sample_with_context(0.0, &signal_ctx)
-                * max_r;
-        let theta =
-            SurfaceAngleSignal::angle_from(0.5, 0.5).sample_with_context(0.0, &signal_ctx);
+        let r = SurfaceDistanceSignal::radius_from(0.5, 0.5).sample_with_context(0.0, &signal_ctx)
+            * max_r;
+        let theta = SurfaceAngleSignal::angle_from(0.5, 0.5).sample_with_context(0.0, &signal_ctx);
 
         match &self.path {
             RevealPathType::Spiral {

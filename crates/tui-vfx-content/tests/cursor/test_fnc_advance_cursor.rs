@@ -4,7 +4,7 @@
 // <CLOG>T19: add edge-case tests E5, E12, E13, E15</CLOG>
 
 use mixed_signals::prelude::SignalContext;
-use tui_vfx_content::cursor::{fnc_advance_cursor, Cursor, CursorState};
+use tui_vfx_content::cursor::{Cursor, CursorState, fnc_advance_cursor};
 
 fn ctx() -> SignalContext {
     SignalContext::new(0, 0)
@@ -58,7 +58,7 @@ fn e3_revisiting_cell_replaces_old_entry() {
     fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.1, 0.1, &ctx());
     fnc_advance_cursor(&mut state, &cursor, Some((0, 2)), 0.2, 0.1, &ctx());
     fnc_advance_cursor(&mut state, &cursor, Some((0, 1)), 0.3, 0.1, &ctx()); // revisit (0,1) — removes old (0,1) entry, inserts fresh
-                                                                             // History should not contain (0,1) twice.
+    // History should not contain (0,1) twice.
     let hits = state
         .history
         .iter()
@@ -190,7 +190,7 @@ fn grow_in_once_does_not_retrigger() {
     fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.3, 0.05, &ctx()); // Hidden
     cursor.visibility = SignalOrFloat::Static(1.0);
     fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.4, 0.1, &ctx()); // Show again
-                                                                             // Mode is Once — re-show snaps to Visible, does not start a new grow-in.
+    // Mode is Once — re-show snaps to Visible, does not start a new grow-in.
     assert_eq!(state.grow_in_phase, GrowInPhase::Visible);
 }
 

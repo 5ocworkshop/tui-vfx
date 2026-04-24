@@ -38,7 +38,12 @@ fn layer_painted(layer: &str, role: RoleTag) -> TraceEvent {
 fn accepts_all_is_pass_all() {
     let f = TraceFilter::accept_all();
     assert!(f.accepts(&env(cell(0, 0), 0, 0, None)));
-    assert!(f.accepts(&env(layer_painted("l", RoleTag::Border), 10, 1000, Some("r"))));
+    assert!(f.accepts(&env(
+        layer_painted("l", RoleTag::Border),
+        10,
+        1000,
+        Some("r")
+    )));
 }
 
 #[test]
@@ -116,12 +121,7 @@ fn stage_mask_none_rejects_everything() {
         time_ms: 0..u64::MAX,
     };
     assert!(!f.accepts(&env(cell(0, 0), 0, 0, None)));
-    assert!(!f.accepts(&env(
-        layer_painted("l", RoleTag::Border),
-        0,
-        0,
-        None
-    )));
+    assert!(!f.accepts(&env(layer_painted("l", RoleTag::Border), 0, 0, None)));
 }
 
 #[test]

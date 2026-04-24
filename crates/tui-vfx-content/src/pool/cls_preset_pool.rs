@@ -28,9 +28,7 @@ use crate::types::ContentEffect;
 /// "brand heading → split-flap reveal." For max surprise across every
 /// combination, use independent [`TextPool`](super::TextPool) +
 /// [`EffectPool`](super::EffectPool) instead.
-#[derive(
-    Clone, Debug, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
-)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 pub struct Preset {
     /// Override the content's text for this variant. `None` → inherit
     /// the recipe's static `content.text` or fall through to
@@ -117,9 +115,7 @@ impl Preset {
 /// (The precedence logic lives on `ContentConfig::resolved_*`
 /// accessors, not on `PresetPool` itself — the pool just picks; the
 /// schema decides which slot wins.)
-#[derive(
-    Clone, Debug, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
-)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 pub struct PresetPool {
     /// Pool entries — each a curated bundle.
     #[serde(default)]
@@ -191,7 +187,10 @@ mod tests {
         );
         let picked = pool.pick().unwrap();
         assert_eq!(picked.text.as_deref(), Some("angry line"));
-        assert!(matches!(picked.effect, Some(ContentEffect::Scramble { .. })));
+        assert!(matches!(
+            picked.effect,
+            Some(ContentEffect::Scramble { .. })
+        ));
     }
 
     #[test]
@@ -205,7 +204,10 @@ mod tests {
     fn partial_preset_with_effect_only() {
         let preset = Preset::with_effect(tw());
         assert!(preset.text.is_none());
-        assert!(matches!(preset.effect, Some(ContentEffect::Typewriter { .. })));
+        assert!(matches!(
+            preset.effect,
+            Some(ContentEffect::Typewriter { .. })
+        ));
     }
 
     #[test]
@@ -224,10 +226,7 @@ mod tests {
 
     #[test]
     fn serde_skips_none_fields_on_output() {
-        let pool = PresetPool::new(
-            vec![Preset::with_text("just text")],
-            PoolPolicy::FirstOnly,
-        );
+        let pool = PresetPool::new(vec![Preset::with_text("just text")], PoolPolicy::FirstOnly);
         let json = serde_json::to_string(&pool).unwrap();
         assert!(
             !json.contains("effect"),
@@ -243,7 +242,10 @@ mod tests {
             .with_image("logo_light")
             .with_font("bold_20");
         assert_eq!(preset.text.as_deref(), Some("Corporate mode"));
-        assert!(matches!(preset.effect, Some(ContentEffect::Typewriter { .. })));
+        assert!(matches!(
+            preset.effect,
+            Some(ContentEffect::Typewriter { .. })
+        ));
         assert_eq!(preset.image_name.as_deref(), Some("logo_light"));
         assert_eq!(preset.font_name.as_deref(), Some("bold_20"));
     }
@@ -262,7 +264,9 @@ mod tests {
 
     #[test]
     fn preset_only_asset_fields_without_text_or_effect() {
-        let preset = Preset::default().with_image("base_logo").with_font("default_font");
+        let preset = Preset::default()
+            .with_image("base_logo")
+            .with_font("default_font");
         assert!(preset.text.is_none());
         assert!(preset.effect.is_none());
         assert_eq!(preset.image_name.as_deref(), Some("base_logo"));

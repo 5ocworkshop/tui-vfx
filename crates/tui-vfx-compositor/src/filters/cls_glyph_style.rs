@@ -186,15 +186,15 @@ mod tests {
                 chars: vec!['H'],
                 fg: Some(Color::rgb(255, 0, 0)),
                 bg: None,
-            bg_alternate: None,
-            fg_alternate: None,
+                bg_alternate: None,
+                fg_alternate: None,
             },
             GlyphStyleRule {
                 chars: vec!['H'],
                 fg: Some(Color::rgb(0, 255, 0)),
                 bg: None,
-            bg_alternate: None,
-            fg_alternate: None,
+                bg_alternate: None,
+                fg_alternate: None,
             },
         ]);
         let mut cell = cell_with('H');
@@ -211,15 +211,15 @@ mod tests {
                 chars: "█▀▔—▁▄▓▒░".chars().collect(),
                 fg: Some(Color::rgb(210, 210, 210)),
                 bg: Some(Color::rgb(42, 42, 42)),
-            bg_alternate: None,
-            fg_alternate: None,
+                bg_alternate: None,
+                fg_alternate: None,
             },
             GlyphStyleRule {
                 chars: "ⒶꓭƆꓷƎⅎ⅁ꓘ⅂ԀꓤꓤꞱ∩ΛⅯⅦⅣ".chars().collect(),
                 fg: Some(Color::rgb(140, 140, 140)),
                 bg: None,
-            bg_alternate: None,
-            fg_alternate: None,
+                bg_alternate: None,
+                fg_alternate: None,
             },
         ]);
 
@@ -230,7 +230,11 @@ mod tests {
 
         let mut letter = cell_with('H');
         filter.apply(&mut letter, 0, 0, 10, 10, 0.0);
-        assert_eq!(letter.fg, Color::rgb(100, 100, 100), "letter passes through");
+        assert_eq!(
+            letter.fg,
+            Color::rgb(100, 100, 100),
+            "letter passes through"
+        );
         assert_eq!(letter.bg, Color::rgb(20, 20, 20));
     }
 
@@ -254,17 +258,29 @@ mod tests {
         // (1,0) → parity odd → bg_alternate
         let mut odd = cell_with('A');
         filter.apply(&mut odd, 1, 0, 10, 10, 0.0);
-        assert_eq!(odd.bg, Color::rgb(36, 36, 36), "odd parity uses bg_alternate");
+        assert_eq!(
+            odd.bg,
+            Color::rgb(36, 36, 36),
+            "odd parity uses bg_alternate"
+        );
 
         // (0,1) → parity odd → bg_alternate
         let mut odd_y = cell_with('A');
         filter.apply(&mut odd_y, 0, 1, 10, 10, 0.0);
-        assert_eq!(odd_y.bg, Color::rgb(36, 36, 36), "odd parity (y) uses bg_alternate");
+        assert_eq!(
+            odd_y.bg,
+            Color::rgb(36, 36, 36),
+            "odd parity (y) uses bg_alternate"
+        );
 
         // (1,1) → parity even → bg
         let mut even_diag = cell_with('A');
         filter.apply(&mut even_diag, 1, 1, 10, 10, 0.0);
-        assert_eq!(even_diag.bg, Color::rgb(28, 28, 28), "diagonal even uses bg");
+        assert_eq!(
+            even_diag.bg,
+            Color::rgb(28, 28, 28),
+            "diagonal even uses bg"
+        );
     }
 
     #[test]
@@ -280,8 +296,11 @@ mod tests {
         for (x, y) in [(0u16, 0u16), (1, 0), (0, 1), (1, 1), (5, 7)] {
             let mut cell = cell_with('A');
             filter.apply(&mut cell, x, y, 10, 10, 0.0);
-            assert_eq!(cell.bg, Color::rgb(28, 28, 28),
-                       "cell ({x},{y}) should fall back to bg");
+            assert_eq!(
+                cell.bg,
+                Color::rgb(28, 28, 28),
+                "cell ({x},{y}) should fall back to bg"
+            );
         }
     }
 
@@ -302,7 +321,10 @@ mod tests {
         let mut space = cell_with(' ');
         let before = space;
         filter.apply(&mut space, 1, 0, 10, 10, 0.0);
-        assert_eq!(space, before, "unmatched space stays at original bg even at odd parity");
+        assert_eq!(
+            space, before,
+            "unmatched space stays at original bg even at odd parity"
+        );
 
         // Border char at odd parity — unchanged
         let mut border = cell_with('│');
@@ -313,7 +335,11 @@ mod tests {
         // Matched 'B' at odd parity — gets bg_alternate
         let mut matched = cell_with('B');
         filter.apply(&mut matched, 1, 0, 10, 10, 0.0);
-        assert_eq!(matched.bg, Color::rgb(36, 36, 36), "matched char gets bg_alternate");
+        assert_eq!(
+            matched.bg,
+            Color::rgb(36, 36, 36),
+            "matched char gets bg_alternate"
+        );
     }
 
     // ---------- fg_alternate: coordinate checkerboard fg modulation ----------
@@ -334,15 +360,27 @@ mod tests {
 
         let mut odd_x = cell_with('█');
         filter.apply(&mut odd_x, 1, 0, 10, 10, 0.0);
-        assert_eq!(odd_x.fg, Color::rgb(120, 120, 120), "odd x uses fg_alternate");
+        assert_eq!(
+            odd_x.fg,
+            Color::rgb(120, 120, 120),
+            "odd x uses fg_alternate"
+        );
 
         let mut odd_y = cell_with('█');
         filter.apply(&mut odd_y, 0, 1, 10, 10, 0.0);
-        assert_eq!(odd_y.fg, Color::rgb(120, 120, 120), "odd y uses fg_alternate");
+        assert_eq!(
+            odd_y.fg,
+            Color::rgb(120, 120, 120),
+            "odd y uses fg_alternate"
+        );
 
         let mut diag_even = cell_with('█');
         filter.apply(&mut diag_even, 1, 1, 10, 10, 0.0);
-        assert_eq!(diag_even.fg, Color::rgb(200, 200, 200), "diagonal even uses fg");
+        assert_eq!(
+            diag_even.fg,
+            Color::rgb(200, 200, 200),
+            "diagonal even uses fg"
+        );
     }
 
     #[test]
@@ -357,8 +395,11 @@ mod tests {
         for (x, y) in [(0u16, 0u16), (1, 0), (0, 1), (1, 1), (5, 7)] {
             let mut cell = cell_with('█');
             filter.apply(&mut cell, x, y, 10, 10, 0.0);
-            assert_eq!(cell.fg, Color::rgb(200, 200, 200),
-                       "cell ({x},{y}) should fall back to fg");
+            assert_eq!(
+                cell.fg,
+                Color::rgb(200, 200, 200),
+                "cell ({x},{y}) should fall back to fg"
+            );
         }
     }
 
@@ -376,7 +417,10 @@ mod tests {
         let mut space = cell_with(' ');
         let before = space;
         filter.apply(&mut space, 1, 0, 10, 10, 0.0);
-        assert_eq!(space, before, "unmatched space is not touched by fg_alternate");
+        assert_eq!(
+            space, before,
+            "unmatched space is not touched by fg_alternate"
+        );
 
         // Matched char at odd parity gets fg_alternate
         let mut block = cell_with('█');

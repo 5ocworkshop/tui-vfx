@@ -4,13 +4,17 @@
 // <CLOG>0.1.0: define a grouped V3 value enum for overall style effects plus lowering helpers to and from the legacy StyleEffect surface.</CLOG>
 
 //! Grouped V3 executable value surface for overall style effects.
+//!
+//! This pairs grouped family identity with concrete legacy `StyleEffect` values
+//! during cutover so V3 code can classify effects without losing the ability to
+//! lower back into the existing executable surface.
 
 use serde::{Deserialize, Serialize};
 
-use crate::models::{StyleEffect, VfxSpatialShaderFamily};
 use crate::models::v3::{
     TryLowerV3StyleEffectError, VfxStyleEffectFamily, try_lower_v3_spatial_shader_family,
 };
+use crate::models::{StyleEffect, VfxSpatialShaderFamily};
 
 /// Grouped V3 executable value surface for overall style effects.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

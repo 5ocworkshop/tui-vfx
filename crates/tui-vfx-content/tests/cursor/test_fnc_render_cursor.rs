@@ -5,7 +5,7 @@
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use tui_vfx_content::cursor::{
-    fnc_advance_cursor, fnc_render_cursor, Cursor, CursorScan, CursorState, GrowInMode, ScanMode,
+    Cursor, CursorScan, CursorState, GrowInMode, ScanMode, fnc_advance_cursor, fnc_render_cursor,
 };
 
 fn ctx() -> SignalContext {
@@ -252,7 +252,7 @@ fn scan_does_not_override_during_grow_in() {
     // First show → GrowingIn phase.
     fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.0, 0.016, &ctx());
     fnc_advance_cursor(&mut state, &cursor, Some((0, 0)), 0.1, 0.1, &ctx()); // ~50% through
-                                                                             // While growing in, glyph comes from grow-in ramp, not from scan.
+    // While growing in, glyph comes from grow-in ramp, not from scan.
     let ops = fnc_render_cursor(&state, &cursor, 0.1, &ctx());
     let p = ops.primary.unwrap();
     // Grow-in midway produces a partial 1/8th block distinct from the

@@ -19,7 +19,10 @@ fn composed_path_supports_pendulum_over_arc() {
         },
     );
 
-    assert_ne!(arc, composed, "dynamic layer should perturb the carrier route");
+    assert_ne!(
+        arc, composed,
+        "dynamic layer should perturb the carrier route"
+    );
 }
 
 #[test]

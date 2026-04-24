@@ -99,10 +99,7 @@ mod tests {
 
     #[test]
     fn serde_roundtrip() {
-        let pool = ImagePool::new(
-            vec!["alpha".into(), "beta".into()],
-            PoolPolicy::Random,
-        );
+        let pool = ImagePool::new(vec!["alpha".into(), "beta".into()], PoolPolicy::Random);
         let json = serde_json::to_string(&pool).unwrap();
         let back: ImagePool = serde_json::from_str(&json).unwrap();
         assert_eq!(pool, back);

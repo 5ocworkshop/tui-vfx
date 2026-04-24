@@ -30,8 +30,8 @@ fn new_source_region_is_none() {
 
 #[test]
 fn with_source_region_sets_role() {
-    let config = ShadowConfig::new(Color::BLACK.with_alpha(128))
-        .with_source_region(RoleTag::Border);
+    let config =
+        ShadowConfig::new(Color::BLACK.with_alpha(128)).with_source_region(RoleTag::Border);
     assert_eq!(config.source_region, Some(RoleTag::Border));
     assert_eq!(config.source_region(), Some(RoleTag::Border));
 }
@@ -69,11 +69,10 @@ fn serde_round_trip_preserves_first_class_roles() {
         RoleTag::Procedural,
     ];
     for role in roles {
-        let config = ShadowConfig::new(Color::BLACK.with_alpha(180))
-            .with_source_region(role.clone());
+        let config =
+            ShadowConfig::new(Color::BLACK.with_alpha(180)).with_source_region(role.clone());
         let json = serde_json::to_string(&config).expect("serialize");
-        let restored: ShadowConfig =
-            serde_json::from_str(&json).expect("deserialize");
+        let restored: ShadowConfig = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(
             restored.source_region,
             Some(role.clone()),
@@ -98,8 +97,8 @@ fn serde_round_trip_preserves_custom_role() {
 #[test]
 fn source_region_does_not_affect_existing_fields() {
     // Sanity: adding the new field must not disturb other default values.
-    let config = ShadowConfig::new(Color::BLACK.with_alpha(200))
-        .with_source_region(RoleTag::Border);
+    let config =
+        ShadowConfig::new(Color::BLACK.with_alpha(200)).with_source_region(RoleTag::Border);
     assert_eq!(config.offset_x, 1);
     assert_eq!(config.offset_y, 1);
     assert_eq!(config.inset_x, None);

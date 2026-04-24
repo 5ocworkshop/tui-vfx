@@ -15,8 +15,8 @@ use tui_vfx_types::{Cell, Style};
 /// 2. Mask checks visibility → on_mask_checked
 /// 3. Shader applies style → on_shader_applied
 /// 4. Filter modifies cell → on_filter_applied
-    /// 5. Shadow-region cell prepared → on_shadow_cell_applied
-    /// 6. Cell written to buffer → on_cell_rendered
+/// 5. Shadow-region cell prepared → on_shadow_cell_applied
+/// 6. Cell written to buffer → on_cell_rendered
 pub trait CompositorInspector {
     /// Called after sampler transforms coordinates for a cell.
     ///

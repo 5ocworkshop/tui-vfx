@@ -129,18 +129,66 @@ impl ConfigSchema for RoleTag {
             json_name: None,
             tag_field: None,
             variants: vec![
-                SchemaVariant::Unit { name: "Background".to_string(), description: Some("Fill/background cells".to_string()), json_value: Some("background".to_string()) },
-                SchemaVariant::Unit { name: "Text".to_string(), description: Some("Primary text cells".to_string()), json_value: Some("text".to_string()) },
-                SchemaVariant::Unit { name: "Title".to_string(), description: Some("Title/header cells".to_string()), json_value: Some("title".to_string()) },
-                SchemaVariant::Unit { name: "Caption".to_string(), description: Some("Caption/secondary text cells".to_string()), json_value: Some("caption".to_string()) },
-                SchemaVariant::Unit { name: "Border".to_string(), description: Some("Border cells".to_string()), json_value: Some("border".to_string()) },
-                SchemaVariant::Unit { name: "Image".to_string(), description: Some("Image/pixel-art cells".to_string()), json_value: Some("image".to_string()) },
-                SchemaVariant::Unit { name: "Icon".to_string(), description: Some("Icon cells".to_string()), json_value: Some("icon".to_string()) },
-                SchemaVariant::Unit { name: "Indicator".to_string(), description: Some("Indicator/status cells".to_string()), json_value: Some("indicator".to_string()) },
-                SchemaVariant::Unit { name: "Highlight".to_string(), description: Some("Highlight/emphasis cells".to_string()), json_value: Some("highlight".to_string()) },
-                SchemaVariant::Unit { name: "Shadow".to_string(), description: Some("Shadow-region cells".to_string()), json_value: Some("shadow".to_string()) },
-                SchemaVariant::Unit { name: "Decoration".to_string(), description: Some("Decorative cells".to_string()), json_value: Some("decoration".to_string()) },
-                SchemaVariant::Unit { name: "Procedural".to_string(), description: Some("Procedural-source cells".to_string()), json_value: Some("procedural".to_string()) },
+                SchemaVariant::Unit {
+                    name: "Background".to_string(),
+                    description: Some("Fill/background cells".to_string()),
+                    json_value: Some("background".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Text".to_string(),
+                    description: Some("Primary text cells".to_string()),
+                    json_value: Some("text".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Title".to_string(),
+                    description: Some("Title/header cells".to_string()),
+                    json_value: Some("title".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Caption".to_string(),
+                    description: Some("Caption/secondary text cells".to_string()),
+                    json_value: Some("caption".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Border".to_string(),
+                    description: Some("Border cells".to_string()),
+                    json_value: Some("border".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Image".to_string(),
+                    description: Some("Image/pixel-art cells".to_string()),
+                    json_value: Some("image".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Icon".to_string(),
+                    description: Some("Icon cells".to_string()),
+                    json_value: Some("icon".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Indicator".to_string(),
+                    description: Some("Indicator/status cells".to_string()),
+                    json_value: Some("indicator".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Highlight".to_string(),
+                    description: Some("Highlight/emphasis cells".to_string()),
+                    json_value: Some("highlight".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Shadow".to_string(),
+                    description: Some("Shadow-region cells".to_string()),
+                    json_value: Some("shadow".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Decoration".to_string(),
+                    description: Some("Decorative cells".to_string()),
+                    json_value: Some("decoration".to_string()),
+                },
+                SchemaVariant::Unit {
+                    name: "Procedural".to_string(),
+                    description: Some("Procedural-source cells".to_string()),
+                    json_value: Some("procedural".to_string()),
+                },
                 SchemaVariant::Tuple {
                     name: "Custom".to_string(),
                     description: Some("Custom semantic role".to_string()),

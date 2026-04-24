@@ -1440,8 +1440,10 @@ mod tests {
         // chosen from the same point in the walk.
         let r = sf.transform("AAAA", 0.3, &ctx());
         let chars: Vec<char> = r.chars().collect();
-        assert!(chars.iter().all(|&c| c == chars[0]),
-                "simultaneous dispersion must produce identical chars across identical targets, got {r:?}");
+        assert!(
+            chars.iter().all(|&c| c == chars[0]),
+            "simultaneous dispersion must produce identical chars across identical targets, got {r:?}"
+        );
     }
 
     #[test]

@@ -82,10 +82,7 @@ fn iter_is_row_major() {
     assert_eq!(collected.last().map(|c| (c.0, c.1)), Some((2, 1)));
     // Row-major means (0,0), (1,0), (2,0), (0,1), (1,1), (2,1)
     let coords: Vec<(u16, u16)> = collected.iter().map(|c| (c.0, c.1)).collect();
-    assert_eq!(
-        coords,
-        vec![(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1)]
-    );
+    assert_eq!(coords, vec![(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1)]);
 }
 
 #[test]

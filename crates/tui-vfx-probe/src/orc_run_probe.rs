@@ -4,8 +4,8 @@
 // <CLOG>0.7.0: MINOR — migrate call to the new `render_pipeline_with_spec` signature. Source roles default to `RoleMap::all_background(w, h)` (probe has no semantic info). Destination is lifted into a `SemanticScene` via `SemanticScene::from_grid_with_default_role`; after the pipeline runs, we extract the grid back via `grid_mut()` clone for downstream probe analysis (probe still speaks `Grid`, not `SemanticScene`).</CLOG>
 
 use serde_json::{Value, json};
-use tui_vfx_compositor::pipeline::{CompositionPlaybackTiming, CompositionSpec};
 use tui_vfx_compositor::pipeline::render_pipeline_with_spec;
+use tui_vfx_compositor::pipeline::{CompositionPlaybackTiming, CompositionSpec};
 use tui_vfx_types::{Grid, RoleMap, RoleTag, SemanticScene};
 
 use crate::cls_probe_cell::ProbeCell;
