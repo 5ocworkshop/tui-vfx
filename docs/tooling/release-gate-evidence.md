@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> - <DESC>Executable evidence-record contract and command map for V3 Chapter 60 release gates.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.1.1</VERS> -->
 <!-- <WCTX>Make the seeded Chapter 60 release-gate manifest actionable by mapping each evidence type to existing tooling and a small checked record shape.</WCTX> -->
-<!-- <CLOG>0.1.0: initial command map and evidence-record JSON shape for release-gate fixture evidence keyed by the seeded manifest IDs.</CLOG> -->
+<!-- <CLOG>0.1.1: add the probe_alarm_lighthouse smoke plan and clarify the small local sidecar record handoff.</CLOG> -->
 
 # Release-gate evidence records
 
@@ -82,13 +82,14 @@ For a low-risk first D6 slice, capture `probe_alarm_lighthouse`:
 
 ```bash
 cd /usr/projects/tui-vfx-recipes
+mkdir -p artifacts/release-gates/probe_alarm_lighthouse
 cargo run -q -p recipe-probe -- \
   recipes/vfx-probe-validation/alarm_lighthouse.json \
   --format json \
   --phase dwelling \
   --sample-t 1.0 \
   --with-causation \
-  > /tmp/probe_alarm_lighthouse.probe_report.json
+  > artifacts/release-gates/probe_alarm_lighthouse/probe_report.json
 ```
 
 Optional database check using the same probe surface:
@@ -106,5 +107,24 @@ This is intentionally only probe evidence. Shadow, offscreen, trace,
 GT-Design, and role-aware lowering gates use the same record shape with their
 own required evidence types from the manifest.
 
+## First smoke record plan
+
+Use `probe_alarm_lighthouse` as the first actual command-backed smoke record.
+Keep the generated probe report local under
+`artifacts/release-gates/probe_alarm_lighthouse/` and pair it with a small
+sidecar JSON record that follows the minimum record shape above.
+
+Suggested sequence:
+
+1. Run the command in [First smoke target](#first-smoke-target) from
+   `/usr/projects/tui-vfx-recipes`.
+2. Write the sidecar record next to the report as
+   `artifacts/release-gates/probe_alarm_lighthouse/evidence.record.json`.
+3. Keep the sidecar tiny; do not embed the full report payload.
+
+The checked-in template is the minimum JSON example above. Treat it as the
+shape to copy when D6 needs a command-backed smoke record without promoting a
+large generated artifact.
+
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->

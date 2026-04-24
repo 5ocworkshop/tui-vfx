@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-release-gate-manifest.md</FILE> - <DESC>First concrete V3 release-gate fixture manifest seed for Track D / Chapter 60.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.1</VERS> -->
 <!-- <WCTX>Define the first checked-in manifest shape for the six V3 release gates so evidence capture and CI can bind to stable fixture IDs without overclaiming approved outcomes.</WCTX> -->
-<!-- <CLOG>0.2.0: point D6 evidence capture at the release-gate evidence-record guide and command map. 0.1.0: initial release-gate manifest seed with gate coverage for shadow, offscreen, probe, trace, GT-Design integration, and role-aware lowering, plus a companion machine-readable JSON seed.</CLOG> -->
+<!-- <CLOG>0.2.1: point D6 at the probe_alarm_lighthouse smoke record and small evidence sidecar handoff.</CLOG> -->
 
 # V3 release-gate manifest seed
 
@@ -99,7 +99,7 @@ never recapture silently.
 
 | Fixture ID | Recipe target | Required evidence | Ownership / approval notes |
 | --- | --- | --- | --- |
-| `probe_alarm_lighthouse` | `tui-vfx-recipes:recipes/vfx-probe-validation/alarm_lighthouse.json` | `probe_report_json` | Part of the dedicated probe-validation corpus. Tooling-lead owned. |
+| `probe_alarm_lighthouse` | `tui-vfx-recipes:recipes/vfx-probe-validation/alarm_lighthouse.json` | `probe_report_json` | Part of the dedicated probe-validation corpus. Tooling-lead owned. First command-backed smoke target for D6. |
 | `probe_midnight_switchboard` | `tui-vfx-recipes:recipes/vfx-probe-validation/midnight_switchboard.json` | `probe_report_json` | Good multi-style / multi-stage probe reference. |
 | `probe_wormhole_pageant` | `tui-vfx-recipes:recipes/vfx-probe-validation/wormhole_pageant.json` | `probe_report_json` | High-stage-activity probe corpus member for repeated diff evidence. |
 
@@ -137,8 +137,9 @@ concrete downstream targets early enough for D6 wiring.
 D6 evidence records use the small JSON sidecar shape documented in
 [Release-gate evidence records](../tooling/release-gate-evidence.md). The record
 keys by `fixture_id`, names the command that produced each artifact, and stores
-large probe/trace/render outputs as separate artifacts. Probe and frame-diff
-evidence must reuse `recipe-probe` / `pipeline-validator --probe` and the
+large probe/trace/render outputs as separate artifacts. Start with
+`probe_alarm_lighthouse` as the first command-backed smoke record and keep the
+sidecar tiny. Probe and frame-diff evidence must reuse `recipe-probe` / `pipeline-validator --probe` and the
 existing SQLite xray surface; do not add a second diff schema for Chapter 60.
 
 ## Companion JSON expectations
@@ -161,10 +162,10 @@ place. Those belong in generated outputs or later evidence records keyed by
 
 ## Next handoff
 
-1. D6 can attach evidence records keyed to these fixture IDs using `docs/tooling/release-gate-evidence.md`.
+1. D6 can attach evidence records keyed to these fixture IDs using `docs/tooling/release-gate-evidence.md`, starting with the command-backed `probe_alarm_lighthouse` smoke record and its tiny sidecar.
 2. GTD owner can confirm, replace, or shrink the provisional GTD fixture set
    without changing the overall manifest shape.
 3. D7 can consume the JSON seed for CI enumeration once evidence capture exists.
 
 <!-- <FILE>docs/design/tui-vfx-v3-release-gate-manifest.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.1</VERS> -->

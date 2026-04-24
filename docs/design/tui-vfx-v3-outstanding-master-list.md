@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.11.0</VERS> -->
+<!-- <VERS>VERSION: 0.11.1</VERS> -->
 <!-- <WCTX>Move the latest committed VC-09, VC-01/03, motion, and docgen slices into completed/complete-initial status while keeping broader follow-on lanes visible.</WCTX> -->
-<!-- <CLOG>0.11.0: record committed slices for BSOD VC-09 exact evidence, migration outcome reporting, VC-01 metadata shape validation, VC-03 dual-style survivor validation, diagonal offscreen motion fixture/compiled parity, and V3 docs-generation landing page. 0.10.0: move completed/complete-initial DAG batch work into a completed section, including recipe inventory, VC-10 review queue, release-gate manifest, motion compatibility table, metadata/timing doc follow-through, and earlier edge-tooling initial slices. 0.9.0: add V3 execution DAG pointer for parallel track dispatch and dependency management. 0.8.0: record accepted timing and metadata decision from tui-vfx-v3-timing-and-metadata-decision.md: no universal Timer primitive for V3; optional metadata with non-authoritative intent hints and debug-recipe expected-visual guidance. 0.7.0: record accepted capability governance from tui-vfx-v3-capability-governance-decision.md, including promotion ladder and rule-of-three factory-internal promotion. 0.6.0: record accepted scope/composition decision from tui-vfx-v3-scope-composition-decision.md, including intersect/replace scope modes, deferred union, and explicit normalized combine/merge semantics. 0.5.0: record accepted release-gate policy from tui-vfx-v3-release-gate-policy.md, including outcome states, whitelist ownership, GTD owner approval for product-visible drift, and no automatic fixture recapture. 0.4.0: record accepted provisional migration outcome policy from tui-vfx-v3-migration-outcome-policy.md, including owner-audit caveat and no legacy recipe removal. 0.3.0: record accepted phase-scoping decision from tui-vfx-v3-phase-scoping-decision.md and move Q#3/Q#13 out of owner-decision status. 0.2.0: record accepted naming decisions from tui-vfx-v3-naming-normalization-decisions.md, move preview/player and routing naming out of owner-decision status, and point rename work at execution. 0.1.0: initial master outstanding list with edge tooling lanes, migration-equivalence work, recipe migration, docs/schema gates, and final V2-removal policy.</CLOG> -->
+<!-- <CLOG>0.11.1: note the first command-backed V3-CI02 smoke plan and normalized IR dump envelope contract.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -18,7 +18,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Outstanding | Finish stricter authoring schema diagnostics and style normalization validation; VC-10 review queue is already seeded. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Outstanding | Treat normalized IR as validator/viewer/equivalence target and prove canonicalized equivalence for curated authoring forms. |
-| V3-CI02 | Release-gate evidence capture / compare | Outstanding | The release-gate manifest exists; next work is pass/fail/whitelist-needed evidence capture using existing probe/render/trace tooling. |
+| V3-CI02 | Release-gate evidence capture / compare | Outstanding | The release-gate manifest exists; next work is pass/fail/whitelist-needed evidence capture using existing probe/render/trace tooling, starting with the command-backed `probe_alarm_lighthouse` smoke record. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Outstanding | Implement/prove host-bound motion envelope, transparent shadow behavior, and directional edge-crossing semantics together. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Outstanding | Surface/frame-space signal basis and richer field/showcase consumers remain follow-up beyond the landed cell-space field-hint proofs. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
@@ -86,7 +86,7 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-VC03 | Finish style normalization validation | Validator proves no dual style forms survive normalized IR. |
 | V3-M01 | Continue VC-09 migration-equivalence harness | Use provisional `equivalent` / `replacement` / `retired` tracks; keep all legacy files in place pending owner audit. |
 | V3-CI02 | Capture / compare release-gate evidence | Gates produce pass/fail/whitelist-needed output with render/probe/trace evidence. |
-| V3-C01 | Canonical normalized IR as explicit artifact | Normalized IR is treated as the validator/viewer/equivalence target, with serializable output where tooling needs it. |
+| V3-C01 | Canonical normalized IR as explicit artifact | Normalized IR is treated as the validator/viewer/equivalence target; `pipeline-validator --dump-normalized --format json` now advertises the `tui_vfx.pipeline_validator.normalized_ir_dump.v1` envelope contract in `docs/contracts/normalized_ir_dump.v1.schema.json`. |
 | V3-C02 | Canonicalization/property-test tooling | Named-factory and compositional forms can canonicalize to the same normalized form for curated pairs. |
 | V3-VIEW01 | Normalized IR viewer/explorer backlog | Viewer work is scoped around normalized execution graph, not raw authoring syntax. |
 | V3-REGION01 | Region compression follow-up | `cell_run`, `cell_runs`, `region_ref`, and any larger-corpus compression pressure are implemented or deferred with evidence. |
@@ -233,4 +233,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.1</VERS> -->
