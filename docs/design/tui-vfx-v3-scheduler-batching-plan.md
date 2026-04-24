@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-scheduler-batching-plan.md</FILE> - <DESC>Execution plan for the next V3 slice after scene/content proofs: scheduler boundaries, parallel join semantics, and batching readiness.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Start the scheduler/batching follow-on after V3 I/O, scene/content, and Madeira sidebar proofs landed.</WCTX> -->
-<!-- <CLOG>0.3.0: add the SCHED-03 batching-readiness classification matrix, machine-checkable audit record, and SCHED-04 entry gates.
+<!-- <CLOG>0.4.0: record the first bounded SCHED-04 executor optimization and render-hash drift gate.
+0.3.0: add the SCHED-03 batching-readiness classification matrix, machine-checkable audit record, and SCHED-04 entry gates.
 0.2.0: record the scheduler-facing filter-to-mask join fixture and root topology truth surface as the next completed semantic slice before batching optimization.
 0.1.0: initial scheduler/batching execution plan with SCHED-01 parallel-join I/O proof as the first bounded slice.</CLOG> -->
 
@@ -10,8 +11,9 @@
 ## Status
 
 Active follow-on after the V3 I/O and scene/content tranches. SCHED-01,
-SCHED-02, and SCHED-03 are semantic/tooling proof slices; optimization remains
-gated on SCHED-04.
+SCHED-02, and SCHED-03 are semantic/tooling proof slices. SCHED-04 is the first
+bounded executor optimization and intentionally preserves all SCHED-03
+observable truth.
 
 The direct V3 executor already preserves authored `Sequence` boundaries, snapshot-isolates `Parallel` children, and merges parallel outputs after the parallel block. The next work is to turn that behavior from scattered tests into a documented scheduler/batching surface that future optimization can rely on.
 
@@ -132,13 +134,36 @@ Machine-checkable entry gates for SCHED-04:
 
 ### SCHED-04 — first bounded batching optimization
 
-**Status: planned.**
+**Status: complete.**
+
+As-built artifact:
+
+- `/usr/projects/tui-vfx-recipes/src/v3/compile/fnc_execute_compiled_step_tree_to_scene.rs`
+- `/usr/projects/tui-vfx-recipes/src/v3/compile/test_render_compiled_plan_deterministically.rs`
 
 Deliverables:
 
 - implement one measurable, reversible optimization after SCHED-02/SCHED-03
 - prove no render hash drift on scheduler fixtures
 - run targeted perf sanity only after semantic tests pass
+
+As-built behavior:
+
+- The ordered executor now routes all `Parallel` branches through one
+  `execute_parallel_children_from_snapshot` helper instead of repeating the same
+  branch-snapshot/merge loop separately for disjoint-static,
+  channel-order-independent, role-order-independent, and generic conflict
+  cases.
+- SCHED-03 predicates remain available for direct-path gating and truth-surface
+  classification, but execution no longer re-traverses those predicates inside
+  the hot `Parallel` arm when the merge behavior is identical.
+- The drift guard
+  `scheduler_first_bounded_batching_optimization_preserves_fixture_hashes`
+  pins render hashes for:
+  - `v3_scheduler_batch_safe_channel_shader_style.json`
+  - `v3_io_parallel_merge_shader.json`
+  - `v3_scheduler_parallel_join_filter_mask.json`
+  - `complex_parallel_overlap_conflict_snapshot.json`
 
 ## Verification baseline
 
@@ -150,6 +175,7 @@ cargo test -p tui-vfx-recipes parallel_merge_shader -- --nocapture
 cargo test -p tui-vfx-recipes scheduler_parallel_join -- --nocapture
 cargo test -p tui-vfx-recipes scheduler_batch_safe_channel_shader_style -- --nocapture
 cargo test -p tui-vfx-recipes scheduler_batching_audit -- --nocapture
+cargo test -p tui-vfx-recipes scheduler_first_bounded_batching_optimization -- --nocapture
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_io_parallel_merge_shader.json --strict --probe --format json
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_io_parallel_merge_shader.json --debug-recipes-qc --format json
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_scheduler_parallel_join_filter_mask.json --strict --probe --format json
@@ -173,7 +199,9 @@ git diff --check
 - scheduler boundary behavior has committed debug recipes and deterministic regressions
 - root topology truth is visible in validator/probe/QC output for scheduler fixtures
 - later batching work has a tested safe/unsafe classification path
+- first bounded executor optimization has a render-hash drift gate over safe,
+  hint-join, and conflict fixtures
 - docs distinguish current semantic proofs from future optimization work
 
 <!-- <FILE>docs/design/tui-vfx-v3-scheduler-batching-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
