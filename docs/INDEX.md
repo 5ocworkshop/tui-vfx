@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.11.0</VERS> -->
-<!-- <WCTX>Sub-plan B Phase B.6 — add the new tui-vfx-trace LLM guide and extend the tool-ownership notes so AI agents can distinguish unified trace capture from probe/validator surfaces.</WCTX> -->
-<!-- <CLOG>1.11.0: add PIPELINE_TRACE_LLM_GUIDE.md, add tui-vfx-trace to the recipe-authoring ownership split, and keep the existing inspection-foundation references intact.
+<!-- <VERS>VERSION: 1.12.0</VERS> -->
+<!-- <WCTX>Add a V3 landing page, master punch list, and tooling hub so humans and agents have one place to start before following narrower guides.</WCTX> -->
+<!-- <CLOG>1.12.0: add the V3 outstanding master list and first-class tooling hub pointers.
+1.11.0: add PIPELINE_TRACE_LLM_GUIDE.md, add tui-vfx-trace to the recipe-authoring ownership split, and keep the existing inspection-foundation references intact.
 1.10.0: add Unified inspection foundation subsection pointing at tui-vfx-debug::inspection and TRACE_EVENT_SCHEMA.md; update pipeline-probe + validator guide entries with cross-reference to the inspection surface.
 1.9.0: add Foundation primitives subsection naming the role-tagging primitives shipped in tui-vfx-types 0.6.0 for the recipe scene composer.
 1.8.0: add explicit recipe-authoring tool ownership split plus the debug-recipes QC surface.</CLOG> -->
@@ -71,6 +72,13 @@ disturbing existing direct implementors (`ProbeInspector`,
 `StageInspector`, `TraceInspector`).
 
 Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
+
+## V3 planning and tooling
+
+- [design/tui-vfx-v3-INDEX.md](design/tui-vfx-v3-INDEX.md) — Single landing page for V3 planning, schema, I/O, migration, tooling, and outstanding work.
+- [design/tui-vfx-v3-naming-normalization-decisions.md](design/tui-vfx-v3-naming-normalization-decisions.md) — Accepted V3 naming normalization decisions for `Vfx*`, playback seams, timing, motion, and intent vocabulary.
+- [design/tui-vfx-v3-outstanding-master-list.md](design/tui-vfx-v3-outstanding-master-list.md) — Master outstanding V3 work list, including the final-only V2 retirement gate.
+- [tooling/INDEX.md](tooling/INDEX.md) — Tooling hub for V3 preview, probe/database/frame diff, resize adapter, and edge ingestion workflows.
 
 ## Hand-Maintained
 - Recipe-authoring tool ownership:

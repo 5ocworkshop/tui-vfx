@@ -1,7 +1,7 @@
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>VERSION: 1.5.0</VERS> -->
-<!-- <WCTX>Add primitive-first debug recipe guidance so authors prove the simplest visual form before advanced chaining/showcase recipes.</WCTX> -->
-<!-- <CLOG>1.5.0: Add primitive-first debug recipe guidance: every primitive/feature/pathway starts with the simplest visual confirmation, with complex I/O showcases as secondary fixtures. 1.4.0: Add grid-size/adaptive-layout guidance: tui-vfx renders to caller-provided grids, host apps own resize events, and authors should choose fullscreen/relative/bound positions intentionally. 1.3.0: Add a “which tool proves what” split, including upstream-native debug-recipes QC and Preview as the canonical player for final visual sign-off</CLOG> -->
+<!-- <VERS>VERSION: 1.5.1</VERS> -->
+<!-- <WCTX>Add primitive-first debug recipe guidance so authors prove the simplest visual form before advanced chaining/showcase recipes, now with explicit EIRA-07 resize-contract evidence references.</WCTX> -->
+<!-- <CLOG>1.5.1: Add concrete resize-contract evidence references (`resize_preserve_phase_chain.json` and `diag_resize_preserve_phase`) so the authoring guide states the as-built host-owned resize model directly. 1.5.0: Add primitive-first debug recipe guidance: every primitive/feature/pathway starts with the simplest visual confirmation, with complex I/O showcases as secondary fixtures. 1.4.0: Add grid-size/adaptive-layout guidance: tui-vfx renders to caller-provided grids, host apps own resize events, and authors should choose fullscreen/relative/bound positions intentionally. 1.3.0: Add a “which tool proves what” split, including upstream-native debug-recipes QC and Preview as the canonical player for final visual sign-off</CLOG> -->
 
 # Recipe Authoring Workflow
 
@@ -102,6 +102,13 @@ to know that a terminal resize happened; the host app, Ratatui integration,
 preview runner, or validator supplies a new target grid and asks the recipe to
 render again.
 
+The concrete EIRA-07 evidence fixture for this contract is
+`tui-vfx-recipes/recipes/debug_recipes/complex/resize_preserve_phase_chain.json`.
+Its paired smoke example,
+`cargo run -q --example diag_resize_preserve_phase -- recipes/debug_recipes/complex/resize_preserve_phase_chain.json`,
+renders the same dwell sample at two host sizes plus a restarted control render
+so authors can see the current behavior instead of inferring it from prose.
+
 Authoring implications:
 
 - Use `layout.mode: "fullscreen"` when the recipe should fill whatever grid the
@@ -110,6 +117,8 @@ Authoring implications:
 - Use fixed `width`/`height` deliberately when the recipe is designed to stay a
   fixed-size object inside a larger grid. Fixed recipes may be centered, anchored,
   clipped, or padded by the host/layout rules rather than magically reflowing.
+  `recipes/wargames/themes/wopr_cyan.json` and `recipes/wargames/themes/wopr_green.json`
+  are the current fixed-size V3 reference shapes.
 - Treat absolute cell positions as widget-local defaults. If a position must track
   a changing host layout, expose it through runtime bindings or derive it from
   grid-aware layout/source rules instead of baking one terminal size into the
