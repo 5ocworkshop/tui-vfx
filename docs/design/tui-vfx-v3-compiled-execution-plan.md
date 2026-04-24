@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> - <DESC>Working design note for the initial V3 compiled execution plan. Defines the layer between normalized IR and later runtime family execution, especially the first selector-compaction rules and consumer seams.</DESC> -->
-<!-- <VERS>VERSION: 0.12.0</VERS> -->
+<!-- <VERS>VERSION: 0.13.0</VERS> -->
 <!-- <WCTX>Keep the compiled execution-plan note aligned with the as-built timing model, Parallel semantics, and landed field-hint consumer proofs.</WCTX> -->
-<!-- <CLOG>0.12.0: record root topology truth reporting and the time-varying scheduler Parallel join into filter-to-mask proof.
+<!-- <CLOG>0.13.0: record the completed SCHED-03 batching-readiness audit and SCHED-04 optimization gate.
+0.12.0: record root topology truth reporting and the time-varying scheduler Parallel join into filter-to-mask proof.
 0.11.0: point scheduler/batching follow-on at the parallel-join I/O proof and dedicated plan. 0.10.0: record binding-backed scene-layer visibility plus local I/O proof for Madeira/sidebar parity. 0.9.0: record that top-level content effects now have a content-before-pipeline proof feeding a sourced-output filter/shader chain. 0.8.0: record that scene procedural sources now have an asset-backed runtime-input proof through braille_flag_field wave speed. 0.7.0: record that scene-layer-local pipelines now have a direct compiled I/O proof using the same sourced-output chain. 0.6.0: record the mask sourced-output consumer proof as part of the direct compiled execution coverage matrix. 0.5.0: record the sourced-output direct execution proof that lets a filter publish a bound field to a later shader consumer. 0.4.0: record that authored-order Parallel overlap semantics and the shared field-hint displacement/shading proof have landed, leaving arbitrary cross-family scheduling and broader family coverage as follow-up.
 0.3.0: clarify that execution-facing timing must preserve normalized phase/loop progress separately from monotonic elapsed time, and that cadence-driven motion reads elapsed time.
 0.2.0: document the current direct-execution migration strategy so the working note matches the implementation direction.
@@ -277,7 +278,7 @@ The main remaining execution work now shifts to:
 
 - broader family coverage for hint-driven consumers beyond the current Madeira/sidebar proofs
 - general arbitrary cross-family order preservation, now backed by both `v3_io_parallel_merge_shader.json` and `v3_scheduler_parallel_join_filter_mask.json`
-- final scheduling / batching strategy tracked in `tui-vfx-v3-scheduler-batching-plan.md`; the current next gate is the SCHED-03 batching-readiness audit, not optimization yet
+- final scheduling / batching strategy tracked in `tui-vfx-v3-scheduler-batching-plan.md`; SCHED-03 now provides the machine-checkable safe/serial classification record, so the next gate is a bounded SCHED-04 optimization that proves no fixture drift
 
 ---
 
@@ -310,4 +311,4 @@ To keep the phase real, it should propagate through the same shallow seam family
 That is the minimal proof that the compiled plan is becoming part of the real public pathway rather than staying trapped in an internal helper module.
 
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.13.0</VERS> -->

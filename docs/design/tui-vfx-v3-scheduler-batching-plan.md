@@ -1,16 +1,17 @@
 <!-- <FILE>docs/design/tui-vfx-v3-scheduler-batching-plan.md</FILE> - <DESC>Execution plan for the next V3 slice after scene/content proofs: scheduler boundaries, parallel join semantics, and batching readiness.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
 <!-- <WCTX>Start the scheduler/batching follow-on after V3 I/O, scene/content, and Madeira sidebar proofs landed.</WCTX> -->
-<!-- <CLOG>0.2.0: record the scheduler-facing filter-to-mask join fixture and root topology truth surface as the next completed semantic slice before batching optimization.
+<!-- <CLOG>0.3.0: add the SCHED-03 batching-readiness classification matrix, machine-checkable audit record, and SCHED-04 entry gates.
+0.2.0: record the scheduler-facing filter-to-mask join fixture and root topology truth surface as the next completed semantic slice before batching optimization.
 0.1.0: initial scheduler/batching execution plan with SCHED-01 parallel-join I/O proof as the first bounded slice.</CLOG> -->
 
 # tui-vfx V3 scheduler/batching plan
 
 ## Status
 
-Active follow-on after the V3 I/O and scene/content tranches. SCHED-01 and
-SCHED-02 are now semantic/tooling proof slices; optimization remains gated on
-SCHED-03.
+Active follow-on after the V3 I/O and scene/content tranches. SCHED-01,
+SCHED-02, and SCHED-03 are semantic/tooling proof slices; optimization remains
+gated on SCHED-04.
 
 The direct V3 executor already preserves authored `Sequence` boundaries, snapshot-isolates `Parallel` children, and merges parallel outputs after the parallel block. The next work is to turn that behavior from scattered tests into a documented scheduler/batching surface that future optimization can rely on.
 
@@ -90,13 +91,44 @@ As-built behavior:
 
 ### SCHED-03 — batching-readiness audit
 
-**Status: planned.**
+**Status: complete.**
+
+As-built artifact:
+
+- `/usr/projects/tui-vfx-recipes/docs/v3_scheduler_batching_audit.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/v3_scheduler_batch_safe_channel_shader_style.json`
+- `/usr/projects/tui-vfx-recipes/tests/test_v3_scheduler_batching_audit.rs`
+- Rustdoc-facing notes in:
+  - `/usr/projects/tui-vfx-recipes/src/v3/compile/fnc_execute_compiled_step_tree_to_scene.rs`
+  - `/usr/projects/tui-vfx-recipes/tools/pipeline-validator/src/fnc_collect_compiled_v3_truth_surface.rs`
+  - `/usr/projects/tui-vfx-recipes/tools/pipeline-validator/src/fnc_run_debug_recipes_qc.rs`
 
 Deliverables:
 
 - classify which leaf families are safe to batch by scope/channel/role without altering output merge semantics
 - document any family whose output semantics require serial execution
 - avoid optimizing until the classification has tests and fixture evidence
+
+As-built classification:
+
+| Class                          | Families                             | Safe condition                                                                                                | Serial-required boundary                                                                                                 |
+| ------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Disjoint static scopes         | mask, sampler, filter, shader, style | every branch has literal static bounds and branch bounds are pairwise non-overlapping                         | dynamic scopes, unknown bounds, or any overlap outside another proven safe class                                         |
+| Channel-exclusive local writes | filter, shader, style                | every branch is scoped to one exclusive channel and the effect family is in the channel-local whitelist       | masks, samplers, unknown channel-locality, or filter/shader/style families outside the whitelist                         |
+| Role-exclusive visual writes   | shader, style                        | every branch is scoped to a distinct semantic role/border and every leaf is a visual shader/style-effect step | masks, samplers, filters, role overlap, or unknown non-visual side effects                                               |
+| Post-Parallel hint joins       | sampler, filter, shader, mask, style | new branch hints are withheld from siblings, merged at the join, then consumed by later `Sequence` siblings   | sibling cross-feed inside one `Parallel`, or duplicate hint outputs unless the current first-new-wins order is preserved |
+
+Machine-checkable entry gates for SCHED-04:
+
+1. `docs/v3_scheduler_batching_audit.json` remains valid and is cited by docs.
+2. Every safe class has evidence tests and recipes or an explicit source
+   predicate.
+3. Scheduler debug recipes pass strict probe and debug-recipes QC.
+4. Any optimization proves no render-hash drift for:
+   - `v3_io_parallel_merge_shader.json`
+   - `v3_scheduler_parallel_join_filter_mask.json`
+   - `v3_scheduler_batch_safe_channel_shader_style.json`
+   - `complex_parallel_overlap_conflict_snapshot.json`
 
 ### SCHED-04 — first bounded batching optimization
 
@@ -116,10 +148,14 @@ From `/usr/projects/tui-vfx-recipes`:
 cargo fmt --all --check
 cargo test -p tui-vfx-recipes parallel_merge_shader -- --nocapture
 cargo test -p tui-vfx-recipes scheduler_parallel_join -- --nocapture
+cargo test -p tui-vfx-recipes scheduler_batch_safe_channel_shader_style -- --nocapture
+cargo test -p tui-vfx-recipes scheduler_batching_audit -- --nocapture
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_io_parallel_merge_shader.json --strict --probe --format json
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_io_parallel_merge_shader.json --debug-recipes-qc --format json
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_scheduler_parallel_join_filter_mask.json --strict --probe --format json
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_scheduler_parallel_join_filter_mask.json --debug-recipes-qc --format json
+cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_scheduler_batch_safe_channel_shader_style.json --strict --probe --format json
+cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_scheduler_batch_safe_channel_shader_style.json --debug-recipes-qc --format json
 cargo test -p tui-vfx-recipes
 git diff --check
 ```
@@ -136,8 +172,8 @@ git diff --check
 
 - scheduler boundary behavior has committed debug recipes and deterministic regressions
 - root topology truth is visible in validator/probe/QC output for scheduler fixtures
-- later batching work has a documented safe/unsafe classification path
+- later batching work has a tested safe/unsafe classification path
 - docs distinguish current semantic proofs from future optimization work
 
 <!-- <FILE>docs/design/tui-vfx-v3-scheduler-batching-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
