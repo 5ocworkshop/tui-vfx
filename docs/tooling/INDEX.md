@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/INDEX.md</FILE> - <DESC>Tooling documentation index for tui-vfx and tui-vfx-recipes.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.1</VERS> -->
 <!-- <WCTX>Make the V3 tooling hub a command-first start page that maps the as-built validator, probe, diff/database, preview/player, resize, edge-ingestion, command-capture, trace, and docs-generation surfaces.</WCTX> -->
-<!-- <CLOG>0.2.0: expand the tooling hub with concrete as-built command examples, verified tool boundaries, command-capture and docs-generation entries, and corrected sibling-repo cross-links. 0.1.0: initial tooling docs hub with ownership map and links to probe/database/diff, preview/player, resize, and edge-ingestion guidance.</CLOG> -->
+<!-- <CLOG>0.2.1: tighten the hub into a canonical surface map with status notes, grouped command families, and a release-gate link.</CLOG> -->
 
 # Tooling documentation
 
@@ -11,27 +11,42 @@ a deeper guide. Do not add a new tool until the existing validator, probe,
 trace, preview/player, capture, or docs-generation surface cannot represent the
 needed evidence.
 
+This page is the canonical map for the current as-built surfaces. If a task
+fits one of the rows below, reuse that command surface first and only open a
+deeper guide when you need more detail.
+
 ## Quick command map
 
-| Need | Existing command surface | Boundary |
-|---|---|---|
-| Validate recipe structure/rules | `cargo run -q -p pipeline-validator -- --rules <recipe.json>` from `/usr/projects/tui-vfx-recipes` | Recipe-aware validation. Keeps V2/V3 cutover behavior in the recipe repo. |
-| Inspect normalized V3 IR | `pipeline-validator --dump-normalized --format json <recipe.json>` | Canonical normalized authoring shape. Not a renderer. |
-| Inspect V3 lowering invariants | `pipeline-validator --lowering-report --format json <recipe.json>` | Machine-readable unresolved-lowering / human-review queue. |
-| Check V2↔V3 migration pairs | `pipeline-validator --migration-equivalence-report --format json <manifest.json>` | Manifest-driven migration evidence, not owner audit. |
-| Run debug fixture QC | `pipeline-validator --debug-recipes-qc --format json <recipe.json>` | Upstream-native structured QC over debug fixtures/concrete exports. |
-| Recipe-to-scene probe | `cargo run -q -p recipe-probe -- <recipe.json> ...` | Recipe-aware adapter into the engine probe shape. |
-| Validation plus probe in one flow | `pipeline-validator --probe ... <recipe.json>` | Validator owns recipe parsing/rules; delegated output is structured probe evidence. |
-| Direct engine scene probe | `cargo run -q -p tui-vfx-probe --bin pipeline-probe -- --input <scene.json> ...` from `/usr/projects/tui-vfx` | Engine-level `ProbeSceneSpec`; not recipe-aware. |
-| Frame diff and SQLite xray | `recipe-probe --diff-to <t> --sqlite-query '<sql>' <recipe.json>` | Reuse existing probe report/database shape. Do not invent a parallel diff format. |
-| Unified lifecycle/trace evidence | `cargo run -q -p tui-vfx-trace -- --recipe <recipe.json> --format report` | Recipe trace CLI for lifecycle/resolution/composition/pipeline evidence. |
-| Human preview/browser | `cargo run --example demo -- [recipe.json]` | Interactive ratatui browser and visual sign-off. |
-| Fullscreen single-recipe preview | `cargo run --example play_recipe -- <recipe.json>` | Human isolation of one recipe; terminal lifecycle stays in the example/player. |
-| Minimal V3 inspector/player | `cargo run --example v3_play_recipe -- <v3-recipe.json>` | Prints normalized IR and deterministic render metadata for supported V3 recipes. |
-| Demo-path cell dump | `cargo run --example diag_render_dump -- <recipe.json> [dwell_seconds]` | Machine-readable cells through the same render path as the demo. |
-| Resize contract evidence | `cargo run --example diag_resize_preserve_phase -- [recipe.json]` | Shows host-owned resize rerendering with preserved phase/time. No core resize loop. |
-| Offline command-output capture | `cargo run -q -p recipe-source-capture -- --output <artifact.json> -- <cmd> ...` | Authoring/tooling capture only. Runtime recipe playback must not spawn commands. |
-| Generated capabilities/API docs | `just docs-generate`, `just docs-check`, `just docs-validate`, `just docs-api`, `just docs-api-check`, `just docs-api-validate` from `/usr/projects/tui-vfx` | `xtask`/`just` pipeline for generated docs and drift checks. |
+| Need | Existing command surface | Status | Boundary |
+|---|---|---|---|
+| Validate recipe structure/rules | `cargo run -q -p pipeline-validator -- --rules <recipe.json>` from `/usr/projects/tui-vfx-recipes` | as-built | Recipe-aware validation. Keeps V2/V3 cutover behavior in the recipe repo. |
+| Inspect normalized V3 IR | `pipeline-validator --dump-normalized --format json <recipe.json>` | as-built | Canonical normalized authoring shape. Not a renderer. |
+| Inspect V3 lowering invariants | `pipeline-validator --lowering-report --format json <recipe.json>` | as-built | Machine-readable unresolved-lowering / human-review queue. |
+| Check V2↔V3 migration pairs | `pipeline-validator --migration-equivalence-report --format json <manifest.json>` | as-built | Manifest-driven migration evidence, not owner audit. |
+| Run debug fixture QC | `pipeline-validator --debug-recipes-qc --format json <recipe.json>` | as-built | Upstream-native structured QC over debug fixtures/concrete exports. |
+| Recipe-to-scene probe | `cargo run -q -p recipe-probe -- <recipe.json> ...` | as-built | Recipe-aware adapter into the engine probe shape. |
+| Validation plus probe in one flow | `pipeline-validator --probe ... <recipe.json>` | as-built | Validator owns recipe parsing/rules; delegated output is structured probe evidence. |
+| Direct engine scene probe | `cargo run -q -p tui-vfx-probe --bin pipeline-probe -- --input <scene.json> ...` from `/usr/projects/tui-vfx` | engine-level | `ProbeSceneSpec`; not recipe-aware. |
+| Frame diff and SQLite xray | `recipe-probe --diff-to <t> --sqlite-query '<sql>' <recipe.json>` | diff/database | Reuse existing probe report/database shape. Do not invent a parallel diff format. |
+| Unified lifecycle/trace evidence | `cargo run -q -p tui-vfx-trace -- --recipe <recipe.json> --format report` | trace | Recipe trace CLI for lifecycle/resolution/composition/pipeline evidence. |
+| Human preview/browser | `cargo run --example demo -- [recipe.json]` | preview/player | Interactive ratatui browser and visual sign-off. |
+| Fullscreen single-recipe preview | `cargo run --example play_recipe -- <recipe.json>` | preview/player | Human isolation of one recipe; terminal lifecycle stays in the example/player. |
+| Minimal V3 inspector/player | `cargo run --example v3_play_recipe -- <v3-recipe.json>` | example-level | Prints normalized IR and deterministic render metadata for supported V3 recipes. |
+| Demo-path cell dump | `cargo run --example diag_render_dump -- <recipe.json> [dwell_seconds]` | debug dump | Machine-readable cells through the same render path as the demo. |
+| Resize contract evidence | `cargo run --example diag_resize_preserve_phase -- [recipe.json]` | host-owned resize | Shows host-owned resize rerendering with preserved phase/time. No core resize loop. |
+| Offline command-output capture | `cargo run -q -p recipe-source-capture -- --output <artifact.json> -- <cmd> ...` | offline-only | Authoring/tooling capture only. Runtime recipe playback must not spawn commands. |
+| Generated capabilities/API docs | `just docs-generate`, `just docs-check`, `just docs-validate`, `just docs-api`, `just docs-api-check`, `just docs-api-validate` from `/usr/projects/tui-vfx` | generated docs | `xtask`/`just` pipeline for generated docs and drift checks. |
+
+Status shorthand used above:
+
+- `as-built` means the surface already exists and should be reused as the first
+  stop.
+- `engine-level` means the command operates on engine inputs, not recipes.
+- `preview/player` means the host owns terminal lifecycle and playback.
+- `offline-only` means the command captures authoring data but must not run
+  during recipe playback.
+- `generated docs` means the command checks or emits generated documentation
+  artifacts, not hand-edited docs.
 
 ## Common workflows
 
@@ -178,6 +193,7 @@ live in `/usr/projects/tui-vfx-recipes/docs/`.
 - [V3 preview and thin player surface](v3-preview-and-thin-player.md)
 - [Grid resize adapter contract](grid-resize-adapter-contract.md)
 - [Edge ingestion and capture tooling](edge-ingestion-and-capture.md)
+- [Release-gate evidence records](release-gate-evidence.md)
 
 ## Existing detailed references
 
@@ -185,6 +201,7 @@ live in `/usr/projects/tui-vfx-recipes/docs/`.
 - [`../PIPELINE_PROBE_LLM_GUIDE.md`](../PIPELINE_PROBE_LLM_GUIDE.md)
 - [`../PIPELINE_TRACE_LLM_GUIDE.md`](../PIPELINE_TRACE_LLM_GUIDE.md)
 - [`../RECIPE_AUTHORING_WORKFLOW.md`](../RECIPE_AUTHORING_WORKFLOW.md)
+- [`./release-gate-evidence.md`](release-gate-evidence.md)
 - [`../../../tui-vfx-recipes/docs/RECIPE_PROBE_GUIDE.md`](../../../tui-vfx-recipes/docs/RECIPE_PROBE_GUIDE.md)
 - [`../../../tui-vfx-recipes/docs/V3_TOOLING_COMMAND_REFERENCE.md`](../../../tui-vfx-recipes/docs/V3_TOOLING_COMMAND_REFERENCE.md)
 - [`../../../tui-vfx-recipes/docs/V3_STANDALONE_PREVIEW_SURFACES.md`](../../../tui-vfx-recipes/docs/V3_STANDALONE_PREVIEW_SURFACES.md)
@@ -203,4 +220,4 @@ live in `/usr/projects/tui-vfx-recipes/docs/`.
   tables unless a concrete missing field forces a schema extension.
 
 <!-- <FILE>docs/tooling/INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.1</VERS> -->

@@ -1,16 +1,13 @@
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> - <DESC>Design plan for a generalized braille-dotfield source/toolkit in V3, using the Madeira flag as the first proving consumer.</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>Track the braille-dotfield toolkit direction as it moves from Madeira planning into an as-built reusable, contract-backed recipe asset path with wave displacement and correlated shading applied before final terminal-cell emission.</WCTX> -->
-<!-- <CLOG>0.6.0: record the scene procedural runtime-input proof for braille_flag_field wave speed. 0.5.0: record the as-built Phase 5 asset-contract slice: Madeira now resolves braille-dotfield artwork through requires_assets, plus a scene debug recipe locks the reusable asset-token path. A follow-up debug fixture,
-`recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json`, proves the
-same asset-backed source can take `wave_speed` from a V3 `requires_bindings`
-runtime input without adding Madeira-specific Rust plumbing. 0.4.0: update the recommendation after implementation review — stop planning interim Madeira-specific source hacks and explicitly choose the generalized full braille-dotfield implementation now, with the Madeira flag as the first proving consumer. 0.3.0: add ANSI block/flow diagrams for the crate workflow, the near-term scene-layer implementation path, and the long-term toolkit layering so the design is easier to execute and discuss. 0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
+<!-- <VERS>VERSION: 0.6.1</VERS> -->
+<!-- <WCTX>Track the braille-dotfield toolkit direction as a post-release strategy note with reusable boundaries, effect families, and follow-on phases after the Madeira proof slice.</WCTX> -->
+<!-- <CLOG>0.6.1: add the post-release strategy section, including ownership boundaries, creative procedural lanes, and phased follow-up work.</CLOG> -->
 
 # tui-vfx V3 braille-dotfield toolkit plan
 
 ## Status
 
-Implementation-oriented. The first reusable slice has landed in
+Post-release strategy. The first reusable slice has landed in
 `tui-vfx-recipes`: `braille_flag_field` loads validated braille-dotfield rows at
 V3 recipe-load time, Madeira selects its base artwork through
 `requires_assets.madeira_flag_base`, and
@@ -776,5 +773,164 @@ That is the shortest honest path from the current state to a recipe-side flag
 that actually behaves like the source crate **and** leaves behind reusable
 foundation instead of disposable interim work.
 
+
+## 16. Post-release strategy
+
+The sections above describe the current toolkit shape and the first proving
+consumer. This section is the post-release lane: follow-on exploration, family
+design, and downstream adoption. It is intentionally not a release gate.
+
+### 16.1 Inspiration review: bgraph and rocketsplash
+
+`bgraph` is useful because it treats braille lookup and emission as a small,
+explicit utility surface. It shows the value of canonical dot ordering, compact
+tables, and predictable glyph selection.
+
+`rocketsplash` is useful because it treats braille as an intermediate
+representation in a pipeline: source preparation, quantization, and final
+terminal emission stay separate even when the output is braille.
+
+The takeaway for post-release work is simple:
+
+- reuse the braille surface discipline
+- do not copy image-ingest assumptions into procedural effects
+- keep source prep, field transforms, and terminal emission separable
+
+### 16.2 Ownership boundaries
+
+```text
+Downstream apps
+  ├─ choose the story, UX, and release packaging
+  ├─ own policy, defaults, and product-facing names
+  └─ consume recipe outputs instead of reinterpreting internals
+        │
+        ▼
+tui-vfx-recipes
+  ├─ owns recipe schema and authoring-facing source params
+  ├─ owns procedural source registration and validation
+  └─ exposes braille-dotfield sources as recipe data, not app policy
+        │
+        ▼
+tui-vfx
+  ├─ owns rendering semantics, braille emission, filters, compositor behavior
+  ├─ owns visual transforms and reusable effect engines
+  └─ keeps effect policy inside the library, not in downstream apps
+        │
+        ▼
+mixed-signals
+  ├─ owns reusable signal/math substrate
+  ├─ owns field primitives that are not terminal-specific
+  └─ stays upstream of tui-vfx when the math is reusable beyond one effect
+```
+
+Boundary rule of thumb:
+
+- **mixed-signals**: reusable field/math substrate
+- **tui-vfx**: rendering semantics, braille emission, visual transforms
+- **tui-vfx-recipes**: recipe-facing source shapes and validation
+- **downstream apps**: policy, packaging, and presentation
+
+### 16.3 Creative procedural lanes
+
+These are post-release effect families to explore, not immediate blockers:
+
+| Idea | What it does | Likely home |
+|---|---|---|
+| Mouse pixie dust / trails | Leave a short-lived particle wake behind pointer movement | `tui-vfx` effect or recipe-facing procedural source |
+| Starburst | Radial bursts from clicks, taps, or timed triggers | `tui-vfx-recipes` source backed by `tui-vfx` transforms |
+| Negative-space words | Carve text by preserving empty cells around the word shape | `tui-vfx-recipes` authoring surface with `tui-vfx` emission |
+| Ant-farm / minions | Small agents follow trails, cluster, and reform paths | `tui-vfx` simulation layer with recipe parameters |
+| Sketch / drawing | Jittered strokes, hatch fills, and line-drawn contours | `tui-vfx` renderer and reusable recipe source family |
+
+The point is not to name every possible effect up front. The point is to make
+the substrate reusable enough that the family can grow without re-deciding the
+braille boundary each time.
+
+### 16.4 ANSI block diagrams
+
+#### Architecture diagram
+
+```text
+┌──────────────────────────────┐
+│ downstream apps              │
+│ - policy                     │
+│ - packaging                  │
+│ - UX / story / defaults      │
+└───────────────┬──────────────┘
+                │ consumes recipe outputs
+                ▼
+┌──────────────────────────────┐
+│ tui-vfx-recipes              │
+│ - schema                     │
+│ - validation                 │
+│ - procedural source ids      │
+│ - authoring params           │
+└───────────────┬──────────────┘
+                │ emits braille-dotfield intent
+                ▼
+┌──────────────────────────────┐
+│ tui-vfx                      │
+│ - compositor                 │
+│ - braille emission           │
+│ - dotfield transforms        │
+│ - visual effects             │
+└───────────────┬──────────────┘
+                │ reuses substrate
+                ▼
+┌──────────────────────────────┐
+│ mixed-signals                │
+│ - reusable signal/math leaves │
+│ - field primitives            │
+└──────────────────────────────┘
+```
+
+#### Visual concept diagram
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│   •   •      ✦          . . .         •                    │
+│     \ | /               trail          \                   │
+│  ---  *  ---      NEGATIVE SPACE      ---*---              │
+│     / | \             WORDS             /                   │
+│   ant-farm lines  ···············  sketch hatch            │
+│            mouse pixie dust / starburst / drawing          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 16.5 Post-release implementation phases
+
+#### Phase 1 — inventory and classify
+
+- catalog existing braille consumers and helpers
+- separate reusable substrate from one-off effect behavior
+- tag which ideas belong in `mixed-signals`, `tui-vfx`, or recipes
+
+#### Phase 2 — substrate extraction
+
+- normalize braille dot ordering and emission helpers
+- keep dotfield space separate from terminal-cell space
+- extract the smallest reusable transforms first
+
+#### Phase 3 — effect family prototypes
+
+- prototype mouse trails, starbursts, and negative-space text
+- test ant-farm / minion movement as a controlled simulation lane
+- add sketch/drawing experiments where the braille surface is the output
+
+#### Phase 4 — recipe-facing promotion
+
+- promote the stable families into recipe source ids
+- document params, defaults, and expected visual behavior
+- keep downstream apps on recipe outputs rather than internal effects
+
+#### Phase 5 — polish and adoption
+
+- add examples and screenshots or terminal captures
+- tighten docs around ownership boundaries
+- prune dead experiments that do not justify their surface area
+
+Post-release success is a small, stable family of reusable braille-dotfield
+effects, not a single oversized abstraction.
+
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.1</VERS> -->
