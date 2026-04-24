@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.12.6</VERS> -->
+<!-- <VERS>VERSION: 0.12.7</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.12.6: record naming inventory and fresh D6 evidence status.</CLOG> -->
+<!-- <CLOG>0.12.7: record thin-player/current V3 surface documentation checkpoint.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -26,7 +26,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-NAME01/PREVIEW01 | V3 naming cutover work | Inventory complete / implementation outstanding | `tui-vfx-v3-naming-implementation-inventory.md` now maps accepted targets and risk order. Next slice: `tui-vfx-recipes/src/recipe_schema/**` `Ra*`→`Vfx*` foundation with aliases before preview/playback seam rename. |
 | V3-VIEW01 | Normalized IR viewer/explorer | Outstanding | Scope around normalized execution graph after IR contract is stable. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
-| V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. |
+| V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / partial docs evidence | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Thin-player/current V3 surface map is documented; packaged `tui-vfx-player` remains outstanding. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
 | V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial / follow-up queued | `tui-vfx-v3-docs-lifecycle-plan.md` classifies core docs, active implementation plans, retained design records, stale-status cleanup, and archive/merge candidates. Next follow-up is V3-QDOC01 stale checklist reconciliation. |
@@ -162,6 +162,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-COMBINE01 | Complete initial | `tui-vfx-recipes` commit `bf2ee98`: normalized IR emits explicit sequence/parallel combine, merge, leaf-family defaults, and conservative parallel overlap classifications. |
 | V3-NAME01-INV | Complete initial | `tui-vfx` commit `c765fa8`: accepted naming slate has concrete repo/file/symbol buckets, compatibility/re-export guidance, risk order, and next rename slice. |
 | V3-CI02-D6-REFRESH | Complete evidence refresh | `tui-vfx` commit `c765fa8`: stale D6 sidecars replaced with fresh truthful failing evidence for offscreen diagnostics and missing shadow render-capture gates. |
+| V3-D2-SURFACEMAP | Complete initial | `tui-vfx` commit `abfb615`: `v3_play_recipe`, validator output dump, probe/diff surfaces, and render dump responsibilities are documented as the current thin-player substrate; packaged `tui-vfx-player` remains a later wrapper. |
 | V3-VC01-RELATED | Complete initial | `tui-vfx-recipes` commit `ec25b34`: `pipeline-validator --rules` surfaces malformed `metadata.related_themes` with path-style parse diagnostics. |
 | V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
 
