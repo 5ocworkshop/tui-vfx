@@ -1,13 +1,16 @@
 <!-- <FILE>docs/design/tui-vfx-v3-scheduler-batching-plan.md</FILE> - <DESC>Execution plan for the next V3 slice after scene/content proofs: scheduler boundaries, parallel join semantics, and batching readiness.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Start the scheduler/batching follow-on after V3 I/O, scene/content, and Madeira sidebar proofs landed.</WCTX> -->
-<!-- <CLOG>0.1.0: initial scheduler/batching execution plan with SCHED-01 parallel-join I/O proof as the first bounded slice.</CLOG> -->
+<!-- <CLOG>0.2.0: record the scheduler-facing filter-to-mask join fixture and root topology truth surface as the next completed semantic slice before batching optimization.
+0.1.0: initial scheduler/batching execution plan with SCHED-01 parallel-join I/O proof as the first bounded slice.</CLOG> -->
 
 # tui-vfx V3 scheduler/batching plan
 
 ## Status
 
-Active follow-on after the V3 I/O and scene/content tranches.
+Active follow-on after the V3 I/O and scene/content tranches. SCHED-01 and
+SCHED-02 are now semantic/tooling proof slices; optimization remains gated on
+SCHED-03.
 
 The direct V3 executor already preserves authored `Sequence` boundaries, snapshot-isolates `Parallel` children, and merges parallel outputs after the parallel block. The next work is to turn that behavior from scattered tests into a documented scheduler/batching surface that future optimization can rely on.
 
@@ -34,7 +37,7 @@ The scheduler/batching work must preserve these rules:
 
 ### SCHED-01 — parallel join I/O proof
 
-**Status: complete in tui-vfx-recipes; docs commit pending.**
+**Status: complete.**
 
 As-built artifact:
 
@@ -58,13 +61,32 @@ Debug recipe requirement:
 
 ### SCHED-02 — execution truth surface
 
-**Status: planned.**
+**Status: complete.**
+
+As-built artifacts:
+
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/v3_scheduler_parallel_join_filter_mask.json`
+- `/usr/projects/tui-vfx-recipes/tools/pipeline-validator/src/fnc_collect_compiled_v3_truth_surface.rs`
+- `/usr/projects/tui-vfx-recipes/tools/pipeline-validator/src/fnc_run_debug_recipes_qc.rs`
+- `/usr/projects/tui-vfx-recipes/tools/pipeline-validator/src/fnc_run_probe_mode.rs`
 
 Deliverables:
 
 - extend compiled/probe truth reporting so reviewers can see root pipeline tree shape, layer-local tree shape, and direct-executor coverage without reading Rust internals
 - keep reporting truthful about probe limitations: root compositor stage analysis is not the same as compiled V3 tree analysis
 - add tests around the scheduler-facing debug fixtures
+
+As-built behavior:
+
+- `CompiledV3TruthSurface` reports root pipeline counts, root topology tree,
+  total root node count, and root `Parallel` join count.
+- Probe mode emits `support_truth` for root-only compiled V3 recipes, not just
+  scene-bearing recipes.
+- Debug-recipes QC adds `compiled_v3_pipeline_topology` and
+  `scheduler_parallel_join` checks for scheduler fixtures.
+- The new fixture proves a time-varying scalar emitted in a `Parallel` branch
+  can be consumed by a downstream filter, re-emitted via `io.outputs.source`,
+  and consumed by a checker mask after the join.
 
 ### SCHED-03 — batching-readiness audit
 
@@ -93,8 +115,11 @@ From `/usr/projects/tui-vfx-recipes`:
 ```sh
 cargo fmt --all --check
 cargo test -p tui-vfx-recipes parallel_merge_shader -- --nocapture
+cargo test -p tui-vfx-recipes scheduler_parallel_join -- --nocapture
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_io_parallel_merge_shader.json --strict --probe --format json
 cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_io_parallel_merge_shader.json --debug-recipes-qc --format json
+cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_scheduler_parallel_join_filter_mask.json --strict --probe --format json
+cargo run -p pipeline-validator -- recipes/debug_recipes/complex/v3_scheduler_parallel_join_filter_mask.json --debug-recipes-qc --format json
 cargo test -p tui-vfx-recipes
 git diff --check
 ```
@@ -109,9 +134,10 @@ git diff --check
 
 ## Completion criteria
 
-- scheduler boundary behavior has at least one committed debug recipe and deterministic regression
+- scheduler boundary behavior has committed debug recipes and deterministic regressions
+- root topology truth is visible in validator/probe/QC output for scheduler fixtures
 - later batching work has a documented safe/unsafe classification path
 - docs distinguish current semantic proofs from future optimization work
 
 <!-- <FILE>docs/design/tui-vfx-v3-scheduler-batching-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
