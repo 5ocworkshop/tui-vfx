@@ -353,3 +353,14 @@ The packet library now reaches all the way from immediate V3 tooling blockers th
 
 ## Madeira-reference collision notes
 - `WP61` is primarily audit-only and can run in parallel with non-Madeira implementation lanes, but should avoid overlapping with another packet that is actively retuning Madeira visuals at the same time.
+
+
+## Madeira-direct-output corrective packet node
+- `WP62` — Madeira direct-scene output fidelity fix
+
+## Madeira-direct-output dependency notes
+- `WP62` follows `WP61` because it implements the single next corrective slice identified by the faithfulness audit.
+- `WP62` should precede any deeper visual parity tuning or final Madeira signoff reassessment.
+
+## Madeira-direct-output collision notes
+- `WP62` collides with any packet actively retuning Madeira scene rendering or preview behavior and should not overlap with broader Madeira implementation lanes in the same files.
