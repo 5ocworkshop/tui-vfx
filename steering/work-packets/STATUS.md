@@ -57,6 +57,8 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `887413f`
 - `43-madeira-release-readiness-checklist.md`
   - landed via `09ad811`
+- `08-madeira-next-slice-plan.md`
+  - landed via `d7e70b8`
 - `24-madeira-second-slice-template.md`
   - landed via `8c1be16`
 - `05-debug-recipes-qc-v3.md`
