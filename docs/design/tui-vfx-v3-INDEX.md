@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.5.1</VERS> -->
-<!-- <WCTX>Link the docs lifecycle/elevation plan from the landing page so the V3-DOCS01 lane is easy to find.</WCTX> -->
-<!-- <CLOG>0.5.1: add V3 docs lifecycle/elevation plan link.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.3</VERS> -->
+<!-- <WCTX>Keep the V3 landing page current with active docs and deferred post-release capability specs.</WCTX> -->
+<!-- <CLOG>0.5.3: move braille dotfield plan under post-release specs.</CLOG> -->
 
 # V3 documentation index
 
@@ -86,7 +86,9 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 
 - [V3 capability catalog](tui-vfx-v3-capability-catalog.md)
 - [V3 capability governance decision](tui-vfx-v3-capability-governance-decision.md)
-- [V3 braille dotfield toolkit plan](tui-vfx-v3-braille-dotfield-toolkit-plan.md)
+- [Post-release capability specs](post-release/INDEX.md)
+  - [Braille dotfield toolkit plan](post-release/braille-dotfield-toolkit-plan.md)
+  - [Glyph actor procedural spec](post-release/glyph-actor-procedural-spec.md)
 
 ## Rules of thumb
 
@@ -101,4 +103,4 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
   semantics belong in `tui-vfx` / `tui-vfx-recipes`.
 
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.3</VERS> -->

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-scene-content-integration-plan.md</FILE> - <DESC>Execution plan for the next V3 integration slice after shader/effects I/O: scene-layer procedural/braille and content composition.</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.1</VERS> -->
 <!-- <WCTX>Plan the next V3-only tranche after the shader/filter/mask/style-effect I/O path has root and scene-layer proofs, keeping Madeira and content composition as reusable proving grounds.</WCTX> -->
-<!-- <CLOG>0.4.0: mark the Madeira showcase sidebar complete after binding-backed scene visibility and layered text parity landed in tui-vfx-recipes. 0.3.0: mark SC-02 complete after the typewriter-to-filter/shader I/O proof and compiled content QC truth landed in tui-vfx-recipes. 0.2.0: mark SC-01 complete after the asset-backed braille_flag_field runtime wave proof landed in tui-vfx-recipes. 0.1.0: initial execution plan for scene/content integration, including debug-recipe obligations, rustdoc/docs deliverables, verification commands, and sub-agent lanes.</CLOG> -->
+<!-- <CLOG>0.4.1: update braille plan path after post-release move.</CLOG> -->
 
 # tui-vfx V3 scene/content integration plan
 
@@ -157,7 +157,7 @@ Deliverables:
 - Keep rustdoc on touched procedural/content seams explicit about determinism,
   runtime input resolution, and no hot-path file I/O.
 - Update hand-maintained docs in both repos:
-  - `docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md`
+  - `docs/design/post-release/braille-dotfield-toolkit-plan.md`
   - `docs/design/tui-vfx-v3-compiled-execution-plan.md`
   - `docs/design/tui-vfx-v3-spatial-field-hint-plan.md` when the field matrix
     changes
@@ -207,4 +207,4 @@ git diff --check
   not missing first proof of scene/content composition or Madeira sidebar parity.
 
 <!-- <FILE>docs/design/tui-vfx-v3-scene-content-integration-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.1</VERS> -->

@@ -1,7 +1,7 @@
-<!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> - <DESC>Design plan for a generalized braille-dotfield source/toolkit in V3, using the Madeira flag as the first proving consumer.</DESC> -->
-<!-- <VERS>VERSION: 0.6.1</VERS> -->
+<!-- <FILE>docs/design/post-release/braille-dotfield-toolkit-plan.md</FILE> - <DESC>Design plan for a generalized braille-dotfield source/toolkit in V3, using the Madeira flag as the first proving consumer.</DESC> -->
+<!-- <VERS>VERSION: 0.6.2</VERS> -->
 <!-- <WCTX>Track the braille-dotfield toolkit direction as a post-release strategy note with reusable boundaries, effect families, and follow-on phases after the Madeira proof slice.</WCTX> -->
-<!-- <CLOG>0.6.1: add the post-release strategy section, including ownership boundaries, creative procedural lanes, and phased follow-up work.</CLOG> -->
+<!-- <CLOG>0.6.2: move plan into post-release capability specs.</CLOG> -->
 
 # tui-vfx V3 braille-dotfield toolkit plan
 
@@ -932,5 +932,5 @@ braille boundary each time.
 Post-release success is a small, stable family of reusable braille-dotfield
 effects, not a single oversized abstraction.
 
-<!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.6.1</VERS> -->
+<!-- <FILE>docs/design/post-release/braille-dotfield-toolkit-plan.md</FILE> -->
+<!-- <VERS>END OF VERSION: 0.6.2</VERS> -->

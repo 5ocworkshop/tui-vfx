@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.11.7</VERS> -->
-<!-- <WCTX>Keep the V3 master punch list aligned with current VC-09 evidence and the new docs lifecycle/elevation plan.</WCTX> -->
-<!-- <CLOG>0.11.7: mark V3-QDOC01 reconciled after checklist status cleanup.</CLOG> -->
+<!-- <VERS>VERSION: 0.11.9</VERS> -->
+<!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
+<!-- <CLOG>0.11.9: point braille dotfield tracking at post-release specs.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -31,7 +31,8 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
 | V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial / follow-up queued | `tui-vfx-v3-docs-lifecycle-plan.md` classifies core docs, active implementation plans, retained design records, stale-status cleanup, and archive/merge candidates. Next follow-up is V3-QDOC01 stale checklist reconciliation. |
 | V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
-| V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `tui-vfx-v3-braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
+| V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `post-release/braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
+| V3-GLYPHACTOR01 | Glyph actor procedural | Post-release spec captured | `docs/design/post-release/glyph-actor-procedural-spec.md`; implementation waits until core V3 release/migration stability. |
 | V3-R99 | Final V2 retirement plan | Blocked by design | Only after migration, stability, downstream adaptation, and owner approval. |
 
 ## Resolved owner decisions
@@ -246,4 +247,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.11.7</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.9</VERS> -->

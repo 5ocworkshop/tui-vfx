@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-docs-lifecycle-plan.md</FILE> - <DESC>Provisional V3 docs lifecycle/elevation plan: classifies live docs into core reference, active plan, retained record, stale-status cleanup, and later archive/merge buckets without moving or rewriting anything yet.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.1.1</VERS> -->
 <!-- <WCTX>Classify the V3 docs set so the outstanding V3-DOCS01 lane has a concrete, non-destructive elevation plan.</WCTX> -->
-<!-- <CLOG>0.1.0: initial classification plan for V3 docs lifecycle/elevation work.</CLOG> -->
+<!-- <CLOG>0.1.1: update braille plan path after post-release move.</CLOG> -->
 
 # V3 docs lifecycle / elevation plan
 
@@ -105,7 +105,7 @@ particular shape, even when they are no longer the active work surface.
 - `docs/design/tui-vfx-v3-motion-spec.md` — draft motion design note.
 - `docs/design/tui-vfx-v3-shadow-spec.md` — draft shadow design note.
 - `docs/design/tui-vfx-v3-vanishing-edge-spec.md` — draft viewport-edge note.
-- `docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md` — post-release
+- `docs/design/post-release/braille-dotfield-toolkit-plan.md` — post-release
   strategy note.
 - `docs/design/tui-vfx-v3-migration-findings-memo-claude.md` — migration
   findings memo.
