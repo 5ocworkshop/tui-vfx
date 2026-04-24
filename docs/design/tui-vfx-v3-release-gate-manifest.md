@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-release-gate-manifest.md</FILE> - <DESC>First concrete V3 release-gate fixture manifest seed for Track D / Chapter 60.</DESC> -->
-<!-- <VERS>VERSION: 0.2.1</VERS> -->
+<!-- <VERS>VERSION: 0.2.2</VERS> -->
 <!-- <WCTX>Define the first checked-in manifest shape for the six V3 release gates so evidence capture and CI can bind to stable fixture IDs without overclaiming approved outcomes.</WCTX> -->
-<!-- <CLOG>0.2.1: point D6 at the probe_alarm_lighthouse smoke record and small evidence sidecar handoff.</CLOG> -->
+<!-- <CLOG>0.2.2: add the checked probe_alarm_lighthouse evidence-record template and keep the smoke handoff small.</CLOG> -->
 
 # V3 release-gate manifest seed
 
@@ -142,6 +142,11 @@ large probe/trace/render outputs as separate artifacts. Start with
 sidecar tiny. Probe and frame-diff evidence must reuse `recipe-probe` / `pipeline-validator --probe` and the
 existing SQLite xray surface; do not add a second diff schema for Chapter 60.
 
+The checked template for that sidecar lives at
+[`../tooling/probe_alarm_lighthouse.evidence.record.template.json`](../tooling/probe_alarm_lighthouse.evidence.record.template.json).
+Copy it to `artifacts/release-gates/probe_alarm_lighthouse/evidence.record.json`
+when the smoke capture is produced; do not check in the generated artifact.
+
 ## Companion JSON expectations
 
 The JSON seed mirrors this document and is intended to be the future automation
@@ -168,4 +173,4 @@ place. Those belong in generated outputs or later evidence records keyed by
 3. D7 can consume the JSON seed for CI enumeration once evidence capture exists.
 
 <!-- <FILE>docs/design/tui-vfx-v3-release-gate-manifest.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.2</VERS> -->

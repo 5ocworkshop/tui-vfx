@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.11.1</VERS> -->
+<!-- <VERS>VERSION: 0.11.2</VERS> -->
 <!-- <WCTX>Move the latest committed VC-09, VC-01/03, motion, and docgen slices into completed/complete-initial status while keeping broader follow-on lanes visible.</WCTX> -->
-<!-- <CLOG>0.11.1: note the first command-backed V3-CI02 smoke plan and normalized IR dump envelope contract.</CLOG> -->
+<!-- <CLOG>0.11.2: add a post-release braille dotfield strategy item covering procedural effects, bgraph, and rocketsplash review.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -30,6 +30,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
 | V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
+| V3-BRAILLE01 | Braille dotfield strategy | Post-release / strategy needed | Review current braille/dotfield support plus usage in `/usr/projects/bgraph` and `/usr/projects/rocketsplash`; develop an extensible procedural strategy for animation, drawing, negative-space text, pixie-dust trails, starbursts, and other sub-cell effects. |
 | V3-R99 | Final V2 retirement plan | Blocked by design | Only after migration, stability, downstream adaptation, and owner approval. |
 
 ## Resolved owner decisions
@@ -112,6 +113,7 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-AUTH01 | V3 authoring-guide rewrite | Rewrite authoring workflow, schema reference, scene guide, procedural sources, and pipeline-validator LLM guide for V3 tree schema and primitive/default model. |
 | V3-QDOC01 | Reconcile stale status docs | Some older first-slice/status docs still say `IN_PROGRESS`; update or annotate after verifying current as-built state. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. |
+| V3-BRAILLE01 | Develop post-release braille dotfield strategy | Strategy doc reviews current support and bgraph/rocketsplash usage, proposes mixed-signals/tui-vfx/tui-vfx-recipes boundaries, and explores procedural effects with ANSI diagrams before any implementation. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
 
 ## Completed / complete-initial work
@@ -233,4 +235,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.11.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.2</VERS> -->

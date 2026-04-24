@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> - <DESC>Executable evidence-record contract and command map for V3 Chapter 60 release gates.</DESC> -->
-<!-- <VERS>VERSION: 0.1.1</VERS> -->
+<!-- <VERS>VERSION: 0.1.2</VERS> -->
 <!-- <WCTX>Make the seeded Chapter 60 release-gate manifest actionable by mapping each evidence type to existing tooling and a small checked record shape.</WCTX> -->
-<!-- <CLOG>0.1.1: add the probe_alarm_lighthouse smoke plan and clarify the small local sidecar record handoff.</CLOG> -->
+<!-- <CLOG>0.1.2: add the checked probe_alarm_lighthouse evidence-record template and point the smoke plan at the checked sidecar shape.</CLOG> -->
 
 # Release-gate evidence records
 
@@ -118,7 +118,8 @@ Suggested sequence:
 
 1. Run the command in [First smoke target](#first-smoke-target) from
    `/usr/projects/tui-vfx-recipes`.
-2. Write the sidecar record next to the report as
+2. Copy the checked template from
+   `docs/tooling/probe_alarm_lighthouse.evidence.record.template.json` to
    `artifacts/release-gates/probe_alarm_lighthouse/evidence.record.json`.
 3. Keep the sidecar tiny; do not embed the full report payload.
 
@@ -126,5 +127,9 @@ The checked-in template is the minimum JSON example above. Treat it as the
 shape to copy when D6 needs a command-backed smoke record without promoting a
 large generated artifact.
 
+Template file:
+
+- [`probe_alarm_lighthouse.evidence.record.template.json`](probe_alarm_lighthouse.evidence.record.template.json)
+
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.2</VERS> -->

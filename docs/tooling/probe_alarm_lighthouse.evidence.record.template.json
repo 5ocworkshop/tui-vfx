@@ -1,0 +1,24 @@
+{
+  "schema": "tui_vfx_v3_release_gate_evidence.v1",
+  "fixture_id": "probe_alarm_lighthouse",
+  "gate": "probe",
+  "status": "__STATUS__",
+  "captured_at": "__CAPTURED_AT_ISO8601__",
+  "recipe": {
+    "repo": "tui-vfx-recipes",
+    "path": "recipes/vfx-probe-validation/alarm_lighthouse.json"
+  },
+  "tool_runs": [
+    {
+      "evidence_type": "probe_report_json",
+      "command": "__RECIPE_PROBE_COMMAND__",
+      "artifact": "__ARTIFACT_PATH__/probe_report.json",
+      "status": "__STATUS__"
+    }
+  ],
+  "review": {
+    "owner": "tui-vfx tooling lead",
+    "approval_required": false,
+    "notes": "Template only; replace placeholders when copying the sidecar next to the captured artifact."
+  }
+}
