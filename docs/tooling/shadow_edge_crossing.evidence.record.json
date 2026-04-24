@@ -1,0 +1,34 @@
+{
+  "schema": "tui_vfx_v3_release_gate_evidence.v1",
+  "fixture_id": "shadow_edge_crossing",
+  "gate": "shadow",
+  "status": "stale",
+  "captured_at": "2026-04-24T19:04:07Z",
+  "recipe": {
+    "repo": "tui-vfx-recipes",
+    "path": "recipes/debug_recipes/motion_routes/toast_shadow_edge_crossing.json"
+  },
+  "tool_runs": [
+    {
+      "evidence_type": "probe_report_json",
+      "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/motion_routes/toast_shadow_edge_crossing.json --format json --phase dwelling --sample-t 1.0 --with-causation",
+      "artifact": "/tmp/tui-vfx-release-gates/shadow_edge_crossing/probe_report.json",
+      "artifact_generated": false,
+      "status": "stale",
+      "observed_output_summary": "stale record: command was captured while tui-vfx-recipes had transient uncommitted compile errors; rerun after the compiled-path checkpoint before classifying this gate."
+    },
+    {
+      "evidence_type": "trace_report_json",
+      "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/motion_routes/toast_shadow_edge_crossing.json --format report",
+      "artifact": "/tmp/tui-vfx-release-gates/shadow_edge_crossing/trace_report.json",
+      "artifact_generated": false,
+      "status": "stale",
+      "observed_output_summary": "stale record: command was captured while tui-vfx-recipes had transient uncommitted compile errors; rerun after the compiled-path checkpoint before classifying this gate."
+    }
+  ],
+  "review": {
+    "owner": "tui-vfx implementation lead",
+    "approval_required": false,
+    "notes": "Stale evidence record retained as a breadcrumb only: the command was run during a transient uncommitted compile break that has since been fixed in tui-vfx-recipes commit bf2ee98. Rerun this fixture before using it for release-gate status."
+  }
+}
