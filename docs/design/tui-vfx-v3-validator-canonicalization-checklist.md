@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-validator-canonicalization-checklist.md</FILE> - <DESC>Execution checklist for the V3 validator/canonicalization phase. Tracks the minimum checks and canonical outputs needed before broad family runtime implementation should proceed.</DESC> -->
 <!-- <VERS>VERSION: 0.9.1</VERS> -->
 <!-- <WCTX>Track the current validator/canonicalization checklist state across tui-vfx planning docs and tui-vfx-recipes executable validator/tooling slices.</WCTX> -->
-<!-- <CLOG>0.9.1: record that pipeline-validator rules mode now pins malformed V3 metadata shape diagnostics.</CLOG> -->
+<!-- <CLOG>0.9.2: reconcile stale validator statuses with as-built schema, style, and dump evidence.</CLOG> -->
 
 # tui-vfx V3 validator / canonicalization checklist
 
@@ -9,9 +9,9 @@
 
 | ID    | Check area                          | Status           | Notes                                                                                                                                                                                                                        |
 | ----- | ----------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| VC-01 | Authoring schema validation         | IN_PROGRESS      | V3 parse/load path exists in `tui-vfx-recipes::v3`; pipeline-validator now has a focused regression for malformed `metadata` shape surfacing in `--rules`, and remaining work is schema-report surfacing in tools              |
+| VC-01 | Authoring schema validation         | COMPLETE_INITIAL  | V3 parse/load path exists in `tui-vfx-recipes::v3`; `pipeline-validator` has a focused regression for malformed `metadata` shape in `--rules`; broader schema-report surfacing remains on `V3-VC01` |
 | VC-02 | Region-ref / compression resolution | COMPLETE_INITIAL | Region refs/cycles already fail in normalization; normalized validation now rejects impossible literal row/column/cell-run ranges and non-positive rect dimensions while allowing dynamic binding-backed scope values        |
-| VC-03 | Style normalization validation      | IN_PROGRESS      | Initial `base_style` normalization exists; validator now flags leaf payloads that keep legacy `base_style` alongside canonical `base_style_override` shape, with broader equivalence work still pending |
+| VC-03 | Style normalization validation      | COMPLETE_INITIAL  | `normalize_base_style_into_base_style_override` and `validate_rejects_dual_style_form_survivors_in_leaf_payloads` cover the initial canonicalization/validation pair; broader equivalence remains on `V3-VC03` |
 | VC-04 | Hint producer/consumer validation   | COMPLETE_INITIAL | First-class I/O plus legacy `emits_hint`/`binds` validation covers sequence visibility, parallel isolation, duplicate producers, missing producers, and value-kind mismatches                                                |
 | VC-05 | Scene-layer placement validation    | COMPLETE         | Normalized validation rejects duplicate layer IDs, bad sibling refs, malformed placement/surface shapes, absolute sibling misuse, and non-positive absolute rect dimensions                                                  |
 | VC-06 | Contract discovery validation       | COMPLETE         | Normalized declaration-shape checks and `contract_usage` reporting are in place; binding-focused V3 debug recipes now declare `requires_bindings`; `pipeline-validator --rules --strict-contracts` is the opt-in strict gate |

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.11.6</VERS> -->
+<!-- <VERS>VERSION: 0.11.7</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with current VC-09 evidence and the new docs lifecycle/elevation plan.</WCTX> -->
-<!-- <CLOG>0.11.6: update VC-09 evidence truth and mark docs lifecycle planning complete-initial.</CLOG> -->
+<!-- <CLOG>0.11.7: mark V3-QDOC01 reconciled after checklist status cleanup.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -111,7 +111,7 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-TRACE01 | Trace/probe parity for broader V3 subset | Recipe-probe and tui-vfx-trace already accept supported compiled V3 subsets; scene parity, lifecycle-analysis parity, and broader trace semantics remain. |
 | V3-DEMO01 | Full native animated V3 demo/browser path | Demo/play_recipe render supported direct V3 bridge subset; full browser experience for migrated V3 corpus remains outstanding. |
 | V3-AUTH01-FOLLOW | V3 authoring-doc sibling follow-ons | Scene authoring guide is complete-initial; reconcile schema reference, procedural sources, pipeline-validator LLM guide, and authoring workflow docs around the same V3 ladder and vocabulary. |
-| V3-QDOC01 | Reconcile stale status docs | Some older first-slice/status docs still say `IN_PROGRESS`; update or annotate after verifying current as-built state. |
+| V3-QDOC01 | Reconcile stale status docs | First-slice and validator checklist rows now reflect as-built state with evidence; completed-initial and kept here as a historical breadcrumb. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
 | V3-DOCS01 | Create docs lifecycle/elevation plan | Classify transient V3 planning docs versus durable core docs; decide what gets elevated, merged, kept as design record, or archived. Use developer voice: clear, concise, honest, with occasional fun but no marketing fog machine. |
@@ -246,4 +246,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.11.6</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.7</VERS> -->

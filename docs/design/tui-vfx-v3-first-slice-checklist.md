@@ -1,16 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-first-slice-checklist.md</FILE> - <DESC>Execution checklist for the first concrete V3 implementation slice.</DESC> -->
 <!-- <VERS>VERSION: 1.0.0</VERS> -->
 <!-- <WCTX>Tracks the first code-facing work package after schema/catalog/lowering/IR/validator planning. Updated now that the V3 spine has direct entry points, recipe-layer wrappers, top-level exports, and a separate example path while the legacy viewer remains untouched.</WCTX> -->
-<!-- <CLOG>1.0.0: record that FS-08 now has an initial implementation path, note the broader V3 entry-surface propagation, and explicitly hand off to the compiled execution-plan follow-on.
-0.9.0: record the new recipe-layer V3 wrappers (`parse_v3`, `load_v3`) and their focused passing tests so FS-01/FS-02 reflect the actual reachable API surface.
-0.8.0: record the first end-to-end V3 example smoke-test output via `examples/v3_play_recipe.rs`, confirming file load + parse + normalize + dump on a standalone V3 path.
-0.7.0: record the new public V3 parse/normalize entry points and their focused passing tests for FS-01/FS-02.
-0.6.0: mark FS-08 explicitly in progress and keep the first-slice checklist aligned with the now-documented V3 scaffolding module headers/footers.
-0.5.0: mark FS-06/FS-07/FS-08 as in progress after the first hint-validation, scene-normalization, and canonical IR dump helpers landed in `tui-vfx-recipes::v3` with focused passing tests.
-0.4.0: mark FS-03/FS-04/FS-05 as in progress after the first normalization helpers landed in `tui-vfx-recipes::v3::normalize` and their focused unit tests passed.
-0.3.0: record initial verification signal for FS-01/FS-02 after the V3 scaffold compiled under `cargo check --lib` and the focused parse unit test passed.
-0.2.0: mark FS-01 and FS-02 as in progress after adding initial V3 authoring-schema and normalized-IR scaffolding module in tui-vfx-recipes.
-0.1.0: initial checklist. Seeds the first implementation slice with concrete deliverables and status slots.</CLOG> -->
+<!-- <CLOG>1.0.1: reconcile stale first-slice statuses with as-built parse/normalize, validation, and dump evidence.</CLOG> -->
 
 # tui-vfx V3 first implementation slice checklist
 
@@ -18,14 +9,14 @@
 
 | ID | Work item | Status | Notes |
 |---|---|---|---|
-| FS-01 | Authoring schema parse types | IN_PROGRESS | Initial `src/v3::authoring` scaffold plus public `parse_v3_document`, recipe-layer `parse_v3`, and crate-root/prelude V3 parse exports in `tui-vfx-recipes`; focused parse tests pass |
-| FS-02 | Normalized IR core types | IN_PROGRESS | Initial `src/v3::normalized` scaffold plus public `normalize_v3_document`, recipe-layer `load_v3_normalized`, and crate-root/prelude V3 normalized-path exports in `tui-vfx-recipes`; focused normalize/load tests pass |
-| FS-03 | Region-ref resolution | IN_PROGRESS | Initial normalization helper implemented in `tui-vfx-recipes::v3::normalize`; focused unit test passes |
-| FS-04 | `cell_run` / `cell_runs` canonicalization | IN_PROGRESS | Initial canonicalization helper implemented in `tui-vfx-recipes::v3::normalize`; focused unit test passes |
-| FS-05 | Style normalization pass | IN_PROGRESS | Initial `base_style` → `base_style_override` normalization implemented in `tui-vfx-recipes::v3::normalize`; focused unit test passes |
-| FS-06 | Hint producer/consumer validation | IN_PROGRESS | Initial validator in `tui-vfx-recipes::v3::validate`; focused unit tests pass for duplicate/missing hint cases |
-| FS-07 | Scene placement normalization | IN_PROGRESS | Initial scene-layer default placement/surface normalization implemented in `tui-vfx-recipes::v3::normalize`; focused unit test passes |
-| FS-08 | Canonical IR dump/debug output | IN_PROGRESS | `dump_normalized_recipe_pretty` exists, the separate `examples/v3_play_recipe.rs` path prints normalized IR, and the next follow-on is now the compiled execution-plan phase |
+| FS-01 | Authoring schema parse types | COMPLETE_INITIAL | `src/v3/fnc_parse_v3_document.rs`, `src/recipe/fnc_parse_v3.rs`, and `src/v3/authoring/test_authoring.rs` cover the initial parse surface; focused parse tests pass |
+| FS-02 | Normalized IR core types | COMPLETE_INITIAL | `src/v3/fnc_normalize_v3_document.rs`, `src/recipe/fnc_load_v3_normalized.rs`, and `src/v3/normalize/test_normalize.rs` cover the initial normalize/load surface; focused normalize/load tests pass |
+| FS-03 | Region-ref resolution | COMPLETE_INITIAL | `normalize_region_ref_and_defaults` in `src/v3/normalize/test_normalize.rs` covers region-ref resolution and default phase/scope handling |
+| FS-04 | `cell_run` / `cell_runs` canonicalization | COMPLETE_INITIAL | `normalize_cell_runs_into_compact_runs` in `src/v3/normalize/test_normalize.rs` covers compacted cell-run normalization |
+| FS-05 | Style normalization pass | COMPLETE_INITIAL | `normalize_base_style_into_base_style_override` in `src/v3/normalize/test_normalize.rs` covers the canonical style rewrite |
+| FS-06 | Hint producer/consumer validation | COMPLETE_INITIAL | `src/v3/validate/col_collect_hints.rs` and `src/v3/validate/test_validate_normalized_recipe.rs` cover duplicate/missing hint cases |
+| FS-07 | Scene placement normalization | COMPLETE_INITIAL | `normalize_scene_layer_defaults` in `src/v3/normalize/test_normalize.rs` covers default placement and surface normalization |
+| FS-08 | Canonical IR dump/debug output | COMPLETE_INITIAL | `src/v3/normalize/fnc_dump_normalized_recipe_pretty.rs` and `examples/v3_play_recipe.rs` expose the normalized dump; follow-on execution-plan work is now the next slice |
 
 ## Minimum first-code definition of done
 
