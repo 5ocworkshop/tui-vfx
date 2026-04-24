@@ -71,6 +71,7 @@ NormalizedStep
 ├─ scope
 ├─ clock?
 ├─ interaction?
+├─ io?
 ├─ payload
 └─ provenance?
 ```
@@ -79,6 +80,7 @@ NormalizedStep
 
 - `phase` is always explicit
 - `scope` is always explicit
+- `io` carries first-class producer / consumer metadata when present
 - `payload` is already in its canonical family-specific form
 - `provenance` is optional runtime/tooling metadata, not part of the public authoring schema
 
@@ -170,6 +172,20 @@ That distinction matters for performance.
 - region refs are resolved before execution
 - defaults and inheritance are made explicit before runtime
 - hint validation happens at validation/build time rather than during frame rendering
+
+### As-built Phase 1 note
+
+The current implementation now carries first-class step-I/O metadata alongside
+normalized leaf steps while still lifting legacy payload-local
+`emits_hint` / `binds` metadata during the rollout.
+
+That means the normalized leaf shape is converging toward:
+
+- explicit scope / phase
+- explicit step-I/O carriage
+- canonical payload
+
+without forcing an immediate authored-corpus break.
 
 ### What should not be assumed yet
 
