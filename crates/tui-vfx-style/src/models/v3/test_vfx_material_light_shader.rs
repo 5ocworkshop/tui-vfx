@@ -11,6 +11,7 @@ use crate::models::{
     ColorConfig, ConcealedLightMode, ConcealedLightShader, DiffusionMode, DiffusionShader,
     EdgeSheenApplyTo, EdgeSheenShader, SpatialShaderType,
 };
+use mixed_signals::types::SignalOrFloat;
 
 #[test]
 fn converts_diffusion_into_v3_material_light_surface() {
@@ -21,7 +22,7 @@ fn converts_diffusion_into_v3_material_light_surface() {
         softness: 0.4,
         edge_firmness: 0.3,
         falloff: crate::models::FalloffType::Quadratic,
-        intensity: 0.22,
+        intensity: SignalOrFloat::Static(0.22),
         apply_to: crate::models::DiffusionApplyTo::Both,
         mode: DiffusionMode::Breath,
         drift_speed: 1.2,
@@ -38,7 +39,7 @@ fn converts_diffusion_into_v3_material_light_surface() {
             softness: 0.4,
             edge_firmness: 0.3,
             falloff: crate::models::FalloffType::Quadratic,
-            intensity: 0.22,
+            intensity: SignalOrFloat::Static(0.22),
             apply_to: VfxMaterialLightApplyTo::Both,
             mode: VfxDiffusionMode::Breath,
             drift_speed: 1.2,

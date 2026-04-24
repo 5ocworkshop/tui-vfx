@@ -5,6 +5,7 @@
 
 use crate::common::{make_ctx, make_style};
 
+use mixed_signals::types::SignalOrFloat;
 use tui_vfx_style::models::{DiffusionMode, DiffusionShader, DiffusionSource, GlowShader};
 use tui_vfx_style::traits::StyleShader;
 
@@ -14,13 +15,13 @@ fn default_values_are_conservative() {
     assert_eq!(shader.source, DiffusionSource::Center);
     assert_eq!(shader.radius, 6);
     assert_eq!(shader.mode, DiffusionMode::Static);
-    assert!(shader.intensity > 0.0 && shader.intensity < 0.3);
+    assert_eq!(shader.intensity, SignalOrFloat::Static(0.2));
 }
 
 #[test]
 fn zero_intensity_no_change() {
     let shader = DiffusionShader {
-        intensity: 0.0,
+        intensity: SignalOrFloat::Static(0.0),
         ..Default::default()
     };
     let base = make_style();
@@ -30,7 +31,7 @@ fn zero_intensity_no_change() {
 #[test]
 fn center_source_affects_interior() {
     let shader = DiffusionShader {
-        intensity: 0.5,
+        intensity: SignalOrFloat::Static(0.5),
         radius: 4,
         ..Default::default()
     };
@@ -45,7 +46,7 @@ fn center_source_affects_interior() {
 fn top_source_is_directional() {
     let shader = DiffusionShader {
         source: DiffusionSource::Top,
-        intensity: 0.5,
+        intensity: SignalOrFloat::Static(0.5),
         radius: 5,
         ..Default::default()
     };
@@ -60,7 +61,7 @@ fn top_source_is_directional() {
 fn softness_broadens_transition() {
     let sharp = DiffusionShader {
         softness: 0.0,
-        intensity: 0.6,
+        intensity: SignalOrFloat::Static(0.6),
         radius: 6,
         ..Default::default()
     };
@@ -78,7 +79,7 @@ fn softness_broadens_transition() {
 fn edge_firmness_changes_perimeter_behavior() {
     let soft = DiffusionShader {
         source: DiffusionSource::Center,
-        intensity: 0.5,
+        intensity: SignalOrFloat::Static(0.5),
         radius: 8,
         edge_firmness: 0.0,
         ..Default::default()
@@ -96,7 +97,7 @@ fn edge_firmness_changes_perimeter_behavior() {
 #[test]
 fn breath_mode_changes_gently_over_time() {
     let shader = DiffusionShader {
-        intensity: 0.25,
+        intensity: SignalOrFloat::Static(0.25),
         radius: 6,
         mode: DiffusionMode::Breath,
         drift_speed: 0.5,
@@ -112,7 +113,7 @@ fn breath_mode_changes_gently_over_time() {
 #[test]
 fn distinct_from_glow_for_center_field() {
     let diffusion = DiffusionShader {
-        intensity: 0.5,
+        intensity: SignalOrFloat::Static(0.5),
         radius: 8,
         ..Default::default()
     };
@@ -130,7 +131,7 @@ fn serde_roundtrip() {
         radius: 7,
         softness: 0.8,
         edge_firmness: 0.35,
-        intensity: 0.22,
+        intensity: SignalOrFloat::Static(0.22),
         mode: DiffusionMode::WarmDrift,
         drift_speed: 0.08,
         drift_amount: 0.04,
@@ -139,6 +140,22 @@ fn serde_roundtrip() {
     let json = serde_json::to_string(&shader).unwrap();
     let parsed: DiffusionShader = serde_json::from_str(&json).unwrap();
     assert_eq!(shader, parsed);
+}
+
+#[test]
+fn signal_intensity_changes_with_context() {
+    let shader = DiffusionShader {
+        intensity: SignalOrFloat::Signal {
+            spec: mixed_signals::types::SignalSpec::SampleNormX,
+            cache: std::sync::OnceLock::new(),
+        },
+        radius: 8,
+        ..Default::default()
+    };
+    let base = make_style();
+    let left = shader.style_at(&make_ctx(0, 4, 12, 8, 0.0), base);
+    let right = shader.style_at(&make_ctx(11, 4, 12, 8, 0.0), base);
+    assert_ne!(left, right);
 }
 
 // <FILE>crates/tui-vfx-style/tests/models/test_cls_diffusion_shader.rs</FILE> - <DESC>Integration tests for DiffusionShader</DESC>

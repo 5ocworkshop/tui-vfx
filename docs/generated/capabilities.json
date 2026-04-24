@@ -2633,7 +2633,7 @@
             "default": "0.20",
             "doc": "overall strength. falloff: Linear, Quadratic, Exponential",
             "name": "intensity",
-            "ty": "f32"
+            "ty": "SignalOrFloat"
           }
         ],
         "premium": true,

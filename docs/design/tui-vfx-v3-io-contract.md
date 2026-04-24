@@ -216,7 +216,23 @@ As implementation lands, keep these hand-maintained docs aligned with the as-bui
 
 ---
 
-## 12. Non-goals for the first release
+## 12. As-built runtime notes
+
+### Diffusion intensity typed value support
+
+The V3 material-light `diffusion` shader now uses the shared
+`mixed_signals::SignalOrFloat` typed value substrate for `intensity` in the
+runtime style model. JSON compatibility is preserved for numeric authored
+values, while signal-valued recipe bindings can flow through the grouped V3
+shader-family lowering seam into the executable shader. This is intentionally
+source-breaking for Rust callers that construct `DiffusionShader` directly:
+constructors should pass `SignalOrFloat::Static(value)` for fixed intensity.
+
+Author-facing debug/key-parameter output formats static diffusion intensity as a
+number and signal-backed intensity as `signal(<kind>)`, avoiding raw Rust debug
+output in docs and inspection surfaces.
+
+## 13. Non-goals for the first release
 
 Not part of the first-release contract:
 

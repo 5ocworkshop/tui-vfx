@@ -133,6 +133,25 @@ fn spatial_shader_type_can_build_from_v3_binding_and_signal_payloads() {
 }
 
 #[test]
+fn diffusion_key_parameters_format_signal_intensity_for_authors() {
+    let shader = SpatialShaderType::try_from_v3_payload(serde_json::json!({
+        "type": "diffusion",
+        "source": "right",
+        "color": { "type": "white" },
+        "radius": 4,
+        "intensity": { "type": "sample_norm_x" }
+    }))
+    .unwrap();
+
+    let params = shader.key_parameters();
+    let intensity = params
+        .iter()
+        .find_map(|(name, value)| (*name == "intensity").then_some(value.as_str()))
+        .expect("diffusion intensity key parameter");
+    assert_eq!(intensity, "signal(sample_norm_x)");
+}
+
+#[test]
 fn spatial_shader_type_exposes_grouped_v3_family_seam() {
     let primitive = SpatialShaderType::Glow(Default::default());
     let composed = SpatialShaderType::BorderSweep(Default::default());

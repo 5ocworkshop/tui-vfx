@@ -100,7 +100,7 @@
 //! [`crate::models::StyleEffect::Spatial`] for temporal animation.
 
 use crate::models::{
-    LinearGradientShader, cls_affordance_wake_shader::AffordanceWakeShader,
+    LinearGradientShader, VfxSpatialShaderFamily, cls_affordance_wake_shader::AffordanceWakeShader,
     cls_ambient_occlusion_shader::AmbientOcclusionShader, cls_barber_pole_shader::BarberPoleShader,
     cls_bevel_shader::BevelShader, cls_border_sweep_shader::BorderSweepShader,
     cls_chromatic_edge_shader::ChromaticEdgeShader,
@@ -116,8 +116,10 @@ use crate::models::{
     cls_stochastic_sparkle_shader::StochasticSparkleShader,
     cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
     cls_trace_propagation_shader::TracePropagationShader,
-    cls_wayfinding_node_shader::WayfindingNodeShader, VfxSpatialShaderFamily,
+    cls_wayfinding_node_shader::WayfindingNodeShader,
 };
+use mixed_signals::types::SignalOrFloat;
+
 use crate::traits::{
     ShaderContext, ShaderRuntimeBindingRequest, ShaderRuntimeBindingResolution, StyleShader,
 };
@@ -671,7 +673,7 @@ impl SpatialShaderType {
                 ("source", format!("{:?}", s.source)),
                 ("radius", format!("{} cells", s.radius)),
                 ("softness", format!("{:.2}", s.softness)),
-                ("intensity", format!("{:.2}", s.intensity)),
+                ("intensity", format_signal_or_float(&s.intensity)),
             ],
             SpatialShaderType::FocusField(s) => vec![
                 ("shape", format!("{:?}", s.shape)),
@@ -723,6 +725,21 @@ impl SpatialShaderType {
     }
 }
 
+fn format_signal_or_float(value: &SignalOrFloat) -> String {
+    match value {
+        SignalOrFloat::Static(value) => format!("{value:.2}"),
+        SignalOrFloat::Signal { spec, .. } => serde_json::to_value(spec)
+            .ok()
+            .and_then(|value| {
+                value
+                    .get("type")
+                    .and_then(Value::as_str)
+                    .map(|kind| format!("signal({kind})"))
+            })
+            .unwrap_or_else(|| "signal".to_string()),
+    }
+}
+
 fn extract_binding_object(
     object: &mut serde_json::Map<String, Value>,
     field: &str,
@@ -737,7 +754,10 @@ fn extract_binding_object(
     let binding_name = binding_obj.get("binding").and_then(Value::as_str);
     let default_value = binding_obj.get("default").cloned();
     if let Some(binding_name) = binding_name {
-        object.insert(binding_field.to_string(), Value::String(binding_name.to_string()));
+        object.insert(
+            binding_field.to_string(),
+            Value::String(binding_name.to_string()),
+        );
     }
     if let Some(default_value) = default_value {
         object.insert(field.to_string(), default_value);
@@ -747,11 +767,19 @@ fn extract_binding_object(
 }
 
 fn signal_default_f32(value: &Value) -> Option<f32> {
-    value.get("signal")?.get("offset")?.as_f64().map(|v| v as f32)
+    value
+        .get("signal")?
+        .get("offset")?
+        .as_f64()
+        .map(|v| v as f32)
 }
 
 fn signal_implies_looping(value: &Value) -> bool {
-    value.get("signal").and_then(|s| s.get("kind")).and_then(Value::as_str) == Some("sine")
+    value
+        .get("signal")
+        .and_then(|s| s.get("kind"))
+        .and_then(Value::as_str)
+        == Some("sine")
 }
 
 fn edges_to_ao(edges: &[Value]) -> &'static str {
@@ -788,12 +816,21 @@ fn normalize_colored_overlay_payload(obj: &mut serde_json::Map<String, Value>) {
         return;
     };
     let kind = pattern.get("kind").and_then(Value::as_str).unwrap_or("");
-    let color = obj.get("color").cloned().unwrap_or(serde_json::json!({"type":"white"}));
-    let intensity = obj.get("intensity").cloned().unwrap_or(serde_json::json!(1.0));
+    let color = obj
+        .get("color")
+        .cloned()
+        .unwrap_or(serde_json::json!({"type":"white"}));
+    let intensity = obj
+        .get("intensity")
+        .cloned()
+        .unwrap_or(serde_json::json!(1.0));
     let apply_to = obj.get("apply_to").cloned();
     match kind {
         "perimeter_halo" => {
-            let radius = pattern.get("radius").cloned().unwrap_or(serde_json::json!(2));
+            let radius = pattern
+                .get("radius")
+                .cloned()
+                .unwrap_or(serde_json::json!(2));
             let falloff = pattern
                 .get("falloff")
                 .cloned()
@@ -815,7 +852,10 @@ fn normalize_colored_overlay_payload(obj: &mut serde_json::Map<String, Value>) {
             *obj = next;
         }
         "edge_shadow" => {
-            let radius = pattern.get("radius").cloned().unwrap_or(serde_json::json!(2));
+            let radius = pattern
+                .get("radius")
+                .cloned()
+                .unwrap_or(serde_json::json!(2));
             let falloff = pattern
                 .get("falloff")
                 .cloned()
@@ -840,7 +880,10 @@ fn normalize_colored_overlay_payload(obj: &mut serde_json::Map<String, Value>) {
             *obj = next;
         }
         "radial_from_corner" => {
-            let radius = pattern.get("radius").cloned().unwrap_or(serde_json::json!(6));
+            let radius = pattern
+                .get("radius")
+                .cloned()
+                .unwrap_or(serde_json::json!(6));
             let softness = pattern
                 .get("softness")
                 .cloned()
@@ -849,10 +892,16 @@ fn normalize_colored_overlay_payload(obj: &mut serde_json::Map<String, Value>) {
                 .get("edge_firmness")
                 .cloned()
                 .unwrap_or(serde_json::json!(0.2));
-            let source = pattern.get("source").and_then(Value::as_str).unwrap_or("center");
+            let source = pattern
+                .get("source")
+                .and_then(Value::as_str)
+                .unwrap_or("center");
             let mut next = serde_json::Map::new();
             next.insert("type".into(), serde_json::json!("diffusion"));
-            next.insert("source".into(), serde_json::json!(source_to_diffusion(source)));
+            next.insert(
+                "source".into(),
+                serde_json::json!(source_to_diffusion(source)),
+            );
             next.insert("color".into(), color);
             next.insert("radius".into(), radius);
             next.insert("softness".into(), softness);

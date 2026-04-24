@@ -50,7 +50,7 @@ impl From<&DiffusionShader> for VfxMaterialLightShader {
                 softness: shader.softness,
                 edge_firmness: shader.edge_firmness,
                 falloff: shader.falloff,
-                intensity: shader.intensity,
+                intensity: shader.intensity.clone(),
                 apply_to: shader.apply_to.into(),
                 mode: shader.mode.into(),
                 drift_speed: shader.drift_speed,

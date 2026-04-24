@@ -17,6 +17,7 @@ use crate::models::{ColorConfig, ColorSpace, FalloffType};
 use crate::traits::{ShaderContext, StyleShader};
 use crate::utils::fnc_blend_colors::blend_colors;
 use mixed_signals::prelude::{CellDistanceSignal, Signal, SignalContext};
+use mixed_signals::types::SignalOrFloat;
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -80,7 +81,7 @@ pub struct DiffusionShader {
     #[serde(default)]
     pub falloff: FalloffType,
     #[serde(default = "default_intensity")]
-    pub intensity: f32,
+    pub intensity: SignalOrFloat,
     #[serde(default)]
     pub apply_to: DiffusionApplyTo,
     #[serde(default)]
@@ -103,8 +104,8 @@ fn default_edge_firmness() -> f32 {
     0.2
 }
 
-fn default_intensity() -> f32 {
-    0.2
+fn default_intensity() -> SignalOrFloat {
+    SignalOrFloat::Static(0.2)
 }
 
 fn default_drift_amount() -> f32 {
@@ -139,25 +140,30 @@ impl DiffusionShader {
             .with_dimensions(width, height)
             .with_cell_position(x as u16, y as u16);
         match self.source {
-            DiffusionSource::Center => CellDistanceSignal::radius_from(0.5, 0.5)
-                .sample_with_context(0.0, &signal_ctx)
-                * ((max_x / 2.0).powi(2) + (max_y / 2.0).powi(2)).sqrt(),
+            DiffusionSource::Center => {
+                CellDistanceSignal::radius_from(0.5, 0.5).sample_with_context(0.0, &signal_ctx)
+                    * ((max_x / 2.0).powi(2) + (max_y / 2.0).powi(2)).sqrt()
+            }
             DiffusionSource::Top => y,
             DiffusionSource::Bottom => max_y - y,
             DiffusionSource::Left => x,
             DiffusionSource::Right => max_x - x,
-            DiffusionSource::TopLeft => CellDistanceSignal::radius_from(0.0, 0.0)
-                .sample_with_context(0.0, &signal_ctx)
-                * (max_x.powi(2) + max_y.powi(2)).sqrt(),
-            DiffusionSource::TopRight => CellDistanceSignal::radius_from(1.0, 0.0)
-                .sample_with_context(0.0, &signal_ctx)
-                * (max_x.powi(2) + max_y.powi(2)).sqrt(),
-            DiffusionSource::BottomLeft => CellDistanceSignal::radius_from(0.0, 1.0)
-                .sample_with_context(0.0, &signal_ctx)
-                * (max_x.powi(2) + max_y.powi(2)).sqrt(),
-            DiffusionSource::BottomRight => CellDistanceSignal::radius_from(1.0, 1.0)
-                .sample_with_context(0.0, &signal_ctx)
-                * (max_x.powi(2) + max_y.powi(2)).sqrt(),
+            DiffusionSource::TopLeft => {
+                CellDistanceSignal::radius_from(0.0, 0.0).sample_with_context(0.0, &signal_ctx)
+                    * (max_x.powi(2) + max_y.powi(2)).sqrt()
+            }
+            DiffusionSource::TopRight => {
+                CellDistanceSignal::radius_from(1.0, 0.0).sample_with_context(0.0, &signal_ctx)
+                    * (max_x.powi(2) + max_y.powi(2)).sqrt()
+            }
+            DiffusionSource::BottomLeft => {
+                CellDistanceSignal::radius_from(0.0, 1.0).sample_with_context(0.0, &signal_ctx)
+                    * (max_x.powi(2) + max_y.powi(2)).sqrt()
+            }
+            DiffusionSource::BottomRight => {
+                CellDistanceSignal::radius_from(1.0, 1.0).sample_with_context(0.0, &signal_ctx)
+                    * (max_x.powi(2) + max_y.powi(2)).sqrt()
+            }
         }
     }
 
@@ -185,9 +191,20 @@ impl DiffusionShader {
         }
     }
 
+    fn resolved_intensity(&self, ctx: &ShaderContext) -> f32 {
+        let signal_ctx = SignalContext::new(0, 0)
+            .with_dimensions(ctx.width, ctx.height)
+            .with_cell_position(ctx.local_x, ctx.local_y);
+        self.intensity
+            .evaluate(ctx.t, &signal_ctx)
+            .unwrap_or(0.0)
+            .clamp(0.0, 1.0)
+    }
+
     fn modulated_intensity(&self, ctx: &ShaderContext) -> f32 {
+        let base_intensity = self.resolved_intensity(ctx);
         if self.drift_speed <= 0.0 || self.drift_amount <= 0.0 {
-            return self.intensity;
+            return base_intensity;
         }
 
         let phase = ctx.t as f32 * self.drift_speed * std::f32::consts::TAU;
@@ -197,7 +214,7 @@ impl DiffusionShader {
             DiffusionMode::WarmDrift => 1.0 + self.drift_amount * (phase.sin() * 0.6),
             DiffusionMode::CoolDrift => 1.0 + self.drift_amount * (phase.cos() * 0.6),
         };
-        self.intensity * modulation
+        base_intensity * modulation
     }
 
     fn blend_target(&self, base: Color, light: Color, alpha: f32) -> Color {
@@ -211,7 +228,7 @@ impl DiffusionShader {
 
 impl StyleShader for DiffusionShader {
     fn style_at(&self, ctx: &ShaderContext, base: Style) -> Style {
-        if self.intensity <= 0.0 || self.radius == 0 || ctx.width == 0 || ctx.height == 0 {
+        if self.radius == 0 || ctx.width == 0 || ctx.height == 0 {
             return base;
         }
 
@@ -264,7 +281,13 @@ impl StyleShader for DiffusionShader {
 mod tests {
     use super::*;
 
-    fn old_source_distance(source: DiffusionSource, x: u16, y: u16, width: u16, height: u16) -> f32 {
+    fn old_source_distance(
+        source: DiffusionSource,
+        x: u16,
+        y: u16,
+        width: u16,
+        height: u16,
+    ) -> f32 {
         let max_x = width.saturating_sub(1) as f32;
         let max_y = height.saturating_sub(1) as f32;
         let x = x as f32;
