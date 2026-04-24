@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.2.7</VERS> -->
-<!-- <WCTX>Add iterative design-compass vocabulary for theme recipe inspiration.</WCTX> -->
-<!-- <CLOG>0.2.7: define provisional 60/30/10 inspiration trio guidance for recipe authors.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.8</VERS> -->
+<!-- <WCTX>Keep author-facing timing terminology centered on enter/dwell/exit phases.</WCTX> -->
+<!-- <CLOG>0.2.8: rename the old timing heading to phase vocabulary.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
 
@@ -144,7 +144,7 @@ Rules:
 - avoid **toolbox**, **toolchest**, or generic **tools** when the intended
   meaning is recipe ingredients
 
-## 3. Lifecycle vocabulary
+## 3. Phase vocabulary
 
 Canonical author-facing phase words:
 
@@ -493,4 +493,4 @@ in one shared visual model while we continue normalizing schema, fixtures, and
 runtime behavior.
 
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.7</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.8</VERS> -->
