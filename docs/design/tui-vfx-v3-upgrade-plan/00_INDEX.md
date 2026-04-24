@@ -1,12 +1,11 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md</FILE> - <DESC>Navigation hub and pinned Schema V3.0 reference for the V3 upgrade plan chapter directory. Defines the reading order, summarizes each chapter, and lists the pinned schema reference the rest of the plan depends on. This file's <VERS> tracks its own revisions; individual chapter files version independently.</DESC> -->
-<!-- <VERS>VERSION: 1.1.2</VERS> -->
-<!-- <WCTX>Bring the Chapter 80 summary in the chapter map back in sync with the chapter's current accepted-question state after Q#21 metadata and Q#23 timer policy were closed.</WCTX> -->
-<!-- <CLOG>1.1.2: PATCH — refresh the Chapter 80 summary so it no longer describes Q#21 metadata and Q#23 timer policy as still-open plan questions. 1.1.1: PATCH — expand Chapter 63 scope note to include the grid-resize adapter contract and Cellophane adoption matrix. 1.1.0: MINOR — add Chapter 63 for the V3 edge ingestion/runtime-adapter lane and animation-pattern primitive gap review. 1.0.1: PATCH — metadata bump to record the two open-questions additions (Q#22 motion_path + offscreen, Q#23 timer story). No structural change; body was already current.</CLOG> -->
-<!-- <CLOG>1.0.0: initial index. Establishes chapter layout (10/20/.../110 with 10-unit spacing for flexible insertion), pins Schema V3.0 reference in the body, cross-maps each chapter to its monolith source, provides the ANSI chapter-dependency diagram.</CLOG> -->
+<!-- <VERS>VERSION: 1.2.0</VERS> -->
+<!-- <WCTX>Keep this chapter index useful as a retained V3 design hub while current implementation status lives in the master list and tooling docs.</WCTX> -->
+<!-- <CLOG>1.2.0: replace stale draft-only status language with retained-design-record guidance.</CLOG> -->
 
 # TUI-VFX V3 Upgrade Plan
 
-> **Status: draft — direction only.** No implementation schedule, no migration tooling spec, no committed V3 schema grammar yet. This plan captures *what we've decided* and *what still needs to resolve* before a real implementation plan can be written.
+> **Status: retained V3 design record and chapter hub.** This chapter set preserves the design rationale and pinned Schema V3.0 reference; current implementation status now lives in the master punch list, checklist docs, and tooling guides rather than in this historical status line.
 
 ## Pinned schema reference
 
@@ -148,4 +147,4 @@ The table below names the **live** V2 locations the archive was copied from — 
 Chapter 100 (`100_tooling_ci_migration.md`) enumerates every one of these artifacts as a release-blocking migration target.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.1.1</VERS> -->
+<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.4</VERS> -->
+<!-- <VERS>VERSION: 0.14.5</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.14.4: record the normalized IR explorer scope assessment for V3-VIEW01.</CLOG> -->
+<!-- <CLOG>0.14.5: mark the V3 docs lifecycle/status reconciliation complete-initial.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -29,7 +29,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / implementation slice scoped | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Thin-player assessment says the gap is packaging/surface consolidation: add a `tools/tui-vfx-player` wrapper over existing preview/player APIs without `gtd-movie` semantics. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
-| V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial / follow-up queued | `tui-vfx-v3-docs-lifecycle-plan.md` classifies docs; V3/tooling indexes are intact and the first broken historical links in upgrade-audit/workflow docs and upgrade-plan appendices are repaired. Next follow-up: broader stale checklist/status reconciliation. |
+| V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial | `tui-vfx-v3-docs-lifecycle-plan.md` is linked from the V3 index, records the focused status/link audit, and confirms local Markdown links under `docs/design` and `docs/tooling` pass with no broken local targets. Historical draft/deferred wording remains where it intentionally describes retained design records or post-release territory. |
 | V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
 | V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `post-release/braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
 | V3-GLYPHACTOR01 | Glyph actor procedural | Post-release spec captured | `docs/design/post-release/glyph-actor-procedural-spec.md`; implementation waits until core V3 release/migration stability. |
@@ -183,6 +183,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-QDOC01-LINKS01 | Complete initial | Broken historical V3 doc links in the upgrade audit workflow and tooling/appendix chapters were repaired or converted to plain-text historical references; broader stale-status reconciliation remains under V3-DOCS01. |
 | V3-TOOL01-THINPLAYER-SCOPE | Complete assessment | Thin player gap is packaging/surface consolidation, not engine work: first implementation slice should add `tools/tui-vfx-player` around existing `play_recipe`/`v3_play_recipe` behavior while avoiding `gtd-movie` timeline/composer semantics. |
 | V3-VIEW01-SCOPE | Complete assessment | Normalized IR viewer gap is presentation, not schema work: first implementation slice should add an offline `pipeline-validator` normalized execution-graph explorer over existing normalized IR loader/dump APIs. |
+| V3-DOCS01-QDOC01-COMPLETE | Complete initial | Focused V3 docs lifecycle/status reconciliation updated the V3 index, lifecycle plan, and upgrade-plan index; local Markdown link audit over `docs/design` and `docs/tooling` checked 70 files with 0 broken local links. |
 
 ## Hard policy: V2 removal is last
 
@@ -274,4 +275,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.4</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.5</VERS> -->

@@ -1,11 +1,11 @@
 <!-- <FILE>docs/design/tui-vfx-v3-docs-lifecycle-plan.md</FILE> - <DESC>Provisional V3 docs lifecycle/elevation plan: classifies live docs into core reference, active plan, retained record, stale-status cleanup, and later archive/merge buckets without moving or rewriting anything yet.</DESC> -->
-<!-- <VERS>VERSION: 0.1.1</VERS> -->
-<!-- <WCTX>Classify the V3 docs set so the outstanding V3-DOCS01 lane has a concrete, non-destructive elevation plan.</WCTX> -->
-<!-- <CLOG>0.1.1: update braille plan path after post-release move.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Track the V3 docs lifecycle map and the current status of stale-status/link reconciliation without moving or rewriting docs broadly.</WCTX> -->
+<!-- <CLOG>0.2.0: record link audit outcome and mark first-slice/validator stale-status cleanup complete.</CLOG> -->
 
 # V3 docs lifecycle / elevation plan
 
-> Status: draft classification plan only. No docs are moved, deleted, archived, or rewritten in this pass.
+> Status: complete initial classification plus focused stale-status/link reconciliation. No docs are moved, deleted, archived, or broadly rewritten in this pass.
 
 This file turns the V3-DOCS01 punch-list item into a concrete, non-destructive
 classification map. It keeps the focus on docs lifecycle and elevation, not on
@@ -120,17 +120,20 @@ particular shape, even when they are no longer the active work surface.
 - `docs/design/tui-vfx-v3-style-model-restructure-inventory.md` — style-model
   restructure inventory.
 
-## 4) Stale status docs to reconcile
+## 4) Stale status reconciliation
 
-These are the highest-risk files for misleading lifecycle language. They should
-be rechecked against as-built state before any future cleanup pass.
+The highest-risk checklist status drift has been reconciled against the master
+punch list and implemented evidence.
 
-- `docs/design/tui-vfx-v3-first-slice-checklist.md` — still contains 8 explicit
-  `IN_PROGRESS` rows.
-- `docs/design/tui-vfx-v3-validator-canonicalization-checklist.md` — still
-  contains 2 explicit `IN_PROGRESS` rows.
-- `docs/design/tui-vfx-v3-outstanding-master-list.md` already calls this out as
-  `V3-QDOC01`.
+- `docs/design/tui-vfx-v3-first-slice-checklist.md` — no remaining explicit
+  `IN_PROGRESS` rows; FS-01 through FS-08 now point at initial parse, normalize,
+  validation, scene placement, and dump evidence.
+- `docs/design/tui-vfx-v3-validator-canonicalization-checklist.md` — no
+  remaining explicit `IN_PROGRESS` rows; VC-01 through VC-10 now distinguish
+  complete, complete-initial, and partial migration-equivalence work.
+- `docs/design/tui-vfx-v3-outstanding-master-list.md` remains leader-owned; this
+  plan should be used as the evidence note for the V3-DOCS01/QDOC01 status
+  recommendation rather than edited directly from this packet.
 
 ## 5) Archive / merge candidates
 
@@ -153,17 +156,24 @@ owners confirm the final cutover shape.
   collapsed into the capability/normalized-IR record set once implementation
   stops needing a separate inventory.
 
-## High-risk takeaways
+## Focused link/status audit outcome
 
-- The only explicit stale-life-cycle language I found that looks behind the
-  as-built state is the pair of checklist files above.
-- The master list already has a named cleanup item for this lane, so the new
-  plan is aligned with existing punch-list intent.
+- Local Markdown links under `docs/design/**/*.md` and `docs/tooling/**/*.md`
+  pass the focused checker used for this ticket.
+- No broken local Markdown targets remained to repair in this pass.
+- No missing historical/external Markdown links remained that needed conversion
+  to plain text in this pass.
+- The V3 landing page now links this lifecycle plan from the start-here section,
+  so the docs lifecycle lane is discoverable from the canonical index.
+
+## Remaining watch items
+
+- Historical design records still intentionally use words such as `draft`,
+  `deferred`, and `open question` where they describe retained history or
+  explicitly post-release territory. Do not bulk-normalize those terms without
+  owner approval.
+- `V3-M02`, `V3-CI02`, `V3-M01`, and final V2 retirement statuses remain active
+  project work, not docs-hygiene drift.
 - Keep downstream consumer policy out of this repo; tui-vfx owns architecture
   and docs for tui-vfx, while tui-vfx-recipes owns recipe-authoring/runtime
   policy.
-
-## Follow-up
-
-If this bucket map is accepted, the V3 landing page should link here so the docs
-lifecycle lane is discoverable from the canonical index.

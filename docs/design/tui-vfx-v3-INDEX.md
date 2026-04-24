@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.5.4</VERS> -->
+<!-- <VERS>VERSION: 0.5.5</VERS> -->
 <!-- <WCTX>Keep the V3 landing page current with active docs and deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.5.4: link weather ambient field spec.</CLOG> -->
+<!-- <CLOG>0.5.5: promote the V3 docs lifecycle plan into the start-here navigation.</CLOG> -->
 
 # V3 documentation index
 
@@ -15,17 +15,18 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 3. [V3 upgrade-plan chapter index](tui-vfx-v3-upgrade-plan/00_INDEX.md)
 4. [V3 schema overview](tui-vfx-v3-schema-overview.md)
 5. [V3 schema draft](tui-vfx-v3-schema-draft.json)
-6. [V3 I/O contract](tui-vfx-v3-io-contract.md)
-7. [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
-8. [V3 naming implementation inventory](tui-vfx-v3-naming-implementation-inventory.md)
-9. [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
-10. [V3 migration outcome policy](tui-vfx-v3-migration-outcome-policy.md)
-11. [V3 release-gate policy](tui-vfx-v3-release-gate-policy.md)
-12. [V3 release-gate manifest seed](tui-vfx-v3-release-gate-manifest.md)
-13. [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
-14. [V3 capability governance decision](tui-vfx-v3-capability-governance-decision.md)
-15. [V3 timing and metadata decision](tui-vfx-v3-timing-and-metadata-decision.md)
-16. [Tooling hub](../tooling/INDEX.md)
+6. [V3 docs lifecycle/elevation plan](tui-vfx-v3-docs-lifecycle-plan.md)
+7. [V3 I/O contract](tui-vfx-v3-io-contract.md)
+8. [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
+9. [V3 naming implementation inventory](tui-vfx-v3-naming-implementation-inventory.md)
+10. [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
+11. [V3 migration outcome policy](tui-vfx-v3-migration-outcome-policy.md)
+12. [V3 release-gate policy](tui-vfx-v3-release-gate-policy.md)
+13. [V3 release-gate manifest seed](tui-vfx-v3-release-gate-manifest.md)
+14. [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
+15. [V3 capability governance decision](tui-vfx-v3-capability-governance-decision.md)
+16. [V3 timing and metadata decision](tui-vfx-v3-timing-and-metadata-decision.md)
+17. [Tooling hub](../tooling/INDEX.md)
 
 ## Architecture and decisions
 
@@ -104,4 +105,4 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
   semantics belong in `tui-vfx` / `tui-vfx-recipes`.
 
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.4</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.5</VERS> -->
