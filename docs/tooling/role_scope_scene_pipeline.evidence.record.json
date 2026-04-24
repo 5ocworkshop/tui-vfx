@@ -1,0 +1,40 @@
+{
+  "schema": "tui_vfx_v3_release_gate_evidence.v1",
+  "fixture_id": "role_scope_scene_pipeline",
+  "gate": "role_aware_lowering",
+  "status": "fail",
+  "captured_at": "2026-04-24T20:35:00Z",
+  "recipe": {
+    "repo": "tui-vfx-recipes",
+    "path": "recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json"
+  },
+  "tool_runs": [
+    {
+      "evidence_type": "lowering_report_json",
+      "command": "cargo run -q -p pipeline-validator -- --lowering-report --format json recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json",
+      "artifact": "/tmp/tui-vfx-release-gates/role_scope_scene_pipeline/lowering_report.json",
+      "artifact_sha256": "bf1701d8c96b06e5700cf6761a189c0c2ae51a1fe3606316ae52998cb393f3af",
+      "status": "pass",
+      "observed_output_summary": "Lowering report exit 0; summary automatic=4, human_review_required=0, not_applicable=1, human_review_needed=[]."
+    },
+    {
+      "evidence_type": "trace_report_json",
+      "command": "cargo run -q -p tui-vfx-trace -- --recipe recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json --format report",
+      "artifact": "/tmp/tui-vfx-release-gates/role_scope_scene_pipeline/trace_report.json",
+      "artifact_sha256": "483f11d7c426a567746458b587d3883688352df5729ee10c4c3fadbe7c59f0ce",
+      "status": "pass",
+      "observed_output_summary": "Trace report exit 0; summary.total_envelopes=961, dropped=0, fallbacks assets/procedurals/layers all 0."
+    },
+    {
+      "evidence_type": "render_capture_png",
+      "command": "NOT RUN per owner stop: cargo run -q --example play_recipe -- recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json",
+      "status": "fail",
+      "observed_output_summary": "blocked-on-explicit-owner-visual-capture: the manifest requires render_capture_png, but GUI/X11/Zutty/demo-window capture is now out of scope and was not run."
+    }
+  ],
+  "review": {
+    "owner": "tui-vfx implementation lead",
+    "approval_required": false,
+    "notes": "Headless lowering and trace evidence pass with no human-review-needed queue and no dropped trace envelopes. Overall fixture remains fail until owner-approved visual capture supplies the required render_capture_png."
+  }
+}

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.5</VERS> -->
+<!-- <VERS>VERSION: 0.14.6</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.14.5: mark the V3 docs lifecycle/status reconciliation complete-initial.</CLOG> -->
+<!-- <CLOG>0.14.6: record the headless V3-CI02 evidence push and blockers.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -18,7 +18,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Complete initial / broaden later | Metadata shape diagnostics now include `related_themes`; style normalization validation has a first pass. Broaden remaining optional metadata/schema-report coverage as corpus pressure appears. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists, curated payload alias equivalence tests prove first canonicalization pairs, and normalized IR now emits explicit phase/scope/combine metadata. Broader property/corpus coverage remains follow-up. |
-| V3-CI02 | Release-gate evidence capture / compare | In progress / mixed evidence | `offscreen_content_slide_shift` now has required `render_capture_png`; remaining inventory is 10 complete-pass records, 2 explicit fails, 1 stale/incomplete offscreen record (`offscreen_follow_lag`), and 6 missing records. Next: clear the follow-lag build blocker and plan GTD representative captures. |
+| V3-CI02 | Release-gate evidence capture / compare | Blocked / headless evidence current | Headless evidence is current for non-GTD fixtures that can run without GUI capture. Remaining blockers: `probe_midnight_switchboard` hard technical probe failure, four records blocked on explicit owner visual-capture approval for `render_capture_png`, and four GTD representative captures requiring owner-approved fixtures. No X11/Zutty/Xvfb capture is allowed without explicit owner approval. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Complete initial / broaden later | Scene-layer motion now feeds edge-crossing border and attached-shadow policy; shared helper coverage proves diagonal/two-edge blanking directly. Follow-up: broaden full scene-layer corpus fixtures as needed. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Complete initial / broaden later | mixed-signals already has surface/frame-space basis; `tui-vfx-recipes` commits `c5190f1`, `7b2246f`, and `e52a510` prove and expose `sample_surface_radius`, `sample_surface_radius_from`, and `sample_surface_angle_from` through V3 native filter rendering plus primitive-first debug recipes. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
@@ -184,6 +184,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-TOOL01-THINPLAYER-SCOPE | Complete assessment | Thin player gap is packaging/surface consolidation, not engine work: first implementation slice should add `tools/tui-vfx-player` around existing `play_recipe`/`v3_play_recipe` behavior while avoiding `gtd-movie` timeline/composer semantics. |
 | V3-VIEW01-SCOPE | Complete assessment | Normalized IR viewer gap is presentation, not schema work: first implementation slice should add an offline `pipeline-validator` normalized execution-graph explorer over existing normalized IR loader/dump APIs. |
 | V3-DOCS01-QDOC01-COMPLETE | Complete initial | Focused V3 docs lifecycle/status reconciliation updated the V3 index, lifecycle plan, and upgrade-plan index; local Markdown link audit over `docs/design` and `docs/tooling` checked 70 files with 0 broken local links. |
+| V3-CI02-HEADLESS01 | Complete evidence checkpoint | Headless release-gate records now document passing probe/lowering/trace evidence where available and classify remaining `render_capture_png` gaps as blocked-on-explicit-owner-visual-capture; `probe_midnight_switchboard` remains the technical blocker to fix. |
 
 ## Hard policy: V2 removal is last
 
@@ -275,4 +276,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.5</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.6</VERS> -->

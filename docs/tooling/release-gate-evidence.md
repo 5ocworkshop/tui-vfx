@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> - <DESC>Executable evidence-record contract and command map for V3 Chapter 60 release gates.</DESC> -->
-<!-- <VERS>VERSION: 0.1.3</VERS> -->
+<!-- <VERS>VERSION: 0.1.4</VERS> -->
 <!-- <WCTX>Make the seeded Chapter 60 release-gate manifest actionable by mapping each evidence type to existing tooling and the D5/D6/D7 gate lanes.</WCTX> -->
-<!-- <CLOG>0.1.3: add the D5/D6 gate alignment table and ordered fixture batch for the first evidence captures.</CLOG> -->
+<!-- <CLOG>0.1.4: summarize current V3-CI02 evidence status and visual-capture blockers.</CLOG> -->
 
 # Release-gate evidence records
 
@@ -32,6 +32,25 @@ capture schema.
 Start with the probe and trace fixtures. They are the smallest command-backed
 captures and give D6 enough evidence to validate the record shape before the
 render and GTD lanes widen the scope.
+
+## Current V3-CI02 evidence status
+
+As of 2026-04-24, command-backed headless evidence records exist for every
+non-GTD fixture that can be advanced without product-owner visual judgment.
+
+| Gate | Current record status | Notes |
+|---|---|---|
+| `shadow` | 3 pass | Existing render/probe/trace evidence records cover all seeded shadow fixtures. |
+| `trace` | 3 pass | Existing trace/lowering evidence records cover all seeded trace fixtures. |
+| `probe` | 2 pass, 1 fail | `probe_midnight_switchboard` still fails headless probe analysis: configured `style` and `shader` stages produce no observed events. |
+| `offscreen` | 1 pass, 2 fail | `offscreen_follow_lag` now has passing headless probe evidence, but it and `offscreen_scene_full_stack` remain blocked on required `render_capture_png`. |
+| `role_aware_lowering` | 1 pass, 2 fail | `role_scope_scene_pipeline` and `role_scope_border_style` now have passing headless lowering/trace evidence where required, but remain blocked on required `render_capture_png`. |
+| `gtd_integration` | 4 owner/GTD-dependent missing records | These require owner-approved GTD representative surface capture and are not invented from library/tooling fixtures. |
+
+For records whose only missing evidence is `render_capture_png`, classify the
+remaining gap as `blocked-on-explicit-owner-visual-capture` until an owner
+explicitly approves a visual capture workflow. Do not open X11, Zutty, Xvfb, or
+demo-window capture surfaces during headless evidence packets.
 
 ## Evidence record shape
 
@@ -151,4 +170,4 @@ Template file:
 - [`probe_alarm_lighthouse.evidence.record.template.json`](probe_alarm_lighthouse.evidence.record.template.json)
 
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.3</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.4</VERS> -->

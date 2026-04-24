@@ -3,7 +3,7 @@
   "fixture_id": "offscreen_scene_full_stack",
   "gate": "offscreen",
   "status": "fail",
-  "captured_at": "2026-04-24T18:33:01Z",
+  "captured_at": "2026-04-24T20:35:00Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/scene/scene_layer_full_stack.json"
@@ -22,11 +22,17 @@
       "artifact": "artifacts/release-gates/offscreen_scene_full_stack/trace_report.json",
       "artifact_sha256": "525d91c27e75dd9db1ee8d17d4030c36c0ed251417fc8f0acac092eee09d7eb3",
       "status": "pass"
+    },
+    {
+      "evidence_type": "render_capture_png",
+      "command": "NOT RUN per owner stop: cargo run -q --example play_recipe -- recipes/debug_recipes/scene/scene_layer_full_stack.json",
+      "status": "fail",
+      "observed_output_summary": "blocked-on-explicit-owner-visual-capture: the manifest requires render_capture_png, but GUI/X11/Zutty/demo-window capture is now out of scope and was not run."
     }
   ],
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "recipe-probe again produced diagnostics=[] with inactive pre-compositor stages, so the offscreen fixture has command-backed probe evidence without stage failures. tui-vfx-trace emitted summary.total_envelopes=1441 with dropped=0. The gate stays fail until the manifest-required render_capture_png artifact is captured and compared."
+    "notes": "Headless probe and trace evidence pass: probe diagnostics=[] and trace summary.total_envelopes=1441 with dropped=0. Overall fixture remains fail because required render_capture_png is blocked-on-explicit-owner-visual-capture after owner direction to stop all X11/Zutty/demo-window capture work."
   }
 }

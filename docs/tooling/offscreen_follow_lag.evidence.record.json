@@ -2,8 +2,8 @@
   "schema": "tui_vfx_v3_release_gate_evidence.v1",
   "fixture_id": "offscreen_follow_lag",
   "gate": "offscreen",
-  "status": "pass",
-  "captured_at": "2026-04-24T20:05:00Z",
+  "status": "fail",
+  "captured_at": "2026-04-24T20:35:00Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json"
@@ -13,14 +13,20 @@
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json --format json --phase dwelling --sample-t 1.0 --with-causation",
       "artifact": "/tmp/tui-vfx-release-gates/offscreen_follow_lag/probe_report.json",
-      "artifact_generated": false,
+      "artifact_sha256": "9870b3e1e56c367589e821108f0dd6ceb176ea8cd21ecd011d526980388d92ba",
       "status": "pass",
-      "observed_output_summary": "Probe exit 0 at tui-vfx-recipes@e6e9da5; analysis.status=success, frame_count=1, diagnostics=[]."
+      "observed_output_summary": "Probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, frame_count=1, diagnostics=[]."
+    },
+    {
+      "evidence_type": "render_capture_png",
+      "command": "NOT RUN per owner stop: cargo run -q --example play_recipe -- recipes/debug_recipes/motion_routes/scene_layer_follow_lag.json",
+      "status": "fail",
+      "observed_output_summary": "blocked-on-explicit-owner-visual-capture: the manifest requires render_capture_png, but GUI/X11/Zutty/demo-window capture is now out of scope and was not run."
     }
   ],
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "Validated after moving the leader layer down in tui-vfx-recipes@e6e9da5. Probe command exits 0 with analysis.status=success and no diagnostics, so this offscreen fixture now passes."
+    "notes": "Headless probe evidence passes. Overall fixture remains fail because required render_capture_png is blocked-on-explicit-owner-visual-capture after owner direction to stop all X11/Zutty/demo-window capture work."
   }
 }
