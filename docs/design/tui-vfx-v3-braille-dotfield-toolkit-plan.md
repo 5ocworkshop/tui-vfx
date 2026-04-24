@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> - <DESC>Design plan for a generalized braille-dotfield source/toolkit in V3, using the Madeira flag as the first proving consumer.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Tonight's immediate need is not a universal shader/effect migration but a faithful recipe-side recreation of the madeira-flag crate. The key lesson from that crate is that the flag is not an image-layer effect stack; it is a braille-dot-native field with wave displacement and correlated shading applied before final terminal-cell emission. This doc captures the near-term implementation shape and the longer-term reusable toolkit direction.</WCTX> -->
-<!-- <CLOG>0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
+<!-- <CLOG>0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
 
 # tui-vfx V3 braille-dotfield toolkit plan
 
@@ -52,6 +52,10 @@ This plan is grounded in:
 - `/usr/projects/bgraph/src/functions/fnc_render_braille.rs`
 - `/usr/projects/bgraph/src/functions/fnc_get_braille_symbols.rs`
 - `/usr/projects/bgraph/src/functions/fnc_braille_tables.rs`
+- `/usr/projects/rocketsplash/crates/rocketsplash/src/v2/features/image/fnc_image_to_braille.rs`
+- `/usr/projects/rocketsplash/crates/rocketsplash/src/v2/features/image/cls_braille_image.rs`
+- `/usr/projects/rocketsplash/crates/rocketsplash/src/v2/features/quantize/fnc_map_braille.rs`
+- `/usr/projects/rocketsplash/crates/rocketsplash/src/v2/ui/canvas/ui_render_canvas/fnc_render_braille_image.rs`
 
 ---
 
@@ -129,12 +133,23 @@ It is not a file-backed raster or a prepacked terminal image.
 Wave amplitude increases with normalized x.
 The left side is mostly anchored; the right side is the moving edge.
 
-### C. The wave can extend outside the nominal flag rect
+### D. The source is recipe-owned geometry, not a file-backed image
 
-The crate renders above and below the nominal rectangle so the wave can visibly
-crest and trough.
+The current recipe uses `requires_assets.madeira_flag_rsb`, but the source crate
+does not load a file-backed image at all. It procedurally authors the flag into
+a dot lattice and then renders from that authored field.
 
-If we lose any of those three properties, the flag stops looking like the crate.
+That means the long-term truthful recipe representation should move away from
+"image-like source with a Madeira-specific fallback" and toward one of:
+
+- a procedural dotfield source that authors its own geometry from recipe params
+- or a future first-class dotfield source whose authored content still lives in
+  recipe space
+
+The key rule is:
+
+> the canonical flag content should live in recipe-owned data or source logic,
+> not in a hidden Rust-only Madeira fallback path.
 
 ---
 
@@ -351,8 +366,32 @@ The important reusable lessons are:
 - centralize braille glyph tables / dot ordering
 - separate source-value normalization from final glyph emission
 - keep exact contract tests for fill progression and edge cases
+- treat braille emission as a reusable low-level primitive, not inline ad hoc
+  logic spread across many consumers
 
-### 8.2 gt-design lessons
+### 8.2 rocketsplash lessons
+
+Most useful files:
+
+- `crates/rocketsplash/src/v2/features/image/fnc_image_to_braille.rs`
+- `crates/rocketsplash/src/v2/features/image/cls_braille_image.rs`
+- `crates/rocketsplash/src/v2/features/quantize/fnc_map_braille.rs`
+- `crates/rocketsplash/src/v2/ui/canvas/ui_render_canvas/fnc_render_braille_image.rs`
+
+The important reusable lessons are:
+
+- a braille surface can be treated as a first-class intermediate representation
+  rather than only as a final display artifact
+- the 2×4 lattice should stay explicit in code instead of being implied by a
+  loose sequence of glyph writes
+- source preparation, quantization, and final terminal emission are different
+  layers even when they all target braille in the end
+
+RocketSplash is image-ingest-focused, not procedural-flag-focused, so it should
+not define the Madeira runtime. But it is strong evidence that a dedicated
+"braille intermediate surface" mental model is practical and reusable.
+
+### 8.3 gt-design lessons
 
 Most useful files:
 
@@ -367,7 +406,7 @@ The main reusable ideas are:
 - strong contract tests for visual encodings
 - dataviz-oriented examples for quickly sanity-checking braille output quality
 
-### 8.3 What to actually extract
+### 8.4 What to actually extract
 
 For the near-term procedural source, extract at most:
 
@@ -494,7 +533,35 @@ Success is:
 
 ---
 
-## 12. Long-term generalized toolkit direction
+## 12. Additional design rules from the follow-on research
+
+### 12.1 Dot order must be explicit and canonical
+
+The braille-dot order should be defined in one helper/constant surface and used
+by every consumer. Do not let each procedural source or scene bridge invent its
+own dot ordering.
+
+### 12.2 Dotfield space and cell space are different layers
+
+Even when the output is always braille, the implementation should keep a clean
+boundary between:
+
+- **dotfield space** (2×4 subdots)
+- **cell space** (terminal cells carrying one braille glyph)
+
+The crate works because wave and shading are applied in dotfield space before
+final cell emission. Future toolkit surfaces should preserve that layering.
+
+### 12.3 Recipe truth should stay higher than engine fallback
+
+If a source is canonical and showcase-bearing, its meaning should not live only
+in one hidden engine fallback branch. The recipe should describe enough of the
+source or source family that the meaning is visible in recipe space, even if the
+first implementation is still a procedural-source id plus params.
+
+---
+
+## 13. Long-term generalized toolkit direction
 
 Once the Madeira source works, the right extraction is a reusable toolkit with
 three layers.
@@ -526,7 +593,7 @@ But it should come **after** the first flag consumer proves the approach.
 
 ---
 
-## 13. Decision summary
+## 14. Decision summary
 
 ### Near-term decision
 
@@ -547,7 +614,7 @@ small generalized braille-dot toolkit.
 
 ---
 
-## 14. Final recommendation
+## 15. Final recommendation
 
 If the goal is **tonight: get the recipe to relative parity with the crate**,
 then the correct plan is:
@@ -564,4 +631,4 @@ That is the shortest honest path from the current state to a recipe-side flag
 that actually behaves like the source crate.
 
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
