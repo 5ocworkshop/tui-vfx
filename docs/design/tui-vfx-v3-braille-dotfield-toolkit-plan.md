@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> - <DESC>Design plan for a generalized braille-dotfield source/toolkit in V3, using the Madeira flag as the first proving consumer.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Tonight's immediate need is not a universal shader/effect migration but a faithful recipe-side recreation of the madeira-flag crate. The key lesson from that crate is that the flag is not an image-layer effect stack; it is a braille-dot-native field with wave displacement and correlated shading applied before final terminal-cell emission. This doc captures the near-term implementation shape and the longer-term reusable toolkit direction.</WCTX> -->
-<!-- <CLOG>0.3.0: add ANSI block/flow diagrams for the crate workflow, the near-term scene-layer implementation path, and the long-term toolkit layering so the design is easier to execute and discuss. 0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
+<!-- <CLOG>0.4.0: update the recommendation after implementation review — stop planning interim Madeira-specific source hacks and explicitly choose the generalized full braille-dotfield implementation now, with the Madeira flag as the first proving consumer. 0.3.0: add ANSI block/flow diagrams for the crate workflow, the near-term scene-layer implementation path, and the long-term toolkit layering so the design is easier to execute and discuss. 0.2.0: incorporate follow-on research from gt-design, bgraph, and rocketsplash; clarify that the source crate's flag is braille-dot-native rather than image-backed; add explicit toolkit layering, dot-order/emission guidance, and a reusable-source/asset boundary note. 0.1.0: initial design. Defines the braille-dotfield concept, maps it onto current V3 scene/recipe/tooling surfaces, proposes the near-term procedural-source implementation path, and identifies the minimal generalized toolkit seams to extract from the first Madeira consumer.</CLOG> -->
 
 # tui-vfx V3 braille-dotfield toolkit plan
 
@@ -81,21 +81,22 @@ It is:
 
 > **braille-dotfield source + shared-field consumers + braille emission**
 
-The near-term recommendation is:
+The updated recommendation is:
 
-- keep the flag as a **scene layer**
-- change its source concept from `image` to a **procedural braille-dotfield
-  source**
-- keep the shared wave logic inside that procedural source for now
-- ensure the source can render with **vertical overscan** beyond the nominal
-  target rect
-- use Madeira as the first proving consumer
+- treat the braille-dotfield toolkit itself as the current implementation goal
+- do **not** plan a throwaway Madeira-only source hack as an intermediate step
+- make Madeira the **first proving consumer** of the generalized toolkit
+- ensure the generalized implementation already includes:
+  - dotfield primitives
+  - dotfield transforms
+  - overscan-aware rendering
+  - shared-field displacement + shading
+  - scene/recipe integration
 
-The longer-term recommendation is:
+In other words:
 
-- extract that source into a reusable **braille-dotfield toolkit**
-- make dotfield construction, displacement, shading, and emission reusable
-  primitives for future recipe-side consumers
+> we should eat the frog and build the real reusable thing now, then make the
+> flag demo prove it.
 
 ---
 
@@ -315,45 +316,64 @@ The problem is that the flag needs a **dotfield-native source shape**.
 
 ---
 
-## 4. Near-term implementation recommendation
+## 4. Immediate implementation recommendation
 
 ### Recommendation
 
-For the first implementation, do **not** add a brand-new top-level V3 category.
+For the first real implementation, still avoid inventing a brand-new top-level
+V3 schema category tonight, but **do** build the generalized toolkit immediately.
 
-Instead, model the flag as:
+That means:
 
 ```text
 scene layer
   source.type = procedural
-  source_id    = braille_flag_field
+  source_id   = braille_dotfield_*
 ```
 
-That procedural source should:
+with the important difference that the underlying machinery is no longer
+Madeira-specific.
 
-1. own the internal 2×4 dot lattice
-2. draw the static Madeira flag pattern into it
-3. compute the wave field internally
-4. compute displacement and correlated shading from the same field
-5. emit final braille chars into the scene grid
-6. request or apply the required top/bottom overscan behavior
+The implementation should be split into reusable layers from the start:
 
-### Why this is the best near-term choice
+1. a canonical 2×4 braille-dotfield primitive layer
+2. reusable dotfield transforms (displacement, shading, overscan-aware lookup)
+3. a recipe-facing procedural source family that consumes those primitives
+4. the Madeira flag source as the first consumer built on top
 
-- fits the existing `procedural` source machinery
-- does not force a large schema rewrite tonight
-- matches the true semantics better than `image`
-- gives us a faithful first consumer
-- can later be generalized into a toolkit rather than thrown away
+### Why this is the right immediate choice
+
+- avoids throwaway interim work
+- preserves the true crate semantics
+- gives us a reusable braille-native foundation immediately
+- lets the flag prove the generalized path instead of becoming a one-off exception
+- still fits the existing scene/procedural/source machinery well enough to move tonight
 
 ---
 
-## 5. Near-term runtime shape
+## 5. Immediate runtime shape
 
-The first consumer should be a **single procedural source** that internally owns
-all of the dotfield logic.
+The first consumer should be implemented on top of a **reusable procedural braille-dotfield toolkit**, not as one giant special-case source.
 
-### Proposed source id
+### Proposed layering
+
+```text
+Layer A: braille-dotfield primitives
+  - BrailleDotCanvas
+  - dot ordering helpers
+  - braille emission helpers
+
+Layer B: braille-dotfield transforms
+  - displacement through dotfield
+  - shading from shared field
+  - overscan-aware visible extent
+
+Layer C: recipe-facing procedural sources
+  - braille_flag_field
+  - future braille-native banners/dataviz/decorative sources
+```
+
+### Proposed first consumer id
 
 ```text
 braille_flag_field
@@ -363,32 +383,38 @@ braille_flag_field
 
 ```text
 frame(ctx):
-  1. decide logical flag size in terminal cells
+  1. decide logical source size in terminal cells
   2. derive dotfield size = (cell_w*2, cell_h*4)
-  3. draw static pattern into dotfield
-  4. compute overscan rows from max wave amplitude
-  5. for each visible output cell in overscanned region:
+  3. build/static-fill dotfield source content
+  4. compute shared wave field
+  5. compute overscan rows from max wave amplitude
+  6. for each visible output cell in overscanned region:
        for each of 8 braille dots:
-         evaluate wave field
+         evaluate shared field
          invert displacement to source-dot lookup
          sample source dot
+         compute correlated shade
          accumulate braille bit + color + shade
-  6. emit final braille char + fg color + transparent bg
+  7. emit final braille char + fg color + transparent bg
 ```
 
-### Internal helpers the source should own initially
+### Immediate reusable helpers to add
+
+Toolkit-level helpers should exist from the beginning:
 
 - `BrailleDotCanvas`
+- `BrailleDotOrder` or equivalent canonical dot-map surface
+- `emit_braille_cell(...)`
+- `displaced_dot_lookup(...)`
+- `overscan_rows(...)`
+- `shade_from_field(...)`
+
+Consumer-specific helpers for Madeira can sit on top:
+
 - `draw_flag_pattern(...)`
 - `draw_cross_pattee(...)`
 - `draw_greek_cross(...)`
 - `wave_field(dot_x, t, params)`
-- `shade_from_wave(wave)`
-- `emit_braille_cell(...)`
-- `overscan_rows(logical_height, max_amplitude)`
-
-This keeps the first consumer self-contained while still making the boundaries
-clear enough to extract later.
 
 ---
 
@@ -665,10 +691,13 @@ first implementation is still a procedural-source id plus params.
 
 ---
 
-## 13. Long-term generalized toolkit direction
+## 13. Generalized toolkit direction
 
-Once the Madeira source works, the right extraction is a reusable toolkit with
-three layers.
+This is no longer only a future extraction target. It is the implementation
+target now.
+
+Once the first consumer works, the toolkit should already exist in the same
+three-layer shape described below, even if only one consumer uses it at first.
 
 ### Layer 1 — dotfield primitives
 
@@ -699,40 +728,38 @@ But it should come **after** the first flag consumer proves the approach.
 
 ## 14. Decision summary
 
-### Near-term decision
+### Immediate decision
 
-Implement the Madeira flag as a:
-
-> **procedural braille-dotfield scene source**
-
-inside the existing scene-layer / procedural-source model.
+Implement the generalized braille-dotfield toolkit **now**, still using the
+existing scene-layer / procedural-source model as the recipe-facing entry point.
 
 ### Deferred decision
 
-Do **not** introduce a brand-new top-level V3 schema concept tonight.
+Do **not** introduce a brand-new top-level V3 schema concept tonight unless the
+existing procedural/source surface proves structurally insufficient.
 
-### Future direction
+### First proving consumer
 
-After the first consumer works, extract the reusable dotfield helpers into a
-small generalized braille-dot toolkit.
+Use the Madeira flag as the first consumer of the generalized toolkit rather
+than as a one-off implementation lane.
 
 ---
 
 ## 15. Final recommendation
 
-If the goal is **tonight: get the recipe to relative parity with the crate**,
-then the correct plan is:
+If the goal is **tonight: get the recipe to relative parity with the crate**
+without wasting effort, then the correct plan is:
 
 1. stop modeling the flag as an image-like layer
-2. add a `braille_flag_field` procedural scene source
-3. preserve the crate's 2×4 dot-lattice behavior
-4. allow top/bottom overscan
-5. keep displacement and shading driven by the same wave function
-6. use the resulting implementation as the first proving consumer for a later
-   generalized braille-dot toolkit
+2. build the generalized braille-dotfield primitives immediately
+3. build reusable displacement/shading/overscan dotfield transforms
+4. expose a recipe-facing procedural source family on top of them
+5. implement `braille_flag_field` as the first consumer
+6. use the resulting implementation to prove the toolkit on a real showcase
 
 That is the shortest honest path from the current state to a recipe-side flag
-that actually behaves like the source crate.
+that actually behaves like the source crate **and** leaves behind reusable
+foundation instead of disposable interim work.
 
 <!-- <FILE>docs/design/tui-vfx-v3-braille-dotfield-toolkit-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
