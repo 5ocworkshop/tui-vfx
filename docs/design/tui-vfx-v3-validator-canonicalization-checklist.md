@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-validator-canonicalization-checklist.md</FILE> - <DESC>Execution checklist for the V3 validator/canonicalization phase. Tracks the minimum checks and canonical outputs needed before broad family runtime implementation should proceed.</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>VC-02 now has initial normalized scope/range validation, so impossible literal row/column/cell-run ranges and non-positive rect dimensions fail before execution while dynamic binding-backed ranges remain runtime-resolved.</WCTX> -->
-<!-- <CLOG>0.6.0: mark VC-02 complete-initial after normalized literal scope sanity validation landed in tui-vfx-recipes. 0.5.0: mark VC-05 complete-initial after normalized scene-layer duplicate-ID and sibling-reference validation landed in tui-vfx-recipes. 0.4.0: mark VC-06 complete after pipeline-validator --rules --strict-contracts and V3 debug-corpus requires_bindings declarations landed in tui-vfx-recipes. 0.3.0: mark VC-06 complete-initial after normalized contract declaration checks and contract_usage reporting landed in tui-vfx-recipes; shift the next validator slice to corpus-compatible strict contract gates. 0.2.0: mark VC-08 complete after pipeline-validator --dump-normalized landed in tui-vfx-recipes; convert the tracker from all-open seed state to an as-built plan for the remaining validator/canonicalization work. 0.1.0: initial checklist. Seeds the concrete validation/canonicalization work items following the schema, catalog, lowering, and normalized-IR phases.</CLOG> -->
+<!-- <VERS>VERSION: 0.7.0</VERS> -->
+<!-- <WCTX>VC-05 now rejects malformed scene-layer placement/surface shapes and impossible absolute geometry before the typed compile seam, complementing earlier layer ID and sibling-reference validation.</WCTX> -->
+<!-- <CLOG>0.7.0: complete the initial VC-05 geometry/surface diagnostics slice after layer placement/surface hard validation landed in tui-vfx-recipes. 0.6.0: mark VC-02 complete-initial after normalized literal scope sanity validation landed in tui-vfx-recipes. 0.5.0: mark VC-05 complete-initial after normalized scene-layer duplicate-ID and sibling-reference validation landed in tui-vfx-recipes. 0.4.0: mark VC-06 complete after pipeline-validator --rules --strict-contracts and V3 debug-corpus requires_bindings declarations landed in tui-vfx-recipes. 0.3.0: mark VC-06 complete-initial after normalized contract declaration checks and contract_usage reporting landed in tui-vfx-recipes; shift the next validator slice to corpus-compatible strict contract gates. 0.2.0: mark VC-08 complete after pipeline-validator --dump-normalized landed in tui-vfx-recipes; convert the tracker from all-open seed state to an as-built plan for the remaining validator/canonicalization work. 0.1.0: initial checklist. Seeds the concrete validation/canonicalization work items following the schema, catalog, lowering, and normalized-IR phases.</CLOG> -->
 
 # tui-vfx V3 validator / canonicalization checklist
 
@@ -13,7 +13,7 @@
 | VC-02 | Region-ref / compression resolution | COMPLETE_INITIAL | Region refs/cycles already fail in normalization; normalized validation now rejects impossible literal row/column/cell-run ranges and non-positive rect dimensions while allowing dynamic binding-backed scope values        |
 | VC-03 | Style normalization validation      | IN_PROGRESS      | Initial `base_style` normalization exists; remaining work is validation that no dual style forms survive normalized IR                                                                                                       |
 | VC-04 | Hint producer/consumer validation   | COMPLETE_INITIAL | First-class I/O plus legacy `emits_hint`/`binds` validation covers sequence visibility, parallel isolation, duplicate producers, missing producers, and value-kind mismatches                                                |
-| VC-05 | Scene-layer placement validation    | COMPLETE_INITIAL | Normalized validation rejects duplicate scene layer IDs, self-sibling placement, and unknown sibling placement references; remaining work is impossible geometry/surface diagnostics                                         |
+| VC-05 | Scene-layer placement validation    | COMPLETE         | Normalized validation rejects duplicate layer IDs, bad sibling refs, malformed placement/surface shapes, absolute sibling misuse, and non-positive absolute rect dimensions                                                  |
 | VC-06 | Contract discovery validation       | COMPLETE         | Normalized declaration-shape checks and `contract_usage` reporting are in place; binding-focused V3 debug recipes now declare `requires_bindings`; `pipeline-validator --rules --strict-contracts` is the opt-in strict gate |
 | VC-07 | Lowering invariant checks           | OPEN             | V2→V3 migration/lowering invariants still need a dedicated report path                                                                                                                                                       |
 | VC-08 | Normalized IR dump / debug output   | COMPLETE         | `pipeline-validator --dump-normalized --format json` now emits the canonical normalized V3 IR through `RecipeLoadMode::Normalized`; `dump_normalized_recipe_pretty` remains the library helper                               |
@@ -59,6 +59,32 @@ normalize:
    - runtime range validation can be added later if a concrete runtime-param
      context is explicitly available.
 
+## Completed VC-05 slice: scene geometry/surface validation
+
+VC-05 now catches the static scene-layer mistakes that previously could leak to
+the typed compile seam:
+
+1. **Layer identity and sibling graph**
+   - duplicate IDs fail.
+   - self-sibling and unknown sibling placement references fail.
+   - non-string `sibling_id` values fail before traversal.
+2. **Placement shape**
+   - placement must be the tagged V3 scene shape with `type` and `spec`.
+   - supported placement types are currently `anchor` and `absolute`.
+   - `absolute` placement cannot carry sibling references.
+3. **Geometry sanity**
+   - absolute placement `rect.width` and `rect.height` must be positive
+     integers.
+   - this is intentionally static geometry validation; clipping and runtime
+     layout behavior remain scene composition responsibilities.
+4. **Surface shape**
+   - scene-layer `surface` must be an object.
+   - only `base_style` and `shadow` are accepted at the normalized surface
+     level, and each must be an object when present.
+5. **Canonical defaults**
+   - missing authored placement now normalizes to the tagged anchor shape:
+     `{ "type": "anchor", "spec": { "anchor": "default" } }`.
+
 ## Completed VC-06 slice: contract discovery validation
 
 VC-06 now connects the working I/O pathway, asset-backed Madeira flag work,
@@ -85,14 +111,13 @@ and normalized inspection surface:
      binding or template-placeholder usage while normal `--rules` stays
      backward-compatible.
 
-## Next slices after VC-02/VC-05
+## Next slices after VC-05
 
-1. **VC-05 geometry/surface diagnostics:** duplicate IDs and sibling placement refs now fail; next scene validation should cover impossible geometry and surface-shape mistakes.
-2. **VC-07 lowering invariants:** add a report that says which lowerings were
+1. **VC-07 lowering invariants:** add a report that says which lowerings were
    automatic, which were lossy, and which require human review.
-3. **VC-09 migration-equivalence harness:** compare critical V2/V3 pairs through
+2. **VC-09 migration-equivalence harness:** compare critical V2/V3 pairs through
    normalized intent and render/probe evidence.
-4. **VC-10 human-review-needed report:** turn unresolved lowering classes into a
+3. **VC-10 human-review-needed report:** turn unresolved lowering classes into a
    machine-readable queue for migration work.
 
 ## Tooling evidence
@@ -118,4 +143,4 @@ git diff --check
 ```
 
 <!-- <FILE>docs/design/tui-vfx-v3-validator-canonicalization-checklist.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.7.0</VERS> -->
