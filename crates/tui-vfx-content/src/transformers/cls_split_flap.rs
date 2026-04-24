@@ -1239,7 +1239,10 @@ mod tests {
                 break;
             }
         }
-        assert!(saw_turned, "flip_preview must show turned target 'Ɐ' somewhere in the hinge window");
+        assert!(
+            saw_turned,
+            "flip_preview must show turned target 'Ɐ' somewhere in the hinge window"
+        );
     }
 
     #[test]
@@ -1401,7 +1404,10 @@ mod tests {
                 break;
             }
         }
-        assert!(saw_divergence, "adjacent columns should flicker out of phase somewhere in the window");
+        assert!(
+            saw_divergence,
+            "adjacent columns should flicker out of phase somewhere in the window"
+        );
     }
 
     // ---------- SplitFlapDispersion: per-column start-delay patterns ----------
@@ -1448,7 +1454,10 @@ mod tests {
         // a long-distance char should still be rotating.
         let r = sf.transform("AZ", 0.1, &ctx());
         let chars: Vec<char> = r.chars().collect();
-        assert_eq!(chars[0], 'A', "short-distance char must land early under Authentic dispersion");
+        assert_eq!(
+            chars[0], 'A',
+            "short-distance char must land early under Authentic dispersion"
+        );
         assert_ne!(chars[1], 'Z', "long-distance char must still be flipping");
     }
 

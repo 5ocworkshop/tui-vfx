@@ -19,13 +19,15 @@ fn test_signal_ctx() -> SignalContext {
         loop_t: None,
         absolute_t: None,
         char_index: None,
+        cell_x: None,
+        cell_y: None,
     }
 }
 
 #[test]
 fn test_integers() {
     let tx = Numeric::default(); // Default format "{}"
-    // 0 -> 100. At 0.5 -> 50
+                                 // 0 -> 100. At 0.5 -> 50
     assert_eq!(tx.transform("100", 0.5, &test_signal_ctx()), "50");
 }
 #[test]

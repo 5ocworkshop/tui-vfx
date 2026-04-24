@@ -20,6 +20,8 @@ fn test_signal_ctx() -> SignalContext {
         loop_t: None,
         absolute_t: None,
         char_index: None,
+        cell_x: None,
+        cell_y: None,
     }
 }
 

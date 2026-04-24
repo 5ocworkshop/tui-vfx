@@ -103,6 +103,8 @@ fn apply_with_context_matches_explicit_path_with_same_context() {
         loop_t: None,
         absolute_t: None,
         char_index: None,
+        cell_x: None,
+        cell_y: None,
     };
 
     let via_apply = effect
