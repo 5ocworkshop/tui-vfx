@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-validator-canonicalization-checklist.md</FILE> - <DESC>Execution checklist for the V3 validator/canonicalization phase. Tracks the minimum checks and canonical outputs needed before broad family runtime implementation should proceed.</DESC> -->
-<!-- <VERS>VERSION: 0.7.0</VERS> -->
-<!-- <WCTX>VC-05 now rejects malformed scene-layer placement/surface shapes and impossible absolute geometry before the typed compile seam, complementing earlier layer ID and sibling-reference validation.</WCTX> -->
-<!-- <CLOG>0.7.0: complete the initial VC-05 geometry/surface diagnostics slice after layer placement/surface hard validation landed in tui-vfx-recipes. 0.6.0: mark VC-02 complete-initial after normalized literal scope sanity validation landed in tui-vfx-recipes. 0.5.0: mark VC-05 complete-initial after normalized scene-layer duplicate-ID and sibling-reference validation landed in tui-vfx-recipes. 0.4.0: mark VC-06 complete after pipeline-validator --rules --strict-contracts and V3 debug-corpus requires_bindings declarations landed in tui-vfx-recipes. 0.3.0: mark VC-06 complete-initial after normalized contract declaration checks and contract_usage reporting landed in tui-vfx-recipes; shift the next validator slice to corpus-compatible strict contract gates. 0.2.0: mark VC-08 complete after pipeline-validator --dump-normalized landed in tui-vfx-recipes; convert the tracker from all-open seed state to an as-built plan for the remaining validator/canonicalization work. 0.1.0: initial checklist. Seeds the concrete validation/canonicalization work items following the schema, catalog, lowering, and normalized-IR phases.</CLOG> -->
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <WCTX>VC-07 now has an initial machine-readable lowering-invariant report in pipeline-validator, covering normalized/compiled automatic lowerings, lossless legacy-I/O lifting, scene-layer homes, and dynamic-scope human-review flags.</WCTX> -->
+<!-- <CLOG>0.8.0: mark VC-07 complete-initial after pipeline-validator --lowering-report landed in tui-vfx-recipes. 0.7.0: complete the initial VC-05 geometry/surface diagnostics slice after layer placement/surface hard validation landed in tui-vfx-recipes. 0.6.0: mark VC-02 complete-initial after normalized literal scope sanity validation landed in tui-vfx-recipes. 0.5.0: mark VC-05 complete-initial after normalized scene-layer duplicate-ID and sibling-reference validation landed in tui-vfx-recipes. 0.4.0: mark VC-06 complete after pipeline-validator --rules --strict-contracts and V3 debug-corpus requires_bindings declarations landed in tui-vfx-recipes. 0.3.0: mark VC-06 complete-initial after normalized contract declaration checks and contract_usage reporting landed in tui-vfx-recipes; shift the next validator slice to corpus-compatible strict contract gates. 0.2.0: mark VC-08 complete after pipeline-validator --dump-normalized landed in tui-vfx-recipes; convert the tracker from all-open seed state to an as-built plan for the remaining validator/canonicalization work. 0.1.0: initial checklist. Seeds the concrete validation/canonicalization work items following the schema, catalog, lowering, and normalized-IR phases.</CLOG> -->
 
 # tui-vfx V3 validator / canonicalization checklist
 
@@ -15,7 +15,7 @@
 | VC-04 | Hint producer/consumer validation   | COMPLETE_INITIAL | First-class I/O plus legacy `emits_hint`/`binds` validation covers sequence visibility, parallel isolation, duplicate producers, missing producers, and value-kind mismatches                                                |
 | VC-05 | Scene-layer placement validation    | COMPLETE         | Normalized validation rejects duplicate layer IDs, bad sibling refs, malformed placement/surface shapes, absolute sibling misuse, and non-positive absolute rect dimensions                                                  |
 | VC-06 | Contract discovery validation       | COMPLETE         | Normalized declaration-shape checks and `contract_usage` reporting are in place; binding-focused V3 debug recipes now declare `requires_bindings`; `pipeline-validator --rules --strict-contracts` is the opt-in strict gate |
-| VC-07 | Lowering invariant checks           | OPEN             | V2→V3 migration/lowering invariants still need a dedicated report path                                                                                                                                                       |
+| VC-07 | Lowering invariant checks           | COMPLETE_INITIAL | `pipeline-validator --lowering-report --format json` reports automatic normalized/compiled lowering, lossless legacy-I/O lifting, scene-layer homes, and dynamic-scope human-review flags                                    |
 | VC-08 | Normalized IR dump / debug output   | COMPLETE         | `pipeline-validator --dump-normalized --format json` now emits the canonical normalized V3 IR through `RecipeLoadMode::Normalized`; `dump_normalized_recipe_pretty` remains the library helper                               |
 | VC-09 | Migration-equivalence checks        | PARTIAL          | Critical V3 fixtures have render-hash/probe coverage; V2↔V3 equivalence reports remain follow-on work                                                                                                                        |
 | VC-10 | Human-review-needed report          | OPEN             | Needed for unresolved lowering classes and migration review queues                                                                                                                                                           |
@@ -30,9 +30,7 @@ plans or initial code. That bar is now mostly met for the direct V3 path:
 - VC-02/05 now have initial hard validation for the highest-risk structural
   mistakes.
 - VC-04 has meaningful I/O visibility and kind-validation coverage.
-- VC-08 has both library and CLI inspection surfaces.
-- VC-07 still needs the clearest remaining validator-side plan before migration
-  automation grows.
+- VC-07/08 have both library/tooling evidence surfaces for migration review.
 
 Because runtime-family work has already moved ahead through the compiled
 execution plan, the validator follow-on should be incremental and non-breaking:
@@ -111,13 +109,35 @@ and normalized inspection surface:
      binding or template-placeholder usage while normal `--rules` stays
      backward-compatible.
 
-## Next slices after VC-05
+## Completed initial VC-07 slice: lowering invariant report
 
-1. **VC-07 lowering invariants:** add a report that says which lowerings were
-   automatic, which were lossy, and which require human review.
-2. **VC-09 migration-equivalence harness:** compare critical V2/V3 pairs through
+VC-07 now exposes migration/lowering evidence without requiring a full automatic
+V2→V3 migrator:
+
+1. **Report surface**
+   - `pipeline-validator --lowering-report --format json <recipe>` emits
+     `kind: "v3_lowering_report"`.
+   - each recipe includes metrics plus invariant rows with `automatic`,
+     `lossless`, `human_review_required`, or `not_applicable` status.
+2. **Automatic lowering evidence**
+   - recipes load through the canonical normalized V3 IR.
+   - normalized recipes compile to typed execution plans without late schema
+     recovery.
+   - scene layers are reported as preserved in their source/placement/surface/
+     pipeline homes when present.
+3. **Lossless compatibility evidence**
+   - legacy `emits_hint`/`binds` payload edges are counted and reported as
+     lossless compiled step-I/O preservation.
+4. **Human-review queue seed**
+   - dynamic runtime-bound scopes are counted and classified as
+     `human_review_required`, giving migration work a concrete queue before
+     broader V2/V3 equivalence automation lands.
+
+## Next slices after VC-07
+
+1. **VC-09 migration-equivalence harness:** compare critical V2/V3 pairs through
    normalized intent and render/probe evidence.
-3. **VC-10 human-review-needed report:** turn unresolved lowering classes into a
+2. **VC-10 human-review-needed report:** turn unresolved lowering classes into a
    machine-readable queue for migration work.
 
 ## Tooling evidence
@@ -129,6 +149,9 @@ cd /usr/projects/tui-vfx-recipes
 cargo run -q -p pipeline-validator -- \
   --dump-normalized --format json \
   recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json
+cargo run -q -p pipeline-validator -- \
+  --lowering-report --format json \
+  recipes/debug_recipes/styles/style_cell_position_binding.json
 ```
 
 Expected verification lane for the next validator slice:
@@ -143,4 +166,4 @@ git diff --check
 ```
 
 <!-- <FILE>docs/design/tui-vfx-v3-validator-canonicalization-checklist.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.7.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->
