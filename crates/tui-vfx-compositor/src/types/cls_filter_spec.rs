@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.12.0</VERS>
-// <WCTX>Keep V3 compatibility lowering as close to executable filter semantics as possible so direct-V3 callers stop carrying rigid-shake binding-object normalization themselves.</WCTX>
-// <CLOG>3.12.0: add FilterSpec::try_from_v3_payload for engine-owned rigid-shake binding/default lowering from V3-authored payloads.
+// <VERS>VERSION: 3.12.1</VERS>
+// <WCTX>Compositor clippy cleanup pass</WCTX>
+// <CLOG>3.12.1: PATCH — collapse nested if-let in rigid_shake normalization into Rust-2024 let-chains per clippy.
+// 3.12.0: add FilterSpec::try_from_v3_payload for engine-owned rigid-shake binding/default lowering from V3-authored payloads.
 
 //! # Filter Specifications
 //!
@@ -1549,37 +1550,37 @@ impl FilterSpec {
                 .and_then(serde_json::Value::as_str)
                 .unwrap_or_default();
             if payload_type == "rigid_shake" {
-                if let Some(num_shakes) = object.get("num_shakes").cloned() {
-                    if let Value::Object(binding_obj) = num_shakes {
-                        if let Some(binding_name) = binding_obj
-                            .get("binding")
-                            .and_then(serde_json::Value::as_str)
-                        {
-                            object.insert(
-                                "num_shakes_binding".into(),
-                                Value::String(binding_name.to_string()),
-                            );
-                        }
-                        if let Some(default_value) = binding_obj.get("default").cloned() {
-                            object.insert("num_shakes".into(), default_value);
-                        } else {
-                            object.remove("num_shakes");
-                        }
+                if let Some(num_shakes) = object.get("num_shakes").cloned()
+                    && let Value::Object(binding_obj) = num_shakes
+                {
+                    if let Some(binding_name) = binding_obj
+                        .get("binding")
+                        .and_then(serde_json::Value::as_str)
+                    {
+                        object.insert(
+                            "num_shakes_binding".into(),
+                            Value::String(binding_name.to_string()),
+                        );
+                    }
+                    if let Some(default_value) = binding_obj.get("default").cloned() {
+                        object.insert("num_shakes".into(), default_value);
+                    } else {
+                        object.remove("num_shakes");
                     }
                 }
-                if let Some(damping_scale) = object.get("damping_scale").cloned() {
-                    if let Value::Object(binding_obj) = damping_scale {
-                        if let Some(binding_name) = binding_obj
-                            .get("binding")
-                            .and_then(serde_json::Value::as_str)
-                        {
-                            object.insert(
-                                "damping_scale_binding".into(),
-                                Value::String(binding_name.to_string()),
-                            );
-                        }
-                        object.remove("damping_scale");
+                if let Some(damping_scale) = object.get("damping_scale").cloned()
+                    && let Value::Object(binding_obj) = damping_scale
+                {
+                    if let Some(binding_name) = binding_obj
+                        .get("binding")
+                        .and_then(serde_json::Value::as_str)
+                    {
+                        object.insert(
+                            "damping_scale_binding".into(),
+                            Value::String(binding_name.to_string()),
+                        );
                     }
+                    object.remove("damping_scale");
                 }
             }
         }
@@ -1981,4 +1982,4 @@ impl FilterSpec {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 3.8.0</VERS>
+// <VERS>END OF VERSION: 3.12.1</VERS>

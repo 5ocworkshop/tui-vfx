@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/types/cls_sampler_spec.rs</FILE> - <DESC>SamplerSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 2.6.0</VERS>
-// <WCTX>Keep V3 compatibility lowering as close to executable sampler semantics as possible so direct-V3 callers stop carrying phase_offset and ripple-center normalization themselves.</WCTX>
-// <CLOG>2.6.0: add SamplerSpec::try_from_v3_payload for engine-owned sine-wave and ripple payload normalization from V3-authored forms.</CLOG>
+// <VERS>VERSION: 2.6.1</VERS>
+// <WCTX>Compositor clippy cleanup pass</WCTX>
+// <CLOG>2.6.1: PATCH — collapse nested if-let in V3 payload normalization into Rust-2024 let-chains per clippy.
+// 2.6.0: add SamplerSpec::try_from_v3_payload for engine-owned sine-wave and ripple payload normalization from V3-authored forms.</CLOG>
 
 //! # Sampler Specifications
 //!
@@ -535,43 +536,44 @@ impl SamplerSpec {
                 .unwrap_or_default();
             match payload_type {
                 "sine_wave" => {
-                    if object.contains_key("phase_offset") && !object.contains_key("phase") {
-                        if let Some(phase) = object.remove("phase_offset") {
-                            object.insert("phase".into(), phase);
-                        }
+                    if object.contains_key("phase_offset")
+                        && !object.contains_key("phase")
+                        && let Some(phase) = object.remove("phase_offset")
+                    {
+                        object.insert("phase".into(), phase);
                     }
                 }
                 "ripple" => {
-                    if let Some(center) = object.get("center").cloned() {
-                        if let Value::Object(center_object) = center {
-                            if center_object
-                                .get("kind")
-                                .and_then(serde_json::Value::as_str)
-                                == Some("center")
-                            {
-                                object.insert(
-                                    "center".into(),
-                                    Value::String("center".to_string()),
-                                );
-                            } else if center_object
-                                .get("kind")
-                                .and_then(serde_json::Value::as_str)
-                                == Some("cell")
-                            {
-                                object.insert(
-                                    "center".into(),
-                                    serde_json::json!({
-                                        "x": center_object
-                                            .get("x")
-                                            .and_then(serde_json::Value::as_u64)
-                                            .unwrap_or(0),
-                                        "y": center_object
-                                            .get("y")
-                                            .and_then(serde_json::Value::as_u64)
-                                            .unwrap_or(0),
-                                    }),
-                                );
-                            }
+                    if let Some(center) = object.get("center").cloned()
+                        && let Value::Object(center_object) = center
+                    {
+                        if center_object
+                            .get("kind")
+                            .and_then(serde_json::Value::as_str)
+                            == Some("center")
+                        {
+                            object.insert(
+                                "center".into(),
+                                Value::String("center".to_string()),
+                            );
+                        } else if center_object
+                            .get("kind")
+                            .and_then(serde_json::Value::as_str)
+                            == Some("cell")
+                        {
+                            object.insert(
+                                "center".into(),
+                                serde_json::json!({
+                                    "x": center_object
+                                        .get("x")
+                                        .and_then(serde_json::Value::as_u64)
+                                        .unwrap_or(0),
+                                    "y": center_object
+                                        .get("y")
+                                        .and_then(serde_json::Value::as_u64)
+                                        .unwrap_or(0),
+                                }),
+                            );
                         }
                     }
                 }
@@ -714,4 +716,4 @@ impl SamplerSpec {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_sampler_spec.rs</FILE> - <DESC>SamplerSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 2.5.1</VERS>
+// <VERS>END OF VERSION: 2.6.1</VERS>

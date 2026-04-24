@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_shredder.rs</FILE> - <DESC>Shredder sampler implementation</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>WG5: Sampler Spatial Context Enhancement</WCTX>
-// <CLOG>BREAKING CHANGE: Updated sample() signature to include spatial parameters; IMPROVEMENT: max_fall now scales with widget height (50% of height) instead of hardcoded 20 cells</CLOG>
+// <VERS>VERSION: 2.0.1</VERS>
+// <WCTX>Compositor clippy cleanup pass</WCTX>
+// <CLOG>2.0.1: PATCH — swap manual parity check for strip_idx.is_multiple_of(2) per clippy</CLOG>
 
 use crate::traits::sampler::Sampler;
 
@@ -58,7 +58,7 @@ impl Sampler for Shredder {
         let strip_idx = dest_x / self.stripe_width;
 
         // Alternate base speed, plus per-strip variation for organic look
-        let base_speed = if strip_idx % 2 == 0 {
+        let base_speed = if strip_idx.is_multiple_of(2) {
             self.even_speed
         } else {
             self.odd_speed
@@ -168,4 +168,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_shredder.rs</FILE> - <DESC>Shredder sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <VERS>END OF VERSION: 2.0.1</VERS>

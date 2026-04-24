@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_checkers.rs</FILE> - <DESC>Checkers mask</DESC>
-// <VERS>VERSION: 1.1.0 - 2025-12-23</VERS>
-// <WCTX>Pipeline configuration fix</WCTX>
-// <CLOG>Added cell_size config field</CLOG>
+// <VERS>VERSION: 1.1.1</VERS>
+// <WCTX>Compositor clippy cleanup pass</WCTX>
+// <CLOG>1.1.1: PATCH — swap manual parity check for (bx+by).is_multiple_of(2) per clippy</CLOG>
 
 use crate::traits::mask::Mask;
 
@@ -30,7 +30,7 @@ impl Mask for Checkers {
     fn is_visible(&self, x: u16, y: u16, _w: u16, _h: u16, progress: f64) -> bool {
         let bx = x / self.cell_size;
         let by = y / self.cell_size;
-        let is_even = (bx + by) % 2 == 0;
+        let is_even = (bx + by).is_multiple_of(2);
         if is_even {
             progress > 0.25
         } else {
@@ -64,4 +64,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/masks/cls_checkers.rs</FILE> - <DESC>Checkers mask</DESC>
-// <VERS>END OF VERSION: 1.1.0 - 2025-12-23</VERS>
+// <VERS>END OF VERSION: 1.1.1</VERS>

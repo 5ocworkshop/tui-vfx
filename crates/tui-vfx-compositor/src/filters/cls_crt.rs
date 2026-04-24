@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_crt.rs</FILE> - <DESC>CRT filter with scanlines and phosphor glow</DESC>
-// <VERS>VERSION: 4.0.1</VERS>
-// <WCTX>Fix brightness jump at animation completion</WCTX>
-// <CLOG>Use round() instead of truncation in color math to prevent off-by-one errors</CLOG>
+// <VERS>VERSION: 4.0.2</VERS>
+// <WCTX>Compositor clippy cleanup pass</WCTX>
+// <CLOG>4.0.2: PATCH — swap manual parity check for y.is_multiple_of(2) per clippy</CLOG>
 
 use crate::traits::filter::Filter;
 use tui_vfx_types::{Cell, Color};
@@ -53,7 +53,7 @@ impl Crt {
 
 impl Filter for Crt {
     fn apply(&self, cell: &mut Cell, _x: u16, y: u16, _width: u16, _height: u16, _t: f64) {
-        if y % 2 == 0 {
+        if y.is_multiple_of(2) {
             // Even rows: Apply scanline dimming
             let factor = 1.0 - self.scanline_strength;
             cell.fg = Self::dim_color(cell.fg, factor);
@@ -146,4 +146,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_crt.rs</FILE> - <DESC>CRT filter with scanlines and phosphor glow</DESC>
-// <VERS>END OF VERSION: 4.0.1</VERS>
+// <VERS>END OF VERSION: 4.0.2</VERS>

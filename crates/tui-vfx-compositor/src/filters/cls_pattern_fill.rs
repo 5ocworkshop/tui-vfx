@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_pattern_fill.rs</FILE> - <DESC>Pattern fill filter for background textures</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>L2/L3 abstraction: make compositor framework-agnostic</WCTX>
-// <CLOG>Changed to use tui_vfx_types::Cell and Color for framework independence</CLOG>
+// <VERS>VERSION: 2.0.1</VERS>
+// <WCTX>Compositor clippy cleanup pass</WCTX>
+// <CLOG>2.0.1: PATCH — swap manual parity/divisibility checks for is_multiple_of per clippy</CLOG>
 
 use crate::traits::filter::Filter;
 use serde::{Deserialize, Serialize};
@@ -126,7 +126,7 @@ impl PatternFill {
             PatternType::Single { char: c } => Some(*c),
 
             PatternType::Checkerboard { char_a, char_b } => {
-                if (x + y) % 2 == 0 {
+                if (x + y).is_multiple_of(2) {
                     Some(*char_a)
                 } else {
                     Some(*char_b)
@@ -137,7 +137,7 @@ impl PatternFill {
                 if *spacing == 0 {
                     return None;
                 }
-                if y % spacing == 0 {
+                if y.is_multiple_of(*spacing) {
                     Some(*line_char)
                 } else {
                     None
@@ -148,7 +148,7 @@ impl PatternFill {
                 if *spacing == 0 {
                     return None;
                 }
-                if x % spacing == 0 {
+                if x.is_multiple_of(*spacing) {
                     Some(*line_char)
                 } else {
                     None
@@ -379,4 +379,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_pattern_fill.rs</FILE> - <DESC>Pattern fill filter for background textures</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <VERS>END OF VERSION: 2.0.1</VERS>

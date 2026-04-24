@@ -1,8 +1,8 @@
 // <FILE>tui-vfx-compositor/src/context/cls_compositor_ctx.rs</FILE>
 // <DESC>Grid reuse manager with growth-only allocation</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>L2/L3 abstraction: make compositor framework-agnostic</WCTX>
-// <CLOG>Changed from ratatui Buffer to mixed_types OwnedGrid for framework independence</CLOG>
+// <VERS>VERSION: 2.0.1</VERS>
+// <WCTX>Compositor clippy cleanup pass</WCTX>
+// <CLOG>2.0.1: PATCH — fold is_none/unwrap scratchpad check into a match per clippy</CLOG>
 
 use tui_vfx_types::{Cell, Grid, GridExt, OwnedGrid};
 
@@ -41,19 +41,14 @@ impl CompositorCtx {
         let requested_size = width.saturating_mul(height);
 
         // Growth-only strategy with shrink threshold
-        let should_reallocate = if self.scratchpad.is_none() {
-            // First allocation
-            true
-        } else if requested_size > self.scratchpad_capacity {
-            // Need to grow
-            true
-        } else if requested_size < (self.scratchpad_capacity / 2) {
-            // Shrink threshold: new size is <50% of current capacity
-            true
-        } else {
-            // Check if dimensions actually match
-            let grid = self.scratchpad.as_ref().unwrap();
-            grid.width() != width || grid.height() != height
+        let should_reallocate = match &self.scratchpad {
+            None => true,
+            Some(grid) => {
+                requested_size > self.scratchpad_capacity
+                    || requested_size < (self.scratchpad_capacity / 2)
+                    || grid.width() != width
+                    || grid.height() != height
+            }
         };
 
         if should_reallocate {
@@ -71,4 +66,4 @@ impl CompositorCtx {
 
 // <FILE>tui-vfx-compositor/src/context/cls_compositor_ctx.rs</FILE>
 // <DESC>Grid reuse manager with growth-only allocation</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <VERS>END OF VERSION: 2.0.1</VERS>
