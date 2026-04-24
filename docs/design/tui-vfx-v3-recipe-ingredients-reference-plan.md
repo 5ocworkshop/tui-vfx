@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-ingredients-reference-plan.md</FILE> - <DESC>Plan and template for a standardized V3 recipe ingredients reference</DESC> -->
-<!-- <VERS>VERSION: 0.1.3</VERS> -->
-<!-- <WCTX>Align icon/glyph ingredient assumptions with modern Unicode and emoji-capable true-color terminals.</WCTX> -->
-<!-- <CLOG>0.1.3: update icon/glyph ingredient baseline for 2026+ terminals.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.4</VERS> -->
+<!-- <WCTX>Include future-ingredient wishlist capture for creative ideas beyond the current ingredient catalog.</WCTX> -->
+<!-- <CLOG>0.1.4: add future-ingredient wishlist guidance for missing primitive/math discoveries.</CLOG> -->
 
 # V3 Recipe Ingredients Reference Plan
 
@@ -26,6 +26,7 @@ The reference should help humans and AI authors answer:
 - What should it not be used for?
 - Which fields/bindings/inputs matter?
 - Where is a working debug recipe?
+- Which creative ideas require new ingredients we do not have yet?
 
 This is different from development tooling documentation. Validators, probes,
 trace CLIs, and preview players are **development tools**. Content transforms,
@@ -193,5 +194,24 @@ a distinct recipe concept unless the assignment asks for variant coverage.
 - How should host-edge affordances be represented while adapter support remains
   boundary-specific?
 
+## 9. Future-ingredient wishlist
+
+The creative lab should not be constrained to only what exists today. If an
+author finds a compelling idea that requires missing support, record it as a
+future-ingredient wishlist item:
+
+```text
+Future ingredient:
+  name:
+  missing primitive/math/capability:
+  creative idea it unlocks:
+  why existing ingredients are insufficient:
+  possible recipe/API shape:
+  example moment:
+```
+
+Wishlist entries are not implementation commitments. They are a discovery
+surface for enriching the library.
+
 # <FILE>docs/design/tui-vfx-v3-recipe-ingredients-reference-plan.md</FILE> - <DESC>Plan and template for a standardized V3 recipe ingredients reference</DESC>
-<!-- <VERS>END OF VERSION: 0.1.3</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.4</VERS> -->

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.2.3</VERS> -->
-<!-- <WCTX>Set the icon/glyph baseline around modern 2026+ Unicode and emoji-capable true-color terminals.</WCTX> -->
-<!-- <CLOG>0.2.3: update icon/glyph guidance for modern terminal and emoji assumptions.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.5</VERS> -->
+<!-- <WCTX>Make after-hours creative exploration a required recipe-authoring lane and capture missing ingredient ideas.</WCTX> -->
+<!-- <CLOG>0.2.5: require after-hours creative lab and add future-ingredient wishlist vocabulary.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
 
@@ -89,6 +89,19 @@ Recipe family vocabulary:
 - if the assignment asks for a limited set of distinct recipes, a family with
   variants usually counts as one concept unless the user explicitly asks for
   each variant as its own deliverable
+
+Whimsy vocabulary:
+
+- use **selective whimsy** for purposeful playful details inside otherwise
+  professional recipes
+- use **after-hours creative lab** for free-form recipes whose goal is artistic
+  or playful exploration rather than utility or theme fit; this is a required
+  final creative lane in quality-oriented authoring rounds
+- whimsical recipes still need validation; freedom is not a reason to ship
+  broken recipes
+- use **future-ingredient wishlist** for creative ideas that require a new
+  primitive, math capability, shader/filter/sampler, procedural source, path, or
+  content-animation feature before they can be expressed well
 
 Rules:
 
