@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> - <DESC>Executable evidence-record contract and command map for V3 Chapter 60 release gates.</DESC> -->
-<!-- <VERS>VERSION: 0.1.2</VERS> -->
-<!-- <WCTX>Make the seeded Chapter 60 release-gate manifest actionable by mapping each evidence type to existing tooling and a small checked record shape.</WCTX> -->
-<!-- <CLOG>0.1.2: add the checked probe_alarm_lighthouse evidence-record template and point the smoke plan at the checked sidecar shape.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.3</VERS> -->
+<!-- <WCTX>Make the seeded Chapter 60 release-gate manifest actionable by mapping each evidence type to existing tooling and the D5/D6/D7 gate lanes.</WCTX> -->
+<!-- <CLOG>0.1.3: add the D5/D6 gate alignment table and ordered fixture batch for the first evidence captures.</CLOG> -->
 
 # Release-gate evidence records
 
@@ -13,6 +13,25 @@ and the existing SQLite xray surface documented in
 
 Use this guide for Track D / `D6-RELEASE-EVIDENCE` after selecting a fixture from
 [`tui-vfx-v3-release-gate-manifest.seed.json`](../design/tui-vfx-v3-release-gate-manifest.seed.json).
+
+## Gate alignment
+
+This is the gate-level view of the same command map. It keeps the evidence
+commands tied back to the punch list and DAG lanes without introducing a new
+capture schema.
+
+| Gate lane | Existing command surface | Evidence types | First fixture IDs |
+|---|---|---|---|
+| `V3-CI02` / `D5-RELEASE-MANIFESTS` / `D6-RELEASE-EVIDENCE` / probe | `cargo run -q -p recipe-probe -- <recipe> --format json --phase dwelling --sample-t <t> --with-causation` or `pipeline-validator --probe` | `probe_report_json` | `probe_alarm_lighthouse`, `probe_midnight_switchboard`, `probe_wormhole_pageant` |
+| `V3-CI02` / `D5-RELEASE-MANIFESTS` / `D6-RELEASE-EVIDENCE` / trace | `cargo run -q -p tui-vfx-trace -- --recipe <recipe> --format report` | `trace_report_json` | `trace_path_primitive`, `trace_propagation_primitive`, `trace_scene_role_scope` |
+| `V3-CI02` / `D5-RELEASE-MANIFESTS` / `D6-RELEASE-EVIDENCE` / shadow | `cargo run --example play_recipe -- <recipe>` or `cargo run --example demo -- <recipe>` plus `recipe-probe` | `render_capture_png`, `probe_report_json` | `shadow_surface_base`, `shadow_surface_pipeline`, `shadow_edge_crossing` |
+| `V3-CI02` / `D5-RELEASE-MANIFESTS` / `D6-RELEASE-EVIDENCE` / offscreen | same render surfaces plus `recipe-probe` / `tui-vfx-trace` as needed | `render_capture_png`, `probe_report_json`, `trace_report_json` | `offscreen_content_slide_shift`, `offscreen_scene_full_stack`, `offscreen_follow_lag` |
+| `V3-CI02` / `D5-RELEASE-MANIFESTS` / `D6-RELEASE-EVIDENCE` / gtd_integration | GTD representative preview / capture flow | `gtd_surface_capture`, `probe_report_json` | `gtd_toast_success_restrained`, `gtd_modal_midrange`, `gtd_drawer_bold`, `gtd_progress_midrange` |
+| `V3-CI02` / `D5-RELEASE-MANIFESTS` / `D6-RELEASE-EVIDENCE` / role_aware_lowering | `pipeline-validator --lowering-report --format json` plus render/trace/probe as needed | `lowering_report_json`, `render_capture_png`, `trace_report_json` | `role_scope_scene_pipeline`, `role_scope_border_style`, `role_scope_parallel_conflict` |
+
+Start with the probe and trace fixtures. They are the smallest command-backed
+captures and give D6 enough evidence to validate the record shape before the
+render and GTD lanes widen the scope.
 
 ## Evidence record shape
 
@@ -132,4 +151,4 @@ Template file:
 - [`probe_alarm_lighthouse.evidence.record.template.json`](probe_alarm_lighthouse.evidence.record.template.json)
 
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.3</VERS> -->

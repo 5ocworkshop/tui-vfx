@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-release-gate-manifest.md</FILE> - <DESC>First concrete V3 release-gate fixture manifest seed for Track D / Chapter 60.</DESC> -->
-<!-- <VERS>VERSION: 0.2.2</VERS> -->
-<!-- <WCTX>Define the first checked-in manifest shape for the six V3 release gates so evidence capture and CI can bind to stable fixture IDs without overclaiming approved outcomes.</WCTX> -->
-<!-- <CLOG>0.2.2: add the checked probe_alarm_lighthouse evidence-record template and keep the smoke handoff small.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.3</VERS> -->
+<!-- <WCTX>Define the first checked-in manifest shape for the six V3 release gates and add the D5/D6 capture order so evidence work can stay bound to stable fixture IDs.</WCTX> -->
+<!-- <CLOG>0.2.3: add the D5/D6 command map and the next capture batch order for V3-CI02.</CLOG> -->
 
 # V3 release-gate manifest seed
 
@@ -24,6 +24,25 @@ Companion machine-readable seed:
   the allowed outcome states and approval ownership split.
 - The remaining blocker is a checked-in fixture manifest shape that names the
   critical gate entries without pretending the evidence is already captured.
+
+## D5 / D6 command and gate map
+
+This is the practical crosswalk between the punch list, the DAG, and the
+existing evidence commands. It keeps V3-CI02 on the release-gate path without
+inventing new tooling.
+
+| Punch list / DAG lane | Current evidence command surface | Evidence types | First capture batch |
+| --- | --- | --- | --- |
+| `V3-CI02` / `D6-RELEASE-EVIDENCE` / probe | `cargo run -q -p recipe-probe -- ...` or `pipeline-validator --probe` | `probe_report_json` | `probe_alarm_lighthouse`, `probe_midnight_switchboard`, `probe_wormhole_pageant` |
+| `V3-CI02` / `D6-RELEASE-EVIDENCE` / trace | `cargo run -q -p tui-vfx-trace -- --recipe <recipe> --format report` | `trace_report_json` | `trace_path_primitive`, `trace_propagation_primitive`, `trace_scene_role_scope` |
+| `V3-CI02` / `D6-RELEASE-EVIDENCE` / shadow | `cargo run --example play_recipe -- <recipe>` or `cargo run --example demo -- <recipe>` plus `recipe-probe` | `render_capture_png`, `probe_report_json` | `shadow_surface_base`, `shadow_surface_pipeline`, `shadow_edge_crossing` |
+| `V3-CI02` / `D6-RELEASE-EVIDENCE` / offscreen | same render surfaces plus `recipe-probe` / `tui-vfx-trace` as needed | `render_capture_png`, `probe_report_json`, `trace_report_json` | `offscreen_content_slide_shift`, `offscreen_scene_full_stack`, `offscreen_follow_lag` |
+| `V3-CI02` / `D6-RELEASE-EVIDENCE` / gtd_integration | GTD representative preview / capture flow | `gtd_surface_capture`, `probe_report_json` | `gtd_toast_success_restrained`, `gtd_modal_midrange`, `gtd_drawer_bold`, `gtd_progress_midrange` |
+| `V3-CI02` / `D6-RELEASE-EVIDENCE` / role_aware_lowering | `pipeline-validator --lowering-report --format json` plus render/trace/probe as needed | `lowering_report_json`, `render_capture_png`, `trace_report_json` | `role_scope_scene_pipeline`, `role_scope_border_style`, `role_scope_parallel_conflict` |
+
+The first implementation slice should start with the probe and trace rows.
+That keeps the capture work command-backed and low-risk before moving into the
+render-capture and owner-approved GTD lanes.
 
 ## Scope and boundary
 
@@ -173,4 +192,4 @@ place. Those belong in generated outputs or later evidence records keyed by
 3. D7 can consume the JSON seed for CI enumeration once evidence capture exists.
 
 <!-- <FILE>docs/design/tui-vfx-v3-release-gate-manifest.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.3</VERS> -->

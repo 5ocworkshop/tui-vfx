@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-naming-implementation-inventory.md</FILE> - <DESC>Implementation inventory for the accepted V3 naming slate covering Ra to Vfx, Preview to Playback, frame snapshots, render helpers, and player seams.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.1.1</VERS> -->
 <!-- <WCTX>V3-NAME01/PREVIEW01 needs an exact inventory before any broad rename. This document records current symbols, files, buckets, order, and risks so the later cutover can be staged rather than performed by blind search/replace.</WCTX> -->
-<!-- <CLOG>0.1.0: initial bounded inventory for the accepted V3 naming slate. No code renames performed.</CLOG> -->
+<!-- <CLOG>0.1.1: clarify the next actionable rename bucket and keep Bucket C provisional until seam names are final.</CLOG> -->
 
 # V3 naming implementation inventory
 
@@ -224,6 +224,18 @@ Risk bucket: **medium**. Wide fan-out, but mostly mechanical once compatibility 
 
 6. **Remove compatibility aliases only at a later V3 cutover gate.**
    - Do not remove V2 support or old aliases as part of the initial rename unless the owner explicitly approves the breaking cleanup.
+
+## Next bucket to work
+
+If the next bucket needs to be picked now, start with **Bucket A**.
+
+Reason:
+
+- its target `Vfx*` names are fully enumerated here
+- the change is still a schema surface, so the rename can be staged behind compatibility aliases
+- the follow-on `Ra*` consumer updates in Bucket B can move in lockstep once Bucket A exists
+
+Do **not** treat Bucket C as the next bucket unless the seam-name decision is narrowed further. `PreviewRecipeBridge` and `DirectV3PreviewState` still have provisional replacement names, so that bucket carries more naming ambiguity than the schema surface.
 
 ## Blockers and cautions
 

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>Add the V3 motion compatibility table to the landing page so motion/offscreen/edge lowering policy is discoverable from the canonical start page.</WCTX> -->
-<!-- <CLOG>0.5.0: add V3 motion compatibility table link. 0.4.0: add V3 release-gate manifest seed link. 0.3.0: add V3 execution DAG link. 0.2.0: add timing and metadata decision link. 0.1.0: initial V3 documentation index spanning the upgrade plan, schema, I/O, motion, scene/content, tooling, migration, and outstanding punch list docs.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.1</VERS> -->
+<!-- <WCTX>Link the docs lifecycle/elevation plan from the landing page so the V3-DOCS01 lane is easy to find.</WCTX> -->
+<!-- <CLOG>0.5.1: add V3 docs lifecycle/elevation plan link.</CLOG> -->
 
 # V3 documentation index
 
@@ -73,6 +73,7 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 ## Migration and debug recipes
 
 - [V3 upgrade audit workflow](tui-vfx-v3-upgrade-audit-workflow.md)
+- [V3 docs lifecycle/elevation plan](tui-vfx-v3-docs-lifecycle-plan.md)
 - [V3 upgrade debug recipes migration log](tui-vfx-v3-upgrade-debug-recipes-migration-log.md)
 - [V3 migration findings memo](tui-vfx-v3-migration-findings-memo-claude.md)
 - [V3 migration outcome policy](tui-vfx-v3-migration-outcome-policy.md)

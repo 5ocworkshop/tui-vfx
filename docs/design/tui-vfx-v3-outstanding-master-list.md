@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.11.5</VERS> -->
-<!-- <WCTX>Record the authoring-guide rewrite checkpoint and add a separate V3 docs lifecycle/elevation planning lane.</WCTX> -->
-<!-- <CLOG>0.11.5: record the V3 authoring-guide checkpoint and add docs lifecycle/elevation planning.</CLOG> -->
+<!-- <VERS>VERSION: 0.11.6</VERS> -->
+<!-- <WCTX>Keep the V3 master punch list aligned with current VC-09 evidence and the new docs lifecycle/elevation plan.</WCTX> -->
+<!-- <CLOG>0.11.6: update VC-09 evidence truth and mark docs lifecycle planning complete-initial.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -14,7 +14,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
 | V3-T01 | Tooling docs hub | Complete initial / ongoing | Canonical command map now covers validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, docs generation, and release-gate evidence; expand only as new tooling lands. |
-| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear` is now a truthful partial fixture with output mismatch + probe match; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
+| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear` and `wargames_defcon` now have truthful owner-review-required output+probe mismatch evidence; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Outstanding | Finish stricter authoring schema diagnostics and style normalization validation; VC-10 review queue is already seeded. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists and curated payload alias equivalence tests prove first canonicalization pairs; broader property/corpus coverage remains follow-up. |
@@ -29,7 +29,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
-| V3-DOCS01 | V3 docs lifecycle/elevation plan | Outstanding | Run a separate planning cycle to classify V3 planning docs as core/elevate, merge, keep-as-design-record, or archive/closed-out; keep docs developer-focused, concise, lightly fun, and non-marketing. |
+| V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial / follow-up queued | `tui-vfx-v3-docs-lifecycle-plan.md` classifies core docs, active implementation plans, retained design records, stale-status cleanup, and archive/merge candidates. Next follow-up is V3-QDOC01 stale checklist reconciliation. |
 | V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
 | V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `tui-vfx-v3-braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
 | V3-R99 | Final V2 retirement plan | Blocked by design | Only after migration, stability, downstream adaptation, and owner approval. |
@@ -151,7 +151,8 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-MOTIONROUTE01 | Complete initial | `tui-vfx-recipes` commit `7572f86` and `tui-vfx` commit `2ac8cc8`: route/path fixtures moved to `recipes/debug_recipes/motion_routes/`, tests and release-gate references updated. |
 | V3-TRACE01A | Complete initial | `tui-vfx-recipes` commit `50c3547`: direct compiled-V3 trace runs emit trace-local lifecycle phase markers and tooling docs no longer treat the surface as blocked. |
 | V3-C02A | Complete initial | `tui-vfx-recipes` commit `50c3547`: curated payload alias tests prove `pulse_color`→`color` and `rotation_speed`→`speed` canonicalize equivalently. |
-| V3-VC09-EASE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `23200fa`: `ease_linear` is tracked as a truthful VC-09 partial with output mismatch, probe match, and owner-review-required evidence. |
+| V3-VC09-EASE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9cc4497`: `ease_linear` is tracked as owner-review-required output+probe mismatch evidence. |
+| V3-VC09-WARGAMES01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9cc4497`: `wargames_defcon` is tracked as owner-review-required output+probe mismatch evidence for the next critical-pair slice. |
 | V3-BEZIER01 | Complete | `tui-vfx-recipes` commit `752dd5e`: custom Bezier easing fixture now uses a distinct overshoot cubic-bezier curve and validates through parser, validator, and probe paths. |
 | V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
 
@@ -245,4 +246,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.11.5</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.6</VERS> -->
