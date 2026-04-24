@@ -102,6 +102,13 @@ Your final report must include:
 - blocker or handoff notes
 - performance risks noticed
 
+## File metadata discipline
+If you touch files with header metadata:
+- keep `<CLOG>` / `// <CLOG>` entries to 1-2 short lines
+- summarize only the latest change made to that file
+- do not preserve or append a running history; git already provides history
+- keep `<WCTX>` as stable work context unless the file's role changed
+
 ## Closing task reminder
 Your task is still: [repeat the one-sentence assignment here].
 Do not widen into [specific common drift areas].

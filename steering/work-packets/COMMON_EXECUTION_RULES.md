@@ -30,6 +30,13 @@ Every final report should include:
 - blocker or handoff notes
 - performance risks noticed
 
+## File metadata discipline
+When touching files that carry file-level metadata headers:
+- keep `<CLOG>` / `// <CLOG>` entries to 1-2 short lines
+- summarize only the latest/current file change
+- do not append a running history; git is the history
+- keep `<WCTX>` focused on durable work context unless the file's role changes
+
 ## Scope split rule
 Every packet should make a clear distinction between:
 - `task-scope paths` = the files/areas the assignee must ground on

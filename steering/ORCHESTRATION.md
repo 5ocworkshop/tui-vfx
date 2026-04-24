@@ -123,6 +123,9 @@ Work packet quality rule:
   - explicit first steps
   - exact verification commands
   - a closing task reminder
+- packets that authorize edits to metadata-bearing files must include the file
+  metadata rule: `<CLOG>` / `// <CLOG>` is only 1-2 short lines about the latest
+  file change, not a running history; git is the history
 
 Post-experiment evidence trace:
 - `/usr/projects/tui-vfx/steering/experiments/subagent-briefing-experiment-results.md`
