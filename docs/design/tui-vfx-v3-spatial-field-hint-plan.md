@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> - <DESC>Design plan for spatial signals, typed field hints, and first-class chained visual fields in V3</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <VERS>VERSION: 0.7.0</VERS> -->
 <!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model and landed shared-consumer proofs, so the next tranche starts from the remaining showcase/runtime gaps instead of repeating complete field-hint work.</WCTX> -->
-<!-- <CLOG>0.6.0: record the first Phase 5 Madeira asset-contract slice: braille flag artwork now resolves through requires_assets and has a scene debug fixture proving the reusable token path. 0.5.0: record the Phase 4 shared field-hint proof where one spatial_signal drives both displacement and field-correlated shading through a sequenced recipe-side debug fixture. 0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
+<!-- <CLOG>0.7.0: record the nested style-effect shader consumer proof where dotted io.inputs bind an upstream field hint into payload.shader.intensity. 0.6.0: record the first Phase 5 Madeira asset-contract slice: braille flag artwork now resolves through requires_assets and has a scene debug fixture proving the reusable token path. 0.5.0: record the Phase 4 shared field-hint proof where one spatial_signal drives both displacement and field-correlated shading through a sequenced recipe-side debug fixture. 0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
 
 # tui-vfx V3 spatial field + hint plan
 
@@ -751,17 +751,25 @@ consumers remain open.**
 - one real downstream consumer ✅
 - displacement consumer ✅ (`sine_wave.amplitude` bound to a shared field)
 - field-correlated shading consumer ✅ (`diffusion.intensity` bound to the same field)
+- nested wrapper consumer ✅ (`style_effect` spatial shader binding `shader.intensity` through dotted `io.inputs`)
 - showcase/braille-dotfield consumers remain follow-up work
 
 As-built proof artifacts:
 
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/complex_field_hint_displace_shade.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/shaders/style_field_hint_spatial_shader.json`
 - `/usr/projects/tui-vfx-recipes/docs/V3_FIELD_HINT_CONSUMERS.md`
 
 The canonical chain is `Sequence[spatial_signal producer, sine_wave sampler,
 diffusion shader]`: the sampler consumes the shared field for displacement, and
 the shader consumes the same field for correlated shading after the sampler has
 modified the output.
+
+A second proof exercises a wrapper seam: `Sequence[spatial_signal producer,
+style_effect spatial shader]` binds `style_shade` into `payload.shader.intensity`
+using `io.inputs[].input = "shader.intensity"`. The recipe lives under shader
+debug fixtures because the spatial style-effect wrapper lowers into the shader
+runtime stage, but it preserves style/effect wrappers on the same I/O contract.
 
 ### Phase 5 — restore richer `madeira_flag`
 
