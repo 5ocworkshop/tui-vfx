@@ -2,8 +2,8 @@
   "schema": "tui_vfx_v3_release_gate_evidence.v1",
   "fixture_id": "offscreen_content_slide_shift",
   "gate": "offscreen",
-  "status": "fail",
-  "captured_at": "2026-04-24T19:15:48Z",
+  "status": "pass",
+  "captured_at": "2026-04-24T20:05:00Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/debug_recipes/content/content_slide_shift.json"
@@ -14,13 +14,13 @@
       "command": "cargo run -q -p recipe-probe -- recipes/debug_recipes/content/content_slide_shift.json --format json --phase dwelling --sample-t 1.0 --with-causation",
       "artifact": "/tmp/tui-vfx-release-gates/offscreen_content_slide_shift/probe_report.json",
       "artifact_generated": false,
-      "status": "fail",
-      "observed_output_summary": "Probe exit 0 at tui-vfx-recipes@bf2ee98; analysis.status=success, frame_count=1, diagnostics included expected_message_partial_match and expected_message_missing."
+      "status": "pass",
+      "observed_output_summary": "Probe exit 0 at tui-vfx-recipes@e6e9da5; analysis.status=success, frame_count=1, diagnostics=[]."
     }
   ],
   "review": {
     "owner": "tui-vfx implementation lead",
     "approval_required": false,
-    "notes": "Validated against tui-vfx-recipes@bf2ee98 and tui-vfx@c08b8a3. Probe command exited 0, but the report still emitted diagnostics (expected_message_partial_match warning plus expected_message_missing error), so this fixture remains fail."
+    "notes": "Validated after fixture correction in tui-vfx-recipes@e6e9da5. Probe command exits 0 with analysis.status=success and no diagnostics, so this offscreen fixture now passes."
   }
 }
