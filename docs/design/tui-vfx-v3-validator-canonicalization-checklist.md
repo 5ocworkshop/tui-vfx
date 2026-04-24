@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-validator-canonicalization-checklist.md</FILE> - <DESC>Execution checklist for the V3 validator/canonicalization phase. Tracks the minimum checks and canonical outputs needed before broad family runtime implementation should proceed.</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
-<!-- <WCTX>VC-07 now has an initial machine-readable lowering-invariant report in pipeline-validator, covering normalized/compiled automatic lowerings, lossless legacy-I/O lifting, scene-layer homes, and dynamic-scope human-review flags.</WCTX> -->
-<!-- <CLOG>0.8.0: mark VC-07 complete-initial after pipeline-validator --lowering-report landed in tui-vfx-recipes. 0.7.0: complete the initial VC-05 geometry/surface diagnostics slice after layer placement/surface hard validation landed in tui-vfx-recipes. 0.6.0: mark VC-02 complete-initial after normalized literal scope sanity validation landed in tui-vfx-recipes. 0.5.0: mark VC-05 complete-initial after normalized scene-layer duplicate-ID and sibling-reference validation landed in tui-vfx-recipes. 0.4.0: mark VC-06 complete after pipeline-validator --rules --strict-contracts and V3 debug-corpus requires_bindings declarations landed in tui-vfx-recipes. 0.3.0: mark VC-06 complete-initial after normalized contract declaration checks and contract_usage reporting landed in tui-vfx-recipes; shift the next validator slice to corpus-compatible strict contract gates. 0.2.0: mark VC-08 complete after pipeline-validator --dump-normalized landed in tui-vfx-recipes; convert the tracker from all-open seed state to an as-built plan for the remaining validator/canonicalization work. 0.1.0: initial checklist. Seeds the concrete validation/canonicalization work items following the schema, catalog, lowering, and normalized-IR phases.</CLOG> -->
+<!-- <VERS>VERSION: 0.9.0</VERS> -->
+<!-- <WCTX>VC-10 now has an initial machine-readable human-review-needed queue in pipeline-validator, reusing the lowering-report surface so unresolved lowering classes can feed migration work directly.</WCTX> -->
+<!-- <CLOG>0.9.0: mark VC-10 complete-initial after pipeline-validator --lowering-report gained machine-readable human-review-needed queue entries. 0.8.0: mark VC-07 complete-initial after pipeline-validator --lowering-report landed in tui-vfx-recipes. 0.7.0: complete the initial VC-05 geometry/surface diagnostics slice after layer placement/surface hard validation landed in tui-vfx-recipes. 0.6.0: mark VC-02 complete-initial after normalized literal scope sanity validation landed in tui-vfx-recipes. 0.5.0: mark VC-05 complete-initial after normalized scene-layer duplicate-ID and sibling-reference validation landed in tui-vfx-recipes. 0.4.0: mark VC-06 complete after pipeline-validator --rules --strict-contracts and V3 debug-corpus requires_bindings declarations landed in tui-vfx-recipes. 0.3.0: mark VC-06 complete-initial after normalized contract declaration checks and contract_usage reporting landed in tui-vfx-recipes; shift the next validator slice to corpus-compatible strict contract gates. 0.2.0: mark VC-08 complete after pipeline-validator --dump-normalized landed in tui-vfx-recipes; convert the tracker from all-open seed state to an as-built plan for the remaining validator/canonicalization work. 0.1.0: initial checklist. Seeds the concrete validation/canonicalization work items following the schema, catalog, lowering, and normalized-IR phases.</CLOG> -->
 
 # tui-vfx V3 validator / canonicalization checklist
 
@@ -18,7 +18,7 @@
 | VC-07 | Lowering invariant checks           | COMPLETE_INITIAL | `pipeline-validator --lowering-report --format json` reports automatic normalized/compiled lowering, lossless legacy-I/O lifting, scene-layer homes, and dynamic-scope human-review flags                                    |
 | VC-08 | Normalized IR dump / debug output   | COMPLETE         | `pipeline-validator --dump-normalized --format json` now emits the canonical normalized V3 IR through `RecipeLoadMode::Normalized`; `dump_normalized_recipe_pretty` remains the library helper                               |
 | VC-09 | Migration-equivalence checks        | PARTIAL          | Critical V3 fixtures have render-hash/probe coverage; V2↔V3 equivalence reports remain follow-on work                                                                                                                        |
-| VC-10 | Human-review-needed report          | OPEN             | Needed for unresolved lowering classes and migration review queues                                                                                                                                                           |
+| VC-10 | Human-review-needed report          | COMPLETE_INITIAL | `pipeline-validator --lowering-report --format json` now emits top-level and per-recipe `human_review_needed` queue entries keyed by lowering class/invariant so migration tooling can consume unresolved review work directly |
 
 ## Current go/no-go read
 
@@ -133,12 +133,38 @@ V2→V3 migrator:
      `human_review_required`, giving migration work a concrete queue before
      broader V2/V3 equivalence automation lands.
 
-## Next slices after VC-07
+## Completed initial VC-10 slice: machine-readable human-review-needed queue
+
+VC-10 now turns lowering-report human-review flags into a direct queue surface
+for migration work:
+
+1. **Reuse the existing lowering-report mode**
+   - `pipeline-validator --lowering-report --format json` remains the canonical
+     entry point.
+   - the queue rides alongside the existing lowering invariants and metrics
+     instead of creating a parallel report format.
+2. **Per-recipe queue entries**
+   - each recipe report now includes `human_review_needed[]`.
+   - queue entries carry a stable `class_id`, the source `invariant_id`, a
+     machine-readable `count`, and the human-readable detail text.
+3. **Top-level migration queue**
+   - the report root now includes a flattened `human_review_needed[]` array with
+     `path` and `recipe_id` so migration tooling can consume review work across
+     a corpus without re-walking nested recipe objects.
+4. **Initial unresolved class**
+   - dynamic runtime-bound scopes are currently surfaced as
+     `class_id = "dynamic_scope_runtime_binding"` sourced from
+     `LM-scope.dynamic_values`.
+   - future unresolved lowering classes should extend this queue surface rather
+     than inventing a new report family.
+
+## Next slices after VC-10
 
 1. **VC-09 migration-equivalence harness:** compare critical V2/V3 pairs through
    normalized intent and render/probe evidence.
-2. **VC-10 human-review-needed report:** turn unresolved lowering classes into a
-   machine-readable queue for migration work.
+2. **Extend VC-10 coverage:** add additional unresolved lowering classes to the
+   queue as validator/lowering work discovers new review-needed categories
+   beyond dynamic runtime-bound scopes.
 
 ## Tooling evidence
 
