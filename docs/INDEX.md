@@ -79,6 +79,7 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [design/tui-vfx-v3-naming-normalization-decisions.md](design/tui-vfx-v3-naming-normalization-decisions.md) — Accepted V3 naming normalization decisions for `Vfx*`, playback seams, timing, motion, and intent vocabulary.
 - [design/tui-vfx-v3-phase-scoping-decision.md](design/tui-vfx-v3-phase-scoping-decision.md) — Accepted V3 phase-scoping rule for step phases, container propagation, and normalized `PhaseSet` behavior.
 - [design/tui-vfx-v3-migration-outcome-policy.md](design/tui-vfx-v3-migration-outcome-policy.md) — Accepted provisional migration outcome policy for `equivalent`, `replacement`, and `retired` tracks without removing legacy recipes.
+- [design/tui-vfx-v3-release-gate-policy.md](design/tui-vfx-v3-release-gate-policy.md) — Accepted V3 release-gate manifest, outcome, whitelist, ownership, and fixture recapture policy.
 - [design/tui-vfx-v3-outstanding-master-list.md](design/tui-vfx-v3-outstanding-master-list.md) — Master outstanding V3 work list, including the final-only V2 retirement gate.
 - [tooling/INDEX.md](tooling/INDEX.md) — Tooling hub for V3 preview, probe/database/frame diff, resize adapter, and edge ingestion workflows.
 
