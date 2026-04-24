@@ -1,0 +1,368 @@
+{
+  "manifest_id": "tui_vfx_v3_release_gate_seed",
+  "version": "0.1.0",
+  "seed_date": "2026-04-24",
+  "source_document": "docs/design/tui-vfx-v3-release-gate-manifest.md",
+  "allowed_statuses": [
+    "pass",
+    "fail",
+    "accepted_change",
+    "stale_fixture",
+    "not_applicable"
+  ],
+  "evidence_types": {
+    "render_capture_png": {
+      "description": "Human visual render capture for library/debug fixtures.",
+      "canonical_surfaces": [
+        "demo.rs",
+        "play_recipe.rs"
+      ]
+    },
+    "gtd_surface_capture": {
+      "description": "Human-approved representative GT-Design surface capture.",
+      "canonical_surfaces": [
+        "GT-Design representative preview/capture flow"
+      ]
+    },
+    "probe_report_json": {
+      "description": "Structured recipe-aware probe report and frame-diff evidence.",
+      "canonical_surfaces": [
+        "recipe-probe",
+        "pipeline-validator --probe"
+      ]
+    },
+    "trace_report_json": {
+      "description": "Structured lifecycle/resolution/composition/pipeline trace report.",
+      "canonical_surfaces": [
+        "tui-vfx-trace --format report"
+      ]
+    },
+    "lowering_report_json": {
+      "description": "Structured lowering/canonicalization truth surface for role-aware checks.",
+      "canonical_surfaces": [
+        "pipeline-validator --lowering-report --format json"
+      ]
+    }
+  },
+  "gate_defaults": {
+    "shadow": {
+      "default_owner": "tui-vfx implementation lead",
+      "approval_notes": [
+        "Library-level accepted_change entries may be proposed by the implementation lead.",
+        "stale_fixture always requires explicit recapture approval."
+      ]
+    },
+    "offscreen": {
+      "default_owner": "tui-vfx implementation lead",
+      "approval_notes": [
+        "Library-level accepted_change entries may be proposed by the implementation lead.",
+        "stale_fixture always requires explicit recapture approval."
+      ]
+    },
+    "probe": {
+      "default_owner": "tui-vfx tooling lead",
+      "approval_notes": [
+        "Probe expectation changes should remain tooling-owned unless they become product-visible GTD drift.",
+        "stale_fixture always requires explicit recapture approval."
+      ]
+    },
+    "trace": {
+      "default_owner": "tui-vfx tooling lead",
+      "approval_notes": [
+        "Trace schema additions are allowed when documented; semantic drift still needs explicit rationale.",
+        "stale_fixture always requires explicit recapture approval."
+      ]
+    },
+    "gtd_integration": {
+      "default_owner": "project owner / GTD lead",
+      "approval_notes": [
+        "Representative fixture selection is owner-approved, not implementation-assumed.",
+        "Any product-visible accepted_change requires project owner / GTD lead approval.",
+        "stale_fixture always requires explicit recapture approval."
+      ]
+    },
+    "role_aware_lowering": {
+      "default_owner": "tui-vfx implementation lead",
+      "approval_notes": [
+        "Library-level role-lowering changes may be classified here unless they become product-visible GTD drift.",
+        "stale_fixture always requires explicit recapture approval."
+      ]
+    }
+  },
+  "fixtures": [
+    {
+      "fixture_id": "shadow_surface_base",
+      "gate": "shadow",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/scene/scene_layer_surface_shadow.json"
+      },
+      "required_evidence_types": [
+        "render_capture_png",
+        "probe_report_json"
+      ],
+      "ownership_notes": "Base scene-level shadow truth surface.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "shadow_surface_pipeline",
+      "gate": "shadow",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/scene/scene_layer_surface_shadow_pipeline.json"
+      },
+      "required_evidence_types": [
+        "render_capture_png",
+        "probe_report_json",
+        "trace_report_json"
+      ],
+      "ownership_notes": "Scene-layer pipeline variant for shadow behavior.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "shadow_edge_crossing",
+      "gate": "shadow",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/motion/toast_shadow_edge_crossing.json"
+      },
+      "required_evidence_types": [
+        "render_capture_png",
+        "probe_report_json",
+        "trace_report_json"
+      ],
+      "ownership_notes": "Shadow + motion-envelope + edge-crossing bridge fixture.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "offscreen_content_slide_shift",
+      "gate": "offscreen",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/content/content_slide_shift.json"
+      },
+      "required_evidence_types": [
+        "render_capture_png",
+        "probe_report_json"
+      ],
+      "ownership_notes": "Smallest clear slide fixture.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "offscreen_scene_full_stack",
+      "gate": "offscreen",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/scene/scene_layer_full_stack.json"
+      },
+      "required_evidence_types": [
+        "render_capture_png",
+        "probe_report_json",
+        "trace_report_json"
+      ],
+      "ownership_notes": "Multi-layer/offscreen composition coverage.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "offscreen_follow_lag",
+      "gate": "offscreen",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/motion/scene_layer_follow_lag.json"
+      },
+      "required_evidence_types": [
+        "render_capture_png",
+        "probe_report_json"
+      ],
+      "ownership_notes": "Motion/offscreen coverage without GTD-product coupling.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "probe_alarm_lighthouse",
+      "gate": "probe",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/vfx-probe-validation/alarm_lighthouse.json"
+      },
+      "required_evidence_types": [
+        "probe_report_json"
+      ],
+      "ownership_notes": "Dedicated probe-validation corpus fixture.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "probe_midnight_switchboard",
+      "gate": "probe",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/vfx-probe-validation/midnight_switchboard.json"
+      },
+      "required_evidence_types": [
+        "probe_report_json"
+      ],
+      "ownership_notes": "Multi-style / multi-stage probe reference.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "probe_wormhole_pageant",
+      "gate": "probe",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/vfx-probe-validation/wormhole_pageant.json"
+      },
+      "required_evidence_types": [
+        "probe_report_json"
+      ],
+      "ownership_notes": "High-stage-activity probe reference.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "trace_path_primitive",
+      "gate": "trace",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/shaders/primitives/shader_trace_path.json"
+      },
+      "required_evidence_types": [
+        "trace_report_json"
+      ],
+      "ownership_notes": "Primitive-level trace fixture.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "trace_propagation_primitive",
+      "gate": "trace",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/shaders/primitives/shader_trace_propagation.json"
+      },
+      "required_evidence_types": [
+        "trace_report_json"
+      ],
+      "ownership_notes": "Companion primitive for trace propagation semantics.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "trace_scene_role_scope",
+      "gate": "trace",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json"
+      },
+      "required_evidence_types": [
+        "trace_report_json",
+        "lowering_report_json"
+      ],
+      "ownership_notes": "Scene/lowering bridge fixture for trace expectations.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "gtd_toast_success_restrained",
+      "gate": "gtd_integration",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/gt-design/restrained/R01_fuji_enso_success.json"
+      },
+      "required_evidence_types": [
+        "gtd_surface_capture",
+        "probe_report_json"
+      ],
+      "ownership_notes": "Provisional restrained success/toast representative.",
+      "approval_notes": [
+        "Final representative-set approval belongs to the project owner / GTD lead."
+      ]
+    },
+    {
+      "fixture_id": "gtd_modal_midrange",
+      "gate": "gtd_integration",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/gt-design/mid-range/M05_blueprint_schematic_reveal_modal.json"
+      },
+      "required_evidence_types": [
+        "gtd_surface_capture",
+        "probe_report_json"
+      ],
+      "ownership_notes": "Provisional modal representative.",
+      "approval_notes": [
+        "Final representative-set approval belongs to the project owner / GTD lead."
+      ]
+    },
+    {
+      "fixture_id": "gtd_drawer_bold",
+      "gate": "gtd_integration",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/gt-design/bold/B07_flw_art_glass_drawer.json"
+      },
+      "required_evidence_types": [
+        "gtd_surface_capture",
+        "probe_report_json"
+      ],
+      "ownership_notes": "Provisional drawer/slide representative.",
+      "approval_notes": [
+        "Final representative-set approval belongs to the project owner / GTD lead."
+      ]
+    },
+    {
+      "fixture_id": "gtd_progress_midrange",
+      "gate": "gtd_integration",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/gt-design/mid-range/M09_stuttgart_instrument_cluster_progress.json"
+      },
+      "required_evidence_types": [
+        "gtd_surface_capture",
+        "probe_report_json"
+      ],
+      "ownership_notes": "Provisional progress/overlay representative.",
+      "approval_notes": [
+        "Final representative-set approval belongs to the project owner / GTD lead."
+      ]
+    },
+    {
+      "fixture_id": "role_scope_scene_pipeline",
+      "gate": "role_aware_lowering",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/scene/scene_layer_role_scope_pipeline.json"
+      },
+      "required_evidence_types": [
+        "lowering_report_json",
+        "render_capture_png",
+        "trace_report_json"
+      ],
+      "ownership_notes": "Primary role-aware scene lowering fixture.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "role_scope_border_style",
+      "gate": "role_aware_lowering",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/styles/style_role_scope_border.json"
+      },
+      "required_evidence_types": [
+        "lowering_report_json",
+        "render_capture_png"
+      ],
+      "ownership_notes": "Narrow style-role fixture for border-specific lowering.",
+      "approval_notes": []
+    },
+    {
+      "fixture_id": "role_scope_parallel_conflict",
+      "gate": "role_aware_lowering",
+      "recipe": {
+        "repo": "tui-vfx-recipes",
+        "path": "recipes/debug_recipes/complex/complex_parallel_role_scopes.json"
+      },
+      "required_evidence_types": [
+        "lowering_report_json",
+        "probe_report_json",
+        "trace_report_json"
+      ],
+      "ownership_notes": "Stress fixture for overlapping/disjoint role scopes and conflict handling.",
+      "approval_notes": []
+    }
+  ]
+}
