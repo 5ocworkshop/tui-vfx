@@ -11,6 +11,7 @@ use crate::paths::cls_spiral_path::SpiralPath;
 use crate::paths::cls_step_path::StepPath;
 use crate::traits::MotionPath;
 use crate::types::{PathType, Position};
+use mixed_signals::math::{attract_position, swirl_position};
 pub fn interpolate_position(from: Position, to: Position, t: f64, path: &PathType) -> (f32, f32) {
     let t = t.clamp(0.0, 1.0);
     let t32 = t as f32;
@@ -44,6 +45,29 @@ pub fn interpolate_position(from: Position, to: Position, t: f64, path: &PathTyp
                 radius_cells: None,
             };
             p.calculate(t, from, to)
+        }
+        PathType::Swirl {
+            rotations,
+            radius,
+            direction,
+        } => swirl_position(
+            t32,
+            from.x as f32,
+            from.y as f32,
+            to.x as f32,
+            to.y as f32,
+            rotations,
+            radius,
+            direction,
+        ),
+        PathType::Attractor {
+            target_x,
+            target_y,
+            strength,
+        } => {
+            let base_x = lerp(from.x as f32, to.x as f32, t32);
+            let base_y = lerp(from.y as f32, to.y as f32, t32);
+            attract_position(t32, base_x, base_y, target_x, target_y, strength)
         }
         PathType::Step { steps } => {
             let p = StepPath { steps };

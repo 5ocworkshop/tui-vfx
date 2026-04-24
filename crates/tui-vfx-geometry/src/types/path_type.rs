@@ -60,6 +60,35 @@ pub enum PathType {
     Spiral {
         rotations: f32,
     },
+    /// Swirling vortex motion around the carrier route.
+    ///
+    /// Unlike [`PathType::Spiral`], which starts offset from the carrier and
+    /// decays into the destination, `Swirl` keeps the authored start and end
+    /// positions exact. Its radius envelope rises between those endpoints and
+    /// falls back to zero, making it safe as either a standalone path or a V3
+    /// dynamic layered over another carrier route.
+    Swirl {
+        /// Number of full rotations over the phase.
+        rotations: f32,
+        /// Maximum swirl radius in cells at the center of the phase.
+        radius: f32,
+        /// Direction sign. Positive is counter-clockwise; negative is clockwise.
+        direction: f32,
+    },
+    /// Pull the carrier route toward a target point and release it again.
+    ///
+    /// This creates a gravity-well / magnetic attraction treatment without
+    /// changing the start or end positions. It is primarily useful as a V3
+    /// dynamic layered over another route.
+    Attractor {
+        /// Target X coordinate in cell space.
+        target_x: f32,
+        /// Target Y coordinate in cell space.
+        target_y: f32,
+        /// Pull strength. `1.0` reaches the target at mid-phase from a linear
+        /// carrier; lower values bow the route toward the target.
+        strength: f32,
+    },
     /// Quantized movement (stop-motion).
     Step {
         steps: u8,
@@ -273,6 +302,30 @@ impl ConfigSchema for PathType {
                     description: Some("Spiral path".to_string()),
                     json_value: Some("spiral".to_string()),
                     fields: vec![f32_field("rotations", "Number of spiral rotations")],
+                },
+                SchemaVariant::Struct {
+                    name: "Swirl".to_string(),
+                    description: Some(
+                        "Vortex-like route treatment that preserves endpoints".to_string(),
+                    ),
+                    json_value: Some("swirl".to_string()),
+                    fields: vec![
+                        f32_field("rotations", "Number of swirl rotations"),
+                        f32_field("radius", "Maximum swirl radius in cells"),
+                        f32_field("direction", "Swirl direction sign"),
+                    ],
+                },
+                SchemaVariant::Struct {
+                    name: "Attractor".to_string(),
+                    description: Some(
+                        "Gravity-well route treatment toward a target point".to_string(),
+                    ),
+                    json_value: Some("attractor".to_string()),
+                    fields: vec![
+                        f32_field("target_x", "Attractor target X"),
+                        f32_field("target_y", "Attractor target Y"),
+                        f32_field("strength", "Attractor pull strength"),
+                    ],
                 },
                 SchemaVariant::Struct {
                     name: "Step".to_string(),
