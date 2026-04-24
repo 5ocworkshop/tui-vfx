@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-naming-normalization-decisions.md</FILE> - <DESC>Accepted V3 naming normalization decisions for public schema, playback seams, timing, motion, and routing vocabulary.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Record accepted project-owner decisions that normalize V3 names around Vfx, Playback, frame snapshots, duration/offset timing, route/dynamics motion, and intent vocabulary.</WCTX> -->
-<!-- <CLOG>0.1.0: initial accepted naming slate, closing the active naming-normalization decisions for V3 planning and giving implementation lanes canonical target names.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Record accepted project-owner decisions that normalize V3 names around Vfx, Playback, frame snapshots, duration/offset timing, route/dynamics motion, intent vocabulary, and recipe metadata naming.</WCTX> -->
+<!-- <CLOG>0.2.0: align recipe metadata naming with the accepted Q#21 policy: use intent_hints, visual_tags, and expected_visual rather than required use_cases/aesthetic_tags. 0.1.0: initial accepted naming slate, closing the active naming-normalization decisions for V3 planning and giving implementation lanes canonical target names.</CLOG> -->
 
 # V3 naming normalization decisions
 
@@ -41,7 +41,9 @@ recipe authoring guides, and migration notes.
 | Edge behavior | vanishing/offscreen edge behavior | `edge_crossing` | Covers border and shadow behavior when the moving host crosses a viewport edge. |
 | Step routing hint | `RoutingRole` | `StepIntent` | Avoids collision with `RoleTag` and `ThemeRole`; describes why the step exists. |
 | Recipe hosting hint | `SurfaceIntent` | `SurfaceIntent` | Keep. It names host/container policy clearly. |
-| Recipe metadata | `use_cases` | `use_cases` | Keep as the discovery-oriented metadata field. Treat as required or strongly warned when metadata policy lands. |
+| Recipe metadata discovery hints | `use_cases` | `intent_hints` | Non-authoritative discovery hints only; hosts/manifests own routing and binding. Optional at parse level. |
+| Recipe visual tags | `aesthetic_tags` | `visual_tags` | Broader than aesthetics: covers visual family, motion character, and technique tags for search/reference. |
+| Recipe visual expectation | — | `expected_visual` | Plain-language visual QA expectation; strongly recommended for debug/reference fixtures. |
 
 ## Names to avoid
 
@@ -96,4 +98,4 @@ schema docs, generated docs, recipes, examples, and migration notes in small,
 verified stages.
 
 <!-- <FILE>docs/design/tui-vfx-v3-naming-normalization-decisions.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

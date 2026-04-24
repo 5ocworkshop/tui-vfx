@@ -1,8 +1,9 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md</FILE> - <DESC>Chapter 80 — the 27 open questions that must resolve before V3 implementation, plus reviewer-opinion annotations from the 2026-04-21 GT-Design lead review memo. Each question names both the question and what's at stake in choosing different answers.</DESC> -->
-<!-- <VERS>VERSION: 1.2.0</VERS> -->
-<!-- <WCTX>Promote four plan-level questions surfaced in the debug-recipes migration findings memo (docs/design/tui-vfx-v3-migration-findings-memo-claude.md §60). Q#24 canonical normalized IR as explicit V3 artifact; Q#25 primitive catalog governance criteria; Q#26 content-effect catalog Decision-2 parity; Q#27 factory payload opacity governance rule. All four are governance/process questions that the migration exercise surfaced but that don't belong at the schema-discussion level.</WCTX>
-<!-- <CLOG>1.2.0: MINOR — add Open Q #24 (canonical normalized IR), Q#25 (primitive catalog governance), Q#26 (content-effect Decision-2 parity), Q#27 (factory payload opacity governance) from the debug-recipes migration findings memo.</CLOG> -->
-<!-- <CLOG>1.1.0: MINOR — add Open Q #23 on timer primitive vs distributed timing mechanisms. Three-option framing (step-level Timer field, `StepInput<T>` sibling, status quo with clearer docs). Surfaced cases where the distributed model strains: per-step durations in `Sequence`, staggered entrances, content-effect timing.</CLOG>
+<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <WCTX>Close Q#21 recipe metadata fields and Q#23 timer story after owner approval. Q#21 resolves to optional non-rendering metadata with debug/reference expected-visual guidance. Q#23 resolves to distributed timing for V3 rather than a universal Timer primitive.</WCTX> -->
+<!-- <CLOG>1.3.0: MINOR — mark Q#21 and Q#23 accepted, pointing to the canonical timing/metadata decision record.</CLOG> -->
+<!-- <CLOG>1.2.0: MINOR — add Open Q #24 (canonical normalized IR), Q#25 primitive catalog governance, Q#26 content-effect Decision-2 parity, Q#27 factory payload opacity governance from the debug-recipes migration findings memo.</CLOG> -->
+<!-- <CLOG>1.1.0: MINOR — add Open Q #23 on timer primitive vs distributed timing mechanisms. Three-option framing (step-level Timer field, `StepInput<T>` sibling, status quo with clearer docs). Surfaced cases where the distributed model strains: per-step durations in `Sequence`, staggered entrances, content-effect timing.</CLOG> -->
 <!-- <CLOG>1.0.0: initial extraction from the monolith with new Open Q #22 added covering motion_path / arc / bezier / spring trajectories and offscreen from/to, previously flagged only as a major gap in the migration log final audit and schema draft. Easings themselves are covered in Decision 3 (pipeline.timing); the gap is the geometry-aware trajectory primitives and offscreen origin/destination semantics.</CLOG> -->
 
 # 80 — Open questions that must resolve before implementation
@@ -288,11 +289,17 @@ Strong lean toward **(A)** because it respects Principle 5 most cleanly: substra
 
 **Reviewer's opinion:** choose **option A**. Keep `RecipeSceneCanvas` as the neutral substrate family; gt-design wraps with family-specific surface identities. *"That aligns with GTD's current steering best: RecipeSceneCanvas is the substrate family, surface identity is higher-level policy, and internal variants (`RawRecipeSceneCanvas`, `ResolvedRecipeSceneCanvas`) can exist without changing that public conceptual split."* Aligns with the plan's strong lean.
 
-## 210 — Q#21: Recipe metadata fields
+## 210 — Q#21: Recipe metadata fields — accepted
 
-Introduced as part of the deferred-design recipe metadata section (Chapter 90 §40). Covers the shape of the optional `metadata` block on each recipe (aesthetic_tags, mood, related_themes, use_cases, maturity_era, authoring_notes, last_reviewed) and the question of vocabulary (open string, closed enum, hybrid), required-vs-optional fields, and placement (inside `config` vs sibling to it).
+**Status: accepted.** Canonical decision record: [`../tui-vfx-v3-timing-and-metadata-decision.md`](../tui-vfx-v3-timing-and-metadata-decision.md).
 
-**Reviewer's opinion:** keep metadata non-blocking for V3 core. `use_cases` should likely be required; most other fields can be optional initially. Discovery metadata (this field) should stay clearly separate from runtime routing metadata (`RoutingRole` / `SurfaceIntent` per Open Q #18). Aligns with the plan's current lean.
+V3 keeps `description` and adds an optional, non-rendering top-level `metadata` block for discovery, curation, QA, and authoring context. Metadata does not participate in rendering or host routing. The accepted optional field set is `intent_hints`, `expected_visual`, `visual_tags`, `mood`, `related_themes`, `maturity_era`, `authoring_notes`, and `last_reviewed`. `visual_tags` is the preferred new name for visual/search tags; older drafts may still mention `aesthetic_tags` while migration work catches up.
+
+`intent_hints` are non-authoritative discovery hints only. Hosts, manifests, apps, and themes own binding/routing decisions. This preserves recipe portability and keeps GT-Design surface policy outside the core recipe.
+
+Debug recipes and visual reference fixtures carry a stronger authoring bar: `description` must explain what the viewer should expect to see, `metadata.expected_visual` is warning-level strongly recommended, and fixture body text should use the concise two-line label/cue pattern: `<Family>: <Human Name>` then `<Concise behavior cue>`.
+
+**Prior reviewer input:** keep metadata non-blocking for V3 core, separate discovery metadata from runtime routing metadata, and avoid making most fields parse-blocking requirements. The accepted decision follows that lean while keeping host/surface identity outside recipes.
 
 ## 220 — Q#22: Motion path + offscreen trajectory migration
 
@@ -357,9 +364,13 @@ Feels philosophically cleaner (uniform Step vocabulary) but couples motion seman
 
 **Reviewer's opinion:** not yet solicited; this Open Question was added in v1.0.0 of this chapter (promoting the migration-log gap to plan-level status). Flag for next review cycle.
 
-## 230 — Q#23: Timer story — distributed mechanisms vs first-class primitive
+## 230 — Q#23: Timer story — distributed mechanisms vs first-class primitive — accepted
 
-**Status.** Surfaced during the 2026-04-21 competitive-analysis pass against tachyonfx. Tachyonfx ships a per-effect `EffectTimer` with interpolation control as a core primitive — every effect carries its own timer. tui-vfx's timing is distributed across three mechanisms that evolved independently.
+**Status: accepted.** Canonical decision record: [`../tui-vfx-v3-timing-and-metadata-decision.md`](../tui-vfx-v3-timing-and-metadata-decision.md).
+
+V3 does **not** add a first-class universal `Timer` primitive. The accepted policy is option C: keep timing distributed by responsibility and document the authoring decision tree clearly. A generic timer remains deferred until repeated recipe pressure proves it would reduce author burden without blurring lifecycle, signal, and effect-local boundaries.
+
+This was surfaced during the 2026-04-21 competitive-analysis pass against tachyonfx. Tachyonfx ships a per-effect `EffectTimer` with interpolation control as a core primitive — every effect carries its own timer. tui-vfx's timing is distributed across three mechanisms that evolved independently.
 
 **Where timing lives today:**
 
@@ -388,9 +399,9 @@ Three mechanisms means "how long does this one effect take" has three possible a
 - Migration impact for V2's existing per-effect duration fields.
 - Interaction with `ParamValue<T>` — can a Timer's `duration_ms` be a `ParamValue<u32>`, bindable to app state?
 
-**Lean: defer decision to V3 implementation.** The distributed model has working paths for every case shipped so far. Tachyonfx's primitive is clearer for per-effect animation but overlaps with our existing signal-graph and pipeline-timing abstractions. Not load-bearing for V3 shape; worth explicit discussion before V3 implementation starts so the final model is deliberate rather than inherited.
+**Accepted resolution.** Use the distributed model for V3: lifecycle/pipeline timing owns whole-recipe or whole-layer phase envelopes, `mixed-signals` owns reusable temporal signal generation/easing/ADSR/keyframes/springs/physics, and effect-local timing remains inside an effect when the effect owns that semantic. Do not introduce recipe-period hacks to hide timing discontinuities; cadence-bearing effects should use elapsed/absolute time where visible discontinuity would otherwise occur.
 
-**Reviewer's opinion:** not yet solicited; added after the 2026-04-21 competitive-analysis pass. Flag for next review cycle.
+**Rejected for V3:** a universal Timer object. It is attractive for per-effect clarity but overlaps with `mixed-signals` envelopes and recipe lifecycle timing enough that introducing it now would add another concept before the corpus proves it is earned.
 
 ## 240 — Q#24: Canonical normalized IR as explicit V3 artifact
 
@@ -477,4 +488,4 @@ Three mechanisms means "how long does this one effect take" has three possible a
 **Reviewer's opinion:** not yet solicited. Flag for next review cycle. The Q15 row_mask precedent is load-bearing — that concrete migration case should inform how the governance rule handles ambiguity.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->

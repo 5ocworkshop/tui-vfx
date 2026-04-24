@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Create one pointer document for humans and agents working on the now-large V3 documentation set.</WCTX> -->
-<!-- <CLOG>0.1.0: initial V3 documentation index spanning the upgrade plan, schema, I/O, motion, scene/content, tooling, migration, and outstanding punch list docs.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Add the accepted V3 timing and metadata decision to the V3 landing page so Q21/Q23 closure is discoverable from the canonical start page.</WCTX> -->
+<!-- <CLOG>0.2.0: add timing and metadata decision link. 0.1.0: initial V3 documentation index spanning the upgrade plan, schema, I/O, motion, scene/content, tooling, migration, and outstanding punch list docs.</CLOG> -->
 
 # V3 documentation index
 
@@ -21,7 +21,8 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 9. [V3 release-gate policy](tui-vfx-v3-release-gate-policy.md)
 10. [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
 11. [V3 capability governance decision](tui-vfx-v3-capability-governance-decision.md)
-12. [Tooling hub](../tooling/INDEX.md)
+12. [V3 timing and metadata decision](tui-vfx-v3-timing-and-metadata-decision.md)
+13. [Tooling hub](../tooling/INDEX.md)
 
 ## Architecture and decisions
 
@@ -34,6 +35,7 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 - [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
 - [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
 - [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
+- [V3 timing and metadata decision](tui-vfx-v3-timing-and-metadata-decision.md)
 
 ## Authoring vocabulary and schema
 
@@ -90,4 +92,4 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
   semantics belong in `tui-vfx` / `tui-vfx-recipes`.
 
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

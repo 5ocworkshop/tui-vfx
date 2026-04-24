@@ -1,7 +1,7 @@
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example with # comment annotations. Stripping lines starting with `#` yields valid JSON representing a canonical V3 recipe.</DESC>
-# <VERS>VERSION: 0.5.0</VERS>
-# <WCTX>Synthesized build-target schema after comparing two parallel migration memos, a full manual local audit of the debug corpus, a large-recipe curveball pass, and a code-derived Madeira Flag draft. This revision adds the newly-discovered two-basis spatial model so signal-graph comments reflect both the landed cell-space leaves and the next planned surface-space companions.</WCTX>
-# <CLOG>0.5.0: MINOR — align the draft with the as-built V3 direct-player surface for fullscreen layout and pipeline timing: `layout.mode: "fullscreen"` fills the live render grid, and `pipeline.timing.{enter_ms,exit_ms,enter_ease,exit_ease}` is the typed root timing metadata used by phase-scoped playback when no first-class `config.motion` duration overrides it. 0.4.0: MINOR — document the two-basis spatial model in the signal-graph vocabulary comments: keep the current cell-space leaves stable and add planned companion surface/frame-space leaves for optical falloff / illumination consumers like vignette and spotlight. 0.3.0: MAJOR — promote the schema draft to a build-target baseline. Lock the recommended concrete field homes/names for implementation planning (anchor retained, auto_dismiss_ms retained, extends/metadata/contracts treated as settled core shape), clarify that normalized IR is a tooling architecture rather than a schema blocker, and reframe the remaining items as extension backlog rather than core-schema instability.
+# <VERS>VERSION: 0.6.0</VERS>
+# <WCTX>Align metadata example with the accepted Q#21 policy: optional non-rendering metadata, non-authoritative intent_hints, expected_visual for visual QA, and visual_tags naming.</WCTX>
+# <CLOG>0.6.0: MINOR — align the metadata example with accepted Q#21 naming and optionality: `intent_hints`, `expected_visual`, and `visual_tags`. 0.5.0: MINOR — align the draft with the as-built V3 direct-player surface for fullscreen layout and pipeline timing: `layout.mode: "fullscreen"` fills the live render grid, and `pipeline.timing.{enter_ms,exit_ms,enter_ease,exit_ease}` is the typed root timing metadata used by phase-scoped playback when no first-class `config.motion` duration overrides it. 0.4.0: MINOR — document the two-basis spatial model in the signal-graph vocabulary comments: keep the current cell-space leaves stable and add planned companion surface/frame-space leaves for optical falloff / illumination consumers like vignette and spotlight. 0.3.0: MAJOR — promote the schema draft to a build-target baseline. Lock the recommended concrete field homes/names for implementation planning (anchor retained, auto_dismiss_ms retained, extends/metadata/contracts treated as settled core shape), clarify that normalized IR is a tooling architecture rather than a schema blocker, and reframe the remaining items as extension backlog rather than core-schema instability.
 # <CLOG>0.2.0: MAJOR — synthesis pass after dual-auditor review. Makes the top-down authoring model explicit: config envelope retained for authoring, content and scene layers treated as renderer trees, pipeline limited to structural nodes + operational leaves, and policy variants kept inside payloads rather than promoted to new step kinds by reflex. Adds explicit subtree guidance, wrapper/router conventions, region-compression pressure notes, style-effect first-class guidance, base_style.modifiers example, and expanded open-gap list including family/template authoring, hybrid transition templates, rule-engine families, celebratory particle generators, and canonical normalized IR.</CLOG>
 
 # ============================================================================
@@ -128,11 +128,19 @@
   # heuristics, and the Morris audit (Principle 1).
 
   "metadata": {
-    "aesthetic_tags": ["warm", "refined", "composed"],
-    # ^ Open-vocabulary list. Canonical tokens seen across the corpus include:
-    #   warm, cool, soft, premium, theatric, restrained, minimal, maximal,
-    #   retro, modern, matrix, noir, crt, glitch, phosphor, breathing,
-    #   meditative, urgent, calm. Not a closed enum; authors can extend.
+    "intent_hints": ["debug_preview", "reference"],
+    # ^ Non-authoritative discovery hints for likely fit or authoring context.
+    #   Hosts/manifests own routing and binding; this field is not policy.
+
+    "expected_visual": "A compact reference fixture clearly demonstrates the named primitive.",
+    # ^ Plain-language visual QA expectation. Strongly recommended for
+    #   debug recipes and visual reference fixtures.
+
+    "visual_tags": ["warm", "refined", "composed"],
+    # ^ Open-vocabulary visual/motion/family/technique tags. Canonical tokens
+    #   seen across the corpus include: warm, cool, soft, premium, theatric,
+    #   restrained, minimal, maximal, retro, modern, matrix, noir, crt, glitch,
+    #   phosphor, breathing, meditative, urgent, calm. Not a closed enum.
 
     "mood": "calm",
     # ^ Single-word emotional tone. Candidates: welcoming, urgent,
@@ -140,13 +148,7 @@
 
     "related_themes": ["theme-neutral"],
     # ^ Which gt-design themes this recipe pairs with, or "theme-neutral"
-    #   for recipes that aren't theme-bound. Used for discovery.
-
-    "use_cases": ["debug_preview", "reference"],
-    # ^ Canonical authoring contexts this recipe exemplifies. Examples:
-    #   splash, toast, error-toast, modal-reveal, hover_indicator,
-    #   scene_transition, ambient_background, training_demo,
-    #   debug_preview, primitive_reference, named_composition_reference.
+    #   for recipes that aren't theme-bound. Advisory/discovery only.
 
     "maturity_era": "mature",
     # ^ Which development era this recipe represents — helps the Morris

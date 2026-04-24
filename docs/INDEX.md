@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.12.0</VERS> -->
-<!-- <WCTX>Add a V3 landing page, master punch list, and tooling hub so humans and agents have one place to start before following narrower guides.</WCTX> -->
-<!-- <CLOG>1.12.0: add the V3 outstanding master list and first-class tooling hub pointers.
+<!-- <VERS>VERSION: 1.13.0</VERS> -->
+<!-- <WCTX>Add the accepted V3 timing and metadata decision to the root documentation index.</WCTX> -->
+<!-- <CLOG>1.13.0: add the V3 timing and metadata decision pointer for Q21/Q23 closure.
+1.12.0: add the V3 outstanding master list and first-class tooling hub pointers.
 1.11.0: add PIPELINE_TRACE_LLM_GUIDE.md, add tui-vfx-trace to the recipe-authoring ownership split, and keep the existing inspection-foundation references intact.
 1.10.0: add Unified inspection foundation subsection pointing at tui-vfx-debug::inspection and TRACE_EVENT_SCHEMA.md; update pipeline-probe + validator guide entries with cross-reference to the inspection surface.
 1.9.0: add Foundation primitives subsection naming the role-tagging primitives shipped in tui-vfx-types 0.6.0 for the recipe scene composer.
@@ -82,6 +83,7 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [design/tui-vfx-v3-release-gate-policy.md](design/tui-vfx-v3-release-gate-policy.md) — Accepted V3 release-gate manifest, outcome, whitelist, ownership, and fixture recapture policy.
 - [design/tui-vfx-v3-scope-composition-decision.md](design/tui-vfx-v3-scope-composition-decision.md) — Accepted V3 scope inheritance and composition combine defaults.
 - [design/tui-vfx-v3-capability-governance-decision.md](design/tui-vfx-v3-capability-governance-decision.md) — Accepted V3 promotion ladder for primitives, variants, earned-name compositions, and factory-internal schema promotion.
+- [design/tui-vfx-v3-timing-and-metadata-decision.md](design/tui-vfx-v3-timing-and-metadata-decision.md) — Accepted V3 distributed timing and optional recipe metadata policy.
 - [design/tui-vfx-v3-outstanding-master-list.md](design/tui-vfx-v3-outstanding-master-list.md) — Master outstanding V3 work list, including the final-only V2 retirement gate.
 - [tooling/INDEX.md](tooling/INDEX.md) — Tooling hub for V3 preview, probe/database/frame diff, resize adapter, and edge ingestion workflows.
 
@@ -117,4 +119,4 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.13.0</VERS> -->

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/90_deferred_design.md</FILE> - <DESC>Chapter 90 — deferred design rounds. Not open questions (not blocking progress) but things that need answers before draft-to-implementation transition, plus adjacent design territory V3 decisions must not foreclose even though V3 doesn't deliver it.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Deferred for later design rounds" section. The Recipe Migration Workflow subsection was promoted to Chapter 50 (full workflow) but a pointer remains here for discoverability.</WCTX> -->
-<!-- <CLOG>1.0.0: initial extraction from the monolith. Subsections preserved verbatim; Recipe migration workflow replaced with a pointer to Chapter 50 because it is no longer deferred.</CLOG> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Update the recipe metadata deferred-design section after Q#21 owner approval. Metadata remains optional and non-rendering, with `intent_hints`, `expected_visual`, and `visual_tags` replacing the earlier required `use_cases`/`aesthetic_tags` lean.</WCTX> -->
+<!-- <CLOG>1.1.0: align recipe metadata section with the accepted timing/metadata decision: optional metadata, non-authoritative intent_hints, expected_visual guidance, visual_tags naming, and host-owned routing policy. 1.0.0: initial extraction from the monolith. Subsections preserved verbatim; Recipe migration workflow replaced with a pointer to Chapter 50 because it is no longer deferred.</CLOG> -->
 
 # 90 — Deferred for later design rounds
 
@@ -70,57 +70,54 @@ Today, recipes carry lightweight identification metadata: `id`, `title`, `descri
 - *"Which recipes use the staggered-fade aesthetic?"*
 - *"Give me minimal, restrained recipes — nothing theatric."*
 
-V3 adds a `metadata` block to recipes with discovery/categorization fields:
+V3 adds an optional top-level `metadata` block to recipes for discovery, categorization, QA, and authoring context. The accepted policy lives in [`../tui-vfx-v3-timing-and-metadata-decision.md`](../tui-vfx-v3-timing-and-metadata-decision.md). Metadata is not part of rendering and is not routing authority. Hosts, manifests, apps, and themes decide how recipes are bound to surfaces.
 
 ```json
 {
   "id": "splash.gt_design_default",
   "title": "GT Design default splash",
-  "description": "...",
+  "description": "A restrained Eichler-style splash treatment with warm entrance motion.",
   "metadata": {
-    "aesthetic_tags": ["warm", "typewriter", "restrained"],
+    "intent_hints": ["splash", "first_run"],
+    "expected_visual": "A compact branded splash enters with restrained motion and warm styling.",
+    "visual_tags": ["warm", "typewriter", "restrained"],
     "mood": "welcoming",
     "related_themes": ["harbor", "blueprint"],
-    "use_cases": ["splash", "first_run"],
     "maturity_era": "mature",
-    "authoring_notes": "Uses the canonical splash architecture; swap brand colors via {{brand}} token.",
-    "last_reviewed": "2026-04-21"
+    "authoring_notes": "Uses the canonical splash architecture; swap concrete colors during downstream GTD theme semanticization.",
+    "last_reviewed": "2026-04-24"
   }
 }
 ```
 
-Candidate fields (not all required; open to expansion as authoring needs surface):
+Accepted optional fields:
 
 | Field | Purpose | Example values |
 |---|---|---|
-| `aesthetic_tags: [string]` | Visual/motion-character tags for discovery | `warm`, `cold`, `restrained`, `theatric`, `noir`, `minimal`, `maximal`, `retro`, `modern` |
-| `mood: string` | Single-word emotional tone | `welcoming`, `urgent`, `meditative`, `energetic` |
-| `related_themes: [string]` | Which themes this recipe pairs well with (or is authored for) | `grimoire`, `harbor`, `blueprint`, or `theme-neutral` |
-| `use_cases: [string]` | Canonical authoring contexts | `splash`, `error-toast`, `modal-reveal`, `scene-transition`, `ambient-background`, `training-demo` |
-| `maturity_era: string` | Which development-era this recipe represents (for the Morris audit) | `basic`, `theatric`, `mature`, `professional`, `impressively-theatric` |
-| `authoring_notes: string` | Free-form notes from the author (intent, substitution hints, related-recipe context) | — |
-| `last_reviewed: ISO date` | When was this last validated against current design standards | `2026-04-21` |
+| `intent_hints: [string]` | Non-authoritative discovery hints for likely fit; not host routing policy | `splash`, `first_run`, `debug_preview`, `primitive_reference` |
+| `expected_visual: string` | Plain-language description of what a viewer/reviewer should see; strongly recommended for debug/reference fixtures | `A compact toast enters from the bottom with a diamond reveal.` |
+| `visual_tags: [string]` | Visual/motion/family/technique tags for discovery; replaces earlier `aesthetic_tags` wording in new docs | `warm`, `cool`, `restrained`, `noir`, `crt`, `glitch` |
+| `mood: string` | Optional emotional tone | `welcoming`, `urgent`, `meditative`, `energetic` |
+| `related_themes: [string]` | Theme affinity or `theme-neutral`; still advisory, not binding | `grimoire`, `harbor`, `blueprint`, `theme-neutral` |
+| `maturity_era: string` | Which development era this recipe represents for audit/discovery | `basic`, `mature`, `professional`, `experimental` |
+| `authoring_notes: string` | Free-form rationale, tuning notes, substitution hints, or caveats for future editors | — |
+| `last_reviewed: ISO date` | When this was last validated against current design standards | `2026-04-24` |
 
 **Why metadata earns its place:**
 
-- **Discovery at library scale.** 200+ recipes without structured metadata become hard to navigate; structured metadata enables SKILLS.md-driven discovery ("find me a recipe that matches this intent"), validator-driven taxonomy ("every recipe should have a use_case"), and future tooling (recipe browser with faceted filtering).
-- **The Morris principle becomes enforceable.** Recipes categorized by `maturity_era` and with explicit `use_cases` are auditable against the useful-or-beautiful filter. A recipe with no use case and a basic-era maturity tag is visible as a candidate for retirement.
-- **Cross-theme pairing becomes authored.** Today, "which recipes fit the grimoire aesthetic" is tribal knowledge. `related_themes` makes it declarative.
-- **AI-assisted authoring quality improves.** When generating or modifying recipes, Claude can filter by `aesthetic_tags` to find reference examples that match the intent. Lower hallucination risk, higher coherence.
-- **Intentional choices become visible.** `authoring_notes` is where the author writes "I chose this specific parameter tuning because..." — the rationale that otherwise lives only in commit messages or author memory.
+- **Discovery at library scale.** 200+ recipes without structured metadata become hard to navigate; structured metadata enables skill-driven discovery, validator-driven taxonomy warnings, and future tooling such as recipe browsers with faceted filtering.
+- **The Morris principle becomes auditable.** `maturity_era`, `expected_visual`, and concrete authoring notes make it easier to identify recipes that no longer justify their place.
+- **Cross-theme pairing becomes visible without becoming binding.** `related_themes` can help authors find likely matches while leaving final theme binding to GTD manifests/import policy.
+- **AI-assisted authoring quality improves.** `visual_tags`, `expected_visual`, and `authoring_notes` help AI authors find references and avoid hallucinating intent.
+- **Intentional choices become visible.** `authoring_notes` carries design rationale that otherwise lives only in commit messages or author memory.
 
-**Relationship to Open Q #18 (`RoutingRole` / `SurfaceIntent`):**
+**Relationship to Open Q #18 (`StepIntent` / `SurfaceIntent`):**
 
-`RoutingRole` (step-level) and `SurfaceIntent` (recipe-level) from Open Q #18 are *downstream routing and hosting hints* — they tell consumers how to treat steps and recipes at render/host time (accessibility dispatch, reduced-motion handling, screen-reader priority, surface-identity choice). Metadata tags (this field) are about *discovery and categorization* — they tell authors and tools how to find and understand the recipe. Different purposes, different fields, should stay separate. They may overlap in specific values (`use_cases: ["splash"]` and `SurfaceIntent::Splash` reinforce each other for the same recipe), but the Open Q #18 fields are optional routing/hosting hints while metadata fields are optional discovery tags.
+Step and surface intent fields are runtime/hosting hints. Metadata fields are discovery and authoring context. They may share words, but metadata remains non-authoritative. A host may bind a recipe to a modal, toast, splash, drawer, or exit screen even when the recipe carries only general `intent_hints`.
 
-**This is a new Open Question (#21) pending its own discussion on vocabulary and required-vs-optional:**
+**Debug recipe guidance:**
 
-- Which fields are required vs optional? Probably `use_cases` required (every recipe justifies its existence via use case), the rest optional.
-- What's the aesthetic tag vocabulary? Open-string or closed-enum? Probably hybrid — canonical list with custom values allowed.
-- Does validation enforce anything beyond schema-shape (e.g., "every recipe must have at least one `use_case`")?
-- Does metadata live inside `config` or as a sibling to it? Probably sibling — metadata is about the recipe, not the playback contract.
-
-**Reviewer's opinion (2026-04-21 GT-Design lead review memo — one input, question remains open):** keep metadata non-blocking for V3 core. `use_cases` should likely be required; most other fields can be optional initially. Discovery metadata (this field) should stay clearly separate from runtime routing metadata (`RoutingRole` / `SurfaceIntent` per Open Q #18). Aligns with the plan's current lean.
+Debug recipes and visual reference fixtures should include a description explaining what the viewer should expect to see, should strongly prefer `metadata.expected_visual`, and should use concise body text in the form `<Family>: <Human Name>` followed by `<Concise behavior cue>`.
 
 ## 50 — Retrospective corrections
 
@@ -179,4 +176,4 @@ V3 Decision 6 formalizes `ParamValue::RuntimeBinding` uniformly across all step 
 Defer until Decision 6 implementation exposes the real shape.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/90_deferred_design.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
