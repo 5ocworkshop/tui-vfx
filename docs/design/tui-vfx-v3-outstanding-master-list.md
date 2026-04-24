@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.12.8</VERS> -->
+<!-- <VERS>VERSION: 0.12.9</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.12.8: record scene edge/shadow, spatial, offscreen, and Vfx naming checkpoints.</CLOG> -->
+<!-- <CLOG>0.12.9: align C3/C4 checkpoint with direct diagonal helper proof.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -19,7 +19,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-VC01/03 | Validator/canonicalization follow-ons | Complete initial / broaden later | Metadata shape diagnostics now include `related_themes`; style normalization validation has a first pass. Broaden remaining optional metadata/schema-report coverage as corpus pressure appears. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists, curated payload alias equivalence tests prove first canonicalization pairs, and normalized IR now emits explicit phase/scope/combine metadata. Broader property/corpus coverage remains follow-up. |
 | V3-CI02 | Release-gate evidence capture / compare | In progress / mixed evidence | Offscreen D6 fixtures now pass after `tui-vfx-recipes` commit `e6e9da5`; shadow gates still need required `render_capture_png` evidence despite clean probe/trace commands. |
-| V3-EDGE01 | Motion/shadow/vanishing-edge integration | Complete initial / broaden later | Scene-layer motion now feeds edge-crossing border and attached-shadow policy; root helper reuse is proved. Follow-up: broaden diagonal/two-edge border-specific evidence beyond the current corner shadow proof. |
+| V3-EDGE01 | Motion/shadow/vanishing-edge integration | Complete initial / broaden later | Scene-layer motion now feeds edge-crossing border and attached-shadow policy; shared helper coverage proves diagonal/two-edge blanking directly. Follow-up: broaden full scene-layer corpus fixtures as needed. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Complete initial / origin leaves follow-up | mixed-signals already has surface/frame-space basis; `tui-vfx-recipes` commit `c5190f1` proves `sample_surface_radius` through V3 native filter rendering. Next: prove configurable-origin leaves (`sample_surface_radius_from`, `sample_surface_angle_from`) and docs/debug discovery. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
 | V3-REGION01 | Region compression follow-up | Outstanding | Resolve larger-corpus pressure beyond current region refs/runs. |
@@ -163,7 +163,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-NAME01-INV | Complete initial | `tui-vfx` commit `c765fa8`: accepted naming slate has concrete repo/file/symbol buckets, compatibility/re-export guidance, risk order, and next rename slice. |
 | V3-CI02-D6-REFRESH | Complete evidence refresh | `tui-vfx` commit `c765fa8`: stale D6 sidecars replaced with fresh truthful failing evidence for offscreen diagnostics and missing shadow render-capture gates. |
 | V3-D2-SURFACEMAP | Complete initial | `tui-vfx` commit `abfb615`: `v3_play_recipe`, validator output dump, probe/diff surfaces, and render dump responsibilities are documented as the current thin-player substrate; packaged `tui-vfx-player` remains a later wrapper. |
-| V3-C3C4-SCENE-EDGE | Complete initial | `tui-vfx-recipes` commits `c5190f1` and `86abb54`: scene-layer motion host context feeds edge-crossing border and attached-shadow policies; diagonal coverage is retained as a corner shadow output proof pending broader border-specific evidence. |
+| V3-C3C4-SCENE-EDGE | Complete initial | `tui-vfx-recipes` commits `c5190f1`, `86abb54`, and `5164596`: scene-layer motion host context feeds edge-crossing border and attached-shadow policies; shared helper coverage proves diagonal/two-edge blanking directly. |
 | V3-SPATIAL01-SURFACE-RADIUS | Complete initial | `tui-vfx-recipes` commit `c5190f1`: existing mixed-signals `sample_surface_radius` leaf parses through V3 recipe payloads and affects native filter rendering. |
 | V3-D6-OFFSCREEN-FIXTURES | Complete evidence refresh | `tui-vfx-recipes` commit `e6e9da5` and `tui-vfx` evidence update: `content_slide_shift` and `scene_layer_follow_lag` now probe clean with empty diagnostics. |
 | V3-NAME01-SCHEMA-A | Complete initial | `tui-vfx-recipes` commit `a9d92e3`: scene/continuous/clock schema types use canonical `Vfx*` definitions with hidden `Ra*` compatibility aliases. |
