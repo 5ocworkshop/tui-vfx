@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>VERSION: 2.4.0</VERS>
+// <VERS>VERSION: 2.5.0</VERS>
 // <WCTX>Keep representative V3-authored shader payload normalization close to executable shader semantics so direct-V3 callers can stop carrying primitive-form alias rewrites and binding-object extraction themselves.</WCTX>
-// <CLOG>2.4.0: add SpatialShaderType::try_from_v3_payload for engine-owned V3 shader payload normalization (primitive aliases, representative binding-object fields, and compatibility fallbacks).</CLOG>
+// <CLOG>2.5.0: add RadialSpiral as an executable spatial shader backed by mixed-signals radial field math.
+// 2.4.0: add SpatialShaderType::try_from_v3_payload for engine-owned V3 shader payload normalization (primitive aliases, representative binding-object fields, and compatibility fallbacks).</CLOG>
 
 //! # Spatial Shader Types
 //!
@@ -63,6 +64,7 @@
 //! | [`Reflect`](SpatialShaderType::Reflect) | Moving reflective glint |
 //! | [`GlistenBand`](SpatialShaderType::GlistenBand) | Moving light band sweep |
 //! | [`PulseWave`](SpatialShaderType::PulseWave) | Rippling color wave |
+//! | [`RadialSpiral`](SpatialShaderType::RadialSpiral) | Procedural radial spiral field |
 //! | [`TracePropagation`](SpatialShaderType::TracePropagation) | Orthogonal routed signal pulse |
 //! | [`TracePath`](SpatialShaderType::TracePath) | Authored routed signal path |
 //! | [`EdgeSheen`](SpatialShaderType::EdgeSheen) | Calm perimeter sheen for shells |
@@ -112,7 +114,8 @@ use crate::models::{
     cls_glow_shader::GlowShader, cls_highlighter_shader::HighlighterShader,
     cls_neon_flicker_shader::NeonFlickerShader, cls_orbit_shader::OrbitShader,
     cls_pulse_wave_shader::PulseWaveShader, cls_radar_shader::RadarShader,
-    cls_reflect_shader::ReflectShader, cls_reveal_wipe_shader::RevealWipeShader,
+    cls_radial_spiral_shader::RadialSpiralShader, cls_reflect_shader::ReflectShader,
+    cls_reveal_wipe_shader::RevealWipeShader,
     cls_stochastic_sparkle_shader::StochasticSparkleShader,
     cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
     cls_trace_propagation_shader::TracePropagationShader,
@@ -182,6 +185,9 @@ pub enum SpatialShaderType {
     /// Rippling color wave emanating from position (attention).
     PulseWave(PulseWaveShader),
 
+    /// Procedural radial spiral density field (portal/loading/background texture).
+    RadialSpiral(RadialSpiralShader),
+
     /// Orthogonal signal pulse moving through routed trace lanes.
     TracePropagation(TracePropagationShader),
 
@@ -249,6 +255,7 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::GlitchLines(s) => s.style_at(ctx, base),
             SpatialShaderType::NeonFlicker(s) => s.style_at(ctx, base),
             SpatialShaderType::PulseWave(s) => s.style_at(ctx, base),
+            SpatialShaderType::RadialSpiral(s) => s.style_at(ctx, base),
             SpatialShaderType::TracePropagation(s) => s.style_at(ctx, base),
             SpatialShaderType::TracePath(s) => s.style_at(ctx, base),
             SpatialShaderType::FocusedRowGradient(s) => s.style_at(ctx, base),
@@ -394,6 +401,7 @@ impl SpatialShaderType {
             SpatialShaderType::GlitchLines(_) => "GlitchLines",
             SpatialShaderType::NeonFlicker(_) => "NeonFlicker",
             SpatialShaderType::PulseWave(_) => "PulseWave",
+            SpatialShaderType::RadialSpiral(_) => "RadialSpiral",
             SpatialShaderType::TracePropagation(_) => "TracePropagation",
             SpatialShaderType::TracePath(_) => "TracePath",
             SpatialShaderType::FocusedRowGradient(_) => "FocusedRowGradient",
@@ -446,6 +454,7 @@ impl SpatialShaderType {
                 "Flickering neon sign effect with independent segments"
             }
             SpatialShaderType::PulseWave(_) => "Rippling color wave emanating from position",
+            SpatialShaderType::RadialSpiral(_) => "Procedural radial spiral density field",
             SpatialShaderType::TracePropagation(_) => {
                 "Orthogonal signal pulse moving through routed trace lanes"
             }
@@ -586,6 +595,14 @@ impl SpatialShaderType {
                 ("speed", format!("{}", s.speed)),
                 ("direction", format!("{:?}", s.direction)),
                 ("wavelength", format!("{} cells", s.wavelength)),
+                ("color", format!("{:?}", s.color)),
+            ],
+            SpatialShaderType::RadialSpiral(s) => vec![
+                ("arms", format!("{}", s.arms)),
+                ("radial_frequency", format!("{}", s.radial_frequency)),
+                ("radial_power", format!("{}", s.radial_power)),
+                ("speed", format!("{}", s.speed)),
+                ("blend_strength", format!("{}", s.blend_strength)),
                 ("color", format!("{:?}", s.color)),
             ],
             SpatialShaderType::TracePropagation(s) => vec![

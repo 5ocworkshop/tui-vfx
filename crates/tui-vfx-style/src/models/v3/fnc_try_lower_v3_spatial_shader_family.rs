@@ -31,10 +31,10 @@ use crate::models::{
     FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader, GlistenDirection,
     GlitchLinesShader, GlowShader, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
     HighlighterRowMask, HighlighterShader, LightDirection, LinearGradientShader, NeonFlickerShader,
-    OrbitShader, PulseWaveShader, RadarShader, ReflectShader, RevealDirection, RevealWipeShader,
-    SegmentMode, ShakeAxis, SparkleTarget, SpatialShaderType, StochasticSparkleShader,
-    SubCellShakeShader, TextContrast, TraceApplyTo, TracePathShader, TracePropagationShader,
-    WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
+    OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader, ReflectShader, RevealDirection,
+    RevealWipeShader, SegmentMode, ShakeAxis, SparkleTarget, SpatialShaderType,
+    StochasticSparkleShader, SubCellShakeShader, TextContrast, TraceApplyTo, TracePathShader,
+    TracePropagationShader, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 /// Lower a grouped V3 spatial shader family back into the executable legacy
@@ -491,6 +491,21 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
             } => SpatialShaderType::Orbit(OrbitShader {
                 speed: *speed,
                 dot_count: *dot_count,
+                color: color.clone(),
+            }),
+            VfxMotionFieldBehavior::RadialSpiral {
+                arms,
+                radial_frequency,
+                radial_power,
+                speed,
+                blend_strength,
+                color,
+            } => SpatialShaderType::RadialSpiral(RadialSpiralShader {
+                arms: *arms,
+                radial_frequency: *radial_frequency,
+                radial_power: *radial_power,
+                speed: *speed,
+                blend_strength: *blend_strength,
                 color: color.clone(),
             }),
         }

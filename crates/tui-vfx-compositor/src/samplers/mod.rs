@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/samplers/mod.rs</FILE> - <DESC>Sampler implementations (internal)</DESC>
-// <VERS>VERSION: 1.9.0</VERS>
+// <VERS>VERSION: 1.10.0</VERS>
 // <WCTX>Add gravity sampler for parabolic acceleration</WCTX>
-// <CLOG>Add cls_gravity module</CLOG>
+// <CLOG>1.10.0: add cls_radial_twist module.
+// Add cls_gravity module</CLOG>
 
 pub(crate) mod cls_bounce;
 pub(crate) mod cls_crt_jitter;
@@ -10,9 +11,10 @@ pub(crate) mod cls_distortion;
 pub(crate) mod cls_fault_line;
 pub(crate) mod cls_gravity;
 pub(crate) mod cls_pendulum;
+pub(crate) mod cls_radial_twist;
 pub(crate) mod cls_ripple;
 pub(crate) mod cls_shredder;
 pub(crate) mod cls_sine_wave;
 
 // <FILE>tui-vfx-compositor/src/samplers/mod.rs</FILE> - <DESC>Sampler implementations (internal)</DESC>
-// <VERS>END OF VERSION: 1.9.0</VERS>
+// <VERS>END OF VERSION: 1.10.0</VERS>

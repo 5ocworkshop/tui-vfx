@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.23.0</VERS>
-<!-- <WCTX>Add V3 pathway guidance so human and AI recipe authors understand first-class recipe I/O, cross-family chaining, runtime bindings, procedural scene sources, scene layers, and debug tooling in addition to the primitive catalog.</WCTX>
-<!-- <CLOG>1.23.0: MINOR — add V3 pathway capabilities section with first-class I/O chaining examples, runtime binding/asset contracts, procedural scene-source details, scene/source contract notes, and authoring/debugging guidance for new human and AI recipe authors.
+<!-- <VERS>VERSION: 1.24.0</VERS> -->
+<!-- <WCTX>Add V3 pathway guidance plus whoa/cellophane-derived route, sampler, and shader capabilities for human and AI recipe authors.</WCTX> -->
+<!-- <CLOG>1.24.0: MINOR — document CarrierOrbit/helix, FigureEight/infinity, RadialTwist sampler, and RadialSpiral shader capabilities from the whoa/cellophane review.
+1.23.0: MINOR — add V3 pathway capabilities section with first-class I/O chaining examples, runtime binding/asset contracts, procedural scene-source details, scene/source contract notes, and authoring/debugging guidance for new human and AI recipe authors.
 1.22.0: PATCH — note that `tui-vfx-recipes` now supports top-level `config.shadow` upstream (validator/probe parity) and cross-link the recipe-authoring shadow flow from the Shadows section.
 1.21.0: MINOR — add 'Quick Scan' (one-screen primitive inventory by category) after the TOC; add banner at top noting that intent-to-primitive selection lives in the gt-design /recipe-author skill.
 1.20.0: PATCH — Phase A.5 consistency pass: add "Unified Inspection Foundation (v0.9.0+)" cross-reference at the recommended-debugging-split section so consumers discover the new TraceEvent / TraceSink / InspectionSink surface from this document (full schema in docs/TRACE_EVENT_SCHEMA.md).
@@ -30,9 +31,9 @@ One-screen overview. Names link to the per-section detail below.
 
 **Filters** (post-processing, 28 types) — basic: [`None`](#filters-post-processing), [`Dim`](#filters-post-processing), [`Invert`](#filters-post-processing), [`Tint`](#filters-post-processing), [`Greyscale`](#filters-post-processing) · ambient: [`Vignette`](#filters-post-processing), [`PatternFill`](#filters-post-processing), [`BrailleDust`](#filters-post-processing), [`CharsetNoise`](#filters-post-processing) · retro: [`Crt`](#filters-post-processing), [`InterlaceCurtain`](#filters-post-processing) · motion: [`MotionBlur`](#filters-post-processing) · sub-cell: [`ColorBridgedShade`](#filters-post-processing), [`SubPixelBar`](#filters-post-processing), [`SubcellLight`](#filters-post-processing), [`SubCellShake`](#filters-post-processing), [`RigidShake`](#filters-post-processing) · indicators: [`HoverBar`](#filters-post-processing), [`UnderlineWipe`](#filters-post-processing), [`BracketEmphasis`](#filters-post-processing), [`DotIndicator`](#filters-post-processing), [`EdgeGrow`](#filters-post-processing) · stylistic: [`PillButton`](#filters-post-processing) · animated: [`GlistenSweep`](#filters-post-processing), [`KittScanner`](#filters-post-processing), [`ShadeScanner`](#filters-post-processing) · content-aware: [`GlyphStyle`](#filters-post-processing)
 
-**Samplers** (coordinate distortion, 7 types) — [`None`](#samplers-coordinate-distortion), [`SineWave`](#samplers-coordinate-distortion), [`Ripple`](#samplers-coordinate-distortion), [`Shredder`](#samplers-coordinate-distortion), [`FaultLine`](#samplers-coordinate-distortion), [`Crt`](#samplers-coordinate-distortion), [`CrtJitter`](#samplers-coordinate-distortion)
+**Samplers** (coordinate distortion, 8 types) — [`None`](#samplers-coordinate-distortion), [`SineWave`](#samplers-coordinate-distortion), [`Ripple`](#samplers-coordinate-distortion), [`Shredder`](#samplers-coordinate-distortion), [`FaultLine`](#samplers-coordinate-distortion), [`RadialTwist`](#samplers-coordinate-distortion), [`Crt`](#samplers-coordinate-distortion), [`CrtJitter`](#samplers-coordinate-distortion)
 
-**Spatial Shaders** (per-cell styling, 23 types) — structural: [`AmbientOcclusion`](#spatial-shaders-per-cell-styling), [`Bevel`](#spatial-shaders-per-cell-styling), [`Glow`](#spatial-shaders-per-cell-styling), [`ConcealedLight`](#spatial-shaders-per-cell-styling), [`Diffusion`](#spatial-shaders-per-cell-styling), [`FocusField`](#spatial-shaders-per-cell-styling), [`LinearGradient`](#spatial-shaders-per-cell-styling) · contextual: [`AffordanceWake`](#spatial-shaders-per-cell-styling), [`WayfindingNode`](#spatial-shaders-per-cell-styling), [`BorderSweep`](#spatial-shaders-per-cell-styling), [`GlistenBand`](#spatial-shaders-per-cell-styling), [`PulseWave`](#spatial-shaders-per-cell-styling), [`FocusedRowGradient`](#spatial-shaders-per-cell-styling), [`RevealWipe`](#spatial-shaders-per-cell-styling) · expressive: [`BarberPole`](#spatial-shaders-per-cell-styling), [`Radar`](#spatial-shaders-per-cell-styling), [`Highlighter`](#spatial-shaders-per-cell-styling), [`Reflect`](#spatial-shaders-per-cell-styling), [`StochasticSparkle`](#spatial-shaders-per-cell-styling), [`GlitchLines`](#spatial-shaders-per-cell-styling), [`NeonFlicker`](#spatial-shaders-per-cell-styling) · tactile: [`SubCellShake`](#spatial-shaders-per-cell-styling), [`ChromaticEdge`](#spatial-shaders-per-cell-styling)
+**Spatial Shaders** (per-cell styling, 24 types) — structural: [`AmbientOcclusion`](#spatial-shaders-per-cell-styling), [`Bevel`](#spatial-shaders-per-cell-styling), [`Glow`](#spatial-shaders-per-cell-styling), [`ConcealedLight`](#spatial-shaders-per-cell-styling), [`Diffusion`](#spatial-shaders-per-cell-styling), [`FocusField`](#spatial-shaders-per-cell-styling), [`LinearGradient`](#spatial-shaders-per-cell-styling) · contextual: [`AffordanceWake`](#spatial-shaders-per-cell-styling), [`WayfindingNode`](#spatial-shaders-per-cell-styling), [`BorderSweep`](#spatial-shaders-per-cell-styling), [`GlistenBand`](#spatial-shaders-per-cell-styling), [`PulseWave`](#spatial-shaders-per-cell-styling), [`FocusedRowGradient`](#spatial-shaders-per-cell-styling), [`RevealWipe`](#spatial-shaders-per-cell-styling) · expressive: [`BarberPole`](#spatial-shaders-per-cell-styling), [`Radar`](#spatial-shaders-per-cell-styling), [`RadialSpiral`](#spatial-shaders-per-cell-styling), [`Highlighter`](#spatial-shaders-per-cell-styling), [`Reflect`](#spatial-shaders-per-cell-styling), [`StochasticSparkle`](#spatial-shaders-per-cell-styling), [`GlitchLines`](#spatial-shaders-per-cell-styling), [`NeonFlicker`](#spatial-shaders-per-cell-styling) · tactile: [`SubCellShake`](#spatial-shaders-per-cell-styling), [`ChromaticEdge`](#spatial-shaders-per-cell-styling)
 
 **Style Effects** (temporal, 11 types) — [`FadeIn`](#style-effects-temporal-animations), [`FadeOut`](#style-effects-temporal-animations), [`Pulse`](#style-effects-temporal-animations), [`Rainbow`](#style-effects-temporal-animations), [`Glitch`](#style-effects-temporal-animations), [`NeonFlicker`](#style-effects-temporal-animations), [`Spatial`](#style-effects-temporal-animations), [`ItalicWindow`](#style-effects-temporal-animations), [`ColorShift`](#style-effects-temporal-animations), [`ColorFade`](#style-effects-temporal-animations), [`RigidShakeStyle`](#style-effects-temporal-animations)
 
@@ -159,6 +160,7 @@ Samplers distort pixel coordinates before rendering, creating spatial effects.
 | **Ripple** | Circular ripple from center | `amplitude`, `wavelength`, `speed`, `center` |
 | **Shredder** | Paper shredder strips | `stripe_width`, `odd_speed`, `even_speed` |
 | **FaultLine** | Fault line displacement | `seed`, `intensity`, `split_bias` |
+| **RadialTwist** | Center-weighted vortex/maelstrom coordinate warp | `twist`, `center`, `radius_floor` |
 | **Crt** | CRT scanlines + curvature | `scanline_strength`, `jitter`, `curvature` |
 | **CrtJitter** | CRT crash/jitter effect | `intensity`, `speed_hz`, `decay_ms` |
 
@@ -175,6 +177,7 @@ Spatial shaders compute per-cell style modifications based on position, time, an
 | **LinearGradient** | Gradient fill at angle | `gradient`, `angle_deg` |
 | **BarberPole** | Animated diagonal stripes | `speed`, `stripe_width`, `gap_width`, `color` |
 | **Radar** | Rotating radar sweep | `speed`, `tail_length`, `color` |
+| **RadialSpiral** | Procedural radial spiral density field for portal/background motion | `arms`, `radial_frequency`, `radial_power`, `speed`, `blend_strength`, `color` |
 | **BorderSweep** | Border highlight sweep | `speed`, `length`, `color` |
 | **Highlighter** | Marker-style text reveal | `color` |
 | **Reflect** | Moving reflective glint | `speed`, `color` |
@@ -961,6 +964,23 @@ Authoring rule of thumb:
 - Keep names semantic (`wave_field`, `focus_falloff`, `hover_progress`) rather
   than implementation-shaped (`sampler_1_output`).
 
+### New V3 edge/pathway primitives from adjacent-library review
+
+The whoa/cellophane review added a small set of reusable, substrate-named
+capabilities. The borrowed demo names are intentionally not the API surface; the
+public names describe the underlying motion or field so recipe authors can reuse
+them across flags, dashboards, loaders, and design-system surfaces.
+
+| Capability | Recipe/API name | What it does | Authoring notes |
+|------------|-----------------|--------------|-----------------|
+| Projected corkscrew path | `carrier_orbit` (`helix` alias) | Moves content around a carrier route while preserving start/end positions. | Use for orbiting badges, corkscrew arrivals, or attention carriers. `helix` is accepted for author convenience; `carrier_orbit` is the substrate name. |
+| Figure-eight path | `figure_eight` (`infinity`, `infinity_symbol`, `lemniscate` aliases) | Produces a 2D harmonic figure-eight/∞ route. | Use when a focus item should continually cross the center without implying 3D depth. This is not a sideways helix. |
+| Vortex source remap | `radial_twist` sampler | Re-samples content through a center-weighted twist field. | Use for portal, maelstrom, and pull-into-center distortions; keep text large because coordinate warps can reduce legibility. |
+| Spiral density field | `radial_spiral` shader / V3 `motion_field.radial_spiral` | Blends style through a radial/angle spiral field. | Use as a procedural loading/background texture or as a shader paired with sampler/mask output hints. |
+
+Shared math for these route and field treatments lives in `mixed-signals` so it
+can be reused consistently by `tui-vfx`, recipes, and downstream applications.
+
 ### Chaining examples that V2 could not express cleanly
 
 #### 1. One spatial field drives both displacement and light
@@ -1441,4 +1461,4 @@ Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EV
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.23.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.24.0</VERS> -->

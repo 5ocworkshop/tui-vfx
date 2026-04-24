@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/types/cls_sampler_spec.rs</FILE> - <DESC>SamplerSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 2.6.1</VERS>
+// <VERS>VERSION: 2.7.0</VERS>
 // <WCTX>Compositor clippy cleanup pass</WCTX>
-// <CLOG>2.6.1: PATCH — collapse nested if-let in V3 payload normalization into Rust-2024 let-chains per clippy.
+// <CLOG>2.7.0: add RadialTwist sampler spec for center-weighted coordinate warps discovered from whoa.
+// 2.6.1: PATCH — collapse nested if-let in V3 payload normalization into Rust-2024 let-chains per clippy.
 // 2.6.0: add SamplerSpec::try_from_v3_payload for engine-owned sine-wave and ripple payload normalization from V3-authored forms.</CLOG>
 
 //! # Sampler Specifications
@@ -22,6 +23,7 @@
 //! | [`SamplerSpec::CrtJitter`] | CRT crash/jitter | Failing electronics |
 //! | [`SamplerSpec::Bounce`] | Bouncing vertical displacement | Loaders, attention |
 //! | [`SamplerSpec::Pendulum`] | Bidirectional swaying motion | Menus, hanging items |
+//! | [`SamplerSpec::RadialTwist`] | Center-weighted radial twist | Vortex, maelstrom, portal warps |
 //!
 //! ## Signal-Driven Parameters
 //!
@@ -149,6 +151,7 @@ impl<'de> Deserialize<'de> for RippleCenter {
 /// - **Wave Effects**: SineWave, Ripple
 /// - **Destruction Effects**: Shredder, FaultLine
 /// - **Retro Effects**: Crt, CrtJitter
+/// - **Spatial Warps**: RadialTwist
 ///
 /// # Signal-Driven Parameters
 ///
@@ -428,6 +431,24 @@ pub enum SamplerSpec {
         #[serde(default = "default_gravity_terminal_velocity")]
         terminal_velocity: SignalOrFloat,
     },
+
+    /// Center-weighted radial coordinate twist.
+    ///
+    /// Samples content through a radial twist field. This is the substrate-named
+    /// version of vortex/maelstrom-style content warping.
+    RadialTwist {
+        /// Twist strength in radians over a full phase.
+        #[serde(default = "default_radial_twist_strength")]
+        twist: SignalOrFloat,
+
+        /// Center point for the twist field.
+        #[serde(default)]
+        center: RippleCenter,
+
+        /// Minimum normalized radius used to keep the center finite.
+        #[serde(default = "default_radial_twist_radius_floor")]
+        radius_floor: SignalOrFloat,
+    },
 }
 
 // Default functions for signal-or-float fields
@@ -437,6 +458,14 @@ fn default_gravity_acceleration() -> SignalOrFloat {
 
 fn default_gravity_terminal_velocity() -> SignalOrFloat {
     SignalOrFloat::Static(10.0)
+}
+
+fn default_radial_twist_strength() -> SignalOrFloat {
+    SignalOrFloat::Static(1.0)
+}
+
+fn default_radial_twist_radius_floor() -> SignalOrFloat {
+    SignalOrFloat::Static(0.1)
 }
 fn default_sine_amplitude() -> SignalOrFloat {
     SignalOrFloat::Static(1.0)
@@ -594,6 +623,7 @@ impl SamplerSpec {
             SamplerSpec::Bounce { .. } => "Bounce",
             SamplerSpec::Pendulum { .. } => "Pendulum",
             SamplerSpec::Gravity { .. } => "Gravity",
+            SamplerSpec::RadialTwist { .. } => "RadialTwist",
         }
     }
 
@@ -612,6 +642,7 @@ impl SamplerSpec {
                 "Bidirectional swaying motion for menus and hanging items"
             }
             SamplerSpec::Gravity { .. } => "Parabolic acceleration for falling/rising content",
+            SamplerSpec::RadialTwist { .. } => "Center-weighted radial coordinate twist",
         }
     }
 
@@ -708,9 +739,18 @@ impl SamplerSpec {
                 ("acceleration", format!("{:?}", acceleration)),
                 ("terminal_velocity", format!("{:?}", terminal_velocity)),
             ],
+            SamplerSpec::RadialTwist {
+                twist,
+                center,
+                radius_floor,
+            } => vec![
+                ("twist", format!("{:?}", twist)),
+                ("center", format!("{:?}", center)),
+                ("radius_floor", format!("{:?}", radius_floor)),
+            ],
         }
     }
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_sampler_spec.rs</FILE> - <DESC>SamplerSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 2.6.1</VERS>
+// <VERS>END OF VERSION: 2.7.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-geometry/src/types/path_type.rs</FILE> - <DESC>Motion path types with physics integration</DESC>
-// <VERS>VERSION: 3.0.0 - 2025-12-31</VERS>
+// <VERS>VERSION: 3.1.0 - 2026-04-24</VERS>
 // <WCTX>Architectural roadmap: Physics PathType variants</WCTX>
-// <CLOG>Added Projectile, Friction, Orbit, Pendulum variants using mixed-signals physics</CLOG>
+// <CLOG>3.1.0: add CarrierOrbit with helix alias and FigureEight with infinity/lemniscate aliases, backed by mixed-signals route math.
+// Added Projectile, Friction, Orbit, Pendulum variants using mixed-signals physics</CLOG>
 
 use serde::{Deserialize, Serialize};
 use tui_vfx_core::{
@@ -74,6 +75,39 @@ pub enum PathType {
         radius: f32,
         /// Direction sign. Positive is counter-clockwise; negative is clockwise.
         direction: f32,
+    },
+    /// Projected helix-like motion around a carrier route.
+    ///
+    /// `CarrierOrbit` is the substrate name. Recipe authors may use the `helix`
+    /// alias when the intended shape is a terminal-projected corkscrew. The path
+    /// preserves authored start/end positions and oscillates around the route
+    /// normal between them.
+    #[serde(alias = "helix")]
+    CarrierOrbit {
+        /// Number of full oscillations over the route.
+        rotations: f32,
+        /// Maximum perpendicular radius in cells at the center of the phase.
+        radius: f32,
+        /// Phase offset in radians.
+        #[serde(default)]
+        phase: f32,
+        /// Direction sign. Positive is counter-clockwise; negative is clockwise.
+        direction: f32,
+    },
+    /// Figure-eight / lemniscate motion between authored endpoints.
+    ///
+    /// This is separate from `CarrierOrbit`: it is a 2D harmonic figure-eight,
+    /// not a projected 3D corkscrew. `infinity` and `lemniscate` are accepted as
+    /// authoring aliases.
+    #[serde(alias = "infinity", alias = "infinity_symbol", alias = "lemniscate")]
+    FigureEight {
+        /// Width along the route tangent in cells.
+        width: f32,
+        /// Height along the route normal in cells.
+        height: f32,
+        /// Phase offset in radians.
+        #[serde(default)]
+        phase: f32,
     },
     /// Pull the carrier route toward a target point and release it again.
     ///
@@ -316,6 +350,31 @@ impl ConfigSchema for PathType {
                     ],
                 },
                 SchemaVariant::Struct {
+                    name: "CarrierOrbit".to_string(),
+                    description: Some(
+                        "Projected helix-like oscillation around a carrier route; authoring alias: helix".to_string(),
+                    ),
+                    json_value: Some("carrier_orbit".to_string()),
+                    fields: vec![
+                        f32_field("rotations", "Number of carrier-orbit rotations"),
+                        f32_field("radius", "Maximum carrier-orbit radius in cells"),
+                        f32_field("phase", "Phase offset in radians"),
+                        f32_field("direction", "Carrier-orbit direction sign"),
+                    ],
+                },
+                SchemaVariant::Struct {
+                    name: "FigureEight".to_string(),
+                    description: Some(
+                        "Figure-eight / lemniscate path; authoring aliases: infinity, infinity_symbol, lemniscate".to_string(),
+                    ),
+                    json_value: Some("figure_eight".to_string()),
+                    fields: vec![
+                        f32_field("width", "Figure-eight width along route tangent"),
+                        f32_field("height", "Figure-eight height along route normal"),
+                        f32_field("phase", "Phase offset in radians"),
+                    ],
+                },
+                SchemaVariant::Struct {
                     name: "Attractor".to_string(),
                     description: Some(
                         "Gravity-well route treatment toward a target point".to_string(),
@@ -373,4 +432,4 @@ impl ConfigSchema for PathType {
 }
 
 // <FILE>tui-vfx-geometry/src/types/path_type.rs</FILE> - <DESC>Motion path types with physics integration</DESC>
-// <VERS>END OF VERSION: 3.0.0 - 2025-12-31</VERS>
+// <VERS>END OF VERSION: 3.1.0 - 2026-04-24</VERS>

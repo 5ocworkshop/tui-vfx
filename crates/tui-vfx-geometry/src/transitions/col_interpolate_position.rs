@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-geometry/src/transitions/col_interpolate_position.rs</FILE> - <DESC>Position interpolation with physics paths</DESC>
-// <VERS>VERSION: 1.2.2 - 2026-01-01T00:13:20Z</VERS>
+// <VERS>VERSION: 1.3.0 - 2026-04-24T00:00:00Z</VERS>
 // <WCTX>Phase 6: Fixes</WCTX>
-// <CLOG>Removed unused variable initialization</CLOG>
+// <CLOG>1.3.0: add CarrierOrbit/helix and FigureEight/infinity interpolation via mixed-signals route helpers.
+// Removed unused variable initialization</CLOG>
 
 use super::col_arc_bezier_point::arc_bezier_point;
 use super::col_lerp::lerp;
@@ -11,7 +12,9 @@ use crate::paths::cls_spiral_path::SpiralPath;
 use crate::paths::cls_step_path::StepPath;
 use crate::traits::MotionPath;
 use crate::types::{PathType, Position};
-use mixed_signals::math::{attract_position, swirl_position};
+use mixed_signals::math::{
+    attract_position, carrier_orbit_position, figure_eight_position, swirl_position,
+};
 pub fn interpolate_position(from: Position, to: Position, t: f64, path: &PathType) -> (f32, f32) {
     let t = t.clamp(0.0, 1.0);
     let t32 = t as f32;
@@ -59,6 +62,36 @@ pub fn interpolate_position(from: Position, to: Position, t: f64, path: &PathTyp
             rotations,
             radius,
             direction,
+        ),
+        PathType::CarrierOrbit {
+            rotations,
+            radius,
+            phase,
+            direction,
+        } => carrier_orbit_position(
+            t32,
+            from.x as f32,
+            from.y as f32,
+            to.x as f32,
+            to.y as f32,
+            rotations,
+            radius,
+            phase,
+            direction,
+        ),
+        PathType::FigureEight {
+            width,
+            height,
+            phase,
+        } => figure_eight_position(
+            t32,
+            from.x as f32,
+            from.y as f32,
+            to.x as f32,
+            to.y as f32,
+            width,
+            height,
+            phase,
         ),
         PathType::Attractor {
             target_x,
@@ -251,4 +284,4 @@ pub fn interpolate_position(from: Position, to: Position, t: f64, path: &PathTyp
 }
 
 // <FILE>tui-vfx-geometry/src/transitions/col_interpolate_position.rs</FILE> - <DESC>Position interpolation with physics paths</DESC>
-// <VERS>END OF VERSION: 1.2.2 - 2026-01-01T00:13:20Z</VERS>
+// <VERS>END OF VERSION: 1.3.0 - 2026-04-24T00:00:00Z</VERS>

@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs</FILE> - <DESC>Prepared sampler enum for pipeline rendering</DESC>
-// <VERS>VERSION: 1.2.1</VERS>
+// <VERS>VERSION: 1.3.0</VERS>
 // <WCTX>feat/content-ergonomics: clean up pre-existing workspace clippy lint</WCTX>
-// <CLOG>Drop redundant f32-to-f32 casts on Gravity::new arguments (clippy::unnecessary_cast)</CLOG>
+// <CLOG>1.3.0: prepare and dispatch SamplerSpec::RadialTwist through the render pipeline.
+// Drop redundant f32-to-f32 casts on Gravity::new arguments (clippy::unnecessary_cast)</CLOG>
 
 use crate::samplers::cls_bounce::Bounce;
 use crate::samplers::cls_crt_jitter::CrtJitter;
@@ -9,6 +10,7 @@ use crate::samplers::cls_crt_sampler::CrtSampler;
 use crate::samplers::cls_fault_line::FaultLine;
 use crate::samplers::cls_gravity::Gravity;
 use crate::samplers::cls_pendulum::Pendulum;
+use crate::samplers::cls_radial_twist::RadialTwist;
 use crate::samplers::cls_ripple::Ripple;
 use crate::samplers::cls_shredder::Shredder;
 use crate::samplers::cls_sine_wave::SineWave;
@@ -27,6 +29,7 @@ pub(crate) enum PreparedSampler {
     Bounce(Bounce),
     Pendulum(Pendulum),
     Gravity(Gravity),
+    RadialTwist(RadialTwist),
 }
 
 impl PreparedSampler {
@@ -49,6 +52,7 @@ impl PreparedSampler {
             PreparedSampler::Bounce(configured) => configured.sample(x, y, width, height, t),
             PreparedSampler::Pendulum(configured) => configured.sample(x, y, width, height, t),
             PreparedSampler::Gravity(configured) => configured.sample(x, y, width, height, t),
+            PreparedSampler::RadialTwist(configured) => configured.sample(x, y, width, height, t),
         };
         match sampled {
             Some((sx, sy)) => (Some(sx), Some(sy)),
@@ -68,6 +72,7 @@ impl PreparedSampler {
             PreparedSampler::Bounce(_) => "Bounce",
             PreparedSampler::Pendulum(_) => "Pendulum",
             PreparedSampler::Gravity(_) => "Gravity",
+            PreparedSampler::RadialTwist(_) => "RadialTwist",
         }
     }
 }
@@ -195,8 +200,17 @@ pub(crate) fn prepare_sampler(t: f64, sampler_spec: &Option<SamplerSpec>) -> Pre
             let eval_terminal = terminal_velocity.evaluate(t, &signal_ctx).unwrap_or(10.0);
             PreparedSampler::Gravity(Gravity::new(eval_accel, eval_terminal, *axis))
         }
+        SamplerSpec::RadialTwist {
+            twist,
+            center,
+            radius_floor,
+        } => {
+            let eval_twist = twist.evaluate(t, &signal_ctx).unwrap_or(1.0);
+            let eval_radius_floor = radius_floor.evaluate(t, &signal_ctx).unwrap_or(0.1);
+            PreparedSampler::RadialTwist(RadialTwist::new(eval_twist, *center, eval_radius_floor))
+        }
     }
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs</FILE> - <DESC>Prepared sampler enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 1.2.1</VERS>
+// <VERS>END OF VERSION: 1.3.0</VERS>

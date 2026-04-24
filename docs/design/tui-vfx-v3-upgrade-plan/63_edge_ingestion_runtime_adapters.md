@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/63_edge_ingestion_runtime_adapters.md</FILE> - <DESC>V3 edge-lane plan for source ingestion, terminal runtime adapters, and pattern/path primitive gaps found during adjacent-library review.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Record the cellophane-inspired edge lane and the follow-on animation-pattern/path review as one bounded V3 workstream. Keeps ingestion/runtime adapters and edge primitive additions together instead of scattering them across core V3 semantics.</WCTX> -->
-<!-- <CLOG>0.2.0: add explicit Cellophane adoption matrix and resize-aware runtime adapter contract while clarifying that Cellophane contributes runtime/frame infrastructure rather than additional named effect/path primitives. 0.1.0: initial lane plan with ANSI/command ingestion, standalone preview adapters, grapheme review, and path/pattern primitive matrix including swirl and attractor.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Record the cellophane/whoa-inspired edge lane and shipped route/field primitive additions as one bounded V3 workstream.</WCTX> -->
+<!-- <CLOG>0.3.0: update the pattern/path matrix with whoa-derived RadialTwist/RadialSpiral plus CarrierOrbit/helix and FigureEight/infinity route support; keep stateful procedural screensavers as future source lanes. 0.2.0: add explicit Cellophane adoption matrix and resize-aware runtime adapter contract while clarifying that Cellophane contributes runtime/frame infrastructure rather than additional named effect/path primitives. 0.1.0: initial lane plan with ANSI/command ingestion, standalone preview adapters, grapheme review, and path/pattern primitive matrix including swirl and attractor.</CLOG> -->
 
 # 63 — Edge ingestion and runtime adapters
 
@@ -76,7 +76,16 @@ and source-adapter ideas, not new shader/filter semantics.
 | Spring/bounce/projectile/pendulum/friction | `PathType` dynamics + V3 lowering | Supported | Physics-like dynamics already execute through the geometry substrate. |
 | Swirl / vortex around a carrier route | `PathType::Swirl` backed by `mixed_signals::math::swirl_position` | Added in this lane | Preserves endpoints, unlike `Spiral`; works as a V3 dynamic over a route. The reusable math lives upstream in `mixed-signals`. |
 | Attractor / gravity well | `PathType::Attractor` + V3 dynamic lowering backed by `mixed_signals::math::attract_position` | Completed in this lane | V3 had the authored dynamic shape; this lane makes it executable. The endpoint-preserving pull math lives upstream in `mixed-signals`. |
-| Lissajous/figure-eight | none | Defer | Add only when a recipe needs repeatable dual-axis harmonic motion. Can be expressed by composed sine signals later. |
+| Carrier orbit / helix | `PathType::CarrierOrbit` backed by `mixed_signals::math::carrier_orbit_position` | Added in this lane | Substrate name is `carrier_orbit`; recipes may use the `helix` alias for projected corkscrew motion. Preserves endpoints. |
+| Figure-eight / infinity / lemniscate | `PathType::FigureEight` backed by `mixed_signals::math::figure_eight_position` | Added in this lane | A true 2D harmonic ∞ route, not a sideways helix. Recipe aliases: `infinity`, `infinity_symbol`, `lemniscate`. |
+| Radial twist / maelstrom warp | `SamplerSpec::RadialTwist` backed by `mixed_signals::math::radial_twist_warp` | Added in this lane | Source-remapping sampler for vortex/portal/maelstrom effects; whoa demo naming stays out of the public API. |
+| Radial spiral density field | `SpatialShaderType::RadialSpiral` / V3 `motion_field.radial_spiral` backed by `mixed_signals::math::radial_spiral_field` | Added in this lane | Procedural style field for spiral loaders, portals, and ambient backgrounds. |
+| Cosine column wave | `SineWave` sampler plus `mixed_signals::math::column_wave_offset` substrate helper | Supported / helper added | Author as a sine wave with a phase offset where possible; shared math exists for adapters/tools that need exact column offsets. |
+| Saturn-style line wave / palette cycling | `mixed_signals::math::line_wave_offset` substrate helper; existing shader/filter palette tools | Partial / future adapter | Line-wave substrate exists, but full EarthBound-style asset/palette/interlace emulation belongs in a future asset-backed procedural source lane. |
+| Perlin/noise density | Existing spatial noise/stochastic shader families | Mostly supported | Use existing stochastic/noise shaders first; add a source only if recipe authors need a stateful fullscreen density surface. |
+| Slime/Physarum agents | none | Defer | Stateful agent simulation belongs in a procedural source lane, not path interpolation. |
+| Conway/cellular automata | none | Defer | Stateful grid evolution belongs in a procedural source lane. |
+| Collapse/gravity cellular transform | `Gravity` sampler partially overlaps | Defer full behavior | Existing gravity moves content, but a cellular collapse simulation should be a future source/transform with state. |
 | Particle system / flocking | none | Defer | Belongs in a later scene/procedural source lane, not the motion-path substrate. |
 
 No further Cellophane-native named path/effect primitives were identified in the
@@ -93,6 +102,8 @@ outside tui-vfx.
    - add `PathType::Swirl` that consumes the shared helper
    - add `PathType::Attractor` that consumes the shared helper
    - add interpolation coverage for endpoint safety and mid-route deviation
+   - add CarrierOrbit/helix and FigureEight/infinity route support when whoa/cellophane consumer review proves they are useful
+   - add RadialTwist sampler and RadialSpiral shader when source-remap/field behavior is reusable
    - wire V3 motion dynamics into executable `PathType`s
 3. Split EIRA-02/EIRA-03/EIRA-04 into separate work packets. They are mostly
    independent, but all must normalize into `SemanticScene` / grid output.
@@ -135,4 +146,4 @@ Every shipped public type or schema-bearing field in this lane requires:
   resetting phase/sample unless the host explicitly requests a restart
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/63_edge_ingestion_runtime_adapters.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->

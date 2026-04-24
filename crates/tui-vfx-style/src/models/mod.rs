@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>VERSION: 2.4.0</VERS>
+// <VERS>VERSION: 2.5.0</VERS>
 // <WCTX>Sub-plan A Phase A.2 audit-1 remediation — register two additional `fnc_style_region_*` sibling modules that carry the custom Deserialize impl and the hand-written ConfigSchema impl extracted from cls_style_region.rs</WCTX>
-// <CLOG>2.4.0: expose the first real V3-side family surface under models::v3 and re-export the traveling-band family types while the legacy flat shader surface remains intact for cutover.
+// <CLOG>2.5.0: expose RadialSpiralShader as a motion-field shader primitive from the whoa review.
+// 2.4.0: expose the first real V3-side family surface under models::v3 and re-export the traveling-band family types while the legacy flat shader surface remains intact for cutover.
 // 2.3.0: MINOR — register fnc_style_region_deserialize and fnc_style_region_schema modules. The Rust impls are global at module scope, so merely declaring the modules is sufficient for them to take effect; no additional re-exports are needed.
 // 2.2.0: MINOR — register fnc_style_region_should_style and fnc_style_region_bounding_rect modules so callers can invoke the predicates as free functions (or reach them via the delegating methods on StyleRegion).
 // 2.1.0: Register cls_cursor_shader module and public re-exports for CursorShader, CursorShaderMode, CursorShaderPrimary, CursorShaderTrail</CLOG>
@@ -58,6 +59,7 @@ pub mod cls_noise_type;
 pub mod cls_orbit_shader;
 pub mod cls_pulse_wave_shader;
 pub mod cls_radar_shader;
+pub mod cls_radial_spiral_shader;
 pub mod cls_reflect_shader;
 pub mod cls_reveal_wipe_shader;
 pub mod cls_signal_color;
@@ -123,6 +125,7 @@ pub use cls_noise_type::NoiseType;
 pub use cls_orbit_shader::OrbitShader;
 pub use cls_pulse_wave_shader::{PulseWaveShader, WaveDirection};
 pub use cls_radar_shader::RadarShader;
+pub use cls_radial_spiral_shader::RadialSpiralShader;
 pub use cls_reflect_shader::ReflectShader;
 pub use cls_reveal_wipe_shader::{RevealDirection, RevealWipeShader};
 pub use cls_signal_color::SignalColor;
@@ -162,4 +165,4 @@ pub use v3::{
 };
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>END OF VERSION: 2.4.0</VERS>
+// <VERS>END OF VERSION: 2.5.0</VERS>

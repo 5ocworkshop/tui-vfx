@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/v3/cls_vfx_motion_field_shader.rs</FILE> - <DESC>V3 motion-field family shader surface</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Decision 2 migration slice — create a real grouped V3 surface for primitive motion-field shaders so PulseWave, Radar, and Orbit become migration inputs instead of the lasting conceptual model.</WCTX>
-// <CLOG>Introduce VfxMotionFieldShader plus conversion helpers from the legacy motion-field variants and SpatialShaderType.</CLOG>
+// <CLOG>0.2.0: include RadialSpiral in the grouped motion-field family.
+// Introduce VfxMotionFieldShader plus conversion helpers from the legacy motion-field variants and SpatialShaderType.</CLOG>
 
 //! V3 family surface for motion-field shaders.
 //!
@@ -11,7 +12,9 @@
 use crate::models::v3::enum_vfx_motion_field_behavior::{
     VfxMotionFieldBehavior, VfxMotionFieldDirection,
 };
-use crate::models::{OrbitShader, PulseWaveShader, RadarShader, SpatialShaderType, WaveDirection};
+use crate::models::{
+    OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader, SpatialShaderType, WaveDirection,
+};
 use serde::{Deserialize, Serialize};
 
 /// Canonical V3 family surface for motion-field shaders.
@@ -30,6 +33,7 @@ impl VfxMotionFieldShader {
             SpatialShaderType::PulseWave(shader) => Some(Self::from(shader)),
             SpatialShaderType::Radar(shader) => Some(Self::from(shader)),
             SpatialShaderType::Orbit(shader) => Some(Self::from(shader)),
+            SpatialShaderType::RadialSpiral(shader) => Some(Self::from(shader)),
             _ => None,
         }
     }
@@ -74,6 +78,21 @@ impl From<&OrbitShader> for VfxMotionFieldShader {
     }
 }
 
+impl From<&RadialSpiralShader> for VfxMotionFieldShader {
+    fn from(shader: &RadialSpiralShader) -> Self {
+        Self {
+            behavior: VfxMotionFieldBehavior::RadialSpiral {
+                arms: shader.arms,
+                radial_frequency: shader.radial_frequency,
+                radial_power: shader.radial_power,
+                speed: shader.speed,
+                blend_strength: shader.blend_strength,
+                color: shader.color.clone(),
+            },
+        }
+    }
+}
+
 impl From<WaveDirection> for VfxMotionFieldDirection {
     fn from(value: WaveDirection) -> Self {
         match value {
@@ -86,4 +105,4 @@ impl From<WaveDirection> for VfxMotionFieldDirection {
 }
 
 // <FILE>tui-vfx-style/src/models/v3/cls_vfx_motion_field_shader.rs</FILE> - <DESC>V3 motion-field family shader surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

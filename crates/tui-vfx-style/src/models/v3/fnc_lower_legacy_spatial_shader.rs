@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/v3/fnc_lower_legacy_spatial_shader.rs</FILE> - <DESC>Lower the legacy flat spatial shader surface into the primitive/composed V3 layers</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Decision 2 migration slice — centralize lowering from SpatialShaderType into the grouped V3 family representation and make the primitive/composed split explicit for downstream runtime wiring.</WCTX>
-// <CLOG>Promote lower_legacy_spatial_shader to return the top-level VfxSpatialShaderFamily with explicit primitive/composed variants.</CLOG>
+// <CLOG>0.3.0: lower RadialSpiral into the V3 motion-field primitive family.
+// Promote lower_legacy_spatial_shader to return the top-level VfxSpatialShaderFamily with explicit primitive/composed variants.</CLOG>
 
 //! Central lowering helper from the legacy flat spatial shader surface into the
 //! grouped V3 primitive/composed family representation.
@@ -52,6 +53,9 @@ pub fn lower_legacy_spatial_shader(shader: &SpatialShaderType) -> VfxSpatialShad
             VfxSpatialComposedPrimitive::StochasticTexture(shader.into()),
         ),
         SpatialShaderType::PulseWave(shader) => {
+            VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
+        }
+        SpatialShaderType::RadialSpiral(shader) => {
             VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
         }
         SpatialShaderType::TracePropagation(shader) => VfxSpatialShaderFamily::ComposedPrimitive(
@@ -109,4 +113,4 @@ pub fn lower_legacy_spatial_shader(shader: &SpatialShaderType) -> VfxSpatialShad
 }
 
 // <FILE>tui-vfx-style/src/models/v3/fnc_lower_legacy_spatial_shader.rs</FILE> - <DESC>Lower the legacy flat spatial shader surface into the primitive/composed V3 layers</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

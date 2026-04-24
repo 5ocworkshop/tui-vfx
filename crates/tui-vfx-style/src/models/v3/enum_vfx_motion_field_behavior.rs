@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/v3/enum_vfx_motion_field_behavior.rs</FILE> - <DESC>V3 motion-field family behavior surface</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Decision 2 migration slice — create a grouped V3 home for primitive motion-field shaders while preserving the legacy PulseWave, Radar, and Orbit variants for current playback.</WCTX>
-// <CLOG>Define the V3 motion-field family enums and payloads that lift the shared field/scan behavior out of the legacy flat shader catalog.</CLOG>
+// <CLOG>0.2.0: add radial_spiral motion-field behavior for procedural spiral density fields.
+// Define the V3 motion-field family enums and payloads that lift the shared field/scan behavior out of the legacy flat shader catalog.</CLOG>
 
 //! V3 behavior surface for motion-field family shaders.
 //!
@@ -74,7 +75,27 @@ pub enum VfxMotionFieldBehavior {
         /// Dot color.
         color: ColorConfig,
     },
+    /// Procedural radial spiral density field.
+    RadialSpiral {
+        /// Angular arm count / repetition factor.
+        #[config(default = 1.5)]
+        arms: f32,
+        /// Radial ring frequency.
+        #[config(default = 12.0)]
+        radial_frequency: f32,
+        /// Radius falloff power.
+        #[config(default = 0.6)]
+        radial_power: f32,
+        /// Speed multiplier.
+        #[config(default = 1.0)]
+        speed: f32,
+        /// Maximum blend strength.
+        #[config(default = 0.5)]
+        blend_strength: f32,
+        /// Blend color.
+        color: ColorConfig,
+    },
 }
 
 // <FILE>tui-vfx-style/src/models/v3/enum_vfx_motion_field_behavior.rs</FILE> - <DESC>V3 motion-field family behavior surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
