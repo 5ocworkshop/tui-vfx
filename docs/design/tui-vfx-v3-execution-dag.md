@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-execution-dag.md</FILE> - <DESC>Dependency DAG for remaining tui-vfx V3 work, separating autonomous parallel tracks from owner-blocked decisions.</DESC> -->
-<!-- <VERS>VERSION: 0.1.1</VERS> -->
-<!-- <WCTX>Add the concrete Track C1 compatibility-table document link so the DAG points implementers at the durable motion/offscreen/edge mapping artifact instead of a vague task label.</WCTX> -->
-<!-- <CLOG>0.1.1: PATCH — link Track C1 directly to the checked-in V2→V3 motion compatibility table. 0.1.0: initial V3 execution DAG with blocker split, parallel tracks, dependency graph, and recommended work waves.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.2</VERS> -->
+<!-- <WCTX>Keep the execution DAG aligned with current completed-initial slices while preserving it as the remaining-work dependency map.</WCTX> -->
+<!-- <CLOG>0.1.2: add current-status guidance so agents do not redispatch completed first slices.</CLOG> -->
 
 # V3 execution DAG
 
@@ -283,6 +283,21 @@ graph TD
   classDef final fill:#5a1f1f,stroke:#ff7b72,color:#fff;
 ```
 
+
+## Current status checkpoint
+
+This DAG remains the dependency map, not the authoritative completion ledger.
+Use the [master punch list](tui-vfx-v3-outstanding-master-list.md) for commit-level
+evidence. As of the current checkpoint, do **not** redispatch first-slice work
+for these completed-initial nodes unless the punch list names a follow-up slice:
+
+| Node | Current dispatch guidance |
+|---|---|
+| `A5-PHASE-SCOPE-COMBINE` | First slice complete: `PhaseSet`, `scope_mode`, and explicit combine metadata are implemented. Dispatch only broader corpus/property or scheduler-classification follow-ups. |
+| `A6-HINTS` | First slice complete: duplicate, missing, and kind-mismatched hint producers now hard-fail. Dispatch only broader corpus or integration follow-ups. |
+| `D1-TOOLING-DOCS` | Complete-initial and ongoing: expand docs only when new tooling/evidence lands. |
+| `F1-AUTHORING` | Complete-initial and ongoing: reconcile sibling schema/procedural/pipeline docs rather than rewriting the guide from scratch. |
+
 ## Recommended work waves
 
 ### Wave 1 — start immediately in parallel
@@ -334,4 +349,4 @@ Dispatch these tracks now; they have minimal cross-track dependency:
   downstream.
 
 <!-- <FILE>docs/design/tui-vfx-v3-execution-dag.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.2</VERS> -->
