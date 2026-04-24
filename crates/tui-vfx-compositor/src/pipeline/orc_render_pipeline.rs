@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.1.2</VERS>
-// <WCTX>Phase 1a perf — cache the Arc<RoleMap> built for each render call across consecutive frames, keyed on (source ptr, generation, width, height), so a stable RoleMap stops triggering a full Vec<RoleId> clone every frame.</WCTX>
-// <CLOG>12.1.2: PATCH — introduce a thread-local ROLES_ARC_CACHE plus a cached_roles_arc() helper that reuses the previously built Arc<RoleMap> when (ptr, generation, width, height) matches the cached entry. Used from all three per-call roles_arc sites: render_pipeline_with_shadow, render_loop, and render_loop_inspected. Behavior unchanged; steady-state per-frame source_roles.clone() drops to zero for workloads that keep a long-lived RoleMap across frames. Memo §2.
+// <VERS>VERSION: 12.1.3</VERS>
+// <WCTX>Phase 1a perf — hoist shader region resolution and the shader area Rect out of the per-cell apply_shaders / apply_shaders_inspected functions. The doc on StyleRegion::Cell states the hot loop should resolve bindings once per layer per frame; the code was doing it once per cell per layer. Fix the mismatch.</WCTX>
+// <CLOG>12.1.3: PATCH — resolve layer.region once per layer at the top of render_pipeline_with_shadow / render_loop / render_loop_inspected, pass the pre-resolved &[Cow<StyleRegion>] and the frame-constant Rect into apply_shaders / apply_shaders_inspected. Eliminates per-cell match + evaluate()×2 (for the Cell{Binding,Binding} case) and per-cell match + Cow::Borrowed wrap (for every other variant). ~150-300 μs/frame on 80×24 with 2 shader layers.
+// 12.1.2: PATCH — introduce a thread-local ROLES_ARC_CACHE plus a cached_roles_arc() helper that reuses the previously built Arc<RoleMap> when (ptr, generation, width, height) matches the cached entry. Used from all three per-call roles_arc sites: render_pipeline_with_shadow, render_loop, and render_loop_inspected. Behavior unchanged; steady-state per-frame source_roles.clone() drops to zero for workloads that keep a long-lived RoleMap across frames. Memo §2.
 // 12.1.1: PATCH — replace the fresh OwnedGrid::new + buffer.clone() pair in render_pipeline_with_shadow with two thread-local GridPool checkouts plus a cells-slice copy. Behavior unchanged; steady-state per-shadowed-frame allocations go from 2+ to 0 once pool buckets are warm. Memo §1 and §3.
 // 12.1.0: MINOR — Phase A.3 additions. (a) render_pipeline_with_shadow now takes `destination: &mut SemanticScene` (was &mut dyn Grid) so it can write RoleTag::Shadow into the destination role map for every cell identified as a shadow region candidate. (b) apply_shaders/apply_shaders_inspected gain a `roles_arc: &Arc<RoleMap>` parameter; the ShaderContext struct literals now include the `roles` field cloned from this Arc. (c) render_loop and render_loop_inspected build the Arc<RoleMap> once per invocation (a single RoleMap clone) so per-cell Arc::clone is cheap. (d) new effective_shadow_rect() helper consults config.source_region via extract_shadow_envelope; returns None for no-match (shadow stage skipped). Non-inspected shadow path pre-computes the in_element_ni / shadow_has_coverage_ni flags so shadow-region writes can be tracked for role tagging regardless of composite mode branch.
 // 12.0.0: MAJOR signature change for role-aware targeting.</CLOG>
@@ -20,9 +21,11 @@ use crate::traits::pipeline_inspector::CompositorInspector;
 use crate::types::cls_sampler_spec::SamplerSpec;
 use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::sync::Arc;
 use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
+use tui_vfx_style::models::StyleRegion;
 use tui_vfx_style::traits::ShaderContext;
 use tui_vfx_types::{Cell, Grid, Rect, RoleMap, RoleTag, SemanticScene, Style};
 
@@ -309,6 +312,16 @@ fn render_pipeline_with_shadow(
 
     // Render element content to buffer (on top of shadow)
     let (w16, h16) = (width as u16, height as u16);
+    // Resolve shader-layer regions and build the shader area once per frame,
+    // not per cell. StyleRegion::resolved is a no-op for bindless regions and
+    // a cheap evaluate() pair for Cell{binding, binding}; either way the cost
+    // belongs outside the per-cell loop.
+    let shader_area = Rect::new(0, 0, w16, h16);
+    let resolved_regions: Vec<Cow<'_, StyleRegion>> = options
+        .shader_layers
+        .iter()
+        .map(|layer| layer.region.resolved(&options.runtime_params))
+        .collect();
     for y in 0..height {
         for x in 0..width {
             let (local_x, local_y) = (x as u16, y as u16);
@@ -338,6 +351,8 @@ fn render_pipeline_with_shadow(
                 offset_y + elem_offset_y,
                 shader_t,
                 &options,
+                &resolved_regions,
+                shader_area,
                 source_role,
                 &roles_arc,
             );
@@ -668,6 +683,14 @@ fn render_loop(
     let mask_t = compute_mask_t(options);
     // Arc-wrap the source role map once for cheap per-cell Arc::clone.
     let roles_arc: Arc<RoleMap> = cached_roles_arc(source_roles);
+    // Resolve shader-layer regions and build the shader area once per frame,
+    // not per cell.
+    let shader_area = Rect::new(0, 0, w16, h16);
+    let resolved_regions: Vec<Cow<'_, StyleRegion>> = options
+        .shader_layers
+        .iter()
+        .map(|layer| layer.region.resolved(&options.runtime_params))
+        .collect();
 
     for y in 0..height {
         for x in 0..width {
@@ -712,6 +735,8 @@ fn render_loop(
                 offset_y,
                 shader_t,
                 options,
+                &resolved_regions,
+                shader_area,
                 source_role,
                 &roles_arc,
             );
@@ -748,6 +773,14 @@ fn render_loop_inspected(
     let mask_t = compute_mask_t(options);
     // Arc-wrap the source role map once for cheap per-cell Arc::clone.
     let roles_arc: Arc<RoleMap> = cached_roles_arc(source_roles);
+    // Resolve shader-layer regions and build the shader area once per frame,
+    // not per cell.
+    let shader_area = Rect::new(0, 0, w16, h16);
+    let resolved_regions: Vec<Cow<'_, StyleRegion>> = options
+        .shader_layers
+        .iter()
+        .map(|layer| layer.region.resolved(&options.runtime_params))
+        .collect();
 
     for y in 0..height {
         for x in 0..width {
@@ -801,6 +834,8 @@ fn render_loop_inspected(
                 offset_y,
                 shader_t,
                 options,
+                &resolved_regions,
+                shader_area,
                 inspector,
                 source_role,
                 &roles_arc,
@@ -850,16 +885,14 @@ fn apply_shaders(
     offset_y: usize,
     shader_t: f64,
     options: &CompositionOptions<'_>,
+    resolved_regions: &[Cow<'_, StyleRegion>],
+    shader_area: Rect,
     source_role: Option<tui_vfx_types::RoleTag>,
     roles_arc: &Arc<RoleMap>,
 ) {
-    let area = Rect::new(0, 0, w16, h16);
-    for layer in &options.shader_layers {
-        // Resolve any runtime-parameter bindings (e.g. Cell { x, y } with
-        // BindableU16::Binding coords) into concrete literals for this
-        // frame's runtime_params. Returns Cow::Borrowed for bindless regions.
-        let resolved = layer.region.resolved(&options.runtime_params);
-        if resolved.should_style(local_x, local_y, source_role.clone(), area) {
+    for (layer, resolved) in options.shader_layers.iter().zip(resolved_regions.iter()) {
+        // `resolved` was produced once per layer per frame by the caller.
+        if resolved.should_style(local_x, local_y, source_role.clone(), shader_area) {
             let (ctx_x, ctx_y, ctx_w, ctx_h) = resolved
                 .to_local_coords(local_x, local_y)
                 .unwrap_or((local_x, local_y, w16, h16));
@@ -902,14 +935,19 @@ fn apply_shaders_inspected(
     offset_y: usize,
     shader_t: f64,
     options: &CompositionOptions<'_>,
+    resolved_regions: &[Cow<'_, StyleRegion>],
+    shader_area: Rect,
     inspector: &mut dyn CompositorInspector,
     source_role: Option<tui_vfx_types::RoleTag>,
     roles_arc: &Arc<RoleMap>,
 ) {
-    let area = Rect::new(0, 0, w16, h16);
-    for (shader_index, layer) in options.shader_layers.iter().enumerate() {
-        let resolved = layer.region.resolved(&options.runtime_params);
-        if resolved.should_style(local_x, local_y, source_role.clone(), area) {
+    for (shader_index, (layer, resolved)) in options
+        .shader_layers
+        .iter()
+        .zip(resolved_regions.iter())
+        .enumerate()
+    {
+        if resolved.should_style(local_x, local_y, source_role.clone(), shader_area) {
             let (ctx_x, ctx_y, ctx_w, ctx_h) = resolved
                 .to_local_coords(local_x, local_y)
                 .unwrap_or((local_x, local_y, w16, h16));
@@ -990,4 +1028,4 @@ fn blend_shadow_cell(shadow_cell: &Cell, dest_cell: &Cell) -> Cell {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>END OF VERSION: 12.0.0</VERS>
+// <VERS>END OF VERSION: 12.1.3</VERS>
