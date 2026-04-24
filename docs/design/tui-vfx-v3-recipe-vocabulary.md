@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Standardize the author-facing term "recipe ingredients" for capabilities authors combine inside recipes.</WCTX> -->
-<!-- <CLOG>0.2.0: add recipe ingredients as the canonical authoring term for recipe capabilities.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.3</VERS> -->
+<!-- <WCTX>Set the icon/glyph baseline around modern 2026+ Unicode and emoji-capable true-color terminals.</WCTX> -->
+<!-- <CLOG>0.2.3: update icon/glyph guidance for modern terminal and emoji assumptions.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
 
@@ -45,6 +45,7 @@ Recipe ingredients include:
 - progress and timer treatments
 - runtime bindings and tokens
 - assets
+- icons, glyphs, symbols, emoji, and optional Nerd Font glyphs
 - I/O producer/consumer links
 - host-edge affordances when an adapter supports them
 
@@ -56,6 +57,38 @@ Why this term:
 - it avoids the vague **capabilities** when speaking to recipe authors
 - it helps authors think in combinations: ingredients create micro-experiences,
   not piles of effects
+
+Icon/glyph guidance:
+
+- assume the go-forward platform is a modern 2026+ true-color developer
+  terminal with good Unicode and emoji support
+- use Unicode symbols and emoji when they improve recognition, hierarchy, or
+  delight
+- treat Nerd Font glyphs as optional profile/host variants unless the host
+  explicitly guarantees support
+- use icons to improve recognition, hierarchy, or delight; do not use them as
+  decorative stickers
+- when multiple recipes in a set use icons, check that the icon language is
+  consistent enough to feel related but distinct enough to serve each event
+
+Similarity rule:
+
+- reject or rework recipe concepts that are materially too similar in
+  ingredients, motion, metaphor, layout, or attention behavior
+- consistency is good when intentional; accidental sameness is a design smell
+- if two recipes are subtle variants of one idea, document why both should exist
+  or remove one
+
+Recipe family vocabulary:
+
+- use **recipe family** when one design format intentionally supports several
+  variants, such as info/warning/error states that share a structure but vary
+  border color, icon, texture, position, or animation intensity
+- a recipe family can be the right answer; do not force every state into a
+  separate concept
+- if the assignment asks for a limited set of distinct recipes, a family with
+  variants usually counts as one concept unless the user explicitly asks for
+  each variant as its own deliverable
 
 Rules:
 

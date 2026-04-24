@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-ingredients-reference-plan.md</FILE> - <DESC>Plan and template for a standardized V3 recipe ingredients reference</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Define the author-facing ingredients catalog needed by staged recipe authoring prompts and future AI/human recipe authors.</WCTX> -->
-<!-- <CLOG>0.1.0: add the recipe ingredients reference template and rollout plan.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.3</VERS> -->
+<!-- <WCTX>Align icon/glyph ingredient assumptions with modern Unicode and emoji-capable true-color terminals.</WCTX> -->
+<!-- <CLOG>0.1.3: update icon/glyph ingredient baseline for 2026+ terminals.</CLOG> -->
 
 # V3 Recipe Ingredients Reference Plan
 
@@ -30,7 +30,8 @@ The reference should help humans and AI authors answer:
 This is different from development tooling documentation. Validators, probes,
 trace CLIs, and preview players are **development tools**. Content transforms,
 masks, shaders, filters, motion routes, procedurals, bindings, timers, progress
-treatments, and I/O chains are **recipe ingredients**.
+treatments, icons/glyphs/symbols/emoji, and I/O chains are **recipe
+ingredients**.
 
 ## 2. Standard ingredient entry format
 
@@ -40,8 +41,8 @@ Every ingredient entry should use this format:
 ## Ingredient Name
 
 Kind: content | motion_route | easing | mask | shader | filter | sampler |
-      procedural_source | binding | progress_timer | asset | io_chain |
-      host_edge_affordance
+      procedural_source | binding | progress_timer | icon_glyph | asset |
+      io_chain | host_edge_affordance
 
 One-line concept:
   ...
@@ -96,8 +97,9 @@ Initial catalog sections:
 8. Procedural sources
 9. Progress and timer ingredients
 10. Runtime bindings, tokens, and assets
-11. I/O chain ingredients
-12. Host-edge affordances
+11. Icons, glyphs, symbols, emoji, and optional Nerd Font glyphs
+12. I/O chain ingredients
+13. Host-edge affordances
 
 Each section should start with a short chooser table:
 
@@ -118,6 +120,7 @@ A good ingredient description is:
 - **paired with working examples**
 - **consistent about canonical vocabulary**
 - **useful for combination brainstorming**
+- **clear about set-level similarity risks**
 
 The reference should help an author form combinations before writing JSON, for
 example:
@@ -138,13 +141,48 @@ sun patch + GlistenBand + concealed light + slow cubic_out settle
    - progress/timer ingredients
    - procedural sources
    - I/O chain patterns
+   - icon/glyph ingredients
 3. Link each ingredient to at least one debug recipe or probe fixture.
 4. Add validation notes where schema spelling or probe bridge behavior is easy
    to get wrong.
 5. Use the staged theme-authoring A/B tests to identify missing descriptions.
 6. Promote the catalog to core V3 documentation when the first pass is useful.
 
-## 6. Open questions
+## 6. Icon/glyph baseline
+
+The go-forward platform is modern: 2026+ true-color developer terminals with
+good Unicode and emoji support. Ingredient references should not write as if the
+target is a 1980s green screen.
+
+Guidance:
+
+- Unicode symbols and emoji are normal ingredients when they improve
+  recognition, hierarchy, or delight.
+- Nerd Font glyphs are optional profile/host variants, not the baseline.
+- Icons should serve the user moment; they are not decorative stickers.
+- If a recipe uses an emoji, document why it fits the tone and whether it may
+  need an alternate glyph for restrained/professional contexts.
+
+## 7. Recipe-set similarity checks
+
+Ingredient references should help authors build a set of recipes, not only a
+single recipe. A recipe set should be checked for accidental sameness:
+
+- repeated metaphor without a reason
+- same motion route across unrelated events
+- same icon/glyph language without semantic distinction
+- same shader/filter combination with only color changes
+- same anchor/timing/prominence for different attention levels
+
+Consistency is desirable when it reinforces the design system. Similarity is a
+problem when it shows the author did not explore the available ingredients.
+
+Intentional variants are different. If alert/info/warning states share one
+format and vary border color, icon, texture, position, or animation intensity,
+document that as a **recipe family** with variants. Do not count each variant as
+a distinct recipe concept unless the assignment asks for variant coverage.
+
+## 8. Open questions
 
 - Should the first catalog be hand-maintained, generated from rustdoc/schema, or
   hybrid?
@@ -156,4 +194,4 @@ sun patch + GlistenBand + concealed light + slow cubic_out settle
   boundary-specific?
 
 # <FILE>docs/design/tui-vfx-v3-recipe-ingredients-reference-plan.md</FILE> - <DESC>Plan and template for a standardized V3 recipe ingredients reference</DESC>
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.3</VERS> -->
