@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.10</VERS> -->
+<!-- <VERS>VERSION: 0.14.11</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work, authoring-doc lifecycle status, and explicitly deferred post-release specs.</WCTX> -->
-<!-- <CLOG>0.14.10: mark V3-AUTH01-FOLLOW complete-initial after sibling authoring-doc reconciliation.</CLOG> -->
+<!-- <CLOG>0.14.11: mark V3-DOCGEN01 and V3-DEMO01 complete-initial after verified recipe-side slices.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -95,9 +95,7 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-SHADOW01 | Implement/prove transparent shadow and host-bound shadow model | Shadow docs require explicit transparent shadow, host attachment, and motion-edge integration rather than accidental underlay behavior. |
 | V3-EDGE01 | Implement/prove directional vanishing-edge behavior | Motion/offscreen edge crossing must drive border vanish/preserve and shadow fade/clip/preserve based on the active clipped edge. |
 | V3-TOOL01 | Work down Chapter 100 release checklist | V3 support for schema dispatch/cutover, `pipeline-validator`, `recipe-probe`, `tui-vfx-trace`, debug QC, docs generation, authoring docs, demo, and CI. |
-| V3-DOCGEN01 | V3-shape generated docs pipeline | Generated-doc landing page now advertises recipe-side V3 entry points; broader schema/capabilities/AI-context generation and drift checks remain follow-up. |
 | V3-TRACE01 | Trace/probe parity for broader V3 subset | Recipe-probe and tui-vfx-trace already accept supported compiled V3 subsets; scene parity, lifecycle-analysis parity, and broader trace semantics remain. |
-| V3-DEMO01 | Full native animated V3 demo/browser path | Demo/play_recipe render supported direct V3 bridge subset; full browser experience for migrated V3 corpus remains outstanding. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
 
@@ -129,6 +127,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-VC03 | Complete initial | `tui-vfx-recipes` commit `2a7b216` and `tui-vfx` commit `4c19f0c`: validator rejects dual legacy/canonical style forms in normalized leaf payloads. |
 | V3-VC01 | Complete initial | `tui-vfx-recipes` commit `dac3a67`: optional authoring metadata shape validation for `intent_hints`, `visual_tags`, and `expected_visual`. |
 | V3-DOCGEN01A | Complete initial | `tui-vfx-recipes` commit `1a32b56`: generated docs landing page names `just docs-v3-generate`, `just docs-v3-check`, `V3_API.md`, and `v3_api.json`. |
+| V3-DOCGEN01 | Complete initial | `tui-vfx-recipes` generated-doc gate now freshness-checks `docs/generated/V3_API.md`, `docs/generated/v3_api.json`, and `docs/generated/README.md` with schema-versioned public item, field, enum-variant, and type-alias shape extracted from `src/v3`. Broader unified `tui-vfx` capabilities/AI-context generation remains tracked under V3-TOOL01 / Chapter 100. |
 | V3-T01 | Complete initial | `tui-vfx` commit `421b6e7`: `docs/tooling/INDEX.md` is now the canonical V3 tooling command map and links release-gate evidence records. |
 | V3-BRAILLE01 | Complete strategy | `tui-vfx` commit `421b6e7`: post-release dotfield strategy captures bgraph/rocketsplash inspiration, ownership boundaries, creative procedural lanes, ANSI diagrams, and phased follow-up work. |
 | V3-LANG01 | Complete initial | `tui-vfx` commit `b4ba71c` and `tui-vfx-recipes` commit `7572f86`: schema-field vocabulary is now a steering rule and authoring docs use `motion_routes` for `motion.route` fixtures. |
@@ -179,6 +178,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-CI02-MIDNIGHTSWITCHBOARD01 | Complete technical blocker fix | `tui-vfx-recipes` commit `8a2eca7` plus `docs/tooling/probe_midnight_switchboard.evidence.record.json`: `midnight_switchboard` now reports successful combined/lifecycle probe analysis with configured style/shader effects observed. |
 | V3-PREVIEW01-IMPORTS | Complete initial | `tui-vfx-recipes` commit `8a2eca7`: examples, tests, and tooling imports/use sites now use canonical `PlaybackPlan`, `PlaybackController`, `PlaybackRecipeBridge`, `V3FrameSnapshot`, and `render_v3_frame_to_buffer` where safe while retaining `Preview*` compatibility seams. |
 | V3-SHOW01-MADEIRA-HEADLESS | Complete initial | `tui-vfx-recipes` commit `8a2eca7`: Madeira has diagnostic-clean headless strict/probe/player evidence and `docs/scene/MADEIRA_HEADLESS_PARITY.md`; visual owner review remains separate. |
+| V3-DEMO01-HEADLESS-PLAYER | Complete initial | `tui-vfx-recipes` commit `bffe815`: `tui-vfx-player --corpus <dir> --json` checks recursive V3 recipe discovery/loading through the demo/player seam, warning on fallback or load errors; demo tests cover disk refresh/reload behavior without GUI playback. |
 
 ## Hard policy: V2 removal is last
 
@@ -270,4 +270,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.10</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.11</VERS> -->
