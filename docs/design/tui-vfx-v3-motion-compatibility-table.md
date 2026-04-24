@@ -170,6 +170,10 @@ Keep the motion spec's family lists aligned with the current executable catalog:
 
 This is doc-only, low risk, and removes a real source of future drift.
 
+Representative debug fixture for the diagonal offscreen case:
+
+- `recipes/debug_recipes/motion/toast_shadow_diagonal_edge_crossing.json`
+
 ### Smallest safe implementation/test follow-up
 
 If a narrowly-scoped runtime packet is opened next, the smallest safe one is:
@@ -184,7 +188,7 @@ If a narrowly-scoped runtime packet is opened next, the smallest safe one is:
   - `from_bottom_left`
   - `from_bottom_right`
 - prove that border-trim output matches the current
-  `vanishing_edge_trim_spec()` diagonal behavior before broader V3 fixture work
+  `vanishing_edge_trim_spec()` diagonal behavior
 
 That packet is smaller and safer than starting with a full motion rewrite because
 it isolates the only still-lossy part of the compatibility map.
