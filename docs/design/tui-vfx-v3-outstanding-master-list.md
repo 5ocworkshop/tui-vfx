@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.12.3</VERS> -->
+<!-- <VERS>VERSION: 0.12.4</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.12.3: mark scope-mode and hint-runtime hardening complete-initial after compiled-path commit.</CLOG> -->
+<!-- <CLOG>0.12.4: mark combine metadata and complex_multi_sampler VC-09 evidence complete-initial.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -14,10 +14,10 @@ considered stable and before any V2 fallback/removal work is considered.
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
 | V3-T01 | Tooling docs hub | Complete initial / ongoing | Canonical command map now covers validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, docs generation, and release-gate evidence; expand only as new tooling lands. |
-| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear`, `wargames_defcon`, and `complex_full_pipeline` now have truthful owner-review-required output+probe mismatch evidence; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
+| V3-M01 | VC-09 migration-equivalence harness | In progress / mixed evidence | BSOD V2↔V3 canary is exact; `ease_linear`, `wargames_defcon`, `complex_full_pipeline`, and `complex_multi_sampler` now have truthful owner-review evidence; continue expanding critical-pair coverage while keeping legacy recipes in place pending owner audit. |
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Complete initial / broaden later | Metadata shape diagnostics now include `related_themes`; style normalization validation has a first pass. Broaden remaining optional metadata/schema-report coverage as corpus pressure appears. |
-| V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists and curated payload alias equivalence tests prove first canonicalization pairs; broader property/corpus coverage remains follow-up. |
+| V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists, curated payload alias equivalence tests prove first canonicalization pairs, and normalized IR now emits explicit phase/scope/combine metadata. Broader property/corpus coverage remains follow-up. |
 | V3-CI02 | Release-gate evidence capture / compare | Outstanding | The release-gate manifest exists; next work is pass/fail/whitelist-needed evidence capture using existing probe/render/trace tooling, starting with the command-backed `probe_alarm_lighthouse` smoke record. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Outstanding | Implement/prove host-bound motion envelope, transparent shadow behavior, and directional edge-crossing semantics together. |
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Outstanding | Surface/frame-space signal basis and richer field/showcase consumers remain follow-up beyond the landed cell-space field-hint proofs. |
@@ -98,7 +98,6 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-STYLE01 | Runtime-facing V3 style family consumers | Continue wiring real V3-side family surfaces into runtime consumers; avoid deleting legacy V2 surfaces until final removal. |
 | V3-SCHED01 | Scheduler/batching final strategy | Keep semantic proofs green, preserve `Sequence` feed-forward and `Parallel` snapshot isolation, and only optimize when render-hash drift guards prove safety. |
 | V3-BIND01 | Broader runtime binding evaluation | Extend runtime binding support beyond currently proven shader/procedural/scene-visibility seams where the corpus needs it. |
-| V3-COMBINE01 | Implement accepted combine defaults | Normalizer emits explicit effective combine/merge semantics for sequence, parallel, masks, filters, shaders, samplers, and overlap classes. |
 | V3-GOV01 | Apply capability promotion ladder in authoring docs | Authoring docs and capability catalog use base primitive / variant / earned-name composition / factory-internal / deferred categories consistently. |
 | V3-GOV02 | Add factory-internal promotion review hooks | Validator/docs process can flag repeated factory-internal conventions for rule-of-three review without making them public prematurely. |
 | V3-SPATIAL01 | Add/prove surface-frame spatial basis if still missing | Mixed-signals has cell-space leaves; docs call out continuous surface/frame geometry leaves as the next additive substrate for optical falloff/spotlight-style consumers. |
@@ -153,10 +152,12 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-VC09-EASE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9cc4497`: `ease_linear` is tracked as owner-review-required output+probe mismatch evidence. |
 | V3-VC09-WARGAMES01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9cc4497`: `wargames_defcon` is tracked as owner-review-required output+probe mismatch evidence for the next critical-pair slice. |
 | V3-VC09-COMPLEX01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `d68ce00`: `complex_full_pipeline` is tracked as owner-review-required output+probe mismatch replacement evidence. |
+| V3-VC09-MULTISAMPLER01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `bf2ee98`: `complex_multi_sampler` is tracked as partial-match replacement evidence with output-only owner review. |
 | V3-BEZIER01 | Complete | `tui-vfx-recipes` commit `752dd5e`: custom Bezier easing fixture now uses a distinct overshoot cubic-bezier curve and validates through parser, validator, and probe paths. |
 | V3-PHASE01 | Complete initial | `tui-vfx-recipes` commit `39aae98`: single phase and phase arrays parse, inherited phase intersections normalize into explicit `PhaseSet`, empty effective phase sets fail validation, compiled leaves carry PhaseSet, and generated V3 docs are current. |
 | V3-HINT01 | Complete initial | `tui-vfx-recipes` commit `ec25b34`: build and ordered runtime paths share hard failures for duplicate producers, missing producers, and declared hint kind mismatches. |
 | V3-SCOPE01 | Complete initial | `tui-vfx-recipes` commit `ec25b34`: authoring/normalization/generated docs support `scope_mode: intersect|replace`, normalized IR emits authored/effective scopes, and validation rejects empty static intersections plus replace-without-authored-scope. |
+| V3-COMBINE01 | Complete initial | `tui-vfx-recipes` commit `bf2ee98`: normalized IR emits explicit sequence/parallel combine, merge, leaf-family defaults, and conservative parallel overlap classifications. |
 | V3-VC01-RELATED | Complete initial | `tui-vfx-recipes` commit `ec25b34`: `pipeline-validator --rules` surfaces malformed `metadata.related_themes` with path-style parse diagnostics. |
 | V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
 
