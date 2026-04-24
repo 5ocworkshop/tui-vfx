@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.6</VERS> -->
+<!-- <VERS>VERSION: 0.14.7</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.14.6: record the headless V3-CI02 evidence push and blockers.</CLOG> -->
+<!-- <CLOG>0.14.7: mark the packaged thin-player slice complete-initial.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -26,7 +26,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-NAME01/PREVIEW01 | V3 naming cutover work | Parser/schema and first playback alias slices complete / import migration outstanding | Scene/continuous/clock, main `config.rs`, parser wrappers, recipe internals, and public preview-boundary aliases now expose canonical `Vfx*`/`Playback*`/frame names while preserving compatibility aliases. Next slice: move imports/usages in risk order, then consider a future module-path shim. |
 | V3-VIEW01 | Normalized IR viewer/explorer | Outstanding / implementation slice scoped | Scope around normalized execution graph after IR contract is stable. First slice should add an offline `pipeline-validator` normalized execution-graph explorer built on existing normalized loading/dump surfaces, without schema or runtime coupling. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
-| V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / implementation slice scoped | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Thin-player assessment says the gap is packaging/surface consolidation: add a `tools/tui-vfx-player` wrapper over existing preview/player APIs without `gtd-movie` semantics. |
+| V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / thin-player complete-initial | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Packaged `tui-vfx-player` now exists in `tui-vfx-recipes` with text/JSON summary modes over existing preview/cutover APIs; remaining TOOL01 work is broader command/docs/CI cutover, not thin-player packaging. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
 | V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial | `tui-vfx-v3-docs-lifecycle-plan.md` is linked from the V3 index, records the focused status/link audit, and confirms local Markdown links under `docs/design` and `docs/tooling` pass with no broken local targets. Historical draft/deferred wording remains where it intentionally describes retained design records or post-release territory. |
@@ -185,6 +185,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-VIEW01-SCOPE | Complete assessment | Normalized IR viewer gap is presentation, not schema work: first implementation slice should add an offline `pipeline-validator` normalized execution-graph explorer over existing normalized IR loader/dump APIs. |
 | V3-DOCS01-QDOC01-COMPLETE | Complete initial | Focused V3 docs lifecycle/status reconciliation updated the V3 index, lifecycle plan, and upgrade-plan index; local Markdown link audit over `docs/design` and `docs/tooling` checked 70 files with 0 broken local links. |
 | V3-CI02-HEADLESS01 | Complete evidence checkpoint | Headless release-gate records now document passing probe/lowering/trace evidence where available and classify remaining `render_capture_png` gaps as blocked-on-explicit-owner-visual-capture; `probe_midnight_switchboard` remains the technical blocker to fix. |
+| V3-TOOL01-THINPLAYER-PACKAGE | Complete initial | `tui-vfx-recipes` commit `c4401ff`: packaged `tui-vfx-player` workspace package provides text and `--json` recipe playback summaries through existing preview/cutover APIs while preserving legacy fallback. |
 
 ## Hard policy: V2 removal is last
 
@@ -276,4 +277,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.6</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.7</VERS> -->
