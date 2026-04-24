@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> - <DESC>Design plan for spatial signals, typed field hints, and first-class chained visual fields in V3</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model by separating normalized phase/loop progress from monotonic elapsed time and making cadence-driven consumers explicitly depend on elapsed time.</WCTX> -->
-<!-- <CLOG>0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model and the work that has already landed, so the next tranche starts from typed field hints rather than repeating already-complete spatial-leaf/context-threading work.</WCTX> -->
+<!-- <CLOG>0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
 
 # tui-vfx V3 spatial field + hint plan
 
@@ -697,17 +697,27 @@ It is just the clearest first one.
 
 ### Phase 1 — mixed-signals spatial leaves
 
-- extend `SignalContext`
-- add `SampleNormX/SampleNormY/SampleCellX/SampleCellY`
-- add tests
+**Status: landed.**
+
+- `SignalContext` now carries `cell_x` / `cell_y`
+- the first coordinate leaves are present in `mixed-signals`
+- focused tests already prove those leaves read the per-sample context correctly
 
 ### Phase 2 — recipes-side threading
 
-- pass spatial context through the existing layer/runtime seams
-- update per-cell evaluation sites to use cell-local contexts where appropriate
-- add focused tests in recipes-side proving signal evaluation sees coordinates
+**Status: materially landed for the current direct path.**
+
+- cell-position threading already flows through the current runtime/evaluation seams
+- multiple compositor/style/recipes consumers already call `with_cell_position(...)`
+- focused tests now prove that signal evaluation can see per-cell coordinates on the current path
+
+So the next missing work is no longer “add basic spatial leaves” or “thread
+cell coordinates once.” The next missing work is to make that substrate useful
+for step-to-step reuse.
 
 ### Phase 3 — typed field hints
+
+**Status: next active tranche.**
 
 - add typed field/hint storage in the V3 runtime
 - make validator/runtime agreement explicit
