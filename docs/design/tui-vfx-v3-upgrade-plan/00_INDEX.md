@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md</FILE> - <DESC>Navigation hub and pinned Schema V3.0 reference for the V3 upgrade plan chapter directory. Defines the reading order, summarizes each chapter, and lists the pinned schema reference the rest of the plan depends on. This file's <VERS> tracks its own revisions; individual chapter files version independently.</DESC> -->
-<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <VERS>VERSION: 1.1.1</VERS> -->
 <!-- <WCTX>Bring the Chapter 80 summary in the chapter map in sync with the chapter's actual content. Chapter 80 grew from 21 → 22 → 23 open questions across two updates (Q#22 motion_path promoted in Chapter 80 v1.0.0; Q#23 timer story added in Chapter 80 v1.1.0 during the tachyonfx competitive-analysis pass). This file's body already reflected the new count; only the VERS/CLOG was lagging.</WCTX> -->
-<!-- <CLOG>1.1.0: MINOR — add Chapter 63 for the V3 edge ingestion/runtime-adapter lane and animation-pattern primitive gap review. 1.0.1: PATCH — metadata bump to record the two open-questions additions (Q#22 motion_path + offscreen, Q#23 timer story). No structural change; body was already current.</CLOG>
+<!-- <CLOG>1.1.1: PATCH — expand Chapter 63 scope note to include the grid-resize adapter contract and Cellophane adoption matrix. 1.1.0: MINOR — add Chapter 63 for the V3 edge ingestion/runtime-adapter lane and animation-pattern primitive gap review. 1.0.1: PATCH — metadata bump to record the two open-questions additions (Q#22 motion_path + offscreen, Q#23 timer story). No structural change; body was already current.</CLOG> -->
 <!-- <CLOG>1.0.0: initial index. Establishes chapter layout (10/20/.../110 with 10-unit spacing for flexible insertion), pins Schema V3.0 reference in the body, cross-maps each chapter to its monolith source, provides the ANSI chapter-dependency diagram.</CLOG> -->
 
 # TUI-VFX V3 Upgrade Plan
@@ -99,7 +99,7 @@ Reading order is the file number order. Chapters 10–30 set up philosophy, arch
 | 59 | [59_validator_and_canonicalization.md](59_validator_and_canonicalization.md) | Validator/canonicalization phase. Defines the checks and canonical outputs needed before broad runtime family work should proceed. | Stable |
 | 61 | [61_first_implementation_slice.md](61_first_implementation_slice.md) | First concrete implementation slice. Defines the smallest credible code package: authoring types, normalized IR skeleton, region/style normalization, hint validation, and IR dump/debug output. | Stable |
 | 62 | [62_compiled_execution_plan.md](62_compiled_execution_plan.md) | Compiled execution-plan phase. Defines the follow-on after the first normalized-IR slice: tighter selector compaction, execution-facing plan types, and propagation through the same shallow consumer seams V2 already uses. | Stable |
-| 63 | [63_edge_ingestion_runtime_adapters.md](63_edge_ingestion_runtime_adapters.md) | Edge-lane plan for ANSI/command source ingestion, standalone preview adapters, grapheme review, and pattern/path primitive gaps such as swirl and attractor. | New |
+| 63 | [63_edge_ingestion_runtime_adapters.md](63_edge_ingestion_runtime_adapters.md) | Edge-lane plan for ANSI/command source ingestion, standalone preview/grid-resize adapters, grapheme review, Cellophane adoption decisions, and pattern/path primitive gaps such as swirl and attractor. | New |
 | 60 | [60_testing_release_gates.md](60_testing_release_gates.md) | Six release-gate criteria (shadow / offscreen / probe / trace / GT-Design integration / role-aware lowering), validator redesign scope, fixture/golden-artifact strategy, whitelist discipline, recapture cadence, escalation paths. Concern F's resolution + Open Q #9. | Stable |
 | 70 | [70_shape_sketches.md](70_shape_sketches.md) | Flat-vs-tree JSON comparisons for three representative cases (simple fade-in toast, ember-felt three-layered dwell, ambient-halo four-per-edge). | Stable |
 | 80 | [80_open_questions.md](80_open_questions.md) | 23 open questions with reviewer-opinion annotations. Ordered roughly by impact on plan shape. Open Q #22 (motion_path + offscreen trajectory migration) newly promoted from migration-log major gap to plan-level status. Open Q #23 (timer story — tachyonfx-style first-class Timer primitive vs distributed timing) added during competitive-analysis pass. | Evolving |
@@ -148,4 +148,4 @@ The table below names the **live** V2 locations the archive was copied from — 
 Chapter 100 (`100_tooling_ci_migration.md`) enumerates every one of these artifacts as a release-blocking migration target.
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.1</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.1</VERS> -->

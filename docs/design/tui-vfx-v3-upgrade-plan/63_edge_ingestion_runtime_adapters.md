@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/63_edge_ingestion_runtime_adapters.md</FILE> - <DESC>V3 edge-lane plan for source ingestion, terminal runtime adapters, and pattern/path primitive gaps found during adjacent-library review.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Record the cellophane-inspired edge lane and the follow-on animation-pattern/path review as one bounded V3 workstream. Keeps ingestion/runtime adapters and edge primitive additions together instead of scattering them across core V3 semantics.</WCTX> -->
-<!-- <CLOG>0.1.0: initial lane plan with ANSI/command ingestion, standalone preview adapters, grapheme review, and path/pattern primitive matrix including swirl and attractor.</CLOG> -->
+<!-- <CLOG>0.2.0: add explicit Cellophane adoption matrix and resize-aware runtime adapter contract while clarifying that Cellophane contributes runtime/frame infrastructure rather than additional named effect/path primitives. 0.1.0: initial lane plan with ANSI/command ingestion, standalone preview adapters, grapheme review, and path/pattern primitive matrix including swirl and attractor.</CLOG> -->
 
 # 63 — Edge ingestion and runtime adapters
 
@@ -15,6 +15,8 @@ input ideas:
 - parse ANSI terminal output into a grid-backed scene source
 - capture command output offline for recipe sources and probes
 - provide a small standalone runner for recipe previews
+- provide resize-aware preview/runtime adapter loops without moving terminal
+  lifecycle ownership into the library core
 - keep terminal lifecycle and diff rendering outside compositor core
 - audit grapheme storage separately from visual-effect semantics
 - close path/pattern gaps such as `swirl` and executable `attractor` dynamics
@@ -39,6 +41,26 @@ crates consume validated scene and pipeline data; adapters produce that data.
 | EIRA-04 | Standalone preview runner / diff adapter | examples/tools | A recipe can be previewed outside a host app using the canonical builder and grid output. |
 | EIRA-05 | Grapheme storage review | design note + tests if adopted | Unicode cluster handling is either explicitly adopted where it improves correctness or deferred with a reason. |
 | EIRA-06 | Pattern/path primitive gaps | `tui-vfx-geometry`, V3 motion lowering | Existing patterns are documented; missing reusable primitives are added with tests and rustdoc. |
+| EIRA-07 | Grid-resize adapter contract | examples/tools + host integration docs | Host-owned resize loops supply a new `Rect`/grid size and preserve phase/sample state while V3 re-renders deterministically; tui-vfx remains area-in/grid-out and does not poll terminal events. |
+
+## Cellophane review: adopt, already have, defer
+
+Cellophane is primarily a terminal animation runtime and frame abstraction. It
+does not appear to ship a catalog of named visual effects or motion paths that
+competes with the V3 recipe/path system. The useful ideas are therefore runtime
+and source-adapter ideas, not new shader/filter semantics.
+
+| Cellophane capability | tui-vfx status | Decision | V3 lane |
+|---|---|---|---|
+| One-trait animation lifecycle (`init`, `update`, `is_done`) | V3 has recipe lifecycle plus compiled preview state, not a user-implemented trait API | Do not copy directly. Preserve recipe-first authoring; expose host adapter examples where imperative apps need a loop. | EIRA-04, EIRA-07 |
+| Resize-aware loop | Core rendering is already naturally adaptive when recipes are rendered from the current `Rect`/grid size; host apps still own terminal events | Adopt the contract language, not new core machinery: host detects resize, supplies the new grid size, preserves phase/sample/runtime params, and asks V3 to render again. | EIRA-07 |
+| Frame diffing renderer | Probe tooling already has frame diffs; compositor should not own terminal writes | Adopt only at preview/tool boundary if useful. Core remains deterministic grid/area rendering; terminal diff writes belong to a host/runner. | EIRA-04 |
+| ANSI/VTE frame ingestion | Not a first-class V3 recipe source yet | Adopt as source ingestion: parse ANSI-styled text into a grid/scene layer offline or at authoring/tool time. | EIRA-02 |
+| Command output to frame | Not a first-class recipe source yet | Adopt as offline capture only. Runtime recipe execution must not spawn commands. | EIRA-03 |
+| Ratatui widget adapter | Host apps can already render tui-vfx output through their own buffers, but a small canonical example would help | Adopt as documentation/example shape, not as a core dependency. | EIRA-04 |
+| Grapheme cluster storage / wide-cell discipline | tui-vfx has Unicode and color-inert-glyph handling, but should re-review cluster storage before broad ANSI ingestion | Review before adopting deeper storage changes. | EIRA-05 |
+| Input forwarding to animations | V3 recipes are declarative; user input is a host concern | Defer as a recipe trigger/binding topic, not an effect primitive. Host adapters may map events to runtime params. | Future bindings/runtime-param lane |
+| Named effects/path primitives | Cellophane does not appear to provide additional built-in paths/effects beyond examples authored by consumers | No direct adoption. Keep the V3 pattern/path matrix below as the source of truth. | EIRA-06 |
 
 ## Pattern/path capability matrix
 
@@ -57,6 +79,12 @@ crates consume validated scene and pipeline data; adapters produce that data.
 | Lissajous/figure-eight | none | Defer | Add only when a recipe needs repeatable dual-axis harmonic motion. Can be expressed by composed sine signals later. |
 | Particle system / flocking | none | Defer | Belongs in a later scene/procedural source lane, not the motion-path substrate. |
 
+No further Cellophane-native named path/effect primitives were identified in the
+local review. If future review of Cellophane consumers such as terminal
+screensavers reveals concrete reusable motion fields, evaluate them against this
+matrix and move shared math into `mixed-signals` when the primitive is useful
+outside tui-vfx.
+
 ## Implementation plan
 
 1. Land EIRA-01 as documentation first.
@@ -68,13 +96,23 @@ crates consume validated scene and pipeline data; adapters produce that data.
    - wire V3 motion dynamics into executable `PathType`s
 3. Split EIRA-02/EIRA-03/EIRA-04 into separate work packets. They are mostly
    independent, but all must normalize into `SemanticScene` / grid output.
-4. Keep EIRA-05 as a review gate before broad ANSI adoption. ANSI parsing can
+4. Land EIRA-07 as a preview/tooling contract rather than core resize logic:
+   - host app listens for terminal resize
+   - host supplies the new target `Rect` / grid size
+   - adapter preserves phase/sample/runtime params where possible
+   - adapter re-renders the same V3 recipe against the new grid
+   - tui-vfx core remains free of terminal polling and lifecycle ownership
+   - recipes are adaptive to the extent their layout/source specs are expressed
+     relative to the provided grid; fixed-size recipes remain intentionally fixed
+5. Keep EIRA-05 as a review gate before broad ANSI adoption. ANSI parsing can
    preserve style without forcing a new grapheme model into the core grid.
-5. Add debug recipes for each shipped slice:
+6. Add debug recipes for each shipped slice:
    - `motion_swirl_chain.json`: route plus swirl dynamic feeding a downstream style shader
    - `motion_attractor_chain.json`: attractor dynamic feeding a downstream shader through the V3 I/O hint path
    - `ansi_source_chain.json`: ANSI layer feeding a shader/filter chain
    - `command_capture_chain.json`: captured command output feeding a shader/filter chain
+   - `resize_preserve_phase_chain.json`: same V3 chain rendered at multiple
+     areas while preserving phase/sample state
 
 ## Documentation requirements
 
@@ -93,6 +131,8 @@ Every shipped public type or schema-bearing field in this lane requires:
 - `cargo xtask docs generate` or the current docs validation target when public
   schema/doc surfaces change
 - probe/validator smoke tests for every added debug recipe
+- adapter smoke proving a recipe can be rendered against two grid sizes without
+  resetting phase/sample unless the host explicitly requests a restart
 
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/63_edge_ingestion_runtime_adapters.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
