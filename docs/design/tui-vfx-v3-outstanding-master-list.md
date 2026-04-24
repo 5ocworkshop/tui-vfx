@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.11.4</VERS> -->
-<!-- <WCTX>Move the latest tooling, braille strategy, easing fixtures, motion route naming, trace, and canonicalization proof slices into completed/complete-initial status while keeping true follow-on work visible.</WCTX> -->
-<!-- <CLOG>0.11.4: record completed tooling, braille strategy, easing fixture, motion route, trace, and canonicalization proof checkpoints.</CLOG> -->
+<!-- <VERS>VERSION: 0.11.5</VERS> -->
+<!-- <WCTX>Record the authoring-guide rewrite checkpoint and add a separate V3 docs lifecycle/elevation planning lane.</WCTX> -->
+<!-- <CLOG>0.11.5: record the V3 authoring-guide checkpoint and add docs lifecycle/elevation planning.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -29,6 +29,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
+| V3-DOCS01 | V3 docs lifecycle/elevation plan | Outstanding | Run a separate planning cycle to classify V3 planning docs as core/elevate, merge, keep-as-design-record, or archive/closed-out; keep docs developer-focused, concise, lightly fun, and non-marketing. |
 | V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
 | V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `tui-vfx-v3-braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
 | V3-R99 | Final V2 retirement plan | Blocked by design | Only after migration, stability, downstream adaptation, and owner approval. |
@@ -109,10 +110,11 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-DOCGEN01 | V3-shape generated docs pipeline | Generated-doc landing page now advertises recipe-side V3 entry points; broader schema/capabilities/AI-context generation and drift checks remain follow-up. |
 | V3-TRACE01 | Trace/probe parity for broader V3 subset | Recipe-probe and tui-vfx-trace already accept supported compiled V3 subsets; scene parity, lifecycle-analysis parity, and broader trace semantics remain. |
 | V3-DEMO01 | Full native animated V3 demo/browser path | Demo/play_recipe render supported direct V3 bridge subset; full browser experience for migrated V3 corpus remains outstanding. |
-| V3-AUTH01 | V3 authoring-guide rewrite | Rewrite authoring workflow, schema reference, scene guide, procedural sources, and pipeline-validator LLM guide for V3 tree schema and primitive/default model. |
+| V3-AUTH01-FOLLOW | V3 authoring-doc sibling follow-ons | Scene authoring guide is complete-initial; reconcile schema reference, procedural sources, pipeline-validator LLM guide, and authoring workflow docs around the same V3 ladder and vocabulary. |
 | V3-QDOC01 | Reconcile stale status docs | Some older first-slice/status docs still say `IN_PROGRESS`; update or annotate after verifying current as-built state. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
+| V3-DOCS01 | Create docs lifecycle/elevation plan | Classify transient V3 planning docs versus durable core docs; decide what gets elevated, merged, kept as design record, or archived. Use developer voice: clear, concise, honest, with occasional fun but no marketing fog machine. |
 
 ## Completed / complete-initial work
 
@@ -150,6 +152,8 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-TRACE01A | Complete initial | `tui-vfx-recipes` commit `50c3547`: direct compiled-V3 trace runs emit trace-local lifecycle phase markers and tooling docs no longer treat the surface as blocked. |
 | V3-C02A | Complete initial | `tui-vfx-recipes` commit `50c3547`: curated payload alias tests prove `pulse_color`→`color` and `rotation_speed`→`speed` canonicalize equivalently. |
 | V3-VC09-EASE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `23200fa`: `ease_linear` is tracked as a truthful VC-09 partial with output mismatch, probe match, and owner-review-required evidence. |
+| V3-BEZIER01 | Complete | `tui-vfx-recipes` commit `752dd5e`: custom Bezier easing fixture now uses a distinct overshoot cubic-bezier curve and validates through parser, validator, and probe paths. |
+| V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
 
 ## Hard policy: V2 removal is last
 
@@ -241,4 +245,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.11.4</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.5</VERS> -->
