@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.12.0</VERS> -->
+<!-- <VERS>VERSION: 0.12.1</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.12.0: add post-release weather ambient field tracking item.</CLOG> -->
+<!-- <CLOG>0.12.1: mark V3-PHASE01 complete after PhaseSet implementation.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -99,7 +99,6 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-SCHED01 | Scheduler/batching final strategy | Keep semantic proofs green, preserve `Sequence` feed-forward and `Parallel` snapshot isolation, and only optimize when render-hash drift guards prove safety. |
 | V3-BIND01 | Broader runtime binding evaluation | Extend runtime binding support beyond currently proven shader/procedural/scene-visibility seams where the corpus needs it. |
 | V3-HINT01 | Hint graph rules hardening | Duplicate producer, visibility, lifetime, and value-kind errors are enforced consistently in validator and runtime. |
-| V3-PHASE01 | Implement accepted phase-scoping rule | Validator/canonicalizer accept single phase and phase arrays, apply inherited intersection, reject empty effective phase, and emit explicit normalized `PhaseSet`. |
 | V3-SCOPE01 | Implement accepted scope inheritance rule | Validator/canonicalizer support `scope_mode: intersect|replace`, reject empty static intersections and invalid replace-without-child-scope, and emit authored/effective scopes. |
 | V3-COMBINE01 | Implement accepted combine defaults | Normalizer emits explicit effective combine/merge semantics for sequence, parallel, masks, filters, shaders, samplers, and overlap classes. |
 | V3-GOV01 | Apply capability promotion ladder in authoring docs | Authoring docs and capability catalog use base primitive / variant / earned-name composition / factory-internal / deferred categories consistently. |
@@ -156,6 +155,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-VC09-EASE01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9cc4497`: `ease_linear` is tracked as owner-review-required output+probe mismatch evidence. |
 | V3-VC09-WARGAMES01 | Complete evidence checkpoint | `tui-vfx-recipes` commit `9cc4497`: `wargames_defcon` is tracked as owner-review-required output+probe mismatch evidence for the next critical-pair slice. |
 | V3-BEZIER01 | Complete | `tui-vfx-recipes` commit `752dd5e`: custom Bezier easing fixture now uses a distinct overshoot cubic-bezier curve and validates through parser, validator, and probe paths. |
+| V3-PHASE01 | Complete initial | `tui-vfx-recipes` commit `39aae98`: single phase and phase arrays parse, inherited phase intersections normalize into explicit `PhaseSet`, empty effective phase sets fail validation, compiled leaves carry PhaseSet, and generated V3 docs are current. |
 | V3-AUTH01 | Complete initial | `tui-vfx-recipes` commit `c0aca72`: scene guide became a ten-section V3 authoring ladder from toast quickstart through scenes, pipelines, I/O, procedural sources, tooling, and debug recipe standards. |
 
 ## Hard policy: V2 removal is last
@@ -248,4 +248,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.1</VERS> -->
