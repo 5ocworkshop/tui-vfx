@@ -283,7 +283,8 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
         FilterSpec::KittScanner {
             boost: 50,
             band_width: 0.15,
-            bps: 1.0,
+            bpm: Some(72.0),
+            bps: 1.2,
             progress: BindableValue::static_f32(0.0),
             motion_mode: Default::default(),
             apply_to: Default::default(),
@@ -373,7 +374,7 @@ fn extract_sampler_metadata() -> HashMap<String, EffectMetadata> {
 
 fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
     use tui_vfx_style::models::{
-        Gradient, LinearGradientShader, cls_affordance_wake_shader::AffordanceWakeShader,
+        cls_affordance_wake_shader::AffordanceWakeShader,
         cls_ambient_occlusion_shader::AmbientOcclusionShader,
         cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
         cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
@@ -388,7 +389,7 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         cls_stochastic_sparkle_shader::StochasticSparkleShader,
         cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
         cls_trace_propagation_shader::TracePropagationShader,
-        cls_wayfinding_node_shader::WayfindingNodeShader,
+        cls_wayfinding_node_shader::WayfindingNodeShader, Gradient, LinearGradientShader,
     };
     use tui_vfx_types::Color;
 

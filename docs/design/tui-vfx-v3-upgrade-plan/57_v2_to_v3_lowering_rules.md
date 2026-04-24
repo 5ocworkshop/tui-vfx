@@ -124,16 +124,21 @@ Rule:
 
 | V2 surface | V3 home | Lowering rule |
 |---|---|---|
-| `pipeline.<phase>.duration_ms` | `pipeline.timing.enter_ms/exit_ms` | normalize |
-| `pipeline.<phase>.easing` | `pipeline.timing.enter_ease/exit_ease` | normalize |
-| `motion_path` | `pipeline.timing.enter_path/exit_path` | structural lift |
-| `from` / `to` offscreen | `pipeline.timing.enter_from/exit_to` | structural lift |
-| `snapping` | `pipeline.timing.enter_snap/exit_snap` | structural lift |
+| `pipeline.<phase>.duration_ms` | `config.motion.enter/exit.duration_ms` | normalize |
+| `pipeline.<phase>.easing` | `config.motion.enter/exit.easing` | normalize |
+| `motion_path` | `config.motion.enter/exit.route` or `route + dynamics[]` | structural lift / classify |
+| `from` / `to` offscreen | `config.motion.enter.from` / `config.motion.exit.to` | structural lift |
+| `via` waypoint | `config.motion.<phase>.via` | structural lift |
+| `snapping` | `config.motion.enter/exit.snap` | structural lift |
+| `quantize_steps` | `config.motion.enter/exit.quantize_steps` | carry forward |
+| `border.trim = vanishing_edge|none` + crossing-edge semantics | `config.motion.<phase>.edge_crossing` | structural lift / normalize |
 | style/content loop clocks | `config.clock` or per-step `clock` | normalize by scope |
 | legacy `continuous` | `phase = all` + clocked step/renderer | normalize, not preserve as separate mode |
 
 Rule:
-- motion/timing metadata stays on the recipe/step envelope, not inside arbitrary payloads unless the family's actual behavior is inherently family-local
+- recipe-envelope motion lives under `config.motion`, not the per-cell step tree
+- layer-local geometry motion lives under `scene.layers[*].placement.motion`
+- motion metadata stays out of arbitrary effect payloads unless the family's actual behavior is inherently family-local
 
 ### 30.7 Content renderer trees
 

@@ -19,7 +19,38 @@
 0.2.0: rename to tui-vfx-v3-upgrade-plan.md; elevate the William Morris "useful or beautiful" principle to a top-level guiding philosophy section with theatrical/whimsical carve-out.
 0.1.0: initial draft. Captures direction only.</CLOG> -->
 
-# TUI-VFX V3 Upgrade Plan
+# TUI-VFX V3 Upgrade Plan — DEPRECATED (monolithic form)
+
+> **⚠ DEPRECATED — DO NOT EDIT.** This monolithic plan has been distilled into a chapter directory and is preserved here only for historical reference. All further plan work happens in the chaptered form.
+>
+> **Canonical plan location:** [`docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md`](../../docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md) (from recyclebin relative path; absolute path `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md`)
+>
+> The chapter directory at `docs/design/tui-vfx-v3-upgrade-plan/` contains:
+>
+> | # | File | Content |
+> |---|---|---|
+> | 00 | `00_INDEX.md` | Navigation hub + pinned Schema V3.0 reference + V2 live-location table + frozen-archive pointer |
+> | 10 | `10_philosophy.md` | Five principles + constraint-vs-permissiveness |
+> | 20 | `20_architectural_framing.md` | Layer model + ecosystem-agnostic seam + mixed-signals + two-level chaining |
+> | 30 | `30_why_now.md` | Clean-break framing + feedback cross-ref + drivers |
+> | 40 | `40_decisions.md` | Decisions 1–8 |
+> | 50 | `50_migration_workflow.md` | Three-phase Curate→Re-author→Validate + critical-set carve-out (promoted Concern B) |
+> | 60 | `60_testing_release_gates.md` | Six release-gate criteria + validator redesign (promoted Concern F + Open Q #9) |
+> | 70 | `70_shape_sketches.md` | Flat-vs-tree JSON comparisons |
+> | 80 | `80_open_questions.md` | 23 open questions (Q#22 motion_path/offscreen added; Q#23 timer primitive added) |
+> | 90 | `90_deferred_design.md` | Movie-composer, metadata, retrospective, distribution, dynamic recipes |
+> | 100 | `100_tooling_ci_migration.md` | ~36 V2-schema-touching components inventory + release checklist |
+> | 110 | `110_appendix_audits.md` | Audit workflows A/B/C pointer |
+>
+> The frozen V2 spec archive lives at [`docs/v2-spec-archive/`](../../docs/v2-spec-archive/) (53 files, read-only).
+>
+> **Why this is deprecated not deleted:** the chaptered form is extracted from this monolith. Keeping this file in the recyclebin lets reviewers compare the two forms during the transition period. Once the chaptered form is reviewed and accepted, this file can be emptied from the recyclebin.
+>
+> ---
+>
+> *Historical plan content preserved below for reference.*
+
+---
 
 > **Status: draft — direction only.** No implementation schedule, no migration tooling spec, no committed V3 schema grammar yet. This document captures *what we've decided* and *what still needs to resolve* before a real plan can be written.
 

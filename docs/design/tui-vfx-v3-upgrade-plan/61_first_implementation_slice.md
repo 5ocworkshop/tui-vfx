@@ -68,7 +68,8 @@ Implement parse types for:
 - `base_style`
 - `regions`
 - `scene.layers`
-- `pipeline.timing`
+- `config.motion`
+- `scene.layers[*].placement.motion`
 - `step`
 - `scope`
 - `interaction`

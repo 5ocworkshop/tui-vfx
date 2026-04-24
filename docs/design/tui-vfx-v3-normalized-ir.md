@@ -39,6 +39,7 @@ NormalizedRecipe
 │  ├─ layout
 │  ├─ lifecycle
 │  ├─ border
+│  ├─ motion?
 │  ├─ clock?
 │  ├─ theme?
 │  └─ shadow?
@@ -51,7 +52,6 @@ NormalizedRecipe
 │     ├─ surface
 │     └─ pipeline
 └─ pipeline
-   ├─ timing
    └─ step?
 ```
 
@@ -88,7 +88,7 @@ NormalizedStep
 
 ### Pass A — envelope defaults
 
-- fill default scope/phase/timing values
+- fill default scope/phase/envelope-motion values
 - normalize clock defaults
 - normalize contract blocks
 
@@ -113,7 +113,18 @@ NormalizedStep
 
 - resolve sibling-relative placement
 - make per-layer defaults explicit
+- normalize layer-local `placement.motion`
 - validate layer-local source/surface/pipeline coherence
+
+### Pass F — motion normalization
+
+- normalize recipe-envelope motion under `envelope.motion`
+- normalize route vs dynamics split
+- normalize `from` / `via` / `to`
+- normalize `entry_edge` / `exit_edge`
+- normalize `screen_edge`
+- preserve enough provenance to map legacy `PathType`-style motion into the
+  cleaner V3 route+dynamics model
 
 ---
 
