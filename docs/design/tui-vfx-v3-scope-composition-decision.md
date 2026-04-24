@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-scope-composition-decision.md</FILE> - <DESC>Accepted V3 decisions for scope inheritance modes and composition combine defaults.</DESC> -->
 <!-- <VERS>VERSION: 0.1.2</VERS> -->
 <!-- <WCTX>Record the project-owner-approved resolution for scope inheritance and composition defaults: intersect by default, replace as explicit escape hatch, union deferred, and normalized IR makes combine semantics explicit.</WCTX> -->
-<!-- <CLOG>0.1.2: mark PhaseSet as implemented in the as-built note.</CLOG> -->
+<!-- <CLOG>0.1.2: align as-built PhaseSet, scope_mode, and combine metadata status.</CLOG> -->
 
 # V3 scope and composition decision
 
@@ -151,13 +151,12 @@ This resolves the active decision shape for:
 - scheduler/batching optimization preconditions
 - normalized IR canonicalization requirements
 
-As built today, `PhaseSet` is implemented in `tui-vfx-recipes`: authoring accepts
-single phases or arrays, normalization emits explicit effective phase sets, and
-validation rejects empty intersections. `scope_mode` and explicit combine
-emission remain the V3-SCOPE01 and V3-COMBINE01 follow-up work.
-
-Implementation remains in validator/canonicalization, scheduler classification,
-and docs/schema-generation lanes.
+As built today, `PhaseSet`, `scope_mode`, and explicit combine emission are
+implemented in `tui-vfx-recipes`: authoring accepts single phases or arrays,
+normalization emits explicit effective phase sets and combine semantics, and
+validation rejects empty intersections plus invalid replace-without-scope
+cases. Broader corpus/property coverage and scheduler classification remain the
+follow-up work.
 
 <!-- <FILE>docs/design/tui-vfx-v3-scope-composition-decision.md</FILE> -->
 <!-- <VERS>END OF VERSION: 0.1.2</VERS> -->

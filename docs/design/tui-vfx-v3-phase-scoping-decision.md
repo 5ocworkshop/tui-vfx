@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-phase-scoping-decision.md</FILE> - <DESC>Accepted V3 phase-scoping decision for step-level phase, container propagation, and normalized PhaseSet behavior.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.1.1</VERS> -->
 <!-- <WCTX>Record the project-owner-approved resolution for Chapter 80 phase scoping: steps and containers can both declare phase membership, effective phase is inherited by intersection, and normalized IR makes it explicit.</WCTX> -->
-<!-- <CLOG>0.1.0: initial accepted phase-scoping decision with examples and implementation rules.</CLOG> -->
+<!-- <CLOG>0.1.1: align as-built PhaseSet status with the current canonical IR slice.</CLOG> -->
 
 # V3 phase-scoping decision
 
@@ -120,7 +120,11 @@ This resolves the active shape decision for:
 - Chapter 90 scope/phase grouping concerns where phase propagation affects tree
   readability
 
-Implementation remains in the validator/canonicalization and schema-doc lanes.
+As built today, normalized `PhaseSet` is already implemented in
+`tui-vfx-recipes`: authoring accepts single phases or arrays, container
+propagation resolves by intersection, and validation rejects empty effective
+sets. The remaining work is broader corpus/property coverage and schema-doc
+drift checks.
 
 <!-- <FILE>docs/design/tui-vfx-v3-phase-scoping-decision.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.1</VERS> -->
