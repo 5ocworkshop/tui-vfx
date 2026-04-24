@@ -1,7 +1,7 @@
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>VERSION: 1.4.0</VERS> -->
-<!-- <WCTX>Clarify the canonical role of Preview, validator, and probe surfaces inside the staged authoring loop; add grid-size/adaptive-layout guidance for V3 authors.</WCTX> -->
-<!-- <CLOG>1.4.0: Add grid-size/adaptive-layout guidance: tui-vfx renders to caller-provided grids, host apps own resize events, and authors should choose fullscreen/relative/bound positions intentionally. 1.3.0: Add a “which tool proves what” split, including upstream-native debug-recipes QC and Preview as the canonical player for final visual sign-off</CLOG> -->
+<!-- <VERS>VERSION: 1.5.0</VERS> -->
+<!-- <WCTX>Add primitive-first debug recipe guidance so authors prove the simplest visual form before advanced chaining/showcase recipes.</WCTX> -->
+<!-- <CLOG>1.5.0: Add primitive-first debug recipe guidance: every primitive/feature/pathway starts with the simplest visual confirmation, with complex I/O showcases as secondary fixtures. 1.4.0: Add grid-size/adaptive-layout guidance: tui-vfx renders to caller-provided grids, host apps own resize events, and authors should choose fullscreen/relative/bound positions intentionally. 1.3.0: Add a “which tool proves what” split, including upstream-native debug-recipes QC and Preview as the canonical player for final visual sign-off</CLOG> -->
 
 # Recipe Authoring Workflow
 
@@ -31,6 +31,28 @@ Typical failure modes:
 Preview is the canonical **player**.
 Validator is the canonical **recipe-authoring acceptance** surface.
 Probe outputs are the canonical **structured evidence** surfaces.
+
+## Primitive-first debug recipes
+
+For `debug_recipes/`, the first fixture for any primitive, feature, or pathway
+should be the simplest presentation that makes the behavior immediately visible.
+This baseline is the visual truth source for authors and reviewers.
+
+Guidelines:
+
+- Strip away anything not required to see the primitive: no decorative border,
+  card background, extra shader, mask, or filter unless that element is the
+  primitive under test or makes the behavior legible.
+- Put advanced combinations, cross-family chains, and “full potential” showcases
+  in secondary complex/composition fixtures after the baseline exists.
+- Name and describe the baseline in human terms so the demo browser tells the
+  viewer exactly what should move, tint, reveal, distort, or emit.
+- When a combined recipe looks wrong, compare it against the primitive baseline
+  first; do not make the complex chain the only proof that a primitive works.
+
+Example: a `radial_twist` sampler baseline should move just the message text
+through the radial pathway. A later complex fixture may add a shader or I/O
+chain, but the text-only pathway proof remains the starting reference.
 
 ## Recommended build order
 
@@ -196,4 +218,4 @@ prefer to:
 - [PIPELINE_PROBE_WISHLIST.md](PIPELINE_PROBE_WISHLIST.md)
 
 <!-- <FILE>docs/RECIPE_AUTHORING_WORKFLOW.md</FILE> - <DESC>Canonical staged workflow for authoring and flattening complex tui-vfx recipes</DESC> -->
-<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.5.0</VERS> -->
