@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-types/src/role_map.rs</FILE> - <DESC>Dense per-cell RoleTag storage (one entry per cell of a SemanticScene)</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Sub-plan A Phase A.3.1 — add `Default` impl (returns an empty 0x0 map) so `Arc<RoleMap>::default()` works from `ShaderContext::default()` on the role-aware code path</WCTX>
-// <CLOG>0.2.0: MINOR — add `impl Default for RoleMap` returning `empty(0, 0)` so the new `roles: Arc<RoleMap>` field on `ShaderContext` can be built via `Arc::default()` without requiring callers to supply dimensions for placeholder contexts.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Phase 1a perf — expose a monotonic generation counter so the render-pipeline Arc<RoleMap> cache can detect mutation without a full content compare.</WCTX>
+// <CLOG>0.3.0: MINOR — add a `generation: u64` field (skipped by serde) that bumps on every in-bounds `set`; expose `pub fn generation(&self) -> u64` for cache-invalidation consumers. Out-of-bounds `set` still no-ops and leaves the generation unchanged.
+// 0.2.0: MINOR — add `impl Default for RoleMap` returning `empty(0, 0)` so the new `roles: Arc<RoleMap>` field on `ShaderContext` can be built via `Arc::default()` without requiring callers to supply dimensions for placeholder contexts.
 // 0.1.0: initial RoleMap with row-major Vec<RoleId> storage, embedded interner, bounds-checked accessors, row-major iterator, serde round-trip via cfg_attr.</CLOG>
 
 //! Dense per-cell `RoleTag` storage.
@@ -48,6 +49,16 @@ pub struct RoleMap {
     cells: Vec<RoleId>,
     /// Owns the `RoleTag` ↔ `RoleId` lookup for this map.
     interner: RoleInterner,
+    /// Monotonic mutation counter bumped on every in-bounds `set`.
+    ///
+    /// Consumers that cache derived state (e.g. an `Arc<RoleMap>` held by
+    /// a per-frame shader context) can store the last-observed generation
+    /// alongside the cache entry; if `generation()` matches, the cached
+    /// state is still valid. Not serde-serialized — a deserialized map
+    /// starts fresh at zero, so cross-process caches must compare content,
+    /// not generation.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    generation: u64,
 }
 
 impl RoleMap {
@@ -77,6 +88,7 @@ impl RoleMap {
             height,
             cells: vec![id; len],
             interner,
+            generation: 0,
         }
     }
 
@@ -103,13 +115,28 @@ impl RoleMap {
     /// Set the `RoleTag` at position `(x, y)`.
     ///
     /// Silently no-ops if `(x, y)` is out of bounds (no panic). This
-    /// matches the `Grid` trait's set semantics.
+    /// matches the `Grid` trait's set semantics. In-bounds sets bump
+    /// `generation()`; out-of-bounds sets leave the generation unchanged
+    /// so consumers that treat unchanged generation as "no mutation" are
+    /// correct by construction.
     pub fn set(&mut self, pos: (u16, u16), tag: RoleTag) {
         let (x, y) = pos;
         if let Some(idx) = self.index(x, y) {
             let id = self.interner.intern(&tag);
             self.cells[idx] = id;
+            self.generation = self.generation.wrapping_add(1);
         }
+    }
+
+    /// Monotonic mutation counter. Bumped on every in-bounds `set`;
+    /// unchanged across out-of-bounds `set`, read-only access, and
+    /// `clone()`.
+    ///
+    /// Designed as a cheap cache-invalidation signal: a consumer can
+    /// store the last observed generation alongside a cached derivation
+    /// and skip recomputing when the value still matches.
+    pub fn generation(&self) -> u64 {
+        self.generation
     }
 
     /// Iterate every cell in row-major order, yielding `(x, y, RoleTag)`.
@@ -170,4 +197,4 @@ impl<'a> Iterator for RoleMapIter<'a> {
 }
 
 // <FILE>crates/tui-vfx-types/src/role_map.rs</FILE> - <DESC>Dense per-cell RoleTag storage</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-types/tests/test_role_map.rs</FILE> - <DESC>Tests for RoleMap cell storage</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.1 — foundation primitive tests</WCTX>
-// <CLOG>0.1.0: TDD red tests for empty/all_background/new_with_default, get/set bounds handling, row-major iter, serde round-trip.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase 1a perf — cover the new generation() counter on RoleMap for Arc-cache invalidation.</WCTX>
+// <CLOG>0.2.0: MINOR — add five tests for RoleMap::generation: starts at zero, bumps on in-bounds set, unchanged across out-of-bounds set, monotonic across repeated sets, and propagates through clone.
+// 0.1.0: TDD red tests for empty/all_background/new_with_default, get/set bounds handling, row-major iter, serde round-trip.</CLOG>
 
 use tui_vfx_types::{RoleMap, RoleTag};
 
@@ -104,6 +105,46 @@ fn iter_returns_custom_tags_after_set() {
     );
 }
 
+#[test]
+fn generation_starts_at_zero() {
+    let map = RoleMap::empty(4, 3);
+    assert_eq!(map.generation(), 0);
+}
+
+#[test]
+fn in_bounds_set_bumps_generation() {
+    let mut map = RoleMap::empty(4, 3);
+    let before = map.generation();
+    map.set((1, 1), RoleTag::Border);
+    assert_eq!(map.generation(), before + 1);
+}
+
+#[test]
+fn out_of_bounds_set_does_not_bump_generation() {
+    let mut map = RoleMap::empty(2, 2);
+    let before = map.generation();
+    map.set((5, 5), RoleTag::Highlight);
+    assert_eq!(map.generation(), before);
+}
+
+#[test]
+fn repeated_sets_bump_monotonically() {
+    let mut map = RoleMap::empty(4, 3);
+    let start = map.generation();
+    map.set((0, 0), RoleTag::Text);
+    map.set((1, 0), RoleTag::Text);
+    map.set((2, 0), RoleTag::Text);
+    assert_eq!(map.generation(), start + 3);
+}
+
+#[test]
+fn clone_preserves_generation() {
+    let mut map = RoleMap::empty(3, 3);
+    map.set((1, 1), RoleTag::Border);
+    let cloned = map.clone();
+    assert_eq!(cloned.generation(), map.generation());
+}
+
 #[cfg(feature = "serde")]
 #[test]
 fn serde_round_trip_preserves_cells() {
@@ -122,4 +163,4 @@ fn serde_round_trip_preserves_cells() {
 }
 
 // <FILE>crates/tui-vfx-types/tests/test_role_map.rs</FILE> - <DESC>RoleMap tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
