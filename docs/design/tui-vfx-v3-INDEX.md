@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>Add the V3 release-gate manifest seed to the landing page so gate fixture enumeration is discoverable from the canonical start page.</WCTX> -->
-<!-- <CLOG>0.4.0: add V3 release-gate manifest seed link. 0.3.0: add V3 execution DAG link. 0.2.0: add timing and metadata decision link. 0.1.0: initial V3 documentation index spanning the upgrade plan, schema, I/O, motion, scene/content, tooling, migration, and outstanding punch list docs.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>Add the V3 motion compatibility table to the landing page so motion/offscreen/edge lowering policy is discoverable from the canonical start page.</WCTX> -->
+<!-- <CLOG>0.5.0: add V3 motion compatibility table link. 0.4.0: add V3 release-gate manifest seed link. 0.3.0: add V3 execution DAG link. 0.2.0: add timing and metadata decision link. 0.1.0: initial V3 documentation index spanning the upgrade plan, schema, I/O, motion, scene/content, tooling, migration, and outstanding punch list docs.</CLOG> -->
 
 # V3 documentation index
 
@@ -46,6 +46,7 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
 - [V3 schema overview](tui-vfx-v3-schema-overview.md)
 - [V3 schema draft](tui-vfx-v3-schema-draft.json)
 - [V3 motion spec](tui-vfx-v3-motion-spec.md)
+- [V3 motion compatibility table](tui-vfx-v3-motion-compatibility-table.md)
 - [V3 shadow spec](tui-vfx-v3-shadow-spec.md)
 - [V3 vanishing edge spec](tui-vfx-v3-vanishing-edge-spec.md)
 
@@ -96,4 +97,4 @@ chapters, as-built contracts, schema docs, tooling guides, and live punch list.
   semantics belong in `tui-vfx` / `tui-vfx-recipes`.
 
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->

@@ -257,9 +257,10 @@ Recommended initial route families:
 - `arc`
 - `bezier`
 - `rectilinear`
+- `spiral`
+- `figure_eight`
 
 Possible extension families later:
-- `spiral`
 - explicit path-point lists
 - future route refs or runtime-driven hooks after the API boundary populates
   typed values
@@ -297,6 +298,8 @@ Recommended initial dynamic families:
 - `projectile`
 - `orbit`
 - `attractor`
+- `swirl`
+- `carrier_orbit`
 
 Some of these are currently represented as standalone `PathType` variants. In V3, the cleaner model is to treat them as motion dynamics layered over a route.
 
@@ -673,6 +676,8 @@ That is the wrong long-term ownership boundary.
 The V3 motion model should live in tui-vfx and flow through canonical builder output so downstream consumers do not need parallel motion policy enums or conversion logic.
 
 ## Migration from V2
+
+Companion variant-by-variant mapping: [`tui-vfx-v3-motion-compatibility-table.md`](tui-vfx-v3-motion-compatibility-table.md).
 
 ### V2 enter / exit motion
 

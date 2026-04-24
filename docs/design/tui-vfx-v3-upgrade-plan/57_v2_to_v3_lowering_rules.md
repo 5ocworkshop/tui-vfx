@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/57_v2_to_v3_lowering_rules.md</FILE> - <DESC>Chapter 57 — canonical lowering rules from V2 to V3. Defines how existing V2 surfaces map into the stabilized V3 tree, what normal forms are preferred, and which cases require human classification rather than blind automatic migration.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>This chapter follows the schema-hardening and capability-catalog phases. It turns migration behavior into an explicit contract so loaders, scripts, validators, and human re-authoring passes do not silently embed different policy.</WCTX> -->
-<!-- <CLOG>1.0.0: initial chapter. Defines the lowering contract categories, the default migration posture, canonical mappings for the highest-value V2 surfaces, and the distinction between automatic lowering, automatic normalization, and human-classification-required cases.</CLOG> -->
+<!-- <VERS>VERSION: 1.0.1</VERS> -->
+<!-- <WCTX>Add a direct companion link to the checked-in motion compatibility table so PathType/offscreen/edge lowering does not get re-specified piecemeal outside this chapter.</WCTX> -->
+<!-- <CLOG>1.0.1: PATCH — link the motion/offscreen/edge companion table from the motion-lowering section. 1.0.0: initial chapter. Defines the lowering contract categories, the default migration posture, canonical mappings for the highest-value V2 surfaces, and the distinction between automatic lowering, automatic normalization, and human-classification-required cases.</CLOG> -->
 
 # 57 — V2 → V3 Lowering Rules
 
@@ -139,6 +139,7 @@ Rule:
 - recipe-envelope motion lives under `config.motion`, not the per-cell step tree
 - layer-local geometry motion lives under `scene.layers[*].placement.motion`
 - motion metadata stays out of arbitrary effect payloads unless the family's actual behavior is inherently family-local
+- use [`../tui-vfx-v3-motion-compatibility-table.md`](../tui-vfx-v3-motion-compatibility-table.md) as the variant-by-variant lowering companion for `PathType`, offscreen placements, and edge-crossing behavior
 
 ### 30.7 Content renderer trees
 

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-execution-dag.md</FILE> - <DESC>Dependency DAG for remaining tui-vfx V3 work, separating autonomous parallel tracks from owner-blocked decisions.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Translate the V3 outstanding master punch list into an execution DAG so agents can work independent tracks in parallel without blocking on unrelated decisions.</WCTX> -->
-<!-- <CLOG>0.1.0: initial V3 execution DAG with blocker split, parallel tracks, dependency graph, and recommended work waves.</CLOG> -->
+<!-- <VERS>VERSION: 0.1.1</VERS> -->
+<!-- <WCTX>Add the concrete Track C1 compatibility-table document link so the DAG points implementers at the durable motion/offscreen/edge mapping artifact instead of a vague task label.</WCTX> -->
+<!-- <CLOG>0.1.1: PATCH — link Track C1 directly to the checked-in V2→V3 motion compatibility table. 0.1.0: initial V3 execution DAG with blocker split, parallel tracks, dependency graph, and recommended work waves.</CLOG> -->
 
 # V3 execution DAG
 
@@ -86,7 +86,7 @@ Purpose: close the remaining geometry/edge/showcase gaps.
 
 Tasks:
 
-- `C1-MOTION-MAP`: V2 `PathType`/offscreen/edge-crossing compatibility table.
+- `C1-MOTION-MAP`: [V2 → V3 motion compatibility table](tui-vfx-v3-motion-compatibility-table.md) for `PathType`/offscreen/edge-crossing behavior.
 - `C2-OFFSCREEN-FIXTURES`: V3 offscreen/slide fixtures.
 - `C3-SHADOW`: transparent and host-bound shadow behavior.
 - `C4-EDGE`: directional vanishing-edge behavior.
