@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.13.0</VERS> -->
+<!-- <VERS>VERSION: 0.13.1</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.13.0: record shadow captures, spatial origin proof, config naming slice, and baseline VC-09 evidence.</CLOG> -->
+<!-- <CLOG>0.13.1: record Vfx parser-wrapper naming slice.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -23,7 +23,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-SPATIAL01 | Spatial field substrate follow-ons | Complete initial / docs/debug discovery follow-up | mixed-signals already has surface/frame-space basis; `tui-vfx-recipes` commits `c5190f1` and `7b2246f` prove `sample_surface_radius`, `sample_surface_radius_from`, and `sample_surface_angle_from` through V3 native filter rendering. Next: docs/debug recipe discovery if the authoring corpus needs it. |
 | V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
 | V3-REGION01 | Region compression follow-up | Outstanding | Resolve larger-corpus pressure beyond current region refs/runs. |
-| V3-NAME01/PREVIEW01 | V3 naming cutover work | Config schema slice complete / broader cutover outstanding | Scene/continuous/clock and main `config.rs` schema surfaces now have canonical `Vfx*` definitions with hidden `Ra*` aliases. Next slices: parser wrappers/import cleanup, then preview/playback seam names. |
+| V3-NAME01/PREVIEW01 | V3 naming cutover work | Parser/schema slices complete / playback seam outstanding | Scene/continuous/clock, main `config.rs`, parser wrappers, and recipe internals now use canonical `Vfx*` definitions with hidden `Ra*` aliases. Next slice: preview/playback seam names and remaining import cleanup. |
 | V3-VIEW01 | Normalized IR viewer/explorer | Outstanding | Scope around normalized execution graph after IR contract is stable. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / partial docs evidence | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Thin-player/current V3 surface map is documented; packaged `tui-vfx-player` remains outstanding. |
@@ -169,6 +169,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-D6-OFFSCREEN-FIXTURES | Complete evidence refresh | `tui-vfx-recipes` commit `e6e9da5` and `tui-vfx` evidence update: `content_slide_shift` and `scene_layer_follow_lag` now probe clean with empty diagnostics. |
 | V3-NAME01-SCHEMA-A | Complete initial | `tui-vfx-recipes` commit `a9d92e3`: scene/continuous/clock schema types use canonical `Vfx*` definitions with hidden `Ra*` compatibility aliases. |
 | V3-NAME01-SCHEMA-CONFIG | Complete initial | `tui-vfx-recipes` commit `ebc3eb0`: main `config.rs` schema definitions use canonical `Vfx*` names with hidden `Ra*` compatibility aliases and unchanged serde/wire fields. |
+| V3-NAME01-PARSER | Complete initial | `tui-vfx-recipes` commit `eca1967`: parser wrappers and recipe internals use canonical `Vfx*` names while retaining hidden `Ra*` aliases. |
 | V3-SPATIAL01-ORIGIN-LEAVES | Complete initial | `tui-vfx-recipes` commit `7b2246f`: `sample_surface_radius_from` and `sample_surface_angle_from` both affect native V3 filter rendering through authored recipe payloads. |
 | V3-D6-SHADOW-CAPTURES | Complete evidence refresh | Shadow release-gate sidecars now include required `render_capture_png` artifacts with checked SHA-256 values for base, edge-crossing, and pipeline fixtures. |
 | V3-VC01-RELATED | Complete initial | `tui-vfx-recipes` commit `ec25b34`: `pipeline-validator --rules` surfaces malformed `metadata.related_themes` with path-style parse diagnostics. |
