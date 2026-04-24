@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.8</VERS> -->
+<!-- <VERS>VERSION: 0.14.9</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work and explicitly deferred post-release capability specs.</WCTX> -->
-<!-- <CLOG>0.14.8: mark V3-VIEW01 and V3-REGION01 complete-initial after verified recipe-side work.</CLOG> -->
+<!-- <CLOG>0.14.9: mark midnight probe, playback import, and Madeira headless parity slices complete-initial.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -18,18 +18,13 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
 | V3-VC01/03 | Validator/canonicalization follow-ons | Complete initial / broaden later | Metadata shape diagnostics now include `related_themes`; style normalization validation has a first pass. Broaden remaining optional metadata/schema-report coverage as corpus pressure appears. |
 | V3-C01/C02 | Canonical normalized IR + canonicalization tooling | Complete initial / broaden later | Normalized IR dump contract exists, curated payload alias equivalence tests prove first canonicalization pairs, and normalized IR now emits explicit phase/scope/combine metadata. Broader property/corpus coverage remains follow-up. |
-| V3-CI02 | Release-gate evidence capture / compare | Blocked / headless evidence current | Headless evidence is current for non-GTD fixtures that can run without GUI capture. Remaining blockers: `probe_midnight_switchboard` hard technical probe failure, four records blocked on explicit owner visual-capture approval for `render_capture_png`, and four GTD representative captures requiring owner-approved fixtures. No X11/Zutty/Xvfb capture is allowed without explicit owner approval. |
+| V3-CI02 | Release-gate evidence capture / compare | Blocked on visual/GTD approval only | Headless evidence is current for non-GTD fixtures that can run without GUI capture. `probe_midnight_switchboard` is now fixed by `tui-vfx-recipes` commit `8a2eca7`; remaining blockers are records that require explicit owner visual-capture approval for `render_capture_png` and GTD representative captures requiring owner-approved fixtures. No X11/Zutty/Xvfb capture is allowed without explicit owner approval. |
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Complete initial / broaden later | Scene-layer motion now feeds edge-crossing border and attached-shadow policy; shared helper coverage proves diagonal/two-edge blanking directly. Follow-up: broaden full scene-layer corpus fixtures as needed. |
-| V3-SPATIAL01 | Spatial field substrate follow-ons | Complete initial / broaden later | mixed-signals already has surface/frame-space basis; `tui-vfx-recipes` commits `c5190f1`, `7b2246f`, and `e52a510` prove and expose `sample_surface_radius`, `sample_surface_radius_from`, and `sample_surface_angle_from` through V3 native filter rendering plus primitive-first debug recipes. |
-| V3-SHOW01 | Madeira / showcase parity | Outstanding | Asset-agnostic Madeira works in the first slice; richer showcase parity and demo-grade reference recipe remain follow-up. |
-| V3-REGION01 | Region compression follow-up | Complete initial / broaden later | `tui-vfx-recipes` commit `a2ef9f3` proves `cell_run`, `cell_runs`, and `region_ref` across authoring/schema, normalized IR, validation, compiled bridge, output stage, and a primitive-first debug recipe. Broaden only if larger corpus pressure appears. |
-| V3-NAME01/PREVIEW01 | V3 naming cutover work | Parser/schema and first playback alias slices complete / import migration outstanding | Scene/continuous/clock, main `config.rs`, parser wrappers, recipe internals, and public preview-boundary aliases now expose canonical `Vfx*`/`Playback*`/frame names while preserving compatibility aliases. Next slice: move imports/usages in risk order, then consider a future module-path shim. |
-| V3-VIEW01 | Normalized IR viewer/explorer | Complete initial / broaden later | `tui-vfx-recipes` commit `a2ef9f3` adds offline `pipeline-validator --explore-normalized` for human-readable normalized execution-graph outlines over existing normalized loading/dump surfaces. Broaden later only for richer formats or UI. |
+| V3-NAME01/PREVIEW01 | V3 naming cutover work | Complete initial / compatibility shims retained | Scene/continuous/clock, main `config.rs`, parser wrappers, recipe internals, public preview-boundary aliases, examples, tests, and tooling now use canonical `Vfx*`/`Playback*`/frame names where safe while preserving compatibility aliases and legacy module paths during cutover. Future work is only broader deprecation/module-path cleanup if needed. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / thin-player complete-initial | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Packaged `tui-vfx-player` now exists in `tui-vfx-recipes` with text/JSON summary modes over existing preview/cutover APIs; remaining TOOL01 work is broader command/docs/CI cutover, not thin-player packaging. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing | Required for every public/schema-bearing V3 change. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
-| V3-DOCS01 | V3 docs lifecycle/elevation plan | Complete initial | `tui-vfx-v3-docs-lifecycle-plan.md` is linked from the V3 index, records the focused status/link audit, and confirms local Markdown links under `docs/design` and `docs/tooling` pass with no broken local targets. Historical draft/deferred wording remains where it intentionally describes retained design records or post-release territory. |
 | V3-Q01 | Chapter 80 open-question closure | Outstanding | Several questions have strong leans but need either owner decision or implementation-backed closure. |
 | V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `post-release/braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
 | V3-GLYPHACTOR01 | Glyph actor procedural | Post-release spec captured | `docs/design/post-release/glyph-actor-procedural-spec.md`; implementation waits until core V3 release/migration stability. |
@@ -88,19 +83,14 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-VC01 | Finish authoring schema validation diagnostics | `pipeline-validator` surfaces stricter authoring-shape diagnostics and schema reports without breaking compatible recipes unexpectedly. |
 | V3-VC03 | Finish style normalization validation | Validator proves no dual style forms survive normalized IR. |
 | V3-M01 | Continue VC-09 migration-equivalence harness | Use provisional `equivalent` / `replacement` / `retired` tracks; keep all legacy files in place pending owner audit. |
-| V3-CI02 | Capture / compare release-gate evidence | Gates produce pass/fail/whitelist-needed output with render/probe/trace evidence. |
+| V3-CI02 | Capture / compare release-gate evidence | Remaining work is visual-capture/GTD-fixture approval and any owner-approved capture reruns; known headless probe blocker is resolved. |
 | V3-C01 | Canonical normalized IR as explicit artifact | Normalized IR is treated as the validator/viewer/equivalence target; `pipeline-validator --dump-normalized --format json` now advertises the `tui_vfx.pipeline_validator.normalized_ir_dump.v1` envelope contract in `docs/contracts/normalized_ir_dump.v1.schema.json`. |
 | V3-C02-FOLLOW | Broaden canonicalization/property-test tooling | Extend beyond the first curated payload alias equivalence tests into named-factory/compositional pairs as the corpus demands. |
-| V3-VIEW01 | Normalized IR viewer/explorer backlog | Viewer work is scoped around normalized execution graph, not raw authoring syntax. |
-| V3-REGION01 | Region compression follow-up | `cell_run`, `cell_runs`, `region_ref`, and any larger-corpus compression pressure are implemented or deferred with evidence. |
-| V3-NAME01 | `Ra*` → `Vfx*` inventory execution | Rename-bearing buckets are worked down methodically while preserving compatibility/deprecation guidance during V3 cutover. |
-| V3-PREVIEW01 | Preview seam naming migration plan | Execute `Preview*` -> `Playback*`/chosen name with re-exports and docs after inventory/risk ordering is complete. |
 | V3-STYLE01 | Runtime-facing V3 style family consumers | Continue wiring real V3-side family surfaces into runtime consumers; avoid deleting legacy V2 surfaces until final removal. |
 | V3-SCHED01 | Scheduler/batching final strategy | Keep semantic proofs green, preserve `Sequence` feed-forward and `Parallel` snapshot isolation, and only optimize when render-hash drift guards prove safety. |
 | V3-BIND01 | Broader runtime binding evaluation | Extend runtime binding support beyond currently proven shader/procedural/scene-visibility seams where the corpus needs it. |
 | V3-GOV01 | Apply capability promotion ladder in authoring docs | Authoring docs and capability catalog use base primitive / variant / earned-name composition / factory-internal / deferred categories consistently. |
 | V3-GOV02 | Add factory-internal promotion review hooks | Validator/docs process can flag repeated factory-internal conventions for rule-of-three review without making them public prematurely. |
-| V3-SPATIAL01 | Add/prove surface-frame spatial basis if still missing | Mixed-signals has cell-space leaves; docs call out continuous surface/frame geometry leaves as the next additive substrate for optical falloff/spotlight-style consumers. |
 | V3-SPATIAL02 | Restore richer Madeira/showcase parity | Re-create the Madeira demo as a first-class V3 showcase using field generation, typed hints, displacement, field-correlated shading, and scene-layer composition. |
 | V3-SHADOW01 | Implement/prove transparent shadow and host-bound shadow model | Shadow docs require explicit transparent shadow, host attachment, and motion-edge integration rather than accidental underlay behavior. |
 | V3-EDGE01 | Implement/prove directional vanishing-edge behavior | Motion/offscreen edge crossing must drive border vanish/preserve and shadow fade/clip/preserve based on the active clipped edge. |
@@ -109,10 +99,8 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-TRACE01 | Trace/probe parity for broader V3 subset | Recipe-probe and tui-vfx-trace already accept supported compiled V3 subsets; scene parity, lifecycle-analysis parity, and broader trace semantics remain. |
 | V3-DEMO01 | Full native animated V3 demo/browser path | Demo/play_recipe render supported direct V3 bridge subset; full browser experience for migrated V3 corpus remains outstanding. |
 | V3-AUTH01-FOLLOW | V3 authoring-doc sibling follow-ons | Scene authoring guide is complete-initial; reconcile schema reference, procedural sources, pipeline-validator LLM guide, and authoring workflow docs around the same V3 ladder and vocabulary. |
-| V3-QDOC01 | Reconcile stale status docs | First-slice and validator checklist rows now reflect as-built state with evidence; completed-initial and kept here as a historical breadcrumb. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
-| V3-DOCS01 | Create docs lifecycle/elevation plan | Classify transient V3 planning docs versus durable core docs; decide what gets elevated, merged, kept as design record, or archived. Use developer voice: clear, concise, honest, with occasional fun but no marketing fog machine. |
 
 ## Completed / complete-initial work
 
@@ -188,6 +176,9 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-TOOL01-THINPLAYER-PACKAGE | Complete initial | `tui-vfx-recipes` commit `c4401ff`: packaged `tui-vfx-player` workspace package provides text and `--json` recipe playback summaries through existing preview/cutover APIs while preserving legacy fallback. |
 | V3-VIEW01-EXPLORER | Complete initial | `tui-vfx-recipes` commit `a2ef9f3`: `pipeline-validator --explore-normalized` prints identity, contracts, scene layers, and pipeline step-tree summaries without changing normalized IR schema or runtime paths. |
 | V3-REGION01-COMPLETE-INITIAL | Complete initial | `tui-vfx-recipes` commit `a2ef9f3`: region-compression support is proven from authoring/schema through normalized/compiled/output bridge, with `shader_region_compression_scope.json` as the debug fixture. |
+| V3-CI02-MIDNIGHTSWITCHBOARD01 | Complete technical blocker fix | `tui-vfx-recipes` commit `8a2eca7` plus `docs/tooling/probe_midnight_switchboard.evidence.record.json`: `midnight_switchboard` now reports successful combined/lifecycle probe analysis with configured style/shader effects observed. |
+| V3-PREVIEW01-IMPORTS | Complete initial | `tui-vfx-recipes` commit `8a2eca7`: examples, tests, and tooling imports/use sites now use canonical `PlaybackPlan`, `PlaybackController`, `PlaybackRecipeBridge`, `V3FrameSnapshot`, and `render_v3_frame_to_buffer` where safe while retaining `Preview*` compatibility seams. |
+| V3-SHOW01-MADEIRA-HEADLESS | Complete initial | `tui-vfx-recipes` commit `8a2eca7`: Madeira has diagnostic-clean headless strict/probe/player evidence and `docs/scene/MADEIRA_HEADLESS_PARITY.md`; visual owner review remains separate. |
 
 ## Hard policy: V2 removal is last
 
@@ -279,4 +270,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.8</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.9</VERS> -->

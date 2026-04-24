@@ -2,8 +2,8 @@
   "schema": "tui_vfx_v3_release_gate_evidence.v1",
   "fixture_id": "probe_midnight_switchboard",
   "gate": "probe",
-  "status": "fail",
-  "captured_at": "2026-04-24T20:35:00Z",
+  "status": "pass",
+  "captured_at": "2026-04-24T21:02:32Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/vfx-probe-validation/midnight_switchboard.json"
@@ -13,14 +13,14 @@
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/vfx-probe-validation/midnight_switchboard.json --format json --phase dwelling --sample-t 1.0 --with-causation",
       "artifact": "/tmp/tui-vfx-release-gates/probe_midnight_switchboard/probe_report.json",
-      "artifact_sha256": "850b52be5046c74d82960283701e29198ef9f9baa0e735ff89df7fc69497c1d5",
-      "status": "fail",
-      "observed_output_summary": "Probe command exited 0, but report analysis.combined.status=failure and lifecycle_analysis.combined.status=failure; failing_stages=[style, shader]. Style Pulse#1 and shader BorderSweep#1 were configured but observed_event_count=0."
+      "artifact_sha256": "6a6cf51a29ce286ae198492d4dcc5d11d40d08a275bbc39d7daa7c0ef96181a0",
+      "status": "pass",
+      "observed_output_summary": "Probe command exits 0 and report analysis.combined.status=success plus lifecycle_analysis.combined.status=success. Configured Pulse#1, BorderSweep#1, and UnderlineWipe#1 all report nonzero observed_event_count after the recipe-side observability and effect-label matching fix."
     }
   ],
   "review": {
     "owner": "tui-vfx tooling lead",
     "approval_required": false,
-    "notes": "Current headless rerun confirms this remains a hard technical probe failure, not an owner/GTD visual-judgment item. No production code or recipe rewrites are in scope for this packet."
+    "notes": "Technical probe blocker resolved by tui-vfx-recipes commit 8a2eca7. This is now headless probe evidence; visual-capture approval remains separate for gates that require render_capture_png."
   }
 }
