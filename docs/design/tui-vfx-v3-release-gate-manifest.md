@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-release-gate-manifest.md</FILE> - <DESC>First concrete V3 release-gate fixture manifest seed for Track D / Chapter 60.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Define the first checked-in manifest shape for the six V3 release gates so evidence capture and CI can bind to stable fixture IDs without overclaiming approved outcomes.</WCTX> -->
-<!-- <CLOG>0.1.0: initial release-gate manifest seed with gate coverage for shadow, offscreen, probe, trace, GT-Design integration, and role-aware lowering, plus a companion machine-readable JSON seed.</CLOG> -->
+<!-- <CLOG>0.2.0: point D6 evidence capture at the release-gate evidence-record guide and command map. 0.1.0: initial release-gate manifest seed with gate coverage for shadow, offscreen, probe, trace, GT-Design integration, and role-aware lowering, plus a companion machine-readable JSON seed.</CLOG> -->
 
 # V3 release-gate manifest seed
 
@@ -14,6 +14,7 @@ recipe targets, expected evidence types, and ownership rules so later work in
 Companion machine-readable seed:
 
 - [`tui-vfx-v3-release-gate-manifest.seed.json`](tui-vfx-v3-release-gate-manifest.seed.json)
+- [Release-gate evidence records](../tooling/release-gate-evidence.md)
 
 ## Why this shape exists now
 
@@ -131,6 +132,15 @@ concrete downstream targets early enough for D6 wiring.
 | `role_scope_border_style` | `tui-vfx-recipes:recipes/debug_recipes/styles/style_role_scope_border.json` | `lowering_report_json`, `render_capture_png` | Narrow style-role fixture for border-specific lowering. |
 | `role_scope_parallel_conflict` | `tui-vfx-recipes:recipes/debug_recipes/complex/complex_parallel_role_scopes.json` | `lowering_report_json`, `probe_report_json`, `trace_report_json` | Stress fixture for overlapping/disjoint role scopes and conflict handling. |
 
+## Evidence record handoff
+
+D6 evidence records use the small JSON sidecar shape documented in
+[Release-gate evidence records](../tooling/release-gate-evidence.md). The record
+keys by `fixture_id`, names the command that produced each artifact, and stores
+large probe/trace/render outputs as separate artifacts. Probe and frame-diff
+evidence must reuse `recipe-probe` / `pipeline-validator --probe` and the
+existing SQLite xray surface; do not add a second diff schema for Chapter 60.
+
 ## Companion JSON expectations
 
 The JSON seed mirrors this document and is intended to be the future automation
@@ -151,10 +161,10 @@ place. Those belong in generated outputs or later evidence records keyed by
 
 ## Next handoff
 
-1. D6 can attach evidence records keyed to these fixture IDs.
+1. D6 can attach evidence records keyed to these fixture IDs using `docs/tooling/release-gate-evidence.md`.
 2. GTD owner can confirm, replace, or shrink the provisional GTD fixture set
    without changing the overall manifest shape.
 3. D7 can consume the JSON seed for CI enumeration once evidence capture exists.
 
 <!-- <FILE>docs/design/tui-vfx-v3-release-gate-manifest.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
