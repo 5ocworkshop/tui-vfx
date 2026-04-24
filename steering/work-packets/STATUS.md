@@ -83,6 +83,12 @@ These packets produced accepted work that is already committed on `master`.
   - landed via `dd9ebff`
 - `52-madeira-direct-preview-allocation-cache-slice.md`
   - landed via `3a235f7`
+- `35-madeira-scene-semantics-implementation-tranche.md`
+  - fulfilled by the later Madeira scene/runtime corrective slices via `5cbb8b4` / `c415e55`
+- `37-madeira-fireworks-effect-implementation-tranche.md`
+  - fulfilled by the later fireworks/runtime corrective slices via `0370ce7` / `c415e55`
+- `56-v3-motion-path-and-offscreen-origin-support.md`
+  - landed across the bounded motion/runtime tranche via `5cbb8b4` / `ecaeda6` / `ded7b9c` / `c4d70ba` / `d79bd48`
 
 ## Completed as audit / planning outputs
 These packets produced accepted non-code outputs that should be treated as harvested knowledge.
@@ -128,7 +134,6 @@ These packets produced accepted non-code outputs that should be treated as harve
 
 ## New follow-on packets created from audit learnings
 - `63-v3-displacement-and-shading-hint-consumers.md`
-- `56-v3-motion-path-and-offscreen-origin-support.md`
 
 ## Notes
 - Packet completion is tied to real commits on `master`, not just plausible subagent responses.
