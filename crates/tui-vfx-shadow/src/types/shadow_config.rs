@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
+// <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>Sub-plan A Phase A.3.3 — add `source_region: Option<RoleTag>` so consumers can restrict shadow extrusion to cells whose source-map role matches (e.g. only extrude from Border cells instead of the whole widget rect). Default `None` preserves today's rect-based extrusion.</WCTX>
-// <CLOG>0.6.0: MINOR — add `source_region: Option<RoleTag>` field, `with_source_region(role)` builder, and `source_region()` accessor. Default is None (back-compat: extrude from the element_rect as before). Serde round-trips both None and all 12 first-class RoleTag variants plus Custom. `#[serde(skip_serializing_if = "Option::is_none")]` keeps legacy JSON unchanged when unset.
-// 0.5.0: add inset_x/inset_y fields plus with_inset builder.</CLOG>
+// <CLOG>0.7.0: add trailing inset controls for centered top/bottom and left/right shadow runs.</CLOG>
 
 //! # Shadow Configuration
 //!
@@ -16,6 +15,7 @@
 //! | `style` | [`ShadowStyle`] | Rendering technique (HalfBlock, Braille, Solid, Gradient) |
 //! | `offset_x/y` | `i8` | Shadow span beyond the element on each axis |
 //! | `inset_x/y` | `Option<u8>` | Optional orthogonal inset override before horizontal/vertical edges begin |
+//! | `inset_x_end/y_end` | `Option<u8>` | Optional orthogonal inset override before horizontal/vertical edges end |
 //! | `color` | [`Color`] | Shadow color (use alpha for transparency) |
 //! | `edges` | [`ShadowEdges`] | Which edges receive shadows |
 //! | `soft_edges` | `bool` | Enable half-block edge transitions |
@@ -68,10 +68,31 @@ pub struct ShadowConfig {
     pub offset_y: i8,
 
     /// Horizontal inset before top/bottom shadow edges begin.
+    ///
+    /// For a bottom-only shadow this trims cells from the left side of the
+    /// bottom run. Pair with [`Self::inset_x_end`] to center the run.
     pub inset_x: Option<u8>,
 
     /// Vertical inset before left/right shadow edges begin.
+    ///
+    /// For a right-edge shadow this trims cells from the top of the vertical
+    /// run. Pair with [`Self::inset_y_end`] to center the run.
     pub inset_y: Option<u8>,
+
+    /// Horizontal inset before top/bottom shadow edges end.
+    ///
+    /// For a bottom-only shadow this trims cells from the right side of the
+    /// bottom run, enabling centered shadows such as two cells in from both
+    /// outer edges.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inset_x_end: Option<u8>,
+
+    /// Vertical inset before left/right shadow edges end.
+    ///
+    /// For a right-edge shadow this trims cells from the bottom of the
+    /// vertical run, enabling centered side shadows.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub inset_y_end: Option<u8>,
 
     /// Shadow color.
     pub color: Color,
@@ -130,6 +151,13 @@ pub struct ShadowConfig {
     pub source_region: Option<RoleTag>,
 }
 
+#[inline]
+fn ordered_nonnegative_span(start: i32, end: i32) -> (usize, usize) {
+    let start = start.max(0);
+    let end = end.max(start).max(0);
+    (start as usize, end as usize)
+}
+
 impl Default for ShadowConfig {
     fn default() -> Self {
         Self {
@@ -138,6 +166,8 @@ impl Default for ShadowConfig {
             offset_y: 1,
             inset_x: None,
             inset_y: None,
+            inset_x_end: None,
+            inset_y_end: None,
             color: Color::BLACK.with_alpha(128),
             surface_color: None,
             edges: ShadowEdges::BOTTOM_RIGHT,
@@ -181,15 +211,80 @@ impl ShadowConfig {
         self
     }
 
-    /// Set the orthogonal shadow edge insets (x, y).
+    /// Set the starting orthogonal shadow edge insets (x, y).
     ///
-    /// `x` trims top/bottom shadow runs inward from the horizontal edge.
-    /// `y` trims left/right shadow runs inward from the vertical edge.
+    /// `x` trims top/bottom shadow runs inward from the horizontal start
+    /// edge. `y` trims left/right shadow runs inward from the vertical start
+    /// edge. Use [`Self::with_inset_end`] or [`Self::with_symmetric_inset`]
+    /// when the trailing side should also be trimmed.
     #[inline]
     pub fn with_inset(mut self, x: u8, y: u8) -> Self {
         self.inset_x = Some(x);
         self.inset_y = Some(y);
         self
+    }
+
+    /// Set the ending orthogonal shadow edge insets (x, y).
+    ///
+    /// `x` trims top/bottom shadow runs inward from the horizontal end edge.
+    /// `y` trims left/right shadow runs inward from the vertical end edge.
+    #[inline]
+    pub fn with_inset_end(mut self, x: u8, y: u8) -> Self {
+        self.inset_x_end = Some(x);
+        self.inset_y_end = Some(y);
+        self
+    }
+
+    /// Set symmetric orthogonal insets for centered shadow runs.
+    ///
+    /// For example, `with_edges(ShadowEdges::BOTTOM)` plus
+    /// `with_symmetric_inset(2, 0)` renders a bottom-only shadow run that
+    /// starts two cells in from the left and ends two cells before the right,
+    /// which reads like a more overhead light position.
+    #[inline]
+    pub fn with_symmetric_inset(mut self, x: u8, y: u8) -> Self {
+        self.inset_x = Some(x);
+        self.inset_x_end = Some(x);
+        self.inset_y = Some(y);
+        self.inset_y_end = Some(y);
+        self
+    }
+
+    /// Return the horizontal span for top/bottom shadow runs.
+    ///
+    /// Existing recipes without explicit insets preserve legacy offset-derived
+    /// trimming. When either start or end inset is supplied, the span is based
+    /// on the element bounds and trims each supplied side explicitly.
+    #[inline]
+    pub(crate) fn horizontal_shadow_span(
+        &self,
+        rect_x: i32,
+        rect_w: i32,
+        ox: i32,
+    ) -> (usize, usize) {
+        if self.inset_x.is_some() || self.inset_x_end.is_some() {
+            let start = rect_x + self.inset_x.map(i32::from).unwrap_or(0);
+            let end = rect_x + rect_w - self.inset_x_end.map(i32::from).unwrap_or(0);
+            ordered_nonnegative_span(start, end)
+        } else {
+            ordered_nonnegative_span(rect_x + ox.max(0) + 1, rect_x + rect_w + ox.min(0))
+        }
+    }
+
+    /// Return the vertical span for left/right shadow runs.
+    ///
+    /// Existing recipes without explicit insets preserve legacy offset-derived
+    /// trimming. When either start or end inset is supplied, the span is based
+    /// on the element bounds and trims each supplied side explicitly.
+    #[inline]
+    pub(crate) fn vertical_shadow_span(&self, rect_y: i32, rect_h: i32, oy: i32) -> (usize, usize) {
+        if self.inset_y.is_some() || self.inset_y_end.is_some() {
+            let start = rect_y + self.inset_y.map(i32::from).unwrap_or(0);
+            let end = rect_y + rect_h - self.inset_y_end.map(i32::from).unwrap_or(0);
+            ordered_nonnegative_span(start, end)
+        } else {
+            ordered_nonnegative_span(rect_y + oy.max(0), rect_y + rect_h + oy.min(0))
+        }
     }
 
     /// Set the shadow rendering style.
@@ -368,4 +463,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

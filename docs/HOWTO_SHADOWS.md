@@ -153,6 +153,9 @@ The shadow appears at `(modal_rect.x + 2, modal_rect.y + 1)` extending to the ri
 ```rust
 ShadowConfig::new(color: Color)
     .with_offset(x: i8, y: i8)           // Shadow displacement (default: 1, 1)
+    .with_inset(x: u8, y: u8)            // Trim start of horizontal/vertical edge runs
+    .with_inset_end(x: u8, y: u8)        // Trim end of horizontal/vertical edge runs
+    .with_symmetric_inset(x: u8, y: u8)  // Trim both ends for centered shadow runs
     .with_style(style: ShadowStyle)      // Rendering style (default: Solid translucent full-cell)
     .with_edges(edges: ShadowEdges)      // Which edges to shadow (default: BOTTOM_RIGHT)
     .with_soft_edges(enabled: bool)      // Use half-blocks for transitions (default: true)
@@ -210,6 +213,16 @@ ShadowConfig::new(Color::BLACK.with_alpha(128))
     .with_offset(2, 1)
     .with_edges(ShadowEdges::BOTTOM_RIGHT)
 ```
+
+### Bottom-Centered Overhead Shadow
+```rust
+ShadowConfig::new(Color::BLACK.with_alpha(160))
+    .with_offset(0, 1)
+    .with_edges(ShadowEdges::BOTTOM)
+    .with_symmetric_inset(2, 0)
+```
+
+This renders only the bottom run, inset two cells from each horizontal edge. It reads like a more overhead light position than the usual down-right drop shadow.
 
 ### Soft Gradient Shadow
 ```rust

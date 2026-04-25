@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_braille.rs</FILE> - <DESC>Braille pattern shadow renderer for dithered effects</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Honor explicit shared shadow inset controls so GTD can keep single-cell shadow spans while starting horizontal and vertical edges at different insets</WCTX>
-// <CLOG>Replace hardcoded edge insets with config.inset_x/inset_y when rendering braille shadows</CLOG>
+// <CLOG>Add trailing inset support for centered bottom/top and side shadow runs.</CLOG>
 
 //! Braille pattern shadow renderer.
 //!
@@ -64,8 +64,6 @@ impl BrailleRenderer {
 
         let ox = config.offset_x as i32;
         let oy = config.offset_y as i32;
-        let inset_x = config.inset_x.map(i32::from);
-        let inset_y = config.inset_y.map(i32::from);
         let edges = config.edges;
 
         // Calculate the effective density based on animation progress
@@ -75,15 +73,9 @@ impl BrailleRenderer {
         // Right edge shadow (aspect-corrected: first col = light, second col = right dots)
         if edges.has_right() && ox > 0 {
             let start_x = (rect_x + rect_w).max(0) as usize;
-            let start_y = match inset_y {
-                Some(inset_y) => (rect_y + inset_y).max(0) as usize,
-                None => (rect_y + oy.max(0)).max(0) as usize,
-            };
+            let (start_y, end_y) = config.vertical_shadow_span(rect_y, rect_h, oy);
             let w = ox as usize;
-            let h = match inset_y {
-                Some(inset_y) => (rect_h - inset_y.min(rect_h)).max(0) as usize,
-                None => (rect_h - oy.abs().min(rect_h)).max(0) as usize,
-            };
+            let h = end_y.saturating_sub(start_y);
 
             // First column: light braille (25% density for soft edge)
             let light_char = Self::density_to_braille_right(effective_density * 0.5);
@@ -119,15 +111,9 @@ impl BrailleRenderer {
 
         // Bottom edge shadow
         if edges.has_bottom() && oy > 0 {
-            let start_x = match inset_x {
-                Some(inset_x) => (rect_x + inset_x).max(0) as usize,
-                None => (rect_x + ox.max(0) + 1).max(0) as usize,
-            };
+            let (start_x, end_x) = config.horizontal_shadow_span(rect_x, rect_w, ox);
             let start_y = (rect_y + rect_h).max(0) as usize;
-            let w = match inset_x {
-                Some(inset_x) => (rect_w - inset_x.min(rect_w)).max(0) as usize,
-                None => (rect_w - ox.abs().min(rect_w)).max(0) as usize,
-            };
+            let w = end_x.saturating_sub(start_x);
             let h = oy as usize;
             Self::fill_region(
                 grid,
@@ -144,9 +130,9 @@ impl BrailleRenderer {
         // Left edge shadow
         if edges.has_left() && ox < 0 {
             let start_x = (rect_x + ox).max(0) as usize;
-            let start_y = (rect_y + oy.max(0)).max(0) as usize;
+            let (start_y, end_y) = config.vertical_shadow_span(rect_y, rect_h, oy);
             let w = (-ox) as usize;
-            let h = (rect_h - oy.abs().min(rect_h)).max(0) as usize;
+            let h = end_y.saturating_sub(start_y);
             Self::fill_region(
                 grid,
                 start_x,
@@ -161,9 +147,9 @@ impl BrailleRenderer {
 
         // Top edge shadow
         if edges.has_top() && oy < 0 {
-            let start_x = (rect_x + ox.max(0)).max(0) as usize;
+            let (start_x, end_x) = config.horizontal_shadow_span(rect_x, rect_w, ox);
             let start_y = (rect_y + oy).max(0) as usize;
-            let w = (rect_w - ox.abs().min(rect_w)).max(0) as usize;
+            let w = end_x.saturating_sub(start_x);
             let h = (-oy) as usize;
             Self::fill_region(
                 grid,
@@ -354,4 +340,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_braille.rs</FILE> - <DESC>Braille pattern shadow renderer for dithered effects</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

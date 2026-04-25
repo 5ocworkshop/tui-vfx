@@ -412,6 +412,7 @@ Shadow compositing is controlled by `composite_mode`: the default `GlyphOverlay`
 destination content with shadow glyphs, `GradeUnderlying` preserves destination glyphs with grading, and `BlendUnderlying` preserves glyphs while alpha-blending the shadow onto the background
 and applies color grading (desaturate, dim, tint) scaled by shadow coverage.
 Use `.with_dramatic_grade()` for a visible preset with stronger background than foreground grading.
+`inset_x`/`inset_y` trim the starting side of horizontal/vertical shadow runs; `inset_x_end`/`inset_y_end` trim the ending side. Use `with_symmetric_inset(2, 0)` with `ShadowEdges::BOTTOM` for a bottom-centered, overhead-light shadow.
 
 
 ## ShadowConfig
@@ -421,6 +422,10 @@ pub struct ShadowConfig {
     pub style: ShadowStyle,
     pub offset_x: i8,
     pub offset_y: i8,
+    pub inset_x: Option<u8>,
+    pub inset_y: Option<u8>,
+    pub inset_x_end: Option<u8>,
+    pub inset_y_end: Option<u8>,
     pub color: Color,
     pub surface_color: Option<Color>,
     pub edges: ShadowEdges,

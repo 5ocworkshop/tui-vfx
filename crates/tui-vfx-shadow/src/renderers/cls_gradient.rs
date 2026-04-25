@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_gradient.rs</FILE> - <DESC>Multi-layer gradient shadow renderer</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Honor explicit shared shadow inset controls so GTD can keep single-cell shadow spans while starting horizontal and vertical edges at different insets</WCTX>
-// <CLOG>Replace hardcoded edge insets with config.inset_x/inset_y when rendering gradient shadows</CLOG>
+// <CLOG>Add trailing inset support for centered bottom/top and side shadow runs.</CLOG>
 
 //! Multi-layer gradient shadow renderer.
 //!
@@ -63,8 +63,6 @@ impl GradientRenderer {
 
         let ox = config.offset_x as i32;
         let oy = config.offset_y as i32;
-        let inset_x = config.inset_x.map(i32::from);
-        let inset_y = config.inset_y.map(i32::from);
         let edges = config.edges;
 
         // Render layers from outermost to innermost (so inner layers overwrite outer)
@@ -92,8 +90,7 @@ impl GradientRenderer {
                 rect_h,
                 layer_ox,
                 layer_oy,
-                inset_x,
-                inset_y,
+                config,
                 edges,
                 layer_color,
             );
@@ -156,8 +153,7 @@ impl GradientRenderer {
                 rect_h,
                 layer_ox,
                 layer_oy,
-                config.inset_x.map(i32::from),
-                config.inset_y.map(i32::from),
+                config,
                 edges,
                 layer_color,
             );
@@ -174,8 +170,7 @@ impl GradientRenderer {
         rect_h: i32,
         ox: i32,
         oy: i32,
-        inset_x: Option<i32>,
-        inset_y: Option<i32>,
+        config: &ShadowConfig,
         edges: crate::types::ShadowEdges,
         color: Color,
     ) {
@@ -189,14 +184,7 @@ impl GradientRenderer {
         if edges.has_right() && ox > 0 {
             let start_x = (rect_x + rect_w).max(0) as usize;
             let end_x = (rect_x + rect_w + ox).max(0) as usize;
-            let start_y = match inset_y {
-                Some(inset_y) => (rect_y + inset_y).max(0) as usize,
-                None => (rect_y + oy.max(0)).max(0) as usize,
-            };
-            let end_y = match inset_y {
-                Some(_) => (rect_y + rect_h).max(0) as usize,
-                None => (rect_y + rect_h + oy.min(0)).max(0) as usize,
-            };
+            let (start_y, end_y) = config.vertical_shadow_span(rect_y, rect_h, oy);
 
             Self::fill_region(
                 grid,
@@ -210,14 +198,7 @@ impl GradientRenderer {
 
         // Bottom edge shadow
         if edges.has_bottom() && oy > 0 {
-            let start_x = match inset_x {
-                Some(inset_x) => (rect_x + inset_x).max(0) as usize,
-                None => (rect_x + ox.max(0) + 1).max(0) as usize,
-            };
-            let end_x = match inset_x {
-                Some(_) => (rect_x + rect_w).max(0) as usize,
-                None => (rect_x + rect_w + ox.min(0)).max(0) as usize,
-            };
+            let (start_x, end_x) = config.horizontal_shadow_span(rect_x, rect_w, ox);
             let start_y = (rect_y + rect_h).max(0) as usize;
             let end_y = (rect_y + rect_h + oy).max(0) as usize;
 
@@ -235,8 +216,7 @@ impl GradientRenderer {
         if edges.has_left() && ox < 0 {
             let start_x = (rect_x + ox).max(0) as usize;
             let end_x = rect_x.max(0) as usize;
-            let start_y = (rect_y + oy.max(0)).max(0) as usize;
-            let end_y = (rect_y + rect_h + oy.min(0)).max(0) as usize;
+            let (start_y, end_y) = config.vertical_shadow_span(rect_y, rect_h, oy);
 
             Self::fill_region(
                 grid,
@@ -250,8 +230,7 @@ impl GradientRenderer {
 
         // Top edge shadow
         if edges.has_top() && oy < 0 {
-            let start_x = (rect_x + ox.max(0)).max(0) as usize;
-            let end_x = (rect_x + rect_w + ox.min(0)).max(0) as usize;
+            let (start_x, end_x) = config.horizontal_shadow_span(rect_x, rect_w, ox);
             let start_y = (rect_y + oy).max(0) as usize;
             let end_y = rect_y.max(0) as usize;
 
@@ -360,4 +339,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_gradient.rs</FILE> - <DESC>Multi-layer gradient shadow renderer</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

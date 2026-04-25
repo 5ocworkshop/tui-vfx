@@ -414,6 +414,7 @@
       "color": { "type": "rgba", "r": 0, "g": 0, "b": 0, "a": 160 },
       "offset": { "x": 2, "y": 1 },
       "inset": { "x": 0, "y": 0 },
+      "inset_end": { "x": 0, "y": 0 },
       "edges": ["right", "bottom"],
       "soft_edges": true,
       "source_region": "Border",
@@ -444,6 +445,9 @@
     #   - `style` mirrors the shared shadow renderer families
     #   - `color` carries transparent-shadow alpha explicitly
     #   - `source_region` restricts extrusion to role-tagged source cells
+    #   - `inset` trims the start of top/bottom and left/right runs; `inset_end`
+    #     trims the opposite side so bottom-only shadows can be centered under a
+    #     surface, e.g. two cells in from both horizontal edges.
     #   - `composite.mode` distinguishes glyph-overlay from grade-underlying
     #
     #   These are the typed shadow fields after load-time substitution. Caller

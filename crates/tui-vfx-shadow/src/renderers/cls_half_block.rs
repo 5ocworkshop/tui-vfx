@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_half_block.rs</FILE> - <DESC>Half-block shadow renderer for sub-cell precision</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
+// <VERS>VERSION: 1.0.0</VERS>
 // <WCTX>Honor explicit shared shadow inset controls so GTD can keep single-cell shadow spans while starting horizontal and vertical edges at different insets</WCTX>
-// <CLOG>Replace hardcoded edge insets with config.inset_x/inset_y when rendering half-block shadows</CLOG>
+// <CLOG>Add trailing inset support for centered bottom/top and side shadow runs.</CLOG>
 
 //! Half-block shadow renderer using Unicode block characters.
 //!
@@ -58,8 +58,8 @@ impl HalfBlockRenderer {
 
         let ox = config.offset_x as i32;
         let oy = config.offset_y as i32;
-        let inset_x = config.inset_x.map(i32::from);
-        let inset_y = config.inset_y.map(i32::from);
+        let horizontal_span = config.horizontal_shadow_span(rect_x, rect_w, ox);
+        let vertical_span = config.vertical_shadow_span(rect_y, rect_h, oy);
 
         let edges = config.edges;
 
@@ -73,7 +73,7 @@ impl HalfBlockRenderer {
                 rect_h,
                 ox,
                 oy,
-                inset_y,
+                vertical_span,
                 shadow_color,
                 surface,
                 config.soft_edges,
@@ -90,7 +90,7 @@ impl HalfBlockRenderer {
                 rect_h,
                 ox,
                 oy,
-                inset_x,
+                horizontal_span,
                 shadow_color,
                 surface,
                 config.soft_edges,
@@ -107,7 +107,7 @@ impl HalfBlockRenderer {
                 rect_h,
                 ox,
                 oy,
-                inset_y,
+                vertical_span,
                 shadow_color,
                 surface,
                 config.soft_edges,
@@ -124,7 +124,7 @@ impl HalfBlockRenderer {
                 rect_h,
                 ox,
                 oy,
-                inset_x,
+                horizontal_span,
                 shadow_color,
                 surface,
                 config.soft_edges,
@@ -152,26 +152,19 @@ impl HalfBlockRenderer {
     fn render_right_edge<G: Grid>(
         grid: &mut G,
         rect_x: i32,
-        rect_y: i32,
+        _rect_y: i32,
         rect_w: i32,
-        rect_h: i32,
+        _rect_h: i32,
         ox: i32,
-        oy: i32,
-        inset_y: Option<i32>,
+        _oy: i32,
+        span_y: (usize, usize),
         shadow: Color,
         surface: Color,
         soft: bool,
     ) {
         let start_x = (rect_x + rect_w).max(0) as usize;
         let end_x = (rect_x + rect_w + ox).max(0) as usize;
-        let start_y = match inset_y {
-            Some(inset_y) => (rect_y + inset_y).max(0) as usize,
-            None => (rect_y + oy.max(0)).max(0) as usize,
-        };
-        let end_y = match inset_y {
-            Some(_) => (rect_y + rect_h).max(0) as usize,
-            None => (rect_y + rect_h + oy.min(0)).max(0) as usize,
-        };
+        let (start_y, end_y) = span_y;
 
         for y in start_y..end_y {
             for x in start_x..end_x {
@@ -198,25 +191,18 @@ impl HalfBlockRenderer {
     #[allow(clippy::too_many_arguments)]
     fn render_bottom_edge<G: Grid>(
         grid: &mut G,
-        rect_x: i32,
+        _rect_x: i32,
         rect_y: i32,
-        rect_w: i32,
+        _rect_w: i32,
         rect_h: i32,
-        ox: i32,
+        _ox: i32,
         oy: i32,
-        inset_x: Option<i32>,
+        span_x: (usize, usize),
         shadow: Color,
         surface: Color,
         soft: bool,
     ) {
-        let start_x = match inset_x {
-            Some(inset_x) => (rect_x + inset_x).max(0) as usize,
-            None => (rect_x + ox.max(0) + 1).max(0) as usize,
-        };
-        let end_x = match inset_x {
-            Some(_) => (rect_x + rect_w).max(0) as usize,
-            None => (rect_x + rect_w + ox.min(0)).max(0) as usize,
-        };
+        let (start_x, end_x) = span_x;
         let start_y = (rect_y + rect_h).max(0) as usize;
         let end_y = (rect_y + rect_h + oy).max(0) as usize;
 
@@ -240,26 +226,19 @@ impl HalfBlockRenderer {
     fn render_left_edge<G: Grid>(
         grid: &mut G,
         rect_x: i32,
-        rect_y: i32,
+        _rect_y: i32,
         _rect_w: i32,
-        rect_h: i32,
+        _rect_h: i32,
         ox: i32,
-        oy: i32,
-        inset_y: Option<i32>,
+        _oy: i32,
+        span_y: (usize, usize),
         shadow: Color,
         surface: Color,
         soft: bool,
     ) {
         let start_x = (rect_x + ox).max(0) as usize;
         let end_x = rect_x.max(0) as usize;
-        let start_y = match inset_y {
-            Some(inset_y) => (rect_y + inset_y).max(0) as usize,
-            None => (rect_y + oy.max(0)).max(0) as usize,
-        };
-        let end_y = match inset_y {
-            Some(_) => (rect_y + rect_h).max(0) as usize,
-            None => (rect_y + rect_h + oy.min(0)).max(0) as usize,
-        };
+        let (start_y, end_y) = span_y;
 
         for y in start_y..end_y {
             for x in start_x..end_x {
@@ -279,25 +258,18 @@ impl HalfBlockRenderer {
     #[allow(clippy::too_many_arguments)]
     fn render_top_edge<G: Grid>(
         grid: &mut G,
-        rect_x: i32,
+        _rect_x: i32,
         rect_y: i32,
-        rect_w: i32,
+        _rect_w: i32,
         _rect_h: i32,
-        ox: i32,
+        _ox: i32,
         oy: i32,
-        inset_x: Option<i32>,
+        span_x: (usize, usize),
         shadow: Color,
         surface: Color,
         soft: bool,
     ) {
-        let start_x = match inset_x {
-            Some(inset_x) => (rect_x + inset_x).max(0) as usize,
-            None => (rect_x + ox.max(0)).max(0) as usize,
-        };
-        let end_x = match inset_x {
-            Some(_) => (rect_x + rect_w).max(0) as usize,
-            None => (rect_x + rect_w + ox.min(0)).max(0) as usize,
-        };
+        let (start_x, end_x) = span_x;
         let start_y = (rect_y + oy).max(0) as usize;
         let end_y = rect_y.max(0) as usize;
 
@@ -423,4 +395,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_half_block.rs</FILE> - <DESC>Half-block shadow renderer for sub-cell precision</DESC>
-// <VERS>END OF VERSION: 0.9.0</VERS>
+// <VERS>END OF VERSION: 1.0.0</VERS>

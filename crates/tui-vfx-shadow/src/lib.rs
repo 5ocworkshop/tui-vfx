@@ -209,6 +209,22 @@
 //!     .with_offset(2, 0);  // 2 cells right, no vertical offset
 //! ```
 //!
+//! ## Centered / Overhead Shadow Runs
+//!
+//! Use start and end insets when a shadow should sit under the center of an
+//! element instead of wrapping a corner. This is useful for an overhead-light
+//! feel: bottom-only, inset from both outer edges.
+//!
+//! ```
+//! use tui_vfx_shadow::{ShadowConfig, ShadowEdges};
+//! use tui_vfx_types::Color;
+//!
+//! let config = ShadowConfig::new(Color::BLACK.with_alpha(160))
+//!     .with_offset(0, 1)
+//!     .with_edges(ShadowEdges::BOTTOM)
+//!     .with_symmetric_inset(2, 0);
+//! ```
+//!
 //! ## Animation Support
 //!
 //! The `progress` parameter (0.0 to 1.0) controls shadow intensity, enabling

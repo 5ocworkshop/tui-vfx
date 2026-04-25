@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_solid.rs</FILE> - <DESC>Solid color shadow renderer</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.5.0</VERS>
 // <WCTX>Honor explicit shared shadow inset controls so GTD can keep single-cell shadow spans while starting horizontal and vertical edges at different insets</WCTX>
-// <CLOG>Replace hardcoded edge insets with config.inset_x/inset_y when rendering solid shadows</CLOG>
+// <CLOG>Add trailing inset support for centered bottom/top and side shadow runs.</CLOG>
 
 //! Solid color shadow renderer.
 //!
@@ -40,8 +40,6 @@ impl SolidRenderer {
 
         let ox = config.offset_x as i32;
         let oy = config.offset_y as i32;
-        let inset_x = config.inset_x.map(i32::from);
-        let inset_y = config.inset_y.map(i32::from);
         let edges = config.edges;
 
         // Calculate shadow regions based on offset direction and enabled edges
@@ -49,29 +47,17 @@ impl SolidRenderer {
         // Right edge shadow
         if edges.has_right() && ox > 0 {
             let start_x = (rect_x + rect_w).max(0) as usize;
-            let start_y = match inset_y {
-                Some(inset_y) => (rect_y + inset_y).max(0) as usize,
-                None => (rect_y + oy.max(0)).max(0) as usize,
-            };
+            let (start_y, end_y) = config.vertical_shadow_span(rect_y, rect_h, oy);
             let w = ox as usize;
-            let h = match inset_y {
-                Some(inset_y) => (rect_h - inset_y.min(rect_h)).max(0) as usize,
-                None => (rect_h - oy.abs().min(rect_h)).max(0) as usize,
-            };
+            let h = end_y.saturating_sub(start_y);
             Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
         }
 
         // Bottom edge shadow
         if edges.has_bottom() && oy > 0 {
-            let start_x = match inset_x {
-                Some(inset_x) => (rect_x + inset_x).max(0) as usize,
-                None => (rect_x + ox.max(0) + 1).max(0) as usize,
-            };
+            let (start_x, end_x) = config.horizontal_shadow_span(rect_x, rect_w, ox);
             let start_y = (rect_y + rect_h).max(0) as usize;
-            let w = match inset_x {
-                Some(inset_x) => (rect_w - inset_x.min(rect_w)).max(0) as usize,
-                None => (rect_w - ox.abs().min(rect_w)).max(0) as usize,
-            };
+            let w = end_x.saturating_sub(start_x);
             let h = oy as usize;
             Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
         }
@@ -79,17 +65,17 @@ impl SolidRenderer {
         // Left edge shadow
         if edges.has_left() && ox < 0 {
             let start_x = (rect_x + ox).max(0) as usize;
-            let start_y = (rect_y + oy.max(0)).max(0) as usize;
+            let (start_y, end_y) = config.vertical_shadow_span(rect_y, rect_h, oy);
             let w = (-ox) as usize;
-            let h = (rect_h - oy.abs().min(rect_h)).max(0) as usize;
+            let h = end_y.saturating_sub(start_y);
             Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
         }
 
         // Top edge shadow
         if edges.has_top() && oy < 0 {
-            let start_x = (rect_x + ox.max(0)).max(0) as usize;
+            let (start_x, end_x) = config.horizontal_shadow_span(rect_x, rect_w, ox);
             let start_y = (rect_y + oy).max(0) as usize;
-            let w = (rect_w - ox.abs().min(rect_w)).max(0) as usize;
+            let w = end_x.saturating_sub(start_x);
             let h = (-oy) as usize;
             Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
         }
@@ -172,6 +158,26 @@ mod tests {
     }
 
     #[test]
+    fn bottom_only_shadow_can_be_centered_with_symmetric_horizontal_inset() {
+        let mut grid = OwnedGrid::new(20, 10);
+        let rect = Rect::new(4, 2, 10, 3);
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(200))
+            .with_offset(0, 1)
+            .with_symmetric_inset(2, 0)
+            .with_edges(ShadowEdges::BOTTOM);
+
+        SolidRenderer::render(&mut grid, rect, &config, 1.0);
+
+        assert_eq!(grid.get(4, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_eq!(grid.get(5, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_ne!(grid.get(6, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_ne!(grid.get(11, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_eq!(grid.get(12, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_eq!(grid.get(13, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_eq!(grid.get(14, 5).unwrap().bg, Color::TRANSPARENT);
+    }
+
+    #[test]
     fn test_zero_alpha_renders_nothing() {
         let mut grid = OwnedGrid::new(20, 10);
         let rect = Rect::new(5, 2, 8, 4);
@@ -190,4 +196,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_solid.rs</FILE> - <DESC>Solid color shadow renderer</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>
