@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.4.2</VERS>
-// <WCTX>Keep KittScanner sample aligned with new ScannerAxis field.</WCTX>
-// <CLOG>Add axis: Default::default() to KittScanner sample so it compiles after the new field.</CLOG>
+// <VERS>VERSION: 1.4.3</VERS>
+// <WCTX>Keep content-effect samples in sync with public ContentEffect variants — Odometer/SplitFlap mechanical field lands in Phase 3/4.</WCTX>
+// <CLOG>Drop premature mechanical: None lines from Odometer and SplitFlap samples; the field doesn't exist on those variants yet.</CLOG>
 
 use std::collections::HashMap;
 
@@ -701,4 +701,4 @@ fn extract_shadow_metadata() -> HashMap<String, EffectMetadata> {
 }
 
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>END OF VERSION: 1.4.2</VERS>
+// <VERS>END OF VERSION: 1.4.3</VERS>
