@@ -11,9 +11,9 @@
 # See docs/design/CAPABILITY_MANIFEST_*.md for architecture details.
 
 # <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
-# <VERS>VERSION: 2.2.3</VERS>
-# <WCTX>Refresh content effect capability language for structured mechanical display fields.</WCTX>
-# <CLOG>Document Odometer tile-grid roll and SplitFlap multi-cell Solari tiles.</CLOG>
+# <VERS>VERSION: 2.3.0</VERS>
+# <WCTX>Phase 7 prep: KittScanner gains a vertical axis option, unlocking column-wise reveals (TTE Beams) without a sampler chain.</WCTX>
+# <CLOG>Document KittScanner.axis (horizontal default / vertical) in the ai_hint and add 'reveal' to use_cases.</CLOG>
 
 [meta]
 version = "2.2.3"
@@ -377,21 +377,22 @@ boost_separator_bg: true to also boost separator backgrounds for continuous powe
 Creates premium "shine" effect for buttons and cards on hover."""
 
 [effects.filters.KittScanner]
-use_cases = ["hover", "retro", "sci-fi"]
+use_cases = ["hover", "retro", "sci-fi", "reveal"]
 energy = "moderate"
 complexity = "simple"
-ai_hint = """Horizontal ping-pong scanner (KITT/Larson scanner) effect.
+ai_hint = """Ping-pong scanner (KITT/Larson) effect — horizontal or vertical.
 boost: brightness increase (default 50).
-band_width: scanner column width (0.15 default, 0.0-0.5).
+band_width: scanner band width as fraction of the active axis extent (0.15 default, 0.0-0.5).
 bpm: optional human-friendly beats-per-minute cadence; overrides bps when present.
 bps: beats per second for ping-pong cycle (1.2 default = 72 BPM healthy resting cadence).
 progress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).
 motion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).
+axis: 'horizontal' (default — band sweeps left↔right; classic KITT) or 'vertical' (band sweeps top↔bottom; column-wise reveals such as TTE Beams, scanline-down, top-down stage lights).
 apply_to: which channel to boost (fg, bg, or both) when not in powerline mode.
 powerline_mode: true to handle powerline separators safely.
 boost_separator_bg: true to also boost separator backgrounds for continuous powerlines.
 Cadence-driven motion uses monotonic elapsed time; bpm/bps set the scanner rate independently of recipe loop period.
-Classic Knight Rider aesthetic for retro sci-fi hover states."""
+Classic Knight Rider aesthetic for retro sci-fi hover states (horizontal); vertical axis covers reveal/scan effects that previously needed a sampler chain."""
 
 [effects.filters.ShadeScanner]
 use_cases = ["hover", "reveal", "retro"]
@@ -1337,7 +1338,7 @@ effects = [
 ]
 
 # <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
-# <VERS>END OF VERSION: 2.2.1</VERS>
+# <VERS>END OF VERSION: 2.3.0</VERS>
 
 # ════════════════════════════════════════════════════════════════════════════════
 # Generated stubs - fill in use_cases, energy, and ai_hint

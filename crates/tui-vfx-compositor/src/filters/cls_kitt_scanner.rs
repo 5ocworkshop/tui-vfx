@@ -1,12 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_kitt_scanner.rs</FILE>
-// <DESC>Horizontal ping-pong scanner effect like KITT from Knight Rider</DESC>
-// <VERS>VERSION: 1.8.0</VERS>
-// <WCTX>Add human-friendly cadence authoring support</WCTX>
-// <CLOG>1.8.0: add bpm-based authoring support and reset the default cadence to a healthy resting-adult 72 BPM while keeping the runtime filter expressed in bps internally.
-// 1.7.0: add boost_separator_bg toggle for powerlines with non-terminal backgrounds.</CLOG>
+// <DESC>Ping-pong scanner effect like KITT from Knight Rider, horizontal or vertical</DESC>
+// <VERS>VERSION: 1.9.0</VERS>
+// <WCTX>Phase 7 prep: vertical axis support unlocks faithful Beams effect (top-down sweep).</WCTX>
+// <CLOG>Add ScannerAxis field on KittScanner; apply() now selects nx (horizontal) or ny (vertical) before computing the sweep distance.</CLOG>
 
 use crate::traits::filter::Filter;
-use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode, kitt_bps_from_bpm};
+use crate::types::cls_filter_spec::{ApplyTo, ScannerAxis, ScannerMotionMode, kitt_bps_from_bpm};
 use crate::utils::is_powerline_separator;
 use tui_vfx_types::{Cell, Color};
 
@@ -54,6 +53,11 @@ pub struct KittScanner {
     pub bps: f32,
     /// Motion mode controlling whether the scanner ping-pongs or wraps one-way.
     pub motion_mode: ScannerMotionMode,
+    /// Axis along which the scanner sweeps. `Horizontal` is the classic KITT
+    /// pattern (cells brighten as the band passes column-by-column); `Vertical`
+    /// rotates the sweep 90° (band sweeps row-by-row), which gives TTE Beams
+    /// a single-axis primitive without a second filter.
+    pub axis: ScannerAxis,
     /// Which color component to boost (ignored if powerline_mode is true)
     pub apply_to: ApplyTo,
     /// Smart powerline mode: bg on text, fg only on separators
@@ -71,6 +75,7 @@ impl Default for KittScanner {
             progress: 0.0,
             bps: Self::bps_from_bpm(72.0), // healthy resting-adult cadence
             motion_mode: ScannerMotionMode::PingPong,
+            axis: ScannerAxis::Horizontal,
             apply_to: ApplyTo::Both,
             powerline_mode: false,
             boost_separator_bg: false,
@@ -125,6 +130,12 @@ impl KittScanner {
         self
     }
 
+    /// Set the sweep axis (horizontal default, vertical rotates the sweep 90°).
+    pub fn with_axis(mut self, axis: ScannerAxis) -> Self {
+        self.axis = axis;
+        self
+    }
+
     /// Set which color components to boost.
     pub fn with_apply_to(mut self, apply_to: ApplyTo) -> Self {
         self.apply_to = apply_to;
@@ -158,13 +169,26 @@ impl KittScanner {
 }
 
 impl Filter for KittScanner {
-    fn apply(&self, cell: &mut Cell, x: u16, _y: u16, width: u16, _height: u16, t: f64) {
-        if self.progress <= 0.0 || width == 0 {
+    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+        if self.progress <= 0.0 {
             return;
         }
-
-        let width_f = width.max(1) as f32;
-        let nx = x as f32 / width_f;
+        // Pick axis-aligned coordinate. For Vertical, ny = y / height plays the
+        // role nx = x / width plays for Horizontal — the rest of the math
+        // (ping-pong / forward-wrap / reverse-wrap) is axis-agnostic.
+        let extent = match self.axis {
+            ScannerAxis::Horizontal => width,
+            ScannerAxis::Vertical => height,
+        };
+        if extent == 0 {
+            return;
+        }
+        let extent_f = extent.max(1) as f32;
+        let pos = match self.axis {
+            ScannerAxis::Horizontal => x as f32 / extent_f,
+            ScannerAxis::Vertical => y as f32 / extent_f,
+        };
+        let nx = pos;
         let dist = match self.motion_mode {
             ScannerMotionMode::PingPong => {
                 let cycle = (t * self.bps as f64 * std::f64::consts::PI) as f32;
@@ -626,6 +650,67 @@ mod tests {
     }
 
     #[test]
+    fn default_axis_is_horizontal() {
+        let filter = KittScanner::default();
+        assert_eq!(filter.axis, ScannerAxis::Horizontal);
+    }
+
+    #[test]
+    fn vertical_axis_sweeps_along_y_not_x() {
+        // With axis = Vertical the band lives at y == height/2 at t=0 (center
+        // of the ping-pong cycle), regardless of x. Cells in the matching row
+        // brighten; cells in non-matching rows do not.
+        let filter = KittScanner::new()
+            .with_progress(1.0)
+            .with_axis(ScannerAxis::Vertical);
+
+        // Center row, far-left column: should brighten because the vertical
+        // band is at the row midpoint and x is irrelevant.
+        let mut center_row = make_cell();
+        filter.apply(&mut center_row, 0, 5, 20, 10, 0.0);
+        assert_ne!(center_row.fg, Color::rgb(100, 100, 100), "center row brightens");
+
+        // Top row: outside the band — must not brighten.
+        let mut top_row = make_cell();
+        filter.apply(&mut top_row, 0, 0, 20, 10, 0.0);
+        assert_eq!(top_row.fg, Color::rgb(100, 100, 100), "top row stays dark");
+
+        // Bottom row: outside the band — must not brighten.
+        let mut bottom_row = make_cell();
+        filter.apply(&mut bottom_row, 0, 9, 20, 10, 0.0);
+        assert_eq!(bottom_row.fg, Color::rgb(100, 100, 100), "bottom row stays dark");
+    }
+
+    #[test]
+    fn vertical_axis_ping_pong_reaches_top_and_bottom() {
+        // bps=1.0 → at t=0.5 sin(π/2)=1 (bottom edge), at t=1.5 sin(3π/2)=-1
+        // (top edge). Confirms the same oscillator drives the vertical sweep.
+        let filter = KittScanner::new()
+            .with_progress(1.0)
+            .with_bps(1.0)
+            .with_axis(ScannerAxis::Vertical);
+
+        let mut bottom = make_cell();
+        filter.apply(&mut bottom, 0, 9, 10, 10, 0.5);
+        assert_ne!(bottom.fg, Color::rgb(100, 100, 100), "band reaches bottom");
+
+        let mut top = make_cell();
+        filter.apply(&mut top, 0, 0, 10, 10, 1.5);
+        assert_ne!(top.fg, Color::rgb(100, 100, 100), "band reaches top");
+    }
+
+    #[test]
+    fn vertical_axis_zero_height_no_change() {
+        let filter = KittScanner::new()
+            .with_progress(1.0)
+            .with_axis(ScannerAxis::Vertical);
+        let mut cell = make_cell();
+        let original_fg = cell.fg;
+        filter.apply(&mut cell, 5, 0, 10, 0, 0.0);
+        assert_eq!(cell.fg, original_fg, "zero-height vertical sweep is a no-op");
+    }
+
+    #[test]
     fn boost_separator_bg_has_no_effect_without_powerline_mode() {
         // boost_separator_bg should be ignored when powerline_mode is false
         let filter = KittScanner::new()
@@ -650,5 +735,5 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_kitt_scanner.rs</FILE>
-// <DESC>Horizontal ping-pong scanner effect like KITT from Knight Rider</DESC>
-// <VERS>END OF VERSION: 1.7.0</VERS>
+// <DESC>Ping-pong scanner effect like KITT from Knight Rider, horizontal or vertical</DESC>
+// <VERS>END OF VERSION: 1.9.0</VERS>

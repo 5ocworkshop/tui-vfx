@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.4.1</VERS>
-// <WCTX>Keep content-effect metadata samples aligned with structured mechanical display fields.</WCTX>
-// <CLOG>Use structured Odometer and SplitFlap tile fields in generated docs metadata.</CLOG>
+// <VERS>VERSION: 1.4.2</VERS>
+// <WCTX>Keep KittScanner sample aligned with new ScannerAxis field.</WCTX>
+// <CLOG>Add axis: Default::default() to KittScanner sample so it compiles after the new field.</CLOG>
 
 use std::collections::HashMap;
 
@@ -298,6 +298,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             bps: 1.2,
             progress: BindableValue::static_f32(0.0),
             motion_mode: Default::default(),
+            axis: Default::default(),
             apply_to: Default::default(),
             powerline_mode: false,
             boost_separator_bg: false,
@@ -607,6 +608,7 @@ fn extract_content_metadata() -> HashMap<String, EffectMetadata> {
             dispersion: Default::default(),
             tile_width: 1,
             tile_height: 2,
+            mechanical: None,
         },
         ContentEffect::Odometer {
             direction: OdometerDirection::Up,
@@ -614,6 +616,7 @@ fn extract_content_metadata() -> HashMap<String, EffectMetadata> {
             tile_width: 1,
             tile_height: 3,
             from_message: Some("AAA\nBBB\nCCC".to_string()),
+            mechanical: None,
         },
         ContentEffect::Redact { symbol: '█' },
         ContentEffect::Numeric {
@@ -700,4 +703,4 @@ fn extract_shadow_metadata() -> HashMap<String, EffectMetadata> {
 }
 
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>END OF VERSION: 1.2.0</VERS>
+// <VERS>END OF VERSION: 1.4.2</VERS>

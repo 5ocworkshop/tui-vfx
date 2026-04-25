@@ -1,8 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.12.1</VERS>
-// <WCTX>Compositor clippy cleanup pass</WCTX>
-// <CLOG>3.12.1: PATCH — collapse nested if-let in rigid_shake normalization into Rust-2024 let-chains per clippy.
-// 3.12.0: add FilterSpec::try_from_v3_payload for engine-owned rigid-shake binding/default lowering from V3-authored payloads.
+// <VERS>VERSION: 3.13.0</VERS>
+// <WCTX>Phase 7 prep: vertical KittScanner support unlocks faithful Beams effect (top-down sweep).</WCTX>
+// <CLOG>Add ScannerAxis enum (Horizontal default / Vertical) and KittScanner.axis field with serde back-compat default.
 
 //! # Filter Specifications
 //!
@@ -301,6 +300,19 @@ pub enum ScannerMotionMode {
     PingPong,
     ForwardWrap,
     ReverseWrap,
+}
+
+/// Axis along which a scanner sweeps. Horizontal is the classic KITT/Larson
+/// pattern; Vertical sweeps top↔bottom (useful for column-wise reveals such as
+/// TTE's Beams effect). Defaults to Horizontal for back-compat.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum ScannerAxis {
+    #[default]
+    Horizontal,
+    Vertical,
 }
 
 /// Complete filter specification with all parameters.
@@ -1094,6 +1106,10 @@ pub enum FilterSpec {
         /// Motion mode for the scanner sweep
         #[serde(default)]
         motion_mode: ScannerMotionMode,
+        /// Axis along which the scanner sweeps (horizontal default, vertical
+        /// for column-wise reveals).
+        #[serde(default)]
+        axis: ScannerAxis,
         /// Which color component to boost (ignored if powerline_mode is true)
         #[serde(default = "default_kitt_apply_to")]
         apply_to: ApplyTo,
@@ -2137,6 +2153,7 @@ impl FilterSpec {
                 bps,
                 progress,
                 motion_mode,
+                axis,
                 apply_to,
                 powerline_mode,
                 boost_separator_bg,
@@ -2151,6 +2168,7 @@ impl FilterSpec {
                 ("bps", format!("{} Hz", bps)),
                 ("progress", format!("{:?}", progress)),
                 ("motion_mode", format!("{:?}", motion_mode)),
+                ("axis", format!("{:?}", axis)),
                 ("apply_to", format!("{:?}", apply_to)),
                 ("powerline_mode", format!("{}", powerline_mode)),
                 ("boost_separator_bg", format!("{}", boost_separator_bg)),
@@ -2172,4 +2190,4 @@ impl FilterSpec {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 3.12.1</VERS>
+// <VERS>END OF VERSION: 3.13.0</VERS>

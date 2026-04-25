@@ -1,10 +1,7 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.19.0</VERS> -->
-<!-- <WCTX>Audit recommendation 1.4 — surface the StyleRegion::Modulo variant (axis: ModuloAxis::Horizontal | Vertical, modulus: u16, remainder: u16) and the new V3 authoring `modulo` scope kind in the StyleRegion section. Also fold the canonical Role(RoleTag) form into the variant list so the doc no longer teaches the deprecated bare-string TextOnly/BorderOnly/BackgroundOnly variants as primary.</WCTX> -->
-<!-- <CLOG>2.19.0: MINOR — StyleRegion section now lists Role(RoleTag) as the canonical role-based form (with a note that legacy bare strings still parse) and gives full Modulo semantics (axis iteration direction, match formula, common use cases, V3 authoring shape). ModuloAxis docs explain Horizontal scans rows top→bottom and Vertical scans columns left→right.
-2.18.0: MINOR — LinearGradient row updated to list apply_to (LinearGradientApplyTo) and intensity (f32, 0–1, default 1.0). Note added that the gradient_overlay authoring sugar canonicalises to this shape and that both fields survive the canonicalisation. Note added that angle_deg is now a true projection axis at any angle.
-2.17.0: MINOR — WipeDirection section grew from 16 to 24 variants (corner-out and corner-in Euclidean quadrant arcs added) with a note distinguishing the corner-arc wavefront from the Manhattan-diagonal sweep. Documented `corner_down_*` / `corner_up_*` author-friendly serde aliases. Noted the shared canonical home in tui-vfx-geometry.
-2.16.0: MINOR — Document the tui_vfx_content::cursor module (Cursor, CursorBlink, GrowIn, Wake, CursorState, CursorPaintOps, and the fnc_advance_cursor / fnc_render_cursor / fnc_cursor_grow_in_glyph helpers)</CLOG>
+<!-- <VERS>VERSION: 2.20.0</VERS> -->
+<!-- <WCTX>Phase 7 prep: KittScanner gains a ScannerAxis field (Horizontal default / Vertical) so column-wise scanner reveals (TTE Beams) work without a sampler chain.</WCTX> -->
+<!-- <CLOG>Add KittScanner.axis to the filter row, add a ScannerAxis enum subsection, and expand the KittScanner notes paragraph to mention the new field.</CLOG> -->
 
 # TUI-VFX Complete API Reference
 
@@ -463,7 +460,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `DotIndicator` | Dot/bullet marker | `indicator_char: char`, `position: HoverBarPosition`, `color`, `bg_color`, `progress` |
 | `PillButton` | Pill button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten: bool`, `progress` |
 | `GlistenSweep` | Diagonal 45° highlight sweep | `boost: u8`, `band_width: f32`, `speed: f32`, `progress: f32`, `powerline_mode: bool`, `boost_separator_bg: bool` |
-| `KittScanner` | Horizontal scanner sweep (ping-pong or one-way wrap) | `boost: u8`, `band_width: f32`, `bpm: Option<f32>`, `bps: f32`, `progress: f32`, `motion_mode`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool` |
+| `KittScanner` | Scanner sweep (ping-pong or one-way wrap), horizontal or vertical | `boost: u8`, `band_width: f32`, `bpm: Option<f32>`, `bps: f32`, `progress: f32`, `motion_mode`, `axis: ScannerAxis`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool` |
 | `ShadeScanner` | Ping-pong scanner w/ shade overlay | `shade_color`, `bps: f32`, `progress: f32` |
 
 ### ApplyTo
@@ -480,6 +477,12 @@ Filters modify cell colors/styles after rendering (applied in order).
 
 ### MotionBlurDirection
 `Left`, `Right`, `Up`, `Down`
+
+### ScannerAxis (KittScanner)
+`Horizontal` (default — band sweeps left↔right; classic KITT/Larson) or
+`Vertical` (band sweeps top↔bottom; useful for column-wise reveals such as TTE
+Beams). The same oscillator drives both axes; only the coordinate fed in
+changes (`y/height` instead of `x/width`).
 
 ### SubPixelBarDirection
 `Horizontal` (▏▎▍▌▋▊▉█), `Vertical` (▁▂▃▄▅▆▇█)
@@ -508,7 +511,10 @@ See `cls_mask_spec.rs::WipeDirection`.
   monotonic elapsed time, so recipe loop period only controls how often the
   surrounding recipe repeats. `KittScanner.motion_mode` controls whether the
   scan ping-pongs (`ping_pong`) or wraps one-way (`forward_wrap` /
-  `reverse_wrap`).
+  `reverse_wrap`). `KittScanner.axis` (`horizontal` default / `vertical`)
+  selects the axis the band sweeps along — horizontal is the classic KITT
+  pattern; vertical drives TTE-Beams-style top-down reveals without a sampler
+  chain.
 - **ShadeScanner** is a dimming sweep (no `boost`), not a brightening sweep like its
   `KittScanner` neighbor.
 - **Progress-driven filters** (`HoverBar`, `UnderlineWipe`, `BracketEmphasis`,

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>VERSION: 2.15.0</VERS>
-// <WCTX>V3 FILTERS lane hardening — prove every FilterSpec variant survives the engine-owned V3 payload bridge and prepares into a concrete PreparedFilter arm</WCTX>
-// <CLOG>Add one audit test that exercises every FilterSpec variant through try_from_v3_payload + prepare_filter so bridge/preparation drift is caught in one place.</CLOG>
+// <VERS>VERSION: 2.15.1</VERS>
+// <WCTX>Phase 7 prep: thread the new ScannerAxis through KittScanner preparation so vertical-axis recipes light up.</WCTX>
+// <CLOG>Destructure and forward FilterSpec::KittScanner::axis to KittScanner::with_axis; update inline test fixtures.</CLOG>
 
 use super::cls_prepare_context::PrepareContext;
 use crate::filters::cls_animated_glyph_ramp::AnimatedGlyphRamp;
@@ -888,6 +888,7 @@ pub(crate) fn prepare_filter(
             bps,
             progress,
             motion_mode,
+            axis,
             apply_to,
             powerline_mode,
             boost_separator_bg,
@@ -901,6 +902,7 @@ pub(crate) fn prepare_filter(
                     .with_band_width(*band_width)
                     .with_progress(evaluated_progress)
                     .with_motion_mode(*motion_mode)
+                    .with_axis(*axis)
                     .with_apply_to(*apply_to)
                     .with_powerline_mode(*powerline_mode)
                     .with_boost_separator_bg(*boost_separator_bg);
@@ -968,7 +970,7 @@ mod tests {
 
     use super::*;
     use crate::types::BindableValue;
-    use crate::types::cls_filter_spec::{ApplyTo, ScannerMotionMode};
+    use crate::types::cls_filter_spec::{ApplyTo, ScannerAxis, ScannerMotionMode};
     use serde_json::json;
     use tui_vfx_style::traits::ShaderRuntimeParams;
 
@@ -980,6 +982,7 @@ mod tests {
             bps: 1.2,
             progress,
             motion_mode: ScannerMotionMode::default(),
+            axis: ScannerAxis::default(),
             apply_to: ApplyTo::Both,
             powerline_mode: false,
             boost_separator_bg: false,
@@ -1079,6 +1082,7 @@ mod tests {
             bps: 9.9,
             progress: BindableValue::static_f32(1.0),
             motion_mode: ScannerMotionMode::default(),
+            axis: ScannerAxis::default(),
             apply_to: ApplyTo::Both,
             powerline_mode: false,
             boost_separator_bg: false,
@@ -1934,4 +1938,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 2.15.0</VERS>
+// <VERS>END OF VERSION: 2.15.1</VERS>
