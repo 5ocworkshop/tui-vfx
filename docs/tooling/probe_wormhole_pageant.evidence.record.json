@@ -3,7 +3,7 @@
   "fixture_id": "probe_wormhole_pageant",
   "gate": "probe",
   "status": "pass",
-  "captured_at": "2026-04-24T22:50:18Z",
+  "captured_at": "2026-04-25T02:31:30Z",
   "recipe": {
     "repo": "tui-vfx-recipes",
     "path": "recipes/vfx-probe-validation/wormhole_pageant.json"
@@ -12,15 +12,15 @@
     {
       "evidence_type": "probe_report_json",
       "command": "cargo run -q -p recipe-probe -- recipes/vfx-probe-validation/wormhole_pageant.json --format json --phase dwelling --sample-t 1.0 --with-causation",
-      "artifact": "/tmp/tui-vfx-release-gates-headless-refresh2/probe_wormhole_pageant/probe_report.json",
+      "artifact": "artifacts/release-gates/probe_wormhole_pageant/probe_report.json",
       "status": "pass",
-      "artifact_sha256": "d97025df4b183f648e5c0a7a0d548cf48e31795ece11354f5ee472410f28ec19",
+      "artifact_sha256": "c39fd0f5c3c5d1b90d92fea103aaa46759f28c89bb546cc93f629cab79d6dc53",
       "observed_output_summary": "Headless probe exit 0; analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0, stages: style=success observed=280, filter=success observed=280."
     }
   ],
   "review": {
     "owner": "tui-vfx tooling lead",
     "approval_required": false,
-    "notes": "Probe report ran cleanly. analysis.status=success, lifecycle_analysis.status=success, frame_count=1."
+    "notes": "Fresh headless probe report ran cleanly on 2026-04-25. analysis.combined.status=success, lifecycle_analysis.combined.status=success, diagnostics=0; no GUI/X11/Zutty/Xvfb capture was run."
   }
 }
