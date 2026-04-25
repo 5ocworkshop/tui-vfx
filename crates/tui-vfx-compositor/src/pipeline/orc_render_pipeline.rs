@@ -145,16 +145,14 @@ pub fn render_pipeline(
     // SLOW PATH: Effects are active
     let timing = CompositionPlaybackTiming::from_options(&options);
     let samplers = prepare_samplers(options.t, effective_sampler_specs.as_ref());
-    let sampler_label = if samplers.is_empty() {
-        String::from("None#1")
-    } else {
+    let sampler_label = (!samplers.is_empty()).then(|| {
         samplers
             .iter()
             .enumerate()
             .map(|(index, sampler)| format!("{}#{}", sampler.name(), index + 1))
             .collect::<Vec<_>>()
             .join(" -> ")
-    };
+    });
     let prepared_masks = prepare_masks(options.masks.as_ref());
     let loop_t = timing.effective_loop_t();
     let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
@@ -177,7 +175,7 @@ pub fn render_pipeline(
             &prepared_masks,
             &prepared_filters,
             loop_t,
-            &sampler_label,
+            sampler_label.as_deref(),
             inspector,
         );
     } else {
@@ -767,7 +765,7 @@ fn render_loop_inspected(
     prepared_masks: &SmallVec<[PreparedMask; 2]>,
     prepared_filters: &SmallVec<[PreparedFilter; 3]>,
     loop_t: f64,
-    sampler_label: &str,
+    sampler_label: Option<&str>,
     inspector: &mut dyn CompositorInspector,
 ) {
     let (w16, h16) = (width as u16, height as u16);
@@ -791,7 +789,15 @@ fn render_loop_inspected(
             // Sample coordinates
             let (src_local_x, src_local_y) =
                 sample_sampler_chain(samplers, local_x, local_y, w16, h16, options.t);
-            inspector.on_sampler_applied(local_x, local_y, src_local_x, src_local_y, sampler_label);
+            if let Some(sampler_label) = sampler_label {
+                inspector.on_sampler_applied(
+                    local_x,
+                    local_y,
+                    src_local_x,
+                    src_local_y,
+                    sampler_label,
+                );
+            }
 
             let (src_x, src_y) = match (src_local_x, src_local_y) {
                 (Some(sx), Some(sy)) => (sx, sy),
