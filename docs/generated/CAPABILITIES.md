@@ -2,7 +2,7 @@
 <!-- Edit docs/templates/capabilities.toml or source rustdoc comments instead -->
 
 <!-- <FILE>docs/generated/CAPABILITIES.md</FILE> - <DESC>Comprehensive inventory of tui-vfx visual effects capabilities</DESC> -->
-<!-- <VERS>VERSION: 2.2.2</VERS> -->
+<!-- <VERS>VERSION: 2.2.3</VERS> -->
 
 # tui-vfx Capabilities Reference
 
@@ -143,7 +143,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **Mirror** | Mirror/reverse text effect | effect, playful, reflection |
 | **Morph** | Text morphing transition | transition, smooth, creative |
 | **Numeric** | Numeric formatting effect | data, counter, dashboard |
-| **Odometer** | Vertical scrolling digit counter | counter, retro, mechanical |
+| **Odometer** | Mechanical tile-grid rolling display | counter, retro, mechanical |
 | **Redact** | Text redaction/censorship effect | censorship, reveal, dramatic |
 | **Scramble** | Character scramble/decode effect | decrypt, reveal, tech |
 | **ScrambleGlitchShift** | Combined scramble and glitch shift effect | glitch, decrypt, dramatic |
@@ -211,4 +211,4 @@ This document provides a complete inventory of visual effects available in tui-v
 
 
 <!-- <FILE>docs/generated/CAPABILITIES.md</FILE> - <DESC>Comprehensive inventory of tui-vfx visual effects capabilities</DESC> -->
-<!-- <VERS>END OF VERSION: 2.2.2</VERS> -->
+<!-- <VERS>END OF VERSION: 2.2.3</VERS> -->

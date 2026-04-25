@@ -11,12 +11,12 @@
 # See docs/design/CAPABILITY_MANIFEST_*.md for architecture details.
 
 # <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
-# <VERS>VERSION: 2.2.2</VERS>
-# <WCTX>Docs coverage: include new powerline parameters</WCTX>
-# <CLOG>Expand ai_hint for GlistenSweep and KittScanner powerline fields</CLOG>
+# <VERS>VERSION: 2.2.3</VERS>
+# <WCTX>Refresh content effect capability language for structured mechanical display fields.</WCTX>
+# <CLOG>Document Odometer tile-grid roll and SplitFlap multi-cell Solari tiles.</CLOG>
 
 [meta]
-version = "2.2.2"
+version = "2.2.3"
 description = "tui-vfx visual effects capability manifest"
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1030,9 +1030,10 @@ Smoothly animates between numeric values."""
 use_cases = ["counter", "retro", "mechanical"]
 energy = "moderate"
 complexity = "moderate"
-ai_hint = """Odometer-style digit rolling animation.
-Digits roll vertically like mechanical counter.
-Retro/mechanical aesthetic for counters and scores."""
+ai_hint = """Mechanical tile-grid roll for odometer and slot-style boards.
+direction: up/down/left/right/diagonal. travel: tagged object (axis, full_clear, or cells).
+tile_width/tile_height define the rolling grid tile; from_message supplies the previous board.
+Old digit interpolation is intentionally replaced by cell-grid rolling."""
 
 [effects.content.Redact]
 use_cases = ["censorship", "reveal", "dramatic"]
@@ -1046,9 +1047,11 @@ Covers text with blocks, can reveal progressively."""
 use_cases = ["retro", "airport", "mechanical"]
 energy = "moderate"
 complexity = "moderate"
-ai_hint = """Split-flap display effect like airport departure boards.
-speed: flip speed. cascade: stagger between characters.
-Characters flip through alphabet to reach target."""
+ai_hint = """Split-flap/Solari display effect like airport departure boards.
+speed: flip speed. cascade/dispersion: stagger between tiles. cycles/jitter add mechanical variation.
+charset selects the character pool; from_message supplies the previous board for message-to-message flips.
+settle_overshoot, leading_blocks, settle_hinge, spring_settle, authentic_timing, rolling_flip, flip_preview, and flip_flicker tune Solari physicality.
+tile_width/tile_height support 1x1 legacy characters and even 2/4/6/8 center-hinged Solari tiles."""
 
 [effects.content.WrapIndicator]
 use_cases = ["hover", "selection", "emphasis"]

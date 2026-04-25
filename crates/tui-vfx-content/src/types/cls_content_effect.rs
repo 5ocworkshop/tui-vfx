@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
 // <VERS>VERSION: 2.14.0</VERS>
-// <WCTX>Add SplitFlap tile geometry fields for multi-cell Solari support.</WCTX>
-// <CLOG>Add tile_width/tile_height defaults to the SplitFlap content effect.</CLOG>
+// <WCTX>Clarify mechanical display rustdocs for generated schema and capability docs.</WCTX>
+// <CLOG>Describe tile-grid Odometer replacement and SplitFlap Solari tile sizes.</CLOG>
 
 //! # Content Effects
 //!
@@ -267,9 +267,9 @@ pub enum ContentEffect {
     /// Airport/train station split-flap display.
     ///
     /// Characters flip through a character pool like mechanical departure
-    /// boards (Solari, Alitalia, Frankfurt Hbf). 3.0.0 adds nine
-    /// mechanical-feel controls; all default to values that preserve
-    /// 2.1.0 linear-walk behavior, so legacy recipes deserialize unchanged.
+    /// boards (Solari, Alitalia, Frankfurt Hbf). The default `1x1` tile
+    /// preserves legacy character flips; even `tile_height` values `2`, `4`,
+    /// `6`, and `8` render larger center-hinged Solari cards.
     SplitFlap {
         /// Flip animation speed.
         #[serde(default)]
@@ -374,9 +374,11 @@ pub enum ContentEffect {
 
     /// Mechanical tile-grid rolling display.
     ///
-    /// Odometer treats content as a fixed character-cell grid and rolls old cells out
-    /// while target cells enter from the opposite edge. The previous digit
-    /// interpolation behavior was intentionally replaced and is not preserved.
+    /// Odometer treats content as a fixed character-cell grid and rolls old
+    /// tiles out while target tiles enter from the opposite edge. This is a
+    /// mechanical board/window motion effect, not numeric interpolation: the
+    /// previous vertical digit interpolation behavior was intentionally
+    /// replaced and is not preserved.
     Odometer {
         /// Direction old content rolls toward while target content enters.
         direction: OdometerDirection,

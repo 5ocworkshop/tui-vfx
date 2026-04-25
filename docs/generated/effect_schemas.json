@@ -41627,7 +41627,7 @@
             "name": "GlyphCascade"
           },
           {
-            "description": "Airport/train station split-flap display.\n\nCharacters flip through a character pool like mechanical departure\nboards (Solari, Alitalia, Frankfurt Hbf). 3.0.0 adds nine\nmechanical-feel controls; all default to values that preserve\n2.1.0 linear-walk behavior, so legacy recipes deserialize unchanged.",
+            "description": "Airport/train station split-flap display.\n\nCharacters flip through a character pool like mechanical departure\nboards (Solari, Alitalia, Frankfurt Hbf). The default `1x1` tile\npreserves legacy character flips; even `tile_height` values `2`, `4`,\n`6`, and `8` render larger center-hinged Solari cards.",
             "fields": [
               {
                 "json_key": null,
@@ -48668,6 +48668,46 @@
                     }
                   ]
                 }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Tile width in character cells. `1` with `tile_height: 1` preserves legacy SplitFlap behavior.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "tile_width",
+                "schema": {
+                  "kind": "primitive",
+                  "range": {
+                    "max": 65535,
+                    "min": 0
+                  },
+                  "type": "u16"
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Tile height in character cells. `1` preserves legacy behavior; even heights 2/4/6/8 use center-hinged grid rendering.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "tile_height",
+                "schema": {
+                  "kind": "primitive",
+                  "range": {
+                    "max": 65535,
+                    "min": 0
+                  },
+                  "type": "u16"
+                }
               }
             ],
             "json_value": "split_flap",
@@ -48675,9 +48715,201 @@
             "name": "SplitFlap"
           },
           {
-            "description": "Vertical scrolling digit counter.\n\nNumbers scroll vertically like a mechanical odometer or slot machine.",
+            "description": "Mechanical tile-grid rolling display.\n\nOdometer treats content as a fixed character-cell grid and rolls old\ntiles out while target tiles enter from the opposite edge. This is a\nmechanical board/window motion effect, not numeric interpolation: the\nprevious vertical digit interpolation behavior was intentionally\nreplaced and is not preserved.",
+            "fields": [
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Direction old content rolls toward while target content enters.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": false,
+                  "range": null
+                },
+                "name": "direction",
+                "schema": {
+                  "description": "Direction for mechanical Odometer tile rolling.",
+                  "json_name": null,
+                  "kind": "enum",
+                  "name": "OdometerDirection",
+                  "tag_field": null,
+                  "variants": [
+                    {
+                      "description": null,
+                      "json_value": "up",
+                      "kind": "unit",
+                      "name": "Up"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "down",
+                      "kind": "unit",
+                      "name": "Down"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "left",
+                      "kind": "unit",
+                      "name": "Left"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "right",
+                      "kind": "unit",
+                      "name": "Right"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "up_left",
+                      "kind": "unit",
+                      "name": "UpLeft"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "up_right",
+                      "kind": "unit",
+                      "name": "UpRight"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "down_left",
+                      "kind": "unit",
+                      "name": "DownLeft"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "down_right",
+                      "kind": "unit",
+                      "name": "DownRight"
+                    }
+                  ]
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Distance policy for each roll.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": false,
+                  "range": null
+                },
+                "name": "travel",
+                "schema": {
+                  "description": "Travel distance policy for mechanical Odometer tile rolling.",
+                  "json_name": null,
+                  "kind": "enum",
+                  "name": "OdometerTravel",
+                  "tag_field": "type",
+                  "variants": [
+                    {
+                      "description": null,
+                      "json_value": "axis",
+                      "kind": "unit",
+                      "name": "Axis"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "full_clear",
+                      "kind": "unit",
+                      "name": "FullClear"
+                    },
+                    {
+                      "description": null,
+                      "fields": [
+                        {
+                          "json_key": null,
+                          "meta": {
+                            "default": null,
+                            "description": null,
+                            "help": null,
+                            "json_key": null,
+                            "optional": false,
+                            "range": null
+                          },
+                          "name": "cells",
+                          "schema": {
+                            "kind": "primitive",
+                            "range": {
+                              "max": 65535,
+                              "min": 0
+                            },
+                            "type": "u16"
+                          }
+                        }
+                      ],
+                      "json_value": "cells",
+                      "kind": "struct",
+                      "name": "Cells"
+                    }
+                  ]
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Tile width in character cells; must be non-zero to animate.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "tile_width",
+                "schema": {
+                  "kind": "primitive",
+                  "range": {
+                    "max": 65535,
+                    "min": 0
+                  },
+                  "type": "u16"
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Tile height in character cells; must be non-zero to animate.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "tile_height",
+                "schema": {
+                  "kind": "primitive",
+                  "range": {
+                    "max": 65535,
+                    "min": 0
+                  },
+                  "type": "u16"
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Optional source message. Missing cells are padded with blanks by grid coordinate.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "from_message",
+                "schema": {
+                  "inner": {
+                    "kind": "primitive",
+                    "range": null,
+                    "type": "String"
+                  },
+                  "kind": "option"
+                }
+              }
+            ],
             "json_value": "odometer",
-            "kind": "unit",
+            "kind": "struct",
             "name": "Odometer"
           },
           {
@@ -59344,9 +59576,201 @@
           "name": "Numeric"
         },
         "odometer": {
-          "description": "Vertical scrolling digit counter.\n\nNumbers scroll vertically like a mechanical odometer or slot machine.",
+          "description": "Mechanical tile-grid rolling display.\n\nOdometer treats content as a fixed character-cell grid and rolls old\ntiles out while target tiles enter from the opposite edge. This is a\nmechanical board/window motion effect, not numeric interpolation: the\nprevious vertical digit interpolation behavior was intentionally\nreplaced and is not preserved.",
+          "fields": [
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Direction old content rolls toward while target content enters.",
+                "help": null,
+                "json_key": null,
+                "optional": false,
+                "range": null
+              },
+              "name": "direction",
+              "schema": {
+                "description": "Direction for mechanical Odometer tile rolling.",
+                "json_name": null,
+                "kind": "enum",
+                "name": "OdometerDirection",
+                "tag_field": null,
+                "variants": [
+                  {
+                    "description": null,
+                    "json_value": "up",
+                    "kind": "unit",
+                    "name": "Up"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "down",
+                    "kind": "unit",
+                    "name": "Down"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "left",
+                    "kind": "unit",
+                    "name": "Left"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "right",
+                    "kind": "unit",
+                    "name": "Right"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "up_left",
+                    "kind": "unit",
+                    "name": "UpLeft"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "up_right",
+                    "kind": "unit",
+                    "name": "UpRight"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "down_left",
+                    "kind": "unit",
+                    "name": "DownLeft"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "down_right",
+                    "kind": "unit",
+                    "name": "DownRight"
+                  }
+                ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Distance policy for each roll.",
+                "help": null,
+                "json_key": null,
+                "optional": false,
+                "range": null
+              },
+              "name": "travel",
+              "schema": {
+                "description": "Travel distance policy for mechanical Odometer tile rolling.",
+                "json_name": null,
+                "kind": "enum",
+                "name": "OdometerTravel",
+                "tag_field": "type",
+                "variants": [
+                  {
+                    "description": null,
+                    "json_value": "axis",
+                    "kind": "unit",
+                    "name": "Axis"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "full_clear",
+                    "kind": "unit",
+                    "name": "FullClear"
+                  },
+                  {
+                    "description": null,
+                    "fields": [
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": null,
+                          "help": null,
+                          "json_key": null,
+                          "optional": false,
+                          "range": null
+                        },
+                        "name": "cells",
+                        "schema": {
+                          "kind": "primitive",
+                          "range": {
+                            "max": 65535,
+                            "min": 0
+                          },
+                          "type": "u16"
+                        }
+                      }
+                    ],
+                    "json_value": "cells",
+                    "kind": "struct",
+                    "name": "Cells"
+                  }
+                ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Tile width in character cells; must be non-zero to animate.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "tile_width",
+              "schema": {
+                "kind": "primitive",
+                "range": {
+                  "max": 65535,
+                  "min": 0
+                },
+                "type": "u16"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Tile height in character cells; must be non-zero to animate.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "tile_height",
+              "schema": {
+                "kind": "primitive",
+                "range": {
+                  "max": 65535,
+                  "min": 0
+                },
+                "type": "u16"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Optional source message. Missing cells are padded with blanks by grid coordinate.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "from_message",
+              "schema": {
+                "inner": {
+                  "kind": "primitive",
+                  "range": null,
+                  "type": "String"
+                },
+                "kind": "option"
+              }
+            }
+          ],
           "json_value": "odometer",
-          "kind": "unit",
+          "kind": "struct",
           "name": "Odometer"
         },
         "redact": {
@@ -68747,7 +69171,7 @@
           "name": "SlideShift"
         },
         "split_flap": {
-          "description": "Airport/train station split-flap display.\n\nCharacters flip through a character pool like mechanical departure\nboards (Solari, Alitalia, Frankfurt Hbf). 3.0.0 adds nine\nmechanical-feel controls; all default to values that preserve\n2.1.0 linear-walk behavior, so legacy recipes deserialize unchanged.",
+          "description": "Airport/train station split-flap display.\n\nCharacters flip through a character pool like mechanical departure\nboards (Solari, Alitalia, Frankfurt Hbf). The default `1x1` tile\npreserves legacy character flips; even `tile_height` values `2`, `4`,\n`6`, and `8` render larger center-hinged Solari cards.",
           "fields": [
             {
               "json_key": null,
@@ -75787,6 +76211,46 @@
                     "name": "Shuffled"
                   }
                 ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Tile width in character cells. `1` with `tile_height: 1` preserves legacy SplitFlap behavior.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "tile_width",
+              "schema": {
+                "kind": "primitive",
+                "range": {
+                  "max": 65535,
+                  "min": 0
+                },
+                "type": "u16"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Tile height in character cells. `1` preserves legacy behavior; even heights 2/4/6/8 use center-hinged grid rendering.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "tile_height",
+              "schema": {
+                "kind": "primitive",
+                "range": {
+                  "max": 65535,
+                  "min": 0
+                },
+                "type": "u16"
               }
             }
           ],
@@ -397602,5 +398066,5 @@
       }
     }
   },
-  "version": "2.2.2"
+  "version": "2.2.3"
 }

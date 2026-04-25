@@ -100,12 +100,12 @@
 - **Mirror**: Mirror/flip text horizontally or vertically.
 - **Morph**: Character morphing/blending between text states.
 - **Numeric**: Number transition animations for dashboards.
-- **Odometer**: Odometer-style digit rolling animation.
+- **Odometer**: Mechanical tile-grid roll for odometer and slot-style boards.
 - **Redact**: Redaction/censoring effect with █ blocks.
 - **Scramble**: Random character scrambling that resolves to final text.
 - **ScrambleGlitchShift**: Combined scramble + glitch shift for maximum chaos. [Intense]
 - **SlideShift**: Sliding text with row jump after passing a column span.
-- **SplitFlap**: Split-flap display effect like airport departure boards.
+- **SplitFlap**: Split-flap/Solari display effect like airport departure boards.
 - **Typewriter**: Character-by-character text reveal.
 - **WrapIndicator**: Prefix/suffix symbols appear progressively with progress.
 

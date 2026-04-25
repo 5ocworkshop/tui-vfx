@@ -1,12 +1,12 @@
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.4.0</VERS>
-// <WCTX>Phase 0 P0.1 — remaining 8 filter progress fields lifted to BindableValue</WCTX>
-// <CLOG>Wrap every sample FilterSpec progress in BindableValue::static_f32 to match the new lifted spec field type across all 9 filters</CLOG>
+// <VERS>VERSION: 1.4.1</VERS>
+// <WCTX>Keep content-effect metadata samples aligned with structured mechanical display fields.</WCTX>
+// <CLOG>Use structured Odometer and SplitFlap tile fields in generated docs metadata.</CLOG>
 
 use std::collections::HashMap;
 
 use tui_vfx_compositor::types::{BindableValue, FilterSpec, MaskSpec, SamplerSpec};
-use tui_vfx_content::types::ContentEffect;
+use tui_vfx_content::types::{ContentEffect, OdometerDirection, OdometerTravel};
 use tui_vfx_shadow::types::ShadowStyle;
 use tui_vfx_style::models::{ColorConfig, SpatialShaderType, StyleEffect};
 
@@ -605,8 +605,16 @@ fn extract_content_metadata() -> HashMap<String, EffectMetadata> {
             flip_preview: false,
             flip_flicker: false,
             dispersion: Default::default(),
+            tile_width: 1,
+            tile_height: 2,
         },
-        ContentEffect::Odometer,
+        ContentEffect::Odometer {
+            direction: OdometerDirection::Up,
+            travel: OdometerTravel::Axis,
+            tile_width: 1,
+            tile_height: 3,
+            from_message: Some("AAA\nBBB\nCCC".to_string()),
+        },
         ContentEffect::Redact { symbol: '█' },
         ContentEffect::Numeric {
             format: "{}".to_string(),

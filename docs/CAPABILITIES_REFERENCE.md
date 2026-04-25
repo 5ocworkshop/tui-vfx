@@ -1,17 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.27.0</VERS> -->
-<!-- <WCTX>Audit recommendation 1.4 — document the V3 `modulo` authoring scope, the engine-side `StyleRegion::Modulo { axis, modulus, remainder }` it lowers to, and the `ModuloAxis` enum. Until now `StyleRegion::Modulo` existed in the runtime but was unreachable from V3 recipes; with v3-authoring 0.2.0 + normalize-scope 0.3.0 + compile 0.4.0 + build-composition-spec 1.15.0 the path is end-to-end.</WCTX> -->
-<!-- <CLOG>1.27.0: MINOR — extend "StyleRegion Targeting" with the `Modulo` variant (axis: ModuloAxis::Horizontal | Vertical, modulus: u16, remainder: u16) and the V3 authoring `modulo` scope kind. Document that `axis: horizontal` scans row-by-row (a matched row is one full-row stripe) and `axis: vertical` scans column-by-column. Note literal-folding to StaticModulo and binding fall-through to dynamic resolution.
-1.26.0: MINOR — LinearGradient row gains `apply_to` and `intensity` columns; new "Shader Notes" entry documents the angle semantics (true projection at any angle), the relationship to the `gradient_overlay` authoring sugar, and the channel-scope path. Closes the long-standing foot-gun where `gradient_overlay` with `apply_to:"background"` or `channel:background` silently ignored the channel intent.
-1.25.0: MINOR — WipeDirection grew from 16 to 24 variants (corner-out and corner-in quadrant arcs added). Updated the top-of-file Wipe directions count, the WipeDirection Variants table, and added the explanatory note that the same enum is now shared by the mask, the shader, and the V3 grouped reveal family. Documented author-friendly `corner_down_*` / `corner_up_*` aliases. Source of truth is `tui-vfx-geometry::WipeDirection`.
-1.24.0: MINOR — document CarrierOrbit/helix, FigureEight/infinity, RadialTwist sampler, and RadialSpiral shader capabilities from the whoa/cellophane review.
-1.23.0: MINOR — add V3 pathway capabilities section with first-class I/O chaining examples, runtime binding/asset contracts, procedural scene-source details, scene/source contract notes, and authoring/debugging guidance for new human and AI recipe authors.
-1.22.0: PATCH — note that `tui-vfx-recipes` now supports top-level `config.shadow` upstream (validator/probe parity) and cross-link the recipe-authoring shadow flow from the Shadows section.
-1.21.0: MINOR — add 'Quick Scan' (one-screen primitive inventory by category) after the TOC; add banner at top noting that intent-to-primitive selection lives in the gt-design /recipe-author skill.
-1.20.0: PATCH — Phase A.5 consistency pass: add "Unified Inspection Foundation (v0.9.0+)" cross-reference at the recommended-debugging-split section so consumers discover the new TraceEvent / TraceSink / InspectionSink surface from this document (full schema in docs/TRACE_EVENT_SCHEMA.md).
-1.19.0: MINOR — add "Role-Aware Pipeline Signature (v0.7.0+)" and "StyleRegion Targeting" subsections describing the new `&RoleMap` + `&mut SemanticScene` parameters and the Role(RoleTag) variant. Note back-compat via legacy bare-string Deserialize.
-1.18.0: Add "Braille cursors" subsection listing the 4 static ctors; extend "Scan" subsection with BraillePulse and BrailleRowFlip rows noting base-glyph override behavior; extend the debug recipe catalog with 6 new braille recipe entries.</CLOG>
-
+<!-- <VERS>VERSION: 1.28.0</VERS> -->
+<!-- <WCTX>Keep hand-maintained content-transformer reference aligned with structured mechanical display fields.</WCTX> -->
+<!-- <CLOG>1.28.0: update Odometer/SplitFlap capability language for tile-grid roll and multi-cell Solari tiles.</CLOG> -->
 # tui-vfx Capabilities Reference
 
 > **MAINTENANCE NOTE:** This document must be kept in sync with the source code.
@@ -633,11 +623,16 @@ Content transformers modify text content during animation.
 | **Mirror** | Mirror/flip text |
 | **Morph** | Character morphing/blending |
 | **Numeric** | Number transition animations |
-| **Odometer** | Odometer-style digit rolling |
+| **Odometer** | Mechanical tile-grid roll; replaces old digit interpolation |
 | **Redact** | Redaction/censoring effect |
-| **SplitFlap** | Split-flap display effect |
+| **SplitFlap** | Split-flap/Solari display with 1x1 legacy and even 2/4/6/8 center-hinged tiles |
 | **WrapIndicator** | Prefix/suffix wrapping based on progress |
 | **GlyphCascade** | Glyph alphabet cascade / symbol evolution |
+
+### Mechanical Display Notes
+
+- **Odometer** is a mechanical cell-grid/tile roll. It rolls old tile cells out of a fixed viewport while target tile cells enter from the opposite edge; the old vertical digit interpolation behavior is intentionally replaced. Key fields: `direction`, tagged `travel` (`{ "type": "axis" }`, `{ "type": "full_clear" }`, or `{ "type": "cells", "cells": N }`), `tile_width`, `tile_height`, and optional `from_message`.
+- **SplitFlap** keeps `1x1` legacy character flips by default. Larger Solari-style cards use `tile_width` plus even `tile_height` values `2`, `4`, `6`, or `8` for center-hinged rendering; invalid multi-cell heights are rejected by transformer validation.
 
 ### WrapIndicator Details
 
@@ -1530,4 +1525,4 @@ Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EV
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.24.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.28.0</VERS> -->

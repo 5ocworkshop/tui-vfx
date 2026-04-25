@@ -293,16 +293,47 @@
         ]
       },
       "Odometer": {
-        "ai_hint": "Odometer-style digit rolling animation.\nDigits roll vertically like mechanical counter.\nRetro/mechanical aesthetic for counters and scores.",
+        "ai_hint": "Mechanical tile-grid roll for odometer and slot-style boards.\ndirection: up/down/left/right/diagonal. travel: tagged object (axis, full_clear, or cells).\ntile_width/tile_height define the rolling grid tile; from_message supplies the previous board.\nOld digit interpolation is intentionally replaced by cell-grid rolling.",
         "complexity": "moderate",
         "energy": "moderate",
         "name": "Odometer",
         "pairs_with": [],
-        "parameters": [],
+        "parameters": [
+          {
+            "default": "Up",
+            "doc": "Direction old content rolls toward while target content enters.",
+            "name": "direction",
+            "ty": "OdometerDirection"
+          },
+          {
+            "default": "Axis",
+            "doc": "Distance policy for each roll.",
+            "name": "travel",
+            "ty": "OdometerTravel"
+          },
+          {
+            "default": "1",
+            "doc": "Tile width in character cells; must be non-zero to animate.",
+            "name": "tile_width",
+            "ty": "u16"
+          },
+          {
+            "default": "3",
+            "doc": "Tile height in character cells; must be non-zero to animate.",
+            "name": "tile_height",
+            "ty": "u16"
+          },
+          {
+            "default": "Some(\"AAA\\nBBB\\nCCC\")",
+            "doc": "Optional source message. Missing cells are padded with blanks by grid coordinate.",
+            "name": "from_message",
+            "ty": "Option<String>"
+          }
+        ],
         "premium": false,
         "requires": [],
-        "rustdoc_description": "Vertical scrolling digit counter",
-        "rustdoc_summary": "Vertical scrolling digit counter",
+        "rustdoc_description": "Mechanical tile-grid rolling display",
+        "rustdoc_summary": "Mechanical tile-grid rolling display",
         "use_cases": [
           "counter",
           "retro",
@@ -490,7 +521,7 @@
         ]
       },
       "SplitFlap": {
-        "ai_hint": "Split-flap display effect like airport departure boards.\nspeed: flip speed. cascade: stagger between characters.\nCharacters flip through alphabet to reach target.",
+        "ai_hint": "Split-flap/Solari display effect like airport departure boards.\nspeed: flip speed. cascade/dispersion: stagger between tiles. cycles/jitter add mechanical variation.\ncharset selects the character pool; from_message supplies the previous board for message-to-message flips.\nsettle_overshoot, leading_blocks, settle_hinge, spring_settle, authentic_timing, rolling_flip, flip_preview, and flip_flicker tune Solari physicality.\ntile_width/tile_height support 1x1 legacy characters and even 2/4/6/8 center-hinged Solari tiles.",
         "complexity": "moderate",
         "energy": "moderate",
         "name": "SplitFlap",
@@ -585,6 +616,18 @@
             "doc": "Dispersion pattern — how per-column start delays are\ndistributed across the board. `Legacy` (default) preserves\npre-3.2.0 cascade+authentic_timing behavior; the other\nvariants (cascade/authentic/simultaneous/random/center_out/\nedge_in/shuffled) override the old knobs with their own\ndelay curve.",
             "name": "dispersion",
             "ty": "SplitFlapDispersion"
+          },
+          {
+            "default": "1",
+            "doc": "Tile width in character cells. `1` with `tile_height: 1` preserves legacy SplitFlap behavior.",
+            "name": "tile_width",
+            "ty": "u16"
+          },
+          {
+            "default": "2",
+            "doc": "Tile height in character cells. `1` preserves legacy behavior; even heights 2/4/6/8 use center-hinged grid rendering.",
+            "name": "tile_height",
+            "ty": "u16"
           }
         ],
         "premium": false,
@@ -4239,5 +4282,5 @@
       }
     }
   },
-  "version": "2.2.2"
+  "version": "2.2.3"
 }
