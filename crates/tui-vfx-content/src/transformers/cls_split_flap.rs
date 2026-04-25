@@ -1,9 +1,12 @@
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions, flip-preview glyph, hinge-window flicker, per-column dispersion patterns)</DESC>
-// <VERS>VERSION: 3.2.1</VERS>
-// <WCTX>PATCH: fix multi-line cascade/dispersion bug. Pre-3.2.1 the transform loop tracked column position via the linear char index `i`, so for a 5-row × 44-col message `i` reached 220+, and with cascade=0.04 the rightmost columns / lower rows got delays of 8+ and never settled. Now tracks per-row `col_in_row` (resets after \n) and normalizes column_start_delay output to [0,1] using max_row_width, so cascade is interpretable as "max delay as fraction of total animation time" regardless of message length. Legacy dispersion still uses raw `i` for byte-for-byte back-compat.</WCTX>
-// <CLOG>PATCH 3.2.1: column_start_delay now takes (col_in_row, max_row_width), returns [0,1]-normalized. Added per-row col_in_row tracking in transform loop with reset on \n/\r and increment per non-newline char at every exit path. Computes max_row_width via target.lines().map(|l| l.chars().count()).max() once before the loop. Fixes cascade/random/center_out/edge_in/shuffled appearing broken on multi-line boards; authentic + simultaneous + legacy unaffected. Updated dispersion_center_out test math to match normalized space.
-// MINOR 3.2.0: add SplitFlapDispersion enum with 8 variants (Legacy preserves back-compat), add flip_preview/flip_flicker/dispersion fields to SplitFlap, add with_flip_preview / with_flip_flicker / with_dispersion builders, wire into transform() — flip_preview substitutes HINGE_CHARS[2] with char_turn(target), flip_flicker overrides the whole hinge window with a per-(col,bucket)-hashed 8-variant pool, dispersion computes column start-delays via column_start_delay() helper. Existing recipes unchanged; all new fields default to off/Legacy.</CLOG>
+// <VERS>VERSION: 3.3.0</VERS>
+// <WCTX>Phase 3 adds multi-cell SplitFlap tile routing while preserving the 1x1 legacy path.</WCTX>
+// <CLOG>Add tile_width/tile_height and route validated even-height tiles through mechanical center-hinge helpers.</CLOG>
 
+use crate::mechanical::{
+    MechanicalSizing, MechanicalTile, grid_to_text, paired_grids, split_flap_tile_frame,
+    validate_split_flap_tile,
+};
 use crate::traits::TextTransformer;
 use crate::utils::char_turn;
 use mixed_signals::physics::DampedSpring;
@@ -164,6 +167,8 @@ pub struct SplitFlap {
     /// visual "shape" of which flaps begin rotating first. Default
     /// `Legacy` preserves existing `cascade`/`authentic_timing` behavior.
     pub dispersion: SplitFlapDispersion,
+    pub tile_width: u16,
+    pub tile_height: u16,
 }
 
 impl SplitFlap {
@@ -192,6 +197,8 @@ impl SplitFlap {
             flip_preview: false,
             flip_flicker: false,
             dispersion: SplitFlapDispersion::Legacy,
+            tile_width: 1,
+            tile_height: 1,
         }
     }
 
@@ -225,6 +232,8 @@ impl SplitFlap {
             flip_preview: false,
             flip_flicker: false,
             dispersion: SplitFlapDispersion::Legacy,
+            tile_width: 1,
+            tile_height: 1,
         }
     }
 
@@ -262,6 +271,13 @@ impl SplitFlap {
     /// character at `from[i]` to the character at `target[i]`.
     pub fn with_from_message(mut self, from: impl Into<String>) -> Self {
         self.from_message = Some(from.into());
+        self
+    }
+
+    /// Set SplitFlap tile geometry. `1x1` preserves legacy character behavior.
+    pub fn with_tile_size(mut self, width: u16, height: u16) -> Self {
+        self.tile_width = width;
+        self.tile_height = height;
         self
     }
 
@@ -392,6 +408,22 @@ impl TextTransformer for SplitFlap {
     ) -> Cow<'a, str> {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
+        }
+        if self.tile_width != 1 || self.tile_height != 1 {
+            let tile = MechanicalTile {
+                width: self.tile_width,
+                height: self.tile_height,
+            };
+            if validate_split_flap_tile(tile).is_err() {
+                return Cow::Borrowed(target);
+            }
+            let source = paired_grids(
+                self.from_message.as_deref(),
+                target,
+                MechanicalSizing::PadToMax,
+            );
+            let grid = split_flap_tile_frame(&source, progress, tile);
+            return Cow::Owned(grid_to_text(&grid));
         }
         let speed = self
             .speed

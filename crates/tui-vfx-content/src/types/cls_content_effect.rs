@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>VERSION: 2.13.0</VERS>
-// <WCTX>Replace Odometer with structured mechanical tile-roll configuration.</WCTX>
-// <CLOG>Replace unit Odometer with direction/travel/tile/from_message fields.</CLOG>
+// <VERS>VERSION: 2.14.0</VERS>
+// <WCTX>Add SplitFlap tile geometry fields for multi-cell Solari support.</WCTX>
+// <CLOG>Add tile_width/tile_height defaults to the SplitFlap content effect.</CLOG>
 
 //! # Content Effects
 //!
@@ -364,6 +364,12 @@ pub enum ContentEffect {
         /// delay curve.
         #[serde(default)]
         dispersion: crate::transformers::SplitFlapDispersion,
+        /// Tile width in character cells. `1` with `tile_height: 1` preserves legacy SplitFlap behavior.
+        #[serde(default = "default_tile_width")]
+        tile_width: u16,
+        /// Tile height in character cells. `1` preserves legacy behavior; even heights 2/4/6/8 use center-hinged grid rendering.
+        #[serde(default = "default_tile_height")]
+        tile_height: u16,
     },
 
     /// Mechanical tile-grid rolling display.
@@ -644,6 +650,8 @@ impl ContentEffect {
                 flip_preview,
                 flip_flicker,
                 dispersion,
+                tile_width,
+                tile_height,
             } => vec![
                 ("speed", format!("{:?}", speed)),
                 ("cascade", format!("{:?}", cascade)),
@@ -666,6 +674,8 @@ impl ContentEffect {
                 ("flip_preview", format!("{}", flip_preview)),
                 ("flip_flicker", format!("{}", flip_flicker)),
                 ("dispersion", format!("{:?}", dispersion)),
+                ("tile_width", format!("{}", tile_width)),
+                ("tile_height", format!("{}", tile_height)),
             ],
             ContentEffect::Odometer {
                 direction,
@@ -736,4 +746,4 @@ impl ContentEffect {
 }
 
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>END OF VERSION: 2.13.0</VERS>
+// <VERS>END OF VERSION: 2.14.0</VERS>

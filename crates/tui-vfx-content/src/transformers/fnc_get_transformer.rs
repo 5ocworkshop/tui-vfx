@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/transformers/fnc_get_transformer.rs</FILE> - <DESC>Factory function for content transformers</DESC>
-// <VERS>VERSION: 3.10.0</VERS>
-// <WCTX>Wire structured Odometer tile-roll configuration into transformer factory.</WCTX>
-// <CLOG>Construct Odometer from direction/travel/tile/from_message fields.</CLOG>
+// <VERS>VERSION: 3.11.0</VERS>
+// <WCTX>Wire SplitFlap tile geometry into transformer factory.</WCTX>
+// <CLOG>Pass tile_width/tile_height into SplitFlap transformer.</CLOG>
 
 use crate::traits::TextTransformer;
 use crate::transformers::{
@@ -82,6 +82,8 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
             flip_preview,
             flip_flicker,
             dispersion,
+            tile_width,
+            tile_height,
         } => {
             let mut sf = SplitFlap::new_mechanical(
                 speed.clone(),
@@ -98,7 +100,8 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
             .with_rolling_flip(*rolling_flip)
             .with_flip_preview(*flip_preview)
             .with_flip_flicker(*flip_flicker)
-            .with_dispersion(*dispersion);
+            .with_dispersion(*dispersion)
+            .with_tile_size(*tile_width, *tile_height);
             if let Some(from) = from_message {
                 sf = sf.with_from_message(from.clone());
             }
@@ -164,4 +167,4 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
 }
 
 // <FILE>tui-vfx-content/src/transformers/fnc_get_transformer.rs</FILE> - <DESC>Factory function for content transformers</DESC>
-// <VERS>END OF VERSION: 3.10.0</VERS>
+// <VERS>END OF VERSION: 3.11.0</VERS>

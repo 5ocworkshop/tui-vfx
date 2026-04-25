@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/tests/test_transformers.rs</FILE> - <DESC>Linker for transformer tests</DESC>
-// <VERS>VERSION: 1.5.0</VERS>
-// <WCTX>Phase 2 Odometer replacement with grid-first mechanical tile roll.</WCTX>
-// <CLOG>Link structured Odometer transformer tests.</CLOG>
+// <VERS>VERSION: 1.6.0</VERS>
+// <WCTX>Phase 3 SplitFlap tile support with transformer test linkage.</WCTX>
+// <CLOG>Link SplitFlap multi-cell tile transformer tests.</CLOG>
 
 #[path = "transformers/test_cls_marquee.rs"]
 mod test_cls_marquee;
@@ -15,6 +15,8 @@ mod test_cls_redact;
 mod test_cls_scramble;
 #[path = "transformers/test_cls_slide_shift.rs"]
 mod test_cls_slide_shift;
+#[path = "transformers/test_cls_split_flap_tiles.rs"]
+mod test_cls_split_flap_tiles;
 #[path = "transformers/test_cls_typewriter.rs"]
 mod test_cls_typewriter;
 #[path = "transformers/test_fnc_get_transformer.rs"]
@@ -23,4 +25,4 @@ mod test_fnc_get_transformer;
 mod test_typewriter_transform_with_cursor;
 
 // <FILE>tui-vfx-content/tests/test_transformers.rs</FILE> - <DESC>Linker for transformer tests</DESC>
-// <VERS>END OF VERSION: 1.5.0</VERS>
+// <VERS>END OF VERSION: 1.6.0</VERS>
