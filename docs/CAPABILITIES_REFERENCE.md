@@ -872,8 +872,8 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 | `surface_color` | Option<Color> | Background for half-block blending |
 | `edges` | ShadowEdges | Which edges to render. Builder-facing names include `BOTTOM_RIGHT` / `ALL`; recipe JSON currently uses bitflag strings such as `"RIGHT | BOTTOM"`. |
 | `soft_edges` | bool | Use half-blocks at boundaries |
-| `composite_mode` | ShadowCompositeMode | `GlyphOverlay` (default) or `GradeUnderlying` |
-| `grade` | Option<ShadowGradeConfig> | Grade parameters for `GradeUnderlying` |
+| `composite_mode` | ShadowCompositeMode | `GlyphOverlay` (default), `GradeUnderlying`, or `BlendUnderlying` |
+| `grade` | Option<ShadowGradeConfig> | Grade parameters for `GradeUnderlying`; ignored by `GlyphOverlay` and `BlendUnderlying` |
 | `source_region` | Option<RoleTag> | v0.8.0+ — restrict extrusion to cells whose role matches the tag. `None` (default) = rectangular extrusion as before. `Some(role)` = extrude from the tight bounding rectangle of role-matched source cells (see `extract_shadow_envelope`) and tag produced cells with `RoleTag::Shadow` in the destination role map. Fixes the "shadow on text rect" splash bug. Builder: `with_source_region(role)`; accessor: `source_region()`. Recipe JSON currently uses enum names like `"Border"`. |
 
 Note: as of v0.8.0, `ShadowConfig` is no longer `Copy` — `RoleTag::Custom` carries an `Arc<str>`. Call-sites that relied on implicit copy must add `.clone()`.

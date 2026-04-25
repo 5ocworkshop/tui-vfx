@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_composite_mode.rs</FILE> - <DESC>Shadow compositing mode selection</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 0 dramatic color-shadow rollout: add compositing mode enum</WCTX>
-// <CLOG>Initial creation with GlyphOverlay and GradeUnderlying variants</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Transparent shadows need a destination-preserving alpha blend mode for dark surfaces where GradeUnderlying is visually too subtle.</WCTX>
+// <CLOG>0.2.0: add BlendUnderlying for glyph-preserving alpha-aware background blending.</CLOG>
 
 //! Shadow compositing mode.
 //!
@@ -10,6 +10,9 @@
 //! preserves backward-compatible glyph-based shadow rendering. The
 //! [`GradeUnderlying`](ShadowCompositeMode::GradeUnderlying) mode leaves
 //! destination glyphs in place and applies color grading to the shadow region.
+//! [`BlendUnderlying`](ShadowCompositeMode::BlendUnderlying) also preserves
+//! destination glyphs, but alpha-blends the rendered shadow color onto the
+//! destination background.
 
 use serde::{Deserialize, Serialize};
 
@@ -22,8 +25,9 @@ use serde::{Deserialize, Serialize};
 ///
 /// The default is [`GlyphOverlay`](Self::GlyphOverlay), which preserves the
 /// existing shadow rendering behavior. Switching to
-/// [`GradeUnderlying`](Self::GradeUnderlying) changes only the blend step,
-/// not the shadow geometry pipeline.
+/// [`GradeUnderlying`](Self::GradeUnderlying) or
+/// [`BlendUnderlying`](Self::BlendUnderlying) changes only the blend step, not
+/// the shadow geometry pipeline.
 #[derive(
     Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
@@ -46,6 +50,15 @@ pub enum ShadowCompositeMode {
     /// [`ShadowConfig::with_dramatic_grade`](super::ShadowConfig::with_dramatic_grade)
     /// builder provides a recommended visible preset.
     GradeUnderlying,
+
+    /// Destination-preserving alpha blend: leaves destination glyphs,
+    /// foreground colors, and modifiers intact while alpha-blending the
+    /// rendered shadow color onto the destination background.
+    ///
+    /// Use this for translucent shadows over dark or textured surfaces where
+    /// [`GradeUnderlying`](Self::GradeUnderlying) can be too subtle but
+    /// [`GlyphOverlay`](Self::GlyphOverlay) would destroy the underlying glyph.
+    BlendUnderlying,
 }
 
 #[cfg(test)]
@@ -65,6 +78,7 @@ mod tests {
         let modes = [
             ShadowCompositeMode::GlyphOverlay,
             ShadowCompositeMode::GradeUnderlying,
+            ShadowCompositeMode::BlendUnderlying,
         ];
         for mode in &modes {
             let json = serde_json::to_string(mode).unwrap();
@@ -75,4 +89,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_composite_mode.rs</FILE> - <DESC>Shadow compositing mode selection</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

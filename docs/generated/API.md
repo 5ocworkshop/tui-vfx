@@ -409,7 +409,7 @@ Shadows come from the `tui-vfx-shadow` crate and can be rendered **directly**
 or **integrated** into the compositor via `ShadowSpec`.
 
 Shadow compositing is controlled by `composite_mode`: the default `GlyphOverlay` replaces
-destination content with shadow glyphs, while `GradeUnderlying` preserves destination glyphs
+destination content with shadow glyphs, `GradeUnderlying` preserves destination glyphs with grading, and `BlendUnderlying` preserves glyphs while alpha-blending the shadow onto the background
 and applies color grading (desaturate, dim, tint) scaled by shadow coverage.
 Use `.with_dramatic_grade()` for a visible preset with stronger background than foreground grading.
 
@@ -446,6 +446,7 @@ pub struct ShadowConfig {
 
 - `GlyphOverlay` (default) — shadow glyphs replace destination content
 - `GradeUnderlying` — destination glyphs preserved; color grading applied
+- `BlendUnderlying` — destination glyph/fg preserved; shadow alpha blends onto background
 
 ## ShadowGradeConfig
 

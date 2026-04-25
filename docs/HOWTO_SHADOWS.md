@@ -157,7 +157,7 @@ ShadowConfig::new(color: Color)
     .with_edges(edges: ShadowEdges)      // Which edges to shadow (default: BOTTOM_RIGHT)
     .with_soft_edges(enabled: bool)      // Use half-blocks for transitions (default: true)
     .with_surface_color(color: Color)    // Background for blending (for HalfBlock)
-    .with_composite_mode(mode)           // GlyphOverlay (default) or GradeUnderlying
+    .with_composite_mode(mode)           // GlyphOverlay (default), GradeUnderlying, or BlendUnderlying
     .with_grade(grade_config)            // Custom ShadowGradeConfig
     .with_dramatic_grade()               // Shorthand: GradeUnderlying + dramatic preset
 ```
@@ -302,6 +302,7 @@ For a more sophisticated look, **grade-underlying** compositing preserves destin
 |------|----------|
 | `GlyphOverlay` (default) | Shadow glyphs replace destination content |
 | `GradeUnderlying` | Destination glyphs preserved; color grading applied |
+| `BlendUnderlying` | Destination glyph/fg preserved; shadow alpha blends onto background |
 
 ### Dramatic Grade-Underlying Example
 

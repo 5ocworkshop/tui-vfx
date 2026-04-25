@@ -455,9 +455,11 @@
     #   `render_v3_snapshot_onto_scene`; ratatui's `render_v3_frame_to_buffer`
     #   is only an adapter over that grid-first seam. Shadow semantics do not
     #   belong to ratatui. The grid renderer dispatches `GlyphOverlay` through
-    #   the compositor's shared shadow blend helper and `GradeUnderlying`
-    #   through the destination-preserving grade helper. Use the scene variant
-    #   when downstream code needs `RoleTag::Shadow` write-back.
+    #   the compositor's shared shadow blend helper, `GradeUnderlying`
+    #   through the destination-preserving grade helper, and
+    #   `BlendUnderlying` through the destination-preserving alpha blend helper.
+    #   Use the scene variant when downstream code needs `RoleTag::Shadow`
+    #   write-back.
 
     # -----------------------------------------------------------------------
     # 5.5 Scene layers (Decision 5) — multi-source composition

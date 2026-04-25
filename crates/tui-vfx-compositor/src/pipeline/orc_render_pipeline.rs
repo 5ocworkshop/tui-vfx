@@ -12,6 +12,7 @@ use super::cls_prepared_mask::{PreparedMask, prepare_masks};
 use super::cls_prepared_sampler::{PreparedSampler, prepare_samplers, sample_sampler_chain};
 use super::cls_render_area::RenderArea;
 use super::fnc_blend_shadow_cell::blend_shadow_cell;
+use super::fnc_blend_underlying_shadow_cell::blend_underlying_shadow_cell;
 use super::fnc_check_masks::check_prepared_masks;
 use super::fnc_grade_shadow_cell::grade_shadow_cell;
 use crate::traits::pipeline_inspector::CompositorInspector;
@@ -466,6 +467,9 @@ fn render_pipeline_with_shadow(
                                         shadow_spec.config.color,
                                         &grade_config,
                                     ),
+                                    ShadowCompositeMode::BlendUnderlying => {
+                                        blend_underlying_shadow_cell(shadow_cell, dest_cell)
+                                    }
                                 }
                             } else {
                                 match shadow_spec.config.composite_mode {
@@ -476,6 +480,9 @@ fn render_pipeline_with_shadow(
                                         shadow_spec.config.color,
                                         &grade_config,
                                     ),
+                                    ShadowCompositeMode::BlendUnderlying => {
+                                        blend_underlying_shadow_cell(shadow_cell, cell)
+                                    }
                                 }
                             }
                         } else {
@@ -496,6 +503,9 @@ fn render_pipeline_with_shadow(
                                     shadow_spec.config.color,
                                     &grade_config,
                                 ),
+                                ShadowCompositeMode::BlendUnderlying => {
+                                    blend_underlying_shadow_cell(cell, dest_cell)
+                                }
                             }
                         } else {
                             *cell
@@ -587,6 +597,9 @@ fn render_pipeline_with_shadow(
                                         shadow_spec.config.color,
                                         &grade_config,
                                     ),
+                                    ShadowCompositeMode::BlendUnderlying => {
+                                        blend_underlying_shadow_cell(shadow_cell, dest_cell)
+                                    }
                                 }
                             } else {
                                 match shadow_spec.config.composite_mode {
@@ -597,6 +610,9 @@ fn render_pipeline_with_shadow(
                                         shadow_spec.config.color,
                                         &grade_config,
                                     ),
+                                    ShadowCompositeMode::BlendUnderlying => {
+                                        blend_underlying_shadow_cell(shadow_cell, cell)
+                                    }
                                 }
                             }
                         } else {
@@ -613,6 +629,9 @@ fn render_pipeline_with_shadow(
                                 shadow_spec.config.color,
                                 &grade_config,
                             ),
+                            ShadowCompositeMode::BlendUnderlying => {
+                                blend_underlying_shadow_cell(cell, dest_cell)
+                            }
                         }
                     } else {
                         *cell
