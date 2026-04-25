@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>VERSION: 0.3.2</VERS> -->
-<!-- <WCTX>Keep the schema overview aligned with the accepted V3 vocabulary, distributed timing model, metadata posture, and sibling authoring docs.</WCTX> -->
-<!-- <CLOG>0.3.2: document V3 border type vocabulary and inline border-title fields.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.3</VERS> -->
+<!-- <WCTX>Keep the schema overview aligned with V3 vocabulary, distributed timing, metadata posture, border/title fields, and shadow snapshot renderer boundaries.</WCTX> -->
+<!-- <CLOG>0.3.3: record that V3 shadow snapshots render through grid/scene-first APIs with ratatui as an adapter.</CLOG> -->
 
 # tui-vfx V3 Schema Overview
 
@@ -176,6 +176,9 @@ Recipe
    ├─ regions?
    ├─ theme?
    ├─ shadow?
+   │  ├─ style/color/offset/inset/edges/soft_edges
+   │  ├─ source_region?
+   │  └─ composite.mode: glyph_overlay | grade_underlying
    ├─ scene?
    │  └─ layers[]
    │     ├─ id
@@ -566,7 +569,7 @@ Current reconciliation stance:
 | `time` | normalized to `config.clock`, while runtime still keeps both normalized progress and monotonic elapsed time |
 | style-layer `clock` | normalized to per-step `clock` override |
 | `theme` | explicit envelope-level home |
-| `shadow` | explicit recipe-envelope home plus scene-layer `surface.shadow` |
+| `shadow` | explicit recipe-envelope home plus scene-layer `surface.shadow`; rendered through grid/scene-first snapshot APIs, with ratatui only as an adapter |
 | `scene layer styling` | scene-layer `surface.base_style` and `surface.shadow` now execute on the native V3 scene lane |
 | `scene layer channels` | scene-layer local pipelines can now run alongside `surface.*`, including channel-scoped filter cases on the native V3 scene lane |
 | `role-scoped pipeline targeting` | `scope = { kind: "role", value: ... }` now lowers directly into role-aware runtime regions on the active V3 path |
@@ -663,4 +666,4 @@ In practice, these two docs should be read together:
 - use this overview to understand why that shape is organized the way it is
 
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>END OF VERSION: 0.3.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.3</VERS> -->

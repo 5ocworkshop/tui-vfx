@@ -1,7 +1,7 @@
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example with # comment annotations. Stripping lines starting with `#` yields valid JSON representing a canonical V3 recipe.</DESC>
-# <VERS>VERSION: 0.8.0</VERS>
-# <WCTX>Tighten current-target schema commentary after Q#21/Q#23 acceptance so metadata guidance points at `intent_hints` / `expected_visual` / `visual_tags` and timing guidance describes the distributed V3 model without implying a Timer primitive.</WCTX>
-# <CLOG>0.8.0: document canonical border types plus inline top/bottom/left/right border-title fields.</CLOG>
+# <VERS>VERSION: 0.8.1</VERS>
+# <WCTX>Keep the draft schema annotations aligned with border/title fields, shadow composite modes, and the grid-first V3 snapshot renderer boundary.</WCTX>
+# <CLOG>0.8.1: annotate shadow composite modes against the grid-first V3 snapshot renderer seam.</CLOG>
 
 # ============================================================================
 # tui-vfx V3 schema — DRAFT
@@ -445,6 +445,15 @@
     #   These are the typed shadow fields after load-time substitution. Caller
     #   tokenization lives at the `tui-vfx-recipes` boundary; the schema itself
     #   describes the resolved form.
+    #
+    #   Runtime access note:
+    #   V3 snapshots compose through `render_v3_snapshot_onto_grid` or
+    #   `render_v3_snapshot_onto_scene`; ratatui's `render_v3_frame_to_buffer`
+    #   is only an adapter over that grid-first seam. Shadow semantics do not
+    #   belong to ratatui. The grid renderer dispatches `GlyphOverlay` through
+    #   the compositor's shared shadow blend helper and `GradeUnderlying`
+    #   through the destination-preserving grade helper. Use the scene variant
+    #   when downstream code needs `RoleTag::Shadow` write-back.
 
     # -----------------------------------------------------------------------
     # 5.5 Scene layers (Decision 5) — multi-source composition
@@ -1247,5 +1256,5 @@
 
 # ============================================================================
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example</DESC>
-# <VERS>END OF VERSION: 0.8.0</VERS>
+# <VERS>END OF VERSION: 0.8.1</VERS>
 # ============================================================================

@@ -353,6 +353,42 @@ All strength values range from `0.0` (no effect) to `1.0` (maximum) and are furt
 
 ---
 
+## V3 snapshot rendering and non-ratatui consumers
+
+V3 frame snapshots are rendered through a grid-first seam. If you already have a
+`V3FrameSnapshot`, do not reimplement shadow composition and do not route through
+ratatui unless your host is actually a ratatui buffer. Use:
+
+```rust
+use tui_vfx_recipes::preview::{
+    render_v3_snapshot_onto_grid, render_v3_snapshot_onto_scene, V3FrameSnapshot,
+};
+use tui_vfx_types::{OwnedGrid, SemanticScene};
+
+fn render_for_export(snapshot: &V3FrameSnapshot, canvas: &mut OwnedGrid) {
+    render_v3_snapshot_onto_grid(snapshot, canvas);
+}
+
+fn render_with_roles(snapshot: &V3FrameSnapshot, scene: &mut SemanticScene) {
+    render_v3_snapshot_onto_scene(snapshot, scene);
+}
+```
+
+`render_v3_snapshot_onto_grid` writes the final cells into an `OwnedGrid`.
+`render_v3_snapshot_onto_scene` also updates roles: snapshot cells keep their
+source role and produced shadow cells are tagged `RoleTag::Shadow`. Python
+bindings, crossterm adapters, headless validators, image/movie exporters, and
+raw-grid tests should use one of these two functions.
+
+The ratatui helper is still available as `render_v3_frame_to_buffer`, but it is
+only an adapter. It snapshots the target ratatui buffer region into `OwnedGrid`,
+invokes the grid renderer, then writes the resulting grid back. Shadow behavior
+therefore matches the non-ratatui path: `GlyphOverlay` uses the compositor's
+shared glyph blend, and `GradeUnderlying` preserves destination glyphs while
+grading foreground/background colors.
+
+---
+
 ## Recipe authoring note (tui-vfx-recipes Hotfix H2+)
 
 If you author through `tui-vfx-recipes`, the same `ShadowSpec` surface is now available directly at top-level `config.shadow`. `pipeline-validator --dump` and `recipe-probe` preserve this authored shadow spec, so recipe JSON, validator output, and compositor behavior finally line up. A minimal pattern:
