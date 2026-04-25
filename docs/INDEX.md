@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.14.0</VERS> -->
-<!-- <WCTX>Add the accepted V3 timing and metadata decision to the root documentation index.</WCTX> -->
-<!-- <CLOG>1.14.0: add the root CAPABILITIES guide to the main docs navigation.
+<!-- <VERS>VERSION: 1.15.0</VERS> -->
+<!-- <WCTX>Add the V3 per-cell motion plan and annotated schema draft to the root documentation index.</WCTX> -->
+<!-- <CLOG>1.15.0: add V3 per-cell motion plan and annotated schema draft pointers.
+1.14.0: add the root CAPABILITIES guide to the main docs navigation.
 1.13.0: add the V3 timing and metadata decision pointer for Q21/Q23 closure.
 1.12.0: add the V3 outstanding master list and first-class tooling hub pointers.
 1.11.0: add PIPELINE_TRACE_LLM_GUIDE.md, add tui-vfx-trace to the recipe-authoring ownership split, and keep the existing inspection-foundation references intact.
@@ -89,6 +90,8 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [design/tui-vfx-v3-scope-composition-decision.md](design/tui-vfx-v3-scope-composition-decision.md) — Accepted V3 scope inheritance and composition combine defaults.
 - [design/tui-vfx-v3-capability-governance-decision.md](design/tui-vfx-v3-capability-governance-decision.md) — Accepted V3 promotion ladder for primitives, variants, earned-name compositions, and factory-internal schema promotion.
 - [design/tui-vfx-v3-timing-and-metadata-decision.md](design/tui-vfx-v3-timing-and-metadata-decision.md) — Accepted V3 distributed timing and optional recipe metadata policy.
+- [design/tui-vfx-v3-per-cell-motion-plan.md](design/tui-vfx-v3-per-cell-motion-plan.md) — V3 source-cell remapping plan for root and scene-layer `cell_motion`, including schema homes, runtime order, tests, docs, and debug fixtures.
+- [design/tui-vfx-v3-schema-draft.json](design/tui-vfx-v3-schema-draft.json) — Annotated draft V3 schema; strip `#` comment lines to get valid canonical example JSON.
 - [design/tui-vfx-v3-outstanding-master-list.md](design/tui-vfx-v3-outstanding-master-list.md) — Master outstanding V3 work list, including the final-only V2 retirement gate.
 - [tooling/INDEX.md](tooling/INDEX.md) — Tooling hub for V3 preview, probe/database/frame diff, resize adapter, and edge ingestion workflows.
 
@@ -124,4 +127,4 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.14.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.15.0</VERS> -->

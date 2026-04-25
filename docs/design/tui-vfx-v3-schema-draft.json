@@ -1,7 +1,7 @@
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example with # comment annotations. Stripping lines starting with `#` yields valid JSON representing a canonical V3 recipe.</DESC>
-# <VERS>VERSION: 0.8.1</VERS>
-# <WCTX>Keep the draft schema annotations aligned with border/title fields, shadow composite modes, and the grid-first V3 snapshot renderer boundary.</WCTX>
-# <CLOG>0.8.1: annotate shadow composite modes against the grid-first V3 snapshot renderer seam.</CLOG>
+# <VERS>VERSION: 0.8.2</VERS>
+# <WCTX>Keep the draft schema annotations aligned with border/title fields, shadow composite modes, per-cell motion homes, and the grid-first V3 snapshot renderer boundary.</WCTX>
+# <CLOG>0.8.2: add first-slice `cell_motion` schema homes for root content and scene layers. 0.8.1: annotate shadow composite modes against the grid-first V3 snapshot renderer seam.</CLOG>
 
 # ============================================================================
 # tui-vfx V3 schema — DRAFT
@@ -98,7 +98,7 @@
   "version": "3.0.0",
   # ^ SemVer. Bumps on material recipe changes. Convention carried from V2.
 
-  "last_updated": "2026-04-21",
+  "last_updated": "2026-04-25",
   # ^ ISO date. When the recipe was last reviewed/edited.
 
   # =========================================================================
@@ -260,6 +260,28 @@
           #   inside deeper renderer trees (e.g. split_flap board-system,
           #   typewriter + nested cursor policy spaces), not as separate
           #   top-level families.
+        }
+      },
+
+      "cell_motion": {
+        # ^ Optional first-slice source-cell remapping for root message/content
+        #   cells only. It runs after the root `content.effect` has produced
+        #   cells and before the root pipeline sees those cells. Border, title,
+        #   and host/chrome cells are deliberately out of scope here.
+        "enter": {
+          "duration_ms": 450,
+          "easing": "quad_out",
+          "affect": "non_empty",
+          "stagger": { "type": "middle_out", "span_ms": 180 },
+          "from": { "type": "offscreen", "direction": "from_bottom", "margin_cells": 1 },
+          "to": { "type": "authored" },
+          "collision": "nearest_to_completion"
+        },
+        "exit": {
+          "duration_ms": 300,
+          "affect": "non_empty",
+          "from": { "type": "authored" },
+          "to": { "type": "offscreen", "direction": "to_top", "margin_cells": 1 }
         }
       }
     },
@@ -518,6 +540,17 @@
     #       "id": "text_stack",
     #       "role_tag": "content",
     #       "source": { "type": "card", "title": "{{app_name}}", "body": "Line one\nLine two" },
+    #       "cell_motion": {
+    #         "enter": {
+    #           "duration_ms": 500,
+    #           "affect": "all",
+    #           "from": { "type": "authored_offset", "dx": -4, "dy": 0 },
+    #           "to": { "type": "authored" }
+    #         }
+    #       },
+    #       # ^ Optional layer-local source-cell remapping. It runs after the
+    #       #   layer source is rasterized and before layer-local pipeline and
+    #       #   placement motion. It does not move sibling layers or host chrome.
     #       "placement": {
     #         "anchor": "below_sibling",
     #         "sibling_id": "backdrop",
@@ -1275,5 +1308,5 @@
 
 # ============================================================================
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example</DESC>
-# <VERS>END OF VERSION: 0.8.1</VERS>
+# <VERS>END OF VERSION: 0.8.2</VERS>
 # ============================================================================
