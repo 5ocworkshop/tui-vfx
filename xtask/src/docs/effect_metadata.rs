@@ -170,6 +170,17 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             chars: None,
             gradient: None,
         },
+        FilterSpec::AnimatedGlyphRamp {
+            glyphs: "▁█".into(),
+            cycles_per_second: 1.0,
+            ease: Default::default(),
+            apply_to: Default::default(),
+            affect: Default::default(),
+            phase_offset_x_ms: 20.0,
+            phase_offset_y_ms: 0.0,
+            colors: Some(vec![ColorConfig::Blue, ColorConfig::White]),
+            color_gradient: None,
+        },
         FilterSpec::InterlaceCurtain {
             density: 1.0,
             dim_factor: 0.3,
@@ -414,11 +425,13 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
             length: 5,
             color: ColorConfig::Cyan,
             position_binding: None,
+            ..BorderSweepShader::default()
         }),
         SpatialShaderType::Highlighter(HighlighterShader::new(ColorConfig::Yellow)),
         SpatialShaderType::Reflect(ReflectShader {
             speed: 2.0,
             color: ColorConfig::White,
+            ..ReflectShader::default()
         }),
         SpatialShaderType::GlistenBand(GlistenBandShader::default()),
         SpatialShaderType::GlitchLines(GlitchLinesShader::default()),

@@ -5,7 +5,9 @@
 // 0.1.0: initial suite.</CLOG>
 
 use tui_vfx_compositor::pipeline::{CompositionOptions, render_pipeline};
-use tui_vfx_style::models::{ColorSpace, Gradient, LinearGradientShader, StyleRegion};
+use tui_vfx_style::models::{
+    ColorSpace, Gradient, LinearGradientApplyTo, LinearGradientShader, StyleRegion,
+};
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid, RoleMap, RoleTag, SemanticScene};
 
 fn filled(w: usize, h: usize, ch: char) -> OwnedGrid {
@@ -80,6 +82,8 @@ fn render_with_shader(region: StyleRegion) -> SemanticScene {
             space: ColorSpace::Rgb,
         },
         angle_deg: 0.0,
+        apply_to: LinearGradientApplyTo::Foreground,
+        intensity: 1.0,
     };
     let options = CompositionOptions::default().with_shader_layer(&shader, region);
     render_pipeline(

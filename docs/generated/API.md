@@ -1,5 +1,5 @@
 <!-- <FILE>docs/generated/API.md</FILE> - <DESC>Complete TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 3.3.0</VERS> -->
+<!-- <VERS>VERSION: 3.4.0</VERS> -->
 <!-- <WCTX>Generated API documentation</WCTX> -->
 <!-- <CLOG>Auto-generated from code + api_docs.toml</CLOG> -->
 
@@ -21,7 +21,7 @@ supports shadows and `preserve_unfilled`.
 | Category | Count (variants) | Primary API |
 | --- | --- | --- |
 | Masks | 11 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
-| Filters | 26 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
+| Filters | 27 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
 | Spatial Shaders | 25 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
@@ -293,12 +293,13 @@ Pattern for cellular mask
 
 ---
 
-## FilterSpec (26 effects)
+## FilterSpec (27 effects)
 
 Filters modify cell colors/styles after rendering (applied in order).
 
 | Variant | Description | Parameters |
 | --- | --- | --- |
+| `AnimatedGlyphRamp` | Synchronised glyph + colour cycling driven by one shared phase signal | `glyphs_len`, `cycles_per_second`, `ease`, `phase_offset_x_ms`, `phase_offset_y_ms` |
 | `BracketEmphasis` | Brackets that appear around content based on progress | `left`, `right`, `progress` |
 | `BrailleDust` | Stochastic braille dust for frosted glass texture | `density`, `hz`, `seed` |
 | `CharsetNoise` | Non-converging time-varying character replacement for living textures | `hz`, `seed`, `jitter` |
@@ -422,13 +423,6 @@ pub struct ShadowConfig {
     pub style: ShadowStyle,
     pub offset_x: i8,
     pub offset_y: i8,
-    pub inset_x: Option<u8>,
-    pub inset_y: Option<u8>,
-    pub inset_x_end: Option<u8>,
-    pub inset_y_end: Option<u8>,
-    pub falloff_x: Option<u8>,
-    pub falloff_y: Option<u8>,
-    pub side_coverage_eighths: Option<u8>,
     pub color: Color,
     pub surface_color: Option<Color>,
     pub edges: ShadowEdges,
@@ -441,9 +435,9 @@ pub struct ShadowConfig {
 ## ShadowStyle
 - `Braille` — Braille patterns for dithered/density-based shadows
 - `Gradient` — Multi-layer gradient shadow with decreasing intensity
-- `HalfBlock` — Half-block characters for soft sub-cell shadows
+- `HalfBlock` — Half-block characters for deliberate sub-cell shadow texture
 - `MediumShade` — Medium-shade character cells for textured full-cell shadows
-- `Solid` — Solid color cells (space with background color)
+- `Solid` — Translucent full-cell drop shadow using alpha background cells
 
 ## ShadowEdges (bitflags)
 `RIGHT`, `BOTTOM`, `LEFT`, `TOP`, plus convenience `BOTTOM_RIGHT`, `TOP_LEFT`, `ALL`.
@@ -483,9 +477,9 @@ For full guidance and examples, see `docs/HOWTO_SHADOWS.md`.
 
 ## StyleRegion
 
-Apply styles to targeted regions:
+Apply styles to targeted regions. Role(RoleTag) is the canonical role-based form (legacy bare strings TextOnly/BorderOnly/BackgroundOnly still parse via custom Deserialize):
 
-`All`, `TextOnly`, `BorderOnly`, `BackgroundOnly`, `Rows(Vec<u16>)`, `RowRange { start, end }`, `Cell { x, y }`, `Cells(Vec<CellCoord>)`, `Column(u16)`, `Columns(Vec<u16>)`, `ColumnRange { start, end }`, `Modulo { axis, modulus, remainder }`
+`All`, `Role(RoleTag)`, `Rows(Vec<u16>)`, `RowRange { start, end }`, `Cell { x: BindableU16, y: BindableU16 }`, `Cells(Vec<CellCoord>)`, `Column(u16)`, `Columns(Vec<u16>)`, `ColumnRange { start, end }`, `Modulo { axis: ModuloAxis, modulus: u16, remainder: u16 }`
 
 `ModuloAxis`: `Horizontal`, `Vertical`
 
@@ -717,4 +711,4 @@ pub use tui_vfx_shadow::{ShadowCompositeMode, ShadowConfig, ShadowEdges, ShadowG
 ---
 
 <!-- <FILE>docs/generated/API.md</FILE> - <DESC>Complete TUI-VFX API documentation</DESC> -->
-<!-- <VERS>END OF VERSION: 3.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 3.4.0</VERS> -->

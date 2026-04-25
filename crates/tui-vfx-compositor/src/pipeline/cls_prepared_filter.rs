@@ -4,6 +4,7 @@
 // <CLOG>Add one audit test that exercises every FilterSpec variant through try_from_v3_payload + prepare_filter so bridge/preparation drift is caught in one place.</CLOG>
 
 use super::cls_prepare_context::PrepareContext;
+use crate::filters::cls_animated_glyph_ramp::AnimatedGlyphRamp;
 use crate::filters::cls_bracket_emphasis::BracketEmphasis;
 use crate::filters::cls_braille_dust::BrailleDust;
 use crate::filters::cls_charset_noise::CharsetNoise;
@@ -53,6 +54,7 @@ pub(crate) enum PreparedFilter {
     Greyscale(Greyscale),
     BrailleDust(BrailleDust),
     CharsetNoise(CharsetNoise),
+    AnimatedGlyphRamp(AnimatedGlyphRamp),
     MatrixRain(MatrixRain),
     InterlaceCurtain(InterlaceCurtain),
     MotionBlur(MotionBlur),
@@ -112,6 +114,9 @@ impl PreparedFilter {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
             PreparedFilter::CharsetNoise(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
+            PreparedFilter::AnimatedGlyphRamp(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
             PreparedFilter::MatrixRain(filter) => {
@@ -183,6 +188,7 @@ impl PreparedFilter {
             PreparedFilter::Greyscale(_) => "Greyscale",
             PreparedFilter::BrailleDust(_) => "BrailleDust",
             PreparedFilter::CharsetNoise(_) => "CharsetNoise",
+            PreparedFilter::AnimatedGlyphRamp(_) => "AnimatedGlyphRamp",
             PreparedFilter::MatrixRain(_) => "MatrixRain",
             PreparedFilter::InterlaceCurtain(_) => "InterlaceCurtain",
             PreparedFilter::MotionBlur(_) => "MotionBlur",
@@ -425,6 +431,64 @@ pub(crate) fn prepare_filter(
                 affect_mode,
                 stops,
             )))
+        }
+        FilterSpec::AnimatedGlyphRamp {
+            glyphs,
+            cycles_per_second,
+            apply_to,
+            affect,
+            phase_offset_x_ms,
+            phase_offset_y_ms,
+            colors,
+            color_gradient,
+            ease,
+        } => {
+            use crate::filters::cls_animated_glyph_ramp::{
+                AnimatedGlyphRamp as AnimatedGlyphRampFilter,
+                AnimatedGlyphRampApplyTo as ImplApplyTo, discrete_color_mode, gradient_color_mode,
+            };
+            use crate::filters::cls_charset_noise::AffectMode;
+            let glyph_chars: Vec<char> = glyphs.chars().collect();
+            if glyph_chars.is_empty() {
+                return None;
+            }
+            let color_mode = match (colors.as_ref(), color_gradient.as_ref()) {
+                (Some(colors), None) => {
+                    if colors.len() != glyph_chars.len() {
+                        return None;
+                    }
+                    discrete_color_mode(colors.iter().map(|c| Color::from(*c)).collect())
+                }
+                (None, Some(gradient)) => gradient_color_mode(gradient.clone()),
+                _ => return None,
+            };
+            let apply_to_mode = match apply_to {
+                crate::types::cls_filter_spec::AnimatedGlyphRampApplyTo::Foreground => {
+                    ImplApplyTo::Foreground
+                }
+                crate::types::cls_filter_spec::AnimatedGlyphRampApplyTo::Background => {
+                    ImplApplyTo::Background
+                }
+                crate::types::cls_filter_spec::AnimatedGlyphRampApplyTo::Both => ImplApplyTo::Both,
+            };
+            let affect_mode = match affect {
+                crate::types::cls_filter_spec::AnimatedGlyphRampAffect::All => AffectMode::All,
+                crate::types::cls_filter_spec::AnimatedGlyphRampAffect::NonEmpty => {
+                    AffectMode::NonEmpty
+                }
+            };
+            Some(PreparedFilter::AnimatedGlyphRamp(
+                AnimatedGlyphRampFilter::new(
+                    glyph_chars,
+                    color_mode,
+                    *cycles_per_second,
+                    *ease,
+                    apply_to_mode,
+                    affect_mode,
+                    *phase_offset_x_ms,
+                    *phase_offset_y_ms,
+                ),
+            ))
         }
         FilterSpec::MatrixRain {
             mode,
@@ -1106,6 +1170,20 @@ mod tests {
                 Some("CharsetNoise"),
             ),
             (
+                "animated_glyph_ramp",
+                json!({
+                    "type": "animated_glyph_ramp",
+                    "glyphs": "AB",
+                    "colors": [
+                        { "type": "rgb", "r": 255, "g": 0, "b": 0 },
+                        { "type": "rgb", "r": 0, "g": 0, "b": 255 }
+                    ],
+                    "cycles_per_second": 1.0,
+                    "ease": "Linear"
+                }),
+                Some("AnimatedGlyphRamp"),
+            ),
+            (
                 "matrix_rain",
                 json!({ "type": "matrix_rain" }),
                 Some("MatrixRain"),
@@ -1233,7 +1311,7 @@ mod tests {
         }
 
         assert_eq!(
-            prepared_variant_count, 28,
+            prepared_variant_count, 29,
             "all non-None FilterSpec variants should prepare successfully"
         );
     }

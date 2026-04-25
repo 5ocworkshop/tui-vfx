@@ -26,6 +26,7 @@
 - **Wipe**: Classic film-style linear reveal/hide.
 
 ### Filters
+- **AnimatedGlyphRamp**: Synchronised glyph and colour ramp driven by one shared phase.
 - **BracketEmphasis**: Brackets fade in at content edges based on progress.
 - **BrailleDust**: Animated braille particles for ambient texture. [Premium]
 - **CharsetNoise**: Time-varying character replacement using a configurable charset gradient.
@@ -70,7 +71,7 @@
 - **GlitchLines**: Random horizontal glitch lines for errors/warnings. [Intense]
 - **Glow**: Multi-cell bloom/halo around widget edges. [Premium]
 - **Highlighter**: Marker-style text highlighting effect.
-- **LinearGradient**: Gradient fill at configurable angle.
+- **LinearGradient**: Gradient fill at any angle, with channel targeting and intensity blend.
 - **NeonFlicker**: Flickering neon tube simulation.
 - **PulseWave**: Rippling color wave effect.
 - **Radar**: Rotating radar sweep effect.

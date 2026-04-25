@@ -4,8 +4,12 @@
 // <CLOG>Added test for FilterSpec::Greyscale serde roundtrip</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
-use tui_vfx_compositor::types::{ApplyTo, FilterSpec};
-use tui_vfx_style::models::ColorConfig;
+use tui_vfx_compositor::types::{
+    AnimatedGlyphRampAffect, AnimatedGlyphRampApplyTo, ApplyTo, FilterSpec,
+};
+use tui_vfx_geometry::easing::EasingType;
+use tui_vfx_geometry::types::EasingCurve;
+use tui_vfx_style::models::{ColorConfig, ColorSpace, Gradient};
 
 #[test]
 fn test_filter_spec_default_is_none() {
@@ -153,6 +157,84 @@ fn test_filter_spec_can_build_from_v3_rigid_shake_binding_payload() {
         }
         other => panic!("expected RigidShake, got {other:?}"),
     }
+}
+
+#[test]
+fn test_filter_spec_animated_glyph_ramp_serde_roundtrip() {
+    let spec = FilterSpec::AnimatedGlyphRamp {
+        glyphs: "AB".into(),
+        cycles_per_second: 2.0,
+        ease: EasingCurve::Type(EasingType::SineInOut),
+        apply_to: AnimatedGlyphRampApplyTo::Both,
+        affect: AnimatedGlyphRampAffect::All,
+        phase_offset_x_ms: 10.0,
+        phase_offset_y_ms: 5.0,
+        colors: Some(vec![ColorConfig::Red, ColorConfig::Blue]),
+        color_gradient: None,
+    };
+    spec.validate().unwrap();
+    let json = serde_json::to_string(&spec).unwrap();
+    let parsed: FilterSpec = serde_json::from_str(&json).unwrap();
+    assert_eq!(spec, parsed);
+}
+
+#[test]
+fn test_filter_spec_animated_glyph_ramp_gradient_payload_validates() {
+    let spec = FilterSpec::try_from_v3_payload(serde_json::json!({
+        "type": "animated_glyph_ramp",
+        "glyphs": "ABC",
+        "cycles_per_second": 1.25,
+        "ease": "SineInOut",
+        "color_gradient": {
+            "stops": [
+                [0.0, { "type": "rgb", "r": 0, "g": 0, "b": 0 }],
+                [1.0, { "type": "rgb", "r": 255, "g": 255, "b": 255 }]
+            ],
+            "space": "rgb"
+        }
+    }))
+    .unwrap();
+    spec.validate().unwrap();
+    match spec {
+        FilterSpec::AnimatedGlyphRamp {
+            ease,
+            color_gradient: Some(Gradient { space, .. }),
+            ..
+        } => {
+            assert_eq!(ease, EasingCurve::Type(EasingType::SineInOut));
+            assert_eq!(space, ColorSpace::Rgb);
+        }
+        other => panic!("expected AnimatedGlyphRamp, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_filter_spec_animated_glyph_ramp_rejects_invalid_colour_modes() {
+    let neither = FilterSpec::AnimatedGlyphRamp {
+        glyphs: "AB".into(),
+        cycles_per_second: 1.0,
+        ease: EasingCurve::default(),
+        apply_to: AnimatedGlyphRampApplyTo::default(),
+        affect: AnimatedGlyphRampAffect::default(),
+        phase_offset_x_ms: 0.0,
+        phase_offset_y_ms: 0.0,
+        colors: None,
+        color_gradient: None,
+    };
+    assert!(neither.validate().is_err());
+
+    let mismatch = FilterSpec::AnimatedGlyphRamp {
+        glyphs: "AB".into(),
+        cycles_per_second: 1.0,
+        ease: EasingCurve::default(),
+        apply_to: AnimatedGlyphRampApplyTo::default(),
+        affect: AnimatedGlyphRampAffect::default(),
+        phase_offset_x_ms: 0.0,
+        phase_offset_y_ms: 0.0,
+        colors: Some(vec![ColorConfig::Red]),
+        color_gradient: None,
+    };
+    assert!(mismatch.validate().is_err());
 }
 
 // =============================================================================

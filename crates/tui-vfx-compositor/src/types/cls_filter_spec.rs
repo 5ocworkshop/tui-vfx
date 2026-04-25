@@ -71,7 +71,7 @@ use super::cls_bindable_value::BindableValue;
 use super::cls_hover_bar_position::HoverBarPosition;
 use super::cls_mask_spec::WipeDirection;
 use mixed_signals::types::SignalOrFloat;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Error as _};
 use serde_json::{self, Value};
 use tui_vfx_style::models::ColorConfig;
 
@@ -196,6 +196,37 @@ pub enum CharsetNoiseAffect {
     /// Replace only non-whitespace cells (default).
     #[default]
     NonEmpty,
+}
+
+/// Controls which cells [`FilterSpec::AnimatedGlyphRamp`] affects.
+///
+/// Mirrors [`CharsetNoiseAffect`] — kept as a separate type so the two
+/// filters can evolve independently without serde-rename coupling.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum AnimatedGlyphRampAffect {
+    /// Replace all cells (including whitespace).
+    All,
+    /// Replace only non-whitespace cells (default).
+    #[default]
+    NonEmpty,
+}
+
+/// Which colour channel(s) [`FilterSpec::AnimatedGlyphRamp`] writes into.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum AnimatedGlyphRampApplyTo {
+    /// Write the ramp colour to the foreground only (default).
+    #[default]
+    Foreground,
+    /// Write the ramp colour to the background only.
+    Background,
+    /// Write the ramp colour to both foreground and background.
+    Both,
 }
 
 /// Controls which cells MatrixRain affects.
@@ -500,6 +531,102 @@ pub enum FilterSpec {
         /// Position-aware charset gradient. Overrides `chars` if present.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         gradient: Option<Vec<CharsetNoiseGradientStop>>,
+    },
+    /// Synchronised glyph + colour cycling driven by one shared phase signal.
+    ///
+    /// Closes the audit-1.6 synthesis gap: composing [`FilterSpec::CharsetNoise`]
+    /// (glyph cycling) and [`FilterSpec::Tint`] (colour) gives independent
+    /// evolution, but TTE-style waves expect glyph index `i` and colour index
+    /// `i` to be sampled from the same phase. This filter does so directly.
+    ///
+    /// # JSON Examples
+    ///
+    /// Discrete colour vector matching the glyph ramp 1:1:
+    /// ```json
+    /// {
+    ///   "type": "animated_glyph_ramp",
+    ///   "glyphs": "▁▂▃▄▅▆▇█▇▆▅▄▃▂▁",
+    ///   "cycles_per_second": 1.5,
+    ///   "colors": [
+    ///     {"type":"rgb","r":240,"g":255,"b":101},
+    ///     {"type":"rgb","r":248,"g":216,"b":52},
+    ///     {"type":"rgb","r":255,"g":177,"b":2},
+    ///     {"type":"rgb","r":152,"g":169,"b":107},
+    ///     {"type":"rgb","r":49,"g":160,"b":212},
+    ///     {"type":"rgb","r":49,"g":160,"b":212},
+    ///     {"type":"rgb","r":49,"g":160,"b":212},
+    ///     {"type":"rgb","r":49,"g":160,"b":212},
+    ///     {"type":"rgb","r":49,"g":160,"b":212},
+    ///     {"type":"rgb","r":152,"g":169,"b":107},
+    ///     {"type":"rgb","r":255,"g":177,"b":2},
+    ///     {"type":"rgb","r":248,"g":216,"b":52},
+    ///     {"type":"rgb","r":240,"g":255,"b":101},
+    ///     {"type":"rgb","r":240,"g":255,"b":101},
+    ///     {"type":"rgb","r":240,"g":255,"b":101}
+    ///   ],
+    ///   "phase_offset_x_ms": 20.0
+    /// }
+    /// ```
+    ///
+    /// Gradient colour curve sampled at `index / (glyphs.len() - 1)`:
+    /// ```json
+    /// {
+    ///   "type": "animated_glyph_ramp",
+    ///   "glyphs": "█▓▒░",
+    ///   "cycles_per_second": 0.5,
+    ///   "color_gradient": {
+    ///     "stops": [
+    ///       [0.0, {"type":"rgb","r":255,"g":255,"b":255}],
+    ///       [1.0, {"type":"rgb","r":36,"g":36,"b":36}]
+    ///     ],
+    ///     "space": "rgb"
+    ///   },
+    ///   "apply_to": "foreground"
+    /// }
+    /// ```
+    ///
+    /// Exactly one of `colors` and `color_gradient` must be supplied.
+    /// When `colors` is used, its length **must** equal `glyphs.len()`;
+    /// the lowering layer rejects mismatches at recipe-compile time.
+    AnimatedGlyphRamp {
+        /// Glyph progression. Each char in the string is one ramp step.
+        /// Authoring as a single string keeps recipes terse — order is
+        /// preserved exactly.
+        glyphs: String,
+        /// How many full glyph-ramp cycles complete per second of `t`.
+        /// Default `1.0`. Clamped to a small positive minimum at runtime.
+        #[serde(default = "default_animated_glyph_ramp_cycles_per_second")]
+        cycles_per_second: f32,
+        /// Easing applied to normalised cycle progress before glyph and
+        /// colour lookup. Default `Linear`. Use `SineInOut` for TTE Waves'
+        /// soft crest/trough cadence.
+        #[serde(default)]
+        ease: tui_vfx_geometry::types::EasingCurve,
+        /// Which colour channel(s) the ramp writes into. Default
+        /// `Foreground`.
+        #[serde(default)]
+        apply_to: AnimatedGlyphRampApplyTo,
+        /// Which cells the ramp affects. Default `NonEmpty`.
+        #[serde(default)]
+        affect: AnimatedGlyphRampAffect,
+        /// Per-column phase offset in milliseconds. Set to a positive
+        /// value to make the ramp travel left-to-right across cells.
+        /// Default `0.0`.
+        #[serde(default)]
+        phase_offset_x_ms: f32,
+        /// Per-row phase offset in milliseconds. Set to a positive value
+        /// to make the ramp travel top-to-bottom. Default `0.0`.
+        #[serde(default)]
+        phase_offset_y_ms: f32,
+        /// Discrete colour vector — must match `glyphs.len()` characters
+        /// 1:1. Mutually exclusive with `color_gradient`; the lowering
+        /// layer rejects payloads that supply both or neither.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        colors: Option<Vec<ColorConfig>>,
+        /// Colour curve sampled at `index / (glyphs.len() - 1)`. Mutually
+        /// exclusive with `colors`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        color_gradient: Option<tui_vfx_style::models::Gradient>,
     },
     /// Deterministic procedural digital-rain field.
     ///
@@ -1143,6 +1270,10 @@ fn default_charset_noise_hz() -> f32 {
     8.0
 }
 
+fn default_animated_glyph_ramp_cycles_per_second() -> f32 {
+    1.0
+}
+
 fn default_matrix_rain_density() -> BindableValue {
     BindableValue::static_f32(0.5)
 }
@@ -1585,7 +1716,48 @@ impl FilterSpec {
             }
         }
 
-        serde_json::from_value(payload)
+        let spec: Self = serde_json::from_value(payload)?;
+        spec.validate().map_err(serde_json::Error::custom)?;
+        Ok(spec)
+    }
+
+    /// Validate cross-field invariants that serde cannot express.
+    ///
+    /// Currently this is limited to [`FilterSpec::AnimatedGlyphRamp`]'s
+    /// two colour-source modes. Runtime preparation also rejects invalid
+    /// specs defensively, but callers that only parse a V3 payload need the
+    /// same authoring error before preparing a frame.
+    pub fn validate(&self) -> Result<(), String> {
+        match self {
+            FilterSpec::AnimatedGlyphRamp {
+                glyphs,
+                colors,
+                color_gradient,
+                ..
+            } => {
+                let glyph_count = glyphs.chars().count();
+                if glyph_count == 0 {
+                    return Err("animated_glyph_ramp glyphs must not be empty".to_string());
+                }
+                match (colors, color_gradient) {
+                    (Some(colors), None) if colors.len() == glyph_count => Ok(()),
+                    (Some(colors), None) => Err(format!(
+                        "animated_glyph_ramp colors length ({}) must match glyph count ({glyph_count})",
+                        colors.len()
+                    )),
+                    (None, Some(_)) => Ok(()),
+                    (Some(_), Some(_)) => Err(
+                        "animated_glyph_ramp requires exactly one of colors or color_gradient"
+                            .to_string(),
+                    ),
+                    (None, None) => Err(
+                        "animated_glyph_ramp requires exactly one of colors or color_gradient"
+                            .to_string(),
+                    ),
+                }
+            }
+            _ => Ok(()),
+        }
     }
 
     /// Returns the filter type name as a string.
@@ -1602,6 +1774,7 @@ impl FilterSpec {
             FilterSpec::Greyscale { .. } => "Greyscale",
             FilterSpec::BrailleDust { .. } => "BrailleDust",
             FilterSpec::CharsetNoise { .. } => "CharsetNoise",
+            FilterSpec::AnimatedGlyphRamp { .. } => "AnimatedGlyphRamp",
             FilterSpec::MatrixRain { .. } => "MatrixRain",
             FilterSpec::InterlaceCurtain { .. } => "InterlaceCurtain",
             FilterSpec::MotionBlur { .. } => "MotionBlur",
@@ -1640,6 +1813,9 @@ impl FilterSpec {
             FilterSpec::BrailleDust { .. } => "Stochastic braille dust for frosted glass texture",
             FilterSpec::CharsetNoise { .. } => {
                 "Non-converging time-varying character replacement for living textures"
+            }
+            FilterSpec::AnimatedGlyphRamp { .. } => {
+                "Synchronised glyph + colour cycling driven by one shared phase signal"
             }
             FilterSpec::MatrixRain { .. } => {
                 "Deterministic procedural digital-rain field with modern and classic rendering modes"
@@ -1756,6 +1932,20 @@ impl FilterSpec {
                 ("hz", format!("{}", hz)),
                 ("seed", format!("{}", seed)),
                 ("jitter", format!("{}", jitter)),
+            ],
+            FilterSpec::AnimatedGlyphRamp {
+                glyphs,
+                cycles_per_second,
+                ease,
+                phase_offset_x_ms,
+                phase_offset_y_ms,
+                ..
+            } => vec![
+                ("glyphs_len", format!("{}", glyphs.chars().count())),
+                ("cycles_per_second", format!("{}", cycles_per_second)),
+                ("ease", format!("{:?}", ease)),
+                ("phase_offset_x_ms", format!("{}", phase_offset_x_ms)),
+                ("phase_offset_y_ms", format!("{}", phase_offset_y_ms)),
             ],
             FilterSpec::MatrixRain {
                 mode,

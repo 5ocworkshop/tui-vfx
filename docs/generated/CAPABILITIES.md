@@ -44,6 +44,7 @@ This document provides a complete inventory of visual effects available in tui-v
 
 | Effect | Description | Use Cases |
 |--------|-------------|----------|
+| **AnimatedGlyphRamp** | Synchronised glyph + colour cycling driven by one shared phase signal | wave, sweep, glyph-cycle, tte-port |
 | **BracketEmphasis** | Brackets that appear around content based on progress | hover, selection, emphasis |
 | **BrailleDust** | Stochastic braille dust for frosted glass texture | ambient, texture, premium |
 | **CharsetNoise** | Non-converging time-varying character replacement for living textures | glitch, ambient, textural, cyber |
@@ -157,9 +158,9 @@ This document provides a complete inventory of visual effects available in tui-v
 |--------|-------------|----------|
 | **Braille** | Braille patterns for dithered/density-based shadows | depth, fine, subtle |
 | **Gradient** | Multi-layer gradient shadow with decreasing intensity | depth, soft, premium |
-| **HalfBlock** | Half-block characters for soft sub-cell shadows | depth, premium, modal |
+| **HalfBlock** | Half-block characters for deliberate sub-cell shadow texture | depth, premium, modal |
 | **MediumShade** | Medium-shade character cells for textured full-cell shadows | depth, texture, full-cell, fallback-premium |
-| **Solid** | Solid color cells (space with background color) | depth, compatible, simple |
+| **Solid** | Translucent full-cell drop shadow using alpha background cells | depth, compatible, simple |
 
 ## Quick Reference
 

@@ -14,8 +14,9 @@ pub mod mask_combine_mode;
 pub use crate::masks::cls_radial::RadialOrigin;
 pub use cls_bindable_value::BindableValue;
 pub use cls_filter_spec::{
-    ApplyTo, BraillePatternType, FilterSpec, MatrixRainAffect, MatrixRainCharsetPreset,
-    MatrixRainMode, MotionBlurDirection, PatternType, SubPixelBarDirection,
+    AnimatedGlyphRampAffect, AnimatedGlyphRampApplyTo, ApplyTo, BraillePatternType, FilterSpec,
+    MatrixRainAffect, MatrixRainCharsetPreset, MatrixRainMode, MotionBlurDirection, PatternType,
+    SubPixelBarDirection,
 };
 pub use cls_hover_bar_position::HoverBarPosition;
 pub use cls_mask_spec::{

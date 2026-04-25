@@ -1,8 +1,10 @@
 // <FILE>tui-vfx-compositor/src/filters/mod.rs</FILE> - <DESC>Filter implementations (internal)</DESC>
-// <VERS>VERSION: 2.8.0</VERS>
-// <WCTX>Add cls_glyph_style module — per-glyph-category style overrides via char-membership rules (primary consumer: SplitFlap boards needing distinct colors for block/hinge/letter/turned glyph categories)</WCTX>
-// <CLOG>MINOR: register cls_glyph_style alongside the existing 30 filters</CLOG>
+// <VERS>VERSION: 2.9.0</VERS>
+// <WCTX>Audit recommendation 1.6 — register the new cls_animated_glyph_ramp filter that synchronises glyph + colour cycling from one shared phase signal, closing the synthesis gap that prevents faithful TTE Waves / Sweep / SynthGrid recreation.</WCTX>
+// <CLOG>2.9.0: MINOR — register cls_animated_glyph_ramp alongside the existing 31 filters.
+// 2.8.0: register cls_glyph_style alongside the existing 30 filters</CLOG>
 
+pub(crate) mod cls_animated_glyph_ramp;
 pub(crate) mod cls_bracket_emphasis;
 pub(crate) mod cls_braille_dust;
 pub(crate) mod cls_charset_noise;

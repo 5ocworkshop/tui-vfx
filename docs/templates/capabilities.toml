@@ -242,6 +242,19 @@ affect_mode: All, NonEmpty, or Empty cells.
 gradient: ordered charset stops controlling how glyph noise evolves across the effect.
 Useful for signal corruption, ambient machine texture, and non-converging decode surfaces."""
 
+[effects.filters.AnimatedGlyphRamp]
+use_cases = ["wave", "sweep", "glyph-cycle", "tte-port"]
+energy = "moderate"
+complexity = "moderate"
+ai_hint = """Synchronised glyph and colour ramp driven by one shared phase.
+glyphs / glyphs_len: ordered ramp string and resulting step count.
+colors: discrete colour list matching glyph count exactly, OR color_gradient for gradient sampling.
+cycles_per_second: full ramp cycles per second.
+ease: easing applied to cycle progress before glyph/colour lookup.
+phase_offset_x_ms / phase_offset_y_ms: per-cell stagger for travelling waves.
+apply_to: foreground, background, or both. affect: all or non_empty cells.
+Use when glyph identity and colour must stay in lockstep, such as TTE Waves and Sweep-style cascades."""
+
 [effects.filters.InterlaceCurtain]
 use_cases = ["retro", "loading", "effect"]
 energy = "calm"

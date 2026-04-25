@@ -653,6 +653,55 @@
       }
     },
     "filters": {
+      "AnimatedGlyphRamp": {
+        "ai_hint": "Synchronised glyph and colour ramp driven by one shared phase.\nglyphs / glyphs_len: ordered ramp string and resulting step count.\ncolors: discrete colour list matching glyph count exactly, OR color_gradient for gradient sampling.\ncycles_per_second: full ramp cycles per second.\nease: easing applied to cycle progress before glyph/colour lookup.\nphase_offset_x_ms / phase_offset_y_ms: per-cell stagger for travelling waves.\napply_to: foreground, background, or both. affect: all or non_empty cells.\nUse when glyph identity and colour must stay in lockstep, such as TTE Waves and Sweep-style cascades.",
+        "complexity": "moderate",
+        "energy": "moderate",
+        "name": "AnimatedGlyphRamp",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "2",
+            "doc": "ordered ramp string and resulting step count",
+            "name": "glyphs_len",
+            "ty": ""
+          },
+          {
+            "default": "1",
+            "doc": "How many full glyph-ramp cycles complete per second of `t`.\nDefault `1.0`. Clamped to a small positive minimum at runtime.",
+            "name": "cycles_per_second",
+            "ty": "f32"
+          },
+          {
+            "default": "Type(Linear)",
+            "doc": "Easing applied to normalised cycle progress before glyph and\ncolour lookup. Default `Linear`. Use `SineInOut` for TTE Waves'\nsoft crest/trough cadence.",
+            "name": "ease",
+            "ty": "EasingCurve"
+          },
+          {
+            "default": "20",
+            "doc": "Per-column phase offset in milliseconds. Set to a positive\nvalue to make the ramp travel left-to-right across cells.\nDefault `0.0`.",
+            "name": "phase_offset_x_ms",
+            "ty": "f32"
+          },
+          {
+            "default": "0",
+            "doc": "Per-row phase offset in milliseconds. Set to a positive value\nto make the ramp travel top-to-bottom. Default `0.0`.",
+            "name": "phase_offset_y_ms",
+            "ty": "f32"
+          }
+        ],
+        "premium": false,
+        "requires": [],
+        "rustdoc_description": "Synchronised glyph + colour cycling driven by one shared phase signal",
+        "rustdoc_summary": "Synchronised glyph + colour cycling driven by one shared phase signal",
+        "use_cases": [
+          "wave",
+          "sweep",
+          "glyph-cycle",
+          "tte-port"
+        ]
+      },
       "BracketEmphasis": {
         "ai_hint": "Brackets fade in at content edges based on progress. left/right chars default [ ]. Fades from bg_color to color.",
         "complexity": "simple",
@@ -2510,7 +2559,7 @@
           },
           {
             "default": "Cyan",
-            "doc": "highlight color",
+            "doc": "Solid-color fallback used when `head` / `tail` are absent.",
             "name": "color",
             "ty": "ColorConfig"
           }
@@ -2981,7 +3030,7 @@
         ]
       },
       "LinearGradient": {
-        "ai_hint": "Gradient fill at configurable angle.\ngradient: color stops array defining the gradient.\nangle_deg: rotation angle (0=horizontal, 90=vertical, -45=diagonal).\nElegant for backgrounds and premium surfaces.",
+        "ai_hint": "Gradient fill at any angle, with channel targeting and intensity blend.\ngradient: color stops array defining the gradient.\nangle_deg: gradient axis angle in degrees, measured CCW from the positive X axis. 0 = left→right, 90 = top→bottom, 45 = TL→BR diagonal, 135 = TR→BL diagonal. Any angle is supported via projection of the cell's normalised position onto the gradient axis (since linear-gradient-shader 1.0.0); previous releases used the angle as a boolean axis selector (a known bug — angle_deg=45 swept VERTICALLY).\napply_to: Foreground (default, back-compat), Background, or Both.\nintensity: blend strength 0.0..=1.0; 1.0 (default) fully replaces the target channel, lower values blend toward base, 0.0 returns base unchanged.\nAuthoring sugar `gradient_overlay` canonicalises to this shape and now preserves both apply_to and intensity through the canonicalisation (since payload-normalize 0.5.0). Recipes can also use a `channel:background` scope; the lowering layer translates that into apply_to:\"background\" on the payload.\nElegant for backgrounds and premium surfaces.",
         "complexity": "simple",
         "energy": "calm",
         "name": "LinearGradient",
@@ -2989,7 +3038,7 @@
         "parameters": [
           {
             "default": "0",
-            "doc": "rotation angle (0=horizontal, 90=vertical, -45=diagonal)",
+            "doc": "Gradient axis angle in degrees.\n\nAngles are measured CCW from the positive X axis (i.e.\n`0` = left→right, `90` = top→bottom, `45` = TL→BR diagonal).\nAny angle is supported; the runtime projects the cell's\nnormalised position onto the gradient axis.",
             "name": "angle_deg",
             "ty": "f32"
           }
@@ -3133,13 +3182,13 @@
         "parameters": [
           {
             "default": "2",
-            "doc": "glint movement rate",
+            "doc": "Legacy playback speed scalar retained for compatibility.",
             "name": "speed",
             "ty": "f32"
           },
           {
             "default": "White",
-            "doc": "highlight color for the glint",
+            "doc": "Solid-color fallback used when `head` / `tail` are absent.",
             "name": "color",
             "ty": "ColorConfig"
           }
@@ -3163,9 +3212,9 @@
         "parameters": [
           {
             "default": "LeftToRight",
-            "doc": "Direction of the reveal animation",
+            "doc": "Direction of the reveal animation. See [`RevealDirection`] for the\nfull vocabulary; defaults to `LeftToRight`.",
             "name": "direction",
-            "ty": "RevealDirection"
+            "ty": "WipeDirection"
           }
         ],
         "premium": false,
@@ -3320,7 +3369,7 @@
           },
           {
             "default": "Cyan",
-            "doc": "Trace pulse color.",
+            "doc": "Solid-color fallback used when `head` / `tail` are absent.",
             "name": "color",
             "ty": "ColorConfig"
           },
@@ -3375,7 +3424,7 @@
           },
           {
             "default": "Cyan",
-            "doc": "Trace pulse color.",
+            "doc": "Solid-color fallback used when `head` / `tail` are absent.",
             "name": "color",
             "ty": "ColorConfig"
           }
@@ -3493,8 +3542,8 @@
         "parameters": [],
         "premium": true,
         "requires": [],
-        "rustdoc_description": "Half-block characters for soft sub-cell shadows",
-        "rustdoc_summary": "Half-block characters for soft sub-cell shadows",
+        "rustdoc_description": "Half-block characters for deliberate sub-cell shadow texture",
+        "rustdoc_summary": "Half-block characters for deliberate sub-cell shadow texture",
         "use_cases": [
           "depth",
           "premium",
@@ -3528,8 +3577,8 @@
         "parameters": [],
         "premium": false,
         "requires": [],
-        "rustdoc_description": "Solid color cells (space with background color)",
-        "rustdoc_summary": "Solid color cells (space with background color)",
+        "rustdoc_description": "Translucent full-cell drop shadow using alpha background cells",
+        "rustdoc_summary": "Translucent full-cell drop shadow using alpha background cells",
         "use_cases": [
           "depth",
           "compatible",
@@ -3855,7 +3904,7 @@
         "parameters": [
           {
             "default": "0",
-            "doc": "rotation for shader orientation",
+            "doc": "Gradient axis angle in degrees.\n\nAngles are measured CCW from the positive X axis (i.e.\n`0` = left→right, `90` = top→bottom, `45` = TL→BR diagonal).\nAny angle is supported; the runtime projects the cell's\nnormalised position onto the gradient axis.",
             "name": "angle_deg",
             "ty": "f32"
           }
