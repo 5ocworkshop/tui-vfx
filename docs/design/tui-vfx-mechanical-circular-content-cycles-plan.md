@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md</FILE> - <DESC>Reviewed implementation plan for shared circular mechanical content cycles powering odometer drums, Solari flap stacks, slot reels, and explicit old/new Pair transitions</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Follow-on design after the mechanical display primitives landed: structured Odometer, private grid helpers, and SplitFlap multi-cell tiles exist; this plan adds ordered/circular face routes without regressing Pair old/new behavior.</WCTX> -->
-<!-- <CLOG>Critical review update: align with existing code, make Pair the compatibility default, define face-grid route semantics, clarify route-vs-window direction, add concrete Rust/JSON sketches, validation, sequencing, tests, migration notes, file touch list, success criteria, and non-goals.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Lock per-tile settle semantics, Spring/spring_settle precedence, and the no-inert-fields rule before Phase 1 lands.</WCTX> -->
+<!-- <CLOG>0.3.0: state per-tile settle composition with cascade; define cycle-level Spring vs legacy SplitFlap spring_settle precedence and a validator rejection for the combo; remove every "accepted but inert" allowance — schema fields must ship fully wired in their introducing phase.</CLOG> -->
 
 # Mechanical circular content cycles: drums, flap stacks, and reels
 
@@ -150,7 +150,7 @@ pub struct MechanicalCycleConfig {
     #[serde(default)]
     pub cascade: MechanicalCascadePolicy,
 
-    /// Optional post-route timing remap. First implementation may parse this before every visual mechanism uses it.
+    /// Per-tile settle behavior applied at target arrival. Fully wired in the phase that introduces it; no parse-but-inert allowance. Composes with `cascade` so each tile gets its own detent in its own time window.
     #[serde(default)]
     pub settle: MechanicalSettleConfig,
 }
@@ -356,6 +356,54 @@ pub enum EasingCurveName {
 ```
 
 If existing easing types are not schema-friendly in this crate, use a small local enum first. Do not pull a broad easing dependency into content.
+
+### Settle semantics: per-tile, composes with cascade
+
+`MechanicalSettleConfig::Spring { overshoot, settle_fraction }` is the
+spring/detent at target arrival. It is **per-tile**, not whole-cycle:
+
+1. Each tile's local progress is derived from cascade scheduling
+   (Simultaneous, Staggered, NumericCarry, Randomized).
+2. When a tile's local progress crosses `1.0 - settle_fraction`, the tile
+   enters its settle phase and overshoots its final face by `overshoot`
+   before recovering on the target.
+3. Tiles whose local progress has not yet reached the settle threshold are
+   still mid-route; they do not preview the settle phase.
+4. When `cascade = Simultaneous`, every tile lands and settles in lockstep,
+   so the visual result is one whole-cycle settle. This is the same code
+   path as the per-tile case; it is not a separate mode.
+
+Why per-tile: an odometer ratchets each digit into place with its own
+detent click-click-click as carries propagate. A single whole-cycle settle
+loses the staggered click and reads as a single soft snap, which is wrong
+for digit drums. Per-tile settle composes correctly with all cascade
+policies and falls back to whole-cycle settle when cascade is simultaneous.
+
+`MechanicalSettleConfig::Ease { easing }` follows the same per-tile rule:
+the easing curve is applied to each tile's last `settle_fraction` window
+of local progress. `MechanicalSettleConfig::None` skips both phases.
+
+### Cycle-level Spring vs legacy `spring_settle: bool`
+
+`SplitFlap` already carries a per-mechanism `spring_settle: bool` field that
+remaps the hinge rotation through a DampedSpring curve. The new
+`mechanical.settle = Spring { .. }` is a higher-level cycle-wide knob.
+When both are present:
+
+1. **Cycle-level Spring wins.** The validator and runtime route the cycle
+   through `MechanicalSettleConfig::Spring`; the legacy `spring_settle`
+   bool is ignored for tiles whose cycle is owned by `mechanical`.
+2. **Validator rejects the ambiguous combo.** If a recipe sets both
+   `mechanical.settle = Spring { .. }` and legacy `spring_settle: true`,
+   the validator returns a structured error rather than picking silently.
+   Authors who want the cycle-level spring drop `spring_settle: true`.
+3. **Legacy `spring_settle` keeps working when `mechanical` is absent.**
+   Recipes that have not opted into mechanical cycles see no behavior
+   change; their `spring_settle: true` continues to remap hinge rotation
+   through DampedSpring exactly as today.
+
+This precedence rule is documented in the Validation rules section below
+and exercised by a SplitFlap test in Phase 4.
 
 ---
 
@@ -703,7 +751,7 @@ Add explicit runtime/recipe validation beyond generated `ConfigSchema`.
 2. `randomized.max_delay_fraction` must be `0.0..=0.95`.
 3. `settle.spring.overshoot` must be `0.0..=0.5`.
 4. `settle.spring.settle_fraction` must be `0.0..=1.0` and should be non-zero when spring is used.
-5. If a visual mechanism cannot honor `settle` yet, parsing is allowed but docs/tests must state it is currently accepted but inert for that mechanism.
+5. **Settle ships wired, never inert.** A phase that introduces or extends `MechanicalSettleConfig` must wire it through to actual rendering for every mechanism that exposes it. Adding the field with a "parses but does nothing" runtime is not allowed; defer the schema change to the phase where the runtime is ready instead.
 
 ## Existing mechanism validation remains
 
@@ -729,22 +777,38 @@ cargo test -p tui-vfx-content cls_split_flap
 
 Add a focused regression if needed proving `mechanical` absent keeps current outputs.
 
-## Phase 1 — public config types and validation
+## Phase 1 — standalone public config vocabulary
+
+This phase adds the schema-bearing types as a standalone public surface.
+It does **not** attach them to `ContentEffect::Odometer` or `::SplitFlap`
+yet — that happens in Phase 3 and Phase 4 alongside the runtime that
+honors the field. The no-inert rule (see `<CLOG>`) forbids landing the
+field on a variant that does not yet wire it through to rendering.
 
 Files:
 
-- `crates/tui-vfx-content/src/types/cls_content_effect.rs`
-- `crates/tui-vfx-content/src/types/mod.rs`
-- new `crates/tui-vfx-content/src/types/cls_mechanical_cycle_config.rs` or equivalent
-- `crates/tui-vfx-content/src/transformers/fnc_get_transformer.rs`
+- new `crates/tui-vfx-content/src/types/cls_mechanical_cycle_source.rs`
+- new `crates/tui-vfx-content/src/types/cls_mechanical_cycle_route.rs`
+- new `crates/tui-vfx-content/src/types/cls_mechanical_cycle_cascade.rs`
+- new `crates/tui-vfx-content/src/types/cls_mechanical_cycle_config.rs`
+- `crates/tui-vfx-content/src/types/mod.rs` (register + re-export)
 
 Tasks:
 
-1. Add schema-bearing mechanical cycle types.
-2. Add `#[serde(default, skip_serializing_if = "MechanicalCycleConfig::is_default")] mechanical: MechanicalCycleConfig` to Odometer.
-3. Prefer `Option<MechanicalCycleConfig>` for SplitFlap so absent means legacy. If a non-optional default is used, ensure runtime can distinguish absence from explicit Pair only if behavior needs that distinction.
-4. Add rustdoc for every new public field/type.
-5. Add serde tests for Pair default, ordered config, unknown-field rejection, and invalid shapes.
+1. Add schema-bearing mechanical cycle types (source, route, cascade,
+   settle, top-level config). Each cluster lives in its own OFPF-sized
+   file with inline `#[cfg(test)]` serde-roundtrip tests.
+2. Provide `MechanicalCycleConfig::is_default` so a future
+   `skip_serializing_if` predicate produces the same JSON for absent and
+   explicit-Pair configs.
+3. Add rustdoc for every new public type, including the precedence rules
+   (cycle-level `Spring` wins over legacy `spring_settle`, settle is
+   per-tile and composes with cascade, etc.).
+4. Add serde tests for default, ordered, preset, weighted, and unknown-
+   field rejection on every tagged enum.
+5. Do **not** modify `ContentEffect`, `fnc_get_transformer`,
+   `effect_metadata`, or any test that destructures Odometer/SplitFlap
+   variants. Those edits belong to Phase 3 and Phase 4.
 
 ## Phase 2 — route resolution helpers
 
@@ -778,59 +842,117 @@ Required tests:
 - multi-line `3x3` face normalization rejects oversized faces and pads smaller faces.
 - `split_flap_alpha` preset equals current code's pool exactly.
 
-## Phase 3 — Odometer cycle rendering
+## Phase 3 — Odometer schema attach + cycle rendering + settle
+
+Phase 3 lands the `mechanical: Option<MechanicalCycleConfig>` field on
+`ContentEffect::Odometer` **and** the runtime that honors it, in one
+phase. Cascade and per-tile settle are wired in this same phase — no
+parse-but-inert allowance.
 
 Files:
 
+- `crates/tui-vfx-content/src/types/cls_content_effect.rs`
+  (add the `mechanical` field; bump VERS/CLOG)
 - `crates/tui-vfx-content/src/transformers/cls_odometer.rs`
+- `crates/tui-vfx-content/src/transformers/fnc_get_transformer.rs`
+  (thread the config to the transformer constructor)
 - `crates/tui-vfx-content/src/mechanical/fnc_roll_cycle_window.rs`
-- possibly `crates/tui-vfx-content/src/mechanical/fnc_tile_rects.rs`
+- `crates/tui-vfx-content/src/mechanical/fnc_tile_rects.rs` if needed
+- `crates/tui-vfx-content/src/mechanical/fnc_tile_progress.rs`
+  (cascade scheduling: derives per-tile local progress from frame
+  progress, tile index, total tile count, and `MechanicalCascadePolicy`)
+- `crates/tui-vfx-content/src/mechanical/fnc_apply_settle.rs`
+  (settle phase: Spring overshoot/recovery and Ease curves over the
+  final `settle_fraction` window of each tile's local progress)
+- `crates/tui-vfx-content/tests/transformers/test_cls_odometer.rs`
+- `xtask/src/docs/effect_metadata.rs`
+  (add `mechanical: None` to the Odometer sample)
 
 Tasks:
 
-1. Keep existing whole-grid Pair path unchanged.
+1. Keep existing whole-grid Pair path unchanged when `mechanical` is
+   absent or set to the explicit-Pair default.
 2. For non-Pair source, segment source/target into tile rects.
-3. Resolve a route per tile.
-4. Apply cascade to produce tile-local progress.
-5. Sample each route with `roll_cycle_window` and blit into output grid.
-6. Keep `progress >= 1.0` returning `Cow::Borrowed(target)`.
+3. Resolve a route per tile via the Phase 2 helpers.
+4. Apply cascade to produce per-tile local progress.
+5. Apply settle to per-tile local progress (Spring/Ease/None).
+6. Sample each route with `roll_cycle_window` and blit into the output
+   grid.
+7. Keep `progress >= 1.0` returning `Cow::Borrowed(target)`.
 
 Required Odometer tests:
 
 - current pair-mode row/column/diagonal tests still pass unchanged.
-- explicit Pair config matches absent/default Pair.
+- absent `mechanical` and explicit-Pair `mechanical` produce identical
+  output.
 - decimal `099 -> 100` routes changed digits forward.
 - decimal `100 -> 099` routes changed digits reverse.
 - unchanged digits hold under `NumericCarry { unchanged: Hold }`.
 - `SpinAndReturn` spins an unchanged tile and still lands on target.
-- `extra_rotations` increases intermediate route length and still lands exactly.
+- `extra_rotations` increases intermediate route length and still lands
+  exactly.
 - bounded cycle rejects impossible reverse/forward routes.
+- **Per-tile spring settle.** With `Staggered` cascade and
+  `Spring { overshoot: 0.25, settle_fraction: 0.2 }`, each tile briefly
+  overshoots its target face and recovers before the next tile starts
+  settling. A frame-by-frame snapshot test asserts the overshoot face
+  appears in the expected tile at the expected frame.
+- **Cycle-level Spring composes with NumericCarry.** Each changed digit
+  ratchets and clicks; unchanged digits hold without spurious settle.
 
-## Phase 4 — SplitFlap/Solari adoption
+## Phase 4 — SplitFlap/Solari schema attach + cycle rendering + settle precedence
+
+Phase 4 lands the `mechanical: Option<MechanicalCycleConfig>` field on
+`ContentEffect::SplitFlap` **and** the runtime that honors it. The
+cycle-level Spring vs legacy `spring_settle` precedence rule is enforced
+in this same phase — no parse-but-inert allowance.
 
 Files:
 
+- `crates/tui-vfx-content/src/types/cls_content_effect.rs`
+  (add the `mechanical` field on the SplitFlap variant; bump VERS/CLOG)
 - `crates/tui-vfx-content/src/transformers/cls_split_flap.rs`
+- `crates/tui-vfx-content/src/transformers/fnc_get_transformer.rs`
 - `crates/tui-vfx-content/tests/transformers/test_cls_split_flap_tiles.rs`
-- new focused cycle tests if large enough to avoid growing `cls_split_flap.rs` tests further
+- new focused cycle tests if large enough to avoid growing
+  `cls_split_flap.rs` tests further
+- `xtask/src/docs/effect_metadata.rs`
+  (add `mechanical: None` to the SplitFlap sample)
 
 Tasks:
 
-1. If `mechanical` absent, run current code unchanged.
-2. If `mechanical` present with `1x1`, route through ordered face stacks while preserving existing visual phases.
-3. If `mechanical` present with `2/4/6/8` tile height, build per-tile routes and feed adjacent route faces into the center-hinge helper.
-4. Reject ambiguous double-spin configs (`cycles` and `mechanical.route.extra_rotations` both non-zero) until semantics are explicitly defined.
-5. Preserve `from_message` grid parsing and newline handling.
+1. If `mechanical` is absent, run current code unchanged.
+2. If `mechanical` is present with `1x1`, route through ordered face
+   stacks while preserving existing speed/cascade/jitter/dispersion/
+   hinge phases.
+3. If `mechanical` is present with `2/4/6/8` tile height, build per-tile
+   routes and feed adjacent route faces into the center-hinge helper;
+   apply cascade and settle from `MechanicalCycleConfig` per Phase 3.
+4. Reject ambiguous double-spin configs (`cycles` and
+   `mechanical.route.extra_rotations` both non-zero) at validation time.
+5. **Enforce cycle-level Spring vs legacy `spring_settle` precedence.**
+   When `mechanical.settle = Spring { .. }` and legacy `spring_settle:
+   true` are both present, the validator rejects the recipe with a
+   structured error. Legacy `spring_settle` continues to remap hinge
+   rotation through DampedSpring when `mechanical` is absent.
+6. Preserve `from_message` grid parsing and newline handling.
 
 Required SplitFlap tests:
 
 - absent `mechanical` preserves existing `1x1` snapshots.
 - explicit Pair in `mechanical` matches current old/new tile behavior.
 - ordered alphabet cycle yields expected intermediate face sequence.
-- unknown char with `missing_face: pair_fallback` preserves legacy-ish fallback.
+- unknown char with `missing_face: pair_fallback` preserves legacy-ish
+  fallback.
 - strict missing face errors in validator tests.
-- multi-cell Solari route settles exactly on target.
-- invalid tile sizes remain rejected/no-op at transformer layer and rejected by validator layer.
+- multi-cell Solari route settles exactly on target with cycle-level
+  spring.
+- invalid tile sizes remain rejected/no-op at transformer layer and
+  rejected by validator layer.
+- **Spring vs `spring_settle` precedence test.** Recipe with both is
+  rejected at validation; recipe with only `mechanical.settle = Spring`
+  uses cycle-level spring; recipe with only legacy `spring_settle: true`
+  keeps the existing DampedSpring hinge remap.
 
 ## Phase 5 — docs, schema, recipes, tooling
 

@@ -608,7 +608,6 @@ fn extract_content_metadata() -> HashMap<String, EffectMetadata> {
             dispersion: Default::default(),
             tile_width: 1,
             tile_height: 2,
-            mechanical: None,
         },
         ContentEffect::Odometer {
             direction: OdometerDirection::Up,
@@ -616,7 +615,6 @@ fn extract_content_metadata() -> HashMap<String, EffectMetadata> {
             tile_width: 1,
             tile_height: 3,
             from_message: Some("AAA\nBBB\nCCC".to_string()),
-            mechanical: None,
         },
         ContentEffect::Redact { symbol: '█' },
         ContentEffect::Numeric {
