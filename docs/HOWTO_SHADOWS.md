@@ -156,6 +156,7 @@ ShadowConfig::new(color: Color)
     .with_inset(x: u8, y: u8)            // Trim start of horizontal/vertical edge runs
     .with_inset_end(x: u8, y: u8)        // Trim end of horizontal/vertical edge runs
     .with_symmetric_inset(x: u8, y: u8)  // Trim both ends for centered shadow runs
+    .with_falloff(x: u8, y: u8)          // Alpha falloff at horizontal/vertical run ends
     .with_style(style: ShadowStyle)      // Rendering style (default: Solid translucent full-cell)
     .with_edges(edges: ShadowEdges)      // Which edges to shadow (default: BOTTOM_RIGHT)
     .with_soft_edges(enabled: bool)      // Use half-blocks for transitions (default: true)
@@ -220,9 +221,10 @@ ShadowConfig::new(Color::BLACK.with_alpha(160))
     .with_offset(0, 1)
     .with_edges(ShadowEdges::BOTTOM)
     .with_symmetric_inset(2, 0)
+    .with_falloff(2, 0)
 ```
 
-This renders only the bottom run, inset two cells from each horizontal edge. It reads like a more overhead light position than the usual down-right drop shadow.
+This renders only the bottom run, inset two cells from each horizontal edge, with transparent alpha falloff at each end. It reads like a more overhead light position than the usual down-right drop shadow while preserving/dimming content underneath.
 
 ### Soft Gradient Shadow
 ```rust

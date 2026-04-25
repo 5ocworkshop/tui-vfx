@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.26</VERS> -->
+<!-- <VERS>VERSION: 0.14.27</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work, question-closure status, and explicitly deferred post-release specs.</WCTX> -->
-<!-- <CLOG>0.14.26: add transparent tapered shadow caps follow-up.</CLOG> -->
+<!-- <CLOG>0.14.27: record transparent shadow falloff implementation slice.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -23,7 +23,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-EDGE01 | Motion/shadow/vanishing-edge integration | Complete initial / broaden later | Scene-layer motion now feeds edge-crossing border and attached-shadow policy; shared helper coverage proves diagonal/two-edge blanking directly. 2026-04-25 follow-up fixed the edge-crossing shadow artifact where a viewport-clipped side could cast a fake vertical shadow leg during exit. Broaden full scene-layer corpus fixtures as needed. |
 | V3-BORDER01 | Border parity and schema hardening | Complete initial / broaden only on corpus pressure | `single` now parses as the line-drawn plain border, V3 trim precedence has tests for omitted trim and explicit `trim: none`, and `tui-vfx-recipes` commit `d80bb7d` makes root V3 `custom_chars` and `frame` render into border-role source cells. Follow-up decision is closed: role-scoped border/text targeting is a native V3 source/scene contract; legacy V2 recipes stay on the legacy renderer until migrated rather than receiving synthetic V3 role maps. |
 | V3-NAME01/PREVIEW01 | V3 naming cutover work | Complete initial / compatibility shims retained | Scene/continuous/clock, main `config.rs`, parser wrappers, recipe internals, public preview-boundary aliases, examples, tests, and tooling now use canonical `Vfx*`/`Playback*`/frame names where safe while preserving compatibility aliases and legacy module paths during cutover. Future work is only broader deprecation/module-path cleanup if needed. |
-| V3-SHADOW03 | Transparent tapered/triangular shadow caps | Design required | Owner wants triangle/tapered ends on centered shadows, but glyph triangles would replace underlying content. The correct path is coverage-aware shadow masks/compositing that preserves destination glyphs and dims/blends content through partial-cell coverage; do not ship glyph-overlay triangle caps as the transparent shadow solution. |
+| V3-SHADOW03 | Transparent shadow run falloff | Complete initial / broaden later | Solid transparent shadows now support `falloff_x` / `falloff_y` alpha tapering at horizontal/vertical run ends, preserving destination glyphs through `BlendUnderlying`/`GradeUnderlying` instead of glyph triangle caps. Broaden later only if non-solid renderer families need equivalent coverage falloff. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
 | V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / Horseman complete-initial | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Packaged `tui-vfx-horseman` now exists in `tui-vfx-recipes` with text/JSON summary modes over existing preview/cutover APIs; `just v3-headless-smoke` now rehearses the headless validator/probe/trace/docs slice with a legacy fallback probe and the `probe_alarm_lighthouse` release-gate probe smoke, but the broader command/docs/CI cutover still needs GitHub Actions and release-gate adoption. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing / recipes docs gate green | 2026-04-25 recipes-side audit: `just docs-v3-generate` produced no generated-output drift, `just docs-v3-check` passed, and `RUSTDOCFLAGS="-D warnings" CARGO_TARGET_DIR=/tmp/tui-vfx-recipes-doc-target cargo doc -p tui-vfx-recipes --no-deps` completed. Use the throwaway target dir when shared cargo target locks are busy. |
@@ -289,4 +289,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.26</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.27</VERS> -->

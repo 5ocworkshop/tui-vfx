@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>Sub-plan A Phase A.3.3 — add `source_region: Option<RoleTag>` so consumers can restrict shadow extrusion to cells whose source-map role matches (e.g. only extrude from Border cells instead of the whole widget rect). Default `None` preserves today's rect-based extrusion.</WCTX>
-// <CLOG>0.7.0: add trailing inset controls for centered top/bottom and left/right shadow runs.</CLOG>
+// <CLOG>0.8.0: add alpha falloff controls for transparent shadow run ends.</CLOG>
 
 //! # Shadow Configuration
 //!
@@ -16,6 +16,7 @@
 //! | `offset_x/y` | `i8` | Shadow span beyond the element on each axis |
 //! | `inset_x/y` | `Option<u8>` | Optional orthogonal inset override before horizontal/vertical edges begin |
 //! | `inset_x_end/y_end` | `Option<u8>` | Optional orthogonal inset override before horizontal/vertical edges end |
+//! | `falloff_x/y` | `Option<u8>` | Optional alpha falloff cells at horizontal/vertical run ends |
 //! | `color` | [`Color`] | Shadow color (use alpha for transparency) |
 //! | `edges` | [`ShadowEdges`] | Which edges receive shadows |
 //! | `soft_edges` | `bool` | Enable half-block edge transitions |
@@ -94,6 +95,21 @@ pub struct ShadowConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inset_y_end: Option<u8>,
 
+    /// Alpha falloff width at the start/end of top/bottom shadow runs.
+    ///
+    /// This preserves transparent compositing by reducing shadow alpha at the
+    /// run ends rather than drawing taper glyphs over destination content.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub falloff_x: Option<u8>,
+
+    /// Alpha falloff height at the start/end of left/right shadow runs.
+    ///
+    /// This preserves transparent compositing by reducing shadow alpha at the
+    /// vertical run ends rather than drawing taper glyphs over destination
+    /// content.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub falloff_y: Option<u8>,
+
     /// Shadow color.
     pub color: Color,
 
@@ -168,6 +184,8 @@ impl Default for ShadowConfig {
             inset_y: None,
             inset_x_end: None,
             inset_y_end: None,
+            falloff_x: None,
+            falloff_y: None,
             color: Color::BLACK.with_alpha(128),
             surface_color: None,
             edges: ShadowEdges::BOTTOM_RIGHT,
@@ -247,6 +265,19 @@ impl ShadowConfig {
         self.inset_x_end = Some(x);
         self.inset_y = Some(y);
         self.inset_y_end = Some(y);
+        self
+    }
+
+    /// Set transparent alpha falloff widths for horizontal/vertical runs.
+    ///
+    /// `x` fades the start and end cells of top/bottom shadow runs. `y` fades
+    /// the start and end cells of left/right shadow runs. The falloff changes
+    /// alpha coverage only, so `BlendUnderlying` and `GradeUnderlying` still
+    /// preserve destination glyphs and dim/blend content through the shadow.
+    #[inline]
+    pub fn with_falloff(mut self, x: u8, y: u8) -> Self {
+        self.falloff_x = Some(x);
+        self.falloff_y = Some(y);
         self
     }
 
@@ -463,4 +494,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

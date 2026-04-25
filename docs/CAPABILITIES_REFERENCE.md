@@ -872,6 +872,8 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 | `inset_x_end` | Option<u8> | Trim the end of top/bottom shadow runs, e.g. right side of a bottom shadow |
 | `inset_y` | Option<u8> | Trim the start of left/right shadow runs, e.g. top of a right shadow |
 | `inset_y_end` | Option<u8> | Trim the end of left/right shadow runs, e.g. bottom of a right shadow |
+| `falloff_x` | Option<u8> | Alpha falloff cells at the start/end of top/bottom runs |
+| `falloff_y` | Option<u8> | Alpha falloff cells at the start/end of left/right runs |
 | `color` | Color | Shadow color |
 | `surface_color` | Option<Color> | Background for half-block blending |
 | `edges` | ShadowEdges | Which edges to render. Builder-facing names include `BOTTOM_RIGHT` / `ALL`; recipe JSON currently uses bitflag strings such as `"RIGHT | BOTTOM"`. |

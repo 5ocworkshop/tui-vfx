@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_solid.rs</FILE> - <DESC>Solid color shadow renderer</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Honor explicit shared shadow inset controls so GTD can keep single-cell shadow spans while starting horizontal and vertical edges at different insets</WCTX>
-// <CLOG>Add trailing inset support for centered bottom/top and side shadow runs.</CLOG>
+// <CLOG>Add transparent alpha falloff for horizontal and vertical solid shadow runs.</CLOG>
 
 //! Solid color shadow renderer.
 //!
@@ -50,7 +50,15 @@ impl SolidRenderer {
             let (start_y, end_y) = config.vertical_shadow_span(rect_y, rect_h, oy);
             let w = ox as usize;
             let h = end_y.saturating_sub(start_y);
-            Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
+            Self::fill_region_vertical_falloff(
+                grid,
+                start_x,
+                start_y,
+                w,
+                h,
+                shadow_color,
+                config.falloff_y.unwrap_or(0) as usize,
+            );
         }
 
         // Bottom edge shadow
@@ -59,7 +67,15 @@ impl SolidRenderer {
             let start_y = (rect_y + rect_h).max(0) as usize;
             let w = end_x.saturating_sub(start_x);
             let h = oy as usize;
-            Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
+            Self::fill_region_horizontal_falloff(
+                grid,
+                start_x,
+                start_y,
+                w,
+                h,
+                shadow_color,
+                config.falloff_x.unwrap_or(0) as usize,
+            );
         }
 
         // Left edge shadow
@@ -68,7 +84,15 @@ impl SolidRenderer {
             let (start_y, end_y) = config.vertical_shadow_span(rect_y, rect_h, oy);
             let w = (-ox) as usize;
             let h = end_y.saturating_sub(start_y);
-            Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
+            Self::fill_region_vertical_falloff(
+                grid,
+                start_x,
+                start_y,
+                w,
+                h,
+                shadow_color,
+                config.falloff_y.unwrap_or(0) as usize,
+            );
         }
 
         // Top edge shadow
@@ -77,7 +101,15 @@ impl SolidRenderer {
             let start_y = (rect_y + oy).max(0) as usize;
             let w = end_x.saturating_sub(start_x);
             let h = (-oy) as usize;
-            Self::fill_region(grid, start_x, start_y, w, h, shadow_color);
+            Self::fill_region_horizontal_falloff(
+                grid,
+                start_x,
+                start_y,
+                w,
+                h,
+                shadow_color,
+                config.falloff_x.unwrap_or(0) as usize,
+            );
         }
 
         // Corner regions
@@ -110,17 +142,74 @@ impl SolidRenderer {
 
     /// Fill a rectangular region with the shadow color.
     fn fill_region<G: Grid>(grid: &mut G, x: usize, y: usize, w: usize, h: usize, color: Color) {
-        let cell = Cell::new(' ').with_bg(color).with_mod_alpha(Some(255));
+        Self::fill_region_with_alpha_at(grid, x, y, w, h, |_, _| color);
+    }
+
+    /// Fill a horizontal run with transparent alpha falloff at its left/right ends.
+    fn fill_region_horizontal_falloff<G: Grid>(
+        grid: &mut G,
+        x: usize,
+        y: usize,
+        w: usize,
+        h: usize,
+        color: Color,
+        falloff: usize,
+    ) {
+        Self::fill_region_with_alpha_at(grid, x, y, w, h, |dx, _| {
+            color.with_alpha(falloff_alpha(color.a, dx, w, falloff))
+        });
+    }
+
+    /// Fill a vertical run with transparent alpha falloff at its top/bottom ends.
+    fn fill_region_vertical_falloff<G: Grid>(
+        grid: &mut G,
+        x: usize,
+        y: usize,
+        w: usize,
+        h: usize,
+        color: Color,
+        falloff: usize,
+    ) {
+        Self::fill_region_with_alpha_at(grid, x, y, w, h, |_, dy| {
+            color.with_alpha(falloff_alpha(color.a, dy, h, falloff))
+        });
+    }
+
+    fn fill_region_with_alpha_at<G: Grid>(
+        grid: &mut G,
+        x: usize,
+        y: usize,
+        w: usize,
+        h: usize,
+        mut color_at: impl FnMut(usize, usize) -> Color,
+    ) {
         for dy in 0..h {
             for dx in 0..w {
                 let px = x + dx;
                 let py = y + dy;
                 if grid.in_bounds(px, py) {
+                    let color = color_at(dx, dy);
+                    let cell = Cell::new(' ').with_bg(color).with_mod_alpha(Some(255));
                     grid.set(px, py, cell);
                 }
             }
         }
     }
+}
+
+#[inline]
+fn falloff_alpha(alpha: u8, pos: usize, len: usize, falloff: usize) -> u8 {
+    if alpha == 0 || falloff == 0 || len == 0 {
+        return alpha;
+    }
+    let end_pos = len.saturating_sub(1).saturating_sub(pos);
+    let distance = pos.min(end_pos);
+    if distance >= falloff {
+        return alpha;
+    }
+    let numerator = (distance + 1) as f32;
+    let denominator = (falloff + 1) as f32;
+    (alpha as f32 * (numerator / denominator)).round() as u8
 }
 
 #[cfg(test)]
@@ -178,6 +267,44 @@ mod tests {
     }
 
     #[test]
+    fn bottom_shadow_falloff_reduces_alpha_at_horizontal_ends() {
+        let mut grid = OwnedGrid::new(20, 10);
+        let rect = Rect::new(4, 2, 10, 3);
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(210))
+            .with_offset(0, 1)
+            .with_symmetric_inset(1, 0)
+            .with_falloff(2, 0)
+            .with_edges(ShadowEdges::BOTTOM);
+
+        SolidRenderer::render(&mut grid, rect, &config, 1.0);
+
+        assert_eq!(grid.get(5, 5).unwrap().bg.a, 70);
+        assert_eq!(grid.get(6, 5).unwrap().bg.a, 140);
+        assert_eq!(grid.get(7, 5).unwrap().bg.a, 210);
+        assert_eq!(grid.get(11, 5).unwrap().bg.a, 140);
+        assert_eq!(grid.get(12, 5).unwrap().bg.a, 70);
+    }
+
+    #[test]
+    fn side_shadow_falloff_reduces_alpha_at_vertical_ends() {
+        let mut grid = OwnedGrid::new(20, 12);
+        let rect = Rect::new(4, 2, 8, 7);
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+            .with_offset(1, 0)
+            .with_symmetric_inset(0, 1)
+            .with_falloff(0, 2)
+            .with_edges(ShadowEdges::RIGHT);
+
+        SolidRenderer::render(&mut grid, rect, &config, 1.0);
+
+        assert_eq!(grid.get(12, 3).unwrap().bg.a, 60);
+        assert_eq!(grid.get(12, 4).unwrap().bg.a, 120);
+        assert_eq!(grid.get(12, 5).unwrap().bg.a, 180);
+        assert_eq!(grid.get(12, 6).unwrap().bg.a, 120);
+        assert_eq!(grid.get(12, 7).unwrap().bg.a, 60);
+    }
+
+    #[test]
     fn test_zero_alpha_renders_nothing() {
         let mut grid = OwnedGrid::new(20, 10);
         let rect = Rect::new(5, 2, 8, 4);
@@ -196,4 +323,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_solid.rs</FILE> - <DESC>Solid color shadow renderer</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>
