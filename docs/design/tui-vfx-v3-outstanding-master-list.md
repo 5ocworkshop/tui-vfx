@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.24</VERS> -->
+<!-- <VERS>VERSION: 0.14.25</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work, question-closure status, and explicitly deferred post-release specs.</WCTX> -->
-<!-- <CLOG>0.14.24: record V3-D01 generated-doc and rustdoc gate commands/evidence.</CLOG> -->
+<!-- <CLOG>0.14.25: close V3-STYLE01 after runtime-facing style family consumer hardening landed.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -88,7 +88,6 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-CI02 | Capture / compare release-gate evidence | Remaining work is owner visual-capture/GTD-fixture approval, any owner-approved capture reruns, and follow-up on provisional GTD candidate probe failures if those fixtures remain selected; known non-GTD headless probe blocker is resolved. |
 | V3-C01 | Canonical normalized IR as explicit artifact | Normalized IR is treated as the validator/viewer/equivalence target; `pipeline-validator --dump-normalized --format json` now advertises the `tui_vfx.pipeline_validator.normalized_ir_dump.v1` envelope contract in `docs/contracts/normalized_ir_dump.v1.schema.json`. |
 | V3-C02-FOLLOW | Broaden canonicalization/property-test tooling | Extend beyond the first curated payload alias equivalence tests into named-factory/compositional pairs as the corpus demands. |
-| V3-STYLE01 | Runtime-facing V3 style family consumers | Traveling-band V3 lowering now preserves reflect gap/width and head/tail color policy for border/reflect/trace propagation/trace path. Continue wiring remaining real V3-side family surfaces into runtime consumers; avoid deleting legacy V2 surfaces until final removal. |
 | V3-SCHED01 | Scheduler/batching final strategy | Keep semantic proofs green, preserve `Sequence` feed-forward and `Parallel` snapshot isolation, and only optimize when render-hash drift guards prove safety. |
 | V3-BIND01 | Broader runtime binding evaluation | FadeToCanvas canvas-color binding is now probe/QC-proven for exit-phase compiled V3 filters. Continue extending runtime binding support only where the corpus exposes a concrete missing seam. |
 | V3-SPATIAL02 | Restore richer Madeira/showcase parity | Re-create the Madeira demo as a first-class V3 showcase using field generation, typed hints, displacement, field-correlated shading, and scene-layer composition. |
@@ -109,6 +108,7 @@ usable slice landed, but docs/tests may still evolve as related lanes continue.
 | V3-PIPE01-SAMPLER | Complete initial | Ordered multi-sampler chains now execute through `CompositionSpec::effective_samplers`, compiled V3 lowers repeated sampler leaves instead of failing `MultipleSamplers`, and probe/QC reports configured sampler chains with `configured_count: 2`. |
 | V3-PIPE01-SHADER-BAND | Complete initial | V3 traveling-band lowering now preserves reflect `gap`/`width` plus `head_tail` color policy for border, reflect, trace propagation, and trace path while keeping legacy solid-color defaults backward-compatible. |
 | V3-PIPE01-FILTER-BIND | Complete initial | Exit-phase `fade_to_canvas.canvas_color` bindings lower into runtime-compatible filter payloads and pass recipe-probe/debug-QC with `FadeToCanvas#1` observed. |
+| V3-STYLE01 | Closed | `tui-vfx-recipes` commit `83add2a` audits the V3 style family surface and hardens direct runtime replay so spatial style effects continue through compositor shader families while every non-spatial family (`StyleFade`, `StyleModulation`, `TypographyWindow`, `StyleInstability`, `PairedCapability`) is collected for the style pass with active-time scalar hint/runtime-binding sampling. |
 | V3-PIPE01-MASK-NONE | Complete initial | `mask_none.json` exists as the primitive-first no-clipping baseline; debug QC treats explicit V3 none-mask fixtures as valid inactive-mask baselines. |
 | V3-PIPE01-CONTENT-SCENE | Complete initial | Scene text-source `content_effect` is regression-proven through compiled scene source construction and direct preview-area render hash changes. |
 | V3-P0 | Policy captured | V2 removal is final-only and requires explicit approval after kept recipes migrate/rewrite, V3 stabilizes, and downstream consumers adapt. |
@@ -285,4 +285,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.24</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.25</VERS> -->
