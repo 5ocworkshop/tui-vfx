@@ -39,7 +39,7 @@ One-screen overview. Names link to the per-section detail below.
 
 **Content Transformers** (text effects, 15 types) — [`Typewriter`](#content-transformers-text-effects), [`Scramble`](#content-transformers-text-effects), [`GlitchShift`](#content-transformers-text-effects), [`ScrambleGlitchShift`](#content-transformers-text-effects), [`Dissolve`](#content-transformers-text-effects), [`Marquee`](#content-transformers-text-effects), [`SlideShift`](#content-transformers-text-effects), [`Mirror`](#content-transformers-text-effects), [`Morph`](#content-transformers-text-effects), [`Numeric`](#content-transformers-text-effects), [`Odometer`](#content-transformers-text-effects), [`Redact`](#content-transformers-text-effects), [`SplitFlap`](#content-transformers-text-effects), [`WrapIndicator`](#content-transformers-text-effects), [`GlyphCascade`](#content-transformers-text-effects)
 
-**Shadows** (4 styles) — [`HalfBlock`](#shadows) (default), [`Braille`](#shadows), [`Solid`](#shadows), [`Gradient`](#shadows) — all support `source_region` role-aware extrusion since v0.8.0
+**Shadows** (5 styles) — [`Solid`](#shadows) (default transparent full-cell), [`HalfBlock`](#shadows), [`Braille`](#shadows), [`MediumShade`](#shadows), [`Gradient`](#shadows) — all support `source_region` role-aware extrusion since v0.8.0
 
 **Composition order** — `Sampler → Shadow → Element → Masks → Filters → Shaders` (per-cell, every frame). Shadow output carries `RoleTag::Shadow` (v0.8.0+).
 
@@ -855,9 +855,10 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 
 | Style | Description | Quality |
 |-------|-------------|---------|
-| **HalfBlock** (default) | Half-block characters (▐▄▌▀) | Best quality, sub-cell precision |
+| **Solid** (default) | Space cells with alpha background | Clean transparent full-cell drop shadow |
+| **HalfBlock** | Half-block characters (▐▄▌▀) | Explicit sub-cell texture |
 | **Braille** | 2×4 subpixel density grid | Fine-grained, font-dependent |
-| **Solid** | Simple background color fill | Maximum compatibility |
+| **MediumShade** | Medium shade glyph (`▒`) | Textured full-cell shadow |
 | **Gradient** | Multi-layer decreasing intensity | Softer appearance |
 
 ### ShadowConfig Properties
@@ -1427,7 +1428,7 @@ Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EV
 ### For Premium Surfaces
 - Shaders: StochasticSparkle, GlistenBand, LinearGradient, AmbientOcclusion, Bevel, Glow
 - Filters: BrailleDust, Vignette, ColorBridgedShade
-- Shadows: HalfBlock with soft_edges, Gradient
+- Shadows: Solid transparent full-cell with alpha, Gradient
 
 ### For Data Display
 - Transformers: Odometer, SplitFlap, Numeric
@@ -1446,7 +1447,7 @@ Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EV
 - All masks, filters, style effects
 - LinearGradient, PulseWave, BorderSweep shaders
 - All content transformers
-- HalfBlock and Solid shadow styles
+- Solid, HalfBlock, and textured shadow styles
 
 **Font-dependent (may vary):**
 - Braille shadow style

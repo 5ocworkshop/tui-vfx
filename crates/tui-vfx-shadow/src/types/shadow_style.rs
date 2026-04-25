@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_style.rs</FILE> - <DESC>Shadow rendering style variants</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Add medium-shade character shadow style</WCTX>
-// <CLOG>Add MediumShade enum variant and metadata reporting for docs/schema</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Default shadows should use the full-cell translucent style; half-block remains available but is no longer the ergonomic default.</WCTX>
+// <CLOG>Switch ShadowStyle default from HalfBlock to Solid and refresh style guidance.</CLOG>
 
 //! # Shadow Styles
 //!
@@ -12,10 +12,10 @@
 //!
 //! | Style | Characters | Sub-cell | Compatibility | Best For |
 //! |-------|------------|----------|---------------|----------|
-//! | [`HalfBlock`] | `▐▄▌▀` | Yes | High | Default, most uses |
+//! | [`Solid`] | Space+BG | No | Maximum | Default translucent drop shadow |
 //! | [`Braille`] | `⣿` | Yes (2x4) | Medium | Density effects |
 //! | [`MediumShade`] | `▒` | No | High | Textured full-cell shade |
-//! | [`Solid`] | Space+BG | No | Maximum | Simple terminals |
+//! | [`HalfBlock`] | `▐▄▌▀` | Yes | High | Legacy sub-cell texture |
 //! | [`Gradient`] | Multiple | Layers | High | Soft shadows |
 //!
 //! [`HalfBlock`]: ShadowStyle::HalfBlock
@@ -41,9 +41,9 @@
 pub enum ShadowStyle {
     /// Half-block characters (▐▄▌▀) for soft sub-cell shadows.
     ///
-    /// This is the default style and provides the best visual quality on most terminals.
-    /// Uses foreground/background color blending for sub-cell precision.
-    #[default]
+    /// Use this when a recipe deliberately wants visible sub-cell texture. The
+    /// default is [`Solid`](Self::Solid), which gives the cleaner translucent
+    /// full-cell drop shadow preferred by the V3 recipe path.
     HalfBlock,
 
     /// Braille patterns (⣿) for dithered/density-based shadows.
@@ -61,10 +61,12 @@ pub enum ShadowStyle {
     /// More visually pronounced than braille while preserving texture.
     MediumShade,
 
-    /// Solid color cells (space with background color).
+    /// Solid translucent full-cell shadow (space with alpha-bearing background).
     ///
-    /// The simplest shadow style - fills cells with solid background color.
-    /// Maximum compatibility but no sub-cell precision.
+    /// This is the default V3 shadow style. It produces the cleanest drop
+    /// shadow in modern true-color terminals: a transparent full-cell overlay
+    /// offset from the host, without half-block glyph texture.
+    #[default]
     Solid,
 
     /// Multi-layer gradient shadow with decreasing intensity.
@@ -116,12 +118,14 @@ impl ShadowStyle {
     /// Returns a brief human-readable description of what this style does.
     pub fn terse_description(&self) -> &'static str {
         match self {
-            ShadowStyle::HalfBlock => "Half-block characters for soft sub-cell shadows",
+            ShadowStyle::HalfBlock => {
+                "Half-block characters for deliberate sub-cell shadow texture"
+            }
             ShadowStyle::Braille { .. } => "Braille patterns for dithered/density-based shadows",
             ShadowStyle::MediumShade => {
                 "Medium-shade character cells for textured full-cell shadows"
             }
-            ShadowStyle::Solid => "Solid color cells (space with background color)",
+            ShadowStyle::Solid => "Translucent full-cell drop shadow using alpha background cells",
             ShadowStyle::Gradient { .. } => "Multi-layer gradient shadow with decreasing intensity",
         }
     }
@@ -143,8 +147,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_default_is_half_block() {
-        assert_eq!(ShadowStyle::default(), ShadowStyle::HalfBlock);
+    fn test_default_is_solid_translucent_shadow() {
+        assert_eq!(ShadowStyle::default(), ShadowStyle::Solid);
     }
 
     #[test]
@@ -190,4 +194,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_style.rs</FILE> - <DESC>Shadow rendering style variants</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

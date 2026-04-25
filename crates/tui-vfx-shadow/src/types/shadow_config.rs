@@ -58,7 +58,7 @@ use super::{ShadowCompositeMode, ShadowEdges, ShadowGradeConfig, ShadowStyle};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(default)]
 pub struct ShadowConfig {
-    /// Shadow rendering style.
+    /// Shadow rendering style. Defaults to [`ShadowStyle::Solid`] for the V3 transparent full-cell drop shadow.
     pub style: ShadowStyle,
 
     /// X offset from element (positive = right, negative = left).
@@ -133,7 +133,7 @@ pub struct ShadowConfig {
 impl Default for ShadowConfig {
     fn default() -> Self {
         Self {
-            style: ShadowStyle::HalfBlock,
+            style: ShadowStyle::Solid,
             offset_x: 1,
             offset_y: 1,
             inset_x: None,
@@ -153,7 +153,7 @@ impl ShadowConfig {
     /// Create a new shadow configuration with the specified color.
     ///
     /// Uses defaults for other settings:
-    /// - Style: HalfBlock
+    /// - Style: Solid translucent full-cell
     /// - Offset: (1, 1)
     /// - Inset: legacy renderer-derived behavior
     /// - Edges: BOTTOM_RIGHT
@@ -294,7 +294,7 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = ShadowConfig::default();
-        assert_eq!(config.style, ShadowStyle::HalfBlock);
+        assert_eq!(config.style, ShadowStyle::Solid);
         assert_eq!(config.offset_x, 1);
         assert_eq!(config.offset_y, 1);
         assert_eq!(config.inset_x, None);

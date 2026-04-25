@@ -119,7 +119,7 @@ Why `surface.shadow`:
 
 ```json
 ShadowSpec = {
-  "style": "half_block" | "solid" | "medium_shade" | "braille" | "gradient",
+  "style": "solid" | "half_block" | "medium_shade" | { "braille": { "density": 0.65 } } | { "gradient": { "layers": 3 } },
   "color": { "r": 0, "g": 0, "b": 0, "a": 160 },
   "offset": { "x": 2, "y": 1 },
   "inset": { "x": 0, "y": 0 },
@@ -144,7 +144,7 @@ ShadowSpec = {
 }
 ```
 
-As built on the current direct V3 preview/demo path, the bounded host region is now replayed over the **live preview underlay** before shadow composition, so transparent and grade-underlying shadows land on the same canvas/substrate semantics as the V2 path instead of grading against an empty black framebuffer.
+As built on the current direct V3 preview/demo path, the bounded host region is now replayed over the **live preview underlay** before shadow composition, so transparent and grade-underlying shadows land on the same canvas/substrate semantics as the V2 path instead of grading against an empty black framebuffer. The default style is `solid`: a clean alpha-bearing full-cell drop shadow with the configured offset. Half-block, braille, medium-shade, and gradient are explicit texture choices.
 
 As built in the current code path, the root V3 shadow surface now maps
 directly onto the typed upstream shadow runtime surface:
@@ -155,8 +155,8 @@ directly onto the typed upstream shadow runtime surface:
 
 ### `style`
 Maps to current shadow renderer families:
+- `solid` (default transparent full-cell offset shadow)
 - `half_block`
-- `solid`
 - `medium_shade`
 - `braille`
 - `gradient`
@@ -321,7 +321,7 @@ Current authored shape already resembles:
 
 ```json
 "shadow": {
-  "style": "half_block",
+  "style": "solid",
   "offset_x": 2,
   "offset_y": 1,
   "color": { "r": 0, "g": 0, "b": 0, "a": 160 },

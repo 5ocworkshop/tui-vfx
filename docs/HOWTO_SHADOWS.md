@@ -132,7 +132,7 @@ let modal_rect = Rect::new(10, 5, 30, 12);  // x, y, width, height
 // 2. Configure shadow
 let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(128))
     .with_offset(2, 1)
-    .with_style(ShadowStyle::HalfBlock)
+    .with_style(ShadowStyle::Solid)
     .with_edges(ShadowEdges::BOTTOM_RIGHT);
 
 // 3. Render shadow FIRST (it goes behind the element)
@@ -153,7 +153,7 @@ The shadow appears at `(modal_rect.x + 2, modal_rect.y + 1)` extending to the ri
 ```rust
 ShadowConfig::new(color: Color)
     .with_offset(x: i8, y: i8)           // Shadow displacement (default: 1, 1)
-    .with_style(style: ShadowStyle)      // Rendering style (default: HalfBlock)
+    .with_style(style: ShadowStyle)      // Rendering style (default: Solid translucent full-cell)
     .with_edges(edges: ShadowEdges)      // Which edges to shadow (default: BOTTOM_RIGHT)
     .with_soft_edges(enabled: bool)      // Use half-blocks for transitions (default: true)
     .with_surface_color(color: Color)    // Background for blending (for HalfBlock)
@@ -180,9 +180,10 @@ let extra_h = spec.extra_height();  // |offset_y|
 
 | Style | Characters | Best For |
 |-------|------------|----------|
-| `ShadowStyle::HalfBlock` | `▐▄▌▀` + space | Default - sub-cell precision |
+| `ShadowStyle::Solid` | space + alpha background | Default - transparent full-cell drop shadow |
+| `ShadowStyle::HalfBlock` | `▐▄▌▀` + space | Explicit sub-cell texture / legacy look |
 | `ShadowStyle::Braille { density: 0.7 }` | `⣿` patterns | Dithered/variable density |
-| `ShadowStyle::Solid` | Space with bg color | Maximum compatibility |
+| `ShadowStyle::MediumShade` | `▒` | Textured full-cell shadow |
 | `ShadowStyle::Gradient { layers: 3 }` | Multi-layer | Soft drop shadows |
 
 ### Shadow Edges
@@ -291,7 +292,7 @@ for frame in 0..60 {
 
 ## Shadow Compositing Modes
 
-By default, shadows use **glyph overlay** compositing: shadow characters (half-blocks, braille patterns, etc.) replace whatever is underneath. This is the traditional approach.
+By default, shadows use **glyph overlay** compositing. With the V3 default `solid` style this means an alpha-bearing full-cell background is blended over the underlay; glyph-heavy styles such as half-block, braille, and medium-shade remain opt-in textures.
 
 For a more sophisticated look, **grade-underlying** compositing preserves destination glyphs and modifiers while applying color grading (desaturation, dimming, tinting) to the shadow region. Text beneath the shadow remains readable but visually recedes.
 
@@ -398,7 +399,7 @@ If you author through `tui-vfx-recipes`, the same `ShadowSpec` surface is now av
   "config": {
     "border": { "type": "rounded" },
     "shadow": {
-      "style": "half_block",
+      "style": "solid",
       "offset_x": 2,
       "offset_y": 1,
       "color": { "r": 0, "g": 0, "b": 0, "a": 160 },
@@ -497,7 +498,7 @@ opt-in.
 3. **For static elements** - Direct rendering is simpler
 4. **Compositor extends the render area** - Account for `|offset_x|` and `|offset_y|` extra cells
 5. **Progress parameter** - Controls shadow opacity (0.0 = invisible, 1.0 = full)
-6. **Surface color matters for HalfBlock** - Set it to match your background for proper blending
+6. **Prefer Solid for default V3 depth** - use `Solid` with alpha color for the clean transparent full-cell shadow; set surface color only when deliberately using HalfBlock
 7. **Offset direction controls edge rendering** - Positive offset = bottom-right shadow
 
 ---

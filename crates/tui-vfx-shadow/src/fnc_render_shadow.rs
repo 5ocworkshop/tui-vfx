@@ -70,7 +70,7 @@ pub fn render_shadow<G: Grid>(
 /// Render a shadow with default configuration.
 ///
 /// Convenience function that creates a shadow with the given color and
-/// default settings (HalfBlock style, offset (1,1), BOTTOM_RIGHT edges).
+/// default settings (Solid translucent full-cell style, offset (1,1), BOTTOM_RIGHT edges).
 ///
 /// # Arguments
 /// * `grid` - The grid to render into
@@ -337,13 +337,14 @@ mod tests {
         let mut grid = OwnedGrid::new(30, 15);
         let rect = Rect::new(5, 2, 10, 6);
 
-        // render_shadow_simple uses HalfBlock with default offset (1,1) and soft edges
-        // With offset=1, only first column exists: ▐ with fg=shadow, bg=surface
+        // render_shadow_simple uses the default Solid translucent full-cell shadow.
+        // With offset=1, the first right-edge cell carries an alpha background.
         render_shadow_simple(&mut grid, rect, Color::BLACK.with_alpha(128), None, 1.0);
 
         let cell = grid.get(15, 4).unwrap();
-        // First column uses fg=shadow (▐ with standard fg=shadow,bg=surface)
-        assert_ne!(cell.fg, Color::TRANSPARENT);
+        // First column uses an alpha-bearing background over a space glyph.
+        assert_eq!(cell.ch, ' ');
+        assert_ne!(cell.bg, Color::TRANSPARENT);
     }
 }
 

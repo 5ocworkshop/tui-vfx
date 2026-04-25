@@ -553,7 +553,8 @@ and applies color grading (desaturate, dim, tint) scaled by shadow coverage.
 Use `.with_dramatic_grade()` for a visible preset with stronger background than foreground grading.
 
 ## ShadowStyle
-- `HalfBlock` (default) — best quality sub-cell shadows
+- `Solid` (default) — transparent full-cell drop shadow using alpha background cells
+- `HalfBlock` — explicit sub-cell shadow texture
 - `Braille { density }` — 2x4 subpixel grid, font-dependent
 - `Solid` — maximum compatibility
 - `Gradient { layers }` — multi-layer soft shadow
