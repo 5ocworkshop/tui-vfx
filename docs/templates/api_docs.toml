@@ -9,12 +9,13 @@
 # See docs/design/API_DOC_GENERATION_PLAN.md for architecture details.
 
 # <FILE>docs/templates/api_docs.toml</FILE> - <DESC>Editorial manifest for tui-vfx API documentation</DESC>
-# <VERS>VERSION: 3.3.0</VERS>
-# <WCTX>feat/cursor-braille: document BraillePulse and BrailleRowFlip scan variants, which override the base glyph unconditionally unlike Pulse / HalfBlockBounce.</WCTX>
-# <CLOG>MINOR: extend ScanMode variants list with BraillePulse and BrailleRowFlip; extend description to note base-glyph override semantics for the two braille modes.</CLOG>
+# <VERS>VERSION: 3.4.0</VERS>
+# <WCTX>Audit recommendation 1.4 — rewrite the StyleRegion variants list to prefer the canonical Role(RoleTag) form and to surface the Modulo variant's per-axis semantics so the generated API.md teaches the V3 `modulo` authoring scope correctly.</WCTX>
+# <CLOG>3.4.0: MINOR — StyleRegion description now mentions Role(RoleTag) as canonical with bare-string back-compat. Variants list replaces TextOnly/BorderOnly/BackgroundOnly with Role(RoleTag); Cell uses BindableU16; Modulo expanded to {axis: ModuloAxis, modulus: u16, remainder: u16}. New `notes` key documents the match formula, axis iteration semantics, and the V3 authoring shape.
+3.3.0: MINOR — extend ScanMode variants list with BraillePulse and BrailleRowFlip; extend description to note base-glyph override semantics for the two braille modes.</CLOG>
 
 [meta]
-version = "3.3.0"
+version = "3.4.0"
 description = "tui-vfx API documentation editorial content"
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -371,14 +372,15 @@ see_also = "For full guidance and examples, see `docs/HOWTO_SHADOWS.md`."
 [specs.StyleRegion]
 part = "style"
 section_title = "StyleRegion"
-description = "Apply styles to targeted regions:"
+description = "Apply styles to targeted regions. Role(RoleTag) is the canonical role-based form (legacy bare strings TextOnly/BorderOnly/BackgroundOnly still parse via custom Deserialize):"
 variants = [
-    "All", "TextOnly", "BorderOnly", "BackgroundOnly",
+    "All", "Role(RoleTag)",
     "Rows(Vec<u16>)", "RowRange { start, end }",
-    "Cell { x, y }", "Cells(Vec<CellCoord>)",
+    "Cell { x: BindableU16, y: BindableU16 }", "Cells(Vec<CellCoord>)",
     "Column(u16)", "Columns(Vec<u16>)", "ColumnRange { start, end }",
-    "Modulo { axis, modulus, remainder }",
+    "Modulo { axis: ModuloAxis, modulus: u16, remainder: u16 }",
 ]
+notes = "Modulo: cell (x, y) matches iff coord % modulus == remainder, where coord is y for ModuloAxis::Horizontal (scans rows top→bottom; one match becomes one full-row stripe) and x for ModuloAxis::Vertical (scans columns left→right; one match becomes one full-column stripe). Authored from V3 recipes via {\"kind\": \"modulo\", \"axis\": \"horizontal\" | \"vertical\", \"modulus\": N, \"remainder\": K}."
 
 [specs.StyleRegion.enums.ModuloAxis]
 variants = ["Horizontal", "Vertical"]

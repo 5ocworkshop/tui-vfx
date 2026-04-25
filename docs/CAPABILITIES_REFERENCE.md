@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.26.0</VERS> -->
-<!-- <WCTX>Audit recommendations 2.1 + 2.2 — document the LinearGradientShader 1.0.0 surface: first-class `apply_to` (Foreground / Background / Both) and `intensity` (0–1) fields, true diagonal angle sampling at any `angle_deg`. The `gradient_overlay` authoring sugar canonicalises to this shape and now preserves both fields through the canonicalisation. `linear_gradient` is in the channel allow-list at the lowering layer.</WCTX> -->
-<!-- <CLOG>1.26.0: MINOR — LinearGradient row gains `apply_to` and `intensity` columns; new "Shader Notes" entry documents the angle semantics (true projection at any angle), the relationship to the `gradient_overlay` authoring sugar, and the channel-scope path. Closes the long-standing foot-gun where `gradient_overlay` with `apply_to:"background"` or `channel:background` silently ignored the channel intent.
+<!-- <VERS>VERSION: 1.27.0</VERS> -->
+<!-- <WCTX>Audit recommendation 1.4 — document the V3 `modulo` authoring scope, the engine-side `StyleRegion::Modulo { axis, modulus, remainder }` it lowers to, and the `ModuloAxis` enum. Until now `StyleRegion::Modulo` existed in the runtime but was unreachable from V3 recipes; with v3-authoring 0.2.0 + normalize-scope 0.3.0 + compile 0.4.0 + build-composition-spec 1.15.0 the path is end-to-end.</WCTX> -->
+<!-- <CLOG>1.27.0: MINOR — extend "StyleRegion Targeting" with the `Modulo` variant (axis: ModuloAxis::Horizontal | Vertical, modulus: u16, remainder: u16) and the V3 authoring `modulo` scope kind. Document that `axis: horizontal` scans row-by-row (a matched row is one full-row stripe) and `axis: vertical` scans column-by-column. Note literal-folding to StaticModulo and binding fall-through to dynamic resolution.
+1.26.0: MINOR — LinearGradient row gains `apply_to` and `intensity` columns; new "Shader Notes" entry documents the angle semantics (true projection at any angle), the relationship to the `gradient_overlay` authoring sugar, and the channel-scope path. Closes the long-standing foot-gun where `gradient_overlay` with `apply_to:"background"` or `channel:background` silently ignored the channel intent.
 1.25.0: MINOR — WipeDirection grew from 16 to 24 variants (corner-out and corner-in quadrant arcs added). Updated the top-of-file Wipe directions count, the WipeDirection Variants table, and added the explanatory note that the same enum is now shared by the mask, the shader, and the V3 grouped reveal family. Documented author-friendly `corner_down_*` / `corner_up_*` aliases. Source of truth is `tui-vfx-geometry::WipeDirection`.
 1.24.0: MINOR — document CarrierOrbit/helix, FigureEight/infinity, RadialTwist sampler, and RadialSpiral shader capabilities from the whoa/cellophane review.
 1.23.0: MINOR — add V3 pathway capabilities section with first-class I/O chaining examples, runtime binding/asset contracts, procedural scene-source details, scene/source contract notes, and authoring/debugging guidance for new human and AI recipe authors.
@@ -1355,6 +1356,49 @@ Legacy JSON fixtures that still write `"BorderOnly"`, `"TextOnly"`, or
 them to `Role(RoleTag::Border / Text / Background)` respectively.
 Serialization always emits the canonical form; the schema converges
 on round-trip.
+
+#### `StyleRegion::Modulo`
+
+```rust
+StyleRegion::Modulo {
+    axis: ModuloAxis,   // Horizontal | Vertical
+    modulus: u16,       // period (0 produces no matches)
+    remainder: u16,     // offset within the period
+}
+```
+
+`ModuloAxis::Horizontal` makes the rule scan **row by row**: cell
+`(x, y)` matches iff `y % modulus == remainder`, so one matched row
+becomes one full-row stripe. `ModuloAxis::Vertical` scans
+**column by column**: `(x, y)` matches iff `x % modulus == remainder`,
+producing full-column stripes. The axis name describes the direction
+the rule iterates, not the orientation of the stripes it draws.
+
+Use cases: CRT scanlines (`Horizontal`, modulus 2, remainder 0),
+ledger paper (`Horizontal`, modulus 3, remainder 0), alternating
+column highlights (`Vertical`, modulus 2, remainder 1).
+
+Authored from V3 recipes via:
+
+```json
+"scope": {
+  "kind": "modulo",
+  "axis": "horizontal",
+  "modulus": 3,
+  "remainder": 0
+}
+```
+
+The recipe compiler folds literal `modulus` and `remainder` into the
+compact `CompiledScope::StaticModulo` form; either field may be
+expressed as `{"binding": "name"}`, in which case the scope falls
+through to dynamic resolution against `ShaderRuntimeParams` per
+frame. Authors should keep `modulus >= 1`; a value of `0` would
+produce no matches at runtime (the rule never fires).
+
+Debug recipes:
+- `recipes/debug_recipes/styles/style_modulo_horizontal_every_third_row.json`
+- `recipes/debug_recipes/styles/style_modulo_vertical_every_fourth_column_offset.json`
 
 ### Render Order
 

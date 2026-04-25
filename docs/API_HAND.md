@@ -1,7 +1,8 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.18.0</VERS> -->
-<!-- <WCTX>Audit recommendations 2.1 + 2.2 — extend the LinearGradient row of the spatial-shader fields table with the new `apply_to` and `intensity` fields and the projection-based angle semantics. Note the relationship to the `gradient_overlay` authoring sugar.</WCTX> -->
-<!-- <CLOG>2.18.0: MINOR — LinearGradient row updated to list apply_to (LinearGradientApplyTo) and intensity (f32, 0–1, default 1.0). Note added that the gradient_overlay authoring sugar canonicalises to this shape and that both fields survive the canonicalisation. Note added that angle_deg is now a true projection axis at any angle.
+<!-- <VERS>VERSION: 2.19.0</VERS> -->
+<!-- <WCTX>Audit recommendation 1.4 — surface the StyleRegion::Modulo variant (axis: ModuloAxis::Horizontal | Vertical, modulus: u16, remainder: u16) and the new V3 authoring `modulo` scope kind in the StyleRegion section. Also fold the canonical Role(RoleTag) form into the variant list so the doc no longer teaches the deprecated bare-string TextOnly/BorderOnly/BackgroundOnly variants as primary.</WCTX> -->
+<!-- <CLOG>2.19.0: MINOR — StyleRegion section now lists Role(RoleTag) as the canonical role-based form (with a note that legacy bare strings still parse) and gives full Modulo semantics (axis iteration direction, match formula, common use cases, V3 authoring shape). ModuloAxis docs explain Horizontal scans rows top→bottom and Vertical scans columns left→right.
+2.18.0: MINOR — LinearGradient row updated to list apply_to (LinearGradientApplyTo) and intensity (f32, 0–1, default 1.0). Note added that the gradient_overlay authoring sugar canonicalises to this shape and that both fields survive the canonicalisation. Note added that angle_deg is now a true projection axis at any angle.
 2.17.0: MINOR — WipeDirection section grew from 16 to 24 variants (corner-out and corner-in Euclidean quadrant arcs added) with a note distinguishing the corner-arc wavefront from the Manhattan-diagonal sweep. Documented `corner_down_*` / `corner_up_*` author-friendly serde aliases. Noted the shared canonical home in tui-vfx-geometry.
 2.16.0: MINOR — Document the tui_vfx_content::cursor module (Cursor, CursorBlink, GrowIn, Wake, CursorState, CursorPaintOps, and the fnc_advance_cursor / fnc_render_cursor / fnc_cursor_grow_in_glyph helpers)</CLOG>
 
@@ -627,11 +628,25 @@ For full guidance and examples, see `docs/HOWTO_SHADOWS.md`.
 
 Apply styles to targeted regions:
 
-`All`, `TextOnly`, `BorderOnly`, `BackgroundOnly`, `Rows(Vec<u16>)`, `RowRange { start, end }`,
-`Cell { x, y }`, `Cells(Vec<CellCoord>)`, `Column(u16)`, `Columns(Vec<u16>)`,
+`All`, `Role(RoleTag)` (canonical role-based form; the legacy
+`TextOnly` / `BorderOnly` / `BackgroundOnly` strings still parse via
+custom `Deserialize`),
+`Rows(Vec<u16>)`, `RowRange { start, end }`,
+`Cell { x: BindableU16, y: BindableU16 }`, `Cells(Vec<CellCoord>)`,
+`Column(u16)`, `Columns(Vec<u16>)`,
 `ColumnRange { start, end }`, `Modulo { axis, modulus, remainder }`
 
-`ModuloAxis`: `Horizontal`, `Vertical`
+`ModuloAxis`: `Horizontal` (scans rows top→bottom — one match becomes
+one full-row stripe), `Vertical` (scans columns left→right — one match
+becomes one full-column stripe). The axis name describes the iteration
+direction, not the orientation of the resulting stripes.
+
+`Modulo` semantics: cell `(x, y)` matches iff `coord % modulus == remainder`,
+where `coord` is `y` for `Horizontal` and `x` for `Vertical`. Use for
+CRT scanlines (`Horizontal`, modulus 2, remainder 0), ledger paper
+(`Horizontal`, modulus 3), or alternating column highlights
+(`Vertical`, modulus 2, remainder 1). Authored from V3 recipes via
+`{"kind": "modulo", "axis": "horizontal" | "vertical", "modulus": N, "remainder": K}`.
 
 ## Spatial Shaders (`SpatialShaderType`)
 

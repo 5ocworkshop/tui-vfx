@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Audit recommendation 1.2 + 1.3 — extend the canonical wipe-direction vocabulary with the new corner-out (Euclidean quadrant arc, expanding from a corner) and corner-in (collapsing toward a corner) families, plus the author-friendly `corner_down_*` / `corner_up_*` aliases. Document that the diagonal Manhattan sweep and the corner Euclidean arc are intentionally distinct.</WCTX> -->
-<!-- <CLOG>0.3.0: MINOR — wipe-direction vocabulary section grew from 12 canonical variants to 20 (cardinal + diagonal + centre/edge + corner-out + corner-in). Added the diagonal-vs-corner-arc explanatory note. Documented that the same vocabulary is shared by the Wipe mask, the RevealWipe shader, and the V3 grouped reveal family at the engine level via one canonical WipeDirection in tui-vfx-geometry.
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Audit recommendation 1.4 — add the canonical V3 scope vocabulary section so authors learn the full scope kind list, including the new `modulo` authoring scope (axis + modulus + remainder) that exposes the engine's long-existing StyleRegion::Modulo to recipe writers.</WCTX> -->
+<!-- <CLOG>0.4.0: MINOR — add new section "Canonical V3 scope vocabulary" that catalogues all V3 scope kinds, documents the new `modulo` scope (axis: horizontal | vertical, plus integer modulus and remainder), explains the axis-naming rule (horizontal scans rows top→bottom, vertical scans columns left→right), and lists which scope kinds support runtime bindings today vs. literal-only.
+0.3.0: MINOR — wipe-direction vocabulary section grew from 12 canonical variants to 20 (cardinal + diagonal + centre/edge + corner-out + corner-in). Added the diagonal-vs-corner-arc explanatory note. Documented that the same vocabulary is shared by the Wipe mask, the RevealWipe shader, and the V3 grouped reveal family at the engine level via one canonical WipeDirection in tui-vfx-geometry.
 0.2.9: add sibling authoring-doc routing for ingredients, schema, procedural sources, and tooling.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
@@ -305,6 +306,90 @@ The same vocabulary is shared at the engine level (one canonical
 `direction` field interchanges across the mask, shader, and grouped-V3
 layers.
 
+## 7b. Canonical V3 scope vocabulary
+
+V3 recipe steps target cells through a `scope` field. The canonical scope
+kinds (the strings authored in `"kind": "..."`) are:
+
+### Whole-area / role
+- `all` — every cell inside the layer
+- `border` — the painted border characters of the widget
+- `role` — cells whose `RoleTag` matches `value` (e.g. `text`, `border`,
+  `background`, or a custom role name)
+- `channel` — a logical paint channel (`foreground`, `background`,
+  `glyph`); some payload families honour the channel intent during
+  lowering
+
+### Coordinate-anchored
+- `cell { x, y }` — a single cell. `x` and `y` are `BindableU16` (raw
+  integer or `{"binding": "name"}`)
+- `cells { cells: [...] }` — a list of `{x, y}` coordinates
+- `cell_run { run: { y, x_start, x_end } }` — a single horizontal run on
+  one row
+- `cell_runs { runs: [...] }` — a list of horizontal runs
+- `rect { x, y, w, h }` — an axis-aligned rectangle
+- `rect_exclude { x, y, w, h }` — every cell **outside** the given rect
+- `outer { margins }` / `inner { margins }` — perimeter band / interior
+  area defined by per-edge margins
+- `rows { rows: [...] }` — specific row indices
+- `row_range { start, end }` — half-open contiguous row range
+- `columns { columns: [...] }` — specific column indices
+- `column_range { start, end }` — half-open contiguous column range
+
+### Periodic / modular
+- `modulo { axis, modulus, remainder }` — every Nth row or column.
+  - `axis: "horizontal"` scans **row by row** (one matched row is one
+    full-row stripe). `axis: "vertical"` scans **column by column**
+    (one matched column is one full-column stripe). The axis name
+    describes the direction the rule **iterates**, not the orientation
+    of the stripes it draws.
+  - `modulus: u16` is the period; `remainder: u16` is the offset within
+    the period (`0` means rows/cols 0, N, 2N, …; `1` shifts by one).
+  - Both `modulus` and `remainder` accept a literal integer or a
+    `{"binding": "name"}` form; when both are literals the recipe
+    compiler folds the scope into the compact `StaticModulo` shape, and
+    when either is a binding the scope is resolved per-frame against
+    `ShaderRuntimeParams`.
+  - Engine-level: this lowers to
+    `StyleRegion::Modulo { axis: ModuloAxis::Horizontal | Vertical,
+    modulus, remainder }`.
+
+### Content / glyph
+- `content { value }` — cells whose source character equals `value`
+- `glyph_matches { pattern }` — cells whose source character matches the
+  glob/charset pattern
+
+### Predicate / boolean
+- `predicate { ref }` — invokes a named predicate registered with the
+  recipe
+- `and { children: [...] }`, `or { children: [...] }`, `not { child }` —
+  boolean composition over child scopes
+
+### Runtime-binding support today
+
+The `BindableU16` form (`{"binding": "name"}`) is currently honoured on
+the coordinate fields of `cell`, `cells`, `cell_run`, `cell_runs`,
+`rect`, `rect_exclude`, and the literal margin fields of `outer` /
+`inner`. `row_range`, `column_range`, and `modulo` accept the same
+JSON binding shape at the V3 authoring layer; the recipe compiler keeps
+literal forms compact (`StaticRowRange` / `StaticColumnRange` /
+`StaticModulo`) and falls back to dynamic resolution when a binding is
+present. End-to-end binding plumbing for the range/modulo families
+remains an in-progress universalisation effort tracked under audit
+recommendation 1.5.
+
+### Authoring guidance
+
+- Use `modulo` for "every Nth row" or "every Nth column" patterns
+  (CRT scanlines, ledger paper, alternating column highlights). Do not
+  reach for `rows: [0, 3, 6, 9, ...]` to express the same idea — the
+  modulo form is shorter, expresses intent more clearly, and survives
+  resize.
+- Use `row_range` / `column_range` for one contiguous band; use `rows`
+  / `columns` only when the index list is irregular and short.
+- Use `rect_exclude` instead of building a four-rect `or` to mask out
+  a centre region; it is one allocation and one comparison per cell.
+
 ## 8. Origin vocabulary
 
 For origin-driven families, use:
@@ -555,4 +640,4 @@ in one shared visual model while we continue normalizing schema, fixtures, and
 runtime behavior.
 
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.9</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
