@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.22</VERS> -->
+<!-- <VERS>VERSION: 0.14.23</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work, question-closure status, and explicitly deferred post-release specs.</WCTX> -->
-<!-- <CLOG>0.14.22: record the V3 border custom-chars/frame source rendering slice and remaining border parity follow-up.</CLOG> -->
+<!-- <CLOG>0.14.23: record the first headless release-gate probe smoke target for V3-TOOL01.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -24,7 +24,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-BORDER01 | Border parity and schema hardening | Complete initial / V2 role-map follow-up remains | `single` now parses as the line-drawn plain border, V3 trim precedence has tests for omitted trim and explicit `trim: none`, and `tui-vfx-recipes` commit `d80bb7d` makes root V3 `custom_chars` and `frame` render into border-role source cells. Remaining follow-up: decide whether to build semantic border/text role maps for V2 rendered sources or document that V2 role-targeting remains partial during migration. |
 | V3-NAME01/PREVIEW01 | V3 naming cutover work | Complete initial / compatibility shims retained | Scene/continuous/clock, main `config.rs`, parser wrappers, recipe internals, public preview-boundary aliases, examples, tests, and tooling now use canonical `Vfx*`/`Playback*`/frame names where safe while preserving compatibility aliases and legacy module paths during cutover. Future work is only broader deprecation/module-path cleanup if needed. |
 | V3-F01 | Celebratory particles/fireworks | Owner decision | Conceptual home exists; priority/fidelity decision needed. |
-| V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / Horseman complete-initial | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Packaged `tui-vfx-horseman` now exists in `tui-vfx-recipes` with text/JSON summary modes over existing preview/cutover APIs; `just v3-headless-smoke` now rehearses the headless validator/probe/trace/docs slice with a legacy fallback probe, but the broader command/docs/CI cutover still needs GitHub Actions and release-gate adoption. |
+| V3-TOOL01 | Chapter 100 tooling/CI cutover checklist | Outstanding / Horseman complete-initial | V3 schema dispatch/cutover, doc generators, debug QC, trace/probe parity, demo V3 corpus loading, and CI gates must go green. Packaged `tui-vfx-horseman` now exists in `tui-vfx-recipes` with text/JSON summary modes over existing preview/cutover APIs; `just v3-headless-smoke` now rehearses the headless validator/probe/trace/docs slice with a legacy fallback probe and the `probe_alarm_lighthouse` release-gate probe smoke, but the broader command/docs/CI cutover still needs GitHub Actions and release-gate adoption. |
 | V3-D01 | Rustdoc/schema/generated docs gate | Ongoing / recipes generated-doc gate green | 2026-04-24 recipes-side audit: `just docs-v3-generate` produced no generated-output drift and `just docs-v3-check` passed, including rustdoc-summary coverage for public `src/v3` items. `just v3-headless-smoke` and ad-hoc `cargo doc` were blocked/inconclusive under concurrent cargo/build-target activity, so broader rustdoc build evidence remains a follow-up. |
 | V3-D02 | Hand-authored capabilities/authoring docs | Ongoing | Keep author-facing docs aligned with as-built behavior. |
 | V3-Q01 | Chapter 80 open-question closure | Complete initial / owner decisions remain | Chapter 80 now has a current closure ledger separating accepted/implemented questions, active implementation-shaped questions, and owner/downstream decisions. Remaining owner decisions stay listed below rather than blocking upstream V3 execution. |
@@ -94,7 +94,7 @@ the tooling/authoring docs for agents to keep moving without more owner input.
 | V3-SPATIAL02 | Restore richer Madeira/showcase parity | Re-create the Madeira demo as a first-class V3 showcase using field generation, typed hints, displacement, field-correlated shading, and scene-layer composition. |
 | V3-BORDER01-FOLLOW | V2 border role-map parity decision | V3 root source now supports `single`, titles, `custom_chars`, and `frame` with border roles. Remaining border audit item is V2 source role truth: either construct semantic border/text role maps for V2 rendered sources or document/lint that V2 role-scoped border effects are partial until recipes migrate to V3. |
 | V3-EDGE01 | Implement/prove directional vanishing-edge behavior | Motion/offscreen edge crossing must drive border vanish/preserve and shadow fade/clip/preserve based on the active clipped edge. Latest clipped-shadow-side fix is landed; remaining work is broader scene/corpus proof if new recipes expose gaps. |
-| V3-TOOL01 | Work down Chapter 100 release checklist | `tui-vfx-horseman` is the packaged headless summary/corpus command, and debug QC now accepts multi-sampler, none-mask, and exit-phase FadeToCanvas fixtures. Remaining work is CI adoption, broader trace/probe parity, and release-gate policy closure. |
+| V3-TOOL01 | Work down Chapter 100 release checklist | `tui-vfx-horseman` is the packaged headless summary/corpus command, and debug QC now accepts multi-sampler, none-mask, and exit-phase FadeToCanvas fixtures. Remaining work is CI adoption, broader trace/probe parity, and release-gate policy closure beyond the first headless probe smoke. |
 | V3-TRACE01 | Trace/probe parity for broader V3 subset | `tui-vfx-recipes` commit `d2fe1e4` adds lifecycle-sampled compiled-V3 scene-composition trace events. The next slice now mirrors lifecycle transitions and broader stage-summary semantics; continue toward broader trace semantics and do not mark complete-final yet. |
 | V3-D01 | Keep rustdocs/schema/generated docs current | Public/schema-bearing changes include rustdocs and generated docs validation where applicable. Latest recipes-side generated-doc audit: `just docs-v3-check` green after `just docs-v3-generate` on 2026-04-24; broader rustdoc build check still needs a clean cargo lane. |
 | V3-D02 | Keep hand-maintained docs current | Capabilities, authoring, V3 index, and punch list match the implemented system. |
@@ -285,4 +285,4 @@ and downstream consumers before any deletion happens.
 Until that dedicated plan exists and is approved, V2 removal is out of scope.
 
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.14.19</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.23</VERS> -->

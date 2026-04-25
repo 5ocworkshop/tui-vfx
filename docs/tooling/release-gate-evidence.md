@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> - <DESC>Executable evidence-record contract and command map for V3 Chapter 60 release gates.</DESC> -->
-<!-- <VERS>VERSION: 0.1.5</VERS> -->
+<!-- <VERS>VERSION: 0.1.6</VERS> -->
 <!-- <WCTX>Make the seeded Chapter 60 release-gate manifest actionable by mapping each evidence type to existing tooling and the D5/D6/D7 gate lanes.</WCTX> -->
-<!-- <CLOG>0.1.5: update probe gate status after midnight_switchboard headless blocker fix.</CLOG> -->
+<!-- <CLOG>0.1.6: add the just-based probe_alarm_lighthouse smoke check as the smallest headless gate rehearsal.</CLOG> -->
 
 # Release-gate evidence records
 
@@ -119,7 +119,12 @@ Run commands from `/usr/projects/tui-vfx-recipes` unless noted.
 
 ## First smoke target
 
-For a low-risk first D6 slice, capture `probe_alarm_lighthouse`:
+For a low-risk first D6 slice, run the checked smoke target or capture `probe_alarm_lighthouse` directly:
+
+```bash
+cd /usr/projects/tui-vfx-recipes
+just v3-release-gate-probe-smoke
+```
 
 ```bash
 cd /usr/projects/tui-vfx-recipes
@@ -173,4 +178,4 @@ Template file:
 - [`probe_alarm_lighthouse.evidence.record.template.json`](probe_alarm_lighthouse.evidence.record.template.json)
 
 <!-- <FILE>docs/tooling/release-gate-evidence.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.5</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.6</VERS> -->
