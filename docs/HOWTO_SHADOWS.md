@@ -157,6 +157,7 @@ ShadowConfig::new(color: Color)
     .with_inset_end(x: u8, y: u8)        // Trim end of horizontal/vertical edge runs
     .with_symmetric_inset(x: u8, y: u8)  // Trim both ends for centered shadow runs
     .with_falloff(x: u8, y: u8)          // Alpha falloff at horizontal/vertical run ends
+    .with_side_coverage(eighths: u8)     // Optional left/right sub-cell foreground coverage
     .with_style(style: ShadowStyle)      // Rendering style (default: Solid translucent full-cell)
     .with_edges(edges: ShadowEdges)      // Which edges to shadow (default: BOTTOM_RIGHT)
     .with_soft_edges(enabled: bool)      // Use half-blocks for transitions (default: true)
@@ -189,6 +190,22 @@ let extra_h = spec.extra_height();  // |offset_y|
 | `ShadowStyle::Braille { density: 0.7 }` | `⣿` patterns | Dithered/variable density |
 | `ShadowStyle::MediumShade` | `▒` | Textured full-cell shadow |
 | `ShadowStyle::Gradient { layers: 3 }` | Multi-layer | Soft drop shadows |
+
+### Side-column optical tuning
+
+Solid shadows normally use alpha-bearing background cells. For some drop
+shadows that combine a full bottom run with a side run, the side column can read
+too heavy because the row underneath the panel already makes the vertical edge
+feel thinner. `ShadowConfig::with_side_coverage(6)` renders left/right solid
+shadow columns as a three-quarter block-fraction foreground glyph over a
+transparent background (`▊` on the right edge; right-filled equivalents on the
+left edge). This is an optical tuning control, not the default.
+
+Use this with `GlyphOverlay` when the side shadow lives outside meaningful
+content and you want the visible glyph shape. Use `BlendUnderlying` or
+`GradeUnderlying` when preserving destination glyphs matters; a terminal cell
+cannot show both the original character and a block-fraction shadow glyph at the
+same time.
 
 ### Shadow Edges
 

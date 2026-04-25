@@ -874,6 +874,7 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 | `inset_y_end` | Option<u8> | Trim the end of left/right shadow runs, e.g. bottom of a right shadow |
 | `falloff_x` | Option<u8> | Alpha falloff cells at the start/end of top/bottom runs |
 | `falloff_y` | Option<u8> | Alpha falloff cells at the start/end of left/right runs |
+| `side_coverage_eighths` | Option<u8> | Optional sub-cell foreground block coverage for left/right solid shadow columns; `6` gives a three-quarter side edge |
 | `color` | Color | Shadow color |
 | `surface_color` | Option<Color> | Background for half-block blending |
 | `edges` | ShadowEdges | Which edges to render. Builder-facing names include `BOTTOM_RIGHT` / `ALL`; recipe JSON currently uses bitflag strings such as `"RIGHT | BOTTOM"`. |
@@ -881,6 +882,13 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 | `composite_mode` | ShadowCompositeMode | `GlyphOverlay` (default), `GradeUnderlying`, or `BlendUnderlying` |
 | `grade` | Option<ShadowGradeConfig> | Grade parameters for `GradeUnderlying`; ignored by `GlyphOverlay` and `BlendUnderlying` |
 | `source_region` | Option<RoleTag> | v0.8.0+ — restrict extrusion to cells whose role matches the tag. `None` (default) = rectangular extrusion as before. `Some(role)` = extrude from the tight bounding rectangle of role-matched source cells (see `extract_shadow_envelope`) and tag produced cells with `RoleTag::Shadow` in the destination role map. Fixes the "shadow on text rect" splash bug. Builder: `with_source_region(role)`; accessor: `source_region()`. Recipe JSON currently uses enum names like `"Border"`. |
+
+`side_coverage_eighths` is an optical tuning control for side shadows. With
+`GlyphOverlay`, a value such as `6` renders the side as a three-quarter block
+glyph over transparent background so the vertical edge feels lighter than a
+full-cell column. Prefer `BlendUnderlying` / `GradeUnderlying` for shadows that
+must preserve existing destination glyphs; a terminal cell cannot display the
+destination glyph and a separate sub-cell shadow glyph at once.
 
 Note: as of v0.8.0, `ShadowConfig` is no longer `Copy` — `RoleTag::Custom` carries an `Arc<str>`. Call-sites that relied on implicit copy must add `.clone()`.
 

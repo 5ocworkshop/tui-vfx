@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
+// <VERS>VERSION: 0.9.0</VERS>
 // <WCTX>Sub-plan A Phase A.3.3 — add `source_region: Option<RoleTag>` so consumers can restrict shadow extrusion to cells whose source-map role matches (e.g. only extrude from Border cells instead of the whole widget rect). Default `None` preserves today's rect-based extrusion.</WCTX>
-// <CLOG>0.8.0: add alpha falloff controls for transparent shadow run ends.</CLOG>
+// <CLOG>0.9.0: add optional side-edge subcell coverage for optical shadow columns.</CLOG>
 
 //! # Shadow Configuration
 //!
@@ -17,6 +17,7 @@
 //! | `inset_x/y` | `Option<u8>` | Optional orthogonal inset override before horizontal/vertical edges begin |
 //! | `inset_x_end/y_end` | `Option<u8>` | Optional orthogonal inset override before horizontal/vertical edges end |
 //! | `falloff_x/y` | `Option<u8>` | Optional alpha falloff cells at horizontal/vertical run ends |
+//! | `side_coverage_eighths` | `Option<u8>` | Optional foreground block coverage for left/right shadow columns |
 //! | `color` | [`Color`] | Shadow color (use alpha for transparency) |
 //! | `edges` | [`ShadowEdges`] | Which edges receive shadows |
 //! | `soft_edges` | `bool` | Enable half-block edge transitions |
@@ -110,6 +111,18 @@ pub struct ShadowConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub falloff_y: Option<u8>,
 
+    /// Optional sub-cell coverage for left/right solid shadow columns.
+    ///
+    /// When set, solid side shadows render as foreground block-fraction glyphs
+    /// over a transparent background instead of full background cells. A value
+    /// of `6` paints a three-quarter column, which can make right/left shadow
+    /// edges read less optically heavy next to a full-cell bottom shadow. This
+    /// is most useful with [`ShadowCompositeMode::GlyphOverlay`]; destination-
+    /// preserving modes cannot show both the original glyph and a block glyph
+    /// in the same terminal cell.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub side_coverage_eighths: Option<u8>,
+
     /// Shadow color.
     pub color: Color,
 
@@ -186,6 +199,7 @@ impl Default for ShadowConfig {
             inset_y_end: None,
             falloff_x: None,
             falloff_y: None,
+            side_coverage_eighths: None,
             color: Color::BLACK.with_alpha(128),
             surface_color: None,
             edges: ShadowEdges::BOTTOM_RIGHT,
@@ -278,6 +292,20 @@ impl ShadowConfig {
     pub fn with_falloff(mut self, x: u8, y: u8) -> Self {
         self.falloff_x = Some(x);
         self.falloff_y = Some(y);
+        self
+    }
+
+    /// Set foreground block coverage for left/right solid shadow columns.
+    ///
+    /// `eighths` is clamped to `0..=8`; `6` means three-quarter coverage. Right
+    /// shadows use left-filled block fractions (for example `▊`) so the filled
+    /// portion sits next to the casting element. Left shadows use right-filled
+    /// fractions where available (for example U+1FB8A for right three-quarter
+    /// block), which may be more font-sensitive than the default full-cell
+    /// background shadow.
+    #[inline]
+    pub fn with_side_coverage(mut self, eighths: u8) -> Self {
+        self.side_coverage_eighths = Some(eighths.clamp(0, 8));
         self
     }
 
@@ -476,6 +504,16 @@ mod tests {
     }
 
     #[test]
+    fn side_coverage_clamps_and_round_trips() {
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(128)).with_side_coverage(12);
+        assert_eq!(config.side_coverage_eighths, Some(8));
+
+        let json = serde_json::to_string(&config).unwrap();
+        let restored: ShadowConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored.side_coverage_eighths, Some(8));
+    }
+
+    #[test]
     fn test_color_at_progress() {
         let config = ShadowConfig::new(Color::BLACK.with_alpha(200));
 
@@ -494,4 +532,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>

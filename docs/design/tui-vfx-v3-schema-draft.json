@@ -451,6 +451,11 @@
     #     surface, e.g. two cells in from both horizontal edges.
     #   - `falloff` tapers shadow alpha at horizontal/vertical run ends while
     #     preserving transparent/dimmed content under the shadow.
+    #   - `side_coverage_eighths` optionally renders left/right solid shadow
+    #     columns as foreground block-fraction glyphs over transparent
+    #     backgrounds. `6` gives a three-quarter side edge for optical tuning.
+    #     Use it with glyph-overlay when you want the visible sub-cell edge;
+    #     use blend/grade-underlying when preserving destination glyphs matters.
     #   - `composite.mode` distinguishes glyph-overlay from grade-underlying
     #
     #   These are the typed shadow fields after load-time substitution. Caller
