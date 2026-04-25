@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/v3/cls_vfx_gradient_reveal_shader.rs</FILE> - <DESC>V3 gradient-reveal family shader surface</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Audit recommendation 1.2 + 1.3 — RevealDirection and VfxRevealDirection both became type aliases for tui_vfx_geometry::WipeDirection, so the From<RevealDirection> for VfxRevealDirection conversion is now identity (both sides are the same type) and is no longer needed. The legacy-shader conversion can copy the direction directly with no enum-mapping.</WCTX>
-// <CLOG>0.2.0: drop the now-redundant From<RevealDirection> for VfxRevealDirection impl and the redundant `.into()` call (both sides are the same WipeDirection type after the audit-recommended unification).
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Audit recommendation 2.1 — propagate the new LinearGradientShader fields (apply_to, intensity) through the V3 grouped surface so the round-trip from grouped V3 → legacy SpatialShaderType → grouped V3 stays lossless.</WCTX>
+// <CLOG>0.3.0: From<&LinearGradientShader> for VfxGradientRevealShader now copies apply_to and intensity into the LinearGradient behavior. Round-trip parity with the new LinearGradientShader 1.0.0.
+// 0.2.0: drop the now-redundant From<RevealDirection> for VfxRevealDirection impl.
 // 0.1.0: initial V3 grouped surface for LinearGradient + RevealWipe</CLOG>
 
 //! V3 family surface for gradient-reveal shaders.
@@ -40,6 +41,8 @@ impl From<&LinearGradientShader> for VfxGradientRevealShader {
             behavior: VfxGradientRevealBehavior::LinearGradient {
                 gradient: shader.gradient.clone(),
                 angle_deg: shader.angle_deg,
+                apply_to: shader.apply_to,
+                intensity: shader.intensity,
             },
         }
     }

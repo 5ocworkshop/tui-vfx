@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.25.0</VERS> -->
-<!-- <WCTX>Audit recommendation 1.2 + 1.3 — document the unified WipeDirection vocabulary (24 variants) shared by the Wipe mask, the RevealWipe shader, and the V3 grouped reveal family, including the new corner-out / corner-in quadrant-arc variants.</WCTX> -->
-<!-- <CLOG>1.25.0: MINOR — WipeDirection grew from 16 to 24 variants (corner-out and corner-in quadrant arcs added). Updated the top-of-file Wipe directions count, the WipeDirection Variants table, and added the explanatory note that the same enum is now shared by the mask, the shader, and the V3 grouped reveal family. Documented author-friendly `corner_down_*` / `corner_up_*` aliases. Source of truth is `tui-vfx-geometry::WipeDirection`.
+<!-- <VERS>VERSION: 1.26.0</VERS> -->
+<!-- <WCTX>Audit recommendations 2.1 + 2.2 — document the LinearGradientShader 1.0.0 surface: first-class `apply_to` (Foreground / Background / Both) and `intensity` (0–1) fields, true diagonal angle sampling at any `angle_deg`. The `gradient_overlay` authoring sugar canonicalises to this shape and now preserves both fields through the canonicalisation. `linear_gradient` is in the channel allow-list at the lowering layer.</WCTX> -->
+<!-- <CLOG>1.26.0: MINOR — LinearGradient row gains `apply_to` and `intensity` columns; new "Shader Notes" entry documents the angle semantics (true projection at any angle), the relationship to the `gradient_overlay` authoring sugar, and the channel-scope path. Closes the long-standing foot-gun where `gradient_overlay` with `apply_to:"background"` or `channel:background` silently ignored the channel intent.
+1.25.0: MINOR — WipeDirection grew from 16 to 24 variants (corner-out and corner-in quadrant arcs added). Updated the top-of-file Wipe directions count, the WipeDirection Variants table, and added the explanatory note that the same enum is now shared by the mask, the shader, and the V3 grouped reveal family. Documented author-friendly `corner_down_*` / `corner_up_*` aliases. Source of truth is `tui-vfx-geometry::WipeDirection`.
 1.24.0: MINOR — document CarrierOrbit/helix, FigureEight/infinity, RadialTwist sampler, and RadialSpiral shader capabilities from the whoa/cellophane review.
 1.23.0: MINOR — add V3 pathway capabilities section with first-class I/O chaining examples, runtime binding/asset contracts, procedural scene-source details, scene/source contract notes, and authoring/debugging guidance for new human and AI recipe authors.
 1.22.0: PATCH — note that `tui-vfx-recipes` now supports top-level `config.shadow` upstream (validator/probe parity) and cross-link the recipe-authoring shadow flow from the Shadows section.
@@ -175,7 +176,7 @@ Spatial shaders compute per-cell style modifications based on position, time, an
 
 | Shader | Description | Key Parameters |
 |--------|-------------|----------------|
-| **LinearGradient** | Gradient fill at angle | `gradient`, `angle_deg` |
+| **LinearGradient** | Gradient fill at any angle | `gradient`, `angle_deg`, `apply_to` (Foreground / Background / Both, default Foreground), `intensity` (0–1, default 1) |
 | **BarberPole** | Animated diagonal stripes | `speed`, `stripe_width`, `gap_width`, `color` |
 | **Radar** | Rotating radar sweep | `speed`, `tail_length`, `color` |
 | **RadialSpiral** | Procedural radial spiral density field for portal/background motion | `arms`, `radial_frequency`, `radial_power`, `speed`, `blend_strength`, `color` |
@@ -212,6 +213,14 @@ Premium effect for frosted glass / film grain texture:
 ### Detailed Notes
 
 #### Shader Notes
+
+**LinearGradient** — Static directional gradient fill at any angle:
+- `gradient`: multi-stop gradient (stops + colour space).
+- `angle_deg`: gradient axis angle in degrees, measured CCW from the positive X axis. `0` = left→right, `90` = top→bottom, `45` = TL→BR diagonal, `135` = TR→BL. Any angle is supported via projection of the cell's normalised position onto the gradient axis (since linear-gradient-shader 1.0.0); previous releases ignored the magnitude and picked an axis.
+- `apply_to`: Foreground (default, back-compat), Background, or Both.
+- `intensity`: blend strength `0.0..=1.0`. `1.0` (default) fully replaces the target channel; lower values blend toward base.
+- Authoring alias `gradient_overlay` canonicalises to this shape; `apply_to` and `intensity` survive the canonicalisation since payload-normalize 0.5.0.
+- Recipes can also use a `channel:background` scope; the lowering layer translates that into `apply_to: "background"` on the payload.
 
 **AmbientOcclusion** — Contact shadow shader that darkens cells near widget edges:
 - `edges`: BottomRight (default), TopLeft, All, Inner

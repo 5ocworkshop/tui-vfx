@@ -1,7 +1,8 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.17.0</VERS> -->
-<!-- <WCTX>Audit recommendation 1.2 + 1.3 — record the unified 24-variant WipeDirection enum now hosted in tui-vfx-geometry, shared by the Wipe mask, the RevealWipe shader (RevealDirection alias), and the V3 grouped reveal family (VfxRevealDirection alias).</WCTX> -->
-<!-- <CLOG>2.17.0: MINOR — WipeDirection section grew from 16 to 24 variants (corner-out and corner-in Euclidean quadrant arcs added) with a note distinguishing the corner-arc wavefront from the Manhattan-diagonal sweep. Documented `corner_down_*` / `corner_up_*` author-friendly serde aliases. Noted the shared canonical home in tui-vfx-geometry.
+<!-- <VERS>VERSION: 2.18.0</VERS> -->
+<!-- <WCTX>Audit recommendations 2.1 + 2.2 — extend the LinearGradient row of the spatial-shader fields table with the new `apply_to` and `intensity` fields and the projection-based angle semantics. Note the relationship to the `gradient_overlay` authoring sugar.</WCTX> -->
+<!-- <CLOG>2.18.0: MINOR — LinearGradient row updated to list apply_to (LinearGradientApplyTo) and intensity (f32, 0–1, default 1.0). Note added that the gradient_overlay authoring sugar canonicalises to this shape and that both fields survive the canonicalisation. Note added that angle_deg is now a true projection axis at any angle.
+2.17.0: MINOR — WipeDirection section grew from 16 to 24 variants (corner-out and corner-in Euclidean quadrant arcs added) with a note distinguishing the corner-arc wavefront from the Manhattan-diagonal sweep. Documented `corner_down_*` / `corner_up_*` author-friendly serde aliases. Noted the shared canonical home in tui-vfx-geometry.
 2.16.0: MINOR — Document the tui_vfx_content::cursor module (Cursor, CursorBlink, GrowIn, Wake, CursorState, CursorPaintOps, and the fnc_advance_cursor / fnc_render_cursor / fnc_cursor_grow_in_glyph helpers)</CLOG>
 
 # TUI-VFX Complete API Reference
@@ -638,7 +639,7 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 
 | Shader | Parameters |
 | --- | --- |
-| `LinearGradient` | `gradient: Gradient`, `angle_deg` |
+| `LinearGradient` | `gradient: Gradient`, `angle_deg`, `apply_to: LinearGradientApplyTo` (Foreground / Background / Both; default Foreground), `intensity: f32` (0–1, default 1.0). Authoring sugar `gradient_overlay` canonicalises to this shape; `apply_to` and `intensity` survive the canonicalisation since payload-normalize 0.5.0. `angle_deg` is a true projection axis (since linear-gradient-shader 1.0.0); non-cardinal angles like 45° produce diagonal sweeps, not the axis-pick behaviour from the previous version. |
 | `BarberPole` | `speed`, `stripe_width`, `gap_width`, `color` |
 | `Radar` | `speed`, `tail_length`, `color` |
 | `BorderSweep` | `speed`, `length`, `color` |

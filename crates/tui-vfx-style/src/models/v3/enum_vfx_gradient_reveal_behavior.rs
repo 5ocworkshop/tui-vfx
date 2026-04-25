@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/v3/enum_vfx_gradient_reveal_behavior.rs</FILE> - <DESC>V3 gradient-reveal family behavior surface</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Audit recommendation 1.2 + 1.3 — the V3 grouped reveal family previously inherited the four-cardinal RevealDirection vocabulary, which propagated the wipe-direction regression out of the legacy shader and into the V3 surface. Re-export tui_vfx_geometry::WipeDirection as VfxRevealDirection so the V3 surface, the legacy shader, and the Wipe mask all share one direction enum, and so the new corner-out / corner-in variants land at every layer simultaneously.</WCTX>
-// <CLOG>0.2.0: VfxRevealDirection becomes a re-export of tui_vfx_geometry::WipeDirection (full 20-variant vocabulary). All existing V3 recipes that say `direction: "left_to_right"` parse identically. The wider set is now visible at the V3 grouped family layer for free.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Audit recommendation 2.1 — the V3 grouped LinearGradient behaviour previously had only `gradient` and `angle_deg`, dropping the apply_to and intensity fields that authors set on `gradient_overlay`. Add both fields so the V3 surface carries them through to the executable LinearGradientShader without loss.</WCTX>
+// <CLOG>0.3.0: VfxGradientRevealBehavior::LinearGradient grew two new authoring fields, `apply_to: LinearGradientApplyTo` and `intensity: f32`. Both serde-default to back-compat values (Foreground / 1.0) so existing V3 recipes that omit them are unchanged. The grouped family now matches the runtime LinearGradientShader 1:1.
+// 0.2.0: VfxRevealDirection becomes a re-export of tui_vfx_geometry::WipeDirection (full 20-variant vocabulary).
 // 0.1.0: Decision 2 migration slice — initial four-cardinal V3 RevealDirection</CLOG>
 
 //! V3 behavior surface for gradient-reveal family shaders.
@@ -12,9 +13,13 @@
 //! [`tui_vfx_geometry::WipeDirection`] vocabulary, exposed here as the
 //! legacy alias [`VfxRevealDirection`] for back-compat.
 
-use crate::models::Gradient;
+use crate::models::{Gradient, LinearGradientApplyTo};
 use serde::{Deserialize, Serialize};
 use tui_vfx_geometry::WipeDirection;
+
+fn default_intensity() -> f32 {
+    1.0
+}
 
 /// Direction policy for reveal-style shaders.
 ///
@@ -37,6 +42,14 @@ pub enum VfxGradientRevealBehavior {
         gradient: Gradient,
         /// Gradient angle in degrees.
         angle_deg: f32,
+        /// Which colour channel(s) the gradient writes to. Default
+        /// `Foreground` for back-compat with pre-0.3.0 V3 recipes.
+        #[serde(default)]
+        apply_to: LinearGradientApplyTo,
+        /// Blend strength (0.0–1.0). Default 1.0 (fully replace target
+        /// channel) matches pre-0.3.0 behaviour.
+        #[serde(default = "default_intensity")]
+        intensity: f32,
     },
     /// Progressive directional reveal.
     RevealWipe {

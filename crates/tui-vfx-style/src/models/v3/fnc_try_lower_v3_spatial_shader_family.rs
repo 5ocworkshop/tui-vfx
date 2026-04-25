@@ -585,9 +585,13 @@ impl From<&crate::models::v3::VfxGradientRevealShader> for SpatialShaderType {
             VfxGradientRevealBehavior::LinearGradient {
                 gradient,
                 angle_deg,
+                apply_to,
+                intensity,
             } => SpatialShaderType::LinearGradient(LinearGradientShader {
                 gradient: gradient.clone(),
                 angle_deg: *angle_deg,
+                apply_to: *apply_to,
+                intensity: *intensity,
             }),
             VfxGradientRevealBehavior::RevealWipe { direction } => {
                 SpatialShaderType::RevealWipe(RevealWipeShader {

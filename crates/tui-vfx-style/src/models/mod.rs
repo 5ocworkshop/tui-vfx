@@ -119,7 +119,7 @@ pub use cls_highlighter_shader::{
     HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
     HighlighterShader, TextContrast,
 };
-pub use cls_linear_gradient_shader::LinearGradientShader;
+pub use cls_linear_gradient_shader::{LinearGradientApplyTo, LinearGradientShader};
 pub use cls_neon_flicker_shader::{NeonFlickerShader, SegmentMode};
 pub use cls_noise_type::NoiseType;
 pub use cls_orbit_shader::OrbitShader;

@@ -507,9 +507,12 @@ For error states or retro malfunction aesthetics."""
 use_cases = ["background", "premium", "branding"]
 energy = "calm"
 complexity = "simple"
-ai_hint = """Gradient fill at configurable angle.
+ai_hint = """Gradient fill at any angle, with channel targeting and intensity blend.
 gradient: color stops array defining the gradient.
-angle_deg: rotation angle (0=horizontal, 90=vertical, -45=diagonal).
+angle_deg: gradient axis angle in degrees, measured CCW from the positive X axis. 0 = left→right, 90 = top→bottom, 45 = TL→BR diagonal, 135 = TR→BL diagonal. Any angle is supported via projection of the cell's normalised position onto the gradient axis (since linear-gradient-shader 1.0.0); previous releases used the angle as a boolean axis selector (a known bug — angle_deg=45 swept VERTICALLY).
+apply_to: Foreground (default, back-compat), Background, or Both.
+intensity: blend strength 0.0..=1.0; 1.0 (default) fully replaces the target channel, lower values blend toward base, 0.0 returns base unchanged.
+Authoring sugar `gradient_overlay` canonicalises to this shape and now preserves both apply_to and intensity through the canonicalisation (since payload-normalize 0.5.0). Recipes can also use a `channel:background` scope; the lowering layer translates that into apply_to:"background" on the payload.
 Elegant for backgrounds and premium surfaces."""
 
 [effects.shaders.BarberPole]
