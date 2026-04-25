@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/post-release/INDEX.md</FILE> - <DESC>Index of post-release V3 capability ideas that are intentionally deferred until the core V3 release is stable.</DESC> -->
-<!-- <VERS>VERSION: 0.1.2</VERS> -->
+<!-- <VERS>VERSION: 0.1.3</VERS> -->
 <!-- <WCTX>Collect deferred capability specs without mixing post-release creative work into the active V3 release gate.</WCTX> -->
-<!-- <CLOG>0.1.2: add weather ambient field spec.</CLOG> -->
+<!-- <CLOG>0.1.3: add spatial-constraint relative-motion spec (PinnedOffset / Repulsion / OrbitPair).
+0.1.2: add weather ambient field spec.</CLOG> -->
 
 # Post-release capability specs
 
@@ -19,6 +20,10 @@ until V3 playback, validation, docs, and recipe migration are stable.
 - [Weather ambient field spec](weather-ambient-field-spec.md) — rain, snow,
   wind, fog, lightning, and time-of-day lighting as composable V3 ambient
   ingredients.
+- [Spatial-constraint relative motion spec](relative-motion-spatial-constraints-spec.md) —
+  per-frame `PinnedOffset` / `Repulsion` / `OrbitPair` route variants that
+  generalise today's static `sibling_id` anchoring and temporal `follow.lag_ms`
+  into true layer-to-layer spatial constraints.
 
 ## Rules
 
