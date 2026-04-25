@@ -77,9 +77,7 @@ impl Mask for Wipe {
         // (position, size) helper so the soft-edge and invert paths can
         // continue to apply edge_width directly. Corner-arc variants
         // return None and route through `wipe_visible_at` below.
-        if let Some((position, size)) =
-            wipe_progress(self.direction, x, y, w, h)
-        {
+        if let Some((position, size)) = wipe_progress(self.direction, x, y, w, h) {
             // Handle edge case where size is 0
             if size <= 0.0 {
                 let visible = effective_progress_f32 > 0.0;

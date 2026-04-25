@@ -58,17 +58,11 @@ pub fn wipe_progress(
         }
         D::TopRightToBottomLeft => {
             let max_dist = max_x + max_y;
-            Some((
-                (max_x.saturating_sub(x) + y) as f32,
-                (max_dist + 1) as f32,
-            ))
+            Some(((max_x.saturating_sub(x) + y) as f32, (max_dist + 1) as f32))
         }
         D::BottomLeftToTopRight => {
             let max_dist = max_x + max_y;
-            Some((
-                (x + max_y.saturating_sub(y)) as f32,
-                (max_dist + 1) as f32,
-            ))
+            Some(((x + max_y.saturating_sub(y)) as f32, (max_dist + 1) as f32))
         }
         D::HorizontalCenterOut => {
             let center = (w as f32 - 1.0) / 2.0;
@@ -340,18 +334,26 @@ mod tests {
     #[test]
     fn corner_out_from_top_left_reveals_top_left_first() {
         assert!(wipe_visible_at(D::CornerOutFromTopLeft, 0, 0, 10, 10, 0.3));
-        assert!(!wipe_visible_at(
-            D::CornerOutFromTopLeft, 9, 9, 10, 10, 0.3
-        ));
+        assert!(!wipe_visible_at(D::CornerOutFromTopLeft, 9, 9, 10, 10, 0.3));
     }
 
     #[test]
     fn corner_out_from_bottom_right_reveals_bottom_right_first() {
         assert!(wipe_visible_at(
-            D::CornerOutFromBottomRight, 9, 9, 10, 10, 0.3
+            D::CornerOutFromBottomRight,
+            9,
+            9,
+            10,
+            10,
+            0.3
         ));
         assert!(!wipe_visible_at(
-            D::CornerOutFromBottomRight, 0, 0, 10, 10, 0.3
+            D::CornerOutFromBottomRight,
+            0,
+            0,
+            10,
+            10,
+            0.3
         ));
     }
 

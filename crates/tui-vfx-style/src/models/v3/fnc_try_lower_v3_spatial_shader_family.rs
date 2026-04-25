@@ -32,10 +32,10 @@ use crate::models::{
     FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader, GlistenDirection,
     GlitchLinesShader, GlowShader, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
     HighlighterRowMask, HighlighterShader, LightDirection, LinearGradientShader, NeonFlickerShader,
-    OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader, ReflectShader,
-    RevealWipeShader, SegmentMode, ShakeAxis, SparkleTarget, SpatialShaderType,
-    StochasticSparkleShader, SubCellShakeShader, TextContrast, TraceApplyTo, TracePathShader,
-    TracePropagationShader, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
+    OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader, ReflectShader, RevealWipeShader,
+    SegmentMode, ShakeAxis, SparkleTarget, SpatialShaderType, StochasticSparkleShader,
+    SubCellShakeShader, TextContrast, TraceApplyTo, TracePathShader, TracePropagationShader,
+    WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 /// Lower a grouped V3 spatial shader family back into the executable legacy

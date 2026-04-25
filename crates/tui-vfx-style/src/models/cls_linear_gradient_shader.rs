@@ -204,7 +204,11 @@ mod tests {
         Gradient::new(vec![(0.0, Color::BLACK), (1.0, Color::WHITE)])
     }
 
-    fn make_shader(angle_deg: f32, apply_to: LinearGradientApplyTo, intensity: f32) -> LinearGradientShader {
+    fn make_shader(
+        angle_deg: f32,
+        apply_to: LinearGradientApplyTo,
+        intensity: f32,
+    ) -> LinearGradientShader {
         LinearGradientShader {
             gradient: Gradient {
                 stops: black_to_white().stops,
@@ -286,7 +290,10 @@ mod tests {
         let right = shader.style_at(&ctx(9, 0, 10, 1), base_style());
         let r = right.fg.r as i32;
         // 50% blend between 50 and 255 ≈ 152 or 153 depending on rounding.
-        assert!((151..=154).contains(&r), "expected halfway blend, got r={r}");
+        assert!(
+            (151..=154).contains(&r),
+            "expected halfway blend, got r={r}"
+        );
     }
 
     #[test]
@@ -314,7 +321,10 @@ mod tests {
             for x in 0..10 {
                 let cell = shader.style_at(&ctx(x, y, 10, 10), base_style());
                 let same_y_other_x = shader.style_at(&ctx((x + 1) % 10, y, 10, 10), base_style());
-                assert_eq!(cell.fg, same_y_other_x.fg, "fg should not depend on x at angle=90");
+                assert_eq!(
+                    cell.fg, same_y_other_x.fg,
+                    "fg should not depend on x at angle=90"
+                );
             }
         }
     }
@@ -336,8 +346,14 @@ mod tests {
         // anti-diagonal as the centre. Distinct from the old buggy
         // behaviour where TR matched BR (both on the bottom row of a
         // vertical sweep).
-        assert_eq!(tr.fg, bl.fg, "TR and BL should sit on the same anti-diagonal at 45°");
-        assert_ne!(tr.fg, br.fg, "TR must NOT match BR at angle=45 (the old bug)");
+        assert_eq!(
+            tr.fg, bl.fg,
+            "TR and BL should sit on the same anti-diagonal at 45°"
+        );
+        assert_ne!(
+            tr.fg, br.fg,
+            "TR must NOT match BR at angle=45 (the old bug)"
+        );
     }
 
     #[test]

@@ -6,7 +6,7 @@
 
 use crate::traits::{ShaderContext, StyleShader};
 use serde::{Deserialize, Serialize};
-use tui_vfx_geometry::{wipe_visible_at, WipeDirection};
+use tui_vfx_geometry::{WipeDirection, wipe_visible_at};
 use tui_vfx_types::Style;
 
 /// Type alias for the canonical wipe-direction vocabulary.
@@ -57,7 +57,14 @@ impl StyleShader for RevealWipeShader {
         // we keep the base style (revealed); for unrevealed cells we set
         // fg = bg so the text is invisible against its own background.
         let progress = (ctx.t as f32).clamp(0.0, 1.0);
-        if wipe_visible_at(self.direction, ctx.local_x, ctx.local_y, ctx.width, ctx.height, progress) {
+        if wipe_visible_at(
+            self.direction,
+            ctx.local_x,
+            ctx.local_y,
+            ctx.width,
+            ctx.height,
+            progress,
+        ) {
             base
         } else {
             let mut style = base;
