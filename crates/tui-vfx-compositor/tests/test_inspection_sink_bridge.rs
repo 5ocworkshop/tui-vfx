@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compositor/tests/test_inspection_sink_bridge.rs</FILE> - <DESC>Integration test: installing an InspectionSinkBridge on render_pipeline produces TraceEvents; existing CompositorInspector impls keep working</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.4 — bridge regression test. Drives render_pipeline once with InspectionSinkBridge and once with a hand-rolled CompositorInspector; asserts both paths reach the same per-cell stages and the bridge produces a non-empty TraceReport with the expected variants.</WCTX>
-// <CLOG>0.1.0: initial red-phase bridge integration test.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Update the minimal-config sampler assertion to match the post-8dfcadf "absent samplers stay out of inspected traces" policy.</WCTX>
+// <CLOG>existing_compositor_inspector_impls_keep_working: when no sampler is configured the inspector must observe 0 on_sampler_applied callbacks (was 12, the synthetic None#1-fallback count).</CLOG>
 
 use std::sync::Arc;
 
@@ -213,12 +213,13 @@ fn existing_compositor_inspector_impls_keep_working() {
         4 * 3,
         "every cell reports on_cell_rendered"
     );
-    // Sampler fires on every (x, y) pair even in the minimal config
-    // (inspected path always calls on_sampler_applied).
+    // No sampler is configured in minimal_options(). Since 8dfcadf the
+    // inspected path no longer synthesises a fallback `None#1` sampler
+    // label, so absent samplers stay out of the trace and the inspector
+    // observes zero on_sampler_applied callbacks.
     assert_eq!(
-        inspector.sampler,
-        4 * 3,
-        "every cell reports on_sampler_applied"
+        inspector.sampler, 0,
+        "absent sampler must not fire on_sampler_applied",
     );
     assert_eq!(inspector.mask, 0);
     assert_eq!(inspector.shader, 0);

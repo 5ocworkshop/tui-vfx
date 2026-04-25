@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx/tests/test_foundation_end_to_end.rs</FILE> - <DESC>End-to-end integration test proving the Sub-plan A foundation (A.1 primitives + A.2 pipeline + A.3 shadow role write-back + A.4 trace sink) composes cleanly</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.5 — single integration test that constructs a SemanticScene with non-trivial role tags (Background + Border + Text + Image), runs it through render_pipeline with a Role(Border) shader AND a shadow stage whose source_region is Role::Border, captures events through a TraceSink, and asserts: (a) destination RoleMap has RoleTag::Shadow where the shadow stage wrote cells, (b) captured events match the expected stage sequence, (c) NDJSON round-trip preserves ordering.</WCTX>
-// <CLOG>0.1.0: initial end-to-end proof. Exercises every foundation primitive shipped by Sub-plans A.1-A.4 in one scenario so a regression in any phase surfaces here.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Audit Phase 7 prep — restore the cargo-test build after Phase 2 added `apply_to` and `intensity` to LinearGradientShader without updating this test fixture's struct literal.</WCTX>
+// <CLOG>Pass back-compat `apply_to: Foreground` and `intensity: 1.0` to LinearGradientShader so the test compiles after Phase 2 extended the struct.</CLOG>
 
 //! End-to-end integration test for Sub-plan A (Foundation).
 //!
@@ -29,7 +29,9 @@ use tui_vfx_compositor::traits::cls_inspection_sink_bridge::{
 use tui_vfx_debug::inspection::{
     StageMask, TraceEvent, TraceFilter, TraceReport, TraceSelector, TraceSink,
 };
-use tui_vfx_style::models::{ColorSpace, Gradient, LinearGradientShader, StyleRegion};
+use tui_vfx_style::models::{
+    ColorSpace, Gradient, LinearGradientApplyTo, LinearGradientShader, StyleRegion,
+};
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid, RecipeId, RoleMap, RoleTag, SemanticScene};
 
 /// Build a 10×6 source grid and paired role map used by the test.
@@ -89,6 +91,8 @@ fn shader_blue() -> LinearGradientShader {
             space: ColorSpace::Rgb,
         },
         angle_deg: 0.0,
+        apply_to: LinearGradientApplyTo::Foreground,
+        intensity: 1.0,
     }
 }
 

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/tests/models/test_effect_descriptions.rs</FILE> - <DESC>Tests for effect documentation methods</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>Cover Orbit shader in spatial effect documentation tests</WCTX>
-// <CLOG>Add Orbit shader to name/description coverage</CLOG>
+// <VERS>VERSION: 1.2.1</VERS>
+// <WCTX>Audit Phase 7 prep — restore the cargo-test build after Phase 2 added `apply_to` and `intensity` to LinearGradientShader without updating these two test fixture struct literals.</WCTX>
+// <CLOG>Pass back-compat `apply_to: Foreground` and `intensity: 1.0` to both LinearGradientShader literals so the file compiles after Phase 2 extended the struct.</CLOG>
 
 use tui_vfx_geometry::easing::EasingType;
 use tui_vfx_geometry::types::EasingCurve;
@@ -19,7 +19,9 @@ use tui_vfx_style::models::cls_focused_row_gradient_shader::FocusedRowGradientSh
 use tui_vfx_style::models::cls_glisten_band_shader::GlistenBandShader;
 use tui_vfx_style::models::cls_glitch_lines_shader::GlitchLinesShader;
 use tui_vfx_style::models::cls_highlighter_shader::HighlighterShader;
-use tui_vfx_style::models::cls_linear_gradient_shader::LinearGradientShader;
+use tui_vfx_style::models::cls_linear_gradient_shader::{
+    LinearGradientApplyTo, LinearGradientShader,
+};
 use tui_vfx_style::models::cls_neon_flicker_shader::NeonFlickerShader;
 use tui_vfx_style::models::cls_orbit_shader::OrbitShader;
 use tui_vfx_style::models::cls_pulse_wave_shader::PulseWaveShader;
@@ -86,6 +88,8 @@ fn test_spatial_shader_name_returns_nonempty() {
         SpatialShaderType::LinearGradient(LinearGradientShader {
             gradient: Gradient::default(),
             angle_deg: 0.0,
+            apply_to: LinearGradientApplyTo::Foreground,
+            intensity: 1.0,
         }),
     ];
 
@@ -146,6 +150,8 @@ fn test_spatial_shader_description_returns_nonempty() {
         SpatialShaderType::LinearGradient(LinearGradientShader {
             gradient: Gradient::default(),
             angle_deg: 0.0,
+            apply_to: LinearGradientApplyTo::Foreground,
+            intensity: 1.0,
         }),
     ];
 

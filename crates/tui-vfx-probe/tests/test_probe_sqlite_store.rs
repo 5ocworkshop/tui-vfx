@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>TDD for the embedded SQLite query backend including full trace snapshots</WCTX>
-// <CLOG>MINOR: Extend SQLite store coverage to prove report-level diagnostics are indexed and queryable alongside raw probe frames/traces and operational analysis</CLOG>
+// <VERS>VERSION: 0.4.1</VERS>
+// <WCTX>Audit Phase 7 prep — align test_sqlite_store_indexes_frame_report_cells_and_trace_events with the post-0.2.0 alpha-border-diagnostic gate that requires the row to actually look like a border row before reporting an alphabetic-character violation.</WCTX>
+// <CLOG>test_sqlite_store_indexes_frame_report_cells_and_trace_events: drop the alpha-on-border diagnostic-count assertion because the dim_scene fixture has no border glyphs and the gate now (correctly) skips those rows; the test still validates probe_cells and probe_trace_events indexing, which is its named subject.</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use serde_json::json;
@@ -120,12 +120,19 @@ fn test_sqlite_store_indexes_frame_report_cells_and_trace_events() {
         .query_json("select count(*) as count from probe_trace_events where stage = 'filter' and before_bg_r is not null and after_bg_r is not null")
         .unwrap();
     assert_eq!(bg_snapshot_rows[0]["count"], 6);
+    // Diagnostic emission is gated on rows that actually look like border
+    // rows (see fnc_collect_basic_diagnostics 0.2.0). The dim_scene
+    // fixture has no border glyphs, so no alpha-on-border diagnostics
+    // fire and the diagnostics table is empty for this scene. Border
+    // diagnostic emission has dedicated coverage in
+    // test_probe_diagnostics.rs and test_probe_frame_dump.rs.
     let diagnostic_rows = store
-        .query_json("select code from probe_diagnostics order by code")
+        .query_json("select code from probe_diagnostics")
         .unwrap();
-    assert_eq!(diagnostic_rows.len(), 2);
-    assert_eq!(diagnostic_rows[0]["code"], "alpha_on_bottom_border");
-    assert_eq!(diagnostic_rows[1]["code"], "alpha_on_top_border");
+    assert!(
+        diagnostic_rows.is_empty(),
+        "no border glyphs in dim_scene → no alpha-on-border diagnostics expected"
+    );
 }
 
 #[test]

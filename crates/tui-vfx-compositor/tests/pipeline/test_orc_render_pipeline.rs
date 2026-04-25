@@ -1,9 +1,7 @@
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>VERSION: 5.6.0</VERS>
-// <WCTX>Sub-plan A Phase A.3.3 — reintroduce `.clone()` at ShadowSpec::new call sites; ShadowConfig is no longer Copy (new `source_region: Option<RoleTag>` field contains Arc<str> via RoleTag::Custom).</WCTX>
-// <CLOG>5.6.0: MINOR — restore `.clone()` on every ShadowSpec::new(shadow_config) call site; ShadowConfig lost Copy in v0.6.0 when it gained source_region: Option<RoleTag>.
-// 5.5.0: MINOR — rename render_pipeline → render_pipeline_legacy shim; no behavior change under test.
-// 5.4.1: Drop redundant ShadowConfig clone() since the type is Copy (clippy::clone_on_copy)</CLOG>
+// <VERS>VERSION: 5.6.1</VERS>
+// <WCTX>Audit Phase 7 prep — restore the half-block-specific edge geometry assertions in test_shadow_extends_render_area after the V3 transparent-shadow tranche changed the default style to Solid.</WCTX>
+// <CLOG>test_shadow_extends_render_area: pin the shadow style to ShadowStyle::HalfBlock so the bg=shadow / fg=shadow sub-cell edge assertions match the half-block geometry the test was written for.</CLOG>
 
 #[path = "test_helpers.rs"]
 mod test_helpers;
@@ -15,7 +13,7 @@ use tui_vfx_compositor::pipeline::{CompositionOptions, ShadowSpec};
 use tui_vfx_compositor::types::{
     ApplyTo, Axis, FilterSpec, MaskCombineMode, MaskSpec, SamplerSpec, WipeDirection,
 };
-use tui_vfx_shadow::{ShadowConfig, ShadowEdges};
+use tui_vfx_shadow::{ShadowConfig, ShadowEdges, ShadowStyle};
 use tui_vfx_types::{Cell, Color, Grid, GridExt, OwnedGrid};
 
 /// Helper to create a source grid with content
@@ -699,9 +697,15 @@ fn test_shadow_extends_render_area() {
         ..Default::default()
     });
 
+    // The HalfBlock style is required to drive the half-block-specific
+    // sub-cell shadow geometry asserted below; the default style was
+    // changed to ShadowStyle::Solid (full-cell bg fill) in the V3
+    // transparent-shadow tranche, which produces fg=transparent at the
+    // edge cells and would silently invalidate this test's intent.
     let shadow_config = ShadowConfig::new(Color::BLACK.with_alpha(200))
         .with_offset(2, 1)
-        .with_edges(ShadowEdges::BOTTOM_RIGHT);
+        .with_edges(ShadowEdges::BOTTOM_RIGHT)
+        .with_style(ShadowStyle::HalfBlock);
 
     render_pipeline_legacy(
         &source,

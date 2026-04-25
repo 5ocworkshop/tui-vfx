@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_operational_analysis.rs</FILE> - <DESC>Regression tests for direct probe operational analysis</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>TDD for direct compositor-stage success/failure summaries layered on top of probe reports</WCTX>
-// <CLOG>0.4.0: lock multi-sampler chain analysis so configured sampler rows stay successful when inspected traces collapse them into one ordered chain label.</CLOG>
+// <VERS>VERSION: 0.4.1</VERS>
+// <WCTX>Audit Phase 7 prep — align the success-for-filter-stage test with the post-119e785 inactive-vs-failure semantic where unconfigured stages are Inactive (not Failure) and therefore do not poison the combined operational status.</WCTX>
+// <CLOG>test_collect_probe_operational_analysis_reports_success_for_filter_stage: combined.status is now Success when only the filter stage is configured and produces events; unconfigured sampler/mask/shader stages classify as Inactive, not Failure.</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::CompositionSpec;
@@ -95,7 +95,10 @@ fn test_collect_probe_operational_analysis_reports_success_for_filter_stage() {
     .expect("report should build");
 
     let analysis = collect_probe_operational_analysis("frame", &[report]);
-    assert_eq!(analysis.combined.status, ProbeOperationalStatus::Failure);
+    // Only the filter stage is configured. The other stages classify as
+    // Inactive (configured_count == 0) rather than Failure, so they do
+    // not appear in `failing_stages` and the combined status is Success.
+    assert_eq!(analysis.combined.status, ProbeOperationalStatus::Success);
     assert!(analysis.stages.iter().any(|stage| stage.stage == "filter"
         && stage.status == ProbeOperationalStatus::Success
         && stage.observed_event_count > 0
