@@ -237,11 +237,14 @@ ShadowConfig::new(Color::BLACK.with_alpha(128))
 ShadowConfig::new(Color::BLACK.with_alpha(160))
     .with_offset(0, 1)
     .with_edges(ShadowEdges::BOTTOM)
-    .with_symmetric_inset(2, 0)
     .with_falloff(2, 0)
 ```
 
-This renders only the bottom run, inset two cells from each horizontal edge, with transparent alpha falloff at each end. It reads like a more overhead light position than the usual down-right drop shadow while preserving/dimming content underneath.
+This renders only the bottom run. Because it is bottom-only with `offset_x = 0`
+and no explicit horizontal insets, it defaults to two cells in from each
+horizontal edge. The falloff adds transparent alpha tapering at each end. It
+reads like a more overhead light position than the usual down-right drop shadow
+while preserving/dimming content underneath.
 
 ### Soft Gradient Shadow
 ```rust

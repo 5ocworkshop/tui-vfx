@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/types/shadow_config.rs</FILE> - <DESC>Shadow configuration with builder pattern</DESC>
 // <VERS>VERSION: 0.9.0</VERS>
 // <WCTX>Sub-plan A Phase A.3.3 — add `source_region: Option<RoleTag>` so consumers can restrict shadow extrusion to cells whose source-map role matches (e.g. only extrude from Border cells instead of the whole widget rect). Default `None` preserves today's rect-based extrusion.</WCTX>
-// <CLOG>0.9.0: add optional side-edge subcell coverage for optical shadow columns.</CLOG>
+// <CLOG>0.9.0: center bottom-only shadows by default with a two-cell horizontal inset.</CLOG>
 
 //! # Shadow Configuration
 //!
@@ -311,9 +311,12 @@ impl ShadowConfig {
 
     /// Return the horizontal span for top/bottom shadow runs.
     ///
-    /// Existing recipes without explicit insets preserve legacy offset-derived
-    /// trimming. When either start or end inset is supplied, the span is based
-    /// on the element bounds and trims each supplied side explicitly.
+    /// Bottom-only shadows with no explicit horizontal inset default to a
+    /// symmetric two-cell inset from both left and right edges. That makes the
+    /// common overhead-light shadow read centered by default. When either start
+    /// or end inset is supplied, the span is based on the element bounds and
+    /// trims each supplied side explicitly. Other edge combinations preserve
+    /// legacy offset-derived trimming.
     #[inline]
     pub(crate) fn horizontal_shadow_span(
         &self,
@@ -325,6 +328,8 @@ impl ShadowConfig {
             let start = rect_x + self.inset_x.map(i32::from).unwrap_or(0);
             let end = rect_x + rect_w - self.inset_x_end.map(i32::from).unwrap_or(0);
             ordered_nonnegative_span(start, end)
+        } else if ox == 0 && self.edges == ShadowEdges::BOTTOM {
+            ordered_nonnegative_span(rect_x + 2, rect_x + rect_w - 2)
         } else {
             ordered_nonnegative_span(rect_x + ox.max(0) + 1, rect_x + rect_w + ox.min(0))
         }
@@ -511,6 +516,26 @@ mod tests {
         let json = serde_json::to_string(&config).unwrap();
         let restored: ShadowConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(restored.side_coverage_eighths, Some(8));
+    }
+
+    #[test]
+    fn bottom_only_horizontal_span_defaults_to_symmetric_two_cell_inset() {
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+            .with_offset(0, 1)
+            .with_edges(ShadowEdges::BOTTOM);
+
+        assert_eq!(config.horizontal_shadow_span(4, 10, 0), (6, 12));
+    }
+
+    #[test]
+    fn explicit_horizontal_inset_overrides_bottom_only_default() {
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(180))
+            .with_offset(0, 1)
+            .with_edges(ShadowEdges::BOTTOM)
+            .with_inset(1, 0)
+            .with_inset_end(3, 0);
+
+        assert_eq!(config.horizontal_shadow_span(4, 10, 0), (5, 11));
     }
 
     #[test]

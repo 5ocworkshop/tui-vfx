@@ -447,8 +447,9 @@
     #   - `color` carries transparent-shadow alpha explicitly
     #   - `source_region` restricts extrusion to role-tagged source cells
     #   - `inset` trims the start of top/bottom and left/right runs; `inset_end`
-    #     trims the opposite side so bottom-only shadows can be centered under a
-    #     surface, e.g. two cells in from both horizontal edges.
+    #     trims the opposite side. Bottom-only shadows default to two cells in
+    #     from both horizontal edges when these fields are omitted, so the
+    #     overhead-light shadow is centered by default.
     #   - `falloff` tapers shadow alpha at horizontal/vertical run ends while
     #     preserving transparent/dimmed content under the shadow.
     #   - `side_coverage_eighths` optionally renders left/right solid shadow

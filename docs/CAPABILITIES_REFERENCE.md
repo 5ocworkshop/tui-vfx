@@ -868,8 +868,8 @@ Ten curated recipes under `tui-vfx-recipes/recipes/debug_recipes/content/` exerc
 | `style` | ShadowStyle | Rendering technique |
 | `offset_x` | i8 | X offset (positive = right) |
 | `offset_y` | i8 | Y offset (positive = down) |
-| `inset_x` | Option<u8> | Trim the start of top/bottom shadow runs, e.g. left side of a bottom shadow |
-| `inset_x_end` | Option<u8> | Trim the end of top/bottom shadow runs, e.g. right side of a bottom shadow |
+| `inset_x` | Option<u8> | Trim the start of top/bottom shadow runs, e.g. left side of a bottom shadow; bottom-only defaults to 2 when unset |
+| `inset_x_end` | Option<u8> | Trim the end of top/bottom shadow runs, e.g. right side of a bottom shadow; bottom-only defaults to 2 when unset |
 | `inset_y` | Option<u8> | Trim the start of left/right shadow runs, e.g. top of a right shadow |
 | `inset_y_end` | Option<u8> | Trim the end of left/right shadow runs, e.g. bottom of a right shadow |
 | `falloff_x` | Option<u8> | Alpha falloff cells at the start/end of top/bottom runs |

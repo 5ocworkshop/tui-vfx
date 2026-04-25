@@ -351,6 +351,24 @@ mod tests {
     }
 
     #[test]
+    fn bottom_only_shadow_defaults_to_two_cell_symmetric_horizontal_inset() {
+        let mut grid = OwnedGrid::new(20, 10);
+        let rect = Rect::new(4, 2, 10, 3);
+        let config = ShadowConfig::new(Color::BLACK.with_alpha(200))
+            .with_offset(0, 1)
+            .with_edges(ShadowEdges::BOTTOM);
+
+        SolidRenderer::render(&mut grid, rect, &config, 1.0);
+
+        assert_eq!(grid.get(4, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_eq!(grid.get(5, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_ne!(grid.get(6, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_ne!(grid.get(11, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_eq!(grid.get(12, 5).unwrap().bg, Color::TRANSPARENT);
+        assert_eq!(grid.get(13, 5).unwrap().bg, Color::TRANSPARENT);
+    }
+
+    #[test]
     fn bottom_shadow_falloff_reduces_alpha_at_horizontal_ends() {
         let mut grid = OwnedGrid::new(20, 10);
         let rect = Rect::new(4, 2, 10, 3);
