@@ -1,7 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.5.6</VERS> -->
-<!-- <WCTX>Keep durable steering guidance focused on architectural boundaries, canonical vocabulary, authoring ergonomics, index hygiene, debug-recipe quality, schema-language consistency, and architecture-first onboarding.</WCTX> -->
-<!-- <CLOG>0.5.6: add comparison guardrail so architecture-first positioning does not erase effects-pipeline competitiveness.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.7</VERS> -->
+<!-- <WCTX>Keep durable steering guidance focused on architectural boundaries, canonical vocabulary, authoring ergonomics, index hygiene, debug-recipe quality, schema-language consistency, architecture-first onboarding, and commit-message provenance policy.</WCTX> -->
+<!-- <CLOG>0.5.7: prohibit co-author credit trailers or agent-credit lines in commit messages. 0.5.6: add comparison guardrail so architecture-first positioning does not erase effects-pipeline competitiveness.</CLOG> -->
 
 # Intentions
 
@@ -33,6 +33,19 @@ Where this applies: `MARKETING.md`, `README.md` files, rustdoc on public items, 
 Why: developers filter for signal. Filler makes them work harder to find what matters. Grandiose framing reads as insecurity about the actual capability — the opposite of what we want. Schema regularity applies to prose too; a regular voice is easier for human readers to scan and for AI authors to produce reliably.
 
 What this is *not* saying: don't be dry for its own sake. Clarity and personality coexist. The rule is "cut the filler," not "strip the voice."
+
+## Commit message provenance policy
+
+Do not add co-author credits to commit messages. This includes `Co-authored-by:`
+trailers, tool-generated agent credit lines, model/tool signature footers, and any
+other commit-message text whose purpose is to credit an AI assistant or secondary
+author. Commit messages should record intent, constraints, decisions, rejected
+alternatives, and verification evidence — not authorship attribution beyond the
+Git author/committer metadata already present.
+
+Why: commit history is a decision log for maintainers. Extra credit trailers add
+noise, can violate project attribution policy, and make future archaeology harder
+without improving the technical record.
 
 ---
 
@@ -600,4 +613,4 @@ recipes first. That is the map needed to use V3 seriously.
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.6</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.7</VERS> -->
