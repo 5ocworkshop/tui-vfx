@@ -79,6 +79,7 @@ These still shape implementation, validation, migration, or release-gate follow-
 - [V3 core pipeline readiness matrix](tui-vfx-v3-core-pipeline-readiness-matrix.md)
 - [V3 spatial field hint plan](tui-vfx-v3-spatial-field-hint-plan.md)
 - [V3 scene content integration plan](tui-vfx-v3-scene-content-integration-plan.md)
+- [V3 per-cell motion plan](tui-vfx-v3-per-cell-motion-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
 - [V3 recipe ingredients reference plan](tui-vfx-v3-recipe-ingredients-reference-plan.md)
 - [V3 release-gate manifest seed](tui-vfx-v3-release-gate-manifest.md)
@@ -142,6 +143,7 @@ primitive behavior.
 - [V3 core pipeline readiness matrix](tui-vfx-v3-core-pipeline-readiness-matrix.md)
 - [V3 spatial field hint plan](tui-vfx-v3-spatial-field-hint-plan.md)
 - [V3 scene content integration plan](tui-vfx-v3-scene-content-integration-plan.md)
+- [V3 per-cell motion plan](tui-vfx-v3-per-cell-motion-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
 
 ## Tooling and edge adapters
