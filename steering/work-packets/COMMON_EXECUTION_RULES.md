@@ -9,6 +9,31 @@ Assume the assigned subagent is a junior-but-capable engineer:
 - do not assume they will naturally stay narrow without written out-of-scope bullets
 - require concrete verification and reporting
 
+## gpt-5.5 low lane lessons
+When dispatching an unroled `gpt-5.5` low agent:
+- keep the packet concrete and narrower than a normal frontier packet
+- do not assign a role if the owner requested the raw model/effort lane
+- include exact write scope and explicit non-goals; this lane can execute well
+  but should not be asked to infer architecture boundaries from broad plans
+- include one canonical input fixture or JSON snippet for schema/parser packets
+  so the agent does not need to infer the intended authored shape
+- name tricky semantic edge cases as tests, especially coordinate-frame,
+  timing, cache, and schema-default behavior
+- for schema/parser packets, require separate tests for acceptance, unknown-field
+  rejection, default application, validation boundaries, and downstream typed
+  propagation
+- for runtime packets, name likely player/preview/probe entrypoints and ask the
+  lane to prove they do not silently drop the new feature
+- when reduced-motion, timing, or cache policy is relevant, require the lane to
+  identify the existing source of truth or explicitly report that no runtime
+  option exists yet
+- require a final self-check for OFPF line pressure, test placement, and whether
+  filtered test commands actually exercised the new tests
+- expect the leader to rerun verification, review semantics, and make small
+  integration fixes before accepting the work
+- one mid-flight status check after localized compile failures is useful; repeated
+  interruptions are unnecessary when the agent is clearly converging
+
 ## OFPF rules
 - Start with `ofpf-orientation --root <repo>` for each repo in scope.
 - Use OFPF reads first: orientation, hotspots, inspect, focus, around.

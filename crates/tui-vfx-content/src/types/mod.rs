@@ -14,6 +14,12 @@ pub mod cls_slide_shift_line_mode;
 pub mod cls_typewriter_cursor;
 pub mod fnc_apply_content_effect;
 
+pub use crate::cell_motion::{
+    CellCollisionMode, CellMotionAffect, CellMotionCoord, CellMotionOptions, CellMotionPhase,
+    CellMotionPhaseSpec, CellMotionScope, CellMotionSpec, CellMotionTiming, CellMotionVisibility,
+    CellPlacement, CellPlacementBasis, CellStagger, CellStaggerAxis, CellStaggerDirection,
+    CellVisibilityMode, apply_cell_motion,
+};
 pub use cls_content_effect::{ContentEffect, OdometerDirection, OdometerTravel};
 pub use cls_dissolve_config::{DissolveDirection, DissolvePattern, DissolveReplacement};
 pub use cls_glyph_cascade::{GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern};

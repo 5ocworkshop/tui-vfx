@@ -91,6 +91,24 @@ Default post-experiment stance:
   judgment, or higher-cost implementation mistakes
 - use `gpt-5.3-codex-spark` with `reasoning_effort: low` only for low-context,
   doc-only helper lanes
+- use unroled `gpt-5.5` with `reasoning_effort: low` when the owner explicitly
+  wants that lane shape or when a packet is implementation-heavy but still
+  concrete enough to avoid architectural freelancing
+  - do not assign a role in the spawn request when the owner asks for this lane;
+    role selection can silently force a different model/effort profile
+  - keep the task packet narrower than a normal frontier packet: exact write
+    scope, exact non-goals, exact tests, and exact edge-case probes are required
+  - expect good in-scope execution and honest reporting, but leader review must
+    still check semantic edge cases, file-size/OFPF pressure, and whether tests
+    landed in the intended harness
+  - prefer sending one mid-flight status check after the first compile/test
+    failure report; do not repeatedly interrupt if the agent is making localized
+    progress
+  - after the agent returns, run the verification locally and do at least one
+    leader-owned edge-case review before accepting the lane
+  - include one canonical JSON/fixture shape when the packet touches parser,
+    schema, or DTO propagation; otherwise the agent may pass the concept but
+    miss a plan-required default or boundary assertion
 - keep up to 5 useful lanes busy when independent work exists
 
 Work packet quality rule:
@@ -126,6 +144,14 @@ Work packet quality rule:
 - packets that authorize edits to metadata-bearing files must include the file
   metadata rule: `<CLOG>` / `// <CLOG>` is only 1-2 short lines about the latest
   file change, not a running history; git is the history
+- for `gpt-5.5` low implementation packets, add explicit self-checks for:
+  - non-obvious coordinate-frame or timing semantics named by the plan
+  - OFPF soft/hard line pressure before final report
+  - whether test filters actually ran the new tests
+  - any pre-existing dirty files so the helper does not claim ownership of
+    unrelated changes
+  - whether parser/schema tests cover both acceptance and defaults, not just
+    propagation through later phases
 
 Post-experiment evidence trace:
 - `/usr/projects/tui-vfx/steering/experiments/subagent-briefing-experiment-results.md`
@@ -145,6 +171,24 @@ Post-experiment evidence trace:
 - codex-spark operational learnings from the doc-task experiment family remain
   stable: use spark for low-context doc surfaces only, not for runtime lanes or
   broad repo-context work
+- first `gpt-5.5` low Packet 1 for V3 per-cell motion was strong enough to use
+  again: it stayed in scope, read the required docs, produced passing tests, and
+  reported honestly. Leader review still found a semantic coordinate-frame issue
+  (`local_frame` origin vs returned scene-local coordinates) and OFPF/test
+  placement cleanup. Lesson: this lane is effective when the packet spells out
+  tricky semantics as direct tests, but final acceptance remains a leader-owned
+  integration/review step.
+- second `gpt-5.5` low Packet 2 reinforced the pattern: it cleanly carried typed
+  cell-motion data through recipes DTO/normalization/compile and ran the right
+  docs check, but leader review added the missing parser-default assertion. For
+  schema packets, tasking should include a canonical JSON snippet plus a checklist
+  for accept/reject/default/propagation tests.
+- third `gpt-5.5` low Packet 3 showed that implementation lanes can find the
+  real runtime seam when tasking permits narrow repo-boundary adjustment: root
+  runtime integration lived in `tui-vfx-recipes`, not the compositor crate. For
+  runtime packets, name likely preview/player/probe surfaces and explicitly ask
+  for reduced-motion source discovery plus remaining tooling touchpoints, rather
+  than assuming the engine repo owns the whole path.
 
 Current model/task routing after the experiment family closed:
 - `gpt-5.4-mini` with `reasoning_effort: medium` is the operational default

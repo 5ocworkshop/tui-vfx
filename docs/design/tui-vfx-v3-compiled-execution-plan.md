@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-compiled-execution-plan.md</FILE> - <DESC>Working design note for the initial V3 compiled execution plan. Defines the layer between normalized IR and later runtime family execution, especially the first selector-compaction rules and consumer seams.</DESC> -->
-<!-- <VERS>VERSION: 0.18.0</VERS> -->
+<!-- <VERS>VERSION: 0.19.0</VERS> -->
 <!-- <WCTX>Keep the compiled execution-plan note aligned with the as-built timing model, Parallel semantics, and landed field-hint consumer proofs.</WCTX> -->
-<!-- <CLOG>0.18.0: record XFC-03 mixed-family overlap/conflict guard coverage.
+<!-- <CLOG>0.19.0: record that compiled plans preserve root/layer cell_motion before downstream pipeline execution.
+0.18.0: record XFC-03 mixed-family overlap/conflict guard coverage.
 0.17.0: record XFC-02 post-Parallel sampler/style-effect consumer coverage.
 0.16.0: record XFC-01 root cross-family sequence coverage across sampler/filter/mask/shader/style-effect lanes.
 0.15.0: point the post-SCHED-04 execution work at the cross-family coverage plan.
@@ -156,6 +157,21 @@ making:
 - probe / validator motion-boundary diagnostics
 
 ---
+
+## 3.2 Per-cell motion in compiled plans
+
+Per-cell motion is preserved outside the compiled pipeline leaf algebra. The
+compiled plan carries it on the root envelope and on scene-layer plans so runtime
+can apply it at the source-cell boundary:
+
+```text
+root content cells -> config.content.cell_motion -> root pipeline
+layer source cells -> scene.layers[*].cell_motion -> layer pipeline -> placement
+```
+
+This keeps the StepKind set unchanged. Downstream compiled leaves see the moved
+semantic grid, which is why debug fixtures can prove `cell_motion` followed by an
+`AnimatedGlyphRamp` filter or shader chain without adding a `cell_motion` leaf.
 
 ## 4. First compaction rule
 

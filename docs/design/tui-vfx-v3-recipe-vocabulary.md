@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.1</VERS> -->
 <!-- <WCTX>Audit recommendation 1.4 — add the canonical V3 scope vocabulary section so authors learn the full scope kind list, including the new `modulo` authoring scope (axis + modulus + remainder) that exposes the engine's long-existing StyleRegion::Modulo to recipe writers.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — add new section "Canonical V3 scope vocabulary" that catalogues all V3 scope kinds, documents the new `modulo` scope (axis: horizontal | vertical, plus integer modulus and remainder), explains the axis-naming rule (horizontal scans rows top→bottom, vertical scans columns left→right), and lists which scope kinds support runtime bindings today vs. literal-only.
+<!-- <CLOG>0.4.1: MINOR — add per-cell motion vocabulary for cell_motion homes, placements, and first-slice choreography limits.
+0.4.0: MINOR — add new section "Canonical V3 scope vocabulary" that catalogues all V3 scope kinds, documents the new `modulo` scope (axis: horizontal | vertical, plus integer modulus and remainder), explains the axis-naming rule (horizontal scans rows top→bottom, vertical scans columns left→right), and lists which scope kinds support runtime bindings today vs. literal-only.
 0.3.0: MINOR — wipe-direction vocabulary section grew from 12 canonical variants to 20 (cardinal + diagonal + centre/edge + corner-out + corner-in). Added the diagonal-vs-corner-arc explanatory note. Documented that the same vocabulary is shared by the Wipe mask, the RevealWipe shader, and the V3 grouped reveal family at the engine level via one canonical WipeDirection in tui-vfx-geometry.
 0.2.9: add sibling authoring-doc routing for ingredients, schema, procedural sources, and tooling.</CLOG> -->
 
@@ -214,6 +215,35 @@ Important:
 - these are currently **authoring guidance terms**, not first-class schema
   fields
 - the schema already supports them by giving enter and exit independent payloads
+
+## 5.1 Per-cell motion vocabulary
+
+Use **per-cell motion** for the V3 source-cell remapping feature authored as
+`cell_motion`. It is not host motion and not a pipeline step.
+
+Canonical homes:
+
+- `config.content.cell_motion` — root message/content cells only. Border, title,
+  shadow, and other chrome stay fixed.
+- `scene.layers[*].cell_motion` — layer-local source cells before the
+  layer-local pipeline and before layer placement.
+
+Canonical placement words in docs and examples:
+
+- `authored` — the cell's source coordinate.
+- `origin` — an anchor resolved against `selection_bounds` or `local_frame`.
+- `offscreen` — just outside the local frame, using `from_top`, `from_bottom`,
+  `from_left`, or related slide directions.
+- `absolute` — one explicit local-frame coordinate.
+
+Use **MiddleOut first-slice approximation** for `origin(selection_bounds center)`
+`-> authored`. Exact TTE MiddleOut needs two stages and remains a multi-track /
+phase-internal sequencing follow-up.
+
+Use **Slice first-slice fixture** for two scene text layers: top scoped layer from
+`offscreen from_top`, bottom scoped layer from `offscreen from_bottom`. Do not
+teach a one-track single-layer Slice until `cell_motion` grows multi-track
+authoring.
 
 ## 6. Reveal-geometry vocabulary
 

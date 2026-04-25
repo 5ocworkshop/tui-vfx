@@ -99,6 +99,7 @@
 //! let custom = TypewriterCursor::simple('◆');   // any single glyph
 //! ```
 
+pub mod cell_motion;
 pub mod cursor;
 mod mechanical;
 pub mod pool;

@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>VERSION: 0.3.3</VERS> -->
+<!-- <VERS>VERSION: 0.3.4</VERS> -->
 <!-- <WCTX>Keep the schema overview aligned with V3 vocabulary, distributed timing, metadata posture, border/title fields, and shadow snapshot renderer boundaries.</WCTX> -->
-<!-- <CLOG>0.3.3: record that V3 shadow snapshots render through grid/scene-first APIs with ratatui as an adapter.</CLOG> -->
+<!-- <CLOG>0.3.4: document the first-slice per-cell motion schema homes and debug fixtures. 0.3.3: record that V3 shadow snapshots render through grid/scene-first APIs with ratatui as an adapter.</CLOG> -->
 
 # tui-vfx V3 Schema Overview
 
@@ -124,6 +124,23 @@ Authoring implication:
   oscillation should consume elapsed time rather than deriving cadence from
   reset-on-loop progress
 
+### 2.3 Per-cell motion posture
+
+V3 per-cell motion is a source-cell remapping pass, not a pipeline `StepKind`.
+It runs before downstream masks, samplers, filters, shaders, and style effects.
+The first schema homes are deliberately narrow:
+
+- `config.content.cell_motion` for root message/content cells only; it does not
+  select border, title, shadow, or host chrome.
+- `scene.layers[*].cell_motion` for layer-local source cells before the
+  layer-local pipeline and before scene placement.
+
+The first slice supports `enter` and `exit`, one track per phase, authored/source
+coordinate scopes, deterministic staggering, and placements such as `authored`,
+`origin`, `absolute`, and `offscreen`. Exact two-stage MiddleOut and one-layer
+Slice choreography need future multi-track or phase-internal sequencing; current
+fixtures use the documented first-slice forms.
+
 ### 2.2 Metadata posture
 
 V3 metadata is optional and non-rendering. When authors choose to add it, the
@@ -163,8 +180,9 @@ Recipe
    ├─ message?
    ├─ content?
    │  ├─ mode
-   │  └─ effect
-   │     └─ deep renderer subtree
+   │  ├─ effect
+   │  │  └─ deep renderer subtree
+   │  └─ cell_motion?
    ├─ layout
    ├─ lifecycle
    ├─ border
@@ -186,6 +204,7 @@ Recipe
    │     ├─ source
    │     ├─ placement?
    │     ├─ surface?
+   │     ├─ cell_motion?
    │     └─ pipeline?
    └─ pipeline
       ├─ timing

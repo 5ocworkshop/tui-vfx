@@ -23,6 +23,11 @@ By the end of this packet:
 ## Mode
 [BLOCKER_MODE by default; FAMILY_MODE only when the packet is explicitly family-wide]
 
+## Agent lane / model constraints
+[If the owner requested an unroled model lane, state it here. Example:
+`Use unroled gpt-5.5 low. Do not assign a specialist role because that may
+change the model/effort profile.` Delete this section when not relevant.]
+
 ## Task-scope paths for grounding
 These are the exact files/areas you should use to understand the problem before you decide what the write scope is:
 - `[full path]`
@@ -84,6 +89,21 @@ motion route, shadow, scope, binding, or adjacent V3 pipeline file:
 - keep `<CLOG>` entries to the latest one- or two-line summary and update
   relevant `INDEX.md` files when docs move or become canonical
 
+## Test-shape requirements
+If this packet touches schema/parser behavior, include or point to one canonical
+authored JSON fixture and require focused coverage for:
+- accepted minimal form
+- rejected unknown nested fields
+- defaulted omitted fields
+- validation boundary errors
+- typed propagation into downstream IR/compiled structures
+
+If this packet touches runtime behavior, name likely player/preview/probe
+entrypoints and require focused coverage that those surfaces do not silently
+drop the new feature. If reduced-motion, timing, or cache policy matters, require
+the packet to identify the existing source of truth or report the missing seam
+as a handoff.
+
 ## First steps / grounding instructions
 1. Run `ofpf-orientation` on each repo in scope.
 2. Read the must-read docs in order before broader file reads.
@@ -92,6 +112,11 @@ motion route, shadow, scope, binding, or adjacent V3 pipeline file:
    - what counts as done
    - what the biggest scope risk is
 4. Do the narrowest repo inspection needed before editing.
+5. If this is a `gpt-5.5` low lane, explicitly list the tricky semantics you
+   will test before implementation (coordinate frame, timing, cache, schema
+   defaults, or other packet-specific risks).
+6. For schema/parser `gpt-5.5` low lanes, confirm the canonical JSON fixture
+   shape before editing and name the default/boundary assertions you will add.
 
 ## Hot-path watchpoints
 - [lane-specific hot-path risk]
@@ -120,6 +145,8 @@ Your final report must include:
 - pass/fail outcome per command
 - blocker or handoff notes
 - performance risks noticed
+- for `gpt-5.5` low lanes: OFPF line-pressure self-check, test-placement
+  self-check, and any pre-existing dirty files noticed
 
 ## File metadata discipline
 If you touch files with header metadata:
