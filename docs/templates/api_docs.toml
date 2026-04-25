@@ -198,13 +198,20 @@ Exactly one of `reveal`, `hide`, or `direction` should be set.
 """
 
 [specs.MaskSpec.enums.WipeDirection]
-title = "WipeDirection (16 variants)"
+title = "WipeDirection (24 variants)"
+notes = """\
+Defined in `tui-vfx-geometry::WipeDirection` and shared by the Wipe \
+mask, the RevealWipe shader (`RevealDirection = WipeDirection`), and \
+the V3 grouped reveal family (`VfxRevealDirection = WipeDirection`).\
+"""
 groups = [
     { name = "Cardinal", variants = ["LeftToRight", "RightToLeft", "TopToBottom", "BottomToTop"] },
-    { name = "Diagonal", variants = ["TopLeftToBottomRight", "TopRightToBottomLeft", "BottomLeftToTopRight", "BottomRightToTopLeft"] },
+    { name = "Diagonal (Manhattan sweep)", variants = ["TopLeftToBottomRight", "TopRightToBottomLeft", "BottomLeftToTopRight", "BottomRightToTopLeft"] },
     { name = "Aliases", variants = ["FromLeft", "FromRight", "FromTop", "FromBottom"] },
     { name = "Center-out (curtains opening)", variants = ["HorizontalCenterOut", "VerticalCenterOut"] },
     { name = "Edges-in (curtains closing)", variants = ["HorizontalEdgesIn", "VerticalEdgesIn"] },
+    { name = "Corner-out (Euclidean quadrant arc expanding from corner; aliases corner_down_*, corner_up_*)", variants = ["CornerOutFromTopLeft", "CornerOutFromTopRight", "CornerOutFromBottomLeft", "CornerOutFromBottomRight"] },
+    { name = "Corner-in (Euclidean quadrant arc collapsing toward corner)", variants = ["CornerInToTopLeft", "CornerInToTopRight", "CornerInToBottomLeft", "CornerInToBottomRight"] },
 ]
 
 [specs.MaskSpec.enums.other]

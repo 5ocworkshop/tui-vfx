@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.2.9</VERS> -->
-<!-- <WCTX>Keep author-facing terminology centered on recipe ingredients, schema field vocabulary, and enter/dwell/exit phases.</WCTX> -->
-<!-- <CLOG>0.2.9: add sibling authoring-doc routing for ingredients, schema, procedural sources, and tooling.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Audit recommendation 1.2 + 1.3 — extend the canonical wipe-direction vocabulary with the new corner-out (Euclidean quadrant arc, expanding from a corner) and corner-in (collapsing toward a corner) families, plus the author-friendly `corner_down_*` / `corner_up_*` aliases. Document that the diagonal Manhattan sweep and the corner Euclidean arc are intentionally distinct.</WCTX> -->
+<!-- <CLOG>0.3.0: MINOR — wipe-direction vocabulary section grew from 12 canonical variants to 20 (cardinal + diagonal + centre/edge + corner-out + corner-in). Added the diagonal-vs-corner-arc explanatory note. Documented that the same vocabulary is shared by the Wipe mask, the RevealWipe shader, and the V3 grouped reveal family at the engine level via one canonical WipeDirection in tui-vfx-geometry.
+0.2.9: add sibling authoring-doc routing for ingredients, schema, procedural sources, and tooling.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
 
@@ -248,7 +249,7 @@ For `wipe`, the canonical direction set is:
 - `top_to_bottom`
 - `bottom_to_top`
 
-### Diagonal
+### Diagonal (Manhattan sweep, slanted-line wavefront)
 - `top_left_to_bottom_right`
 - `top_right_to_bottom_left`
 - `bottom_left_to_top_right`
@@ -260,6 +261,25 @@ For `wipe`, the canonical direction set is:
 - `horizontal_edges_in`
 - `vertical_edges_in`
 
+### Corner-out (Euclidean quadrant arc, expanding from a corner)
+- `corner_out_from_top_left`
+- `corner_out_from_top_right`
+- `corner_out_from_bottom_left`
+- `corner_out_from_bottom_right`
+
+Author-friendly aliases that read more naturally and may be used
+interchangeably:
+- `corner_down_top_left` (= `corner_out_from_top_left`)
+- `corner_down_top_right` (= `corner_out_from_top_right`)
+- `corner_up_bottom_left` (= `corner_out_from_bottom_left`)
+- `corner_up_bottom_right` (= `corner_out_from_bottom_right`)
+
+### Corner-in (Euclidean quadrant arc, collapsing toward a corner)
+- `corner_in_to_top_left`
+- `corner_in_to_top_right`
+- `corner_in_to_bottom_left`
+- `corner_in_to_bottom_right`
+
 Compatibility aliases such as:
 
 - `from_left`
@@ -269,6 +289,21 @@ Compatibility aliases such as:
 
 may remain for compatibility, but they are **not** the preferred teaching
 surface.
+
+**Diagonal vs. corner-arc:** the Manhattan-diagonal variants
+(`top_left_to_bottom_right` etc.) sweep a straight slanted line from
+one corner toward the opposite corner; at progress 0.5 the wavefront
+is a single line. The corner-arc variants
+(`corner_out_from_top_left` etc.) sweep a Euclidean quadrant arc
+rooted at the named corner; at progress 0.5 the wavefront is a
+quarter-circle. Both are intentionally preserved as separate
+directions because their visual feel is materially different.
+
+The same vocabulary is shared at the engine level (one canonical
+`WipeDirection` enum in `tui-vfx-geometry`) by the `Wipe` mask, the
+`RevealWipe` shader, and the V3 grouped reveal family — so a
+`direction` field interchanges across the mask, shader, and grouped-V3
+layers.
 
 ## 8. Origin vocabulary
 

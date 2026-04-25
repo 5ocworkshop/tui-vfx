@@ -1,7 +1,8 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.24.0</VERS> -->
-<!-- <WCTX>Add V3 pathway guidance plus whoa/cellophane-derived route, sampler, and shader capabilities for human and AI recipe authors.</WCTX> -->
-<!-- <CLOG>1.24.0: MINOR — document CarrierOrbit/helix, FigureEight/infinity, RadialTwist sampler, and RadialSpiral shader capabilities from the whoa/cellophane review.
+<!-- <VERS>VERSION: 1.25.0</VERS> -->
+<!-- <WCTX>Audit recommendation 1.2 + 1.3 — document the unified WipeDirection vocabulary (24 variants) shared by the Wipe mask, the RevealWipe shader, and the V3 grouped reveal family, including the new corner-out / corner-in quadrant-arc variants.</WCTX> -->
+<!-- <CLOG>1.25.0: MINOR — WipeDirection grew from 16 to 24 variants (corner-out and corner-in quadrant arcs added). Updated the top-of-file Wipe directions count, the WipeDirection Variants table, and added the explanatory note that the same enum is now shared by the mask, the shader, and the V3 grouped reveal family. Documented author-friendly `corner_down_*` / `corner_up_*` aliases. Source of truth is `tui-vfx-geometry::WipeDirection`.
+1.24.0: MINOR — document CarrierOrbit/helix, FigureEight/infinity, RadialTwist sampler, and RadialSpiral shader capabilities from the whoa/cellophane review.
 1.23.0: MINOR — add V3 pathway capabilities section with first-class I/O chaining examples, runtime binding/asset contracts, procedural scene-source details, scene/source contract notes, and authoring/debugging guidance for new human and AI recipe authors.
 1.22.0: PATCH — note that `tui-vfx-recipes` now supports top-level `config.shadow` upstream (validator/probe parity) and cross-link the recipe-authoring shadow flow from the Shadows section.
 1.21.0: MINOR — add 'Quick Scan' (one-screen primitive inventory by category) after the TOC; add banner at top noting that intent-to-primitive selection lives in the gt-design /recipe-author skill.

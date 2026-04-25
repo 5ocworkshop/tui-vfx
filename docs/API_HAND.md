@@ -1,7 +1,8 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.16.0</VERS> -->
-<!-- <WCTX>feat/cursor-primitive T29: hand API entry for the general Cursor primitive</WCTX> -->
-<!-- <CLOG>MINOR: Document the tui_vfx_content::cursor module (Cursor, CursorBlink, GrowIn, Wake, CursorState, CursorPaintOps, and the fnc_advance_cursor / fnc_render_cursor / fnc_cursor_grow_in_glyph helpers)</CLOG>
+<!-- <VERS>VERSION: 2.17.0</VERS> -->
+<!-- <WCTX>Audit recommendation 1.2 + 1.3 — record the unified 24-variant WipeDirection enum now hosted in tui-vfx-geometry, shared by the Wipe mask, the RevealWipe shader (RevealDirection alias), and the V3 grouped reveal family (VfxRevealDirection alias).</WCTX> -->
+<!-- <CLOG>2.17.0: MINOR — WipeDirection section grew from 16 to 24 variants (corner-out and corner-in Euclidean quadrant arcs added) with a note distinguishing the corner-arc wavefront from the Manhattan-diagonal sweep. Documented `corner_down_*` / `corner_up_*` author-friendly serde aliases. Noted the shared canonical home in tui-vfx-geometry.
+2.16.0: MINOR — Document the tui_vfx_content::cursor module (Cursor, CursorBlink, GrowIn, Wake, CursorState, CursorPaintOps, and the fnc_advance_cursor / fnc_render_cursor / fnc_cursor_grow_in_glyph helpers)</CLOG>
 
 # TUI-VFX Complete API Reference
 
@@ -375,12 +376,16 @@ Masks control cell visibility based on position and animation progress `t`.
 
 Exactly one of `reveal`, `hide`, or `direction` should be set.
 
-### WipeDirection (16 variants)
+### WipeDirection (24 variants)
+
+Defined in `tui-vfx-geometry` and shared by the `Wipe` mask, the
+`RevealWipe` shader (`RevealDirection = WipeDirection`), and the V3
+grouped reveal family (`VfxRevealDirection = WipeDirection`).
 
 Cardinal:
 `LeftToRight`, `RightToLeft`, `TopToBottom`, `BottomToTop`
 
-Diagonal:
+Diagonal (Manhattan sweep, straight-line wavefront):
 `TopLeftToBottomRight`, `TopRightToBottomLeft`, `BottomLeftToTopRight`, `BottomRightToTopLeft`
 
 Aliases:
@@ -391,6 +396,20 @@ Center-out (curtains opening):
 
 Edges-in (curtains closing):
 `HorizontalEdgesIn`, `VerticalEdgesIn`
+
+Corner-out (Euclidean quadrant arc expanding from a corner;
+authoring aliases `corner_down_top_left` / `corner_down_top_right` /
+`corner_up_bottom_left` / `corner_up_bottom_right`):
+`CornerOutFromTopLeft`, `CornerOutFromTopRight`,
+`CornerOutFromBottomLeft`, `CornerOutFromBottomRight`
+
+Corner-in (Euclidean quadrant arc collapsing toward a corner):
+`CornerInToTopLeft`, `CornerInToTopRight`,
+`CornerInToBottomLeft`, `CornerInToBottomRight`
+
+Corner-arc variants are **distinct** from the Manhattan-diagonal
+variants: diagonal sweep is a slanted-line wavefront; corner arc is
+a quarter-circle wavefront. Both are intentionally preserved.
 
 ### Other mask enums
 
