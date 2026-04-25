@@ -1,8 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.5.8</VERS> -->
+<!-- <VERS>VERSION: 0.5.9</VERS> -->
 <!-- <WCTX>Keep the V3 landing page current with active authoring, schema, tooling, lifecycle, and deferred post-release capability docs.</WCTX> -->
-<!-- <CLOG>0.5.8: add a tiny route to the root V3 capabilities orientation.
-0.5.7: add lifecycle status buckets so agents can distinguish live guidance, retained history, and canonical core docs.</CLOG> -->
+<!-- <CLOG>0.5.9: add the deterministic core-pipeline readiness matrix to the active V3 work surfaces and execution references.</CLOG> -->
 
 # V3 documentation index
 
@@ -77,6 +76,7 @@ These still shape implementation, validation, migration, or release-gate follow-
 - [V3 scheduler batching plan](tui-vfx-v3-scheduler-batching-plan.md)
 - [V3 validator canonicalization checklist](tui-vfx-v3-validator-canonicalization-checklist.md)
 - [V3 cross-family coverage plan](tui-vfx-v3-cross-family-coverage-plan.md)
+- [V3 core pipeline readiness matrix](tui-vfx-v3-core-pipeline-readiness-matrix.md)
 - [V3 spatial field hint plan](tui-vfx-v3-spatial-field-hint-plan.md)
 - [V3 scene content integration plan](tui-vfx-v3-scene-content-integration-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
@@ -139,6 +139,7 @@ primitive behavior.
 
 - [V3 I/O contract](tui-vfx-v3-io-contract.md)
 - [V3 cross-family coverage plan](tui-vfx-v3-cross-family-coverage-plan.md)
+- [V3 core pipeline readiness matrix](tui-vfx-v3-core-pipeline-readiness-matrix.md)
 - [V3 spatial field hint plan](tui-vfx-v3-spatial-field-hint-plan.md)
 - [V3 scene content integration plan](tui-vfx-v3-scene-content-integration-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)

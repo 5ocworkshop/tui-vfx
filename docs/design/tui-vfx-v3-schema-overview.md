@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>VERSION: 0.3.1</VERS> -->
+<!-- <VERS>VERSION: 0.3.2</VERS> -->
 <!-- <WCTX>Keep the schema overview aligned with the accepted V3 vocabulary, distributed timing model, metadata posture, and sibling authoring docs.</WCTX> -->
-<!-- <CLOG>0.3.1: align schema overview with recipe-ingredient vocabulary and sibling authoring references.</CLOG> -->
+<!-- <CLOG>0.3.2: document V3 border type vocabulary and inline border-title fields.</CLOG> -->
 
 # tui-vfx V3 Schema Overview
 
@@ -168,6 +168,9 @@ Recipe
    ├─ layout
    ├─ lifecycle
    ├─ border
+   │  ├─ type: none | plain | rounded | double | thick
+   │  ├─ trim: none | vanishing_edge
+   │  └─ title/title_position/title_alignment?
    ├─ clock?
    ├─ base_style?
    ├─ regions?
@@ -411,6 +414,8 @@ So V3 now needs to think in two layers:
 - `cell`
 - `cells`
 - `border`
+  - includes inline border-title cells because title text is chrome embedded
+    in the line, not separate body copy
 - channel/content/role selectors
 
 ### 7.2 Compression / reuse aids
@@ -557,7 +562,7 @@ Current reconciliation stance:
 | `content` | kept, but explicitly treated as a deep renderer subtree |
 | `layout` | kept under `config.layout` |
 | `lifecycle` | kept under `config.lifecycle` |
-| `border` | kept under `config.border` |
+| `border` | kept under `config.border`; canonical types are `plain`, `rounded`, `double`, `thick`, and `none`; inline `title` / `title_position` / `title_alignment` are retained for top/bottom/left/right border text |
 | `time` | normalized to `config.clock`, while runtime still keeps both normalized progress and monotonic elapsed time |
 | style-layer `clock` | normalized to per-step `clock` override |
 | `theme` | explicit envelope-level home |
@@ -658,4 +663,4 @@ In practice, these two docs should be read together:
 - use this overview to understand why that shape is organized the way it is
 
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.2</VERS> -->

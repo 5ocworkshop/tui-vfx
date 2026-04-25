@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.19</VERS> -->
+<!-- <VERS>VERSION: 0.14.20</VERS> -->
 <!-- <WCTX>Keep the V3 master punch list aligned with active work, question-closure status, and explicitly deferred post-release specs.</WCTX> -->
-<!-- <CLOG>0.14.19: record the latest core pipeline hardening tranche and narrow the remaining V3 pipeline work.</CLOG> -->
+<!-- <CLOG>0.14.20: add the deterministic core-pipeline readiness matrix and note the direct scene-layer shadow+filter proof.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -13,7 +13,7 @@ considered stable and before any V2 fallback/removal work is considered.
 
 | ID | Lane | Status | Notes / next action |
 |---|---|---|---|
-| V3-PIPE01 | Core V3 pipeline hardening | Complete initial / matrix audit continues | Latest tranche proves ordered multi-sampler chains through compositor/probe/QC, exit-phase FadeToCanvas binding filters, explicit none-mask baselines, scene text-source content effects, reflect gap/width lowering, and head/tail color lowering for border/reflect/trace propagation/trace path. Continue shrinking the per-family matrix only where new fixtures expose gaps. |
+| V3-PIPE01 | Core V3 pipeline hardening | Complete initial / matrix audit continues | See `tui-vfx-v3-core-pipeline-readiness-matrix.md` for the current lane-by-lane proof set. Latest matrix pass keeps shader/filter/mask/sampler/style/content/shadow/binding lanes on deterministic fixture evidence and adds a direct `scene_layer_surface_shadow_pipeline` proof so the smaller scene-layer shadow+filter lane is no longer implicit. Continue shrinking the per-family matrix only where new fixtures expose gaps. |
 | V3-T01 | Tooling docs hub | Complete initial / ongoing | Canonical command map now covers validation, probe, diff/database, preview/player, resize, edge ingestion, command capture, docs generation, and release-gate evidence; expand only as new tooling lands. |
 | V3-M01 | VC-09 migration-equivalence harness | Complete initial / owner-audit blocked for complete-final | `tui-vfx-recipes` commit `d2fe1e4` carries the current 10-pair critical evidence group plus machine-readable provisional buckets and `OWNER-RECIPE-AUDIT`. Continue only curated critical evidence until the owner recipe audit resolves keep/rewrite/retire classifications; keep legacy files in place. |
 | V3-M02 | Kept-recipe migration/rewrite | Deferred on owner audit | Owner needs time to audit recipes. Work around with provisional classifications only; do not remove legacy recipes. |
