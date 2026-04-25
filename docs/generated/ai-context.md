@@ -100,7 +100,7 @@
 - **Mirror**: Mirror/flip text horizontally or vertically.
 - **Morph**: Character morphing/blending between text states.
 - **Numeric**: Number transition animations for dashboards.
-- **Odometer**: Mechanical tile-grid roll for odometer and slot-style boards.
+- **Odometer**: Mechanical cell-grid roll for odometer and slot-style boards.
 - **Redact**: Redaction/censoring effect with █ blocks.
 - **Scramble**: Random character scrambling that resolves to final text.
 - **ScrambleGlitchShift**: Combined scramble + glitch shift for maximum chaos. [Intense]

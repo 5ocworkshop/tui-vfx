@@ -372,10 +372,10 @@ pub enum ContentEffect {
         tile_height: u16,
     },
 
-    /// Mechanical tile-grid rolling display.
+    /// Mechanical cell-grid rolling display.
     ///
     /// Odometer treats content as a fixed character-cell grid and rolls old
-    /// tiles out while target tiles enter from the opposite edge. This is a
+    /// cells out while target cells enter from the opposite edge. This is a
     /// mechanical board/window motion effect, not numeric interpolation: the
     /// previous vertical digit interpolation behavior was intentionally
     /// replaced and is not preserved.
@@ -563,7 +563,7 @@ impl ContentEffect {
             }
             ContentEffect::GlyphCascade { .. } => "Glyph-cascade / symbol-evolution effect",
             ContentEffect::SplitFlap { .. } => "Airport/train station split-flap display",
-            ContentEffect::Odometer { .. } => "Mechanical tile-grid rolling display",
+            ContentEffect::Odometer { .. } => "Mechanical cell-grid rolling display",
             ContentEffect::Redact { .. } => "Text redaction/censorship effect",
             ContentEffect::Numeric { .. } => "Numeric formatting effect",
             ContentEffect::Marquee { .. } => "Scrolling marquee text",

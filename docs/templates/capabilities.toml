@@ -1030,10 +1030,10 @@ Smoothly animates between numeric values."""
 use_cases = ["counter", "retro", "mechanical"]
 energy = "moderate"
 complexity = "moderate"
-ai_hint = """Mechanical tile-grid roll for odometer and slot-style boards.
+ai_hint = """Mechanical cell-grid roll for odometer and slot-style boards.
 direction: up/down/left/right/diagonal. travel: tagged object (axis, full_clear, or cells).
-tile_width/tile_height define the rolling grid tile; from_message supplies the previous board.
-Old digit interpolation is intentionally replaced by cell-grid rolling."""
+tile_width/tile_height describe glyph/window geometry and minimum travel; rows/columns still roll at cell granularity for row-by-row odometer motion.
+from_message supplies the previous board. Old digit interpolation is intentionally replaced by cell-grid rolling."""
 
 [effects.content.Redact]
 use_cases = ["censorship", "reveal", "dramatic"]

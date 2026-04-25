@@ -293,7 +293,7 @@
         ]
       },
       "Odometer": {
-        "ai_hint": "Mechanical tile-grid roll for odometer and slot-style boards.\ndirection: up/down/left/right/diagonal. travel: tagged object (axis, full_clear, or cells).\ntile_width/tile_height define the rolling grid tile; from_message supplies the previous board.\nOld digit interpolation is intentionally replaced by cell-grid rolling.",
+        "ai_hint": "Mechanical cell-grid roll for odometer and slot-style boards.\ndirection: up/down/left/right/diagonal. travel: tagged object (axis, full_clear, or cells).\ntile_width/tile_height describe glyph/window geometry and minimum travel; rows/columns still roll at cell granularity for row-by-row odometer motion.\nfrom_message supplies the previous board. Old digit interpolation is intentionally replaced by cell-grid rolling.",
         "complexity": "moderate",
         "energy": "moderate",
         "name": "Odometer",
@@ -332,8 +332,8 @@
         ],
         "premium": false,
         "requires": [],
-        "rustdoc_description": "Mechanical tile-grid rolling display",
-        "rustdoc_summary": "Mechanical tile-grid rolling display",
+        "rustdoc_description": "Mechanical cell-grid rolling display",
+        "rustdoc_summary": "Mechanical cell-grid rolling display",
         "use_cases": [
           "counter",
           "retro",

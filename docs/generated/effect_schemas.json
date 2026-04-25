@@ -48715,7 +48715,7 @@
             "name": "SplitFlap"
           },
           {
-            "description": "Mechanical tile-grid rolling display.\n\nOdometer treats content as a fixed character-cell grid and rolls old\ntiles out while target tiles enter from the opposite edge. This is a\nmechanical board/window motion effect, not numeric interpolation: the\nprevious vertical digit interpolation behavior was intentionally\nreplaced and is not preserved.",
+            "description": "Mechanical cell-grid rolling display.\n\nOdometer treats content as a fixed character-cell grid and rolls old\ncells out while target cells enter from the opposite edge. This is a\nmechanical board/window motion effect, not numeric interpolation: the\nprevious vertical digit interpolation behavior was intentionally\nreplaced and is not preserved.",
             "fields": [
               {
                 "json_key": null,
@@ -59576,7 +59576,7 @@
           "name": "Numeric"
         },
         "odometer": {
-          "description": "Mechanical tile-grid rolling display.\n\nOdometer treats content as a fixed character-cell grid and rolls old\ntiles out while target tiles enter from the opposite edge. This is a\nmechanical board/window motion effect, not numeric interpolation: the\nprevious vertical digit interpolation behavior was intentionally\nreplaced and is not preserved.",
+          "description": "Mechanical cell-grid rolling display.\n\nOdometer treats content as a fixed character-cell grid and rolls old\ncells out while target cells enter from the opposite edge. This is a\nmechanical board/window motion effect, not numeric interpolation: the\nprevious vertical digit interpolation behavior was intentionally\nreplaced and is not preserved.",
           "fields": [
             {
               "json_key": null,

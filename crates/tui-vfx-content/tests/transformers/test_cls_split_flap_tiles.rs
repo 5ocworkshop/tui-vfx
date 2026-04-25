@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_split_flap_tiles.rs</FILE> - <DESC>SplitFlap multi-cell Solari tile behavior tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Phase 3 mechanical display primitives: add SplitFlap tile geometry coverage.</WCTX>
-// <CLOG>Add failing tests for tile serde, 1x1 compatibility, validation, and center-hinged frames.</CLOG>
+// <CLOG>0.2.0: prove multi-cell tile mode honors cascade and cycles controls.
+// 0.1.0: add failing tests for tile serde, 1x1 compatibility, validation, and center-hinged frames.</CLOG>
 
 use tui_vfx_content::prelude::*;
 use tui_vfx_content::transformers::{SplitFlap, SplitFlapCharset, SplitFlapDispersion};
@@ -10,7 +11,8 @@ fn canonical_tile_effect(tile_width: u16, tile_height: u16) -> ContentEffect {
     serde_json::from_value(serde_json::json!({
         "type": "split_flap",
         "from_message": "OLD\nOLD\nOLD\nOLD",
-        "cycles": 0.4,
+        "speed": 1.0,
+        "cycles": 0.0,
         "jitter": 0.0,
         "settle_hinge": true,
         "spring_settle": true,
@@ -120,6 +122,69 @@ fn split_flap_tile_height_4_renders_center_hinged_frames() {
     assert_eq!(effect.apply(target, 0.75), "OLD\nNEW\nNEW\nNEW");
     assert_eq!(effect.apply(target, 1.0), target);
 }
+#[test]
+fn split_flap_tile_mode_honors_cascade_per_tile() {
+    let target = "NEWXYZ\nNEWXYZ\nNEWXYZ\nNEWXYZ";
+    let simultaneous = serde_json::from_value::<ContentEffect>(serde_json::json!({
+        "type": "split_flap",
+        "from_message": "OLDOLD\nOLDOLD\nOLDOLD\nOLDOLD",
+        "speed": 1.0,
+        "cascade": 0.0,
+        "cycles": 0.0,
+        "jitter": 0.0,
+        "dispersion": "cascade",
+        "tile_width": 3,
+        "tile_height": 4
+    }))
+    .unwrap();
+    let cascaded = serde_json::from_value::<ContentEffect>(serde_json::json!({
+        "type": "split_flap",
+        "from_message": "OLDOLD\nOLDOLD\nOLDOLD\nOLDOLD",
+        "speed": 1.0,
+        "cascade": 0.8,
+        "cycles": 0.0,
+        "jitter": 0.0,
+        "dispersion": "cascade",
+        "tile_width": 3,
+        "tile_height": 4
+    }))
+    .unwrap();
+
+    assert_eq!(
+        cascaded.apply(target, 0.5),
+        "OLDOLD\nOLDOLD\nNEWOLD\nNEWOLD"
+    );
+    assert_ne!(cascaded.apply(target, 0.5), simultaneous.apply(target, 0.5));
+}
+
+#[test]
+fn split_flap_tile_mode_honors_cycles() {
+    let target = "NEW\nNEW\nNEW\nNEW";
+    let no_cycles = serde_json::from_value::<ContentEffect>(serde_json::json!({
+        "type": "split_flap",
+        "from_message": "OLD\nOLD\nOLD\nOLD",
+        "speed": 1.0,
+        "cascade": 0.0,
+        "cycles": 0.0,
+        "jitter": 0.0,
+        "tile_width": 3,
+        "tile_height": 4
+    }))
+    .unwrap();
+    let with_cycle = serde_json::from_value::<ContentEffect>(serde_json::json!({
+        "type": "split_flap",
+        "from_message": "OLD\nOLD\nOLD\nOLD",
+        "speed": 1.0,
+        "cascade": 0.0,
+        "cycles": 1.0,
+        "jitter": 0.0,
+        "tile_width": 3,
+        "tile_height": 4
+    }))
+    .unwrap();
+
+    assert_ne!(with_cycle.apply(target, 0.4), no_cycles.apply(target, 0.4));
+}
 
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_split_flap_tiles.rs</FILE> - <DESC>SplitFlap multi-cell Solari tile behavior tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

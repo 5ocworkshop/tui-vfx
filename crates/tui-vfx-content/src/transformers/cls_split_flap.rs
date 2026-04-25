@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions, flip-preview glyph, hinge-window flicker, per-column dispersion patterns)</DESC>
-// <VERS>VERSION: 3.3.0</VERS>
+// <VERS>VERSION: 3.4.0</VERS>
 // <WCTX>Phase 3 adds multi-cell SplitFlap tile routing while preserving the 1x1 legacy path.</WCTX>
-// <CLOG>Add tile_width/tile_height and route validated even-height tiles through mechanical center-hinge helpers.</CLOG>
+// <CLOG>3.4.0: route multi-cell tile mode through SplitFlap speed/cascade/cycles/jitter/dispersion controls.
+// 3.3.0: add tile_width/tile_height and route validated even-height tiles through mechanical center-hinge helpers.</CLOG>
 
 use crate::mechanical::{
     MechanicalSizing, MechanicalTile, grid_to_text, paired_grids, split_flap_tile_frame,
@@ -13,6 +14,7 @@ use mixed_signals::physics::DampedSpring;
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use tui_vfx_types::Grid;
 
 /// Character pool the flap cycles through.
 ///
@@ -387,6 +389,19 @@ impl SplitFlap {
             || (matches!(self.dispersion, SplitFlapDispersion::Legacy) && self.authentic_timing)
     }
 
+    fn tile_cycle_progress(local_progress: f64, cycles: f64) -> f64 {
+        let local = local_progress.clamp(0.0, 1.0);
+        if local >= 1.0 {
+            return 1.0;
+        }
+        let scaled = local * (cycles.max(0.0) + 1.0);
+        if scaled >= cycles.max(0.0) {
+            (scaled - cycles.max(0.0)).clamp(0.0, 1.0)
+        } else {
+            scaled.fract()
+        }
+    }
+
     fn hinge_spring() -> DampedSpring {
         DampedSpring::new(1.0, 180.0, 14.0, 0.0, 1.0)
     }
@@ -409,22 +424,6 @@ impl TextTransformer for SplitFlap {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
         }
-        if self.tile_width != 1 || self.tile_height != 1 {
-            let tile = MechanicalTile {
-                width: self.tile_width,
-                height: self.tile_height,
-            };
-            if validate_split_flap_tile(tile).is_err() {
-                return Cow::Borrowed(target);
-            }
-            let source = paired_grids(
-                self.from_message.as_deref(),
-                target,
-                MechanicalSizing::PadToMax,
-            );
-            let grid = split_flap_tile_frame(&source, progress, tile);
-            return Cow::Owned(grid_to_text(&grid));
-        }
         let speed = self
             .speed
             .evaluate(progress, signal_ctx)
@@ -440,6 +439,43 @@ impl TextTransformer for SplitFlap {
             .evaluate(progress, signal_ctx)
             .unwrap_or(0.0)
             .max(0.0) as f64;
+
+        if self.tile_width != 1 || self.tile_height != 1 {
+            let tile = MechanicalTile {
+                width: self.tile_width,
+                height: self.tile_height,
+            };
+            if validate_split_flap_tile(tile).is_err() {
+                return Cow::Borrowed(target);
+            }
+            let source = paired_grids(
+                self.from_message.as_deref(),
+                target,
+                MechanicalSizing::PadToMax,
+            );
+            let tile_cols = ((source.to.width().max(source.from.width()) + tile.width as usize
+                - 1)
+                / tile.width as usize)
+                .max(1);
+            let use_authentic = self.uses_authentic_timing();
+            let grid = split_flap_tile_frame(&source, tile, |tile_col, tile_row| {
+                let tile_index = tile_row.saturating_mul(tile_cols).saturating_add(tile_col);
+                let jitter_factor = self.jitter_factor(tile_index);
+                let local = if use_authentic {
+                    progress * f64::from(speed) * jitter_factor
+                } else {
+                    let effective_cascade = f64::from(cascade) * jitter_factor;
+                    let delay_units = if matches!(self.dispersion, SplitFlapDispersion::Legacy) {
+                        tile_index as f64
+                    } else {
+                        self.column_start_delay(tile_col, tile_cols)
+                    };
+                    progress * f64::from(speed) - delay_units * effective_cascade
+                };
+                Self::tile_cycle_progress(local, cycles)
+            });
+            return Cow::Owned(grid_to_text(&grid));
+        }
 
         let pool = self.charset.chars();
         let pool_len = pool.len().max(1);

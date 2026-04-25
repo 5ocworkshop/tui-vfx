@@ -143,7 +143,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **Mirror** | Mirror/reverse text effect | effect, playful, reflection |
 | **Morph** | Text morphing transition | transition, smooth, creative |
 | **Numeric** | Numeric formatting effect | data, counter, dashboard |
-| **Odometer** | Mechanical tile-grid rolling display | counter, retro, mechanical |
+| **Odometer** | Mechanical cell-grid rolling display | counter, retro, mechanical |
 | **Redact** | Text redaction/censorship effect | censorship, reveal, dramatic |
 | **Scramble** | Character scramble/decode effect | decrypt, reveal, tech |
 | **ScrambleGlitchShift** | Combined scramble and glitch shift effect | glitch, decrypt, dramatic |

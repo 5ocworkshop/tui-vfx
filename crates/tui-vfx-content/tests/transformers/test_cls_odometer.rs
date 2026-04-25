@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_odometer.rs</FILE> - <DESC>Tests for structured mechanical Odometer tile-roll behavior</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Phase 2 Odometer replacement with grid-first mechanical tile roll.</WCTX>
-// <CLOG>Add serde acceptance/rejection and directional tile-roll samples.</CLOG>
+// <CLOG>0.2.0: lock multi-cell glyph-window odometer rolls to cell-step motion.
+// 0.1.0: add serde acceptance/rejection and directional tile-roll samples.</CLOG>
 
 use mixed_signals::prelude::SignalContext;
 use tui_vfx_content::traits::TextTransformer;
@@ -124,10 +125,25 @@ fn content_effect_dispatches_structured_odometer() {
     assert_eq!(effect.name(), "Odometer");
     assert_eq!(
         effect.terse_description(),
-        "Mechanical tile-grid rolling display"
+        "Mechanical cell-grid rolling display"
     );
     assert!(!effect.key_parameters().is_empty());
 }
+#[test]
+fn multi_cell_odometer_rolls_cell_steps_inside_glyph_window() {
+    let effect = Odometer::new(
+        OdometerDirection::Up,
+        OdometerTravel::Axis,
+        2,
+        3,
+        Some("AABB\nCCDD\nEEFF".to_string()),
+    );
+
+    assert_eq!(
+        effect.transform("1122\n3344\n5566", 0.34, &SignalContext::default()),
+        "CCDD\nEEFF\n1122"
+    );
+}
 
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_odometer.rs</FILE> - <DESC>Tests for structured mechanical Odometer tile-roll behavior</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
