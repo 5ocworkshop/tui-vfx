@@ -1139,6 +1139,7 @@ dependencies = [
  "tui-vfx-content",
  "tui-vfx-core",
  "tui-vfx-debug",
+ "tui-vfx-geometry",
  "tui-vfx-shadow",
  "tui-vfx-style",
  "tui-vfx-types",

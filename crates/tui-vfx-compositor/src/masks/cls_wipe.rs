@@ -1,12 +1,14 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_wipe.rs</FILE>
-// <DESC>Linear wipe mask with cardinal, diagonal, and center-out directions</DESC>
-// <VERS>VERSION: 1.9.0</VERS>
-// <WCTX>Fix soft edge behavior for hide masks causing premature disappearance</WCTX>
-// <CLOG>Disable soft edge extension for hide masks - inversion breaks soft edge semantics, causing wipe to lead animation by ~10%</CLOG>
+// <DESC>Linear wipe mask with cardinal, diagonal, centre-out, edges-in, and corner-arc directions</DESC>
+// <VERS>VERSION: 2.0.0</VERS>
+// <WCTX>Audit recommendation 1.2 + 1.3 — replace the locally-duplicated direction position/size math with calls into the shared tui_vfx_geometry::wipe_progress / wipe_visible_at helpers, and pick up the new corner-out / corner-in variants for free.</WCTX>
+// <CLOG>2.0.0: MAJOR refactor of is_visible to delegate the per-direction position/size math to tui_vfx_geometry::wipe_progress. Soft-edge and invert semantics for the cardinal/diagonal/centre/edge variants are unchanged (same threshold + edge-width math, same hide-mask inversion). Corner-arc variants (CornerOutFrom* / CornerInTo*) use tui_vfx_geometry::wipe_visible_at directly because they don't fit the (position, size) 1D model; soft-edge for corner arcs is intentionally a no-op for now (the corner arc is already a smooth radial wavefront — author-friendly soft-edge support can be layered on later if requested).
+// 1.9.0: Fix soft edge behavior for hide masks causing premature disappearance (disable soft edge extension for hide masks - inversion breaks soft edge semantics, causing wipe to lead animation by ~10%)</CLOG>
 
 use super::col_soft_edge::calc_edge_width;
 use crate::traits::mask::Mask;
 use crate::types::cls_mask_spec::WipeDirection;
+use tui_vfx_geometry::{wipe_progress, wipe_visible_at};
 
 /// Linear wipe mask that reveals/hides from one edge to another.
 ///
@@ -69,117 +71,41 @@ impl Mask for Wipe {
         } else {
             progress
         };
-        let progress = effective_progress as f32;
+        let effective_progress_f32 = effective_progress as f32;
 
-        // Calculate position and size based on direction
-        // For cardinal directions: use single axis
-        // For diagonal directions: use sum of both axes
-        let (position, size) = match self.direction {
-            // Cardinal: horizontal
-            WipeDirection::LeftToRight | WipeDirection::FromLeft => (x as f32, w as f32),
-            WipeDirection::RightToLeft | WipeDirection::FromRight => {
-                ((w.saturating_sub(1).saturating_sub(x)) as f32, w as f32)
+        // Cardinal / diagonal / centre-out / edges-in: use the shared
+        // (position, size) helper so the soft-edge and invert paths can
+        // continue to apply edge_width directly. Corner-arc variants
+        // return None and route through `wipe_visible_at` below.
+        if let Some((position, size)) =
+            wipe_progress(self.direction, x, y, w, h)
+        {
+            // Handle edge case where size is 0
+            if size <= 0.0 {
+                let visible = effective_progress_f32 > 0.0;
+                return if self.invert { !visible } else { visible };
             }
-            // Cardinal: vertical
-            WipeDirection::TopToBottom | WipeDirection::FromTop => (y as f32, h as f32),
-            WipeDirection::BottomToTop | WipeDirection::FromBottom => {
-                ((h.saturating_sub(1).saturating_sub(y)) as f32, h as f32)
-            }
-            // Diagonal: use combined x+y distance from corner
-            // Size is max_distance + 1 so that at progress=1.0 all pixels are visible
-            WipeDirection::TopLeftToBottomRight => {
-                let max_dist = w.saturating_sub(1) + h.saturating_sub(1);
-                ((x + y) as f32, (max_dist + 1) as f32)
-            }
-            WipeDirection::BottomRightToTopLeft => {
-                let max_x = w.saturating_sub(1);
-                let max_y = h.saturating_sub(1);
-                let max_dist = max_x + max_y;
-                (
-                    ((max_x.saturating_sub(x)) + (max_y.saturating_sub(y))) as f32,
-                    (max_dist + 1) as f32,
-                )
-            }
-            WipeDirection::TopRightToBottomLeft => {
-                let max_x = w.saturating_sub(1);
-                let max_dist = max_x + h.saturating_sub(1);
-                (
-                    ((max_x.saturating_sub(x)) + y) as f32,
-                    (max_dist + 1) as f32,
-                )
-            }
-            WipeDirection::BottomLeftToTopRight => {
-                let max_y = h.saturating_sub(1);
-                let max_dist = w.saturating_sub(1) + max_y;
-                (
-                    (x + (max_y.saturating_sub(y))) as f32,
-                    (max_dist + 1) as f32,
-                )
-            }
-            // Center-out directions: distance from center determines visibility
-            WipeDirection::HorizontalCenterOut => {
-                // Distance from center column
-                let center = (w as f32 - 1.0) / 2.0;
-                let dist_from_center = (x as f32 - center).abs();
-                // Half-width is max distance from center to edge
-                let half_width = center.max(w as f32 - 1.0 - center);
-                (dist_from_center, half_width + 1.0)
-            }
-            WipeDirection::VerticalCenterOut => {
-                // Distance from center row
-                let center = (h as f32 - 1.0) / 2.0;
-                let dist_from_center = (y as f32 - center).abs();
-                // Half-height is max distance from center to edge
-                let half_height = center.max(h as f32 - 1.0 - center);
-                (dist_from_center, half_height + 1.0)
-            }
-            // Edges-in directions: inverse of center-out (curtains closing)
-            WipeDirection::HorizontalEdgesIn => {
-                // Distance from nearest edge (left or right)
-                let dist_from_left = x as f32;
-                let dist_from_right = (w.saturating_sub(1).saturating_sub(x)) as f32;
-                let dist_from_edge = dist_from_left.min(dist_from_right);
-                let half_width = (w as f32 - 1.0) / 2.0;
-                (dist_from_edge, half_width + 1.0)
-            }
-            WipeDirection::VerticalEdgesIn => {
-                // Distance from nearest edge (top or bottom)
-                let dist_from_top = y as f32;
-                let dist_from_bottom = (h.saturating_sub(1).saturating_sub(y)) as f32;
-                let dist_from_edge = dist_from_top.min(dist_from_bottom);
-                let half_height = (h as f32 - 1.0) / 2.0;
-                (dist_from_edge, half_height + 1.0)
-            }
-        };
-
-        // Handle edge case where size is 0
-        if size <= 0.0 {
-            let visible = progress > 0.0;
-            // For hide, also invert the output so t=1 shows everything, t=0 shows nothing
+            let threshold = size * effective_progress_f32;
+            // Soft edge extends visibility for reveal masks (smooth leading edge).
+            // For hide masks (invert=true), soft edge extension breaks the semantics
+            // because it gets inverted, causing premature hiding. We disable soft edge
+            // extension for hide masks - the visual smoothness comes from the fade/tint
+            // effect that typically accompanies wipe transitions.
+            let visible = if self.soft_edge && !self.invert {
+                let edge_width = calc_edge_width(size);
+                position < threshold + edge_width
+            } else {
+                position < threshold
+            };
             return if self.invert { !visible } else { visible };
         }
 
-        let threshold = size * progress;
-
-        // Soft edge extends visibility for reveal masks (smooth leading edge).
-        // For hide masks (invert=true), soft edge extension breaks the semantics
-        // because it gets inverted, causing premature hiding. We disable soft edge
-        // extension for hide masks - the visual smoothness comes from the fade/tint
-        // effect that typically accompanies wipe transitions.
-        let visible = if self.soft_edge && !self.invert {
-            // Reveal: add edge_width for smooth leading edge
-            let edge_width = calc_edge_width(size);
-            position < threshold + edge_width
-        } else {
-            // Hide or no soft edge: use hard threshold
-            position < threshold
-        };
-
-        // For hide masks, invert the output so content disappears where the wipe passes
-        // Combined with progress inversion (1-t), this gives:
-        //   At t=1 (exit start): effective_progress=0, threshold=0, visible=false, inverted=true ✓
-        //   At t=0 (exit end): effective_progress=1, threshold=size, visible=true, inverted=false ✓
-        if self.invert { !visible } else { visible }
+        // Corner-arc variants. soft_edge is intentionally a no-op for these
+        // — the radial wavefront is already smooth at typical render sizes,
+        // and applying calc_edge_width to a Euclidean threshold isn't
+        // semantically equivalent. Author-friendly soft-edge for corner
+        // arcs can be layered on later if it's requested.
+        wipe_visible_at(self.direction, x, y, w, h, effective_progress_f32)
     }
 }
 

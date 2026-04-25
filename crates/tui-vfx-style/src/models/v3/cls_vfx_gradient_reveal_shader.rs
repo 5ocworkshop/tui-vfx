@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/v3/cls_vfx_gradient_reveal_shader.rs</FILE> - <DESC>V3 gradient-reveal family shader surface</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Decision 2 migration slice — create a real grouped V3 surface for the remaining primitive gradient/reveal shaders so LinearGradient and RevealWipe become migration inputs instead of the lasting conceptual model.</WCTX>
-// <CLOG>Introduce VfxGradientRevealShader plus conversion helpers from the legacy gradient/reveal variants and SpatialShaderType.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Audit recommendation 1.2 + 1.3 — RevealDirection and VfxRevealDirection both became type aliases for tui_vfx_geometry::WipeDirection, so the From<RevealDirection> for VfxRevealDirection conversion is now identity (both sides are the same type) and is no longer needed. The legacy-shader conversion can copy the direction directly with no enum-mapping.</WCTX>
+// <CLOG>0.2.0: drop the now-redundant From<RevealDirection> for VfxRevealDirection impl and the redundant `.into()` call (both sides are the same WipeDirection type after the audit-recommended unification).
+// 0.1.0: initial V3 grouped surface for LinearGradient + RevealWipe</CLOG>
 
 //! V3 family surface for gradient-reveal shaders.
 //!
@@ -9,12 +10,8 @@
 //! primitive directional fill/reveal treatments that currently live as separate
 //! flat variants.
 
-use crate::models::v3::enum_vfx_gradient_reveal_behavior::{
-    VfxGradientRevealBehavior, VfxRevealDirection,
-};
-use crate::models::{
-    Gradient, LinearGradientShader, RevealDirection, RevealWipeShader, SpatialShaderType,
-};
+use crate::models::v3::enum_vfx_gradient_reveal_behavior::VfxGradientRevealBehavior;
+use crate::models::{Gradient, LinearGradientShader, RevealWipeShader, SpatialShaderType};
 use serde::{Deserialize, Serialize};
 
 /// Canonical V3 family surface for gradient-reveal shaders.
@@ -50,21 +47,13 @@ impl From<&LinearGradientShader> for VfxGradientRevealShader {
 
 impl From<&RevealWipeShader> for VfxGradientRevealShader {
     fn from(shader: &RevealWipeShader) -> Self {
+        // shader.direction is RevealDirection = WipeDirection, and
+        // VfxRevealDirection is also WipeDirection after the unification.
+        // Direct copy — no enum mapping required.
         Self {
             behavior: VfxGradientRevealBehavior::RevealWipe {
-                direction: shader.direction.into(),
+                direction: shader.direction,
             },
-        }
-    }
-}
-
-impl From<RevealDirection> for VfxRevealDirection {
-    fn from(value: RevealDirection) -> Self {
-        match value {
-            RevealDirection::LeftToRight => Self::LeftToRight,
-            RevealDirection::RightToLeft => Self::RightToLeft,
-            RevealDirection::TopToBottom => Self::TopToBottom,
-            RevealDirection::BottomToTop => Self::BottomToTop,
         }
     }
 }
@@ -73,4 +62,4 @@ impl From<RevealDirection> for VfxRevealDirection {
 fn _keep_gradient_type_visible(_gradient: &Gradient) {}
 
 // <FILE>tui-vfx-style/src/models/v3/cls_vfx_gradient_reveal_shader.rs</FILE> - <DESC>V3 gradient-reveal family shader surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

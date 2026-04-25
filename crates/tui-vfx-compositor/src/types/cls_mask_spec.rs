@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/types/cls_mask_spec.rs</FILE> - <DESC>MaskSpec enum with full parameters</DESC>
-// <VERS>VERSION: 2.3.2</VERS>
-// <WCTX>V3 MASK lane hardening</WCTX>
-// <CLOG>Add focused coverage for missing PathReveal/Radial/Cellular serde and wipe resolution semantics</CLOG>
+// <VERS>VERSION: 2.4.0</VERS>
+// <WCTX>Audit recommendation 1.2 + 1.3 — replace the locally-defined WipeDirection enum with a re-export of the canonical tui_vfx_geometry::WipeDirection so the mask, the RevealWipe shader, and the V3 grouped reveal family all share one source of truth and the new corner-out / corner-in variants are visible at every layer simultaneously.</WCTX>
+// <CLOG>2.4.0: replace local WipeDirection definition with a `pub use tui_vfx_geometry::WipeDirection` re-export. Local definition kept zero behavioural changes — same variants, same serde, same aliases — but is now a single source of truth that also carries the new CornerOutFrom* / CornerInTo* variants. All existing recipes continue to parse identically. The MaskSpec docs still cite the same direction families.
+// 2.3.2: V3 MASK lane hardening</CLOG>
 
 //! # Mask Specifications
 //!
@@ -54,114 +55,14 @@ use crate::masks::cls_path_reveal::RevealPathType;
 use crate::masks::cls_radial::RadialOrigin;
 use serde::{Deserialize, Serialize};
 
-/// Direction for wipe mask transitions.
-///
-/// Wipe directions define how content is revealed or hidden across the screen.
-/// Multiple naming conventions are supported for flexibility:
-///
-/// ## Cardinal Directions (4)
-/// - [`LeftToRight`](Self::LeftToRight), [`RightToLeft`](Self::RightToLeft)
-/// - [`TopToBottom`](Self::TopToBottom), [`BottomToTop`](Self::BottomToTop)
-///
-/// ## Diagonal Directions (4)
-/// - [`TopLeftToBottomRight`](Self::TopLeftToBottomRight), [`TopRightToBottomLeft`](Self::TopRightToBottomLeft)
-/// - [`BottomLeftToTopRight`](Self::BottomLeftToTopRight), [`BottomRightToTopLeft`](Self::BottomRightToTopLeft)
-///
-/// ## Barn Door / Curtain Effects (4)
-/// - [`HorizontalCenterOut`](Self::HorizontalCenterOut) — Curtains opening horizontally
-/// - [`VerticalCenterOut`](Self::VerticalCenterOut) — Curtains opening vertically
-/// - [`HorizontalEdgesIn`](Self::HorizontalEdgesIn) — Curtains closing horizontally
-/// - [`VerticalEdgesIn`](Self::VerticalEdgesIn) — Curtains closing vertically
-///
-/// ## Source-Based Aliases (4)
-/// Convenience aliases that read naturally: `FromLeft`, `FromRight`, `FromTop`, `FromBottom`
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
-)]
-#[serde(rename_all = "snake_case")]
-pub enum WipeDirection {
-    // ─────────────────────────────────────────────────────────────────
-    // Cardinal directions
-    // ─────────────────────────────────────────────────────────────────
-    /// Wipe from left edge to right edge.
-    ///
-    /// The most common wipe direction, matching natural reading order
-    /// in left-to-right languages.
-    #[default]
-    LeftToRight,
-
-    /// Wipe from right edge to left edge.
-    RightToLeft,
-
-    /// Wipe from top edge to bottom edge.
-    TopToBottom,
-
-    /// Wipe from bottom edge to top edge.
-    BottomToTop,
-
-    // ─────────────────────────────────────────────────────────────────
-    // Diagonal directions
-    // ─────────────────────────────────────────────────────────────────
-    /// Diagonal wipe from top-left corner to bottom-right corner.
-    ///
-    /// Creates a dynamic, angular reveal effect.
-    TopLeftToBottomRight,
-
-    /// Diagonal wipe from top-right corner to bottom-left corner.
-    TopRightToBottomLeft,
-
-    /// Diagonal wipe from bottom-left corner to top-right corner.
-    BottomLeftToTopRight,
-
-    /// Diagonal wipe from bottom-right corner to top-left corner.
-    BottomRightToTopLeft,
-
-    // ─────────────────────────────────────────────────────────────────
-    // Source-based aliases (convenience)
-    // ─────────────────────────────────────────────────────────────────
-    /// Alias for [`LeftToRight`](Self::LeftToRight).
-    ///
-    /// Reads naturally: "wipe from left"
-    #[serde(alias = "FromLeft")]
-    FromLeft,
-
-    /// Alias for [`RightToLeft`](Self::RightToLeft).
-    #[serde(alias = "FromRight")]
-    FromRight,
-
-    /// Alias for [`TopToBottom`](Self::TopToBottom).
-    #[serde(alias = "FromTop")]
-    FromTop,
-
-    /// Alias for [`BottomToTop`](Self::BottomToTop).
-    #[serde(alias = "FromBottom")]
-    FromBottom,
-
-    // ─────────────────────────────────────────────────────────────────
-    // Center-out / Barn door effects
-    // ─────────────────────────────────────────────────────────────────
-    /// Horizontal wipe from center outward to left and right edges.
-    ///
-    /// Creates a "curtains opening" effect. Great for dramatic reveals.
-    #[serde(alias = "center_out_horizontal", alias = "barn_door_horizontal")]
-    HorizontalCenterOut,
-
-    /// Vertical wipe from center outward to top and bottom edges.
-    ///
-    /// Vertical variant of the curtain opening effect.
-    #[serde(alias = "center_out_vertical", alias = "barn_door_vertical")]
-    VerticalCenterOut,
-
-    /// Horizontal wipe from edges inward to center.
-    ///
-    /// Creates a "curtains closing" effect.
-    #[serde(alias = "edges_in_horizontal", alias = "barn_door_close_horizontal")]
-    HorizontalEdgesIn,
-
-    /// Vertical wipe from edges inward to center.
-    #[serde(alias = "edges_in_vertical", alias = "barn_door_close_vertical")]
-    VerticalEdgesIn,
-}
+// `WipeDirection` is the canonical wipe-direction vocabulary, hosted in
+// tui-vfx-geometry so the Wipe mask, the RevealWipe shader, and the V3
+// grouped reveal family all consume one source of truth. The full variant
+// list — cardinal, diagonal, source aliases, centre-out / edges-in, and
+// the corner-out / corner-in quadrant arcs — lives there. This re-export
+// preserves the historical `tui_vfx_compositor::types::WipeDirection`
+// import path so existing callers compile without change.
+pub use tui_vfx_geometry::WipeDirection;
 
 /// Orientation for blinds and similar directional masks.
 #[derive(

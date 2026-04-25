@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/v3/fnc_try_lower_v3_spatial_shader_family.rs</FILE> - <DESC>Lower grouped V3 spatial shader families back into the executable legacy runtime surface</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Decision 2 runtime follow-on — grouped V3 spatial shader families are now modeled explicitly, and runtime-facing seams need a reversible bridge back into SpatialShaderType while the legacy executable surface remains in place.</WCTX>
-// <CLOG>0.3.0: lower V3 traveling-band head_tail colors into backward-compatible legacy shader head/tail fields for border, reflect, trace_propagation, and trace_path.</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Audit recommendation 1.2 + 1.3 — VfxRevealDirection and RevealDirection both alias tui_vfx_geometry::WipeDirection, so the explicit From<VfxRevealDirection> for RevealDirection impl is now an orphan-rule violation (and unnecessary — the implicit identity From<T> for T covers any .into() call between them).</WCTX>
+// <CLOG>0.4.0: drop the now-redundant From<VfxRevealDirection> for RevealDirection impl. Both types alias the same WipeDirection after the audit-recommended unification, so any .into() conversion route is already covered by the implicit identity From; the explicit impl violates Rust's orphan rule for two same-type aliases.
+// 0.3.0: lower V3 traveling-band head_tail colors into backward-compatible legacy shader head/tail fields</CLOG>
 
 //! Lower grouped V3 spatial shader families back into the executable legacy
 //! runtime surface.
@@ -15,7 +16,7 @@ use crate::models::v3::{
     VfxMaterialLightApplyTo, VfxMaterialLightBehavior, VfxMotionFieldBehavior,
     VfxMotionFieldDirection, VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection,
     VfxProgressEmphasisMode, VfxProgressEmphasisRowMask, VfxProgressEmphasisTextContrast,
-    VfxRevealDirection, VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
+    VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
     VfxStochasticTextureBehavior, VfxStripeMotionBehavior, VfxSurfaceDepthBehavior,
     VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection, VfxTextureSegmentMode, VfxTextureTarget,
     VfxTracePathTailMode, VfxTravelingBandApplyTo, VfxTravelingBandBehavior, VfxTravelingBandColor,
@@ -31,7 +32,7 @@ use crate::models::{
     FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader, GlistenDirection,
     GlitchLinesShader, GlowShader, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
     HighlighterRowMask, HighlighterShader, LightDirection, LinearGradientShader, NeonFlickerShader,
-    OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader, ReflectShader, RevealDirection,
+    OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader, ReflectShader,
     RevealWipeShader, SegmentMode, ShakeAxis, SparkleTarget, SpatialShaderType,
     StochasticSparkleShader, SubCellShakeShader, TextContrast, TraceApplyTo, TracePathShader,
     TracePropagationShader, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
@@ -891,16 +892,11 @@ impl From<VfxEdgeDistortionAxis> for ShakeAxis {
         }
     }
 }
-impl From<VfxRevealDirection> for RevealDirection {
-    fn from(v: VfxRevealDirection) -> Self {
-        match v {
-            VfxRevealDirection::LeftToRight => Self::LeftToRight,
-            VfxRevealDirection::RightToLeft => Self::RightToLeft,
-            VfxRevealDirection::TopToBottom => Self::TopToBottom,
-            VfxRevealDirection::BottomToTop => Self::BottomToTop,
-        }
-    }
-}
+// (From<VfxRevealDirection> for RevealDirection removed in 0.4.0 — both
+// types alias tui_vfx_geometry::WipeDirection after the audit-recommended
+// unification, so the implicit identity From<T> for T covers any
+// .into() conversion route, and an explicit impl would violate Rust's
+// orphan rule for two same-type aliases.)
 impl From<VfxTextureSegmentMode> for SegmentMode {
     fn from(v: VfxTextureSegmentMode) -> Self {
         match v {
