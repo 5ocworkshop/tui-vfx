@@ -1,12 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.1.4</VERS>
-// <WCTX>Phase 1a perf — hoist the frame-constant element-rect bounds out of both write-back loops in render_pipeline_with_shadow. Same doc-intent-vs-code discipline as 12.1.3.</WCTX>
-// <CLOG>12.1.4: PATCH — hoist element_left / element_top / element_right / element_bottom above the inspected/non-inspected write-back branch split. Both branches previously recomputed them per cell via usize::from(element_rect.x/y/width/height); element_rect is frame-constant. The non-inspected shadow_element_rect.is_none() branch had a parallel per-cell in_element built from elem_offset_x + width directly; replaced with in_element_ni (same value post-hoist). ~5-10 μs/frame on 80×24 + shadow.
-// 12.1.3: PATCH — resolve layer.region once per layer at the top of render_pipeline_with_shadow / render_loop / render_loop_inspected, pass the pre-resolved &[Cow<StyleRegion>] and the frame-constant Rect into apply_shaders / apply_shaders_inspected. Eliminates per-cell match + evaluate()×2 (for the Cell{Binding,Binding} case) and per-cell match + Cow::Borrowed wrap (for every other variant). ~150-300 μs/frame on 80×24 with 2 shader layers.
-// 12.1.2: PATCH — introduce a thread-local ROLES_ARC_CACHE plus a cached_roles_arc() helper that reuses the previously built Arc<RoleMap> when (ptr, generation, width, height) matches the cached entry. Used from all three per-call roles_arc sites: render_pipeline_with_shadow, render_loop, and render_loop_inspected. Behavior unchanged; steady-state per-frame source_roles.clone() drops to zero for workloads that keep a long-lived RoleMap across frames. Memo §2.
-// 12.1.1: PATCH — replace the fresh OwnedGrid::new + buffer.clone() pair in render_pipeline_with_shadow with two thread-local GridPool checkouts plus a cells-slice copy. Behavior unchanged; steady-state per-shadowed-frame allocations go from 2+ to 0 once pool buckets are warm. Memo §1 and §3.
-// 12.1.0: MINOR — Phase A.3 additions. (a) render_pipeline_with_shadow now takes `destination: &mut SemanticScene` (was &mut dyn Grid) so it can write RoleTag::Shadow into the destination role map for every cell identified as a shadow region candidate. (b) apply_shaders/apply_shaders_inspected gain a `roles_arc: &Arc<RoleMap>` parameter; the ShaderContext struct literals now include the `roles` field cloned from this Arc. (c) render_loop and render_loop_inspected build the Arc<RoleMap> once per invocation (a single RoleMap clone) so per-cell Arc::clone is cheap. (d) new effective_shadow_rect() helper consults config.source_region via extract_shadow_envelope; returns None for no-match (shadow stage skipped). Non-inspected shadow path pre-computes the in_element_ni / shadow_has_coverage_ni flags so shadow-region writes can be tracked for role tagging regardless of composite mode branch.
-// 12.0.0: MAJOR signature change for role-aware targeting.</CLOG>
+// <VERS>VERSION: 12.2.0</VERS>
+// <WCTX>Share shadow composite-mode helpers with grid-first V3 snapshot adapters instead of keeping glyph-overlay blending private to the orchestrator.</WCTX>
+// <CLOG>12.2.0: move glyph-overlay blending to a shared public helper while keeping render_pipeline_with_shadow dispatch behavior unchanged.</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
 use super::cls_composition_playback_timing::CompositionPlaybackTiming;
@@ -16,6 +11,7 @@ use super::cls_prepared_filter::{PreparedFilter, prepare_filters};
 use super::cls_prepared_mask::{PreparedMask, prepare_masks};
 use super::cls_prepared_sampler::{PreparedSampler, prepare_samplers, sample_sampler_chain};
 use super::cls_render_area::RenderArea;
+use super::fnc_blend_shadow_cell::blend_shadow_cell;
 use super::fnc_check_masks::check_prepared_masks;
 use super::fnc_grade_shadow_cell::grade_shadow_cell;
 use crate::traits::pipeline_inspector::CompositorInspector;
@@ -27,7 +23,7 @@ use std::sync::Arc;
 use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
 use tui_vfx_style::models::StyleRegion;
 use tui_vfx_style::traits::ShaderContext;
-use tui_vfx_types::{Cell, Grid, Rect, RoleMap, RoleTag, SemanticScene, Style};
+use tui_vfx_types::{Grid, Rect, RoleMap, RoleTag, SemanticScene, Style};
 
 // Thread-local cache for the Arc<RoleMap> the shader context receives.
 //
@@ -987,46 +983,5 @@ fn apply_shaders_inspected(
     }
 }
 
-/// Blend a shadow cell with the destination cell.
-///
-/// For shadow cells, we want to composite with the underlying content:
-/// - If the cell's bg has alpha < 255, blend it with dest's bg
-/// - If the cell's fg has alpha < 255, blend it with dest's bg (NOT fg!)
-///   because the fg in shadow cells represents the shadow portion of
-///   half-block characters, which should darken the background underneath
-/// - Keep the cell's character and modifiers
-///
-/// This allows half-block shadow characters to show underlying content
-/// through the "surface" portions while maintaining the shadow effect.
-#[inline]
-fn blend_shadow_cell(shadow_cell: &Cell, dest_cell: &Cell) -> Cell {
-    let blended_bg = if shadow_cell.bg.a < 255 && shadow_cell.bg.a > 0 {
-        // Semi-transparent: blend with dest bg
-        shadow_cell.bg.blend_over(dest_cell.bg)
-    } else if shadow_cell.bg.a == 0 {
-        // Fully transparent: use dest bg (show-through portion)
-        dest_cell.bg
-    } else {
-        // Opaque: use shadow bg
-        shadow_cell.bg
-    };
-
-    // For shadow cells, fg represents the shadow portion of half-block characters.
-    // We blend it with dest's BG (not fg) because shadows darken the background.
-    let blended_fg = if shadow_cell.fg.a < 255 && shadow_cell.fg.a > 0 {
-        // Semi-transparent shadow: blend with dest bg for darkening effect
-        shadow_cell.fg.blend_over(dest_cell.bg)
-    } else if shadow_cell.fg.a == 0 {
-        // Fully transparent: use dest bg
-        dest_cell.bg
-    } else {
-        // Opaque: use shadow fg
-        shadow_cell.fg
-    };
-
-    Cell::styled(shadow_cell.ch, blended_fg, blended_bg, shadow_cell.mods)
-        .with_mod_alpha(shadow_cell.mod_alpha)
-}
-
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>END OF VERSION: 12.1.4</VERS>
+// <VERS>END OF VERSION: 12.2.0</VERS>

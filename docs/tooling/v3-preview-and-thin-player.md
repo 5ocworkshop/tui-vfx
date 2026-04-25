@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/v3-preview-and-thin-player.md</FILE> - <DESC>As-built V3 preview surfaces and thin-player direction.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Document the existing V3 preview/player surfaces and keep the future movie/thin-player lane aligned with the grid-first architecture.</WCTX> -->
-<!-- <CLOG>0.2.0: record the packaged tui-vfx-horseman summary CLI as the first thin-player slice.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Document the existing V3 preview/player surfaces and keep the snapshot renderer boundary aligned with the grid-first architecture.</WCTX> -->
+<!-- <CLOG>0.3.0: record render_v3_snapshot_onto_grid/render_v3_snapshot_onto_scene as the semantic snapshot renderers and ratatui as an adapter.</CLOG> -->
 
 # V3 preview and thin player surface
 
@@ -19,9 +19,25 @@ only then choose an output adapter.
 | Machine-readable grid dump | `pipeline-validator --dump --stage output --format json` | Digestible frame/grid output from the canonical V3 output-dump path. |
 | Probe / diff / SQLite | `recipe-probe` or `pipeline-validator --probe` | Probe-compatible structured evidence, timeline samples, diffs, and queryable probe tables. |
 | Direct V3 snapshot state | `/usr/projects/tui-vfx-recipes/src/preview/cls_direct_v3_preview_state.rs` | Maintains sampled timing and rendered snapshot for supported V3 recipes. |
-| Direct snapshot composer | `/usr/projects/tui-vfx-recipes/src/preview/fnc_render_direct_v3_snapshot.rs` | Composes a direct V3 snapshot into a ratatui buffer at the adapter boundary. |
+| Grid-first snapshot composer | `/usr/projects/tui-vfx-recipes/src/preview/fnc_render_direct_v3_snapshot.rs` | `render_v3_snapshot_onto_grid` / `render_v3_snapshot_onto_scene` compose a V3 frame snapshot onto framework-agnostic surfaces. |
+| Ratatui snapshot adapter | `/usr/projects/tui-vfx-recipes/src/preview/fnc_render_direct_v3_snapshot.rs` | `render_v3_frame_to_buffer` converts the ratatui buffer region to an owned grid, delegates to the grid renderer, and writes back. |
 | Diagnostic dump | `/usr/projects/tui-vfx-recipes/examples/diag_render_dump.rs` | Machine-friendly rendered cell dump for focused debugging. |
 | Packaged thin player | `/usr/projects/tui-vfx-recipes/tools/tui-vfx-horseman` | Stable `tui-vfx-horseman` package with text and `--json` summary modes over the existing preview/cutover APIs. |
+
+## Snapshot renderer boundary
+
+The semantic snapshot renderer is `render_v3_snapshot_onto_grid` (or
+`render_v3_snapshot_onto_scene` when role write-back matters). It accepts
+`tui-vfx-types` grids/scenes and dispatches shadow composition by
+`ShadowCompositeMode`:
+
+- `GlyphOverlay` uses the compositor's shared glyph-overlay blend helper.
+- `GradeUnderlying` preserves the destination glyph and grades foreground /
+  background through the compositor's shared grade helper.
+
+`render_v3_frame_to_buffer` is only the ratatui adapter. Python bindings,
+crossterm adapters, headless validators, exporters, and test harnesses should
+call the grid/scene renderer rather than reimplementing ratatui buffer logic.
 
 ## D2 packaged thin-player slice
 
@@ -64,4 +80,4 @@ Future player work should stay narrow:
   snapshot path. Do not create a parallel recipe interpreter.
 
 <!-- <FILE>docs/tooling/v3-preview-and-thin-player.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
