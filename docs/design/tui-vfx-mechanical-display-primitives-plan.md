@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-mechanical-display-primitives-plan.md</FILE> - <DESC>Design plan for shared mechanical display primitives powering Odometer grid roll and multi-cell SplitFlap/Solari effects</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Plan a shared grid-first mechanical-display substrate so the existing Odometer namespace can become useful without regressing the mature single-cell SplitFlap/Solari experience.</WCTX> -->
-<!-- <CLOG>Accept odometer replacement direction: remove legacy/default compatibility requirements and make tile roll the primary odometer model.</CLOG> -->
+<!-- <CLOG>Add explicit tooling, validator, and player update phase for tui-vfx and tui-vfx-recipes feature awareness.</CLOG> -->
 
 # Mechanical display primitives: Odometer grid roll and multi-cell Solari
 
@@ -1026,7 +1026,7 @@ Required new schema assertions:
 - `docs/generated/effect_schemas.json` content variant `split_flap` lists
   `tile_width` and `tile_height`.
 - `docs/generated/effect_schemas.json` content variant `odometer` changes from
-  `kind: "unit"` to `kind: "struct"` and lists `mode`, `direction`, `travel`,
+  `kind: "unit"` to `kind: "struct"` and lists `direction`, `travel`,
   `tile_width`, `tile_height`, `cascade`, `cycles`, `jitter`, `dispersion`, and
   `from_message`.
 - The generated schema for `RollTravel` shows tagged variants `axis`,
@@ -1048,11 +1048,6 @@ needs serde, `ConfigSchema`, rustdoc, and re-exports from `types/mod.rs`.
 Expected public types:
 
 ```rust
-pub enum OdometerMode {
-    Numeric,
-    CellRoll,
-}
-
 pub enum RollDirection {
     Up,
     Down,
@@ -1157,6 +1152,62 @@ preserves existing recipes. Even tile heights `2`, `4`, `6`, and `8` enable
 grid-aware center-hinged Solari cards. Odd multi-cell heights are invalid because
 the hinge must lie between rows.
 ```
+
+
+## Tooling, validator, and player awareness
+
+This feature changes schema-bearing recipe vocabulary, so implementation is not
+complete until the authoring and playback tooling in both repositories understands
+and exercises the new shapes.
+
+Required tooling updates in `/usr/projects/tui-vfx`:
+
+- Update all `ContentEffect` construction, metadata, schema, docs, and sample
+  generation paths that currently assume `Odometer` is a unit variant.
+- Update any recipe/demo/player path in this repo that parses or previews content
+  effects so it can load structured Odometer and multi-cell SplitFlap fields.
+- Update validation paths to reject invalid mechanical configs instead of silently
+  clamping or falling back:
+  - Odometer: missing core fields, zero `tile_width`/`tile_height`, invalid
+    `RollTravel::Cells { cells: 0 }` if that variant is accepted.
+  - SplitFlap: zero dimensions, odd multi-cell tile heights, unsupported
+    center-hinge heights outside `2/4/6/8`.
+- Add or update tests for validator acceptance, validator rejection, generated
+  schema contents, and any player/demo fixture that loads content effects.
+
+Required tooling updates in `/usr/projects/tui-vfx-recipes`:
+
+- Update V3 DTO/schema/normalization/compile paths as required so recipe documents
+  can carry the new structured `odometer` effect, tagged `travel`, and SplitFlap
+  `tile_width`/`tile_height` fields without dropping them.
+- Update the pipeline validator and debug recipe QC so the new debug recipes are
+  validated as first-class examples, not ignored by permissive pass-through.
+- Update player/headless playback/smoke paths as required so the recipe player can
+  load, compile, and play the new Odometer and multi-cell SplitFlap recipes.
+- Update generated V3 API / annotated schema docs after the DTO/schema changes.
+
+Concrete checks to include where available:
+
+```bash
+# /usr/projects/tui-vfx
+cargo test -p tui-vfx-content
+cargo test -p tui-vfx-core
+just docs-all
+just docs-all-check
+just docs-all-validate
+
+# /usr/projects/tui-vfx-recipes
+cargo test -p pipeline-validator --test test_debug_recipes_qc
+cargo test --test test_debug_recipes_qc
+just docs-v3-check
+just v3-headless-smoke
+just check
+```
+
+If a named player/check target has a different local name, discover it with
+`just --list` and record the actual command in the phase report. Do not mark the
+feature complete until the relevant validators and players either pass or have a
+clearly documented pre-existing blocker.
 
 ## Documentation updates
 
@@ -1353,12 +1404,14 @@ Detailed tasks:
 6. Convert destination grid back to text.
 7. Reject invalid tile sizes through validation before rendering.
 
-### Phase 4 — docs/schema/generated artifacts
+### Phase 4 — docs/schema/tooling/player artifacts
 
 - Update rustdoc.
 - Update hand-maintained docs.
+- Update validators, metadata, schema, player/demo paths, and generated docs in
+  both repos so the new features are first-class tooling-aware recipe vocabulary.
 - Regenerate docs/schema outputs.
-- Run docs checks.
+- Run docs, validator, and player/headless checks.
 
 Detailed tasks:
 
@@ -1366,9 +1419,17 @@ Detailed tasks:
 2. Update `docs/templates/capabilities.toml` because generated capabilities use
    curated TOML input.
 3. Update `docs/CAPABILITIES_REFERENCE.md` with mode/tile examples.
-4. Run `just docs-all`.
-5. Run `just docs-all-check`.
-6. Inspect generated diff, especially:
+4. Update tui-vfx validator/player/demo/tooling paths that construct, parse,
+   preview, or validate content effects.
+5. Update tui-vfx-recipes V3 DTO/schema/normalize/compile/validator/player paths
+   as required for structured Odometer, tagged `travel`, and SplitFlap tile fields.
+6. Run `just docs-all`.
+7. Run `just docs-all-check`.
+8. Run `just docs-all-validate`.
+9. In `/usr/projects/tui-vfx-recipes`, run `just docs-v3-check`,
+   `cargo test -p pipeline-validator --test test_debug_recipes_qc`, and the
+   relevant player/headless smoke command such as `just v3-headless-smoke`.
+10. Inspect generated diff, especially:
    - `docs/generated/CAPABILITIES.md`
    - `docs/generated/capabilities.json`
    - `docs/generated/effect_schemas.json`
@@ -1414,6 +1475,8 @@ Use this as the implementation work queue. Complete one row at a time.
 | `xtask/src/docs/effect_metadata.rs` | Update constructed Odometer/SplitFlap metadata values. |
 | `docs/templates/capabilities.toml` | Update Odometer/SplitFlap hints. |
 | `docs/CAPABILITIES_REFERENCE.md` | Add mode/tile examples and validation notes. |
+| `/usr/projects/tui-vfx-recipes/src/recipe_schema/**/*.rs` | Update V3 annotated/schema DTOs for structured Odometer, tagged `travel`, and SplitFlap tile fields as required. |
+| `/usr/projects/tui-vfx-recipes/src/v3/**/*.rs` | Update normalize/compile/validate/player-aware paths so new fields are preserved and validated. |
 | `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/content/*.json` | Add/update debug recipes after core behavior lands. |
 
 OFPF guidance:
@@ -1447,7 +1510,7 @@ just check
 The feature is complete only when:
 
 - old `split_flap` recipes still render through the single-cell path
-- old `odometer` recipes still deserialize
+- old unit/default `odometer` recipes are intentionally rejected or updated to the new structured form
 - Odometer has useful grid-roll behavior under the old namespace
 - SplitFlap supports even-height multi-cell Solari tiles without regressing
   single-cell behavior
@@ -1456,4 +1519,4 @@ The feature is complete only when:
   2/4/6/8-row Solari cases
 
 <!-- <FILE>docs/design/tui-vfx-mechanical-display-primitives-plan.md</FILE> - <DESC>Design plan for shared mechanical display primitives powering Odometer grid roll and multi-cell SplitFlap/Solari effects</DESC> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
