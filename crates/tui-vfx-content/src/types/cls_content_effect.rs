@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>VERSION: 2.12.0</VERS>
-// <WCTX>Add GlyphCascade as a richer evolve-like content effect</WCTX>
-// <CLOG>Add ContentEffect::GlyphCascade variant with alphabet, pattern, direction, seed, mode fields; wire name/description/enumerate_params arms</CLOG>
+// <VERS>VERSION: 2.13.0</VERS>
+// <WCTX>Replace Odometer with structured mechanical tile-roll configuration.</WCTX>
+// <CLOG>Replace unit Odometer with direction/travel/tile/from_message fields.</CLOG>
 
 //! # Content Effects
 //!
@@ -55,6 +55,61 @@ use mixed_signals::prelude::SignalOrFloat;
 
 fn default_shift_width() -> u16 {
     1
+}
+
+fn default_tile_width() -> u16 {
+    1
+}
+
+fn default_tile_height() -> u16 {
+    1
+}
+
+/// Direction for mechanical Odometer tile rolling.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Default,
+    serde::Serialize,
+    serde::Deserialize,
+    tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum OdometerDirection {
+    #[default]
+    Up,
+    Down,
+    Left,
+    Right,
+    UpLeft,
+    UpRight,
+    DownLeft,
+    DownRight,
+}
+
+/// Travel distance policy for mechanical Odometer tile rolling.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Default,
+    serde::Serialize,
+    serde::Deserialize,
+    tui_vfx_core::ConfigSchema,
+)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum OdometerTravel {
+    #[default]
+    Axis,
+    FullClear,
+    Cells {
+        cells: u16,
+    },
 }
 
 /// Content effects that transform text before rendering.
@@ -311,10 +366,26 @@ pub enum ContentEffect {
         dispersion: crate::transformers::SplitFlapDispersion,
     },
 
-    /// Vertical scrolling digit counter.
+    /// Mechanical tile-grid rolling display.
     ///
-    /// Numbers scroll vertically like a mechanical odometer or slot machine.
-    Odometer,
+    /// Odometer treats content as a fixed character-cell grid and rolls old cells out
+    /// while target cells enter from the opposite edge. The previous digit
+    /// interpolation behavior was intentionally replaced and is not preserved.
+    Odometer {
+        /// Direction old content rolls toward while target content enters.
+        direction: OdometerDirection,
+        /// Distance policy for each roll.
+        travel: OdometerTravel,
+        /// Tile width in character cells; must be non-zero to animate.
+        #[serde(default = "default_tile_width")]
+        tile_width: u16,
+        /// Tile height in character cells; must be non-zero to animate.
+        #[serde(default = "default_tile_height")]
+        tile_height: u16,
+        /// Optional source message. Missing cells are padded with blanks by grid coordinate.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        from_message: Option<String>,
+    },
 
     /// Text redaction/censorship effect.
     ///
@@ -461,7 +532,7 @@ impl ContentEffect {
             ContentEffect::ScrambleGlitchShift { .. } => "ScrambleGlitchShift",
             ContentEffect::GlyphCascade { .. } => "GlyphCascade",
             ContentEffect::SplitFlap { .. } => "SplitFlap",
-            ContentEffect::Odometer => "Odometer",
+            ContentEffect::Odometer { .. } => "Odometer",
             ContentEffect::Redact { .. } => "Redact",
             ContentEffect::Numeric { .. } => "Numeric",
             ContentEffect::Marquee { .. } => "Marquee",
@@ -484,7 +555,7 @@ impl ContentEffect {
             }
             ContentEffect::GlyphCascade { .. } => "Glyph-cascade / symbol-evolution effect",
             ContentEffect::SplitFlap { .. } => "Airport/train station split-flap display",
-            ContentEffect::Odometer => "Vertical scrolling digit counter",
+            ContentEffect::Odometer { .. } => "Mechanical tile-grid rolling display",
             ContentEffect::Redact { .. } => "Text redaction/censorship effect",
             ContentEffect::Numeric { .. } => "Numeric formatting effect",
             ContentEffect::Marquee { .. } => "Scrolling marquee text",
@@ -596,7 +667,19 @@ impl ContentEffect {
                 ("flip_flicker", format!("{}", flip_flicker)),
                 ("dispersion", format!("{:?}", dispersion)),
             ],
-            ContentEffect::Odometer => vec![],
+            ContentEffect::Odometer {
+                direction,
+                travel,
+                tile_width,
+                tile_height,
+                from_message,
+            } => vec![
+                ("direction", format!("{:?}", direction)),
+                ("travel", format!("{:?}", travel)),
+                ("tile_width", format!("{}", tile_width)),
+                ("tile_height", format!("{}", tile_height)),
+                ("from_message", format!("{:?}", from_message)),
+            ],
             ContentEffect::Redact { symbol } => vec![("symbol", format!("{}", symbol))],
             ContentEffect::Numeric { format } => vec![("format", format.clone())],
             ContentEffect::Marquee { speed, width } => vec![
@@ -653,4 +736,4 @@ impl ContentEffect {
 }
 
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>END OF VERSION: 2.12.0</VERS>
+// <VERS>END OF VERSION: 2.13.0</VERS>

@@ -1,9 +1,7 @@
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Splash library + VFX integration plan Stage 1.5: register pool module (TextPool / EffectPool / PresetPool) alongside sources.</WCTX>
-// <CLOG>0.5.0: add pub mod pool for general-purpose content randomization.
-// 0.4.0: add pub mod sources for rocketsplash-rt image/font integration.
-// 0.3.0: Add pub mod cursor.</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>Phase 1 mechanical helpers for private grid-first content transformers.</WCTX>
+// <CLOG>0.7.0: register private mechanical helpers for Odometer tile roll.</CLOG>
 
 //! # TUI VFX Content
 //!
@@ -102,6 +100,7 @@
 //! ```
 
 pub mod cursor;
+mod mechanical;
 pub mod pool;
 pub mod prelude;
 pub mod sources;
@@ -111,4 +110,4 @@ pub mod types;
 pub mod utils;
 
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

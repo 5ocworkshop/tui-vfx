@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>VERSION: 1.10.0</VERS>
-// <WCTX>Register GlyphCascade configuration types</WCTX>
-// <CLOG>Add cls_glyph_cascade module and re-export GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern</CLOG>
+// <VERS>VERSION: 1.12.0</VERS>
+// <WCTX>Expose public Odometer schema enums for structured tile-roll recipes.</WCTX>
+// <CLOG>1.12.0: re-export OdometerDirection and OdometerTravel.</CLOG>
 
 pub mod cls_content_effect;
 pub mod cls_dissolve_config;
@@ -14,7 +14,7 @@ pub mod cls_slide_shift_line_mode;
 pub mod cls_typewriter_cursor;
 pub mod fnc_apply_content_effect;
 
-pub use cls_content_effect::ContentEffect;
+pub use cls_content_effect::{ContentEffect, OdometerDirection, OdometerTravel};
 pub use cls_dissolve_config::{DissolveDirection, DissolvePattern, DissolveReplacement};
 pub use cls_glyph_cascade::{GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern};
 pub use cls_mirror_axis::MirrorAxis;
@@ -25,4 +25,4 @@ pub use cls_slide_shift_line_mode::SlideShiftLineMode;
 pub use cls_typewriter_cursor::TypewriterCursor;
 
 // <FILE>tui-vfx-content/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>END OF VERSION: 1.10.0</VERS>
+// <VERS>END OF VERSION: 1.12.0</VERS>

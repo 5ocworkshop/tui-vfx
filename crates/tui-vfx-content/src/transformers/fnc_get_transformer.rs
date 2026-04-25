@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/transformers/fnc_get_transformer.rs</FILE> - <DESC>Factory function for content transformers</DESC>
-// <VERS>VERSION: 3.9.0</VERS>
-// <WCTX>Add CharsetNoise to transformer factory</WCTX>
-// <CLOG>Wire CharsetNoise into get_transformer factory with gradient and flat charset support</CLOG>
+// <VERS>VERSION: 3.10.0</VERS>
+// <WCTX>Wire structured Odometer tile-roll configuration into transformer factory.</WCTX>
+// <CLOG>Construct Odometer from direction/travel/tile/from_message fields.</CLOG>
 
 use crate::traits::TextTransformer;
 use crate::transformers::{
@@ -104,7 +104,19 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
             }
             Box::new(sf)
         }
-        ContentEffect::Odometer => Box::new(Odometer),
+        ContentEffect::Odometer {
+            direction,
+            travel,
+            tile_width,
+            tile_height,
+            from_message,
+        } => Box::new(Odometer::new(
+            *direction,
+            *travel,
+            *tile_width,
+            *tile_height,
+            from_message.clone(),
+        )),
         ContentEffect::Redact { symbol } => Box::new(Redact::new(*symbol)),
         ContentEffect::Numeric { format } => Box::new(Numeric::new(format)),
         ContentEffect::Marquee { speed, width } => Box::new(Marquee::new(*width, speed.clone())),
@@ -152,4 +164,4 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
 }
 
 // <FILE>tui-vfx-content/src/transformers/fnc_get_transformer.rs</FILE> - <DESC>Factory function for content transformers</DESC>
-// <VERS>END OF VERSION: 3.9.0</VERS>
+// <VERS>END OF VERSION: 3.10.0</VERS>
