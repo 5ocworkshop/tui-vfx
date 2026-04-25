@@ -1,10 +1,7 @@
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>VERSION: 1.5.0</VERS> -->
+<!-- <VERS>VERSION: 1.6.0</VERS> -->
 <!-- <WCTX>Hotfix H3 validator ergonomics: document multi-phase/all selection, --frames sweeps, structured JSON dump output, verbose resolution/border-trim traces, the build-once/direct-binary workflow, and the first supported compiled-V3 validator bridge subset.</WCTX> -->
-<!-- <CLOG>1.5.0: MINOR — document the first supported compiled-V3 validator bridge subset: parse/profile/render/shader/output now work for bridgeable compiled V3 recipes and emit deterministic render hashes instead of stopping at parse.
-1.4.0: MINOR — add H3 ergonomics guidance for phase lists/all, --frames, --format json dump mode, -vvv resolution/border-trim traces, and the build-once/direct-binary matrix workflow.
-1.3.0: MINOR — add "Relationship to tui-vfx-trace (Sub-plan B)" section so validator's recipe-authoring scope is distinguished from the unified inspection trace stream.
-1.2.0: MINOR — Add an authority split for Preview / validator / probe, document --debug-recipes-qc, and explain that concrete GTD bridge exports are valid upstream recipe inputs after token resolution</CLOG> -->
+<!-- <CLOG>1.6.0: MINOR — clarify that rules-only validation does not prove runtime payload/scope compatibility; probe is required for acceptance.</CLOG> -->
 
 # Pipeline Validator: An LLM's Guide to Inspecting Recipe Output
 
@@ -95,7 +92,8 @@ full legacy preview-scheduler matrix.
 
 ## The flags that matter
 
-- **`--rules --stages`** — the standard pre-flight: parses, validates against rules, runs the profile/render/shader/output stages. Use this first.
+- **`--rules --stages`** — the standard pre-flight: parses, validates against rules, runs the profile/render/shader/output stages. Use this first, but do not stop here.
+- **`--probe --format json`** — the required runtime compatibility check for authored recipes. Probe catches payload-field and scope/lowering mismatches that rules-only validation can miss, for example unsupported `channel:background` scopes on AO/barber-pole/charset-noise paths.
 - **`--phase entering|dwelling|exiting|all`** — selects which animation phase(s) to simulate. Comma-separated lists are allowed (`--phase entering,exiting`), and `all` expands to the fixed lifecycle order entering → dwelling → exiting. Critical: each phase has its own `t` clock, and an LLM that confuses dwell time with overall lifecycle time will get fooled (see "Time math" below).
 - **`--sample-t T1,T2,T3`** — sample at specific phase progress values (0.0–1.0 within the chosen phase). `--sample-t 0.5 --phase dwelling` means "halfway through dwell". Combine with `--phase all` for one invocation that emits every (phase, t) pair.
 - **`--frames N`** — sweep `N` evenly spaced sample points through the selected phase(s). If both `--frames` and `--sample-t` are supplied, `--frames` wins and validator reports a warning.
@@ -184,10 +182,11 @@ If you want to predict what the trace shader is doing, **always compute the shad
 The workflow that actually solved a real bug:
 
 1. **Sanity:** `pipeline-validator --rules --stages <recipe>` — confirms parse and structure.
-2. **Stage counts:** `pipeline-validator --stages -vvv --sample-t 0.4 0.5 0.6 --phase dwelling <recipe>` — look at the SHADER and FILTER cell modification counts. If a count is suspiciously high, that stage is the suspect.
-3. **Visual map:** `pipeline-validator --dump --stage output --sample-t 0.5 --phase dwelling -vvv <recipe>` — read the grid map. Compare what you see against what your mental model of the recipe says should be there. **Any cell that's lit and shouldn't be is a bug** — either in the recipe, or in the engine.
-4. **Cross-reference t values:** repeat step 3 at multiple `--sample-t` values to see the animation's progression. A bug that "appears at 50%" should be visible somewhere between t=0.45 and t=0.55.
-5. **Read the engine source:** when the visual diverges from the recipe's intent, the divergence happens in the engine. Find the shader/filter implementation and trace through the math for one specific cell coordinate. (See `crates/tui-vfx-style/src/models/cls_*_shader.rs` for spatial shaders; `crates/tui-vfx-compositor/src/filters/cls_*.rs` for filters.)
+2. **Runtime compatibility:** `pipeline-validator --probe --format json <recipe>` — confirms lowering/runtime support for payload fields and scopes. Rules-only success is not acceptance.
+3. **Stage counts:** `pipeline-validator --stages -vvv --sample-t 0.4 0.5 0.6 --phase dwelling <recipe>` — look at the SHADER and FILTER cell modification counts. If a count is suspiciously high, that stage is the suspect.
+4. **Visual map:** `pipeline-validator --dump --stage output --sample-t 0.5 --phase dwelling -vvv <recipe>` — read the grid map. Compare what you see against what your mental model of the recipe says should be there. **Any cell that's lit and shouldn't be is a bug** — either in the recipe, or in the engine.
+5. **Cross-reference t values:** repeat step 3 at multiple `--sample-t` values to see the animation's progression. A bug that "appears at 50%" should be visible somewhere between t=0.45 and t=0.55.
+6. **Read the engine source:** when the visual diverges from the recipe's intent, the divergence happens in the engine. Find the shader/filter implementation and trace through the math for one specific cell coordinate. (See `crates/tui-vfx-style/src/models/cls_*_shader.rs` for spatial shaders; `crates/tui-vfx-compositor/src/filters/cls_*.rs` for filters.)
 
 ## Real example: the phantom projection bug
 
@@ -222,4 +221,4 @@ Fix: use true point-to-segment Euclidean distance, including the parallel offset
 - `tools/pipeline-validator/src/stages/functions/fnc_sample_buffer_cells.rs` (in tui-vfx-recipes) — the grid-map and per-row dump implementations
 
 <!-- <FILE>docs/PIPELINE_VALIDATOR_LLM_GUIDE.md</FILE> - <DESC>How an LLM should use pipeline-validator to debug recipe rendering</DESC> -->
-<!-- <VERS>END OF VERSION: 1.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.6.0</VERS> -->
