@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.5.9</VERS> -->
+<!-- <VERS>VERSION: 0.6.1</VERS> -->
 <!-- <WCTX>Keep the V3 landing page current with active authoring, schema, tooling, lifecycle, and deferred post-release capability docs.</WCTX> -->
-<!-- <CLOG>0.5.9: add the deterministic core-pipeline readiness matrix to the active V3 work surfaces and execution references.</CLOG> -->
+<!-- <CLOG>0.6.1: add token-safe TTE-inspired remaining-work handoff. 0.6.0: add the Task 24 glyph particle emitter plan to active V3 work surfaces.
+0.5.9: add the deterministic core-pipeline readiness matrix to the active V3 work surfaces and execution references.</CLOG> -->
 
 # V3 documentation index
 
@@ -80,6 +81,8 @@ These still shape implementation, validation, migration, or release-gate follow-
 - [V3 spatial field hint plan](tui-vfx-v3-spatial-field-hint-plan.md)
 - [V3 scene content integration plan](tui-vfx-v3-scene-content-integration-plan.md)
 - [V3 per-cell motion plan](tui-vfx-v3-per-cell-motion-plan.md)
+- [V3 glyph particle emitter plan](tui-vfx-v3-glyph-particle-emitter-plan.md)
+- [V3 TTE-inspired remaining-work plan](tui-vfx-v3-tte-inspired-remaining-work-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
 - [V3 recipe ingredients reference plan](tui-vfx-v3-recipe-ingredients-reference-plan.md)
 - [V3 release-gate manifest seed](tui-vfx-v3-release-gate-manifest.md)
@@ -144,6 +147,8 @@ primitive behavior.
 - [V3 spatial field hint plan](tui-vfx-v3-spatial-field-hint-plan.md)
 - [V3 scene content integration plan](tui-vfx-v3-scene-content-integration-plan.md)
 - [V3 per-cell motion plan](tui-vfx-v3-per-cell-motion-plan.md)
+- [V3 glyph particle emitter plan](tui-vfx-v3-glyph-particle-emitter-plan.md)
+- [V3 TTE-inspired remaining-work plan](tui-vfx-v3-tte-inspired-remaining-work-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
 
 ## Tooling and edge adapters

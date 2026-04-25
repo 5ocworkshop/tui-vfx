@@ -20,6 +20,10 @@ pub use crate::cell_motion::{
     CellPlacement, CellPlacementBasis, CellStagger, CellStaggerAxis, CellStaggerDirection,
     CellVisibilityMode, apply_cell_motion,
 };
+pub use crate::glyph_particles::{
+    GlyphParticleEmitterSpec, GlyphParticleResult, GlyphParticleStats, ParticleConcurrency,
+    ParticleEndBehavior, emit_glyph_particles,
+};
 pub use cls_content_effect::{ContentEffect, OdometerDirection, OdometerTravel};
 pub use cls_dissolve_config::{DissolveDirection, DissolvePattern, DissolveReplacement};
 pub use cls_glyph_cascade::{GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern};

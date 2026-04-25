@@ -101,6 +101,7 @@
 
 pub mod cell_motion;
 pub mod cursor;
+pub mod glyph_particles;
 mod mechanical;
 pub mod pool;
 pub mod prelude;
