@@ -1,7 +1,7 @@
 <!-- <FILE>docs/tooling/INDEX.md</FILE> - <DESC>Tooling documentation index for tui-vfx and tui-vfx-recipes.</DESC> -->
-<!-- <VERS>VERSION: 0.2.3</VERS> -->
+<!-- <VERS>VERSION: 0.2.4</VERS> -->
 <!-- <WCTX>Make the V3 tooling hub a command-first start page that maps the as-built validator, probe, diff/database, preview/player, resize, edge-ingestion, command-capture, trace, docs-generation, and headless smoke surfaces.</WCTX> -->
-<!-- <CLOG>0.2.3: add the probe_alarm_lighthouse release-gate smoke command to the headless tooling map.</CLOG> -->
+<!-- <CLOG>0.2.4: add recipe-side V3 generated-doc and rustdoc gate commands to the tooling map.</CLOG> -->
 
 # Tooling documentation
 
@@ -37,6 +37,8 @@ deeper guide when you need more detail.
 | Resize contract evidence | `cargo run --example diag_resize_preserve_phase -- [recipe.json]` | host-owned resize | Shows host-owned resize rerendering with preserved phase/time. No core resize loop. |
 | Offline command-output capture | `cargo run -q -p recipe-source-capture -- --output <artifact.json> -- <cmd> ...` | offline-only | Authoring/tooling capture only. Runtime recipe playback must not spawn commands. |
 | Generated capabilities/API docs | `just docs-generate`, `just docs-check`, `just docs-validate`, `just docs-api`, `just docs-api-check`, `just docs-api-validate` from `/usr/projects/tui-vfx` | generated docs | `xtask`/`just` pipeline for generated docs and drift checks. |
+| Recipe-side V3 generated docs | `just docs-v3-generate`, `just docs-v3-check` from `/usr/projects/tui-vfx-recipes` | generated docs | Extracts public `src/v3` rustdoc summaries into `docs/generated/V3_API.md` and `v3_api.json`, then checks drift. |
+| Recipe-side rustdoc gate | `RUSTDOCFLAGS="-D warnings" CARGO_TARGET_DIR=/tmp/tui-vfx-recipes-doc-target cargo doc -p tui-vfx-recipes --no-deps` from `/usr/projects/tui-vfx-recipes` | rustdoc | Public API rustdoc build without waiting on the shared workspace target lock. Use a throwaway target dir for evidence lanes. |
 | Headless Chapter 100 smoke | `cd /usr/projects/tui-vfx-recipes && just v3-headless-smoke` | as-built | Headless release-gate rehearsal for Chapter 100. Composes validator, debug-QC, probe, trace, release-gate probe evidence, and docs freshness checks while keeping a legacy fallback probe in the same run. |
 | First release-gate probe smoke | `cd /usr/projects/tui-vfx-recipes && just v3-release-gate-probe-smoke` | as-built | Smallest GUI-free evidence check: runs `recipe-probe --format json` for `probe_alarm_lighthouse` and validates the report status/cells shape. |
 
@@ -51,6 +53,8 @@ Status shorthand used above:
   during recipe playback.
 - `generated docs` means the command checks or emits generated documentation
   artifacts, not hand-edited docs.
+- `rustdoc` means the command builds public API documentation and treats rustdoc
+  warnings as errors.
 
 ## Common workflows
 
@@ -204,11 +208,19 @@ just docs-validate
 just docs-api
 just docs-api-check
 just docs-api-validate
+
+cd /usr/projects/tui-vfx-recipes
+just docs-v3-generate
+just docs-v3-check
+RUSTDOCFLAGS="-D warnings" CARGO_TARGET_DIR=/tmp/tui-vfx-recipes-doc-target cargo doc -p tui-vfx-recipes --no-deps
 ```
 
-These wrap `cargo xtask docs ...` and are the as-built entry points for generated
-capabilities/API docs and drift validation. Recipe-side V3 tooling references
-live in `/usr/projects/tui-vfx-recipes/docs/`.
+The `tui-vfx` commands wrap `cargo xtask docs ...` for generated capabilities/API
+docs and drift validation. The recipe-side V3 commands extract public `src/v3`
+rustdoc summaries into `docs/generated/` and then prove both generated-doc drift
+and rustdoc build health. Use a throwaway `CARGO_TARGET_DIR` when the shared
+workspace target is busy so the docs gate can produce clean evidence without
+interrupting another cargo lane.
 
 ## Focused guides
 
@@ -243,4 +255,4 @@ live in `/usr/projects/tui-vfx-recipes/docs/`.
   tables unless a concrete missing field forces a schema extension.
 
 <!-- <FILE>docs/tooling/INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.3</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.4</VERS> -->
