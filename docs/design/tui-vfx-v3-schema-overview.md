@@ -419,6 +419,9 @@ So V3 now needs to think in two layers:
 - `border`
   - includes inline border-title cells because title text is chrome embedded
     in the line, not separate body copy
+  - on the native V3 path, title/frame/custom border cells are source cells with
+    the `border` role; legacy V2 recipes are not backfilled with synthetic V3
+    role maps during migration
 - channel/content/role selectors
 
 ### 7.2 Compression / reuse aids
@@ -572,7 +575,7 @@ Current reconciliation stance:
 | `shadow` | explicit recipe-envelope home plus scene-layer `surface.shadow`; rendered through grid/scene-first snapshot APIs, with ratatui only as an adapter |
 | `scene layer styling` | scene-layer `surface.base_style` and `surface.shadow` now execute on the native V3 scene lane |
 | `scene layer channels` | scene-layer local pipelines can now run alongside `surface.*`, including channel-scoped filter cases on the native V3 scene lane |
-| `role-scoped pipeline targeting` | `scope = { kind: "role", value: ... }` now lowers directly into role-aware runtime regions on the active V3 path |
+| `role-scoped pipeline targeting` | `scope = { kind: "role", value: ... }` now lowers directly into role-aware runtime regions on the active V3 path; this is a V3 source/scene contract, not a synthetic role-map retrofit for legacy V2 recipes |
 | `outer/inner area scopes` | `scope = { kind: "outer"|"inner", margins: ... }` now lowers directly into concrete runtime regions on the active V3 path |
 | `content selectors` | `scope = { kind: "content", value: "text" | "non_empty" }` now lowers directly into concrete runtime regions on the active V3 path |
 | `predicate selectors` | `scope = { kind: "predicate", ref: ... }` now lowers through the active builtin predicate registry on the direct V3 path |

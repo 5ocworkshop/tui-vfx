@@ -307,6 +307,10 @@
       # ^ trim policy for border corners. none | vanishing_edge.
       "title": "ALERT",
       # ^ Optional inline border text. This is chrome content, not body copy.
+      #   On the native V3 path, title/frame/custom border cells are tagged as
+      #   border-role source cells so role-scoped effects can target them. V2
+      #   recipes remain on the legacy V2 renderer until migrated; do not infer
+      #   V3 role-map parity from a legacy recipe that has not moved to V3.
       "title_position": "top",
       # ^ top | bottom | left | right. Left/right write top-to-bottom on
       #   the vertical border.
