@@ -75,6 +75,7 @@ fn decimal_preset_forward_walks_intermediate_digits() {
         source: MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         },
         route: forward_route(),
         cascade: MechanicalCascadePolicy::Simultaneous,
@@ -94,6 +95,7 @@ fn decimal_preset_reverse_walks_decreasing_digits() {
         source: MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         },
         route: MechanicalRouteConfig {
             direction: CycleDirectionPolicy::Reverse,
@@ -121,6 +123,7 @@ fn numeric_carry_increment_routes_changed_digits_forward() {
         source: MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         },
         route: MechanicalRouteConfig {
             direction: CycleDirectionPolicy::NumericDelta,
@@ -147,6 +150,7 @@ fn numeric_carry_decrement_routes_changed_digits_reverse() {
         source: MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         },
         route: MechanicalRouteConfig {
             direction: CycleDirectionPolicy::NumericDelta,
@@ -171,6 +175,7 @@ fn numeric_carry_holds_unchanged_tiles_under_hold_policy() {
         source: MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         },
         route: MechanicalRouteConfig {
             direction: CycleDirectionPolicy::NumericDelta,
@@ -197,6 +202,7 @@ fn extra_rotations_lands_target_exactly_at_progress_one() {
         source: MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         },
         route: MechanicalRouteConfig {
             direction: CycleDirectionPolicy::Forward,
@@ -313,6 +319,7 @@ fn spring_settle_renders_overshoot_face_during_settle_window() {
         source: MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         },
         route: MechanicalRouteConfig {
             extra_rotations: 1,
@@ -338,6 +345,7 @@ fn spring_settle_progress_one_returns_borrowed_target() {
         source: MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         },
         route: forward_route(),
         cascade: MechanicalCascadePolicy::Simultaneous,

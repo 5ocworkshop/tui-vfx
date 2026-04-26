@@ -5,6 +5,10 @@
 
 use std::collections::HashSet;
 
+use tui_vfx_style::models::BindableString;
+use tui_vfx_style::traits::ShaderRuntimeParams;
+
+use crate::fonts::FontRegistry;
 use crate::types::{CycleWrapMode, MechanicalContentSource};
 
 use super::cls_resolved_cycle::{ResolvedMechanicalCycle, ResolvedMechanicalFace};
@@ -21,9 +25,43 @@ use super::types::MechanicalTile;
 /// source and target endpoints when building a route. The non-Pair
 /// variants resolve to a fully populated, validated cycle whose face
 /// grids are normalized to `tile`.
+///
+/// Backward-compatible entry point: forwards to `resolve_mechanical_
+/// cycle_with_context` with a default font registry and an empty
+/// runtime-params map. Callers that want font expansion via a host-
+/// supplied registry, or that want bindable-font resolution against
+/// runtime params, use the `_with_context` variant directly.
 pub(crate) fn resolve_mechanical_cycle(
     source: &MechanicalContentSource,
     tile: MechanicalTile,
+) -> Result<ResolvedMechanicalCycle, MechanicalCycleError> {
+    let registry = FontRegistry::new();
+    let params = ShaderRuntimeParams::new();
+    resolve_mechanical_cycle_with_context(source, tile, &registry, &params)
+}
+
+/// Font-aware cycle resolution.
+///
+/// Identical to [`resolve_mechanical_cycle`] except for the `Preset`
+/// path, which when `font` is set on the variant expands each preset
+/// face string through the resolved font's glyph table before
+/// normalization. Resolution precedence for the font:
+///
+/// 1. `BindableString::Literal(name)` resolves directly against
+///    `font_registry` with implicit fallback to the registry's default
+///    per Intention 36.
+/// 2. `BindableString::Binding(key)` looks up `key` in
+///    `runtime_params`; if a Text value is present, that name resolves
+///    against `font_registry` (with default fallback). If the binding
+///    is absent or the parameter is the wrong type, falls back to the
+///    registry's default font.
+/// 3. The reserved sentinel `default_font` always routes to the
+///    registry's currently-registered default.
+pub(crate) fn resolve_mechanical_cycle_with_context(
+    source: &MechanicalContentSource,
+    tile: MechanicalTile,
+    font_registry: &FontRegistry,
+    runtime_params: &ShaderRuntimeParams,
 ) -> Result<ResolvedMechanicalCycle, MechanicalCycleError> {
     match source {
         MechanicalContentSource::Pair => Ok(ResolvedMechanicalCycle {
@@ -33,8 +71,19 @@ pub(crate) fn resolve_mechanical_cycle(
         MechanicalContentSource::Ordered { faces, wrap } => {
             resolve_from_face_strings(faces, *wrap, tile)
         }
-        MechanicalContentSource::Preset { preset, wrap } => {
-            let faces = expand_cycle_preset(*preset);
+        MechanicalContentSource::Preset { preset, wrap, font } => {
+            let raw_faces = expand_cycle_preset(*preset);
+            let faces = match font {
+                None => raw_faces,
+                Some(bindable) => {
+                    let table =
+                        resolve_font_table(bindable, font_registry, runtime_params);
+                    raw_faces
+                        .iter()
+                        .map(|s| table.render_text(s))
+                        .collect()
+                }
+            };
             resolve_from_face_strings(&faces, *wrap, tile)
         }
         MechanicalContentSource::Randomized { faces, seed, wrap } => {
@@ -111,6 +160,24 @@ fn distinct_value_count(faces: &[ResolvedMechanicalFace]) -> usize {
     seen.len()
 }
 
+/// Resolve a [`BindableString`] font reference against the registry +
+/// runtime params.
+///
+/// Always returns a glyph table by falling back to the registry's
+/// registered default per Intention 36 — missing fonts degrade to the
+/// project's canonical Line 3x3 face rather than failing the recipe.
+fn resolve_font_table(
+    bindable: &BindableString,
+    registry: &FontRegistry,
+    runtime_params: &ShaderRuntimeParams,
+) -> crate::fonts::FontGlyphTable {
+    let resolved_name = bindable
+        .evaluate(runtime_params)
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| crate::fonts::DEFAULT_FONT_SENTINEL.to_string());
+    registry.resolve_or_default(&resolved_name)
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::fnc_grid_text::grid_to_text;
@@ -158,10 +225,103 @@ mod tests {
         let src = MechanicalContentSource::Preset {
             preset: MechanicalCyclePreset::DecimalDigits,
             wrap: CycleWrapMode::Circular,
+            font: None,
         };
         let cycle = resolve_mechanical_cycle(&src, tile(1, 1)).unwrap();
         assert_eq!(cycle.faces.len(), 10);
         assert_eq!(values(&cycle), vec!["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+    }
+
+    #[test]
+    fn preset_with_literal_line_3x3_font_expands_to_3x3_glyphs() {
+        // With font = Literal("line-3x3"), each preset digit expands
+        // through the Line 3x3 glyph table to a 3x3 multi-line face.
+        // The cycle is then normalized against a 3x3 tile.
+        let src = MechanicalContentSource::Preset {
+            preset: MechanicalCyclePreset::DecimalDigits,
+            wrap: CycleWrapMode::Circular,
+            font: Some(BindableString::Literal("line-3x3".to_string())),
+        };
+        let cycle = resolve_mechanical_cycle(&src, tile(3, 3)).unwrap();
+        assert_eq!(cycle.faces.len(), 10);
+        // The face VALUE is the multi-line glyph string the preset
+        // expanded to; the grid is the same content normalized to 3×3.
+        // First face is "0" rendered as the canonical Line 3x3 box.
+        let zero_value = &cycle.faces[0].value;
+        let zero_lines: Vec<&str> = zero_value.lines().collect();
+        assert_eq!(zero_lines.len(), 3);
+        assert_eq!(zero_lines[0], "┏━┓");
+        assert_eq!(zero_lines[1], "┃ ┃");
+        assert_eq!(zero_lines[2], "┗━┛");
+    }
+
+    #[test]
+    fn preset_with_default_font_sentinel_falls_back_to_registered_default() {
+        // BindableString::Literal("default_font") routes through the
+        // registry's sentinel resolver to whatever the registered
+        // default is — Line 3x3 by construction.
+        let src = MechanicalContentSource::Preset {
+            preset: MechanicalCyclePreset::DecimalDigits,
+            wrap: CycleWrapMode::Circular,
+            font: Some(BindableString::Literal("default_font".to_string())),
+        };
+        let cycle = resolve_mechanical_cycle(&src, tile(3, 3)).unwrap();
+        // Same expansion as the named "line-3x3" path because the
+        // registry's default is line-3x3.
+        assert_eq!(cycle.faces[0].value.lines().count(), 3);
+        assert_eq!(cycle.faces[0].value.lines().next(), Some("┏━┓"));
+    }
+
+    #[test]
+    fn preset_with_unknown_font_name_falls_back_to_default() {
+        // Per Intention 36: missing font names degrade to the registry's
+        // default rather than failing the recipe.
+        let src = MechanicalContentSource::Preset {
+            preset: MechanicalCyclePreset::DecimalDigits,
+            wrap: CycleWrapMode::Circular,
+            font: Some(BindableString::Literal("does-not-exist".to_string())),
+        };
+        let cycle = resolve_mechanical_cycle(&src, tile(3, 3)).unwrap();
+        // Falls back to Line 3x3 — first face is the "0" box glyph.
+        assert_eq!(cycle.faces[0].value.lines().next(), Some("┏━┓"));
+    }
+
+    #[test]
+    fn preset_font_binding_falls_back_to_default_without_runtime_params() {
+        // BindableString::Binding requires runtime_params to evaluate.
+        // The default-arg `resolve_mechanical_cycle` passes an empty
+        // ShaderRuntimeParams, so the binding evaluates to None and the
+        // resolver falls back to the registry default.
+        let src = MechanicalContentSource::Preset {
+            preset: MechanicalCyclePreset::DecimalDigits,
+            wrap: CycleWrapMode::Circular,
+            font: Some(BindableString::Binding("drum_font".to_string())),
+        };
+        let cycle = resolve_mechanical_cycle(&src, tile(3, 3)).unwrap();
+        assert_eq!(cycle.faces[0].value.lines().next(), Some("┏━┓"));
+    }
+
+    #[test]
+    fn preset_font_binding_resolves_via_runtime_params() {
+        // With the with_context entry point and a runtime-params map
+        // that supplies a string for the binding key, the bindable
+        // resolves to the named font and the cycle expands accordingly.
+        let src = MechanicalContentSource::Preset {
+            preset: MechanicalCyclePreset::DecimalDigits,
+            wrap: CycleWrapMode::Circular,
+            font: Some(BindableString::Binding("drum_font".to_string())),
+        };
+        let registry = FontRegistry::new();
+        let mut params = ShaderRuntimeParams::new();
+        params.insert("drum_font", "line-3x3".to_string());
+        let cycle = resolve_mechanical_cycle_with_context(
+            &src,
+            tile(3, 3),
+            &registry,
+            &params,
+        )
+        .unwrap();
+        assert_eq!(cycle.faces[0].value.lines().next(), Some("┏━┓"));
     }
 
     #[test]

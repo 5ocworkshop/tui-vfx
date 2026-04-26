@@ -318,6 +318,7 @@ mod tests {
             &MechanicalContentSource::Preset {
                 preset: MechanicalCyclePreset::DecimalDigits,
                 wrap: CycleWrapMode::Circular,
+                font: None,
             },
             tile(1, 1),
         )

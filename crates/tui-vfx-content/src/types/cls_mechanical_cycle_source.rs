@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-content/src/types/cls_mechanical_cycle_source.rs</FILE> - <DESC>Public schema for mechanical cycle face sources (Pair / Ordered / Preset / Randomized / Weighted)</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1 of mechanical circular content cycles plan: schema-bearing source enum that lets odometer drums, flap stacks and slot reels share one face-supply vocabulary.</WCTX>
-// <CLOG>0.1.0: introduce MechanicalContentSource, CycleWrapMode, MechanicalCyclePreset, WeightedCycleFace.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Slice 6.3 of mechanical circular content cycles plan: add optional `font` field to Preset variant so preset digit cycles can expand single-char faces through a runtime-bindable font name.</WCTX>
+// <CLOG>0.2.0: add Optional<BindableString> font field to MechanicalContentSource::Preset; absent leaves the existing 1-cell digit behavior unchanged. 0.1.0: introduce MechanicalContentSource, CycleWrapMode, MechanicalCyclePreset, WeightedCycleFace.</CLOG>
 
 use serde::{Deserialize, Serialize};
+use tui_vfx_style::models::BindableString;
 
 /// Source of faces consumed by a [`MechanicalCycleConfig`].
 ///
@@ -32,10 +33,21 @@ pub enum MechanicalContentSource {
 
     /// Named preset face set. Presets are documented and tested; their exact
     /// face order is part of the public contract.
+    ///
+    /// When `font` is `Some`, each preset face (e.g. `"0"`, `"1"`, ...,
+    /// `"9"` for `decimal_digits`) is expanded through the resolved
+    /// font's glyph table before normalization, producing multi-line
+    /// face strings sized to the font's cell shape (3×3 for the
+    /// canonical Line 3x3 face per Intention 36). When `font` is
+    /// `None`, faces remain single-character strings — current behavior.
+    /// `BindableString::Literal` resolves immediately; `Binding` requires
+    /// runtime parameters threaded into the resolver (Slice 6.5).
     Preset {
         preset: MechanicalCyclePreset,
         #[serde(default)]
         wrap: CycleWrapMode,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        font: Option<BindableString>,
     },
 
     /// Author-supplied faces shuffled deterministically once from `seed`.
@@ -181,6 +193,7 @@ mod tests {
             MechanicalContentSource::Preset {
                 preset: MechanicalCyclePreset::DecimalDigits,
                 wrap: CycleWrapMode::Circular,
+                font: None,
             }
         ));
     }
