@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-types/src/glyph/cls_glyph_encoder.rs</FILE> - <DESC>GlyphEncoder enum: closed vocabulary of scalar-to-glyph encoders for field-effect rendering</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Glyph rendering framework Phase 3: GlyphEncoder for water/fire/future field-effect glyph encoding</WCTX>
-// <CLOG>0.2.0: drop unused `t: f64` parameter from encode_one/encode_subcell — temporal dither lives on ScalarFieldGlyphFilter, not on the encoder; clears clippy::only_used_in_recursion under -D warnings.</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Fix stale 4-arg doctest call after encode_one was trimmed to 3-arg signature</WCTX>
+// <CLOG>0.2.1: fix doctest in GlyphEncoder struct-level example — drop trailing `0.0` arg that no longer exists after encode_one was trimmed from 4 to 3 parameters.</CLOG>
 
 use std::borrow::Cow;
 
@@ -42,7 +42,7 @@ const BRAILLE_DOTS: [u8; 8] = [0x01, 0x02, 0x04, 0x40, 0x08, 0x10, 0x20, 0x80];
 /// ```rust
 /// use tui_vfx_types::glyph::GlyphEncoder;
 /// let enc = GlyphEncoder::BlockHorizontal;
-/// assert_eq!(enc.encode_one(0.5, 0, 0, 0.0), '▌');
+/// assert_eq!(enc.encode_one(0.5, 0, 0), '▌');
 /// ```
 #[derive(Debug, Clone)]
 pub enum GlyphEncoder {
@@ -247,4 +247,4 @@ fn ramp_char(chars: &[char], intensity: f32) -> char {
 mod tests;
 
 // <FILE>crates/tui-vfx-types/src/glyph/cls_glyph_encoder.rs</FILE> - <DESC>GlyphEncoder enum: closed vocabulary of scalar-to-glyph encoders for field-effect rendering</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>
