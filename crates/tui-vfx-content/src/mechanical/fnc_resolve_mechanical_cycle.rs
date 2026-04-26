@@ -26,11 +26,13 @@ use super::types::MechanicalTile;
 /// variants resolve to a fully populated, validated cycle whose face
 /// grids are normalized to `tile`.
 ///
-/// Backward-compatible entry point: forwards to `resolve_mechanical_
-/// cycle_with_context` with a default font registry and an empty
-/// runtime-params map. Callers that want font expansion via a host-
-/// supplied registry, or that want bindable-font resolution against
-/// runtime params, use the `_with_context` variant directly.
+/// **Test helper only.** Production callers route through
+/// [`resolve_mechanical_cycle_with_context`] directly so the
+/// host-supplied font registry and runtime-params map participate in
+/// resolution. Phase C (Slice 6.6) migrated the last production caller
+/// (Odometer); only the three inline tests below still need the
+/// 2-arg shape, hence the `#[cfg(test)]` gate.
+#[cfg(test)]
 pub(crate) fn resolve_mechanical_cycle(
     source: &MechanicalContentSource,
     tile: MechanicalTile,

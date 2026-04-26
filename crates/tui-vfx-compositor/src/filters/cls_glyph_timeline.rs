@@ -179,8 +179,10 @@ pub enum TimelineTrigger {
 /// One frame in a glyph timeline.
 ///
 /// Mirrors TTE's `FrameSpec` / `Visual` shape (`pro/main.rs:369-377`).
-/// Use [`Frame::new`] which clamps `duration_ticks` to a minimum of 1
-/// so the cumulative-end math is always well-defined.
+/// Construct via [`Frame::new_with_fg`] (production) or `Frame::new`
+/// (test-only convenience); both clamp `duration_ticks` to a minimum
+/// of 1 so the cumulative-end math is always well-defined.
+///
 /// Foreground color for a frame: either a single static color applied
 /// to every cell, or a seeded palette from which the apply path picks
 /// a per-cell-per-frame color via `hash_to_index`.
@@ -203,9 +205,14 @@ pub struct Frame {
 }
 
 impl Frame {
-    /// Convenience constructor for the common case: optional static
-    /// foreground + background. For palette foregrounds use
-    /// [`Frame::new_with_fg`].
+    /// **Test helper only.** Convenience constructor for the common
+    /// case: optional static foreground + background, with `Color`
+    /// auto-wrapped into `FrameColor::Static`. Production code uses
+    /// [`Frame::new_with_fg`] directly, which accepts a `FrameColor`
+    /// (Static or Palette) — the recipe-lowering path always has a
+    /// `FrameColor` in hand and would needlessly unwrap-and-rewrap
+    /// through this helper.
+    #[cfg(test)]
     pub fn new(
         glyph: Option<char>,
         fg: Option<Color>,
