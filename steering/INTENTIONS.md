@@ -798,6 +798,96 @@ Companion docs:
   recipes; concrete examples of the marker in use.
 
 
+## 39. Engine surfaces are recipes, not parallel renderers
+
+When the engine itself needs to draw something visible — a debug
+badge, a status indicator, a probe overlay, a watermark, a
+diagnostic toast — the answer is **author it as a V3 recipe in the
+standard JSON format on disk**, not a hardcoded cell-painter or
+parallel rendering primitive. The recipe is `include_str!`-inlined
+into the binary so it ships with the engine, but the artifact lives
+on disk in `recipes/internal/` (or equivalent), is editable by hand,
+and goes through the same compile + render path every other recipe
+uses.
+
+Rules:
+
+1. **Default to recipes.** If the visible thing can be expressed
+   with the V3 vocabulary (text + layout + base_style + pipeline
+   + motion), it MUST be a recipe. Inventing a parallel "overlay"
+   primitive that paints cells directly is a code smell that
+   indicates the vocabulary needs to grow, not that the engine
+   needs an escape hatch.
+2. **Inline at compile time.** Engine-required recipes
+   (`recipes/internal/*.json`) are bundled into the binary via
+   `include_str!()` so they're always available, but the source of
+   truth stays on disk. This means recipe-authors can iterate on the
+   appearance without touching engine code, and the recipe browser
+   shows them alongside every other recipe.
+3. **Cache the compile, not the JSON.** The first call parses +
+   compiles the inlined JSON; the compiled plan goes in a
+   `OnceLock`. Per-frame cost is the render call, not re-parsing.
+4. **Vocabulary gaps are not exemptions.** If the V3 vocabulary
+   genuinely cannot express the surface (e.g. a 1-row alpha-faded
+   status badge with no border at width=4), the right move is to
+   extend the vocabulary so the recipe path works — and to do that
+   work as part of whatever feature surfaced the gap, not as a
+   side-quest that delays the feature. Falling back to a hardcoded
+   cell-painter "just for this one" never stops at one.
+
+Why: the engine has exactly one rendering path. Two paths mean two
+sets of bugs, two sets of tests, two sets of styling vocabularies,
+two places authors have to look to understand how anything renders.
+Worse: parallel renderers calcify the choices their initial author
+made (color, glyph, position, fade behaviour), so iterating on the
+look later means editing engine code instead of editing a JSON file.
+The recipe path was built precisely to let the visible behaviour
+evolve independently of the engine; bypassing it for engine-internal
+surfaces forfeits that flexibility for no upside.
+
+The canonical example: the loopback visibility badge (Phase L3).
+The first attempt at L3 hardcoded a 4-cell `[LB]` glyph string,
+two `Color { r, g, b, a }` constants, and a per-cell paint loop in
+a new `tui-vfx-compositor/src/overlays/` module. The user's
+correction landed instantly: *"Don't re-invent or hard code things
+we can do with recipes and maintain flexibility."* The badge is now
+a tiny V3 recipe (`recipes/internal/loopback_badge.json` and a
+Nerd Font sibling), inlined via `include_str!`, compiled into a
+small grid via the same render path everything else uses, and
+blitted into the top-right of the host scene. Every styling
+decision — orange shade, fade approach, glyph choice, padding —
+lives in JSON the recipe-author can edit without recompiling the
+engine.
+
+The flexibility upside is concrete and load-bearing: because the
+badge is a recipe and the host's invocation is "render this recipe
+when loopback fires," **switching from a top-right badge to a
+center-screen toast notification, or to an ambient banner, or to a
+brief fly-in animation, is a recipe-file edit + a one-line change
+in the host's call site.** The user's framing: *"if it is a recipe
+we can toggle it to a notification later if we want by updating
+the recipe and changing how we call it. So... flexible."* The
+recipe path exists precisely to keep these visual decisions
+editable; engine-internal surfaces forfeit that flexibility the
+moment they're hardcoded.
+
+What this is *not* saying: it is not requiring every engine pixel
+to be a recipe. The compositing primitives (cell blending, shadow
+gradients, mask compose) stay in code — they're the *machinery* the
+recipe path uses, not surfaces themselves. The line is: anything a
+user would describe as "a visible thing" (a badge, a label, a
+toast, a watermark) is a recipe. Anything that's "how the engine
+puts pixels on the surface" is code.
+
+Companion docs:
+
+- `docs/design/tui-vfx-binding-loopback.md` — the design that
+  surfaced this principle when L3 needed a visibility badge.
+- `docs/design/tui-vfx-binding-loopback-implementation-plan.md` —
+  the L3 phase notes that record the recipe-based badge
+  architecture.
+
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->

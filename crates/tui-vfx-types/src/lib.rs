@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-types/src/lib.rs</FILE> - <DESC>Foundation types for mixed-animations ecosystem</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Sub-plan A Phase A.1 — add SemanticScene / RoleMap / RoleTag / opaque newtypes</WCTX>
-// <CLOG>0.4.0: Sub-plan A Phase A.1 — add SemanticScene + RoleMap + RoleTag (12 first-class variants + Custom) + RoleInterner + RoleId + SceneMetadata + LayerId + RecipeId + InternedString + InternedRoleName foundation primitives. All use idiomatic naming per tui-vfx-types OFPF carve-out.
-// 0.3.0: Add color_inert module with is_color_inert_glyph detection utility.</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Glyph rendering framework Phase 3: add glyph module with GlyphEncoder and subcell sampling helpers</WCTX>
+// <CLOG>0.5.0: add pub mod glyph exposing GlyphEncoder, sample_eight_subcells, sample_eight_subcells_with_slope, and SUBCELL_OFFSETS for Phase 3 of the glyph rendering framework.</CLOG>
 
 //! # tui-vfx-types
 //!
@@ -75,6 +74,7 @@ mod cell;
 mod color;
 pub mod color_inert;
 mod geometry;
+pub mod glyph;
 mod grid;
 mod interned_string;
 mod layer_id;
@@ -107,4 +107,4 @@ pub use semantic_scene::SemanticScene;
 pub use style::Style;
 
 // <FILE>crates/tui-vfx-types/src/lib.rs</FILE> - <DESC>Foundation types for mixed-animations ecosystem</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

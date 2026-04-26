@@ -1,8 +1,7 @@
 # <FILE>crates/tui-vfx-types/Cargo.toml</FILE> - <DESC>Foundation types for tui-vfx ecosystem</DESC>
-# <VERS>VERSION: 0.4.0</VERS>
-# <WCTX>Sub-plan A Phase A.1 — SemanticScene / RoleMap / RoleTag / opaque newtype foundation primitives</WCTX>
-# <CLOG>0.4.0: add serde_json dev-dependency for integration-test serde round-trip assertions introduced in Phase A.1.
-# 0.3.1: Remove no-std category and add sub-crate README reference.</CLOG>
+# <VERS>VERSION: 0.5.0</VERS>
+# <WCTX>Glyph rendering framework Phase 3: add mixed-signals dep for GlyphEncoder and subcell sampling helpers</WCTX>
+# <CLOG>0.5.0: add mixed-signals.workspace = true so glyph module can consume Signal/SignalContext/SignalWithSlope.</CLOG>
 
 [package]
 name = "tui-vfx-types"
@@ -17,6 +16,7 @@ keywords = ["animation", "terminal", "tui", "types"]
 categories = ["data-structures"]
 
 [dependencies]
+mixed-signals = { workspace = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 tui-vfx-core = { path = "../tui-vfx-core" }
 
@@ -28,4 +28,4 @@ default = ["serde"]
 serde = ["dep:serde"]
 
 # <FILE>crates/tui-vfx-types/Cargo.toml</FILE> - <DESC>Foundation types for tui-vfx ecosystem</DESC>
-# <VERS>END OF VERSION: 0.4.0</VERS>
+# <VERS>END OF VERSION: 0.5.0</VERS>

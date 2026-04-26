@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-binding-loopback-implementation-plan.md</FILE> - <DESC>Implementation plan for the binding loopback design (companion to tui-vfx-binding-loopback.md). Phase-by-phase file lists, TDD outlines, commit boundaries, and explicit deferrals so a single end-to-end push can land L1–L5 without re-deciding architecture mid-flight.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>L1 + L2 shipped. Update plan to reflect: L2 used the existing root-level `requires_bindings` block (not a new `config.bindings` block), Intention 37 landed mid-implementation and forced the "loopback required for every declaration" rule (no production-only carve-out), all five BindingKinds (U16/F32/Bool/String/Color) ship in L2 with non-numeric kinds carrying literal-only loopback in v1.</WCTX> -->
-<!-- <CLOG>0.2.0: mark L1 and L2 as shipped with commit pointers. L2 deviations from initial plan: (a) authoring layered onto root-level `requires_bindings` rather than a new `config.bindings` block; (b) per Intention 37, `loopback` is effectively required (the validator gates `effective_loopback().is_some()` per declaration); (c) all five BindingKinds shipped in L2 (the v0.1 plan scoped only U16/F32, but the existing corpus's bool/string/color bindings forced the broader scope); (d) `loopback_declarations` lives compile-time-derivable from the contracts JSON (via `compile_loopback_declarations`) rather than as a stored field on `CompiledRecipePlan`. L3 / L4 / L5 plans unchanged.
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>L3 architecture pivoted mid-implementation per Intention 39 ("Engine surfaces are recipes, not parallel renderers"). The first attempt at L3 hardcoded a cell-painter overlay in tui-vfx-compositor; user correction landed within minutes and the artefacts were recycled. L3 is now scoped as "badge-as-recipe": author the badge as a normal V3 recipe living on disk under recipes/internal/, inline via include_str! at engine compile time, render through the standard recipe path, composite onto the host scene's final grid. Plan section 3 rewritten to match.</WCTX> -->
+<!-- <CLOG>0.3.0: rewrite Phase L3 around the badge-as-recipe architecture per Intention 39. New file list: `recipes/internal/loopback_badge.json` + a `OnceLock`-cached compile helper + an `apply_loopback_badge` fn that composites the rendered badge over the host grid. Recycled artefacts (`recyclebin/crates/tui-vfx-compositor/src/overlays/*`) listed explicitly so the historical record stays discoverable. `with_loopback_applied` slated to return `(Self, Vec<String>)` so render entry points can pass `fired_keys` to the apply fn. L4/L5 sections still need a minor pass to remove the "engine overlay reads strictness hint" assumption inherited from the recycled design — flagged inline but not rewritten in this pass.
+0.2.0: mark L1 and L2 as shipped with commit pointers. L2 deviations from initial plan: (a) authoring layered onto root-level `requires_bindings` rather than a new `config.bindings` block; (b) per Intention 37, `loopback` is effectively required (the validator gates `effective_loopback().is_some()` per declaration); (c) all five BindingKinds shipped in L2 (the v0.1 plan scoped only U16/F32, but the existing corpus's bool/string/color bindings forced the broader scope); (d) `loopback_declarations` lives compile-time-derivable from the contracts JSON (via `compile_loopback_declarations`) rather than as a stored field on `CompiledRecipePlan`. L3 / L4 / L5 plans unchanged.
 0.1.0: Initial implementation plan covering L1 (engine fallback layer / merge function), L2 (`bindings:` block authoring + strict-contracts gate), L3 (visibility badge), L4 (strictness modes), L5 (probe + browser + demo recipes + docs).</CLOG> -->
 
 # Binding loopback — implementation plan
@@ -248,73 +249,132 @@ Modified (recipes side):
 - Hand-maintained doc updates (API_HAND, CAPABILITIES_REFERENCE,
   vocabulary) — L5.
 
-## 3. Phase L3 — visibility badge
+## 3. Phase L3 — visibility badge (badge-as-recipe per Intention 39)
 
 ### Goal
 
-Engine-side composition of the `LB` badge per the design doc
-section 5. Triggered by any loopback firing during the current
-frame. Solid orange, soft-edge fade, 4-cell ASCII variant
-(`!LB ` or `[LB]`) by default; Nerd Font 5-cell variant
-(` LB `) selectable via host config. Pulse-then-settle deferred
-to v1.1 (see "Deferred" below).
+When any loopback fires during a frame, render an additional
+recipe — the **loopback badge recipe** — at higher z over the
+recipe under review. The badge recipe is authored as a normal V3
+JSON recipe living on disk under `recipes/internal/`, inlined
+into the engine binary via `include_str!()`, parsed and compiled
+once via a `OnceLock` cache, and composited onto the host scene's
+final grid through the standard render path.
 
-### Why this lives in the engine, not the recipe browser
+The badge's visual choices — glyph set, colors, anchor, fade
+behaviour, padding, animation if any — are **recipe-author
+decisions encoded in JSON**, not engine constants. Switching from
+a top-right badge to a center-screen toast or to an ambient
+banner is a recipe edit + a host-side recipe-path swap; it does
+not require an engine code change.
 
-- Probe captures should carry the badge so probe reports show the
-  same visual state as live playback.
-- The compositor already owns post-pipeline overlay mechanics.
-- Putting the badge in the player means every player has to
-  re-implement it; engine-side is one place.
+### Why this lives as a recipe, not an engine overlay
+
+This phase landed Intention 39 ("Engine surfaces are recipes, not
+parallel renderers"). The first attempt at L3 hardcoded glyphs +
+colors + a per-cell paint loop in `tui-vfx-compositor/src/overlays/`;
+it was recycled to `recyclebin/crates/tui-vfx-compositor/src/overlays/`
+the moment the user pointed out the loss of recipe-author
+flexibility. Concretely:
+
+- The engine has exactly one rendering path. A parallel cell
+  painter creates a second set of styling decisions, bugs, and
+  test surfaces.
+- A recipe artefact on disk lets the recipe browser show the
+  badge alongside every other recipe; an engine constant doesn't.
+- Recipe-as-source-of-truth makes the badge↔notification choice
+  a recipe edit, not an engine rewrite. Per the user: *"if it is
+  a recipe we can toggle it to a notification later if we want by
+  updating the recipe and changing how we call it."*
+- Probe captures already carry rendered grids; if the badge is
+  another recipe rendered through the standard path, probe
+  output picks it up "for free" with no probe-side wiring.
 
 ### Files
 
 New:
-- `crates/tui-vfx-compositor/src/overlays/cls_loopback_badge_overlay.rs` —
-  the overlay implementation. Renders the badge into the top-right
-  area of the surface. Pure given an enum (which glyph variant) and
-  a flag (badge active this frame).
-- `crates/tui-vfx-compositor/src/overlays/enum_loopback_badge_style.rs` —
-  `LoopbackBadgeStyle { Auto, NerdFont, Ascii }` (Auto defaults to
-  NerdFont for v1; in v2 Auto detects).
-- `crates/tui-vfx-compositor/src/overlays/mod.rs` — module declaration.
-- Peer tests.
+- `recipes/internal/loopback_badge.json` — the V3 badge recipe.
+  Authored to be small (≤5 cells × 1 row), borderless, static
+  (no enter/exit animation), with anchor + style chosen by the
+  recipe-author. Glyph variant (`[LB]` ASCII vs ` ⚠ LB ` Nerd Font)
+  is encoded in the recipe's `message` field. A second recipe
+  (`recipes/internal/loopback_badge_nerd.json`) lands when a
+  host wants the Nerd Font variant; the host picks recipe path,
+  not a hardcoded enum.
+- `crates/tui-vfx-recipes/src/loopback/fnc_loopback_badge_plan.rs` —
+  `loopback_badge_compiled_plan() -> &'static CompiledRecipePlan`.
+  `OnceLock`-backed: first call parses the inlined JSON via
+  `include_str!()`, runs it through normalize → compile, caches.
+- `crates/tui-vfx-recipes/src/loopback/fnc_apply_loopback_badge.rs` —
+  `apply_loopback_badge(host_grid, host_roles, fired_keys, frame_w, frame_h, t)`.
+  When `fired_keys` is non-empty, renders the cached badge plan
+  at the same frame dimensions through
+  `render_compiled_plan_for_preview_area_timed_with_overrides`
+  and merges the result's non-empty cells onto `host_grid`. The
+  badge recipe owns positioning via its own `layout.anchor`;
+  the apply function doesn't hardcode "top-right".
+- Peer tests for both `fnc_*` files.
 
 Modified:
-- `crates/tui-vfx-compositor/src/lib.rs` — `pub mod overlays;` plus
-  re-exports.
-- The render pipeline composes the overlay as the last step before
-  returning the rendered scene. The pipeline already has a hook for
-  post-render filters; use that. Find via
-  `ofpf-inspect crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs`.
-- `crates/tui-vfx-recipes/src/loopback/cls_loopback_declarations.rs`
-  (modified from L1) — add a `frame_fired_keys: Vec<String>`
-  hook so the merge function records which loopback keys fired
-  during the current merge call. Engine reads this from the recipe
-  side (via a small `LoopbackBadgeState` struct on `RenderPlan`)
-  and decides whether to draw the badge.
+- `crates/tui-vfx-recipes/src/loopback/mod.rs` — register and
+  export the two new fns.
+- `crates/tui-vfx-recipes/src/v3/compile/cls_compiled_runtime_overrides.rs` —
+  `with_loopback_applied` returns `(Self, Vec<String>)` instead
+  of just `Self`, so render entry points can pass `fired_keys`
+  to the apply fn. (Breaking change to a method that landed in
+  L2; only two call sites use it, both updated in this phase.)
+- `crates/tui-vfx-recipes/src/v3/compile/fnc_render_compiled_plan_deterministically.rs` —
+  the two render entry points capture `fired_keys` from the
+  updated `with_loopback_applied`, then call
+  `apply_loopback_badge` on the final rendered grid + roles
+  before constructing the snapshot.
+
+Recycled (L3 first-attempt artefacts, preserved as the historical
+record that surfaced Intention 39):
+- `recyclebin/crates/tui-vfx-compositor/src/overlays/mod.rs`
+- `recyclebin/crates/tui-vfx-compositor/src/overlays/enum_loopback_badge_style.rs`
+- `recyclebin/crates/tui-vfx-compositor/src/overlays/cls_loopback_badge_state.rs`
+- `recyclebin/crates/tui-vfx-compositor/src/overlays/fnc_apply_loopback_badge.rs`
 
 ### TDD test outline
 
 | Test | What it proves |
 | --- | --- |
-| `badge_does_not_render_when_no_loopback_fired` | Default state is invisible. |
-| `badge_renders_in_top_right_when_any_loopback_fired` | Trigger logic works. |
-| `badge_glyph_variant_ascii_uses_4_cells` | Cell-count contract. |
-| `badge_glyph_variant_nerd_font_uses_5_cells` | Cell-count contract. |
-| `badge_orange_foreground_matches_warning_severity_color` | Color spec. |
-| `badge_soft_fade_alpha_ramps_at_outer_edges` | 1-cell alpha falloff present. |
-| `badge_overlay_does_not_modify_underlying_cells_when_inactive` | Inactive overlay is a no-op. |
-| `merge_loopback_params_records_fired_keys` | The L1 merge function tracks fires for the badge layer. |
+| `loopback_badge_recipe_parses_and_compiles` | The inlined JSON is a valid V3 recipe end-to-end. |
+| `loopback_badge_compiled_plan_is_cached_after_first_call` | Per-frame cost is the render call, not re-parsing. |
+| `apply_does_nothing_when_fired_keys_empty` | Inactive case is a clean no-op. |
+| `apply_blits_non_empty_badge_cells_over_host_grid` | Composite contract: badge cells overwrite, defaults pass through. |
+| `apply_respects_host_grid_dimensions` | Badge recipe rendered at host's frame size — anchor positions the content. |
+| `with_loopback_applied_returns_fired_keys_along_with_augmented_overrides` | The fired_keys signal makes it from L1 merge to the apply call site. |
+| `render_entry_point_paints_badge_when_recipe_has_loopback_fire` | Integration: end-to-end through `render_compiled_plan_for_preview_timed_with_overrides`. |
+| `render_entry_point_does_not_paint_badge_when_host_supplies_all_keys` | Host-wins regression guard for the badge layer. |
 
 ### Commit
 
-- Single commit on `tui-vfx` (engine).
-- Title: `Add LB visibility badge overlay for loopback fires (Phase L3)`
-- Verify: workspace test green. Visual inspection deferred to L5
-  via demo recipes.
+- Single commit on `tui-vfx-recipes` (engine doesn't change in
+  this phase — Intention 39 moved the badge into the recipes
+  workspace).
+- Title: `Add badge-as-recipe loopback visibility surface (Phase L3)`
+- Verify: `cargo test --workspace --no-fail-fast` green; visual
+  inspection deferred to L5 demo recipes.
 
 ### Deferred to v1.1
+
+- Pulse-then-settle animation. Lives in the badge recipe's
+  `pipeline` / `motion` blocks once we've validated the static
+  recipe; recipe-author work, not engine work.
+- Auto detection of Nerd Font availability. Hosts pick the
+  recipe path explicitly until a runtime detector lands.
+- Per-binding badge overrides (different recipe per binding key).
+  The current contract is "any fire → render the badge recipe";
+  per-binding routing is a host-side concern and out of scope.
+
+### Deferred to v1.1 (legacy notes from the recycled overlay design)
+
+These notes describe the abandoned engine-overlay shape and are
+preserved only for context. The recycled files in
+`recyclebin/crates/tui-vfx-compositor/src/overlays/` are the
+implementation artefacts.
 
 - Pulse-then-settle animation. Requires per-recipe-play-start
   reference for the cadence; the simplest implementation needs a
@@ -364,9 +424,13 @@ Modified:
   call.
 - `crates/tui-vfx-recipes/src/rendering/types.rs` — add the
   strictness field to `RenderPlan` (default `Permissive`).
-- The engine's `LoopbackBadgeOverlay` (from L3) — read strictness
-  hint from the recipe side and force-show the badge in `Strict`/`Error`
-  modes regardless of whether the merge actually fired.
+- L3-derived call site (`fnc_apply_loopback_badge`) — accept a
+  "force show" hint and synthesise a one-element `fired_keys`
+  list so the badge recipe still renders in `Strict`/`Error`
+  modes even though the merge layer didn't insert any values.
+  (Inherited from the recycled overlay design's "force-show"
+  contract; the apply fn is the new home for that hint now that
+  L3 is recipe-based.)
 
 ### TDD test outline
 
