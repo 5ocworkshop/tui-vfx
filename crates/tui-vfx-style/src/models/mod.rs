@@ -67,6 +67,7 @@ pub mod cls_style_layer;
 pub mod cls_style_region;
 pub mod cls_style_transition;
 pub mod cls_sub_cell_shake_shader;
+pub mod cls_terminal_water_shader;
 pub mod cls_trace_common;
 pub mod cls_trace_path_shader;
 pub mod cls_trace_propagation_shader;
@@ -134,6 +135,9 @@ pub use cls_style_layer::StyleLayer;
 pub use cls_style_region::{CellCoord, ModuloAxis, StyleRegion};
 pub use cls_style_transition::StyleTransition;
 pub use cls_sub_cell_shake_shader::{ShakeAxis, SubCellShakeShader};
+pub use cls_terminal_water_shader::{
+    TerminalWaterShader, WaterApplyTo, WaterRippleEmitter, WaterWakeSource, WaterWaveMode,
+};
 pub use cls_trace_common::{TraceApplyTo, TraceOrigin, TracePoint, TracePolyline};
 pub use cls_trace_path_shader::TracePathShader;
 pub use cls_trace_propagation_shader::TracePropagationShader;
