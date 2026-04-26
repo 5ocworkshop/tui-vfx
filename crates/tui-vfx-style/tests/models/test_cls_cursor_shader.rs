@@ -10,13 +10,7 @@ use tui_vfx_style::traits::{ShaderContext, StyleShader};
 use tui_vfx_types::{Color, Style};
 
 fn ctx(x: u16, y: u16) -> ShaderContext {
-    ShaderContext {
-        local_x: x,
-        local_y: y,
-        width: 80,
-        height: 1,
-        ..ShaderContext::default()
-    }
+    ShaderContext::new(x, y, 80, 1, 0, 0, 0.0, None, None)
 }
 
 #[test]

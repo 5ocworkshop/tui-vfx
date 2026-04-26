@@ -921,18 +921,18 @@ fn apply_shaders(
                 .to_local_coords(local_x, local_y)
                 .unwrap_or((local_x, local_y, w16, h16));
 
-            let shader_ctx = ShaderContext {
-                local_x: ctx_x,
-                local_y: ctx_y,
-                width: ctx_w,
-                height: ctx_h,
-                screen_x: offset_x as u16,
-                screen_y: offset_y as u16,
-                t: shader_t,
-                phase: options.phase,
-                runtime_params: options.runtime_params.clone(),
-                roles: roles_arc.clone(),
-            };
+            let shader_ctx = ShaderContext::new(
+                ctx_x,
+                ctx_y,
+                ctx_w,
+                ctx_h,
+                offset_x as u16,
+                offset_y as u16,
+                shader_t,
+                options.phase,
+                Some(options.runtime_params.clone()),
+            )
+            .with_roles(roles_arc.clone());
 
             let current_style = Style {
                 fg: out_cell.fg,
@@ -976,18 +976,18 @@ fn apply_shaders_inspected(
                 .to_local_coords(local_x, local_y)
                 .unwrap_or((local_x, local_y, w16, h16));
 
-            let shader_ctx = ShaderContext {
-                local_x: ctx_x,
-                local_y: ctx_y,
-                width: ctx_w,
-                height: ctx_h,
-                screen_x: offset_x as u16,
-                screen_y: offset_y as u16,
-                t: shader_t,
-                phase: options.phase,
-                runtime_params: options.runtime_params.clone(),
-                roles: roles_arc.clone(),
-            };
+            let shader_ctx = ShaderContext::new(
+                ctx_x,
+                ctx_y,
+                ctx_w,
+                ctx_h,
+                offset_x as u16,
+                offset_y as u16,
+                shader_t,
+                options.phase,
+                Some(options.runtime_params.clone()),
+            )
+            .with_roles(roles_arc.clone());
 
             let before_style = Style {
                 fg: out_cell.fg,

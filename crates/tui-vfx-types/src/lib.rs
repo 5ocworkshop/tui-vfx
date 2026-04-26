@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-types/src/lib.rs</FILE> - <DESC>Foundation types for mixed-animations ecosystem</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Glyph rendering framework Phase 3: add glyph module with GlyphEncoder and subcell sampling helpers</WCTX>
-// <CLOG>0.5.0: add pub mod glyph exposing GlyphEncoder, sample_eight_subcells, sample_eight_subcells_with_slope, and SUBCELL_OFFSETS for Phase 3 of the glyph rendering framework.</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Slice 6.6 §F.1 — expose VfxCellContext as the per-cell spatial bundle shared by Filter/Mask/Sampler/StyleShader.</WCTX>
+// <CLOG>0.6.0: add pub mod cls_vfx_cell_context exposing VfxCellContext (seven-field Copy bundle with new() + screen_cell_x/y + normalized_x/y accessors).</CLOG>
 
 //! # tui-vfx-types
 //!
@@ -71,6 +71,7 @@
 
 pub mod braille;
 mod cell;
+mod cls_vfx_cell_context;
 mod color;
 pub mod color_inert;
 mod geometry;
@@ -90,6 +91,7 @@ mod semantic_scene;
 mod style;
 
 pub use cell::Cell;
+pub use cls_vfx_cell_context::VfxCellContext;
 pub use color::Color;
 pub use geometry::{Anchor, Point, Rect, Size};
 pub use grid::{BoundaryMode, Grid, GridExt, OwnedGrid};
@@ -107,4 +109,4 @@ pub use semantic_scene::SemanticScene;
 pub use style::Style;
 
 // <FILE>crates/tui-vfx-types/src/lib.rs</FILE> - <DESC>Foundation types for mixed-animations ecosystem</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

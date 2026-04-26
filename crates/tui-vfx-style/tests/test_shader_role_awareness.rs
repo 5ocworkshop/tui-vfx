@@ -57,18 +57,7 @@ fn default_shader_context_carries_empty_role_map() {
 fn shader_can_read_role_for_current_cell() {
     let mut roles = RoleMap::new_with_default(8, 4, RoleTag::Background);
     roles.set((3, 1), RoleTag::Border);
-    let ctx = ShaderContext {
-        local_x: 3,
-        local_y: 1,
-        width: 8,
-        height: 4,
-        screen_x: 0,
-        screen_y: 0,
-        t: 0.0,
-        phase: None,
-        runtime_params: Arc::new(ShaderRuntimeParams::new()),
-        roles: Arc::new(roles),
-    };
+    let ctx = ShaderContext::new(3, 1, 8, 4, 0, 0, 0.0, None, None).with_roles(Arc::new(roles));
     let shader = RoleAwareShader {
         target: RoleTag::Border,
         match_color: Color::RED,
@@ -89,18 +78,7 @@ fn shader_can_read_role_for_current_cell() {
 #[test]
 fn shader_passes_through_when_role_does_not_match() {
     let roles = RoleMap::new_with_default(4, 4, RoleTag::Background);
-    let ctx = ShaderContext {
-        local_x: 1,
-        local_y: 1,
-        width: 4,
-        height: 4,
-        screen_x: 0,
-        screen_y: 0,
-        t: 0.0,
-        phase: None,
-        runtime_params: Arc::new(ShaderRuntimeParams::new()),
-        roles: Arc::new(roles),
-    };
+    let ctx = ShaderContext::new(1, 1, 4, 4, 0, 0, 0.0, None, None).with_roles(Arc::new(roles));
     let shader = RoleAwareShader {
         target: RoleTag::Border,
         match_color: Color::RED,
@@ -123,18 +101,8 @@ fn shader_context_send_sync_preserved() {
 fn shader_context_clone_preserves_roles() {
     let mut roles = RoleMap::new_with_default(4, 4, RoleTag::Background);
     roles.set((2, 2), RoleTag::Title);
-    let original = ShaderContext {
-        local_x: 2,
-        local_y: 2,
-        width: 4,
-        height: 4,
-        screen_x: 0,
-        screen_y: 0,
-        t: 0.0,
-        phase: None,
-        runtime_params: Arc::new(ShaderRuntimeParams::new()),
-        roles: Arc::new(roles),
-    };
+    let original =
+        ShaderContext::new(2, 2, 4, 4, 0, 0, 0.0, None, None).with_roles(Arc::new(roles));
     let cloned = original.clone();
     assert_eq!(
         cloned.roles.get((2, 2)),
