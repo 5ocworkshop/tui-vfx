@@ -1,13 +1,13 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>Add Intention 38 — recipes and source files that consume bindable-typed fields carry an explicit `_bindable` marker (filename suffix + metadata tag) until the binding-loopback design matures and tooling-driven discovery is in place.</WCTX> -->
-<!-- <CLOG>0.6.0: add Intention 38 making the `_bindable` filename suffix and `bindable` metadata tag a transitional convention so binding-consuming recipes stay distinguishable in debug_recipes/ noise. Explicit transitional framing — when L2 ships and the validator can derive the same view from `requires_bindings` / `requires_assets` declarations, the convention may be retired or refined. 0.5.9: add Intention 37 making loopback required for every requires_bindings entry. 0.5.8: add Intention 36 establishing Line 3x3 as default/fallback font.</CLOG> -->
+<!-- <VERS>VERSION: 0.6.1</VERS> -->
+<!-- <WCTX>Add Intention 40 — fix root causes; never per-site #[allow] suppressions; upstream extractions must be byte-equivalent to canonical pre-lift implementation.</WCTX> -->
+<!-- <CLOG>0.6.1: add Intention 40 codifying the no-landmines / no-loose-ends rule (no per-site #[allow], no algorithmic divergence on upstream extractions, no half-merged consolidations).</CLOG> -->
 
 # Intentions
 
 This file captures top-down decisions that steer implementation of tui-vfx. It is the durable framing that outlasts any individual release or schema version.
 
-**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), and onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35).
+**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), and we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40).
 
 **Companion:** `steering/MARKETING.md` answers *how we describe what we've built*; this file answers *how we decide what to build*. The two stay in sync; when they diverge, they must be brought back into agreement.
 
@@ -890,5 +890,82 @@ Companion docs:
 
 ---
 
+## 40. No landmines: fix root causes, no per-site `#[allow]`, no half-finished consolidations
+
+When a strict lint gate (e.g. `cargo clippy --all-targets -- -D warnings`)
+flags an issue, the answer is **never** a per-site `#[allow]` suppression.
+Find the root cause and fix it, set explicit project-level policy in
+`clippy.toml` with a comment explaining the rationale, or restructure the
+code so the lint doesn't fire. `#[allow]` is a landmine: the next code
+addition past the suppression silently inherits the bypass; the reason for
+the suppression decays in code review; and it hides downstream behaviour
+changes a future lint update would have caught.
+
+Rules:
+
+1. **No per-site `#[allow]` for clippy gates.** If the lint is firing on
+   real code-style debt, refactor the code. If the lint's default doesn't
+   fit the crate's nature (e.g. `too-many-arguments-threshold` for a
+   math/geometry crate where 8–9 positional `f32` args are idiomatic), set
+   the threshold globally in `clippy.toml` with a one-line comment
+   explaining why. That is a conscious, contributor-visible policy
+   decision; per-site suppressions are not.
+2. **`#[expect]` over `#[allow]` when suppression is genuinely required.**
+   `#[expect]` fails the build if the warning later goes away, so the
+   suppression doesn't outlive its reason. Reach for it only when (a)
+   restructuring is genuinely worse than the lint is right, and (b) a
+   short comment in source explains the trade-off.
+2A. **`-D warnings` is non-negotiable on the audit gate.** Weakening the
+    gate (`-W warnings`, dropping `--all-targets`, scoping out examples)
+    to "make it pass" is also a landmine. Fix the code or set the policy
+    in `clippy.toml`.
+3. **Upstream extractions must be byte-equivalent to the canonical
+   pre-lift implementation.** When lifting a primitive from one consumer
+   into a shared crate (e.g. `mixed-signals`), the upstream MUST reproduce
+   the canonical algorithm verbatim — exact magic numbers, exact shift
+   counts, exact normalization. Otherwise the migration silently changes
+   downstream behaviour (rain drop positions, spark seeds, render output)
+   and tests asserting range properties rather than exact values won't
+   catch it. Behaviour-preserving means **bit-equivalent**, not
+   *plausibly-similar*. Plan documents that say "behaviour-preserving
+   migration" mean exactly that.
+4. **No half-finished consolidations.** When extracting shared math or
+   collapsing duplicated patterns, every caller migrates in the same
+   workset that lands the upstream. A half-merged consolidation is a
+   landmine: the next contributor sees two implementations and has no way
+   to know which is canonical. Either complete the migration or revert
+   the extraction.
+5. **Disclosure obligation.** Subagent or solo work that hits an
+   out-of-scope clippy/test gate failure must surface it in the report,
+   not paper over it with `#[allow]`. Saying "I had to suppress X to keep
+   the lint clean" is a flag for the reviewer to evaluate the suppression;
+   silently landing the suppression is the failure mode this intention
+   exists to prevent.
+6. **Pre-commit verification.** Before declaring a workset done, run
+   `rg -n '#\[allow|#!\[allow'` over the diff. If new suppressions
+   appeared, justify each one in the commit message or remove it.
+
+Why: each landmine is silent at landing time and surfaces unpredictably
+later — sometimes weeks later, sometimes at a release boundary. The cost
+of fixing root causes once at landing is lower than the cost of a future
+contributor (or the same author) re-deriving the suppression's
+justification, then either re-suppressing it from inertia or removing it
+without understanding what it protected. The user's directive that
+prompted this rule was direct: *"stop leaving landmines."* Half-fixes
+look productive in the moment and degrade the codebase as durable
+infrastructure; this intention is the explicit counter-force.
+
+What this is *not* saying: it is not banning all `#[allow]` everywhere.
+Generated code, FFI shims, or genuinely platform-specific paths that
+clippy can't reason about may legitimately need one — but those are rare,
+documented, and reviewed. The default position when in doubt: don't
+suppress; fix.
+
+Companion memory: `feedback_no_landmines.md` in the auto-memory directory
+captures the same rule in a more conversational form for in-session
+recall.
+
+---
+
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.1</VERS> -->
