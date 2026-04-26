@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-types/src/glyph/cls_glyph_encoder.rs</FILE> - <DESC>GlyphEncoder enum: closed vocabulary of scalar-to-glyph encoders for field-effect rendering</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Glyph rendering framework Phase 3: GlyphEncoder for water/fire/future field-effect glyph encoding</WCTX>
-// <CLOG>0.1.0: initial implementation with TDD coverage and rustdoc; BrailleSubcell/BrailleEighths/BlockHorizontal/BlockVertical/Ramp byte-equivalent to SubcellLight private tables</CLOG>
+// <CLOG>0.2.0: drop unused `t: f64` parameter from encode_one/encode_subcell — temporal dither lives on ScalarFieldGlyphFilter, not on the encoder; clears clippy::only_used_in_recursion under -D warnings.</CLOG>
 
 use std::borrow::Cow;
 
@@ -84,9 +84,9 @@ impl GlyphEncoder {
     /// Inputs outside `[0.0, 1.0]` are clamped before encoding. NaN intensity
     /// is treated as `0.0` (lowest glyph for all variants).
     ///
-    /// `(x, y, t)` are the cell's grid coordinates and time-since-start in
-    /// caller units; only `BrailleEighths { rotated: true }` reads `(x, y)` to
-    /// permute the dot order across cells. Other variants ignore all three.
+    /// `(x, y)` are the cell's grid coordinates; only
+    /// `BrailleEighths { rotated: true }` reads them to permute the dot order
+    /// across cells. Other variants ignore them.
     ///
     /// Cross-shape fallback: `BrailleSubcell::encode_one` averages the input
     /// scalar across all eight subcell positions and falls back to
@@ -97,10 +97,10 @@ impl GlyphEncoder {
     ///
     /// ```rust
     /// use tui_vfx_types::glyph::GlyphEncoder;
-    /// assert_eq!(GlyphEncoder::BlockVertical.encode_one(0.0, 0, 0, 0.0), ' ');
-    /// assert_eq!(GlyphEncoder::BlockVertical.encode_one(1.0, 0, 0, 0.0), '█');
+    /// assert_eq!(GlyphEncoder::BlockVertical.encode_one(0.0, 0, 0), ' ');
+    /// assert_eq!(GlyphEncoder::BlockVertical.encode_one(1.0, 0, 0), '█');
     /// ```
-    pub fn encode_one(&self, intensity: f32, x: u16, y: u16, t: f64) -> char {
+    pub fn encode_one(&self, intensity: f32, x: u16, y: u16) -> char {
         let i = if intensity.is_nan() {
             0.0_f32
         } else {
@@ -109,7 +109,7 @@ impl GlyphEncoder {
         match self {
             GlyphEncoder::BrailleSubcell { .. } => {
                 // Cross-shape fallback: average → eighths form (unrotated)
-                GlyphEncoder::BrailleEighths { rotated: false }.encode_one(i, x, y, t)
+                GlyphEncoder::BrailleEighths { rotated: false }.encode_one(i, x, y)
             }
             GlyphEncoder::BrailleEighths { rotated } => braille_eighths(i, x, y, *rotated),
             GlyphEncoder::BlockHorizontal => horizontal_partial_char(i),
@@ -139,9 +139,9 @@ impl GlyphEncoder {
     /// use tui_vfx_types::braille::braille;
     /// // All dots above threshold 0.0 → full braille
     /// let enc = GlyphEncoder::BrailleSubcell { threshold: 0.0 };
-    /// assert_eq!(enc.encode_subcell([1.0; 8], 0, 0, 0.0), braille(0xFF));
+    /// assert_eq!(enc.encode_subcell([1.0; 8], 0, 0), braille(0xFF));
     /// ```
-    pub fn encode_subcell(&self, subcells: [f32; 8], x: u16, y: u16, t: f64) -> char {
+    pub fn encode_subcell(&self, subcells: [f32; 8], x: u16, y: u16) -> char {
         match self {
             GlyphEncoder::BrailleSubcell { threshold } => {
                 let mut bits = 0_u8;
@@ -164,7 +164,7 @@ impl GlyphEncoder {
                     }
                 }
                 let avg = if count > 0 { sum / count as f32 } else { 0.0 };
-                self.encode_one(avg, x, y, t)
+                self.encode_one(avg, x, y)
             }
         }
     }

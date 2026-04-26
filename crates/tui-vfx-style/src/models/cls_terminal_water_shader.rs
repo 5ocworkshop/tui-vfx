@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_terminal_water_shader.rs</FILE> - <DESC>Layered terminal water/ocean shader</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Migrate water shader's private math/noise helpers to mixed-signals upstream primitives (in-flight 0.3.0).</WCTX>
-// <CLOG>0.2.0: replace private smoothstep/finite_or/clamp_finite/hash01 with mixed_signals::math + mixed_signals::noise imports.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Glyph rendering framework Phase 5: expose WaterFieldSample (pub(crate)) and retain slope_x/slope_y for the WaterFieldSignal wrapper's SignalWithSlope impl.</WCTX>
+// <CLOG>0.3.0: WaterFieldSample + sample_field_at promoted to pub(crate); slope_x/slope_y added to the sample so the sibling WaterFieldSignal can return analytic gradients without 8× subcell field re-evaluations.</CLOG>
 
 //! Layered terminal water/ocean shader.
 //!
@@ -261,18 +261,29 @@ struct Vec3 {
     z: f32,
 }
 
+/// Per-cell sample of the water field used by [`TerminalWaterShader`].
+///
+/// Visibility is `pub(crate)` so the sibling [`crate::models::cls_water_field_signal`]
+/// wrapper can route it through the [`mixed_signals::traits::Signal`] surface.
+/// Fields stay `pub(crate)` until probe/trace consumers need them publicly.
 #[derive(Debug, Clone, Copy, PartialEq)]
-struct WaterFieldSample {
-    height: f32,
-    height_scalar: f32,
-    crest: f32,
-    curvature: f32,
-    foam: f32,
-    diffuse: f32,
-    specular: f32,
-    fresnel: f32,
-    light_scalar: f32,
-    ripple_scalar: f32,
+pub(crate) struct WaterFieldSample {
+    pub(crate) height: f32,
+    pub(crate) height_scalar: f32,
+    pub(crate) crest: f32,
+    pub(crate) curvature: f32,
+    pub(crate) foam: f32,
+    pub(crate) diffuse: f32,
+    pub(crate) specular: f32,
+    pub(crate) fresnel: f32,
+    pub(crate) light_scalar: f32,
+    pub(crate) ripple_scalar: f32,
+    /// Cached spatial gradient ∂height/∂x in cell-space units.
+    /// Used by [`crate::models::cls_water_field_signal::WaterFieldSignal`]'s
+    /// `SignalWithSlope` impl to skip 8× subcell field evaluations.
+    pub(crate) slope_x: f32,
+    /// Cached spatial gradient ∂height/∂y in cell-space units.
+    pub(crate) slope_y: f32,
 }
 
 impl TerminalWaterShader {
@@ -280,7 +291,14 @@ impl TerminalWaterShader {
         self.layers.clamp(1, MAX_LAYERS)
     }
 
-    fn sample_field_at(&self, x: f32, y: f32, width: u16, height: u16, t: f32) -> WaterFieldSample {
+    pub(crate) fn sample_field_at(
+        &self,
+        x: f32,
+        y: f32,
+        width: u16,
+        height: u16,
+        t: f32,
+    ) -> WaterFieldSample {
         let layers = self.sanitized_layers();
         let amplitude = finite_or_clamp(self.amplitude, 0.0, 2.0, DEFAULT_AMPLITUDE);
         let wavelength = finite_or_clamp(self.wavelength, 1.0, 512.0, DEFAULT_WAVELENGTH);
@@ -429,6 +447,8 @@ impl TerminalWaterShader {
             fresnel,
             light_scalar,
             ripple_scalar,
+            slope_x,
+            slope_y,
         }
     }
 

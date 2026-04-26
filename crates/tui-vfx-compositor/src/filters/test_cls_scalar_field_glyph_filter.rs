@@ -1,13 +1,13 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/test_cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Tests for ScalarFieldGlyphFilter — encoding, threshold, only_blank, recolor, SignalContext wiring</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Glyph rendering framework Phase 4: TDD tests for ScalarFieldGlyphFilter</WCTX>
-// <CLOG>0.1.0: initial test suite; covers all required test cases from the Phase 4 packet spec</CLOG>
+// <CLOG>0.2.0: drop temporal_dither_hz field references and the dead test that asserted on it (the field never wired through to the encoder; SubcellLight retains its inline temporal-dither path).</CLOG>
 
 use std::sync::{Arc, Mutex};
 
 use mixed_signals::traits::{Signal, SignalContext, SignalTime};
-use tui_vfx_types::{glyph::GlyphEncoder, Cell, Color, Modifiers};
+use tui_vfx_types::{Cell, Color, Modifiers, glyph::GlyphEncoder};
 
 use super::ScalarFieldGlyphFilter;
 use crate::traits::filter::Filter;
@@ -40,11 +40,7 @@ impl Signal for SpatialXSignal {
     fn sample_with_context(&self, _t: SignalTime, ctx: &SignalContext) -> f32 {
         let x = ctx.cell_x.unwrap_or(0) as f32;
         let w = ctx.width as f32;
-        if w > 0.0 {
-            x / w
-        } else {
-            0.0
-        }
+        if w > 0.0 { x / w } else { 0.0 }
     }
 }
 
@@ -74,7 +70,6 @@ fn default_filter(
         recolor: None,
         threshold: 0.0,
         only_blank: false,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     }
@@ -90,7 +85,7 @@ fn default_filter(
 fn test_apply_writes_glyph_via_encoder() {
     let intensity = 0.5;
     let encoder = GlyphEncoder::BlockHorizontal;
-    let expected = encoder.encode_one(intensity, 0, 0, 0.0);
+    let expected = encoder.encode_one(intensity, 0, 0);
 
     let filter = default_filter(ConstSignal(intensity), GlyphEncoder::BlockHorizontal);
     let mut cell = make_cell(' ', Color::WHITE, Color::BLACK);
@@ -112,7 +107,6 @@ fn test_apply_skips_below_threshold() {
         threshold: 0.6,
         recolor: None,
         only_blank: false,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     };
@@ -134,7 +128,6 @@ fn test_apply_only_blank_skips_non_space_cells() {
         threshold: 0.0,
         recolor: None,
         only_blank: true,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     };
@@ -156,7 +149,6 @@ fn test_apply_only_blank_processes_space_cells() {
         threshold: 0.0,
         recolor: None,
         only_blank: true,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     };
@@ -179,7 +171,6 @@ fn test_apply_recolor_some_overrides_colors() {
         threshold: 0.0,
         recolor: Some((lit, unlit)),
         only_blank: false,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     };
@@ -200,7 +191,6 @@ fn test_apply_recolor_none_preserves_colors() {
         threshold: 0.0,
         recolor: None,
         only_blank: false,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     };
@@ -232,7 +222,6 @@ fn test_apply_constructs_signal_context_with_default_form() {
         threshold: 0.0,
         recolor: None,
         only_blank: false,
-        temporal_dither_hz: 0.0,
         frame: 42,
         seed: 7,
     };
@@ -280,7 +269,6 @@ fn test_apply_spatial_x_signal_blank_cell_produces_half_block() {
         threshold: 0.0,
         recolor: None,
         only_blank: false,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     };
@@ -298,7 +286,6 @@ fn test_apply_only_blank_skips_text() {
         threshold: 0.0,
         recolor: None,
         only_blank: true,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     };
@@ -325,7 +312,6 @@ fn test_apply_braille_subcell_uses_eight_samples() {
         threshold: 0.0,
         recolor: None,
         only_blank: false,
-        temporal_dither_hz: 0.0,
         frame: 0,
         seed: 0,
     };
@@ -339,46 +325,6 @@ fn test_apply_braille_subcell_uses_eight_samples() {
     );
 }
 
-/// Temporal dither snaps the encode_t to discrete steps.
-/// Two calls at t=0.0 and t=0.4 with temporal_dither_hz=2.0 both snap to step 0,
-/// producing the same glyph. A call at t=0.6 snaps to step 1.
-#[test]
-fn test_apply_temporal_dither_quantizes_time() {
-    let hz = 2.0_f32;
-    let filter = ScalarFieldGlyphFilter {
-        sampler: ConstSignal(0.5),
-        encoder: GlyphEncoder::BrailleEighths { rotated: true },
-        threshold: 0.0,
-        recolor: None,
-        only_blank: false,
-        temporal_dither_hz: hz,
-        frame: 0,
-        seed: 0,
-    };
-
-    // Both t=0.0 and t=0.4 floor to the same step (0.0 * 2 = 0 → encode_t = 0.0)
-    let mut a = make_cell(' ', Color::WHITE, Color::BLACK);
-    let mut b = make_cell(' ', Color::WHITE, Color::BLACK);
-    filter.apply(&mut a, 3, 2, 10, 5, 0.0);
-    filter.apply(&mut b, 3, 2, 10, 5, 0.4);
-    assert_eq!(
-        a.ch, b.ch,
-        "t=0.0 and t=0.4 should produce the same glyph with hz=2"
-    );
-
-    // t=0.6 floors to step 1 → encode_t = 0.5 → different from step 0
-    let mut c = make_cell(' ', Color::WHITE, Color::BLACK);
-    filter.apply(&mut c, 3, 2, 10, 5, 0.6);
-    // Note: with BrailleEighths rotated, encode_one ignores t (only x/y matter).
-    // The temporal_dither_hz mechanism affects the t passed to encode_one,
-    // but rotated BrailleEighths only uses x,y for rotation.
-    // Just verify the filter completes without panic and writes a braille char.
-    assert!(
-        tui_vfx_types::braille::braille_bits(c.ch).is_some(),
-        "BrailleEighths must produce a braille char"
-    );
-}
-
 // <FILE>crates/tui-vfx-compositor/src/filters/test_cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Tests for ScalarFieldGlyphFilter — encoding, threshold, only_blank, recolor, SignalContext wiring</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

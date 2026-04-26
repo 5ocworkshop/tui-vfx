@@ -6,7 +6,7 @@
 
 use crate::filters::cls_cell_color_intensity_signal::CellColorIntensitySignal;
 use crate::traits::filter::Filter;
-use tui_vfx_types::{glyph::GlyphEncoder, Cell, Color};
+use tui_vfx_types::{Cell, Color, glyph::GlyphEncoder};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SubcellLightRenderMode {
@@ -112,10 +112,10 @@ impl Filter for SubcellLight {
                 braille(pattern)
             }
             SubcellLightRenderMode::Horizontal => {
-                GlyphEncoder::BlockHorizontal.encode_one(intensity, x, y, t)
+                GlyphEncoder::BlockHorizontal.encode_one(intensity, x, y)
             }
             SubcellLightRenderMode::Vertical => {
-                GlyphEncoder::BlockVertical.encode_one(intensity, x, y, t)
+                GlyphEncoder::BlockVertical.encode_one(intensity, x, y)
             }
         };
         cell.fg = self.lit_color;

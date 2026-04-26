@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>
-// <VERS>VERSION: 2.6.0</VERS>
-// <WCTX>Phase 3b: register fnc_style_region_resolved sibling that owns the BindableU16 lowering for every resolvable StyleRegion variant.</WCTX>
-// <CLOG>Register fnc_style_region_resolved module alongside the other fnc_style_region_* siblings.</CLOG>
+// <VERS>VERSION: 2.7.0</VERS>
+// <WCTX>Glyph rendering framework Phase 5: register cls_water_field_signal sibling that exposes TerminalWaterShader's per-cell field as a mixed_signals::Signal.</WCTX>
+// <CLOG>2.7.0: register cls_water_field_signal module + re-export WaterFieldSignal so downstream consumers (ScalarFieldGlyphFilter, water glyph recipes) can plug water into the glyph encoder pipeline.</CLOG>
 
 //! Style/shader model surface for `tui-vfx-style`.
 //!
@@ -72,6 +72,7 @@ pub mod cls_terminal_water_shader;
 pub mod cls_trace_common;
 pub mod cls_trace_path_shader;
 pub mod cls_trace_propagation_shader;
+pub mod cls_water_field_signal;
 pub mod cls_wayfinding_node_shader;
 pub mod fnc_apply_style_effects_to_scene;
 pub mod fnc_style_region_bounding_rect;
@@ -143,6 +144,7 @@ pub use cls_terminal_water_shader::{
 pub use cls_trace_common::{TraceApplyTo, TraceOrigin, TracePoint, TracePolyline};
 pub use cls_trace_path_shader::TracePathShader;
 pub use cls_trace_propagation_shader::TracePropagationShader;
+pub use cls_water_field_signal::WaterFieldSignal;
 pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader};
 pub use fnc_apply_style_effects_to_scene::apply_style_effects_to_scene;
 pub use tui_vfx_geometry::easing::EasingType;

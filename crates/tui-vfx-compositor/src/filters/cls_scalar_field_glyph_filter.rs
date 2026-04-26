@@ -1,11 +1,11 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Generic scalar-field-to-glyph filter: samples any Signal and encodes intensity via GlyphEncoder</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Glyph rendering framework Phase 4: unifying filter for water/fire/terrain field effects</WCTX>
-// <CLOG>0.1.1: replace #[allow(dead_code)] with #[expect(dead_code)] so the suppression auto-retires when Phase 6 wires FilterSpec::ScalarFieldGlyph (Intention 40 §2).</CLOG>
+// <CLOG>0.2.0: drop unwired temporal_dither_hz field — encoders no longer take a time argument, so the snap-to-step value flowed nowhere; SubcellLight retains its own inline temporal-dither logic.</CLOG>
 
 use mixed_signals::traits::{Signal, SignalContext};
-use tui_vfx_types::{glyph::sample_eight_subcells, glyph::GlyphEncoder, Cell, Color};
+use tui_vfx_types::{Cell, Color, glyph::GlyphEncoder, glyph::sample_eight_subcells};
 
 use crate::traits::filter::Filter;
 
@@ -33,12 +33,16 @@ use crate::traits::filter::Filter;
 /// - `threshold` — skip-guard for single-scalar encoders; cell is left
 ///   unchanged when `intensity <= threshold`.
 /// - `only_blank` — skip non-blank cells (`cell.ch != ' '`) when `true`.
-/// - `temporal_dither_hz` — when nonzero, the time argument forwarded to
-///   `encode_one` snaps to `(t * temporal_dither_hz).floor() / temporal_dither_hz`
-///   to produce per-frame discrete steps that change at this rate. Matches
-///   `SubcellLight::rotated_braille_pattern`'s time-snapping logic exactly.
 /// - `frame` / `seed` — forwarded into the [`SignalContext`] for signals that
 ///   use them for determinism or noise.
+///
+/// # Temporal dither
+///
+/// Time-stepped variation across frames belongs to the *signal* (sample at
+/// quantized `absolute_t`) or to a future encoder variant that consumes time
+/// (e.g. a hypothetical `BrailleEighthsTimeDither`). The legacy
+/// [`crate::filters::cls_subcell_light::SubcellLight`] keeps its own inline
+/// temporal-dither logic; this filter does not duplicate it.
 ///
 /// # Example
 ///
@@ -59,7 +63,6 @@ use crate::traits::filter::Filter;
 ///     recolor: None,
 ///     threshold: 0.0,
 ///     only_blank: false,
-///     temporal_dither_hz: 0.0,
 ///     frame: 0,
 ///     seed: 0,
 /// };
@@ -71,7 +74,10 @@ use crate::traits::filter::Filter;
 // `docs/design/tui-vfx-glyph-rendering-framework-plan.md` when `FilterSpec`
 // gains a `ScalarFieldGlyph` discriminant. `#[expect(dead_code)]` auto-retires
 // at that point — the build fails if the expectation no longer applies.
-#[expect(dead_code, reason = "wired in Phase 6 via FilterSpec::ScalarFieldGlyph")]
+#[expect(
+    dead_code,
+    reason = "wired in Phase 6 via FilterSpec::ScalarFieldGlyph"
+)]
 pub struct ScalarFieldGlyphFilter<S: Signal> {
     /// The field sampler; sampled once per `apply` call (or eight times for
     /// `BrailleSubcell`).
@@ -87,9 +93,6 @@ pub struct ScalarFieldGlyphFilter<S: Signal> {
     pub threshold: f32,
     /// When `true`, cells whose `ch` is not `' '` are skipped.
     pub only_blank: bool,
-    /// Time-quantization rate for the `t` argument passed to `encode_one`.
-    /// When `0.0`, `t` is passed through unchanged.
-    pub temporal_dither_hz: f32,
     /// Frame counter forwarded into `SignalContext`.
     pub frame: u64,
     /// Noise seed forwarded into `SignalContext`.
@@ -112,25 +115,17 @@ impl<S: Signal> Filter for ScalarFieldGlyphFilter<S> {
             .with_cell_position(x, y)
             .with_absolute_time(t);
 
-        // Time value forwarded to encode_one; snapped for temporal dither.
-        let encode_t = if self.temporal_dither_hz > 0.0 {
-            let hz = self.temporal_dither_hz as f64;
-            (t * hz).floor() / hz
-        } else {
-            t
-        };
-
         let new_ch = match &self.encoder {
             GlyphEncoder::BrailleSubcell { .. } => {
                 let subcells = sample_eight_subcells(&self.sampler, &ctx, t);
-                self.encoder.encode_subcell(subcells, x, y, encode_t)
+                self.encoder.encode_subcell(subcells, x, y)
             }
             _ => {
                 let v = self.sampler.sample_with_context(t, &ctx);
                 if v <= self.threshold {
                     return;
                 }
-                self.encoder.encode_one(v, x, y, encode_t)
+                self.encoder.encode_one(v, x, y)
             }
         };
 
@@ -148,4 +143,4 @@ mod tests;
 
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Generic scalar-field-to-glyph filter: samples any Signal and encodes intensity via GlyphEncoder</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
