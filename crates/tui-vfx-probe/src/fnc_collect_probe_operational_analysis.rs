@@ -12,6 +12,10 @@ use crate::{
 
 const STAGES: [&str; 4] = ["sampler", "mask", "shader", "filter"];
 
+/// `effect-name → (set of (frame, x, y) cells touched, total event count)`.
+/// Aggregated per stage across one or more probe reports.
+type EffectsByName = BTreeMap<String, (BTreeSet<(usize, u16, u16)>, usize)>;
+
 /// Collect stage-by-stage operational analysis from one or more direct probe reports.
 pub fn collect_probe_operational_analysis(
     scope: &str,
@@ -211,7 +215,7 @@ fn configured_effects_for_stage(
 
 fn observed_counts_for_configured_effect(
     configured_effect: &str,
-    effects: &BTreeMap<String, (BTreeSet<(usize, u16, u16)>, usize)>,
+    effects: &EffectsByName,
 ) -> (usize, usize) {
     let mut touched_cells = BTreeSet::new();
     let mut event_count = 0usize;

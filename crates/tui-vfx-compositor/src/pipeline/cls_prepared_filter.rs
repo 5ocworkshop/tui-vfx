@@ -558,13 +558,13 @@ pub(crate) fn prepare_filter(
                     use crate::filters::cls_glyph_timeline::FrameColor;
                     use crate::types::cls_filter_spec::FrameColorSpec;
                     let fg = f.fg.as_ref().map(|fc| match fc {
-                        FrameColorSpec::Static(c) => FrameColor::Static(Color::from(c.clone())),
+                        FrameColorSpec::Static(c) => FrameColor::Static(Color::from(*c)),
                         FrameColorSpec::Palette { palette, seed } => FrameColor::Palette {
-                            colors: palette.iter().cloned().map(Color::from).collect(),
+                            colors: palette.iter().copied().map(Color::from).collect(),
                             seed: *seed,
                         },
                     });
-                    Frame::new_with_fg(f.glyph, fg, f.bg.clone().map(Color::from), f.duration_ticks)
+                    Frame::new_with_fg(f.glyph, fg, f.bg.map(Color::from), f.duration_ticks)
                 })
                 .collect();
 

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.3.0</VERS>
-// <WCTX>Pipeline observability Unit A — wrap the cell loop in render_loop_inspected with per-stage StageEntered/ScopeEvaluated/StageSkipped/StageFinished + RoleMapMaterialized emission via the new orc_pipeline_observability helpers, so the focused_row_btop scope-mismatch class shows up on the event stream.</WCTX>
-// <CLOG>12.3.0: emit per-stage observability events around the inspected cell loop — RoleMapMaterialized at entry, per-shader scope tally + StageEntered/ScopeEvaluated/StageSkipped at pre-loop, simple StageEntered/Finished pair for samplers/masks/filters/shadow.</CLOG>
+// <VERS>VERSION: 12.4.0</VERS>
+// <WCTX>Pipeline observability Unit A — architect-flagged B2 follow-up: render_pipeline_with_shadow's element pass now emits the same per-stage block (Sampler/Mask/Shader/Filter) that render_loop_inspected uses, so a shadowed Role(Text)-on-all-Background recipe fires StageSkipped { ScopeMatchedZeroCells } instead of silently rendering zero cells.</WCTX>
+// <CLOG>12.4.0: refactor pre-loop / post-loop emit blocks into emit_per_stage_entered / emit_per_stage_finished helpers; render_pipeline_with_shadow's element pass calls them with start_step_id=2 (Shadow=1), and respects the returned skipped_shader_indices in its inline shader loop.</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
 use super::cls_composition_playback_timing::CompositionPlaybackTiming;
@@ -16,9 +16,10 @@ use super::fnc_blend_underlying_shadow_cell::blend_underlying_shadow_cell;
 use super::fnc_check_masks::check_prepared_masks;
 use super::fnc_grade_shadow_cell::grade_shadow_cell;
 use super::orc_pipeline_observability::{
-    SimpleStageState, emit_role_map_materialized, emit_shader_entered_or_skipped,
-    emit_shader_finished, emit_simple_stage_entered, emit_simple_stage_finished,
+    PerStageInputs, emit_per_stage_entered, emit_per_stage_finished, emit_role_map_materialized,
+    emit_simple_stage_entered, emit_simple_stage_finished,
 };
+use crate::pipeline::cls_composition_options::ShaderWithRegion;
 use crate::traits::pipeline_inspector::CompositorInspector;
 use tui_vfx_debug::inspection::PipelineStageKind;
 use mixed_signals::traits::Phase;
@@ -364,6 +365,56 @@ fn render_pipeline_with_shadow(
         .iter()
         .map(|layer| layer.region.resolved(&options.runtime_params))
         .collect();
+
+    // Prepared masks are produced now (rather than just before the mask
+    // pass below) so the per-stage observability block can emit Mask
+    // StageEntered events alongside the Sampler/Shader/Filter entries.
+    let prepared_masks = prepare_masks(options.masks.as_ref());
+
+    // ── Pipeline observability Unit A — element-pass per-stage emit ─────
+    // Architect-flagged B2: the shadow path's element pass was previously
+    // observability-blind for Sampler/Mask/Shader/Filter stages. Wire the
+    // same per-stage block render_loop_inspected uses, starting at
+    // step_id=2 because step_id=1 is reserved for the Shadow stage that
+    // already emitted above.
+    let element_stage_block = if let Some(insp) = inspector.as_deref_mut() {
+        let mask_labels: Vec<String> = prepared_masks
+            .iter()
+            .enumerate()
+            .map(|(i, mask)| format!("{}#{}", mask.name(), i + 1))
+            .collect();
+        let filter_labels: Vec<String> = prepared_filters
+            .iter()
+            .enumerate()
+            .map(|(i, filter)| format!("{}#{}", filter.name(), i + 1))
+            .collect();
+        let shader_pairs: Vec<(&ShaderWithRegion, &StyleRegion)> = options
+            .shader_layers
+            .iter()
+            .zip(resolved_regions.iter())
+            .map(|(layer, resolved)| (layer, resolved.as_ref()))
+            .collect();
+        Some(emit_per_stage_entered(
+            insp,
+            2,
+            &PerStageInputs {
+                sampler_label: options.sampler_spec.as_ref().map(|spec| spec.name()),
+                mask_labels: &mask_labels,
+                shader_layers_with_regions: &shader_pairs,
+                filter_labels: &filter_labels,
+                source_roles,
+                width: w16,
+                height: h16,
+            },
+        ))
+    } else {
+        None
+    };
+    let element_skipped_shaders: &[usize] = element_stage_block
+        .as_ref()
+        .map_or(&[], |block| &block.skipped_shader_indices);
+    // ────────────────────────────────────────────────────────────────────
+
     for y in 0..height {
         for x in 0..width {
             let (local_x, local_y) = (x as u16, y as u16);
@@ -382,23 +433,47 @@ fn render_pipeline_with_shadow(
 
             let mut out_cell = *source_cell;
 
-            // Apply shaders (coordinates relative to element)
+            // Apply shaders (coordinates relative to element). Shaders flagged
+            // as scope-mismatched by emit_per_stage_entered are skipped via
+            // element_skipped_shaders so they do not silently mutate cells
+            // for a stage already marked StageSkipped on the trace.
             let source_role = source_roles.get((src_x, src_y));
-            apply_shaders(
-                &mut out_cell,
-                local_x,
-                local_y,
-                w16,
-                h16,
-                offset_x + elem_offset_x,
-                offset_y + elem_offset_y,
-                shader_t,
-                &options,
-                &resolved_regions,
-                shader_area,
-                source_role,
-                &roles_arc,
-            );
+            for (shader_index, (layer, resolved)) in options
+                .shader_layers
+                .iter()
+                .zip(resolved_regions.iter())
+                .enumerate()
+            {
+                if element_skipped_shaders.contains(&shader_index) {
+                    continue;
+                }
+                if resolved.should_style(local_x, local_y, source_role.clone(), shader_area) {
+                    let (ctx_x, ctx_y, ctx_w, ctx_h) = resolved
+                        .to_local_coords(local_x, local_y)
+                        .unwrap_or((local_x, local_y, w16, h16));
+                    let shader_ctx = ShaderContext::new(
+                        ctx_x,
+                        ctx_y,
+                        ctx_w,
+                        ctx_h,
+                        (offset_x + elem_offset_x) as u16,
+                        (offset_y + elem_offset_y) as u16,
+                        shader_t,
+                        options.phase,
+                        Some(options.runtime_params.clone()),
+                    )
+                    .with_roles(roles_arc.clone());
+                    let current_style = Style {
+                        fg: out_cell.fg,
+                        bg: out_cell.bg,
+                        mods: out_cell.mods,
+                    };
+                    let new_style = layer.shader.style_at(&shader_ctx, current_style);
+                    out_cell.fg = new_style.fg;
+                    out_cell.bg = new_style.bg;
+                    out_cell.mods = new_style.mods;
+                }
+            }
 
             // Apply filters
             for filter in &prepared_filters {
@@ -411,7 +486,6 @@ fn render_pipeline_with_shadow(
     }
 
     // Now copy from buffer to dest, applying masks over the extended area
-    let prepared_masks = prepare_masks(options.masks.as_ref());
     let mask_t = compute_mask_t(&options);
     let (ext_w16, ext_h16) = (ext_width as u16, ext_height as u16);
 
@@ -432,7 +506,7 @@ fn render_pipeline_with_shadow(
     // RoleTag::Shadow for the collected positions.
     let dest: &mut dyn Grid = destination.grid_mut();
 
-    if let Some(inspector) = inspector {
+    if let Some(inspector) = inspector.as_deref_mut() {
         // Inspected path
         for y in 0..ext_height {
             for x in 0..ext_width {
@@ -692,6 +766,17 @@ fn render_pipeline_with_shadow(
             roles.set((dx, dy), RoleTag::Shadow);
         }
     }
+
+    // ── Pipeline observability Unit A — element-pass post-loop emit ─────
+    // Emit StageFinished for every Sampler/Mask/Shader/Filter stage that
+    // emit_per_stage_entered registered above. Skipped shaders short-circuit
+    // inside emit_per_stage_finished so the pair is not double-counted.
+    if let (Some(insp), Some(block)) =
+        (inspector, element_stage_block.as_ref())
+    {
+        emit_per_stage_finished(insp, block);
+    }
+    // ────────────────────────────────────────────────────────────────────
 }
 
 /// Compute the effective shadow element rectangle, honouring a
@@ -839,80 +924,43 @@ fn render_loop_inspected(
         .collect();
 
     // ── Pipeline observability Unit A — pre-loop emit ───────────────────
-    // Emit RoleMapMaterialized first, then per-stage StageEntered /
-    // ScopeEvaluated for every stage instance. Shaders that match zero
-    // cells emit StageSkipped immediately and are flagged in
-    // `skipped_shader_indices` so apply_shaders_inspected skips them.
+    // Emit RoleMapMaterialized first, then delegate the per-stage
+    // StageEntered / ScopeEvaluated emit to the shared helper. Shaders
+    // that match zero cells emit StageSkipped immediately and the helper
+    // flags them in `block.skipped_shader_indices` so
+    // apply_shaders_inspected skips them.
     emit_role_map_materialized(inspector, source_roles, w16, h16);
 
-    let mut next_step_id: u32 = 1;
-    let mut simple_states: Vec<SimpleStageState> = Vec::new();
-
-    if let Some(label) = sampler_label {
-        let state = emit_simple_stage_entered(
-            inspector,
-            PipelineStageKind::Sampler,
-            next_step_id,
-            label,
-            source_roles,
-            w16,
-            h16,
-        );
-        next_step_id += 1;
-        simple_states.push(state);
-    }
-    for (mask_index, mask) in prepared_masks.iter().enumerate() {
-        let label = format!("{}#{}", mask.name(), mask_index + 1);
-        let state = emit_simple_stage_entered(
-            inspector,
-            PipelineStageKind::Mask,
-            next_step_id,
-            &label,
-            source_roles,
-            w16,
-            h16,
-        );
-        next_step_id += 1;
-        simple_states.push(state);
-    }
-    let mut shader_states = Vec::with_capacity(options.shader_layers.len());
-    let mut skipped_shader_indices: Vec<usize> = Vec::new();
-    for (shader_index, (layer, resolved)) in options
+    let mask_labels: Vec<String> = prepared_masks
+        .iter()
+        .enumerate()
+        .map(|(i, mask)| format!("{}#{}", mask.name(), i + 1))
+        .collect();
+    let filter_labels: Vec<String> = prepared_filters
+        .iter()
+        .enumerate()
+        .map(|(i, filter)| format!("{}#{}", filter.name(), i + 1))
+        .collect();
+    let shader_pairs: Vec<(&ShaderWithRegion, &StyleRegion)> = options
         .shader_layers
         .iter()
         .zip(resolved_regions.iter())
-        .enumerate()
-    {
-        let state = emit_shader_entered_or_skipped(
-            inspector,
-            next_step_id,
-            layer,
-            resolved.as_ref(),
+        .map(|(layer, resolved)| (layer, resolved.as_ref()))
+        .collect();
+    let block = emit_per_stage_entered(
+        inspector,
+        1,
+        &PerStageInputs {
+            sampler_label,
+            mask_labels: &mask_labels,
+            shader_layers_with_regions: &shader_pairs,
+            filter_labels: &filter_labels,
             source_roles,
-            w16,
-            h16,
-            shader_index,
-        );
-        next_step_id += 1;
-        if state.skipped {
-            skipped_shader_indices.push(shader_index);
-        }
-        shader_states.push(state);
-    }
-    for (filter_index, filter) in prepared_filters.iter().enumerate() {
-        let label = format!("{}#{}", filter.name(), filter_index + 1);
-        let state = emit_simple_stage_entered(
-            inspector,
-            PipelineStageKind::Filter,
-            next_step_id,
-            &label,
-            source_roles,
-            w16,
-            h16,
-        );
-        next_step_id += 1;
-        simple_states.push(state);
-    }
+            width: w16,
+            height: h16,
+        },
+    );
+    let skipped_shader_indices = &block.skipped_shader_indices;
     // ────────────────────────────────────────────────────────────────────
 
     for y in 0..height {
@@ -975,7 +1023,7 @@ fn render_loop_inspected(
                 inspector,
                 source_role,
                 &roles_arc,
-                &skipped_shader_indices,
+                skipped_shader_indices,
             );
 
             // Apply filters with inspector
@@ -1000,12 +1048,7 @@ fn render_loop_inspected(
     // Emit StageFinished for every non-skipped stage. Order does not matter
     // (consumers join on step_id) but for tape readability we emit in
     // the same order stages were entered.
-    for state in &simple_states {
-        emit_simple_stage_finished(inspector, state);
-    }
-    for state in &shader_states {
-        emit_shader_finished(inspector, state);
-    }
+    emit_per_stage_finished(inspector, &block);
 }
 
 /// Compute mask progress value (inverted for exit phase).
@@ -1145,4 +1188,4 @@ fn apply_shaders_inspected(
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>END OF VERSION: 12.3.0</VERS>
+// <VERS>END OF VERSION: 12.4.0</VERS>

@@ -41,8 +41,6 @@ pub(crate) use fnc_grid_text::{grid_from_text, grid_to_text, paired_grids};
 pub(crate) use fnc_normalize_cycle_face::normalize_cycle_face;
 pub(crate) use fnc_overshoot_face::overshoot_face_for;
 pub(crate) use fnc_resolve_mechanical_cycle::resolve_mechanical_cycle_with_context;
-#[cfg(test)]
-pub(crate) use fnc_resolve_mechanical_cycle::resolve_mechanical_cycle;
 pub(crate) use fnc_roll_cycle_window::roll_cycle_window;
 pub(crate) use fnc_roll_grid_window::roll_grid_window;
 pub(crate) use fnc_route_between::route_between;

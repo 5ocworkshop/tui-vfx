@@ -13,7 +13,7 @@
 //! widening the shader trait itself.
 
 use std::sync::Arc;
-use tui_vfx_style::traits::{ShaderContext, ShaderRuntimeParams, StyleShader};
+use tui_vfx_style::traits::{ShaderContext, StyleShader};
 use tui_vfx_types::{Color, RoleMap, RoleTag, Style};
 
 /// A dummy shader that inspects `ctx.roles` at `(ctx.local_x, ctx.local_y)`

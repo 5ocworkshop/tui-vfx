@@ -2230,12 +2230,12 @@ impl FilterSpec {
                     return Err("glyph_timeline frames must not be empty".to_string());
                 }
                 for (i, f) in frames.iter().enumerate() {
-                    if let Some(FrameColorSpec::Palette { palette, .. }) = &f.fg {
-                        if palette.is_empty() {
-                            return Err(format!(
-                                "glyph_timeline frame {i} fg palette must not be empty"
-                            ));
-                        }
+                    if let Some(FrameColorSpec::Palette { palette, .. }) = &f.fg
+                        && palette.is_empty()
+                    {
+                        return Err(format!(
+                            "glyph_timeline frame {i} fg palette must not be empty"
+                        ));
                     }
                 }
                 Ok(())

@@ -236,10 +236,7 @@ fn extract_ai_hint_param_docs(ai_hint: &str, param_names: &[String]) -> HashMap<
     let mut docs = HashMap::new();
     for line in ai_hint.lines() {
         let mut rest = line;
-        loop {
-            let Some((name, _, colon)) = find_next_param(rest, param_names) else {
-                break;
-            };
+        while let Some((name, _, colon)) = find_next_param(rest, param_names) {
             let after_colon = rest[colon + 1..].trim_start();
             let (doc, remainder) = split_at_next_param(after_colon, param_names);
             let doc = doc.trim().trim_end_matches('.').trim();

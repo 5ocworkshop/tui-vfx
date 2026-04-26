@@ -174,14 +174,13 @@ pub(crate) fn emit_role_map_materialized(
 pub(crate) fn emit_shader_entered_or_skipped(
     inspector: &mut dyn CompositorInspector,
     step_id: u32,
-    layer: &ShaderWithRegion,
+    layer: &ShaderWithRegion<'_>,
     resolved_region: &StyleRegion,
     roles: &RoleMap,
     width: u16,
     height: u16,
     shader_index: usize,
 ) -> ShaderObservabilityState {
-    let name = layer.inspector_shader_label(shader_index);
     let scope_summary = style_region_summary(resolved_region);
     let (matched, skipped, hist) = tally_shader_scope_match(resolved_region, roles, width, height);
 
@@ -206,6 +205,7 @@ pub(crate) fn emit_shader_entered_or_skipped(
         };
     }
 
+    let name = layer.inspector_shader_label(shader_index);
     inspector.on_stage_entered(PipelineStageKind::Shader, step_id, &name, &scope_summary);
     inspector.on_scope_evaluated(step_id, matched, skipped, hist);
 
@@ -319,7 +319,7 @@ pub(crate) struct PerStageInputs<'a> {
     /// One `(layer, resolved-region)` pair per shader, in pipeline
     /// order. Each pair emits one Shader stage (or a StageSkipped if its
     /// scope matches zero cells).
-    pub shader_layers_with_regions: &'a [(&'a ShaderWithRegion, &'a StyleRegion)],
+    pub shader_layers_with_regions: &'a [(&'a ShaderWithRegion<'a>, &'a StyleRegion)],
     /// One label per prepared filter, in pipeline order. Each label
     /// emits one Filter stage.
     pub filter_labels: &'a [String],
@@ -481,4 +481,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-compositor/src/pipeline/orc_pipeline_observability.rs</FILE> - <DESC>Per-stage observability emit helpers</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
