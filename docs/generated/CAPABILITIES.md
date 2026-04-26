@@ -112,6 +112,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **RevealWipe** | Progressive reveal from one direction, hiding unrevealed text | reveal, transition, text |
 | **StochasticSparkle** | Film grain / frosted glass effect with random cell brightening | premium-surface, frosted-glass, texture, ambient |
 | **SubCellShake** | Micro-jitter visual effect through rapid color oscillation | error, vibration, attention |
+| **TerminalWater** | Layered water/ocean field with ripples, wakes, foam, and glint | ambient, weather, surface, interactive, premium |
 | **TracePath** | Authored routed signal path following explicit waypoints | schematic, pcb, path-authored, technical |
 | **TracePropagation** | Orthogonal signal pulse moving through routed trace lanes | schematic, pcb, system-flow, technical |
 | **WayfindingNode** | Calm node emphasis for breadcrumbs, progress steps, and route hints | breadcrumb, progress-steps, junction, wayfinding |

@@ -3370,6 +3370,80 @@
           "attention"
         ]
       },
+      "TerminalWater": {
+        "ai_hint": "Layered terminal water/ocean motion field with sine/Gerstner-style waves, ripples, rain rings, flow, wakes, foam, Fresnel/specular lighting, and optional glint.\nmode: Ocean, Ripple, Rain, Flow, Wake, OceanWithRipples, or Composite. Use Ripple for pebble drops/still pools, Rain for weather impacts, Wake for cursor/path trails, Flow for streams/currents, and Ocean/OceanWithRipples for ambient water surfaces.\nlayers: number of wave octaves (1..=4 recommended).\namplitude, wavelength, speed, direction_deg, steepness: core wave shape controls.\nnormal_strength, diffuse, specular, shininess, fresnel: lighting controls. glint_strength, glint_angle_deg, glint_width, glint_speed add existing glisten-band-style sparkle over water.\nfoam: blends foam_color from steepness/curvature; deep_color and shallow_color define the water palette.\napply_to: Foreground, Background, or Both.\nComposite supports combining water modes, but keep child mode lists small for terminal-frame performance.\n",
+        "complexity": "complex",
+        "energy": "calm",
+        "name": "TerminalWater",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Ocean",
+            "doc": "Ocean, Ripple, Rain, Flow, Wake, OceanWithRipples, or Composite. Use Ripple for pebble drops/still pools, Rain for weather impacts, Wake for cursor/path trails, Flow for streams/currents, and Ocean/OceanWithRipples for ambient water surfaces",
+            "name": "mode",
+            "ty": "WaterWaveMode"
+          },
+          {
+            "default": "3",
+            "doc": "number of wave octaves (1..=4 recommended)",
+            "name": "layers",
+            "ty": "u8"
+          },
+          {
+            "default": "0.35",
+            "doc": "",
+            "name": "amplitude",
+            "ty": "f32"
+          },
+          {
+            "default": "12.0 cells",
+            "doc": "",
+            "name": "wavelength",
+            "ty": "f32"
+          },
+          {
+            "default": "1.00",
+            "doc": "",
+            "name": "speed",
+            "ty": "f32"
+          },
+          {
+            "default": "25.0deg",
+            "doc": "",
+            "name": "direction",
+            "ty": ""
+          },
+          {
+            "default": "0.50",
+            "doc": "blends foam_color from steepness/curvature; deep_color and shallow_color define the water palette",
+            "name": "foam",
+            "ty": "f32"
+          },
+          {
+            "default": "0.00",
+            "doc": "",
+            "name": "glint",
+            "ty": ""
+          },
+          {
+            "default": "Both",
+            "doc": "Foreground, Background, or Both",
+            "name": "apply_to",
+            "ty": "WaterApplyTo"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Layered water/ocean field with ripples, wakes, foam, and glint",
+        "rustdoc_summary": "Layered water/ocean field with ripples, wakes, foam, and glint",
+        "use_cases": [
+          "ambient",
+          "weather",
+          "surface",
+          "interactive",
+          "premium"
+        ]
+      },
       "TracePath": {
         "ai_hint": "Authored routed trace following explicit waypoints.\ncolor: pulse tint.\nspeed: travel rate of the signal head.\ntail_length: illuminated trail length behind the signal.\nvertical_weight: makes vertical travel consume more route time for smoother perceived turns.\nthickness: maximum route thickness in cells.\njunction_boost: extra emphasis when the pulse passes a turn.\njunction_glow: local emphasis at the corner cell itself.\ntail_mode: Path for continuous tails, Segment for active-segment-only tails.\napply_to: Foreground, Background, or Both.\npaths: one or more orthogonal polylines, each with points and optional delay.\nIdeal for art-directed blueprint traces and as the deterministic foundation for future obstacle-aware auto-routing.",
         "complexity": "moderate",

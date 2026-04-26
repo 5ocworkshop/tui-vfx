@@ -79,6 +79,7 @@
 - **RevealWipe**: Progressive reveal wipe driven by t parameter.
 - **StochasticSparkle**: Film grain / frosted glass shimmer for premium surfaces. [Premium]
 - **SubCellShake**: Micro-jitter via rapid color oscillation. [Intense]
+- **TerminalWater**: Layered terminal water/ocean motion field with sine/Gerstner-style waves, ripples, rain rings, flow, wakes, foam, Fresnel/specular lighting, and optional glint. [Premium]
 - **TracePath**: Authored routed trace following explicit waypoints. [Premium]
 - **TracePropagation**: Orthogonal signal pulse traveling through routed trace lanes. [Premium]
 - **WayfindingNode**: Calm node emphasis for breadcrumbs, progress steps, and route hints.

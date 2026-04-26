@@ -92,6 +92,13 @@ pub enum WaterWaveMode {
         ripple_mix: f32,
     },
     Composite {
+        /// Bounded list of child water modes mixed together.
+        ///
+        /// This field is intentionally opaque to generated config metadata:
+        /// `WaterWaveMode` is recursive (`Composite` contains more modes), and
+        /// the current schema walker expands fields eagerly without recursion
+        /// guards. Serde still validates the concrete child modes normally.
+        #[config(opaque)]
         #[serde(default)]
         modes: Vec<WaterWaveMode>,
     },

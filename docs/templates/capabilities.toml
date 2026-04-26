@@ -634,6 +634,21 @@ direction: wave propagation direction.
 wavelength: distance between wave peaks.
 Attention/loading indicator for selection states."""
 
+[effects.shaders.TerminalWater]
+use_cases = ["ambient", "weather", "surface", "interactive", "premium"]
+energy = "calm"
+complexity = "complex"
+premium = true
+ai_hint = """Layered terminal water/ocean motion field with sine/Gerstner-style waves, ripples, rain rings, flow, wakes, foam, Fresnel/specular lighting, and optional glint.
+mode: Ocean, Ripple, Rain, Flow, Wake, OceanWithRipples, or Composite. Use Ripple for pebble drops/still pools, Rain for weather impacts, Wake for cursor/path trails, Flow for streams/currents, and Ocean/OceanWithRipples for ambient water surfaces.
+layers: number of wave octaves (1..=4 recommended).
+amplitude, wavelength, speed, direction_deg, steepness: core wave shape controls.
+normal_strength, diffuse, specular, shininess, fresnel: lighting controls. glint_strength, glint_angle_deg, glint_width, glint_speed add existing glisten-band-style sparkle over water.
+foam: blends foam_color from steepness/curvature; deep_color and shallow_color define the water palette.
+apply_to: Foreground, Background, or Both.
+Composite supports combining water modes, but keep child mode lists small for terminal-frame performance.
+"""
+
 [effects.shaders.TracePropagation]
 use_cases = ["schematic", "pcb", "system-flow", "technical"]
 energy = "moderate"
