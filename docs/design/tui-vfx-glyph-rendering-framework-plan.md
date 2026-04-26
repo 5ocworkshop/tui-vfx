@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-glyph-rendering-framework-plan.md</FILE> - <DESC>Implementation plan for the shared scalar-field-to-glyph framework consumed by water, fire, and future field-driven effects. Covers the upstream math/noise lift into mixed-signals, the encoder/subcell helper layer in tui-vfx-types, the unifying ScalarFieldGlyphFilter in tui-vfx-compositor, the WaterFieldSignal wrapper, and the first water-glyph debug recipe.</DESC> -->
-<!-- <VERS>VERSION: 0.2.1</VERS> -->
-<!-- <WCTX>Correct §4.5 version policy: mixed-signals stays at in-flight 0.3.0; framework lift folds into existing [Unreleased] CHANGELOG block, no crate bump.</WCTX> -->
-<!-- <CLOG>0.2.1: drop the proposed 0.3.0→0.4.0 version bump; document the public v0.2.2 vs in-tree 0.3.0 split and route additions through the existing [Unreleased] CHANGELOG block.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Phase 7 doc closure landed: water plan §13/§21.1 marked Implemented; fire plan §9.0/§9.1/§9.10 reference upstream primitives + FireFieldSignal pattern; INDEX entry added.</WCTX> -->
+<!-- <CLOG>0.3.0: Phase 7 doc closure complete — all seven phases shipped; framework is the canonical scalar-field-to-glyph surface for water (live) and fire (next consumer).</CLOG> -->
 
 # tui-vfx glyph rendering framework — plan
 

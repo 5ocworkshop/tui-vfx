@@ -1532,6 +1532,22 @@ Keep this optional so the first implementation does not get blocked by recipe ae
 
 ## 13. 256-braille follow-up design
 
+> **Status: Implemented (2026-04).** The design captured here landed via the
+> shared glyph-rendering framework — see
+> [`tui-vfx-glyph-rendering-framework-plan.md`](tui-vfx-glyph-rendering-framework-plan.md)
+> for the framework, plus the working debug recipe at
+> `recipes/debug_recipes/shaders/primitives/shader_terminal_water_glyph_v3.json`
+> in `tui-vfx-recipes`. The encoder vocabulary lives in
+> `tui-vfx-types/src/glyph/cls_glyph_encoder.rs` (variants
+> `BrailleSubcell`, `BrailleEighths`, `BlockHorizontal`, `BlockVertical`,
+> `Ramp`); the unifying filter lives in
+> `tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs`; the
+> water sampler that drives it lives in
+> `tui-vfx-style/src/models/cls_water_field_signal.rs`; the recipe-layer
+> wire-up lives in `cls_filter_spec.rs`'s `FilterSpec::ScalarFieldGlyph`
+> variant. The original §13 design content below is preserved as historical
+> context for *why* the framework took the shape it did.
+
 This section is for the glyph-capable primitive/filter. Do not implement inside the style-shader path unless a glyph mutation API already exists.
 
 ### 13.1 Why 256 braille, not a short ramp
@@ -1917,6 +1933,17 @@ Keep this section as future design context only. The current plan should expose 
 ## 21. Extension roadmap
 
 ### 21.1 Glyph-capable 256-braille water
+
+> **Status: Implemented (2026-04).** Landed as part of the shared
+> glyph-rendering framework rather than as a water-specific primitive.
+> See `tui-vfx-glyph-rendering-framework-plan.md` and the debug recipe
+> `shader_terminal_water_glyph_v3.json` in `tui-vfx-recipes`. The
+> framework's `GlyphEncoder::BrailleSubcell` is the high-quality mode the
+> §21.1 sketch called out; the framework also provides `BrailleEighths`
+> (eighths dot count, equivalent to the legacy `BrailleDensity` sketch)
+> and the block-bar / ramp variants for consumers that don't want full
+> subcell sampling. The original §21.1 sketch is preserved below for
+> archaeology.
 
 Add a filter or content primitive that can mutate cell glyphs. It should reuse the same water field math and provide:
 

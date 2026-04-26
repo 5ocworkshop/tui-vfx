@@ -1,8 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-terminal-fire-shader-plan.md</FILE> - <DESC>Implementation plan for a terminal fire/flame shader primitive.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Add a discoverable implementation plan for procedural terminal fire next to the terminal water shader plan.</WCTX> -->
-<!-- <CLOG>0.2.0: refine for junior implementation with scaffolding snippets, exact registration checklist, smaller phases, and first-pass compile strategy.
-0.1.0: initial fire shader plan with procedural density/temperature fields, smoke, blue core, sparks, stateful upgrade path, and shared helper recommendations with water.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Phase 7 of glyph rendering framework: §9.0/§9.1/§9.10 reference the upstream mixed-signals primitives (saturate/finite_or/smoothstep/fade/lerp + hash01/hash3/value_noise3/fbm3) plus the FireFieldSignal pattern from water Phase 5; original copy-paste skeletons preserved as byte-equivalence reference.</WCTX> -->
+<!-- <CLOG>0.3.0: §9.0 imports `mixed_signals::math::{saturate, finite_or, smoothstep, fade, lerp}`; §9.1 imports `mixed_signals::noise::{hash01, hash3, value_noise3, fbm3}`; §9.10 cross-references the FireFieldSignal pattern so fire glyph mode falls out of the existing ScalarFieldGlyph wiring.</CLOG> -->
 
 # Terminal Fire / Flame Shader Implementation Plan
 
@@ -679,7 +678,21 @@ impl TerminalFireShader {
 }
 ```
 
-### 9.0 Copy-paste scalar helpers for first implementation
+### 9.0 Scalar helpers — import from `mixed-signals`
+
+> **Updated 2026-04 (Phase 7 of glyph rendering framework):** the helpers
+> below were lifted upstream during Phase 1 of the glyph-rendering
+> framework. They are now public in `mixed-signals` (in-flight v0.3.0 via
+> the `[Unreleased]` block; releases as 0.3.0). Replace any planned
+> private definitions with this import line:
+>
+> ```rust
+> use mixed_signals::math::{saturate, finite_or, smoothstep, fade, lerp};
+> ```
+>
+> See `tui-vfx-glyph-rendering-framework-plan.md` §4.1 for the lift
+> rationale. The original copy-paste definitions are preserved below as
+> a reference to confirm byte-equivalence after migration.
 
 If shared helpers have not been extracted yet, put these private helpers near the bottom of `cls_terminal_fire_shader.rs`. Move them to `utils` only after water/fire both need them.
 
@@ -719,6 +732,24 @@ fn lerp(a: f32, b: f32, t: f32) -> f32 {
 These helpers intentionally avoid generics and allocations. Unit-test `smoothstep` separately if they move to `utils`.
 
 ### 9.1 Noise foundation
+
+> **Updated 2026-04 (Phase 7 of glyph rendering framework):** the noise
+> primitives below were lifted upstream during Phase 1 of the
+> glyph-rendering framework. They are now public in `mixed-signals`
+> (in-flight v0.3.0 via the `[Unreleased]` block). Replace any planned
+> private definitions with this import line:
+>
+> ```rust
+> use mixed_signals::noise::{hash01, hash3, value_noise3, fbm3};
+> ```
+>
+> The "good defaults" and "fire-upward time" guidance below remains
+> renderer-semantic and stays in this plan. See
+> `tui-vfx-glyph-rendering-framework-plan.md` §4.2 for the lift
+> rationale. The original copy-paste implementation is preserved below
+> as a byte-equivalence reference (the upstream `hash01` uses the same
+> lowbias32 xorshift-multiply that water adopted, so rain-drop and spark
+> seeds are stable across the migration).
 
 Use coherent deterministic noise, not random per-frame noise. If no coherent noise helper exists, add a small dependency-free value noise helper in `utils/fnc_procedural_noise.rs` or keep a private helper until both fire and water need it.
 
@@ -1047,6 +1078,15 @@ i = saturate(i + 0.8 * sparks);
 ```
 
 ### 9.10 Assembled `sample_field_at` skeleton
+
+> **Updated 2026-04 (Phase 7 of glyph rendering framework):** when fire's
+> `sample_field_at` is implemented, wrap it in a `FireFieldSignal` impl
+> the same way water did in Phase 5
+> (`tui-vfx-style/src/models/cls_water_field_signal.rs`). The `Signal`
+> + `SignalWithSlope` shape gives fire glyph mode for free via the
+> existing `ScalarFieldGlyphFilter` and `FilterSpec::ScalarFieldGlyph`
+> wiring. See `tui-vfx-glyph-rendering-framework-plan.md` §3 (Layer A)
+> and Phase 5 for the pattern.
 
 Once the pieces above are in place, the complete helper should look structurally like this. It is not meant to replace the explanatory formulas above; it shows where each value is computed and returned.
 
@@ -2063,4 +2103,4 @@ Implementation is complete when all of these are true:
 14. Only then consider optional glyph-capable braille rendering or stateful simulation.
 
 <!-- <FILE>docs/design/tui-vfx-terminal-fire-shader-plan.md</FILE> - <DESC>Implementation plan for a terminal fire/flame shader primitive.</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
