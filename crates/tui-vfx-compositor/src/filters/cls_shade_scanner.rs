@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_shade_scanner.rs</FILE>
 // <DESC>Ping-pong scanner that dims text with light shade overlay</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Fix transparency bug in powerline rendering</WCTX>
-// <CLOG>Preserve transparent colors - skip shading alpha=0 cells to prevent background loss</CLOG>
+// <VERS>VERSION: 1.1.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.1.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Light shade character for the dimmest coverage.
 const SHADE_LIGHT: char = '░'; // U+2591 - 25% coverage
@@ -69,7 +69,10 @@ impl ShadeScanner {
 }
 
 impl Filter for ShadeScanner {
-    fn apply(&self, cell: &mut Cell, x: u16, _y: u16, width: u16, _height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let width = ctx.width;
+        let t = ctx.t;
         if self.progress <= 0.0 || width == 0 {
             return;
         }
@@ -149,7 +152,7 @@ mod tests {
         let filter = ShadeScanner::new().with_progress(0.0);
         let mut cell = make_cell();
         let original = cell;
-        filter.apply(&mut cell, 2, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(2, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, original.ch);
     }
 
@@ -160,12 +163,12 @@ mod tests {
         // At t=0, scanner is at center (0.5)
         // Cell at x=2 in width=10 (0.2) should be shaded (left of 0.5)
         let mut left_cell = make_cell();
-        filter.apply(&mut left_cell, 2, 0, 10, 1, 0.0);
+        filter.apply(&mut left_cell, &VfxCellContext::new(2, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(left_cell.ch, SHADE_LIGHT);
 
         // Cell at x=8 in width=10 (0.8) should NOT be shaded (right of 0.5)
         let mut right_cell = make_cell();
-        filter.apply(&mut right_cell, 8, 0, 10, 1, 0.0);
+        filter.apply(&mut right_cell, &VfxCellContext::new(8, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(right_cell.ch, 'A'); // Original character preserved
     }
 
@@ -176,7 +179,7 @@ mod tests {
         // At t=1.5, scanner is at left edge (0.0)
         // No cells should be shaded
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 1.5);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 1.5));
         assert_eq!(cell.ch, 'A'); // Original preserved
     }
 
@@ -187,7 +190,7 @@ mod tests {
         // At t=0.5, scanner is at right edge (1.0)
         // All cells should be shaded
         let mut cell = make_cell();
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.5);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.5));
         assert_eq!(cell.ch, SHADE_LIGHT);
     }
 
@@ -210,10 +213,10 @@ mod tests {
         // At t=0, scanner at 0.5
         // Cell at x=0 (0.0) should be more dimmed than cell at x=4 (0.4)
         let mut far_left = make_cell();
-        filter.apply(&mut far_left, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut far_left, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
 
         let mut near_scanner = make_cell();
-        filter.apply(&mut near_scanner, 4, 0, 10, 1, 0.0);
+        filter.apply(&mut near_scanner, &VfxCellContext::new(4, 0, 10, 1, 0, 0, 0.0));
 
         // Both should be shaded
         assert_eq!(far_left.ch, SHADE_LIGHT);
@@ -236,7 +239,7 @@ mod tests {
         );
         let original_fg = cell.fg;
         // Apply at left where shade would occur
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         // Transparent fg should remain transparent
         assert_eq!(cell.fg, original_fg);
         assert_eq!(cell.fg.a, 0);
@@ -253,7 +256,7 @@ mod tests {
         );
         let original_bg = cell.bg;
         // Apply at left where shade would occur
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         // Transparent bg should remain transparent
         assert_eq!(cell.bg, original_bg);
         assert_eq!(cell.bg.a, 0);
@@ -270,7 +273,7 @@ mod tests {
             Modifiers::NONE,
         );
         // Apply at left where shade would occur
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         // Alpha values should be preserved
         assert_eq!(cell.fg.a, 128);
         assert_eq!(cell.bg.a, 200);
@@ -279,4 +282,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_shade_scanner.rs</FILE>
 // <DESC>Ping-pong scanner that dims text with light shade overlay</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.1.1</VERS>

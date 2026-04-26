@@ -1,12 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_vignette.rs</FILE> - <DESC>Vignette filter with proper spatial radial gradient</DESC>
-// <VERS>VERSION: 3.1.0</VERS>
-// <WCTX>Adopt the new mixed-signals surface-space basis for optical falloff consumers where the mapping is now direct and verified.</WCTX>
-// <CLOG>3.1.0: use mixed-signals sample_surface_radius for classic all-sides vignette evaluation instead of open-coding frame-center distance math.
-// 3.0.1: Use round() instead of truncation in color math to prevent off-by-one errors</CLOG>
+// <VERS>VERSION: 3.1.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>3.1.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Which edge a directional vignette can originate from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -131,7 +130,12 @@ impl Vignette {
 }
 
 impl Filter for Vignette {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         // Handle zero dimensions gracefully
         if width == 0 || height == 0 {
             return;
@@ -200,7 +204,7 @@ mod tests {
             Modifiers::NONE,
         );
         // Cell at exact center (5,5) in 10x10 grid
-        vignette.apply(&mut center, 5, 5, 10, 10, 0.0);
+        vignette.apply(&mut center, &VfxCellContext::new(5, 5, 10, 10, 0, 0, 0.0));
         // Center has norm_dist ~0, within any radius, so no dimming
         assert_eq!(center.fg, Color::rgb(100, 100, 100));
     }
@@ -215,7 +219,7 @@ mod tests {
             Modifiers::NONE,
         );
         // Cell at corner (0,0) in 10x10 grid - max distance from center
-        vignette.apply(&mut corner, 0, 0, 10, 10, 0.0);
+        vignette.apply(&mut corner, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         // At corner with strength 1.0 and radius 0.0, should be fully dimmed
         assert_eq!(corner.fg, Color::rgb(0, 0, 0));
         assert_eq!(corner.bg, Color::rgb(0, 0, 0));
@@ -230,7 +234,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        vignette.apply(&mut cell, 0, 0, 0, 0, 0.0);
+        vignette.apply(&mut cell, &VfxCellContext::new(0, 0, 0, 0, 0, 0, 0.0));
         // Should return early, no change
         assert_eq!(cell.fg, Color::rgb(100, 100, 100));
     }
@@ -244,7 +248,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        vignette.apply(&mut corner, 0, 0, 10, 10, 0.0);
+        vignette.apply(&mut corner, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         // 50% dim at corner: 100 * 0.5 = 50
         assert_eq!(corner.fg, Color::rgb(50, 50, 50));
     }
@@ -259,8 +263,8 @@ mod tests {
             Modifiers::NONE,
         );
         let mut right = left;
-        vignette.apply(&mut left, 0, 5, 10, 10, 0.0);
-        vignette.apply(&mut right, 9, 5, 10, 10, 0.0);
+        vignette.apply(&mut left, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
+        vignette.apply(&mut right, &VfxCellContext::new(9, 5, 10, 10, 0, 0, 0.0));
         assert_ne!(left.fg, Color::rgb(100, 100, 100));
         assert_eq!(right.fg, Color::rgb(100, 100, 100));
     }
@@ -276,8 +280,8 @@ mod tests {
             Modifiers::NONE,
         );
         let mut bottom_right = top_left;
-        vignette.apply(&mut top_left, 0, 0, 10, 10, 0.0);
-        vignette.apply(&mut bottom_right, 9, 9, 10, 10, 0.0);
+        vignette.apply(&mut top_left, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        vignette.apply(&mut bottom_right, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
         assert_ne!(top_left.fg, Color::rgb(100, 100, 100));
         assert_eq!(bottom_right.fg, Color::rgb(100, 100, 100));
     }
@@ -292,8 +296,8 @@ mod tests {
             Modifiers::NONE,
         );
         let mut b = a;
-        vignette.apply(&mut a, 0, 1, 20, 10, 0.0);
-        vignette.apply(&mut b, 1, 1, 20, 10, 0.0);
+        vignette.apply(&mut a, &VfxCellContext::new(0, 1, 20, 10, 0, 0, 0.0));
+        vignette.apply(&mut b, &VfxCellContext::new(1, 1, 20, 10, 0, 0, 0.0));
         assert_ne!(a.fg, b.fg);
     }
 
@@ -307,11 +311,11 @@ mod tests {
             Modifiers::NONE,
         );
         let mut b = a;
-        vignette.apply(&mut a, 0, 1, 20, 10, 0.0);
-        vignette.apply(&mut b, 0, 1, 20, 10, 1.0);
+        vignette.apply(&mut a, &VfxCellContext::new(0, 1, 20, 10, 0, 0, 0.0));
+        vignette.apply(&mut b, &VfxCellContext::new(0, 1, 20, 10, 0, 0, 1.0));
         assert_ne!(a.fg, b.fg);
     }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_vignette.rs</FILE> - <DESC>Vignette filter with proper spatial radial gradient</DESC>
-// <VERS>END OF VERSION: 3.1.0</VERS>
+// <VERS>END OF VERSION: 3.1.1</VERS>

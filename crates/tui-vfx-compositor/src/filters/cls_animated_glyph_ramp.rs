@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_animated_glyph_ramp.rs</FILE> - <DESC>Synchronised glyph + colour cycling filter driven by one shared phase signal</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>Audit recommendation 1.6 — close the synthesis gap that prevents faithful TTE Waves / Sweep / SynthGrid recreation. CharsetNoise cycles glyphs and Tint cycles colours, but composing them gives independent evolution. This filter samples one shared phase signal so glyph index N always pairs with colour index N.</WCTX>
-// <CLOG>1.0.0: NEW — initial AnimatedGlyphRamp filter. Per-cell phase = (t + x*phase_offset_x_ms + y*phase_offset_y_ms) * cycles_per_second; index = (phase % 1.0) * glyphs.len(); colour comes from a parallel discrete vector (same length as glyphs) or from a Gradient sampled at index/(N-1). apply_to selects fg / bg / both. affect = All | NonEmpty (matching CharsetNoise).</CLOG>
+// <VERS>VERSION: 1.0.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 //! Synchronised glyph + colour cycling driven by one shared phase signal.
 //!
@@ -67,7 +67,7 @@
 use crate::traits::filter::Filter;
 use tui_vfx_geometry::types::EasingCurve;
 use tui_vfx_style::models::Gradient;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 use super::cls_charset_noise::AffectMode;
 
@@ -235,7 +235,10 @@ impl AnimatedGlyphRamp {
 }
 
 impl Filter for AnimatedGlyphRamp {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, _width: u16, _height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let t = ctx.t;
         if self.glyphs.is_empty() || !self.should_affect(cell) {
             return;
         }
@@ -318,7 +321,7 @@ mod tests {
             let t = t_ms as f64 / 1000.0;
             cell.ch = '⣿';
             cell.fg = Color::default();
-            ramp.apply(&mut cell, 0, 0, 10, 10, t);
+            ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, t));
             let idx = ramp.glyph_index(0, 0, t);
             assert_eq!(cell.ch, waves_glyphs()[idx]);
             assert_eq!(cell.fg, three_color_discrete()[idx]);
@@ -368,12 +371,12 @@ mod tests {
         let ramp = AnimatedGlyphRamp::discrete(glyphs.clone(), colors.clone(), 3.0);
         // At t=0: index 0
         let mut cell = make_cell('⣿');
-        ramp.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, 'A');
         assert_eq!(cell.fg, rgb(255, 0, 0));
         // At t=1/9 (cycles=3, so 1/9 * 3 = 1/3, floor(1/3 * 3) = 1): index 1
         cell.ch = '⣿';
-        ramp.apply(&mut cell, 0, 0, 10, 10, 1.0 / 9.0);
+        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0 / 9.0));
         assert_eq!(cell.ch, 'B');
         assert_eq!(cell.fg, rgb(0, 255, 0));
     }
@@ -388,7 +391,7 @@ mod tests {
         let ramp = AnimatedGlyphRamp::from_gradient(glyphs.clone(), gradient, 1.0);
         // At t=0: index 0 -> sample at 0.0 -> black
         let mut cell = make_cell('⣿');
-        ramp.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, 'A');
         assert_eq!(cell.fg, rgb(0, 0, 0));
         // At index 2 of 3 (last): sample at 1.0 -> white. Find a t
@@ -396,7 +399,7 @@ mod tests {
         // 3 glyphs, cycles=1.0. Index 2 happens at frac in [2/3, 1.0).
         // Pick t=0.7 -> frac=0.7, idx=floor(0.7*3)=2
         cell.ch = '⣿';
-        ramp.apply(&mut cell, 0, 0, 10, 10, 0.7);
+        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.7));
         assert_eq!(cell.ch, 'C');
         assert_eq!(cell.fg, rgb(255, 255, 255));
     }
@@ -415,7 +418,7 @@ mod tests {
         );
         let mut cell = make_cell('⣿');
         cell.fg = rgb(1, 2, 3);
-        ramp.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, 'X');
         assert_eq!(cell.fg, rgb(1, 2, 3), "fg must be untouched");
         assert_eq!(cell.bg, rgb(99, 88, 77));
@@ -434,7 +437,7 @@ mod tests {
             0.0,
         );
         let mut cell = make_cell('⣿');
-        ramp.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, rgb(11, 22, 33));
         assert_eq!(cell.bg, rgb(11, 22, 33));
     }
@@ -444,8 +447,8 @@ mod tests {
         let ramp = AnimatedGlyphRamp::discrete(vec!['X'], vec![rgb(255, 0, 0)], 1.0);
         let mut space = make_cell(' ');
         let mut braille_blank = make_cell('\u{2800}');
-        ramp.apply(&mut space, 0, 0, 10, 10, 0.0);
-        ramp.apply(&mut braille_blank, 0, 0, 10, 10, 0.0);
+        ramp.apply(&mut space, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        ramp.apply(&mut braille_blank, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(space.ch, ' ');
         assert_eq!(braille_blank.ch, '\u{2800}');
     }
@@ -463,7 +466,7 @@ mod tests {
             0.0,
         );
         let mut space = make_cell(' ');
-        ramp.apply(&mut space, 0, 0, 10, 10, 0.0);
+        ramp.apply(&mut space, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(space.ch, 'X');
     }
 
@@ -471,7 +474,7 @@ mod tests {
     fn empty_glyphs_is_noop() {
         let ramp = AnimatedGlyphRamp::discrete(vec![], vec![], 1.0);
         let mut cell = make_cell('⣿');
-        ramp.apply(&mut cell, 0, 0, 10, 10, 0.5);
+        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
         assert_eq!(cell.ch, '⣿');
     }
 
@@ -480,8 +483,8 @@ mod tests {
         let ramp = AnimatedGlyphRamp::discrete(waves_glyphs(), three_color_discrete(), 1.5);
         let mut a = make_cell('⣿');
         let mut b = make_cell('⣿');
-        ramp.apply(&mut a, 3, 4, 10, 10, 0.123);
-        ramp.apply(&mut b, 3, 4, 10, 10, 0.123);
+        ramp.apply(&mut a, &VfxCellContext::new(3, 4, 10, 10, 0, 0, 0.123));
+        ramp.apply(&mut b, &VfxCellContext::new(3, 4, 10, 10, 0, 0, 0.123));
         assert_eq!(a.ch, b.ch);
         assert_eq!(a.fg, b.fg);
     }
@@ -515,11 +518,11 @@ mod tests {
         // Linear 0.5 would land at index 2. QuadIn eases 0.5 to 0.25,
         // so both glyph and colour stay paired at index 1.
         let mut cell = make_cell('x');
-        ramp.apply(&mut cell, 0, 0, 10, 10, 0.5);
+        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
         assert_eq!(cell.ch, 'B');
         assert_eq!(cell.fg, rgb(20, 0, 0));
     }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_animated_glyph_ramp.rs</FILE> - <DESC>Synchronised glyph + colour cycling filter driven by one shared phase signal</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.0.1</VERS>

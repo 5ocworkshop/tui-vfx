@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_bracket_emphasis.rs</FILE>
 // <DESC>Brackets that appear around content based on progress</DESC>
-// <VERS>VERSION: 1.0.2</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Use shared test cell helper</CLOG>
+// <VERS>VERSION: 1.0.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Brackets that appear around content based on progress.
 ///
@@ -94,7 +94,9 @@ impl BracketEmphasis {
 }
 
 impl Filter for BracketEmphasis {
-    fn apply(&self, cell: &mut Cell, x: u16, _y: u16, width: u16, _height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let width = ctx.width;
         if self.progress <= 0.0 {
             return;
         }
@@ -157,7 +159,7 @@ mod tests {
 
         let mut cell = make_cell();
         let original = cell;
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
 
         assert_eq!(cell.ch, original.ch);
     }
@@ -169,7 +171,7 @@ mod tests {
             .with_color(Color::rgb(100, 150, 200));
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
 
         assert_eq!(cell.ch, '[');
         assert_eq!(cell.fg, Color::rgb(100, 150, 200));
@@ -181,7 +183,7 @@ mod tests {
 
         let mut cell = make_cell();
         // Right edge (x=9 for width=10)
-        filter.apply(&mut cell, 9, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 0, 10, 1, 0, 0, 0.0));
 
         assert_eq!(cell.ch, ']');
     }
@@ -193,7 +195,7 @@ mod tests {
         // Interior cell should not be modified
         let mut cell = make_cell();
         let original = cell;
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
 
         assert_eq!(cell.ch, original.ch);
     }
@@ -206,7 +208,7 @@ mod tests {
             .with_progress(0.5);
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
 
         // At 50% progress, color should be blended
         assert_eq!(cell.fg, Color::rgb(50, 100, 50));
@@ -215,4 +217,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_bracket_emphasis.rs</FILE>
 // <DESC>Brackets that appear around content based on progress</DESC>
-// <VERS>END OF VERSION: 1.0.2</VERS>
+// <VERS>END OF VERSION: 1.0.3</VERS>

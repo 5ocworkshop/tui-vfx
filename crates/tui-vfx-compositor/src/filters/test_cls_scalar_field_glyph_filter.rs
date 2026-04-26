@@ -1,13 +1,13 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/test_cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Tests for ScalarFieldGlyphFilter — encoding, threshold, only_blank, recolor, SignalContext wiring</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Glyph rendering framework Phase 4: TDD tests for ScalarFieldGlyphFilter</WCTX>
-// <CLOG>0.2.0: drop temporal_dither_hz field references and the dead test that asserted on it (the field never wired through to the encoder; SubcellLight retains its inline temporal-dither path).</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>0.2.1: migrate test apply calls to &VfxCellContext.</CLOG>
 
 use std::sync::{Arc, Mutex};
 
 use mixed_signals::traits::{Signal, SignalContext, SignalTime};
-use tui_vfx_types::{Cell, Color, Modifiers, glyph::GlyphEncoder};
+use tui_vfx_types::{Cell, Color, Modifiers, VfxCellContext, glyph::GlyphEncoder};
 
 use super::ScalarFieldGlyphFilter;
 use crate::traits::filter::Filter;
@@ -108,7 +108,7 @@ fn test_apply_writes_glyph_via_encoder() {
 
     let filter = default_filter(ConstSignal(intensity), GlyphEncoder::BlockHorizontal);
     let mut cell = make_cell(' ', Color::WHITE, Color::BLACK);
-    filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
 
     assert_eq!(
         cell.ch, expected,
@@ -131,7 +131,7 @@ fn test_apply_skips_below_threshold() {
     };
     let original = make_cell(' ', Color::WHITE, Color::BLACK);
     let mut cell = original;
-    filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
     assert_eq!(
         cell, original,
         "cell must be unchanged when intensity <= threshold"
@@ -152,7 +152,7 @@ fn test_apply_only_blank_skips_non_space_cells() {
     };
     let original = make_cell('X', Color::WHITE, Color::BLACK);
     let mut cell = original;
-    filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
     assert_eq!(
         cell, original,
         "non-blank cell must be untouched when only_blank is true"
@@ -172,7 +172,7 @@ fn test_apply_only_blank_processes_space_cells() {
         seed: 0,
     };
     let mut cell = make_cell(' ', Color::WHITE, Color::BLACK);
-    filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
     assert_ne!(
         cell.ch, ' ',
         "blank cell should be encoded when only_blank is true"
@@ -194,7 +194,7 @@ fn test_apply_recolor_some_overrides_colors() {
         seed: 0,
     };
     let mut cell = make_cell(' ', Color::rgb(10, 20, 30), Color::rgb(40, 50, 60));
-    filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
     assert_eq!(cell.fg, lit, "fg must be overwritten by lit");
     assert_eq!(cell.bg, unlit, "bg must be overwritten by unlit");
 }
@@ -214,7 +214,7 @@ fn test_apply_recolor_none_preserves_colors() {
         seed: 0,
     };
     let mut cell = make_cell(' ', orig_fg, orig_bg);
-    filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
     assert_eq!(
         cell.fg, orig_fg,
         "fg must be preserved when recolor is None"
@@ -250,7 +250,7 @@ fn test_apply_constructs_signal_context_with_default_form() {
     };
 
     let mut cell = make_cell(' ', Color::WHITE, Color::BLACK);
-    filter.apply(&mut cell, 3, 5, 16, 9, 1.5);
+    filter.apply(&mut cell, &VfxCellContext::new(3, 5, 16, 9, 0, 0, 1.5));
 
     let ctx = captured
         .lock()
@@ -309,7 +309,7 @@ fn test_apply_threads_loop_t_through_signal_t_arg() {
     };
 
     let mut cell = make_cell(' ', Color::WHITE, Color::BLACK);
-    filter.apply(&mut cell, 0, 0, 4, 4, 0.42);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 4, 4, 0, 0, 0.42));
 
     let t = captured_t
         .lock()
@@ -322,7 +322,7 @@ fn test_apply_threads_loop_t_through_signal_t_arg() {
     );
 
     // And again at a different t — proves animation isn't pinned at zero.
-    filter.apply(&mut cell, 0, 0, 4, 4, 0.83);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 4, 4, 0, 0, 0.83));
     let t2 = captured_t
         .lock()
         .unwrap()
@@ -348,7 +348,7 @@ fn test_apply_spatial_x_signal_blank_cell_produces_half_block() {
         seed: 0,
     };
     let mut cell = make_cell(' ', Color::WHITE, Color::BLACK);
-    filter.apply(&mut cell, 4, 0, 8, 1, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(4, 0, 8, 1, 0, 0, 0.0));
     assert_eq!(cell.ch, '▌', "x=4, w=8 → intensity=0.5 → '▌'");
 }
 
@@ -366,7 +366,7 @@ fn test_apply_only_blank_skips_text() {
     };
     let original = make_cell('X', Color::WHITE, Color::BLACK);
     let mut cell = original;
-    filter.apply(&mut cell, 4, 0, 8, 1, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(4, 0, 8, 1, 0, 0, 0.0));
     assert_eq!(
         cell, original,
         "non-blank cell must survive only_blank=true"
@@ -391,7 +391,7 @@ fn test_apply_braille_subcell_uses_eight_samples() {
         seed: 0,
     };
     let mut cell = make_cell(' ', Color::WHITE, Color::BLACK);
-    filter.apply(&mut cell, 0, 0, 8, 4, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 8, 4, 0, 0, 0.0));
 
     let bits = braille_bits(cell.ch).expect("must produce a braille char");
     assert!(
@@ -402,4 +402,4 @@ fn test_apply_braille_subcell_uses_eight_samples() {
 
 // <FILE>crates/tui-vfx-compositor/src/filters/test_cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Tests for ScalarFieldGlyphFilter — encoding, threshold, only_blank, recolor, SignalContext wiring</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

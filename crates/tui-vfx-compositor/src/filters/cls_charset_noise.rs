@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_charset_noise.rs</FILE> - <DESC>Non-converging time-varying character replacement filter with vertical gradient</DESC>
-// <VERS>VERSION: 1.0.1</VERS>
-// <WCTX>feat/content-ergonomics: clean up pre-existing workspace clippy lint</WCTX>
-// <CLOG>Use struct-init form in test make_cell helper (clippy::field_reassign_with_default)</CLOG>
+// <VERS>VERSION: 1.0.2</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.2: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use mixed_signals::random::hash_to_index;
-use tui_vfx_types::Cell;
+use tui_vfx_types::{Cell, VfxCellContext};
 
 /// A single stop in a vertical charset gradient.
 #[derive(Debug, Clone)]
@@ -119,7 +119,11 @@ impl CharsetNoise {
 }
 
 impl Filter for CharsetNoise {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, _width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let height = ctx.height;
+        let t = ctx.t;
         if self.gradient.is_empty() || !self.should_affect(cell) {
             return;
         }
@@ -185,7 +189,7 @@ mod tests {
     fn non_empty_cells_get_replaced() {
         let filter = CharsetNoise::new(42, 8.0, 0.0, AffectMode::NonEmpty, simple_gradient());
         let mut cell = make_cell('⣿');
-        filter.apply(&mut cell, 0, 0, 10, 10, 500.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 500.0));
         assert!(
             cell.ch == 'A' || cell.ch == 'B',
             "Top cell should use first gradient stop, got {:?}",
@@ -197,7 +201,7 @@ mod tests {
     fn empty_cells_skipped() {
         let filter = CharsetNoise::new(42, 8.0, 0.0, AffectMode::NonEmpty, simple_gradient());
         let mut cell = make_cell('⠀');
-        filter.apply(&mut cell, 0, 0, 10, 10, 500.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 500.0));
         assert_eq!(cell.ch, '⠀', "Empty braille should be skipped");
     }
 
@@ -205,7 +209,7 @@ mod tests {
     fn space_cells_skipped() {
         let filter = CharsetNoise::new(42, 8.0, 0.0, AffectMode::NonEmpty, simple_gradient());
         let mut cell = make_cell(' ');
-        filter.apply(&mut cell, 0, 0, 10, 10, 500.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 500.0));
         assert_eq!(cell.ch, ' ', "Space should be skipped");
     }
 
@@ -213,7 +217,7 @@ mod tests {
     fn all_mode_replaces_everything() {
         let filter = CharsetNoise::new(42, 8.0, 0.0, AffectMode::All, simple_gradient());
         let mut cell = make_cell(' ');
-        filter.apply(&mut cell, 0, 0, 10, 10, 500.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 500.0));
         assert!(cell.ch == 'A' || cell.ch == 'B');
     }
 
@@ -222,8 +226,8 @@ mod tests {
         let filter = CharsetNoise::new(42, 8.0, 0.0, AffectMode::NonEmpty, simple_gradient());
         let mut top = make_cell('⣿');
         let mut bottom = make_cell('⣿');
-        filter.apply(&mut top, 5, 0, 10, 10, 500.0);
-        filter.apply(&mut bottom, 5, 9, 10, 10, 500.0);
+        filter.apply(&mut top, &VfxCellContext::new(5, 0, 10, 10, 0, 0, 500.0));
+        filter.apply(&mut bottom, &VfxCellContext::new(5, 9, 10, 10, 0, 0, 500.0));
         assert!(
             top.ch == 'A' || top.ch == 'B',
             "Top row should use first stop"
@@ -250,7 +254,7 @@ mod tests {
         let mut results = std::collections::HashSet::new();
         for t_ms in (0..10000).step_by(200) {
             let mut cell = make_cell('⣿');
-            filter.apply(&mut cell, 3, 3, 10, 10, t_ms as f64);
+            filter.apply(&mut cell, &VfxCellContext::new(3, 3, 10, 10, 0, 0, t_ms as f64));
             results.insert(cell.ch);
         }
         assert!(
@@ -265,8 +269,8 @@ mod tests {
         let filter = CharsetNoise::new(42, 8.0, 0.0, AffectMode::NonEmpty, simple_gradient());
         let mut cell1 = make_cell('⣿');
         let mut cell2 = make_cell('⣿');
-        filter.apply(&mut cell1, 3, 3, 10, 10, 500.0);
-        filter.apply(&mut cell2, 3, 3, 10, 10, 500.0);
+        filter.apply(&mut cell1, &VfxCellContext::new(3, 3, 10, 10, 0, 0, 500.0));
+        filter.apply(&mut cell2, &VfxCellContext::new(3, 3, 10, 10, 0, 0, 500.0));
         assert_eq!(cell1.ch, cell2.ch, "Same inputs must produce same output");
     }
 
@@ -274,7 +278,7 @@ mod tests {
     fn empty_gradient_is_noop() {
         let filter = CharsetNoise::new(42, 8.0, 0.0, AffectMode::NonEmpty, vec![]);
         let mut cell = make_cell('⣿');
-        filter.apply(&mut cell, 0, 0, 10, 10, 500.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 500.0));
         assert_eq!(cell.ch, '⣿');
     }
 
@@ -285,7 +289,7 @@ mod tests {
         // Sample cells across middle rows — jitter should push some to different stops
         for x in 0..20u16 {
             let mut cell = make_cell('⣿');
-            filter.apply(&mut cell, x, 5, 20, 10, 500.0);
+            filter.apply(&mut cell, &VfxCellContext::new(x, 5, 20, 10, 0, 0, 500.0));
             results.insert(cell.ch);
         }
         assert!(
@@ -296,4 +300,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_charset_noise.rs</FILE> - <DESC>Non-converging time-varying character replacement filter with vertical gradient</DESC>
-// <VERS>END OF VERSION: 1.0.1</VERS>
+// <VERS>END OF VERSION: 1.0.2</VERS>

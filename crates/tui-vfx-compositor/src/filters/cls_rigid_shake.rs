@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_rigid_shake.rs</FILE>
 // <DESC>Rigid body shake filter with ketchup bottle damped oscillation pattern</DESC>
-// <VERS>VERSION: 1.2.4</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Use shared test cell helper</CLOG>
+// <VERS>VERSION: 1.2.5</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.2.5: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color, RigidShakeTiming};
+use tui_vfx_types::{Cell, Color, RigidShakeTiming, VfxCellContext};
 
 /// Rigid body shake filter using partial vertical blocks.
 ///
@@ -182,7 +182,12 @@ impl RigidShake {
 }
 
 impl Filter for RigidShake {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         let margin = self.margin_width as u16;
 
         // Determine if this cell is in the margin area
@@ -351,7 +356,7 @@ mod tests {
         // Cell in interior (x=5, total width=14 with margins)
         let mut cell = make_cell();
         let original = cell;
-        filter.apply(&mut cell, 5, 0, 14, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 14, 1, 0, 0, 0.0));
 
         // Interior cell should be unchanged
         assert_eq!(cell.ch, original.ch);
@@ -366,7 +371,7 @@ mod tests {
 
         // Right margin cell (x=12 in width=14)
         let mut cell = make_cell();
-        filter.apply(&mut cell, 12, 0, 14, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(12, 0, 14, 1, 0, 0, 0.0));
 
         // Should be modified (base extension visible)
         assert!(cell.ch != ' ' || cell.fg != Color::WHITE);
@@ -375,4 +380,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_rigid_shake.rs</FILE>
 // <DESC>Rigid body shake filter with ketchup bottle damped oscillation pattern</DESC>
-// <VERS>END OF VERSION: 1.2.4</VERS>
+// <VERS>END OF VERSION: 1.2.5</VERS>

@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_motion_blur.rs</FILE>
 // <DESC>Motion blur trail effect with directional dimming</DESC>
-// <VERS>VERSION: 1.0.2</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Retain local test cell helper</CLOG>
+// <VERS>VERSION: 1.0.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Direction of motion blur trail.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -156,7 +156,11 @@ impl MotionBlur {
 }
 
 impl Filter for MotionBlur {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
         if self.trail_length <= 0.0 {
             return;
         }
@@ -210,7 +214,7 @@ mod tests {
     fn zero_trail_length_no_change() {
         let filter = MotionBlur::new(0.0, 1.0, MotionDirection::Left);
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(100, 100, 100));
     }
 
@@ -220,11 +224,11 @@ mod tests {
 
         // Left edge (x=0) should be dimmer
         let mut cell_left = make_cell();
-        filter.apply(&mut cell_left, 0, 5, 10, 10, 0.0);
+        filter.apply(&mut cell_left, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
 
         // Right edge (x=9) should be brighter (within bright zone)
         let mut cell_right = make_cell();
-        filter.apply(&mut cell_right, 9, 5, 10, 10, 0.0);
+        filter.apply(&mut cell_right, &VfxCellContext::new(9, 5, 10, 10, 0, 0, 0.0));
 
         assert!(
             cell_left.fg.r < cell_right.fg.r,
@@ -238,11 +242,11 @@ mod tests {
 
         // Right edge (x=9) should be dimmer
         let mut cell_right = make_cell();
-        filter.apply(&mut cell_right, 9, 5, 10, 10, 0.0);
+        filter.apply(&mut cell_right, &VfxCellContext::new(9, 5, 10, 10, 0, 0, 0.0));
 
         // Left edge (x=0) should be brighter
         let mut cell_left = make_cell();
-        filter.apply(&mut cell_left, 0, 5, 10, 10, 0.0);
+        filter.apply(&mut cell_left, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
 
         assert!(
             cell_right.fg.r < cell_left.fg.r,
@@ -256,11 +260,11 @@ mod tests {
 
         // Top edge (y=0) should be dimmer
         let mut cell_top = make_cell();
-        filter.apply(&mut cell_top, 5, 0, 10, 10, 0.0);
+        filter.apply(&mut cell_top, &VfxCellContext::new(5, 0, 10, 10, 0, 0, 0.0));
 
         // Bottom edge (y=9) should be brighter
         let mut cell_bottom = make_cell();
-        filter.apply(&mut cell_bottom, 5, 9, 10, 10, 0.0);
+        filter.apply(&mut cell_bottom, &VfxCellContext::new(5, 9, 10, 10, 0, 0, 0.0));
 
         assert!(
             cell_top.fg.r < cell_bottom.fg.r,
@@ -274,11 +278,11 @@ mod tests {
 
         // Bottom edge (y=9) should be dimmer
         let mut cell_bottom = make_cell();
-        filter.apply(&mut cell_bottom, 5, 9, 10, 10, 0.0);
+        filter.apply(&mut cell_bottom, &VfxCellContext::new(5, 9, 10, 10, 0, 0, 0.0));
 
         // Top edge (y=0) should be brighter
         let mut cell_top = make_cell();
-        filter.apply(&mut cell_top, 5, 0, 10, 10, 0.0);
+        filter.apply(&mut cell_top, &VfxCellContext::new(5, 0, 10, 10, 0, 0, 0.0));
 
         assert!(
             cell_bottom.fg.r < cell_top.fg.r,
@@ -293,7 +297,7 @@ mod tests {
         // With trail_length=0.5, the leading 50% should be at full brightness
         // Right edge is leading
         let mut cell = make_cell();
-        filter.apply(&mut cell, 9, 5, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 5, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(100, 100, 100));
     }
 
@@ -309,8 +313,8 @@ mod tests {
         // x=1 in 10-wide: position = 1/9 ≈ 0.11, just barely in bright zone
         // x=0 in 10-wide: position = 0, fully in trail
         // Test at position 0 (fully in trail zone)
-        low_decay.apply(&mut cell_low, 0, 5, 10, 10, 0.0);
-        high_decay.apply(&mut cell_high, 0, 5, 10, 10, 0.0);
+        low_decay.apply(&mut cell_low, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
+        high_decay.apply(&mut cell_high, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
 
         // At position 0, normalized_trail_pos = 0, so 0^decay = 0 for any decay
         // Both should be completely black at position 0
@@ -321,8 +325,8 @@ mod tests {
         // Let me use a larger widget: 20-wide, x=1 gives position=1/19≈0.053
         let mut cell_low = make_cell();
         let mut cell_high = make_cell();
-        low_decay.apply(&mut cell_low, 1, 5, 20, 10, 0.0);
-        high_decay.apply(&mut cell_high, 1, 5, 20, 10, 0.0);
+        low_decay.apply(&mut cell_low, &VfxCellContext::new(1, 5, 20, 10, 0, 0, 0.0));
+        high_decay.apply(&mut cell_high, &VfxCellContext::new(1, 5, 20, 10, 0, 0, 0.0));
 
         // At position ~0.053, trail_start=0.1, normalized=0.53
         // low_decay: 0.53^1.0 = 0.53
@@ -353,7 +357,7 @@ mod tests {
         let mut cell = make_cell();
 
         // At trailing edge
-        filter.apply(&mut cell, 0, 5, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
 
         // Both should be dimmed
         assert!(cell.fg.r < 100);
@@ -363,4 +367,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_motion_blur.rs</FILE>
 // <DESC>Motion blur trail effect with directional dimming</DESC>
-// <VERS>END OF VERSION: 1.0.2</VERS>
+// <VERS>END OF VERSION: 1.0.3</VERS>

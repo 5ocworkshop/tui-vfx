@@ -1,13 +1,13 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_hover_bar.rs</FILE>
 // <DESC>Progress-driven partial bar indicator for hover/focus states</DESC>
-// <VERS>VERSION: 1.2.2</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Use shared test cell helper</CLOG>
+// <VERS>VERSION: 1.2.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.2.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::filters::cls_edge_grow::EdgeGrow;
 use crate::traits::filter::Filter;
 use crate::types::HoverBarPosition;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Progress-driven partial bar indicator for hover/focus states.
 ///
@@ -127,7 +127,7 @@ impl HoverBar {
 }
 
 impl Filter for HoverBar {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
         let edge_grow = EdgeGrow::from_hover_bar(
             self.base_eighths,
             self.max_eighths,
@@ -137,7 +137,7 @@ impl Filter for HoverBar {
             self.progress,
             self.margin_width,
         );
-        edge_grow.apply(cell, x, y, width, height, t);
+        edge_grow.apply(cell, ctx);
     }
 }
 
@@ -213,7 +213,7 @@ mod tests {
         // Cell in interior (x=5, total width=14 with 2-cell margins on each side)
         let mut cell = make_cell();
         let original = cell;
-        filter.apply(&mut cell, 5, 0, 14, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 14, 1, 0, 0, 0.0));
 
         assert_eq!(cell.ch, original.ch);
         assert_eq!(cell.fg, original.fg);
@@ -232,7 +232,7 @@ mod tests {
 
         // Left margin cell (x=0 or x=1 in width=14)
         let mut cell = make_cell();
-        filter.apply(&mut cell, 1, 0, 14, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(1, 0, 14, 1, 0, 0, 0.0));
 
         // Should be modified (base extension visible)
         // With base_eighths=4, cell 1 (adjacent to content) shows 4/8
@@ -250,7 +250,7 @@ mod tests {
 
         // Right margin cell (x=12 in width=14)
         let mut cell = make_cell();
-        filter.apply(&mut cell, 12, 0, 14, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(12, 0, 14, 1, 0, 0, 0.0));
 
         // Should be modified
         assert_ne!(cell.ch, ' ');
@@ -285,7 +285,7 @@ mod tests {
 
         // Bottom margin cell (y=9 in height=10)
         let mut cell = make_cell();
-        filter.apply(&mut cell, 5, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 9, 10, 10, 0, 0, 0.0));
 
         // Should be modified
         assert_ne!(cell.ch, ' ');
@@ -302,7 +302,7 @@ mod tests {
 
         // Top margin cell (y=0 in height=10)
         let mut cell = make_cell();
-        filter.apply(&mut cell, 5, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 10, 0, 0, 0.0));
 
         // Should be modified
         assert_ne!(cell.ch, ' ');
@@ -311,4 +311,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_hover_bar.rs</FILE>
 // <DESC>Progress-driven partial bar indicator for hover/focus states</DESC>
-// <VERS>END OF VERSION: 1.2.2</VERS>
+// <VERS>END OF VERSION: 1.2.3</VERS>

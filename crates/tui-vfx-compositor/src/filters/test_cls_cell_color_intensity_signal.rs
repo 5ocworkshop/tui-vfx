@@ -1,13 +1,13 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/test_cls_cell_color_intensity_signal.rs</FILE>
 // <DESC>Tests for CellColorIntensitySignal — byte-equivalence and boundary anchors</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Glyph rendering framework Phase 4: TDD tests for CellColorIntensitySignal</WCTX>
-// <CLOG>0.1.0: initial test suite; byte-equivalence against SubcellLight::project_intensity, boundary and channel coverage</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>0.1.1: migrate filter.apply call to &VfxCellContext.</CLOG>
 
 use super::CellColorIntensitySignal;
 use crate::filters::cls_subcell_light::{LightSampleFrom, SubcellLight};
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color, Modifiers};
+use tui_vfx_types::{Cell, Color, Modifiers, VfxCellContext};
 
 fn make_cell(ch: char, fg: Color, bg: Color) -> Cell {
     Cell::styled(ch, fg, bg, Modifiers::NONE)
@@ -92,7 +92,7 @@ fn test_intensity_for_consistent_with_subcell_light_apply() {
         ..Default::default()
     };
     let mut cell = make_cell(' ', Color::TRANSPARENT, bg);
-    filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+    filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
     // SubcellLight wrote a glyph — confirm intensity > 0.
     assert_ne!(cell.ch, ' ', "SubcellLight should have written a glyph");
 
@@ -188,4 +188,4 @@ fn test_sample_from_foreground_vs_background() {
 
 // <FILE>crates/tui-vfx-compositor/src/filters/test_cls_cell_color_intensity_signal.rs</FILE>
 // <DESC>Tests for CellColorIntensitySignal — byte-equivalence and boundary anchors</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

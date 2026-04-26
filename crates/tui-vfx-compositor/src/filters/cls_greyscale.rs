@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_greyscale.rs</FILE> - <DESC>Greyscale filter using BT.601 luminance formula</DESC>
-// <VERS>VERSION: 1.1.1</VERS>
-// <WCTX>Fix brightness jump at animation completion</WCTX>
-// <CLOG>Use round() instead of truncation in color math to prevent off-by-one errors</CLOG>
+// <VERS>VERSION: 1.1.2</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.1.2: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::types::cls_filter_spec::ApplyTo;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Greyscale filter that desaturates colors using the BT.601 luminance formula.
 ///
@@ -85,7 +85,7 @@ impl Greyscale {
 }
 
 impl Filter for Greyscale {
-    fn apply(&self, cell: &mut Cell, _x: u16, _y: u16, _width: u16, _height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, _ctx: &VfxCellContext) {
         // Note: we ignore t here - strength is caller-controlled via SignalOrFloat
         match self.apply_to {
             ApplyTo::Foreground => {
@@ -157,7 +157,7 @@ mod tests {
         cell.fg = Color::rgb(255, 0, 0);
         cell.bg = Color::rgb(255, 255, 255);
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         // FG should be greyscale (76, 76, 76)
         assert_eq!(cell.fg.r, 76);
@@ -171,7 +171,7 @@ mod tests {
         let mut cell = Cell::default();
         cell.fg = Color::rgb(255, 0, 0);
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         // Color should be unchanged
         assert_eq!(cell.fg.r, 255);
@@ -185,7 +185,7 @@ mod tests {
         let mut cell = Cell::default();
         cell.fg = Color::rgb(255, 0, 0);
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         // Should be 50% blend: (255 * 0.5 + 76 * 0.5) ≈ 165
         assert!(cell.fg.r >= 164 && cell.fg.r <= 166);
@@ -200,7 +200,7 @@ mod tests {
         cell.fg = Color::rgb(255, 0, 0);
         cell.bg = Color::rgb(0, 255, 0);
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         // FG should be greyscale
         assert_eq!(cell.fg.r, cell.fg.g);
@@ -219,7 +219,7 @@ mod tests {
         cell.fg = Color::rgb(255, 0, 0);
         cell.bg = Color::rgb(0, 255, 0);
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         // FG should be unchanged
         assert_eq!(cell.fg.r, 255);
@@ -240,7 +240,7 @@ mod tests {
         cell.fg = Color::rgb(255, 0, 0);
 
         // Even at t=0.5, full strength should apply because strength is 1.0
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.5);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
 
         // Should be fully greyscale (76, 76, 76)
         assert_eq!(cell.fg.r, 76);
@@ -266,4 +266,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_greyscale.rs</FILE> - <DESC>Greyscale filter using BT.601 luminance formula</DESC>
-// <VERS>END OF VERSION: 1.1.1</VERS>
+// <VERS>END OF VERSION: 1.1.2</VERS>

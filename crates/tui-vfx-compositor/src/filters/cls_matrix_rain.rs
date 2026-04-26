@@ -1,10 +1,10 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_matrix_rain.rs</FILE> - <DESC>Deterministic procedural digital-rain filter</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Faithful digital-rain primitive — implement column-coherent falling glyph streams as a compositor filter so recipes can author static and runtime-bound Matrix-rain effects without needing a widget-owned state machine</WCTX>
-// <CLOG>Initial MatrixRain filter with deterministic per-column streams, trail falloff, glyph churn, density/speed controls, and bright-head/tail-color interpolation</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>0.1.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 const DEFAULT_MATRIX_GLYPHS: &str = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎ0123456789@#$%&*+=-<>!?";
 const DEFAULT_BINARY_GLYPHS: &str = "01";
@@ -257,7 +257,11 @@ impl MatrixRain {
 }
 
 impl Filter for MatrixRain {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, _width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let height = ctx.height;
+        let t = ctx.t;
         if self.glyphs.is_empty() || !self.should_affect(cell) || !self.column_active(x) {
             return;
         }
@@ -314,7 +318,7 @@ mod tests {
         for x in 0..32 {
             for y in 0..16 {
                 let mut cell = blank();
-                filter.apply(&mut cell, x, y, 32, 16, 0.5);
+                filter.apply(&mut cell, &VfxCellContext::new(x, y, 32, 16, 0, 0, 0.5));
                 assert_eq!(cell.ch, ' ');
             }
         }
@@ -325,8 +329,8 @@ mod tests {
         let filter = MatrixRain::new().with_density(1.0).with_seed(7);
         let mut a = blank();
         let mut b = blank();
-        filter.apply(&mut a, 3, 4, 20, 10, 0.42);
-        filter.apply(&mut b, 3, 4, 20, 10, 0.42);
+        filter.apply(&mut a, &VfxCellContext::new(3, 4, 20, 10, 0, 0, 0.42));
+        filter.apply(&mut b, &VfxCellContext::new(3, 4, 20, 10, 0, 0, 0.42));
         assert_eq!(a.ch, b.ch);
         assert_eq!(a.fg, b.fg);
     }
@@ -337,7 +341,7 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         for t in [0.1, 0.25, 0.4, 0.6] {
             let mut cell = blank();
-            filter.apply(&mut cell, 2, 4, 20, 10, t);
+            filter.apply(&mut cell, &VfxCellContext::new(2, 4, 20, 10, 0, 0, t));
             seen.insert((cell.ch, cell.fg.g));
         }
         assert!(seen.len() > 1);
@@ -351,8 +355,8 @@ mod tests {
             .with_speed_multiplier(0.0);
         let mut a = blank();
         let mut b = blank();
-        filter.apply(&mut a, 3, 4, 20, 10, 0.1);
-        filter.apply(&mut b, 3, 4, 20, 10, 0.9);
+        filter.apply(&mut a, &VfxCellContext::new(3, 4, 20, 10, 0, 0, 0.1));
+        filter.apply(&mut b, &VfxCellContext::new(3, 4, 20, 10, 0, 0, 0.9));
         assert_eq!(a.ch, b.ch);
         assert_eq!(a.fg, b.fg);
     }
@@ -366,7 +370,7 @@ mod tests {
         let mut rendered = 0usize;
         for y in 0..12 {
             let mut cell = blank();
-            filter.apply(&mut cell, 2, y, 10, 12, 0.5);
+            filter.apply(&mut cell, &VfxCellContext::new(2, y, 10, 12, 0, 0, 0.5));
             if cell.ch != ' ' {
                 rendered += 1;
             }
@@ -384,7 +388,7 @@ mod tests {
         let mut rendered: Vec<(u16, Cell)> = Vec::new();
         for y in 0..height {
             let mut cell = blank();
-            filter.apply(&mut cell, x, y, 10, height, t);
+            filter.apply(&mut cell, &VfxCellContext::new(x, y, 10, height, 0, 0, t));
             if cell.ch != ' ' {
                 rendered.push((y, cell));
             }
@@ -401,10 +405,10 @@ mod tests {
             .with_density(1.0)
             .with_affect(MatrixRainAffectMode::OnlyBlank);
         let mut cell = Cell::new('X');
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.5);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
         assert_eq!(cell.ch, 'X');
     }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_matrix_rain.rs</FILE> - <DESC>Deterministic procedural digital-rain filter</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

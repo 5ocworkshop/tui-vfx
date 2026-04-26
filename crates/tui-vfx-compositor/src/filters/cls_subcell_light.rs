@@ -1,12 +1,12 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_subcell_light.rs</FILE>
 // <DESC>Sub-cell light filter that renders light fields into partial-block or braille glyphs</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Glyph rendering framework Phase 4: delegate private helpers to GlyphEncoder from tui-vfx-types</WCTX>
-// <CLOG>0.2.0: remove BRAILLE_BASE/BRAILLE_DOTS constants and rotated_braille_pattern/horizontal_partial/vertical_partial private helpers; delegate to GlyphEncoder::BrailleEighths/BlockHorizontal/BlockVertical and CellColorIntensitySignal::intensity_for; public API and tests unchanged</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>0.2.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::filters::cls_cell_color_intensity_signal::CellColorIntensitySignal;
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color, glyph::GlyphEncoder};
+use tui_vfx_types::{Cell, Color, VfxCellContext, glyph::GlyphEncoder};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SubcellLightRenderMode {
@@ -55,7 +55,10 @@ impl Default for SubcellLight {
 }
 
 impl Filter for SubcellLight {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, _width: u16, _height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let t = ctx.t;
         if self.only_blank && cell.ch != ' ' {
             return;
         }
@@ -145,7 +148,7 @@ mod tests {
         let filter = SubcellLight::default();
         let mut cell = make_cell('X', Color::WHITE, Color::rgb(100, 100, 100));
         let original = cell;
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell, original);
     }
 
@@ -161,7 +164,7 @@ mod tests {
             only_blank: true,
         };
         let mut cell = make_cell(' ', Color::TRANSPARENT, Color::rgb(110, 110, 110));
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_ne!(cell.ch, ' ');
         assert_eq!(cell.fg, Color::rgb(200, 200, 200));
         assert_eq!(cell.bg, Color::rgb(20, 20, 20));
@@ -179,7 +182,7 @@ mod tests {
             only_blank: true,
         };
         let mut cell = make_cell(' ', Color::rgb(140, 140, 140), Color::rgb(30, 30, 30));
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_ne!(cell.ch, ' ');
     }
 
@@ -191,7 +194,7 @@ mod tests {
         };
         let mut cell = make_cell(' ', Color::TRANSPARENT, Color::rgb(40, 40, 40));
         let original = cell;
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell, original);
     }
 
@@ -204,8 +207,8 @@ mod tests {
         };
         let mut a = make_cell(' ', Color::TRANSPARENT, Color::rgb(120, 120, 120));
         let mut b = make_cell(' ', Color::TRANSPARENT, Color::rgb(120, 120, 120));
-        filter.apply(&mut a, 3, 2, 10, 5, 0.0);
-        filter.apply(&mut b, 3, 2, 10, 5, 1.0);
+        filter.apply(&mut a, &VfxCellContext::new(3, 2, 10, 5, 0, 0, 0.0));
+        filter.apply(&mut b, &VfxCellContext::new(3, 2, 10, 5, 0, 0, 1.0));
         assert_eq!(a.ch, b.ch);
     }
 
@@ -218,12 +221,12 @@ mod tests {
         };
         let mut a = make_cell(' ', Color::TRANSPARENT, Color::rgb(120, 120, 120));
         let mut b = make_cell(' ', Color::TRANSPARENT, Color::rgb(120, 120, 120));
-        filter.apply(&mut a, 3, 2, 10, 5, 0.0);
-        filter.apply(&mut b, 3, 2, 10, 5, 1.0);
+        filter.apply(&mut a, &VfxCellContext::new(3, 2, 10, 5, 0, 0, 0.0));
+        filter.apply(&mut b, &VfxCellContext::new(3, 2, 10, 5, 0, 0, 1.0));
         assert_ne!(a.ch, b.ch);
     }
 }
 
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_subcell_light.rs</FILE>
 // <DESC>Sub-cell light filter that renders light fields into partial-block or braille glyphs</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

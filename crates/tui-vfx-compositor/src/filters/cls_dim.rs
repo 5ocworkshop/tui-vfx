@@ -1,12 +1,12 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_dim.rs</FILE>
 // <DESC>Dim filter with apply_to targeting and spatial context support</DESC>
-// <VERS>VERSION: 4.0.1</VERS>
-// <WCTX>Fix brightness jump at animation completion</WCTX>
-// <CLOG>Use round() instead of truncation in color math to prevent off-by-one errors</CLOG>
+// <VERS>VERSION: 4.0.2</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>4.0.2: migrate apply signature to &VfxCellContext; read t via ctx.t.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::types::cls_filter_spec::ApplyTo;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Dim filter that darkens colors based on a factor.
 ///
@@ -30,8 +30,8 @@ impl Dim {
 }
 
 impl Filter for Dim {
-    fn apply(&self, cell: &mut Cell, _x: u16, _y: u16, _width: u16, _height: u16, t: f64) {
-        let t = t as f32;
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let t = ctx.t as f32;
 
         fn dim_color(c: Color, factor: f32) -> Color {
             // tui_vfx_types::Color always has RGB components
@@ -63,6 +63,10 @@ mod tests {
     use super::*;
     use tui_vfx_types::Modifiers;
 
+    fn ctx_at(t: f64) -> VfxCellContext {
+        VfxCellContext::new(0, 0, 10, 10, 0, 0, t)
+    }
+
     #[test]
     fn test_dim_foreground_only() {
         let mut cell = Cell::styled(
@@ -71,7 +75,7 @@ mod tests {
             Color::rgb(10, 20, 30),
             Modifiers::NONE,
         );
-        Dim::new(ApplyTo::Foreground).apply(&mut cell, 0, 0, 10, 10, 0.5);
+        Dim::new(ApplyTo::Foreground).apply(&mut cell, &ctx_at(0.5));
         assert_eq!(cell.fg, Color::rgb(50, 25, 0));
         assert_eq!(cell.bg, Color::rgb(10, 20, 30)); // Unchanged
     }
@@ -84,7 +88,7 @@ mod tests {
             Color::rgb(10, 20, 30),
             Modifiers::NONE,
         );
-        Dim::new(ApplyTo::Background).apply(&mut cell, 0, 0, 10, 10, 0.5);
+        Dim::new(ApplyTo::Background).apply(&mut cell, &ctx_at(0.5));
         assert_eq!(cell.fg, Color::rgb(100, 50, 0)); // Unchanged
         assert_eq!(cell.bg, Color::rgb(5, 10, 15));
     }
@@ -97,7 +101,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        Dim::new(ApplyTo::Both).apply(&mut cell, 0, 0, 10, 10, 0.5);
+        Dim::new(ApplyTo::Both).apply(&mut cell, &ctx_at(0.5));
         assert_eq!(cell.fg, Color::rgb(50, 50, 50));
         assert_eq!(cell.bg, Color::rgb(50, 50, 50));
     }
@@ -110,7 +114,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        Dim::default().apply(&mut cell, 0, 0, 10, 10, 0.0);
+        Dim::default().apply(&mut cell, &ctx_at(0.0));
         assert_eq!(cell.fg, Color::rgb(100, 100, 100));
     }
 
@@ -122,7 +126,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        Dim::default().apply(&mut cell, 0, 0, 10, 10, 1.0);
+        Dim::default().apply(&mut cell, &ctx_at(1.0));
         assert_eq!(cell.fg, Color::rgb(0, 0, 0));
         assert_eq!(cell.bg, Color::rgb(0, 0, 0));
     }
@@ -130,4 +134,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_dim.rs</FILE>
 // <DESC>Dim filter with apply_to targeting and spatial context support</DESC>
-// <VERS>END OF VERSION: 4.0.1</VERS>
+// <VERS>END OF VERSION: 4.0.2</VERS>

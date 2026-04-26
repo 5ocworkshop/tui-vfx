@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_color_bridged_shade.rs</FILE>
 // <DESC>Maps opacity to shade characters (░▒▓█) with smooth color bridging</DESC>
-// <VERS>VERSION: 1.0.2</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Retain local test cell helper</CLOG>
+// <VERS>VERSION: 1.0.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Shade characters from lightest to darkest.
 const SHADE_LIGHT: char = '░'; // U+2591 - Light shade (25%)
@@ -124,7 +124,7 @@ impl ColorBridgedShade {
 }
 
 impl Filter for ColorBridgedShade {
-    fn apply(&self, cell: &mut Cell, _x: u16, _y: u16, _width: u16, _height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, _ctx: &VfxCellContext) {
         let (shade_char, fg, bg) = self.shade_for_opacity(self.opacity);
         cell.ch = shade_char;
         cell.fg = fg;
@@ -167,7 +167,7 @@ mod tests {
     fn very_low_opacity_uses_light_shade() {
         let filter = ColorBridgedShade::with_opacity(0.1);
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, SHADE_LIGHT);
     }
 
@@ -175,7 +175,7 @@ mod tests {
     fn quarter_opacity_uses_light_shade() {
         let filter = ColorBridgedShade::with_opacity(0.24);
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, SHADE_LIGHT);
     }
 
@@ -183,7 +183,7 @@ mod tests {
     fn half_opacity_uses_medium_shade() {
         let filter = ColorBridgedShade::with_opacity(0.35);
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, SHADE_MEDIUM);
     }
 
@@ -191,7 +191,7 @@ mod tests {
     fn three_quarter_opacity_uses_dark_shade() {
         let filter = ColorBridgedShade::with_opacity(0.6);
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, SHADE_DARK);
     }
 
@@ -199,7 +199,7 @@ mod tests {
     fn high_opacity_uses_full_block() {
         let filter = ColorBridgedShade::with_opacity(0.9);
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, SHADE_FULL);
     }
 
@@ -219,7 +219,7 @@ mod tests {
     fn full_opacity_uses_fg_color() {
         let filter = ColorBridgedShade::new(1.0, Color::rgb(255, 0, 0), Color::rgb(0, 0, 255));
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
 
         // At full opacity, colors should both approach fg_color
         assert_eq!(cell.fg, Color::rgb(255, 0, 0));
@@ -230,7 +230,7 @@ mod tests {
     fn colors_set_correctly() {
         let filter = ColorBridgedShade::new(0.5, Color::rgb(200, 100, 50), Color::rgb(20, 40, 80));
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
 
         // Medium shade should use fg_color and bg_color as-is
         assert_eq!(cell.fg, Color::rgb(200, 100, 50));
@@ -243,8 +243,8 @@ mod tests {
         let mut cell1 = make_cell();
         let mut cell2 = make_cell();
 
-        filter.apply(&mut cell1, 0, 0, 10, 10, 0.0);
-        filter.apply(&mut cell2, 5, 5, 10, 10, 0.0);
+        filter.apply(&mut cell1, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        filter.apply(&mut cell2, &VfxCellContext::new(5, 5, 10, 10, 0, 0, 0.0));
 
         // Same filter should produce same result regardless of position
         assert_eq!(cell1.ch, cell2.ch);
@@ -258,8 +258,8 @@ mod tests {
         let mut cell1 = make_cell();
         let mut cell2 = make_cell();
 
-        filter.apply(&mut cell1, 0, 0, 10, 10, 0.0);
-        filter.apply(&mut cell2, 0, 0, 10, 10, 0.5);
+        filter.apply(&mut cell1, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        filter.apply(&mut cell2, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
 
         // Same filter should produce same result regardless of time
         assert_eq!(cell1.ch, cell2.ch);
@@ -268,4 +268,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_color_bridged_shade.rs</FILE>
 // <DESC>Maps opacity to shade characters (░▒▓█) with smooth color bridging</DESC>
-// <VERS>END OF VERSION: 1.0.2</VERS>
+// <VERS>END OF VERSION: 1.0.3</VERS>

@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_pattern_fill.rs</FILE> - <DESC>Pattern fill filter for background textures</DESC>
-// <VERS>VERSION: 2.0.1</VERS>
-// <WCTX>Compositor clippy cleanup pass</WCTX>
-// <CLOG>2.0.1: PATCH — swap manual parity/divisibility checks for is_multiple_of per clippy</CLOG>
+// <VERS>VERSION: 2.0.2</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>2.0.2: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use serde::{Deserialize, Serialize};
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Pattern types for filling cells.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -159,7 +159,9 @@ impl PatternFill {
 }
 
 impl Filter for PatternFill {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, _width: u16, _height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
         // Skip non-empty cells if only_empty is set
         if self.only_empty && !Self::is_cell_empty(cell) {
             return;
@@ -193,7 +195,7 @@ mod tests {
         let mut cell = Cell::default();
         cell.ch = ' '; // Empty cell
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         assert_eq!(cell.ch, '~');
     }
@@ -206,14 +208,14 @@ mod tests {
         let mut cell_with_content = Cell::default();
         cell_with_content.ch = 'X';
 
-        filter.apply(&mut cell_with_content, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell_with_content, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
         assert_eq!(cell_with_content.ch, 'X');
 
         // Empty cell should be filled
         let mut empty_cell = Cell::default();
         empty_cell.ch = ' ';
 
-        filter.apply(&mut empty_cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut empty_cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
         assert_eq!(empty_cell.ch, '.');
     }
 
@@ -227,23 +229,23 @@ mod tests {
         // Even positions (0,0), (1,1), (0,2) should use char_a
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, '#');
 
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 1, 1, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(1, 1, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, '#');
 
         // Odd positions (1,0), (0,1) should use char_b
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 1, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, ' ');
 
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 0, 1, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, ' ');
     }
 
@@ -257,18 +259,18 @@ mod tests {
         // Row 0, 2, 4, ... should have the line char
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 5, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, '-');
 
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 5, 2, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 2, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, '-');
 
         // Row 1, 3, 5, ... should not have the line char
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 5, 1, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 1, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, ' ');
     }
 
@@ -282,18 +284,18 @@ mod tests {
         // Column 0, 3, 6, ... should have the line char
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 0, 5, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, '|');
 
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 3, 5, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(3, 5, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, '|');
 
         // Other columns should not have the line char
         let mut cell = Cell::default();
         cell.ch = ' ';
-        filter.apply(&mut cell, 1, 5, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(1, 5, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.ch, ' ');
     }
 
@@ -305,7 +307,7 @@ mod tests {
         let mut cell = Cell::default();
         cell.ch = ' ';
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         assert_eq!(cell.ch, '*');
         assert_eq!(cell.fg, Color::rgb(100, 100, 100));
@@ -320,7 +322,7 @@ mod tests {
         cell.fg = Color::rgb(255, 0, 0);
         cell.bg = Color::rgb(0, 0, 255);
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         assert_eq!(cell.ch, '.');
         // Colors should be preserved when no explicit color is set
@@ -346,7 +348,7 @@ mod tests {
         cell.ch = ' ';
         cell.bg = Color::rgb(0, 0, 0);
 
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         assert_eq!(cell.ch, '·');
         assert_eq!(cell.fg, Color::rgb(50, 50, 50));
@@ -379,4 +381,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_pattern_fill.rs</FILE> - <DESC>Pattern fill filter for background textures</DESC>
-// <VERS>END OF VERSION: 2.0.1</VERS>
+// <VERS>END OF VERSION: 2.0.2</VERS>

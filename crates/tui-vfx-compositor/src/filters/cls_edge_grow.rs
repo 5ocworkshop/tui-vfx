@@ -1,12 +1,12 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_edge_grow.rs</FILE>
 // <DESC>Generalized edge-growth indicator filter using sub-cell partial blocks</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>New richer stretch/grow/expand pipeline primitive that subsumes hover-bar margin growth</WCTX>
-// <CLOG>Add EdgeGrow filter supporting four edges, arbitrary margin widths, and progress-driven sub-cell growth without duplicating HoverBar logic</CLOG>
+// <VERS>VERSION: 1.0.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::types::HoverBarPosition;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Generalized progress-driven edge growth effect.
 ///
@@ -163,7 +163,11 @@ impl EdgeGrow {
 }
 
 impl Filter for EdgeGrow {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
         let Some(margin_idx) = self.margin_index(x, y, width, height) else {
             return;
         };
@@ -197,7 +201,7 @@ mod tests {
             2,
         );
         let mut near = default_cell();
-        filter.apply(&mut near, 8, 0, 10, 1, 0.0);
+        filter.apply(&mut near, &VfxCellContext::new(8, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(near.ch, '█');
     }
 
@@ -213,7 +217,7 @@ mod tests {
             1,
         );
         let mut cell = default_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.bg, Color::rgb(255, 0, 0));
         assert_ne!(cell.ch, ' ');
     }
@@ -221,4 +225,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_edge_grow.rs</FILE>
 // <DESC>Generalized edge-growth indicator filter using sub-cell partial blocks</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.0.1</VERS>

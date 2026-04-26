@@ -1,12 +1,12 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_braille_dust.rs</FILE> - <DESC>Stochastic braille dust filter for frosted glass texture</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
-// <WCTX>Desynchronize braille_dust particles and add fade envelope</WCTX>
-// <CLOG>Per-cell time offset for staggered particles; fade envelope dims fg color smoothly (sin bell curve) for organic fade-in/fade-out</CLOG>
+// <VERS>VERSION: 1.3.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.3.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use mixed_signals::math::fast_random;
 use tui_vfx_types::braille;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Braille dot pattern options for the dust effect.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -183,7 +183,10 @@ impl BrailleDust {
 }
 
 impl Filter for BrailleDust {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, _width: u16, _height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let t = ctx.t;
         // Only affect empty cells
         if !Self::is_cell_empty(cell) {
             return;
@@ -249,12 +252,12 @@ mod tests {
 
         // Cell with content should not be modified
         let mut cell_with_content = Cell::new('X');
-        dust.apply(&mut cell_with_content, 0, 0, 10, 10, 0.5);
+        dust.apply(&mut cell_with_content, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
         assert_eq!(cell_with_content.ch, 'X');
 
         // Empty cell should be filled
         let mut empty_cell = Cell::default();
-        dust.apply(&mut empty_cell, 0, 0, 10, 10, 0.5);
+        dust.apply(&mut empty_cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
         assert_ne!(empty_cell.ch, ' ');
     }
 
@@ -269,13 +272,13 @@ mod tests {
         for y in 0..100 {
             for x in 0..100 {
                 let mut low_cell = Cell::default();
-                low_dust.apply(&mut low_cell, x, y, 100, 100, 0.5);
+                low_dust.apply(&mut low_cell, &VfxCellContext::new(x, y, 100, 100, 0, 0, 0.5));
                 if low_cell.ch != ' ' {
                     low_count += 1;
                 }
 
                 let mut high_cell = Cell::default();
-                high_dust.apply(&mut high_cell, x, y, 100, 100, 0.5);
+                high_dust.apply(&mut high_cell, &VfxCellContext::new(x, y, 100, 100, 0, 0, 0.5));
                 if high_cell.ch != ' ' {
                     high_count += 1;
                 }
@@ -295,7 +298,7 @@ mod tests {
         let dust = BrailleDust::new().with_density(1.0);
 
         let mut cell = Cell::default();
-        dust.apply(&mut cell, 5, 5, 10, 10, 0.5);
+        dust.apply(&mut cell, &VfxCellContext::new(5, 5, 10, 10, 0, 0, 0.5));
 
         // Should be a valid braille character
         assert!(
@@ -318,7 +321,7 @@ mod tests {
             let dust = BrailleDust::new().with_density(1.0).with_pattern(pattern);
 
             let mut cell = Cell::default();
-            dust.apply(&mut cell, 0, 0, 10, 10, 0.5);
+            dust.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
 
             // All should produce valid braille
             assert!(
@@ -337,7 +340,7 @@ mod tests {
 
         let mut cell = Cell::default().with_fg(Color::WHITE);
 
-        dust.apply(&mut cell, 0, 0, 10, 10, 0.5);
+        dust.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
 
         // Color is dimmed by the fade envelope — verify it's set (non-white)
         // and in the right color family (gray, not the original white)
@@ -362,11 +365,11 @@ mod tests {
         for y in 0..10 {
             for x in 0..10 {
                 let mut cell = Cell::default();
-                dust.apply(&mut cell, x, y, 10, 10, 0.0);
+                dust.apply(&mut cell, &VfxCellContext::new(x, y, 10, 10, 0, 0, 0.0));
                 chars_t0.push(cell.ch);
 
                 let mut cell = Cell::default();
-                dust.apply(&mut cell, x, y, 10, 10, 1.0);
+                dust.apply(&mut cell, &VfxCellContext::new(x, y, 10, 10, 0, 0, 1.0));
                 chars_t1.push(cell.ch);
             }
         }
@@ -377,4 +380,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_braille_dust.rs</FILE> - <DESC>Stochastic braille dust filter for frosted glass texture</DESC>
-// <VERS>END OF VERSION: 1.3.0</VERS>
+// <VERS>END OF VERSION: 1.3.1</VERS>

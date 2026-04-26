@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_invert.rs</FILE> - <DESC>Invert filter with spatial context support</DESC>
-// <VERS>VERSION: 3.0.0</VERS>
-// <WCTX>L2/L3 abstraction: make compositor framework-agnostic</WCTX>
-// <CLOG>Changed to use tui_vfx_types::Cell and Color for framework independence</CLOG>
+// <VERS>VERSION: 3.0.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>3.0.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::types::cls_filter_spec::ApplyTo;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Invert filter that swaps foreground and background colors.
 pub struct Invert {
@@ -27,7 +27,7 @@ impl Invert {
 }
 
 impl Filter for Invert {
-    fn apply(&self, cell: &mut Cell, _x: u16, _y: u16, _width: u16, _height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, _ctx: &VfxCellContext) {
         let old_fg = cell.fg;
         let old_bg = cell.bg;
 
@@ -77,7 +77,7 @@ mod tests {
             Color::TRANSPARENT,
             Modifiers::NONE,
         );
-        Invert::new(ApplyTo::Foreground).apply(&mut cell, 0, 0, 10, 10, 0.0);
+        Invert::new(ApplyTo::Foreground).apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::BLACK);
         assert_eq!(cell.bg, Color::TRANSPARENT); // Unchanged
     }
@@ -90,7 +90,7 @@ mod tests {
             Color::rgb(50, 60, 70),
             Modifiers::NONE,
         );
-        Invert::new(ApplyTo::Foreground).apply(&mut cell, 0, 0, 10, 10, 0.0);
+        Invert::new(ApplyTo::Foreground).apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(50, 60, 70));
         assert_eq!(cell.bg, Color::rgb(50, 60, 70)); // Unchanged
     }
@@ -103,7 +103,7 @@ mod tests {
             Color::rgb(1, 2, 3),
             Modifiers::NONE,
         );
-        Invert::new(ApplyTo::Background).apply(&mut cell, 0, 0, 10, 10, 0.0);
+        Invert::new(ApplyTo::Background).apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::TRANSPARENT); // Unchanged
         assert_eq!(cell.bg, Color::WHITE);
     }
@@ -116,7 +116,7 @@ mod tests {
             Color::rgb(50, 50, 50),
             Modifiers::NONE,
         );
-        Invert::new(ApplyTo::Both).apply(&mut cell, 0, 0, 10, 10, 0.0);
+        Invert::new(ApplyTo::Both).apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(50, 50, 50));
         assert_eq!(cell.bg, Color::rgb(100, 100, 100));
     }
@@ -124,11 +124,11 @@ mod tests {
     #[test]
     fn test_invert_both_handles_transparent() {
         let mut cell = Cell::styled('x', Color::TRANSPARENT, Color::TRANSPARENT, Modifiers::NONE);
-        Invert::new(ApplyTo::Both).apply(&mut cell, 0, 0, 10, 10, 0.0);
+        Invert::new(ApplyTo::Both).apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::BLACK);
         assert_eq!(cell.bg, Color::WHITE);
     }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_invert.rs</FILE> - <DESC>Invert filter with spatial context support</DESC>
-// <VERS>END OF VERSION: 3.0.0</VERS>
+// <VERS>END OF VERSION: 3.0.1</VERS>

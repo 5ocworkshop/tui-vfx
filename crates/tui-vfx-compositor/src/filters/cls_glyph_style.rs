@@ -1,8 +1,8 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_glyph_style.rs</FILE>
 // <DESC>GlyphStyle filter — per-glyph-category style overrides via char-membership rules</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>Add fg_alternate field (symmetric to bg_alternate) so the flap/block glyph rule can make its foreground match the NEIGHBOR cell's bg — fg tracks (x+y) parity just like bg. In HBF sparse_update this produces a subtle depth/shadow read as cards spin: the flap's visible face carries the neighbor's bg shade rather than its own, selling a slight "receding into the board" look without breaking the checkerboard.</WCTX>
-// <CLOG>MINOR: GlyphStyleRule grows pub fg_alternate: Option<Color>. When set and (x+y) parity is odd, the cell uses fg_alternate instead of fg; when unset, behavior matches v1.1.0. Three new inline tests mirror the bg_alternate coverage: parity application, fall-through when unset, bounded-by-char-match.</CLOG>
+// <VERS>VERSION: 1.2.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.2.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 //! GlyphStyle filter
 //!
@@ -25,7 +25,7 @@
 //! to least-specific. If no rule matches, the cell is unchanged.
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Single rule in a [`GlyphStyle`] filter: a char-membership set plus
 /// optional fg/bg overrides.
@@ -78,7 +78,9 @@ impl GlyphStyle {
 }
 
 impl Filter for GlyphStyle {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, _w: u16, _h: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
         for rule in &self.rules {
             if rule.chars.contains(&cell.ch) {
                 // Coordinate-checkerboard fg: symmetric to bg path below.
@@ -130,7 +132,7 @@ mod tests {
         let filter = GlyphStyle::new(vec![]);
         let mut cell = cell_with('H');
         let before = cell;
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell, before);
     }
 
@@ -145,7 +147,7 @@ mod tests {
         }]);
         let mut cell = cell_with('X');
         let before = cell;
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell, before);
     }
 
@@ -159,7 +161,7 @@ mod tests {
             fg_alternate: None,
         }]);
         let mut cell = cell_with('█');
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(180, 180, 180));
         assert_eq!(cell.bg, Color::rgb(20, 20, 20), "bg unchanged");
     }
@@ -174,7 +176,7 @@ mod tests {
             fg_alternate: None,
         }]);
         let mut cell = cell_with('▀');
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(100, 100, 100), "fg unchanged");
         assert_eq!(cell.bg, Color::rgb(42, 42, 42));
     }
@@ -198,7 +200,7 @@ mod tests {
             },
         ]);
         let mut cell = cell_with('H');
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(255, 0, 0), "first rule wins");
     }
 
@@ -224,12 +226,12 @@ mod tests {
         ]);
 
         let mut hinge = cell_with('█');
-        filter.apply(&mut hinge, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut hinge, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(hinge.fg, Color::rgb(210, 210, 210));
         assert_eq!(hinge.bg, Color::rgb(42, 42, 42));
 
         let mut letter = cell_with('H');
-        filter.apply(&mut letter, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut letter, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(
             letter.fg,
             Color::rgb(100, 100, 100),
@@ -252,12 +254,12 @@ mod tests {
 
         // (0,0) → parity even → bg
         let mut even = cell_with('A');
-        filter.apply(&mut even, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut even, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(even.bg, Color::rgb(28, 28, 28), "even parity uses bg");
 
         // (1,0) → parity odd → bg_alternate
         let mut odd = cell_with('A');
-        filter.apply(&mut odd, 1, 0, 10, 10, 0.0);
+        filter.apply(&mut odd, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(
             odd.bg,
             Color::rgb(36, 36, 36),
@@ -266,7 +268,7 @@ mod tests {
 
         // (0,1) → parity odd → bg_alternate
         let mut odd_y = cell_with('A');
-        filter.apply(&mut odd_y, 0, 1, 10, 10, 0.0);
+        filter.apply(&mut odd_y, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 0.0));
         assert_eq!(
             odd_y.bg,
             Color::rgb(36, 36, 36),
@@ -275,7 +277,7 @@ mod tests {
 
         // (1,1) → parity even → bg
         let mut even_diag = cell_with('A');
-        filter.apply(&mut even_diag, 1, 1, 10, 10, 0.0);
+        filter.apply(&mut even_diag, &VfxCellContext::new(1, 1, 10, 10, 0, 0, 0.0));
         assert_eq!(
             even_diag.bg,
             Color::rgb(28, 28, 28),
@@ -295,7 +297,7 @@ mod tests {
         }]);
         for (x, y) in [(0u16, 0u16), (1, 0), (0, 1), (1, 1), (5, 7)] {
             let mut cell = cell_with('A');
-            filter.apply(&mut cell, x, y, 10, 10, 0.0);
+            filter.apply(&mut cell, &VfxCellContext::new(x, y, 10, 10, 0, 0, 0.0));
             assert_eq!(
                 cell.bg,
                 Color::rgb(28, 28, 28),
@@ -320,7 +322,7 @@ mod tests {
         // Space at odd parity — unchanged (no rule matches)
         let mut space = cell_with(' ');
         let before = space;
-        filter.apply(&mut space, 1, 0, 10, 10, 0.0);
+        filter.apply(&mut space, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(
             space, before,
             "unmatched space stays at original bg even at odd parity"
@@ -329,12 +331,12 @@ mod tests {
         // Border char at odd parity — unchanged
         let mut border = cell_with('│');
         let before = border;
-        filter.apply(&mut border, 1, 0, 10, 10, 0.0);
+        filter.apply(&mut border, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(border, before, "unmatched border char stays at original bg");
 
         // Matched 'B' at odd parity — gets bg_alternate
         let mut matched = cell_with('B');
-        filter.apply(&mut matched, 1, 0, 10, 10, 0.0);
+        filter.apply(&mut matched, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(
             matched.bg,
             Color::rgb(36, 36, 36),
@@ -355,11 +357,11 @@ mod tests {
         }]);
 
         let mut even = cell_with('█');
-        filter.apply(&mut even, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut even, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(even.fg, Color::rgb(200, 200, 200), "even parity uses fg");
 
         let mut odd_x = cell_with('█');
-        filter.apply(&mut odd_x, 1, 0, 10, 10, 0.0);
+        filter.apply(&mut odd_x, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(
             odd_x.fg,
             Color::rgb(120, 120, 120),
@@ -367,7 +369,7 @@ mod tests {
         );
 
         let mut odd_y = cell_with('█');
-        filter.apply(&mut odd_y, 0, 1, 10, 10, 0.0);
+        filter.apply(&mut odd_y, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 0.0));
         assert_eq!(
             odd_y.fg,
             Color::rgb(120, 120, 120),
@@ -375,7 +377,7 @@ mod tests {
         );
 
         let mut diag_even = cell_with('█');
-        filter.apply(&mut diag_even, 1, 1, 10, 10, 0.0);
+        filter.apply(&mut diag_even, &VfxCellContext::new(1, 1, 10, 10, 0, 0, 0.0));
         assert_eq!(
             diag_even.fg,
             Color::rgb(200, 200, 200),
@@ -394,7 +396,7 @@ mod tests {
         }]);
         for (x, y) in [(0u16, 0u16), (1, 0), (0, 1), (1, 1), (5, 7)] {
             let mut cell = cell_with('█');
-            filter.apply(&mut cell, x, y, 10, 10, 0.0);
+            filter.apply(&mut cell, &VfxCellContext::new(x, y, 10, 10, 0, 0, 0.0));
             assert_eq!(
                 cell.fg,
                 Color::rgb(200, 200, 200),
@@ -416,7 +418,7 @@ mod tests {
         // Unmatched char at odd parity stays unchanged
         let mut space = cell_with(' ');
         let before = space;
-        filter.apply(&mut space, 1, 0, 10, 10, 0.0);
+        filter.apply(&mut space, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(
             space, before,
             "unmatched space is not touched by fg_alternate"
@@ -424,7 +426,7 @@ mod tests {
 
         // Matched char at odd parity gets fg_alternate
         let mut block = cell_with('█');
-        filter.apply(&mut block, 1, 0, 10, 10, 0.0);
+        filter.apply(&mut block, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(block.fg, Color::rgb(120, 120, 120));
     }
 
@@ -446,18 +448,18 @@ mod tests {
         // Even parity: cell bg = own_bg; neighbor bg = own_bg_alt.
         // Flap fg should equal own_bg_alt (= neighbor bg).
         let mut even = cell_with('█');
-        filter.apply(&mut even, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut even, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(even.bg, own_bg, "even parity cell bg");
         assert_eq!(even.fg, own_bg_alt, "even parity fg matches neighbor bg");
 
         // Odd parity: cell bg = own_bg_alt; neighbor bg = own_bg.
         // Flap fg should equal own_bg (= neighbor bg).
         let mut odd = cell_with('█');
-        filter.apply(&mut odd, 1, 0, 10, 10, 0.0);
+        filter.apply(&mut odd, &VfxCellContext::new(1, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(odd.bg, own_bg_alt, "odd parity cell bg");
         assert_eq!(odd.fg, own_bg, "odd parity fg matches neighbor bg");
     }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_glyph_style.rs</FILE>
-// <VERS>END OF VERSION: 1.2.0</VERS>
+// <VERS>END OF VERSION: 1.2.1</VERS>

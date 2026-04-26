@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_sub_cell_shake.rs</FILE>
 // <DESC>Sub-cell shake filter using partial blocks for physical vibration effect</DESC>
-// <VERS>VERSION: 1.0.5</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Retain local test cell helper</CLOG>
+// <VERS>VERSION: 1.0.6</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.6: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Sub-cell shake filter using partial vertical blocks.
 ///
@@ -138,7 +138,11 @@ impl SubCellShake {
 }
 
 impl Filter for SubCellShake {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, _height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let t = ctx.t;
         if width == 0 {
             return;
         }
@@ -280,7 +284,7 @@ mod tests {
         // Interior cell (x=5 in width=10)
         let mut cell = make_cell();
         let original = cell;
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
 
         // Cell should be unchanged (edge_only skips interior)
         assert_eq!(cell.ch, original.ch);
@@ -295,7 +299,7 @@ mod tests {
 
         // Left edge cell (x=0)
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
 
         // Should have changed to a block character
         assert!(
@@ -324,7 +328,7 @@ mod tests {
         for i in 0..8 {
             let t = i as f64 / 8.0;
             let mut cell = make_cell();
-            filter.apply(&mut cell, 0, 0, 10, 1, t);
+            filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, t));
             symbols_at_times.push(cell.ch);
         }
 
@@ -342,7 +346,7 @@ mod tests {
 
         // Interior cell
         let mut cell = make_cell();
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.25);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.25));
 
         // Should have been modified
         assert!(cell.ch != ' ' || cell.fg != Color::rgb(255, 255, 255));
@@ -351,4 +355,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_sub_cell_shake.rs</FILE>
 // <DESC>Sub-cell shake filter using partial blocks for physical vibration effect</DESC>
-// <VERS>END OF VERSION: 1.0.5</VERS>
+// <VERS>END OF VERSION: 1.0.6</VERS>

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_glyph_timeline.rs</FILE> - <DESC>Per-cell discrete-frame, variable-dwell, one-shot glyph + color timeline filter for TTE-style scripted scenes</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>TTE effects port phase 4b — add PerCellSchedule trigger variant so author-supplied per-cell trigger arrays (e.g. from poisson_burst_schedule) drive the timeline; closes the Beams cadence-fidelity gap by letting recipe-side schedule generators compose mixed-signals primitives without inventing new filter machinery.</WCTX>
-// <CLOG>0.2.0: add TimelineTrigger::PerCellSchedule { trigger_times: Arc<Vec<f64>>, width: u16 } variant — flat per-cell trigger time array indexed [y*width+x]; out-of-bounds reads return f64::INFINITY (cell never fires). Existing Immediate / PhaseOffset / Wavefront variants unchanged.</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>0.2.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 //! Per-cell scripted glyph + color timeline.
 //!
@@ -56,7 +56,7 @@ use std::sync::Arc;
 use crate::traits::filter::Filter;
 use mixed_signals::random::hash_to_index;
 use tui_vfx_geometry::types::EasingCurve;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 use super::cls_charset_noise::AffectMode;
 
@@ -397,7 +397,12 @@ impl GlyphTimeline {
 }
 
 impl Filter for GlyphTimeline {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         if self.frames.is_empty() || !self.should_affect(cell) {
             return;
         }
@@ -509,7 +514,7 @@ mod tests {
     fn cell_at_t_zero_shows_first_frame_when_immediate() {
         let tl = immediate_hold(three_frames());
         let mut cell = make_cell('⣿');
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, 'A');
         assert_eq!(cell.fg, rgb(255, 0, 0));
     }
@@ -523,15 +528,15 @@ mod tests {
         let tl = immediate_hold(three_frames());
         let mut cell = make_cell('⣿');
         // Mid-frame 0: 'A'
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.05);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.05));
         assert_eq!(cell.ch, 'A');
         // Mid-frame 1: 'B'
         cell.ch = '⣿';
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.20);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.20));
         assert_eq!(cell.ch, 'B');
         // Mid-frame 2: 'C'
         cell.ch = '⣿';
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.35);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.35));
         assert_eq!(cell.ch, 'C');
     }
 
@@ -539,7 +544,7 @@ mod tests {
     fn hold_mode_keeps_last_frame_past_end() {
         let tl = immediate_hold(three_frames());
         let mut cell = make_cell('⣿');
-        tl.apply(&mut cell, 0, 0, 10, 10, 100.0);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 100.0));
         assert_eq!(cell.ch, 'C');
         assert_eq!(cell.fg, rgb(0, 0, 255));
     }
@@ -555,7 +560,7 @@ mod tests {
         );
         let mut cell = make_cell('#');
         cell.fg = rgb(50, 50, 50);
-        tl.apply(&mut cell, 0, 0, 10, 10, 100.0);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 100.0));
         assert_eq!(cell.ch, '#'); // unchanged
         assert_eq!(cell.fg, rgb(50, 50, 50));
     }
@@ -575,15 +580,15 @@ mod tests {
         );
         // t=0.45 wraps to 0.05 → mid-frame 0 → 'A'
         let mut cell = make_cell('⣿');
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.45);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.45));
         assert_eq!(cell.ch, 'A');
         // t=0.60 wraps to 0.20 → mid-frame 1 → 'B'
         cell.ch = '⣿';
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.60);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.60));
         assert_eq!(cell.ch, 'B');
         // t=0.75 wraps to 0.35 → mid-frame 2 → 'C'
         cell.ch = '⣿';
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.75);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.75));
         assert_eq!(cell.ch, 'C');
     }
 
@@ -602,7 +607,7 @@ mod tests {
         );
         let mut cell = make_cell('#');
         // Column 5 fires at 0.5s; at t=0.0 it shouldn't have started.
-        tl.apply(&mut cell, 5, 0, 10, 10, 0.0);
+        tl.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, '#');
     }
 
@@ -621,11 +626,11 @@ mod tests {
         );
         // At t=0.5s: column 0 trigger=0, t_local=0.5 -> frame 2 ('C')
         let mut c0 = make_cell('⣿');
-        tl.apply(&mut c0, 0, 0, 10, 10, 0.5);
+        tl.apply(&mut c0, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
         assert_eq!(c0.ch, 'C');
         // Column 5 trigger=0.5, t_local=0.0 -> frame 0 ('A')
         let mut c5 = make_cell('⣿');
-        tl.apply(&mut c5, 5, 0, 10, 10, 0.5);
+        tl.apply(&mut c5, &VfxCellContext::new(5, 0, 10, 10, 0, 0, 0.5));
         assert_eq!(c5.ch, 'A');
     }
 
@@ -806,8 +811,8 @@ mod tests {
         );
         let mut space = make_cell(' ');
         let mut text = make_cell('X');
-        tl.apply(&mut space, 0, 0, 10, 10, 0.0);
-        tl.apply(&mut text, 0, 0, 10, 10, 0.0);
+        tl.apply(&mut space, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        tl.apply(&mut text, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(space.ch, ' '); // skipped
         assert_eq!(text.ch, 'A'); // first frame applied
     }
@@ -824,7 +829,7 @@ mod tests {
         );
         let mut cell = make_cell('⣿');
         cell.fg = rgb(1, 1, 1);
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, 'X');
         assert_eq!(cell.fg, rgb(1, 1, 1), "fg untouched");
         assert_eq!(cell.bg, rgb(0, 99, 0));
@@ -835,7 +840,7 @@ mod tests {
         let tl = immediate_hold(vec![]);
         let mut cell = make_cell('⣿');
         cell.fg = rgb(1, 2, 3);
-        tl.apply(&mut cell, 0, 0, 10, 10, 0.5);
+        tl.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
         assert_eq!(cell.ch, '⣿');
         assert_eq!(cell.fg, rgb(1, 2, 3));
     }
@@ -851,8 +856,8 @@ mod tests {
         let tl = immediate_hold(three_frames());
         let mut a = make_cell('⣿');
         let mut b = make_cell('⣿');
-        tl.apply(&mut a, 3, 4, 10, 10, 0.123);
-        tl.apply(&mut b, 3, 4, 10, 10, 0.123);
+        tl.apply(&mut a, &VfxCellContext::new(3, 4, 10, 10, 0, 0, 0.123));
+        tl.apply(&mut b, &VfxCellContext::new(3, 4, 10, 10, 0, 0, 0.123));
         assert_eq!(a.ch, b.ch);
         assert_eq!(a.fg, b.fg);
     }
@@ -916,8 +921,8 @@ mod tests {
         // At t=0.05: (0,0) t_local=0.05 → frame 0 ('A'); (1,0) hasn't fired.
         let mut c00 = make_cell('⣿');
         let mut c10 = make_cell('⣿');
-        tl.apply(&mut c00, 0, 0, 2, 1, 0.05);
-        tl.apply(&mut c10, 1, 0, 2, 1, 0.05);
+        tl.apply(&mut c00, &VfxCellContext::new(0, 0, 2, 1, 0, 0, 0.05));
+        tl.apply(&mut c10, &VfxCellContext::new(1, 0, 2, 1, 0, 0, 0.05));
         assert_eq!(c00.ch, 'A');
         assert_eq!(
             c10.ch, '⣿',
@@ -927,8 +932,8 @@ mod tests {
         //           (1,0) t_local=0.05 → frame 0 ('A').
         let mut c00 = make_cell('⣿');
         let mut c10 = make_cell('⣿');
-        tl.apply(&mut c00, 0, 0, 2, 1, 0.55);
-        tl.apply(&mut c10, 1, 0, 2, 1, 0.55);
+        tl.apply(&mut c00, &VfxCellContext::new(0, 0, 2, 1, 0, 0, 0.55));
+        tl.apply(&mut c10, &VfxCellContext::new(1, 0, 2, 1, 0, 0, 0.55));
         assert_eq!(c00.ch, 'C', "(0,0) past end, Hold = last frame");
         assert_eq!(c10.ch, 'A', "(1,0) just fired");
     }

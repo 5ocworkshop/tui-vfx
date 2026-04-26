@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_tint.rs</FILE> - <DESC>Tint filter with spatial context support</DESC>
-// <VERS>VERSION: 3.2.0</VERS>
-// <WCTX>Fix brightness jump at animation completion</WCTX>
-// <CLOG>Use round() instead of truncation in blend to prevent off-by-one color errors</CLOG>
+// <VERS>VERSION: 3.2.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>3.2.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::types::cls_filter_spec::ApplyTo;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Tint filter that blends a color into the cell's fg/bg.
 ///
@@ -83,7 +83,7 @@ impl Tint {
 }
 
 impl Filter for Tint {
-    fn apply(&self, cell: &mut Cell, _x: u16, _y: u16, _width: u16, _height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, _ctx: &VfxCellContext) {
         // Note: we ignore t here - strength is caller-controlled via SignalOrFloat
         match self.apply_to {
             ApplyTo::Foreground => {
@@ -124,7 +124,7 @@ mod tests {
         cell.fg = Color::rgb(0, 0, 0);
         cell.bg = Color::rgb(255, 255, 255);
 
-        tint.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        tint.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         // FG should be fully tinted to red
         assert_eq!(cell.fg, Color::rgb(255, 0, 0));
@@ -144,7 +144,7 @@ mod tests {
         cell.fg = Color::rgb(255, 255, 255);
         cell.bg = Color::rgb(0, 0, 0);
 
-        tint.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        tint.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         // FG should be unchanged
         assert_eq!(cell.fg, Color::rgb(255, 255, 255));
@@ -164,7 +164,7 @@ mod tests {
         cell.fg = Color::rgb(0, 0, 0);
         cell.bg = Color::rgb(0, 0, 0);
 
-        tint.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        tint.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
 
         // Should be 50% blend (127 or 128 due to rounding)
         assert!(
@@ -192,4 +192,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_tint.rs</FILE> - <DESC>Tint filter with spatial context support</DESC>
-// <VERS>END OF VERSION: 3.2.0</VERS>
+// <VERS>END OF VERSION: 3.2.1</VERS>

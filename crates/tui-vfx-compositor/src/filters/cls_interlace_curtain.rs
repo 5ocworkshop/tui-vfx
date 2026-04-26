@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_interlace_curtain.rs</FILE>
 // <DESC>Scanline/interlace effect that dims alternating rows for backdrop effects</DESC>
-// <VERS>VERSION: 1.1.2</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Retain local test cell helper</CLOG>
+// <VERS>VERSION: 1.1.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.1.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Scanline/interlace effect filter for backdrop dimming.
 ///
@@ -89,7 +89,9 @@ impl InterlaceCurtain {
 }
 
 impl Filter for InterlaceCurtain {
-    fn apply(&self, cell: &mut Cell, _x: u16, y: u16, _width: u16, _height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let y = ctx.local_y;
+        let t = ctx.t;
         if self.should_dim_row(y, t) {
             cell.fg = self.dim_color(cell.fg);
             cell.bg = self.dim_color(cell.bg);
@@ -156,19 +158,19 @@ mod tests {
 
         // Row 0 should be dimmed
         let mut cell0 = make_cell();
-        filter.apply(&mut cell0, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell0, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell0.fg, Color::rgb(50, 50, 50));
         assert_eq!(cell0.bg, Color::rgb(25, 25, 25));
 
         // Row 1 should NOT be dimmed
         let mut cell1 = make_cell();
-        filter.apply(&mut cell1, 0, 1, 10, 10, 0.0);
+        filter.apply(&mut cell1, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 0.0));
         assert_eq!(cell1.fg, Color::rgb(100, 100, 100));
         assert_eq!(cell1.bg, Color::rgb(50, 50, 50));
 
         // Row 2 should be dimmed
         let mut cell2 = make_cell();
-        filter.apply(&mut cell2, 0, 2, 10, 10, 0.0);
+        filter.apply(&mut cell2, &VfxCellContext::new(0, 2, 10, 10, 0, 0, 0.0));
         assert_eq!(cell2.fg, Color::rgb(50, 50, 50));
     }
 
@@ -181,24 +183,24 @@ mod tests {
 
         // At t=0, row 0 is dimmed (scroll_offset=0)
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(0, 0, 0)); // Fully dimmed
 
         // At t=1.0, pattern shifts by 1 row (scroll_offset = 1.0 % 2.0 = 1.0)
         // Row 0: effective_y = 0 + 1 = 1, 1 % 2 = 1, 1 < 1 = false → NOT dimmed
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.fg, Color::rgb(100, 100, 100)); // Not dimmed
 
         // At t=1.0, row 1 should be dimmed (swapped with row 0)
         // Row 1: effective_y = 1 + 1 = 2, 2 % 2 = 0, 0 < 1 = true → dimmed
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 1, 10, 10, 1.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 1.0));
         assert_eq!(cell.fg, Color::rgb(0, 0, 0)); // Dimmed
 
         // At t=2.0, pattern cycles back (scroll_offset = 2.0 % 2.0 = 0)
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 2.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 2.0));
         assert_eq!(cell.fg, Color::rgb(0, 0, 0)); // Dimmed again (back to original)
     }
 
@@ -206,7 +208,7 @@ mod tests {
     fn zero_dim_factor_no_change() {
         let filter = InterlaceCurtain::new().with_dim_factor(0.0);
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(100, 100, 100));
     }
 
@@ -214,7 +216,7 @@ mod tests {
     fn full_dim_factor_blacks_out() {
         let filter = InterlaceCurtain::new().with_dim_factor(1.0);
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(0, 0, 0));
         assert_eq!(cell.bg, Color::rgb(0, 0, 0));
     }
@@ -228,8 +230,8 @@ mod tests {
         // Different x positions on the same row should have same result
         let mut cell1 = make_cell();
         let mut cell2 = make_cell();
-        filter.apply(&mut cell1, 0, 0, 10, 10, 0.0);
-        filter.apply(&mut cell2, 5, 0, 10, 10, 0.0);
+        filter.apply(&mut cell1, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        filter.apply(&mut cell2, &VfxCellContext::new(5, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell1.fg, cell2.fg);
         assert_eq!(cell1.bg, cell2.bg);
     }
@@ -242,23 +244,23 @@ mod tests {
 
         // density=0.5 -> period=4, so rows 0-1 dimmed, rows 2-3 not dimmed
         let mut cell0 = make_cell();
-        filter.apply(&mut cell0, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell0, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell0.fg, Color::rgb(0, 0, 0)); // Dimmed
 
         let mut cell1 = make_cell();
-        filter.apply(&mut cell1, 0, 1, 10, 10, 0.0);
+        filter.apply(&mut cell1, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 0.0));
         assert_eq!(cell1.fg, Color::rgb(0, 0, 0)); // Dimmed
 
         let mut cell2 = make_cell();
-        filter.apply(&mut cell2, 0, 2, 10, 10, 0.0);
+        filter.apply(&mut cell2, &VfxCellContext::new(0, 2, 10, 10, 0, 0, 0.0));
         assert_eq!(cell2.fg, Color::rgb(100, 100, 100)); // Not dimmed
 
         let mut cell3 = make_cell();
-        filter.apply(&mut cell3, 0, 3, 10, 10, 0.0);
+        filter.apply(&mut cell3, &VfxCellContext::new(0, 3, 10, 10, 0, 0, 0.0));
         assert_eq!(cell3.fg, Color::rgb(100, 100, 100)); // Not dimmed
     }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_interlace_curtain.rs</FILE>
 // <DESC>Scanline/interlace effect that dims alternating rows for backdrop effects</DESC>
-// <VERS>END OF VERSION: 1.1.2</VERS>
+// <VERS>END OF VERSION: 1.1.3</VERS>

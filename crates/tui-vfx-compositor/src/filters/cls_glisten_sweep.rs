@@ -1,12 +1,12 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_glisten_sweep.rs</FILE>
 // <DESC>Diagonal glisten sweep effect for hover states</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
-// <WCTX>Add boost_separator_bg for continuous powerline backgrounds</WCTX>
-// <CLOG>Add boost_separator_bg toggle for powerlines with non-terminal backgrounds</CLOG>
+// <VERS>VERSION: 1.3.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.3.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::utils::is_powerline_separator;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Diagonal glisten sweep that moves across content on hover.
 ///
@@ -117,7 +117,12 @@ impl GlistenSweep {
 }
 
 impl Filter for GlistenSweep {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         if self.progress <= 0.0 {
             return;
         }
@@ -235,7 +240,7 @@ mod tests {
         let filter = GlistenSweep::new().with_progress(0.0);
         let mut cell = make_cell();
         let original_fg = cell.fg;
-        filter.apply(&mut cell, 0, 0, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, original_fg);
     }
 
@@ -247,7 +252,7 @@ mod tests {
         let original_fg = cell.fg;
         // At progress=1.0 with speed=0, sweep is at position 1.0 (bottom-right)
         // Cell at (9,9) in 10x10 has diag_pos ~= 0.9, close to sweep
-        filter.apply(&mut cell, 9, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
         // Should be brightened
         assert_ne!(cell.fg, original_fg);
     }
@@ -277,7 +282,7 @@ mod tests {
         );
         let original_fg = cell.fg;
         // Apply at position where highlight would occur
-        filter.apply(&mut cell, 9, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
         // Transparent fg should remain transparent
         assert_eq!(cell.fg, original_fg);
         assert_eq!(cell.fg.a, 0);
@@ -294,7 +299,7 @@ mod tests {
         );
         let original_bg = cell.bg;
         // Apply at position where highlight would occur
-        filter.apply(&mut cell, 9, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
         // Transparent bg should remain transparent
         assert_eq!(cell.bg, original_bg);
         assert_eq!(cell.bg.a, 0);
@@ -310,7 +315,7 @@ mod tests {
             Color::new(30, 30, 30, 200),
             Modifiers::NONE,
         );
-        filter.apply(&mut cell, 9, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
         // Alpha values should be preserved
         assert_eq!(cell.fg.a, 128);
         assert_eq!(cell.bg.a, 200);
@@ -326,7 +331,7 @@ mod tests {
             .with_powerline_mode(true);
         let mut cell = make_cell(); // 'A' is not a powerline separator
         let original_fg = cell.fg;
-        filter.apply(&mut cell, 9, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
         // Foreground should NOT be boosted (regular text)
         assert_eq!(cell.fg, original_fg);
         // Background should be boosted
@@ -347,7 +352,7 @@ mod tests {
             Modifiers::NONE,
         );
         let original_bg = cell.bg;
-        filter.apply(&mut cell, 9, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
         // fg should be boosted for separator
         assert!(cell.fg.r > 100);
         // bg should NOT be boosted
@@ -369,7 +374,7 @@ mod tests {
             Color::rgb(30, 30, 30),
             Modifiers::NONE,
         );
-        filter.apply(&mut cell, 9, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
 
         // fg should be boosted
         assert!(cell.fg.r > 100);
@@ -380,4 +385,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_glisten_sweep.rs</FILE>
 // <DESC>Diagonal glisten sweep effect for hover states</DESC>
-// <VERS>END OF VERSION: 1.3.0</VERS>
+// <VERS>END OF VERSION: 1.3.1</VERS>

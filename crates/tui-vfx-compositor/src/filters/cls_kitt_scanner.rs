@@ -1,13 +1,13 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_kitt_scanner.rs</FILE>
 // <DESC>Ping-pong scanner effect like KITT from Knight Rider, horizontal or vertical</DESC>
-// <VERS>VERSION: 1.9.0</VERS>
-// <WCTX>Phase 7 prep: vertical axis support unlocks faithful Beams effect (top-down sweep).</WCTX>
-// <CLOG>Add ScannerAxis field on KittScanner; apply() now selects nx (horizontal) or ny (vertical) before computing the sweep distance.</CLOG>
+// <VERS>VERSION: 1.9.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.9.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::types::cls_filter_spec::{ApplyTo, ScannerAxis, ScannerMotionMode, kitt_bps_from_bpm};
 use crate::utils::is_powerline_separator;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Horizontal scanner effect (Larson scanner / KITT scanner).
 ///
@@ -169,7 +169,12 @@ impl KittScanner {
 }
 
 impl Filter for KittScanner {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         if self.progress <= 0.0 {
             return;
         }
@@ -305,7 +310,7 @@ mod tests {
         let filter = KittScanner::new().with_progress(0.0);
         let mut cell = make_cell();
         let original_fg = cell.fg;
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.fg, original_fg);
     }
 
@@ -316,7 +321,7 @@ mod tests {
         let original_fg = cell.fg;
         // At t=0.0, sin(0)=0, so position is 0.5 (center)
         // Test cell at x=5 in width=10 (center)
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         assert_ne!(cell.fg, original_fg);
     }
 
@@ -326,12 +331,12 @@ mod tests {
 
         // Middle row (y=1 in height=3)
         let mut mid_cell = make_cell();
-        filter.apply(&mut mid_cell, 5, 1, 10, 3, 0.0);
+        filter.apply(&mut mid_cell, &VfxCellContext::new(5, 1, 10, 3, 0, 0, 0.0));
         let mid_changed = mid_cell.fg != Color::rgb(100, 100, 100);
 
         // Top row (should also be affected now)
         let mut top_cell = make_cell();
-        filter.apply(&mut top_cell, 5, 0, 10, 3, 0.0);
+        filter.apply(&mut top_cell, &VfxCellContext::new(5, 0, 10, 3, 0, 0, 0.0));
         let top_changed = top_cell.fg != Color::rgb(100, 100, 100);
 
         // Both rows should be affected (full-height effect)
@@ -349,13 +354,13 @@ mod tests {
         // At t=1.5 (1.5 beats), sin(3π/2)=-1 → position = 0.0 (left edge)
 
         let mut cell_center = make_cell();
-        filter.apply(&mut cell_center, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell_center, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
 
         let mut cell_right = make_cell();
-        filter.apply(&mut cell_right, 9, 0, 10, 1, 0.5);
+        filter.apply(&mut cell_right, &VfxCellContext::new(9, 0, 10, 1, 0, 0, 0.5));
 
         let mut cell_left = make_cell();
-        filter.apply(&mut cell_left, 0, 0, 10, 1, 1.5);
+        filter.apply(&mut cell_left, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 1.5));
 
         // All should be highlighted at their respective times
         assert_ne!(cell_center.fg, Color::rgb(100, 100, 100));
@@ -395,7 +400,7 @@ mod tests {
         );
         let original_fg = cell.fg;
         // Apply at center where highlight would occur
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // Transparent fg should remain transparent
         assert_eq!(cell.fg, original_fg);
         assert_eq!(cell.fg.a, 0);
@@ -412,7 +417,7 @@ mod tests {
         );
         let original_bg = cell.bg;
         // Apply at center where highlight would occur
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // Transparent bg should remain transparent
         assert_eq!(cell.bg, original_bg);
         assert_eq!(cell.bg.a, 0);
@@ -433,7 +438,7 @@ mod tests {
             Color::new(30, 30, 30, 200),
             Modifiers::NONE,
         );
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // Alpha values should be preserved
         assert_eq!(cell.fg.a, 128);
         assert_eq!(cell.bg.a, 200);
@@ -452,7 +457,7 @@ mod tests {
         let mut cell = make_cell();
         let original_bg = cell.bg;
         // Apply at center where highlight would occur
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // Foreground should be boosted
         assert!(cell.fg.r > 100);
         // Background should NOT be boosted (unchanged)
@@ -469,7 +474,7 @@ mod tests {
         let mut cell = make_cell();
         let original_fg = cell.fg;
         // Apply at center where highlight would occur
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // Foreground should NOT be boosted (unchanged)
         assert_eq!(cell.fg, original_fg);
         // Background should be boosted
@@ -485,7 +490,7 @@ mod tests {
             .with_apply_to(ApplyTo::Both);
         let mut cell = make_cell();
         // Apply at center where highlight would occur
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // Both should be boosted
         assert!(cell.fg.r > 100);
         assert!(cell.bg.r > 30);
@@ -507,15 +512,15 @@ mod tests {
             .with_motion_mode(ScannerMotionMode::ForwardWrap);
 
         let mut left = make_cell();
-        filter.apply(&mut left, 0, 0, 10, 1, 0.01);
+        filter.apply(&mut left, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.01));
         assert_ne!(left.fg, Color::rgb(100, 100, 100));
 
         let mut right = make_cell();
-        filter.apply(&mut right, 9, 0, 10, 1, 0.4);
+        filter.apply(&mut right, &VfxCellContext::new(9, 0, 10, 1, 0, 0, 0.4));
         assert_ne!(right.fg, Color::rgb(100, 100, 100));
 
         let mut dark = make_cell();
-        filter.apply(&mut dark, 5, 0, 10, 1, 0.75);
+        filter.apply(&mut dark, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.75));
         assert_eq!(dark.fg, Color::rgb(100, 100, 100));
     }
 
@@ -526,7 +531,7 @@ mod tests {
             .with_powerline_mode(true);
         let mut cell = make_cell(); // 'A' is not a powerline separator
         let original_fg = cell.fg;
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // Foreground should NOT be boosted (regular text)
         assert_eq!(cell.fg, original_fg);
         // Background should be boosted
@@ -546,7 +551,7 @@ mod tests {
             Modifiers::NONE,
         );
         let original_bg = cell.bg;
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // fg should be boosted for separator
         assert!(cell.fg.r > 100);
         // bg should NOT be boosted (avoid double-brightness and end-separator artifacts)
@@ -566,7 +571,7 @@ mod tests {
             Modifiers::NONE,
         );
         let original_bg = cell.bg;
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         // fg should be boosted for separator
         assert!(cell.fg.r > 100);
         // bg should NOT be boosted
@@ -588,7 +593,7 @@ mod tests {
             Color::rgb(100, 100, 100), // Same starting color for comparison
             Modifiers::NONE,
         );
-        filter.apply(&mut text_cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut text_cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         let text_bg_boost = text_cell.bg.r - 100;
 
         // Separator cell
@@ -598,7 +603,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        filter.apply(&mut sep_cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut sep_cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         let sep_fg_boost = sep_cell.fg.r - 100;
 
         // Both should get the same boost amount (boost/2)
@@ -641,7 +646,7 @@ mod tests {
             Color::rgb(30, 30, 30),
             Modifiers::NONE,
         );
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
 
         // fg should be boosted
         assert!(cell.fg.r > 100);
@@ -667,7 +672,7 @@ mod tests {
         // Center row, far-left column: should brighten because the vertical
         // band is at the row midpoint and x is irrelevant.
         let mut center_row = make_cell();
-        filter.apply(&mut center_row, 0, 5, 20, 10, 0.0);
+        filter.apply(&mut center_row, &VfxCellContext::new(0, 5, 20, 10, 0, 0, 0.0));
         assert_ne!(
             center_row.fg,
             Color::rgb(100, 100, 100),
@@ -676,12 +681,12 @@ mod tests {
 
         // Top row: outside the band — must not brighten.
         let mut top_row = make_cell();
-        filter.apply(&mut top_row, 0, 0, 20, 10, 0.0);
+        filter.apply(&mut top_row, &VfxCellContext::new(0, 0, 20, 10, 0, 0, 0.0));
         assert_eq!(top_row.fg, Color::rgb(100, 100, 100), "top row stays dark");
 
         // Bottom row: outside the band — must not brighten.
         let mut bottom_row = make_cell();
-        filter.apply(&mut bottom_row, 0, 9, 20, 10, 0.0);
+        filter.apply(&mut bottom_row, &VfxCellContext::new(0, 9, 20, 10, 0, 0, 0.0));
         assert_eq!(
             bottom_row.fg,
             Color::rgb(100, 100, 100),
@@ -699,11 +704,11 @@ mod tests {
             .with_axis(ScannerAxis::Vertical);
 
         let mut bottom = make_cell();
-        filter.apply(&mut bottom, 0, 9, 10, 10, 0.5);
+        filter.apply(&mut bottom, &VfxCellContext::new(0, 9, 10, 10, 0, 0, 0.5));
         assert_ne!(bottom.fg, Color::rgb(100, 100, 100), "band reaches bottom");
 
         let mut top = make_cell();
-        filter.apply(&mut top, 0, 0, 10, 10, 1.5);
+        filter.apply(&mut top, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.5));
         assert_ne!(top.fg, Color::rgb(100, 100, 100), "band reaches top");
     }
 
@@ -714,7 +719,7 @@ mod tests {
             .with_axis(ScannerAxis::Vertical);
         let mut cell = make_cell();
         let original_fg = cell.fg;
-        filter.apply(&mut cell, 5, 0, 10, 0, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 0, 0, 0, 0.0));
         assert_eq!(
             cell.fg, original_fg,
             "zero-height vertical sweep is a no-op"
@@ -737,7 +742,7 @@ mod tests {
             Modifiers::NONE,
         );
         let original_bg = cell.bg;
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
 
         // Should follow apply_to (fg only), not boost_separator_bg
         assert!(cell.fg.r > 100);
@@ -747,4 +752,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_kitt_scanner.rs</FILE>
 // <DESC>Ping-pong scanner effect like KITT from Knight Rider, horizontal or vertical</DESC>
-// <VERS>END OF VERSION: 1.9.0</VERS>
+// <VERS>END OF VERSION: 1.9.1</VERS>

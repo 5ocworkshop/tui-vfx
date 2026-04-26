@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_pill_button.rs</FILE>
 // <DESC>Pill-shaped button with gradient edges and optional glisten</DESC>
-// <VERS>VERSION: 1.0.2</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Use shared test cell helper</CLOG>
+// <VERS>VERSION: 1.0.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Pill-shaped button effect with gradient edges.
 ///
@@ -96,7 +96,12 @@ impl PillButton {
 }
 
 impl Filter for PillButton {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         // Calculate gradient position
         let edge_w = self.edge_width.min(width / 2);
 
@@ -213,7 +218,7 @@ mod tests {
 
         let mut cell = make_cell();
         // Center cell (x=5 in width=10, edge=2)
-        filter.apply(&mut cell, 5, 1, 10, 3, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 1, 10, 3, 0, 0, 0.0));
 
         assert_eq!(cell.bg, Color::rgb(100, 100, 100));
     }
@@ -230,9 +235,9 @@ mod tests {
         let mut cell2 = make_cell();
 
         // First cell should be closer to bg
-        filter.apply(&mut cell1, 0, 1, 10, 3, 0.0);
+        filter.apply(&mut cell1, &VfxCellContext::new(0, 1, 10, 3, 0, 0, 0.0));
         // Cell further in should be closer to button
-        filter.apply(&mut cell2, 3, 1, 10, 3, 0.0);
+        filter.apply(&mut cell2, &VfxCellContext::new(3, 1, 10, 3, 0, 0, 0.0));
 
         // cell2 should be brighter (closer to button color)
         let (r1, _, _) = cell1.bg.to_rgb();
@@ -255,8 +260,8 @@ mod tests {
         let mut cell1 = make_cell();
         let mut cell2 = make_cell();
 
-        filter_no_hover.apply(&mut cell1, 5, 1, 10, 3, 0.0);
-        filter_hover.apply(&mut cell2, 5, 1, 10, 3, 0.0);
+        filter_no_hover.apply(&mut cell1, &VfxCellContext::new(5, 1, 10, 3, 0, 0, 0.0));
+        filter_hover.apply(&mut cell2, &VfxCellContext::new(5, 1, 10, 3, 0, 0, 0.0));
 
         let (r1, _, _) = cell1.bg.to_rgb();
         let (r2, _, _) = cell2.bg.to_rgb();
@@ -266,4 +271,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_pill_button.rs</FILE>
 // <DESC>Pill-shaped button with gradient edges and optional glisten</DESC>
-// <VERS>END OF VERSION: 1.0.2</VERS>
+// <VERS>END OF VERSION: 1.0.3</VERS>

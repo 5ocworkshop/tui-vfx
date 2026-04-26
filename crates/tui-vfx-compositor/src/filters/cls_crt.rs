@@ -1,10 +1,10 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_crt.rs</FILE> - <DESC>CRT filter with scanlines and phosphor glow</DESC>
-// <VERS>VERSION: 4.0.2</VERS>
-// <WCTX>Compositor clippy cleanup pass</WCTX>
-// <CLOG>4.0.2: PATCH — swap manual parity check for y.is_multiple_of(2) per clippy</CLOG>
+// <VERS>VERSION: 4.0.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>4.0.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// CRT monitor effect with scanlines and phosphor glow.
 ///
@@ -52,7 +52,8 @@ impl Crt {
 }
 
 impl Filter for Crt {
-    fn apply(&self, cell: &mut Cell, _x: u16, y: u16, _width: u16, _height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let y = ctx.local_y;
         if y.is_multiple_of(2) {
             // Even rows: Apply scanline dimming
             let factor = 1.0 - self.scanline_strength;
@@ -81,7 +82,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        crt.apply(&mut even, 0, 0, 10, 10, 0.0); // y=0 is even
+        crt.apply(&mut even, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0)); // y=0 is even
         // scanline_strength=1.0 means factor=0.0, full darkness
         assert_eq!(even.fg, Color::rgb(0, 0, 0));
         assert_eq!(even.bg, Color::rgb(0, 0, 0));
@@ -96,7 +97,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        crt.apply(&mut odd, 0, 1, 10, 10, 0.0); // y=1 is odd
+        crt.apply(&mut odd, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 0.0)); // y=1 is odd
         // glow=1.0 means boost=1.5, so 100*1.5=150
         assert_eq!(odd.fg, Color::rgb(150, 150, 150));
         assert_eq!(odd.bg, Color::rgb(150, 150, 150));
@@ -111,7 +112,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        crt.apply(&mut odd, 0, 1, 10, 10, 0.0); // y=1 is odd, glow=0
+        crt.apply(&mut odd, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 0.0)); // y=1 is odd, glow=0
         // No glow applied to odd rows when glow is 0
         assert_eq!(odd.fg, Color::rgb(100, 100, 100));
     }
@@ -125,7 +126,7 @@ mod tests {
             Color::rgb(100, 100, 100),
             Modifiers::NONE,
         );
-        crt.apply(&mut even, 0, 0, 10, 10, 0.0);
+        crt.apply(&mut even, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         // factor = 1.0 - 0.5 = 0.5, so 100 * 0.5 = 50
         assert_eq!(even.fg, Color::rgb(50, 50, 50));
     }
@@ -139,11 +140,11 @@ mod tests {
             Color::rgb(200, 200, 200),
             Modifiers::NONE,
         );
-        crt.apply(&mut bright, 0, 1, 10, 10, 0.0);
+        crt.apply(&mut bright, &VfxCellContext::new(0, 1, 10, 10, 0, 0, 0.0));
         // boost=1.5, 200*1.5=300, clamped to 255
         assert_eq!(bright.fg, Color::rgb(255, 255, 255));
     }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_crt.rs</FILE> - <DESC>CRT filter with scanlines and phosphor glow</DESC>
-// <VERS>END OF VERSION: 4.0.2</VERS>
+// <VERS>END OF VERSION: 4.0.3</VERS>

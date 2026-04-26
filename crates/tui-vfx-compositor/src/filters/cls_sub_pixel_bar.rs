@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_sub_pixel_bar.rs</FILE>
 // <DESC>Sub-pixel progress bar filter with 8x horizontal/vertical resolution</DESC>
-// <VERS>VERSION: 1.0.2</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Retain local test cell helper</CLOG>
+// <VERS>VERSION: 1.0.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.0.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Direction for sub-pixel progress bar rendering.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -118,7 +118,12 @@ impl SubPixelBar {
 }
 
 impl Filter for SubPixelBar {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         // Determine effective progress (animated or static)
         let progress = if self.animated {
             (t as f32).fract()
@@ -260,11 +265,11 @@ mod tests {
 
         // All cells should be empty
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, ' ');
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, ' ');
     }
 
@@ -274,11 +279,11 @@ mod tests {
 
         // All cells should be full blocks
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, '█');
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 9, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, '█');
     }
 
@@ -288,11 +293,11 @@ mod tests {
 
         // Width 10, 50% = 40 sub-pixels = 5 full cells, 0 partial
         let mut cell = make_cell();
-        filter.apply(&mut cell, 4, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(4, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, '█'); // Cell 4 is full (cells 0-4 = 5 cells)
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, ' '); // Cell 5 is empty
     }
 
@@ -303,15 +308,15 @@ mod tests {
         let filter = SubPixelBar::new(0.125);
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, '█'); // Cell 0 is full
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 1, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(1, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, '▎'); // Cell 1 is 2/8 = ▎
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 2, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(2, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.ch, ' '); // Cell 2 is empty
     }
 
@@ -321,7 +326,7 @@ mod tests {
 
         // All cells should be full blocks
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 1, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 1, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, '█');
     }
 
@@ -332,11 +337,11 @@ mod tests {
         // With t=0.5, progress should be 0.5
         // Width 10, 50% = 40 sub-pixels = 5 full cells
         let mut cell = make_cell();
-        filter.apply(&mut cell, 4, 0, 10, 1, 0.5);
+        filter.apply(&mut cell, &VfxCellContext::new(4, 0, 10, 1, 0, 0, 0.5));
         assert_eq!(cell.ch, '█'); // Cell 4 is full
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 5, 0, 10, 1, 0.5);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.5));
         assert_eq!(cell.ch, ' '); // Cell 5 is empty
     }
 
@@ -348,13 +353,13 @@ mod tests {
 
         // Filled cell
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(0, 255, 0));
         assert_eq!(cell.bg, Color::rgb(100, 100, 100));
 
         // Unfilled cell
         let mut cell = make_cell();
-        filter.apply(&mut cell, 9, 0, 10, 1, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(9, 0, 10, 1, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(100, 100, 100));
         assert_eq!(cell.bg, Color::rgb(100, 100, 100));
     }
@@ -368,7 +373,7 @@ mod tests {
             let filter = SubPixelBar::new(progress);
 
             let mut cell = make_cell();
-            filter.apply(&mut cell, 0, 0, 8, 1, 0.0);
+            filter.apply(&mut cell, &VfxCellContext::new(0, 0, 8, 1, 0, 0, 0.0));
 
             let expected = SubPixelBar::horizontal_partial(i);
             assert_eq!(
@@ -382,4 +387,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_sub_pixel_bar.rs</FILE>
 // <DESC>Sub-pixel progress bar filter with 8x horizontal/vertical resolution</DESC>
-// <VERS>END OF VERSION: 1.0.2</VERS>
+// <VERS>END OF VERSION: 1.0.3</VERS>

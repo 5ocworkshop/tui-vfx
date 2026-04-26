@@ -1,12 +1,12 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_underline_wipe.rs</FILE>
 // <DESC>Horizontal underline that wipes in based on progress</DESC>
-// <VERS>VERSION: 1.3.2</VERS>
-// <WCTX>Consolidate filter test helpers</WCTX>
-// <CLOG>Use shared test cell helper</CLOG>
+// <VERS>VERSION: 1.3.3</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>1.3.3: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::types::WipeDirection;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Horizontal underline that wipes in based on progress.
 ///
@@ -125,7 +125,12 @@ impl UnderlineWipe {
 }
 
 impl Filter for UnderlineWipe {
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         // Check if this is the target row (bottom - offset)
         let target_row = height.saturating_sub(1 + self.row_offset);
         if y != target_row {
@@ -252,7 +257,7 @@ mod tests {
 
         let mut cell = make_cell();
         let original = cell;
-        filter.apply(&mut cell, 0, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 9, 10, 10, 0, 0, 0.0));
 
         assert_eq!(cell.ch, original.ch);
     }
@@ -267,7 +272,7 @@ mod tests {
 
         let mut cell = make_cell();
         // Bottom row (y=9 for height=10)
-        filter.apply(&mut cell, 0, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 9, 10, 10, 0, 0, 0.0));
 
         assert_eq!(cell.ch, '—');
         assert_eq!(cell.fg, Color::rgb(100, 150, 200));
@@ -280,7 +285,7 @@ mod tests {
         // Not bottom row
         let mut cell = make_cell();
         let original = cell;
-        filter.apply(&mut cell, 0, 5, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
 
         assert_eq!(cell.ch, original.ch);
     }
@@ -291,7 +296,7 @@ mod tests {
 
         // Should affect row 7 (9 - 2) for height=10
         let mut cell = make_cell();
-        filter.apply(&mut cell, 0, 7, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 7, 10, 10, 0, 0, 0.0));
 
         assert_eq!(cell.ch, '—');
     }
@@ -306,11 +311,11 @@ mod tests {
 
         // At 50% progress on width=10, cells 0-4 should be drawn
         let mut cell = make_cell();
-        filter.apply(&mut cell, 4, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(4, 9, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, '—');
 
         let mut cell = make_cell();
-        filter.apply(&mut cell, 5, 9, 10, 10, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(5, 9, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.ch, ' ');
     }
 
@@ -325,11 +330,11 @@ mod tests {
 
         // First cell should be closer to target color
         let mut cell1 = make_cell();
-        filter.apply(&mut cell1, 0, 9, 10, 10, 0.0);
+        filter.apply(&mut cell1, &VfxCellContext::new(0, 9, 10, 10, 0, 0, 0.0));
 
         // Last cell should be closer to bg color
         let mut cell2 = make_cell();
-        filter.apply(&mut cell2, 9, 9, 10, 10, 0.0);
+        filter.apply(&mut cell2, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
 
         // They should have different colors
         assert_ne!(cell1.fg, cell2.fg);
@@ -338,4 +343,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_underline_wipe.rs</FILE>
 // <DESC>Horizontal underline that wipes in based on progress</DESC>
-// <VERS>END OF VERSION: 1.3.2</VERS>
+// <VERS>END OF VERSION: 1.3.3</VERS>

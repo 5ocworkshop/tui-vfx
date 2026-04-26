@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_fade_to_canvas.rs</FILE> - <DESC>Exit filter that blends cells toward a declared canvas color</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Phase 0 P0.B followup — canvas_color_binding so themes can drive the exit-fade target from a runtime Rgb parameter (e.g. current terminal background) instead of a compile-time ColorConfig</WCTX>
-// <CLOG>No behavior change in the runtime filter struct itself — the binding resolution lives in prepare_filter which picks between the static canvas_color ColorConfig and the runtime Rgb parameter before constructing FadeToCanvas. Adds three new inline prepare-time tests covering the binding resolution, missing-binding fallback, and non-Rgb-kind fallback paths</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>0.2.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 //! # FadeToCanvas filter
 //!
@@ -31,7 +31,7 @@
 
 use crate::traits::filter::Filter;
 use crate::types::cls_filter_spec::ApplyTo;
-use tui_vfx_types::{Cell, Color};
+use tui_vfx_types::{Cell, Color, VfxCellContext};
 
 /// Blends cell colors toward a declared canvas color at a caller-controlled
 /// strength (usually driven from the exit phase's animation progress).
@@ -82,7 +82,7 @@ impl FadeToCanvas {
 }
 
 impl Filter for FadeToCanvas {
-    fn apply(&self, cell: &mut Cell, _x: u16, _y: u16, _width: u16, _height: u16, _t: f64) {
+    fn apply(&self, cell: &mut Cell, _ctx: &VfxCellContext) {
         // Strength is pre-resolved by prepare_filter; we ignore the raw `t`
         // passed in by the dispatch enum exactly like `Tint` does.
         match self.apply_to {
@@ -115,7 +115,7 @@ mod tests {
         let mut cell = Cell::default();
         cell.fg = Color::rgb(10, 20, 30);
         cell.bg = Color::rgb(40, 50, 60);
-        filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(10, 20, 30));
         assert_eq!(cell.bg, Color::rgb(40, 50, 60));
     }
@@ -130,7 +130,7 @@ mod tests {
         let mut cell = Cell::default();
         cell.fg = Color::rgb(10, 20, 30);
         cell.bg = Color::rgb(40, 50, 60);
-        filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(200, 210, 220));
         assert_eq!(cell.bg, Color::rgb(200, 210, 220));
     }
@@ -145,7 +145,7 @@ mod tests {
         let mut cell = Cell::default();
         cell.fg = Color::rgb(0, 0, 0);
         cell.bg = Color::rgb(50, 50, 50);
-        filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
         // 0.5 * 200 = 100, matches the blend formula
         assert_eq!(cell.fg, Color::rgb(100, 100, 100));
         // Background untouched
@@ -166,7 +166,7 @@ mod tests {
         let mut cell = Cell::default();
         cell.fg = Color::rgb(50, 50, 60);
         cell.bg = Color::rgb(180, 180, 190); // widget mid-tone
-        filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
         let avg = (cell.bg.r as u16 + cell.bg.g as u16 + cell.bg.b as u16) / 3;
         let widget_avg = (180 + 180 + 190) / 3;
         let canvas_avg = (240 + 240 + 245) / 3;
@@ -189,11 +189,11 @@ mod tests {
         let mut cell = Cell::default();
         cell.fg = Color::rgb(0, 0, 0);
         cell.bg = Color::rgb(100, 100, 100);
-        filter.apply(&mut cell, 0, 0, 10, 5, 0.0);
+        filter.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 5, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(255, 255, 255));
         assert_eq!(cell.bg, Color::rgb(100, 100, 100));
     }
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_fade_to_canvas.rs</FILE> - <DESC>Exit filter that blends cells toward a declared canvas color</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

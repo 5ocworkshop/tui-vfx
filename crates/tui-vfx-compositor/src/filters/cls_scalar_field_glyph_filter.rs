@@ -1,11 +1,11 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Generic scalar-field-to-glyph filter: samples any Signal and encodes intensity via GlyphEncoder</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Phase 6 follow-up: drop with_absolute_time(t) so per-cell sampling threads loop_t through the signal's t-arg fallback path instead of mislabeling normalized loop progress as elapsed milliseconds. Without this fix, FireFieldSignal/WaterFieldSignal divide loop_t by 1000 and freeze the field.</WCTX>
-// <CLOG>0.4.0: drop with_absolute_time(t). The Filter trait documents t as "animation progress 0.0..=1.0" (normalized loop_t), not milliseconds; signals already fall back to using t as f32 when absolute_t is None, matching the StyleShader::style_at convention. Fix unfreezes the glyph-rendered field.</CLOG>
+// <VERS>VERSION: 0.4.1</VERS>
+// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
+// <CLOG>0.4.1: migrate apply signature to &VfxCellContext; extract x/y/width/height/t from ctx fields.</CLOG>
 
 use mixed_signals::traits::{Signal, SignalContext};
-use tui_vfx_types::{Cell, Color, glyph::GlyphEncoder, glyph::sample_eight_subcells};
+use tui_vfx_types::{Cell, Color, VfxCellContext, glyph::GlyphEncoder, glyph::sample_eight_subcells};
 
 use crate::traits::filter::Filter;
 
@@ -67,7 +67,7 @@ use crate::traits::filter::Filter;
 ///     seed: 0,
 /// };
 /// let mut cell = Cell::styled(' ', Color::WHITE, Color::BLACK, Modifiers::NONE);
-/// filter.apply(&mut cell, 4, 0, 8, 1, 0.0);
+/// filter.apply(&mut cell, &VfxCellContext::new(4, 0, 8, 1, 0, 0, 0.0));
 /// assert_eq!(cell.ch, '▌');
 /// ```
 pub struct ScalarFieldGlyphFilter<S: Signal> {
@@ -108,7 +108,12 @@ impl<S: Signal> Filter for ScalarFieldGlyphFilter<S> {
     /// FireFieldSignal (and any future field signal that follows the same
     /// "absolute_t is in milliseconds" convention) to divide by 1000 and
     /// freeze the field at near-zero time.
-    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let x = ctx.local_x;
+        let y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
         if self.only_blank && cell.ch != ' ' {
             return;
         }
@@ -145,4 +150,4 @@ mod tests;
 
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Generic scalar-field-to-glyph filter: samples any Signal and encodes intensity via GlyphEncoder</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>
