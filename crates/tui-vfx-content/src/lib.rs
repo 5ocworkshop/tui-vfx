@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
-// <WCTX>Phase 5 of mechanical circular content cycles plan: register the public fonts module hosting the canonical Line 3x3 face (Intention 36).</WCTX>
-// <CLOG>0.8.0: register pub mod fonts; first inhabitants are the Line 3x3 heavy glyph table and the public lookup helpers.</CLOG>
+// <VERS>VERSION: 0.9.0</VERS>
+// <WCTX>Phase 7 (breadcrumb) of mechanical circular content cycles plan: register the public assets module hosting AssetRegistry; pluggable name → bytes mapping for scene-layer surfaces that load rocketsplash images and other byte-source assets.</WCTX>
+// <CLOG>0.9.0: register pub mod assets; first inhabitant is AssetRegistry with default_logo sentinel routing. 0.8.0: register pub mod fonts hosting the Line 3x3 heavy glyph table and public lookup helpers.</CLOG>
 
 //! # TUI VFX Content
 //!
@@ -99,6 +99,7 @@
 //! let custom = TypewriterCursor::simple('◆');   // any single glyph
 //! ```
 
+pub mod assets;
 pub mod cell_motion;
 pub mod cursor;
 pub mod fonts;
