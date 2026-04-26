@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-core-macros/src/lib.rs</FILE> - <DESC>Proc-macro derives for ConfigSchema</DESC>
-// <VERS>VERSION: 0.4.1 - 2025-12-31</VERS>
+// <VERS>VERSION: 0.4.2</VERS>
 // <WCTX>Schema reference auto-generation - Phase 5</WCTX>
-// <CLOG>Fix parsing of serde(default = "fn") and serde(skip_serializing_if = "fn")</CLOG>
+// <CLOG>0.4.2: collapse nested if-let chains in extract_doc_comments and is_option_type to satisfy clippy::collapsible_if under -D warnings.</CLOG>
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -136,14 +136,12 @@ fn extract_doc_comments(attrs: &[Attribute]) -> Option<String> {
     let docs: Vec<String> = attrs
         .iter()
         .filter_map(|attr| {
-            if attr.path().is_ident("doc") {
-                if let syn::Meta::NameValue(meta) = &attr.meta {
-                    if let syn::Expr::Lit(expr_lit) = &meta.value {
-                        if let syn::Lit::Str(lit_str) = &expr_lit.lit {
-                            return Some(lit_str.value().trim().to_string());
-                        }
-                    }
-                }
+            if attr.path().is_ident("doc")
+                && let syn::Meta::NameValue(meta) = &attr.meta
+                && let syn::Expr::Lit(expr_lit) = &meta.value
+                && let syn::Lit::Str(lit_str) = &expr_lit.lit
+            {
+                return Some(lit_str.value().trim().to_string());
             }
             None
         })
@@ -278,10 +276,10 @@ fn apply_rename_all(name: &str, rename_all: Option<&str>) -> String {
 
 /// Check if a type is Option<T>
 fn is_option_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        if let Some(segment) = type_path.path.segments.last() {
-            return segment.ident == "Option";
-        }
+    if let syn::Type::Path(type_path) = ty
+        && let Some(segment) = type_path.path.segments.last()
+    {
+        return segment.ident == "Option";
     }
     false
 }
