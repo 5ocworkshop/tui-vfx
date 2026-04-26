@@ -1,13 +1,14 @@
-// <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
-// <WCTX>Slice 6.1 of mechanical circular content cycles plan: add string-shaped runtime parameter access so BindableString can resolve its Binding variant against ShaderRuntimeParams without dragging in a new param-map surface.</WCTX>
-// <CLOG>1.3.0: MINOR — add ShaderRuntimeParamValue::as_text() returning Option<&str> for the existing Text variant, and ShaderRuntimeParams::get_text() helper. Both follow the established as_f32 / as_u16 / as_color shape. Used by BindableString::evaluate; future bindable-string consumers (font names, asset names, locale tokens) inherit the same lookup. 1.2.0: MINOR — add role-awareness fields/accessors/builder. 1.1.0: add ShaderRuntimeParamValue::Rgb{r,g,b}, an as_color() accessor, From<Color>, and ShaderRuntimeParams::get_color.</CLOG>
+// <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects; composes VfxCellContext via Deref</DESC>
+// <VERS>VERSION: 2.0.0</VERS>
+// <WCTX>Slice 6.6 §F.2 — refactor ShaderContext so the seven cell-spatial fields live on a composed VfxCellContext sub-bundle; Deref keeps all existing field reads source-compatible.</WCTX>
+// <CLOG>2.0.0: replace seven inlined spatial fields with `cell: VfxCellContext`; add Deref<Target=VfxCellContext>; ::new() unchanged externally, builds VfxCellContext internally; delete shadowing screen_cell_x/y + normalized_x/y (now on VfxCellContext via Deref); update Default to call Self::new(...).</CLOG>
 
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::ops::Deref;
 use std::sync::Arc;
-use tui_vfx_types::{Color, RoleMap, RoleTag};
+use tui_vfx_types::{Color, RoleMap, RoleTag, VfxCellContext};
 
 /// Runtime scalar value exposed to spatial shaders during render.
 ///
@@ -270,48 +271,53 @@ where
     }
 }
 
-/// Context passed to StyleShader implementations for spatial effects.
+/// Context passed to `StyleShader` implementations for spatial render effects.
 ///
-/// This struct provides shaders with complete information about their rendering context,
-/// including both local (widget-relative) and screen-absolute coordinates.
+/// Composes a [`VfxCellContext`] sub-bundle (`cell`) that carries the seven
+/// cell-spatial fields shared with `Filter`, `Mask`, and `Sampler` parameter
+/// bundles. A `Deref<Target = VfxCellContext>` impl makes field access
+/// ergonomic: `ctx.local_x` desugars to `ctx.cell.local_x` with no runtime
+/// cost.
+///
+/// The four derived-coordinate methods (`screen_cell_x`, `screen_cell_y`,
+/// `normalized_x`, `normalized_y`) live on [`VfxCellContext`] and are
+/// reached via `Deref` — do not re-add them here.
 ///
 /// # Coordinate Systems
 ///
-/// - **Local coordinates** (`local_x`, `local_y`): Position within the widget (0,0 = top-left of widget)
-/// - **Screen coordinates**: `screen_x + local_x`, `screen_y + local_y` gives absolute screen position
+/// - **Local coordinates** (`local_x`, `local_y`): position within the
+///   widget; `(0, 0)` is the widget's top-left.
+/// - **Screen coordinates**: `ctx.screen_cell_x()` / `ctx.screen_cell_y()`
+///   give the cell's absolute screen position.
 ///
-/// # Use Cases
+/// # Phase-aware shaders
 ///
-/// - **Widget-relative effects**: Use `local_x`, `local_y` for effects like highlights, sweeps
-/// - **Screen-space effects**: Use screen coords for effects that span multiple widgets or align to screen edges
-/// - **Phase-aware effects**: Use `phase` to vary behavior during enter/dwell/exit
+/// Use `ctx.phase` / `ctx.is_entering()` / `ctx.is_dwelling()` /
+/// `ctx.is_exiting()` to vary behavior across animation lifecycle phases.
 #[derive(Debug, Clone)]
 pub struct ShaderContext {
-    /// Local X coordinate within widget (0 = left edge of widget)
-    pub local_x: u16,
-    /// Local Y coordinate within widget (0 = top edge of widget)
-    pub local_y: u16,
-    /// Widget width in cells
-    pub width: u16,
-    /// Widget height in cells
-    pub height: u16,
-    /// Screen X offset - widget's left edge in absolute screen coordinates
-    pub screen_x: u16,
-    /// Screen Y offset - widget's top edge in absolute screen coordinates
-    pub screen_y: u16,
-    /// Animation progress (0.0 to 1.0) - phase-based or loop time
-    pub t: f64,
-    /// Current animation phase (Entering/Dwelling/Exiting/Finished)
+    /// Cell-spatial sub-bundle (`local_x`, `local_y`, `width`, `height`,
+    /// `screen_x`, `screen_y`, `t`). Shared shape with `Filter`, `Mask`,
+    /// and `Sampler` parameter bundles.
+    ///
+    /// Reach through `Deref` for ergonomic field access: `ctx.local_x`
+    /// desugars to `ctx.cell.local_x`. Derived-coordinate methods
+    /// (`screen_cell_x`, `screen_cell_y`, `normalized_x`, `normalized_y`)
+    /// also live here and are available via `Deref`.
+    pub cell: VfxCellContext,
+    /// Style-only: animation phase. `None` when the shader is not
+    /// phase-driven.
     pub phase: Option<Phase>,
-    /// Render-time runtime parameter map for shader bindings.
+    /// Style-only: render-time runtime parameter map for shader bindings.
     pub runtime_params: Arc<ShaderRuntimeParams>,
-    /// Per-cell semantic role map carried from the source `SemanticScene`.
+    /// Style-only: per-cell semantic role map carried from the source
+    /// `SemanticScene`.
     ///
     /// Shaders MAY consult `roles.get((local_x, local_y))` to branch on
     /// the current cell's semantic role (or any other cell's role) in
     /// addition to geometric coordinates. The compositor populates this
-    /// Arc once per pipeline invocation and clones the `Arc` per cell,
-    /// so reading is O(1) and does not allocate.
+    /// `Arc` once per pipeline invocation and clones it per cell, so
+    /// reading is O(1) and does not allocate.
     ///
     /// Call sites that have no role information should pass an empty
     /// `Arc<RoleMap>` via `Arc::default()` (or let `ShaderContext::new`
@@ -320,10 +326,23 @@ pub struct ShaderContext {
     pub roles: Arc<RoleMap>,
 }
 
+impl Deref for ShaderContext {
+    type Target = VfxCellContext;
+    #[inline]
+    fn deref(&self) -> &VfxCellContext {
+        &self.cell
+    }
+}
+
 impl ShaderContext {
     /// Create a new shader context.
     ///
-    /// The `roles` field is defaulted to an empty `Arc<RoleMap>`; call
+    /// The argument list is unchanged from before the `VfxCellContext`
+    /// composition refactor (F.2); all 30 in-tree call sites compile
+    /// without modification. Internally the seven spatial args are
+    /// forwarded to [`VfxCellContext::new`].
+    ///
+    /// The `roles` field defaults to an empty `Arc<RoleMap>`; call
     /// [`Self::with_roles`] to attach a real role map.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
@@ -338,13 +357,7 @@ impl ShaderContext {
         runtime_params: Option<Arc<ShaderRuntimeParams>>,
     ) -> Self {
         Self {
-            local_x,
-            local_y,
-            width,
-            height,
-            screen_x,
-            screen_y,
-            t,
+            cell: VfxCellContext::new(local_x, local_y, width, height, screen_x, screen_y, t),
             phase,
             runtime_params: runtime_params.unwrap_or_default(),
             roles: Arc::default(),
@@ -368,38 +381,6 @@ impl ShaderContext {
     /// call sites that want a clean one-liner.
     pub fn role_at(&self, pos: (u16, u16)) -> Option<RoleTag> {
         self.roles.get(pos)
-    }
-
-    /// Get absolute screen X coordinate for this cell.
-    #[inline]
-    pub fn screen_cell_x(&self) -> u16 {
-        self.screen_x.saturating_add(self.local_x)
-    }
-
-    /// Get absolute screen Y coordinate for this cell.
-    #[inline]
-    pub fn screen_cell_y(&self) -> u16 {
-        self.screen_y.saturating_add(self.local_y)
-    }
-
-    /// Get normalized local X position (0.0 = left, 1.0 = right).
-    #[inline]
-    pub fn normalized_x(&self) -> f32 {
-        if self.width > 0 {
-            self.local_x as f32 / self.width as f32
-        } else {
-            0.0
-        }
-    }
-
-    /// Get normalized local Y position (0.0 = top, 1.0 = bottom).
-    #[inline]
-    pub fn normalized_y(&self) -> f32 {
-        if self.height > 0 {
-            self.local_y as f32 / self.height as f32
-        } else {
-            0.0
-        }
     }
 
     /// Check if currently in entering/start phase.
@@ -444,20 +425,9 @@ impl ShaderContext {
 
 impl Default for ShaderContext {
     fn default() -> Self {
-        Self {
-            local_x: 0,
-            local_y: 0,
-            width: 0,
-            height: 0,
-            screen_x: 0,
-            screen_y: 0,
-            t: 0.0,
-            phase: None,
-            runtime_params: Arc::default(),
-            roles: Arc::default(),
-        }
+        Self::new(0, 0, 0, 0, 0, 0, 0.0, None, None)
     }
 }
 
-// <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects</DESC>
-// <VERS>END OF VERSION: 1.2.0</VERS>
+// <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects; composes VfxCellContext via Deref</DESC>
+// <VERS>END OF VERSION: 2.0.0</VERS>
