@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-core/src/schema/fnc_to_markdown.rs</FILE> - <DESC>Convert SchemaNode to Markdown documentation</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
+// <VERS>VERSION: 1.0.1</VERS>
 // <WCTX>Schema Reference Auto-Generation</WCTX>
-// <CLOG>Initial Markdown generator</CLOG>
+// <CLOG>1.0.1: convert nested if-in-match patterns to match-arm guards and collapse two json_name if-pairs into let-chains for clippy::collapsible_if.</CLOG>
 
 use super::types::{ScalarValue, SchemaNode, SchemaVariant};
 use std::collections::HashSet;
@@ -27,27 +27,23 @@ pub fn to_markdown(root: &SchemaNode, title: &str) -> String {
 
 fn collect_toc(node: &SchemaNode, output: &mut String, visited: &mut HashSet<String>) {
     match node {
-        SchemaNode::Struct { name, fields, .. } => {
-            if visited.insert(name.clone()) {
-                output.push_str(&format!("- [{}](#{})\n", name, name.to_lowercase()));
-                for field in fields {
-                    collect_toc(&field.schema, output, visited);
-                }
+        SchemaNode::Struct { name, fields, .. } if visited.insert(name.clone()) => {
+            output.push_str(&format!("- [{}](#{})\n", name, name.to_lowercase()));
+            for field in fields {
+                collect_toc(&field.schema, output, visited);
             }
         }
-        SchemaNode::Enum { name, variants, .. } => {
-            if visited.insert(name.clone()) {
-                output.push_str(&format!("- [{}](#{})\n", name, name.to_lowercase()));
-                for variant in variants {
-                    match variant {
-                        SchemaVariant::Struct { fields, .. }
-                        | SchemaVariant::Tuple { items: fields, .. } => {
-                            for field in fields {
-                                collect_toc(&field.schema, output, visited);
-                            }
+        SchemaNode::Enum { name, variants, .. } if visited.insert(name.clone()) => {
+            output.push_str(&format!("- [{}](#{})\n", name, name.to_lowercase()));
+            for variant in variants {
+                match variant {
+                    SchemaVariant::Struct { fields, .. }
+                    | SchemaVariant::Tuple { items: fields, .. } => {
+                        for field in fields {
+                            collect_toc(&field.schema, output, visited);
                         }
-                        _ => {}
                     }
+                    _ => {}
                 }
             }
         }
@@ -79,10 +75,10 @@ fn generate_type_docs(node: &SchemaNode, output: &mut String, visited: &mut Hash
                 output.push_str(&format!("{}\n\n", desc));
             }
 
-            if let Some(jn) = json_name {
-                if jn != name {
-                    output.push_str(&format!("**JSON name:** `{}`\n\n", jn));
-                }
+            if let Some(jn) = json_name
+                && jn != name
+            {
+                output.push_str(&format!("**JSON name:** `{}`\n\n", jn));
             }
 
             if !fields.is_empty() {
@@ -140,10 +136,10 @@ fn generate_type_docs(node: &SchemaNode, output: &mut String, visited: &mut Hash
                 output.push_str(&format!("{}\n\n", desc));
             }
 
-            if let Some(jn) = json_name {
-                if jn != name {
-                    output.push_str(&format!("**JSON name:** `{}`\n\n", jn));
-                }
+            if let Some(jn) = json_name
+                && jn != name
+            {
+                output.push_str(&format!("**JSON name:** `{}`\n\n", jn));
             }
 
             if let Some(tag) = tag_field {

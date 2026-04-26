@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-core/src/schema/fnc_variant_to_tagged_schema.rs</FILE> - <DESC>Convert SchemaVariant to tagged JSON Schema</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
+// <VERS>VERSION: 1.0.1</VERS>
 // <WCTX>OFPF refactoring: extract variant handlers from fnc_to_json_schema.rs</WCTX>
-// <CLOG>Initial extraction of variant_to_schema for tagged enums</CLOG>
+// <CLOG>1.0.1: collapse nested description if-let pair into a let-chain for clippy::collapsible_if.</CLOG>
 
 use serde_json::{Map, Value, json};
 
@@ -51,10 +51,10 @@ pub fn variant_to_tagged_schema(
                 let field_name = field.json_key.as_ref().unwrap_or(&field.name);
                 let mut field_schema = node_to_schema(&field.schema, definitions);
 
-                if let Some(desc) = &field.meta.description {
-                    if let Value::Object(ref mut obj) = field_schema {
-                        obj.insert("description".to_string(), json!(desc));
-                    }
+                if let Some(desc) = &field.meta.description
+                    && let Value::Object(ref mut obj) = field_schema
+                {
+                    obj.insert("description".to_string(), json!(desc));
                 }
 
                 properties.insert(field_name.clone(), field_schema);
