@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-buy-once-architecture-sweep.md</FILE> - <DESC>Repository-wide buy-once/cry-once architectural sweep — surfaces conversion points where a single deliberate change today would prevent repeated trait/signature/schema churn later. Modeled after the TransformContext bundle exemplar (Slice 6.6). Findings are evidence-based via ofpf-* tooling and filtered through Intentions 23 (rule of three) and 24 (changes earn their place).</DESC> -->
-<!-- <VERS>VERSION: 1.2.0</VERS> -->
-<!-- <WCTX>Architectural sweep companion to the TransformContext bundle. Identifies the next round of trait/signature/schema conversion points the leader can triage into work packets. Sweep only; no code changes.</WCTX> -->
-<!-- <CLOG>1.2.0: add §8 (impact analysis across three axes: chainable-effects mechanism, V3 feature surfaces, performance) covering all 12 findings; renumber prior §8 Appendix to §9. Verdicts: zero chainable-effects risk across all 12 findings (StepInput/HintRef/ParamValue are V3 design surfaces, not yet code; Top 3 findings touch trait spatial parameters, struct generics, and recipe field types — orthogonal to inter-step hint propagation); Top 3 V3-surface impact is mostly enabling (no capability lost, several gained); performance count Positive=2, Neutral=8, Negligible=2, Negative=0. §1–§7 unchanged.</CLOG> -->
+<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <WCTX>Slice 6.6 Phase F closed Finding 1.1.A — record DONE status, closing commits, and final shape (Option C with Deref) in §Top 1 and §Recommendation Summary table.</WCTX> -->
+<!-- <CLOG>1.3.0: mark Finding 1.1.A DONE — Slice 6.6 Phase F closed (commits 51f5204, c883683, b628abd, 5535b0e, 7821815). §Top 1 + summary-table row updated.</CLOG> -->
 
 # tui-vfx buy-once architecture sweep
 
@@ -479,9 +479,17 @@ Ranked by leverage (blast-radius prevented per unit of work-now):
 
 ### Top 1 — Bundle Filter / Mask / Sampler trait spatial-context parameters (Finding 1.1.A)
 
-**Rationale.** Same shape as the in-flight TransformContext exemplar. ~56 impl files across three traits already absorbed two churns each; the next addition (runtime-params / role-map / phase) is queued. The author landing TransformContext is in the freshest possible context for this work.
+**Status (2026-04-26): DONE.** Slice 6.6 Phase F closed this finding. Final shape matches §6.1 Option C: `VfxCellContext` lives in `tui-vfx-types`, `ShaderContext` composes it via `Deref`, and Filter/Mask/Sampler each take `&VfxCellContext` directly. All 30 Filter impls + 11 Mask impls + 11 Sampler impls migrated; pipeline dispatchers build the context once per cell and pass `&ctx` to every arm. Cross-repo audit confirmed zero impls of any of the three traits in gt-design / tui-vfx-recipes / mixed-signals.
 
-**Next step.** After Slice 6.6 lands, scope a "PipelineCellContext" slice. Decision: reuse `ShaderContext` directly (cross-crate semantic leak) vs. define a sibling type in `tui-vfx-compositor/src/traits/`. Migrate Mask first (smallest set, no historical churn). Then Sampler. Then Filter.
+**Closing commits (master, in order):**
+
+- `51f5204` — Phase F.0 + F.1: introduce `VfxCellContext`; cleanup ShaderContext struct-literal sites in `orc_render_pipeline.rs:924,979` + three test sites.
+- `c883683` — Phase F.2: ShaderContext composes VfxCellContext via Deref; `::new` keeps 9-arg signature for source-compat with all 30 callers; shadowing accessors deleted.
+- `b628abd` — Phase F.3: Mask trait (11 impls) + dispatchers (`fnc_check_masks.rs` + `cls_prepared_mask.rs`).
+- `5535b0e` — Phase F.4: Sampler trait (11 impls) + `sample_sampler_chain` dispatcher.
+- `7821815` — Phase F.5: Filter trait (30 concrete + 1 generic impls) + `prepare_filters` dispatcher; rustdoc doctests updated.
+
+**Rationale (kept for historical context).** Same shape as the in-flight TransformContext exemplar. ~56 impl files across three traits already absorbed two churns each; the next addition (runtime-params / role-map / phase) was queued. The author landing TransformContext was in the freshest possible context for this work — and that's exactly how it landed.
 
 ### Top 2 — Generalize the five `*Pool` types into `Pool<T>` (Finding 1.2.B)
 
@@ -527,7 +535,7 @@ Three different `evaluate` signatures across the Bindable family. Looks like a c
 
 | # | Finding | Risk | Recommendation |
 |---|---|---|---|
-| 1.1.A | Filter / Mask / Sampler spatial-context bundle | L | Do now (after Slice 6.6) |
+| 1.1.A | Filter / Mask / Sampler spatial-context bundle | L | **DONE 2026-04-26** (Slice 6.6 Phase F — see §Top 1) |
 | 1.1.B | Bindable*::evaluate signature unification | M | Wait for third trigger |
 | 1.2.A | Bindable<T> generalization | L | Next slice |
 | 1.2.B | Pool<T> generalization | S | **Do now** |
