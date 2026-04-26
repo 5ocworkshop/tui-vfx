@@ -617,6 +617,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
+name = "mcu-hct"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adb9e8325dcd52c0449dfd8dbd3ce5e4d80a123b1fea578560684e08cc57f5f9"
+dependencies = [
+ "mcu-utils",
+ "once_cell",
+]
+
+[[package]]
+name = "mcu-utils"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fe74042c366a4f80af8fb92f4c7c6c1386ed332c3c2bdd72fcc18d14fe10ffe"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1233,6 +1252,8 @@ dependencies = [
 name = "tui-vfx-style"
 version = "0.11.0"
 dependencies = [
+ "mcu-hct",
+ "mcu-utils",
  "mixed-signals",
  "rstest",
  "serde",

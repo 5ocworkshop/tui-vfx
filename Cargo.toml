@@ -49,6 +49,13 @@ tui-vfx-debug = { path = "crates/tui-vfx-debug", version = "0.11.0" }
 
 # External dependencies (preserve versions from source crates)
 mixed-signals = { path = "../mixed-signals", version = "0.3.0" }
+# HCT (Hue, Chroma, Tone) perceptual color space — used by tui-vfx-style for
+# brightness scaling and gradient interpolation that preserves perceived hue.
+# gt-design already depends on mcu-terminal-color which sits on top of these
+# crates; both are published to crates.io as part of the mcu-material-color
+# Material Color Utilities Rust port.
+mcu-hct = "0.2.0"
+mcu-utils = "0.2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 smallvec = "1.11"

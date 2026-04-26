@@ -1,9 +1,11 @@
-// <FILE>tui-vfx-style/src/utils/fnc_blend_colors.rs</FILE> - <DESC>Color interpolation logic (RGB/HSL)</DESC>
-// <VERS>VERSION: 0.2.0 - 2025-12-16T20:59:26Z</VERS>
-// <WCTX>Turn 6 Implementation</WCTX>
-// <CLOG>Made HSL helpers public for StyleEffect usage</CLOG>
+// <FILE>tui-vfx-style/src/utils/fnc_blend_colors.rs</FILE> - <DESC>Color interpolation logic — RGB, HSL, and HCT (perceptually uniform via mcu-hct)</DESC>
+// <VERS>VERSION: 0.3.0 - 2026-04-26</VERS>
+// <WCTX>TTE effects port — extend blend_colors with the Hct arm so ColorSpace::Hct produces perceptually-uniform gradient interpolation. RGB and HSL arms unchanged.</WCTX>
+// <CLOG>0.3.0: add Hct interpolation arm — converts both endpoints to HCT via mcu-hct, lerps tone/chroma linearly, lerps hue along shortest 360° path, converts back. RGB/HSL paths unchanged.</CLOG>
 
 use crate::models::ColorSpace;
+use mcu_hct::Hct;
+use mcu_utils::color::{argb_from_rgb, blue_from_argb, green_from_argb, red_from_argb};
 use tui_vfx_types::Color;
 /// Blends two colors based on progress `t` and the specified color space.
 ///
@@ -44,10 +46,21 @@ pub fn blend_colors(c1: Color, c2: Color, t: f32, space: ColorSpace) -> Color {
             let (r, g, b) = hsl_to_rgb(h, s, l);
             Color::rgb(r, g, b)
         }
+        ColorSpace::Hct => {
+            let h1 = Hct::from_int(argb_from_rgb(r1, g1, b1));
+            let h2 = Hct::from_int(argb_from_rgb(r2, g2, b2));
+            let (hue, chroma, tone) = lerp_hct(h1, h2, t as f64);
+            let argb = Hct::from(hue, chroma, tone).to_int();
+            Color::rgb(red_from_argb(argb), green_from_argb(argb), blue_from_argb(argb))
+        }
     }
 }
 #[inline]
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
+    a + (b - a) * t
+}
+#[inline]
+fn lerp_f64(a: f64, b: f64, t: f64) -> f64 {
     a + (b - a) * t
 }
 /// Helper to convert colors to (r,g,b) tuple.
@@ -123,5 +136,26 @@ fn hue_to_rgb(p: f32, q: f32, mut t: f32) -> f32 {
     p
 }
 
-// <FILE>tui-vfx-style/src/utils/fnc_blend_colors.rs</FILE> - <DESC>Color interpolation logic (RGB/HSL)</DESC>
-// <VERS>END OF VERSION: 0.2.0 - 2025-12-16T20:59:26Z</VERS>
+/// Lerp two HCT colors. Hue takes the shortest 360° path; chroma and tone
+/// lerp linearly. The hue rotation matches the HSL arm's shortest-path
+/// behavior so authors switching between `ColorSpace::Hsl` and `Hct`
+/// don't see direction-of-rotation changes on the same gradient.
+fn lerp_hct(a: Hct, b: Hct, t: f64) -> (f64, f64, f64) {
+    let h1 = a.hue();
+    let h2 = b.hue();
+    let d = h2 - h1;
+    let delta = if d > 180.0 {
+        d - 360.0
+    } else if d < -180.0 {
+        d + 360.0
+    } else {
+        d
+    };
+    let hue = (h1 + delta * t).rem_euclid(360.0);
+    let chroma = lerp_f64(a.chroma(), b.chroma(), t);
+    let tone = lerp_f64(a.tone(), b.tone(), t);
+    (hue, chroma, tone)
+}
+
+// <FILE>tui-vfx-style/src/utils/fnc_blend_colors.rs</FILE>
+// <VERS>END OF VERSION: 0.3.0 - 2026-04-26</VERS>
