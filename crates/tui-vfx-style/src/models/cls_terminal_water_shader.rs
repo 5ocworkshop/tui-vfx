@@ -47,7 +47,9 @@ pub enum WaterApplyTo {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(tag = "mode", rename_all = "snake_case", deny_unknown_fields)]
+#[derive(Default)]
 pub enum WaterWaveMode {
+    #[default]
     Ocean,
     Ripple {
         #[serde(default)]
@@ -106,11 +108,6 @@ pub enum WaterWaveMode {
     },
 }
 
-impl Default for WaterWaveMode {
-    fn default() -> Self {
-        Self::Ocean
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]

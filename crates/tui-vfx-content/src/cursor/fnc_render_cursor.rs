@@ -47,11 +47,10 @@ pub fn fnc_render_cursor(
     let mut ops = CursorPaintOps::default();
 
     // --- Primary op (current cell) ---
-    if let Some(pos) = state.position {
-        if !cursor.character.is_empty() {
+    if let Some(pos) = state.position
+        && !cursor.character.is_empty() {
             ops.primary = primary_op(state, cursor, pos, now, ctx);
         }
-    }
 
     // --- Trail ops (wake) ---
     if !matches!(cursor.wake.mode, WakeMode::Off) {

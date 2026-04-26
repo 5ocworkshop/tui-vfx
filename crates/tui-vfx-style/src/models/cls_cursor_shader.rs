@@ -165,14 +165,13 @@ impl StyleShader for CursorShader {
         let cell = (ctx.local_y, ctx.local_x);
 
         // Primary-cell alpha modulation (drives grow-in fade).
-        if let Some(p) = self.primary.as_ref() {
-            if p.position == cell {
+        if let Some(p) = self.primary.as_ref()
+            && p.position == cell {
                 let alpha = p.alpha.clamp(0.0, 1.0);
                 let mut fg = base.fg;
                 fg.a = (alpha * 255.0).round() as u8;
                 return base.with_fg(fg);
             }
-        }
 
         // Wake trail: each trail cell is alpha-blended with the tint color.
         // Ghost mode renders identically to Tint at the style layer; glyph

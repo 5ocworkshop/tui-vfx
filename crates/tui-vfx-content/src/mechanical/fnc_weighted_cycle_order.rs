@@ -64,7 +64,7 @@ pub(crate) fn shuffle_in_place<T>(items: &mut [T], seed: u64) {
     let mut state = seed.wrapping_add(0x9E3779B97F4A7C15);
     for i in (1..items.len()).rev() {
         let r = next_u64(&mut state);
-        let j = (r as u128 * (i as u128 + 1) >> 64) as usize;
+        let j = ((r as u128 * (i as u128 + 1)) >> 64) as usize;
         items.swap(i, j);
     }
 }

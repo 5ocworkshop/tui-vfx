@@ -244,7 +244,10 @@ mod tests {
 
     #[test]
     fn default_is_empty_literal() {
-        assert_eq!(BindableString::default(), BindableString::Literal(String::new()));
+        assert_eq!(
+            BindableString::default(),
+            BindableString::Literal(String::new())
+        );
     }
 
     #[test]
@@ -255,15 +258,13 @@ mod tests {
 
     #[test]
     fn deserializes_tagged_literal() {
-        let parsed: BindableString =
-            serde_json::from_str(r#"{"literal":"line-3x3"}"#).unwrap();
+        let parsed: BindableString = serde_json::from_str(r#"{"literal":"line-3x3"}"#).unwrap();
         assert_eq!(parsed, BindableString::Literal("line-3x3".to_string()));
     }
 
     #[test]
     fn deserializes_tagged_binding() {
-        let parsed: BindableString =
-            serde_json::from_str(r#"{"binding":"drum_font"}"#).unwrap();
+        let parsed: BindableString = serde_json::from_str(r#"{"binding":"drum_font"}"#).unwrap();
         assert_eq!(parsed, BindableString::Binding("drum_font".to_string()));
     }
 
@@ -301,8 +302,7 @@ mod tests {
         // Binding names follow the snake_case convention per the cycle
         // plan v0.5.0 / Intention 37: validator and resolver lookups are
         // case-sensitive, so the convention is load-bearing.
-        let parsed: BindableString =
-            serde_json::from_str(r#"{"binding":"drum_font"}"#).unwrap();
+        let parsed: BindableString = serde_json::from_str(r#"{"binding":"drum_font"}"#).unwrap();
         match parsed {
             BindableString::Binding(ref key) => assert_eq!(key, "drum_font"),
             _ => panic!("expected Binding, got {parsed:?}"),

@@ -78,7 +78,7 @@ impl VfxProgressEmphasisShader {
 impl From<&HighlighterShader> for VfxProgressEmphasisShader {
     fn from(shader: &HighlighterShader) -> Self {
         Self {
-            color: shader.color.clone(),
+            color: shader.color,
             apply_to: shader.apply_to.into(),
             text_contrast: shader.text_contrast.clone().into(),
             mode: shader.mode.into(),

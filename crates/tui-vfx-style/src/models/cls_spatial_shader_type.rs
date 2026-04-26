@@ -334,8 +334,8 @@ impl SpatialShaderType {
                     extract_binding_object(object, "frequency", "frequency_binding");
                 }
                 "concealed_light" => {
-                    if let Some(spread) = object.get("spread").cloned() {
-                        if spread.get("signal").is_some() {
+                    if let Some(spread) = object.get("spread").cloned()
+                        && spread.get("signal").is_some() {
                             if let Some(default) = signal_default_f32(&spread) {
                                 object.insert(
                                     "spread".into(),
@@ -345,7 +345,6 @@ impl SpatialShaderType {
                             object.insert("mode".into(), serde_json::json!("drift"));
                             object.insert("pulse_speed".into(), serde_json::json!(1.0));
                         }
-                    }
                 }
                 "border_sweep" => {
                     extract_binding_object(object, "position", "position_binding");
@@ -826,8 +825,6 @@ fn edges_to_ao(edges: &[Value]) -> &'static str {
         "bottom_right"
     } else if has("top") && has("left") && strs.len() == 2 {
         "top_left"
-    } else if has("top") && has("bottom") && has("left") && has("right") {
-        "all"
     } else {
         "all"
     }

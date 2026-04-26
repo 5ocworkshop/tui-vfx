@@ -707,25 +707,20 @@ impl StyleEffect {
             if payload_type == "pulse"
                 && object.contains_key("pulse_color")
                 && !object.contains_key("color")
-            {
-                if let Some(color) = object.remove("pulse_color") {
+                && let Some(color) = object.remove("pulse_color") {
                     object.insert("color".into(), color);
                 }
-            }
             if payload_type == "rainbow"
                 && object.contains_key("rotation_speed")
                 && !object.contains_key("speed")
-            {
-                if let Some(speed) = object.remove("rotation_speed") {
+                && let Some(speed) = object.remove("rotation_speed") {
                     object.insert("speed".into(), speed);
                 }
-            }
-            if payload_type == "spatial" {
-                if let Some(shader_payload) = object.remove("shader") {
+            if payload_type == "spatial"
+                && let Some(shader_payload) = object.remove("shader") {
                     let shader = SpatialShaderType::try_from_v3_payload(shader_payload)?;
                     object.insert("shader".into(), serde_json::to_value(shader)?);
                 }
-            }
         }
 
         serde_json::from_value(payload)

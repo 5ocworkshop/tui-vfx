@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-debug/src/logger.rs</FILE> - <DESC>Core centralized debug logger with global singleton and log history</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
+// <VERS>VERSION: 1.0.1</VERS>
 // <WCTX>WG3: Debug Logger Integration</WCTX>
-// <CLOG>Initial creation with global singleton, color output, log history, and JSON export</CLOG>
+// <CLOG>1.0.1: collapse nested if-let in debug() into a let-chain to clear clippy::collapsible_if under -D warnings.</CLOG>
 
 use crate::config::{LogLevel, ModuleConfig, module_registry};
 use chrono::Local;
@@ -141,10 +141,10 @@ pub struct Logger {
 
 impl Logger {
     pub fn debug(&self, message: &str) {
-        if let Some(logger) = get_global_logger() {
-            if matches!(logger.get_level(&self.namespace), LogLevel::Debug) {
-                logger.log(&self.namespace, "DEBUG", message);
-            }
+        if let Some(logger) = get_global_logger()
+            && matches!(logger.get_level(&self.namespace), LogLevel::Debug)
+        {
+            logger.log(&self.namespace, "DEBUG", message);
         }
     }
 

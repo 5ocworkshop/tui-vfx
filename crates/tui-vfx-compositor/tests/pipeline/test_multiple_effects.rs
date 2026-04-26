@@ -1,13 +1,10 @@
 // <FILE>tui-vfx-compositor/tests/pipeline/test_multiple_effects.rs</FILE> - <DESC>Tests for multiple masks, filters, shaders</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
+// <VERS>VERSION: 1.3.1</VERS>
 // <WCTX>Sub-plan A Phase A.2.3 — wire up the legacy shim helpers (unused on this file today but imported for symmetry with siblings)</WCTX>
-// <CLOG>1.3.0: MINOR — import `_legacy` shim helpers (allow-unused for now).
-// 1.2.0: Update tests for new reveal/hide/direction optional fields</CLOG>
+// <CLOG>1.3.1: drop local `mod test_helpers;` declaration; pull from crate root (test_pipeline.rs declares once) to clear clippy::duplicate_mod.</CLOG>
 
-#[path = "test_helpers.rs"]
-mod test_helpers;
 #[allow(unused_imports)]
-use test_helpers::{render_pipeline_legacy, render_pipeline_with_spec_legacy};
+use crate::test_helpers::{render_pipeline_legacy, render_pipeline_with_spec_legacy};
 
 use smallvec::{SmallVec, smallvec};
 use tui_vfx_compositor::types::{FilterSpec, MaskCombineMode, MaskSpec, WipeDirection};

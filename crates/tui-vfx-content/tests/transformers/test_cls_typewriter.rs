@@ -21,6 +21,7 @@ fn test_signal_ctx() -> SignalContext {
         char_index: None,
         cell_x: None,
         cell_y: None,
+        ..Default::default()
     }
 }
 

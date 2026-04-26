@@ -72,7 +72,10 @@ fn rows_matches_listed_rows() {
 
 #[test]
 fn row_range_matches_half_open_interval() {
-    let region = StyleRegion::RowRange { start: BindableU16::Literal(1), end: BindableU16::Literal(4) };
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Literal(1),
+        end: BindableU16::Literal(4),
+    };
     let a = area(10, 5);
     assert!(!should_style(&region, 0, 0, None, a));
     assert!(should_style(&region, 0, 1, None, a));
@@ -90,7 +93,10 @@ fn column_matches_single_x() {
 
 #[test]
 fn column_range_matches_half_open_interval() {
-    let region = StyleRegion::ColumnRange { start: BindableU16::Literal(2), end: BindableU16::Literal(5) };
+    let region = StyleRegion::ColumnRange {
+        start: BindableU16::Literal(2),
+        end: BindableU16::Literal(5),
+    };
     let a = area(10, 5);
     assert!(!should_style(&region, 1, 0, None, a));
     assert!(should_style(&region, 2, 0, None, a));

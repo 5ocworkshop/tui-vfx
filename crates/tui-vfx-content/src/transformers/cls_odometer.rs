@@ -217,7 +217,7 @@ impl Odometer {
                 if matches!(cfg.source, MechanicalContentSource::Pair) {
                     None
                 } else {
-                    overshoot_face_for(&cycle, &route).map(|g| g.clone())
+                    overshoot_face_for(&cycle, &route).cloned()
                 };
 
             let tile_grid = roll_cycle_window(

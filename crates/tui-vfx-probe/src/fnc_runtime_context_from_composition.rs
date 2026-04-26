@@ -55,6 +55,10 @@ pub fn runtime_context_from_composition(
             supplied_params,
             binding_requests,
             binding_resolutions,
+            // Composition spec carries no loopback merge metadata —
+            // recipes-side callers that ran `with_loopback_applied`
+            // populate this field directly on the returned context.
+            loopback_fired_keys: Vec::new(),
         })
     }
 }

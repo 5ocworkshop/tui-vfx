@@ -45,7 +45,7 @@ impl From<&CursorShader> for VfxCursorShader {
     fn from(shader: &CursorShader) -> Self {
         Self {
             mode: shader.mode.into(),
-            tint: shader.tint.clone(),
+            tint: shader.tint,
             primary: shader.primary.as_ref().map(Into::into),
             trail: shader.trail.iter().map(Into::into).collect(),
         }

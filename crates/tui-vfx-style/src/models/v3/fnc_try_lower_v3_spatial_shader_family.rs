@@ -129,8 +129,8 @@ fn try_lower_traveling_band(
             speed_binding,
         } => {
             let (head, tail) = match &shader.color {
-                VfxTravelingBandColor::Solid { color } => (color.clone(), color.clone()),
-                VfxTravelingBandColor::HeadTail { head, tail } => (head.clone(), tail.clone()),
+                VfxTravelingBandColor::Solid { color } => (*color, *color),
+                VfxTravelingBandColor::HeadTail { head, tail } => (*head, *tail),
             };
             Ok(SpatialShaderType::GlistenBand(GlistenBandShader {
                 speed: shader.speed,
@@ -210,9 +210,9 @@ fn legacy_traveling_band_colors(
     Option<crate::models::ColorConfig>,
 ) {
     match color {
-        VfxTravelingBandColor::Solid { color } => (color.clone(), None, None),
+        VfxTravelingBandColor::Solid { color } => (*color, None, None),
         VfxTravelingBandColor::HeadTail { head, tail } => {
-            (head.clone(), Some(head.clone()), Some(tail.clone()))
+            (*head, Some(*head), Some(*tail))
         }
     }
 }
@@ -220,7 +220,7 @@ fn legacy_traveling_band_colors(
 impl From<&crate::models::v3::VfxProgressEmphasisShader> for SpatialShaderType {
     fn from(shader: &crate::models::v3::VfxProgressEmphasisShader) -> Self {
         SpatialShaderType::Highlighter(HighlighterShader {
-            color: shader.color.clone(),
+            color: shader.color,
             apply_to: shader.apply_to.into(),
             text_contrast: shader.text_contrast.clone().into(),
             mode: shader.mode.into(),
@@ -254,7 +254,7 @@ impl From<&crate::models::v3::VfxMaterialLightShader> for SpatialShaderType {
                 drift_amount,
             } => SpatialShaderType::Diffusion(DiffusionShader {
                 source: (*source).into(),
-                color: color.clone(),
+                color: *color,
                 radius: *radius,
                 softness: *softness,
                 edge_firmness: *edge_firmness,
@@ -278,7 +278,7 @@ impl From<&crate::models::v3::VfxMaterialLightShader> for SpatialShaderType {
                 source_cutoff,
             } => SpatialShaderType::ConcealedLight(ConcealedLightShader {
                 source: (*source).into(),
-                color: color.clone(),
+                color: *color,
                 spread: *spread,
                 edge_width: *edge_width,
                 falloff: *falloff,
@@ -297,7 +297,7 @@ impl From<&crate::models::v3::VfxMaterialLightShader> for SpatialShaderType {
                 corner_boost,
                 apply_to,
             } => SpatialShaderType::EdgeSheen(EdgeSheenShader {
-                color: color.clone(),
+                color: *color,
                 speed: *speed,
                 band_width: *band_width,
                 edge_width: *edge_width,
@@ -327,8 +327,8 @@ impl From<&crate::models::v3::VfxGuidanceCueShader> for SpatialShaderType {
                 selected_row_ratio: *selected_row_ratio,
                 selected_row_ratio_binding: selected_row_ratio_binding.clone(),
                 falloff_distance: *falloff_distance,
-                bright_color: bright_color.clone(),
-                dim_color: dim_color.clone(),
+                bright_color: *bright_color,
+                dim_color: *dim_color,
                 apply_to: (*apply_to).into(),
             }),
             VfxGuidanceCueBehavior::FocusField {
@@ -354,7 +354,7 @@ impl From<&crate::models::v3::VfxGuidanceCueShader> for SpatialShaderType {
                 apply_to,
                 pulse_speed,
             } => SpatialShaderType::FocusField(FocusFieldShader {
-                color: color.clone(),
+                color: *color,
                 shape: (*shape).into(),
                 center_x: *center_x,
                 center_y: *center_y,
@@ -387,7 +387,7 @@ impl From<&crate::models::v3::VfxGuidanceCueShader> for SpatialShaderType {
                 peak_intensity,
                 apply_to,
             } => SpatialShaderType::AffordanceWake(AffordanceWakeShader {
-                color: color.clone(),
+                color: *color,
                 zone: (*zone).into(),
                 radius: *radius,
                 falloff: *falloff,
@@ -409,7 +409,7 @@ impl From<&crate::models::v3::VfxGuidanceCueShader> for SpatialShaderType {
                 pulse_speed,
                 apply_to,
             } => SpatialShaderType::WayfindingNode(WayfindingNodeShader {
-                color: color.clone(),
+                color: *color,
                 nodes: nodes.iter().copied().map(Into::into).collect(),
                 radius: *radius,
                 intensity: *intensity,
@@ -438,7 +438,7 @@ impl From<&crate::models::v3::VfxSurfaceDepthShader> for SpatialShaderType {
                 radius: *radius,
                 edges: (*edges).into(),
                 falloff: *falloff,
-                shadow_color: shadow_color.clone(),
+                shadow_color: *shadow_color,
             }),
             VfxSurfaceDepthBehavior::Bevel {
                 light_direction,
@@ -458,7 +458,7 @@ impl From<&crate::models::v3::VfxSurfaceDepthShader> for SpatialShaderType {
                 intensity,
                 pulse_speed,
             } => SpatialShaderType::Glow(GlowShader {
-                color: color.clone(),
+                color: *color,
                 radius: *radius,
                 falloff: *falloff,
                 intensity: *intensity,
@@ -482,7 +482,7 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
                 frequency: *frequency,
                 frequency_binding: frequency_binding.clone(),
                 speed: *speed,
-                color: color.clone(),
+                color: *color,
                 direction: (*direction).into(),
                 wavelength: *wavelength,
             }),
@@ -493,7 +493,7 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
             } => SpatialShaderType::Radar(RadarShader {
                 speed: *speed,
                 tail_length: *tail_length,
-                color: color.clone(),
+                color: *color,
             }),
             VfxMotionFieldBehavior::Orbit {
                 speed,
@@ -502,7 +502,7 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
             } => SpatialShaderType::Orbit(OrbitShader {
                 speed: *speed,
                 dot_count: *dot_count,
-                color: color.clone(),
+                color: *color,
             }),
             VfxMotionFieldBehavior::RadialSpiral {
                 arms,
@@ -517,7 +517,7 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
                 radial_power: *radial_power,
                 speed: *speed,
                 blend_strength: *blend_strength,
-                color: color.clone(),
+                color: *color,
             }),
             VfxMotionFieldBehavior::TerminalWater { shader } => {
                 SpatialShaderType::TerminalWater(shader.clone())
@@ -546,7 +546,7 @@ impl From<&crate::models::v3::VfxEdgeDistortionShader> for SpatialShaderType {
                 max_lines: *max_lines,
                 speed: *speed,
                 flash_chance: *flash_chance,
-                pulse_color: pulse_color.clone(),
+                pulse_color: *pulse_color,
                 pulse_speed: *pulse_speed,
                 italic_on_flash: *italic_on_flash,
                 flash_hold: *flash_hold,
@@ -598,7 +598,7 @@ impl From<&crate::models::v3::VfxGradientRevealShader> for SpatialShaderType {
             }),
             VfxGradientRevealBehavior::RevealWipe { direction } => {
                 SpatialShaderType::RevealWipe(RevealWipeShader {
-                    direction: (*direction).into(),
+                    direction: (*direction),
                 })
             }
         }
@@ -650,7 +650,7 @@ impl From<&crate::models::v3::VfxCursorShader> for SpatialShaderType {
     fn from(shader: &crate::models::v3::VfxCursorShader) -> Self {
         SpatialShaderType::Cursor(CursorShader {
             mode: shader.mode.into(),
-            tint: shader.tint.clone(),
+            tint: shader.tint,
             primary: shader.primary.as_ref().map(Into::into),
             trail: shader.trail.iter().map(Into::into).collect(),
         })
@@ -669,7 +669,7 @@ impl From<&crate::models::v3::VfxStripeMotionShader> for SpatialShaderType {
                 speed: *speed,
                 stripe_width: *stripe_width,
                 gap_width: *gap_width,
-                color: color.clone(),
+                color: *color,
             }),
         }
     }

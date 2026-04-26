@@ -134,8 +134,8 @@ impl<'de> Deserialize<'de> for ColorConfig {
         let value = serde_json::Value::deserialize(deserializer)?;
 
         // Check if it's an object with r, g, b but no "type" field (RGB shorthand)
-        if let serde_json::Value::Object(ref map) = value {
-            if !map.contains_key("type")
+        if let serde_json::Value::Object(ref map) = value
+            && !map.contains_key("type")
                 && map.contains_key("r")
                 && map.contains_key("g")
                 && map.contains_key("b")
@@ -149,7 +149,6 @@ impl<'de> Deserialize<'de> for ColorConfig {
                     b: shorthand.b,
                 });
             }
-        }
 
         // Fall back to tagged format
         let tagged: TaggedColorConfig = serde_json::from_value(value)

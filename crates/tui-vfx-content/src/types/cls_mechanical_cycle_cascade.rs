@@ -11,8 +11,10 @@ use serde::{Deserialize, Serialize};
 /// tiles so the cycle visually progresses across the mechanism.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+#[derive(Default)]
 pub enum MechanicalCascadePolicy {
     /// All tiles share the same progress.
+    #[default]
     Simultaneous,
     /// Each tile starts later than the previous one by `fraction` of the
     /// total progress window. `fraction` is clamped to `0.0..=0.95`.
@@ -34,11 +36,6 @@ pub enum MechanicalCascadePolicy {
     },
 }
 
-impl Default for MechanicalCascadePolicy {
-    fn default() -> Self {
-        Self::Simultaneous
-    }
-}
 
 fn default_stagger_fraction() -> f32 {
     0.35
@@ -78,8 +75,10 @@ pub enum UnchangedCellPolicy {
 /// is no "parses but does nothing at runtime" allowance.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+#[derive(Default)]
 pub enum MechanicalSettleConfig {
     /// No settle. The tile lands at local progress `1.0` and stops.
+    #[default]
     None,
     /// Brief overshoot past the final face then recovery onto it.
     /// `overshoot` is clamped to `0.0..=0.5` and is how far past the final
@@ -98,11 +97,6 @@ pub enum MechanicalSettleConfig {
     },
 }
 
-impl Default for MechanicalSettleConfig {
-    fn default() -> Self {
-        Self::None
-    }
-}
 
 /// Small named easing subset usable by `MechanicalSettleConfig`.
 ///

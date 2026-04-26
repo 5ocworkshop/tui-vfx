@@ -31,9 +31,7 @@ where
             let p = tile_progress(tile_col, tile_row).clamp(0.0, 1.0);
             let ch = if p <= 0.0 {
                 get_ch(&source.from, x, y)
-            } else if p >= 1.0 {
-                get_ch(&source.to, x, y)
-            } else if !tile_changed(source, tile_x, tile_y, tile_w, tile_h) {
+            } else if p >= 1.0 || !tile_changed(source, tile_x, tile_y, tile_w, tile_h) {
                 get_ch(&source.to, x, y)
             } else {
                 center_hinge_ch(source, x, y, local_y, tile_h, p)

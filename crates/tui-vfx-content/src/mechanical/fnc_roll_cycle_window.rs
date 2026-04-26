@@ -37,11 +37,11 @@ pub(crate) fn roll_cycle_window(
             if let Some(grid) = overshoot_face {
                 return grid.clone();
             }
-            return route
+            route
                 .faces
                 .last()
                 .map(|f| f.grid.clone())
-                .unwrap_or_else(|| OwnedGrid::new(tile.width as usize, tile.height as usize));
+                .unwrap_or_else(|| OwnedGrid::new(tile.width as usize, tile.height as usize))
         }
         SettleSample::Route { progress } => sample_route(route, progress, direction, travel, tile),
     }

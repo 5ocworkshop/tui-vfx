@@ -1,13 +1,13 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.6.2</VERS> -->
-<!-- <WCTX>Add Intention 41 — cross-repo audits for large-scale changes must scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, and (when relevant) gt-design.</WCTX> -->
-<!-- <CLOG>0.6.2: add Intention 41 codifying the four-repo audit scope after Phase 1's two-repo rg missed tui-vfx-recipes and gt-design SignalContext call sites.</CLOG> -->
+<!-- <VERS>VERSION: 0.6.3</VERS> -->
+<!-- <WCTX>Add Intention 42 — learn and default to the ofpf-* tooling; require reading steering/OFPF-TOOLS.md as the practical reference.</WCTX> -->
+<!-- <CLOG>0.6.3: add Intention 42 codifying ofpf-* as the default codebase-query interface and require steering/OFPF-TOOLS.md as the supporting reference.</CLOG> -->
 
 # Intentions
 
 This file captures top-down decisions that steer implementation of tui-vfx. It is the durable framing that outlasts any individual release or schema version.
 
-**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), and cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41).
+**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41), and the `ofpf-*` semantic suite is the default interface for any codebase question — read `steering/OFPF-TOOLS.md` for the practical reference (Intention 42).
 
 **Companion:** `steering/MARKETING.md` answers *how we describe what we've built*; this file answers *how we decide what to build*. The two stay in sync; when they diverge, they must be brought back into agreement.
 
@@ -1032,5 +1032,70 @@ counter-force that prevents the audit-scope failure mode specifically.
 
 ---
 
+## 42. Learn the `ofpf-*` tooling and use it by default
+
+The `ofpf-*` semantic suite (a thin alias layer over `librarian-cli`,
+backed by a long-running multi-tenant daemon) is the canonical interface
+for codebase questions in this repository. Use it before reaching for
+`find`, `grep`, `cat`, or whole-file reads. When you are not yet fluent
+in the tool surface, **read `steering/OFPF-TOOLS.md`** — it is the
+practical reference for which tool answers which question, output-handling
+patterns, multi-repo workflow, response-guard semantics, and the
+non-obvious flags that bite first-time users.
+
+Rules:
+
+1. **Default to `ofpf-*` for any "where is X?" / "who calls Y?" / "what
+   does this file do?" / "what breaks if I change Z?" question.** Raw
+   `find` / `grep` / whole-file reads are fallbacks for cases the
+   `ofpf-*` suite genuinely cannot reach (small ad-hoc shell tasks,
+   non-text files, pre-load probing).
+2. **Read `steering/OFPF-TOOLS.md` once per session if you have not
+   internalized the tool surface.** It is a fast skim and pays back the
+   first time it saves a wrong-tool detour. The CLAUDE.md orientation
+   step links to it transitively through this intention.
+3. **Use `librarian-cli --help-json` and `librarian-cli meta` as the
+   canonical reference when in doubt.** `--help-json` returns the full
+   command schema (subcommands, args, aliases, exit-code semantics,
+   response-guard behavior, JSON-mode protocol). `meta` decodes the
+   abbreviated keys (`co`/`in`/`out`/`f`/`p`/`n`/`l`/`k`) used in
+   compact responses. Both beat guessing.
+4. **Capture new pitfalls and patterns in `OFPF-TOOLS.md`.** When you
+   discover a non-obvious flag, an empty-result interpretation, or a
+   tool combination that is the right answer to a recurring question,
+   add it to the reference so the next session benefits. This is the
+   Intention 25 ("hunt for infrastructure wins") application to tooling
+   knowledge.
+5. **Treat `ofpf-status` failure as a precondition violation.** If the
+   daemon is unhealthy, surface it before answering repo questions
+   instead of silently falling back to slower or less accurate
+   alternatives.
+
+Why: the `ofpf-*` suite is daemon-backed, multi-repo (up to ten loaded
+in parallel via `--root`), and returns structured JSON that composes
+cleanly with downstream tooling. It is materially faster than shelling
+out for the same query, and the response guard protects context from
+runaway result sets. Treating it as the default — and keeping a living
+reference for it — keeps every contributor (human or AI) on the path of
+least context burn. The reference exists because the tool surface is
+larger than any one session needs to memorize, and because the standards
+docs in `~/.claude/rules/` are necessarily generic; `OFPF-TOOLS.md` is
+the project-local distillation.
+
+What this is *not* saying: it is not banning shell utilities. `git`,
+`cargo`, `just`, `rg` directly, and small scripts remain the right
+answer for execution, build, and ad-hoc tasks. The intention targets
+**codebase interrogation** specifically — symbol lookup, dependency
+reasoning, blast radius, file neighborhood — where the `ofpf-*` suite is
+purpose-built and the alternatives leave performance and clarity on the
+table.
+
+Companion: `steering/OFPF-TOOLS.md` (project-local reference);
+`~/.claude/rules/ofpf.md` and `~/.claude/CLAUDE.md` (global standards
+that introduce the suite); `librarian-cli --help-json` (canonical
+upstream schema).
+
+---
+
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.6.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.3</VERS> -->

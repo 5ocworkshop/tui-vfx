@@ -48,7 +48,7 @@ impl From<&PulseWaveShader> for VfxMotionFieldShader {
                 frequency: shader.frequency,
                 frequency_binding: shader.frequency_binding.clone(),
                 speed: shader.speed,
-                color: shader.color.clone(),
+                color: shader.color,
                 direction: shader.direction.into(),
                 wavelength: shader.wavelength,
             },
@@ -62,7 +62,7 @@ impl From<&RadarShader> for VfxMotionFieldShader {
             behavior: VfxMotionFieldBehavior::Radar {
                 speed: shader.speed,
                 tail_length: shader.tail_length,
-                color: shader.color.clone(),
+                color: shader.color,
             },
         }
     }
@@ -74,7 +74,7 @@ impl From<&OrbitShader> for VfxMotionFieldShader {
             behavior: VfxMotionFieldBehavior::Orbit {
                 speed: shader.speed,
                 dot_count: shader.dot_count,
-                color: shader.color.clone(),
+                color: shader.color,
             },
         }
     }
@@ -89,7 +89,7 @@ impl From<&RadialSpiralShader> for VfxMotionFieldShader {
                 radial_power: shader.radial_power,
                 speed: shader.speed,
                 blend_strength: shader.blend_strength,
-                color: shader.color.clone(),
+                color: shader.color,
             },
         }
     }

@@ -4,7 +4,6 @@
 // <CLOG>0.1.0: cover absent vs explicit-Pair equivalence, decimal preset increment/decrement, NumericCarry hold/spin_and_return, extra_rotations, ordered alphabet drum, weighted reel determinism, per-tile Spring settle.</CLOG>
 
 use mixed_signals::prelude::SignalContext;
-use tui_vfx_content::traits::TextTransformer;
 use tui_vfx_content::transformers::get_transformer;
 use tui_vfx_content::types::{
     ContentEffect, CycleDirectionPolicy, CycleMissingFacePolicy, CycleTieBreaker, CycleWrapMode,

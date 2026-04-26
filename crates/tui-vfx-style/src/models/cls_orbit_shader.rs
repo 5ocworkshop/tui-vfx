@@ -64,7 +64,7 @@ impl StyleShader for OrbitShader {
             let y = (cy + radius * angle.sin()).round() as i32;
 
             if x == ctx.local_x as i32 && y == ctx.local_y as i32 {
-                let color = Color::from(self.color.clone());
+                let color = Color::from(self.color);
                 style.fg = color;
                 style.bg = color;
                 break;

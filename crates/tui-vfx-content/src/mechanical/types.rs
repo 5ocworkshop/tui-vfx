@@ -51,7 +51,7 @@ pub(crate) fn validate_split_flap_tile(
         }
         return Err(MechanicalValidationError::UnsupportedVerticalHinge);
     }
-    if tile.height % 2 != 0 {
+    if !tile.height.is_multiple_of(2) {
         return Err(MechanicalValidationError::OddCenterHingeTileHeight {
             height: tile.height,
         });

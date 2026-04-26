@@ -668,7 +668,11 @@ mod tests {
         // band is at the row midpoint and x is irrelevant.
         let mut center_row = make_cell();
         filter.apply(&mut center_row, 0, 5, 20, 10, 0.0);
-        assert_ne!(center_row.fg, Color::rgb(100, 100, 100), "center row brightens");
+        assert_ne!(
+            center_row.fg,
+            Color::rgb(100, 100, 100),
+            "center row brightens"
+        );
 
         // Top row: outside the band — must not brighten.
         let mut top_row = make_cell();
@@ -678,7 +682,11 @@ mod tests {
         // Bottom row: outside the band — must not brighten.
         let mut bottom_row = make_cell();
         filter.apply(&mut bottom_row, 0, 9, 20, 10, 0.0);
-        assert_eq!(bottom_row.fg, Color::rgb(100, 100, 100), "bottom row stays dark");
+        assert_eq!(
+            bottom_row.fg,
+            Color::rgb(100, 100, 100),
+            "bottom row stays dark"
+        );
     }
 
     #[test]
@@ -707,7 +715,10 @@ mod tests {
         let mut cell = make_cell();
         let original_fg = cell.fg;
         filter.apply(&mut cell, 5, 0, 10, 0, 0.0);
-        assert_eq!(cell.fg, original_fg, "zero-height vertical sweep is a no-op");
+        assert_eq!(
+            cell.fg, original_fg,
+            "zero-height vertical sweep is a no-op"
+        );
     }
 
     #[test]

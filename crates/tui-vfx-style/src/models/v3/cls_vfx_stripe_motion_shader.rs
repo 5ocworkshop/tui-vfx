@@ -38,7 +38,7 @@ impl From<&BarberPoleShader> for VfxStripeMotionShader {
                 speed: shader.speed,
                 stripe_width: shader.stripe_width,
                 gap_width: shader.gap_width,
-                color: shader.color.clone(),
+                color: shader.color,
             },
         }
     }

@@ -1,0 +1,8 @@
+# Clippy configuration for the tui-vfx workspace.
+#
+# Rendering and shadow code idiomatically takes many positional arguments
+# (x, y, width, height, color, falloff, edge, coverage_eighths, ...). The
+# clippy default threshold of 7 is too tight for this domain; raising the
+# threshold here is an explicit, project-level policy rather than a per-site
+# `#[allow]` (Intention 40 §1).
+too-many-arguments-threshold = 9

@@ -72,8 +72,8 @@ impl BorderSweepShader {
 
     fn band_color(&self, intensity: f32) -> Color {
         blend_colors(
-            Color::from(self.tail_color().clone()),
-            Color::from(self.head_color().clone()),
+            Color::from(*self.tail_color()),
+            Color::from(*self.head_color()),
             intensity.clamp(0.0, 1.0),
             ColorSpace::Rgb,
         )
@@ -136,7 +136,7 @@ impl StyleShader for BorderSweepShader {
                 .abs()
                 .min(perimeter as f32 - (sweep_pos - pos).abs());
             if dist < self.length as f32 {
-                style.fg = Color::from(self.color.clone());
+                style.fg = Color::from(self.color);
             }
         }
         style

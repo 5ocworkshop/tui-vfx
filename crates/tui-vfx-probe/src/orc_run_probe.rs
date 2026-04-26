@@ -22,6 +22,7 @@ use crate::cls_probe_widget::ProbeWidget;
 use crate::fnc_build_owned_grid::build_owned_grid;
 use crate::fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
 use crate::fnc_collect_basic_diagnostics::collect_basic_diagnostics;
+use crate::fnc_collect_loopback_fire_diagnostics::collect_loopback_fire_diagnostics;
 use crate::fnc_diff_frames::diff_frames;
 use crate::fnc_modifier_names::modifier_names;
 use crate::fnc_normalize_color::normalize_color;
@@ -164,7 +165,7 @@ pub fn run_probe(
         }
     }
 
-    let diagnostics = collect_basic_diagnostics(&ProbeReport {
+    let scaffold = ProbeReport {
         schema_version: "0.1.0".to_string(),
         kind: "frame_dump".to_string(),
         source: ProbeReportSource {
@@ -203,7 +204,13 @@ pub fn run_probe(
         },
         diagnostics: Vec::new(),
         cells: all_cells.iter().map(|(cell, _, _)| cell.clone()).collect(),
-    });
+    };
+    let mut diagnostics = collect_basic_diagnostics(&scaffold);
+    // Phase L5 follow-on: emit one Warning per binding key that fell back
+    // to recipe-author-declared loopback during the probed frame. Empty
+    // when no runtime context is attached or the host supplied every
+    // declared binding.
+    diagnostics.extend(collect_loopback_fire_diagnostics(&scaffold));
 
     Ok(ProbeReport {
         schema_version: "0.1.0".to_string(),

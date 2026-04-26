@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/tests/test_fnc_render_shadow.rs</FILE> - <DESC>Integration tests for the role-aware render_shadow_into_scene entrypoint — back-compat with None source_region and role-filter behavior with Some source_region, plus destination RoleTag::Shadow write-back</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>Sub-plan A Phase A.3.5 — TDD red→green for shadow stage writing RoleTag::Shadow into destination roles; back-compat (None) produces today's rect-based extrusion; Some(role) uses role-filtered bbox for extrusion.</WCTX>
-// <CLOG>0.1.0: initial TDD red covering (a) back-compat: source_region=None produces same shadow cells as legacy render_shadow for the supplied element rect; (b) source_region=Some(role) restricts extrusion to role-filtered bbox; (c) destination RoleMap has RoleTag::Shadow at every cell the stage wrote; (d) tiny-rect shadow renders without panic.</CLOG>
+// <CLOG>0.1.1: collapse nested if-let in count_nonempty_cells helper into a let-chain to clear clippy::collapsible_if under -D warnings.</CLOG>
 
 //! Integration tests for `render_shadow_into_scene` (the role-aware shadow
 //! stage entrypoint) introduced in Sub-plan A Phase A.3.5.
@@ -43,10 +43,10 @@ fn count_nonempty_cells(g: &OwnedGrid) -> usize {
     let mut n = 0usize;
     for y in 0..g.height() {
         for x in 0..g.width() {
-            if let Some(cell) = g.get(x, y) {
-                if cell.ch != ' ' || cell.bg.a != 0 || cell.fg.a != 0 {
-                    n += 1;
-                }
+            if let Some(cell) = g.get(x, y)
+                && (cell.ch != ' ' || cell.bg.a != 0 || cell.fg.a != 0)
+            {
+                n += 1;
             }
         }
     }

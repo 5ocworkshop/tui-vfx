@@ -44,7 +44,7 @@ pub(crate) fn route_between(
     if cycle.faces.is_empty() {
         // Pair-shaped resolved cycle: no intermediate faces. Return
         // [from, to] using the supplied tile to normalize endpoints.
-        return Ok(pair_route(from, to, tile, CycleDirectionPolicy::Forward)?);
+        return pair_route(from, to, tile, CycleDirectionPolicy::Forward);
     }
 
     let from_idx_opt = cycle.index_of(from);

@@ -1,12 +1,10 @@
 // <FILE>tui-vfx-compositor/tests/pipeline/test_render_pipeline_with_spec.rs</FILE>
 // <DESC>Spec-based pipeline wrapper tests</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
+// <VERS>VERSION: 0.7.1</VERS>
 // <WCTX>Sub-plan A Phase A.2.3 — route every call-site through the `_legacy` shim wrapper so these tests keep speaking the old `&mut OwnedGrid` call shape</WCTX>
-// <CLOG>0.7.0: add sampler-chain equivalence coverage for spec-vs-options rendering.</CLOG>
+// <CLOG>0.7.1: drop local `mod test_helpers;` declaration; pull from crate root (test_pipeline.rs declares once) to clear clippy::duplicate_mod.</CLOG>
 
-#[path = "test_helpers.rs"]
-mod test_helpers;
-use test_helpers::{
+use crate::test_helpers::{
     render_pipeline_legacy, render_pipeline_with_spec_area_legacy, render_pipeline_with_spec_legacy,
 };
 

@@ -45,7 +45,7 @@ impl From<&DiffusionShader> for VfxMaterialLightShader {
         Self {
             behavior: VfxMaterialLightBehavior::Diffusion {
                 source: shader.source.into(),
-                color: shader.color.clone(),
+                color: shader.color,
                 radius: shader.radius,
                 softness: shader.softness,
                 edge_firmness: shader.edge_firmness,
@@ -65,7 +65,7 @@ impl From<&ConcealedLightShader> for VfxMaterialLightShader {
         Self {
             behavior: VfxMaterialLightBehavior::ConcealedLight {
                 source: shader.source.into(),
-                color: shader.color.clone(),
+                color: shader.color,
                 spread: shader.spread,
                 edge_width: shader.edge_width,
                 falloff: shader.falloff,
@@ -83,7 +83,7 @@ impl From<&EdgeSheenShader> for VfxMaterialLightShader {
     fn from(shader: &EdgeSheenShader) -> Self {
         Self {
             behavior: VfxMaterialLightBehavior::EdgeSheen {
-                color: shader.color.clone(),
+                color: shader.color,
                 speed: shader.speed,
                 band_width: shader.band_width,
                 edge_width: shader.edge_width,

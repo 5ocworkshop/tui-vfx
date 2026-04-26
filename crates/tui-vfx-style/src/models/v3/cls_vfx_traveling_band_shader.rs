@@ -88,8 +88,8 @@ impl From<&GlistenBandShader> for VfxTravelingBandShader {
         Self {
             speed: shader.speed,
             color: VfxTravelingBandColor::HeadTail {
-                head: shader.head.clone(),
-                tail: shader.tail.clone(),
+                head: shader.head,
+                tail: shader.tail,
             },
             behavior: VfxTravelingBandBehavior::GlistenBand {
                 band_width: shader.band_width,
@@ -158,11 +158,11 @@ fn traveling_band_color_from_legacy(
 ) -> VfxTravelingBandColor {
     match (head, tail) {
         (None, None) => VfxTravelingBandColor::Solid {
-            color: color.clone(),
+            color: *color,
         },
         _ => VfxTravelingBandColor::HeadTail {
-            head: head.unwrap_or(color).clone(),
-            tail: tail.unwrap_or(color).clone(),
+            head: *head.unwrap_or(color),
+            tail: *tail.unwrap_or(color),
         },
     }
 }

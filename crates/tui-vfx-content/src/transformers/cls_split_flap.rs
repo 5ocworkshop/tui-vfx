@@ -453,9 +453,7 @@ impl TextTransformer for SplitFlap {
                 target,
                 MechanicalSizing::PadToMax,
             );
-            let tile_cols = ((source.to.width().max(source.from.width()) + tile.width as usize
-                - 1)
-                / tile.width as usize)
+            let tile_cols = source.to.width().max(source.from.width()).div_ceil(tile.width as usize)
                 .max(1);
             let use_authentic = self.uses_authentic_timing();
             let grid = split_flap_tile_frame(&source, tile, |tile_col, tile_row| {
@@ -1302,7 +1300,7 @@ mod tests {
         // Hinge window is 0.82..1.0; sweep at 30Hz density.
         for i in 0..=100 {
             let t = 0.82 + (i as f64) * 0.0018;
-            if sf.transform("A", t, &ctx()).chars().next() == Some('Ɐ') {
+            if sf.transform("A", t, &ctx()).starts_with('Ɐ') {
                 saw_turned = true;
                 break;
             }

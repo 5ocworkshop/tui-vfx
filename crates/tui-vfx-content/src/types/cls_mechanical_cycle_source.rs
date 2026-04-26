@@ -19,8 +19,10 @@ use tui_vfx_style::models::BindableString;
 /// [`SplitFlap`]: super::cls_content_effect::ContentEffect::SplitFlap
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+#[derive(Default)]
 pub enum MechanicalContentSource {
     /// Direct old/new exchange. No intermediate faces; route is `[from, to]`.
+    #[default]
     Pair,
 
     /// Author-supplied ordered list of face strings. Faces are normalized
@@ -71,11 +73,6 @@ pub enum MechanicalContentSource {
     },
 }
 
-impl Default for MechanicalContentSource {
-    fn default() -> Self {
-        Self::Pair
-    }
-}
 
 /// Whether a cycle wraps around its endpoints.
 ///

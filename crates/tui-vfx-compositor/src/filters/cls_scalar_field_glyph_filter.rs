@@ -72,11 +72,14 @@ use crate::traits::filter::Filter;
 /// ```
 // Public type; constructed from non-test code starting in Phase 6 of
 // `docs/design/tui-vfx-glyph-rendering-framework-plan.md` when `FilterSpec`
-// gains a `ScalarFieldGlyph` discriminant. `#[expect(dead_code)]` auto-retires
-// at that point — the build fails if the expectation no longer applies.
-#[expect(
-    dead_code,
-    reason = "wired in Phase 6 via FilterSpec::ScalarFieldGlyph"
+// gains a `ScalarFieldGlyph` discriminant. The expectation applies only in
+// non-test builds — tests construct the type directly, so `dead_code` does
+// not fire under `--all-targets`. `#[expect]` auto-retires the moment Phase 6
+// wires a non-test caller; the build fails if the expectation no longer
+// applies in lib-only mode.
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "wired in Phase 6 via FilterSpec::ScalarFieldGlyph")
 )]
 pub struct ScalarFieldGlyphFilter<S: Signal> {
     /// The field sampler; sampled once per `apply` call (or eight times for

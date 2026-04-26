@@ -1246,6 +1246,7 @@ dependencies = [
 name = "tui-vfx-types"
 version = "0.11.0"
 dependencies = [
+ "mixed-signals",
  "serde",
  "serde_json",
  "tui-vfx-core",

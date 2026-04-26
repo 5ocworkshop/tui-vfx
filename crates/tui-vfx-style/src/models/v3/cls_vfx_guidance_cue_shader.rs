@@ -50,8 +50,8 @@ impl From<&FocusedRowGradientShader> for VfxGuidanceCueShader {
                 selected_row_ratio: shader.selected_row_ratio,
                 selected_row_ratio_binding: shader.selected_row_ratio_binding.clone(),
                 falloff_distance: shader.falloff_distance,
-                bright_color: shader.bright_color.clone(),
-                dim_color: shader.dim_color.clone(),
+                bright_color: shader.bright_color,
+                dim_color: shader.dim_color,
                 apply_to: shader.apply_to.into(),
             },
         }
@@ -62,7 +62,7 @@ impl From<&FocusFieldShader> for VfxGuidanceCueShader {
     fn from(shader: &FocusFieldShader) -> Self {
         Self {
             behavior: VfxGuidanceCueBehavior::FocusField {
-                color: shader.color.clone(),
+                color: shader.color,
                 shape: shader.shape.into(),
                 center_x: shader.center_x,
                 center_y: shader.center_y,
@@ -92,7 +92,7 @@ impl From<&AffordanceWakeShader> for VfxGuidanceCueShader {
     fn from(shader: &AffordanceWakeShader) -> Self {
         Self {
             behavior: VfxGuidanceCueBehavior::AffordanceWake {
-                color: shader.color.clone(),
+                color: shader.color,
                 zone: shader.zone.into(),
                 radius: shader.radius,
                 falloff: shader.falloff,
@@ -110,7 +110,7 @@ impl From<&WayfindingNodeShader> for VfxGuidanceCueShader {
     fn from(shader: &WayfindingNodeShader) -> Self {
         Self {
             behavior: VfxGuidanceCueBehavior::WayfindingNode {
-                color: shader.color.clone(),
+                color: shader.color,
                 nodes: shader.nodes.iter().copied().map(Into::into).collect(),
                 radius: shader.radius,
                 intensity: shader.intensity,

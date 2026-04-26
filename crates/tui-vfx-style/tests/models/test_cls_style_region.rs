@@ -145,7 +145,10 @@ fn test_rows_out_of_bounds_safe() {
 
 #[test]
 fn test_row_range_matches_range() {
-    let region = StyleRegion::RowRange { start: BindableU16::Literal(1), end: BindableU16::Literal(4) };
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Literal(1),
+        end: BindableU16::Literal(4),
+    };
     let (w, h) = (10, 5);
 
     // Rows in [1, 4) should match
@@ -162,7 +165,10 @@ fn test_row_range_matches_range() {
 #[test]
 fn test_row_range_single_row() {
     // Range of exactly one row
-    let region = StyleRegion::RowRange { start: BindableU16::Literal(2), end: BindableU16::Literal(3) };
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Literal(2),
+        end: BindableU16::Literal(3),
+    };
     let (w, h) = (10, 5);
 
     assert!(!region.should_style_legacy(0, 1, w, h));
@@ -173,7 +179,10 @@ fn test_row_range_single_row() {
 #[test]
 fn test_row_range_full_widget() {
     // Range covering entire widget
-    let region = StyleRegion::RowRange { start: BindableU16::Literal(0), end: BindableU16::Literal(5) };
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Literal(0),
+        end: BindableU16::Literal(5),
+    };
     let (w, h) = (10, 5);
 
     assert!(region.should_style_legacy(0, 0, w, h));
@@ -184,7 +193,10 @@ fn test_row_range_full_widget() {
 #[test]
 fn test_row_range_inverted_matches_nothing() {
     // Inverted range (start >= end) should match nothing
-    let region = StyleRegion::RowRange { start: BindableU16::Literal(5), end: BindableU16::Literal(2) };
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Literal(5),
+        end: BindableU16::Literal(2),
+    };
     let (w, h) = (10, 5);
 
     assert!(!region.should_style_legacy(0, 0, w, h));
@@ -196,7 +208,10 @@ fn test_row_range_inverted_matches_nothing() {
 #[test]
 fn test_row_range_empty_matches_nothing() {
     // Empty range (start == end)
-    let region = StyleRegion::RowRange { start: BindableU16::Literal(2), end: BindableU16::Literal(2) };
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Literal(2),
+        end: BindableU16::Literal(2),
+    };
     let (w, h) = (10, 5);
 
     assert!(!region.should_style_legacy(0, 1, w, h));
@@ -218,7 +233,10 @@ fn test_serde_rows_roundtrip() {
 
 #[test]
 fn test_serde_row_range_roundtrip() {
-    let region = StyleRegion::RowRange { start: BindableU16::Literal(1), end: BindableU16::Literal(5) };
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Literal(1),
+        end: BindableU16::Literal(5),
+    };
     let json = serde_json::to_string(&region).unwrap();
     let parsed: StyleRegion = serde_json::from_str(&json).unwrap();
     assert_eq!(region, parsed);

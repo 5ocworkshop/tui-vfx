@@ -92,10 +92,7 @@ pub fn resolved<'a>(
 
 #[inline]
 fn both_literal(a: &BindableU16, b: &BindableU16) -> bool {
-    matches!(
-        (a, b),
-        (BindableU16::Literal(_), BindableU16::Literal(_))
-    )
+    matches!((a, b), (BindableU16::Literal(_), BindableU16::Literal(_)))
 }
 
 #[inline]

@@ -45,7 +45,7 @@ impl From<&AmbientOcclusionShader> for VfxSurfaceDepthShader {
                 radius: shader.radius,
                 edges: shader.edges.into(),
                 falloff: shader.falloff,
-                shadow_color: shader.shadow_color.clone(),
+                shadow_color: shader.shadow_color,
             },
         }
     }
@@ -68,7 +68,7 @@ impl From<&GlowShader> for VfxSurfaceDepthShader {
     fn from(shader: &GlowShader) -> Self {
         Self {
             behavior: VfxSurfaceDepthBehavior::Glow {
-                color: shader.color.clone(),
+                color: shader.color,
                 radius: shader.radius,
                 falloff: shader.falloff,
                 intensity: shader.intensity,

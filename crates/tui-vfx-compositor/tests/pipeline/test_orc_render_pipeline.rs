@@ -1,11 +1,9 @@
 // <FILE>crates/tui-vfx-compositor/tests/pipeline/test_orc_render_pipeline.rs</FILE> - <DESC>L2 render pipeline tests with Grid trait</DESC>
-// <VERS>VERSION: 5.6.1</VERS>
+// <VERS>VERSION: 5.6.2</VERS>
 // <WCTX>Audit Phase 7 prep — restore the half-block-specific edge geometry assertions in test_shadow_extends_render_area after the V3 transparent-shadow tranche changed the default style to Solid.</WCTX>
-// <CLOG>test_shadow_extends_render_area: pin the shadow style to ShadowStyle::HalfBlock so the bg=shadow / fg=shadow sub-cell edge assertions match the half-block geometry the test was written for.</CLOG>
+// <CLOG>5.6.2: drop local `mod test_helpers;` declaration; pull from crate root (test_pipeline.rs declares once) to clear clippy::duplicate_mod.</CLOG>
 
-#[path = "test_helpers.rs"]
-mod test_helpers;
-use test_helpers::render_pipeline_legacy;
+use crate::test_helpers::render_pipeline_legacy;
 
 use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;

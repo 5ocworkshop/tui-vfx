@@ -69,8 +69,8 @@ fn converts_glisten_band_into_v3_family_surface() {
     assert_eq!(
         converted.color,
         VfxTravelingBandColor::HeadTail {
-            head: legacy.head.clone(),
-            tail: legacy.tail.clone(),
+            head: legacy.head,
+            tail: legacy.tail,
         }
     );
     assert!(matches!(
