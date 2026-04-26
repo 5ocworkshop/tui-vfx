@@ -1,11 +1,14 @@
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.4.4</VERS>
-// <WCTX>Phase 3 of mechanical circular content cycles plan: Odometer sample now constructs the mechanical: None default to match the new variant shape.</WCTX>
-// <CLOG>1.4.4: re-add mechanical: None to the Odometer sample now that ContentEffect::Odometer carries the field; SplitFlap follows in Phase 4.</CLOG>
+// <VERS>VERSION: 1.4.5</VERS>
+// <WCTX>Glyph rendering framework Phase 6: wire ScalarFieldGlyphFilter via FilterSpec::ScalarFieldGlyph.</WCTX>
+// <CLOG>1.4.5: add FilterSpec::ScalarFieldGlyph entry to extract_filter_metadata using a default TerminalWaterShader sampler.</CLOG>
 
 use std::collections::HashMap;
 
-use tui_vfx_compositor::types::{BindableValue, FilterSpec, MaskSpec, SamplerSpec};
+use tui_vfx_compositor::types::{
+    BindableValue, FilterSpec, GlyphEncoderSpec, MaskSpec, SamplerRef, SamplerSpec,
+};
+use tui_vfx_style::models::cls_terminal_water_shader::TerminalWaterShader;
 use tui_vfx_content::types::{ContentEffect, OdometerDirection, OdometerTravel};
 use tui_vfx_shadow::types::ShadowStyle;
 use tui_vfx_style::models::{ColorConfig, SpatialShaderType, StyleEffect};
@@ -307,6 +310,16 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             shade_color: ColorConfig::Gray,
             bps: 1.0,
             progress: BindableValue::static_f32(0.0),
+        },
+        FilterSpec::GlyphStyle { rules: vec![] },
+        FilterSpec::ScalarFieldGlyph {
+            sampler: SamplerRef::TerminalWater {
+                shader: TerminalWaterShader::default(),
+            },
+            encoder: GlyphEncoderSpec::BrailleSubcell { threshold: 0.45 },
+            threshold: 0.0,
+            only_blank: false,
+            recolor: None,
         },
     ];
 

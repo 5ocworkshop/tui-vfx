@@ -1,8 +1,8 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Generic scalar-field-to-glyph filter: samples any Signal and encodes intensity via GlyphEncoder</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Glyph rendering framework Phase 4: unifying filter for water/fire/terrain field effects</WCTX>
-// <CLOG>0.2.0: drop unwired temporal_dither_hz field — encoders no longer take a time argument, so the snap-to-step value flowed nowhere; SubcellLight retains its own inline temporal-dither logic.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Glyph rendering framework Phase 6: wire ScalarFieldGlyphFilter via FilterSpec::ScalarFieldGlyph.</WCTX>
+// <CLOG>0.3.0: remove #[cfg_attr(not(test), expect(dead_code))] — filter is now constructed from cls_prepared_filter.rs for FilterSpec::ScalarFieldGlyph; Phase 6 wiring fulfilled.</CLOG>
 
 use mixed_signals::traits::{Signal, SignalContext};
 use tui_vfx_types::{Cell, Color, glyph::GlyphEncoder, glyph::sample_eight_subcells};
@@ -70,17 +70,6 @@ use crate::traits::filter::Filter;
 /// filter.apply(&mut cell, 4, 0, 8, 1, 0.0);
 /// assert_eq!(cell.ch, '▌');
 /// ```
-// Public type; constructed from non-test code starting in Phase 6 of
-// `docs/design/tui-vfx-glyph-rendering-framework-plan.md` when `FilterSpec`
-// gains a `ScalarFieldGlyph` discriminant. The expectation applies only in
-// non-test builds — tests construct the type directly, so `dead_code` does
-// not fire under `--all-targets`. `#[expect]` auto-retires the moment Phase 6
-// wires a non-test caller; the build fails if the expectation no longer
-// applies in lib-only mode.
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "wired in Phase 6 via FilterSpec::ScalarFieldGlyph")
-)]
 pub struct ScalarFieldGlyphFilter<S: Signal> {
     /// The field sampler; sampled once per `apply` call (or eight times for
     /// `BrailleSubcell`).
@@ -146,4 +135,4 @@ mod tests;
 
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Generic scalar-field-to-glyph filter: samples any Signal and encodes intensity via GlyphEncoder</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

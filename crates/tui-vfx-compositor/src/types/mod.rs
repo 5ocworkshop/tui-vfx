@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>VERSION: 2.9.0</VERS>
-// <WCTX>Phase 0 P0.1 — progress_binding infrastructure</WCTX>
-// <CLOG>Add cls_bindable_value module and BindableValue re-export</CLOG>
+// <VERS>VERSION: 2.10.0</VERS>
+// <WCTX>Glyph rendering framework Phase 6: wire ScalarFieldGlyphFilter via FilterSpec::ScalarFieldGlyph.</WCTX>
+// <CLOG>2.10.0: re-export GlyphEncoderSpec and SamplerRef from cls_filter_spec.</CLOG>
 
 pub mod cls_bindable_value;
 pub mod cls_filter_spec;
@@ -15,8 +15,8 @@ pub use crate::masks::cls_radial::RadialOrigin;
 pub use cls_bindable_value::BindableValue;
 pub use cls_filter_spec::{
     AnimatedGlyphRampAffect, AnimatedGlyphRampApplyTo, ApplyTo, BraillePatternType, FilterSpec,
-    MatrixRainAffect, MatrixRainCharsetPreset, MatrixRainMode, MotionBlurDirection, PatternType,
-    SubPixelBarDirection,
+    GlyphEncoderSpec, GlyphRecolorSpec, MatrixRainAffect, MatrixRainCharsetPreset, MatrixRainMode,
+    MotionBlurDirection, PatternType, SamplerRef, SubPixelBarDirection,
 };
 pub use cls_hover_bar_position::HoverBarPosition;
 pub use cls_mask_spec::{
@@ -27,4 +27,4 @@ pub use cls_shadow_spec::ShadowSpec;
 pub use mask_combine_mode::MaskCombineMode;
 
 // <FILE>tui-vfx-compositor/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>END OF VERSION: 2.9.0</VERS>
+// <VERS>END OF VERSION: 2.10.0</VERS>

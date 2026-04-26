@@ -21,7 +21,7 @@ supports shadows and `preserve_unfilled`.
 | Category | Count (variants) | Primary API |
 | --- | --- | --- |
 | Masks | 11 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
-| Filters | 27 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
+| Filters | 29 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
 | Spatial Shaders | 26 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
@@ -293,7 +293,7 @@ Pattern for cellular mask
 
 ---
 
-## FilterSpec (27 effects)
+## FilterSpec (29 effects)
 
 Filters modify cell colors/styles after rendering (applied in order).
 
@@ -310,6 +310,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `EdgeGrow` | Generalized edge growth / stretch indicator using sub-cell blocks | `rest_eighths`, `peak_eighths`, `edge`, `progress`, `margin_width` |
 | `FadeToCanvas` | Canvas-aware exit fade: blend cells toward a declared canvas color | `canvas_color`, `canvas_color_binding`, `strength`, `apply_to` |
 | `GlistenSweep` | Diagonal glisten sweep effect | `boost`, `band_width`, `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
+| `GlyphStyle` | Per-glyph-category fg/bg override via char-membership rules | `rules` |
 | `Greyscale` | Greyscale/desaturate filter using BT.601 luminance | `strength`, `apply_to` |
 | `HoverBar` | Progress-driven partial bar indicator for hover states | `base_eighths`, `max_eighths`, `position`, `progress` |
 | `InterlaceCurtain` | Scanline/interlace effect for backdrop dimming | `density`, `dim_factor`, `scroll_speed` |
@@ -320,6 +321,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `PatternFill` | Pattern fill effect for background textures | `pattern`, `color`, `only_empty` |
 | `PillButton` | Pill-shaped button with gradient edges | `edge_width`, `glisten`, `progress` |
 | `RigidShake` | Rigid body shake filter with damped oscillation | `shake_period`, `num_shakes`, `pause_duration`, `max_eighths` |
+| `ScalarFieldGlyph` | Scalar-field-to-glyph filter: samples a 2D signal and encodes per-cell intensity as braille, block, or ramp glyphs | `encoder`, `threshold`, `only_blank`, `recolor` |
 | `ShadeScanner` | Ping-pong scanner that dims text with shade overlay | `shade_color`, `bps`, `progress` |
 | `SubCellShake` | Sub-cell shake using partial vertical blocks | `amplitude`, `frequency`, `seed`, `edge_only` |
 | `SubPixelBar` | Sub-pixel progress bar with 8x resolution | `progress`, `direction` |

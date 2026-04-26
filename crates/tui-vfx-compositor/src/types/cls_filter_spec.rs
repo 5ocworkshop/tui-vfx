@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.13.0</VERS>
-// <WCTX>Phase 7 prep: vertical KittScanner support unlocks faithful Beams effect (top-down sweep).</WCTX>
-// <CLOG>Add ScannerAxis enum (Horizontal default / Vertical) and KittScanner.axis field with serde back-compat default.
+// <VERS>VERSION: 3.14.0</VERS>
+// <WCTX>Glyph rendering framework Phase 6: wire ScalarFieldGlyphFilter via FilterSpec::ScalarFieldGlyph.</WCTX>
+// <CLOG>3.14.0: add GlyphEncoderSpec, SamplerRef enums and FilterSpec::ScalarFieldGlyph variant; wire SamplerRef::TerminalWater with inline shader spec (Option A).
 
 //! # Filter Specifications
 //!
@@ -72,7 +72,7 @@ use super::cls_mask_spec::WipeDirection;
 use mixed_signals::types::SignalOrFloat;
 use serde::{Deserialize, Serialize, de::Error as _};
 use serde_json::{self, Value};
-use tui_vfx_style::models::ColorConfig;
+use tui_vfx_style::models::{ColorConfig, cls_terminal_water_shader::TerminalWaterShader};
 
 /// Pattern types for filling cells.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
@@ -313,6 +313,89 @@ pub enum ScannerAxis {
     #[default]
     Horizontal,
     Vertical,
+}
+
+/// Optional two-color recolor pair for [`FilterSpec::ScalarFieldGlyph`].
+///
+/// When present, `lit` replaces `cell.fg` and `unlit` replaces `cell.bg`
+/// after glyph encoding. Absent (i.e. `recolor: null` or omitted) preserves
+/// the upstream shader's colors.
+///
+/// # Example (JSON)
+///
+/// ```json
+/// { "lit": { "type": "rgb", "r": 40, "g": 170, "b": 210 },
+///   "unlit": { "type": "rgb", "r": 3, "g": 18, "b": 40 } }
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GlyphRecolorSpec {
+    /// Color applied to `cell.fg` when the cell is "lit" (above threshold).
+    pub lit: ColorConfig,
+    /// Color applied to `cell.bg` when the cell is "unlit" (below threshold).
+    pub unlit: ColorConfig,
+}
+
+/// Spec-shape glyph encoder enum for [`FilterSpec::ScalarFieldGlyph`].
+///
+/// Mirrors [`tui_vfx_types::glyph::GlyphEncoder`] in serde-friendly form:
+/// `Ramp` uses `Vec<char>` instead of `Cow<'static, [char]>` for round-trip
+/// stability. All other variants are structurally identical to the runtime enum.
+///
+/// # Example (JSON)
+///
+/// ```json
+/// { "type": "braille_subcell", "threshold": 0.45 }
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+pub enum GlyphEncoderSpec {
+    /// Eight per-subcell scalars → 256-pattern braille via per-dot threshold.
+    BrailleSubcell {
+        /// Minimum field intensity for a subcell dot to light.
+        threshold: f32,
+    },
+    /// Single intensity → eighths dot-count braille, optionally rotation-permuted.
+    BrailleEighths {
+        /// When `true`, the fill order is permuted by a spatial hash of `(x, y)`.
+        rotated: bool,
+    },
+    /// Single intensity → horizontal partial-block characters ▏▎▍▌▋▊▉█.
+    BlockHorizontal,
+    /// Single intensity → vertical partial-block characters ▁▂▃▄▅▆▇█.
+    BlockVertical,
+    /// Single intensity → arbitrary char ramp. `chars[0]` = coldest,
+    /// `chars[len-1]` = brightest. An empty ramp returns `' '`.
+    Ramp {
+        /// The character ramp from darkest to brightest.
+        chars: Vec<char>,
+    },
+}
+
+/// Sampler kind for [`FilterSpec::ScalarFieldGlyph`].
+///
+/// Each variant carries the parameters needed to construct a runtime signal
+/// at recipe-load time. The first variant, `TerminalWater`, wraps a
+/// [`TerminalWaterShader`] inline so the filter is self-contained — no
+/// cross-step reference required.
+///
+/// # Example (JSON)
+///
+/// ```json
+/// { "kind": "terminal_water", "shader": { "mode": { "mode": "ocean" }, "layers": 3 } }
+/// ```
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum SamplerRef {
+    /// Samples a [`tui_vfx_style::models::WaterFieldSignal`] constructed from
+    /// the given [`TerminalWaterShader`] at recipe-load time. The shader spec
+    /// is carried inline so the filter is self-contained; the recipe may
+    /// replicate the same spec on an upstream `shader` pipeline step without
+    /// coupling the two steps.
+    TerminalWater {
+        /// Water shader parameters to drive the glyph field signal.
+        shader: TerminalWaterShader,
+    },
 }
 
 /// Complete filter specification with all parameters.
@@ -1165,6 +1248,45 @@ pub enum FilterSpec {
         /// Rules evaluated in declaration order (first match wins).
         rules: Vec<GlyphStyleRule>,
     },
+
+    /// Scalar-field-to-glyph filter using a typed sampler signal.
+    ///
+    /// Samples a 2D scalar field (identified by `sampler`) once — or eight
+    /// times for `BrailleSubcell` — per cell per frame, then encodes the
+    /// intensity to a glyph character via `encoder`.
+    ///
+    /// The first supported sampler is `TerminalWater` which wraps an inline
+    /// [`TerminalWaterShader`] as a [`tui_vfx_style::models::WaterFieldSignal`].
+    ///
+    /// # Example (JSON)
+    ///
+    /// ```json
+    /// {
+    ///   "type": "scalar_field_glyph",
+    ///   "sampler": { "kind": "terminal_water", "shader": { "mode": { "mode": "ocean" } } },
+    ///   "encoder": { "type": "braille_subcell", "threshold": 0.45 },
+    ///   "only_blank": false
+    /// }
+    /// ```
+    ScalarFieldGlyph {
+        /// The signal source to sample per cell.
+        sampler: SamplerRef,
+        /// Glyph encoder applied to the sampled intensity.
+        encoder: GlyphEncoderSpec,
+        /// Minimum intensity below which the cell is left unchanged.
+        /// Applies to single-scalar encoders; ignored by `BrailleSubcell`
+        /// (which has its own per-dot threshold inside the encoder).
+        #[serde(default)]
+        threshold: f32,
+        /// When `true`, skip cells whose character is not `' '`.
+        #[serde(default = "default_only_blank")]
+        only_blank: bool,
+        /// Optional two-color recolor: when present, `recolor.lit` overrides
+        /// `cell.fg` and `recolor.unlit` overrides `cell.bg` after encoding.
+        /// Absent (null/omitted) preserves the upstream shader's colors.
+        #[serde(default)]
+        recolor: Option<GlyphRecolorSpec>,
+    },
 }
 
 /// Direction of motion blur trail.
@@ -1233,7 +1355,13 @@ pub enum VignetteEdge {
     Right,
 }
 
-// Default functions for signal-or-float fields
+// Default functions for signal-or-float fields and bool guards
+
+/// Returns `false` — default for `ScalarFieldGlyph::only_blank` (process all cells).
+fn default_only_blank() -> bool {
+    false
+}
+
 fn default_dim_factor() -> SignalOrFloat {
     SignalOrFloat::Static(0.5)
 }
@@ -1809,6 +1937,7 @@ impl FilterSpec {
             FilterSpec::KittScanner { .. } => "KittScanner",
             FilterSpec::ShadeScanner { .. } => "ShadeScanner",
             FilterSpec::GlyphStyle { .. } => "GlyphStyle",
+            FilterSpec::ScalarFieldGlyph { .. } => "ScalarFieldGlyph",
         }
     }
 
@@ -1866,6 +1995,9 @@ impl FilterSpec {
             }
             FilterSpec::GlyphStyle { .. } => {
                 "Per-glyph-category fg/bg override via char-membership rules"
+            }
+            FilterSpec::ScalarFieldGlyph { .. } => {
+                "Scalar-field-to-glyph filter: samples a 2D signal and encodes per-cell intensity as braille, block, or ramp glyphs"
             }
         }
     }
@@ -2185,9 +2317,152 @@ impl FilterSpec {
             FilterSpec::GlyphStyle { rules } => {
                 vec![("rules", format!("{} rule(s)", rules.len()))]
             }
+            FilterSpec::ScalarFieldGlyph {
+                encoder,
+                threshold,
+                only_blank,
+                recolor,
+                ..
+            } => vec![
+                ("encoder", format!("{:?}", encoder)),
+                ("threshold", format!("{}", threshold)),
+                ("only_blank", format!("{}", only_blank)),
+                (
+                    "recolor",
+                    recolor
+                        .as_ref()
+                        .map(|r| format!("lit={:?} unlit={:?}", r.lit, r.unlit))
+                        .unwrap_or_else(|| "none".to_string()),
+                ),
+            ],
         }
     }
 }
 
+#[cfg(test)]
+mod tests_scalar_field_glyph {
+    use super::*;
+    use serde_json::{from_str, json, to_value};
+
+    fn ocean_shader_json() -> serde_json::Value {
+        json!({
+            "kind": "terminal_water",
+            "shader": {
+                "mode": { "mode": "ocean" },
+                "layers": 3,
+                "amplitude": 0.36,
+                "wavelength": 12.0,
+                "speed": 1.0,
+                "direction_deg": 25.0,
+                "steepness": 0.48,
+                "normal_strength": 1.45,
+                "diffuse": 0.68,
+                "specular": 0.62,
+                "shininess": 26.0,
+                "fresnel": 0.38,
+                "foam": 0.58,
+                "deep_color": { "type": "rgb", "r": 5, "g": 32, "b": 64 },
+                "shallow_color": { "type": "rgb", "r": 40, "g": 170, "b": 210 },
+                "foam_color": { "type": "white" },
+                "glint_strength": 0.28,
+                "glint_angle_deg": -18.0,
+                "glint_width": 8.0,
+                "glint_speed": 1.0,
+                "apply_to": "both"
+            }
+        })
+    }
+
+    fn minimal_spec() -> serde_json::Value {
+        json!({
+            "type": "scalar_field_glyph",
+            "sampler": ocean_shader_json(),
+            "encoder": { "type": "braille_subcell", "threshold": 0.45 }
+        })
+    }
+
+    #[test]
+    fn round_trip_minimal() {
+        let json_str = minimal_spec().to_string();
+        let spec: FilterSpec = from_str(&json_str).expect("deserialize minimal ScalarFieldGlyph");
+        let round_tripped = to_value(&spec).expect("re-serialize");
+        // Re-deserialize from the round-tripped value to confirm stability.
+        let spec2: FilterSpec = serde_json::from_value(round_tripped).expect("second deserialize");
+        assert_eq!(spec, spec2, "round-trip must be stable");
+        match &spec {
+            FilterSpec::ScalarFieldGlyph {
+                encoder: GlyphEncoderSpec::BrailleSubcell { threshold },
+                only_blank,
+                recolor,
+                threshold: field_threshold,
+                ..
+            } => {
+                assert!(
+                    (*threshold - 0.45).abs() < 1e-5,
+                    "encoder threshold preserved"
+                );
+                assert!(!only_blank, "only_blank defaults false");
+                assert!(recolor.is_none(), "recolor defaults None");
+                assert!(
+                    (*field_threshold).abs() < 1e-5,
+                    "field threshold defaults 0.0"
+                );
+            }
+            other => panic!("expected ScalarFieldGlyph, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn round_trip_all_encoder_variants() {
+        let encoders = vec![
+            json!({ "type": "braille_subcell", "threshold": 0.5 }),
+            json!({ "type": "braille_eighths", "rotated": true }),
+            json!({ "type": "block_horizontal" }),
+            json!({ "type": "block_vertical" }),
+            json!({ "type": "ramp", "chars": ['▁', '▄', '█'] }),
+        ];
+        for enc_json in encoders {
+            let full = json!({
+                "type": "scalar_field_glyph",
+                "sampler": ocean_shader_json(),
+                "encoder": enc_json
+            });
+            let spec: FilterSpec = serde_json::from_value(full.clone())
+                .unwrap_or_else(|e| panic!("failed to deserialize {}: {}", full, e));
+            let re = serde_json::to_value(&spec).expect("re-serialize");
+            let spec2: FilterSpec = serde_json::from_value(re).expect("second deserialize");
+            assert_eq!(spec, spec2, "encoder variant round-trip stable");
+        }
+    }
+
+    #[test]
+    fn reject_unknown_encoder_field() {
+        let bad = json!({
+            "type": "scalar_field_glyph",
+            "sampler": ocean_shader_json(),
+            "encoder": { "type": "braille_subcell", "threshold": 0.5, "unknown_field": true }
+        });
+        let result: Result<FilterSpec, _> = serde_json::from_value(bad);
+        assert!(
+            result.is_err(),
+            "deny_unknown_fields must reject unknown encoder fields"
+        );
+    }
+
+    #[test]
+    fn reject_unknown_sampler_field() {
+        let bad = json!({
+            "type": "scalar_field_glyph",
+            "sampler": { "kind": "terminal_water", "shader": serde_json::Value::Object(Default::default()), "extra": 99 },
+            "encoder": { "type": "block_horizontal" }
+        });
+        let result: Result<FilterSpec, _> = serde_json::from_value(bad);
+        assert!(
+            result.is_err(),
+            "deny_unknown_fields must reject unknown sampler fields"
+        );
+    }
+}
+
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 3.13.0</VERS>
+// <VERS>END OF VERSION: 3.14.0</VERS>

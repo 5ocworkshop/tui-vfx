@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>VERSION: 2.15.1</VERS>
-// <WCTX>Phase 7 prep: thread the new ScannerAxis through KittScanner preparation so vertical-axis recipes light up.</WCTX>
-// <CLOG>Destructure and forward FilterSpec::KittScanner::axis to KittScanner::with_axis; update inline test fixtures.</CLOG>
+// <VERS>VERSION: 2.16.0</VERS>
+// <WCTX>Glyph rendering framework Phase 6: wire ScalarFieldGlyphFilter via FilterSpec::ScalarFieldGlyph.</WCTX>
+// <CLOG>2.16.0: add PreparedFilter::ScalarFieldGlyphWater variant and prepare_filter arm for FilterSpec::ScalarFieldGlyph with SamplerRef::TerminalWater.</CLOG>
 
 use super::cls_prepare_context::PrepareContext;
 use crate::filters::cls_animated_glyph_ramp::AnimatedGlyphRamp;
@@ -28,6 +28,7 @@ use crate::filters::cls_motion_blur::{MotionBlur, MotionDirection};
 use crate::filters::cls_pattern_fill::PatternFill;
 use crate::filters::cls_pill_button::PillButton;
 use crate::filters::cls_rigid_shake::RigidShake;
+use crate::filters::cls_scalar_field_glyph_filter::ScalarFieldGlyphFilter;
 use crate::filters::cls_shade_scanner::ShadeScanner;
 use crate::filters::cls_sub_cell_shake::SubCellShake;
 use crate::filters::cls_sub_pixel_bar::{BarDirection, SubPixelBar};
@@ -39,12 +40,19 @@ use crate::filters::cls_tint::Tint;
 use crate::filters::cls_underline_wipe::UnderlineWipe;
 use crate::filters::cls_vignette::Vignette;
 use crate::traits::filter::Filter;
-use crate::types::cls_filter_spec::{FilterSpec, PatternType};
+use crate::types::cls_filter_spec::{
+    FilterSpec, GlyphEncoderSpec, GlyphRecolorSpec, PatternType, SamplerRef,
+};
 use smallvec::SmallVec;
+use tui_vfx_style::models::cls_water_field_signal::WaterFieldSignal;
+use tui_vfx_types::glyph::GlyphEncoder;
 use tui_vfx_types::{Cell, Color};
 
 pub(crate) enum PreparedFilter {
-    Dim { filter: Dim, factor: f32 },
+    Dim {
+        filter: Dim,
+        factor: f32,
+    },
     Invert(Invert),
     Tint(Tint),
     FadeToCanvas(FadeToCanvas),
@@ -73,6 +81,8 @@ pub(crate) enum PreparedFilter {
     KittScanner(KittScanner),
     ShadeScanner(ShadeScanner),
     GlyphStyle(GlyphStyle),
+    /// [`ScalarFieldGlyphFilter`] backed by a [`WaterFieldSignal`] sampler.
+    ScalarFieldGlyphWater(ScalarFieldGlyphFilter<WaterFieldSignal>),
 }
 
 impl PreparedFilter {
@@ -173,6 +183,9 @@ impl PreparedFilter {
             PreparedFilter::GlyphStyle(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
+            PreparedFilter::ScalarFieldGlyphWater(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
         }
     }
 
@@ -207,6 +220,7 @@ impl PreparedFilter {
             PreparedFilter::KittScanner(_) => "KittScanner",
             PreparedFilter::ShadeScanner(_) => "ShadeScanner",
             PreparedFilter::GlyphStyle(_) => "GlyphStyle",
+            PreparedFilter::ScalarFieldGlyphWater(_) => "ScalarFieldGlyphWater",
         }
     }
 }
@@ -944,6 +958,52 @@ pub(crate) fn prepare_filter(
                 })
                 .collect();
             Some(PreparedFilter::GlyphStyle(GlyphStyle::new(resolved)))
+        }
+        FilterSpec::ScalarFieldGlyph {
+            sampler,
+            encoder,
+            threshold,
+            only_blank,
+            recolor,
+        } => {
+            // Convert spec-shape GlyphEncoderSpec → runtime GlyphEncoder.
+            let runtime_encoder = match encoder {
+                GlyphEncoderSpec::BrailleSubcell {
+                    threshold: enc_thresh,
+                } => GlyphEncoder::BrailleSubcell {
+                    threshold: *enc_thresh,
+                },
+                GlyphEncoderSpec::BrailleEighths { rotated } => {
+                    GlyphEncoder::BrailleEighths { rotated: *rotated }
+                }
+                GlyphEncoderSpec::BlockHorizontal => GlyphEncoder::BlockHorizontal,
+                GlyphEncoderSpec::BlockVertical => GlyphEncoder::BlockVertical,
+                GlyphEncoderSpec::Ramp { chars } => GlyphEncoder::Ramp(chars.clone().into()),
+            };
+            // Convert optional GlyphRecolorSpec → runtime Color pair.
+            let runtime_recolor = recolor.as_ref().map(|GlyphRecolorSpec { lit, unlit }| {
+                let lit_color: Color = (*lit).into();
+                let unlit_color: Color = (*unlit).into();
+                (lit_color, unlit_color)
+            });
+            // Build the signal sampler from the SamplerRef variant.
+            // Option A: each SamplerRef variant carries its own parameters;
+            // no cross-step reference needed.
+            let filter = match sampler {
+                SamplerRef::TerminalWater { shader } => {
+                    let signal = WaterFieldSignal::new(shader.clone());
+                    ScalarFieldGlyphFilter {
+                        sampler: signal,
+                        encoder: runtime_encoder,
+                        recolor: runtime_recolor,
+                        threshold: *threshold,
+                        only_blank: *only_blank,
+                        frame: 0,
+                        seed: 0,
+                    }
+                }
+            };
+            Some(PreparedFilter::ScalarFieldGlyphWater(filter))
         }
     }
 }
