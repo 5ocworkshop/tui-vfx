@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-transform-context-implementation-plan.md</FILE> - <DESC>Implementation plan for the cross-trait context-bundle migration. Phases A–E close Slice 6.6 of the mechanical circular content cycles plan (TransformContext for TextTransformer, BindableString font binding). Phase F generalizes the same pattern to Filter / Mask / Sampler per buy-once sweep finding 1.1.A (VfxCellContext in tui-vfx-types).</DESC> -->
-<!-- <VERS>VERSION: 1.2.0</VERS> -->
-<!-- <WCTX>Pass-1 review + Pass-2 junior-implementability uplift across the whole plan. Headline corrections: AnimationPhase does not live where v1.1.0 thought; baseline lib-test count corrected; VfxCellContext field set rescoped; Filter/Mask/Sampler impl counts re-verified; cross-repo audit reframed (no out-of-tree impls today); ShaderContext.new constructor migration made explicit; minimum-compiling-intermediate-states table added.</WCTX> -->
-<!-- <CLOG>1.2.0: critical review pass. AnimationPhase rescope (lives in tui-vfx-recipes::state, not above tui-vfx-types — drop phase from VfxCellContext, ShaderContext keeps Option&lt;mixed_signals::traits::Phase&gt;). Baseline 348 lib tests (was 356). Mask/Sampler counts 11/11 (was 13/12). Cross-repo audit reframed to confirm-and-document (no impls outside tui-vfx today). ShaderContext constructor migration spelled out. Per-phase intermediate-state table added. Junior-impl uplift: representative before/after for one Filter, one Mask, one Sampler impl; explicit OFPF size budgets per new file; doctest test-helper pattern detailed.</CLOG> -->
+<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <WCTX>Fold leader resolutions for all ten §11 open questions into the plan body. Headline: §A.6 removes apply_with_context outright (Q9); §11 converts to a resolved decision log; LOC over-budget callout dropped (LOC limits are advisory).</WCTX> -->
+<!-- <CLOG>1.3.0: close all §11 open questions. §A.6 removes apply_with_context (one test caller migrates to apply_with_runtime). §11 reframed as decision log. cls_shader_context.rs version bump confirmed 1.3.0 → 2.0.0; trait majors confirmed Filter→4.0.0, Sampler→3.0.0, Mask→2.0.0. ShaderContext field-layout MAJOR confirmed. transform_with_cursor Option 1 confirmed. FontRegistry plumbing and screen_x/y dispatcher plumbing deferred (not hot-path / no impl needs them).</CLOG> -->
 
 # tui-vfx TransformContext implementation plan
 
@@ -621,7 +621,7 @@ impl ContentEffect {
 }
 ```
 
-**After**. The body of `apply_with_context` constructs a `TransformContext` with an empty `ShaderRuntimeParams`. A new `apply_with_runtime` (or extended `apply_with_context`) method is added so consumers that have a `ShaderRuntimeParams` can pass it through:
+**After**. `apply_with_context` is **removed** outright (Q9 resolution: one in-tree caller, a single test, which migrates to `apply_with_runtime` in this same commit). `apply_with_runtime` becomes the host-injection entry point:
 
 ```rust
 use crate::traits::TransformContext;
@@ -636,22 +636,6 @@ impl ContentEffect {
         let sig = SignalContext::default();
         let params = ShaderRuntimeParams::new();
         let ctx = TransformContext::new(&sig, &params);
-        let transformer = get_transformer(self);
-        transformer.transform(target, progress, &ctx)
-    }
-
-    /// Advanced: apply the effect with a caller-supplied [`SignalContext`].
-    /// The runtime-params map defaults to empty. For host-injected binding
-    /// resolution (font names, asset names, etc.) use
-    /// [`apply_with_runtime`](Self::apply_with_runtime).
-    pub fn apply_with_context<'a>(
-        &self,
-        target: &'a str,
-        progress: f64,
-        signal_ctx: &SignalContext,
-    ) -> Cow<'a, str> {
-        let params = ShaderRuntimeParams::new();
-        let ctx = TransformContext::new(signal_ctx, &params);
         let transformer = get_transformer(self);
         transformer.transform(target, progress, &ctx)
     }
@@ -673,7 +657,9 @@ impl ContentEffect {
 }
 ```
 
-**Bump the file's version to 2.0.0** (MINOR additive: new public method, plus internal signature change to the trait). Update the header CLOG accordingly.
+**Test-caller migration.** `crates/tui-vfx-content/tests/test_content_effect_apply.rs` is the only in-tree caller of `apply_with_context`. Replace each `effect.apply_with_context(target, progress, &signal_ctx)` with `effect.apply_with_runtime(target, progress, &signal_ctx, &ShaderRuntimeParams::new())`. Run the file's tests to confirm green.
+
+**Bump the file's version to 2.0.0** (MAJOR: `apply_with_context` removed; new `apply_with_runtime` added; internal signature change to the trait). Update the header CLOG accordingly.
 
 The doctests in this file (`apply` example at lines 32–41) do not call `.transform()` directly — they exercise `apply` — so they stay green automatically.
 
@@ -2195,35 +2181,35 @@ The v0.1.0 pre-review draft had several factual gaps and one architectural misfr
 
 8. **The v0.1.0 draft did not include shell-ready verification commands.** Each phase now ends with copy-pasteable `cargo` / `ofpf-*` / `just` commands plus expected output shape (test counts, exit codes).
 
-9. **The `apply_with_runtime` method is new in v1.0.0.** The v0.1.0 draft did not specify how the inherent `ContentEffect::apply_*` family extends to expose host-supplied runtime params. §A.6 adds `apply_with_runtime` as the third entry point — `apply` and `apply_with_context` keep their current ergonomics; `apply_with_runtime` is the host-injection path.
+9. **The `apply_with_runtime` method is new in v1.0.0; `apply_with_context` is removed in v1.3.0 per Q9 resolution.** The v0.1.0 draft did not specify how the inherent `ContentEffect::apply_*` family extends to expose host-supplied runtime params. §A.6 adds `apply_with_runtime` as the host-injection entry point and removes `apply_with_context` outright (one in-tree test caller migrates to `apply_with_runtime` in the same commit). The surface is now `apply` (default-context convenience) + `apply_with_runtime` (host-supplied signals + runtime params); no near-duplicate API.
 
 ---
 
-## 11. Open questions (needing human judgment)
+## 11. Open questions — all resolved as of v1.3.0
 
-These could not be closed from the codebase alone.
+All questions in this section were resolved by the leader on 2026-04-26. Resolutions are recorded inline below; the plan's body sections (§A.6, §A.7, §F.2, §F.6, etc.) reflect each resolution. This section is preserved as a decision log rather than as live questions.
 
-1. **Should `transform_with_cursor` migrate to `&TransformContext` (Option 1 in §A.7) or stay on `&SignalContext` and construct a `TransformContext` internally (Option 2)?** The plan picks Option 1 for consistency, but Option 2 minimizes blast radius (fewer callers to migrate). The Option-1 cost is small (3 test sites in compositor + 4–5 in `test_typewriter_transform_with_cursor.rs`); the consistency gain is durable. Confirm before A.7.
+1. ~~**Should `transform_with_cursor` migrate to `&TransformContext` (Option 1) or stay on `&SignalContext` (Option 2)?**~~ **Resolved: Option 1.** Consistency across the trait family is durable; the migration cost (3 compositor test sites + 4–5 sites in `test_typewriter_transform_with_cursor.rs`) is small. §A.7 already implements Option 1.
 
-2. **Should `apply_with_context` be deprecated in favor of `apply_with_runtime`?** Today's `apply_with_context` only takes `signal_ctx`; `apply_with_runtime` is strictly more capable. Keeping both is the conservative call (back-compat). Deprecating `apply_with_context` (with a `#[deprecated]` attribute pointing at `apply_with_runtime`) is the cleaner long-term call. The plan keeps both for now; flag if you want a deprecation in this slice.
+2. ~~**Should `apply_with_context` be deprecated in favor of `apply_with_runtime`?**~~ **Superseded — see Q9.**
 
-3. **Should the `FontRegistry` reference be plumbed through Odometer's builder?** §C.1 constructs a fresh `FontRegistry::new()` inside `roll_cycle`. This is correct functionally and not on the per-cell hot path, but it is per-`transform`-call. Plumbing a registry reference (held by the caller, e.g. the recipe player) eliminates that allocation. The plan defers this; flag if you want it in scope.
+3. ~~**Should the `FontRegistry` reference be plumbed through Odometer's builder?**~~ **Resolved: defer.** The fresh `FontRegistry::new()` inside `roll_cycle` is per-`transform`-call, not per-cell, and not on the 16.7ms-per-frame budget hot path. Functionally correct today; revisit only if a profile shows it.
 
-4. **Recipe `default` sentinel — `"default_font"` vs `"line-3x3"`?** §D.1's recipe migration uses `"default_font"` for `requires_bindings.drum_font.default`. The reserved sentinel routes through the registry's currently-registered default (line-3x3 in the shipping case). Using the literal `"line-3x3"` instead would be more explicit but couples the recipe to a specific font name. The plan picks the sentinel for forward-compatibility; flag if you prefer the literal.
+4. ~~**Recipe `default` sentinel — `"default_font"` vs `"line-3x3"`?**~~ **Resolved: keep the `"default_font"` sentinel.** Coupling recipes to a literal font name is the kind of decision that ages badly; the sentinel routes through the registry's currently-registered default and survives renames upstream.
 
-5. ~~**Phase F: `Mask::is_visible` parameter rename — keep `progress` or unify on `t`?**~~ **Resolved in v1.2.0: rename uniformly to `ctx.t`.** Verified there is no semantic distinction between `Mask::is_visible`'s `progress`, `Sampler::sample`'s `t`, and `Filter::apply`'s `t` — all three are the same animation clock. The bundle uses `t` because `VfxCellContext.t` is canonical. No `progress()` accessor added (would be API surface for zero benefit). Evidence that would have re-opened: a Mask impl that sourced `progress` from a different clock than the dispatcher's `t` — none exist (`rg "is_visible.*progress" --type rust` shows the dispatcher passes `t` directly).
+5. ~~**Phase F: `Mask::is_visible` parameter rename — keep `progress` or unify on `t`?**~~ **Resolved in v1.2.0: rename uniformly to `ctx.t`.** Verified there is no semantic distinction between `Mask::is_visible`'s `progress`, `Sampler::sample`'s `t`, and `Filter::apply`'s `t` — all three are the same animation clock. The bundle uses `t` because `VfxCellContext.t` is canonical.
 
-6. **Phase F: trait-version bump scheme.** `Filter` is at v3.0.0, `Sampler` at v2.0.0, **`Mask` at v1.0.0** (verified at v1.2.0 — Mask never carried explicit version-bump CLOG until now). Phase F bumps each by one major: Filter 3.0.0 → 4.0.0, Sampler 2.0.0 → 3.0.0, Mask 1.0.0 → 2.0.0. Evidence that would change this: a project decision to use SemVer minor instead of major for trait-shape changes, but the existing Filter/Sampler precedent argues for major.
+6. ~~**Phase F: trait-version bump scheme.**~~ **Resolved: Filter 3.0.0 → 4.0.0, Sampler 2.0.0 → 3.0.0, Mask 1.0.0 → 2.0.0.** Existing Filter/Sampler precedent established major bumps for trait-shape changes; Mask follows the family.
 
-7. **Phase F: should `ShaderContext` field-layout change be MAJOR or MINOR?** Current revision says MAJOR (struct field layout changed; struct-literal construction breaks). But `cls_shader_context.rs` is internal to `tui-vfx-style` and the only public way to construct is `ShaderContext::new(...)` (which is preserved). Evidence that would close as MINOR: zero in-tree struct-literal sites *and* a project policy that struct-literal external construction is not part of the public API. Without that policy in writing, MAJOR is the safe call.
+7. ~~**Phase F: should `ShaderContext` field-layout change be MAJOR or MINOR?**~~ **Resolved: MAJOR.** No project policy in writing that struct-literal external construction is non-public; safe call is MAJOR.
 
-8. **Phase F: should `screen_x` / `screen_y` plumbing through the layer dispatcher be in scope or follow-up?** Plan says follow-up — dispatchers default to `0` for now, preserving current behavior. Evidence that would put it in scope: a Mask/Sampler/Filter impl that needs absolute screen coords to render (e.g. a vignette pinned to the screen, not the layer). Verified: no such impl today. Defer.
+8. ~~**Phase F: should `screen_x` / `screen_y` plumbing through the layer dispatcher be in scope or follow-up?**~~ **Resolved: defer.** Zero impls need absolute screen coords today (verified). Pulling it into Phase F is YAGNI; dispatchers default to `0`, preserving current behavior.
 
-9. **Should `apply_with_context` (which only takes `signal_ctx`) be deprecated in favor of `apply_with_runtime`?** Verified at v1.2.0: `apply_with_context` has exactly **one** in-tree caller — `crates/tui-vfx-content/tests/test_content_effect_apply.rs`. Migrating that test to `apply_with_runtime` and adding `#[deprecated(since = "<version>", note = "use apply_with_runtime")]` to `apply_with_context` is one extra commit. Plan keeps both for now (back-compat); flag to add deprecation if you want one fewer near-duplicate API surface.
+9. ~~**Should `apply_with_context` (which only takes `signal_ctx`) be deprecated in favor of `apply_with_runtime`?**~~ **Resolved: remove `apply_with_context` outright in §A.6.** Only one in-tree caller — `crates/tui-vfx-content/tests/test_content_effect_apply.rs` — which migrates to `apply_with_runtime` in the same commit. A `#[deprecated]` shim would force every future reader to ask which entry point they want; the carry cost outweighs the back-compat value for a method with one caller.
 
-> **OPEN QUESTION (Pass 1 review):** **Is leaving `cls_shader_context.rs` at 463 LOC (well over the 200-LOC hard limit) acceptable for the duration of Phase F?** F.2 *reduces* the file by ~30 LOC (the four accessors moving to `VfxCellContext`), but the file remains far over budget. A clean split — extracting `Phase`-helper methods (`is_starting`, `is_active`, etc.) into a peer file — is mechanical but expands Phase F's blast radius. Suggested resolution: **defer the split to a dedicated follow-up packet** (file naming: `2026-04-XX_packet-shader-context-loc-split.md`), document the over-budget state in F.2's commit message, and add an entry in the buy-once sweep doc as a known-debt item. Evidence that would close: leader confirmation that "ship over-budget for the F-phase, fix in follow-up" is acceptable, vs "must split in F.2".
+> ~~**OPEN QUESTION (Pass 1 review): cls_shader_context.rs over the 200-LOC hard limit.**~~ **Resolved: drop. No action.** OFPF per-prefix LOC budgets are guidelines, not gates. F.2 reduces the file by ~30 LOC (accessors moving to `VfxCellContext`) — that is sufficient improvement. No follow-up split packet, no debt entry in the buy-once sweep.
 
-10. **What major-version bump should `cls_shader_context.rs` carry post-F.2?** Current is 1.3.0. The F.2 change moves field layout (`local_x` etc. now live on `cell: VfxCellContext`) and removes four inherent methods (covered by Deref). For internal types, MAJOR is appropriate. Suggested resolution: bump to 2.0.0 with the F.2 commit, named "F.2: compose VfxCellContext; remove cell-spatial accessors (now on VfxCellContext via Deref)". Evidence that would close: leader confirmation that 1.3.0 → 2.0.0 is the right bump (vs 1.4.0 if "internal-only" is the policy).
+10. ~~**What major-version bump should `cls_shader_context.rs` carry post-F.2?**~~ **Resolved: 1.3.0 → 2.0.0.** Field layout changes (`local_x` etc. move to `cell: VfxCellContext`) and four inherent methods are removed (Deref-routed instead). MAJOR is the honest call per OFPF.
 
 <!-- <FILE>docs/design/tui-vfx-transform-context-implementation-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.3.0</VERS> -->
