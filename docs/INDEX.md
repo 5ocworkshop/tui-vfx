@@ -1,16 +1,7 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.17.0</VERS> -->
-<!-- <WCTX>Add terminal water and fire shader plans to discoverable documentation indexes.</WCTX> -->
-<!-- <CLOG>1.17.0: add terminal fire/flame shader implementation plan pointer.
-1.16.0: add terminal water/ocean shader implementation plan pointer.
-1.15.0: add V3 per-cell motion plan and annotated schema draft pointers.
-1.14.0: add the root CAPABILITIES guide to the main docs navigation.
-1.13.0: add the V3 timing and metadata decision pointer for Q21/Q23 closure.
-1.12.0: add the V3 outstanding master list and first-class tooling hub pointers.
-1.11.0: add PIPELINE_TRACE_LLM_GUIDE.md, add tui-vfx-trace to the recipe-authoring ownership split, and keep the existing inspection-foundation references intact.
-1.10.0: add Unified inspection foundation subsection pointing at tui-vfx-debug::inspection and TRACE_EVENT_SCHEMA.md; update pipeline-probe + validator guide entries with cross-reference to the inspection surface.
-1.9.0: add Foundation primitives subsection naming the role-tagging primitives shipped in tui-vfx-types 0.6.0 for the recipe scene composer.
-1.8.0: add explicit recipe-authoring tool ownership split plus the debug-recipes QC surface.</CLOG> -->
+<!-- <VERS>VERSION: 1.18.0</VERS> -->
+<!-- <WCTX>Pipeline observability Unit A — point at the v0.2.0 spec, the five new TraceEvent variants, and the AssertingInspector test sink so debugging-from-the-CLI surfaces are discoverable.</WCTX> -->
+<!-- <CLOG>1.18.0: add pointer to the v0.2.0 pipeline-observability design spec and call out the new per-stage / scope-evidence TraceEvent variants + AssertingInspector landed in Unit A.</CLOG> -->
 
 # Documentation Index
 
@@ -76,7 +67,44 @@ that forwards compositor callbacks into any `InspectionSink` without
 disturbing existing direct implementors (`ProbeInspector`,
 `StageInspector`, `TraceInspector`).
 
-Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
+### Pipeline observability Unit A — per-stage and scope evidence
+
+Five new pipeline-stage variants extend `TraceEvent` so a
+"modified zero cells" diagnosis no longer requires source archaeology
+(the focused_row_btop case study, 2026-04-26):
+
+- **`StageEntered { kind, step_id, name, scope_summary }`** — one per
+  Sampler / Mask / Shader / Filter / Shadow stage application.
+- **`StageFinished { kind, step_id, cells_modified, elapsed_ns }`** —
+  matching post-application event.
+- **`StageSkipped { kind, step_id, reason }`** — replaces the
+  entered/finished pair when the stage skipped iteration. `reason` is a
+  `PipelineSkipReason` tagged union; `ScopeMatchedZeroCells` carries the
+  predicate string and the role histogram the predicate visited.
+- **`ScopeEvaluated { step_id, matched, skipped, role_histogram }`** —
+  one per stage application; `matched + skipped` equals area cell count.
+- **`RoleMapMaterialized { source, histogram }`** — one per render at
+  the moment the role map becomes available; `source` discriminator
+  distinguishes `Inferred` / `ExplicitFromProducer { producer }` /
+  `Injected` so two renders with different role-map sources can be
+  diffed cleanly.
+
+Helper types (`PipelineStageKind`, `PipelineSkipReason`, `RoleHistogram`,
+`RoleMapSource`) live in `tui-vfx-debug::inspection` next to
+`TraceEvent`. The `CompositorInspector` trait grows four matching
+callbacks (`on_stage_entered` / `on_stage_finished` / `on_stage_skipped`
+/ `on_scope_evaluated`) plus `on_role_map_materialized`, each with
+default empty bodies so existing impls compile unchanged.
+
+The `AssertingInspector` test sink (`tui-vfx-debug::inspection`) wraps
+forbidden-event predicates and panics on first match with a clear
+assertion message. The convenience constructor
+`AssertingInspector::forbid_zero_cell_scope_matches()` is the canonical
+guard for the focused_row_btop bug class — install it on a recipe that
+*should* fire its shader to mechanically refuse any future
+`ScopeMatchedZeroCells` skip.
+
+Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-observability.md) (v0.2.0). Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 
 ## V3 orientation
 
@@ -131,4 +159,4 @@ Full schema reference: [TRACE_EVENT_SCHEMA.md](TRACE_EVENT_SCHEMA.md).
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.16.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.18.0</VERS> -->

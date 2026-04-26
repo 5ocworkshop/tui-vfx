@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.2.0</VERS>
-// <WCTX>Share shadow composite-mode helpers with grid-first V3 snapshot adapters instead of keeping glyph-overlay blending private to the orchestrator.</WCTX>
-// <CLOG>12.2.0: move glyph-overlay blending to a shared public helper while keeping render_pipeline_with_shadow dispatch behavior unchanged.</CLOG>
+// <VERS>VERSION: 12.3.0</VERS>
+// <WCTX>Pipeline observability Unit A — wrap the cell loop in render_loop_inspected with per-stage StageEntered/ScopeEvaluated/StageSkipped/StageFinished + RoleMapMaterialized emission via the new orc_pipeline_observability helpers, so the focused_row_btop scope-mismatch class shows up on the event stream.</WCTX>
+// <CLOG>12.3.0: emit per-stage observability events around the inspected cell loop — RoleMapMaterialized at entry, per-shader scope tally + StageEntered/ScopeEvaluated/StageSkipped at pre-loop, simple StageEntered/Finished pair for samplers/masks/filters/shadow.</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
 use super::cls_composition_playback_timing::CompositionPlaybackTiming;
@@ -15,7 +15,12 @@ use super::fnc_blend_shadow_cell::blend_shadow_cell;
 use super::fnc_blend_underlying_shadow_cell::blend_underlying_shadow_cell;
 use super::fnc_check_masks::check_prepared_masks;
 use super::fnc_grade_shadow_cell::grade_shadow_cell;
+use super::orc_pipeline_observability::{
+    SimpleStageState, emit_role_map_materialized, emit_shader_entered_or_skipped,
+    emit_shader_finished, emit_simple_stage_entered, emit_simple_stage_finished,
+};
 use crate::traits::pipeline_inspector::CompositorInspector;
+use tui_vfx_debug::inspection::PipelineStageKind;
 use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
 use std::borrow::Cow;
@@ -243,7 +248,7 @@ fn render_pipeline_with_shadow(
     offset_x: usize,
     offset_y: usize,
     options: CompositionOptions<'_>,
-    inspector: Option<&mut dyn CompositorInspector>,
+    mut inspector: Option<&mut dyn CompositorInspector>,
 ) {
     // Extract shadow spec (caller guarantees it's Some)
     let shadow_spec = options.shadow.as_ref().expect("shadow_spec must be Some");
@@ -281,6 +286,29 @@ fn render_pipeline_with_shadow(
     let mut buffer_guard = GridPool::checkout(ext_width, ext_height);
     let mut shadow_only_guard = GridPool::checkout(ext_width, ext_height);
 
+    // ── Pipeline observability Unit A — Shadow stage emit pair ──────────
+    // When an inspector is installed, emit RoleMapMaterialized at function
+    // entry (the role map is the source role map for this render) and
+    // bracket the actual shadow generation with a per-stage entered/
+    // finished pair. step_id=1 because this is the first stage of the
+    // shadow-mode pipeline; element-pass stages emitted from the inner
+    // render loop later in this function carry their own step_ids.
+    let shadow_stage_state = if let Some(insp) = inspector.as_deref_mut() {
+        emit_role_map_materialized(insp, source_roles, width as u16, height as u16);
+        Some(emit_simple_stage_entered(
+            insp,
+            PipelineStageKind::Shadow,
+            1,
+            "Shadow",
+            source_roles,
+            width as u16,
+            height as u16,
+        ))
+    } else {
+        None
+    };
+    // ────────────────────────────────────────────────────────────────────
+
     // Render shadow to buffer (uses animation progress for fade sync).
     // Phase A.3: if `config.source_region` is set, the shadow stage
     // computes the role-filtered envelope's bounding rect and extrudes
@@ -291,6 +319,13 @@ fn render_pipeline_with_shadow(
         effective_shadow_rect(source, source_roles, element_rect, &shadow_spec.config);
     if let Some(rect) = effective_shadow_rect {
         render_shadow(buffer_guard.as_mut(), rect, &shadow_spec.config, options.t);
+    }
+
+    // Emit Shadow StageFinished now that the shadow buffer is complete;
+    // downstream element-pass per-cell shadow callbacks (on_shadow_cell_applied)
+    // continue to fire as today.
+    if let (Some(insp), Some(state)) = (inspector.as_deref_mut(), shadow_stage_state.as_ref()) {
+        emit_simple_stage_finished(insp, state);
     }
 
     // Snapshot the post-shadow grid into the second buffer so the element
@@ -803,6 +838,83 @@ fn render_loop_inspected(
         .map(|layer| layer.region.resolved(&options.runtime_params))
         .collect();
 
+    // ── Pipeline observability Unit A — pre-loop emit ───────────────────
+    // Emit RoleMapMaterialized first, then per-stage StageEntered /
+    // ScopeEvaluated for every stage instance. Shaders that match zero
+    // cells emit StageSkipped immediately and are flagged in
+    // `skipped_shader_indices` so apply_shaders_inspected skips them.
+    emit_role_map_materialized(inspector, source_roles, w16, h16);
+
+    let mut next_step_id: u32 = 1;
+    let mut simple_states: Vec<SimpleStageState> = Vec::new();
+
+    if let Some(label) = sampler_label {
+        let state = emit_simple_stage_entered(
+            inspector,
+            PipelineStageKind::Sampler,
+            next_step_id,
+            label,
+            source_roles,
+            w16,
+            h16,
+        );
+        next_step_id += 1;
+        simple_states.push(state);
+    }
+    for (mask_index, mask) in prepared_masks.iter().enumerate() {
+        let label = format!("{}#{}", mask.name(), mask_index + 1);
+        let state = emit_simple_stage_entered(
+            inspector,
+            PipelineStageKind::Mask,
+            next_step_id,
+            &label,
+            source_roles,
+            w16,
+            h16,
+        );
+        next_step_id += 1;
+        simple_states.push(state);
+    }
+    let mut shader_states = Vec::with_capacity(options.shader_layers.len());
+    let mut skipped_shader_indices: Vec<usize> = Vec::new();
+    for (shader_index, (layer, resolved)) in options
+        .shader_layers
+        .iter()
+        .zip(resolved_regions.iter())
+        .enumerate()
+    {
+        let state = emit_shader_entered_or_skipped(
+            inspector,
+            next_step_id,
+            layer,
+            resolved.as_ref(),
+            source_roles,
+            w16,
+            h16,
+            shader_index,
+        );
+        next_step_id += 1;
+        if state.skipped {
+            skipped_shader_indices.push(shader_index);
+        }
+        shader_states.push(state);
+    }
+    for (filter_index, filter) in prepared_filters.iter().enumerate() {
+        let label = format!("{}#{}", filter.name(), filter_index + 1);
+        let state = emit_simple_stage_entered(
+            inspector,
+            PipelineStageKind::Filter,
+            next_step_id,
+            &label,
+            source_roles,
+            w16,
+            h16,
+        );
+        next_step_id += 1;
+        simple_states.push(state);
+    }
+    // ────────────────────────────────────────────────────────────────────
+
     for y in 0..height {
         for x in 0..width {
             let (local_x, local_y) = (x as u16, y as u16);
@@ -863,6 +975,7 @@ fn render_loop_inspected(
                 inspector,
                 source_role,
                 &roles_arc,
+                &skipped_shader_indices,
             );
 
             // Apply filters with inspector
@@ -881,6 +994,17 @@ fn render_loop_inspected(
             inspector.on_cell_rendered(local_x, local_y, &out_cell);
             dest.set(offset_x + x, offset_y + y, out_cell);
         }
+    }
+
+    // ── Pipeline observability Unit A — post-loop emit ──────────────────
+    // Emit StageFinished for every non-skipped stage. Order does not matter
+    // (consumers join on step_id) but for tape readability we emit in
+    // the same order stages were entered.
+    for state in &simple_states {
+        emit_simple_stage_finished(inspector, state);
+    }
+    for state in &shader_states {
+        emit_shader_finished(inspector, state);
     }
 }
 
@@ -948,6 +1072,12 @@ fn apply_shaders(
 }
 
 /// Apply shader layers to a cell with inspector callbacks.
+///
+/// `skipped_shader_indices` lists shaders whose pre-loop scope tally
+/// returned matched=0 (StageSkipped already emitted by
+/// `emit_shader_entered_or_skipped`). Those shaders are silently bypassed
+/// in the cell loop so per-cell `on_shader_applied` events do not fire
+/// for a stage already marked skipped on the trace.
 #[allow(clippy::too_many_arguments)]
 fn apply_shaders_inspected(
     out_cell: &mut tui_vfx_types::Cell,
@@ -964,6 +1094,7 @@ fn apply_shaders_inspected(
     inspector: &mut dyn CompositorInspector,
     source_role: Option<tui_vfx_types::RoleTag>,
     roles_arc: &Arc<RoleMap>,
+    skipped_shader_indices: &[usize],
 ) {
     for (shader_index, (layer, resolved)) in options
         .shader_layers
@@ -971,6 +1102,9 @@ fn apply_shaders_inspected(
         .zip(resolved_regions.iter())
         .enumerate()
     {
+        if skipped_shader_indices.contains(&shader_index) {
+            continue;
+        }
         if resolved.should_style(local_x, local_y, source_role.clone(), shader_area) {
             let (ctx_x, ctx_y, ctx_w, ctx_h) = resolved
                 .to_local_coords(local_x, local_y)
@@ -1011,4 +1145,4 @@ fn apply_shaders_inspected(
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>END OF VERSION: 12.2.0</VERS>
+// <VERS>END OF VERSION: 12.3.0</VERS>

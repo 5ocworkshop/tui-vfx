@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-debug/src/inspection/mod.rs</FILE> - <DESC>Inspection module root for the unified trace pipeline</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Sub-plan A Phase A.4 — inspection module root. tui-vfx-debug becomes logger + unified inspection foundation per spec §9.1. Re-exports the public surface: StageMask, TraceEvent, TraceEnvelope, TraceSelector, TraceFilter, InspectionSink, TraceSink, TraceReport, TraceReportSummary, TraceFrameContext, and TraceEmitter.</WCTX>
-// <CLOG>0.2.0: add TraceFrameContext + TraceEmitter so seq_in_frame stamping is centralized for cross-repo emit sites.
-// 0.1.0: initial module tree with OFPF cls_* files for each primitive; re-exports at module root.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Pipeline observability Unit A — add per-stage and scope-evidence helpers (PipelineStageKind, PipelineSkipReason, RoleHistogram, RoleMapSource) so the focused_row_btop bug class is mechanically detectable from the event stream.</WCTX>
+// <CLOG>0.3.0: add PipelineStageKind / PipelineSkipReason / RoleHistogram / RoleMapSource helper types and AssertingInspector test sink + re-exports for the new TraceEvent variants landing in cls_trace_event.rs 0.2.0.</CLOG>
 
 //! Unified inspection foundation for the recipe scene composer.
 //!
@@ -48,7 +47,12 @@
 //! });
 //! ```
 
+mod cls_asserting_inspector;
 mod cls_inspection_sink;
+mod cls_pipeline_skip_reason;
+mod cls_pipeline_stage_kind;
+mod cls_role_histogram;
+mod cls_role_map_source;
 mod cls_stage_mask;
 mod cls_trace_emitter;
 mod cls_trace_envelope;
@@ -58,7 +62,12 @@ mod cls_trace_report;
 mod cls_trace_selector;
 mod cls_trace_sink;
 
+pub use cls_asserting_inspector::{AssertingInspector, ForbidRule};
 pub use cls_inspection_sink::InspectionSink;
+pub use cls_pipeline_skip_reason::PipelineSkipReason;
+pub use cls_pipeline_stage_kind::PipelineStageKind;
+pub use cls_role_histogram::RoleHistogram;
+pub use cls_role_map_source::RoleMapSource;
 pub use cls_stage_mask::StageMask;
 pub use cls_trace_emitter::{TraceEmitter, TraceFrameContext};
 pub use cls_trace_envelope::TraceEnvelope;
@@ -69,4 +78,4 @@ pub use cls_trace_selector::TraceSelector;
 pub use cls_trace_sink::TraceSink;
 
 // <FILE>crates/tui-vfx-debug/src/inspection/mod.rs</FILE> - <DESC>Inspection module root</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

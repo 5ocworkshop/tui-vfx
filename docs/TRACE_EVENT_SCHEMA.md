@@ -1,8 +1,7 @@
-<!-- <FILE>docs/TRACE_EVENT_SCHEMA.md</FILE> - <DESC>Canonical schema reference for TraceEvent + TraceEnvelope shipped in tui-vfx-debug::inspection (since 0.9.0)</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Sub-plan B Phase B.5 — sync the schema reference with the concrete recipes-side emit-site paths now that lifecycle, resolution, and composition events are wired through their B.5 helpers.</WCTX> -->
-<!-- <CLOG>0.2.0: document TraceFrameContext + TraceEmitter as the shared stamping authority for TraceEnvelope emission across bridge/composer emit sites.
-0.1.0: initial AI-consumption schema reference covering all 18 TraceEvent variants across the four stages (lifecycle / resolution / composition / pipeline), envelope fields, stage mask semantics, NDJSON format, determinism.</CLOG> -->
+<!-- <FILE>docs/TRACE_EVENT_SCHEMA.md</FILE> - <DESC>Canonical schema reference for TraceEvent + TraceEnvelope shipped in tui-vfx-debug::inspection</DESC> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Pipeline observability Unit A — document the five new pipeline variants (StageEntered/StageFinished/StageSkipped/ScopeEvaluated/RoleMapMaterialized) and the four supporting helper types (PipelineStageKind/PipelineSkipReason/RoleHistogram/RoleMapSource).</WCTX>
+<!-- <CLOG>0.4.0: extend §5 with the per-stage and scope-evidence variants; add §5A documenting the helper types; bump §9 versioning entry for the per-stage extension.</CLOG> -->
 
 # TraceEvent Schema — `tui-vfx-debug::inspection` (since 0.9.0)
 
@@ -242,6 +241,99 @@ Source: `tui-vfx-compositor` per-cell pipeline. Reaches the inspection sink via 
 | `y` | `u16` | Cell y. |
 | `final_cell` | `Cell` | Final cell written to the destination surface. |
 
+### `StageEntered { kind, step_id, name, scope_summary }` (Pipeline observability Unit A)
+
+Emitted once at the start of every Sampler / Mask / Shader / Filter / Shadow stage application. Paired with `StageFinished` (or replaced by `StageSkipped` when the stage skips iteration).
+
+| Field | Type | Description |
+|---|---|---|
+| `kind` | `PipelineStageKind` | Stage discriminator (`Sampler`, `Mask`, `Shader`, `Filter`, `Shadow`). |
+| `step_id` | `u32` | 1-based per-render stage counter; the join key for inspector queries. |
+| `name` | `String` | Stage display name (e.g. `"FocusedRowGradient"`, `"FadeIn"`). |
+| `scope_summary` | `String` | Closed-vocabulary scope predicate summary (e.g. `"Role(Text)"`, `"All"`, `"RowRange"`). Empty string if the stage has no per-stage scope predicate. |
+
+### `StageFinished { kind, step_id, cells_modified, elapsed_ns }` (Unit A)
+
+Pairs with the matching `StageEntered` (same `kind` + `step_id`).
+
+| Field | Type | Description |
+|---|---|---|
+| `kind` | `PipelineStageKind` | Stage discriminator. |
+| `step_id` | `u32` | 1-based per-render stage counter. |
+| `cells_modified` | `u32` | **Upper bound on cells the stage modified** (pre-loop scope-tally match count for shaders; `area_total` for Sampler / Mask / Filter / Shadow stages). Over-counts when a sampler returns `None` or a mask culls visibility. A future enrichment will thread the actual per-cell mutation count from the loop. |
+| `elapsed_ns` | `u64` | Wall-clock duration of the stage application in nanoseconds. |
+
+### `StageSkipped { kind, step_id, reason }` (Unit A)
+
+Replaces the `StageEntered` / `StageFinished` pair when the stage was skipped without iterating cells. The `reason` discriminator carries the data needed to reproduce the decision.
+
+| Field | Type | Description |
+|---|---|---|
+| `kind` | `PipelineStageKind` | Stage discriminator. |
+| `step_id` | `u32` | 1-based per-render stage counter. |
+| `reason` | `PipelineSkipReason` | Tagged-union reason — see §5A. |
+
+### `ScopeEvaluated { step_id, matched, skipped, role_histogram }` (Unit A)
+
+Emitted once per stage application with the scope predicate evaluation summary. Sum of `matched + skipped` equals the number of cells in the stage's effective area.
+
+| Field | Type | Description |
+|---|---|---|
+| `step_id` | `u32` | 1-based per-render stage counter (matches the surrounding `StageEntered` / `StageFinished`). |
+| `matched` | `u32` | Cells the predicate matched. |
+| `skipped` | `u32` | Cells the predicate skipped. |
+| `role_histogram` | `RoleHistogram` | Per-role cell counts the predicate visited — see §5A. |
+
+### `RoleMapMaterialized { source, histogram }` (Unit A)
+
+Emitted once per render at the moment the role map becomes available to the pipeline. The `source` discriminator distinguishes geometric inference from explicit producer-tagged roles vs externally injected roles — load-bearing for diagnosing the focused_row_btop bug class without source archaeology.
+
+| Field | Type | Description |
+|---|---|---|
+| `source` | `RoleMapSource` | Where the role map came from — see §5A. Unit A always emits `Injected`; gt-design upgrades to `ExplicitFromProducer { producer }` in Unit B. |
+| `histogram` | `RoleHistogram` | Per-role cell counts in the materialized map. |
+
+## 5A. Pipeline observability helper types (Unit A)
+
+### `PipelineStageKind` (enum)
+
+| Variant | Description |
+|---|---|
+| `Sampler` | Coordinate sampler — transforms destination cell coords to source coords. |
+| `Mask` | Visibility mask — gates whether downstream stages affect a cell. |
+| `Shader` | Style shader — produces a new style for cells in scope. |
+| `Filter` | Cell filter — mutates cell content/style in place. |
+| `Shadow` | Shadow stage — produces shadow-region cells before final blend. |
+
+### `PipelineSkipReason` (tagged union)
+
+| Variant | Payload | Meaning |
+|---|---|---|
+| `EmptyArea` | — | Stage's effective area is empty (zero width or height). |
+| `ScopeMatchedZeroCells` | `{ predicate: String, role_histogram: RoleHistogram }` | Scope predicate matched zero cells. The load-bearing variant for the focused_row_btop case study. |
+| `DisabledByPolicy` | `{ policy: String }` | Stage was disabled by a runtime policy (feature flag / per-recipe disable). |
+| `BudgetExceeded` | `{ budget_ns: u64 }` | Stage exceeded its per-stage time budget. |
+
+### `RoleHistogram` (struct)
+
+Five per-role cell counts. All fields default to `0` on deserialization (forward-compat). Sum across fields ≤ visited cells (roles outside the five buckets — `Title`, `Caption`, `Image`, `Icon`, `Shadow`, `Decoration`, `Procedural`, `Custom` — are not counted today; future enrichment driven by investigation).
+
+| Field | Type | Description |
+|---|---|---|
+| `background` | `u32` | Cells tagged `RoleTag::Background`. |
+| `text` | `u32` | Cells tagged `RoleTag::Text`. |
+| `border` | `u32` | Cells tagged `RoleTag::Border`. |
+| `indicator` | `u32` | Cells tagged `RoleTag::Indicator`. |
+| `highlight` | `u32` | Cells tagged `RoleTag::Highlight`. |
+
+### `RoleMapSource` (tagged union)
+
+| Variant | Payload | Meaning |
+|---|---|---|
+| `Inferred` | — | Roles inferred geometrically (e.g. `infer_source_roles`). |
+| `ExplicitFromProducer` | `{ producer: String }` | Roles supplied by an upstream producer (e.g. a gt-design widget). The `producer` field carries the widget identity so a consumer can identify the source without a side lookup. |
+| `Injected` | — | Roles injected externally (test harness, CLI override, replay from tape). |
+
 ## 6. Selectors — `TraceSelector`
 
 Declarative predicate combined by OR inside `TraceFilter`. Each selector matches against the envelope's wrapped event.
@@ -283,7 +375,8 @@ Per spec §9.6:
 ## 9. Versioning
 
 - **0.9.0 (Sub-plan A Phase A.4):** initial schema — 18 variants across 4 stages; envelope with `seq_in_frame`.
+- **Pipeline observability Unit A (cls_trace_event 0.2.0):** add five Pipeline variants — `StageEntered`, `StageFinished`, `StageSkipped`, `ScopeEvaluated`, `RoleMapMaterialized` — plus four helper types (`PipelineStageKind`, `PipelineSkipReason`, `RoleHistogram`, `RoleMapSource`) and the `AssertingInspector` test sink (`forbid_zero_cell_scope_matches()` convenience constructor).
 - Future additive variants must preserve `#[non_exhaustive]` so client code using wildcard arms continues to compile.
 
 <!-- <FILE>docs/TRACE_EVENT_SCHEMA.md</FILE> - <DESC>Canonical schema reference for TraceEvent + TraceEnvelope</DESC> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->

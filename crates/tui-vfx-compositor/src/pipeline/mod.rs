@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/mod.rs</FILE> - <DESC>Pipeline module</DESC>
-// <VERS>VERSION: 7.7.0</VERS>
-// <WCTX>Grid-first V3 snapshot composition needs public access to shadow composite-mode helpers.</WCTX>
-// <CLOG>7.7.0: export blend_underlying_shadow_cell for glyph-preserving alpha shadow composition.</CLOG>
+// <VERS>VERSION: 7.8.0</VERS>
+// <WCTX>Pipeline observability Unit A — declare orc_pipeline_observability submodule that holds the per-stage emit helpers used by render_loop_inspected.</WCTX>
+// <CLOG>7.8.0: declare orc_pipeline_observability module for the new per-stage TraceEvent emit helpers.</CLOG>
 
 pub mod cls_composition_options;
 pub mod cls_composition_playback_timing;
@@ -19,6 +19,7 @@ pub mod fnc_check_masks;
 pub mod fnc_grade_shadow_cell;
 pub mod fnc_render_pipeline_with_spec;
 pub mod fnc_render_pipeline_with_spec_area;
+mod orc_pipeline_observability;
 pub mod orc_render_pipeline;
 
 pub use crate::types::ShadowSpec;
@@ -36,4 +37,4 @@ pub use fnc_render_pipeline_with_spec_area::render_pipeline_with_spec_area;
 pub use orc_render_pipeline::{render_pipeline, render_pipeline_with_area};
 
 // <FILE>tui-vfx-compositor/src/pipeline/mod.rs</FILE> - <DESC>Pipeline module</DESC>
-// <VERS>END OF VERSION: 7.7.0</VERS>
+// <VERS>END OF VERSION: 7.8.0</VERS>

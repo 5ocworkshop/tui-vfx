@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compositor/src/traits/cls_inspection_sink_bridge.rs</FILE> - <DESC>Bridge from CompositorInspector callbacks to tui-vfx-debug InspectionSink TraceEvents</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Sub-plan B Phase B.1 — replace the bridge-local seq_in_frame counter with tui-vfx-debug::inspection::TraceEmitter so every borrower in a frame shares one stamping authority while preserving the existing public bridge API.</WCTX>
-// <CLOG>0.2.0: delegate envelope stamping to TraceEmitter; re-export TraceFrameContext from tui-vfx-debug; keep begin_frame/context/sink public API stable while removing duplicate seq authority.\n// 0.1.0: initial InspectionSinkBridge + TraceFrameContext. accepts_any_stage short-circuits every callback before envelope construction so the all-stages-off configuration has zero allocation cost.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Pipeline observability Unit A — forward the four new per-stage CompositorInspector callbacks (on_stage_entered/on_stage_finished/on_stage_skipped/on_scope_evaluated) onto the inspection bus as the matching TraceEvent variants, reusing the existing pipeline_stage_enabled fast-path.</WCTX>
+// <CLOG>0.3.0: forward on_stage_entered/on_stage_finished/on_stage_skipped/on_scope_evaluated to TraceEvent::StageEntered/StageFinished/StageSkipped/ScopeEvaluated through the existing self.emit() path.</CLOG>
 
 //! Bridge from [`CompositorInspector`] callbacks to the unified
 //! [`InspectionSink`] (in `tui-vfx-debug`).
@@ -34,7 +34,10 @@
 
 use std::sync::Arc;
 
-use tui_vfx_debug::inspection::{InspectionSink, StageMask, TraceEmitter, TraceEvent, TraceSink};
+use tui_vfx_debug::inspection::{
+    InspectionSink, PipelineSkipReason, PipelineStageKind, RoleHistogram, RoleMapSource, StageMask,
+    TraceEmitter, TraceEvent, TraceSink,
+};
 use tui_vfx_types::{Cell, Style};
 
 use super::pipeline_inspector::CompositorInspector;
@@ -193,7 +196,69 @@ impl CompositorInspector for InspectionSinkBridge {
             final_cell: *final_cell,
         });
     }
+
+    fn on_stage_entered(
+        &mut self,
+        kind: PipelineStageKind,
+        step_id: u32,
+        name: &str,
+        scope_summary: &str,
+    ) {
+        self.emit(TraceEvent::StageEntered {
+            kind,
+            step_id,
+            name: name.to_string(),
+            scope_summary: scope_summary.to_string(),
+        });
+    }
+
+    fn on_stage_finished(
+        &mut self,
+        kind: PipelineStageKind,
+        step_id: u32,
+        cells_modified: u32,
+        elapsed_ns: u64,
+    ) {
+        self.emit(TraceEvent::StageFinished {
+            kind,
+            step_id,
+            cells_modified,
+            elapsed_ns,
+        });
+    }
+
+    fn on_stage_skipped(
+        &mut self,
+        kind: PipelineStageKind,
+        step_id: u32,
+        reason: PipelineSkipReason,
+    ) {
+        self.emit(TraceEvent::StageSkipped {
+            kind,
+            step_id,
+            reason,
+        });
+    }
+
+    fn on_scope_evaluated(
+        &mut self,
+        step_id: u32,
+        matched: u32,
+        skipped: u32,
+        role_histogram: RoleHistogram,
+    ) {
+        self.emit(TraceEvent::ScopeEvaluated {
+            step_id,
+            matched,
+            skipped,
+            role_histogram,
+        });
+    }
+
+    fn on_role_map_materialized(&mut self, source: RoleMapSource, histogram: RoleHistogram) {
+        self.emit(TraceEvent::RoleMapMaterialized { source, histogram });
+    }
 }
 
 // <FILE>crates/tui-vfx-compositor/src/traits/cls_inspection_sink_bridge.rs</FILE> - <DESC>InspectionSinkBridge</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>
