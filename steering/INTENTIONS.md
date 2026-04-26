@@ -1,7 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.5.7</VERS> -->
-<!-- <WCTX>Keep durable steering guidance focused on architectural boundaries, canonical vocabulary, authoring ergonomics, index hygiene, debug-recipe quality, schema-language consistency, architecture-first onboarding, and commit-message provenance policy.</WCTX> -->
-<!-- <CLOG>0.5.7: prohibit co-author credit trailers or agent-credit lines in commit messages. 0.5.6: add comparison guardrail so architecture-first positioning does not erase effects-pipeline competitiveness.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.8</VERS> -->
+<!-- <WCTX>Lock the Line 3x3 glyph table as the default and fallback font so recipes survive font drift without blank-screen failures.</WCTX> -->
+<!-- <CLOG>0.5.8: add Intention 36 establishing Line 3x3 as default/fallback font with one canonical home in tui-vfx-content; runtime falls back with a trace warning, validator may reject in strict mode.</CLOG> -->
 
 # Intentions
 
@@ -610,7 +610,57 @@ to the scene graph, composition model, clock, recipe runtime, and flagship
 recipes first. That is the map needed to use V3 seriously.
 
 
+## 36. The 3x3 line glyph table is the default and fallback font
+
+The canonical heavy-weight Line 3x3 glyph table (a fixed-cell ASCII/box-drawing
+font covering space, digits, A–Z, common punctuation, currency, and a small
+operator set) is tui-vfx's default font and the runtime fallback when a recipe-
+declared font cannot be located. The table lives at
+`tui-vfx-content/src/fonts/col_line_3x3_heavy_glyphs.rs` and is mirrored
+byte-for-byte from gt-design's `gtd-components` so the family agrees on which
+strokes draw which glyph.
+
+Rules:
+
+1. **Default when none declared.** Recipes that exercise typography (Odometer
+   3x3 digit drums, font-rendered marquees, Solari-style multi-cell flap
+   stacks) without an explicit font selection render through the Line 3x3
+   table.
+2. **Fallback when declared font is missing.** When a recipe names a font that
+   the loader cannot resolve (filesystem miss, wrong path, asset not embedded),
+   the runtime emits one warning to the trace surface and renders through the
+   Line 3x3 table instead of failing the recipe outright.
+3. **Strict mode is a validator concern.** The recipe validator (in
+   `tui-vfx-recipes`) MAY reject missing-font recipes at load time when run in
+   strict mode. The runtime fallback is for resilience; strictness lives one
+   level up.
+4. **Cell shape is fixed.** Line 3x3 is exactly 3 cells wide and 3 cells tall.
+   Recipes that author against a different cell shape (e.g., 20-row braille
+   faces) and lose their declared font will visibly degrade — a tile spec of
+   `tile_width: 5, tile_height: 8` will render Line 3x3 glyphs padded into
+   the larger tile rather than scaled. This is deliberate: silent rescaling
+   would hide the asset miss.
+5. **One canonical home.** The glyph table lives once in
+   `tui-vfx-content/src/fonts/`. Other crates (recipes, debug, probe, examples)
+   import from there rather than duplicating the table. Consolidating later
+   into a sibling `tui-vfx-fonts` crate is a possible future refactor; doing
+   it now is premature (only one consumer).
+6. **Authoring helper exposed publicly.** A small public helper that maps
+   `(char, weight) → [&str; 3]` lives alongside the table so AI authors and
+   recipe-tooling code can synthesize multi-line glyph strings programmatically
+   without reaching into internals.
+
+Why: a recipe library at scale (500+ recipes, AI-authored extensions) must
+survive font drift. Treating the canonical Line 3x3 face as the default removes
+a class of "blank screen on missing asset" recipe failures, normalizes the
+authoring experience for typography effects, and keeps tui-vfx renderable
+without external font assets at all. Per Principle 5 (meaning lives low,
+policy lives high): the canonical glyph table is meaning; "should we reject
+the recipe instead of falling back" is policy and lives at the validator
+boundary.
+
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.7</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.8</VERS> -->

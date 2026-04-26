@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>Phase 1 mechanical helpers for private grid-first content transformers.</WCTX>
-// <CLOG>0.7.0: register private mechanical helpers for Odometer tile roll.</CLOG>
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>Phase 5 of mechanical circular content cycles plan: register the public fonts module hosting the canonical Line 3x3 face (Intention 36).</WCTX>
+// <CLOG>0.8.0: register pub mod fonts; first inhabitants are the Line 3x3 heavy glyph table and the public lookup helpers.</CLOG>
 
 //! # TUI VFX Content
 //!
@@ -101,6 +101,7 @@
 
 pub mod cell_motion;
 pub mod cursor;
+pub mod fonts;
 pub mod glyph_particles;
 mod mechanical;
 pub mod pool;
@@ -112,4 +113,4 @@ pub mod types;
 pub mod utils;
 
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>
