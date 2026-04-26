@@ -1,13 +1,14 @@
 <!-- <FILE>docs/design/tui-vfx-binding-loopback.md</FILE> - <DESC>Design proposal: binding loopback — recipe-author-declared fallback values for runtime-bound parameters so debug/preview contexts can play recipes that production hosts would normally drive externally</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
 <!-- L1+L2 shipped — see implementation pointers in the status banner below. Authoring shape reconciled with the existing root-level `requires_bindings` block; all five BindingKinds (U16/F32/Bool/String/Color) ship in L2; Intention 37 supersedes the "loopback is optional, omit when production-only" guidance — every declaration MUST yield an effective loopback at the strict-contracts gate. -->
 <!-- <WCTX>Pull the `extends`-based tiered base recipes proposal out of the design — for the demo-recipe use case the indirection cost outweighs the DRY win, and dropping it removes the deep-merge-vs-replace open question entirely. Replace the `⚠` glyph in the badge spec with a Nerd Font primary + ASCII fallback decision since the emoji-presentation `⚠` formats inconsistently next to monospace text.</WCTX>
 <!-- <CLOG>Demote section 10 (tiered base recipes via extends) to a one-paragraph "Considered alternatives" note with the reasoning preserved so future-me doesn't reinvent it. Update badge glyph spec to Nerd Font `nf-fa-warning` () primary with ASCII `!` fallback, configurable via LoopbackBadgeStyle; drop emoji-presentation `⚠`.</CLOG> -->
 
 # Binding Loopback
 
-> **Status:** L1 + L2 shipped (2026-04-26). L3 (visibility badge), L4
-> (strictness modes), and L5 (probe + browser + demo recipes) remain.
+> **Status:** L1–L5 shipped (2026-04-26). The full design is in
+> production code; the implementation pointers below are the canonical
+> entry points.
 >
 > **Implementation pointers** for the L1+L2 surface:
 >
@@ -26,6 +27,46 @@
 >   (V3 → L1 lowering) and the `with_loopback_applied` method on
 >   `CompiledV3RuntimeOverrides` (per-frame merge before the engine sees
 >   `runtime_params`).
+>
+> **Implementation pointers** for L3 / L4 / L5:
+>
+> - **L3 visibility badge (badge-as-recipe per Intention 39)**:
+>   `recipes/internal/loopback_badge.json` is a normal V3 recipe inlined
+>   via `include_str!` into the engine binary;
+>   `tui-vfx-recipes/src/loopback/fnc_loopback_badge_plan.rs` parses +
+>   compiles it once and caches via `OnceLock`;
+>   `tui-vfx-recipes/src/loopback/fnc_apply_loopback_badge.rs` renders
+>   the badge plan through the standard area-render path and composites
+>   the resulting cells onto the host scene's final grid. The badge
+>   recipe owns positioning via its own `layout.anchor` — the apply fn
+>   doesn't hardcode "top-right". The recycled first-attempt
+>   cell-painter overlay lives under
+>   `tui-vfx/recyclebin/crates/tui-vfx-compositor/src/overlays/` as the
+>   historical record of what Intention 39 superseded.
+> - **L4 strictness modes**:
+>   `tui-vfx-recipes/src/loopback/enum_loopback_strictness.rs` defines
+>   `LoopbackStrictness { Permissive, Warn, Strict, Error }` (Permissive
+>   default). `CompiledV3RuntimeOverrides::with_loopback_strictness`
+>   builds the override; `with_loopback_applied` honors it; Strict
+>   suppresses the merge but still surfaces the badge via
+>   `would_have_fired_keys`; Error escalates to
+>   `RenderCompiledPlanError::MissingHostBindingsInErrorMode` so CI /
+>   pre-deploy gates fail when host wiring is incomplete.
+> - **L5 browser + probe surface**:
+>   `tui-vfx-recipes/src/v3/compile/fnc_bindings_summary.rs` exposes
+>   `bindings_summary(contracts) -> Vec<BindingSummaryEntry>` so
+>   downstream players, browsers, and probes can list a recipe's
+>   binding contract without re-parsing `V3BindingDeclaration`. Probe
+>   integration on the engine side is the natural follow-on; the
+>   contract surface is in.
+> - **L5 demo recipes**: `recipes/debug_recipes/loopback/` ships three
+>   first-of-corpus recipes that exercise the explicit
+>   `loopback: {signal: {...}}` shape end-to-end —
+>   `loopback_pill_button_progress_ramp.json`,
+>   `loopback_underline_wipe_progress_ramp.json`, and
+>   `loopback_rigid_shake_severity_ramp.json` (multi-binding). Each
+>   passes `pipeline-validator --rules --strict-contracts` and renders
+>   through the standard preview path.
 >
 > **Behavioural notes**:
 >
@@ -557,4 +598,4 @@ plumbing the loopback layer needs to be useful to procedurals.
   effectively obsoletes once shipped.
 
 <!-- <FILE>docs/design/tui-vfx-binding-loopback.md</FILE> - <DESC>Design proposal: binding loopback</DESC> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->

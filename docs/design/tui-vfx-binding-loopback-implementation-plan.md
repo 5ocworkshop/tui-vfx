@@ -1,9 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-binding-loopback-implementation-plan.md</FILE> - <DESC>Implementation plan for the binding loopback design (companion to tui-vfx-binding-loopback.md). Phase-by-phase file lists, TDD outlines, commit boundaries, and explicit deferrals so a single end-to-end push can land L1–L5 without re-deciding architecture mid-flight.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>L3 architecture pivoted mid-implementation per Intention 39 ("Engine surfaces are recipes, not parallel renderers"). The first attempt at L3 hardcoded a cell-painter overlay in tui-vfx-compositor; user correction landed within minutes and the artefacts were recycled. L3 is now scoped as "badge-as-recipe": author the badge as a normal V3 recipe living on disk under recipes/internal/, inline via include_str! at engine compile time, render through the standard recipe path, composite onto the host scene's final grid. Plan section 3 rewritten to match.</WCTX> -->
-<!-- <CLOG>0.3.0: rewrite Phase L3 around the badge-as-recipe architecture per Intention 39. New file list: `recipes/internal/loopback_badge.json` + a `OnceLock`-cached compile helper + an `apply_loopback_badge` fn that composites the rendered badge over the host grid. Recycled artefacts (`recyclebin/crates/tui-vfx-compositor/src/overlays/*`) listed explicitly so the historical record stays discoverable. `with_loopback_applied` slated to return `(Self, Vec<String>)` so render entry points can pass `fired_keys` to the apply fn. L4/L5 sections still need a minor pass to remove the "engine overlay reads strictness hint" assumption inherited from the recycled design — flagged inline but not rewritten in this pass.
-0.2.0: mark L1 and L2 as shipped with commit pointers. L2 deviations from initial plan: (a) authoring layered onto root-level `requires_bindings` rather than a new `config.bindings` block; (b) per Intention 37, `loopback` is effectively required (the validator gates `effective_loopback().is_some()` per declaration); (c) all five BindingKinds shipped in L2 (the v0.1 plan scoped only U16/F32, but the existing corpus's bool/string/color bindings forced the broader scope); (d) `loopback_declarations` lives compile-time-derivable from the contracts JSON (via `compile_loopback_declarations`) rather than as a stored field on `CompiledRecipePlan`. L3 / L4 / L5 plans unchanged.
-0.1.0: Initial implementation plan covering L1 (engine fallback layer / merge function), L2 (`bindings:` block authoring + strict-contracts gate), L3 (visibility badge), L4 (strictness modes), L5 (probe + browser + demo recipes + docs).</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>L1–L5 all shipped on the recipes side. The probe-side `LoopbackFire` Warning diagnostic remains the one deferred piece (engine workspace); the contract surface for it is in place via `bindings_summary` + `MergeOutcome.{fired_keys, would_have_fired_keys}`. Plan reflects the as-shipped commits and the recipe-as-source-of-truth pivot for L3 from Intention 39.</WCTX> -->
+<!-- <CLOG>Mark Phases L3, L4, L5 as SHIPPED with commit pointers (581513e for L3, e974506 for L4, bae47d0 + 68387bd for L5). Note the probe-side LoopbackFire diagnostic deferral and the snapshot-field backout (would have forced peer-owned test code to update; bindings_summary carries the contract instead).</CLOG> -->
 
 # Binding loopback — implementation plan
 
@@ -249,7 +247,15 @@ Modified (recipes side):
 - Hand-maintained doc updates (API_HAND, CAPABILITIES_REFERENCE,
   vocabulary) — L5.
 
-## 3. Phase L3 — visibility badge (badge-as-recipe per Intention 39)
+## 3. Phase L3 — visibility badge (badge-as-recipe per Intention 39) — **SHIPPED**
+
+> Status: shipped at commit `581513e` (recipes). Recipe at
+> `recipes/internal/loopback_badge.json`; OnceLock cache in
+> `tui-vfx-recipes/src/loopback/fnc_loopback_badge_plan.rs`; apply fn in
+> `tui-vfx-recipes/src/loopback/fnc_apply_loopback_badge.rs`. Both render
+> entry points capture `fired_keys` from the L3-tuple-returning
+> `with_loopback_applied` and composite the badge over the final grid.
+> 9 new tests pass alongside the 92 prior loopback tests.
 
 ### Goal
 
@@ -385,7 +391,18 @@ implementation artefacts.
   unconditionally; document this and let users force `Ascii` if
   they're in a non-Nerd-Font environment.
 
-## 4. Phase L4 — strictness modes
+## 4. Phase L4 — strictness modes — **SHIPPED**
+
+> Status: shipped at commit `e974506` (recipes). `LoopbackStrictness` in
+> `tui-vfx-recipes/src/loopback/enum_loopback_strictness.rs`;
+> `MergeOutcome` extended with `would_have_fired_keys`; merge function
+> takes the strictness param and routes per mode;
+> `CompiledV3RuntimeOverrides::with_loopback_strictness` builder is the
+> host-facing knob; `with_loopback_applied` returns
+> `Result<(Self, Vec<String>), RenderCompiledPlanError>` so Error mode
+> escalates via the new
+> `RenderCompiledPlanError::MissingHostBindingsInErrorMode` variant.
+> 11 new tests cover Permissive/Warn/Strict/Error end-to-end.
 
 ### Goal
 
@@ -456,7 +473,28 @@ Modified:
 - Per-binding strictness ("strict for key X, permissive for key Y").
   YAGNI for v1 per the design doc's open question 4.
 
-## 5. Phase L5 — probe + browser integration + demo recipes + docs
+## 5. Phase L5 — probe + browser integration + demo recipes + docs — **SHIPPED (recipes side); probe deferred**
+
+> Status: recipes-side surface shipped across commits `bae47d0`
+> (browser-facing `bindings_summary`) and `68387bd` (three first-of-corpus
+> signal-driven demo recipes). The probe-side `LoopbackFire` Warning
+> diagnostic was the one piece of the original L5 scope that lives in
+> `tui-vfx-probe` (engine workspace); the contract surface
+> (`bindings_summary` + the loopback merge layer's `fired_keys` /
+> `would_have_fired_keys`) is in place so the probe-side wire-in becomes
+> a follow-on task that doesn't require recipes-side changes. Filed as a
+> post-L5 task; not blocking the design's "shipped" status because the
+> human-facing badge already shows up in probe captures (the badge is a
+> recipe, so probe naturally renders it into the captured grid per
+> Intention 39).
+>
+> The `loopback_fired_keys` snapshot field originally proposed for this
+> phase was backed out — the field forced peer-owned construction sites
+> at `src/preview/fnc_render_direct_v3_snapshot.rs:717,748` to update,
+> and the cardinal "don't edit unowned code" rule applied. The
+> `bindings_summary` + observer-style merge outcome carry the
+> contract; downstream tooling (probe, browser, host telemetry) reads
+> from those instead.
 
 ### Goal
 
@@ -616,4 +654,4 @@ Before starting Phase L1:
   follow-on (release-blocking, not in this plan).
 
 <!-- <FILE>docs/design/tui-vfx-binding-loopback-implementation-plan.md</FILE> - <DESC>Implementation plan for binding loopback</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
