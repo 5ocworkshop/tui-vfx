@@ -1,9 +1,27 @@
 <!-- <FILE>docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md</FILE> - <DESC>Reviewed implementation plan for shared circular mechanical content cycles powering odometer drums, Solari flap stacks, slot reels, and explicit old/new Pair transitions</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Lock per-tile settle semantics, Spring/spring_settle precedence, and the no-inert-fields rule before Phase 1 lands.</WCTX> -->
-<!-- <CLOG>0.3.0: state per-tile settle composition with cascade; define cycle-level Spring vs legacy SplitFlap spring_settle precedence and a validator rejection for the combo; remove every "accepted but inert" allowance — schema fields must ship fully wired in their introducing phase.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Mark Phases 1, 2, 3, and 5 complete (Odometer cycle path lands with vocabulary, route resolver, runtime, debug recipes, and docs); Phase 4 (SplitFlap migration) deferred to a dedicated follow-on session.</WCTX> -->
+<!-- <CLOG>0.4.0: Phases 1-3 + 5 marked complete with commit hashes; Phase 4 explicitly deferred with sub-plan notes for the SplitFlap surface; Intention 36 (Line 3x3 default font) added as the canonical glyph-table home in tui-vfx-content. 0.3.0: state per-tile settle composition with cascade; define cycle-level Spring vs legacy SplitFlap spring_settle precedence and a validator rejection for the combo; remove every "accepted but inert" allowance — schema fields must ship fully wired in their introducing phase.</CLOG> -->
 
 # Mechanical circular content cycles: drums, flap stacks, and reels
+
+## Implementation status (v0.4.0)
+
+| Phase | Scope | Status | Landing commits |
+| --- | --- | --- | --- |
+| 1 | Public schema vocabulary (source / route / cascade / settle / config) | **Complete** | `f0f5879` (vocabulary + plan v0.3.0), `dcc98f0` (effect_metadata header) |
+| 2 | Route resolver (preset, normalize, weighted shuffle, resolve, route_between) | **Complete** | `145ff36` |
+| 3 | Odometer schema attach + cycle rendering + cascade + per-tile settle | **Complete** | `c9a0182` |
+| — | Intention 36 + Line 3x3 default font (canonical glyph table home) | **Complete** | `b23838e` |
+| 5 | Docs (CAPABILITIES_REFERENCE, capabilities.toml, V3 schema draft) + debug recipes (3 new) + font assets | **Complete** | tui-vfx `91a1c0a`; tui-vfx-recipes `50ab1c1` |
+| 4 | SplitFlap schema attach + cycle rendering + Spring/spring_settle precedence | **Deferred** | Sub-plan in this doc; warrants a dedicated session given `cls_split_flap.rs` complexity (1642 LOC, 9-variant dispersion enum, hinge frames, rolling-flip, flicker). |
+
+Phase 4 follow-up scoping notes:
+
+- Wire mechanical 1x1 path first (per-column route through cycle, preserving legacy timing fields). Validator rejects ambiguous double-spin (`cycles + extra_rotations` both non-zero) and Spring + `spring_settle` both true.
+- Multi-cell mechanical (2/4/6/8) follows in a sub-phase: per-tile routes feed adjacent route faces into the existing `split_flap_tile_frame` center-hinge helper.
+- Decision still needed: when `mechanical` is set, do legacy `cascade` / `dispersion` fields still apply, or does mechanical own all timing? Current lean: mechanical wins; non-Simultaneous mechanical cascade overrides legacy dispersion.
+- Tests must lock byte-equivalent legacy 1x1 snapshots for absent-mechanical recipes.
 
 ## Executive summary
 
