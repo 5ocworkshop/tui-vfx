@@ -1,11 +1,10 @@
 // <FILE>tui-vfx-content/src/transformers/cls_redact.rs</FILE> - <DESC>Redact transformer</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>feat-20251224-155211: Signal-driven content effects</WCTX>
-// <CLOG>BREAKING: Updated transform() signature to accept SignalContext parameter</CLOG>
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>2.1.0: TextTransformer signature now takes &TransformContext<'_>; this transformer ignores the context and underscores the parameter.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::utils::fnc_graphemes::{len_graphemes, slice_graphemes};
-use mixed_signals::prelude::SignalContext;
 use std::borrow::Cow;
 #[derive(Debug, Clone)]
 pub struct Redact {
@@ -26,7 +25,7 @@ impl TextTransformer for Redact {
         &self,
         target: &'a str,
         progress: f64,
-        _signal_ctx: &SignalContext,
+        _ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
@@ -49,4 +48,4 @@ impl TextTransformer for Redact {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_redact.rs</FILE> - <DESC>Redact transformer</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <VERS>END OF VERSION: 2.1.0</VERS>

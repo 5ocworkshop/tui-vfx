@@ -1,13 +1,21 @@
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_odometer.rs</FILE> - <DESC>Tests for structured mechanical Odometer tile-roll behavior</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Phase 2 Odometer replacement with grid-first mechanical tile roll.</WCTX>
-// <CLOG>0.2.0: lock multi-cell glyph-window odometer rolls to cell-step motion.
-// 0.1.0: add serde acceptance/rejection and directional tile-roll samples.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>0.3.0: route every transform call site through a TransformContext built from a OnceLock-cached SignalContext + ShaderRuntimeParams pair.</CLOG>
 
 use mixed_signals::prelude::SignalContext;
-use tui_vfx_content::traits::TextTransformer;
+use std::sync::OnceLock;
+use tui_vfx_content::traits::{TextTransformer, TransformContext};
 use tui_vfx_content::transformers::{Odometer, get_transformer};
 use tui_vfx_content::types::{ContentEffect, OdometerDirection, OdometerTravel};
+use tui_vfx_style::traits::ShaderRuntimeParams;
+
+static CTX_PARTS: OnceLock<(SignalContext, ShaderRuntimeParams)> = OnceLock::new();
+
+fn tctx() -> TransformContext<'static> {
+    let p = CTX_PARTS.get_or_init(|| (SignalContext::default(), ShaderRuntimeParams::new()));
+    TransformContext::new(&p.0, &p.1)
+}
 
 const FROM: &str = "AAA\nBBB\nCCC";
 const TO: &str = "111\n222\n333";
@@ -24,7 +32,7 @@ fn odometer(direction: OdometerDirection) -> Odometer {
 
 fn sample(direction: OdometerDirection, progress: f64) -> String {
     odometer(direction)
-        .transform(TO, progress, &SignalContext::default())
+        .transform(TO, progress, &tctx())
         .into_owned()
 }
 
@@ -75,7 +83,7 @@ fn missing_from_message_uses_blank_source_grid() {
     };
     let tx = get_transformer(&effect);
     assert_eq!(
-        tx.transform(TO, 0.34, &SignalContext::default()),
+        tx.transform(TO, 0.34, &tctx()),
         format!("{}\n{}\n111", "   ", "   ")
     );
 }
@@ -85,7 +93,7 @@ fn up_rolls_rows_from_source_to_target() {
     assert_eq!(sample(OdometerDirection::Up, 0.0), FROM);
     assert_eq!(sample(OdometerDirection::Up, 0.34), "BBB\nCCC\n111");
     assert_eq!(sample(OdometerDirection::Up, 0.67), "CCC\n111\n222");
-    let full = odometer(OdometerDirection::Up).transform(TO, 1.0, &SignalContext::default());
+    let full = odometer(OdometerDirection::Up).transform(TO, 1.0, &tctx());
     assert!(matches!(full, std::borrow::Cow::Borrowed(_)));
     assert_eq!(full, TO);
 }
@@ -120,10 +128,7 @@ fn content_effect_dispatches_structured_odometer() {
         mechanical: None,
     };
     let tx = get_transformer(&effect);
-    assert_eq!(
-        tx.transform(TO, 0.34, &SignalContext::default()),
-        "BBB\nCCC\n111"
-    );
+    assert_eq!(tx.transform(TO, 0.34, &tctx()), "BBB\nCCC\n111");
     assert_eq!(effect.name(), "Odometer");
     assert_eq!(
         effect.terse_description(),
@@ -142,10 +147,10 @@ fn multi_cell_odometer_rolls_cell_steps_inside_glyph_window() {
     );
 
     assert_eq!(
-        effect.transform("1122\n3344\n5566", 0.34, &SignalContext::default()),
+        effect.transform("1122\n3344\n5566", 0.34, &tctx()),
         "CCDD\nEEFF\n1122"
     );
 }
 
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_odometer.rs</FILE> - <DESC>Tests for structured mechanical Odometer tile-roll behavior</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

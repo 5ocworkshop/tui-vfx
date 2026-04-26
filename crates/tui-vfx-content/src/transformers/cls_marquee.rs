@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-content/src/transformers/cls_marquee.rs</FILE> - <DESC>Marquee transformer</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>feat-20251224-170136: Complete signal-driven content effects</WCTX>
-// <CLOG>BREAKING: Changed speed from f32 to SignalOrFloat with per-frame evaluation</CLOG>
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>2.1.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for speed-signal evaluation.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::utils::fnc_graphemes::{len_graphemes, slice_graphemes};
-use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;
 
 #[derive(Debug, Clone)]
@@ -35,7 +35,7 @@ impl TextTransformer for Marquee {
         &self,
         target: &'a str,
         progress: f64,
-        signal_ctx: &SignalContext,
+        ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         let total_len = len_graphemes(target);
         if total_len == 0 {
@@ -45,7 +45,7 @@ impl TextTransformer for Marquee {
         // Evaluate speed signal per-frame (unwrap with fallback to 1.0 on error)
         let speed = f64::from(
             self.speed
-                .evaluate(progress, signal_ctx)
+                .evaluate(progress, ctx.signal_ctx)
                 .unwrap_or(1.0)
                 .max(0.0),
         );
@@ -79,4 +79,4 @@ impl TextTransformer for Marquee {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_marquee.rs</FILE> - <DESC>Marquee transformer</DESC>
-// <VERS>END OF VERSION: 1.0.1 - 2025-12-16T20:40:24Z</VERS>
+// <VERS>END OF VERSION: 2.1.0</VERS>

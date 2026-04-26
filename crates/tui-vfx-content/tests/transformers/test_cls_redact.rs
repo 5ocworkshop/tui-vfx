@@ -5,24 +5,36 @@
 
 use mixed_signals::prelude::SignalContext;
 use tui_vfx_content::traits::TextTransformer;
+use tui_vfx_content::traits::TransformContext;
 use tui_vfx_content::transformers::Redact;
+use tui_vfx_style::traits::ShaderRuntimeParams;
 
-// Helper for creating test SignalContext
-fn test_signal_ctx() -> SignalContext {
-    SignalContext {
-        frame: 0,
-        seed: 0,
-        width: 80,
-        height: 24,
-        phase: None,
-        phase_t: None,
-        loop_t: None,
-        absolute_t: None,
-        char_index: None,
-        cell_x: None,
-        cell_y: None,
-        ..Default::default()
-    }
+static CTX_PARTS: std::sync::OnceLock<(SignalContext, ShaderRuntimeParams)> =
+    std::sync::OnceLock::new();
+
+// Helper returning a per-test TransformContext<'static>. The SignalContext
+// half is constructed once via OnceLock and shared across all callers.
+fn test_signal_ctx() -> TransformContext<'static> {
+    let parts = CTX_PARTS.get_or_init(|| {
+        let sig = {
+            SignalContext {
+                frame: 0,
+                seed: 0,
+                width: 80,
+                height: 24,
+                phase: None,
+                phase_t: None,
+                loop_t: None,
+                absolute_t: None,
+                char_index: None,
+                cell_x: None,
+                cell_y: None,
+                ..Default::default()
+            }
+        };
+        (sig, ShaderRuntimeParams::new())
+    });
+    TransformContext::new(&parts.0, &parts.1)
 }
 
 #[test]

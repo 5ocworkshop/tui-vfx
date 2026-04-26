@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compositor/tests/cursor_integration.rs</FILE> - <DESC>End-to-end cursor rendering integration</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>feat/cursor-primitive T32: end-to-end test that drives Typewriter + Cursor primitive + CursorShader through render_pipeline_with_spec, verifying the cursor glyph is spliced into the revealed text and that the wake-trail shader paints a tint onto the destination grid cell the compositor pipeline emits.</WCTX>
-// <CLOG>Initial test — two cases: primary glyph splice, wake Tint trail painting via the shader layer</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: Typewriter::transform_with_cursor signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>0.2.0: migrate ctx() helper to return TransformContext<'static> so the cursor-integration test compiles against the new transform_with_cursor signature.</CLOG>
 
 //! End-to-end cursor integration test.
 //!
@@ -22,14 +22,20 @@ mod test_helpers;
 use test_helpers::render_pipeline_with_spec_legacy;
 
 use mixed_signals::prelude::SignalContext;
+use std::sync::OnceLock;
 use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec};
 use tui_vfx_content::cursor::{Cursor, CursorState, fnc_build_cursor_shader};
+use tui_vfx_content::traits::TransformContext;
 use tui_vfx_content::transformers::Typewriter;
 use tui_vfx_style::models::SpatialShaderType;
+use tui_vfx_style::traits::ShaderRuntimeParams;
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid};
 
-fn ctx() -> SignalContext {
-    SignalContext::new(0, 0)
+static CTX_PARTS: OnceLock<(SignalContext, ShaderRuntimeParams)> = OnceLock::new();
+
+fn ctx() -> TransformContext<'static> {
+    let p = CTX_PARTS.get_or_init(|| (SignalContext::new(0, 0), ShaderRuntimeParams::new()));
+    TransformContext::new(&p.0, &p.1)
 }
 
 #[test]
@@ -112,4 +118,4 @@ fn cursor_shader_paints_wake_tint_on_dest_grid() {
 }
 
 // <FILE>crates/tui-vfx-compositor/tests/cursor_integration.rs</FILE> - <DESC>End-to-end cursor rendering integration</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

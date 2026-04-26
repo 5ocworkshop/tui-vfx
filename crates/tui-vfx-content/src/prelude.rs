@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-content/src/prelude.rs</FILE> - <DESC>Library prelude</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
-// <WCTX>Expose new GlyphCascade transformer and config types</WCTX>
-// <CLOG>Re-export GlyphCascade, GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern</CLOG>
+// <VERS>VERSION: 1.4.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: re-export TransformContext alongside TextTransformer.</WCTX>
+// <CLOG>1.4.0: re-export TransformContext for downstream transformer callers.</CLOG>
 
-pub use crate::traits::TextTransformer;
+pub use crate::traits::{TextTransformer, TransformContext};
 pub use crate::transformers::{
     GlyphCascade, Marquee, Numeric, Redact, Scramble, Typewriter, get_transformer,
 };
@@ -14,4 +14,4 @@ pub use crate::types::{
 pub use mixed_signals::prelude::SignalOrFloat;
 
 // <FILE>tui-vfx-content/src/prelude.rs</FILE> - <DESC>Library prelude</DESC>
-// <VERS>END OF VERSION: 1.3.0</VERS>
+// <VERS>END OF VERSION: 1.4.0</VERS>

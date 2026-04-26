@@ -1,12 +1,12 @@
 // <FILE>tui-vfx-content/src/transformers/cls_scramble.rs</FILE> - <DESC>Scramble transformer</DESC>
-// <VERS>VERSION: 3.0.0</VERS>
-// <WCTX>feat-20251224-170136: Complete signal-driven content effects</WCTX>
-// <CLOG>BREAKING: Added resolve_pace field with per-frame signal evaluation for dynamic reveal pacing</CLOG>
+// <VERS>VERSION: 3.1.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>3.1.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for resolve_pace signal evaluation.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::types::ScrambleCharset;
 use crate::utils::fnc_graphemes::len_graphemes;
-use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use mixed_signals::prelude::SignalOrFloat;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
 
@@ -45,7 +45,7 @@ impl TextTransformer for Scramble {
         &self,
         target: &'a str,
         progress: f64,
-        signal_ctx: &SignalContext,
+        ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
@@ -58,7 +58,7 @@ impl TextTransformer for Scramble {
         // Evaluate resolve_pace signal per-frame (unwrap with fallback to 1.0 on error)
         let pace = self
             .resolve_pace
-            .evaluate(progress, signal_ctx)
+            .evaluate(progress, ctx.signal_ctx)
             .unwrap_or(1.0)
             .max(0.1);
 
@@ -90,4 +90,4 @@ impl TextTransformer for Scramble {
 use unicode_segmentation::UnicodeSegmentation;
 
 // <FILE>tui-vfx-content/src/transformers/cls_scramble.rs</FILE> - <DESC>Scramble transformer</DESC>
-// <VERS>END OF VERSION: 3.0.0</VERS>
+// <VERS>END OF VERSION: 3.1.0</VERS>

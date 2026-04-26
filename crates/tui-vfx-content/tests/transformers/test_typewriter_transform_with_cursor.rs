@@ -1,14 +1,20 @@
 // <FILE>tui-vfx-content/tests/transformers/test_typewriter_transform_with_cursor.rs</FILE> - <DESC>Tests for Typewriter::transform_with_cursor</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>feat/cursor-primitive T31: clippy clean-up (field_reassign_with_default)</WCTX>
-// <CLOG>PATCH: rewrite cursor construction to struct-literal form with ..Cursor::default()</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: transform_with_cursor signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>0.2.0: migrate test sites to TransformContext-based ctx() helper to match the slice 6.6 trait/inherent-method signature change.</CLOG>
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use std::sync::OnceLock;
 use tui_vfx_content::cursor::{Cursor, CursorState};
+use tui_vfx_content::traits::TransformContext;
 use tui_vfx_content::transformers::Typewriter;
+use tui_vfx_style::traits::ShaderRuntimeParams;
 
-fn ctx() -> SignalContext {
-    SignalContext::new(0, 0)
+static CTX_PARTS: OnceLock<(SignalContext, ShaderRuntimeParams)> = OnceLock::new();
+
+fn ctx() -> TransformContext<'static> {
+    let p = CTX_PARTS.get_or_init(|| (SignalContext::new(0, 0), ShaderRuntimeParams::new()));
+    TransformContext::new(&p.0, &p.1)
 }
 
 #[test]
@@ -73,5 +79,6 @@ fn transform_without_cursor_unchanged() {
     let out = tw.transform("hello", 0.5, &ctx());
     assert_eq!(out.as_ref(), "he");
 }
+
 // <FILE>tui-vfx-content/tests/transformers/test_typewriter_transform_with_cursor.rs</FILE> - <DESC>Tests for Typewriter::transform_with_cursor</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

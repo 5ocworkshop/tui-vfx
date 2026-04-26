@@ -1,9 +1,11 @@
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_odometer_cycles.rs</FILE> - <DESC>Integration tests for Odometer with mechanical cycle config: ordered/preset routes, NumericCarry, settle, extra_rotations</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 3 of mechanical circular content cycles plan: lock the cycle-path Odometer behaviors that the new schema field unlocks.</WCTX>
-// <CLOG>0.1.0: cover absent vs explicit-Pair equivalence, decimal preset increment/decrement, NumericCarry hold/spin_and_return, extra_rotations, ordered alphabet drum, weighted reel determinism, per-tile Spring settle.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>0.2.0: route the sample() helper through a OnceLock-cached TransformContext so cycle-path tests compile against the new trait signature.</CLOG>
 
 use mixed_signals::prelude::SignalContext;
+use std::sync::OnceLock;
+use tui_vfx_content::traits::TransformContext;
 use tui_vfx_content::transformers::get_transformer;
 use tui_vfx_content::types::{
     ContentEffect, CycleDirectionPolicy, CycleMissingFacePolicy, CycleTieBreaker, CycleWrapMode,
@@ -11,6 +13,14 @@ use tui_vfx_content::types::{
     MechanicalRouteConfig, MechanicalSettleConfig, OdometerDirection, OdometerTravel,
     UnchangedCellPolicy, WeightedCycleFace,
 };
+use tui_vfx_style::traits::ShaderRuntimeParams;
+
+static CTX_PARTS: OnceLock<(SignalContext, ShaderRuntimeParams)> = OnceLock::new();
+
+fn tctx() -> TransformContext<'static> {
+    let p = CTX_PARTS.get_or_init(|| (SignalContext::default(), ShaderRuntimeParams::new()));
+    TransformContext::new(&p.0, &p.1)
+}
 
 fn odometer(
     from: &str,
@@ -33,8 +43,7 @@ fn odometer(
 
 fn sample(effect: &ContentEffect, target: &str, progress: f64) -> String {
     let tx = get_transformer(effect);
-    tx.transform(target, progress, &SignalContext::default())
-        .into_owned()
+    tx.transform(target, progress, &tctx()).into_owned()
 }
 
 fn forward_route() -> MechanicalRouteConfig {
@@ -354,4 +363,4 @@ fn spring_settle_progress_one_returns_borrowed_target() {
 }
 
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_odometer_cycles.rs</FILE>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

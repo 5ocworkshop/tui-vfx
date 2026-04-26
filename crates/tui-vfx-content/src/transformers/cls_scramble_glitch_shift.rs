@@ -1,12 +1,12 @@
 // <FILE>tui-vfx-content/src/transformers/cls_scramble_glitch_shift.rs</FILE> - <DESC>Combined Scramble + GlitchShift transformer</DESC>
-// <VERS>VERSION: 3.1.0</VERS>
-// <WCTX>Per-frame signal evaluation for glitch window</WCTX>
-// <CLOG>Store glitch bounds as SignalOrFloat and evaluate per frame</CLOG>
+// <VERS>VERSION: 3.2.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>3.2.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for resolve_pace and glitch-window signal evaluation.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::types::ScrambleCharset;
 use crate::utils::fnc_graphemes::len_graphemes;
-use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use mixed_signals::prelude::SignalOrFloat;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
 use unicode_segmentation::UnicodeSegmentation;
@@ -65,7 +65,7 @@ impl TextTransformer for ScrambleGlitchShift {
         &self,
         target: &'a str,
         progress: f64,
-        signal_ctx: &SignalContext,
+        ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         // First apply scramble logic
         let scrambled = if progress >= 1.0 {
@@ -78,7 +78,7 @@ impl TextTransformer for ScrambleGlitchShift {
                 // Evaluate resolve_pace signal per-frame (unwrap with fallback to 1.0 on error)
                 let pace = self
                     .resolve_pace
-                    .evaluate(progress, signal_ctx)
+                    .evaluate(progress, ctx.signal_ctx)
                     .unwrap_or(1.0)
                     .max(0.1);
 
@@ -109,12 +109,12 @@ impl TextTransformer for ScrambleGlitchShift {
         let progress_f32 = progress as f32;
         let glitch_start = self
             .glitch_start
-            .evaluate(progress, signal_ctx)
+            .evaluate(progress, ctx.signal_ctx)
             .unwrap_or(0.0)
             .clamp(0.0, 1.0);
         let glitch_end = self
             .glitch_end
-            .evaluate(progress, signal_ctx)
+            .evaluate(progress, ctx.signal_ctx)
             .unwrap_or(0.0)
             .clamp(0.0, 1.0);
         if progress_f32 >= glitch_start && progress_f32 < glitch_end {
@@ -129,6 +129,12 @@ impl TextTransformer for ScrambleGlitchShift {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mixed_signals::prelude::SignalContext;
+    use tui_vfx_style::traits::ShaderRuntimeParams;
+
+    fn empty_ctx() -> (SignalContext, ShaderRuntimeParams) {
+        (SignalContext::default(), ShaderRuntimeParams::new())
+    }
 
     #[test]
     fn test_scramble_without_glitch() {
@@ -141,7 +147,8 @@ mod tests {
             SignalOrFloat::Static(1.0),
         );
         // At progress 0.1, should be mostly scrambled, no shift
-        let result = effect.transform("hello", 0.1, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = effect.transform("hello", 0.1, &TransformContext::new(&sig, &params));
         assert!(!result.starts_with("     ")); // Not in glitch window
     }
 
@@ -156,7 +163,8 @@ mod tests {
             SignalOrFloat::Static(1.0),
         );
         // At progress 0.35, should be partially scrambled with shift
-        let result = effect.transform("hello", 0.35, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = effect.transform("hello", 0.35, &TransformContext::new(&sig, &params));
         assert!(result.starts_with("     ")); // In glitch window, prepended spaces
     }
 
@@ -171,7 +179,8 @@ mod tests {
             SignalOrFloat::Static(1.0),
         );
         // At progress 1.0, fully resolved, no shift
-        let result = effect.transform("hello", 1.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = effect.transform("hello", 1.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "hello");
     }
 
@@ -185,10 +194,11 @@ mod tests {
             SignalOrFloat::Static(0.6),
             SignalOrFloat::Static(1.0),
         );
-        let result = effect.transform("test", 0.55, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = effect.transform("test", 0.55, &TransformContext::new(&sig, &params));
         assert!(result.starts_with("      ")); // 6 spaces
     }
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_scramble_glitch_shift.rs</FILE> - <DESC>Combined Scramble + GlitchShift transformer</DESC>
-// <VERS>END OF VERSION: 3.1.0</VERS>
+// <VERS>END OF VERSION: 3.2.0</VERS>

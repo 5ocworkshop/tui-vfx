@@ -1,10 +1,10 @@
 // <FILE>tui-vfx-content/src/transformers/cls_glitch_shift.rs</FILE> - <DESC>GlitchShift transformer for brief horizontal offset</DESC>
-// <VERS>VERSION: 2.1.0</VERS>
-// <WCTX>Per-frame signal evaluation for glitch window</WCTX>
-// <CLOG>Store glitch bounds as SignalOrFloat and evaluate per frame</CLOG>
+// <VERS>VERSION: 2.2.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>2.2.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for glitch-window signal evaluation.</CLOG>
 
-use crate::traits::TextTransformer;
-use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use crate::traits::{TextTransformer, TransformContext};
+use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;
 
 /// Transformer that briefly shifts text right by prepending spaces.
@@ -53,18 +53,18 @@ impl TextTransformer for GlitchShift {
         &self,
         target: &'a str,
         progress: f64,
-        signal_ctx: &SignalContext,
+        ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         // Check if we're in the glitch window
         let progress_f32 = progress as f32;
         let glitch_start = self
             .glitch_start
-            .evaluate(progress, signal_ctx)
+            .evaluate(progress, ctx.signal_ctx)
             .unwrap_or(0.0)
             .clamp(0.0, 1.0);
         let glitch_end = self
             .glitch_end
-            .evaluate(progress, signal_ctx)
+            .evaluate(progress, ctx.signal_ctx)
             .unwrap_or(0.0)
             .clamp(0.0, 1.0);
         if progress_f32 >= glitch_start && progress_f32 < glitch_end {
@@ -81,7 +81,12 @@ impl TextTransformer for GlitchShift {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mixed_signals::prelude::SignalOrFloat;
+    use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+    use tui_vfx_style::traits::ShaderRuntimeParams;
+
+    fn empty_ctx() -> (SignalContext, ShaderRuntimeParams) {
+        (SignalContext::default(), ShaderRuntimeParams::new())
+    }
 
     #[test]
     fn test_no_shift_before_window() {
@@ -91,7 +96,8 @@ mod tests {
             SignalOrFloat::Static(0.4),
             42,
         );
-        let result = glitch.transform("hello", 0.1, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = glitch.transform("hello", 0.1, &TransformContext::new(&sig, &params));
         assert_eq!(result, "hello");
     }
 
@@ -103,7 +109,8 @@ mod tests {
             SignalOrFloat::Static(0.4),
             42,
         );
-        let result = glitch.transform("hello", 0.35, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = glitch.transform("hello", 0.35, &TransformContext::new(&sig, &params));
         assert_eq!(result, "     hello");
     }
 
@@ -115,7 +122,8 @@ mod tests {
             SignalOrFloat::Static(0.4),
             42,
         );
-        let result = glitch.transform("hello", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = glitch.transform("hello", 0.5, &TransformContext::new(&sig, &params));
         assert_eq!(result, "hello");
     }
 
@@ -127,7 +135,8 @@ mod tests {
             SignalOrFloat::Static(0.3),
             42,
         );
-        let result = glitch.transform("test", 0.25, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = glitch.transform("test", 0.25, &TransformContext::new(&sig, &params));
         assert_eq!(result, "   test");
     }
 
@@ -139,7 +148,8 @@ mod tests {
             SignalOrFloat::Static(0.6),
             42,
         );
-        let result = glitch.transform("text", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = glitch.transform("text", 0.5, &TransformContext::new(&sig, &params));
         assert_eq!(result, "    text");
     }
 
@@ -152,10 +162,11 @@ mod tests {
             42,
         );
         // At exactly glitch_end, should NOT shift (condition is < glitch_end)
-        let result = glitch.transform("text", 0.6, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = glitch.transform("text", 0.6, &TransformContext::new(&sig, &params));
         assert_eq!(result, "text");
     }
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_glitch_shift.rs</FILE> - <DESC>GlitchShift transformer for brief horizontal offset</DESC>
-// <VERS>END OF VERSION: 2.1.0</VERS>
+// <VERS>END OF VERSION: 2.2.0</VERS>

@@ -1,11 +1,10 @@
 // <FILE>tui-vfx-content/src/transformers/cls_morph.rs</FILE> - <DESC>Text morph transformer</DESC>
-// <VERS>VERSION: 1.8.0</VERS>
-// <WCTX>OFPF refactoring: extract character generators</WCTX>
-// <CLOG>Move character generators to fnc_morph_chars.rs</CLOG>
+// <VERS>VERSION: 1.9.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>1.9.0: TextTransformer signature now takes &TransformContext<'_>; this transformer ignores the context and underscores the parameter.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::types::{MorphDirection, MorphProgression};
-use mixed_signals::prelude::SignalContext;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
 use unicode_segmentation::UnicodeSegmentation;
@@ -251,7 +250,7 @@ impl TextTransformer for Morph {
         &self,
         target: &'a str,
         progress: f64,
-        _signal_ctx: &SignalContext,
+        _ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress <= 0.0 {
             // Return source text
@@ -507,6 +506,12 @@ impl TextTransformer for Morph {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mixed_signals::prelude::SignalContext;
+    use tui_vfx_style::traits::ShaderRuntimeParams;
+
+    fn empty_ctx() -> (SignalContext, ShaderRuntimeParams) {
+        (SignalContext::default(), ShaderRuntimeParams::new())
+    }
 
     #[test]
     fn test_source_at_zero() {
@@ -516,7 +521,8 @@ mod tests {
             MorphDirection::LeftToRight,
             0,
         );
-        let result = morph.transform("World", 0.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("World", 0.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "Hello");
     }
 
@@ -528,7 +534,8 @@ mod tests {
             MorphDirection::LeftToRight,
             0,
         );
-        let result = morph.transform("World", 1.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("World", 1.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "World");
     }
 
@@ -540,7 +547,8 @@ mod tests {
             MorphDirection::LeftToRight,
             0,
         );
-        let result = morph.transform("BBBB", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("BBBB", 0.5, &TransformContext::new(&sig, &params));
         // First half should be morphed to B, second half still A
         assert!(result.starts_with("BB"));
     }
@@ -554,10 +562,12 @@ mod tests {
             0,
         );
         // At 0.4, threshold is 0.5 for all, so all are still source
-        let result = morph.transform("BBB", 0.4, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("BBB", 0.4, &TransformContext::new(&sig, &params));
         assert_eq!(result, "AAA");
         // At 0.6, threshold is 0.5 for all, so all are now target
-        let result = morph.transform("BBB", 0.6, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("BBB", 0.6, &TransformContext::new(&sig, &params));
         assert_eq!(result, "BBB");
     }
 
@@ -570,15 +580,18 @@ mod tests {
             0,
         );
         // Target is longer - at progress 1.0, return target as-is
-        let result = morph.transform("WXYZ", 1.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("WXYZ", 1.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "WXYZ");
 
         // At 0, return source as-is (no padding at endpoints)
-        let result = morph.transform("WXYZ", 0.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("WXYZ", 0.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "AB");
 
         // During morph, padding applies for length matching
-        let result = morph.transform("WXYZ", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("WXYZ", 0.5, &TransformContext::new(&sig, &params));
         // First 2 chars morphed to target, last 2 still from source (padded with spaces)
         assert_eq!(result.len(), 4);
     }
@@ -591,8 +604,10 @@ mod tests {
             MorphDirection::LeftToRight,
             42,
         );
-        let result1 = morph.transform("World", 0.5, &SignalContext::default());
-        let result2 = morph.transform("World", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result1 = morph.transform("World", 0.5, &TransformContext::new(&sig, &params));
+        let (sig, params) = empty_ctx();
+        let result2 = morph.transform("World", 0.5, &TransformContext::new(&sig, &params));
         assert_eq!(result1, result2);
     }
 
@@ -654,7 +669,8 @@ mod tests {
             0,
         );
         // At very beginning, first char should show left column braille
-        let result = morph.transform("ABCD", 0.05, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("ABCD", 0.05, &TransformContext::new(&sig, &params));
         // Should contain the left column braille character ⡇
         assert!(
             result.contains("⡇"),
@@ -671,7 +687,8 @@ mod tests {
             MorphDirection::RightToLeft,
             0,
         );
-        let result = morph.transform("ABCD", 0.05, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = morph.transform("ABCD", 0.05, &TransformContext::new(&sig, &params));
         // Should contain the right column braille character ⣸
         assert!(
             result.contains("⣸"),
@@ -681,4 +698,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_morph.rs</FILE> - <DESC>Text morph transformer</DESC>
-// <VERS>END OF VERSION: 1.8.0</VERS>
+// <VERS>END OF VERSION: 1.9.0</VERS>

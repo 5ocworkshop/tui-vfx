@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
-// <WCTX>Phase 7 (breadcrumb) of mechanical circular content cycles plan: register the public assets module hosting AssetRegistry; pluggable name → bytes mapping for scene-layer surfaces that load rocketsplash images and other byte-source assets.</WCTX>
-// <CLOG>0.9.0: register pub mod assets; first inhabitant is AssetRegistry with default_logo sentinel routing. 0.8.0: register pub mod fonts hosting the Line 3x3 heavy glyph table and public lookup helpers.</CLOG>
+// <VERS>VERSION: 0.10.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: rustdoc and trait-level doctest now construct a TransformContext to match the new TextTransformer signature.</WCTX>
+// <CLOG>0.10.0: update trait-level doctest to construct TransformContext from SignalContext + ShaderRuntimeParams; redirect the apply_with_context rustdoc reference to apply_with_runtime.</CLOG>
 
 //! # TUI VFX Content
 //!
@@ -34,8 +34,9 @@
 //! Need the borrowed fast path?
 //! [`ContentEffect::apply_to_borrowed`](crate::types::ContentEffect::apply_to_borrowed)
 //! returns a [`std::borrow::Cow`] that borrows from the target when the
-//! transformer produced no allocation. Need signal-driven pacing?
-//! [`ContentEffect::apply_with_context`](crate::types::ContentEffect::apply_with_context)
+//! transformer produced no allocation. Need host-supplied bindings or a
+//! non-default signal context?
+//! [`ContentEffect::apply_with_runtime`](crate::types::ContentEffect::apply_with_runtime)
 //! is the advanced entry point.
 //!
 //! ## Trait-level usage
@@ -45,10 +46,13 @@
 //! ```rust
 //! use tui_vfx_content::prelude::*;
 //! use mixed_signals::prelude::SignalContext;
+//! use tui_vfx_style::traits::ShaderRuntimeParams;
 //!
 //! let tx = Typewriter::default();
 //! let signal_ctx = SignalContext::default();
-//! let output = tx.transform("Hello World", 0.5, &signal_ctx);
+//! let runtime_params = ShaderRuntimeParams::new();
+//! let ctx = TransformContext::new(&signal_ctx, &runtime_params);
+//! let output = tx.transform("Hello World", 0.5, &ctx);
 //! assert_eq!(output, "Hello");
 //! ```
 //!
@@ -82,7 +86,7 @@
 //! For signal-driven pacing — dynamic blink rates, breathing cursors,
 //! parameters that vary with procedural noise — see the `mixed_signals`
 //! crate and
-//! [`ContentEffect::apply_with_context`](crate::types::ContentEffect::apply_with_context).
+//! [`ContentEffect::apply_with_runtime`](crate::types::ContentEffect::apply_with_runtime).
 //!
 //! ## Cursor presets
 //!
@@ -114,4 +118,4 @@ pub mod types;
 pub mod utils;
 
 // <FILE>crates/tui-vfx-content/src/lib.rs</FILE> - <DESC>Library entry point</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.10.0</VERS>

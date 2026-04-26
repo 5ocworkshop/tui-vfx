@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-content/src/transformers/cls_typewriter.rs</FILE> - <DESC>Typewriter transformer</DESC>
-// <VERS>VERSION: 3.0.1</VERS>
-// <WCTX>feat/cursor-primitive T31: clippy clean-up (doc-overindented-list-items on the transform_with_cursor argument list; too_many_arguments for the same method is unavoidable since the cursor API needs cursor + state + now + dt on top of the base transform signature — mark with #[allow])</WCTX>
-// <CLOG>PATCH: unindent argument bullet wrap lines; annotate transform_with_cursor with #[allow(clippy::too_many_arguments)] — the 8-arg signature is the cursor-primitive's canonical shape and not splittable without hiding state</CLOG>
+// <VERS>VERSION: 4.0.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer::transform and the inherent transform_with_cursor both take &TransformContext<'_>.</WCTX>
+// <CLOG>4.0.0: BREAKING — TextTransformer::transform signature now takes &TransformContext<'_>; the inherent transform_with_cursor mirrors that change. Reads ctx.signal_ctx for variance evaluation and forwards ctx.signal_ctx to fnc_advance_cursor / fnc_render_cursor.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::utils::fnc_graphemes::{len_graphemes, slice_graphemes};
-use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use mixed_signals::prelude::SignalOrFloat;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
 
@@ -38,7 +38,7 @@ impl TextTransformer for Typewriter {
         &self,
         target: &'a str,
         progress: f64,
-        signal_ctx: &SignalContext,
+        ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress <= 0.0 {
             return Cow::Borrowed("");
@@ -55,7 +55,7 @@ impl TextTransformer for Typewriter {
         // Evaluate speed_variance signal per-frame (unwrap with fallback to 0.0 on error)
         let variance = f64::from(
             self.speed_variance
-                .evaluate(progress, signal_ctx)
+                .evaluate(progress, ctx.signal_ctx)
                 .unwrap_or(0.0),
         );
 
@@ -68,7 +68,7 @@ impl TextTransformer for Typewriter {
             let char_variance = if variance.abs() > 0.0001 {
                 // Use hash_to_index to map character index to a deterministic variance value
                 // Map from [0, u64::MAX] to [-variance, variance]
-                let hash_input = signal_ctx.seed.wrapping_add(i as u64);
+                let hash_input = ctx.signal_ctx.seed.wrapping_add(i as u64);
                 let hash_val = hash_to_index(hash_input, 0, 10000); // Map to 0-9999
                 let normalized = (hash_val as f64 / 10000.0) * 2.0 - 1.0; // Map to -1.0 to 1.0
                 normalized * variance
@@ -104,37 +104,40 @@ impl Typewriter {
     ///
     /// # Arguments
     ///
-    /// * `target`     — Full text being revealed.
-    /// * `progress`   — Reveal progress 0..1 (same semantics as [`Typewriter`]'s
+    /// * `target`   — Full text being revealed.
+    /// * `progress` — Reveal progress 0..1 (same semantics as [`Typewriter`]'s
     ///   [`TextTransformer::transform`] impl).
-    /// * `signal_ctx` — Signal evaluation context.
-    /// * `cursor`     — Cursor configuration (usually `tcursor.cursor`).
-    /// * `state`      — Mutable cursor state owned by the caller.
-    /// * `now`        — Wall-clock seconds (same value used for signal sampling).
-    /// * `dt`         — Wall-clock seconds since the previous frame.
+    /// * `ctx`      — Per-call context bundle. See [`TransformContext`]; the
+    ///   [`SignalContext`](mixed_signals::prelude::SignalContext) inside is
+    ///   forwarded to the cursor advance and render helpers as well as to the
+    ///   base reveal.
+    /// * `cursor`   — Cursor configuration (usually `tcursor.cursor`).
+    /// * `state`    — Mutable cursor state owned by the caller.
+    /// * `now`      — Wall-clock seconds (same value used for signal sampling).
+    /// * `dt`       — Wall-clock seconds since the previous frame.
     #[allow(clippy::too_many_arguments)]
     pub fn transform_with_cursor<'a>(
         &self,
         target: &'a str,
         progress: f64,
-        signal_ctx: &SignalContext,
+        ctx: &TransformContext<'_>,
         cursor: &Cursor,
         state: &mut CursorState,
         now: f64,
         dt: f64,
     ) -> (Cow<'a, str>, CursorPaintOps) {
         // Run the base reveal.
-        let revealed = self.transform(target, progress, signal_ctx);
+        let revealed = self.transform(target, progress, ctx);
 
         // Resolve cursor position from progress and advance the primitive.
         let idx = fnc_typewriter_cursor_position(target, progress).unwrap_or(0);
         // Row is always 0 for a single-line typewriter reveal; callers wrapping
         // multi-line text must drive the cursor externally.
         let pos = (0u16, idx as u16);
-        fnc_advance_cursor(state, cursor, Some(pos), now, dt, signal_ctx);
+        fnc_advance_cursor(state, cursor, Some(pos), now, dt, ctx.signal_ctx);
 
         // Render paint ops and splice the primary glyph in.
-        let ops = fnc_render_cursor(state, cursor, now, signal_ctx);
+        let ops = fnc_render_cursor(state, cursor, now, ctx.signal_ctx);
         let text = match ops.primary.as_ref() {
             Some(p) if !p.glyph.is_empty() => Cow::Owned(fnc_splice_cursor_into_text(
                 revealed.as_ref(),
@@ -148,4 +151,4 @@ impl Typewriter {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_typewriter.rs</FILE> - <DESC>Typewriter transformer</DESC>
-// <VERS>END OF VERSION: 3.0.1</VERS>
+// <VERS>END OF VERSION: 4.0.0</VERS>

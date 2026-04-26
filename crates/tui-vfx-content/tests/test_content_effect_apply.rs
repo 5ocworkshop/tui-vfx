@@ -1,13 +1,15 @@
 // <FILE>tui-vfx-content/tests/test_content_effect_apply.rs</FILE> - <DESC>Tests for ContentEffect::apply ergonomic methods</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>feat/content-ergonomics: ContentEffect::apply convenience entry point</WCTX>
-// <CLOG>Initial test file covering apply / apply_to_borrowed / apply_with_context</CLOG>
+// <VERS>VERSION: 2.0.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: apply_with_context removed; tests now exercise apply_with_runtime and the TransformContext-shaped explicit-dispatcher path.</WCTX>
+// <CLOG>2.0.0: BREAKING — migrate the apply_with_context call to apply_with_runtime; explicit-dispatcher tests construct a TransformContext.</CLOG>
 
 use std::borrow::Cow;
 
 use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use tui_vfx_content::traits::TransformContext;
 use tui_vfx_content::transformers::get_transformer;
 use tui_vfx_content::types::{ContentEffect, ScrambleCharset};
+use tui_vfx_style::traits::ShaderRuntimeParams;
 
 fn typewriter() -> ContentEffect {
     ContentEffect::Typewriter {
@@ -79,21 +81,23 @@ fn apply_matches_explicit_dispatcher_path() {
     let via_apply = effect.apply(target, progress);
 
     let transformer = get_transformer(&effect);
-    let ctx = SignalContext::default();
+    let sig = SignalContext::default();
+    let params = ShaderRuntimeParams::new();
+    let ctx = TransformContext::new(&sig, &params);
     let via_explicit = transformer.transform(target, progress, &ctx).into_owned();
 
     assert_eq!(via_apply, via_explicit);
 }
 
 #[test]
-fn apply_with_context_matches_explicit_path_with_same_context() {
-    // Advanced entry point: with a non-default context, output must
-    // match the explicit dispatcher + transform call with that same
-    // context.
+fn apply_with_runtime_matches_explicit_path_with_same_context() {
+    // Advanced entry point: with a non-default signal context and an
+    // empty runtime-params map, output must match the explicit dispatcher
+    // + transform call wrapping the same parts in a TransformContext.
     let effect = scramble();
     let target = "SYSTEM ONLINE";
     let progress = 0.3;
-    let ctx = SignalContext {
+    let sig = SignalContext {
         frame: 42,
         seed: 99,
         width: 80,
@@ -107,12 +111,14 @@ fn apply_with_context_matches_explicit_path_with_same_context() {
         cell_y: None,
         ..Default::default()
     };
+    let params = ShaderRuntimeParams::new();
 
     let via_apply = effect
-        .apply_with_context(target, progress, &ctx)
+        .apply_with_runtime(target, progress, &sig, &params)
         .into_owned();
 
     let transformer = get_transformer(&effect);
+    let ctx = TransformContext::new(&sig, &params);
     let via_explicit = transformer.transform(target, progress, &ctx).into_owned();
 
     assert_eq!(via_apply, via_explicit);
@@ -143,4 +149,4 @@ fn apply_handles_single_character_target() {
 }
 
 // <FILE>tui-vfx-content/tests/test_content_effect_apply.rs</FILE> - <DESC>Tests for ContentEffect::apply ergonomic methods</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 2.0.0</VERS>

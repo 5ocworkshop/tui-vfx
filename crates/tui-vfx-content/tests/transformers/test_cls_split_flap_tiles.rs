@@ -1,11 +1,11 @@
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_split_flap_tiles.rs</FILE> - <DESC>SplitFlap multi-cell Solari tile behavior tests</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Phase 3 mechanical display primitives: add SplitFlap tile geometry coverage.</WCTX>
-// <CLOG>0.2.0: prove multi-cell tile mode honors cascade and cycles controls.
-// 0.1.0: add failing tests for tile serde, 1x1 compatibility, validation, and center-hinged frames.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>0.3.0: wrap the legacy 1x1 transform comparison in a TransformContext built from a default SignalContext + empty ShaderRuntimeParams.</CLOG>
 
 use tui_vfx_content::prelude::*;
 use tui_vfx_content::transformers::{SplitFlap, SplitFlapCharset, SplitFlapDispersion};
+use tui_vfx_style::traits::ShaderRuntimeParams;
 
 fn canonical_tile_effect(tile_width: u16, tile_height: u16) -> ContentEffect {
     serde_json::from_value(serde_json::json!({
@@ -74,14 +74,10 @@ fn split_flap_legacy_1x1_matches_existing_transformer_path() {
     }))
     .unwrap();
 
-    assert_eq!(
-        effect.apply(target, 0.5),
-        old.transform(
-            target,
-            0.5,
-            &mixed_signals::prelude::SignalContext::default()
-        )
-    );
+    let sig = mixed_signals::prelude::SignalContext::default();
+    let params = ShaderRuntimeParams::new();
+    let ctx = TransformContext::new(&sig, &params);
+    assert_eq!(effect.apply(target, 0.5), old.transform(target, 0.5, &ctx));
     assert_eq!(effect.apply(target, 1.0), target);
 }
 
@@ -187,4 +183,4 @@ fn split_flap_tile_mode_honors_cycles() {
 }
 
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_split_flap_tiles.rs</FILE> - <DESC>SplitFlap multi-cell Solari tile behavior tests</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

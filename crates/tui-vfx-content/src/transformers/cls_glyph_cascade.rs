@@ -1,13 +1,12 @@
 // <FILE>tui-vfx-content/src/transformers/cls_glyph_cascade.rs</FILE> - <DESC>Glyph-cascade transformer for evolve-like text transitions</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>New richer evolve-like content transformer with custom alphabets and reveal modes</WCTX>
-// <CLOG>Add GlyphCascade transformer supporting custom glyph alphabets, multiple reveal patterns, and into/from/glyph-only modes</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>1.1.0: TextTransformer signature now takes &TransformContext<'_>; this transformer ignores the context and underscores the parameter.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::types::{
     DissolveDirection, GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern,
 };
-use mixed_signals::prelude::SignalContext;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
 use unicode_segmentation::UnicodeSegmentation;
@@ -134,7 +133,7 @@ impl TextTransformer for GlyphCascade {
         &self,
         target: &'a str,
         progress: f64,
-        _signal_ctx: &SignalContext,
+        _ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if target.is_empty() {
             return Cow::Borrowed(target);
@@ -184,6 +183,11 @@ impl TextTransformer for GlyphCascade {
 mod tests {
     use super::*;
     use mixed_signals::prelude::SignalContext;
+    use tui_vfx_style::traits::ShaderRuntimeParams;
+
+    fn empty_ctx() -> (SignalContext, ShaderRuntimeParams) {
+        (SignalContext::default(), ShaderRuntimeParams::new())
+    }
 
     #[test]
     fn into_target_lands_on_target() {
@@ -194,8 +198,9 @@ mod tests {
             7,
             GlyphCascadeMode::IntoTarget,
         );
+        let (sig, params) = empty_ctx();
         assert_eq!(
-            effect.transform("TEST", 1.0, &SignalContext::default()),
+            effect.transform("TEST", 1.0, &TransformContext::new(&sig, &params)),
             "TEST"
         );
     }
@@ -209,7 +214,8 @@ mod tests {
             7,
             GlyphCascadeMode::GlyphsOnly,
         );
-        let rendered = effect.transform("AB", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let rendered = effect.transform("AB", 0.5, &TransformContext::new(&sig, &params));
         assert!(
             rendered
                 .chars()
@@ -219,4 +225,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_glyph_cascade.rs</FILE> - <DESC>Glyph-cascade transformer for evolve-like text transitions</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

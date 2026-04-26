@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/transformers/cls_odometer.rs</FILE> - <DESC>Odometer transformer with optional mechanical cycle path covering ordered drums, slot reels, and per-tile spring settle</DESC>
-// <VERS>VERSION: 4.0.0</VERS>
-// <WCTX>Phase 3 of mechanical circular content cycles plan: attach mechanical config + wire cascade + per-tile settle in one phase per the no-inert rule.</WCTX>
-// <CLOG>4.0.0: route non-Pair sources tile-by-tile via route_between + cascade + settle + roll_cycle_window; Pair source preserves the existing whole-grid roll byte-for-byte.</CLOG>
+// <VERS>VERSION: 4.0.1</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>. Phase C will switch the underscored parameter to read ctx.runtime_params.</WCTX>
+// <CLOG>4.0.1: TextTransformer signature now takes &TransformContext<'_>; the parameter stays underscored until Phase C wires runtime_params through resolve_mechanical_cycle_with_context.</CLOG>
 
 use crate::mechanical::{
     MechanicalSizing, MechanicalSource, MechanicalTile, NumericRouteHint, TileScheduleMeta,
@@ -9,12 +9,11 @@ use crate::mechanical::{
     paired_grids, resolve_mechanical_cycle, roll_cycle_window, roll_grid_window, route_between,
     settle_sample_for, tile_progress_for, tile_rects,
 };
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::types::{
     MechanicalCascadePolicy, MechanicalContentSource, MechanicalCycleConfig, OdometerDirection,
     OdometerTravel,
 };
-use mixed_signals::prelude::SignalContext;
 use std::borrow::Cow;
 use tui_vfx_types::{Grid, OwnedGrid};
 
@@ -61,7 +60,7 @@ impl TextTransformer for Odometer {
         &self,
         target: &'a str,
         progress: f64,
-        _signal_ctx: &SignalContext,
+        _ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
@@ -285,4 +284,4 @@ fn numeric_carry_hint(
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_odometer.rs</FILE>
-// <VERS>END OF VERSION: 4.0.0</VERS>
+// <VERS>END OF VERSION: 4.0.1</VERS>

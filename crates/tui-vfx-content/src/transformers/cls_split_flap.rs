@@ -1,17 +1,16 @@
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions, flip-preview glyph, hinge-window flicker, per-column dispersion patterns)</DESC>
-// <VERS>VERSION: 3.4.0</VERS>
-// <WCTX>Phase 3 adds multi-cell SplitFlap tile routing while preserving the 1x1 legacy path.</WCTX>
-// <CLOG>3.4.0: route multi-cell tile mode through SplitFlap speed/cascade/cycles/jitter/dispersion controls.
-// 3.3.0: add tile_width/tile_height and route validated even-height tiles through mechanical center-hinge helpers.</CLOG>
+// <VERS>VERSION: 3.5.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>3.5.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for speed/cascade/cycles signal evaluation.</CLOG>
 
 use crate::mechanical::{
     MechanicalSizing, MechanicalTile, grid_to_text, paired_grids, split_flap_tile_frame,
     validate_split_flap_tile,
 };
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::utils::char_turn;
 use mixed_signals::physics::DampedSpring;
-use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use mixed_signals::prelude::SignalOrFloat;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use tui_vfx_types::Grid;
@@ -419,24 +418,24 @@ impl TextTransformer for SplitFlap {
         &self,
         target: &'a str,
         progress: f64,
-        signal_ctx: &SignalContext,
+        ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
         }
         let speed = self
             .speed
-            .evaluate(progress, signal_ctx)
+            .evaluate(progress, ctx.signal_ctx)
             .unwrap_or(0.0)
             .max(0.0);
         let cascade = self
             .cascade
-            .evaluate(progress, signal_ctx)
+            .evaluate(progress, ctx.signal_ctx)
             .unwrap_or(0.0)
             .max(0.0);
         let cycles = self
             .cycles
-            .evaluate(progress, signal_ctx)
+            .evaluate(progress, ctx.signal_ctx)
             .unwrap_or(0.0)
             .max(0.0) as f64;
 
@@ -743,9 +742,19 @@ impl TextTransformer for SplitFlap {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mixed_signals::prelude::SignalContext;
+    use std::sync::OnceLock;
+    use tui_vfx_style::traits::ShaderRuntimeParams;
 
-    fn ctx() -> SignalContext {
-        SignalContext::new(0, 0)
+    static CTX_PARTS: OnceLock<(SignalContext, ShaderRuntimeParams)> = OnceLock::new();
+
+    fn ctx_parts() -> &'static (SignalContext, ShaderRuntimeParams) {
+        CTX_PARTS.get_or_init(|| (SignalContext::new(0, 0), ShaderRuntimeParams::new()))
+    }
+
+    fn tctx() -> TransformContext<'static> {
+        let p = ctx_parts();
+        TransformContext::new(&p.0, &p.1)
     }
 
     /// Test helper: common 6-arg form (pre-spring/pre-authentic/pre-from).
@@ -814,13 +823,13 @@ mod tests {
     #[test]
     fn complete_progress_returns_target_unchanged() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false);
-        assert_eq!(x.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(x.transform("HELLO", 1.0, &tctx()), "HELLO");
     }
 
     #[test]
     fn default_behavior_matches_v2_linear_walk() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false);
-        let c = x.transform("Z", 0.5, &ctx()).chars().next().unwrap();
+        let c = x.transform("Z", 0.5, &tctx()).chars().next().unwrap();
         assert_ne!(c, 'Z');
     }
 
@@ -829,14 +838,14 @@ mod tests {
     #[test]
     fn cycles_make_low_index_targets_flip_through_pool() {
         let x = sf(2.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false);
-        let c = x.transform("A", 0.25, &ctx()).chars().next().unwrap();
+        let c = x.transform("A", 0.25, &tctx()).chars().next().unwrap();
         assert_ne!(c, 'A');
     }
 
     #[test]
     fn cycles_still_land_at_progress_1() {
         let x = sf(3.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false);
-        assert_eq!(x.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(x.transform("HELLO", 1.0, &tctx()), "HELLO");
     }
 
     // ---------- jitter ----------
@@ -867,20 +876,20 @@ mod tests {
     #[test]
     fn charset_digits_cycles_digits_only() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Digits, false, 0.0, false);
-        let c = x.transform("7", 0.5, &ctx()).chars().next().unwrap();
+        let c = x.transform("7", 0.5, &tctx()).chars().next().unwrap();
         assert!(c.is_ascii_digit() || c == ' ');
     }
 
     #[test]
     fn charset_digits_lands_on_digits() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Digits, false, 0.0, false);
-        assert_eq!(x.transform("2024", 1.0, &ctx()), "2024");
+        assert_eq!(x.transform("2024", 1.0, &tctx()), "2024");
     }
 
     #[test]
     fn charset_uppercase_cycles_letters_only() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Uppercase, false, 0.0, false);
-        let r = x.transform("LISBON", 0.5, &ctx());
+        let r = x.transform("LISBON", 0.5, &tctx());
         for c in r.chars() {
             assert!(c.is_ascii_uppercase() || c == ' ');
         }
@@ -891,7 +900,7 @@ mod tests {
     #[test]
     fn settle_overshoot_lands_on_target_at_progress_1() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Alpha, true, 0.0, false);
-        assert_eq!(x.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(x.transform("HELLO", 1.0, &tctx()), "HELLO");
     }
 
     // ---------- leading_blocks ----------
@@ -899,14 +908,14 @@ mod tests {
     #[test]
     fn leading_blocks_shows_block_glyph_at_opening() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.3, false);
-        let c = x.transform("A", 0.1, &ctx()).chars().next().unwrap();
+        let c = x.transform("A", 0.1, &tctx()).chars().next().unwrap();
         assert!(BLOCK_CHARS.contains(&c));
     }
 
     #[test]
     fn leading_blocks_zero_preserves_v2_behavior() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, false);
-        let c = x.transform("A", 0.05, &ctx()).chars().next().unwrap();
+        let c = x.transform("A", 0.05, &tctx()).chars().next().unwrap();
         assert!(!BLOCK_CHARS.contains(&c));
     }
 
@@ -915,22 +924,22 @@ mod tests {
     #[test]
     fn settle_hinge_plays_rotation_in_settle_window() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, true);
-        let c = x.transform("A", 0.9, &ctx()).chars().next().unwrap();
+        let c = x.transform("A", 0.9, &tctx()).chars().next().unwrap();
         assert!(HINGE_CHARS.contains(&c));
     }
 
     #[test]
     fn settle_hinge_progresses_through_rotation() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, true);
-        let early = x.transform("A", 0.83, &ctx()).chars().next().unwrap();
-        let late = x.transform("A", 0.99, &ctx()).chars().next().unwrap();
+        let early = x.transform("A", 0.83, &tctx()).chars().next().unwrap();
+        let late = x.transform("A", 0.99, &tctx()).chars().next().unwrap();
         assert_ne!(early, late);
     }
 
     #[test]
     fn settle_hinge_lands_on_target_at_progress_1() {
         let x = sf(0.0, 0.0, SplitFlapCharset::Alpha, false, 0.0, true);
-        assert_eq!(x.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(x.transform("HELLO", 1.0, &tctx()), "HELLO");
     }
 
     // ---------- spring_settle ----------
@@ -959,8 +968,8 @@ mod tests {
         );
         let samples = [0.835, 0.86, 0.9, 0.94, 0.97];
         let any_diff = samples.iter().any(|&t| {
-            linear.transform("A", t, &ctx()).chars().next()
-                != spring.transform("A", t, &ctx()).chars().next()
+            linear.transform("A", t, &tctx()).chars().next()
+                != spring.transform("A", t, &tctx()).chars().next()
         });
         assert!(any_diff);
     }
@@ -977,7 +986,7 @@ mod tests {
             true,
             false,
         );
-        assert_eq!(x.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(x.transform("HELLO", 1.0, &tctx()), "HELLO");
     }
 
     // ---------- authentic_timing ----------
@@ -994,7 +1003,7 @@ mod tests {
             false,
             true,
         );
-        let r = x.transform("AZ", 0.1, &ctx());
+        let r = x.transform("AZ", 0.1, &tctx());
         let chars: Vec<char> = r.chars().collect();
         assert_eq!(chars[0], 'A', "short-distance char must land early");
         assert_ne!(chars[1], 'Z', "long-distance char must still be flipping");
@@ -1012,7 +1021,7 @@ mod tests {
             false,
             true,
         );
-        assert_eq!(x.transform("FLIGHT 721", 1.0, &ctx()), "FLIGHT 721");
+        assert_eq!(x.transform("FLIGHT 721", 1.0, &tctx()), "FLIGHT 721");
     }
 
     #[test]
@@ -1027,7 +1036,7 @@ mod tests {
             false,
             true,
         );
-        let r = x.transform("AA", 0.5, &ctx());
+        let r = x.transform("AA", 0.5, &tctx());
         let chars: Vec<char> = r.chars().collect();
         assert_eq!(chars[0], chars[1]);
     }
@@ -1072,7 +1081,7 @@ mod tests {
         )
         .with_from_message("LL");
         for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
-            let r = x.transform("LX", t, &ctx());
+            let r = x.transform("LX", t, &tctx());
             assert_eq!(r.chars().next().unwrap(), 'L', "at t={t}");
         }
     }
@@ -1090,8 +1099,8 @@ mod tests {
             true,
         )
         .with_from_message("Z");
-        assert_eq!(x.transform("A", 1.0, &ctx()), "A");
-        let mid = x.transform("A", 0.5, &ctx()).chars().next().unwrap();
+        assert_eq!(x.transform("A", 1.0, &tctx()), "A");
+        let mid = x.transform("A", 0.5, &tctx()).chars().next().unwrap();
         assert_ne!(mid, 'A');
         assert_ne!(mid, 'Z');
     }
@@ -1109,7 +1118,7 @@ mod tests {
             true,
         )
         .with_from_message("LONDON");
-        assert_eq!(x.transform("PARIS ", 1.0, &ctx()), "PARIS ");
+        assert_eq!(x.transform("PARIS ", 1.0, &tctx()), "PARIS ");
     }
 
     #[test]
@@ -1125,8 +1134,8 @@ mod tests {
             true,
         )
         .with_from_message("AB");
-        assert_eq!(x.transform("ABCDE", 1.0, &ctx()), "ABCDE");
-        let r = x.transform("ABCDE", 0.05, &ctx());
+        assert_eq!(x.transform("ABCDE", 1.0, &tctx()), "ABCDE");
+        let r = x.transform("ABCDE", 0.05, &tctx());
         let chars: Vec<char> = r.chars().collect();
         assert_eq!(chars[0], 'A');
         assert_eq!(chars[1], 'B');
@@ -1150,7 +1159,7 @@ mod tests {
         )
         .with_rolling_flip(true);
         for t in [0.1, 0.3, 0.5, 0.7] {
-            let c = shader.transform("Z", t, &ctx()).chars().next().unwrap();
+            let c = shader.transform("Z", t, &tctx()).chars().next().unwrap();
             assert!(
                 HINGE_CHARS.contains(&c),
                 "rolling_flip at t={t} must show a rotation glyph, got '{c}'"
@@ -1171,7 +1180,7 @@ mod tests {
             false,
         )
         .with_rolling_flip(true);
-        assert_eq!(shader.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(shader.transform("HELLO", 1.0, &tctx()), "HELLO");
     }
 
     #[test]
@@ -1181,7 +1190,7 @@ mod tests {
         // Without rolling_flip, mid-walk should show a pool letter
         // (not a hinge glyph), confirming the old walk behavior remains
         // the default.
-        let c = shader.transform("Z", 0.3, &ctx()).chars().next().unwrap();
+        let c = shader.transform("Z", 0.3, &tctx()).chars().next().unwrap();
         assert!(
             !HINGE_CHARS.contains(&c),
             "without rolling_flip, mid-walk must show a pool letter, got '{c}'"
@@ -1206,7 +1215,7 @@ mod tests {
             true,
         );
         for t in [0.0, 0.25, 0.5, 0.75, 0.99, 1.0] {
-            let r = shader.transform("AB\nCD", t, &ctx());
+            let r = shader.transform("AB\nCD", t, &tctx());
             assert!(
                 r.contains('\n'),
                 "multi-line message must preserve newline at t={t}, got {r:?}"
@@ -1233,7 +1242,7 @@ mod tests {
             true,
         );
         let target = "ROW 1\nROW 2\nROW 3";
-        assert_eq!(shader.transform(target, 1.0, &ctx()), target);
+        assert_eq!(shader.transform(target, 1.0, &tctx()), target);
     }
 
     #[test]
@@ -1250,7 +1259,7 @@ mod tests {
         )
         .with_from_message("A1\nB2");
         for t in [0.0, 0.3, 0.6, 1.0] {
-            let r = shader.transform("X9\nY8", t, &ctx());
+            let r = shader.transform("X9\nY8", t, &tctx());
             assert_eq!(
                 r.chars().filter(|&c| c == '\n').count(),
                 1,
@@ -1273,13 +1282,13 @@ mod tests {
             false,
             false,
         );
-        let opening = x.transform("S", 0.05, &ctx()).chars().next().unwrap();
+        let opening = x.transform("S", 0.05, &tctx()).chars().next().unwrap();
         assert!(BLOCK_CHARS.contains(&opening));
-        let middle = x.transform("S", 0.5, &ctx()).chars().next().unwrap();
+        let middle = x.transform("S", 0.5, &tctx()).chars().next().unwrap();
         assert!(!BLOCK_CHARS.contains(&middle) && !HINGE_CHARS.contains(&middle));
-        let ending = x.transform("S", 0.9, &ctx()).chars().next().unwrap();
+        let ending = x.transform("S", 0.9, &tctx()).chars().next().unwrap();
         assert!(HINGE_CHARS.contains(&ending));
-        assert_eq!(x.transform("S", 1.0, &ctx()), "S");
+        assert_eq!(x.transform("S", 1.0, &tctx()), "S");
     }
 
     // ---------- flip_preview: inverted-glyph frame inside hinge window ----------
@@ -1304,7 +1313,7 @@ mod tests {
         // Hinge window is 0.82..1.0; sweep at 30Hz density.
         for i in 0..=100 {
             let t = 0.82 + (i as f64) * 0.0018;
-            if sf.transform("A", t, &ctx()).starts_with('Ɐ') {
+            if sf.transform("A", t, &tctx()).starts_with('Ɐ') {
                 saw_turned = true;
                 break;
             }
@@ -1337,7 +1346,7 @@ mod tests {
             if t >= 1.0 {
                 break;
             }
-            let c = sf.transform("Q", t, &ctx()).chars().next().unwrap();
+            let c = sf.transform("Q", t, &tctx()).chars().next().unwrap();
             assert!(
                 HINGE_CHARS.contains(&c),
                 "flip_preview with unmapped 'Q' must still emit a hinge glyph at t={t}, got '{c}'"
@@ -1358,7 +1367,7 @@ mod tests {
             false,
         )
         .with_flip_preview(true);
-        assert_eq!(sf.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(sf.transform("HELLO", 1.0, &tctx()), "HELLO");
     }
 
     #[test]
@@ -1377,7 +1386,7 @@ mod tests {
         // Without flip_preview, hinge window never emits a turned glyph.
         for i in 0..=100 {
             let t = 0.82 + (i as f64) * 0.0018;
-            let c = sf.transform("A", t, &ctx()).chars().next().unwrap();
+            let c = sf.transform("A", t, &tctx()).chars().next().unwrap();
             assert_ne!(c, 'Ɐ', "default off must not emit turned glyph at t={t}");
         }
     }
@@ -1403,7 +1412,7 @@ mod tests {
         let mut distinct = std::collections::HashSet::new();
         for i in 0..=20 {
             let t = 0.82 + (i as f64) * 0.009;
-            let c = sf.transform("A", t, &ctx()).chars().next().unwrap();
+            let c = sf.transform("A", t, &tctx()).chars().next().unwrap();
             distinct.insert(c);
         }
         assert!(
@@ -1425,7 +1434,7 @@ mod tests {
             false,
         )
         .with_flip_flicker(true);
-        assert_eq!(sf.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(sf.transform("HELLO", 1.0, &tctx()), "HELLO");
     }
 
     #[test]
@@ -1443,8 +1452,8 @@ mod tests {
             false,
         )
         .with_flip_flicker(true);
-        let a = sf.transform("BOARDING", 0.87, &ctx());
-        let b = sf.transform("BOARDING", 0.87, &ctx());
+        let a = sf.transform("BOARDING", 0.87, &tctx());
+        let b = sf.transform("BOARDING", 0.87, &tctx());
         assert_eq!(a, b);
     }
 
@@ -1467,7 +1476,7 @@ mod tests {
         let mut saw_divergence = false;
         for i in 0..20 {
             let t = 0.82 + (i as f64) * 0.009;
-            let rendered = sf.transform("ABCDEFGH", t, &ctx());
+            let rendered = sf.transform("ABCDEFGH", t, &tctx());
             let chars: Vec<char> = rendered.chars().collect();
             if chars.windows(2).any(|w| w[0] != w[1]) {
                 saw_divergence = true;
@@ -1491,8 +1500,8 @@ mod tests {
             .with_dispersion(SplitFlapDispersion::Legacy);
         for t in [0.1, 0.3, 0.5, 0.7, 1.0] {
             assert_eq!(
-                legacy.transform("HELLO", t, &ctx()),
-                explicit.transform("HELLO", t, &ctx()),
+                legacy.transform("HELLO", t, &tctx()),
+                explicit.transform("HELLO", t, &tctx()),
                 "Legacy dispersion must match default cascade behavior at t={t}"
             );
         }
@@ -1504,11 +1513,11 @@ mod tests {
         // char_progress => all settle simultaneously.
         let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.5))
             .with_dispersion(SplitFlapDispersion::Simultaneous);
-        assert_eq!(sf.transform("HELLO", 1.0, &ctx()), "HELLO");
+        assert_eq!(sf.transform("HELLO", 1.0, &tctx()), "HELLO");
         // At t close to 1.0 but not quite, all chars should be "in progress"
         // (not yet settled) at the same rate — their glyphs should be
         // chosen from the same point in the walk.
-        let r = sf.transform("AAAA", 0.3, &ctx());
+        let r = sf.transform("AAAA", 0.3, &tctx());
         let chars: Vec<char> = r.chars().collect();
         assert!(
             chars.iter().all(|&c| c == chars[0]),
@@ -1524,7 +1533,7 @@ mod tests {
             .with_dispersion(SplitFlapDispersion::Authentic);
         // At progress=0.1, a short-distance char should have settled but
         // a long-distance char should still be rotating.
-        let r = sf.transform("AZ", 0.1, &ctx());
+        let r = sf.transform("AZ", 0.1, &tctx());
         let chars: Vec<char> = r.chars().collect();
         assert_eq!(
             chars[0], 'A',
@@ -1540,8 +1549,8 @@ mod tests {
         let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.02))
             .with_dispersion(SplitFlapDispersion::Random);
         assert_eq!(
-            sf.transform("BOARDING", 0.5, &ctx()),
-            sf.transform("BOARDING", 0.5, &ctx())
+            sf.transform("BOARDING", 0.5, &tctx()),
+            sf.transform("BOARDING", 0.5, &tctx())
         );
     }
 
@@ -1565,7 +1574,7 @@ mod tests {
             false,
         )
         .with_dispersion(SplitFlapDispersion::CenterOut);
-        let r = sf.transform("AAAAA", 0.99, &ctx());
+        let r = sf.transform("AAAAA", 0.99, &tctx());
         let chars: Vec<char> = r.chars().collect();
         assert!(
             HINGE_CHARS.contains(&chars[2]),
@@ -1596,7 +1605,7 @@ mod tests {
             false,
         )
         .with_dispersion(SplitFlapDispersion::EdgeIn);
-        let r = sf.transform("AAAAA", 0.99, &ctx());
+        let r = sf.transform("AAAAA", 0.99, &tctx());
         let chars: Vec<char> = r.chars().collect();
         assert!(
             HINGE_CHARS.contains(&chars[0]),
@@ -1627,7 +1636,7 @@ mod tests {
             let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.05))
                 .with_dispersion(disp);
             assert_eq!(
-                sf.transform("FLIGHT 721", 1.0, &ctx()),
+                sf.transform("FLIGHT 721", 1.0, &tctx()),
                 "FLIGHT 721",
                 "dispersion {disp:?} must land on target at progress=1.0"
             );
@@ -1641,4 +1650,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE>
-// <VERS>END OF VERSION: 3.2.0</VERS>
+// <VERS>END OF VERSION: 3.5.0</VERS>

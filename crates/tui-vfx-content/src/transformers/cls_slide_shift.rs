@@ -1,12 +1,11 @@
 // <FILE>tui-vfx-content/src/transformers/cls_slide_shift.rs</FILE> - <DESC>SlideShift transformer</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
-// <WCTX>SlideShift barrier span support</WCTX>
-// <CLOG>Allow shift_width barrier span and silence clippy arity warning</CLOG>
+// <VERS>VERSION: 1.4.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>1.4.0: TextTransformer signature now takes &TransformContext<'_>; this transformer ignores the context and underscores the parameter.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::types::{SlideShiftFlowMode, SlideShiftLineMode};
 use crate::utils::fnc_graphemes::len_graphemes;
-use mixed_signals::prelude::SignalContext;
 use std::borrow::Cow;
 
 /// Sliding text that shifts rows after crossing a column span.
@@ -52,7 +51,7 @@ impl TextTransformer for SlideShift {
         &self,
         target: &'a str,
         progress: f64,
-        _signal_ctx: &SignalContext,
+        _ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         let progress = progress.clamp(0.0, 1.0);
         let delta_col = (self.end_col - self.start_col) as f64;
@@ -134,4 +133,4 @@ impl TextTransformer for SlideShift {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_slide_shift.rs</FILE> - <DESC>SlideShift transformer</DESC>
-// <VERS>END OF VERSION: 1.3.0</VERS>
+// <VERS>END OF VERSION: 1.4.0</VERS>

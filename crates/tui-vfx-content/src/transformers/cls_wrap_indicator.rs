@@ -1,11 +1,10 @@
 // <FILE>tui-vfx-content/src/transformers/cls_wrap_indicator.rs</FILE>
 // <DESC>Wraps text with prefix/suffix symbols based on progress</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>Hover indicator effects implementation</WCTX>
-// <CLOG>Initial implementation with progress-based prefix/suffix wrapping</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>1.1.0: TextTransformer signature now takes &TransformContext<'_>; this transformer ignores the context and underscores the parameter.</CLOG>
 
-use crate::traits::TextTransformer;
-use mixed_signals::prelude::SignalContext;
+use crate::traits::{TextTransformer, TransformContext};
 use std::borrow::Cow;
 
 /// Wraps text with prefix/suffix symbols based on progress.
@@ -62,7 +61,7 @@ impl TextTransformer for WrapIndicator {
         &self,
         target: &'a str,
         progress: f64,
-        _signal_ctx: &SignalContext,
+        _ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress <= 0.0 {
             return Cow::Borrowed(target);
@@ -99,22 +98,28 @@ impl TextTransformer for WrapIndicator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mixed_signals::prelude::SignalContext;
+    use std::sync::OnceLock;
+    use tui_vfx_style::traits::ShaderRuntimeParams;
 
-    fn ctx() -> SignalContext {
-        SignalContext::default()
+    static CTX_PARTS: OnceLock<(SignalContext, ShaderRuntimeParams)> = OnceLock::new();
+
+    fn tctx() -> TransformContext<'static> {
+        let p = CTX_PARTS.get_or_init(|| (SignalContext::default(), ShaderRuntimeParams::new()));
+        TransformContext::new(&p.0, &p.1)
     }
 
     #[test]
     fn zero_progress_unchanged() {
         let wrap = WrapIndicator::new("» ".to_string(), " «".to_string());
-        let result = wrap.transform("YES", 0.0, &ctx());
+        let result = wrap.transform("YES", 0.0, &tctx());
         assert_eq!(result, "YES");
     }
 
     #[test]
     fn full_progress_complete_wrap() {
         let wrap = WrapIndicator::new("» ".to_string(), " «".to_string());
-        let result = wrap.transform("YES", 1.0, &ctx());
+        let result = wrap.transform("YES", 1.0, &tctx());
         assert_eq!(result, "» YES «");
     }
 
@@ -124,57 +129,57 @@ mod tests {
         let wrap = WrapIndicator::new("» ".to_string(), " «".to_string());
 
         // At 25% (1 char) - show just "»"
-        let result = wrap.transform("YES", 0.25, &ctx());
+        let result = wrap.transform("YES", 0.25, &tctx());
         assert_eq!(result, "»YES");
 
         // At 50% (2 chars) - show "» " (full prefix)
-        let result = wrap.transform("YES", 0.5, &ctx());
+        let result = wrap.transform("YES", 0.5, &tctx());
         assert_eq!(result, "» YES");
 
         // At 75% (3 chars) - show "» " + " "
-        let result = wrap.transform("YES", 0.75, &ctx());
+        let result = wrap.transform("YES", 0.75, &tctx());
         assert_eq!(result, "» YES ");
     }
 
     #[test]
     fn arrows_preset() {
         let wrap = WrapIndicator::arrows();
-        let result = wrap.transform("OK", 1.0, &ctx());
+        let result = wrap.transform("OK", 1.0, &tctx());
         assert_eq!(result, "» OK «");
     }
 
     #[test]
     fn brackets_preset() {
         let wrap = WrapIndicator::brackets();
-        let result = wrap.transform("OK", 1.0, &ctx());
+        let result = wrap.transform("OK", 1.0, &tctx());
         assert_eq!(result, "[ OK ]");
     }
 
     #[test]
     fn angles_preset() {
         let wrap = WrapIndicator::angles();
-        let result = wrap.transform("OK", 1.0, &ctx());
+        let result = wrap.transform("OK", 1.0, &tctx());
         assert_eq!(result, "< OK >");
     }
 
     #[test]
     fn empty_prefix_suffix() {
         let wrap = WrapIndicator::new(String::new(), String::new());
-        let result = wrap.transform("TEXT", 1.0, &ctx());
+        let result = wrap.transform("TEXT", 1.0, &tctx());
         assert_eq!(result, "TEXT");
     }
 
     #[test]
     fn only_prefix() {
         let wrap = WrapIndicator::new("→ ".to_string(), String::new());
-        let result = wrap.transform("Item", 1.0, &ctx());
+        let result = wrap.transform("Item", 1.0, &tctx());
         assert_eq!(result, "→ Item");
     }
 
     #[test]
     fn only_suffix() {
         let wrap = WrapIndicator::new(String::new(), " ←".to_string());
-        let result = wrap.transform("Item", 1.0, &ctx());
+        let result = wrap.transform("Item", 1.0, &tctx());
         assert_eq!(result, "Item ←");
     }
 
@@ -183,15 +188,15 @@ mod tests {
         let wrap = WrapIndicator::new("» ".to_string(), " «".to_string());
 
         // Negative progress should be treated as 0
-        let result = wrap.transform("X", -0.5, &ctx());
+        let result = wrap.transform("X", -0.5, &tctx());
         assert_eq!(result, "X");
 
         // Progress > 1 should be clamped to 1
-        let result = wrap.transform("X", 2.0, &ctx());
+        let result = wrap.transform("X", 2.0, &tctx());
         assert_eq!(result, "» X «");
     }
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_wrap_indicator.rs</FILE>
 // <DESC>Wraps text with prefix/suffix symbols based on progress</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

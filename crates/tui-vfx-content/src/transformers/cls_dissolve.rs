@@ -1,12 +1,11 @@
 // <FILE>tui-vfx-content/src/transformers/cls_dissolve.rs</FILE> - <DESC>Text dissolve transformer</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Effect parity: Content transformers</WCTX>
-// <CLOG>Added Clustered, ByWord, ByLine patterns</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>1.2.0: TextTransformer signature now takes &TransformContext<'_>; this transformer ignores the context and underscores the parameter.</CLOG>
 
-use crate::traits::TextTransformer;
+use crate::traits::{TextTransformer, TransformContext};
 use crate::types::{DissolveDirection, DissolvePattern, DissolveReplacement};
 use crate::utils::fnc_graphemes::len_graphemes;
-use mixed_signals::prelude::SignalContext;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
 use unicode_segmentation::UnicodeSegmentation;
@@ -218,7 +217,7 @@ impl TextTransformer for Dissolve {
         &self,
         target: &'a str,
         progress: f64,
-        _signal_ctx: &SignalContext,
+        _ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress <= 0.0 {
             return Cow::Borrowed(target);
@@ -279,11 +278,18 @@ impl TextTransformer for Dissolve {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mixed_signals::prelude::SignalContext;
+    use tui_vfx_style::traits::ShaderRuntimeParams;
+
+    fn empty_ctx() -> (SignalContext, ShaderRuntimeParams) {
+        (SignalContext::default(), ShaderRuntimeParams::new())
+    }
 
     #[test]
     fn test_no_dissolve_at_zero() {
         let dissolve = Dissolve::default();
-        let result = dissolve.transform("Hello", 0.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = dissolve.transform("Hello", 0.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "Hello");
     }
 
@@ -295,7 +301,8 @@ mod tests {
             DissolveDirection::LeftToRight,
             0,
         );
-        let result = dissolve.transform("Hello", 1.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = dissolve.transform("Hello", 1.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "     ");
     }
 
@@ -307,7 +314,8 @@ mod tests {
             DissolveDirection::LeftToRight,
             0,
         );
-        let result = dissolve.transform("Hi", 1.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = dissolve.transform("Hi", 1.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "..");
     }
 
@@ -319,7 +327,8 @@ mod tests {
             DissolveDirection::LeftToRight,
             0,
         );
-        let result = dissolve.transform("AB", 1.0, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = dissolve.transform("AB", 1.0, &TransformContext::new(&sig, &params));
         assert_eq!(result, "██");
     }
 
@@ -332,7 +341,8 @@ mod tests {
             0,
         );
         // At 50% progress, roughly half should be dissolved
-        let result = dissolve.transform("ABCD", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = dissolve.transform("ABCD", 0.5, &TransformContext::new(&sig, &params));
         // First two characters should be dissolved
         assert!(result.starts_with("  "));
     }
@@ -345,7 +355,8 @@ mod tests {
             DissolveDirection::RightToLeft,
             0,
         );
-        let result = dissolve.transform("ABCD", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let result = dissolve.transform("ABCD", 0.5, &TransformContext::new(&sig, &params));
         // Last two characters should be dissolved
         assert!(result.ends_with("  "));
     }
@@ -358,11 +369,13 @@ mod tests {
             DissolveDirection::LeftToRight,
             42,
         );
-        let result1 = dissolve.transform("Hello", 0.5, &SignalContext::default());
-        let result2 = dissolve.transform("Hello", 0.5, &SignalContext::default());
+        let (sig, params) = empty_ctx();
+        let ctx = TransformContext::new(&sig, &params);
+        let result1 = dissolve.transform("Hello", 0.5, &ctx);
+        let result2 = dissolve.transform("Hello", 0.5, &ctx);
         assert_eq!(result1, result2);
     }
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_dissolve.rs</FILE> - <DESC>Text dissolve transformer</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

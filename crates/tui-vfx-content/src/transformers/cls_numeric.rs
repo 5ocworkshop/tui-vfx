@@ -1,10 +1,9 @@
 // <FILE>tui-vfx-content/src/transformers/cls_numeric.rs</FILE> - <DESC>Numeric transformer</DESC>
-// <VERS>VERSION: 1.0.1 - 2025-12-16T20:40:24Z</VERS>
-// <WCTX>feat-20251224-155211: Signal-driven content effects</WCTX>
-// <CLOG>BREAKING: Updated transform() signature to accept SignalContext parameter</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
+// <CLOG>1.1.0: TextTransformer signature now takes &TransformContext<'_>; this transformer ignores the context and underscores the parameter.</CLOG>
 
-use crate::traits::TextTransformer;
-use mixed_signals::prelude::SignalContext;
+use crate::traits::{TextTransformer, TransformContext};
 use std::borrow::Cow;
 #[derive(Debug, Clone)]
 pub struct Numeric {
@@ -29,7 +28,7 @@ impl TextTransformer for Numeric {
         &self,
         target: &'a str,
         progress: f64,
-        _signal_ctx: &SignalContext,
+        _ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
@@ -55,4 +54,4 @@ impl TextTransformer for Numeric {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_numeric.rs</FILE> - <DESC>Numeric transformer</DESC>
-// <VERS>END OF VERSION: 1.0.1 - 2025-12-16T20:40:24Z</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>
