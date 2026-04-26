@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-buy-once-architecture-sweep.md</FILE> - <DESC>Repository-wide buy-once/cry-once architectural sweep — surfaces conversion points where a single deliberate change today would prevent repeated trait/signature/schema churn later. Modeled after the TransformContext bundle exemplar (Slice 6.6). Findings are evidence-based via ofpf-* tooling and filtered through Intentions 23 (rule of three) and 24 (changes earn their place).</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
-<!-- <WCTX>Slice 6.6 Phase F closed Finding 1.1.A — record DONE status, closing commits, and final shape (Option C with Deref) in §Top 1 and §Recommendation Summary table.</WCTX> -->
-<!-- <CLOG>1.3.0: mark Finding 1.1.A DONE — Slice 6.6 Phase F closed (commits 51f5204, c883683, b628abd, 5535b0e, 7821815). §Top 1 + summary-table row updated.</CLOG> -->
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
+<!-- <WCTX>Mark Finding 1.2.A and Finding 1.7.A DONE — VfxBindable<T, S = Never> shipped in tui-vfx-core::bindable, three legacy types aliased, originals recyclebinned, cross-crate home decision resolved.</WCTX> -->
+<!-- <CLOG>1.4.0: mark Findings 1.2.A and 1.7.A DONE 2026-04-26. 1.3.0: mark Finding 1.1.A DONE — Slice 6.6 Phase F closed (commits 51f5204, c883683, b628abd, 5535b0e, 7821815).</CLOG> -->
 
 # tui-vfx buy-once architecture sweep
 
@@ -138,6 +138,8 @@ pub fn evaluate(&self, loop_t: f64, signal_ctx: &SignalContext, runtime_params: 
 ### 1.2 Sibling type proliferation
 
 #### Finding 1.2.A — `Bindable*` family wants `Bindable<T>` generalization
+
+> **DONE 2026-04-26.** Landed as `tui_vfx_core::bindable::VfxBindable<T, S = Never>` with three type aliases (`VfxBindableU16`, `VfxBindableString`, `VfxBindableValue`). The three legacy concrete types are now thin re-export aliases in their original modules; the hand-rolled bodies are in `recyclebin/`. The `RuntimeParamsRead` trait keeps `evaluate` methods in the home crate without forcing `tui-vfx-core` to depend on `tui-vfx-style`. The `BindableSignal` helper trait omits the phantom `Signal` arm from generated schemas for non-signal instantiations. Bundles Finding 1.7.A (cross-crate home decision — the consolidated type lives in `tui-vfx-core`, which both downstream consumers already depend on). 35 peer tests + 75 BindableValue regression tests green; in-scope clippy clean. Workspace verification gate handled by the parallel observability slice.
 
 **Category:** sibling type proliferation (rule-of-three already crossed).
 
@@ -387,6 +389,8 @@ Already covered: Finding 1.2.C (FontRegistry / AssetRegistry).
 
 #### Finding 1.7.A — `BindableValue` lives in compositor while `BindableU16` / `BindableString` live in style
 
+> **DONE 2026-04-26 (bundled with 1.2.A).** Resolved by hosting the consolidated `VfxBindable<T, S>` and all three concrete aliases in `tui-vfx-core::bindable`. Both downstream crates (`tui-vfx-style`, `tui-vfx-compositor`) already depended on `tui-vfx-core`, so no new crate edges were introduced. The legacy alias modules in `tui-vfx-style/src/models/` and `tui-vfx-compositor/src/types/` are now thin re-exports; the hand-rolled bodies are in `recyclebin/`.
+
 **Category:** cross-crate seam misalignment (small but Vfx*-prefix-relevant).
 
 **What.** Two of the three Bindables live in `tui-vfx-style/src/models/`; the third (`BindableValue`) lives in `tui-vfx-compositor/src/types/`. Per Intention 8 the wire-format `Vfx*` prefix rule applies; today none of the three carry it, but BindableValue is the only one that lives in a downstream crate. If the consolidation of Finding 1.2.A produces a unified `Bindable<T>` (or rename pass at V3 cutover per Intention 10), the home crate must be decided.
@@ -537,14 +541,14 @@ Three different `evaluate` signatures across the Bindable family. Looks like a c
 |---|---|---|---|
 | 1.1.A | Filter / Mask / Sampler spatial-context bundle | L | **DONE 2026-04-26** (Slice 6.6 Phase F — see §Top 1) |
 | 1.1.B | Bindable*::evaluate signature unification | M | Wait for third trigger |
-| 1.2.A | Bindable<T> generalization | L | Next slice |
+| 1.2.A | Bindable<T> generalization | L | **DONE 2026-04-26** (VfxBindable<T, S = Never> in tui-vfx-core::bindable) |
 | 1.2.B | Pool<T> generalization | S | **Do now** |
 | 1.2.C | FontRegistry / AssetRegistry merge | S | Wait for third trigger |
 | 1.3.A | VfxImageSource.image_name → BindableString | S | **Do now** |
 | 1.3.B | BindableEnum<T> for enum fields | — | Leave alone (speculative) |
 | 1.4.A | Loader Error enum consolidation | — | Leave alone (false positive) |
 | 1.6.A | FilterSpec / PreparedFilter / SplitFlap split-up | L | Next slice |
-| 1.7.A | BindableValue cross-crate home | S | Bundle into 1.2.A |
+| 1.7.A | BindableValue cross-crate home | S | **DONE 2026-04-26** (bundled with 1.2.A — home is tui-vfx-core) |
 | 1.8.A | tui-vfx-core/schema cycles | S | Wait for third trigger |
 | 1.9.A | Hand-written ConfigSchema audit | M | Next slice (as validation infra) |
 

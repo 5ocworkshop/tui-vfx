@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-2026-04-26-handoff-outstanding.md</FILE> - <DESC>Handoff capture of outstanding work from the 2026-04-26 Phase F session — single source so the next session can pick items off one at a time</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>End of 2026-04-26 session. Phase F (Slice 6.6 §F.1–F.8) shipped clean. Adjacent work surfaced during cross-repo audit + design discussion is captured here so a fresh session can address each item independently.</WCTX> -->
-<!-- <CLOG>1.0.0: initial handoff — focused_row_btop rendering bug (P1, gt-design), two design proposals awaiting decision, three Model B follow-on moves queued, sweep-doc remaining tier captured.</CLOG> -->
+<!-- <VERS>VERSION: 1.3.0</VERS> -->
+<!-- <WCTX>Mark 1.2.A + 1.7.A done after the VfxBindable<T, S> consolidation landed — three parallel hand-rolled Bindable types collapsed into one generic in tui-vfx-core, originals recyclebinned, downstream consumers compile against legacy alias names with no edits.</WCTX> -->
+<!-- <CLOG>1.3.0: mark sweep findings 1.2.A and 1.7.A done — VfxBindable<T, S = Never> shipped in tui-vfx-core::bindable; BindableU16 / BindableString / BindableValue are now thin re-export aliases; 35 new peer tests + 75 BindableValue regression tests green; sibling-agent build break in tui-vfx-debug (pipeline observability work) blocks the workspace verification gate but is unrelated to bindable scope.</CLOG> -->
 
 # Handoff — outstanding items as of 2026-04-26
 
@@ -11,13 +11,19 @@
 
 ## Index
 
-| # | Item | Repo | Severity | Estimated effort |
-|---|---|---|---|---|
-| 1 | `focused_row_btop` recipe doesn't visually distinguish selected row | gt-design | **P1 — real product bug** | half-day to a day |
-| 2 | Decide effect-composition model (named stages vs free-form graph) | tui-vfx | architectural decision | one decision meeting + small doc bump |
-| 3 | Decide signal-facade placement + scope (`tui_vfx_recipes::signals`) | tui-vfx-recipes | architectural decision | one decision meeting + Slice α/β packets |
-| 4 | Three Model B follow-on moves (composite-effect templates, filter-discard bit, resolved-coord fields) | tui-vfx | future Slice work | one Slice each |
-| 5 | Buy-once sweep findings 1.2.A / 1.2.B / 1.3.A still queued | tui-vfx | future Slice work | per-finding |
+| # | Item | Repo | Severity | Estimated effort | Status |
+|---|---|---|---|---|---|
+| 1 | `focused_row_btop` recipe doesn't visually distinguish selected row | gt-design | **P1 — real product bug** | half-day to a day | **Deferred — gt-design work; auto-closes after items 7 or 8 land. See §8.6.** |
+| 2 | Decide effect-composition model (named stages vs free-form graph) | tui-vfx | architectural decision | one decision + small doc bump | **DECIDED 2026-04-26 — Model B accepted. Acceptance note appended to `tui-vfx-effect-composition-model.md` v0.2.0.** |
+| 3 | Decide signal-facade placement + scope (`tui_vfx_recipes::signals`) | tui-vfx-recipes | architectural decision | one decision + Slice α/β packets | **DECIDED 2026-04-26 — Option A accepted, phases α + β green-lit, γ + δ deferred until 1.2.A lands. Acceptance note appended to `tui-vfx-mixed-signals-recipe-surface-proposal.md` v0.3.0.** |
+| 4 | Three Model B follow-on moves (composite-effect templates, filter-discard bit, resolved-coord fields) | tui-vfx | future Slice work | one Slice each | **Gated on item 2. Per-move recommendations in §8.3.** |
+| 5 | Buy-once sweep findings still queued | tui-vfx | future Slice work | per-finding | **1.2.B + 1.3.A DONE; 1.2.A + 1.7.A DONE 2026-04-26 (one slice — VfxBindable<T, S> in tui-vfx-core, three concrete types aliased, originals recyclebinned); other tier-2 findings tracked in §8.4.** |
+| 6 | Pipeline observability bus + `vfx-inspect` tool | tui-vfx | architectural foundation | per-phase | **IN FLIGHT (parallel session). Spec at `tui-vfx-pipeline-observability.md`.** |
+| 7 | Migrate gt-design recipe stack to V3 schema awareness | gt-design | unblocks item 1 + future V3-only recipes | multi-day packet | **Packet written 2026-04-26: `tui-vfx-2026-04-26-packet-gt-design-v3-stack-migration.md` (785 lines). Q4 recommends bundling item 8 (producer fix) into this packet. Deferred per leader direction until tui-vfx family is finished. See §8.5.** |
+| 8 | Producer-side fix: `ContentShell::card` tags every cell `Surface` instead of distinguishing inner content from border | gt-design | architectural debt V3 inherits | half-day | **Folded into item 7 packet per agent recommendation Q4=A. Co-execution rationale documented in the packet.** |
+| 9 | Probe-path fidelity regression: `pipeline-validator --probe` reports `modified_cells: 0` for known-working canonical schema_v1 recipes (e.g., `recipes/btop_focused_row_demo.json`) | tui-vfx-recipes | **silent diagnostic lie** | small bisect, then small fix | **New finding, 2026-04-26 evening. Recommended path in §8.7.** |
+| 10 | `--runtime-params-json` silently dropped on schema_v1 recipes (documented as wired only for compiled-V3 paths) | tui-vfx-recipes | small UX trap | small | **New finding. Recommended path in §8.8.** |
+| 11 | Legacy `region: TextOnly` lowering produces `Role(Text)` scope, not the content-equivalent V3 produces | tui-vfx-recipes | architectural mismatch | small if standalone, free if folded into V3 cutover | **New finding. Recommended path in §8.9.** |
 
 ---
 
@@ -126,19 +132,152 @@ Each is a separate Slice. Not blocked by anything except the item 2 decision.
 
 ---
 
-## 5. Buy-once sweep findings still queued
+## 5. Buy-once sweep findings — re-audited 2026-04-26
 
-From `docs/design/tui-vfx-buy-once-architecture-sweep.md` v1.3.0 §Recommendation Summary table (excluding finished 1.1.A which Phase F closed):
+OFPF audit during the 2026-04-26 evening session found that two items the morning handoff listed as queued had already shipped in tree. Updated state below.
 
-| Finding | Risk | Recommendation |
-|---|---|---|
-| **1.2.A** Bindable<T> generalization | L | Next slice |
-| **1.2.B** Pool<T> generalization | S | **Do now** |
-| **1.3.A** VfxImageSource.image_name → BindableString | S | **Do now** |
-| 1.1.B Bindable*::evaluate signature unification | M | Wait for third trigger |
-| (others — see sweep doc tier list) | various | various |
+| Finding | Risk | Recommendation | Status |
+|---|---|---|---|
+| **1.2.A** Bindable<T> generalization | L | Next slice | **Queued. Junior packet at `docs/design/tui-vfx-2026-04-26-packet-1.2.A-bindable-generic.md` (671 lines). Three open architectural Q's await leader decision — see §6 below.** |
+| 1.2.B Pool<T> generalization | S | Do now | **DONE — landed at tui-vfx commit `8cad7a2` "Collapse five sibling pool types into Pool<T> with aliases (1.2.B)". Canonical at `crates/tui-vfx-content/src/pool/cls_pool.rs`; five hand-rolled files retired to `recyclebin/`.** |
+| 1.3.A VfxImageSource.image_name → BindableString | S | Do now | **DONE — landed at tui-vfx-recipes commit `e64cf56` "Lift VfxImageSource.image_name to BindableString (1.3.A)". Schema, compile-bridge resolver `resolve_image_source_bindings`, `MissingImageBinding` error variant, runtime `expect()`, and the `_bindable` debug recipe all in tree.** |
+| 1.1.B Bindable*::evaluate signature unification | M | Wait for third trigger | Bundled into 1.2.A per packet §1.2.A.4 |
+| 1.7.A BindableValue cross-crate home | S | Bundle into 1.2.A | Bundled into 1.2.A |
+| (others — see sweep doc tier list) | various | various | Unchanged |
 
-**Note:** 1.2.A (Bindable<T> generalization) is closely related to item 3 (signal facade) — the symmetric Bindable family in proposal phase δ depends on 1.2.A's shape. If item 3 is accepted, schedule 1.2.A immediately before phase δ.
+## 6. Open architectural questions — 1.2.A packet
+
+The 1.2.A packet enumerates five questions; three need leader decision before any junior executes. Recommended defaults are in the packet. The most impactful is **Q3 (signal-arm shape)** — chosen carefully, the resulting shape governs the symmetric Bindable family for the project's lifetime.
+
+| Q | Decision | Recommended default | Why it matters |
+|---|---|---|---|
+| Q1 | Home crate for `VfxBindable<T>` | `tui-vfx-core` (already depends on `mixed-signals`; both downstream crates already pull it) | Determines whether the signal-arm dependency lives in the consolidated home or stays split |
+| Q2 | `Vfx*` prefix on the consolidated type | `VfxBindable<T>` per Intention 8 (wire-format crossing crates) | Locks naming policy for the whole symmetric family that follows |
+| Q3 | Signal-arm parameterization | `VfxBindable<T, S = std::convert::Infallible>` (Never) | Never makes the unconstructable-Signal-arm a type-system invariant. `S = ()` makes it a footgun-by-discipline. Stop-and-ask trigger flagged in the packet. |
+
+## 8. Recommended low-complexity / high-value next steps
+
+This section excludes the two parallel work streams (1.2.A `VfxBindable<T>` consolidation; observability bus implementation against the shipped `tui-vfx-debug::inspection` surface). Everything below is what remains tracked here.
+
+For each item: the smallest move that earns the most. Cost qualifier (S/M/L per the sweep doc convention). Value qualifier (what it unblocks or prevents).
+
+### 8.1 Item 2 — Effect-composition model decision
+
+**Doc:** `docs/design/tui-vfx-effect-composition-model.md` v0.1.0.
+**Recommendation in the doc:** stay Model B (named stages), reject Model A (free-form graph). Per-cell traversal tax of A doesn't pay for itself on a 16ms terminal budget at ~10K cells/frame.
+**Cost to decide:** S — one leader call, no audit needed. The doc's recommendation is well-grounded; absent a contrary consideration, accept-as-default is the cheapest move.
+**Value:** unblocks item 4 (three follow-on moves) and locks the V3 schema vocabulary per §7 of the proposal doc. Until decided, V3 schema work that touches the composition surface stays on hold.
+**Lowest-cost move:** accept the recommendation, append a one-line acceptance note to the proposal doc, mark item 4 ready.
+
+### 8.2 Item 3 — Signal-facade decision
+
+**Doc:** `docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md` v0.2.0.
+**Recommendation in the doc:** Option A (in-crate `tui_vfx_recipes::signals` module), narrow scope (recipe-deserialization only). Production code keeps importing `mixed_signals::*` directly.
+**Cost to decide:** S — same shape as 8.1.
+**Value:** unblocks phase α (autogen `SIGNALS_REFERENCE.md` from SignalSpec rustdoc) and phase β (curated Core 12 cheatsheet) — both small, doc-only, immediately useful for AI-assisted recipe authoring.
+**Lowest-cost move:** accept Option A, accept phase α + β as one packet (doc-only), defer γ + δ until the parallel-session 1.2.A lands (δ depends on the consolidated `VfxBindable<T>` shape).
+
+### 8.3 Item 4 — Three Model B follow-on moves (gated on 8.1)
+
+Per `docs/design/tui-vfx-effect-composition-model.md` §5. Ordered cheapest-first, which is also the order their gaps bite hardest:
+
+| Move | Cost | Value | Ranking |
+|---|---|---|---|
+| **Resolved-coord fields on `VfxCellContext`** (`resolved_x`, `resolved_y` populated post-sampler) | S — one field-bump on the type Phase F just landed; the bundle pattern makes the addition mechanical | covers "mask wants to react to post-sampler coords" — closes a real downstream gap | **Do first** |
+| **Filter-discard bit** on `VfxCellContext` (or a return-type change on `Filter::apply`) | S — one boolean field plus a sweep through the 30 Filter impls Phase F.5 already touched | covers "filter wants to also gate visibility" — closes a real gap | **Do second** |
+| **Composite-effect templates in V3 schema** (`"type": "ripple"` declares a name + parameter schema; recipe-load expands into constituent layers, SCSS-mixin-style) | M — one expansion pass at recipe-load; needs schema design + template registry | covers boundary-crossing ergonomics ("ripple is one effect, not three") without runtime cost; biggest authoring win | **Do third** |
+
+Each is independently shippable. None depend on the V3 cutover. The first two are particularly cheap because Phase F already established `VfxCellContext` as the bundled context type that flows through every stage.
+
+**Lowest-cost move:** if 8.1 accepts Model B, schedule the resolved-coord fields move as the first slice — it's the smallest demonstration that the bundle is the right place to grow per-cell context.
+
+### 8.4 Other queued sweep findings
+
+From `docs/design/tui-vfx-buy-once-architecture-sweep.md` §4, excluding 1.2.A (in flight) and 1.2.B / 1.3.A (shipped):
+
+| Finding | Risk | Existing recommendation | Low-cost / high-value commentary |
+|---|---|---|---|
+| **1.1.B** Bindable*::evaluate signature unification | M | Wait for third trigger; bundle into 1.2.A | Auto-resolved by 1.2.A landing. No standalone action. |
+| **1.2.C** FontRegistry / AssetRegistry merge | S | Wait for third trigger | Two instances today, threshold is three. **Defer.** Add to a "watch list" for the next loader-shape change. |
+| **1.6.A** `cls_filter_spec.rs` (2193 LOC) split-up | L | Next slice, but timing tied to V3 cross-family work that adds 5+ variants | **Defer until V3 cutover decisions** clarify which variants are landing. Splitting first risks the wrong cut lines; splitting after lets the additions inform the structure. |
+| **1.7.A** BindableValue cross-crate home | S | Bundle into 1.2.A | Auto-resolved by 1.2.A landing. No standalone action. |
+| **1.8.A** tui-vfx-core/schema cycles | S | Wait for third trigger | Two cycle pairs known today; defer per the recommendation. |
+| **1.9.A** Hand-written ConfigSchema audit | M | Next slice (as validation infra) | **Cheap quick win:** write a lint/check that fails CI when a new `impl ConfigSchema` lacks a justification comment. ~1 hour of xtask code; prevents the proliferation pattern continuing. **Recommended for a slow-day session.** |
+
+**Lowest-cost move across this group:** 1.9.A's lint check. Pure validation infra, no production-code touch, prevents the pattern. Everything else genuinely earns "wait."
+
+### 8.5 Item 7 — gt-design V3 stack migration
+
+**Status:** deferred per 2026-04-26 leader direction ("ignore gt-design for now, we haven't done the migration because we've not finished building the updated tui-vfx* family, that's our goal today").
+
+**What it is:** gt-design currently has zero V3 awareness anywhere — `crates/gtd-ssot/src/resolve/fnc_resolve_recipes.rs:55` dispatches every recipe through V2 `from_value`; no `from_value_v3`, `V3RecipeDocument`, `NormalizedRecipe`, or compiled-V3 references in the tree. Migration touches: loader dispatch, downstream payload consumers (factory, ratatui integration, theme builder), the compiled-V3 bridge, and schema migration for every gt-design vendored recipe.
+
+**Cost:** L — multi-day packet. Not bug-fix-shaped.
+
+**When to start:** after 1.2.A lands, after the observability bus lands, after Model B follow-ons (item 4) land. The tui-vfx family is the supplier; gt-design is the first consumer of the finished supply chain.
+
+**Lowest-cost preparation while waiting:** pre-write the migration packet (junior-ready, like the 1.2.A packet). The audit work (where does V2 `from_value` get called, what downstream consumers touch the payload, which vendored recipes need migration) doesn't change between now and execution; capturing it as a packet means the eventual execution is mechanical. Estimated packet size: 600–800 lines, similar to the 1.2.A packet. Can be written by a sub-agent.
+
+### 8.6 Items 1 + 8 — `focused_row_btop` bug + `ContentShell::card` producer fix
+
+**Diagnosis (2026-04-26 evening, full transcript in conversation history):** The recipe targets `Role(Text)` cells. `ContentShell::card`'s structural render tags every cell with `Surface` → `RoleTag::Background`. Production uses the explicit role map (`semantic_buffer.to_role_map()` returns all-Background). Shader's scope matches zero cells. Trace's diagnostic preview disagrees because it uses the geometric-inference fallback (`apply_composition` not `apply_composition_with_roles`), so the preview shows fg_changes=228 while the actual surface stays plain.
+
+**Two fix paths exist; the right one depends on item 7's order:**
+
+- **Path A (after item 7 lands):** migrate the recipe to V3 schema with content-scope (`{"kind": "content", "value": "text"}`). Content-scope is glyph-based and role-independent. Sidesteps the producer-tagging bug entirely for this recipe. Doesn't fix the producer-contract violation for any other role-scoped recipe.
+- **Path B (independent of schema version):** fix `ContentShell::card` (and the `tag_scoped_semantics` integration call site at `crates/gtd-ratatui/src/integration/fnc_tag_interaction_scoped_semantics.rs:111`) to tag inner cells with `SemanticRole::Content` (lowers to `RoleTag::Text`) and border cells `Border`. ~50 LOC plus a regression test asserting `RoleMapMaterialized.histogram` for a card render contains text-tagged inner cells.
+
+**Recommendation:** do both. Path B is the right architectural fix (Stage-C contract: explicit roles must be at least as rich as inferred ones), regardless of whether the recipe stays V2 or moves to V3. Path A is correct cleanup once item 7 lands. They are not mutually exclusive.
+
+**Lowest-cost move:** when item 7 starts, fold path B into the same packet — both touch gt-design's role-tagging surface.
+
+### 8.7 Item 9 — Probe-path fidelity regression
+
+**Symptom (verified 2026-04-26 evening):** `cargo run -q -p recipe-probe -- /usr/projects/tui-vfx-recipes/recipes/btop_focused_row_demo.json --phase dwelling --sample-t 1.0 --with-causation --widget-cell 4,3` returns `modified_cells: 0` despite `shader_count: 1` and a recipe that DF-010's evidence (2026-04-14) demonstrated as actively producing per-cell color changes.
+
+**Why it matters:** when the probe lies about whether a recipe modifies cells, the entire validator workflow loses signal. "Probe says 0" no longer means "shader broken"; it means "either shader broken OR probe regressed, indistinguishable from the CLI." The whole DF-010-style investigation pattern is degraded.
+
+**Cost to fix:** S–M. Git-bisect from `tui-vfx-recipes` master at DF-010 close (2026-04-14) forward through `src/probe/`, `tools/recipe-probe/`, and `tools/pipeline-validator/`. The bisect itself is mechanical; the fix size depends on what regressed.
+
+**Value:** restores the truthful-probe contract. Without this, the observability bus (parallel-session work) lands into a system where its closest comparable tool is unreliable — making bus-vs-probe parity tests less useful.
+
+**Lowest-cost move:** run the bisect as a focused half-session. Likely candidate commits per the post-DF-010 log: `4326395 "Wire loopback merge into probe scene builders (L5 follow-on)"` is structurally suspicious as a probe-builder change. Start there.
+
+**Sequencing:** ideally lands BEFORE the observability bus reaches its parity-test phase, so the bus has a working probe to A/B against. The parallel observability session may already have noticed this regression; coordinate.
+
+### 8.8 Item 10 — `--runtime-params-json` silent drop on schema_v1
+
+**Symptom:** `pipeline-validator --runtime-params-json '{"selected_row": 3}' -- <schema_v1_recipe>` accepts the flag, runs the recipe, and emits a probe report where the runtime binding shows `status: fallback_static` — the injected param was dropped without warning. Help text discloses the limitation ("currently wired for the compiled-V3 direct bridge runs"); the runtime does not.
+
+**Cost to fix:** S. One of:
+- Hard error when `--runtime-params-json` is passed with a schema_v1 recipe ("recipe must be migrated to V3 to honor runtime-params-json").
+- Soft warning at probe-output emission time: a `diagnostic` entry with `code: runtime_params_dropped, severity: warning`.
+- Best: thread the runtime params through the schema_v1 path too (matches the user's V3-first stance backwards: legacy paths should be honest about their limitations even while they exist).
+
+**Value:** small but specific. Prevents the same one-hour-of-confusion this caused in the focused_row_btop investigation.
+
+**Lowest-cost move:** add the soft-warning diagnostic. ~20 LOC in `tools/pipeline-validator/src/`. Can land as a one-shot fix any session.
+
+### 8.9 Item 11 — Legacy `region: TextOnly` lowering to `Role(Text)`
+
+**Architectural mismatch:** the legacy recipe field `region: TextOnly` is semantically a *content* predicate ("apply to text cells") but lowers to the `Role(Text)` *role* scope. Content and role are distinct cell properties; the lowering conflates them. The V3 canonical scope `{"kind": "content", "value": "text"}` got it right and the legacy lowering didn't follow.
+
+**Two paths:**
+- **Standalone fix:** change the legacy lowering to produce `Content(Text)` (or `And(Channel(Foreground), Content(NonEmpty))`). Audit every legacy recipe using `region: TextOnly`; verify the behavior change is "start working over more producers" not "start matching cells the author didn't want." Cost: M (audit-bound).
+- **Free at V3 cutover:** when the V3 cutover ships and the legacy schema_v1 path is retired, the bug class disappears. Recipes that survived the migration use V3 content-scope from the start.
+
+**Recommendation:** **defer to the V3 cutover.** Standalone fix is M-cost audit work for behavior the cutover deletes anyway. Track in the V3 cutover plan; no standalone packet needed.
+
+**Lowest-cost move:** add a one-line note to `docs/design/tui-vfx-v3-upgrade-plan/00_INDEX.md` flagging this as a "free win at cutover" — so the cutover author is aware they're closing this defect.
+
+## 7. New architectural artifacts written this session
+
+*(Note: section number 7 was claimed late in the session after §8 was already written. File order is §1–§6, §8, §7, footer; numbering is correct for navigation.)*
+
+- `docs/design/tui-vfx-pipeline-observability.md` — design spec for the `VfxObserver` event bus and the `vfx-inspect` tool. Motivated by the focused_row_btop investigation, where existing trace and probe tooling concealed the role-map mismatch for 30+ minutes. Includes: event taxonomy, sink contracts, cost model, plumbing requirements, inspector CLI, cultural commitments, and §11 open architectural questions for leader decision.
+- `docs/design/tui-vfx-2026-04-26-packet-1.2.A-bindable-generic.md` — junior-ready packet for 1.2.A with the three open Q's above, full code snippets, test plan, acceptance criteria, and rollback plan.
+- `docs/design/tui-vfx-2026-04-26-packet-1.2.B-pool-generalization.md` — verification + follow-on workbook (the underlying work shipped at `8cad7a2`; packet codifies the post-ship audit).
+- `docs/design/tui-vfx-2026-04-26-packet-1.3.A-vfx-image-source-bindable-string.md` — verification + follow-on workbook (underlying work shipped at `e64cf56`).
 
 ---
 

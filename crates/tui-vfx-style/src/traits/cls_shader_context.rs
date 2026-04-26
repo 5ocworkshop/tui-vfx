@@ -1,7 +1,7 @@
-// <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects; composes VfxCellContext via Deref</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>Slice 6.6 §F.2 — refactor ShaderContext so the seven cell-spatial fields live on a composed VfxCellContext sub-bundle; Deref keeps all existing field reads source-compatible.</WCTX>
-// <CLOG>2.0.0: replace seven inlined spatial fields with `cell: VfxCellContext`; add Deref<Target=VfxCellContext>; ::new() unchanged externally, builds VfxCellContext internally; delete shadowing screen_cell_x/y + normalized_x/y (now on VfxCellContext via Deref); update Default to call Self::new(...).</CLOG>
+// <FILE>crates/tui-vfx-style/src/traits/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects; composes VfxCellContext via Deref. Hosts ShaderRuntimeParams and its RuntimeParamsRead impl that bridges into tui-vfx-core's bindable family.</DESC>
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>Buy-once sweep finding 1.2.A Phase 1.5 — implement tui_vfx_core::bindable::RuntimeParamsRead for ShaderRuntimeParams so the inherent evaluate methods on each VfxBindable specialization can consult this map without tui-vfx-core having to depend on tui-vfx-style.</WCTX>
+// <CLOG>2.1.0: implement RuntimeParamsRead for ShaderRuntimeParams (forwards to existing get_u16 / get_text / get_f32 inherent methods); fix file-path drift in metadata header.</CLOG>
 
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
@@ -257,6 +257,18 @@ impl ShaderRuntimeParams {
     }
 }
 
+impl tui_vfx_core::bindable::RuntimeParamsRead for ShaderRuntimeParams {
+    fn get_u16(&self, key: &str) -> Option<u16> {
+        Self::get_u16(self, key)
+    }
+    fn get_text(&self, key: &str) -> Option<&str> {
+        Self::get_text(self, key)
+    }
+    fn get_f32(&self, key: &str) -> Option<f32> {
+        Self::get_f32(self, key)
+    }
+}
+
 impl<K, V> FromIterator<(K, V)> for ShaderRuntimeParams
 where
     K: Into<String>,
@@ -429,5 +441,5 @@ impl Default for ShaderContext {
     }
 }
 
-// <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects; composes VfxCellContext via Deref</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <FILE>crates/tui-vfx-style/src/traits/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects; composes VfxCellContext via Deref. Hosts ShaderRuntimeParams and its RuntimeParamsRead impl that bridges into tui-vfx-core's bindable family.</DESC>
+// <VERS>END OF VERSION: 2.1.0</VERS>

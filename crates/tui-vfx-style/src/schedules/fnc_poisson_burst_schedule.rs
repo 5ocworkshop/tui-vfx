@@ -91,9 +91,10 @@ pub struct PoissonBurstScheduleConfig {
     pub direction_seed: Option<u64>,
     /// Optional per-cell trigger-time jitter on top of the lane
     /// schedule. When `Some((seed, amount))`, each cell's trigger
-    /// time is offset by `(hash_to_index(seed, pos, 2048) / 1024 - 1)
-    /// * amount` seconds. Breaks up regimented sweeps without
-    /// disturbing the lane-batch cadence.
+    /// time is offset by
+    /// `(hash_to_index(seed, pos, 2048) / 1024 - 1) * amount` seconds.
+    /// Breaks up regimented sweeps without disturbing the lane-batch
+    /// cadence.
     pub jitter: Option<(u64, f64)>,
 }
 

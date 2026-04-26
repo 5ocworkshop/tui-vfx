@@ -773,10 +773,10 @@
             "ty": "char"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Progress (0.0 = invisible, 1.0 = fully visible). Accepts a raw\nnumber, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           }
         ],
         "premium": false,
@@ -978,10 +978,10 @@
             "ty": "HoverBarPosition"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Progress (0.0 = invisible, 1.0 = fully visible). Accepts a raw\nnumber, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           }
         ],
         "premium": false,
@@ -1020,10 +1020,10 @@
             "ty": "HoverBarPosition"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Progress (0.0-1.0) as raw number, signal, or runtime binding.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           },
           {
             "default": "2",
@@ -1064,10 +1064,10 @@
             "ty": "Option<String>"
           },
           {
-            "default": "Signal(Static(1.0))",
+            "default": "Literal(1.0)",
             "doc": "Fade strength (0.0 = untouched, 1.0 = fully replaced with\ncanvas_color). Uses `BindableValue` so the P0.1 signal/binding\nsurface applies uniformly across filter parameters.",
             "name": "strength",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           },
           {
             "default": "Both",
@@ -1112,10 +1112,10 @@
             "ty": "f32"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Hover progress (0.0 = not hovered, 1.0 = fully hovered). Accepts\na raw number, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           },
           {
             "default": "false",
@@ -1196,10 +1196,10 @@
             "ty": "HoverBarPosition"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Animation progress (0.0 = rest, 1.0 = fully active). Accepts a\nraw number, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           }
         ],
         "premium": false,
@@ -1304,10 +1304,10 @@
             "ty": "f32"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Animation progress (0.0 = inactive, 1.0 = fully active).\n\nAccepts a raw number (`0.5`), a signal spec, or a runtime binding\n(`{\"binding\": \"scroll_progress\"}`). When set to a binding, the\nvalue is resolved at render time from `ShaderRuntimeParams`.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           },
           {
             "default": "PingPong",
@@ -1460,10 +1460,10 @@
             "ty": "bool"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Hover progress (0.0 = not hovered, 1.0 = fully hovered). Accepts\na raw number, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           }
         ],
         "premium": false,
@@ -1543,10 +1543,10 @@
             "ty": "f32"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Animation progress (0.0 = inactive, 1.0 = fully active). Accepts\na raw number, signal spec, or runtime binding.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           }
         ],
         "premium": false,
@@ -1609,10 +1609,10 @@
         "pairs_with": [],
         "parameters": [
           {
-            "default": "Signal(Static(0.5))",
+            "default": "Literal(0.5)",
             "doc": "Progress value (0.0 = empty, 1.0 = full). Accepts a raw number,\na signal spec, or a runtime binding (`{\"binding\": \"scroll_ratio\"}`).",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           },
           {
             "default": "Horizontal",
@@ -1742,10 +1742,10 @@
             "ty": "WipeDirection"
           },
           {
-            "default": "Signal(Static(0.0))",
+            "default": "Literal(0.0)",
             "doc": "Progress (0.0 = none, 1.0 = full width). Accepts a raw number,\nsignal spec, or runtime binding.",
             "name": "progress",
-            "ty": "BindableValue"
+            "ty": "VfxBindable"
           },
           {
             "default": "true",
