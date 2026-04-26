@@ -35,8 +35,20 @@ fn factor_one_drifts_within_tolerance() {
 fn red_at_thirty_percent_preserves_hue_dominance() {
     // The TTE faded-text case. Red dominance must survive the fade.
     let out = brighten_hct(Color::rgb(255, 0, 0), 0.3);
-    assert!(out.r > out.g, "expected red dominance, got ({}, {}, {})", out.r, out.g, out.b);
-    assert!(out.r > out.b, "expected red dominance, got ({}, {}, {})", out.r, out.g, out.b);
+    assert!(
+        out.r > out.g,
+        "expected red dominance, got ({}, {}, {})",
+        out.r,
+        out.g,
+        out.b
+    );
+    assert!(
+        out.r > out.b,
+        "expected red dominance, got ({}, {}, {})",
+        out.r,
+        out.g,
+        out.b
+    );
 }
 
 #[test]
@@ -44,16 +56,40 @@ fn cyan_stop_preserves_hue_dominance() {
     // 0x00D1FF — TTE Beams mid-gradient stop. Faded cyan must still be cyan-ish
     // (g and b should dominate r), not a desaturated mid-tone.
     let out = brighten_hct(Color::rgb(0x00, 0xD1, 0xFF), 0.3);
-    assert!(out.g > out.r, "cyan g/b dominance, got ({}, {}, {})", out.r, out.g, out.b);
-    assert!(out.b > out.r, "cyan g/b dominance, got ({}, {}, {})", out.r, out.g, out.b);
+    assert!(
+        out.g > out.r,
+        "cyan g/b dominance, got ({}, {}, {})",
+        out.r,
+        out.g,
+        out.b
+    );
+    assert!(
+        out.b > out.r,
+        "cyan g/b dominance, got ({}, {}, {})",
+        out.r,
+        out.g,
+        out.b
+    );
 }
 
 #[test]
 fn magenta_stop_preserves_hue_dominance() {
     // 0x8A008A — TTE Beams magenta stop.
     let out = brighten_hct(Color::rgb(0x8A, 0x00, 0x8A), 0.3);
-    assert!(out.r > out.g, "magenta r/b dominance, got ({}, {}, {})", out.r, out.g, out.b);
-    assert!(out.b > out.g, "magenta r/b dominance, got ({}, {}, {})", out.r, out.g, out.b);
+    assert!(
+        out.r > out.g,
+        "magenta r/b dominance, got ({}, {}, {})",
+        out.r,
+        out.g,
+        out.b
+    );
+    assert!(
+        out.b > out.g,
+        "magenta r/b dominance, got ({}, {}, {})",
+        out.r,
+        out.g,
+        out.b
+    );
 }
 
 #[test]
@@ -124,8 +160,7 @@ fn perceptual_uniformity_yellow_vs_blue_at_same_factor() {
     let blue_tone_in = Hct::from_int(argb_from_rgb(blue.r, blue.g, blue.b)).tone();
     let yellow_tone_out =
         Hct::from_int(argb_from_rgb(dim_yellow.r, dim_yellow.g, dim_yellow.b)).tone();
-    let blue_tone_out =
-        Hct::from_int(argb_from_rgb(dim_blue.r, dim_blue.g, dim_blue.b)).tone();
+    let blue_tone_out = Hct::from_int(argb_from_rgb(dim_blue.r, dim_blue.g, dim_blue.b)).tone();
 
     let yellow_ratio = yellow_tone_out / yellow_tone_in;
     let blue_ratio = blue_tone_out / blue_tone_in;

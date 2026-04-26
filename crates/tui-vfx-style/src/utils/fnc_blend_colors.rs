@@ -51,7 +51,11 @@ pub fn blend_colors(c1: Color, c2: Color, t: f32, space: ColorSpace) -> Color {
             let h2 = Hct::from_int(argb_from_rgb(r2, g2, b2));
             let (hue, chroma, tone) = lerp_hct(h1, h2, t as f64);
             let argb = Hct::from(hue, chroma, tone).to_int();
-            Color::rgb(red_from_argb(argb), green_from_argb(argb), blue_from_argb(argb))
+            Color::rgb(
+                red_from_argb(argb),
+                green_from_argb(argb),
+                blue_from_argb(argb),
+            )
         }
     }
 }

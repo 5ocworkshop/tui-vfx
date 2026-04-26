@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/utils/mod.rs</FILE> - <DESC>Utils module definition</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>TTE effects port — expose brighten_hct as the canonical HCT-based brightness operator alongside existing RGB/HSL utilities.</WCTX>
-// <CLOG>0.5.0: add fnc_brighten_hct module + public re-export.</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>TTE effects port — relocate poisson_burst_schedule from utils/ to its own schedules/ module so per-cell trigger schedule generators live in a discoverable category.</WCTX>
+// <CLOG>0.7.0: remove fnc_poisson_burst_schedule from utils/ — it now lives at crates/tui-vfx-style/src/schedules/. Color ops, easing, and style helpers stay here.</CLOG>
 
 pub mod fnc_blend_colors;
 pub mod fnc_brighten_hct;
@@ -20,5 +20,5 @@ pub use fnc_style_blend::{blend_style_to_color, blend_style_to_color_in_space};
 pub use fnc_style_hsl::{shift_color_hsl, shift_style_hsl};
 pub use fnc_style_rainbow::{rainbow_color, rainbow_style};
 
-// <FILE>tui-vfx-style/src/utils/mod.rs</FILE> - <DESC>Utils module definition</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <FILE>tui-vfx-style/src/utils/mod.rs</FILE>
+// <VERS>END OF VERSION: 0.7.0</VERS>

@@ -1,7 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.6.3</VERS> -->
-<!-- <WCTX>Add Intention 42 — learn and default to the ofpf-* tooling; require reading steering/OFPF-TOOLS.md as the practical reference.</WCTX> -->
-<!-- <CLOG>0.6.3: add Intention 42 codifying ofpf-* as the default codebase-query interface and require steering/OFPF-TOOLS.md as the supporting reference.</CLOG> -->
+<!-- <VERS>VERSION: 0.6.4</VERS> -->
+<!-- <WCTX>Add Intention 43 — plans must orient against the codebase before claiming a contract exists; codifies the lesson from the TTE port plan v0.1.0 which assumed HintRef / sampler-emits-hint shipped when ofpf-defs returned zero hits.</WCTX> -->
+<!-- <CLOG>0.6.4: add Intention 43 — plans must run an ofpf-defs/ofpf-inspect orientation pass before claiming infrastructure exists; treat steering docs as 'what we want' and the codebase as 'what we have.'</CLOG> -->
 
 # Intentions
 
@@ -1097,5 +1097,77 @@ upstream schema).
 
 ---
 
+## 43. Plans must orient against the codebase before claiming a contract exists
+
+Implementation plans (anything in `docs/design/`, work-packet documents,
+`steering/work-packets/*`, or planning prose in PR descriptions) must run
+an `ofpf-defs` / `ofpf-inspect` / `ofpf-content` orientation pass against
+every infrastructure contract the plan references. Steering docs describe
+a mix of shipped capabilities and aspirational/V3-planned ones; plans
+that treat both as equally true bridge the wrong gap and fail on contact
+with reality.
+
+Rules:
+
+1. **Verify symbols exist before referencing them.** If a plan says
+   "extend `Foo` with `Bar`" or "produces a `HintRef<f32>`," run
+   `ofpf-defs Foo` and `ofpf-defs HintRef` first. If results are empty,
+   the plan must either build the missing infrastructure as a phase or
+   work around its absence — never assume aspirational vocabulary is
+   shipped.
+2. **Inspect the actual file before describing how to extend it.**
+   `ofpf-inspect <path>` returns role/metrics/callers in one call. A
+   plan that says "Phase 2 adds a color-space option to `Gradient`"
+   should be preceded by inspecting `Gradient` to confirm the option
+   isn't already there.
+3. **Treat steering docs as 'what we want.' Treat the codebase as
+   'what we have.'** When `MARKETING.md` describes a V3 capability,
+   verify shipped status before planning against it. The codebase is
+   authoritative; steering docs may describe planned-but-unshipped
+   contracts (this is normal — steering documents direction).
+4. **Document the orientation evidence in the plan.** Include the
+   `ofpf-*` queries that confirmed (or refuted) the existence of
+   referenced infrastructure, so future readers can re-verify and
+   understand which contracts were assumed shipped at plan-write time.
+5. **When orientation surfaces existing infrastructure that
+   simplifies the plan, say so explicitly.** If Phase N's work was
+   already done in prior unrelated work, mark the phase superseded
+   with a note about what shipped and where. Don't silently re-do or
+   silently skip.
+
+Why: a plan reads as authoritative once it's written; if it claims a
+contract exists, downstream readers (humans or agents) take that as
+truth and build on it. The TTE port plan's v0.1.0 was assembled by
+reasoning over `MARKETING.md` + `INTENTIONS.md` + `pro/main.rs`. It
+assumed a `HintRef<f32>` / sampler-emits-hint contract existed because
+MARKETING.md describes it as a V3 capability. `ofpf-defs HintRef`
+returned 0 hits — planned, not shipped. It also missed that
+`ColorSpace` + `blend_colors(..., space)` + `Gradient.space` were
+already in place, so what the plan called "Phase 2 — Gradient HSL
+color-space option" was already done in prior v2 work. Two phases
+collapsed and one needed a redesign on contact with reality. Cost of
+the orientation pass at plan-write time: a few minutes. Cost of
+discovering the gap at implementation time: a redesign mid-flight.
+
+This is Intention 42 ("default to `ofpf-*` for codebase questions")
+applied to the planning lifecycle. Intention 42 says use the tools for
+"where is X?" questions; Intention 43 makes it concrete that *plans
+themselves* are full of "where is X?" questions, often phrased as
+"extend the existing X."
+
+What this is *not* saying: it is not banning aspirational planning. A
+plan may legitimately propose new infrastructure that doesn't exist
+yet — that's the whole point of planning. The intention is that the
+plan be **honest about the gap**: "this requires building HintRef
+infrastructure as Phase 0; today the codebase has no equivalent" is a
+valid plan shape. "Phase 3 produces a `HintRef<f32>`" without
+acknowledging that `HintRef` doesn't exist is the failure mode.
+
+Companion: `feedback_plan_from_codebase.md` in auto-memory captures
+the same rule conversationally; `steering/OFPF-TOOLS.md` is the
+practical reference for the orientation queries.
+
+---
+
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.6.3</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.4</VERS> -->

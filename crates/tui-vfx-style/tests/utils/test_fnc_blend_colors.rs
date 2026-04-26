@@ -64,11 +64,27 @@ fn test_blend_hct_red_to_blue_passes_through_purple_not_gray() {
     let c1 = Color::rgb(255, 0, 0);
     let c2 = Color::rgb(0, 0, 255);
     let mid = blend_colors(c1, c2, 0.5, ColorSpace::Hct);
-    assert!(mid.r > 50, "midpoint should not be near-gray, got {:?}", mid);
-    assert!(mid.b > 50, "midpoint should not be near-gray, got {:?}", mid);
+    assert!(
+        mid.r > 50,
+        "midpoint should not be near-gray, got {:?}",
+        mid
+    );
+    assert!(
+        mid.b > 50,
+        "midpoint should not be near-gray, got {:?}",
+        mid
+    );
     // Green should be much lower than red and blue.
-    assert!(mid.g < mid.r, "midpoint g should be < r in red->blue, got {:?}", mid);
-    assert!(mid.g < mid.b, "midpoint g should be < b in red->blue, got {:?}", mid);
+    assert!(
+        mid.g < mid.r,
+        "midpoint g should be < r in red->blue, got {:?}",
+        mid
+    );
+    assert!(
+        mid.g < mid.b,
+        "midpoint g should be < b in red->blue, got {:?}",
+        mid
+    );
 }
 
 #[test]
@@ -79,7 +95,11 @@ fn test_blend_hct_red_to_white_progressively_brightens() {
     let mid = blend_colors(c1, c2, 0.5, ColorSpace::Hct);
     let sum_in = c1.r as i32 + c1.g as i32 + c1.b as i32;
     let sum_mid = mid.r as i32 + mid.g as i32 + mid.b as i32;
-    assert!(sum_mid > sum_in, "mid should be brighter than start, got {:?}", mid);
+    assert!(
+        sum_mid > sum_in,
+        "mid should be brighter than start, got {:?}",
+        mid
+    );
 }
 
 #[test]
