@@ -1,20 +1,54 @@
 <!-- <FILE>docs/design/tui-vfx-binding-loopback.md</FILE> - <DESC>Design proposal: binding loopback — recipe-author-declared fallback values for runtime-bound parameters so debug/preview contexts can play recipes that production hosts would normally drive externally</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- L1+L2 shipped — see implementation pointers in the status banner below. Authoring shape reconciled with the existing root-level `requires_bindings` block; all five BindingKinds (U16/F32/Bool/String/Color) ship in L2; Intention 37 supersedes the "loopback is optional, omit when production-only" guidance — every declaration MUST yield an effective loopback at the strict-contracts gate. -->
 <!-- <WCTX>Pull the `extends`-based tiered base recipes proposal out of the design — for the demo-recipe use case the indirection cost outweighs the DRY win, and dropping it removes the deep-merge-vs-replace open question entirely. Replace the `⚠` glyph in the badge spec with a Nerd Font primary + ASCII fallback decision since the emoji-presentation `⚠` formats inconsistently next to monospace text.</WCTX>
 <!-- <CLOG>Demote section 10 (tiered base recipes via extends) to a one-paragraph "Considered alternatives" note with the reasoning preserved so future-me doesn't reinvent it. Update badge glyph spec to Nerd Font `nf-fa-warning` () primary with ASCII `!` fallback, configurable via LoopbackBadgeStyle; drop emoji-presentation `⚠`.</CLOG> -->
 
-# Binding Loopback (DESIGN PROPOSAL)
+# Binding Loopback
 
-> **Status:** Design — not yet implemented. This document captures the
-> agreed-upon shape so the concept survives across context windows and so
-> implementation work can reference it. Mark as superseded once the first
-> Phase lands, and add a "Status: shipped at vX.Y.Z" line.
+> **Status:** L1 + L2 shipped (2026-04-26). L3 (visibility badge), L4
+> (strictness modes), and L5 (probe + browser + demo recipes) remain.
 >
-> **Last edited:** 2026-04-26
+> **Implementation pointers** for the L1+L2 surface:
+>
+> - L1 engine layer: `tui-vfx-recipes/src/loopback/` —
+>   `BindingKind`, `LoopbackValue`, `LoopbackDeclaration`,
+>   `LoopbackDeclarations`, `evaluate_loopback`, `merge_loopback_params`.
+> - L2 authoring shape: `tui-vfx-recipes/src/v3/authoring/` —
+>   `V3BindingDeclaration`, `V3BindingDeclarationKind`, `V3LoopbackValue`.
+>   The block is the existing root-level `requires_bindings` (not a new
+>   `config.bindings` block as the original v0.1 draft proposed; the
+>   corpus already authored at the root, so the typed shape was layered
+>   there).
+> - L2 strict-contracts gate: `tui-vfx-recipes/src/v3/validate/col_validate_contracts.rs` —
+>   rejects any `requires_bindings` entry where `effective_loopback().is_none()`.
+> - L2 compile / render wiring: `tui-vfx-recipes/src/v3/compile/fnc_compile_loopback_declarations.rs`
+>   (V3 → L1 lowering) and the `with_loopback_applied` method on
+>   `CompiledV3RuntimeOverrides` (per-frame merge before the engine sees
+>   `runtime_params`).
+>
+> **Behavioural notes**:
+>
+> - **Intention 37 supersedes section 3's "omit when production-only"
+>   guidance.** Every declaration MUST yield an effective loopback. The
+>   strict-contracts gate fails the recipe at validation time when it
+>   doesn't. Recipes that wire to a live host still author a synthetic
+>   loopback (a static literal, a slow ramp) so the preview tile renders
+>   meaningfully; document the production intent in `description`, not
+>   by omitting the loopback.
+> - **All five BindingKinds ship in L2.** Numeric kinds (`U16`, `F32`)
+>   accept signal-driven loopback (static or `SignalSpec`); non-numeric
+>   kinds (`Bool`, `String`, `Color`) accept literal-only loopback in v1
+>   via the legacy `default:` field — engine-side string/color signal
+>   vocabularies are future work and would extend `LoopbackValue`.
+> - **L1 SignalSpec field names**: the implementation uses the
+>   `mixed_signals` crate's existing `SignalSpec::Ramp { start, end,
+>   duration }` shape. The original v0.1 draft used `from / to /
+>   period_ms`; those names were aspirational and never landed.
 >
 > **Audience:** Anyone touching `BindableU16`, `BindableValue`,
-> procedural sources, the recipe runtime, the recipe browser, the demo
-> player, or the pipeline-validator probe.
+> `BindableString`, procedural sources, the recipe runtime, the recipe
+> browser, the demo player, or the pipeline-validator probe.
 
 ---
 

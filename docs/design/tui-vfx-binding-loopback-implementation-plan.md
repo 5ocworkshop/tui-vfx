@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-binding-loopback-implementation-plan.md</FILE> - <DESC>Implementation plan for the binding loopback design (companion to tui-vfx-binding-loopback.md). Phase-by-phase file lists, TDD outlines, commit boundaries, and explicit deferrals so a single end-to-end push can land L1–L5 without re-deciding architecture mid-flight.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Side quest from Phase 7 prep: build the loopback layer end-to-end so bindable demo recipes (SynthGrid expand/collapse, animated stripe density, scan-down reveals, etc.) play standalone in the recipe browser without bespoke host wiring per recipe. Companion to the design proposal at tui-vfx-binding-loopback.md v0.3.0.</WCTX> -->
-<!-- <CLOG>Initial implementation plan covering L1 (engine fallback layer / merge function), L2 (`bindings:` block authoring + strict-contracts gate), L3 (visibility badge), L4 (strictness modes), L5 (probe + browser + demo recipes + docs). Plan includes file lists, TDD test outlines per phase, commit boundaries, and a final acceptance test list.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>L1 + L2 shipped. Update plan to reflect: L2 used the existing root-level `requires_bindings` block (not a new `config.bindings` block), Intention 37 landed mid-implementation and forced the "loopback required for every declaration" rule (no production-only carve-out), all five BindingKinds (U16/F32/Bool/String/Color) ship in L2 with non-numeric kinds carrying literal-only loopback in v1.</WCTX> -->
+<!-- <CLOG>0.2.0: mark L1 and L2 as shipped with commit pointers. L2 deviations from initial plan: (a) authoring layered onto root-level `requires_bindings` rather than a new `config.bindings` block; (b) per Intention 37, `loopback` is effectively required (the validator gates `effective_loopback().is_some()` per declaration); (c) all five BindingKinds shipped in L2 (the v0.1 plan scoped only U16/F32, but the existing corpus's bool/string/color bindings forced the broader scope); (d) `loopback_declarations` lives compile-time-derivable from the contracts JSON (via `compile_loopback_declarations`) rather than as a stored field on `CompiledRecipePlan`. L3 / L4 / L5 plans unchanged.
+0.1.0: Initial implementation plan covering L1 (engine fallback layer / merge function), L2 (`bindings:` block authoring + strict-contracts gate), L3 (visibility badge), L4 (strictness modes), L5 (probe + browser + demo recipes + docs).</CLOG> -->
 
 # Binding loopback — implementation plan
 
@@ -45,7 +46,12 @@ the loopback layer cuts across engine + recipes + schema + validator
    the targeted file's tests. Fix existing CLOG entries that
    exceed 1-2 lines as you encounter them.
 
-## 1. Phase L1 — engine fallback layer (Rust API only)
+## 1. Phase L1 — engine fallback layer (Rust API only) — **SHIPPED**
+
+> Status: shipped at commit `ee15dc4` (recipes). Module:
+> `tui-vfx-recipes/src/loopback/`. 26 unit tests passing. Extended at L2
+> commit (see section 2) to cover non-numeric kinds via the new
+> `LoopbackValue` enum.
 
 ### Goal
 
@@ -138,7 +144,21 @@ Modified:
 - Visibility badge — L3.
 - Strictness modes — L4.
 
-## 2. Phase L2 — `bindings:` block authoring + strict-contracts
+## 2. Phase L2 — `bindings:` block authoring + strict-contracts — **SHIPPED**
+
+> Status: shipped (commit pending — this commit). Authoring shape lives
+> on the existing root-level `requires_bindings` block (not a new
+> `config.bindings` block as v0.1 of this plan proposed). All five
+> BindingKinds (U16/F32/Bool/String/Color) ship in L2; non-numeric kinds
+> carry literal-only loopback in v1 via the legacy `default:` field.
+> Intention 37 enforces `effective_loopback().is_some()` per declaration
+> at the strict-contracts gate. Render-plan wiring uses
+> `CompiledV3RuntimeOverrides::with_loopback_applied` invoked at the two
+> compiled-V3 render entry points.
+>
+> The deviations below are noted; the rest of the section is preserved
+> as the as-planned text for historical reference. See the "Behavioural
+> notes" block at the top of the design doc for the as-shipped contract.
 
 ### Goal
 
