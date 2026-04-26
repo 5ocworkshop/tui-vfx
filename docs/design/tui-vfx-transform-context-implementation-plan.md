@@ -1,15 +1,22 @@
-<!-- <FILE>docs/design/tui-vfx-transform-context-implementation-plan.md</FILE> - <DESC>Implementation plan for the TransformContext bundle change that lets BindableString::Binding font references resolve to host-supplied runtime values; closes Slice 6.6 of the mechanical circular content cycles plan</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Phase 6 of mechanical circular content cycles plan — final outstanding piece (Slice 6.6) is the architectural change that threads ShaderRuntimeParams through TextTransformer; bundle into TransformContext so future context additions don't churn the trait again.</WCTX> -->
-<!-- <CLOG>1.0.0: refined to implementation-ready form. Pre-flight grounding section added. Trait file path corrected (text_transformer.rs, not cls_text_transformer.rs). Production-caller plumbing rewritten — callers live in gt-design (recipes/render.rs:119 + text_effects/mod.rs:168), NOT tui-vfx-compositor. Inline #[cfg(test)] sweep in 11 source files surfaced (110+ call sites). Typewriter::transform_with_cursor inherent method addressed. Per-phase shell-ready verification with expected output. Critical findings section added. Code snippets for every non-trivial step.</CLOG> -->
+<!-- <FILE>docs/design/tui-vfx-transform-context-implementation-plan.md</FILE> - <DESC>Implementation plan for the cross-trait context-bundle migration. Phases A–E close Slice 6.6 of the mechanical circular content cycles plan (TransformContext for TextTransformer, BindableString font binding). Phase F generalizes the same pattern to Filter / Mask / Sampler per buy-once sweep finding 1.1.A (VfxCellContext in tui-vfx-types).</DESC> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Plan now covers both the small-scale exemplar (Slice 6.6: one trait, ~15 impls) and the large-scale generalization (Sweep 1.1.A: three traits, ~56 impls, cross-repo). Single source of truth so the F-phase assignee can read the canonical exemplar and the generalization side-by-side.</WCTX> -->
+<!-- <CLOG>1.1.0: fold buy-once sweep finding 1.1.A (Filter/Mask/Sampler bundle) into the plan as Phase F. Updates header framing, §6 risks, §7 out-of-scope, §8 DoD, §9 companions, §11 open questions to cover both slices. Phase F is gated on Phase E green on master.</CLOG>
+<!-- 1.0.0: refined to implementation-ready form. Pre-flight grounding section added. Trait file path corrected (text_transformer.rs, not cls_text_transformer.rs). Production-caller plumbing rewritten — callers live in gt-design (recipes/render.rs:119 + text_effects/mod.rs:168), NOT tui-vfx-compositor. Inline #[cfg(test)] sweep in 11 source files surfaced (110+ call sites). Typewriter::transform_with_cursor inherent method addressed. Per-phase shell-ready verification with expected output. Critical findings section added. Code snippets for every non-trivial step.</CLOG> -->
 
 # tui-vfx TransformContext implementation plan
 
-> **Status:** Implementation-ready (v1.0.0). A junior engineer with read access to the repo and `ofpf-*` tooling installed should be able to execute this plan with little oversight.
+> **Status:** Implementation-ready (v1.1.0). A junior engineer with read access to the repo and `ofpf-*` tooling installed should be able to execute this plan with little oversight.
 >
-> **Target slice:** Slice 6.6 of `docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md`.
+> **Target slices:**
+> - **Phases A–E** — Slice 6.6 of `docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md` (TransformContext + `TextTransformer` migration + binding-form font resolution).
+> - **Phase F** — Buy-once sweep finding 1.1.A from `docs/design/tui-vfx-buy-once-architecture-sweep.md` (`VfxCellContext` bundle for Filter / Mask / Sampler, generalizing the A–E pattern to three sibling traits).
 >
-> **Scope:** Single coordinated slice touching the `TextTransformer` trait surface, all 15 transformer impls, the `ContentEffect::apply_*` family, every test that calls `.transform()`, and the production caller plumbing in `gt-design`. Plus one recipe migration in `tui-vfx-recipes` and a documentation sweep.
+> **Phase ordering:** Phase F is gated on Phase E being green on master. The TextTransformer migration is Phase F's canonical exemplar at one-trait scale; the patterns it leaves on disk are part of Phase F's spec.
+>
+> **Scope:**
+> - **A–E:** the `TextTransformer` trait surface, all 15 transformer impls, the `ContentEffect::apply_*` family, every test that calls `.transform()`, the production caller plumbing in `gt-design`, one recipe migration in `tui-vfx-recipes`, and a documentation sweep.
+> - **F:** a new `VfxCellContext` type in `tui-vfx-types`, the three sibling traits in `tui-vfx-compositor/src/traits/` (`Filter`, `Mask`, `Sampler`) plus their ~56 impls, the `ShaderContext` refactor in `tui-vfx-style`, the pipeline dispatch sites that construct context per cell, and the cross-repo audit (Intention 41) into `gt-design`.
 
 ---
 
@@ -1362,6 +1369,211 @@ Expect: green across all three repos. End-to-end gate passed.
 
 ---
 
+### Phase F — `VfxCellContext` bundle for Filter / Mask / Sampler (sweep §1.1.A)
+
+**Goal:** generalize the Phase A–E pattern to the three sibling traits in `tui-vfx-compositor/src/traits/`. After Phase F lands, every public trait that takes spatial-context positional arguments (`x`, `y`, `width`, `height`, `t`, …) takes a single `&VfxCellContext` instead. Future context additions cost one struct-field bump, not a coordinated three-trait churn.
+
+**Gate:** Do not start Phase F until Phase E is green on master and the cycle plan v0.8.0 commit has landed. Phase F's first commit references the Phase A–E commits in its message.
+
+**Architectural decision (already made — sweep §6.1 Option C):**
+- `VfxCellContext` lives in `tui-vfx-types`. That is the lowest-common crate that already owns `Cell`. Putting it in `tui-vfx-style` would force the compositor to depend on style (Intention 1 violation). Putting it in `tui-vfx-compositor` would split the SSOT (Intention 26 violation).
+- The `Vfx` prefix is mandatory per Intention 8: this is wire-relevant contract-producing data crossing crate boundaries through every Filter / Mask / Sampler impl.
+- `ShaderContext` (in `tui-vfx-style`) refactors to *compose* `VfxCellContext` rather than duplicate the eight spatial-context fields. `ShaderContext` keeps the style-only fields (`runtime_params`, `roles`).
+- Filter / Mask / Sampler do **not** receive `runtime_params` access from this packet. That is queued for after sweep §1.2.A (`Bindable<T>` consolidation) gives the family a binding context.
+
+#### F.1 Define `VfxCellContext` in `tui-vfx-types`
+
+**File:** `crates/tui-vfx-types/src/cls_vfx_cell_context.rs` (new).
+
+Eight fields shared across `Filter`, `Mask`, `Sampler`, and `StyleShader`:
+
+```rust
+// <FILE>crates/tui-vfx-types/src/cls_vfx_cell_context.rs</FILE> ...
+pub struct VfxCellContext {
+    /// Cell coordinates within the layer's local rect.
+    pub local_x: u16,
+    pub local_y: u16,
+    /// Layer dimensions.
+    pub width: u16,
+    pub height: u16,
+    /// Cell coordinates in screen space.
+    pub screen_x: u16,
+    pub screen_y: u16,
+    /// Time / progress clock. Same `f64` semantics as the legacy
+    /// `t` / `progress` parameters across the three traits.
+    pub t: f64,
+    /// Animation phase enum. If `AnimationPhase` lives in `tui-vfx-style`
+    /// today, hoist it down to `tui-vfx-types` as part of this commit.
+    pub phase: AnimationPhase,
+}
+```
+
+Confirm the actual field set at slice-start by reading `crates/tui-vfx-style/src/traits/cls_shader_context.rs` lines 280–320 (the existing eight-field shape). If the live shape differs (extra fields, renames), reconcile and document in the commit message.
+
+Add to `crates/tui-vfx-types/src/lib.rs` exports. Inline tests for the constructor and field access. Provide `VfxCellContext::test_default()` for tests that need a zero-fill literal.
+
+**Land this as commit 1 of Phase F.** Verification:
+
+```bash
+cd /usr/projects/tui-vfx
+cargo test -p tui-vfx-types --lib 2>&1 | tail -10
+```
+
+#### F.2 Refactor `ShaderContext` to compose `VfxCellContext`
+
+**File:** `crates/tui-vfx-style/src/traits/cls_shader_context.rs`.
+
+```rust
+pub struct ShaderContext {
+    pub cell: VfxCellContext,
+    pub runtime_params: Arc<ShaderRuntimeParams>,
+    pub roles: Arc<RoleMap>,
+}
+```
+
+**Decision point (resolve at slice-start, document in commit message):** add `Deref<Target = VfxCellContext>` so `ctx.local_x` / `ctx.t` keep compiling at every existing call site? Or update every `style_at` impl in `tui-vfx-style` and `gt-design` to `ctx.cell.local_x`?
+
+- **Deref pro:** zero-churn migration. Every existing `ctx.local_x` access stays. The follow-on for `runtime_params` and `roles` access stays explicit.
+- **Deref con:** hides the composition; readers cannot tell at the access site whether they are reading cell context or shader context. Subtle but real.
+- **Recommendation:** add the `Deref` impl. The blast radius without it is large (every `style_at` impl), and the composition is documented at the type definition.
+
+**Land this as commit 2 of Phase F.** Verification:
+
+```bash
+cd /usr/projects/tui-vfx
+cargo test -p tui-vfx-style --lib --tests 2>&1 | tail -10
+```
+
+#### F.3 Migrate `Mask` first (smallest impl set, canonical pattern)
+
+**Why first:** Mask has the smallest impl set (~13 files) and no historical breaking-signature churn — the canonical pattern lands here with the lowest blast radius. The diff is the template for F.4 and F.5.
+
+**Trait change** at `crates/tui-vfx-compositor/src/traits/mask.rs:7`:
+
+```rust
+// before
+fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool;
+
+// after
+fn is_visible(&self, ctx: &VfxCellContext) -> bool;
+```
+
+Note: the legacy `progress` parameter is the same `f64` clock as `t` on `VfxCellContext`. Confirm at slice-start whether the rename matters or whether `Mask` should keep a `progress` accessor (`fn progress(&self) -> f64 { self.t }`) on `VfxCellContext` for clarity. If you add the accessor, document the rename in the commit message.
+
+Sweep `ofpf-blast crates/tui-vfx-compositor/src/traits/mask.rs` to enumerate every dependent. Migrate impls; most can use `_ctx` (full bundle ignored) since masks read at most 2–3 fields.
+
+Update pipeline dispatch sites — find via `ofpf-callers` on `mask.rs`. The dispatcher constructs one `VfxCellContext` per cell and passes `&ctx` to Mask.
+
+Bump `Mask`'s metadata version (this is a breaking trait change — track the bump explicitly, e.g. `2.0.0 → 3.0.0`, mirroring how `Filter` and `Sampler` track theirs).
+
+**Land this as commit 3 of Phase F.** Verification:
+
+```bash
+cd /usr/projects/tui-vfx
+cargo build --workspace 2>&1 | tail -10
+cargo test --workspace --lib --tests 2>&1 | tail -40
+cargo clippy --workspace --lib --tests -- -D warnings 2>&1 | tail -20
+```
+
+#### F.4 Migrate `Sampler` (already at v2.0.0 — bump to v3.0.0)
+
+**File:** `crates/tui-vfx-compositor/src/traits/sampler.rs:26`.
+
+```rust
+// before
+fn sample(&self, dest_x: u16, dest_y: u16, width: u16, height: u16, t: f64) -> Option<(u16, u16)>;
+
+// after
+fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)>;
+```
+
+~12 impls. Migration follows the F.3 pattern. Pipeline dispatch is the same `VfxCellContext`-per-cell construction; reuse the shared `ctx` wherever Mask + Sampler + Filter all run on the same cell.
+
+**Land this as commit 4 of Phase F.** Same verification sweep as F.3.
+
+#### F.5 Migrate `Filter` (largest impl set — gate on F.3 + F.4 green)
+
+**File:** `crates/tui-vfx-compositor/src/traits/filter.rs:93`. Largest impl set in the repo (~31 files).
+
+```rust
+// before
+fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64);
+
+// after
+fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext);
+```
+
+Do not start F.5 until F.3 and F.4 are green on master and CI. The 31 impl sweep is mechanical; protect against drift by re-running `ofpf-blast` against the F.3 baseline before starting.
+
+**Land this as commit 5 of Phase F.** Same verification sweep as F.3, plus:
+
+```bash
+cd /usr/projects/tui-vfx
+cargo test --doc -p tui-vfx-compositor 2>&1 | tail -10
+```
+
+Expect: doctests on Filter / Mask / Sampler updated and passing.
+
+#### F.6 Cross-repo audit (Intention 41)
+
+**Repos to audit** in order:
+
+1. **`gt-design`** — likely has Filter / Mask / Sampler impls. Confirm with:
+
+   ```bash
+   cd /usr/projects/gt-design
+   ofpf-status
+   ofpf-content "impl.*for.*Filter\b" --glob "**/*.rs"
+   ofpf-content "impl.*for.*Mask\b" --glob "**/*.rs"
+   ofpf-content "impl.*for.*Sampler\b" --glob "**/*.rs"
+   ```
+
+2. **`tui-vfx-recipes`** — unlikely to have impls but verify with the same `ofpf-content` pattern. If any exist, migrate.
+
+3. **`mixed-signals`** — should have zero impls (signal-only crate, no compositor surface). Confirm.
+
+For each repo with impls: migrate, bump the consumer crate version (PATCH if behavior preserved), commit per-repo. The cross-repo coordination is part of this packet — do not declare Phase F done until every consumer compiles against the new trait surfaces.
+
+**Land per-repo commits as commit 6 (or 6a / 6b / 6c) of Phase F.** Verification:
+
+```bash
+cd /usr/projects/gt-design
+cargo build 2>&1 | tail -10
+cargo test --workspace 2>&1 | tail -40
+
+cd /usr/projects/tui-vfx-recipes
+cargo build -p tui-vfx-recipes 2>&1 | tail -10
+cargo test -p tui-vfx-recipes 2>&1 | tail -20
+```
+
+Expect: green across all four repos.
+
+#### F.7 Phase F documentation sweep
+
+After F.1–F.6 land, update:
+
+- `docs/design/tui-vfx-buy-once-architecture-sweep.md` — mark §1.1.A "Done" with the closing commit hashes; bump the sweep doc's CLOG.
+- `docs/design/tui-vfx-v3-schema-draft.json` — the eight `VfxCellContext` fields are now a referenced type, not eight inline annotations on every shader spec. Update the schema-draft to reflect.
+- `docs/CAPABILITIES_REFERENCE.md` if it currently lists the trait signatures inline.
+
+```bash
+cd /usr/projects/tui-vfx && just docs-all && just docs-all-validate
+```
+
+Expect: both pass. If `docs-all-validate` reports drift, re-run `just docs-all` and re-check.
+
+#### F.8 Phase F verification (end-to-end)
+
+```bash
+cd /usr/projects/tui-vfx && cargo build --workspace && cargo test --workspace 2>&1 | tail -10
+cd /usr/projects/tui-vfx-recipes && cargo test --workspace 2>&1 | tail -10
+cd /usr/projects/gt-design && cargo test --workspace 2>&1 | tail -10
+```
+
+Expect: workspace-wide green across all three repos. Phase F gate passed.
+
+---
+
 ## 6. Risk inventory (with concrete mitigations)
 
 | Risk | Concrete mitigation | Verification |
@@ -1375,22 +1587,36 @@ Expect: green across all three repos. End-to-end gate passed.
 | **Compositor cursor integration test** drift — `cursor_integration.rs` calls `transform_with_cursor` with the old signature. | A.7 explicitly migrates `transform_with_cursor` to take `&TransformContext`; A.7's test-site list includes `cursor_integration.rs:41,61,63`. | `cargo test --workspace` (Phase A.9) passes. |
 | **Recipe validator rejection** of the binding-form recipe due to an L2 contract mismatch. | Read `tui-vfx-recipes/docs/design/tui-vfx-binding-loopback-implementation-plan.md` § L2 first to confirm the `requires_bindings` shape. The expected shape: `{"type": "string", "description": "...", "default": "default_font"}`. | Phase D `cargo test --test test_debug_recipes_qc` passes. |
 | **Docs-freshness drift** from `just docs-all-validate` — a regenerated artifact does not match the committed one. | After E.4 succeeds, commit the regenerated artifact alongside the manual edits. | E.6 `just docs-all-validate` passes. |
+| **Phase F: AnimationPhase home churn.** If `AnimationPhase` lives in `tui-vfx-style` today, hoisting it to `tui-vfx-types` for `VfxCellContext` is itself a breaking change with its own blast radius. | Confirm `AnimationPhase`'s current crate at F.1 start via `ofpf-defs AnimationPhase`. If hoisting is required, do it as the *first* sub-step of F.1 with its own commit; do not bundle the hoist into the same commit as `VfxCellContext`. | F.1 ends with two commits if hoist is needed (one for the hoist, one for `VfxCellContext`). Both compile clean before F.2. |
+| **Phase F: Deref vs explicit `ctx.cell.field` decision.** Choosing wrong leaks into ~56 impls and is painful to reverse. | F.2 decision is made at slice-start and documented in the commit message. The recommendation (Deref) keeps the migration zero-churn at access sites; reverse with a follow-up if the hidden composition causes confusion in practice. | F.2 commit message explicitly names the choice and rationale. |
+| **Phase F: trait migration order broken.** Doing `Filter` first (largest impl set) is tempting for "rip the bandaid" but blocks `Mask` / `Sampler` rollout if a pattern bug surfaces in the 31-impl sweep. | F.3 → F.4 → F.5 in that order is non-negotiable. Mask is smallest and safest; Sampler establishes the second-trait-using-the-pattern signal; Filter is the throughput pass. | The Phase F commit log shows the three traits landing in this order. |
+| **Phase F: cross-repo drift.** gt-design lands an unrelated change against the old trait surfaces between F.5 and F.6, forcing rebase. | Coordinate with the user before F.6 starts; if gt-design has active sibling work, hold F.6 until it lands. The cross-repo audit *is* the migration — do not push consumer-side changes into a stale gt-design tree. | F.6 starts only after gt-design's `git status` is clean of unrelated active work. |
+| **Phase F: `runtime_params` access scope creep.** Tempting to add `runtime_params: Arc<ShaderRuntimeParams>` to `VfxCellContext` "while we are touching every impl anyway." | The decision is made: per sweep §6.1 and the architectural-decision block at the top of Phase F, runtime_params live on `ShaderContext` only. Filter / Mask / Sampler do not get runtime-params access from this packet. Surface the temptation as a follow-on packet referencing sweep §1.2.A. | F.1 `VfxCellContext` definition has exactly the eight spatial-context fields and nothing more. |
 
 ---
 
 ## 7. Out of scope for this slice
 
-- Phase 7 schema lift (`image_name: String → BindableString` on `VfxImageSource`). Independently actionable, but its own slice.
+**Out of scope for Phases A–E:**
+- Phase 7 schema lift (`image_name: String → BindableString` on `VfxImageSource`). **Closed:** landed independently as commit `e64cf56` on tui-vfx-recipes (sweep finding 1.3.A).
 - AssetRegistry / ImagePool / AssetMap consolidation. V3 scene-layer composition territory.
 - Rocketsplash routing through the Image source variant. V3 scene-layer composition territory.
 - Phase 4 (SplitFlap migration). Separate session per cycle plan v0.5.0+.
 - Loopback layer L3-L5 (visibility badge, strictness modes, probe + browser integration). Sibling's territory.
 - Renaming `text_transformer.rs` to `cls_text_transformer.rs`. Larger naming-convention bikeshed; not scoped here.
 
+**Out of scope for Phase F (per sweep §1.1.A):**
+- Sweep §1.1.B (`Bindable*::evaluate` signature unification). "Wait for third trigger" — not bundled here.
+- Sweep §1.6.A (`cls_filter_spec.rs` split-up). Its own slice in V3 cross-family work.
+- Adding `runtime_params: Arc<ShaderRuntimeParams>` or `roles: Arc<RoleMap>` to `VfxCellContext`. Those live on `ShaderContext` only — Intention 1 / sweep §6.1.
+- Filter / Mask / Sampler runtime-params access. Queued for after sweep §1.2.A (`Bindable<T>` consolidation) gives the family a binding context.
+- Changes to the `Cell` type itself.
+
 ---
 
 ## 8. Definition of done
 
+**Phases A–E (Slice 6.6):**
 - [ ] All 15 transformer impls compile against the new trait signature.
 - [ ] `cargo test -p tui-vfx-content --lib` passes with **357** lib tests (356 baseline + 1 new TransformContext test).
 - [ ] `cargo test -p tui-vfx-content` passes with two new integration tests in `tests/transformers/test_cls_odometer_cycles.rs` covering binding-form font resolution (host-supplied + loopback-default).
@@ -1403,15 +1629,35 @@ Expect: green across all three repos. End-to-end gate passed.
 - [ ] No regressions in any other transformer's test suite (per-file counts match the baseline captured at §0.10).
 - [ ] `ofpf-blast crates/tui-vfx-content/src/traits/text_transformer.rs` returns the expected set (§0.5) plus the new `cls_transform_context.rs` re-export.
 
+**Phase F (Sweep §1.1.A):**
+- [ ] `crates/tui-vfx-types/src/cls_vfx_cell_context.rs` exists with eight spatial-context fields, exported from `lib.rs`, with inline tests and a `test_default()` helper.
+- [ ] `ShaderContext` in `tui-vfx-style` composes `VfxCellContext` (with the chosen Deref / explicit-cell decision documented in commit 2's message).
+- [ ] `Mask::is_visible(&self, ctx: &VfxCellContext) -> bool` — all ~13 impls migrated; trait version bumped.
+- [ ] `Sampler::sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)>` — all ~12 impls migrated; trait version bumped to v3.0.0.
+- [ ] `Filter::apply(&self, cell: &mut Cell, ctx: &VfxCellContext)` — all ~31 impls migrated; trait version bumped.
+- [ ] Pipeline dispatch sites construct one `VfxCellContext` per cell and pass `&ctx` to all three trait surfaces.
+- [ ] Cross-repo audit complete: every Filter / Mask / Sampler impl in `gt-design`, `tui-vfx-recipes`, and `mixed-signals` migrated or confirmed absent.
+- [ ] `cargo test --workspace` clean across all four repos (`tui-vfx`, `tui-vfx-recipes`, `gt-design`, `mixed-signals`).
+- [ ] `cargo clippy --workspace --lib --tests -- -D warnings` clean across the four repos.
+- [ ] Sweep doc §1.1.A marked Done with closing commit hashes.
+- [ ] V3 schema draft updated to reference the `VfxCellContext` type rather than inline-annotate eight fields per spec.
+
 ---
 
 ## 9. Companions
 
+**Phases A–E:**
 - `docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md` (v0.7.0 → v0.8.0) — the cycle plan; Slice 6.6 is the row this implementation closes.
 - `docs/design/tui-vfx-binding-loopback.md` (v0.3.0) — sibling's design proposal; the WHY of bindings.
 - `docs/design/tui-vfx-binding-loopback-implementation-plan.md` — sibling's HOW; L2 just shipped at `7e7e88f` (tui-vfx-recipes) + `66fe546` (tui-vfx).
 - `steering/INTENTIONS.md` — Intentions 23, 24, 36, 37, 38 directly informed this approach.
 - `feedback_no_inert_schema.md` and `feedback_loopback_required.md` in the leader's memory.
+
+**Phase F:**
+- `docs/design/tui-vfx-buy-once-architecture-sweep.md` §1.1.A and §6.1 — the WHY and the architectural decision (Option C, hoist to `tui-vfx-types`).
+- `docs/design/work-packets/2026-04-26_packet-1.1.A_filter_mask_sampler_bundle.md` — the original packet form. From v0.2.0 onward this packet points back at this plan as the single source of truth; the F-phase content lives here.
+- `steering/INTENTIONS.md` — Intentions 1 (grid-first compositor independence), 8 (Vfx prefix on wire-format types), 26 (SSOT), 41 (cross-repo audit).
+- The Phase A–E landing commits — Phase F's canonical exemplar at one-trait scale. `git log --grep TransformContext` once they land.
 
 ---
 
@@ -1451,5 +1697,9 @@ These could not be closed from the codebase alone.
 
 4. **Recipe `default` sentinel — `"default_font"` vs `"line-3x3"`?** §D.1's recipe migration uses `"default_font"` for `requires_bindings.drum_font.default`. The reserved sentinel routes through the registry's currently-registered default (line-3x3 in the shipping case). Using the literal `"line-3x3"` instead would be more explicit but couples the recipe to a specific font name. The plan picks the sentinel for forward-compatibility; flag if you prefer the literal.
 
+5. **Phase F: `Mask::is_visible` parameter rename — keep `progress` or unify on `t`?** The legacy `Mask` parameter is `progress: f64`; `VfxCellContext::t: f64` carries the same clock. Phase F.3 has two options: (a) rename uniformly to `t` across the family, or (b) add `fn progress(&self) -> f64 { self.t }` as a clarity accessor on `VfxCellContext`. The plan picks (a) for surface uniformity; flag if Mask's semantic distinction is load-bearing somewhere not surfaced by `ofpf-content`.
+
+6. **Phase F: trait-version bump scheme.** `Filter` is at v3.0.0 and `Sampler` at v2.0.0 per the sweep. Phase F bumps each by one major. Should `Mask` get the same explicit per-trait version stamp it has not historically carried, for parity? The plan adds `Mask v?.0.0 → v?+1.0.0` style tracking; flag if the version-stamping convention should differ.
+
 <!-- <FILE>docs/design/tui-vfx-transform-context-implementation-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
