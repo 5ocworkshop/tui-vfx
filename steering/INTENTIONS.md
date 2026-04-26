@@ -1,7 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.5.9</VERS> -->
-<!-- <WCTX>Add Intention 37 — every binding declaration must yield an effective loopback so recipes are always preview-playable before host wiring exists.</WCTX> -->
-<!-- <CLOG>0.5.9: add Intention 37 making loopback required for every requires_bindings entry (and recommended even where optional). Recipes that omit loopback fail strict-contracts; "production-only bindings" are not a valid category. Generalizes the principle: populate loopback fields anyway when they're optional, so player rendering driven by loopback params stays well-formed. 0.5.8: add Intention 36 establishing Line 3x3 as default/fallback font with one canonical home in tui-vfx-content.</CLOG> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>Add Intention 38 — recipes and source files that consume bindable-typed fields carry an explicit `_bindable` marker (filename suffix + metadata tag) until the binding-loopback design matures and tooling-driven discovery is in place.</WCTX> -->
+<!-- <CLOG>0.6.0: add Intention 38 making the `_bindable` filename suffix and `bindable` metadata tag a transitional convention so binding-consuming recipes stay distinguishable in debug_recipes/ noise. Explicit transitional framing — when L2 ships and the validator can derive the same view from `requires_bindings` / `requires_assets` declarations, the convention may be retired or refined. 0.5.9: add Intention 37 making loopback required for every requires_bindings entry. 0.5.8: add Intention 36 establishing Line 3x3 as default/fallback font.</CLOG> -->
 
 # Intentions
 
@@ -727,7 +727,78 @@ Companions:
   browser integration).
 
 
+## 38. Bindable surface gets an explicit marker (transitional)
+
+Recipes and recipe-fixture files that consume a bindable-typed field
+at any depth in their config — `font: BindableString` on
+`MechanicalContentSource::Preset`, `BindableU16` row coordinates on
+`StyleRegion::RowRange` / `Modulo` / `Cell`, `BindableValue::Binding`
+shader parameters, future `BindableString` asset references — carry
+two explicit markers so they stay distinguishable in the noise of a
+growing recipe library:
+
+1. **Filename suffix `_bindable`.** A recipe that exercises a
+   bindable field is named `<family>_<base>_bindable.json`. The
+   `_bindable` suffix preserves existing family-grouping (recipes
+   alphabetize next to their non-bindable siblings) while making the
+   bindable-vs-not distinction visible in any directory listing.
+2. **Metadata tag `bindable`.** The recipe's `metadata.aesthetic_tags`
+   array includes the literal string `"bindable"`. Programmatic
+   filters (the recipe browser, AI-author corpus selection, validator
+   discovery) read the tag rather than parsing filenames.
+
+Both markers apply when the recipe carries the bindable shape in its
+config — including the literal-form authoring path (e.g.
+`font: "line-3x3"` parses to `BindableString::Literal`). The marker
+is about the field surface the recipe occupies, not about whether
+the recipe currently exercises the binding payload.
+
+Source files: existing OFPF naming already carries "bindable" in the
+filename for the type definition (`cls_bindable_string.rs`,
+`cls_bindable_u16.rs`). No additional convention is needed for
+implementation files; this Intention targets recipes/fixtures.
+
+Why: at debug_recipes-library scale (50+ recipes today, 500+ at
+target), recipes exercising the binding surface need to be visible
+at a glance for binding-layer testing, migration audits, AI-author
+training, and recipe-browser filtering. Without an explicit marker,
+bindable recipes get lost in the noise.
+
+**Transitional framing.** This convention exists because the binding-
+loopback design is in flight and the strict-contracts validator hasn't
+yet typed the `requires_bindings` / `requires_assets` declaration
+shape sibling's L2 work locks. Once the validator can derive the same
+view from a recipe's declared binding contract — every recipe with a
+non-empty `requires_bindings` or `requires_assets` block IS bindable
+by definition — this marker may be retired or refined. Until that
+view exists, the explicit suffix + tag is the navigation aid.
+
+Mechanical detail when retiring (forward note, not work today):
+
+- The validator's `bindings_summary()` query (sibling's L5) lists
+  declared bindings + their loopback presence per recipe.
+- A discovery query like `where bindings_summary().is_some()` over
+  the recipe corpus yields the same set the marker identifies today.
+- At that point, dropping the marker is a mechanical rename + tag-
+  removal sweep across the marked corpus; the convention's
+  retirement is itself a single coordinated session.
+
+What this is *not* saying: it is not requiring recipes to declare
+bindings they don't use. Recipes that don't consume any bindable
+field stay un-marked. The marker is a positive signal that the
+recipe touches the bindable surface, not a negative requirement
+that every recipe declare anything.
+
+Companion docs:
+
+- `docs/design/tui-vfx-binding-loopback.md` — the broader design
+  shape this convention bridges to.
+- `docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md` —
+  Phase 6 / Phase 7 sub-plans that produced the first bindable
+  recipes; concrete examples of the marker in use.
+
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.9</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
