@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_radial_twist.rs</FILE> - <DESC>RadialTwist sampler for center-weighted coordinate warps</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>whoa primitive review — expose maelstrom-style source remapping using tui-vfx substrate naming and mixed-signals math.</WCTX>
-// <CLOG>0.1.0: add RadialTwist sampler backed by mixed_signals::math::radial_twist_warp with finite center and bounds handling.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>0.2.0: sample() now takes &VfxCellContext; dest_x/dest_y/width/height/t reach via ctx fields.</CLOG>
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::RippleCenter;
 use mixed_signals::math::radial_twist_warp;
 
@@ -44,14 +45,13 @@ impl RadialTwist {
 }
 
 impl Sampler for RadialTwist {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        width: u16,
-        height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
+
         if width == 0 || height == 0 {
             return None;
         }
@@ -81,22 +81,28 @@ mod tests {
     #[test]
     fn zero_twist_is_identity() {
         let sampler = RadialTwist::new(0.0, RippleCenter::Center, 0.1);
-        assert_eq!(sampler.sample(3, 4, 20, 10, 1.0), Some((3, 4)));
+        assert_eq!(
+            sampler.sample(&VfxCellContext::new(3, 4, 20, 10, 0, 0, 1.0)),
+            Some((3, 4))
+        );
     }
 
     #[test]
     fn twist_remaps_off_center_cells() {
         let sampler = RadialTwist::new(1.0, RippleCenter::Center, 0.1);
-        let result = sampler.sample(15, 5, 20, 10, 1.0);
+        let result = sampler.sample(&VfxCellContext::new(15, 5, 20, 10, 0, 0, 1.0));
         assert!(matches!(result, Some((_, y)) if y != 5));
     }
 
     #[test]
     fn center_cell_remains_finite() {
         let sampler = RadialTwist::new(8.0, RippleCenter::Center, 0.1);
-        assert_eq!(sampler.sample(10, 5, 20, 10, 1.0), Some((10, 5)));
+        assert_eq!(
+            sampler.sample(&VfxCellContext::new(10, 5, 20, 10, 0, 0, 1.0)),
+            Some((10, 5))
+        );
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_radial_twist.rs</FILE> - <DESC>RadialTwist sampler for center-weighted coordinate warps</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

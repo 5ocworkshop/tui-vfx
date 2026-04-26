@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_fault_line.rs</FILE> - <DESC>FaultLine sampler implementation</DESC>
-// <VERS>VERSION: 2.0.1</VERS>
-// <WCTX>FaultLine edge case fix</WCTX>
-// <CLOG>BUG FIX: Handle height < 3 to prevent clamp panic when min > max</CLOG>
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>2.1.0: sample() now takes &VfxCellContext; dest_x/dest_y/height/t reach via ctx fields.</CLOG>
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 use std::hash::{Hash, Hasher};
 
 /// Fault line displacement effect - splits content horizontally with offset.
@@ -56,15 +57,11 @@ impl FaultLine {
 }
 
 impl Sampler for FaultLine {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        _width: u16,
-        height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
-        let t = t as f32;
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let t = ctx.t as f32;
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
+        let height = ctx.height;
 
         // Calculate split position using actual widget height
         let split_y = self.split_y(height);
@@ -91,20 +88,24 @@ impl Sampler for FaultLine {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_fault_line_small_height_no_panic() {
         // Regression test: height < 3 should not panic
         let sampler = FaultLine::new(1, 1.0, 0.0);
         // Should not panic with small heights
-        let _ = sampler.sample(5, 0, 10, 1, 0.5);
-        let _ = sampler.sample(5, 0, 10, 2, 0.5);
+        let _ = sampler.sample(&ctx_at(5, 0, 10, 1, 0.5));
+        let _ = sampler.sample(&ctx_at(5, 0, 10, 2, 0.5));
     }
 
     #[test]
     fn test_fault_line_identity_at_t1() {
         let sampler = FaultLine::new(1, 1.0, 0.0);
         // At t=1.0, offset should be 0 (content comes together)
-        let result = sampler.sample(5, 0, 10, 10, 1.0);
+        let result = sampler.sample(&ctx_at(5, 0, 10, 10, 1.0));
         assert_eq!(result, Some((5, 0)));
     }
 
@@ -112,7 +113,7 @@ mod tests {
     fn test_fault_line_displacement_at_t0() {
         let sampler = FaultLine::new(1, 1.0, 0.0);
         // At t=0, there should be displacement
-        let result = sampler.sample(50, 0, 100, 10, 0.0);
+        let result = sampler.sample(&ctx_at(50, 0, 100, 10, 0.0));
         // Above split: x - offset
         // offset = (1-0) * 20 * 1.0 = 20
         // src_x = 50 - 20 = 30
@@ -127,8 +128,8 @@ mod tests {
         let _split_y = sampler.split_y(10);
 
         // Above split moves one direction, below split moves opposite
-        let above = sampler.sample(50, 0, 100, 10, 0.0);
-        let below = sampler.sample(50, 9, 100, 10, 0.0);
+        let above = sampler.sample(&ctx_at(50, 0, 100, 10, 0.0));
+        let below = sampler.sample(&ctx_at(50, 9, 100, 10, 0.0));
 
         if let (Some((ax, _)), Some((bx, _))) = (above, below) {
             // One should be < 50, other should be > 50 (or at different offsets)
@@ -140,11 +141,11 @@ mod tests {
     fn test_fault_line_negative_x_returns_none() {
         let sampler = FaultLine::new(1, 1.0, 0.0);
         // Small x with large offset should return None
-        let result = sampler.sample(5, 0, 100, 10, 0.0);
+        let result = sampler.sample(&ctx_at(5, 0, 100, 10, 0.0));
         // offset = 20, src_x = 5 - 20 = -15 < 0
         assert_eq!(result, None);
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_fault_line.rs</FILE> - <DESC>FaultLine sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.0.1</VERS>
+// <VERS>END OF VERSION: 2.1.0</VERS>

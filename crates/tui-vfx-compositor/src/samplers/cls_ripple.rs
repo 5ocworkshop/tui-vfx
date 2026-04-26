@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_ripple.rs</FILE> - <DESC>Ripple sampler with configurable center</DESC>
-// <VERS>VERSION: 3.1.2</VERS>
-// <WCTX>mixed-signals v2 bipolar migration</WCTX>
-// <CLOG>Add .normalized() to Sine for 0-1 output after mixed-signals v2 bipolar change
+// <VERS>VERSION: 3.2.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>3.2.0: sample() now takes &VfxCellContext; dest_x/dest_y/width/height/t reach via ctx fields.
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::RippleCenter;
 use mixed_signals::prelude::{Normalized, Remap, Signal, SignalExt, Sine};
 
@@ -63,18 +64,13 @@ impl Ripple {
 }
 
 impl Sampler for Ripple {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        width: u16,
-        height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
-        let t = t as f32;
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
+        let t = ctx.t as f32;
         // Determine center based on configuration
         let (center_x, center_y) = match self.center {
-            RippleCenter::Center => (width as f32 / 2.0, height as f32 / 2.0),
+            RippleCenter::Center => (ctx.width as f32 / 2.0, ctx.height as f32 / 2.0),
             RippleCenter::Point { x, y } => (x as f32, y as f32),
         };
 
@@ -115,6 +111,10 @@ mod tests {
     const TEST_WIDTH: u16 = 20;
     const TEST_HEIGHT: u16 = 20;
 
+    fn ctx_at(x: u16, y: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, TEST_WIDTH, TEST_HEIGHT, 0, 0, t)
+    }
+
     #[test]
     fn test_ripple_default() {
         let ripple = Ripple::default();
@@ -125,25 +125,25 @@ mod tests {
     #[test]
     fn test_ripple_at_center_no_displacement() {
         let ripple = Ripple::default();
-        let result = ripple.sample(10, 10, TEST_WIDTH, TEST_HEIGHT, 0.0);
+        let result = ripple.sample(&ctx_at(10, 10, 0.0));
         assert_eq!(result, Some((10, 10)));
     }
 
     #[test]
     fn test_ripple_returns_some() {
         let ripple = Ripple::default();
-        let result = ripple.sample(5, 5, TEST_WIDTH, TEST_HEIGHT, 0.5);
+        let result = ripple.sample(&ctx_at(5, 5, 0.5));
         assert!(result.is_some());
     }
 
     #[test]
     fn test_ripple_varies_with_time() {
         let ripple = Ripple::default();
-        let r1 = ripple.sample(15, 10, TEST_WIDTH, TEST_HEIGHT, 0.0);
-        let r2 = ripple.sample(15, 10, TEST_WIDTH, TEST_HEIGHT, 0.25);
+        let r1 = ripple.sample(&ctx_at(15, 10, 0.0));
+        let r2 = ripple.sample(&ctx_at(15, 10, 0.25));
         assert!(r1.is_some() && r2.is_some());
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_ripple.rs</FILE> - <DESC>Ripple sampler with configurable center</DESC>
-// <VERS>END OF VERSION: 3.1.2</VERS>
+// <VERS>END OF VERSION: 3.2.0</VERS>

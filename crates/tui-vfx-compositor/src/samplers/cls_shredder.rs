@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_shredder.rs</FILE> - <DESC>Shredder sampler implementation</DESC>
-// <VERS>VERSION: 2.0.1</VERS>
-// <WCTX>Compositor clippy cleanup pass</WCTX>
-// <CLOG>2.0.1: PATCH — swap manual parity check for strip_idx.is_multiple_of(2) per clippy</CLOG>
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>2.1.0: sample() now takes &VfxCellContext; dest_x/dest_y/height/t reach via ctx fields.</CLOG>
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 
 /// Paper shredder effect - vertical strips fall at different speeds.
 ///
@@ -37,15 +38,11 @@ impl Shredder {
 }
 
 impl Sampler for Shredder {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        _width: u16,
-        height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
-        let t = t as f32;
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let t = ctx.t as f32;
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
+        let height = ctx.height;
 
         // Vertical strips: each column group falls at a different speed.
         // Faster strips "fall further" - their content appears lower on screen.
@@ -92,21 +89,25 @@ impl Sampler for Shredder {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_shredder_at_t_zero_no_offset() {
         let shredder = Shredder::new(2, 3.0, 1.0);
-        let result = shredder.sample(0, 0, 20, 10, 0.0);
+        let result = shredder.sample(&ctx_at(0, 0, 20, 10, 0.0));
         assert_eq!(result, Some((0, 0)));
 
-        let result = shredder.sample(5, 5, 20, 10, 0.0);
+        let result = shredder.sample(&ctx_at(5, 5, 20, 10, 0.0));
         assert_eq!(result, Some((5, 5)));
     }
 
     #[test]
     fn test_shredder_at_t_mid_creates_offset() {
         let shredder = Shredder::new(2, 3.0, 1.0);
-        let even_result = shredder.sample(0, 9, 20, 10, 0.5);
-        let odd_result = shredder.sample(2, 9, 20, 10, 0.5);
+        let even_result = shredder.sample(&ctx_at(0, 9, 20, 10, 0.5));
+        let odd_result = shredder.sample(&ctx_at(2, 9, 20, 10, 0.5));
 
         assert!(even_result.is_some());
         assert!(odd_result.is_some());
@@ -119,15 +120,15 @@ mod tests {
     #[test]
     fn test_shredder_at_t_one_creates_gaps() {
         let shredder = Shredder::new(2, 3.0, 1.0);
-        let result = shredder.sample(0, 0, 20, 10, 1.0);
+        let result = shredder.sample(&ctx_at(0, 0, 20, 10, 1.0));
         assert_eq!(result, None);
     }
 
     #[test]
     fn test_shredder_different_speeds_diverge() {
         let shredder = Shredder::new(2, 5.0, 1.0);
-        let even_result = shredder.sample(0, 5, 20, 10, 0.3);
-        let odd_result = shredder.sample(2, 5, 20, 10, 0.3);
+        let even_result = shredder.sample(&ctx_at(0, 5, 20, 10, 0.3));
+        let odd_result = shredder.sample(&ctx_at(2, 5, 20, 10, 0.3));
 
         if let (Some((_, even_src_y)), Some((_, odd_src_y))) = (even_result, odd_result) {
             let diff = even_src_y.abs_diff(odd_src_y);
@@ -138,10 +139,10 @@ mod tests {
     #[test]
     fn test_shredder_stripe_width_affects_strip_assignment() {
         let shredder = Shredder::new(4, 2.0, 1.0);
-        let x0 = shredder.sample(0, 5, 20, 10, 0.3);
-        let x3 = shredder.sample(3, 5, 20, 10, 0.3);
-        let x4 = shredder.sample(4, 5, 20, 10, 0.3);
-        let x7 = shredder.sample(7, 5, 20, 10, 0.3);
+        let x0 = shredder.sample(&ctx_at(0, 5, 20, 10, 0.3));
+        let x3 = shredder.sample(&ctx_at(3, 5, 20, 10, 0.3));
+        let x4 = shredder.sample(&ctx_at(4, 5, 20, 10, 0.3));
+        let x7 = shredder.sample(&ctx_at(7, 5, 20, 10, 0.3));
 
         if let (Some((_, src_y_0)), Some((_, src_y_3))) = (x0, x3) {
             assert_eq!(src_y_0, src_y_3);
@@ -155,17 +156,17 @@ mod tests {
     #[test]
     fn test_shredder_negative_speed_reverses_direction() {
         let shredder = Shredder::new(2, -1.0, 1.0);
-        let odd_result = shredder.sample(2, 5, 20, 10, 0.5);
+        let odd_result = shredder.sample(&ctx_at(2, 5, 20, 10, 0.5));
         assert!(odd_result.is_some() || odd_result.is_none());
     }
 
     #[test]
     fn test_shredder_zero_height_no_panic() {
         let shredder = Shredder::new(2, 3.0, 1.0);
-        let result = shredder.sample(0, 0, 0, 0, 0.5);
+        let result = shredder.sample(&ctx_at(0, 0, 0, 0, 0.5));
         assert!(result.is_some() || result.is_none());
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_shredder.rs</FILE> - <DESC>Shredder sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.0.1</VERS>
+// <VERS>END OF VERSION: 2.1.0</VERS>

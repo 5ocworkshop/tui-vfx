@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_sine_wave.rs</FILE> - <DESC>SineWave sampler with axis and phase support</DESC>
-// <VERS>VERSION: 3.1.1</VERS>
-// <WCTX>mixed-signals v2 bipolar migration</WCTX>
-// <CLOG>Add .normalized() to Sine for 0-1 output after mixed-signals v2 bipolar change
+// <VERS>VERSION: 3.2.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>3.2.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::Axis;
 use mixed_signals::prelude::{Normalized, Remap, Signal, SignalExt, Sine};
 
@@ -62,15 +63,10 @@ impl SineWave {
 }
 
 impl Sampler for SineWave {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        _width: u16,
-        _height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
-        let t = t as f32;
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let t = ctx.t as f32;
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
         match self.axis {
             Axis::X => {
                 // Wave along Y, displaces X (horizontal wave motion)
@@ -102,20 +98,24 @@ impl Sampler for SineWave {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_sine_wave_zero_amplitude_identity() {
         let sampler = SineWave::new(0.0, 1.0, 1.0, Axis::X, 0.0);
         // With zero amplitude, no displacement should occur
-        assert_eq!(sampler.sample(5, 7, 10, 10, 0.0), Some((5, 7)));
-        assert_eq!(sampler.sample(5, 7, 10, 10, 0.5), Some((5, 7)));
-        assert_eq!(sampler.sample(5, 7, 10, 10, 1.0), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)), Some((5, 7)));
     }
 
     #[test]
     fn test_sine_wave_axis_x_displaces_x() {
         let sampler = SineWave::new(2.0, 0.5, 10.0, Axis::X, 0.0);
         // Should return same y, but potentially different x
-        let result = sampler.sample(5, 5, 10, 10, 0.0);
+        let result = sampler.sample(&ctx_at(5, 5, 10, 10, 0.0));
         assert!(result.is_some());
         let (_, y) = result.unwrap();
         assert_eq!(y, 5); // Y should be unchanged
@@ -125,7 +125,7 @@ mod tests {
     fn test_sine_wave_axis_y_displaces_y() {
         let sampler = SineWave::new(2.0, 0.5, 10.0, Axis::Y, 0.0);
         // Should return same x, but potentially different y
-        let result = sampler.sample(5, 5, 10, 10, 0.0);
+        let result = sampler.sample(&ctx_at(5, 5, 10, 10, 0.0));
         assert!(result.is_some());
         let (x, _) = result.unwrap();
         assert_eq!(x, 5); // X should be unchanged
@@ -136,7 +136,7 @@ mod tests {
         // Test that the sampler handles edge positions gracefully
         let sampler = SineWave::new(2.0, 0.5, 10.0, Axis::X, 0.0);
         // Sampling at x=0 should either return a valid position or None
-        let result = sampler.sample(0, 5, 10, 10, 0.0);
+        let result = sampler.sample(&ctx_at(0, 5, 10, 10, 0.0));
         // Either valid Some(...) or None is acceptable - no panic
         if let Some((x, y)) = result {
             assert_eq!(y, 5); // Y should still be unchanged
@@ -147,4 +147,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_sine_wave.rs</FILE> - <DESC>SineWave sampler with axis and phase support</DESC>
-// <VERS>END OF VERSION: 3.1.1</VERS>
+// <VERS>END OF VERSION: 3.2.0</VERS>

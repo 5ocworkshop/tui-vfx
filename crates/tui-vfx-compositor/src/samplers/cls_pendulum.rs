@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_pendulum.rs</FILE> - <DESC>Pendulum sampler for bidirectional swaying motion</DESC>
-// <VERS>VERSION: 1.0.1</VERS>
-// <WCTX>Rustfmt normalization for pendulum sampler</WCTX>
-// <CLOG>Apply formatting updates after clippy run</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>1.1.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.</CLOG>
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::Axis;
 use std::f32::consts::TAU;
 
@@ -59,15 +60,10 @@ impl Pendulum {
 }
 
 impl Sampler for Pendulum {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        _width: u16,
-        _height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
-        let t = t as f32;
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let t = ctx.t as f32;
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
 
         match self.axis {
             Axis::X => {
@@ -104,13 +100,17 @@ impl Sampler for Pendulum {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_pendulum_zero_amplitude_identity() {
         let sampler = Pendulum::new(0.0, 2.0, 0.3, Axis::X);
         // With zero amplitude, no displacement should occur
-        assert_eq!(sampler.sample(5, 7, 10, 10, 0.0), Some((5, 7)));
-        assert_eq!(sampler.sample(5, 7, 10, 10, 0.5), Some((5, 7)));
-        assert_eq!(sampler.sample(5, 7, 10, 10, 1.0), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)), Some((5, 7)));
     }
 
     #[test]
@@ -118,7 +118,7 @@ mod tests {
         let sampler = Pendulum::new(2.0, 2.0, 0.3, Axis::X);
         // Y should always be unchanged for X-axis swing
         for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
-            let result = sampler.sample(5, 10, 20, 20, t);
+            let result = sampler.sample(&ctx_at(5, 10, 20, 20, t));
             assert!(result.is_some());
             let (_, y) = result.unwrap();
             assert_eq!(y, 10);
@@ -130,7 +130,7 @@ mod tests {
         let sampler = Pendulum::new(2.0, 2.0, 0.3, Axis::Y);
         // X should always be unchanged for Y-axis swing
         for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
-            let result = sampler.sample(5, 10, 20, 20, t);
+            let result = sampler.sample(&ctx_at(5, 10, 20, 20, t));
             assert!(result.is_some());
             let (x, _) = result.unwrap();
             assert_eq!(x, 5);
@@ -145,9 +145,9 @@ mod tests {
         // At t=0.25 (phase = PI/2), sin = 1 (positive offset)
         // At t=0.75 (phase = 3PI/2), sin = -1 (negative offset)
 
-        let result_center = sampler.sample(10, 5, 20, 20, 0.0);
-        let result_right = sampler.sample(10, 5, 20, 20, 0.25);
-        let result_left = sampler.sample(10, 5, 20, 20, 0.75);
+        let result_center = sampler.sample(&ctx_at(10, 5, 20, 20, 0.0));
+        let result_right = sampler.sample(&ctx_at(10, 5, 20, 20, 0.25));
+        let result_left = sampler.sample(&ctx_at(10, 5, 20, 20, 0.75));
 
         assert!(result_center.is_some());
         assert!(result_right.is_some());
@@ -176,8 +176,8 @@ mod tests {
     fn test_pendulum_phase_spread_creates_wave() {
         let sampler = Pendulum::new(2.0, 2.0, 1.0, Axis::X);
         // Different Y positions should have different X offsets
-        let result_y0 = sampler.sample(10, 0, 20, 20, 0.0);
-        let result_y1 = sampler.sample(10, 1, 20, 20, 0.0);
+        let result_y0 = sampler.sample(&ctx_at(10, 0, 20, 20, 0.0));
+        let result_y1 = sampler.sample(&ctx_at(10, 1, 20, 20, 0.0));
 
         assert!(result_y0.is_some());
         assert!(result_y1.is_some());
@@ -191,4 +191,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_pendulum.rs</FILE> - <DESC>Pendulum sampler for bidirectional swaying motion</DESC>
-// <VERS>END OF VERSION: 1.0.1</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

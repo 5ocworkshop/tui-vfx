@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs</FILE> - <DESC>Prepared sampler enum for pipeline rendering</DESC>
-// <VERS>VERSION: 1.4.0</VERS>
-// <WCTX>feat/content-ergonomics: clean up pre-existing workspace clippy lint</WCTX>
-// <CLOG>1.4.0: prepare ordered sampler chains and sample them left-to-right.</CLOG>
+// <VERS>VERSION: 1.5.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — fix pre-existing sampler dispatcher drift blocking build</WCTX>
+// <CLOG>1.5.0: PreparedSampler::sample and sample_sampler_chain now build VfxCellContext per call and delegate via the Sampler trait; fixes build break from incomplete F.4 prep work.</CLOG>
 
 use crate::samplers::cls_bounce::Bounce;
 use crate::samplers::cls_crt_jitter::CrtJitter;
@@ -15,6 +15,7 @@ use crate::samplers::cls_shredder::Shredder;
 use crate::samplers::cls_sine_wave::SineWave;
 use crate::traits::sampler::Sampler;
 use crate::types::cls_sampler_spec::SamplerSpec;
+use tui_vfx_types::VfxCellContext;
 use mixed_signals::traits::SignalContext;
 use smallvec::SmallVec;
 
@@ -41,18 +42,19 @@ impl PreparedSampler {
         height: u16,
         t: f64,
     ) -> (Option<u16>, Option<u16>) {
+        let ctx = VfxCellContext::new(x, y, width, height, 0, 0, t);
         let sampled = match self {
             PreparedSampler::None => Some((x, y)),
-            PreparedSampler::SineWave(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::Ripple(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::Shredder(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::FaultLine(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::CrtSampler(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::CrtJitter(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::Bounce(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::Pendulum(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::Gravity(configured) => configured.sample(x, y, width, height, t),
-            PreparedSampler::RadialTwist(configured) => configured.sample(x, y, width, height, t),
+            PreparedSampler::SineWave(configured) => configured.sample(&ctx),
+            PreparedSampler::Ripple(configured) => configured.sample(&ctx),
+            PreparedSampler::Shredder(configured) => configured.sample(&ctx),
+            PreparedSampler::FaultLine(configured) => configured.sample(&ctx),
+            PreparedSampler::CrtSampler(configured) => configured.sample(&ctx),
+            PreparedSampler::CrtJitter(configured) => configured.sample(&ctx),
+            PreparedSampler::Bounce(configured) => configured.sample(&ctx),
+            PreparedSampler::Pendulum(configured) => configured.sample(&ctx),
+            PreparedSampler::Gravity(configured) => configured.sample(&ctx),
+            PreparedSampler::RadialTwist(configured) => configured.sample(&ctx),
         };
         match sampled {
             Some((sx, sy)) => (Some(sx), Some(sy)),
@@ -245,4 +247,4 @@ pub(crate) fn prepare_sampler(t: f64, sampler_spec: &Option<SamplerSpec>) -> Pre
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs</FILE> - <DESC>Prepared sampler enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 1.4.0</VERS>
+// <VERS>END OF VERSION: 1.5.0</VERS>

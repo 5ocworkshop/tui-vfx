@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_bounce.rs</FILE> - <DESC>Bounce sampler for bouncing ball vertical displacement</DESC>
-// <VERS>VERSION: 1.0.1</VERS>
-// <WCTX>Silence dead_code warning for public sampler builder</WCTX>
-// <CLOG>Allow unused with_params constructor to satisfy clippy -D warnings</CLOG>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>1.1.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.</CLOG>
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 use std::f32::consts::TAU;
 
 /// Bouncing vertical displacement sampler.
@@ -60,15 +61,10 @@ impl Bounce {
 }
 
 impl Sampler for Bounce {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        _width: u16,
-        _height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
-        let t = t as f32;
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let t = ctx.t as f32;
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
 
         // Calculate phase based on time and x position
         // Phase spread creates the wave effect where each column bounces slightly later
@@ -97,13 +93,17 @@ impl Sampler for Bounce {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_bounce_zero_amplitude_identity() {
         let sampler = Bounce::new(0.0, 4.0, 0.5);
         // With zero amplitude, no displacement should occur
-        assert_eq!(sampler.sample(5, 7, 10, 10, 0.0), Some((5, 7)));
-        assert_eq!(sampler.sample(5, 7, 10, 10, 0.5), Some((5, 7)));
-        assert_eq!(sampler.sample(5, 7, 10, 10, 1.0), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)), Some((5, 7)));
     }
 
     #[test]
@@ -111,7 +111,7 @@ mod tests {
         let sampler = Bounce::new(2.0, 4.0, 0.5);
         // X should always be unchanged
         for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
-            let result = sampler.sample(5, 10, 20, 20, t);
+            let result = sampler.sample(&ctx_at(5, 10, 20, 20, t));
             assert!(result.is_some());
             let (x, _) = result.unwrap();
             assert_eq!(x, 5);
@@ -123,7 +123,7 @@ mod tests {
         let sampler = Bounce::new(2.0, 4.0, 0.0);
         // Source Y should always be >= dest Y (bounce adds positive offset)
         for t in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5] {
-            let result = sampler.sample(0, 10, 20, 20, t);
+            let result = sampler.sample(&ctx_at(0, 10, 20, 20, t));
             assert!(result.is_some());
             let (_, y) = result.unwrap();
             assert!(y >= 10, "Source Y {} should be >= dest Y 10 at t={}", y, t);
@@ -134,8 +134,8 @@ mod tests {
     fn test_bounce_phase_spread_creates_offset() {
         let sampler = Bounce::new(2.0, 4.0, 1.0);
         // Different X positions should have different Y offsets at same time
-        let result_x0 = sampler.sample(0, 10, 20, 20, 0.0);
-        let result_x1 = sampler.sample(1, 10, 20, 20, 0.0);
+        let result_x0 = sampler.sample(&ctx_at(0, 10, 20, 20, 0.0));
+        let result_x1 = sampler.sample(&ctx_at(1, 10, 20, 20, 0.0));
 
         assert!(result_x0.is_some());
         assert!(result_x1.is_some());
@@ -161,10 +161,10 @@ mod tests {
 
         for i in 0..100 {
             let t = i as f64 / 100.0;
-            if let Some((_, y)) = small_bounce.sample(0, 10, 20, 20, t) {
+            if let Some((_, y)) = small_bounce.sample(&ctx_at(0, 10, 20, 20, t)) {
                 max_small = max_small.max(y.saturating_sub(10));
             }
-            if let Some((_, y)) = large_bounce.sample(0, 10, 20, 20, t) {
+            if let Some((_, y)) = large_bounce.sample(&ctx_at(0, 10, 20, 20, t)) {
                 max_large = max_large.max(y.saturating_sub(10));
             }
         }
@@ -179,4 +179,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_bounce.rs</FILE> - <DESC>Bounce sampler for bouncing ball vertical displacement</DESC>
-// <VERS>END OF VERSION: 1.0.1</VERS>
+// <VERS>END OF VERSION: 1.1.0</VERS>

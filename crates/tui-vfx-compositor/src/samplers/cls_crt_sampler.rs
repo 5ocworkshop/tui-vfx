@@ -1,10 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_crt_sampler.rs</FILE> - <DESC>CRT sampler with curvature and jitter</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Refactor centered coordinate math onto the shared mixed-signals spatial substrate now that those leaves exist.</WCTX>
-// <CLOG>1.1.0: use mixed-signals centered coordinate leaves for CRT barrel distortion input instead of open-coding the -1..1 coordinate remap locally.
-// 1.0.0: New sampler implementing SamplerSpec::Crt { curvature, jitter }</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>1.2.0: sample() now takes &VfxCellContext; dest_x/dest_y/width/height/t reach via ctx fields.</CLOG>
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 
 /// CRT monitor screen distortion sampler.
@@ -42,14 +42,13 @@ impl CrtSampler {
 }
 
 impl Sampler for CrtSampler {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        width: u16,
-        height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
+        let width = ctx.width;
+        let height = ctx.height;
+        let t = ctx.t;
+
         if width == 0 || height == 0 {
             return Some((dest_x, dest_y));
         }
@@ -103,7 +102,10 @@ mod tests {
     fn test_crt_sampler_zero_dimensions_noop() {
         let sampler = CrtSampler::default();
         // Zero dimensions should return identity
-        assert_eq!(sampler.sample(5, 5, 0, 0, 0.0), Some((5, 5)));
+        assert_eq!(
+            sampler.sample(&VfxCellContext::new(5, 5, 0, 0, 0, 0, 0.0)),
+            Some((5, 5))
+        );
     }
 
     #[test]
@@ -111,7 +113,7 @@ mod tests {
         let sampler = CrtSampler::new(0.0, 0.0);
         // With no curvature and no jitter, center should map to center
         // Actually, due to rounding, let's check that the result is close
-        let result = sampler.sample(5, 5, 10, 10, 0.0);
+        let result = sampler.sample(&VfxCellContext::new(5, 5, 10, 10, 0, 0, 0.0));
         assert!(result.is_some());
         let (x, y) = result.unwrap();
         // Should be very close to input
@@ -124,8 +126,8 @@ mod tests {
         let flat = CrtSampler::new(0.0, 0.0);
         let curved = CrtSampler::new(0.5, 0.0);
         // Corner positions should differ with curvature
-        let flat_corner = flat.sample(0, 0, 10, 10, 0.0);
-        let curved_corner = curved.sample(0, 0, 10, 10, 0.0);
+        let flat_corner = flat.sample(&VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        let curved_corner = curved.sample(&VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         // Curved version likely goes out of bounds or has different coords
         assert!(flat_corner != curved_corner || curved_corner.is_none());
     }
@@ -134,7 +136,7 @@ mod tests {
     fn test_crt_sampler_bounds_check() {
         let sampler = CrtSampler::new(0.5, 0.0);
         // Strong curvature at corners should push samples out of bounds
-        let result = sampler.sample(0, 0, 10, 10, 0.0);
+        let result = sampler.sample(&VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         // Result might be None due to bounds check
         // This is acceptable behavior
         let _ = result;
@@ -142,4 +144,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_crt_sampler.rs</FILE> - <DESC>CRT sampler with curvature and jitter</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

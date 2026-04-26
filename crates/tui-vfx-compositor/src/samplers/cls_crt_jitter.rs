@@ -1,9 +1,10 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_crt_jitter.rs</FILE> - <DESC>CrtJitter sampler implementation</DESC>
-// <VERS>VERSION: 2.2.0</VERS>
-// <WCTX>RNG performance optimization</WCTX>
-// <CLOG>Switched to fast_random for ~25x faster per-cell noise generation</CLOG>
+// <VERS>VERSION: 2.3.0</VERS>
+// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
+// <CLOG>2.3.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.</CLOG>
 
 use crate::traits::sampler::Sampler;
+use tui_vfx_types::VfxCellContext;
 
 /// CRT crash/jitter effect sampler.
 ///
@@ -46,15 +47,10 @@ impl CrtJitter {
 }
 
 impl Sampler for CrtJitter {
-    fn sample(
-        &self,
-        dest_x: u16,
-        dest_y: u16,
-        _width: u16,
-        _height: u16,
-        t: f64,
-    ) -> Option<(u16, u16)> {
-        let t = t as f32;
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let t = ctx.t as f32;
+        let dest_x = ctx.local_x;
+        let dest_y = ctx.local_y;
 
         // Apply decay over time (effect gets weaker as t approaches 1)
         let decay_factor = (-self.decay * t * 5.0).exp();
@@ -80,6 +76,10 @@ mod tests {
     const TEST_WIDTH: u16 = 80;
     const TEST_HEIGHT: u16 = 24;
 
+    fn ctx_at(x: u16, y: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, TEST_WIDTH, TEST_HEIGHT, 0, 0, t)
+    }
+
     #[test]
     fn test_crt_jitter_default() {
         let jitter = CrtJitter::default();
@@ -91,14 +91,14 @@ mod tests {
     #[test]
     fn test_crt_jitter_returns_some() {
         let jitter = CrtJitter::default();
-        let result = jitter.sample(10, 10, TEST_WIDTH, TEST_HEIGHT, 0.5);
+        let result = jitter.sample(&ctx_at(10, 10, 0.5));
         assert!(result.is_some());
     }
 
     #[test]
     fn test_crt_jitter_preserves_y() {
         let jitter = CrtJitter::default();
-        let result = jitter.sample(10, 15, TEST_WIDTH, TEST_HEIGHT, 0.5).unwrap();
+        let result = jitter.sample(&ctx_at(10, 15, 0.5)).unwrap();
         assert_eq!(result.1, 15);
     }
 
@@ -112,8 +112,8 @@ mod tests {
             seed: 123,
             ..Default::default()
         };
-        let r1 = jitter1.sample(10, 10, TEST_WIDTH, TEST_HEIGHT, 0.5);
-        let r2 = jitter2.sample(10, 10, TEST_WIDTH, TEST_HEIGHT, 0.5);
+        let r1 = jitter1.sample(&ctx_at(10, 10, 0.5));
+        let r2 = jitter2.sample(&ctx_at(10, 10, 0.5));
         assert_eq!(r1, r2);
     }
 
@@ -127,11 +127,11 @@ mod tests {
             seed: 456,
             ..Default::default()
         };
-        let r1 = jitter1.sample(10, 10, TEST_WIDTH, TEST_HEIGHT, 0.5);
-        let r2 = jitter2.sample(10, 10, TEST_WIDTH, TEST_HEIGHT, 0.5);
+        let r1 = jitter1.sample(&ctx_at(10, 10, 0.5));
+        let r2 = jitter2.sample(&ctx_at(10, 10, 0.5));
         assert!(r1 != r2 || r1.is_some());
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_crt_jitter.rs</FILE> - <DESC>CrtJitter sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.2.0</VERS>
+// <VERS>END OF VERSION: 2.3.0</VERS>
