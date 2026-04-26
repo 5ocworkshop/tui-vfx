@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_operational_analysis.rs</FILE> - <DESC>Regression tests for direct probe operational analysis</DESC>
-// <VERS>VERSION: 0.4.1</VERS>
-// <WCTX>Audit Phase 7 prep — align the success-for-filter-stage test with the post-119e785 inactive-vs-failure semantic where unconfigured stages are Inactive (not Failure) and therefore do not poison the combined operational status.</WCTX>
-// <CLOG>test_collect_probe_operational_analysis_reports_success_for_filter_stage: combined.status is now Success when only the filter stage is configured and produces events; unconfigured sampler/mask/shader stages classify as Inactive, not Failure.</CLOG>
+// <VERS>VERSION: 0.4.2</VERS>
+// <WCTX>Fix broken struct literals in shader_scene/multi_sampler_scene helpers after 71a6ff2 mis-placed loopback_fired_keys outside the struct braces</WCTX>
+// <CLOG>Move loopback_fired_keys inside the ProbeSceneSpec struct literal in shader_scene and multi_sampler_scene; removes syntax errors introduced by the 71a6ff2 patch script</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::CompositionSpec;
@@ -44,8 +44,8 @@ fn shader_scene() -> ProbeSceneSpec {
             t: 0.5,
             ..CompositionSpec::default()
         },
-    },
-    loopback_fired_keys: Vec::new(),
+        loopback_fired_keys: Vec::new(),
+    }
 }
 
 fn multi_sampler_scene() -> ProbeSceneSpec {
@@ -68,8 +68,8 @@ fn multi_sampler_scene() -> ProbeSceneSpec {
         destination: make_grid(10, 8, ' '),
         widget_offset: ProbePoint { x: 1, y: 1 },
         composition,
-    },
-    loopback_fired_keys: Vec::new(),
+        loopback_fired_keys: Vec::new(),
+    }
 }
 
 #[test]
@@ -220,4 +220,4 @@ fn test_collect_probe_operational_analysis_reports_failure_for_bad_border_scene(
 }
 
 // <FILE>crates/tui-vfx-probe/tests/test_probe_operational_analysis.rs</FILE> - <DESC>Regression tests for direct probe operational analysis</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.2</VERS>

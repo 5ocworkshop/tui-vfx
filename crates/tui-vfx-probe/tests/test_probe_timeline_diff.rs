@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_timeline_diff.rs</FILE> - <DESC>Integration tests for probe timelines and frame diffs</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>TDD for timeline, diff, and expanded trace support in tui-vfx-probe using deterministic animated fixtures</WCTX>
-// <CLOG>MINOR: Switch the diff regression to an animated shader scene so frame-to-frame comparisons assert real temporal changes instead of static filter output</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Fix broken struct literals in dim_scene/shader_scene helpers after 71a6ff2 mis-placed loopback_fired_keys outside the struct braces</WCTX>
+// <CLOG>Move loopback_fired_keys inside the ProbeSceneSpec struct literal in dim_scene and shader_scene; removes the syntax error introduced by the automated patch script in 71a6ff2</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use tui_vfx_compositor::pipeline::{CompositionSpec, ShaderLayerSpec};
@@ -37,8 +37,8 @@ fn dim_scene() -> ProbeSceneSpec {
             }],
             ..CompositionSpec::default()
         },
-    },
-    loopback_fired_keys: Vec::new(),
+        loopback_fired_keys: Vec::new(),
+    }
 }
 
 fn shader_scene() -> ProbeSceneSpec {
@@ -61,8 +61,8 @@ fn shader_scene() -> ProbeSceneSpec {
             t: 0.0,
             ..CompositionSpec::default()
         },
-    },
-    loopback_fired_keys: Vec::new(),
+        loopback_fired_keys: Vec::new(),
+    }
 }
 
 #[test]
@@ -134,4 +134,4 @@ fn test_run_probe_diff_reports_changed_cells_between_samples() {
 }
 
 // <FILE>crates/tui-vfx-probe/tests/test_probe_timeline_diff.rs</FILE> - <DESC>Integration tests for probe timelines and frame diffs</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

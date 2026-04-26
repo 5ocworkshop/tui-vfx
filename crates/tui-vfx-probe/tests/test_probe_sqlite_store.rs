@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>
-// <VERS>VERSION: 0.4.1</VERS>
-// <WCTX>Audit Phase 7 prep — align test_sqlite_store_indexes_frame_report_cells_and_trace_events with the post-0.2.0 alpha-border-diagnostic gate that requires the row to actually look like a border row before reporting an alphabetic-character violation.</WCTX>
-// <CLOG>test_sqlite_store_indexes_frame_report_cells_and_trace_events: drop the alpha-on-border diagnostic-count assertion because the dim_scene fixture has no border glyphs and the gate now (correctly) skips those rows; the test still validates probe_cells and probe_trace_events indexing, which is its named subject.</CLOG>
+// <VERS>VERSION: 0.4.2</VERS>
+// <WCTX>Fix broken struct literals in dim_scene/shader_scene/binding_scene helpers after 71a6ff2 mis-placed loopback_fired_keys outside the struct braces</WCTX>
+// <CLOG>Move loopback_fired_keys inside the ProbeSceneSpec struct literal in dim_scene, shader_scene, and binding_scene; removes syntax errors introduced by the 71a6ff2 patch script</CLOG>
 
 use mixed_signals::prelude::SignalOrFloat;
 use serde_json::json;
@@ -41,8 +41,8 @@ fn dim_scene() -> ProbeSceneSpec {
             }],
             ..CompositionSpec::default()
         },
-    },
-    loopback_fired_keys: Vec::new(),
+        loopback_fired_keys: Vec::new(),
+    }
 }
 
 fn shader_scene() -> ProbeSceneSpec {
@@ -64,8 +64,8 @@ fn shader_scene() -> ProbeSceneSpec {
             }],
             ..CompositionSpec::default()
         },
-    },
-    loopback_fired_keys: Vec::new(),
+        loopback_fired_keys: Vec::new(),
+    }
 }
 
 fn binding_scene() -> ProbeSceneSpec {
@@ -92,8 +92,8 @@ fn binding_scene() -> ProbeSceneSpec {
                 .collect::<ShaderRuntimeParams>(),
             ..CompositionSpec::default()
         },
-    },
-    loopback_fired_keys: Vec::new(),
+        loopback_fired_keys: Vec::new(),
+    }
 }
 
 #[test]
@@ -431,4 +431,4 @@ fn test_sqlite_store_indexes_motion_analysis_rows() {
 }
 
 // <FILE>crates/tui-vfx-probe/tests/test_probe_sqlite_store.rs</FILE> - <DESC>Tests for the in-memory SQLite playback index</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.2</VERS>
