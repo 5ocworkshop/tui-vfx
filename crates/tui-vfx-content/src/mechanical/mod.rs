@@ -34,11 +34,9 @@ mod fnc_weighted_cycle_order;
 mod types;
 
 pub(crate) use cls_resolved_cycle::{
-    MechanicalCycleRoute, NumericRouteHint, ResolvedMechanicalCycle, ResolvedMechanicalFace,
+    MechanicalCycleRoute, NumericRouteHint, ResolvedMechanicalFace,
 };
-pub(crate) use enum_cycle_error::MechanicalCycleError;
-pub(crate) use fnc_apply_settle::{settle_sample_for, SettleSample};
-pub(crate) use fnc_expand_cycle_preset::expand_cycle_preset;
+pub(crate) use fnc_apply_settle::settle_sample_for;
 pub(crate) use fnc_grid_text::{grid_from_text, grid_to_text, paired_grids};
 pub(crate) use fnc_normalize_cycle_face::normalize_cycle_face;
 pub(crate) use fnc_overshoot_face::overshoot_face_for;
@@ -48,8 +46,7 @@ pub(crate) use fnc_roll_grid_window::roll_grid_window;
 pub(crate) use fnc_route_between::route_between;
 pub(crate) use fnc_split_flap_tile_frame::split_flap_tile_frame;
 pub(crate) use fnc_tile_progress::{tile_progress_for, TileScheduleMeta};
-pub(crate) use fnc_tile_rects::{blit_tile_grid, extract_tile_text, tile_rects, TileRect};
-pub(crate) use fnc_weighted_cycle_order::{shuffle_in_place, weighted_cycle_order};
+pub(crate) use fnc_tile_rects::{blit_tile_grid, extract_tile_text, tile_rects};
 pub(crate) use types::{
     MechanicalSizing, MechanicalSource, MechanicalTile, validate_split_flap_tile,
 };

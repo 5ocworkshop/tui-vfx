@@ -314,7 +314,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `HoverBar` | Progress-driven partial bar indicator for hover states | `base_eighths`, `max_eighths`, `position`, `progress` |
 | `InterlaceCurtain` | Scanline/interlace effect for backdrop dimming | `density`, `dim_factor`, `scroll_speed` |
 | `Invert` | Invert colors | `apply_to` |
-| `KittScanner` | Horizontal ping-pong scanner effect (KITT/Larson) | `boost`, `band_width`, `bpm`, `bps`, `progress`, `motion_mode`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
+| `KittScanner` | Horizontal ping-pong scanner effect (KITT/Larson) | `boost`, `band_width`, `bpm`, `bps`, `progress`, `motion_mode`, `axis`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
 | `MotionBlur` | Motion blur trail effect with directional dimming | `trail_length`, `opacity_decay`, `direction` |
 | `None` | No filter effect | - |
 | `PatternFill` | Pattern fill effect for background textures | `pattern`, `color`, `only_empty` |
@@ -583,7 +583,7 @@ pub enum ContentEffect {
     Mirror { axis: Horizontal },
     Morph { source: , progression: Linear, direction: LeftToRight, seed: 0 },
     Numeric { format: {} },
-    Odometer { direction: Up, travel: Axis, tile_width: 1, tile_height: 3, from_message: Some("AAA\nBBB\nCCC") },
+    Odometer { direction: Up, travel: Axis, tile_width: 1, tile_height: 3, from_message: Some("AAA\nBBB\nCCC"), mechanical: None },
     Redact { symbol: █ },
     Scramble { resolve_pace: Static(0.0), charset: Alphanumeric, seed: 42 },
     ScrambleGlitchShift { resolve_pace: Static(0.0), charset: Alphanumeric, scramble_seed: 42, shift_amount: 4, glitch_start: Static(0.0), glitch_end: Static(0.0) },

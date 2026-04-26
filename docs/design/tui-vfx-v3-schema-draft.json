@@ -1,7 +1,7 @@
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example with # comment annotations. Stripping lines starting with `#` yields valid JSON representing a canonical V3 recipe.</DESC>
-# <VERS>VERSION: 0.8.2</VERS>
-# <WCTX>Keep the draft schema annotations aligned with border/title fields, shadow composite modes, per-cell motion homes, and the grid-first V3 snapshot renderer boundary.</WCTX>
-# <CLOG>0.8.2: add first-slice `cell_motion` schema homes for root content and scene layers. 0.8.1: annotate shadow composite modes against the grid-first V3 snapshot renderer seam.</CLOG>
+# <VERS>VERSION: 0.9.0</VERS>
+# <WCTX>Phase 5 of mechanical circular content cycles plan: annotate the Odometer mechanical cycle config block (source / route / cascade / settle) with the same authoring guidance used in CAPABILITIES_REFERENCE.</WCTX>
+# <CLOG>0.9.0: add a new section 5.1.b documenting Odometer's optional mechanical block, schema variants for source/route/cascade/settle, and per-tile NumericCarry + Spring detent semantics. 0.8.2: add first-slice cell_motion schema homes for root content and scene layers.</CLOG>
 
 # ============================================================================
 # tui-vfx V3 schema — DRAFT
@@ -285,6 +285,84 @@
         }
       }
     },
+
+    # -----------------------------------------------------------------------
+    # 5.1.b Mechanical cycle config (Odometer; SplitFlap follows in Phase 4)
+    # -----------------------------------------------------------------------
+    # `mechanical` is an optional schema-bearing block on Odometer that turns
+    # the transformer from a single old/new pair-roll into an ordered,
+    # circular, randomized, or weighted face cycle. Absent or set to the
+    # explicit-Pair default = byte-identical legacy behavior.
+    #
+    # Author the Odometer effect like this when you want digit drums, slot
+    # reels, or 3x3 line-glyph counters:
+    #
+    # "effect": {
+    #   "type": "odometer",
+    #   "direction": "up",
+    #   "travel": { "type": "axis" },
+    #   "tile_width": 1,
+    #   "tile_height": 1,
+    #   "from_message": "099",
+    #   "mechanical": {
+    #     "source": {
+    #       "type": "preset",
+    #       "preset": "decimal_digits",
+    #       "wrap": "circular"
+    #       # ^ source.type: pair (default, equivalent to absent) | ordered |
+    #       #   preset (decimal_digits / split_flap_alpha / split_flap_digits
+    #       #   / split_flap_uppercase) | randomized (faces+seed) | weighted
+    #       #   (faces with weights+seed). Ordered/randomized/weighted carry
+    #       #   their own face arrays; preset face lists are byte-equal mirrors
+    #       #   of SplitFlapCharset constants.
+    #     },
+    #     "route": {
+    #       "direction": "numeric_delta",
+    #       # ^ forward (default) | reverse | shortest | numeric_delta |
+    #       #   authored (reserved). numeric_delta requires decimal_digits
+    #       #   preset (or equivalent 0..=9 cycle); the runtime infers
+    #       #   Increment/Decrement from source-vs-target numeric comparison.
+    #       "tie_breaker": "forward",
+    #       # ^ forward (default) | reverse — only consulted by `shortest`.
+    #       "extra_rotations": 0,
+    #       # ^ u16 — full additional wraps before landing. Slot reels
+    #       #   typically use 2+. Requires wrap: circular.
+    #       "missing_face": "error"
+    #       # ^ error (default, strict) | pair_fallback | insert_at_end.
+    #     },
+    #     "cascade": {
+    #       "type": "numeric_carry",
+    #       "stagger_fraction": 0.4,
+    #       "unchanged": "hold"
+    #       # ^ cascade.type: simultaneous (default) | staggered (fraction
+    #       #   0..0.95) | numeric_carry (stagger_fraction + unchanged:
+    #       #   hold/spin_and_return — sequences only changed digits LSB→MSB)
+    #       #   | randomized (seed + max_delay_fraction).
+    #     },
+    #     "settle": {
+    #       "type": "spring",
+    #       "overshoot": 0.16,
+    #       "settle_fraction": 0.2
+    #       # ^ settle.type: none (default) | spring (overshoot 0..0.5 +
+    #       #   settle_fraction 0..1 — per-tile detent: tile briefly shows
+    #       #   the face one beyond target then snaps to target) | ease
+    #       #   (easing: linear / ease_out / ease_out_back).
+    #     }
+    #   }
+    # }
+    #
+    # Compatibility: when `mechanical` is absent (or source = pair, cascade =
+    # simultaneous, settle = none), Odometer renders byte-identically to the
+    # pre-V3 whole-grid pair roll.
+    #
+    # Per-tile semantics: cascade and settle are per-tile and compose. With
+    # NumericCarry cascade, only changed digits advance — sequenced LSB→MSB.
+    # With Spring settle, each tile gets its own detent in its own time
+    # window, matching how a real odometer wheel ratchets each digit
+    # independently.
+    #
+    # See `docs/CAPABILITIES_REFERENCE.md` § "Mechanical Cycle Config" for the
+    # full schema surface and authoring guidance.
 
     # -----------------------------------------------------------------------
     # 5.2 Layout, lifecycle, border

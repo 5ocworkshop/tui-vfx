@@ -293,7 +293,7 @@
         ]
       },
       "Odometer": {
-        "ai_hint": "Mechanical cell-grid roll for odometer and slot-style boards.\ndirection: up/down/left/right/diagonal. travel: tagged object (axis, full_clear, or cells).\ntile_width/tile_height describe glyph/window geometry and minimum travel; rows/columns still roll at cell granularity for row-by-row odometer motion.\nfrom_message supplies the previous board. Old digit interpolation is intentionally replaced by cell-grid rolling.",
+        "ai_hint": "Mechanical cell-grid roll for odometer drums and slot-style boards.\ndirection: up/down/left/right/diagonal. travel: tagged object (axis, full_clear, or cells).\ntile_width/tile_height describe glyph/window geometry and minimum travel; rows/columns still roll at cell granularity for row-by-row odometer motion.\nfrom_message supplies the previous board. Old digit interpolation is intentionally replaced by cell-grid rolling.\n\nOptional mechanical block (V3) turns Odometer into a full ordered/circular content cycle.\nmechanical.source: pair (default, equivalent to absent), ordered (author faces+wrap), preset (decimal_digits, split_flap_alpha/digits/uppercase), randomized (faces+seed), weighted (faces with weights+seed).\nmechanical.route: direction (forward/reverse/shortest/numeric_delta), tie_breaker, extra_rotations (full extra wraps before landing), missing_face (error/pair_fallback/insert_at_end).\nmechanical.cascade: simultaneous (default), staggered (fraction), numeric_carry (stagger_fraction + unchanged: hold/spin_and_return — sequences only changed digits LSB→MSB), randomized (seed + max_delay_fraction).\nmechanical.settle: none (default), spring (overshoot 0..0.5 + settle_fraction 0..1 — per-tile detent: tile briefly shows the face one beyond target then snaps to target), ease (linear/ease_out/ease_out_back).\n\nAuthoring guidance:\n- 3x3 line-glyph drums: ordered source with explicit 3x3 line-glyph faces; tile_width=3 tile_height=3. The project Line 3x3 face (Intention 36) is the canonical glyph table.\n- Decimal counters with carry: decimal_digits preset + numeric_delta direction + numeric_carry cascade. Runtime infers Increment/Decrement from source-vs-target numeric comparison.\n- Slot reels: weighted source with extra_rotations >= 2 and spring settle. Deterministic seed makes mid-spin sequences reproducible.",
         "complexity": "moderate",
         "energy": "moderate",
         "name": "Odometer",
@@ -328,6 +328,12 @@
             "doc": "Optional source message. Missing cells are padded with blanks by grid coordinate.",
             "name": "from_message",
             "ty": "Option<String>"
+          },
+          {
+            "default": "None",
+            "doc": "Optional ordered/circular cycle config. When absent (or set\nto the explicit-Pair default), Odometer uses the existing\nwhole-grid pair-roll behavior byte-for-byte. When present\nwith a non-Pair source, tiles are individually routed\nthrough the configured cycle, scheduled per the cascade\npolicy, and settled per `MechanicalSettleConfig`. Cascade\n`NumericCarry` requires source/target numeric strings of\nmatching tile count and a `decimal_digits` source preset.",
+            "name": "mechanical",
+            "ty": "Option<MechanicalCycleConfig>"
           }
         ],
         "premium": false,
@@ -337,7 +343,9 @@
         "use_cases": [
           "counter",
           "retro",
-          "mechanical"
+          "mechanical",
+          "slot-reel",
+          "decimal-carry"
         ]
       },
       "Redact": {
@@ -1265,7 +1273,7 @@
         ]
       },
       "KittScanner": {
-        "ai_hint": "Horizontal ping-pong scanner (KITT/Larson scanner) effect.\nboost: brightness increase (default 50).\nband_width: scanner column width (0.15 default, 0.0-0.5).\nbpm: optional human-friendly beats-per-minute cadence; overrides bps when present.\nbps: beats per second for ping-pong cycle (1.2 default = 72 BPM healthy resting cadence).\nprogress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).\nmotion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nCadence-driven motion uses monotonic elapsed time; bpm/bps set the scanner rate independently of recipe loop period.\nClassic Knight Rider aesthetic for retro sci-fi hover states.",
+        "ai_hint": "Ping-pong scanner (KITT/Larson) effect — horizontal or vertical.\nboost: brightness increase (default 50).\nband_width: scanner band width as fraction of the active axis extent (0.15 default, 0.0-0.5).\nbpm: optional human-friendly beats-per-minute cadence; overrides bps when present.\nbps: beats per second for ping-pong cycle (1.2 default = 72 BPM healthy resting cadence).\nprogress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).\nmotion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).\naxis: 'horizontal' (default — band sweeps left↔right; classic KITT) or 'vertical' (band sweeps top↔bottom; column-wise reveals such as TTE Beams, scanline-down, top-down stage lights).\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nCadence-driven motion uses monotonic elapsed time; bpm/bps set the scanner rate independently of recipe loop period.\nClassic Knight Rider aesthetic for retro sci-fi hover states (horizontal); vertical axis covers reveal/scan effects that previously needed a sampler chain.",
         "complexity": "simple",
         "energy": "moderate",
         "name": "KittScanner",
@@ -1308,6 +1316,12 @@
             "ty": "ScannerMotionMode"
           },
           {
+            "default": "Horizontal",
+            "doc": "Axis along which the scanner sweeps (horizontal default, vertical\nfor column-wise reveals).",
+            "name": "axis",
+            "ty": "ScannerAxis"
+          },
+          {
             "default": "Both",
             "doc": "Which color component to boost (ignored if powerline_mode is true)",
             "name": "apply_to",
@@ -1333,7 +1347,8 @@
         "use_cases": [
           "hover",
           "retro",
-          "sci-fi"
+          "sci-fi",
+          "reveal"
         ]
       },
       "MotionBlur": {

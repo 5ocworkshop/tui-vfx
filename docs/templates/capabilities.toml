@@ -11,9 +11,9 @@
 # See docs/design/CAPABILITY_MANIFEST_*.md for architecture details.
 
 # <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
-# <VERS>VERSION: 2.3.0</VERS>
-# <WCTX>Phase 7 prep: KittScanner gains a vertical axis option, unlocking column-wise reveals (TTE Beams) without a sampler chain.</WCTX>
-# <CLOG>Document KittScanner.axis (horizontal default / vertical) in the ai_hint and add 'reveal' to use_cases.</CLOG>
+# <VERS>VERSION: 2.4.0</VERS>
+# <WCTX>Phase 5 of mechanical circular content cycles plan: surface the Odometer mechanical cycle config (source / route / cascade / settle) to AI authors.</WCTX>
+# <CLOG>2.4.0: expand Odometer ai_hint with the mechanical block schema and authoring guidance for 3x3 line-glyph drums, decimal carry, and weighted slot reels; new use_cases tags slot-reel and decimal-carry.</CLOG>
 
 [meta]
 version = "2.2.3"
@@ -1028,13 +1028,24 @@ format: numeric format string for output.
 Smoothly animates between numeric values."""
 
 [effects.content.Odometer]
-use_cases = ["counter", "retro", "mechanical"]
+use_cases = ["counter", "retro", "mechanical", "slot-reel", "decimal-carry"]
 energy = "moderate"
 complexity = "moderate"
-ai_hint = """Mechanical cell-grid roll for odometer and slot-style boards.
+ai_hint = """Mechanical cell-grid roll for odometer drums and slot-style boards.
 direction: up/down/left/right/diagonal. travel: tagged object (axis, full_clear, or cells).
 tile_width/tile_height describe glyph/window geometry and minimum travel; rows/columns still roll at cell granularity for row-by-row odometer motion.
-from_message supplies the previous board. Old digit interpolation is intentionally replaced by cell-grid rolling."""
+from_message supplies the previous board. Old digit interpolation is intentionally replaced by cell-grid rolling.
+
+Optional mechanical block (V3) turns Odometer into a full ordered/circular content cycle.
+mechanical.source: pair (default, equivalent to absent), ordered (author faces+wrap), preset (decimal_digits, split_flap_alpha/digits/uppercase), randomized (faces+seed), weighted (faces with weights+seed).
+mechanical.route: direction (forward/reverse/shortest/numeric_delta), tie_breaker, extra_rotations (full extra wraps before landing), missing_face (error/pair_fallback/insert_at_end).
+mechanical.cascade: simultaneous (default), staggered (fraction), numeric_carry (stagger_fraction + unchanged: hold/spin_and_return — sequences only changed digits LSB→MSB), randomized (seed + max_delay_fraction).
+mechanical.settle: none (default), spring (overshoot 0..0.5 + settle_fraction 0..1 — per-tile detent: tile briefly shows the face one beyond target then snaps to target), ease (linear/ease_out/ease_out_back).
+
+Authoring guidance:
+- 3x3 line-glyph drums: ordered source with explicit 3x3 line-glyph faces; tile_width=3 tile_height=3. The project Line 3x3 face (Intention 36) is the canonical glyph table.
+- Decimal counters with carry: decimal_digits preset + numeric_delta direction + numeric_carry cascade. Runtime infers Increment/Decrement from source-vs-target numeric comparison.
+- Slot reels: weighted source with extra_rotations >= 2 and spring settle. Deterministic seed makes mid-spin sequences reproducible."""
 
 [effects.content.Redact]
 use_cases = ["censorship", "reveal", "dramatic"]
@@ -1338,7 +1349,7 @@ effects = [
 ]
 
 # <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
-# <VERS>END OF VERSION: 2.3.0</VERS>
+# <VERS>END OF VERSION: 2.4.0</VERS>
 
 # ════════════════════════════════════════════════════════════════════════════════
 # Generated stubs - fill in use_cases, energy, and ai_hint

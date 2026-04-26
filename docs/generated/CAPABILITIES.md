@@ -59,7 +59,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **HoverBar** | Progress-driven partial bar indicator for hover states | hover, selection, indicator |
 | **InterlaceCurtain** | Scanline/interlace effect for backdrop dimming | retro, loading, effect |
 | **Invert** | Invert colors | highlight, dramatic, selection |
-| **KittScanner** | Horizontal ping-pong scanner effect (KITT/Larson) | hover, retro, sci-fi |
+| **KittScanner** | Horizontal ping-pong scanner effect (KITT/Larson) | hover, retro, sci-fi, reveal |
 | **MotionBlur** | Motion blur trail effect with directional dimming | movement, speed, dynamic |
 | **None** | No filter effect | none, baseline, passthrough |
 | **PatternFill** | Pattern fill effect for background textures | texture, background, decoration |
@@ -143,7 +143,7 @@ This document provides a complete inventory of visual effects available in tui-v
 | **Mirror** | Mirror/reverse text effect | effect, playful, reflection |
 | **Morph** | Text morphing transition | transition, smooth, creative |
 | **Numeric** | Numeric formatting effect | data, counter, dashboard |
-| **Odometer** | Mechanical cell-grid rolling display | counter, retro, mechanical |
+| **Odometer** | Mechanical cell-grid rolling display | counter, retro, mechanical, slot-reel, decimal-carry |
 | **Redact** | Text redaction/censorship effect | censorship, reveal, dramatic |
 | **Scramble** | Character scramble/decode effect | decrypt, reveal, tech |
 | **ScrambleGlitchShift** | Combined scramble and glitch shift effect | glitch, decrypt, dramatic |

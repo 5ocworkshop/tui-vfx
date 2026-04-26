@@ -48906,6 +48906,839 @@
                   },
                   "kind": "option"
                 }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
+                  "description": "Optional ordered/circular cycle config. When absent (or set\nto the explicit-Pair default), Odometer uses the existing\nwhole-grid pair-roll behavior byte-for-byte. When present\nwith a non-Pair source, tiles are individually routed\nthrough the configured cycle, scheduled per the cascade\npolicy, and settled per `MechanicalSettleConfig`. Cascade\n`NumericCarry` requires source/target numeric strings of\nmatching tile count and a `decimal_digits` source preset.",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "mechanical",
+                "schema": {
+                  "inner": {
+                    "description": "Shared mechanical cycle vocabulary that lets odometer drums, flap stacks,\nand slot reels traverse the same kind of ordered face supply.\n\n`Default` produces the explicit `Pair` source with `Forward`/`Simultaneous`\nscheduling and no settle. Existing Odometer and SplitFlap recipes that omit\nthe `mechanical` field render byte-identically to this default.\n\n# JSON\n\n```json\n{\n\"source\": { \"type\": \"preset\", \"preset\": \"decimal_digits\" },\n\"route\":  { \"direction\": \"numeric_delta\" },\n\"cascade\": { \"type\": \"numeric_carry\", \"stagger_fraction\": 0.35 },\n\"settle\":  { \"type\": \"spring\", \"overshoot\": 0.12, \"settle_fraction\": 0.18 }\n}\n```",
+                    "fields": [
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": "What faces exist between source and target.",
+                          "help": null,
+                          "json_key": null,
+                          "optional": true,
+                          "range": null
+                        },
+                        "name": "source",
+                        "schema": {
+                          "description": "Source of faces consumed by a [`MechanicalCycleConfig`].\n\n`Pair` is the compatibility default: it carries no intermediate faces and\nyields the existing old/new tile-roll behavior of [`Odometer`] and\n[`SplitFlap`]. The remaining variants describe ordered or weighted face\nsupplies that downstream route building traverses between source and\ntarget.\n\n[`MechanicalCycleConfig`]: super::cls_mechanical_cycle_config::MechanicalCycleConfig\n[`Odometer`]: super::cls_content_effect::ContentEffect::Odometer\n[`SplitFlap`]: super::cls_content_effect::ContentEffect::SplitFlap",
+                          "json_name": null,
+                          "kind": "enum",
+                          "name": "MechanicalContentSource",
+                          "tag_field": "type",
+                          "variants": [
+                            {
+                              "description": "Direct old/new exchange. No intermediate faces; route is `[from, to]`.",
+                              "json_value": "pair",
+                              "kind": "unit",
+                              "name": "Pair"
+                            },
+                            {
+                              "description": "Author-supplied ordered list of face strings. Faces are normalized\nagainst the mechanism tile size and rejected if they overflow.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "faces",
+                                  "schema": {
+                                    "item": {
+                                      "kind": "primitive",
+                                      "range": null,
+                                      "type": "String"
+                                    },
+                                    "kind": "vec"
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": true,
+                                    "range": null
+                                  },
+                                  "name": "wrap",
+                                  "schema": {
+                                    "description": "Whether a cycle wraps around its endpoints.\n\n`Circular` is the natural fit for digit drums and Solari letter wheels;\n`Bounded` rejects routes that would require traversing past either end.",
+                                    "json_name": null,
+                                    "kind": "enum",
+                                    "name": "CycleWrapMode",
+                                    "tag_field": null,
+                                    "variants": [
+                                      {
+                                        "description": "The cycle wraps: index `len` maps back to `0`.",
+                                        "json_value": "circular",
+                                        "kind": "unit",
+                                        "name": "Circular"
+                                      },
+                                      {
+                                        "description": "The cycle is bounded: indices outside `0..len` are not reachable.",
+                                        "json_value": "bounded",
+                                        "kind": "unit",
+                                        "name": "Bounded"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ],
+                              "json_value": "ordered",
+                              "kind": "struct",
+                              "name": "Ordered"
+                            },
+                            {
+                              "description": "Named preset face set. Presets are documented and tested; their exact\nface order is part of the public contract.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "preset",
+                                  "schema": {
+                                    "description": "Documented named face preset.\n\nEach preset's exact face list is part of the public contract and is\ncovered by tests. Adding a preset is an additive schema change; renaming\nor reordering an existing preset is a breaking change.",
+                                    "json_name": null,
+                                    "kind": "enum",
+                                    "name": "MechanicalCyclePreset",
+                                    "tag_field": null,
+                                    "variants": [
+                                      {
+                                        "description": "Decimal digits `\"0\"` through `\"9\"`.",
+                                        "json_value": "decimal_digits",
+                                        "kind": "unit",
+                                        "name": "DecimalDigits"
+                                      },
+                                      {
+                                        "description": "Current `SplitFlapCharset::Alpha` exactly: `' '`, `A`-`Z`, `0`-`9`,\n`'.', ',', '-', '!', '?'`.",
+                                        "json_value": "split_flap_alpha",
+                                        "kind": "unit",
+                                        "name": "SplitFlapAlpha"
+                                      },
+                                      {
+                                        "description": "Current `SplitFlapCharset::Digits` exactly: `' '`, `0`-`9`.",
+                                        "json_value": "split_flap_digits",
+                                        "kind": "unit",
+                                        "name": "SplitFlapDigits"
+                                      },
+                                      {
+                                        "description": "Current `SplitFlapCharset::Uppercase` exactly: `' '`, `A`-`Z`.",
+                                        "json_value": "split_flap_uppercase",
+                                        "kind": "unit",
+                                        "name": "SplitFlapUppercase"
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": true,
+                                    "range": null
+                                  },
+                                  "name": "wrap",
+                                  "schema": {
+                                    "description": "Whether a cycle wraps around its endpoints.\n\n`Circular` is the natural fit for digit drums and Solari letter wheels;\n`Bounded` rejects routes that would require traversing past either end.",
+                                    "json_name": null,
+                                    "kind": "enum",
+                                    "name": "CycleWrapMode",
+                                    "tag_field": null,
+                                    "variants": [
+                                      {
+                                        "description": "The cycle wraps: index `len` maps back to `0`.",
+                                        "json_value": "circular",
+                                        "kind": "unit",
+                                        "name": "Circular"
+                                      },
+                                      {
+                                        "description": "The cycle is bounded: indices outside `0..len` are not reachable.",
+                                        "json_value": "bounded",
+                                        "kind": "unit",
+                                        "name": "Bounded"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ],
+                              "json_value": "preset",
+                              "kind": "struct",
+                              "name": "Preset"
+                            },
+                            {
+                              "description": "Author-supplied faces shuffled deterministically once from `seed`.\nThe shuffle output is a function of `(seed, faces)` and never observes\nruntime randomness.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "faces",
+                                  "schema": {
+                                    "item": {
+                                      "kind": "primitive",
+                                      "range": null,
+                                      "type": "String"
+                                    },
+                                    "kind": "vec"
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "seed",
+                                  "schema": {
+                                    "kind": "primitive",
+                                    "range": {
+                                      "max": 18446744073709551615,
+                                      "min": 0
+                                    },
+                                    "type": "u64"
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": true,
+                                    "range": null
+                                  },
+                                  "name": "wrap",
+                                  "schema": {
+                                    "description": "Whether a cycle wraps around its endpoints.\n\n`Circular` is the natural fit for digit drums and Solari letter wheels;\n`Bounded` rejects routes that would require traversing past either end.",
+                                    "json_name": null,
+                                    "kind": "enum",
+                                    "name": "CycleWrapMode",
+                                    "tag_field": null,
+                                    "variants": [
+                                      {
+                                        "description": "The cycle wraps: index `len` maps back to `0`.",
+                                        "json_value": "circular",
+                                        "kind": "unit",
+                                        "name": "Circular"
+                                      },
+                                      {
+                                        "description": "The cycle is bounded: indices outside `0..len` are not reachable.",
+                                        "json_value": "bounded",
+                                        "kind": "unit",
+                                        "name": "Bounded"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ],
+                              "json_value": "randomized",
+                              "kind": "struct",
+                              "name": "Randomized"
+                            },
+                            {
+                              "description": "Weighted reel source. Per-face `weight` controls relative frequency in\nthe resolved cycle order; `seed` makes the order deterministic. Total\nweight must fit in `u32`.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "faces",
+                                  "schema": {
+                                    "item": {
+                                      "description": "One entry in a weighted cycle face list.",
+                                      "fields": [
+                                        {
+                                          "json_key": null,
+                                          "meta": {
+                                            "default": null,
+                                            "description": "Face value. Newlines split the face into multiple grid rows.",
+                                            "help": null,
+                                            "json_key": null,
+                                            "optional": false,
+                                            "range": null
+                                          },
+                                          "name": "value",
+                                          "schema": {
+                                            "kind": "primitive",
+                                            "range": null,
+                                            "type": "String"
+                                          }
+                                        },
+                                        {
+                                          "json_key": null,
+                                          "meta": {
+                                            "default": null,
+                                            "description": "Relative weight. Must be greater than zero. Validation enforces this\nbefore route resolution; runtime treats a zero weight as a recipe bug.",
+                                            "help": null,
+                                            "json_key": null,
+                                            "optional": false,
+                                            "range": null
+                                          },
+                                          "name": "weight",
+                                          "schema": {
+                                            "kind": "primitive",
+                                            "range": {
+                                              "max": 65535,
+                                              "min": 0
+                                            },
+                                            "type": "u16"
+                                          }
+                                        }
+                                      ],
+                                      "json_name": null,
+                                      "kind": "struct",
+                                      "name": "WeightedCycleFace"
+                                    },
+                                    "kind": "vec"
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "seed",
+                                  "schema": {
+                                    "kind": "primitive",
+                                    "range": {
+                                      "max": 18446744073709551615,
+                                      "min": 0
+                                    },
+                                    "type": "u64"
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": true,
+                                    "range": null
+                                  },
+                                  "name": "wrap",
+                                  "schema": {
+                                    "description": "Whether a cycle wraps around its endpoints.\n\n`Circular` is the natural fit for digit drums and Solari letter wheels;\n`Bounded` rejects routes that would require traversing past either end.",
+                                    "json_name": null,
+                                    "kind": "enum",
+                                    "name": "CycleWrapMode",
+                                    "tag_field": null,
+                                    "variants": [
+                                      {
+                                        "description": "The cycle wraps: index `len` maps back to `0`.",
+                                        "json_value": "circular",
+                                        "kind": "unit",
+                                        "name": "Circular"
+                                      },
+                                      {
+                                        "description": "The cycle is bounded: indices outside `0..len` are not reachable.",
+                                        "json_value": "bounded",
+                                        "kind": "unit",
+                                        "name": "Bounded"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ],
+                              "json_value": "weighted",
+                              "kind": "struct",
+                              "name": "Weighted"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": "How to choose a route through the cycle.",
+                          "help": null,
+                          "json_key": null,
+                          "optional": true,
+                          "range": null
+                        },
+                        "name": "route",
+                        "schema": {
+                          "description": "How a route is selected through a [`MechanicalContentSource`].\n\nRoute selection is independent of window motion: `direction: Reverse`\nchanges which face comes next in the cycle, but it does not flip the\nexisting [`OdometerDirection`] visual roll. Authors who want decrement to\nvisibly roll downward set both `OdometerDirection::Down` and\n`CycleDirectionPolicy::Reverse` explicitly.\n\n[`MechanicalContentSource`]: super::cls_mechanical_cycle_source::MechanicalContentSource\n[`OdometerDirection`]: super::cls_content_effect::OdometerDirection",
+                          "fields": [
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": "Direction the route walks the cycle.",
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "direction",
+                              "schema": {
+                                "description": "Direction the route walks through an ordered cycle.",
+                                "json_name": null,
+                                "kind": "enum",
+                                "name": "CycleDirectionPolicy",
+                                "tag_field": null,
+                                "variants": [
+                                  {
+                                    "description": "Walk forward through the cycle indices.",
+                                    "json_value": "forward",
+                                    "kind": "unit",
+                                    "name": "Forward"
+                                  },
+                                  {
+                                    "description": "Walk in reverse through the cycle indices.",
+                                    "json_value": "reverse",
+                                    "kind": "unit",
+                                    "name": "Reverse"
+                                  },
+                                  {
+                                    "description": "Pick whichever traversal has fewer intermediate faces; ties resolved\nby [`CycleTieBreaker`].",
+                                    "json_value": "shortest",
+                                    "kind": "unit",
+                                    "name": "Shortest"
+                                  },
+                                  {
+                                    "description": "Choose forward or reverse from numeric increment/decrement context.\nRequires faces to be exactly the decimal digits `0`..=`9`.",
+                                    "json_value": "numeric_delta",
+                                    "kind": "unit",
+                                    "name": "NumericDelta"
+                                  },
+                                  {
+                                    "description": "Reserved for future override sources. Recipes currently must not set\n`Authored`; the validator rejects it.",
+                                    "json_value": "authored",
+                                    "kind": "unit",
+                                    "name": "Authored"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": "Resolves ties when `direction = Shortest` and forward and reverse\ndistances are equal.",
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "tie_breaker",
+                              "schema": {
+                                "description": "Tie-breaker for `CycleDirectionPolicy::Shortest`.",
+                                "json_name": null,
+                                "kind": "enum",
+                                "name": "CycleTieBreaker",
+                                "tag_field": null,
+                                "variants": [
+                                  {
+                                    "description": "Pick the forward route when distances are equal.",
+                                    "json_value": "forward",
+                                    "kind": "unit",
+                                    "name": "Forward"
+                                  },
+                                  {
+                                    "description": "Pick the reverse route when distances are equal.",
+                                    "json_value": "reverse",
+                                    "kind": "unit",
+                                    "name": "Reverse"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": "Number of full additional wraps to insert before the final face.\n`0` is the default; slot reels typically use `2`+ to feel like a\nphysical wheel spinning past several values before settling.",
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "extra_rotations",
+                              "schema": {
+                                "kind": "primitive",
+                                "range": {
+                                  "max": 65535,
+                                  "min": 0
+                                },
+                                "type": "u16"
+                              }
+                            },
+                            {
+                              "json_key": null,
+                              "meta": {
+                                "default": null,
+                                "description": "What to do when source or target face is not present in the cycle.",
+                                "help": null,
+                                "json_key": null,
+                                "optional": true,
+                                "range": null
+                              },
+                              "name": "missing_face",
+                              "schema": {
+                                "description": "What to do when a route endpoint isn't present in the cycle.\n\n`Error` is the strict default; recipes that ship today should opt in to\nfallbacks deliberately, with awareness that fallbacks change the visible\nbehavior.",
+                                "json_name": null,
+                                "kind": "enum",
+                                "name": "CycleMissingFacePolicy",
+                                "tag_field": null,
+                                "variants": [
+                                  {
+                                    "description": "Reject the recipe at validation time.",
+                                    "json_value": "error",
+                                    "kind": "unit",
+                                    "name": "Error"
+                                  },
+                                  {
+                                    "description": "Fall back to a direct `[from, to]` Pair route for this tile.",
+                                    "json_value": "pair_fallback",
+                                    "kind": "unit",
+                                    "name": "PairFallback"
+                                  },
+                                  {
+                                    "description": "Insert the missing face at the end of the cycle and continue.",
+                                    "json_value": "insert_at_end",
+                                    "kind": "unit",
+                                    "name": "InsertAtEnd"
+                                  }
+                                ]
+                              }
+                            }
+                          ],
+                          "json_name": null,
+                          "kind": "struct",
+                          "name": "MechanicalRouteConfig"
+                        }
+                      },
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": "How tiles are scheduled relative to each other.",
+                          "help": null,
+                          "json_key": null,
+                          "optional": true,
+                          "range": null
+                        },
+                        "name": "cascade",
+                        "schema": {
+                          "description": "Schedules per-tile progress relative to the overall cycle progress.\n\n`Simultaneous` reproduces today's whole-grid behavior; the others stagger\ntiles so the cycle visually progresses across the mechanism.",
+                          "json_name": null,
+                          "kind": "enum",
+                          "name": "MechanicalCascadePolicy",
+                          "tag_field": "type",
+                          "variants": [
+                            {
+                              "description": "All tiles share the same progress.",
+                              "json_value": "simultaneous",
+                              "kind": "unit",
+                              "name": "Simultaneous"
+                            },
+                            {
+                              "description": "Each tile starts later than the previous one by `fraction` of the\ntotal progress window. `fraction` is clamped to `0.0..=0.95`.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "fraction",
+                                  "schema": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "f32"
+                                  }
+                                }
+                              ],
+                              "json_value": "staggered",
+                              "kind": "struct",
+                              "name": "Staggered"
+                            },
+                            {
+                              "description": "Numeric carry: only digit positions that change between source and\ntarget advance, scheduled from least-significant to most-significant.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": true,
+                                    "range": null
+                                  },
+                                  "name": "stagger_fraction",
+                                  "schema": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "f32"
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": true,
+                                    "range": null
+                                  },
+                                  "name": "unchanged",
+                                  "schema": {
+                                    "description": "What happens to tiles whose source and target faces are equal under\n`MechanicalCascadePolicy::NumericCarry`.",
+                                    "json_name": null,
+                                    "kind": "enum",
+                                    "name": "UnchangedCellPolicy",
+                                    "tag_field": null,
+                                    "variants": [
+                                      {
+                                        "description": "The tile holds its existing face for the duration of the cycle.",
+                                        "json_value": "hold",
+                                        "kind": "unit",
+                                        "name": "Hold"
+                                      },
+                                      {
+                                        "description": "The tile spins through the cycle but lands back on the same face.",
+                                        "json_value": "spin_and_return",
+                                        "kind": "unit",
+                                        "name": "SpinAndReturn"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ],
+                              "json_value": "numeric_carry",
+                              "kind": "struct",
+                              "name": "NumericCarry"
+                            },
+                            {
+                              "description": "Each tile starts at a deterministic random offset derived from `seed`.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "seed",
+                                  "schema": {
+                                    "kind": "primitive",
+                                    "range": {
+                                      "max": 18446744073709551615,
+                                      "min": 0
+                                    },
+                                    "type": "u64"
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "max_delay_fraction",
+                                  "schema": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "f32"
+                                  }
+                                }
+                              ],
+                              "json_value": "randomized",
+                              "kind": "struct",
+                              "name": "Randomized"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "json_key": null,
+                        "meta": {
+                          "default": null,
+                          "description": "Optional settle behavior applied at the end of the cycle.",
+                          "help": null,
+                          "json_key": null,
+                          "optional": true,
+                          "range": null
+                        },
+                        "name": "settle",
+                        "schema": {
+                          "description": "Per-tile settle behavior applied at target arrival.\n\nSettle composes with `MechanicalCascadePolicy` so each tile gets its\nown detent in its own time window. With `Simultaneous` cascade the\nper-tile rule degrades to a whole-cycle settle; with `Staggered` or\n`NumericCarry` cascade it produces the click-click-click of an\nodometer ratcheting into place.\n\nEvery variant ships fully wired in the phase that introduces it: there\nis no \"parses but does nothing at runtime\" allowance.",
+                          "json_name": null,
+                          "kind": "enum",
+                          "name": "MechanicalSettleConfig",
+                          "tag_field": "type",
+                          "variants": [
+                            {
+                              "description": "No settle. The tile lands at local progress `1.0` and stops.",
+                              "json_value": "none",
+                              "kind": "unit",
+                              "name": "None"
+                            },
+                            {
+                              "description": "Brief overshoot past the final face then recovery onto it.\n`overshoot` is clamped to `0.0..=0.5` and is how far past the final\nface the tile travels at peak. `settle_fraction` is clamped to\n`0.0..=1.0` and is the fraction of the tile's local progress\ndevoted to the settle phase; the route advance compresses into\n`(1.0 - settle_fraction)`.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "overshoot",
+                                  "schema": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "f32"
+                                  }
+                                },
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "settle_fraction",
+                                  "schema": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "f32"
+                                  }
+                                }
+                              ],
+                              "json_value": "spring",
+                              "kind": "struct",
+                              "name": "Spring"
+                            },
+                            {
+                              "description": "Apply a named easing curve over the final stretch of the tile's\nlocal progress.",
+                              "fields": [
+                                {
+                                  "json_key": null,
+                                  "meta": {
+                                    "default": null,
+                                    "description": null,
+                                    "help": null,
+                                    "json_key": null,
+                                    "optional": false,
+                                    "range": null
+                                  },
+                                  "name": "easing",
+                                  "schema": {
+                                    "description": "Small named easing subset usable by `MechanicalSettleConfig`.\n\nThis is a deliberate, narrow vocabulary chosen to match the shapes a\nsettle motion benefits from. The full easing library lives in the\n`mixed-signals` crate; broader settle expressiveness is a future\nextension once it gains `ConfigSchema` support.",
+                                    "json_name": null,
+                                    "kind": "enum",
+                                    "name": "EasingCurveName",
+                                    "tag_field": null,
+                                    "variants": [
+                                      {
+                                        "description": null,
+                                        "json_value": "linear",
+                                        "kind": "unit",
+                                        "name": "Linear"
+                                      },
+                                      {
+                                        "description": null,
+                                        "json_value": "ease_out",
+                                        "kind": "unit",
+                                        "name": "EaseOut"
+                                      },
+                                      {
+                                        "description": null,
+                                        "json_value": "ease_out_back",
+                                        "kind": "unit",
+                                        "name": "EaseOutBack"
+                                      }
+                                    ]
+                                  }
+                                }
+                              ],
+                              "json_value": "ease",
+                              "kind": "struct",
+                              "name": "Ease"
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "json_name": null,
+                    "kind": "struct",
+                    "name": "MechanicalCycleConfig"
+                  },
+                  "kind": "option"
+                }
               }
             ],
             "json_value": "odometer",
@@ -59764,6 +60597,839 @@
                   "kind": "primitive",
                   "range": null,
                   "type": "String"
+                },
+                "kind": "option"
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Optional ordered/circular cycle config. When absent (or set\nto the explicit-Pair default), Odometer uses the existing\nwhole-grid pair-roll behavior byte-for-byte. When present\nwith a non-Pair source, tiles are individually routed\nthrough the configured cycle, scheduled per the cascade\npolicy, and settled per `MechanicalSettleConfig`. Cascade\n`NumericCarry` requires source/target numeric strings of\nmatching tile count and a `decimal_digits` source preset.",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "mechanical",
+              "schema": {
+                "inner": {
+                  "description": "Shared mechanical cycle vocabulary that lets odometer drums, flap stacks,\nand slot reels traverse the same kind of ordered face supply.\n\n`Default` produces the explicit `Pair` source with `Forward`/`Simultaneous`\nscheduling and no settle. Existing Odometer and SplitFlap recipes that omit\nthe `mechanical` field render byte-identically to this default.\n\n# JSON\n\n```json\n{\n\"source\": { \"type\": \"preset\", \"preset\": \"decimal_digits\" },\n\"route\":  { \"direction\": \"numeric_delta\" },\n\"cascade\": { \"type\": \"numeric_carry\", \"stagger_fraction\": 0.35 },\n\"settle\":  { \"type\": \"spring\", \"overshoot\": 0.12, \"settle_fraction\": 0.18 }\n}\n```",
+                  "fields": [
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": "What faces exist between source and target.",
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "source",
+                      "schema": {
+                        "description": "Source of faces consumed by a [`MechanicalCycleConfig`].\n\n`Pair` is the compatibility default: it carries no intermediate faces and\nyields the existing old/new tile-roll behavior of [`Odometer`] and\n[`SplitFlap`]. The remaining variants describe ordered or weighted face\nsupplies that downstream route building traverses between source and\ntarget.\n\n[`MechanicalCycleConfig`]: super::cls_mechanical_cycle_config::MechanicalCycleConfig\n[`Odometer`]: super::cls_content_effect::ContentEffect::Odometer\n[`SplitFlap`]: super::cls_content_effect::ContentEffect::SplitFlap",
+                        "json_name": null,
+                        "kind": "enum",
+                        "name": "MechanicalContentSource",
+                        "tag_field": "type",
+                        "variants": [
+                          {
+                            "description": "Direct old/new exchange. No intermediate faces; route is `[from, to]`.",
+                            "json_value": "pair",
+                            "kind": "unit",
+                            "name": "Pair"
+                          },
+                          {
+                            "description": "Author-supplied ordered list of face strings. Faces are normalized\nagainst the mechanism tile size and rejected if they overflow.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "faces",
+                                "schema": {
+                                  "item": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "vec"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "wrap",
+                                "schema": {
+                                  "description": "Whether a cycle wraps around its endpoints.\n\n`Circular` is the natural fit for digit drums and Solari letter wheels;\n`Bounded` rejects routes that would require traversing past either end.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "CycleWrapMode",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": "The cycle wraps: index `len` maps back to `0`.",
+                                      "json_value": "circular",
+                                      "kind": "unit",
+                                      "name": "Circular"
+                                    },
+                                    {
+                                      "description": "The cycle is bounded: indices outside `0..len` are not reachable.",
+                                      "json_value": "bounded",
+                                      "kind": "unit",
+                                      "name": "Bounded"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "json_value": "ordered",
+                            "kind": "struct",
+                            "name": "Ordered"
+                          },
+                          {
+                            "description": "Named preset face set. Presets are documented and tested; their exact\nface order is part of the public contract.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "preset",
+                                "schema": {
+                                  "description": "Documented named face preset.\n\nEach preset's exact face list is part of the public contract and is\ncovered by tests. Adding a preset is an additive schema change; renaming\nor reordering an existing preset is a breaking change.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "MechanicalCyclePreset",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": "Decimal digits `\"0\"` through `\"9\"`.",
+                                      "json_value": "decimal_digits",
+                                      "kind": "unit",
+                                      "name": "DecimalDigits"
+                                    },
+                                    {
+                                      "description": "Current `SplitFlapCharset::Alpha` exactly: `' '`, `A`-`Z`, `0`-`9`,\n`'.', ',', '-', '!', '?'`.",
+                                      "json_value": "split_flap_alpha",
+                                      "kind": "unit",
+                                      "name": "SplitFlapAlpha"
+                                    },
+                                    {
+                                      "description": "Current `SplitFlapCharset::Digits` exactly: `' '`, `0`-`9`.",
+                                      "json_value": "split_flap_digits",
+                                      "kind": "unit",
+                                      "name": "SplitFlapDigits"
+                                    },
+                                    {
+                                      "description": "Current `SplitFlapCharset::Uppercase` exactly: `' '`, `A`-`Z`.",
+                                      "json_value": "split_flap_uppercase",
+                                      "kind": "unit",
+                                      "name": "SplitFlapUppercase"
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "wrap",
+                                "schema": {
+                                  "description": "Whether a cycle wraps around its endpoints.\n\n`Circular` is the natural fit for digit drums and Solari letter wheels;\n`Bounded` rejects routes that would require traversing past either end.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "CycleWrapMode",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": "The cycle wraps: index `len` maps back to `0`.",
+                                      "json_value": "circular",
+                                      "kind": "unit",
+                                      "name": "Circular"
+                                    },
+                                    {
+                                      "description": "The cycle is bounded: indices outside `0..len` are not reachable.",
+                                      "json_value": "bounded",
+                                      "kind": "unit",
+                                      "name": "Bounded"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "json_value": "preset",
+                            "kind": "struct",
+                            "name": "Preset"
+                          },
+                          {
+                            "description": "Author-supplied faces shuffled deterministically once from `seed`.\nThe shuffle output is a function of `(seed, faces)` and never observes\nruntime randomness.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "faces",
+                                "schema": {
+                                  "item": {
+                                    "kind": "primitive",
+                                    "range": null,
+                                    "type": "String"
+                                  },
+                                  "kind": "vec"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "seed",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 18446744073709551615,
+                                    "min": 0
+                                  },
+                                  "type": "u64"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "wrap",
+                                "schema": {
+                                  "description": "Whether a cycle wraps around its endpoints.\n\n`Circular` is the natural fit for digit drums and Solari letter wheels;\n`Bounded` rejects routes that would require traversing past either end.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "CycleWrapMode",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": "The cycle wraps: index `len` maps back to `0`.",
+                                      "json_value": "circular",
+                                      "kind": "unit",
+                                      "name": "Circular"
+                                    },
+                                    {
+                                      "description": "The cycle is bounded: indices outside `0..len` are not reachable.",
+                                      "json_value": "bounded",
+                                      "kind": "unit",
+                                      "name": "Bounded"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "json_value": "randomized",
+                            "kind": "struct",
+                            "name": "Randomized"
+                          },
+                          {
+                            "description": "Weighted reel source. Per-face `weight` controls relative frequency in\nthe resolved cycle order; `seed` makes the order deterministic. Total\nweight must fit in `u32`.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "faces",
+                                "schema": {
+                                  "item": {
+                                    "description": "One entry in a weighted cycle face list.",
+                                    "fields": [
+                                      {
+                                        "json_key": null,
+                                        "meta": {
+                                          "default": null,
+                                          "description": "Face value. Newlines split the face into multiple grid rows.",
+                                          "help": null,
+                                          "json_key": null,
+                                          "optional": false,
+                                          "range": null
+                                        },
+                                        "name": "value",
+                                        "schema": {
+                                          "kind": "primitive",
+                                          "range": null,
+                                          "type": "String"
+                                        }
+                                      },
+                                      {
+                                        "json_key": null,
+                                        "meta": {
+                                          "default": null,
+                                          "description": "Relative weight. Must be greater than zero. Validation enforces this\nbefore route resolution; runtime treats a zero weight as a recipe bug.",
+                                          "help": null,
+                                          "json_key": null,
+                                          "optional": false,
+                                          "range": null
+                                        },
+                                        "name": "weight",
+                                        "schema": {
+                                          "kind": "primitive",
+                                          "range": {
+                                            "max": 65535,
+                                            "min": 0
+                                          },
+                                          "type": "u16"
+                                        }
+                                      }
+                                    ],
+                                    "json_name": null,
+                                    "kind": "struct",
+                                    "name": "WeightedCycleFace"
+                                  },
+                                  "kind": "vec"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "seed",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 18446744073709551615,
+                                    "min": 0
+                                  },
+                                  "type": "u64"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "wrap",
+                                "schema": {
+                                  "description": "Whether a cycle wraps around its endpoints.\n\n`Circular` is the natural fit for digit drums and Solari letter wheels;\n`Bounded` rejects routes that would require traversing past either end.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "CycleWrapMode",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": "The cycle wraps: index `len` maps back to `0`.",
+                                      "json_value": "circular",
+                                      "kind": "unit",
+                                      "name": "Circular"
+                                    },
+                                    {
+                                      "description": "The cycle is bounded: indices outside `0..len` are not reachable.",
+                                      "json_value": "bounded",
+                                      "kind": "unit",
+                                      "name": "Bounded"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "json_value": "weighted",
+                            "kind": "struct",
+                            "name": "Weighted"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": "How to choose a route through the cycle.",
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "route",
+                      "schema": {
+                        "description": "How a route is selected through a [`MechanicalContentSource`].\n\nRoute selection is independent of window motion: `direction: Reverse`\nchanges which face comes next in the cycle, but it does not flip the\nexisting [`OdometerDirection`] visual roll. Authors who want decrement to\nvisibly roll downward set both `OdometerDirection::Down` and\n`CycleDirectionPolicy::Reverse` explicitly.\n\n[`MechanicalContentSource`]: super::cls_mechanical_cycle_source::MechanicalContentSource\n[`OdometerDirection`]: super::cls_content_effect::OdometerDirection",
+                        "fields": [
+                          {
+                            "json_key": null,
+                            "meta": {
+                              "default": null,
+                              "description": "Direction the route walks the cycle.",
+                              "help": null,
+                              "json_key": null,
+                              "optional": true,
+                              "range": null
+                            },
+                            "name": "direction",
+                            "schema": {
+                              "description": "Direction the route walks through an ordered cycle.",
+                              "json_name": null,
+                              "kind": "enum",
+                              "name": "CycleDirectionPolicy",
+                              "tag_field": null,
+                              "variants": [
+                                {
+                                  "description": "Walk forward through the cycle indices.",
+                                  "json_value": "forward",
+                                  "kind": "unit",
+                                  "name": "Forward"
+                                },
+                                {
+                                  "description": "Walk in reverse through the cycle indices.",
+                                  "json_value": "reverse",
+                                  "kind": "unit",
+                                  "name": "Reverse"
+                                },
+                                {
+                                  "description": "Pick whichever traversal has fewer intermediate faces; ties resolved\nby [`CycleTieBreaker`].",
+                                  "json_value": "shortest",
+                                  "kind": "unit",
+                                  "name": "Shortest"
+                                },
+                                {
+                                  "description": "Choose forward or reverse from numeric increment/decrement context.\nRequires faces to be exactly the decimal digits `0`..=`9`.",
+                                  "json_value": "numeric_delta",
+                                  "kind": "unit",
+                                  "name": "NumericDelta"
+                                },
+                                {
+                                  "description": "Reserved for future override sources. Recipes currently must not set\n`Authored`; the validator rejects it.",
+                                  "json_value": "authored",
+                                  "kind": "unit",
+                                  "name": "Authored"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "json_key": null,
+                            "meta": {
+                              "default": null,
+                              "description": "Resolves ties when `direction = Shortest` and forward and reverse\ndistances are equal.",
+                              "help": null,
+                              "json_key": null,
+                              "optional": true,
+                              "range": null
+                            },
+                            "name": "tie_breaker",
+                            "schema": {
+                              "description": "Tie-breaker for `CycleDirectionPolicy::Shortest`.",
+                              "json_name": null,
+                              "kind": "enum",
+                              "name": "CycleTieBreaker",
+                              "tag_field": null,
+                              "variants": [
+                                {
+                                  "description": "Pick the forward route when distances are equal.",
+                                  "json_value": "forward",
+                                  "kind": "unit",
+                                  "name": "Forward"
+                                },
+                                {
+                                  "description": "Pick the reverse route when distances are equal.",
+                                  "json_value": "reverse",
+                                  "kind": "unit",
+                                  "name": "Reverse"
+                                }
+                              ]
+                            }
+                          },
+                          {
+                            "json_key": null,
+                            "meta": {
+                              "default": null,
+                              "description": "Number of full additional wraps to insert before the final face.\n`0` is the default; slot reels typically use `2`+ to feel like a\nphysical wheel spinning past several values before settling.",
+                              "help": null,
+                              "json_key": null,
+                              "optional": true,
+                              "range": null
+                            },
+                            "name": "extra_rotations",
+                            "schema": {
+                              "kind": "primitive",
+                              "range": {
+                                "max": 65535,
+                                "min": 0
+                              },
+                              "type": "u16"
+                            }
+                          },
+                          {
+                            "json_key": null,
+                            "meta": {
+                              "default": null,
+                              "description": "What to do when source or target face is not present in the cycle.",
+                              "help": null,
+                              "json_key": null,
+                              "optional": true,
+                              "range": null
+                            },
+                            "name": "missing_face",
+                            "schema": {
+                              "description": "What to do when a route endpoint isn't present in the cycle.\n\n`Error` is the strict default; recipes that ship today should opt in to\nfallbacks deliberately, with awareness that fallbacks change the visible\nbehavior.",
+                              "json_name": null,
+                              "kind": "enum",
+                              "name": "CycleMissingFacePolicy",
+                              "tag_field": null,
+                              "variants": [
+                                {
+                                  "description": "Reject the recipe at validation time.",
+                                  "json_value": "error",
+                                  "kind": "unit",
+                                  "name": "Error"
+                                },
+                                {
+                                  "description": "Fall back to a direct `[from, to]` Pair route for this tile.",
+                                  "json_value": "pair_fallback",
+                                  "kind": "unit",
+                                  "name": "PairFallback"
+                                },
+                                {
+                                  "description": "Insert the missing face at the end of the cycle and continue.",
+                                  "json_value": "insert_at_end",
+                                  "kind": "unit",
+                                  "name": "InsertAtEnd"
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        "json_name": null,
+                        "kind": "struct",
+                        "name": "MechanicalRouteConfig"
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": "How tiles are scheduled relative to each other.",
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "cascade",
+                      "schema": {
+                        "description": "Schedules per-tile progress relative to the overall cycle progress.\n\n`Simultaneous` reproduces today's whole-grid behavior; the others stagger\ntiles so the cycle visually progresses across the mechanism.",
+                        "json_name": null,
+                        "kind": "enum",
+                        "name": "MechanicalCascadePolicy",
+                        "tag_field": "type",
+                        "variants": [
+                          {
+                            "description": "All tiles share the same progress.",
+                            "json_value": "simultaneous",
+                            "kind": "unit",
+                            "name": "Simultaneous"
+                          },
+                          {
+                            "description": "Each tile starts later than the previous one by `fraction` of the\ntotal progress window. `fraction` is clamped to `0.0..=0.95`.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "fraction",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              }
+                            ],
+                            "json_value": "staggered",
+                            "kind": "struct",
+                            "name": "Staggered"
+                          },
+                          {
+                            "description": "Numeric carry: only digit positions that change between source and\ntarget advance, scheduled from least-significant to most-significant.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "stagger_fraction",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": true,
+                                  "range": null
+                                },
+                                "name": "unchanged",
+                                "schema": {
+                                  "description": "What happens to tiles whose source and target faces are equal under\n`MechanicalCascadePolicy::NumericCarry`.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "UnchangedCellPolicy",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": "The tile holds its existing face for the duration of the cycle.",
+                                      "json_value": "hold",
+                                      "kind": "unit",
+                                      "name": "Hold"
+                                    },
+                                    {
+                                      "description": "The tile spins through the cycle but lands back on the same face.",
+                                      "json_value": "spin_and_return",
+                                      "kind": "unit",
+                                      "name": "SpinAndReturn"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "json_value": "numeric_carry",
+                            "kind": "struct",
+                            "name": "NumericCarry"
+                          },
+                          {
+                            "description": "Each tile starts at a deterministic random offset derived from `seed`.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "seed",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": {
+                                    "max": 18446744073709551615,
+                                    "min": 0
+                                  },
+                                  "type": "u64"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "max_delay_fraction",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              }
+                            ],
+                            "json_value": "randomized",
+                            "kind": "struct",
+                            "name": "Randomized"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "json_key": null,
+                      "meta": {
+                        "default": null,
+                        "description": "Optional settle behavior applied at the end of the cycle.",
+                        "help": null,
+                        "json_key": null,
+                        "optional": true,
+                        "range": null
+                      },
+                      "name": "settle",
+                      "schema": {
+                        "description": "Per-tile settle behavior applied at target arrival.\n\nSettle composes with `MechanicalCascadePolicy` so each tile gets its\nown detent in its own time window. With `Simultaneous` cascade the\nper-tile rule degrades to a whole-cycle settle; with `Staggered` or\n`NumericCarry` cascade it produces the click-click-click of an\nodometer ratcheting into place.\n\nEvery variant ships fully wired in the phase that introduces it: there\nis no \"parses but does nothing at runtime\" allowance.",
+                        "json_name": null,
+                        "kind": "enum",
+                        "name": "MechanicalSettleConfig",
+                        "tag_field": "type",
+                        "variants": [
+                          {
+                            "description": "No settle. The tile lands at local progress `1.0` and stops.",
+                            "json_value": "none",
+                            "kind": "unit",
+                            "name": "None"
+                          },
+                          {
+                            "description": "Brief overshoot past the final face then recovery onto it.\n`overshoot` is clamped to `0.0..=0.5` and is how far past the final\nface the tile travels at peak. `settle_fraction` is clamped to\n`0.0..=1.0` and is the fraction of the tile's local progress\ndevoted to the settle phase; the route advance compresses into\n`(1.0 - settle_fraction)`.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "overshoot",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              },
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "settle_fraction",
+                                "schema": {
+                                  "kind": "primitive",
+                                  "range": null,
+                                  "type": "f32"
+                                }
+                              }
+                            ],
+                            "json_value": "spring",
+                            "kind": "struct",
+                            "name": "Spring"
+                          },
+                          {
+                            "description": "Apply a named easing curve over the final stretch of the tile's\nlocal progress.",
+                            "fields": [
+                              {
+                                "json_key": null,
+                                "meta": {
+                                  "default": null,
+                                  "description": null,
+                                  "help": null,
+                                  "json_key": null,
+                                  "optional": false,
+                                  "range": null
+                                },
+                                "name": "easing",
+                                "schema": {
+                                  "description": "Small named easing subset usable by `MechanicalSettleConfig`.\n\nThis is a deliberate, narrow vocabulary chosen to match the shapes a\nsettle motion benefits from. The full easing library lives in the\n`mixed-signals` crate; broader settle expressiveness is a future\nextension once it gains `ConfigSchema` support.",
+                                  "json_name": null,
+                                  "kind": "enum",
+                                  "name": "EasingCurveName",
+                                  "tag_field": null,
+                                  "variants": [
+                                    {
+                                      "description": null,
+                                      "json_value": "linear",
+                                      "kind": "unit",
+                                      "name": "Linear"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "ease_out",
+                                      "kind": "unit",
+                                      "name": "EaseOut"
+                                    },
+                                    {
+                                      "description": null,
+                                      "json_value": "ease_out_back",
+                                      "kind": "unit",
+                                      "name": "EaseOutBack"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "json_value": "ease",
+                            "kind": "struct",
+                            "name": "Ease"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "json_name": null,
+                  "kind": "struct",
+                  "name": "MechanicalCycleConfig"
                 },
                 "kind": "option"
               }
@@ -157013,6 +158679,39 @@
                 "json_key": null,
                 "meta": {
                   "default": null,
+                  "description": "Axis along which the scanner sweeps (horizontal default, vertical\nfor column-wise reveals).",
+                  "help": null,
+                  "json_key": null,
+                  "optional": true,
+                  "range": null
+                },
+                "name": "axis",
+                "schema": {
+                  "description": "Axis along which a scanner sweeps. Horizontal is the classic KITT/Larson\npattern; Vertical sweeps top↔bottom (useful for column-wise reveals such as\nTTE's Beams effect). Defaults to Horizontal for back-compat.",
+                  "json_name": null,
+                  "kind": "enum",
+                  "name": "ScannerAxis",
+                  "tag_field": null,
+                  "variants": [
+                    {
+                      "description": null,
+                      "json_value": "horizontal",
+                      "kind": "unit",
+                      "name": "Horizontal"
+                    },
+                    {
+                      "description": null,
+                      "json_value": "vertical",
+                      "kind": "unit",
+                      "name": "Vertical"
+                    }
+                  ]
+                }
+              },
+              {
+                "json_key": null,
+                "meta": {
+                  "default": null,
                   "description": "Which color component to boost (ignored if powerline_mode is true)",
                   "help": null,
                   "json_key": null,
@@ -191303,6 +193002,39 @@
                     "json_value": "reverse_wrap",
                     "kind": "unit",
                     "name": "ReverseWrap"
+                  }
+                ]
+              }
+            },
+            {
+              "json_key": null,
+              "meta": {
+                "default": null,
+                "description": "Axis along which the scanner sweeps (horizontal default, vertical\nfor column-wise reveals).",
+                "help": null,
+                "json_key": null,
+                "optional": true,
+                "range": null
+              },
+              "name": "axis",
+              "schema": {
+                "description": "Axis along which a scanner sweeps. Horizontal is the classic KITT/Larson\npattern; Vertical sweeps top↔bottom (useful for column-wise reveals such as\nTTE's Beams effect). Defaults to Horizontal for back-compat.",
+                "json_name": null,
+                "kind": "enum",
+                "name": "ScannerAxis",
+                "tag_field": null,
+                "variants": [
+                  {
+                    "description": null,
+                    "json_value": "horizontal",
+                    "kind": "unit",
+                    "name": "Horizontal"
+                  },
+                  {
+                    "description": null,
+                    "json_value": "vertical",
+                    "kind": "unit",
+                    "name": "Vertical"
                   }
                 ]
               }

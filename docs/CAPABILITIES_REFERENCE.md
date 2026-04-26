@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.30.0</VERS> -->
-<!-- <WCTX>Phase 3b: lift BindableU16 into RowRange/ColumnRange/Modulo coordinates. Capabilities reference must surface the new bindable contract for SynthGrid expand/collapse, animated stripe density, and scan-down reveals.</WCTX> -->
-<!-- <CLOG>StyleRegion::Modulo block now lists modulus/remainder as BindableU16 with bound-form authoring example; new StyleRegion::RowRange/ColumnRange block documents the bindable endpoints and resolved() contract.</CLOG> -->
+<!-- <VERS>VERSION: 1.31.0</VERS> -->
+<!-- <WCTX>Phase 5 of mechanical circular content cycles plan: document the Odometer mechanical cycle config schema (source / route / cascade / settle), authoring guidance for 3x3 line-glyph drums, decimal carry, and weighted slot reels.</WCTX> -->
+<!-- <CLOG>1.31.0: add Mechanical Cycle Config (Odometer, V3) section with the full schema surface; update Odometer/SplitFlap one-liners to mention the new optional mechanical block.</CLOG> -->
 # tui-vfx Capabilities Reference
 
 > **MAINTENANCE NOTE:** This document must be kept in sync with the source code.
@@ -632,8 +632,74 @@ Content transformers modify text content during animation.
 
 ### Mechanical Display Notes
 
-- **Odometer** is a mechanical cell-grid/tile roll. It rolls old tile cells out of a fixed viewport while target tile cells enter from the opposite edge; the old vertical digit interpolation behavior is intentionally replaced. Key fields: `direction`, tagged `travel` (`{ "type": "axis" }`, `{ "type": "full_clear" }`, or `{ "type": "cells", "cells": N }`), `tile_width`, `tile_height`, and optional `from_message`.
-- **SplitFlap** keeps `1x1` legacy character flips by default. Larger Solari-style cards use `tile_width` plus even `tile_height` values `2`, `4`, `6`, or `8` for center-hinged rendering; invalid multi-cell heights are rejected by transformer validation.
+- **Odometer** is a mechanical cell-grid/tile roll. It rolls old tile cells out of a fixed viewport while target tile cells enter from the opposite edge; the old vertical digit interpolation behavior is intentionally replaced. Key fields: `direction`, tagged `travel` (`{ "type": "axis" }`, `{ "type": "full_clear" }`, or `{ "type": "cells", "cells": N }`), `tile_width`, `tile_height`, optional `from_message`, and optional `mechanical` (see below).
+- **SplitFlap** keeps `1x1` legacy character flips by default. Larger Solari-style cards use `tile_width` plus even `tile_height` values `2`, `4`, `6`, or `8` for center-hinged rendering; invalid multi-cell heights are rejected by transformer validation. Mechanical cycle config attaches in a follow-on phase.
+
+### Mechanical Cycle Config (Odometer, V3)
+
+`ContentEffect::Odometer` accepts an optional `mechanical` block that turns the transformer from a single old/new pair-roll into an ordered, circular, randomized, or weighted face cycle. When `mechanical` is absent (or set to the explicit-Pair default), Odometer renders byte-identically to the legacy whole-grid pair-roll.
+
+```json
+{
+  "type": "odometer",
+  "direction": "up",
+  "travel": { "type": "axis" },
+  "tile_width": 1,
+  "tile_height": 1,
+  "from_message": "099",
+  "mechanical": {
+    "source": { "type": "preset", "preset": "decimal_digits", "wrap": "circular" },
+    "route":   { "direction": "numeric_delta", "tie_breaker": "forward" },
+    "cascade": { "type": "numeric_carry", "stagger_fraction": 0.4, "unchanged": "hold" },
+    "settle":  { "type": "spring", "overshoot": 0.16, "settle_fraction": 0.2 }
+  }
+}
+```
+
+**Source variants** (face supply for the cycle):
+
+| `source.type` | Faces | Notes |
+|---|---|---|
+| `pair` | None — uses `from_message` and target only | Default; equivalent to absent `mechanical`. |
+| `ordered` | Author-supplied `faces: [...]` plus `wrap: circular \| bounded` | Faces normalized against tile size; oversize rejected, smaller padded with spaces. |
+| `preset` | `preset: decimal_digits \| split_flap_alpha \| split_flap_digits \| split_flap_uppercase` | Exact face lists are byte-equal mirrors of `SplitFlapCharset` constants. |
+| `randomized` | Author-supplied `faces` + `seed: u64` | Same faces, deterministically shuffled once per `seed`. |
+| `weighted` | `faces: [{ value, weight }]` + `seed: u64` | Each entry expands to `weight` copies; total weight must fit `u32`; weight `0` is rejected. |
+
+**Route** (how the cycle is walked between source and target):
+
+| Field | Values | Default |
+|---|---|---|
+| `direction` | `forward` \| `reverse` \| `shortest` \| `numeric_delta` \| `authored` | `forward` |
+| `tie_breaker` | `forward` \| `reverse` (only used when `shortest` ties) | `forward` |
+| `extra_rotations` | `u16` — full additional wraps before landing | `0` |
+| `missing_face` | `error` \| `pair_fallback` \| `insert_at_end` | `error` |
+
+`numeric_delta` requires a 10-face cycle whose values are exactly `"0"` through `"9"` (the `decimal_digits` preset is the canonical case). `authored` is reserved and rejected. `extra_rotations > 0` requires `wrap: circular`.
+
+**Cascade** (how multiple tiles schedule relative to each other):
+
+| `cascade.type` | Effect |
+|---|---|
+| `simultaneous` | Every tile shares the same progress (default). |
+| `staggered` | `fraction` (clamped 0..0.95) sets per-tile start offset across all tiles. |
+| `numeric_carry` | Only changed tiles advance; `stagger_fraction` sequences them LSB→MSB. `unchanged: hold` parks unchanged tiles at source; `unchanged: spin_and_return` spins them through the cycle and lands them back. |
+| `randomized` | Per-tile delay drawn deterministically from `seed`, scaled by `max_delay_fraction`. |
+
+**Settle** (per-tile detent at landing):
+
+| `settle.type` | Effect |
+|---|---|
+| `none` | No settle (default). |
+| `spring` | `overshoot` (0..0.5) and `settle_fraction` (0..1) — tile briefly shows the face one past target in the route direction, then snaps to target. Composes per-tile with cascade so each ratchets independently. |
+| `ease` | `easing: linear \| ease_out \| ease_out_back` applied to the route progress. |
+
+**Authoring guidance:**
+
+- For 3×3 line-glyph odometer drums, use `source.type: ordered` with explicit `faces` of 3×3 line glyphs (see `recipes/debug_recipes/content/content_odometer_3x3_count.json`); `tile_width: 3, tile_height: 3`.
+- For numeric counters with carry, prefer `decimal_digits` preset + `numeric_delta` direction + `numeric_carry` cascade; the runtime infers carry sign from source-vs-target string comparison.
+- For slot reels, use `weighted` source with `extra_rotations >= 2` and `spring` settle; the deterministic seed makes mid-spin sequences reproducible.
+- The fallback font for unrecognized glyphs in face strings is the project Line 3x3 face (Intention 36). Authoring 3×3 cycles uses that face's glyph patterns directly.
 
 ### WrapIndicator Details
 

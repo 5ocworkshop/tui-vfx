@@ -41,7 +41,7 @@
 - **HoverBar**: Progress-driven partial bar using ▏▎▍▌▋▊▉█ with fg/bg inversion.
 - **InterlaceCurtain**: Scanline/interlace dimming effect.
 - **Invert**: Color inversion (negative) effect.
-- **KittScanner**: Horizontal ping-pong scanner (KITT/Larson scanner) effect.
+- **KittScanner**: Ping-pong scanner (KITT/Larson) effect — horizontal or vertical.
 - **MotionBlur**: Directional blur trail.
 - **None**: No filter effect, passthrough output.
 - **PatternFill**: Background texture patterns.
@@ -100,7 +100,7 @@
 - **Mirror**: Mirror/flip text horizontally or vertically.
 - **Morph**: Character morphing/blending between text states.
 - **Numeric**: Number transition animations for dashboards.
-- **Odometer**: Mechanical cell-grid roll for odometer and slot-style boards.
+- **Odometer**: Mechanical cell-grid roll for odometer drums and slot-style boards.
 - **Redact**: Redaction/censoring effect with █ blocks.
 - **Scramble**: Random character scrambling that resolves to final text.
 - **ScrambleGlitchShift**: Combined scramble + glitch shift for maximum chaos. [Intense]
