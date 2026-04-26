@@ -1,7 +1,7 @@
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example with # comment annotations. Stripping lines starting with `#` yields valid JSON representing a canonical V3 recipe.</DESC>
-# <VERS>VERSION: 0.9.0</VERS>
-# <WCTX>Phase 5 of mechanical circular content cycles plan: annotate the Odometer mechanical cycle config block (source / route / cascade / settle) with the same authoring guidance used in CAPABILITIES_REFERENCE.</WCTX>
-# <CLOG>0.9.0: add a new section 5.1.b documenting Odometer's optional mechanical block, schema variants for source/route/cascade/settle, and per-tile NumericCarry + Spring detent semantics. 0.8.2: add first-slice cell_motion schema homes for root content and scene layers.</CLOG>
+# <VERS>VERSION: 1.0.0</VERS>
+# <WCTX>Phase E of TransformContext implementation plan: annotate mechanical.source.font binding-form in the schema draft.</WCTX>
+# <CLOG>1.0.0: add font field annotation to mechanical.source Preset block; documents binding-form shape (Slice 6.6 close).</CLOG>
 
 # ============================================================================
 # tui-vfx V3 schema — DRAFT
@@ -308,8 +308,14 @@
     #     "source": {
     #       "type": "preset",
     #       "preset": "decimal_digits",
-    #       "wrap": "circular"
-    #       # ^ source.type: pair (default, equivalent to absent) | ordered |
+    #       "wrap": "circular",
+    #       # Binding-form: { "binding": "name" } resolves through requires_bindings.
+    #       "font": "line-3x3"
+    #       # ^ Optional. Literal string or {"binding": "name"} reference.
+    #       #   Binding-form resolves through the host-supplied ShaderRuntimeParams
+    #       #   map, populated via requires_bindings at the recipe envelope.
+    #       #   Omit to use the registry default (Line 3x3 per Intention 36).
+    #       #   ^ source.type: pair (default, equivalent to absent) | ordered |
     #       #   preset (decimal_digits / split_flap_alpha / split_flap_digits
     #       #   / split_flap_uppercase) | randomized (faces+seed) | weighted
     #       #   (faces with weights+seed). Ordered/randomized/weighted carry
@@ -1468,5 +1474,5 @@
 
 # ============================================================================
 # <FILE>docs/design/tui-vfx-v3-schema-draft.json</FILE> - <DESC>Draft V3 recipe schema — specification-by-example</DESC>
-# <VERS>END OF VERSION: 0.8.2</VERS>
+# <VERS>END OF VERSION: 1.0.0</VERS>
 # ============================================================================

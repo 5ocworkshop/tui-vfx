@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.31.0</VERS> -->
-<!-- <WCTX>Phase 5 of mechanical circular content cycles plan: document the Odometer mechanical cycle config schema (source / route / cascade / settle), authoring guidance for 3x3 line-glyph drums, decimal carry, and weighted slot reels.</WCTX> -->
-<!-- <CLOG>1.31.0: add Mechanical Cycle Config (Odometer, V3) section with the full schema surface; update Odometer/SplitFlap one-liners to mention the new optional mechanical block.</CLOG> -->
+<!-- <VERS>VERSION: 1.32.0</VERS> -->
+<!-- <WCTX>Phase E of TransformContext implementation plan: document binding-form font authoring shape for Odometer mechanical.source.</WCTX> -->
+<!-- <CLOG>1.32.0: add Binding-form font references subsection under Mechanical Cycle Config (Slice 6.6 close).</CLOG> -->
 # tui-vfx Capabilities Reference
 
 > **MAINTENANCE NOTE:** This document must be kept in sync with the source code.
@@ -700,6 +700,45 @@ Content transformers modify text content during animation.
 - For numeric counters with carry, prefer `decimal_digits` preset + `numeric_delta` direction + `numeric_carry` cascade; the runtime infers carry sign from source-vs-target string comparison.
 - For slot reels, use `weighted` source with `extra_rotations >= 2` and `spring` settle; the deterministic seed makes mid-spin sequences reproducible.
 - The fallback font for unrecognized glyphs in face strings is the project Line 3x3 face (Intention 36). Authoring 3×3 cycles uses that face's glyph patterns directly.
+
+### Binding-form font references (V3, since Slice 6.6)
+
+The `font` field on `mechanical.source` (Preset variant) accepts both literal
+strings and `{"binding": "name"}` references. Binding-form references resolve
+through the host-supplied `ShaderRuntimeParams` map at render time, which the
+recipe player populates via the recipe envelope's `requires_bindings` block.
+
+Recipe example:
+
+    {
+      "requires_bindings": {
+        "drum_font": {
+          "type": "string",
+          "description": "Font name resolved at runtime",
+          "default": "default_font"
+        }
+      },
+      "config": {
+        "content": {
+          "effect": {
+            "type": "odometer",
+            "mechanical": {
+              "source": {
+                "type": "preset",
+                "preset": "decimal_digits",
+                "font": { "binding": "drum_font" }
+              }
+            }
+          }
+        }
+      }
+    }
+
+The reserved `"default_font"` sentinel routes to the registry's currently-
+registered default (Line 3x3 in the embedded shipping case). When the host
+does not supply a value, the loopback layer pre-fills the binding from
+`default`, so the recipe is preview-playable without host wiring per
+Intention 37.
 
 ### WrapIndicator Details
 
@@ -1626,4 +1665,4 @@ Full schema (every variant field) lives in [docs/TRACE_EVENT_SCHEMA.md](TRACE_EV
 ---
 
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>END OF VERSION: 1.28.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.32.0</VERS> -->

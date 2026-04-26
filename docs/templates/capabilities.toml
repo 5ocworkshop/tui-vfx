@@ -11,9 +11,9 @@
 # See docs/design/CAPABILITY_MANIFEST_*.md for architecture details.
 
 # <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
-# <VERS>VERSION: 2.4.0</VERS>
-# <WCTX>Phase 5 of mechanical circular content cycles plan: surface the Odometer mechanical cycle config (source / route / cascade / settle) to AI authors.</WCTX>
-# <CLOG>2.4.0: expand Odometer ai_hint with the mechanical block schema and authoring guidance for 3x3 line-glyph drums, decimal carry, and weighted slot reels; new use_cases tags slot-reel and decimal-carry.</CLOG>
+# <VERS>VERSION: 2.5.0</VERS>
+# <WCTX>Phase E of TransformContext implementation plan: document binding-form font authoring shape for Odometer.</WCTX>
+# <CLOG>2.5.0: add binding-form font sentence to Odometer ai_hint (Slice 6.6 close).</CLOG>
 
 [meta]
 version = "2.2.3"
@@ -1079,7 +1079,8 @@ mechanical.settle: none (default), spring (overshoot 0..0.5 + settle_fraction 0.
 Authoring guidance:
 - 3x3 line-glyph drums: ordered source with explicit 3x3 line-glyph faces; tile_width=3 tile_height=3. The project Line 3x3 face (Intention 36) is the canonical glyph table.
 - Decimal counters with carry: decimal_digits preset + numeric_delta direction + numeric_carry cascade. Runtime infers Increment/Decrement from source-vs-target numeric comparison.
-- Slot reels: weighted source with extra_rotations >= 2 and spring settle. Deterministic seed makes mid-spin sequences reproducible."""
+- Slot reels: weighted source with extra_rotations >= 2 and spring settle. Deterministic seed makes mid-spin sequences reproducible.
+- The mechanical.source.font field on Preset accepts both literal strings (e.g. "line-3x3") and binding references ({"binding": "drum_font"}); see CAPABILITIES_REFERENCE for the binding-form authoring shape."""
 
 [effects.content.Redact]
 use_cases = ["censorship", "reveal", "dramatic"]
@@ -1383,7 +1384,7 @@ effects = [
 ]
 
 # <FILE>docs/templates/capabilities.toml</FILE> - <DESC>Editorial manifest for tui-vfx capabilities</DESC>
-# <VERS>END OF VERSION: 2.4.0</VERS>
+# <VERS>END OF VERSION: 2.5.0</VERS>
 
 # ════════════════════════════════════════════════════════════════════════════════
 # Generated stubs - fill in use_cases, energy, and ai_hint
