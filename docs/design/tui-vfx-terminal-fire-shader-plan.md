@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-terminal-fire-shader-plan.md</FILE> - <DESC>Implementation plan for a terminal fire/flame shader primitive.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Add a discoverable implementation plan for procedural terminal fire next to the terminal water shader plan.</WCTX> -->
-<!-- <CLOG>0.1.0: initial fire shader plan with procedural density/temperature fields, smoke, blue core, sparks, stateful upgrade path, and shared helper recommendations with water.</CLOG> -->
+<!-- <CLOG>0.2.0: refine for junior implementation with scaffolding snippets, exact registration checklist, smaller phases, and first-pass compile strategy.
+0.1.0: initial fire shader plan with procedural density/temperature fields, smoke, blue core, sparks, stateful upgrade path, and shared helper recommendations with water.</CLOG> -->
 
 # Terminal Fire / Flame Shader Implementation Plan
 
@@ -151,6 +152,21 @@ VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(_))
 
 Rationale: fire is an animated spatial field, and the current V3 family set already has motion-field/stochastic/material-light buckets. It is not a static material light like bevel/glow, and it is more structured than stochastic sparkle. If the V3 taxonomy grows a `volumetric_field` or `emissive_field` family later, `terminal_fire` can migrate through the V3 compatibility layer.
 
+## 4.5 Junior implementation orientation
+
+Before writing code, make a scratch checklist from this table. It shows what each area is responsible for and how to know it is done.
+
+| Area | Purpose | First file to copy from | Done when |
+| --- | --- | --- | --- |
+| Fire math | Deterministic `T/D/S/B/I` sample for one cell | `cls_radial_spiral_shader.rs` helper layout | `sample_field_at()` returns bounded finite values and varies by x/y/time |
+| Style application | Convert fire sample to `Style` | `cls_pulse_wave_shader.rs` | visible fg/bg changes without changing transparent channels |
+| Shader catalog | Make `{ "type": "terminal_fire" }` deserialize | `cls_spatial_shader_type.rs` | `SpatialShaderType::TerminalFire` dispatch/name/docs all compile |
+| V3 lowering | Allow primitive V3 recipes to target fire | `enum_vfx_motion_field_behavior.rs` and `fnc_try_lower_v3_spatial_shader_family.rs` | V3 test lowers to legacy `TerminalFire` |
+| Docs/schema | Expose author-facing fields | `xtask/src/docs/effect_metadata.rs` | generated schema/docs mention `terminal_fire` |
+| Debug recipes | Human/CI visual fixture | sibling `shader_*_v3.json` primitive fixtures | validator accepts default/candle/smoke-sparks recipes |
+
+Implementation rule for a junior developer: **make one compileable vertical slice before adding all modes**. The first slice should support `FireMode::Flame`, default palette, no extracted shared helpers, and same-file unit tests. Once that compiles, add modes, V3 wiring, docs, and recipes in small commits.
+
 ## 5. Likely files/modules to touch
 
 ### Style crate
@@ -223,6 +239,51 @@ Add debug recipes under the existing shader primitive area:
 ```
 
 Validate with the sibling repo’s established validator/preview commands.
+
+## 5.5 Minimal first-pass compile strategy
+
+If the full plan feels large, build this minimal compileable skeleton first. It deliberately omits V3, recipes, and helper extraction until the core shader is real.
+
+1. Create `crates/tui-vfx-style/src/models/cls_terminal_fire_shader.rs`.
+2. Add only:
+   - `TerminalFireShader`;
+   - `FireMode`;
+   - `FireApplyTo`;
+   - `FireSparkConfig`;
+   - `FirePalette`;
+   - `FireSample`;
+   - private `saturate`, `smoothstep`, `hash01`, and `fbm3` helpers.
+3. Implement `Default` for each public type.
+4. Implement `sample_field_at()` for `FireMode::Flame`; let other modes return mode tunings but still reuse the same math.
+5. Add 4 same-file tests: bounded sample, varies by position, varies by time, style changes.
+6. Only then export it from `models/mod.rs` and add `SpatialShaderType::TerminalFire`.
+
+This ordering keeps compile failures local. Do **not** start with docs/schema generation; schema is useful only after Rust types compile.
+
+### 5.5.1 First-pass file header and imports
+
+Use the repo metadata header style from nearby shader files:
+
+```rust
+// <FILE>tui-vfx-style/src/models/cls_terminal_fire_shader.rs</FILE> - <DESC>Procedural emissive terminal fire shader</DESC>
+// <VERS>VERSION: 0.1.0</VERS>
+// <WCTX>Add a motion-field primitive for flame, smoke, blue core, and sparks.</WCTX>
+// <CLOG>Initial terminal fire shader implementation.</CLOG>
+
+//! Procedural terminal fire shader.
+//!
+//! Fire is modeled as a thin emissive density field rather than a lit surface.
+//! Coherent rising turbulence produces temperature, density, smoke, blue-core,
+//! and spark fields, then those fields map to emissive terminal colors.
+
+use crate::models::{ColorConfig, ColorSpace};
+use crate::traits::{ShaderContext, StyleShader};
+use crate::utils::blend_colors;
+use serde::{Deserialize, Serialize};
+use tui_vfx_types::{Color, Style};
+```
+
+If any import paths differ, copy the exact import style from `cls_pulse_wave_shader.rs` and `cls_radial_spiral_shader.rs`.
 
 ## 6. Proposed Rust types
 
@@ -302,6 +363,77 @@ pub struct TerminalFireShader {
 }
 ```
 
+### 6.0 Defaults and sanitized local config
+
+Implement defaults explicitly so tests and generated schema have stable values. A junior developer should add this immediately after the structs, before fire math.
+
+```rust
+impl Default for TerminalFireShader {
+    fn default() -> Self {
+        Self {
+            mode: FireMode::default(),
+            apply_to: FireApplyTo::default(),
+            aspect: 1.0,
+            base_width: 0.55,
+            min_width: 0.06,
+            wind: 0.0,
+            rise_speed: 2.2,
+            turbulence: 1.0,
+            intensity: 1.0,
+            density: 1.0,
+            cooling: 0.78,
+            flicker_strength: 0.18,
+            blue_core_strength: 0.35,
+            white_core_strength: 0.35,
+            smoke_strength: 0.35,
+            sparks: FireSparkConfig::default(),
+            palette: FirePalette::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct FireParams {
+    aspect: f32,
+    base_width: f32,
+    min_width: f32,
+    wind: f32,
+    rise_speed: f32,
+    turbulence: f32,
+    intensity: f32,
+    density: f32,
+    cooling: f32,
+    flicker_strength: f32,
+    blue_core_strength: f32,
+    white_core_strength: f32,
+    smoke_strength: f32,
+}
+
+impl TerminalFireShader {
+    fn params(&self) -> FireParams {
+        let base_width = finite_or(self.base_width, 0.55).clamp(0.05, 2.0);
+        let min_width = finite_or(self.min_width, 0.06).clamp(0.005, 0.5).min(base_width);
+        FireParams {
+            aspect: finite_or(self.aspect, 1.0).clamp(0.25, 4.0),
+            base_width,
+            min_width,
+            wind: finite_or(self.wind, 0.0).clamp(-1.0, 1.0),
+            rise_speed: finite_or(self.rise_speed, 2.2).clamp(0.0, 12.0),
+            turbulence: finite_or(self.turbulence, 1.0).clamp(0.0, 2.0),
+            intensity: finite_or(self.intensity, 1.0).clamp(0.0, 2.0),
+            density: finite_or(self.density, 1.0).clamp(0.0, 2.0),
+            cooling: finite_or(self.cooling, 0.78).clamp(0.0, 2.0),
+            flicker_strength: finite_or(self.flicker_strength, 0.18).clamp(0.0, 1.0),
+            blue_core_strength: finite_or(self.blue_core_strength, 0.35).clamp(0.0, 1.0),
+            white_core_strength: finite_or(self.white_core_strength, 0.35).clamp(0.0, 1.0),
+            smoke_strength: finite_or(self.smoke_strength, 0.35).clamp(0.0, 1.0),
+        }
+    }
+}
+```
+
+Keep `FireParams` private. Its job is to prevent `NaN`, infinities, and out-of-range recipe values from spreading through the hot path.
+
 ### Mode enum
 
 Use modes as presets plus limited behavior differences, not wholly separate shader implementations.
@@ -379,6 +511,30 @@ smoke:       rgb(88, 88, 88)    // 238/240 feel
 
 If `ColorConfig` supports indexed colors directly, prefer indices only in recipe examples; keep Rust defaults RGB for broad compatibility.
 
+Default helper functions can be copy-pasted as:
+
+```rust
+fn default_blue_core() -> ColorConfig { ColorConfig::Rgb { r: 0, g: 215, b: 255 } }
+fn default_white_core() -> ColorConfig { ColorConfig::White }
+fn default_yellow() -> ColorConfig { ColorConfig::Rgb { r: 255, g: 215, b: 0 } }
+fn default_orange() -> ColorConfig { ColorConfig::Rgb { r: 255, g: 95, b: 0 } }
+fn default_red() -> ColorConfig { ColorConfig::Rgb { r: 175, g: 0, b: 0 } }
+fn default_smoke() -> ColorConfig { ColorConfig::Rgb { r: 88, g: 88, b: 88 } }
+
+impl Default for FirePalette {
+    fn default() -> Self {
+        Self {
+            blue_core: default_blue_core(),
+            white_core: default_white_core(),
+            yellow: default_yellow(),
+            orange: default_orange(),
+            red: default_red(),
+            smoke: default_smoke(),
+        }
+    }
+}
+```
+
 ### Spark config
 
 Do not create mutable global particles in the style shader. Use deterministic pseudo-particles derived from seed, index, position, and time.
@@ -402,6 +558,37 @@ pub struct FireSparkConfig {
     /// Horizontal spark drift. Clamp 0..=2.
     #[config(default = 0.25)]
     pub drift: f32,
+}
+```
+
+Add defaults/sanitization immediately:
+
+```rust
+impl Default for FireSparkConfig {
+    fn default() -> Self {
+        Self { seed: 1, count: 8, intensity: 0.35, rise_speed: 1.2, drift: 0.25 }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct FireSparkParams {
+    seed: u32,
+    count: u8,
+    intensity: f32,
+    rise_speed: f32,
+    drift: f32,
+}
+
+impl FireSparkConfig {
+    fn sanitized(&self) -> FireSparkParams {
+        FireSparkParams {
+            seed: self.seed,
+            count: self.count.min(32),
+            intensity: finite_or(self.intensity, 0.35).clamp(0.0, 2.0),
+            rise_speed: finite_or(self.rise_speed, 1.2).clamp(0.0, 4.0),
+            drift: finite_or(self.drift, 0.25).clamp(0.0, 2.0),
+        }
+    }
 }
 ```
 
@@ -455,8 +642,8 @@ Map a terminal cell `(i, j)` into flame-local coordinates:
 
 ```rust
 fn normalized_fire_coord(ctx: &ShaderContext, aspect: f32) -> (f32, f32) {
-    let width = ctx.area.width.max(1) as f32;
-    let height = ctx.area.height.max(1) as f32;
+    let width = ctx.width.max(1) as f32;
+    let height = ctx.height.max(1) as f32;
     let col = ctx.local_x as f32;
     let row = ctx.local_y as f32;
 
@@ -492,6 +679,45 @@ impl TerminalFireShader {
 }
 ```
 
+### 9.0 Copy-paste scalar helpers for first implementation
+
+If shared helpers have not been extracted yet, put these private helpers near the bottom of `cls_terminal_fire_shader.rs`. Move them to `utils` only after water/fire both need them.
+
+```rust
+#[inline]
+fn saturate(x: f32) -> f32 {
+    x.clamp(0.0, 1.0)
+}
+
+#[inline]
+fn finite_or(x: f32, fallback: f32) -> f32 {
+    if x.is_finite() { x } else { fallback }
+}
+
+#[inline]
+fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
+    let width = edge1 - edge0;
+    if width.abs() <= f32::EPSILON {
+        return if x >= edge1 { 1.0 } else { 0.0 };
+    }
+    let u = ((x - edge0) / width).clamp(0.0, 1.0);
+    u * u * (3.0 - 2.0 * u)
+}
+
+#[inline]
+fn fade(t: f32) -> f32 {
+    // Smooth interpolation for value noise.
+    t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+}
+
+#[inline]
+fn lerp(a: f32, b: f32, t: f32) -> f32 {
+    a + (b - a) * t
+}
+```
+
+These helpers intentionally avoid generics and allocations. Unit-test `smoothstep` separately if they move to `utils`.
+
 ### 9.1 Noise foundation
 
 Use coherent deterministic noise, not random per-frame noise. If no coherent noise helper exists, add a small dependency-free value noise helper in `utils/fnc_procedural_noise.rs` or keep a private helper until both fire and water need it.
@@ -502,6 +728,73 @@ Minimum helper API:
 pub fn hash3(seed: u32, x: i32, y: i32, z: i32) -> f32;
 pub fn value_noise3(seed: u32, x: f32, y: f32, z: f32) -> f32; // -1..=1
 pub fn fbm3(seed: u32, x: f32, y: f32, z: f32, octaves: u8, gain: f32, lacunarity: f32) -> f32;
+```
+
+Private first-pass implementation:
+
+```rust
+fn hash01(mut x: u32) -> f32 {
+    x ^= x >> 16;
+    x = x.wrapping_mul(0x7feb_352d);
+    x ^= x >> 15;
+    x = x.wrapping_mul(0x846c_a68b);
+    x ^= x >> 16;
+    (x as f32) / (u32::MAX as f32)
+}
+
+fn hash3(seed: u32, x: i32, y: i32, z: i32) -> f32 {
+    let h = seed
+        ^ (x as u32).wrapping_mul(0x9E37_79B9)
+        ^ (y as u32).wrapping_mul(0x85EB_CA6B)
+        ^ (z as u32).wrapping_mul(0xC2B2_AE35);
+    hash01(h) * 2.0 - 1.0
+}
+
+fn value_noise3(seed: u32, x: f32, y: f32, z: f32) -> f32 {
+    let xi = x.floor() as i32;
+    let yi = y.floor() as i32;
+    let zi = z.floor() as i32;
+    let xf = x - xi as f32;
+    let yf = y - yi as f32;
+    let zf = z - zi as f32;
+    let u = fade(xf);
+    let v = fade(yf);
+    let w = fade(zf);
+
+    let c000 = hash3(seed, xi, yi, zi);
+    let c100 = hash3(seed, xi + 1, yi, zi);
+    let c010 = hash3(seed, xi, yi + 1, zi);
+    let c110 = hash3(seed, xi + 1, yi + 1, zi);
+    let c001 = hash3(seed, xi, yi, zi + 1);
+    let c101 = hash3(seed, xi + 1, yi, zi + 1);
+    let c011 = hash3(seed, xi, yi + 1, zi + 1);
+    let c111 = hash3(seed, xi + 1, yi + 1, zi + 1);
+
+    let x00 = lerp(c000, c100, u);
+    let x10 = lerp(c010, c110, u);
+    let x01 = lerp(c001, c101, u);
+    let x11 = lerp(c011, c111, u);
+    let y0 = lerp(x00, x10, v);
+    let y1 = lerp(x01, x11, v);
+    lerp(y0, y1, w).clamp(-1.0, 1.0)
+}
+
+fn fbm3(seed: u32, x: f32, y: f32, z: f32, octaves: u8, gain: f32, lacunarity: f32) -> f32 {
+    let octaves = octaves.clamp(1, 6);
+    let gain = finite_or(gain, 0.5).clamp(0.0, 1.0);
+    let lacunarity = finite_or(lacunarity, 2.0).clamp(1.01, 4.0);
+    let mut amp = 1.0;
+    let mut freq = 1.0;
+    let mut sum = 0.0;
+    let mut norm = 0.0;
+    for octave in 0..octaves {
+        sum += amp * value_noise3(seed.wrapping_add(octave as u32 * 1013), x * freq, y * freq, z * freq);
+        norm += amp;
+        amp *= gain;
+        freq *= lacunarity;
+    }
+    if norm > 0.0 { (sum / norm).clamp(-1.0, 1.0) } else { 0.0 }
+}
 ```
 
 Good defaults:
@@ -563,6 +856,57 @@ Soft flame mask:
 ```rust
 let mask = (-r.powf(2.0 + 1.8 * yw)).exp()
     * (1.0 - smoothstep(0.78, 1.0, yw));
+```
+
+### 9.3.5 Mode tuning table and helper
+
+Implement modes as multipliers so every mode still uses the same tested field pipeline. This avoids five separate shader implementations.
+
+```rust
+#[derive(Debug, Clone, Copy)]
+struct FireModeTuning {
+    width_mul: f32,
+    turbulence_mul: f32,
+    smoke_mul: f32,
+    blue_mul: f32,
+    white_mul: f32,
+    spark_mul: f32,
+    height_gate: f32,
+}
+
+impl FireMode {
+    fn tuning(&self) -> FireModeTuning {
+        match self {
+            FireMode::Flame => FireModeTuning {
+                width_mul: 1.0, turbulence_mul: 1.0, smoke_mul: 1.0,
+                blue_mul: 1.0, white_mul: 1.0, spark_mul: 1.0, height_gate: 1.0,
+            },
+            FireMode::Candle => FireModeTuning {
+                width_mul: 0.35, turbulence_mul: 0.55, smoke_mul: 0.25,
+                blue_mul: 1.8, white_mul: 1.2, spark_mul: 0.0, height_gate: 0.88,
+            },
+            FireMode::Campfire => FireModeTuning {
+                width_mul: 1.35, turbulence_mul: 1.25, smoke_mul: 1.6,
+                blue_mul: 0.45, white_mul: 0.9, spark_mul: 1.8, height_gate: 1.0,
+            },
+            FireMode::Embers => FireModeTuning {
+                width_mul: 1.25, turbulence_mul: 0.35, smoke_mul: 0.45,
+                blue_mul: 0.0, white_mul: 0.35, spark_mul: 0.7, height_gate: 0.28,
+            },
+            FireMode::SmokePlume => FireModeTuning {
+                width_mul: 1.0, turbulence_mul: 0.8, smoke_mul: 2.0,
+                blue_mul: 0.0, white_mul: 0.0, spark_mul: 0.0, height_gate: 1.0,
+            },
+        }
+    }
+}
+```
+
+Use `height_gate` to damp modes like `Embers` rather than adding new coordinate systems:
+
+```rust
+let height_mask = 1.0 - smoothstep(tuning.height_gate, 1.0, yw);
+let mask = mask * height_mask;
 ```
 
 ### 9.4 Temperature
@@ -702,6 +1046,99 @@ let sparks = self.spark_field(xw, yw, time) * smoothstep(0.12, 0.95, yw);
 i = saturate(i + 0.8 * sparks);
 ```
 
+### 9.10 Assembled `sample_field_at` skeleton
+
+Once the pieces above are in place, the complete helper should look structurally like this. It is not meant to replace the explanatory formulas above; it shows where each value is computed and returned.
+
+```rust
+impl TerminalFireShader {
+    fn sample_field_at(&self, x: f32, y: f32, time: f32) -> FireSample {
+        let p = self.params();
+        let tuning = self.mode.tuning();
+        let seed = self.sparks.seed;
+        let time = finite_or(time, 0.0) * p.rise_speed.max(0.001);
+        let x = finite_or(x, 0.0);
+        let y = finite_or(y, 0.0).clamp(0.0, 1.0);
+
+        let nl = fbm3(seed, 1.5 * x, 2.0 * y - 0.7 * time, 0.11 * time, 4, 0.5, 2.0);
+        let nm = fbm3(seed, 4.0 * x, 6.0 * y - 2.2 * time, 0.23 * time, 5, 0.5, 2.0);
+        let nf = fbm3(seed, 12.0 * x, 16.0 * y - 6.0 * time, 0.37 * time, 4, 0.5, 2.0);
+
+        let turbulence = (p.turbulence * tuning.turbulence_mul).clamp(0.0, 2.5);
+        let xw = x + turbulence * (0.16 * y * (1.0 - y) * nl + 0.05 * y * nm);
+        let yw = (y + turbulence * (0.05 * (1.0 - y) * nm + 0.015 * nf)).clamp(0.0, 1.0);
+
+        let base_width = p.base_width * tuning.width_mul;
+        let center = p.wind * yw.powf(1.7)
+            + 0.08 * yw * (3.1 * yw - 1.7 * time).sin()
+            + 0.04 * yw * (8.3 * yw + 2.6 * time).sin()
+            + 0.06 * yw * fbm3(seed, 1.2 * yw, -0.35 * time, 0.0, 4, 0.5, 2.0);
+        let width = (p.min_width + base_width * (1.0 - yw).powf(0.85)
+            + 0.03 * fbm3(seed, 2.0 * yw, -0.8 * time, 0.0, 4, 0.5, 2.0))
+            .max(0.001);
+        let r = ((xw - center).abs() / width).max(0.0);
+
+        let height_mask = 1.0 - smoothstep(tuning.height_gate, 1.0, yw);
+        let mask = ((-r.powf(2.0 + 1.8 * yw)).exp()
+            * (1.0 - smoothstep(0.78, 1.0, yw))
+            * height_mask)
+            .clamp(0.0, 1.0);
+
+        let flicker = fbm3(seed, 0.0, -1.8 * time, 0.6 * time, 4, 0.5, 2.0);
+        let temperature = saturate(
+            1.35 * mask.powf(0.72) + 0.28 * nm + 0.10 * nf - p.cooling * yw
+                + p.flicker_strength * flicker,
+        );
+
+        let mut density = smoothstep(0.08, 0.42, temperature + 0.18 * mask - 0.10 * r + 0.08 * nm);
+        let tongue = smoothstep(0.15, 0.65, mask + 0.35 * nm - 0.50 * yw);
+        density = (density * tongue * p.density).clamp(0.0, 1.0);
+
+        let smoke_drift = 0.35
+            * fbm3(seed, 2.0 * (x + 0.15 * (1.2 * time + 3.0 * y).sin()), 3.0 * (y - 0.25 * time), 0.08 * time, 4, 0.5, 2.0)
+            * smoothstep(0.65, 1.0, y);
+        let smoke = saturate((smoothstep(0.50, 0.95, yw)
+            * (1.0 - smoothstep(0.18, 0.58, temperature))
+            * density
+            * (0.65 + 0.35 * nl)
+            + smoke_drift.max(0.0))
+            * p.smoke_strength
+            * tuning.smoke_mul);
+
+        let blue_core = ((1.0 - smoothstep(0.02, 0.16, yw))
+            * (1.0 - smoothstep(0.0, 0.42, r))
+            * (1.0 - smoothstep(0.35, 0.80, smoke))
+            * p.blue_core_strength
+            * tuning.blue_mul)
+            .clamp(0.0, 1.0);
+
+        let white_core = (density
+            * smoothstep(0.72, 0.95, temperature)
+            * (1.0 - smoothstep(0.0, 0.32, r))
+            * p.white_core_strength
+            * tuning.white_mul)
+            .clamp(0.0, 1.0);
+
+        let sparks = self.spark_field(xw, yw, time)
+            * tuning.spark_mul
+            * smoothstep(0.12, 0.95, yw);
+
+        let intensity = saturate((density * (0.20 + 0.80 * temperature.powf(0.65))
+            + 0.45 * blue_core
+            - 0.25 * smoke
+            + 0.35 * white_core
+            + 0.8 * sparks)
+            * p.intensity);
+
+        FireSample {
+            temperature, density, smoke, blue_core, white_core, sparks, intensity, radius: r, mask,
+        }
+    }
+}
+```
+
+After adding this skeleton, immediately run the bounded/finite tests before touching color or catalog registration.
+
 ## 10. Color mapping
 
 Do not map brightness alone to color. Choose color from semantic fields:
@@ -750,7 +1187,7 @@ Implement `StyleShader` like existing shaders:
 impl StyleShader for TerminalFireShader {
     fn style_at(&self, ctx: &ShaderContext, base: Style) -> Style {
         let (x, y) = normalized_fire_coord(ctx, self.aspect.clamp(0.25, 4.0));
-        let sample = self.sample_field_at(x, y, ctx.time as f32);
+        let sample = self.sample_field_at(x, y, ctx.t as f32);
 
         if sample.intensity <= 0.001 {
             return base;
@@ -991,6 +1428,91 @@ Do **not** create a generic `NaturalPhenomenaPalette` abstraction. Water and fir
 - fire branches on blue core, smoke, temperature, white core.
 
 The only shared piece should be a small transparent-channel-safe style blend helper if current utilities do not already satisfy the need.
+
+## 13.6 Exact module registration snippets
+
+After `cls_terminal_fire_shader.rs` compiles by itself, wire it into the model catalog. These snippets are intentionally explicit because missing one match arm is the most common integration failure.
+
+### `models/mod.rs`
+
+Add the module near the other shader modules:
+
+```rust
+pub mod cls_terminal_fire_shader;
+```
+
+Add public exports near other shader exports:
+
+```rust
+pub use cls_terminal_fire_shader::{
+    FireApplyTo, FireMode, FirePalette, FireSparkConfig, TerminalFireShader,
+};
+```
+
+### `cls_spatial_shader_type.rs`
+
+Add imports if this file imports concrete shader names manually:
+
+```rust
+use crate::models::TerminalFireShader;
+```
+
+Add the enum variant using the same serde style as nearby variants:
+
+```rust
+#[serde(rename = "terminal_fire")]
+TerminalFire(TerminalFireShader),
+```
+
+Add dispatch:
+
+```rust
+SpatialShaderType::TerminalFire(shader) => shader.style_at(ctx, base),
+```
+
+Add name:
+
+```rust
+SpatialShaderType::TerminalFire(_) => "TerminalFire",
+```
+
+Add terse description:
+
+```rust
+SpatialShaderType::TerminalFire(_) => {
+    "Emissive procedural flame/smoke field with coherent rising turbulence, blue core, and sparks."
+}
+```
+
+Add key parameters:
+
+```rust
+SpatialShaderType::TerminalFire(shader) => vec![
+    ("mode", format!("{:?}", shader.mode)),
+    ("base_width", format!("{:.2}", shader.base_width)),
+    ("wind", format!("{:.2}", shader.wind)),
+    ("rise_speed", format!("{:.2}", shader.rise_speed)),
+    ("turbulence", format!("{:.2}", shader.turbulence)),
+    ("intensity", format!("{:.2}", shader.intensity)),
+    ("smoke", format!("{:.2}", shader.smoke_strength)),
+],
+```
+
+Adjust return type (`Vec<(&'static str, String)>`, map, etc.) to the existing function signature. The exact shape is less important than ensuring `mode`, width, wind, speed, turbulence, intensity, and smoke are visible in docs.
+
+### `xtask/src/docs/effect_metadata.rs`
+
+Add `TerminalFireShader` to the same import block as other spatial shader examples and include a default variant in the shader list:
+
+```rust
+SpatialShaderType::TerminalFire(TerminalFireShader::default()),
+```
+
+If metadata supports examples/key parameters, include at least:
+
+```text
+mode, base_width, wind, rise_speed, turbulence, intensity, density, smoke_strength, blue_core_strength, sparks.count
+```
 
 ## 14. V3 schema/lowering plan
 
@@ -1375,6 +1897,23 @@ diffusion:         tiny; terminal resolution already blurs
 
 This upgrade enables persistent plumes, interaction with cursor/mouse disturbances, and fire that continues evolving after emitters move.
 
+## 21.5 Recommended implementation slices for minimal oversight
+
+The following slices are intentionally smaller than the high-level phases. A junior developer should complete each slice, run the listed command, and commit or checkpoint before moving on.
+
+| Slice | Edit scope | Goal | Verification |
+| --- | --- | --- | --- |
+| A | `cls_terminal_fire_shader.rs` only | structs/enums/defaults compile in isolation | `cargo test -p tui-vfx-style --no-run terminal_fire` |
+| B | same file | scalar/noise helpers + helper tests | `cargo test -p tui-vfx-style fire_noise` or targeted helper test names |
+| C | same file | `sample_field_at` bounded and animated | `cargo test -p tui-vfx-style default_sample` then `cargo test -p tui-vfx-style flame_varies` |
+| D | same file | color selection and `style_at` visible | `cargo test -p tui-vfx-style style_at_changes_visible_style` |
+| E | `models/mod.rs`, `cls_spatial_shader_type.rs` | legacy catalog registration | `cargo test -p tui-vfx-style terminal_fire_deserializes` |
+| F | V3 files only | V3 behavior/lowering | `cargo test -p tui-vfx-style terminal_fire_v3` |
+| G | docs/xtask only | schema/docs metadata | the established docs generation/check command from `xtask` |
+| H | sibling recipes only | visual/debug fixtures validate | sibling recipe validator for three fire recipes |
+
+If a slice fails, do not continue to the next slice. Fix or revert within the current slice so the problem stays small.
+
 ## 22. Implementation phases
 
 ### Phase 1 — Grounding and helper decision
@@ -1477,6 +2016,16 @@ Use small, reviewable commits if committing manually:
 
 Follow Lore commit protocol in repository AGENTS if asked to commit.
 
+## 24.5 Common compile errors and fixes
+
+- **`ConfigSchema` derive cannot find defaults**: copy the `#[config(default = ...)]` form from an existing shader, or remove the attribute temporarily and rely on `Default` until schema generation is addressed.
+- **Serde internally tagged enum rejects unit variants**: if `#[serde(tag = "mode")]` does not work for unit variants in this codebase, switch to externally tagged or struct variants, matching the water plan’s final implementation choice. Add a serialization test immediately.
+- **`ColorConfig::Rgb` shape differs**: inspect `cls_color_config.rs`; some projects use `ColorConfig::Rgb { r, g, b }`, others use tuple-like constructors or named colors. Update palette defaults to compile before touching fire math.
+- **`ShaderContext` field names differ**: current `ShaderContext` uses `local_x`, `local_y`, `width`, `height`, and `t`; use those names unless the file has changed.
+- **`Style` has option-like fg/bg instead of transparent colors**: copy transparent-channel handling from `PulseWaveShader` or `GlowShader` exactly. Do not invent semantics.
+- **V3 lowering match is non-exhaustive**: search for a nearby behavior such as `PulseWave`, `RadialSpiral`, or any newly added motion-field primitive and mirror every touched file.
+- **Visual output invisible in debug recipe**: ensure the fixture has non-transparent base fg/bg or uses an existing content layer that style shaders can tint.
+
 ## 25. Acceptance criteria
 
 Implementation is complete when all of these are true:
@@ -1514,4 +2063,4 @@ Implementation is complete when all of these are true:
 14. Only then consider optional glyph-capable braille rendering or stateful simulation.
 
 <!-- <FILE>docs/design/tui-vfx-terminal-fire-shader-plan.md</FILE> - <DESC>Implementation plan for a terminal fire/flame shader primitive.</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
