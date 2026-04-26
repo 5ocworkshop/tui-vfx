@@ -13,7 +13,8 @@ use crate::models::v3::enum_vfx_motion_field_behavior::{
     VfxMotionFieldBehavior, VfxMotionFieldDirection,
 };
 use crate::models::{
-    OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader, SpatialShaderType, WaveDirection,
+    OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader, SpatialShaderType,
+    TerminalWaterShader, WaveDirection,
 };
 use serde::{Deserialize, Serialize};
 
@@ -34,6 +35,7 @@ impl VfxMotionFieldShader {
             SpatialShaderType::Radar(shader) => Some(Self::from(shader)),
             SpatialShaderType::Orbit(shader) => Some(Self::from(shader)),
             SpatialShaderType::RadialSpiral(shader) => Some(Self::from(shader)),
+            SpatialShaderType::TerminalWater(shader) => Some(Self::from(shader)),
             _ => None,
         }
     }
@@ -88,6 +90,16 @@ impl From<&RadialSpiralShader> for VfxMotionFieldShader {
                 speed: shader.speed,
                 blend_strength: shader.blend_strength,
                 color: shader.color.clone(),
+            },
+        }
+    }
+}
+
+impl From<&TerminalWaterShader> for VfxMotionFieldShader {
+    fn from(shader: &TerminalWaterShader) -> Self {
+        Self {
+            behavior: VfxMotionFieldBehavior::TerminalWater {
+                shader: shader.clone(),
             },
         }
     }

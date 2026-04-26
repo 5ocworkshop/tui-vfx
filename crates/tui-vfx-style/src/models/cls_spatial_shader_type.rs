@@ -27,7 +27,7 @@
 //!
 //! - `LinearGradient`, `RevealWipe` → `gradient_reveal` primitive family
 //! - `Glow`, `AmbientOcclusion`, `Bevel` → `surface_depth` primitive family
-//! - `PulseWave`, `Radar`, `Orbit` → `motion_field` primitive family
+//! - `PulseWave`, `Radar`, `Orbit`, `TerminalWater` → `motion_field` primitive family
 //! - `GlitchLines`, `ChromaticEdge`, `SubCellShake` → `edge_distortion`
 //!   primitive family
 //! - `BorderSweep`, `Reflect`, `GlistenBand`, `TracePropagation`, `TracePath`
@@ -64,6 +64,7 @@
 //! | [`Reflect`](SpatialShaderType::Reflect) | Moving reflective glint |
 //! | [`GlistenBand`](SpatialShaderType::GlistenBand) | Moving light band sweep |
 //! | [`PulseWave`](SpatialShaderType::PulseWave) | Rippling color wave |
+//! | [`TerminalWater`](SpatialShaderType::TerminalWater) | Layered water/ocean field with ripples, wakes, foam, and glint |
 //! | [`RadialSpiral`](SpatialShaderType::RadialSpiral) | Procedural radial spiral field |
 //! | [`TracePropagation`](SpatialShaderType::TracePropagation) | Orthogonal routed signal pulse |
 //! | [`TracePath`](SpatialShaderType::TracePath) | Authored routed signal path |
@@ -117,8 +118,8 @@ use crate::models::{
     cls_radial_spiral_shader::RadialSpiralShader, cls_reflect_shader::ReflectShader,
     cls_reveal_wipe_shader::RevealWipeShader,
     cls_stochastic_sparkle_shader::StochasticSparkleShader,
-    cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
-    cls_trace_propagation_shader::TracePropagationShader,
+    cls_sub_cell_shake_shader::SubCellShakeShader, cls_terminal_water_shader::TerminalWaterShader,
+    cls_trace_path_shader::TracePathShader, cls_trace_propagation_shader::TracePropagationShader,
     cls_wayfinding_node_shader::WayfindingNodeShader,
 };
 use mixed_signals::types::SignalOrFloat;
@@ -184,6 +185,9 @@ pub enum SpatialShaderType {
 
     /// Rippling color wave emanating from position (attention).
     PulseWave(PulseWaveShader),
+
+    /// Layered water/ocean field with ripples, wakes, foam, and glint.
+    TerminalWater(TerminalWaterShader),
 
     /// Procedural radial spiral density field (portal/loading/background texture).
     RadialSpiral(RadialSpiralShader),
@@ -255,6 +259,7 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::GlitchLines(s) => s.style_at(ctx, base),
             SpatialShaderType::NeonFlicker(s) => s.style_at(ctx, base),
             SpatialShaderType::PulseWave(s) => s.style_at(ctx, base),
+            SpatialShaderType::TerminalWater(s) => s.style_at(ctx, base),
             SpatialShaderType::RadialSpiral(s) => s.style_at(ctx, base),
             SpatialShaderType::TracePropagation(s) => s.style_at(ctx, base),
             SpatialShaderType::TracePath(s) => s.style_at(ctx, base),
@@ -401,6 +406,7 @@ impl SpatialShaderType {
             SpatialShaderType::GlitchLines(_) => "GlitchLines",
             SpatialShaderType::NeonFlicker(_) => "NeonFlicker",
             SpatialShaderType::PulseWave(_) => "PulseWave",
+            SpatialShaderType::TerminalWater(_) => "TerminalWater",
             SpatialShaderType::RadialSpiral(_) => "RadialSpiral",
             SpatialShaderType::TracePropagation(_) => "TracePropagation",
             SpatialShaderType::TracePath(_) => "TracePath",
@@ -454,6 +460,9 @@ impl SpatialShaderType {
                 "Flickering neon sign effect with independent segments"
             }
             SpatialShaderType::PulseWave(_) => "Rippling color wave emanating from position",
+            SpatialShaderType::TerminalWater(_) => {
+                "Layered water/ocean field with ripples, wakes, foam, and glint"
+            }
             SpatialShaderType::RadialSpiral(_) => "Procedural radial spiral density field",
             SpatialShaderType::TracePropagation(_) => {
                 "Orthogonal signal pulse moving through routed trace lanes"
@@ -596,6 +605,17 @@ impl SpatialShaderType {
                 ("direction", format!("{:?}", s.direction)),
                 ("wavelength", format!("{} cells", s.wavelength)),
                 ("color", format!("{:?}", s.color)),
+            ],
+            SpatialShaderType::TerminalWater(s) => vec![
+                ("mode", format!("{:?}", s.mode)),
+                ("layers", format!("{}", s.layers)),
+                ("amplitude", format!("{:.2}", s.amplitude)),
+                ("wavelength", format!("{:.1} cells", s.wavelength)),
+                ("speed", format!("{:.2}", s.speed)),
+                ("direction", format!("{:.1}deg", s.direction_deg)),
+                ("foam", format!("{:.2}", s.foam)),
+                ("glint", format!("{:.2}", s.glint_strength)),
+                ("apply_to", format!("{:?}", s.apply_to)),
             ],
             SpatialShaderType::RadialSpiral(s) => vec![
                 ("arms", format!("{}", s.arms)),

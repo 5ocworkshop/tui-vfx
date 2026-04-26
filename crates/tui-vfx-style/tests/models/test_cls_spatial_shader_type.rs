@@ -5,7 +5,8 @@
 
 use tui_vfx_style::models::{
     AmbientOcclusionShader, ConcealedLightMode, DiffusionMode, HighlighterDirection,
-    LinearGradientShader, SpatialShaderType, VfxSpatialShaderFamily,
+    LinearGradientShader, SpatialShaderType, TerminalWaterShader, VfxMotionFieldBehavior,
+    VfxSpatialPrimitive, VfxSpatialShaderFamily,
 };
 
 #[test]
@@ -166,4 +167,58 @@ fn spatial_shader_type_exposes_grouped_v3_family_seam() {
         composed.v3_spatial_shader_family(),
         VfxSpatialShaderFamily::ComposedPrimitive(_)
     ));
+}
+
+#[test]
+fn terminal_water_deserializes_and_reports_metadata() {
+    let shader: SpatialShaderType = serde_json::from_value(serde_json::json!({
+        "type": "terminal_water",
+        "mode": { "mode": "ocean" },
+        "layers": 2,
+        "amplitude": 0.4,
+        "wavelength": 10.0,
+        "speed": 1.2,
+        "direction_deg": 35.0,
+        "steepness": 0.5,
+        "normal_strength": 1.2,
+        "diffuse": 0.7,
+        "specular": 0.4,
+        "shininess": 18.0,
+        "fresnel": 0.3,
+        "foam": 0.6,
+        "deep_color": { "type": "rgb", "r": 5, "g": 32, "b": 64 },
+        "shallow_color": { "type": "rgb", "r": 40, "g": 170, "b": 210 },
+        "foam_color": { "type": "white" },
+        "glint_strength": 0.2,
+        "glint_angle_deg": -18.0,
+        "glint_width": 8.0,
+        "glint_speed": 1.0,
+        "apply_to": "both"
+    }))
+    .unwrap();
+
+    assert_eq!(shader.name(), "TerminalWater");
+    assert!(shader.terse_description().contains("water"));
+    let keys: Vec<_> = shader
+        .key_parameters()
+        .into_iter()
+        .map(|(key, _)| key)
+        .collect();
+    assert!(keys.contains(&"mode"));
+    assert!(keys.contains(&"glint"));
+}
+
+#[test]
+fn terminal_water_maps_to_motion_field_family() {
+    let shader = SpatialShaderType::TerminalWater(TerminalWaterShader::default());
+
+    match shader.v3_spatial_shader_family() {
+        VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(field)) => {
+            assert!(matches!(
+                field.behavior,
+                VfxMotionFieldBehavior::TerminalWater { .. }
+            ));
+        }
+        other => panic!("expected terminal water motion field, got {other:?}"),
+    }
 }

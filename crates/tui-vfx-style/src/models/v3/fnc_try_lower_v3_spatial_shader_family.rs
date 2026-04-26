@@ -519,6 +519,9 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
                 blend_strength: *blend_strength,
                 color: color.clone(),
             }),
+            VfxMotionFieldBehavior::TerminalWater { shader } => {
+                SpatialShaderType::TerminalWater(shader.clone())
+            }
         }
     }
 }

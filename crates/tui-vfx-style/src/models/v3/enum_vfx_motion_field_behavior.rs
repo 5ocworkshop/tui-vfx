@@ -9,7 +9,7 @@
 //! This family groups the primitive/substrate-aligned motion-field treatments
 //! currently exposed as `PulseWave`, `Radar`, and `Orbit`.
 
-use crate::models::ColorConfig;
+use crate::models::{ColorConfig, TerminalWaterShader};
 use serde::{Deserialize, Serialize};
 
 /// Direction policy for wave-style motion fields.
@@ -94,6 +94,11 @@ pub enum VfxMotionFieldBehavior {
         blend_strength: f32,
         /// Blend color.
         color: ColorConfig,
+    },
+    /// Layered terminal water/ocean field with ripples, wakes, foam, and glint.
+    TerminalWater {
+        /// Complete terminal-water shader payload.
+        shader: TerminalWaterShader,
     },
 }
 

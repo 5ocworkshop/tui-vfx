@@ -58,6 +58,9 @@ pub fn lower_legacy_spatial_shader(shader: &SpatialShaderType) -> VfxSpatialShad
         SpatialShaderType::RadialSpiral(shader) => {
             VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
         }
+        SpatialShaderType::TerminalWater(shader) => {
+            VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
+        }
         SpatialShaderType::TracePropagation(shader) => VfxSpatialShaderFamily::ComposedPrimitive(
             VfxSpatialComposedPrimitive::TravelingBand(shader.into()),
         ),
