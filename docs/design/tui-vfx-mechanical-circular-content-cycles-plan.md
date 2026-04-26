@@ -1,11 +1,11 @@
 <!-- <FILE>docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md</FILE> - <DESC>Reviewed implementation plan for shared circular mechanical content cycles powering odometer drums, Solari flap stacks, slot reels, and explicit old/new Pair transitions</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>Mark Slices 6.1-6.4 + Phase 7 actionable scope complete (BindableString, FontRegistry, font field on Preset + runtime wiring, recipe migration, AssetRegistry); Slice 6.5 + Phase 7 consumer surface remain deferred on sibling's L2 / V3 scene-layer composition work.</WCTX> -->
-<!-- <CLOG>0.6.0: mark Slices 6.1, 6.2, 6.3, 6.4 complete with commit hashes; mark Phase 7 actionable scope (AssetRegistry, byte-supplying side) complete; capture the two remaining deferrals (Slice 6.5 host-supplied registry threading via sibling's L2; Phase 7 consumer source variant via sibling's V3 scene-layer work). Phase 6 is functionally usable today via the literal-form authoring shape (`font: "line-3x3"` on Preset). 0.5.0: introduce Phase 6 + Phase 7 breadcrumb. 0.4.0: Phases 1-3 + 5 complete; Phase 4 explicitly deferred. 0.3.0: per-tile settle composition with cascade; cycle-level Spring vs legacy spring_settle precedence; remove every "accepted but inert" allowance.</CLOG> -->
+<!-- <VERS>VERSION: 0.7.0</VERS> -->
+<!-- <WCTX>Correct two L2 framing errors after sibling Claude's clarification: (1) `{"binding": "name"}` is V3 canon, not something L2 locks; L2 just types the requires_bindings declaration block + adds the strict-contracts gate. (2) Phase 7 host-resolver decisions and rocketsplash routing are V3 scene-layer territory, orthogonal to L2.</WCTX> -->
+<!-- <CLOG>0.7.0: drop the "gated on L2" framing wherever it appears; L2 doesn't gate runtime threading or asset-reference syntax. Replace Slice 6.5 with Slice 6.6 (TextTransformer ↔ ShaderRuntimeParams threading — its own gap, not L2-gated). Split Phase 7 deferral into the schema lift (image_name: String → BindableString on VfxImageSource — independently actionable) vs. the runtime end-to-end (V3 scene-layer composition territory). Remove asset-reference-syntax misframing — `{"binding": "name"}` is canon. 0.6.0: mark Slices 6.1-6.4 + Phase 7 actionable scope complete. 0.5.0: introduce Phase 6 + Phase 7 breadcrumb. 0.4.0: Phases 1-3 + 5 complete; Phase 4 deferred. 0.3.0: per-tile settle composition with cascade.</CLOG> -->
 
 # Mechanical circular content cycles: drums, flap stacks, and reels
 
-## Implementation status (v0.6.0)
+## Implementation status (v0.7.0)
 
 | Phase | Scope | Status | Landing commits |
 | --- | --- | --- | --- |
@@ -16,10 +16,12 @@
 | — | Intention 37 + loopback-required rule (every binding declaration is preview-playable) | **Complete** | `fe4db42` |
 | 5 | Docs (CAPABILITIES_REFERENCE, capabilities.toml, V3 schema draft) + debug recipes (3 new) + font assets | **Complete** | tui-vfx `91a1c0a`; tui-vfx-recipes `50ab1c1` |
 | 4 | SplitFlap schema attach + cycle rendering + Spring/spring_settle precedence | **Deferred** | Sub-plan below. Warrants a dedicated session given `cls_split_flap.rs` complexity (1642 LOC, 9-variant dispersion enum, hinge frames, rolling-flip, flicker). |
-| 6 | Font as a bindable field — Slices 6.1-6.4 | **Complete (literal form)** | Slice 6.1 `BindableString` `e1de449`; Slices 6.2-6.3 `FontRegistry` + `font` field on Preset + runtime wiring `932ed98`; Slice 6.4 recipe migration in tui-vfx-recipes `b08dfa5`. Authors today write `font: "line-3x3"` (or any registered name); the runtime resolves and expands preset digits through the named font's glyph table. |
-| 6.5 | Font binding loopback integration | **Deferred** | Gated on sibling's L2 (`docs/design/tui-vfx-binding-loopback-implementation-plan.md`). Wires host-supplied `FontRegistry` and runtime parameters through `cls_odometer.rs` so `BindableString::Binding` form lights up; landed when sibling's `bindings:` block authoring + strict-contracts gate ship. Until then, Binding-form font references resolve via fallback to the registry default. |
-| 7 | Asset as a bindable field — actionable scope | **Complete (byte-supplying side)** | `AssetRegistry` lands at `486de1d` parallel to `FontRegistry` — name → bytes mapping with `default_logo` sentinel routing. Hosts populate the registry; the byte-supplying half is in place. |
-| 7.cs | Asset binding consumer surface | **Deferred** | A V3 scene-layer source variant (`type: "rocketsplash_image"`) that consumes `BindableString` for the asset reference and blits via the existing `RocketsplashImage::from_bytes` + `blit_into_grid` runtime. Intersects with sibling's V3 scene-layer composition work; warrants a coordinated session. |
+| 6 | Font as a bindable field — Slices 6.1-6.4 | **Complete (Literal + Binding authoring shapes both accepted)** | Slice 6.1 `BindableString` `e1de449`; Slices 6.2-6.3 `FontRegistry` + `font` field on Preset + runtime wiring `932ed98`; Slice 6.4 recipe migration in tui-vfx-recipes `b08dfa5`. Authors today write `font: "line-3x3"` (Literal) **or** `font: { "binding": "drum_font" }` (Binding) — both shapes parse and route through the registry. The `{"binding": ...}` reference shape is V3 canon, used everywhere step payloads carry runtime-bound parameters. |
+| 6.6 | Thread `ShaderRuntimeParams` to `TextTransformer` | **Deferred (architectural)** | The remaining gap for Binding-form font references to resolve to host-supplied values: `TextTransformer::transform` doesn't currently receive `&ShaderRuntimeParams`. Until that threading lands, `cls_odometer.rs` calls `resolve_mechanical_cycle` with empty params; Binding-form references fall back to the registry default per Intention 36. **Not gated on the binding-loopback work** — it's its own architectural change touching every transformer, not just Odometer. Worth its own coordinated slice once binding-form recipes start needing live host injection. |
+| —  | Binding-loopback design (`requires_bindings` declaration + strict-contracts gate) | **In flight by sibling** | `docs/design/tui-vfx-binding-loopback.md` (design v0.3.0) + `docs/design/tui-vfx-binding-loopback-implementation-plan.md`. Adds the *declaration* layer (`requires_bindings.<name>: { type, loopback }`) and the strict-contracts validator gate. Does not change the `{"binding": "..."}` reference shape (which is V3 canon) and does not touch host-side resolver concerns. When L2 commits, recipes can declare `requires_bindings.drum_font: { type: "string", default: "default_font" }` and the strict-contracts gate enforces declarations. |
+| 7.schema | `image_name: String` → `BindableString` on `VfxImageSource` | **Independently actionable** | One-line schema change in `tui-vfx-recipes/src/recipe_schema/scene/cls_ra_image_source.rs` plus a thin runtime adjustment to evaluate the `BindableString` in the scene-layer composer. Independent of L2 (the `{"binding": ...}` reference shape is V3 canon) and independent of host-resolver consolidation. Lands the *authoring* surface for asset binding without committing to the runtime end-to-end. |
+| 7.bytes | Asset bytes routing — `BindableString` → bytes → `RocketsplashImage::from_bytes` → blit | **Deferred (V3 scene-layer territory)** | The runtime end-to-end requires three orthogonal V3 scene-layer composition decisions: (a) the relationship between `AssetRegistry` (just landed in `tui-vfx-content/src/assets/`), `ImagePool` (existing in `tui-vfx-content/src/pool/cls_image_pool.rs`), and the verbal `AssetMap` contract referenced in docstrings — consolidate, compose, or leave parallel? (b) Whether rocketsplash decoding extends the existing `Image` source variant (dispatch by detected payload format) or adds a sibling `RocketsplashImage` variant. (c) How the scene-layer composer reconciles `aspect: VfxImageAspect` with rocketsplash's native-dimensions contract. None of these depend on the binding-loopback work. |
+| 7.byte-side | `AssetRegistry` (byte-supplying side) | **Complete** | `486de1d`. Parallel to `FontRegistry`; `default_logo` sentinel routing; hosts populate, consumers resolve. Where it fits in the consolidation question above is the scene-layer composer's call. |
 
 Phase 4 follow-up scoping notes:
 
@@ -32,15 +34,11 @@ Phase 4 follow-up scoping notes:
 
 **The problem.** The three debug recipes that landed in Phase 5 (`content_odometer_3x3_count.json`, `content_odometer_decimal_preset_carry.json`, `content_odometer_slot_reel.json`) carry their visual size as **literal multi-line glyph strings** in `mechanical.source.ordered.faces`. That bakes the player's font choice into every recipe; swapping the project default would require editing every recipe. Phase 6 lifts the font into a binding so recipes stay semantic ("count 099 → 100") and the player owns the glyph-table mapping.
 
-**The declaration home.** Per sibling's L2 lock, the recipe's binding contract lives in the existing top-level blocks at the recipe envelope:
+**The declaration home.** The recipe envelope already carries three sibling declaration blocks at the top level — `requires_tokens` (mustache substitutions), `requires_bindings` (typed runtime-bindable values), `requires_assets` (image/font asset slots). Sibling Claude's binding-loopback L2 work types the `requires_bindings` declaration shape and adds a strict-contracts validator gate that enforces every `{"binding": "name"}` reference declares `name` in the block.
 
-- `requires_bindings` — typed structured-value bindings (`u16`, `f32` in v1; per-entry `description` and `loopback`).
-- `requires_assets` — asset references with `type: "image" | "font"`, `format`, `canonical_path` (already exists in the schema).
-- `requires_tokens` — mustache-style template substitutions (already exists).
+The `{"binding": "name"}` reference shape itself is **V3 canon** — already used everywhere step payloads carry runtime-bound parameters. L2 doesn't change it; it adds the *contract layer* (declaration + gate). Phase 6 consumes that canon directly: `font: { "binding": "drum_font" }` (or its `BindableString::Literal` shorthand `font: "line-3x3"`) at the call site, with `requires_bindings.drum_font` declared at the envelope once L2 lands. **Phase 6 does not introduce a parallel `bindings:` block.**
 
-Phase 6 lands font under **`requires_assets`**, since the canonical example for that block already shows a font/image slot shape. The pipeline-side reference syntax (`font: { "asset": "drum_font" }` vs. `font: "{{drum_font}}"` vs. another shape) is sibling's L2 call to type — Phase 6 uses whatever shape lands there. **Phase 6 does not introduce a parallel `bindings:` block.**
-
-**Authoring shape (target — exact reference syntax pending L2 lock):**
+**Authoring shape:**
 
 ```json
 "requires_assets": {
@@ -74,7 +72,7 @@ Phase 6 lands font under **`requires_assets`**, since the canonical example for 
 
 The recipe says nothing about line-3x3 in the call site; it names the asset slot. The player's `FontRegistry` knows what `canonical_path` resolves to today; tomorrow that mapping changes once and every recipe inherits.
 
-**Loopback is required (Intention 37).** Every recipe that consumes a bindable font asset must yield an effective loopback at validation time. For `requires_assets` entries, the canonical_path serves as the implicit loopback today; once sibling's L2 lands typed `loopback` per entry, recipes can author it explicitly and the strict-contracts gate enforces presence. Production-only font slots are not a valid category — every recipe ships preview-playable through the project's default font (Intention 36 + 37 in concert).
+**Loopback is required (Intention 37).** Every `requires_bindings` entry that a recipe declares for a font binding must yield an effective loopback at validation time. The literal default (`default: "default_font"` lifting to a static loopback, or an explicit `loopback: "default_font"`) routes through the `FontRegistry`'s sentinel resolver to the registered default. Production-only bindings are not a valid category — every recipe ships preview-playable. The strict-contracts gate sibling's L2 lands enforces presence.
 
 **Forward-compat sentinel pattern.** Sibling's L2 brief reserves a v2 form `loopback: { "player_default": "default_font" }` that delegates fallback selection to the player's authority instead of hardcoding asset names in the recipe. Phase 6 recipes today carry the literal `canonical_path` form and migrate to `player_default` when v2 ships. Reserved sentinel naming convention: `default_<noun>` snake_case (`default_font`, `default_logo`, future `default_<kind>`); case-sensitive lookups make typos silent failures, so the validator near-miss check (Levenshtein over declared names + known sentinels) ships as part of L2 strict-contracts.
 
@@ -85,8 +83,8 @@ The recipe says nothing about line-3x3 in the call site; it names the asset slot
 | 6.1 | `BindableString` type | New file `tui-vfx-style/src/models/cls_bindable_string.rs` mirroring `BindableU16`'s shape: `Literal(String) \| Binding(String)`, lenient deserialization (bare string accepted as `Literal`), `evaluate(&ShaderRuntimeParams) -> Option<&str>`, `ConfigSchema` derive. Inline tests for serde roundtrip, lenient bare-string parse, binding lookup against `ShaderRuntimeParams`. Used at the call site (e.g. `MechanicalContentSource::Preset.font`); the declaration home stays `requires_assets`. |
 | 6.2 | `FontRegistry` + `FontGlyphTable` | New surface in `tui-vfx-content/src/fonts/`: `FontGlyphTable` is the glyph-table contract (the existing Line 3x3 table satisfies it); `FontRegistry` holds `name -> FontGlyphTable` with one named entry as the default per Intention 36. `resolve(name)` short-circuits the `default_font` sentinel to the registered default once the v2 player_default form lands; v1 resolves by name from the `requires_assets` entry's canonical_path. Embedded Line 3x3 registers automatically; host code can register additional `.rsf`-backed tables. |
 | 6.3 | `font: Option<BindableString>` on `MechanicalContentSource::Preset` | Schema-bearing field, optional with `skip_serializing_if = Option::is_none`. When None, current behavior (1-cell digit faces). When Some, runtime calls `font.evaluate(&runtime_params)` → `FontRegistry::resolve(...)` → glyph table → expanded multi-line digit faces sized to the tile. `resolve_mechanical_cycle` gains `&dyn FontResolver` and `&ShaderRuntimeParams` parameters; existing call sites pass an empty resolver + empty params for byte-identical behavior on Phase 3 paths. |
-| 6.4 | Recipe migration | Rewrite the three Phase 5 recipes to declare `drum_font` in `requires_assets` (with canonical_path pointing at the line-3x3 .rsf) and consume it at the call site via the L2-locked reference shape. The literal-glyph versions move to a `recyclebin/recipes/` mirror so the visual reference stays available for diffing. |
-| 6.5 | Loopback integration (gated on sibling's L2 phase) | When sibling's L2 ships (typed `loopback` field on `requires_bindings` / `requires_assets` + strict-contracts gate enforcing Intention 37), Phase 6's recipes get full lookup precedence: host > loopback > resolver default. Until then, the canonical_path serves as the implicit loopback and recipes work as static config. Validator near-miss check (Levenshtein on undeclared binding/asset names) lands as part of L2's strict-contracts surface. |
+| 6.4 | Recipe migration | Rewrite the three Phase 5 recipes using the `BindableString` literal form (`font: "line-3x3"`) at the call site. Once L2 commits the declaration block, follow-on edit adds `requires_bindings.drum_font` and switches the call site to `font: { "binding": "drum_font" }`. The literal-glyph versions move to a `recyclebin/recipes/` mirror so the visual reference stays available for diffing. |
+| 6.6 | Thread `ShaderRuntimeParams` through `TextTransformer` | The remaining gap for Binding-form references to resolve to host-supplied values: `TextTransformer::transform` doesn't currently receive `&ShaderRuntimeParams`. `cls_odometer.rs` falls through to `resolve_mechanical_cycle` (back-compat entry point with empty params), so Binding-form font references resolve via the registry default. Threading params requires an architectural change touching every transformer, not just Odometer. **Not gated on the binding-loopback work** — it's a separate slice with its own scope. Add when binding-form recipes start needing live host injection. |
 
 **Open questions Phase 6 closes only when implementation starts:**
 
@@ -102,29 +100,34 @@ The recipe says nothing about line-3x3 in the call site; it names the asset slot
 
 **The real case.** A recipe wants to load a rocketsplash `.rss` image and paint it onto a rect — a logo on a splash surface, an empty-state graphic, a sprite face on a slot reel — concrete cases that exist or are imminent. The runtime is already there: `tui-vfx-content/src/sources/cls_rocketsplash_image.rs` wraps `rocketsplash_rt::Splash::from_bytes(...)` and exposes `blit_into_grid(grid, x, y)`. What's missing is a recipe surface that names an asset and a resolver that turns the name into bytes.
 
-**Authoring shape (target — exact reference syntax pending L2 lock):**
+**Authoring shape:**
 
 ```json
-"requires_assets": {
+"requires_bindings": {
   "splash_logo": {
-    "type": "image",
-    "format": "rss",
-    "canonical_path": "assets/logo.rss",
-    "description": "Rocketsplash .rss image painted on the splash surface."
+    "type": "string",
+    "description": "Rocketsplash .rss image painted on the splash surface.",
+    "loopback": "default_logo"
   }
 },
 "config": {
-  "scene_layers": [
-    {
-      "source": {
-        "type": "rocketsplash_image",
-        "asset": <reference to splash_logo — exact shape per L2>
-      },
-      "layout": { "anchor": "center" }
-    }
-  ]
+  "scene": {
+    "layers": [
+      {
+        "source": {
+          "type": "image",
+          "spec": {
+            "image_name": { "binding": "splash_logo" }
+          }
+        },
+        "layout": { "anchor": "center" }
+      }
+    ]
+  }
 }
 ```
+
+The reference shape `{"binding": "splash_logo"}` is V3 canon; sibling's L2 doesn't choose it, V3 does. L2 adds the `requires_bindings.splash_logo` declaration and the strict-contracts gate. The schema lift to make `image_name: BindableString` (currently a plain `String`) is the only piece this Phase 7 sub-plan introduces on the recipe side.
 
 **Reusing Phase 6's shape.** Same `requires_assets` declaration home. Same `BindableString` at the call site (the field consuming the resolved name). Same loopback rule (Intention 37 — every asset declaration must yield an effective loopback; canonical_path is the implicit one until L2 types it explicitly). Same lookup precedence (host > loopback > resolver default > missing). Only the resolver and the consuming source differ.
 
@@ -142,7 +145,7 @@ The recipe says nothing about line-3x3 in the call site; it names the asset slot
 - Recipes never carry image bytes. They carry asset names; resolvers load.
 - The byte-source abstraction means filesystem, embedded, http, and wasm asset paths all work without per-environment recipe forks.
 
-**Sequencing.** Phase 7 lands after Phase 6 (it builds on `BindableString` and the L2-locked declaration shape). Implementation requires deciding the scene-layer source-variant shape, which intersects with the V3 scene-layer design — worth coordinating with sibling work on V3 layer composition before scheduling.
+**Sequencing.** The schema lift (`image_name: String → BindableString` on `VfxImageSource`) is independently actionable today — `BindableString` already accepts `{"binding": "name"}` (Slice 6.1, commit `e1de449`). The runtime end-to-end (decoded bytes → `RocketsplashImage::from_bytes` → `blit_into_grid`) intersects with three V3 scene-layer composition decisions: (a) `AssetRegistry`/`ImagePool`/`AssetMap` consolidation; (b) rocketsplash routing — extend the `Image` variant or add a sibling variant; (c) how `aspect: VfxImageAspect` reconciles with rocketsplash's native-dimension contract. None of those depend on the binding-loopback work; they're V3 scene-layer territory and warrant a coordinated session with sibling when scheduled.
 
 **Stub-today path.** The literal form (a recipe naming `splash_logo` in `requires_assets` and referencing it at the call site once that shape lands) works as soon as Phase 6's `BindableString` lands and the source-variant gains the `asset` field — no resolver bytes loading yet, just static recipe-to-source plumbing. Bindable form lights up when the loopback layer ships and Intention 37 is enforced.
 
