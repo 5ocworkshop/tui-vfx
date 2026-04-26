@@ -1,11 +1,11 @@
 <!-- <FILE>docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md</FILE> - <DESC>Reviewed implementation plan for shared circular mechanical content cycles powering odometer drums, Solari flap stacks, slot reels, and explicit old/new Pair transitions</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>Add Phase 6 (font as a bindable field via the existing requires_assets / requires_bindings declaration shape locked by sibling's L2 design) and Phase 7 breadcrumb (rocketsplash .rss image painted onto a rect via recipe). Loopback is required per Intention 37 — no production-only carve-outs.</WCTX> -->
-<!-- <CLOG>0.5.0: introduce Phase 6 (font binding) and Phase 7 breadcrumb (rocketsplash asset binding) with five sub-slices; align with sibling's locked L2 shape — declarations live in the existing requires_bindings / requires_assets blocks; loopback is required per Intention 37 (no production-only bindings); snake_case for binding names + sentinels; validator near-miss check on undeclared bindings via Levenshtein. Forward-compat sentinel pattern (default_<noun>, e.g. default_font / default_logo) captured for v2 player_default delegation. 0.4.0: Phases 1-3 + 5 complete; Phase 4 explicitly deferred. 0.3.0: per-tile settle composition with cascade; cycle-level Spring vs legacy spring_settle precedence; remove every "accepted but inert" allowance.</CLOG> -->
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>Mark Slices 6.1-6.4 + Phase 7 actionable scope complete (BindableString, FontRegistry, font field on Preset + runtime wiring, recipe migration, AssetRegistry); Slice 6.5 + Phase 7 consumer surface remain deferred on sibling's L2 / V3 scene-layer composition work.</WCTX> -->
+<!-- <CLOG>0.6.0: mark Slices 6.1, 6.2, 6.3, 6.4 complete with commit hashes; mark Phase 7 actionable scope (AssetRegistry, byte-supplying side) complete; capture the two remaining deferrals (Slice 6.5 host-supplied registry threading via sibling's L2; Phase 7 consumer source variant via sibling's V3 scene-layer work). Phase 6 is functionally usable today via the literal-form authoring shape (`font: "line-3x3"` on Preset). 0.5.0: introduce Phase 6 + Phase 7 breadcrumb. 0.4.0: Phases 1-3 + 5 complete; Phase 4 explicitly deferred. 0.3.0: per-tile settle composition with cascade; cycle-level Spring vs legacy spring_settle precedence; remove every "accepted but inert" allowance.</CLOG> -->
 
 # Mechanical circular content cycles: drums, flap stacks, and reels
 
-## Implementation status (v0.5.0)
+## Implementation status (v0.6.0)
 
 | Phase | Scope | Status | Landing commits |
 | --- | --- | --- | --- |
@@ -16,8 +16,10 @@
 | — | Intention 37 + loopback-required rule (every binding declaration is preview-playable) | **Complete** | `fe4db42` |
 | 5 | Docs (CAPABILITIES_REFERENCE, capabilities.toml, V3 schema draft) + debug recipes (3 new) + font assets | **Complete** | tui-vfx `91a1c0a`; tui-vfx-recipes `50ab1c1` |
 | 4 | SplitFlap schema attach + cycle rendering + Spring/spring_settle precedence | **Deferred** | Sub-plan below. Warrants a dedicated session given `cls_split_flap.rs` complexity (1642 LOC, 9-variant dispersion enum, hinge frames, rolling-flip, flicker). |
-| 6 | Font as a bindable field via existing `requires_assets` / call-site `BindableString` | **Planned** | Sub-plan below. Migrates today's literal-glyph recipes to semantic form. Sits under the binding-loopback work (sibling's L2). |
-| 7 | Asset as a bindable field (rocketsplash `.rss` images painted onto a rect via recipe) | **Planned (breadcrumb)** | Sub-plan below. Real driver today; runtime already exists in `tui-vfx-content/src/sources/cls_rocketsplash_image.rs` but no recipe surface loads one. Reuses the same shape as Phase 6. |
+| 6 | Font as a bindable field — Slices 6.1-6.4 | **Complete (literal form)** | Slice 6.1 `BindableString` `e1de449`; Slices 6.2-6.3 `FontRegistry` + `font` field on Preset + runtime wiring `932ed98`; Slice 6.4 recipe migration in tui-vfx-recipes `b08dfa5`. Authors today write `font: "line-3x3"` (or any registered name); the runtime resolves and expands preset digits through the named font's glyph table. |
+| 6.5 | Font binding loopback integration | **Deferred** | Gated on sibling's L2 (`docs/design/tui-vfx-binding-loopback-implementation-plan.md`). Wires host-supplied `FontRegistry` and runtime parameters through `cls_odometer.rs` so `BindableString::Binding` form lights up; landed when sibling's `bindings:` block authoring + strict-contracts gate ship. Until then, Binding-form font references resolve via fallback to the registry default. |
+| 7 | Asset as a bindable field — actionable scope | **Complete (byte-supplying side)** | `AssetRegistry` lands at `486de1d` parallel to `FontRegistry` — name → bytes mapping with `default_logo` sentinel routing. Hosts populate the registry; the byte-supplying half is in place. |
+| 7.cs | Asset binding consumer surface | **Deferred** | A V3 scene-layer source variant (`type: "rocketsplash_image"`) that consumes `BindableString` for the asset reference and blits via the existing `RocketsplashImage::from_bytes` + `blit_into_grid` runtime. Intersects with sibling's V3 scene-layer composition work; warrants a coordinated session. |
 
 Phase 4 follow-up scoping notes:
 
