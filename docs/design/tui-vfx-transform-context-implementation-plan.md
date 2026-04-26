@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-transform-context-implementation-plan.md</FILE> - <DESC>Implementation plan for the cross-trait context-bundle migration. Phases A–E close Slice 6.6 of the mechanical circular content cycles plan (TransformContext for TextTransformer, BindableString font binding). Phase F generalizes the same pattern to Filter / Mask / Sampler per buy-once sweep finding 1.1.A (VfxCellContext in tui-vfx-types).</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
-<!-- <WCTX>Fold leader resolutions for all ten §11 open questions into the plan body. Headline: §A.6 removes apply_with_context outright (Q9); §11 converts to a resolved decision log; LOC over-budget callout dropped (LOC limits are advisory).</WCTX> -->
-<!-- <CLOG>1.3.0: close all §11 open questions. §A.6 removes apply_with_context (one test caller migrates to apply_with_runtime). §11 reframed as decision log. cls_shader_context.rs version bump confirmed 1.3.0 → 2.0.0; trait majors confirmed Filter→4.0.0, Sampler→3.0.0, Mask→2.0.0. ShaderContext field-layout MAJOR confirmed. transform_with_cursor Option 1 confirmed. FontRegistry plumbing and screen_x/y dispatcher plumbing deferred (not hot-path / no impl needs them).</CLOG> -->
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
+<!-- <WCTX>Pre-execution ofpf-* validation pass on 2026-04-26. Confirm blast-radius numbers, fix two real drifts, promote one risk-row to a named prerequisite.</WCTX> -->
+<!-- <CLOG>1.4.0: ofpf-* validation against tracked claims. Drifts: (1) ShaderContext::new sites = 30, plan said 29 — extra site is cls_pulse_wave_shader.rs:282 (file has two test ctx constructors, plan undercounted by one); (2) ShaderContext struct-literal in `src/` = TWO sites at orc_render_pipeline.rs:924 and :979 — plan's §F.2 risk-row mitigation expected zero. Promote that cleanup to a named §F.0 prerequisite so it lands before F.2 instead of riding inside the F.2 commit. Trait blast set = 32 files (plan said ~33; one re-export shim has been collapsed, no impact). Everything else verified exact: 15 transformers, 11 Mask, 11 Sampler, 30 Filter impls; per-file .transform( counts match §0.7 byte-for-byte; cross-repo audit returns zero impls in gt-design/tui-vfx-recipes/mixed-signals; transform_with_cursor sites at the exact lines the plan names; cls_shader_context.rs is 463 LOC, fnc_apply_content_effect.rs is 83 LOC.</CLOG> -->
 
 # tui-vfx TransformContext implementation plan
 
@@ -158,6 +158,40 @@ cargo test --doc -p tui-vfx-content 2>&1 | tail -3
 At the time this v1.2.0 revision was written, on master: lib tests pass at **348**. Capture *your* local baseline number before starting — drift from 348 just means master has moved since this revision. The only new lib test introduced by Phase A is the one inside the new `cls_transform_context.rs` (§3.1). Phase C adds two integration tests, not lib tests. Anything else that changes is a regression.
 
 > **PASS 1 NOTE (corrected from v1.1.0):** v1.1.0 quoted **356**. Local re-run on 2026-04-26 returned **348**. The exact number is not load-bearing — what matters is that you record yours and confirm the *delta* is +1 lib (Phase A) and +2 integration (Phase C).
+
+### 0.11 v1.4.0 ofpf-* validation pass results (2026-04-26)
+
+A pre-execution validation pass re-ran the ofpf-* commands underpinning every blast-radius / call-site / impl-count claim in this plan. Recording results inline so a future reader can audit what was true at execution time without re-deriving everything.
+
+**Verified exact (no plan change required):**
+
+- §0.6: 15 transformer impl files in `crates/tui-vfx-content/src/transformers/cls_*.rs`. ✅
+- §0.7: per-file `.transform(` counts in `src/` match the table byte-for-byte (split_flap=55, wrap=16, morph=12, dissolve=8, glitch=6, mirror=5, scramble_glitch=4, glyph_cascade=2, typewriter=1, apply_content_effect=1, lib.rs=1). ✅
+- §A.7 / §10.1.4: `transform_with_cursor` test sites at `tests/transformers/test_typewriter_transform_with_cursor.rs:20,34,43,56,58` (5 sites) plus `tests/cursor_integration.rs:41,61,63` (3 sites). ✅
+- §10.1.4: trait impl counts — Mask **11**, Sampler **11**, Filter **30**. ✅
+- §F.6: cross-repo `rg "impl (Filter|Mask|Sampler) for"` returns **zero hits** in `gt-design`, `tui-vfx-recipes`, and `mixed-signals`. ✅
+- §0.10: lib-test baseline is **348** on a clean tree at this snapshot. ✅
+- LOC: `crates/tui-vfx-style/src/traits/cls_shader_context.rs` is **463 LOC**; `crates/tui-vfx-content/src/types/fnc_apply_content_effect.rs` is **83 LOC**. ✅
+- §0.9: `ShaderRuntimeParams` is defined at `crates/tui-vfx-style/src/traits/cls_shader_context.rs:214` (same file as `ShaderContext`); the canonical import path `tui_vfx_style::traits::ShaderRuntimeParams` resolves. ✅
+- §A.6 Q9: `apply_with_context` has **two** call edges incoming — one from `apply_to_borrowed:58` (the back-compat shim, rewritten in §A.6 to call `get_transformer().transform()` directly) and one from the test `apply_with_context_matches_explicit_path_with_same_context:89`. After the §A.6 commit, the test caller is the only thing holding the symbol live; migrating it to `apply_with_runtime` and removing the method is a single coherent edit. ✅
+
+**Drifts captured here and folded into the plan body:**
+
+| Claim | Plan said | Verified | Action |
+|---|---|---|---|
+| `ShaderContext::new` in-tree call sites | 29 (§F.2 narrative) | **30** (extra site is `cls_pulse_wave_shader.rs:282` — that file has *two* test ctx ctors at lines 281 and 282 for paired params_a/params_b) | §F.2 narrative updated; arithmetic does not change the recommendation (still keep the 9-positional-arg signature). |
+| `ShaderContext { … }` struct-literal sites in `src/` | "expected zero" (§F.2 risk row mitigation) | **two sites in `src/`** at `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs:924` (in `apply_shaders:902`) and `:979` (in `apply_shaders_inspected:952`). Plus three sites in `tests/test_shader_role_awareness.rs:60,92,126` and one in `tests/models/test_cls_cursor_shader.rs:13`. | **Promoted to a named §F.0 prerequisite below.** F.2 cannot land cleanly while these exist; landing them as a separate prep commit keeps F.2's diff tight. |
+| Trait blast set size | "33 files" (§0.5) | 32 files | One-off drift; almost certainly a re-export shim was inlined since the v1.2.0 measurement. No semantic impact. Do not gate Phase A on the count matching exactly — confirm the *shape* (15 impls + 11 tests + dispatcher + lib doctest + workspace re-exports) instead. |
+
+**Concrete dispatcher and caller addresses confirmed (folded into Phase B and Phase F bodies):**
+
+- `gt-design::resolve_recipe_message` is called from exactly two sites: `render_recipe_playback_item:22` (line 31) and `resolve_message_for_phase:323` (line 358). §B.2 now names both so the implementer does not have to re-derive.
+- Mask dispatchers: `check_prepared_masks` at `fnc_check_masks.rs:26` and `check_masks` at `fnc_check_masks.rs:104`. The four `mask.is_visible(...)` call sites in this file are at lines **47, 65, 68, 72** (not "lines 35–80" as §F.3 narrated). The `PreparedMask::is_visible` match in `cls_prepared_mask.rs` has **eleven** arms at lines 41–51 (not "5+").
+- Sampler dispatcher: `sample_sampler_chain` at `cls_prepared_sampler.rs:90`.
+- Filter dispatcher: `prepare_filters` at `cls_prepared_filter.rs:1190`.
+- `orc_render_pipeline.rs::apply_shaders:902` is called from `render_loop:686` (line 748) and `render_pipeline_with_shadow:237` (line 352). `apply_shaders_inspected:952` is called from `render_loop_inspected:776` (line 851). These are the only consumers of the two struct-literal sites the §F.0 prerequisite migrates.
+- `Odometer::roll_cycle` has exactly one caller: `Odometer::transform:60` at line 77. So the Phase C signature change ripples to exactly one in-tree call site (the one §C.1 already shows).
+- `resolve_mechanical_cycle_with_context` at `fnc_resolve_mechanical_cycle.rs:60` already has **one** test caller: `preset_font_binding_resolves_via_runtime_params:303` in the same file. That test proves the **resolver-level** binding round-trip; §C.2's two new tests are the **transformer-level** complement (Odometer → resolver → registry). The pair forms a complete contract; do not collapse the two new tests into the existing one.
 
 ---
 
