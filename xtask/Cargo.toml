@@ -1,7 +1,7 @@
 # <FILE>xtask/Cargo.toml</FILE> - <DESC>Build tooling crate for documentation generation and CI tasks</DESC>
-# <VERS>VERSION: 1.1.1</VERS>
-# <WCTX>Expose schema types for docs generation</WCTX>
-# <CLOG>Add tui-vfx-core dependency for schema inspection</CLOG>
+# <VERS>VERSION: 1.3.0</VERS>
+# <WCTX>Packet 1.9.A — ConfigSchema justification lint</WCTX>
+# <CLOG>1.3.0: add lib target + tempfile dev-dep for audit integration tests</CLOG>
 
 [package]
 name = "xtask"
@@ -9,6 +9,17 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.86.0"
 publish = false
+
+[[bin]]
+name = "xtask"
+path = "src/main.rs"
+
+[lib]
+name = "xtask_audit_configschema"
+path = "src/lib.rs"
+
+[dev-dependencies]
+tempfile = "3"
 
 [dependencies]
 # CLI argument parsing
@@ -37,6 +48,7 @@ tui-vfx-style = { path = "../crates/tui-vfx-style" }
 tui-vfx-content = { path = "../crates/tui-vfx-content" }
 tui-vfx-shadow = { path = "../crates/tui-vfx-shadow" }
 tui-vfx-core = { path = "../crates/tui-vfx-core" }
+mixed-signals = { path = "../../mixed-signals" }
 
 # <FILE>xtask/Cargo.toml</FILE> - <DESC>Build tooling crate for documentation generation and CI tasks</DESC>
-# <VERS>END OF VERSION: 1.1.1</VERS>
+# <VERS>END OF VERSION: 1.3.0</VERS>

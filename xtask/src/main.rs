@@ -1,8 +1,9 @@
 // <FILE>xtask/src/main.rs</FILE> - <DESC>CLI entry point for xtask build tooling</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
-// <WCTX>Recipe validation tooling</WCTX>
-// <CLOG>Add recipes validation subcommand</CLOG>
+// <VERS>VERSION: 1.5.0</VERS>
+// <WCTX>Phase α + β: signal-facade — add signals pipeline subcommands</WCTX>
+// <CLOG>1.5.0: add Signals, SignalsCheck, SignalsValidate DocsAction variants; wire to docs::signals(), docs::signals_check(), docs::signals_validate()</CLOG>
 
+mod audit;
 mod docs;
 mod recipes;
 
@@ -21,6 +22,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Audit gates — policy validation for the workspace.
+    Audit {
+        #[command(subcommand)]
+        action: AuditAction,
+    },
     /// Documentation generation and validation
     Docs {
         #[command(subcommand)]
@@ -31,6 +37,17 @@ enum Commands {
         #[command(subcommand)]
         action: RecipesAction,
     },
+}
+
+/// Subcommands for `cargo xtask audit`.
+#[derive(Subcommand)]
+enum AuditAction {
+    /// Verify every hand-written `impl ConfigSchema for X` has a justification
+    /// comment, or is in the baseline allowlist at `xtask/data/configschema_baseline.toml`.
+    ///
+    /// See `docs/CONFIGSCHEMA_JUSTIFICATION.md` for the format spec and
+    /// canonical exception kinds.
+    Configschema,
 }
 
 #[derive(Subcommand)]
@@ -75,6 +92,19 @@ enum DocsAction {
         #[arg(long)]
         write: bool,
     },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SIGNAL REFERENCE DOCUMENTATION (phase α + β)
+    // ═══════════════════════════════════════════════════════════════════════════
+    /// Generate SIGNALS_REFERENCE.md from mixed-signals rustdoc + signals.toml overlay
+    Signals,
+
+    /// Check that SIGNALS_REFERENCE.md is up-to-date (for CI)
+    SignalsCheck,
+
+    /// Validate signals.toml: every named signal exists in mixed-signals,
+    /// and every Core 12 entry is in the autogen catalog
+    SignalsValidate,
 }
 
 #[derive(Subcommand)]
@@ -94,6 +124,24 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Audit { action } => match action {
+            AuditAction::Configschema => {
+                let workspace_root = Path::new(
+                    std::env::var("CARGO_MANIFEST_DIR")
+                        .ok()
+                        .as_deref()
+                        .unwrap_or("."),
+                )
+                .parent()
+                .unwrap_or(Path::new("."))
+                .to_path_buf();
+                // Resolve to canonical path so strip_prefix works correctly.
+                let workspace_root = workspace_root
+                    .canonicalize()
+                    .unwrap_or(workspace_root);
+                audit::audit_configschema(&workspace_root)
+            }
+        },
         Commands::Docs { action } => match action {
             // CAPABILITIES.md generation
             DocsAction::Generate => docs::generate(),
@@ -107,6 +155,10 @@ fn main() -> Result<()> {
             DocsAction::ApiCheck => docs::api_check(),
             DocsAction::ApiValidate => docs::api_validate(),
             DocsAction::ApiScaffold { write } => docs::api_scaffold(write),
+            // SIGNALS_REFERENCE.md generation (phase α + β)
+            DocsAction::Signals => docs::signals(),
+            DocsAction::SignalsCheck => docs::signals_check(),
+            DocsAction::SignalsValidate => docs::signals_validate(),
         },
         Commands::Recipes { action } => match action {
             RecipesAction::Validate {
@@ -118,4 +170,4 @@ fn main() -> Result<()> {
 }
 
 // <FILE>xtask/src/main.rs</FILE> - <DESC>CLI entry point for xtask build tooling</DESC>
-// <VERS>END OF VERSION: 1.3.0</VERS>
+// <VERS>END OF VERSION: 1.5.0</VERS>

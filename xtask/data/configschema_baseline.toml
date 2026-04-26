@@ -1,0 +1,97 @@
+# <FILE>xtask/data/configschema_baseline.toml</FILE> - <DESC>Baseline allowlist of pre-existing hand-written impl ConfigSchema for X blocks</DESC>
+# <VERS>VERSION: 1.0.0</VERS>
+# <WCTX>Packet 1.9.A — ConfigSchema justification lint</WCTX>
+# <CLOG>1.0.0: initial baseline from live-tree audit on 2026-04-26 (15 impls; packet estimated 12 — 5 additional generic impls found at scan time; drift documented in report)</CLOG>
+#
+# Entries here are exempt from the justification-comment requirement introduced
+# by packet 1.9.A. The followup audit packet (1.9.A.followup) walks each entry
+# and either:
+#   (a) adds a CONFIGSCHEMA-JUSTIFICATION comment and removes the entry, or
+#   (b) migrates the impl to #[derive(ConfigSchema)] and removes the entry.
+#
+# New impls MUST NOT be added here. New hand-written impls must carry a
+# // CONFIGSCHEMA-JUSTIFICATION: <kind>: <reason>  line directly above the
+# impl line, or a ///  doc-comment block above containing CONFIGSCHEMA-JUSTIFICATION:.
+#
+# Modification of this file requires explicit reviewer approval (it is the
+# only path to silently allow an unjustified hand-written impl).
+
+schema_version = 1
+
+[[entry]]
+file = "crates/tui-vfx-core/src/schema/mod.rs"
+type = "String"
+note = "foreign primitive bridge — String has no MIN/MAX; cannot fold into macro"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/schema/mod.rs"
+type = "&str"
+note = "foreign primitive bridge — thin str wrapper alongside String"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/mixed_signals_schema.rs"
+type = "SignalOrFloat"
+note = "foreign type — lives in mixed-signals; orphan rules forbid #[derive]"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/mixed_signals_schema.rs"
+type = "SignalSpec"
+note = "foreign type — lives in mixed-signals; orphan rules forbid #[derive]"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/mixed_signals_schema.rs"
+type = "EasingType"
+note = "foreign type — lives in mixed-signals; orphan rules forbid #[derive]"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/bindable/cls_bindable.rs"
+type = "Never"
+note = "uninhabited type — intentional divergence; derive would emit nothing useful"
+
+[[entry]]
+file = "crates/tui-vfx-style/src/models/fnc_style_region_schema.rs"
+type = "StyleRegion"
+note = "cross-crate trait dep — Role(RoleTag) variant; RoleTag in tui-vfx-types which does not depend on tui-vfx-core"
+
+[[entry]]
+file = "crates/tui-vfx-geometry/src/types/path_type.rs"
+type = "PathType"
+note = "candidate for derive migration — see followup packet"
+
+[[entry]]
+file = "crates/tui-vfx-types/src/color.rs"
+type = "Color"
+note = "wire-format primitive — declares per-channel RGBA range explicitly; intentional divergence from derive output"
+
+[[entry]]
+file = "crates/tui-vfx-types/src/role_tag.rs"
+type = "RoleTag"
+note = "candidate for derive migration — Custom(InternedRoleName) arm; see followup packet"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/schema/mod.rs"
+type = "Option<T>"
+note = "generic wrapper — derive-cannot-handle-generic-T; bridges Option into SchemaNode::Option"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/schema/mod.rs"
+type = "Vec<T>"
+note = "generic wrapper — derive-cannot-handle-generic-T; bridges Vec into SchemaNode::Vec"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/schema/mod.rs"
+type = "Box<T>"
+note = "generic wrapper — derive-cannot-handle-generic-T; bridges Box into SchemaNode::Box"
+
+[[entry]]
+file = "crates/tui-vfx-core/src/bindable/cls_bindable.rs"
+type = "VfxBindable<T, S>"
+note = "generic impl — derive macro does not emit where T: ConfigSchema, S: BindableSignal bounds; hand-written until macro is extended"
+
+[[entry]]
+file = "crates/tui-vfx-content/src/pool/cls_pool.rs"
+type = "Pool<T>"
+note = "generic wrapper — derive-cannot-handle-generic-T; SchemaNode::Struct with selection policy variants"
+
+# <FILE>xtask/data/configschema_baseline.toml</FILE>
+# <VERS>END OF VERSION: 1.0.0</VERS>

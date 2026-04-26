@@ -304,6 +304,21 @@ dramatic-shadow-full-quality:
     cargo test -p tui-vfx-compositor --test test_pipeline -- --nocapture --skip test_shadow_extends_render_area
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# AUDIT GATES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Audit hand-written impl ConfigSchema for X blocks per Intention 12A.
+# Fails (or warns, during the warn-only period) on new unjustified impls.
+# See docs/CONFIGSCHEMA_JUSTIFICATION.md for the format spec and canonical kinds.
+audit-configschema:
+    @echo "Auditing hand-written impl ConfigSchema for X blocks..."
+    cargo xtask audit configschema
+
+# Run all policy-enforcement audits (used by CI).
+audit-all: audit-configschema
+    @echo "All audits passed."
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # CI SIMULATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
