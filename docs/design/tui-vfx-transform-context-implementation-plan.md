@@ -1,12 +1,11 @@
 <!-- <FILE>docs/design/tui-vfx-transform-context-implementation-plan.md</FILE> - <DESC>Implementation plan for the cross-trait context-bundle migration. Phases A–E close Slice 6.6 of the mechanical circular content cycles plan (TransformContext for TextTransformer, BindableString font binding). Phase F generalizes the same pattern to Filter / Mask / Sampler per buy-once sweep finding 1.1.A (VfxCellContext in tui-vfx-types).</DESC> -->
-<!-- <VERS>VERSION: 1.1.0</VERS> -->
-<!-- <WCTX>Plan now covers both the small-scale exemplar (Slice 6.6: one trait, ~15 impls) and the large-scale generalization (Sweep 1.1.A: three traits, ~56 impls, cross-repo). Single source of truth so the F-phase assignee can read the canonical exemplar and the generalization side-by-side.</WCTX> -->
-<!-- <CLOG>1.1.0: fold buy-once sweep finding 1.1.A (Filter/Mask/Sampler bundle) into the plan as Phase F. Updates header framing, §6 risks, §7 out-of-scope, §8 DoD, §9 companions, §11 open questions to cover both slices. Phase F is gated on Phase E green on master.</CLOG>
-<!-- 1.0.0: refined to implementation-ready form. Pre-flight grounding section added. Trait file path corrected (text_transformer.rs, not cls_text_transformer.rs). Production-caller plumbing rewritten — callers live in gt-design (recipes/render.rs:119 + text_effects/mod.rs:168), NOT tui-vfx-compositor. Inline #[cfg(test)] sweep in 11 source files surfaced (110+ call sites). Typewriter::transform_with_cursor inherent method addressed. Per-phase shell-ready verification with expected output. Critical findings section added. Code snippets for every non-trivial step.</CLOG> -->
+<!-- <VERS>VERSION: 1.2.0</VERS> -->
+<!-- <WCTX>Pass-1 review + Pass-2 junior-implementability uplift across the whole plan. Headline corrections: AnimationPhase does not live where v1.1.0 thought; baseline lib-test count corrected; VfxCellContext field set rescoped; Filter/Mask/Sampler impl counts re-verified; cross-repo audit reframed (no out-of-tree impls today); ShaderContext.new constructor migration made explicit; minimum-compiling-intermediate-states table added.</WCTX> -->
+<!-- <CLOG>1.2.0: critical review pass. AnimationPhase rescope (lives in tui-vfx-recipes::state, not above tui-vfx-types — drop phase from VfxCellContext, ShaderContext keeps Option&lt;mixed_signals::traits::Phase&gt;). Baseline 348 lib tests (was 356). Mask/Sampler counts 11/11 (was 13/12). Cross-repo audit reframed to confirm-and-document (no impls outside tui-vfx today). ShaderContext constructor migration spelled out. Per-phase intermediate-state table added. Junior-impl uplift: representative before/after for one Filter, one Mask, one Sampler impl; explicit OFPF size budgets per new file; doctest test-helper pattern detailed.</CLOG> -->
 
 # tui-vfx TransformContext implementation plan
 
-> **Status:** Implementation-ready (v1.1.0). A junior engineer with read access to the repo and `ofpf-*` tooling installed should be able to execute this plan with little oversight.
+> **Status:** Implementation-ready (v1.2.0). A junior engineer with read access to the repo and `ofpf-*` tooling installed should be able to execute this plan with little oversight. v1.2.0 closed nine factual gaps and rescoped one architectural field that would have inverted a dependency direction; see §10 Critical findings.
 >
 > **Target slices:**
 > - **Phases A–E** — Slice 6.6 of `docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md` (TransformContext + `TextTransformer` migration + binding-form font resolution).
@@ -156,7 +155,9 @@ cargo test -p tui-vfx-content 2>&1 | tail -3
 cargo test --doc -p tui-vfx-content 2>&1 | tail -3
 ```
 
-At the time this plan was written: lib tests pass at **356**. Capture your local baseline number before starting; the only new tests should be the two Phase C integration tests. Anything else that changes is a regression.
+At the time this v1.2.0 revision was written, on master: lib tests pass at **348**. Capture *your* local baseline number before starting — drift from 348 just means master has moved since this revision. The only new lib test introduced by Phase A is the one inside the new `cls_transform_context.rs` (§3.1). Phase C adds two integration tests, not lib tests. Anything else that changes is a regression.
+
+> **PASS 1 NOTE (corrected from v1.1.0):** v1.1.0 quoted **356**. Local re-run on 2026-04-26 returned **348**. The exact number is not load-bearing — what matters is that you record yours and confirm the *delta* is +1 lib (Phase A) and +2 integration (Phase C).
 
 ---
 
@@ -266,7 +267,25 @@ Threading a context struct rather than bare parameters has zero runtime cost (th
 
 ### 2.6 OFPF discipline
 
-`TransformContext` is a leaf data type with simple accessors. It belongs in `crates/tui-vfx-content/src/traits/cls_transform_context.rs` next to the existing `text_transformer.rs`. File size will be well under the `cls_` 200-LOC hard limit (~50 LOC including docs and tests).
+`TransformContext` is a leaf data type with simple accessors. It belongs in `crates/tui-vfx-content/src/traits/cls_transform_context.rs` next to the existing `text_transformer.rs`.
+
+**OFPF size budgets for files this plan introduces or significantly edits:**
+
+| File | Prefix | Soft / Hard LOC | Projected LOC after edit | Headroom |
+|---|---|---|---|---|
+| `crates/tui-vfx-content/src/traits/cls_transform_context.rs` (new) | `cls_` | 150 / 200 | ~55 (definition + ctor + tests) | comfortable |
+| `crates/tui-vfx-types/src/cls_vfx_cell_context.rs` (new, Phase F.1) | `cls_` | 150 / 200 | ~95 (struct + 4 accessors + 3 tests) | comfortable |
+| `crates/tui-vfx-content/src/traits/text_transformer.rs` (edit) | none (legacy idiomatic) | n/a | ~30 | n/a |
+| `crates/tui-vfx-content/src/types/fnc_apply_content_effect.rs` (edit, +`apply_with_runtime`) | `fnc_` | 75 / 120 | currently 83 LOC; after Phase A.6 ~101 LOC. | OK |
+| `crates/tui-vfx-style/src/traits/cls_shader_context.rs` (edit, F.2) | `cls_` | 150 / 200 | currently **463 LOC** — already over hard limit *before* this plan touches it. F.2 should *reduce* LOC, not grow it: remove four accessor methods (`screen_cell_x`, `screen_cell_y`, `normalized_x`, `normalized_y`) which move to `VfxCellContext`; net save ~30 LOC. The file stays over the hard limit; **a follow-up split is owed regardless**, but it is out of scope for Phase F. Document the over-budget state in F.2's commit message and link a follow-up packet. | over hard limit; out-of-scope to fix in this plan |
+
+If `fnc_apply_content_effect.rs` exceeds 120 LOC after Phase A, extract `apply_with_runtime` into its own `fnc_apply_with_runtime.rs` peer file under the same `types/` directory.
+
+**Pre-flight check before each new-file commit:**
+
+```bash
+wc -l <file>           # must be under hard limit for its prefix
+```
 
 ---
 
@@ -435,7 +454,7 @@ cargo build -p tui-vfx-content
 
 Expect: a torrent of trait-mismatch errors from the 15 transformer impls (because the trait file hasn't changed yet — the new struct just exists alongside). That is fine. Move to A.2.
 
-Actually, do NOT do A.1 alone. The intermediate state where the struct exists but the trait still uses `signal_ctx` produces noise. Do A.1 + A.2 + A.3 in one editor session and compile after the full sweep. The verification at A.6 is the gate.
+> **PASS 2 DETAIL — single-editor-session contract.** Do NOT commit between A.1 and A.6. The intermediate states A.1 → A.5 do not compile. **Treat A.1 through A.6 as one atomic editor session**, ending with one commit. `cargo build` does not need to succeed before A.6. If you want a sanity check between A.4 and A.5, run `cargo check -p tui-vfx-content --no-deps 2>&1 | head -50` to see *which* impls still have outstanding errors — but do not pursue partial fixes.
 
 #### A.2 Edit `traits/mod.rs` and `prelude.rs`
 
@@ -753,13 +772,13 @@ Expect: clean build, zero warnings introduced by this change.
 cargo test -p tui-vfx-content --lib 2>&1 | tail -3
 ```
 
-Expect: `test result: ok. 357 passed; 0 failed; 0 ignored;` (356 prior + 1 new in the new TransformContext file). Compare against the baseline you captured at §0.10.
+Expect: `test result: ok. <baseline+1> passed; 0 failed; 0 ignored;` (your captured baseline from §0.10 plus exactly one new test in the new `cls_transform_context.rs` file). On the v1.2.0 master baseline (348) the expected number is **349**. Compare against the baseline you captured at §0.10.
 
 ```bash
 cargo test -p tui-vfx-content 2>&1 | tail -10
 ```
 
-Expect: every test binary passes. Lib tests: 357. Each `tests/transformers/test_cls_*.rs` file passes its prior count. `tests/test_content_effect_apply.rs` passes its 3 tests.
+Expect: every test binary passes. Lib tests: baseline+1 (349 against the v1.2.0 master). Each `tests/transformers/test_cls_*.rs` file passes its prior count. `tests/test_content_effect_apply.rs` passes its 3 tests.
 
 ```bash
 cargo test --doc -p tui-vfx-content 2>&1 | tail -3
@@ -1179,8 +1198,8 @@ cargo test --doc -p tui-vfx-content 2>&1 | tail -3
 ```
 
 Expect:
-- lib tests: 357 (no change from Phase A; the new tests are integration tests).
-- `test_transformers` binary count rises by 2 over the prior baseline.
+- lib tests: same as Phase A end (baseline+1, e.g. 349 against v1.2.0 master); the two new tests are integration tests, not lib tests.
+- `test_transformers` binary count rises by exactly 2 over the prior baseline.
 - workspace clean.
 
 ### Phase D — Recipe migration
@@ -1378,93 +1397,399 @@ Expect: green across all three repos. End-to-end gate passed.
 **Architectural decision (already made — sweep §6.1 Option C):**
 - `VfxCellContext` lives in `tui-vfx-types`. That is the lowest-common crate that already owns `Cell`. Putting it in `tui-vfx-style` would force the compositor to depend on style (Intention 1 violation). Putting it in `tui-vfx-compositor` would split the SSOT (Intention 26 violation).
 - The `Vfx` prefix is mandatory per Intention 8: this is wire-relevant contract-producing data crossing crate boundaries through every Filter / Mask / Sampler impl.
-- `ShaderContext` (in `tui-vfx-style`) refactors to *compose* `VfxCellContext` rather than duplicate the eight spatial-context fields. `ShaderContext` keeps the style-only fields (`runtime_params`, `roles`).
+- `ShaderContext` (in `tui-vfx-style`) refactors to *compose* `VfxCellContext` rather than duplicate the seven cell-spatial fields. `ShaderContext` keeps the style-only fields (`phase: Option<Phase>`, `runtime_params: Arc<ShaderRuntimeParams>`, `roles: Arc<RoleMap>`).
 - Filter / Mask / Sampler do **not** receive `runtime_params` access from this packet. That is queued for after sweep §1.2.A (`Bindable<T>` consolidation) gives the family a binding context.
+- `VfxCellContext` is `Copy`; passing `&VfxCellContext` everywhere is by-reference for cleanliness, not because it's expensive. `ShaderContext` remains `Clone`-only because its `Arc<…>` fields are fine to clone but cannot be `Copy`.
+
+> **PASS 1 NOTE (rescope from v1.1.0).** v1.1.0 specified an **eight**-field `VfxCellContext` with a `phase: AnimationPhase` field, and a risk row about "hoisting `AnimationPhase` down to `tui-vfx-types`". Two factual gaps surfaced during review:
+>
+> 1. **`AnimationPhase` lives downstream, not upstream.** It is defined at `/usr/projects/tui-vfx-recipes/src/state/lifecycle.rs` in the `tui-vfx-recipes` crate. Hoisting it *down* the dependency stack to `tui-vfx-types` would invert the dependency direction (`tui-vfx-recipes` already depends on `tui-vfx-types`, not the reverse).
+> 2. **The `phase` field on the existing `ShaderContext` is `Option<mixed_signals::traits::Phase>`** — a different enum entirely (`Start | Active | End | Done`), used only by signal-driven shaders.
+> 3. **Filter / Mask / Sampler receive no phase parameter today.** Adding one as part of "bundle the *existing* params" is scope creep that contradicts §1.1.A's bundle-only intent. StyleShader keeps its own `Option<Phase>` on `ShaderContext`.
+>
+> **Resolution:** drop the `phase` field from `VfxCellContext`. Bundle is exactly the **seven** spatial-context fields shared by Filter / Mask / Sampler / StyleShader: `local_x`, `local_y`, `width`, `height`, `screen_x`, `screen_y`, `t`. `ShaderContext` retains `phase: Option<Phase>` as a style-only field. No cross-crate hoist needed. The risk row about "AnimationPhase home churn" (§6) is removed.
 
 #### F.1 Define `VfxCellContext` in `tui-vfx-types`
 
 **File:** `crates/tui-vfx-types/src/cls_vfx_cell_context.rs` (new).
 
-Eight fields shared across `Filter`, `Mask`, `Sampler`, and `StyleShader`:
+> **PASS 2 DETAIL — file naming.** The local convention in `tui-vfx-types` does not use OFPF prefixes (existing files are `cell.rs`, `color.rs`, `geometry.rs`, etc.). The new file *does* use the `cls_` prefix. Rationale: `VfxCellContext` is a single cohesive struct with associated methods (constructor, accessors), squarely in `cls_` territory under OFPF, and the project is migrating toward OFPF discipline for new files (CLAUDE.md). The deviation from local idiom is intentional. Document this choice in the commit message so a future reader does not "fix" the naming inconsistently.
+
+**OFPF size budget.** `cls_` hard limit is **200 LOC**, soft is 150 LOC. The struct definition + constructor + accessors + inline tests below totals roughly 95 LOC; comfortably under the soft cap. If accessors grow (e.g. `screen_cell_x`, `normalized_x` migrate from `ShaderContext`), expect ~30 more LOC — still well under the cap.
+
+Seven fields shared across `Filter`, `Mask`, `Sampler`, and `StyleShader`:
 
 ```rust
-// <FILE>crates/tui-vfx-types/src/cls_vfx_cell_context.rs</FILE> ...
+// <FILE>crates/tui-vfx-types/src/cls_vfx_cell_context.rs</FILE> - <DESC>Per-cell spatial context bundle shared by Filter / Mask / Sampler / StyleShader</DESC>
+// <VERS>VERSION: 1.0.0</VERS>
+// <WCTX>Sweep §1.1.A bundle: replace per-trait positional (x, y, w, h, t) param tuples with a single &VfxCellContext so future field additions extend the struct rather than churning four trait surfaces.</WCTX>
+// <CLOG>1.0.0: introduce VfxCellContext { local_x, local_y, width, height, screen_x, screen_y, t } with Copy + new() constructor + screen_cell_x/screen_cell_y/normalized_x/normalized_y accessors hoisted from ShaderContext. Inline tests for constructor, accessor edge cases, and Copy semantics.</CLOG>
+
+/// Per-cell spatial context shared across [`Filter`], [`Mask`], [`Sampler`],
+/// and (composed into) [`ShaderContext`].
+///
+/// All fields are scalar; the struct is `Copy` and zero-allocation. Pass by
+/// reference (`&VfxCellContext`) at trait surfaces for consistency and to
+/// keep the door open for future heap fields, even though `Copy` would
+/// allow by-value.
+///
+/// # Coordinate systems
+///
+/// - **Local** (`local_x`, `local_y`): position within the layer's local
+///   rect. `(0, 0)` is the layer's top-left.
+/// - **Screen offset** (`screen_x`, `screen_y`): the layer's top-left
+///   absolute screen position. Use [`Self::screen_cell_x`] /
+///   [`Self::screen_cell_y`] to compute the cell's absolute screen
+///   coordinate.
+///
+/// [`Filter`]: tui_vfx_compositor::traits::Filter
+/// [`Mask`]: tui_vfx_compositor::traits::Mask
+/// [`Sampler`]: tui_vfx_compositor::traits::Sampler
+/// [`ShaderContext`]: tui_vfx_style::traits::ShaderContext
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct VfxCellContext {
-    /// Cell coordinates within the layer's local rect.
+    /// Cell coordinate within the layer's local rect (0 = left edge).
     pub local_x: u16,
+    /// Cell coordinate within the layer's local rect (0 = top edge).
     pub local_y: u16,
-    /// Layer dimensions.
+    /// Layer width in cells.
     pub width: u16,
+    /// Layer height in cells.
     pub height: u16,
-    /// Cell coordinates in screen space.
+    /// Screen X offset — layer's left edge in absolute screen coordinates.
     pub screen_x: u16,
+    /// Screen Y offset — layer's top edge in absolute screen coordinates.
     pub screen_y: u16,
-    /// Time / progress clock. Same `f64` semantics as the legacy
-    /// `t` / `progress` parameters across the three traits.
+    /// Animation progress / time clock. Same `f64` semantics as the
+    /// legacy `t` / `progress` parameters across the three traits.
     pub t: f64,
-    /// Animation phase enum. If `AnimationPhase` lives in `tui-vfx-style`
-    /// today, hoist it down to `tui-vfx-types` as part of this commit.
-    pub phase: AnimationPhase,
 }
+
+impl VfxCellContext {
+    /// Construct a new context bundle. All callers should use this
+    /// constructor; struct-literal construction is allowed but discouraged
+    /// because adding a future field would silently break literal sites.
+    #[inline]
+    pub fn new(
+        local_x: u16,
+        local_y: u16,
+        width: u16,
+        height: u16,
+        screen_x: u16,
+        screen_y: u16,
+        t: f64,
+    ) -> Self {
+        Self { local_x, local_y, width, height, screen_x, screen_y, t }
+    }
+
+    /// Absolute screen X for this cell.
+    #[inline]
+    pub fn screen_cell_x(&self) -> u16 {
+        self.screen_x.saturating_add(self.local_x)
+    }
+
+    /// Absolute screen Y for this cell.
+    #[inline]
+    pub fn screen_cell_y(&self) -> u16 {
+        self.screen_y.saturating_add(self.local_y)
+    }
+
+    /// Normalized local X position (0.0 = left, 1.0 = right). `0.0` for
+    /// degenerate `width == 0`.
+    #[inline]
+    pub fn normalized_x(&self) -> f32 {
+        if self.width > 0 { self.local_x as f32 / self.width as f32 } else { 0.0 }
+    }
+
+    /// Normalized local Y position (0.0 = top, 1.0 = bottom). `0.0` for
+    /// degenerate `height == 0`.
+    #[inline]
+    pub fn normalized_y(&self) -> f32 {
+        if self.height > 0 { self.local_y as f32 / self.height as f32 } else { 0.0 }
+    }
+
+    /// Test-only zero-filled context. Production code constructs via
+    /// [`Self::new`].
+    #[cfg(test)]
+    pub fn test_default() -> Self {
+        Self::new(0, 0, 0, 0, 0, 0, 0.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn screen_cell_coords_are_local_plus_offset() {
+        let ctx = VfxCellContext::new(3, 5, 10, 10, 100, 200, 0.5);
+        assert_eq!(ctx.screen_cell_x(), 103);
+        assert_eq!(ctx.screen_cell_y(), 205);
+    }
+
+    #[test]
+    fn normalized_returns_zero_on_degenerate_dimensions() {
+        let ctx = VfxCellContext::new(3, 5, 0, 0, 0, 0, 0.0);
+        assert_eq!(ctx.normalized_x(), 0.0);
+        assert_eq!(ctx.normalized_y(), 0.0);
+    }
+
+    #[test]
+    fn copy_semantics_compile() {
+        let ctx = VfxCellContext::test_default();
+        let _a = ctx; // Copy
+        let _b = ctx; // Still usable
+        assert_eq!(ctx.local_x, 0);
+    }
+}
+
+// <FILE>crates/tui-vfx-types/src/cls_vfx_cell_context.rs</FILE>
+// <VERS>END OF VERSION: 1.0.0</VERS>
 ```
 
-Confirm the actual field set at slice-start by reading `crates/tui-vfx-style/src/traits/cls_shader_context.rs` lines 280–320 (the existing eight-field shape). If the live shape differs (extra fields, renames), reconcile and document in the commit message.
+**Add to `crates/tui-vfx-types/src/lib.rs`:**
 
-Add to `crates/tui-vfx-types/src/lib.rs` exports. Inline tests for the constructor and field access. Provide `VfxCellContext::test_default()` for tests that need a zero-fill literal.
+```rust
+// In the `mod` block (alphabetical):
+mod cls_vfx_cell_context;
+
+// In the `pub use` block:
+pub use cls_vfx_cell_context::VfxCellContext;
+```
+
+Bump `tui-vfx-types`' lib.rs metadata from `0.5.0` to `0.6.0` (MINOR — new public type).
 
 **Land this as commit 1 of Phase F.** Verification:
 
 ```bash
 cd /usr/projects/tui-vfx
-cargo test -p tui-vfx-types --lib 2>&1 | tail -10
+cargo build -p tui-vfx-types
+cargo test -p tui-vfx-types --lib 2>&1 | tail -5
 ```
+
+Expect: clean build, +3 lib tests on `tui-vfx-types`. Workspace dependents are unaffected because the type is purely additive.
 
 #### F.2 Refactor `ShaderContext` to compose `VfxCellContext`
 
 **File:** `crates/tui-vfx-style/src/traits/cls_shader_context.rs`.
 
+**Before** (current shape, lines 288–321):
+
 ```rust
+#[derive(Debug, Clone)]
 pub struct ShaderContext {
-    pub cell: VfxCellContext,
+    pub local_x: u16,
+    pub local_y: u16,
+    pub width: u16,
+    pub height: u16,
+    pub screen_x: u16,
+    pub screen_y: u16,
+    pub t: f64,
+    pub phase: Option<Phase>,                          // mixed_signals::traits::Phase
     pub runtime_params: Arc<ShaderRuntimeParams>,
     pub roles: Arc<RoleMap>,
 }
 ```
 
-**Decision point (resolve at slice-start, document in commit message):** add `Deref<Target = VfxCellContext>` so `ctx.local_x` / `ctx.t` keep compiling at every existing call site? Or update every `style_at` impl in `tui-vfx-style` and `gt-design` to `ctx.cell.local_x`?
+**After** (composed):
 
-- **Deref pro:** zero-churn migration. Every existing `ctx.local_x` access stays. The follow-on for `runtime_params` and `roles` access stays explicit.
-- **Deref con:** hides the composition; readers cannot tell at the access site whether they are reading cell context or shader context. Subtle but real.
-- **Recommendation:** add the `Deref` impl. The blast radius without it is large (every `style_at` impl), and the composition is documented at the type definition.
+```rust
+use tui_vfx_types::VfxCellContext;
+use mixed_signals::traits::Phase;
+use std::ops::Deref;
+
+#[derive(Debug, Clone)]
+pub struct ShaderContext {
+    /// Cell-spatial sub-bundle (`local_x`, `local_y`, `width`, `height`,
+    /// `screen_x`, `screen_y`, `t`). Shared shape with `Filter`, `Mask`,
+    /// `Sampler` parameter bundles.
+    pub cell: VfxCellContext,
+    /// Style-only: animation phase. None when the shader is not
+    /// phase-driven.
+    pub phase: Option<Phase>,
+    /// Style-only: render-time runtime parameter map for shader bindings.
+    pub runtime_params: Arc<ShaderRuntimeParams>,
+    /// Style-only: per-cell role map.
+    pub roles: Arc<RoleMap>,
+}
+
+impl Deref for ShaderContext {
+    type Target = VfxCellContext;
+    fn deref(&self) -> &VfxCellContext { &self.cell }
+}
+```
+
+**Decision (already taken — `Deref` impl).** With the `Deref` impl, every existing `ctx.local_x` / `ctx.t` / `ctx.normalized_x()` access keeps compiling unchanged across all 33 `StyleShader` impls. The follow-on for `runtime_params` and `roles` stays explicit (`ctx.runtime_params`, `ctx.roles`) because those are not part of the cell-spatial bundle.
+
+> **PASS 2 DETAIL — what `Deref` does and does not buy.**
+>
+> - **Field reads compile through Deref:** `ctx.local_x` → `(*ctx).local_x` → `ctx.cell.local_x`. ✓
+> - **Method calls compile through Deref:** `ctx.screen_cell_x()` → method on `VfxCellContext`. ✓ (these methods *moved* to `VfxCellContext` in F.1.)
+> - **`ShaderContext` accessor methods stay on ShaderContext:** `ctx.role_at((x, y))` is a method on `ShaderContext` itself reading `self.roles`. ✓
+> - **What does NOT autoderef:** struct-update syntax (`ShaderContext { local_x: 5, ..ctx }` no longer compiles after the field move; this should not exist anywhere — `grep -rn 'ShaderContext\s*{' --type rust` to confirm before F.2).
+
+**`ShaderContext::new` constructor migration.** The current constructor takes 9 positional args (lines 328–352). Two valid options:
+
+- **(a) Keep the same arg list but build `VfxCellContext` internally.** Source-compatible for the **29 in-tree call sites** of `ShaderContext::new` (verified via `rg "ShaderContext::new" --type rust /usr/projects/tui-vfx/`). Recommended.
+- **(b) New signature `ShaderContext::new(cell: VfxCellContext, phase, runtime_params)`.** Cleaner, but breaks all 29 call sites for no behavioral gain. Reject.
+
+**After (Option a — 29-call-site-friendly):**
+
+```rust
+impl ShaderContext {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        local_x: u16,
+        local_y: u16,
+        width: u16,
+        height: u16,
+        screen_x: u16,
+        screen_y: u16,
+        t: f64,
+        phase: Option<Phase>,
+        runtime_params: Option<Arc<ShaderRuntimeParams>>,
+    ) -> Self {
+        Self {
+            cell: VfxCellContext::new(local_x, local_y, width, height, screen_x, screen_y, t),
+            phase,
+            runtime_params: runtime_params.unwrap_or_default(),
+            roles: Arc::default(),
+        }
+    }
+
+    // Existing with_roles / role_at / screen_cell_x / screen_cell_y /
+    // normalized_x / normalized_y stay; the four spatial accessors now
+    // delegate via Deref but you can keep the explicit method bodies if
+    // they exist already, or delete them now that VfxCellContext has them.
+    // RECOMMEND deleting from ShaderContext to avoid duplicate definitions
+    // (Rust will complain about a method on ShaderContext shadowing a
+    // method on VfxCellContext via Deref — harmless but confusing).
+}
+```
+
+**Bump `cls_shader_context.rs` metadata** to a MAJOR version (struct field layout changed; this is a breaking change for anyone struct-literal-constructing `ShaderContext`). Update the CLOG to point at the F.2 commit hash.
+
+**Verify the call-site count.** Before editing, run:
+
+```bash
+cd /usr/projects/tui-vfx
+rg "ShaderContext\s*\{" --type rust         # struct-literal construction
+rg "ShaderContext::new" --type rust         # constructor call
+rg "ctx\.(local_x|local_y|width|height|screen_x|screen_y|t)\b" --type rust | wc -l
+```
+
+The first should return zero hits in `src/` (only struct-literal usage, which we forbid going forward — it would silently break on field churn). The second returned 29 in master at v1.2.0; should stay 29. The third is the audit total of field-access call sites that ride through `Deref` unchanged.
 
 **Land this as commit 2 of Phase F.** Verification:
 
 ```bash
 cd /usr/projects/tui-vfx
+cargo build -p tui-vfx-style
 cargo test -p tui-vfx-style --lib --tests 2>&1 | tail -10
+cargo test --workspace 2>&1 | tail -10        # nothing else should break
 ```
+
+Expect: clean. `tui-vfx-compositor` does NOT see this change (it consumes `ShaderContext` only through `tui-vfx-style`'s public surface, and the public surface is back-compat via Deref).
 
 #### F.3 Migrate `Mask` first (smallest impl set, canonical pattern)
 
-**Why first:** Mask has the smallest impl set (~13 files) and no historical breaking-signature churn — the canonical pattern lands here with the lowest blast radius. The diff is the template for F.4 and F.5.
+**Why first:** Mask has the smallest impl set (**11 files**, verified at v1.2.0) and a tight dispatch site list. The canonical pattern lands here with the lowest blast radius. The diff is the template for F.4 and F.5.
 
-**Trait change** at `crates/tui-vfx-compositor/src/traits/mask.rs:7`:
+**Trait change** at `crates/tui-vfx-compositor/src/traits/mask.rs:5–7`:
+
+**Before:**
 
 ```rust
-// before
-fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool;
-
-// after
-fn is_visible(&self, ctx: &VfxCellContext) -> bool;
+// crates/tui-vfx-compositor/src/traits/mask.rs (current, v1.0.0)
+pub trait Mask {
+    /// Determines if a cell at (x, y) is visible given the total dimensions (w, h) and progress t.
+    fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool;
+}
 ```
 
-Note: the legacy `progress` parameter is the same `f64` clock as `t` on `VfxCellContext`. Confirm at slice-start whether the rename matters or whether `Mask` should keep a `progress` accessor (`fn progress(&self) -> f64 { self.t }`) on `VfxCellContext` for clarity. If you add the accessor, document the rename in the commit message.
+**After:**
 
-Sweep `ofpf-blast crates/tui-vfx-compositor/src/traits/mask.rs` to enumerate every dependent. Migrate impls; most can use `_ctx` (full bundle ignored) since masks read at most 2–3 fields.
+```rust
+// crates/tui-vfx-compositor/src/traits/mask.rs (v2.0.0)
+use tui_vfx_types::VfxCellContext;
 
-Update pipeline dispatch sites — find via `ofpf-callers` on `mask.rs`. The dispatcher constructs one `VfxCellContext` per cell and passes `&ctx` to Mask.
+pub trait Mask {
+    /// Determines whether a cell is visible given the per-cell spatial
+    /// context bundle. The `t` field carries the legacy `progress` clock.
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool;
+}
+```
 
-Bump `Mask`'s metadata version (this is a breaking trait change — track the bump explicitly, e.g. `2.0.0 → 3.0.0`, mirroring how `Filter` and `Sampler` track theirs).
+Update the file's metadata envelope from `1.0.0` to `2.0.0` (BREAKING — public trait signature change).
+
+> **PASS 1 NOTE.** Open Question 5 (rename `progress` → `t`) is resolved as **rename**: there is no semantic distinction between `Mask::is_visible`'s `progress` and `Sampler::sample`'s `t` and `Filter::apply`'s `t`; all three are the same animation clock. The bundle uses `t` because `VfxCellContext` already calls the field `t`. No `progress()` accessor is added — that would add API surface for zero benefit.
+
+**Representative impl-site diff (`crates/tui-vfx-compositor/src/masks/cls_radial.rs`).** This is one of the simpler Mask impls; the pattern repeats across the other 10.
+
+**Before** (current shape):
+
+```rust
+impl Mask for Radial {
+    fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool {
+        let progress = progress as f32;
+        if progress <= 0.0 { return false; }
+        if progress >= 1.0 { return true; }
+        let (origin_x, origin_y) = self.origin.as_fraction();
+        // ... uses x, y, w, h, progress ...
+    }
+}
+```
+
+**After:**
+
+```rust
+use tui_vfx_types::VfxCellContext;
+
+impl Mask for Radial {
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool {
+        let progress = ctx.t as f32;
+        if progress <= 0.0 { return false; }
+        if progress >= 1.0 { return true; }
+        let (origin_x, origin_y) = self.origin.as_fraction();
+        // ... uses ctx.local_x, ctx.local_y, ctx.width, ctx.height, ctx.t ...
+        // (rename x → ctx.local_x, y → ctx.local_y, w → ctx.width, h → ctx.height)
+    }
+}
+```
+
+**Mechanical rename table for every Mask impl:**
+
+| Old positional param | New field on `ctx` |
+|---|---|
+| `x` | `ctx.local_x` |
+| `y` | `ctx.local_y` |
+| `w` | `ctx.width` |
+| `h` | `ctx.height` |
+| `progress` | `ctx.t` |
+
+**Impls that ignore some fields** (e.g. `cls_dissolve.rs`, which reads only `progress`) become `fn is_visible(&self, ctx: &VfxCellContext) -> bool { let progress = ctx.t; ... }` with a single field read; *do not* prefix `ctx` with `_` because the impl reads at least `t`. Use `_ctx` only when the impl reads zero fields.
+
+**Pipeline dispatch sites — exact files and edits** (verified via `rg "is_visible" --type rust /usr/projects/tui-vfx/crates/tui-vfx-compositor/`):
+
+1. `crates/tui-vfx-compositor/src/pipeline/fnc_check_masks.rs` — 4 `mask.is_visible(local_x, local_y, width, height, t)` call sites in lines 35–80. The dispatcher already holds these five values; build `VfxCellContext` once per cell at the top of the loop. Since this function does not currently know `screen_x` / `screen_y`, default them to `0` for now and document with a `// TODO(F.6-followup):` comment if the dispatcher does not yet plumb screen offsets. **For the trait-migration commit, default `screen_x = 0, screen_y = 0` to preserve current Mask behavior** — masks today don't read screen coords.
+2. `crates/tui-vfx-compositor/src/pipeline/cls_prepared_mask.rs` — 5+ dispatch sites in the `PreparedMask::*` match arms. Same shape: build the `ctx` once at the dispatch entry, reuse for every arm.
+
+**Dispatch construction shape** (representative — adapt to the function's local variable names):
+
+```rust
+let ctx = VfxCellContext::new(local_x, local_y, width, height, 0, 0, t);
+let visible = mask.is_visible(&ctx);
+```
+
+**Test-site updates** — every `mask.is_visible(0, 0, 10, 10, 0.5)` style call inside `#[cfg(test)]` modules and standalone test files migrates to the same shape. Inside per-impl test modules, factor a small helper:
+
+```rust
+fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+    VfxCellContext::new(x, y, w, h, 0, 0, t)
+}
+```
+
+The largest test-site file (`cls_dissolve.rs` `#[cfg(test)]` block) has ~7 sites; the helper keeps the diff tight.
 
 **Land this as commit 3 of Phase F.** Verification:
 
@@ -1475,35 +1800,159 @@ cargo test --workspace --lib --tests 2>&1 | tail -40
 cargo clippy --workspace --lib --tests -- -D warnings 2>&1 | tail -20
 ```
 
+Expect: clean. The Mask trait change is fully self-contained inside `tui-vfx-compositor` (no out-of-crate consumers); the workspace check is defensive.
+
 #### F.4 Migrate `Sampler` (already at v2.0.0 — bump to v3.0.0)
 
-**File:** `crates/tui-vfx-compositor/src/traits/sampler.rs:26`.
+**File:** `crates/tui-vfx-compositor/src/traits/sampler.rs:7–34`.
+
+**Before:**
 
 ```rust
-// before
-fn sample(&self, dest_x: u16, dest_y: u16, width: u16, height: u16, t: f64) -> Option<(u16, u16)>;
-
-// after
-fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)>;
+// crates/tui-vfx-compositor/src/traits/sampler.rs (current, v2.0.0)
+pub trait Sampler {
+    fn sample(
+        &self,
+        dest_x: u16,
+        dest_y: u16,
+        width: u16,
+        height: u16,
+        t: f64,
+    ) -> Option<(u16, u16)>;
+}
 ```
 
-~12 impls. Migration follows the F.3 pattern. Pipeline dispatch is the same `VfxCellContext`-per-cell construction; reuse the shared `ctx` wherever Mask + Sampler + Filter all run on the same cell.
+**After:**
+
+```rust
+// crates/tui-vfx-compositor/src/traits/sampler.rs (v3.0.0)
+use tui_vfx_types::VfxCellContext;
+
+pub trait Sampler {
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)>;
+}
+```
+
+**Impl count:** **11** (verified at v1.2.0 — see `rg "impl Sampler for" --type rust -l`). v1.1.0 said "~12"; the actual count is one less.
+
+**Representative impl-site diff (`crates/tui-vfx-compositor/src/samplers/cls_sine_wave.rs`).**
+
+**Before:**
+
+```rust
+impl Sampler for SineWave {
+    fn sample(
+        &self,
+        dest_x: u16,
+        dest_y: u16,
+        _width: u16,
+        _height: u16,
+        t: f64,
+    ) -> Option<(u16, u16)> {
+        let t = t as f32;
+        match self.axis { /* uses dest_x, dest_y */ }
+    }
+}
+```
+
+**After:**
+
+```rust
+use tui_vfx_types::VfxCellContext;
+
+impl Sampler for SineWave {
+    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+        let t = ctx.t as f32;
+        match self.axis { /* uses ctx.local_x as dest_x, ctx.local_y as dest_y */ }
+    }
+}
+```
+
+**Mechanical rename table:**
+
+| Old positional param | New field on `ctx` |
+|---|---|
+| `dest_x` | `ctx.local_x` |
+| `dest_y` | `ctx.local_y` |
+| `width` | `ctx.width` |
+| `height` | `ctx.height` |
+| `t` | `ctx.t` |
+
+**Pipeline dispatch sites** — sampler dispatch lives in pipeline modules adjacent to the mask dispatcher; locate via:
+
+```bash
+rg "\.sample\(" --type rust /usr/projects/tui-vfx/crates/tui-vfx-compositor/src/pipeline/
+```
+
+Reuse the same `VfxCellContext` if a layer goes through Sampler + Mask + Filter on the same cell — construct once at the top of the per-cell loop, pass `&ctx` to each trait surface.
 
 **Land this as commit 4 of Phase F.** Same verification sweep as F.3.
 
 #### F.5 Migrate `Filter` (largest impl set — gate on F.3 + F.4 green)
 
-**File:** `crates/tui-vfx-compositor/src/traits/filter.rs:93`. Largest impl set in the repo (~31 files).
+**File:** `crates/tui-vfx-compositor/src/traits/filter.rs:69–93`. Largest impl set in the repo: **30 standalone impls** (verified — the trait file itself shows up in `rg` results too, hence v1.1.0's "~31"; the actual impl count is 30 plus the trait file).
+
+**Before:**
 
 ```rust
-// before
-fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64);
+// crates/tui-vfx-compositor/src/traits/filter.rs (current, v3.0.0)
+use tui_vfx_types::Cell;
 
-// after
-fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext);
+pub trait Filter {
+    fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64);
+}
 ```
 
-Do not start F.5 until F.3 and F.4 are green on master and CI. The 31 impl sweep is mechanical; protect against drift by re-running `ofpf-blast` against the F.3 baseline before starting.
+**After:**
+
+```rust
+// crates/tui-vfx-compositor/src/traits/filter.rs (v4.0.0)
+use tui_vfx_types::{Cell, VfxCellContext};
+
+pub trait Filter {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext);
+}
+```
+
+**Update the rustdoc** — the file's existing examples (`Dim`, `Vignette`) use the old signature; rewrite both rustdoc blocks (lines 33–67) to use the new signature so the doctest stays correct.
+
+**Representative impl-site diff (`crates/tui-vfx-compositor/src/filters/cls_dim.rs`).**
+
+**Before:**
+
+```rust
+impl Filter for Dim {
+    fn apply(&self, cell: &mut Cell, _x: u16, _y: u16, _width: u16, _height: u16, t: f64) {
+        let t = t as f32;
+        // ... uniform dimming, ignores spatial ...
+    }
+}
+```
+
+**After:**
+
+```rust
+use tui_vfx_types::VfxCellContext;
+
+impl Filter for Dim {
+    fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
+        let t = ctx.t as f32;
+        // ... unchanged body ...
+    }
+}
+```
+
+For spatial-aware Filters (e.g. `cls_vignette.rs`), the rename table is:
+
+| Old positional param | New field on `ctx` |
+|---|---|
+| `x` | `ctx.local_x` |
+| `y` | `ctx.local_y` |
+| `width` | `ctx.width` |
+| `height` | `ctx.height` |
+| `t` | `ctx.t` |
+
+**Do not start F.5 until F.3 and F.4 are green on master.** The 30-impl sweep is mechanical; protect against drift by re-running `ofpf-blast crates/tui-vfx-compositor/src/traits/filter.rs` against the F.3 baseline before starting.
 
 **Land this as commit 5 of Phase F.** Same verification sweep as F.3, plus:
 
@@ -1514,39 +1963,50 @@ cargo test --doc -p tui-vfx-compositor 2>&1 | tail -10
 
 Expect: doctests on Filter / Mask / Sampler updated and passing.
 
-#### F.6 Cross-repo audit (Intention 41)
+#### F.6 Cross-repo audit (Intention 41) — confirm-and-document
 
-**Repos to audit** in order:
+> **PASS 1 NOTE — audit reframed.** v1.1.0 said "**gt-design** likely has Filter / Mask / Sampler impls". Verified at v1.2.0 — **zero impls** of any of the three traits exist in `gt-design`, `tui-vfx-recipes`, or `mixed-signals` (commands below; all return empty). F.6 is therefore a **confirmation pass**, not a migration pass. The packet's "consumer-side coordination" risk in v1.1.0's risk inventory is downgraded.
 
-1. **`gt-design`** — likely has Filter / Mask / Sampler impls. Confirm with:
+**Run these in each sibling repo. All should return zero hits.**
 
-   ```bash
-   cd /usr/projects/gt-design
-   ofpf-status
-   ofpf-content "impl.*for.*Filter\b" --glob "**/*.rs"
-   ofpf-content "impl.*for.*Mask\b" --glob "**/*.rs"
-   ofpf-content "impl.*for.*Sampler\b" --glob "**/*.rs"
-   ```
+```bash
+# gt-design
+cd /usr/projects/gt-design
+rg "impl\s+(\w+::)?Filter\s+for\b" --type rust
+rg "impl\s+(\w+::)?Mask\s+for\b" --type rust
+rg "impl\s+(\w+::)?Sampler\s+for\b" --type rust
 
-2. **`tui-vfx-recipes`** — unlikely to have impls but verify with the same `ofpf-content` pattern. If any exist, migrate.
+# tui-vfx-recipes
+cd /usr/projects/tui-vfx-recipes
+rg "impl\s+(\w+::)?Filter\s+for\b" --type rust
+rg "impl\s+(\w+::)?Mask\s+for\b" --type rust
+rg "impl\s+(\w+::)?Sampler\s+for\b" --type rust
 
-3. **`mixed-signals`** — should have zero impls (signal-only crate, no compositor surface). Confirm.
+# mixed-signals
+cd /usr/projects/mixed-signals
+rg "impl\s+(\w+::)?Filter\s+for\b" --type rust
+rg "impl\s+(\w+::)?Mask\s+for\b" --type rust
+rg "impl\s+(\w+::)?Sampler\s+for\b" --type rust
+```
 
-For each repo with impls: migrate, bump the consumer crate version (PATCH if behavior preserved), commit per-repo. The cross-repo coordination is part of this packet — do not declare Phase F done until every consumer compiles against the new trait surfaces.
+**If any of these return non-empty** between v1.2.0 and Phase F kickoff, the codebase has drifted; treat each new impl as a Mask-pattern migration (F.3 template), commit per-repo with PATCH version bumps. **If they all return empty** (the current state), record the empty result in the Phase F closing commit message and proceed to F.7.
 
-**Land per-repo commits as commit 6 (or 6a / 6b / 6c) of Phase F.** Verification:
+**Build-level confirmation pass** that the consumer repos still compile against the new trait surfaces:
 
 ```bash
 cd /usr/projects/gt-design
-cargo build 2>&1 | tail -10
+cargo build --workspace 2>&1 | tail -10
 cargo test --workspace 2>&1 | tail -40
 
 cd /usr/projects/tui-vfx-recipes
-cargo build -p tui-vfx-recipes 2>&1 | tail -10
-cargo test -p tui-vfx-recipes 2>&1 | tail -20
+cargo build --workspace 2>&1 | tail -10
+cargo test --workspace 2>&1 | tail -20
+
+cd /usr/projects/mixed-signals
+cargo build --workspace 2>&1 | tail -10
 ```
 
-Expect: green across all four repos.
+Expect: green across all four repos. Because the consumer repos do not impl any of the three traits, any failure is either (a) a transitively re-exported public type that depends on the trait surface, or (b) a documentation drift; either way, fix in tui-vfx and re-run rather than patching the consumer.
 
 #### F.7 Phase F documentation sweep
 
@@ -1574,6 +2034,30 @@ Expect: workspace-wide green across all three repos. Phase F gate passed.
 
 ---
 
+## 5x. Minimum compiling intermediate states (between-phase invariants)
+
+> **PASS 2 ADDITION.** Every commit in the sequence below must compile cleanly with `cargo build --workspace` from `/usr/projects/tui-vfx`. If any commit's intermediate state does not compile, the phase split was wrong; reconsider before pushing.
+
+| After commit | What compiles | What does not compile yet | Workspace test state |
+|---|---|---|---|
+| **A.3** (trait file replaced, transformers not yet swept) | nothing — intermediate-only state inside a single editor session. Do not commit at this point. | All 15 transformer impls (signature mismatch). | Build fails. |
+| **A.6** (Phase A end: trait + 15 impls + inline tests + ContentEffect API) | `tui-vfx-content` lib + integration tests + doctests. `tui-vfx` workspace re-export. `tui-vfx-compositor` (cursor integration test compiles after A.7). `gt-design` still compiles because gt-design's `transformer.transform(text, t, &signal_ctx)` call site fails to compile against the new trait. | gt-design call sites at `recipes/render.rs:130`, `text_effects/mod.rs:171`. **gt-design build is broken at this commit.** | Workspace test green for tui-vfx; gt-design red. |
+| **B.4** (Phase B end: gt-design caller plumbing) | Everything in tui-vfx + gt-design. Recipe still uses literal `"line-3x3"` font. | Nothing. | All four repos green. |
+| **C.3** (Phase C end: Odometer reads runtime params) | All of B.4, plus binding-form font tests pass. | Nothing. | All four repos green. |
+| **D.2** (Phase D end: recipe migrated to binding form) | All of C.3, plus `content_odometer_3x3_count_bindable.json` validates with binding-form font. | Nothing. | All four repos green. |
+| **E.6** (Phase E end: docs + cycle plan v0.8.0) | Same as D.2; only docs/CLOG changed. | Nothing. | All four repos green. |
+| **F.1** (`VfxCellContext` defined in `tui-vfx-types`) | Workspace-wide; `VfxCellContext` is purely additive. | Nothing. | All four repos green. |
+| **F.2** (`ShaderContext` composed) | Workspace-wide via `Deref` back-compat. | Nothing if §F.2 pre-flight grep returned zero `src/` struct-literal sites. | All four repos green. |
+| **F.3** (Mask migrated) | Workspace-wide; Mask trait is internal to tui-vfx-compositor. | Nothing. | All four repos green. |
+| **F.4** (Sampler migrated) | Workspace-wide. | Nothing. | All four repos green. |
+| **F.5** (Filter migrated) | Workspace-wide. | Nothing. | All four repos green. |
+| **F.6** (cross-repo audit) | Workspace-wide. | Nothing. | All four repos green. Audit recorded as zero out-of-tree impls. |
+| **F.7** (Phase F docs sweep) | Same as F.6; docs only. | Nothing. | All four repos green. |
+
+**Phase A's mid-stream broken state (A.3 → A.6) and Phase B's mid-stream broken state (between A.6 and B.4) are the only intervals where the workspace does not compile cleanly.** All commit boundaries above are clean. **Do not split commits inside the A.3→A.6 or A.6→B.4 windows;** land them as single commits to keep `git bisect` honest.
+
+---
+
 ## 6. Risk inventory (with concrete mitigations)
 
 | Risk | Concrete mitigation | Verification |
@@ -1587,11 +2071,15 @@ Expect: workspace-wide green across all three repos. Phase F gate passed.
 | **Compositor cursor integration test** drift — `cursor_integration.rs` calls `transform_with_cursor` with the old signature. | A.7 explicitly migrates `transform_with_cursor` to take `&TransformContext`; A.7's test-site list includes `cursor_integration.rs:41,61,63`. | `cargo test --workspace` (Phase A.9) passes. |
 | **Recipe validator rejection** of the binding-form recipe due to an L2 contract mismatch. | Read `tui-vfx-recipes/docs/design/tui-vfx-binding-loopback-implementation-plan.md` § L2 first to confirm the `requires_bindings` shape. The expected shape: `{"type": "string", "description": "...", "default": "default_font"}`. | Phase D `cargo test --test test_debug_recipes_qc` passes. |
 | **Docs-freshness drift** from `just docs-all-validate` — a regenerated artifact does not match the committed one. | After E.4 succeeds, commit the regenerated artifact alongside the manual edits. | E.6 `just docs-all-validate` passes. |
-| **Phase F: AnimationPhase home churn.** If `AnimationPhase` lives in `tui-vfx-style` today, hoisting it to `tui-vfx-types` for `VfxCellContext` is itself a breaking change with its own blast radius. | Confirm `AnimationPhase`'s current crate at F.1 start via `ofpf-defs AnimationPhase`. If hoisting is required, do it as the *first* sub-step of F.1 with its own commit; do not bundle the hoist into the same commit as `VfxCellContext`. | F.1 ends with two commits if hoist is needed (one for the hoist, one for `VfxCellContext`). Both compile clean before F.2. |
+| ~~**Phase F: AnimationPhase home churn.**~~ **Removed in v1.2.0.** v1.1.0's row presumed `AnimationPhase` lived in `tui-vfx-style` and could be hoisted "down" to `tui-vfx-types`. Verified false: `AnimationPhase` lives in `tui-vfx-recipes::state::lifecycle` (downstream), and the existing `ShaderContext::phase` field is `Option<mixed_signals::traits::Phase>` (a different enum). The rescoped `VfxCellContext` (§F.1) does not contain a `phase` field at all — Filter/Mask/Sampler do not currently take a phase parameter. No hoist needed. | n/a | n/a |
 | **Phase F: Deref vs explicit `ctx.cell.field` decision.** Choosing wrong leaks into ~56 impls and is painful to reverse. | F.2 decision is made at slice-start and documented in the commit message. The recommendation (Deref) keeps the migration zero-churn at access sites; reverse with a follow-up if the hidden composition causes confusion in practice. | F.2 commit message explicitly names the choice and rationale. |
 | **Phase F: trait migration order broken.** Doing `Filter` first (largest impl set) is tempting for "rip the bandaid" but blocks `Mask` / `Sampler` rollout if a pattern bug surfaces in the 31-impl sweep. | F.3 → F.4 → F.5 in that order is non-negotiable. Mask is smallest and safest; Sampler establishes the second-trait-using-the-pattern signal; Filter is the throughput pass. | The Phase F commit log shows the three traits landing in this order. |
 | **Phase F: cross-repo drift.** gt-design lands an unrelated change against the old trait surfaces between F.5 and F.6, forcing rebase. | Coordinate with the user before F.6 starts; if gt-design has active sibling work, hold F.6 until it lands. The cross-repo audit *is* the migration — do not push consumer-side changes into a stale gt-design tree. | F.6 starts only after gt-design's `git status` is clean of unrelated active work. |
-| **Phase F: `runtime_params` access scope creep.** Tempting to add `runtime_params: Arc<ShaderRuntimeParams>` to `VfxCellContext` "while we are touching every impl anyway." | The decision is made: per sweep §6.1 and the architectural-decision block at the top of Phase F, runtime_params live on `ShaderContext` only. Filter / Mask / Sampler do not get runtime-params access from this packet. Surface the temptation as a follow-on packet referencing sweep §1.2.A. | F.1 `VfxCellContext` definition has exactly the eight spatial-context fields and nothing more. |
+| **Phase F: `runtime_params` access scope creep.** Tempting to add `runtime_params: Arc<ShaderRuntimeParams>` to `VfxCellContext` "while we are touching every impl anyway." | The decision is made: per sweep §6.1 and the architectural-decision block at the top of Phase F, runtime_params live on `ShaderContext` only. Filter / Mask / Sampler do not get runtime-params access from this packet. Surface the temptation as a follow-on packet referencing sweep §1.2.A. | F.1 `VfxCellContext` definition has exactly the **seven** spatial-context fields and nothing more. |
+| **Phase F: `ShaderContext` struct-literal construction silently breaking.** After F.2, `ShaderContext { local_x: 5, ..ctx }` will not compile (those fields moved into `cell`). Any in-tree call site doing this will block the F.2 commit. | Pre-F.2: `rg "ShaderContext\s*\{" --type rust /usr/projects/tui-vfx/`. Expected zero hits in `src/` other than the type definition itself; if any are found, migrate them to `ShaderContext::new(...)` *before* F.2 (so F.2 stays diff-tight). | Pre-F.2 grep returns zero `src/` hits; F.2 build is clean. |
+| **Phase F: dispatch sites lack `screen_x` / `screen_y` plumbing today.** `fnc_check_masks.rs` and `cls_prepared_mask.rs` build their context from `(local_x, local_y, width, height, t)` but have no screen-offset variables in scope. After F.3 the constructed `VfxCellContext` defaults `screen_x = screen_y = 0`. | Default to `0` in the trait-migration commit (preserves current Mask/Sampler/Filter behavior — none of them read screen coords today). File a follow-up packet to thread screen offsets through the layer dispatcher when a downstream consumer needs them. Add a `// TODO(F-followup):` comment at each construction site naming the follow-up packet. | F.3 / F.4 / F.5 commits are clean; the TODOs are committed alongside. |
+| **Phase F: `Deref<Target = VfxCellContext>` shadows methods on `ShaderContext`.** If `ShaderContext` keeps inherent `screen_cell_x`/`screen_cell_y`/`normalized_x`/`normalized_y` methods after the four move to `VfxCellContext`, callers will see the inherent (which wins over Deref-routed methods); silently fine for now, confusing later. | F.2 explicitly removes those four methods from `ShaderContext`'s inherent `impl` block. Only `role_at`, `with_roles`, and any other style-specific helpers stay on `ShaderContext`. | Post-F.2: `rg "fn screen_cell_x" /usr/projects/tui-vfx/crates/tui-vfx-style/src/traits/cls_shader_context.rs` returns zero hits; the same call site `ctx.screen_cell_x()` continues to compile (now via Deref to `VfxCellContext`). |
+| **Phase A→B: the `apply_to_borrowed` per-call allocation is still per-call.** After Phase A, `apply_to_borrowed` constructs a fresh `SignalContext::default()` and `ShaderRuntimeParams::new()` on every call. This is identical to the current behavior (today's `apply_to_borrowed` already constructs a `SignalContext::default()`), so no regression — but worth flagging as a known not-fixed cost. | Document explicitly in the §A.6 commit message. The fix (caller-supplied context) is what `apply_with_runtime` exposes; document its preference in the rustdoc on `apply_to_borrowed`. | No new allocation introduced beyond what the current code already does; future hot-path consumers prefer `apply_with_runtime`. |
 
 ---
 
@@ -1618,7 +2106,7 @@ Expect: workspace-wide green across all three repos. Phase F gate passed.
 
 **Phases A–E (Slice 6.6):**
 - [ ] All 15 transformer impls compile against the new trait signature.
-- [ ] `cargo test -p tui-vfx-content --lib` passes with **357** lib tests (356 baseline + 1 new TransformContext test).
+- [ ] `cargo test -p tui-vfx-content --lib` passes with **baseline+1** lib tests (one new TransformContext test). Against the v1.2.0 master that is 349; against your local baseline it is your captured number from §0.10 plus one.
 - [ ] `cargo test -p tui-vfx-content` passes with two new integration tests in `tests/transformers/test_cls_odometer_cycles.rs` covering binding-form font resolution (host-supplied + loopback-default).
 - [ ] `cargo test --doc -p tui-vfx-content` passes; doctests on `ContentEffect::apply_*` and `lib.rs` updated.
 - [ ] `cargo build --workspace` clean.
@@ -1630,17 +2118,19 @@ Expect: workspace-wide green across all three repos. Phase F gate passed.
 - [ ] `ofpf-blast crates/tui-vfx-content/src/traits/text_transformer.rs` returns the expected set (§0.5) plus the new `cls_transform_context.rs` re-export.
 
 **Phase F (Sweep §1.1.A):**
-- [ ] `crates/tui-vfx-types/src/cls_vfx_cell_context.rs` exists with eight spatial-context fields, exported from `lib.rs`, with inline tests and a `test_default()` helper.
-- [ ] `ShaderContext` in `tui-vfx-style` composes `VfxCellContext` (with the chosen Deref / explicit-cell decision documented in commit 2's message).
-- [ ] `Mask::is_visible(&self, ctx: &VfxCellContext) -> bool` — all ~13 impls migrated; trait version bumped.
-- [ ] `Sampler::sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)>` — all ~12 impls migrated; trait version bumped to v3.0.0.
-- [ ] `Filter::apply(&self, cell: &mut Cell, ctx: &VfxCellContext)` — all ~31 impls migrated; trait version bumped.
-- [ ] Pipeline dispatch sites construct one `VfxCellContext` per cell and pass `&ctx` to all three trait surfaces.
-- [ ] Cross-repo audit complete: every Filter / Mask / Sampler impl in `gt-design`, `tui-vfx-recipes`, and `mixed-signals` migrated or confirmed absent.
+- [ ] `crates/tui-vfx-types/src/cls_vfx_cell_context.rs` exists with **seven** spatial-context fields (no `phase`), exported from `lib.rs`, with inline tests, `test_default()` helper, and accessors `screen_cell_x` / `screen_cell_y` / `normalized_x` / `normalized_y`.
+- [ ] `tui-vfx-types` lib.rs version bumped from `0.5.0` → `0.6.0` (additive new public type).
+- [ ] `ShaderContext` in `tui-vfx-style` composes `VfxCellContext` via a `cell: VfxCellContext` field plus a `Deref<Target = VfxCellContext>` impl. Inherent `screen_cell_x` / `screen_cell_y` / `normalized_x` / `normalized_y` methods are **removed** from `ShaderContext` (they live on `VfxCellContext` now and route via Deref).
+- [ ] `ShaderContext::new(...)` keeps its 9-positional-arg signature; the body builds the `VfxCellContext` internally. All 29 in-tree `ShaderContext::new` call sites compile unchanged.
+- [ ] `Mask::is_visible(&self, ctx: &VfxCellContext) -> bool` — all **11** impls migrated; trait version bumped 1.0.0 → 2.0.0.
+- [ ] `Sampler::sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)>` — all **11** impls migrated; trait version bumped 2.0.0 → 3.0.0.
+- [ ] `Filter::apply(&self, cell: &mut Cell, ctx: &VfxCellContext)` — all **30** impls migrated; trait version bumped 3.0.0 → 4.0.0.
+- [ ] Pipeline dispatch sites in `crates/tui-vfx-compositor/src/pipeline/fnc_check_masks.rs`, `pipeline/cls_prepared_mask.rs`, and the sampler/filter dispatchers construct one `VfxCellContext` per cell (with `screen_x = screen_y = 0` until a follow-up packet plumbs screen offsets) and pass `&ctx` to all three trait surfaces.
+- [ ] Cross-repo audit complete: `rg "impl\s+(Filter|Mask|Sampler)\s+for\b"` returns zero hits in `gt-design`, `tui-vfx-recipes`, `mixed-signals` (current state, v1.2.0). If non-empty, each impl migrated and recorded in the closing commit.
 - [ ] `cargo test --workspace` clean across all four repos (`tui-vfx`, `tui-vfx-recipes`, `gt-design`, `mixed-signals`).
 - [ ] `cargo clippy --workspace --lib --tests -- -D warnings` clean across the four repos.
 - [ ] Sweep doc §1.1.A marked Done with closing commit hashes.
-- [ ] V3 schema draft updated to reference the `VfxCellContext` type rather than inline-annotate eight fields per spec.
+- [ ] V3 schema draft updated to reference the `VfxCellContext` type rather than inline-annotate seven fields per spec.
 
 ---
 
@@ -1661,9 +2151,33 @@ Expect: workspace-wide green across all three repos. Phase F gate passed.
 
 ---
 
-## 10. Critical findings (drift from the v0.1.0 draft)
+## 10. Critical findings
 
-The v0.1.0 pre-review draft had several factual gaps and one architectural misframing that this v1.0.0 corrects. Documenting them here so the version history is honest.
+### 10.1 v1.2.0 review-pass findings (drift from v1.1.0)
+
+The v1.1.0 plan had nine factual gaps surfaced by a critical Pass-1 review. v1.2.0 fixes them all in-place; documented here so the version history is honest.
+
+1. **`AnimationPhase` lives downstream, not upstream.** v1.1.0 said "If `AnimationPhase` lives in `tui-vfx-style` today, hoist it down to `tui-vfx-types`". Verified: `AnimationPhase` is defined at `/usr/projects/tui-vfx-recipes/src/state/lifecycle.rs` in `tui-vfx-recipes`, not `tui-vfx-style`. Hoisting it to `tui-vfx-types` would invert the dependency direction. Resolution: drop `phase` from `VfxCellContext` entirely; it was scope creep (Filter/Mask/Sampler don't take a phase parameter today).
+
+2. **The existing `ShaderContext::phase` field is `Option<mixed_signals::traits::Phase>`, not `AnimationPhase`.** Two completely different enums (`Start | Active | End | Done` vs `Entering | Dwelling | Exiting | Finished`). Even if F.1 had wanted to bundle a phase, it would have been the *wrong* phase. Resolution: same — drop from `VfxCellContext`; `ShaderContext` retains its existing `Option<Phase>` field as style-only.
+
+3. **Baseline lib-test count was stale.** v1.1.0 said `cargo test -p tui-vfx-content --lib` returns 356. Local re-run on 2026-04-26 returned **348**. Plan now uses "baseline+1" arithmetic so the absolute number stays accurate as master moves.
+
+4. **Filter/Mask/Sampler impl counts overstated.** v1.1.0 said "~13 Mask, ~12 Sampler, ~31 Filter". Verified: **11 Mask, 11 Sampler, 30 Filter** (plus the trait file itself, which `rg` includes in its count). Plan updated to reflect.
+
+5. **Cross-repo audit — zero out-of-tree impls.** v1.1.0 said gt-design "likely has Filter / Mask / Sampler impls". Verified: gt-design, tui-vfx-recipes, mixed-signals all return zero hits for `impl\s+(Filter|Mask|Sampler)\s+for\b`. F.6 reframed as confirm-and-document.
+
+6. **`ShaderContext::new` has 29 in-tree call sites.** v1.1.0 did not surface the constructor migration. With 29 call sites, the only sane choice is to keep the 9-positional-arg signature and build the `VfxCellContext` internally (rather than break 29 sites for a stylistic gain). Plan §F.2 now spells this out.
+
+7. **`VfxCellContext` should be `Copy`, `ShaderContext` cannot be.** v1.1.0 did not state this distinction. `VfxCellContext` is seven scalar fields (one cache line); `ShaderContext` has `Arc<…>` fields. Plan §F.1 now derives `Copy` on `VfxCellContext`.
+
+8. **The `screen_cell_x` / `screen_cell_y` / `normalized_x` / `normalized_y` accessor methods need a home decision.** v1.1.0 was silent. Plan now moves them from `ShaderContext` to `VfxCellContext` (where they live alongside the spatial fields they read), and removes them from `ShaderContext`'s inherent `impl` so `Deref` routes calls through cleanly.
+
+9. **Pipeline dispatchers have no `screen_x` / `screen_y` plumbing today.** v1.1.0 did not surface this. The dispatchers in `fnc_check_masks.rs` / `cls_prepared_mask.rs` build their context from `(local_x, local_y, width, height, t)` only; F.3 defaults `screen_x = screen_y = 0` to preserve current behavior, with a follow-up packet for layer-dispatcher screen-offset plumbing.
+
+### 10.2 v1.0.0 findings (drift from the v0.1.0 draft)
+
+The v0.1.0 pre-review draft had several factual gaps and one architectural misframing that v1.0.0 corrected. Preserved here so the full version history is honest.
 
 1. **Trait file path was guessed.** The v0.1.0 draft said the trait lives at `crates/tui-vfx-content/src/traits/cls_text_transformer.rs` ("or wherever the trait lives — confirm during plan refinement"). The actual file is `text_transformer.rs` — no `cls_` prefix. The `traits/` directory contains exactly two files: `mod.rs` and `text_transformer.rs`. Confirmed via `ofpf-defs TextTransformer`.
 
@@ -1697,9 +2211,19 @@ These could not be closed from the codebase alone.
 
 4. **Recipe `default` sentinel — `"default_font"` vs `"line-3x3"`?** §D.1's recipe migration uses `"default_font"` for `requires_bindings.drum_font.default`. The reserved sentinel routes through the registry's currently-registered default (line-3x3 in the shipping case). Using the literal `"line-3x3"` instead would be more explicit but couples the recipe to a specific font name. The plan picks the sentinel for forward-compatibility; flag if you prefer the literal.
 
-5. **Phase F: `Mask::is_visible` parameter rename — keep `progress` or unify on `t`?** The legacy `Mask` parameter is `progress: f64`; `VfxCellContext::t: f64` carries the same clock. Phase F.3 has two options: (a) rename uniformly to `t` across the family, or (b) add `fn progress(&self) -> f64 { self.t }` as a clarity accessor on `VfxCellContext`. The plan picks (a) for surface uniformity; flag if Mask's semantic distinction is load-bearing somewhere not surfaced by `ofpf-content`.
+5. ~~**Phase F: `Mask::is_visible` parameter rename — keep `progress` or unify on `t`?**~~ **Resolved in v1.2.0: rename uniformly to `ctx.t`.** Verified there is no semantic distinction between `Mask::is_visible`'s `progress`, `Sampler::sample`'s `t`, and `Filter::apply`'s `t` — all three are the same animation clock. The bundle uses `t` because `VfxCellContext.t` is canonical. No `progress()` accessor added (would be API surface for zero benefit). Evidence that would have re-opened: a Mask impl that sourced `progress` from a different clock than the dispatcher's `t` — none exist (`rg "is_visible.*progress" --type rust` shows the dispatcher passes `t` directly).
 
-6. **Phase F: trait-version bump scheme.** `Filter` is at v3.0.0 and `Sampler` at v2.0.0 per the sweep. Phase F bumps each by one major. Should `Mask` get the same explicit per-trait version stamp it has not historically carried, for parity? The plan adds `Mask v?.0.0 → v?+1.0.0` style tracking; flag if the version-stamping convention should differ.
+6. **Phase F: trait-version bump scheme.** `Filter` is at v3.0.0, `Sampler` at v2.0.0, **`Mask` at v1.0.0** (verified at v1.2.0 — Mask never carried explicit version-bump CLOG until now). Phase F bumps each by one major: Filter 3.0.0 → 4.0.0, Sampler 2.0.0 → 3.0.0, Mask 1.0.0 → 2.0.0. Evidence that would change this: a project decision to use SemVer minor instead of major for trait-shape changes, but the existing Filter/Sampler precedent argues for major.
+
+7. **Phase F: should `ShaderContext` field-layout change be MAJOR or MINOR?** Current revision says MAJOR (struct field layout changed; struct-literal construction breaks). But `cls_shader_context.rs` is internal to `tui-vfx-style` and the only public way to construct is `ShaderContext::new(...)` (which is preserved). Evidence that would close as MINOR: zero in-tree struct-literal sites *and* a project policy that struct-literal external construction is not part of the public API. Without that policy in writing, MAJOR is the safe call.
+
+8. **Phase F: should `screen_x` / `screen_y` plumbing through the layer dispatcher be in scope or follow-up?** Plan says follow-up — dispatchers default to `0` for now, preserving current behavior. Evidence that would put it in scope: a Mask/Sampler/Filter impl that needs absolute screen coords to render (e.g. a vignette pinned to the screen, not the layer). Verified: no such impl today. Defer.
+
+9. **Should `apply_with_context` (which only takes `signal_ctx`) be deprecated in favor of `apply_with_runtime`?** Verified at v1.2.0: `apply_with_context` has exactly **one** in-tree caller — `crates/tui-vfx-content/tests/test_content_effect_apply.rs`. Migrating that test to `apply_with_runtime` and adding `#[deprecated(since = "<version>", note = "use apply_with_runtime")]` to `apply_with_context` is one extra commit. Plan keeps both for now (back-compat); flag to add deprecation if you want one fewer near-duplicate API surface.
+
+> **OPEN QUESTION (Pass 1 review):** **Is leaving `cls_shader_context.rs` at 463 LOC (well over the 200-LOC hard limit) acceptable for the duration of Phase F?** F.2 *reduces* the file by ~30 LOC (the four accessors moving to `VfxCellContext`), but the file remains far over budget. A clean split — extracting `Phase`-helper methods (`is_starting`, `is_active`, etc.) into a peer file — is mechanical but expands Phase F's blast radius. Suggested resolution: **defer the split to a dedicated follow-up packet** (file naming: `2026-04-XX_packet-shader-context-loc-split.md`), document the over-budget state in F.2's commit message, and add an entry in the buy-once sweep doc as a known-debt item. Evidence that would close: leader confirmation that "ship over-budget for the F-phase, fix in follow-up" is acceptable, vs "must split in F.2".
+
+10. **What major-version bump should `cls_shader_context.rs` carry post-F.2?** Current is 1.3.0. The F.2 change moves field layout (`local_x` etc. now live on `cell: VfxCellContext`) and removes four inherent methods (covered by Deref). For internal types, MAJOR is appropriate. Suggested resolution: bump to 2.0.0 with the F.2 commit, named "F.2: compose VfxCellContext; remove cell-spatial accessors (now on VfxCellContext via Deref)". Evidence that would close: leader confirmation that 1.3.0 → 2.0.0 is the right bump (vs 1.4.0 if "internal-only" is the policy).
 
 <!-- <FILE>docs/design/tui-vfx-transform-context-implementation-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.2.0</VERS> -->
