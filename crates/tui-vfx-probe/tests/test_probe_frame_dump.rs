@@ -64,6 +64,7 @@ fn test_run_probe_reports_full_widget_dump() {
         destination: make_grid(8, 6, ' '),
         widget_offset: ProbePoint { x: 2, y: 1 },
         composition: CompositionSpec::default(),
+        loopback_fired_keys: Vec::new(),
     };
     let request = ProbeRequest {
         phase: ProbePhase::Dwelling,
@@ -98,6 +99,7 @@ fn test_run_probe_modified_selector_reports_only_filter_touched_cells() {
             }],
             ..CompositionSpec::default()
         },
+        loopback_fired_keys: Vec::new(),
     };
     let request = ProbeRequest {
         phase: ProbePhase::Dwelling,
@@ -138,6 +140,7 @@ fn test_run_probe_modified_selector_reports_only_shader_touched_cells() {
             t: 0.5,
             ..CompositionSpec::default()
         },
+        loopback_fired_keys: Vec::new(),
     };
     let request = ProbeRequest {
         phase: ProbePhase::Dwelling,
@@ -170,6 +173,7 @@ fn test_run_probe_no_effect_dump_omits_last_touch_and_trace() {
         destination: make_grid(4, 3, ' '),
         widget_offset: ProbePoint { x: 1, y: 1 },
         composition: CompositionSpec::default(),
+        loopback_fired_keys: Vec::new(),
     };
     let request = ProbeRequest {
         phase: ProbePhase::Dwelling,
@@ -197,6 +201,7 @@ fn test_run_probe_with_causation_emits_trace_for_modified_cells() {
             }],
             ..CompositionSpec::default()
         },
+        loopback_fired_keys: Vec::new(),
     };
     let request = ProbeRequest {
         phase: ProbePhase::Dwelling,
@@ -223,6 +228,7 @@ fn test_run_probe_auto_populates_basic_diagnostics() {
         destination: make_grid(6, 5, ' '),
         widget_offset: ProbePoint { x: 1, y: 1 },
         composition: CompositionSpec::default(),
+        loopback_fired_keys: Vec::new(),
     };
     let request = ProbeRequest {
         phase: ProbePhase::Dwelling,
@@ -254,6 +260,7 @@ fn test_run_probe_rejects_grid_shape_mismatch() {
         destination: make_grid(4, 4, ' '),
         widget_offset: ProbePoint { x: 0, y: 0 },
         composition: CompositionSpec::default(),
+        loopback_fired_keys: Vec::new(),
     };
     let request = ProbeRequest {
         phase: ProbePhase::Dwelling,
@@ -291,6 +298,7 @@ fn test_run_probe_reports_runtime_bindings_params_and_root_cause() {
                 .collect::<ShaderRuntimeParams>(),
             ..CompositionSpec::default()
         },
+        loopback_fired_keys: Vec::new(),
     };
     let request = ProbeRequest {
         phase: ProbePhase::Dwelling,

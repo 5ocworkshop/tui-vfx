@@ -37,7 +37,8 @@ fn dim_scene() -> ProbeSceneSpec {
             }],
             ..CompositionSpec::default()
         },
-    }
+    },
+    loopback_fired_keys: Vec::new(),
 }
 
 fn shader_scene() -> ProbeSceneSpec {
@@ -60,7 +61,8 @@ fn shader_scene() -> ProbeSceneSpec {
             t: 0.0,
             ..CompositionSpec::default()
         },
-    }
+    },
+    loopback_fired_keys: Vec::new(),
 }
 
 #[test]

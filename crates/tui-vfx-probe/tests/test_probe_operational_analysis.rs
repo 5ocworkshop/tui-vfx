@@ -44,7 +44,8 @@ fn shader_scene() -> ProbeSceneSpec {
             t: 0.5,
             ..CompositionSpec::default()
         },
-    }
+    },
+    loopback_fired_keys: Vec::new(),
 }
 
 fn multi_sampler_scene() -> ProbeSceneSpec {
@@ -67,7 +68,8 @@ fn multi_sampler_scene() -> ProbeSceneSpec {
         destination: make_grid(10, 8, ' '),
         widget_offset: ProbePoint { x: 1, y: 1 },
         composition,
-    }
+    },
+    loopback_fired_keys: Vec::new(),
 }
 
 #[test]
@@ -84,6 +86,7 @@ fn test_collect_probe_operational_analysis_reports_success_for_filter_stage() {
                 }],
                 ..CompositionSpec::default()
             },
+            loopback_fired_keys: Vec::new(),
         },
         &ProbeRequest {
             phase: ProbePhase::Dwelling,
@@ -195,6 +198,7 @@ fn test_collect_probe_operational_analysis_reports_failure_for_bad_border_scene(
             destination: make_grid(6, 5, ' '),
             widget_offset: ProbePoint { x: 1, y: 1 },
             composition: CompositionSpec::default(),
+            loopback_fired_keys: Vec::new(),
         },
         &ProbeRequest {
             phase: ProbePhase::Dwelling,

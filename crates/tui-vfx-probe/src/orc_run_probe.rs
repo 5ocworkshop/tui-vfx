@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
-// <WCTX>Sub-plan A Phase A.2.3 — migrate to role-aware render_pipeline_with_spec signature</WCTX>
-// <CLOG>0.8.0: inventory and trace-parameter lookup now read the full effective sampler chain so multi-sampler specs no longer disappear behind the legacy single-sampler mirror.</CLOG>
+// <VERS>VERSION: 0.9.0</VERS>
+// <WCTX>Loopback Phase L5 (deferred follow-on): splice ProbeSceneSpec.loopback_fired_keys onto ProbeRuntimeContext so collect_loopback_fire_diagnostics emits one Warning per key, and append those diagnostics alongside collect_basic_diagnostics in the report aggregation.</WCTX>
+// <CLOG>Wire scene.loopback_fired_keys → runtime.loopback_fired_keys (synthesizing a runtime context if none was inferred from composition) and call collect_loopback_fire_diagnostics alongside collect_basic_diagnostics in the report-builder scaffold.</CLOG>
 
 use serde_json::{Value, json};
 use tui_vfx_compositor::pipeline::render_pipeline_with_spec;
@@ -79,7 +79,23 @@ pub fn run_probe(
     let mut composition = scene.composition.clone();
     composition.t = request.sample_t;
     composition.phase = Some(request.phase.to_mixed_phase());
-    let runtime = runtime_context_from_composition(&composition);
+    let mut runtime = runtime_context_from_composition(&composition);
+    // Loopback Phase L5 follow-on: splice the recipes-side merge's
+    // fired_keys onto the runtime context so collect_loopback_fire_diagnostics
+    // emits one `loopback_fire` Warning per key. If the runtime context
+    // was None (no params, no binding requests/resolutions, no fires),
+    // synthesize one when fires alone are non-empty so the diagnostic
+    // surface still appears.
+    if !scene.loopback_fired_keys.is_empty() {
+        let mut ctx = runtime.unwrap_or_else(|| crate::ProbeRuntimeContext {
+            supplied_params: Vec::new(),
+            binding_requests: Vec::new(),
+            binding_resolutions: Vec::new(),
+            loopback_fired_keys: Vec::new(),
+        });
+        ctx.loopback_fired_keys = scene.loopback_fired_keys.clone();
+        runtime = Some(ctx);
+    }
 
     let mut inspector = ProbeInspector::default();
     // Probe has no semantic role information — pass all-Background source
@@ -456,4 +472,4 @@ pub fn run_probe_diff(
 }
 
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>

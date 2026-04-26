@@ -40,7 +40,6 @@ pub fn collect_loopback_fire_diagnostics(report: &ProbeReport) -> Vec<ProbeDiagn
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cls_probe_pipeline_inventory::ProbePipelineInventory;
     use crate::cls_probe_report::{
         ProbeFrame, ProbePoint, ProbeReportSource, ProbeSize,
     };
@@ -58,15 +57,15 @@ mod tests {
                 input_kind: "test".to_string(),
             },
             request: ProbeRequest {
-                phase: ProbePhase::Dwell,
+                phase: ProbePhase::Dwelling,
                 sample_t: 1.0,
                 cells: ProbeCellSelector::All,
-                emit_trace: false,
+                with_causation: false,
             },
             timing: ProbeTiming {
-                requested_phase: ProbePhase::Dwell,
+                requested_phase: ProbePhase::Dwelling,
                 requested_t: 1.0,
-                effective_phase: ProbePhase::Dwell,
+                effective_phase: ProbePhase::Dwelling,
                 effective_t: 1.0,
                 tick_ms: None,
             },
@@ -77,7 +76,17 @@ mod tests {
                 abs_origin: ProbePoint { x: 0, y: 0 },
                 size: ProbeSize { width: 10, height: 1 },
             },
-            pipeline: ProbePipelineInventory::default(),
+            // Construct via serde so the test stays robust against
+            // ProbePipelineInventory field additions over time.
+            pipeline: serde_json::from_value(serde_json::json!({
+                "sampler_count": 0,
+                "mask_count": 0,
+                "filter_count": 0,
+                "shader_count": 0,
+                "style_count": 0,
+                "content_count": 0,
+            }))
+            .expect("ProbePipelineInventory must deserialize from a count-only stub"),
             runtime,
             summary: ProbeSummary {
                 total_cells: 10,

@@ -37,6 +37,7 @@ fn test_find_widget_cell_returns_root_cause_ready_cell() {
                 }],
                 ..CompositionSpec::default()
             },
+            loopback_fired_keys: Vec::new(),
         },
         &ProbeRequest {
             phase: ProbePhase::Dwelling,

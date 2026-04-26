@@ -41,7 +41,8 @@ fn dim_scene() -> ProbeSceneSpec {
             }],
             ..CompositionSpec::default()
         },
-    }
+    },
+    loopback_fired_keys: Vec::new(),
 }
 
 fn shader_scene() -> ProbeSceneSpec {
@@ -63,7 +64,8 @@ fn shader_scene() -> ProbeSceneSpec {
             }],
             ..CompositionSpec::default()
         },
-    }
+    },
+    loopback_fired_keys: Vec::new(),
 }
 
 fn binding_scene() -> ProbeSceneSpec {
@@ -90,7 +92,8 @@ fn binding_scene() -> ProbeSceneSpec {
                 .collect::<ShaderRuntimeParams>(),
             ..CompositionSpec::default()
         },
-    }
+    },
+    loopback_fired_keys: Vec::new(),
 }
 
 #[test]
@@ -323,6 +326,7 @@ fn test_sqlite_store_indexes_report_diagnostics_rows() {
             destination: make_grid(6, 5, ' '),
             widget_offset: ProbePoint { x: 1, y: 1 },
             composition: CompositionSpec::default(),
+            loopback_fired_keys: Vec::new(),
         },
         &ProbeRequest {
             phase: ProbePhase::Dwelling,
