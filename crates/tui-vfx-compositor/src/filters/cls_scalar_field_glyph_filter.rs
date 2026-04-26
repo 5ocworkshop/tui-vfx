@@ -1,8 +1,8 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Generic scalar-field-to-glyph filter: samples any Signal and encodes intensity via GlyphEncoder</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>Glyph rendering framework Phase 4: unifying filter for water/fire/terrain field effects</WCTX>
-// <CLOG>0.1.0: initial implementation; Filter impl samples Signal via SignalContext, encodes via GlyphEncoder; supports threshold, only_blank, recolor, temporal_dither_hz; BrailleSubcell path uses sample_eight_subcells</CLOG>
+// <CLOG>0.1.1: replace #[allow(dead_code)] with #[expect(dead_code)] so the suppression auto-retires when Phase 6 wires FilterSpec::ScalarFieldGlyph (Intention 40 §2).</CLOG>
 
 use mixed_signals::traits::{Signal, SignalContext};
 use tui_vfx_types::{glyph::sample_eight_subcells, glyph::GlyphEncoder, Cell, Color};
@@ -67,8 +67,11 @@ use crate::traits::filter::Filter;
 /// filter.apply(&mut cell, 4, 0, 8, 1, 0.0);
 /// assert_eq!(cell.ch, '▌');
 /// ```
-// Public API for direct consumer use; not wired into PreparedFilter (generic).
-#[allow(dead_code)]
+// Public type; constructed from non-test code starting in Phase 6 of
+// `docs/design/tui-vfx-glyph-rendering-framework-plan.md` when `FilterSpec`
+// gains a `ScalarFieldGlyph` discriminant. `#[expect(dead_code)]` auto-retires
+// at that point — the build fails if the expectation no longer applies.
+#[expect(dead_code, reason = "wired in Phase 6 via FilterSpec::ScalarFieldGlyph")]
 pub struct ScalarFieldGlyphFilter<S: Signal> {
     /// The field sampler; sampled once per `apply` call (or eight times for
     /// `BrailleSubcell`).
