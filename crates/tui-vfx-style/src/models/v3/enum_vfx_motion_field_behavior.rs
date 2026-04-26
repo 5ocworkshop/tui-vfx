@@ -9,7 +9,7 @@
 //! This family groups the primitive/substrate-aligned motion-field treatments
 //! currently exposed as `PulseWave`, `Radar`, and `Orbit`.
 
-use crate::models::{ColorConfig, TerminalWaterShader};
+use crate::models::{ColorConfig, TerminalFireShader, TerminalWaterShader};
 use serde::{Deserialize, Serialize};
 
 /// Direction policy for wave-style motion fields.
@@ -99,6 +99,12 @@ pub enum VfxMotionFieldBehavior {
     TerminalWater {
         /// Complete terminal-water shader payload.
         shader: TerminalWaterShader,
+    },
+    /// Emissive procedural flame/smoke field with rising turbulence, blue
+    /// reaction-zone core, and deterministic sparks.
+    TerminalFire {
+        /// Complete terminal-fire shader payload.
+        shader: TerminalFireShader,
     },
 }
 

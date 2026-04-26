@@ -27,7 +27,7 @@
 //!
 //! - `LinearGradient`, `RevealWipe` → `gradient_reveal` primitive family
 //! - `Glow`, `AmbientOcclusion`, `Bevel` → `surface_depth` primitive family
-//! - `PulseWave`, `Radar`, `Orbit`, `TerminalWater` → `motion_field` primitive family
+//! - `PulseWave`, `Radar`, `Orbit`, `TerminalWater`, `TerminalFire` → `motion_field` primitive family
 //! - `GlitchLines`, `ChromaticEdge`, `SubCellShake` → `edge_distortion`
 //!   primitive family
 //! - `BorderSweep`, `Reflect`, `GlistenBand`, `TracePropagation`, `TracePath`
@@ -65,6 +65,7 @@
 //! | [`GlistenBand`](SpatialShaderType::GlistenBand) | Moving light band sweep |
 //! | [`PulseWave`](SpatialShaderType::PulseWave) | Rippling color wave |
 //! | [`TerminalWater`](SpatialShaderType::TerminalWater) | Layered water/ocean field with ripples, wakes, foam, and glint |
+//! | [`TerminalFire`](SpatialShaderType::TerminalFire) | Emissive procedural flame/smoke field with rising turbulence, blue core, and sparks |
 //! | [`RadialSpiral`](SpatialShaderType::RadialSpiral) | Procedural radial spiral field |
 //! | [`TracePropagation`](SpatialShaderType::TracePropagation) | Orthogonal routed signal pulse |
 //! | [`TracePath`](SpatialShaderType::TracePath) | Authored routed signal path |
@@ -103,7 +104,7 @@
 //! [`crate::models::StyleEffect::Spatial`] for temporal animation.
 
 use crate::models::{
-    LinearGradientShader, VfxSpatialShaderFamily, cls_affordance_wake_shader::AffordanceWakeShader,
+    cls_affordance_wake_shader::AffordanceWakeShader,
     cls_ambient_occlusion_shader::AmbientOcclusionShader, cls_barber_pole_shader::BarberPoleShader,
     cls_bevel_shader::BevelShader, cls_border_sweep_shader::BorderSweepShader,
     cls_chromatic_edge_shader::ChromaticEdgeShader,
@@ -118,9 +119,10 @@ use crate::models::{
     cls_radial_spiral_shader::RadialSpiralShader, cls_reflect_shader::ReflectShader,
     cls_reveal_wipe_shader::RevealWipeShader,
     cls_stochastic_sparkle_shader::StochasticSparkleShader,
-    cls_sub_cell_shake_shader::SubCellShakeShader, cls_terminal_water_shader::TerminalWaterShader,
-    cls_trace_path_shader::TracePathShader, cls_trace_propagation_shader::TracePropagationShader,
-    cls_wayfinding_node_shader::WayfindingNodeShader,
+    cls_sub_cell_shake_shader::SubCellShakeShader, cls_terminal_fire_shader::TerminalFireShader,
+    cls_terminal_water_shader::TerminalWaterShader, cls_trace_path_shader::TracePathShader,
+    cls_trace_propagation_shader::TracePropagationShader,
+    cls_wayfinding_node_shader::WayfindingNodeShader, LinearGradientShader, VfxSpatialShaderFamily,
 };
 use mixed_signals::types::SignalOrFloat;
 
@@ -188,6 +190,10 @@ pub enum SpatialShaderType {
 
     /// Layered water/ocean field with ripples, wakes, foam, and glint.
     TerminalWater(TerminalWaterShader),
+
+    /// Emissive procedural flame/smoke field with rising turbulence,
+    /// blue reaction-zone core, and deterministic sparks.
+    TerminalFire(TerminalFireShader),
 
     /// Procedural radial spiral density field (portal/loading/background texture).
     RadialSpiral(RadialSpiralShader),
@@ -260,6 +266,7 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::NeonFlicker(s) => s.style_at(ctx, base),
             SpatialShaderType::PulseWave(s) => s.style_at(ctx, base),
             SpatialShaderType::TerminalWater(s) => s.style_at(ctx, base),
+            SpatialShaderType::TerminalFire(s) => s.style_at(ctx, base),
             SpatialShaderType::RadialSpiral(s) => s.style_at(ctx, base),
             SpatialShaderType::TracePropagation(s) => s.style_at(ctx, base),
             SpatialShaderType::TracePath(s) => s.style_at(ctx, base),
@@ -406,6 +413,7 @@ impl SpatialShaderType {
             SpatialShaderType::NeonFlicker(_) => "NeonFlicker",
             SpatialShaderType::PulseWave(_) => "PulseWave",
             SpatialShaderType::TerminalWater(_) => "TerminalWater",
+            SpatialShaderType::TerminalFire(_) => "TerminalFire",
             SpatialShaderType::RadialSpiral(_) => "RadialSpiral",
             SpatialShaderType::TracePropagation(_) => "TracePropagation",
             SpatialShaderType::TracePath(_) => "TracePath",
@@ -459,6 +467,9 @@ impl SpatialShaderType {
                 "Flickering neon sign effect with independent segments"
             }
             SpatialShaderType::PulseWave(_) => "Rippling color wave emanating from position",
+            SpatialShaderType::TerminalFire(_) => {
+                "Emissive procedural flame/smoke field with rising turbulence, blue core, and sparks"
+            }
             SpatialShaderType::TerminalWater(_) => {
                 "Layered water/ocean field with ripples, wakes, foam, and glint"
             }
@@ -614,6 +625,19 @@ impl SpatialShaderType {
                 ("direction", format!("{:.1}deg", s.direction_deg)),
                 ("foam", format!("{:.2}", s.foam)),
                 ("glint", format!("{:.2}", s.glint_strength)),
+                ("apply_to", format!("{:?}", s.apply_to)),
+            ],
+            SpatialShaderType::TerminalFire(s) => vec![
+                ("mode", format!("{:?}", s.mode)),
+                ("base_width", format!("{:.2}", s.base_width)),
+                ("wind", format!("{:.2}", s.wind)),
+                ("rise_speed", format!("{:.2}", s.rise_speed)),
+                ("turbulence", format!("{:.2}", s.turbulence)),
+                ("intensity", format!("{:.2}", s.intensity)),
+                ("density", format!("{:.2}", s.density)),
+                ("smoke", format!("{:.2}", s.smoke_strength)),
+                ("blue_core", format!("{:.2}", s.blue_core_strength)),
+                ("sparks", format!("{}", s.sparks.count)),
                 ("apply_to", format!("{:?}", s.apply_to)),
             ],
             SpatialShaderType::RadialSpiral(s) => vec![

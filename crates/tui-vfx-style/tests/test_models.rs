@@ -37,6 +37,8 @@ mod test_cls_linear_gradient_shader;
 mod test_cls_neon_flicker_shader;
 #[path = "models/test_cls_spatial_shader_type.rs"]
 mod test_cls_spatial_shader_type;
+#[path = "models/test_terminal_fire_recipes.rs"]
+mod test_terminal_fire_recipes;
 #[path = "models/test_cls_style_effect.rs"]
 mod test_cls_style_effect;
 #[path = "models/test_cls_style_layer.rs"]

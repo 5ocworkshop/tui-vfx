@@ -522,6 +522,9 @@ impl From<&crate::models::v3::VfxMotionFieldShader> for SpatialShaderType {
             VfxMotionFieldBehavior::TerminalWater { shader } => {
                 SpatialShaderType::TerminalWater(shader.clone())
             }
+            VfxMotionFieldBehavior::TerminalFire { shader } => {
+                SpatialShaderType::TerminalFire(shader.clone())
+            }
         }
     }
 }

@@ -692,3 +692,28 @@ Preferred terms:
 - `foam` — crest/curvature highlight, not a separate color sweep.
 
 Do not describe `terminal_water` as a glyph shader until a glyph-capable primitive/filter exists. For now it is a style shader with future braille/ramp derivations.
+
+
+## Terminal fire vocabulary
+
+Use `terminal_fire` for emissive flame, ember, and smoke surfaces. It belongs to the shader/motion-field vocabulary alongside `terminal_water`, but the mental model is different: water is a lit surface read through normals; fire is the light source itself. There is no `light_direction` — `intensity` drives emission directly.
+
+Preferred terms:
+
+- `flame` — general flame mode with wide base, torn top, smoke, optional sparks.
+- `candle` — narrow vertical taper with strong blue reaction-zone core, near-zero sparks, minimal smoke.
+- `campfire` — broad turbulent flame with heavy smoke and dense rising sparks.
+- `embers` — low ember bed (height-gated emission) for status strips and 'glow' surfaces.
+- `smoke_plume` — smoke-dominant transition surface; no flame, no sparks, no blue/white core.
+- `temperature` — combined mask × cooling × flicker; drives the red→orange→yellow→white ramp.
+- `density` — opacity multiplier; gates whether a cell paints fire color over base.
+- `smoke` — upper-region channel; never wins over the hot core (`S > D × T` rule).
+- `blue_core` — narrow base/centerline reaction-zone tint.
+- `white_core` — hottest near-base centerline; mixes yellow→white at high temperature.
+- `sparks` — deterministic pseudo-particles (seed + index + time); no per-cell allocation; `count = 0` disables.
+
+Reserved for the framework integration (consume but do not describe as primary `terminal_fire` vocabulary):
+
+- `FireFieldSignal` — the `mixed_signals::Signal` wrapper that exposes the fire field for `ScalarFieldGlyphFilter`.
+
+Do not describe `terminal_fire` as a glyph shader. The Rust `FireFieldSignal` is glyph-ready, but no recipe-DSL surface for `ScalarFieldGlyphFilter` ships yet — that lands as a separate Phase 6 follow-up.

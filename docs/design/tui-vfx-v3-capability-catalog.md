@@ -252,6 +252,35 @@ Each family entry records:
 - **rationale:**
   - water is a dynamic height surface whose normals/lighting produce the visible style. Ripples, rain, flow, wake, and ocean share one scalar field and should not become unrelated shader families.
 
+### CC-08b — Terminal fire / natural emission fields
+
+- **lane:** shader (style-only today; glyph-ready via `FireFieldSignal`)
+- **classification:** primitive motion-field subtree
+- **canonical primitive:** `terminal_fire`
+- **collapsed source families:**
+  - flame: coherent rising fbm + temperature/density gating
+  - candle: narrow vertical taper with blue reaction-zone emphasis
+  - campfire: broad turbulent flame with heavy smoke and dense sparks
+  - embers: low ember bed (height-gated emission)
+  - smoke plume: smoke-dominant transition surface
+  - sparks: deterministic pseudo-particle ember rise (seed + index + time)
+- **shared payload axes:**
+  - `mode` (`flame`, `candle`, `campfire`, `embers`, `smoke_plume`)
+  - shape controls: `base_width`, `min_width`, `wind`, `aspect`, `rise_speed`
+  - field controls: `turbulence`, `intensity`, `density`, `cooling`, `flicker_strength`
+  - channel controls: `blue_core_strength`, `white_core_strength`, `smoke_strength`
+  - spark controls: `sparks` ({ seed, count, intensity, rise_speed, drift })
+  - palette: per-channel `ColorConfig` (`blue_core`, `white_core`, `yellow`, `orange`, `red`, `smoke`)
+  - `apply_to`: Foreground, Background, or Both
+- **recommended implementation stance:**
+  - keep `terminal_fire` in the motion-field primitive family alongside `terminal_water`;
+  - modes are tuning multipliers, not separate code paths — one tested math pipeline per shader;
+  - consume `mixed_signals::math` and `mixed_signals::noise` directly (Intention 9); no private duplication;
+  - expose the per-cell field as `FireFieldSignal` (style-side `mixed_signals::Signal` impl) for the glyph-rendering framework's `ScalarFieldGlyphFilter`;
+  - do not introduce per-mode shader subtypes — the rule-of-three threshold is not met within fire's mode set.
+- **rationale:**
+  - fire is a thin emissive density field, conceptually parallel to water's height field but with no lit-surface analogue (fire is the light source). Pairing it with water in the motion-field family preserves the "natural-surface field" mental model and keeps both consumers of the same upstream math primitives.
+
 ### CC-09 — Pattern / procedural texture filters
 
 - **lane:** filter

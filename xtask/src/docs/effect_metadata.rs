@@ -399,7 +399,7 @@ fn extract_sampler_metadata() -> HashMap<String, EffectMetadata> {
 
 fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
     use tui_vfx_style::models::{
-        Gradient, LinearGradientShader, cls_affordance_wake_shader::AffordanceWakeShader,
+        cls_affordance_wake_shader::AffordanceWakeShader,
         cls_ambient_occlusion_shader::AmbientOcclusionShader,
         cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
         cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
@@ -413,9 +413,10 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         cls_reveal_wipe_shader::RevealWipeShader,
         cls_stochastic_sparkle_shader::StochasticSparkleShader,
         cls_sub_cell_shake_shader::SubCellShakeShader,
+        cls_terminal_fire_shader::TerminalFireShader,
         cls_terminal_water_shader::TerminalWaterShader, cls_trace_path_shader::TracePathShader,
         cls_trace_propagation_shader::TracePropagationShader,
-        cls_wayfinding_node_shader::WayfindingNodeShader,
+        cls_wayfinding_node_shader::WayfindingNodeShader, Gradient, LinearGradientShader,
     };
     use tui_vfx_types::Color;
 
@@ -453,6 +454,7 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         SpatialShaderType::NeonFlicker(NeonFlickerShader::default()),
         SpatialShaderType::PulseWave(PulseWaveShader::default()),
         SpatialShaderType::TerminalWater(TerminalWaterShader::default()),
+        SpatialShaderType::TerminalFire(TerminalFireShader::default()),
         SpatialShaderType::TracePropagation(TracePropagationShader::default()),
         SpatialShaderType::TracePath(TracePathShader::default()),
         SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader::default()),

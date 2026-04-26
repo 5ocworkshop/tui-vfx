@@ -459,6 +459,72 @@ Authoring notes:
 - use `mode.wake` for cursor/path trails;
 - keep wind/weather presets as a higher-level recipe layer until water behavior is stable.
 
+### 6.2 Terminal fire motion-field shader
+
+`terminal_fire` is the first natural-emission shader in the motion-field family.
+Unlike `terminal_water` (a lit surface read through normals), fire is the light
+source itself — no `light_direction`, no diffuse/specular controls. The shader
+synthesizes coherent rising turbulence and maps it to temperature, density,
+smoke, blue reaction-zone core, white-hot core, and deterministic spark
+fields. The same field is exposed as a `mixed_signals::Signal` via
+`FireFieldSignal` so the glyph-rendering framework's `ScalarFieldGlyphFilter`
+can drive braille/block/ramp output from the same source that paints color.
+
+Minimal payload:
+
+```json
+{
+  "kind": "shader",
+  "scope": { "kind": "all" },
+  "payload": {
+    "type": "terminal_fire",
+    "mode": { "mode": "flame" },
+    "apply_to": "both",
+    "aspect": 1.0,
+    "base_width": 0.55,
+    "min_width": 0.06,
+    "wind": 0.0,
+    "rise_speed": 2.2,
+    "turbulence": 1.0,
+    "intensity": 1.0,
+    "density": 1.0,
+    "cooling": 0.78,
+    "flicker_strength": 0.18,
+    "blue_core_strength": 0.35,
+    "white_core_strength": 0.35,
+    "smoke_strength": 0.35,
+    "sparks": { "seed": 1, "count": 8, "intensity": 0.35, "rise_speed": 1.2, "drift": 0.25 },
+    "palette": {
+      "blue_core": { "type": "rgb", "r": 0, "g": 215, "b": 255 },
+      "white_core": { "type": "white" },
+      "yellow":     { "type": "rgb", "r": 255, "g": 215, "b": 0 },
+      "orange":     { "type": "rgb", "r": 255, "g": 95,  "b": 0 },
+      "red":        { "type": "rgb", "r": 175, "g": 0,   "b": 0 },
+      "smoke":      { "type": "rgb", "r": 88,  "g": 88,  "b": 88 }
+    }
+  }
+}
+```
+
+Modes are tuning presets sharing one math pipeline:
+
+- `mode.flame` — general flame with wide base, torn top, smoke, sparks;
+- `mode.candle` — narrow vertical taper with strong blue base, no sparks;
+- `mode.campfire` — broad turbulent flame with heavy smoke and dense sparks;
+- `mode.embers` — low ember bed (status-strip / glow surfaces);
+- `mode.smoke_plume` — smoke-dominant transition surface (no flame, no sparks).
+
+Authoring notes:
+
+- color selection branches on which channel dominates per cell — blue core wins
+  near the base centerline, smoke wins in the upper region only when
+  `S > D × T` (so it never covers the hot core), and the temperature ramp
+  drives the red→orange→yellow→white transition through the rest of the field;
+- `sparks.count = 0` disables spark sampling entirely (no per-cell loop cost);
+- the field is exposed as `FireFieldSignal` for the glyph-rendering framework;
+  a fire-glyph debug recipe lands when `FilterSpec::ScalarFieldGlyph` gets a
+  recipe-DSL surface (separate Phase 6 follow-up).
+
 ## 7. Scoped regions and compression
 
 Large real recipes surfaced a practical truth:

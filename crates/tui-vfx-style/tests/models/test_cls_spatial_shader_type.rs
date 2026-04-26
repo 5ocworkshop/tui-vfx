@@ -4,9 +4,9 @@
 // <CLOG>0.1.0: add focused coverage for gradient_overlay, colored_overlay pattern lowering, and runtime-binding extraction through SpatialShaderType::try_from_v3_payload.</CLOG>
 
 use tui_vfx_style::models::{
-    AmbientOcclusionShader, ConcealedLightMode, DiffusionMode, HighlighterDirection,
-    LinearGradientShader, SpatialShaderType, TerminalWaterShader, VfxMotionFieldBehavior,
-    VfxSpatialPrimitive, VfxSpatialShaderFamily,
+    AmbientOcclusionShader, ConcealedLightMode, DiffusionMode, FireMode, HighlighterDirection,
+    LinearGradientShader, SpatialShaderType, TerminalFireShader, TerminalWaterShader,
+    VfxMotionFieldBehavior, VfxSpatialPrimitive, VfxSpatialShaderFamily,
 };
 
 #[test]
@@ -220,5 +220,91 @@ fn terminal_water_maps_to_motion_field_family() {
             ));
         }
         other => panic!("expected terminal water motion field, got {other:?}"),
+    }
+}
+
+#[test]
+fn terminal_fire_deserializes_and_reports_metadata() {
+    let shader: SpatialShaderType = serde_json::from_value(serde_json::json!({
+        "type": "terminal_fire",
+        "mode": { "mode": "candle" },
+        "apply_to": "both",
+        "aspect": 1.0,
+        "base_width": 0.18,
+        "min_width": 0.035,
+        "wind": 0.02,
+        "rise_speed": 1.4,
+        "turbulence": 0.55,
+        "intensity": 0.85,
+        "density": 1.0,
+        "cooling": 0.78,
+        "flicker_strength": 0.18,
+        "blue_core_strength": 0.75,
+        "white_core_strength": 0.45,
+        "smoke_strength": 0.08,
+        "sparks": { "seed": 7, "count": 0, "intensity": 0.35, "rise_speed": 1.2, "drift": 0.25 },
+        "palette": {
+            "blue_core": { "type": "rgb", "r": 0, "g": 215, "b": 255 },
+            "white_core": { "type": "white" },
+            "yellow": { "type": "rgb", "r": 255, "g": 215, "b": 0 },
+            "orange": { "type": "rgb", "r": 255, "g": 95, "b": 0 },
+            "red": { "type": "rgb", "r": 175, "g": 0, "b": 0 },
+            "smoke": { "type": "rgb", "r": 88, "g": 88, "b": 88 }
+        }
+    }))
+    .expect("valid terminal_fire candle recipe");
+
+    assert_eq!(shader.name(), "TerminalFire");
+    assert!(shader.terse_description().to_lowercase().contains("flame"));
+    let keys: Vec<_> = shader
+        .key_parameters()
+        .into_iter()
+        .map(|(key, _)| key)
+        .collect();
+    assert!(keys.contains(&"mode"));
+    assert!(keys.contains(&"sparks"));
+    assert!(keys.contains(&"blue_core"));
+}
+
+#[test]
+fn terminal_fire_maps_to_motion_field_family() {
+    let shader = SpatialShaderType::TerminalFire(TerminalFireShader::default());
+
+    match shader.v3_spatial_shader_family() {
+        VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(field)) => {
+            assert!(matches!(
+                field.behavior,
+                VfxMotionFieldBehavior::TerminalFire { .. }
+            ));
+        }
+        other => panic!("expected terminal fire motion field, got {other:?}"),
+    }
+}
+
+#[test]
+fn terminal_fire_v3_round_trip_preserves_mode() {
+    // Lowering legacy → V3 → legacy must preserve the FireMode tuning.
+    let original = SpatialShaderType::TerminalFire(TerminalFireShader {
+        mode: FireMode::Campfire,
+        wind: -0.18,
+        smoke_strength: 0.75,
+        ..TerminalFireShader::default()
+    });
+
+    let v3 = original.v3_spatial_shader_family();
+    let lowered: SpatialShaderType = match v3 {
+        VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(field)) => {
+            (&field).into()
+        }
+        other => panic!("expected motion-field primitive, got {other:?}"),
+    };
+
+    match lowered {
+        SpatialShaderType::TerminalFire(shader) => {
+            assert_eq!(shader.mode, FireMode::Campfire);
+            assert!((shader.wind - (-0.18)).abs() < 1e-6);
+            assert!((shader.smoke_strength - 0.75).abs() < 1e-6);
+        }
+        other => panic!("round-trip lost variant: {other:?}"),
     }
 }

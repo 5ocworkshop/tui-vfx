@@ -912,6 +912,57 @@
             }
           },
 
+          # ---- Example 2c: terminal fire motion-field shader ---------
+          # ^ Sibling natural-field primitive to terminal_water in the
+          #   motion-field family. Unlike water (a lit surface read
+          #   through normals), fire IS the light source — no
+          #   light_direction; intensity drives emission. Modes are
+          #   tuning presets sharing one math pipeline:
+          #   flame / candle / campfire / embers / smoke_plume.
+          #   The same per-cell field is exposed as FireFieldSignal
+          #   (mixed_signals::Signal impl) for the glyph-rendering
+          #   framework's ScalarFieldGlyphFilter.
+          {
+            "kind": "shader",
+            "scope": { "kind": "all" },
+            "payload": {
+              "type": "terminal_fire",
+              "mode": { "mode": "flame" },
+              "apply_to": "both",
+              "aspect": 1.0,
+              "base_width": 0.55,
+              "min_width": 0.06,
+              "wind": 0.0,
+              "rise_speed": 2.2,
+              "turbulence": 1.0,
+              "intensity": 1.0,
+              "density": 1.0,
+              "cooling": 0.78,
+              "flicker_strength": 0.18,
+              "blue_core_strength": 0.35,
+              "white_core_strength": 0.35,
+              "smoke_strength": 0.35,
+              "sparks": {
+                "seed": 1,
+                "count": 8,
+                # ^ deterministic pseudo-particles; count=0 disables
+                "intensity": 0.35,
+                "rise_speed": 1.2,
+                "drift": 0.25
+              },
+              "palette": {
+                # ^ per-channel ColorConfig; defaults approximate
+                #   ANSI 256-color flame ramps.
+                "blue_core":  { "type": "rgb", "r": 0,   "g": 215, "b": 255 },
+                "white_core": { "type": "white" },
+                "yellow":     { "type": "rgb", "r": 255, "g": 215, "b": 0   },
+                "orange":     { "type": "rgb", "r": 255, "g": 95,  "b": 0   },
+                "red":        { "type": "rgb", "r": 175, "g": 0,   "b": 0   },
+                "smoke":      { "type": "rgb", "r": 88,  "g": 88,  "b": 88  }
+              }
+            }
+          },
+
           # ---- Example 3: scoped style lane / style patch ------------
           {
             "kind": "style_effect",

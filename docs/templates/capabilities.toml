@@ -649,6 +649,25 @@ apply_to: Foreground, Background, or Both.
 Composite supports combining water modes, but keep child mode lists small for terminal-frame performance.
 """
 
+[effects.shaders.TerminalFire]
+use_cases = ["ambient", "warm", "warning", "celebration", "atmosphere", "premium"]
+energy = "warm"
+complexity = "complex"
+premium = true
+ai_hint = """Procedural emissive flame/smoke field. Unlike water (a lit surface), fire IS the light source — no light_direction; intensity drives emission.
+mode: Flame (default), Candle, Campfire, Embers, SmokePlume. Modes are tuning presets sharing one math pipeline. Use Candle for narrow vertical taper with strong blue reaction-zone core, Campfire for broad turbulent flame with heavy smoke and sparks, Embers for low ember bed (status strips), SmokePlume for smoke-dominant transition surfaces.
+base_width, min_width: flame envelope at base/top.
+wind: lateral lean (-1..=1).
+rise_speed, turbulence: noise/animation rate and domain warp magnitude.
+intensity, density, cooling: global emission/opacity multipliers and vertical cooling rate.
+flicker_strength: coherent-noise flicker added to temperature.
+blue_core_strength, white_core_strength, smoke_strength: per-channel multipliers; the color selector branches on which channel dominates per cell.
+sparks: deterministic pseudo-particle config (seed, count 0..=32, intensity, rise_speed, drift). count=0 disables sparks entirely.
+palette: ColorConfig per channel (blue_core, white_core, yellow, orange, red, smoke).
+apply_to: Foreground, Background, or Both.
+Pairs with FireFieldSignal for glyph-rendering framework consumers (ScalarFieldGlyphFilter).
+"""
+
 [effects.shaders.TracePropagation]
 use_cases = ["schematic", "pcb", "system-flow", "technical"]
 energy = "moderate"

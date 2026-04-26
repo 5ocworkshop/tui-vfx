@@ -42,6 +42,7 @@ pub mod cls_edge_sheen_shader;
 pub mod cls_fade_effect;
 pub mod cls_fade_spec;
 pub mod cls_falloff_type;
+pub mod cls_fire_field_signal;
 pub mod cls_focus_field_shader;
 pub mod cls_focused_row_gradient_shader;
 pub mod cls_glisten_band_shader;
@@ -68,6 +69,7 @@ pub mod cls_style_layer;
 pub mod cls_style_region;
 pub mod cls_style_transition;
 pub mod cls_sub_cell_shake_shader;
+pub mod cls_terminal_fire_shader;
 pub mod cls_terminal_water_shader;
 pub mod cls_trace_common;
 pub mod cls_trace_path_shader;
@@ -106,9 +108,10 @@ pub use cls_cursor_shader::{
 };
 pub use cls_diffusion_shader::{DiffusionApplyTo, DiffusionMode, DiffusionShader, DiffusionSource};
 pub use cls_edge_sheen_shader::{EdgeSheenApplyTo, EdgeSheenShader};
-pub use cls_fade_effect::{FadeDirection, FadeEffect, FadeToBlack, FadeToColor, fade_effect};
+pub use cls_fade_effect::{fade_effect, FadeDirection, FadeEffect, FadeToBlack, FadeToColor};
 pub use cls_fade_spec::{FadeApplyTo, FadeChain, FadeSegment, FadeSpec, FadeTarget};
 pub use cls_falloff_type::FalloffType;
+pub use cls_fire_field_signal::FireFieldSignal;
 pub use cls_focus_field_shader::{FocusFieldApplyTo, FocusFieldShader, FocusFieldShape};
 pub use cls_focused_row_gradient_shader::{ApplyToColor, FocusedRowGradientShader};
 pub use cls_glisten_band_shader::{GlistenApplyTo, GlistenBandShader, GlistenDirection};
@@ -138,6 +141,9 @@ pub use cls_style_layer::StyleLayer;
 pub use cls_style_region::{CellCoord, ModuloAxis, StyleRegion};
 pub use cls_style_transition::StyleTransition;
 pub use cls_sub_cell_shake_shader::{ShakeAxis, SubCellShakeShader};
+pub use cls_terminal_fire_shader::{
+    FireApplyTo, FireMode, FirePalette, FireSparkConfig, TerminalFireShader,
+};
 pub use cls_terminal_water_shader::{
     TerminalWaterShader, WaterApplyTo, WaterRippleEmitter, WaterWakeSource, WaterWaveMode,
 };
@@ -149,24 +155,23 @@ pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, Wayf
 pub use fnc_apply_style_effects_to_scene::apply_style_effects_to_scene;
 pub use tui_vfx_geometry::easing::EasingType;
 pub use v3::{
-    TryLowerV3SpatialShaderError, TryLowerV3StyleEffectError, VfxAffordanceWakeZone,
-    VfxConcealedLightMode, VfxConcealedLightSource, VfxCursorMode, VfxCursorPrimary,
-    VfxCursorShader, VfxCursorTrail, VfxDiffusionMode, VfxDiffusionSource, VfxEdgeDistortionAxis,
-    VfxEdgeDistortionBehavior, VfxEdgeDistortionShader, VfxFocusFieldShape,
-    VfxGradientRevealBehavior, VfxGradientRevealShader, VfxGuidanceCueApplyTo,
-    VfxGuidanceCueBehavior, VfxGuidanceCueShader, VfxMaterialLightApplyTo,
-    VfxMaterialLightBehavior, VfxMaterialLightShader, VfxMotionFieldBehavior,
-    VfxMotionFieldDirection, VfxMotionFieldShader, VfxProgressEmphasisApplyTo,
-    VfxProgressEmphasisDirection, VfxProgressEmphasisMode, VfxProgressEmphasisRowMask,
-    VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast, VfxRevealDirection,
-    VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
+    lower_legacy_spatial_shader, try_lower_v3_spatial_shader_family, TryLowerV3SpatialShaderError,
+    TryLowerV3StyleEffectError, VfxAffordanceWakeZone, VfxConcealedLightMode,
+    VfxConcealedLightSource, VfxCursorMode, VfxCursorPrimary, VfxCursorShader, VfxCursorTrail,
+    VfxDiffusionMode, VfxDiffusionSource, VfxEdgeDistortionAxis, VfxEdgeDistortionBehavior,
+    VfxEdgeDistortionShader, VfxFocusFieldShape, VfxGradientRevealBehavior,
+    VfxGradientRevealShader, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxGuidanceCueShader,
+    VfxMaterialLightApplyTo, VfxMaterialLightBehavior, VfxMaterialLightShader,
+    VfxMotionFieldBehavior, VfxMotionFieldDirection, VfxMotionFieldShader,
+    VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
+    VfxProgressEmphasisRowMask, VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast,
+    VfxRevealDirection, VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
     VfxStochasticTextureBehavior, VfxStochasticTextureShader, VfxStripeMotionBehavior,
     VfxStripeMotionShader, VfxStyleEffectFamily, VfxStyleEffectValue, VfxSurfaceDepthBehavior,
     VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection, VfxSurfaceDepthShader,
     VfxTextureSegmentMode, VfxTextureTarget, VfxTracePathTailMode, VfxTravelingBandApplyTo,
     VfxTravelingBandBehavior, VfxTravelingBandColor, VfxTravelingBandDirection,
-    VfxTravelingBandShader, VfxWayfindingNode, lower_legacy_spatial_shader,
-    try_lower_v3_spatial_shader_family,
+    VfxTravelingBandShader, VfxWayfindingNode,
 };
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>

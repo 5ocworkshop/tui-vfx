@@ -8,8 +8,8 @@
 //! grouped V3 primitive/composed family representation.
 
 use crate::models::{
-    SpatialShaderType,
     v3::{VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily},
+    SpatialShaderType,
 };
 
 impl VfxSpatialShaderFamily {
@@ -59,6 +59,9 @@ pub fn lower_legacy_spatial_shader(shader: &SpatialShaderType) -> VfxSpatialShad
             VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
         }
         SpatialShaderType::TerminalWater(shader) => {
+            VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
+        }
+        SpatialShaderType::TerminalFire(shader) => {
             VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
         }
         SpatialShaderType::TracePropagation(shader) => VfxSpatialShaderFamily::ComposedPrimitive(

@@ -1,16 +1,29 @@
 <!-- <FILE>docs/design/tui-vfx-terminal-fire-shader-plan.md</FILE> - <DESC>Implementation plan for a terminal fire/flame shader primitive.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Phase 7 of glyph rendering framework: §9.0/§9.1/§9.10 reference the upstream mixed-signals primitives (saturate/finite_or/smoothstep/fade/lerp + hash01/hash3/value_noise3/fbm3) plus the FireFieldSignal pattern from water Phase 5; original copy-paste skeletons preserved as byte-equivalence reference.</WCTX> -->
-<!-- <CLOG>0.3.0: §9.0 imports `mixed_signals::math::{saturate, finite_or, smoothstep, fade, lerp}`; §9.1 imports `mixed_signals::noise::{hash01, hash3, value_noise3, fbm3}`; §9.10 cross-references the FireFieldSignal pattern so fire glyph mode falls out of the existing ScalarFieldGlyph wiring.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>Mark fire shipped on feature/fire-shader and combine with sibling Phase 7 doc closure: §9.0/§9.1/§9.10 reference the upstream mixed-signals primitives (saturate/finite_or/smoothstep/fade/lerp + hash01/hash3/value_noise3/fbm3) plus the FireFieldSignal pattern; an Implementation Status table near the top records phase shipping.</WCTX> -->
+<!-- <CLOG>0.4.0: combine sibling 0.3.0 (Phase 7 doc closure: §9.0/§9.1/§9.10 upstream-import notes with byte-equivalence references preserved) with feature/fire-shader 0.3.0 (Implementation Status table marking Phases 1–6 shipped). Phases 1–6 are Shipped; FireFieldSignal is Shipped (scope b); fire-glyph debug recipe is the next slice once SamplerRef::TerminalFire lands.</CLOG> -->
 
 # Terminal Fire / Flame Shader Implementation Plan
 
 Date: 2026-04-26
 Repository: `/usr/projects/tui-vfx`
 Related recipe repository: `/usr/projects/tui-vfx-recipes`
-Status: implementation-ready planning artifact; no source files changed by this planning pass.
+Status: **implemented on `feature/fire-shader` (worktree).** Phases 1–6 shipped — see Section 22 for per-phase status. The original planning sections below remain for archaeology; deviations from the plan are noted inline in the v0.3.0 CLOG above and in the per-phase status comments.
 Audience: junior Rust developer implementing under existing `tui-vfx` conventions.
 Related plan: [`tui-vfx-terminal-water-shader-plan.md`](tui-vfx-terminal-water-shader-plan.md)
+
+## Implementation status (added 0.3.0)
+
+| Phase | Status | Notes |
+|---|---|---|
+| 1. Grounding + helper decision | **Shipped (no-op)** | mixed-signals Phase 1 lift already delivered `saturate`/`smoothstep`/`fade`/`lerp`/`finite_or`/`finite_or_clamp`/`hash01`/`hash3`/`value_noise3`/`fbm3`. Sections 9.0/9.1/13 became obsolete; fire imports upstream. |
+| 2. Core fire shader | **Shipped** | `crates/tui-vfx-style/src/models/cls_terminal_fire_shader.rs` — 11 unit tests passing. `FireSample` omits cached slopes (justified — fire's pipeline can't compute them analytically for free). |
+| 3. Spatial shader registration | **Shipped** | 8 catalog touch sites + xtask metadata + 3 integration tests. |
+| 4. V3 integration | **Shipped** | `VfxMotionFieldBehavior::TerminalFire { shader }` + bidirectional lowering + V3 round-trip test. |
+| 5. Docs / tooling / recipes | **Shipped** | This plan + `tui-vfx-v3-schema-overview.md` §6.2 + `tui-vfx-v3-recipe-vocabulary.md` + `tui-vfx-v3-capability-catalog.md` CC-08b + `tui-vfx-v3-schema-draft.json` Example 2c + `capabilities.toml`. 5 mode recipes in `tui-vfx-recipes`. |
+| 5b. FireFieldSignal | **Shipped (scope b extension)** | `cls_fire_field_signal.rs` + 12 tests. Mirrors WaterFieldSignal Phase 5 pattern. Uses SignalWithSlope's default central-differencing. Ready for `ScalarFieldGlyphFilter<FireFieldSignal>` once a glyph-recipe DSL surface exists. |
+| 6. Verification + review | **Shipped** | 593 style tests + 13 xtask tests passing. Clippy clean on fire files. Cross-repo audit (Intention 41): zero external consumers in mixed-signals, tui-vfx-recipes lib, gt-design — recipes are JSON fixtures only. |
+| 6b. Fire-glyph recipe | **Deferred** | Requires `FilterSpec::ScalarFieldGlyph` to gain a recipe-DSL surface. Tracked as a Phase 6 follow-up against the glyph-rendering-framework plan, not against this plan. |
 
 ## 0. One-paragraph goal
 
