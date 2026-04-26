@@ -1,14 +1,17 @@
-// <FILE>crates/tui-vfx-content/src/pool/cls_text_pool.rs</FILE> - <DESC>Pool of strings with a selection policy. General-purpose content randomization primitive; splash taglines are one use case, game dialog lines and error-message variety are others.</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Stage 1.5 of the splash library + VFX integration plan.</WCTX>
-// <CLOG>0.1.0: initial; TextPool with items sanitization at construction, pick() helper.</CLOG>
+// <FILE>crates/tui-vfx-content/src/pool/cls_text_pool.rs</FILE> - <DESC>Pool of strings with sanitize-on-construct. Newtype wrapper around Pool&lt;String&gt; — TextPool is the one pool whose constructor strips control bytes (ESC, newlines, tabs) so pool entries can't corrupt downstream render paths. Splash taglines, dialog lines, error-message variety.</DESC>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Buy-once sweep finding 1.2.B — TextPool stays as a thin newtype around Pool&lt;String&gt; rather than collapsing to a type alias because sanitize() is behavioral, not docstring-level. Other String pools (ImagePool, FontPool) use the alias form because they accept arbitrary asset-map keys.</WCTX>
+// <CLOG>0.2.0: TextPool re-implemented as `pub struct TextPool(Pool&lt;String&gt;)` with `new` running sanitize before delegating; pick / is_empty delegate. Deref&lt;Target = Pool&lt;String&gt;&gt; for read-only field access. Serde transparent so the wire format stays `{ items, policy }`.
+// 0.1.0: initial; TextPool with items sanitization at construction, pick() helper.</CLOG>
+
+use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
+use super::cls_pool::Pool;
 use super::col_pool_policy::PoolPolicy;
-use super::fnc_pick_index::pick_index;
 
-/// A general-purpose pool of strings with a selection policy.
+/// A general-purpose pool of strings with sanitize-on-construct.
 ///
 /// Designed for any content-randomization use case — splash taglines,
 /// game NPC dialog, error-message variety, seasonal Easter eggs. Ships
@@ -19,6 +22,14 @@ use super::fnc_pick_index::pick_index;
 /// etc.) are stripped so pool entries can't corrupt downstream render
 /// paths. Newlines are also stripped in v1 to keep layout predictable;
 /// multi-line splash text should be modeled as separate recipe slots.
+///
+/// # Why this is a newtype, not an alias
+///
+/// The other four pools in this family are type aliases over
+/// [`Pool<T>`]. `TextPool` is the exception because [`TextPool::new`]
+/// runs a sanitize pass that the generic pool does not. That is a
+/// behavioral difference, not a docstring difference, so the family
+/// stays honest by keeping `TextPool` as a thin wrapper.
 ///
 /// # Example
 /// ```
@@ -33,36 +44,34 @@ use super::fnc_pick_index::pick_index;
 #[derive(
     Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
-pub struct TextPool {
-    /// Pool entries. See [`TextPool::new`] for sanitization guarantees.
-    #[serde(default)]
-    pub items: Vec<String>,
-
-    /// How [`TextPool::pick`] selects an entry.
-    #[serde(default)]
-    pub policy: PoolPolicy,
-}
+#[serde(transparent)]
+pub struct TextPool(Pool<String>);
 
 impl TextPool {
     /// Construct a new pool, sanitizing every entry by stripping control
     /// bytes (including `\x1b` ESC) and newlines.
     pub fn new(items: Vec<String>, policy: PoolPolicy) -> Self {
-        Self {
-            items: items.into_iter().map(|s| sanitize(&s)).collect(),
-            policy,
-        }
+        let sanitized = items.into_iter().map(|s| sanitize(&s)).collect();
+        Self(Pool::new(sanitized, policy))
     }
 
     /// Pick one entry according to this pool's policy. Returns `None`
     /// when the pool is empty — callers should fall through to a default
     /// (a static text field in the same content config, typically).
     pub fn pick(&self) -> Option<&str> {
-        pick_index(self.items.len(), self.policy).map(|idx| self.items[idx].as_str())
+        self.0.pick().map(String::as_str)
     }
 
     /// True if the pool has no items.
     pub fn is_empty(&self) -> bool {
-        self.items.is_empty()
+        self.0.is_empty()
+    }
+}
+
+impl Deref for TextPool {
+    type Target = Pool<String>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -74,10 +83,6 @@ impl TextPool {
 fn sanitize(s: &str) -> String {
     s.chars().filter(|c| !c.is_control()).collect()
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -112,8 +117,6 @@ mod tests {
             vec!["plain\x1b[31mred\x1b[0m".into()],
             PoolPolicy::FirstOnly,
         );
-        // The ESC bytes and the following bracket-codes are control-filtered,
-        // but the visible characters around them survive.
         let picked = pool.pick().unwrap();
         assert!(!picked.contains('\x1b'));
         assert!(picked.contains("plain"));
@@ -138,7 +141,14 @@ mod tests {
         let back: TextPool = serde_json::from_str(&json).unwrap();
         assert_eq!(pool, back);
     }
+
+    #[test]
+    fn deref_exposes_pool_items() {
+        let pool = TextPool::new(vec!["alpha".into(), "beta".into()], PoolPolicy::FirstOnly);
+        assert_eq!(pool.items.len(), 2);
+        assert_eq!(pool.policy, PoolPolicy::FirstOnly);
+    }
 }
 
 // <FILE>crates/tui-vfx-content/src/pool/cls_text_pool.rs</FILE>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
