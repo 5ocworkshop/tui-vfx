@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_fire_field_signal.rs</FILE> - <DESC>Signal wrapper around TerminalFireShader's emission field for the glyph rendering framework</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Glyph rendering framework Phase 6: expose TerminalFireShader's per-cell emissive field via mixed_signals::Signal so ScalarFieldGlyphFilter can render fire as braille/block/ramp glyphs without a parallel sampler.</WCTX>
-// <CLOG>0.1.0: initial Signal wrapper around TerminalFireShader::sample_field_at; emits intensity as the unit-range output. Uses SignalWithSlope's default central-differencing impl rather than overriding — fire's pipeline does not yield analytic slopes for free, so the 3-call default is the right tradeoff.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Document the live recipe-DSL integration shipped in tui-vfx-compositor 3.15.0 (FilterSpec::ScalarFieldGlyph + SamplerRef::TerminalFire { shader }) and clarify the dual time-source convention (absolute_t-as-ms for V3 direct playback; t-arg as normalized loop progress for ScalarFieldGlyphFilter::apply post the v0.4.0 freeze fix).</WCTX>
+// <CLOG>0.2.0: expand module docs to record the now-live SamplerRef::TerminalFire / PreparedFilter::ScalarFieldGlyphFire integration and the dual time-source convention (absolute_t-when-set is ms; otherwise t-arg flows through unchanged, matching ScalarFieldGlyphFilter::apply post-loop_t-freeze-fix and StyleShader::style_at).</CLOG>
 
 //! Signal wrapper around [`TerminalFireShader`]'s emissive field.
 //!
@@ -23,6 +23,25 @@
 //! tradeoff vs the cost of either differentiating every term or caching
 //! finite differences.
 //!
+//! # Recipe-DSL integration
+//!
+//! Live in compositor 3.15.0+. Recipes invoke this signal indirectly
+//! via [`tui_vfx_compositor::types::FilterSpec::ScalarFieldGlyph`] +
+//! [`tui_vfx_compositor::types::SamplerRef::TerminalFire`]:
+//!
+//! ```json
+//! {
+//!   "type": "scalar_field_glyph",
+//!   "sampler": { "kind": "terminal_fire", "shader": { "mode": { "mode": "flame" } } },
+//!   "encoder": { "type": "braille_subcell", "threshold": 0.40 }
+//! }
+//! ```
+//!
+//! The compositor's `prepare_filter` constructs `FireFieldSignal::new(shader)`
+//! at recipe-load time and wraps it in
+//! `PreparedFilter::ScalarFieldGlyphFire(ScalarFieldGlyphFilter<FireFieldSignal>)`.
+//! Reference fixture: `recipes/debug_recipes/shaders/primitives/shader_terminal_fire_glyph_v3.json`.
+//!
 //! # Coordinate convention
 //!
 //! Mirrors the shader's [`TerminalFireShader::sample_field_at`] entry
@@ -32,9 +51,28 @@
 //! - `x = ctx.cell_x + subcell_offset.dx` (cell-space, fractional via subcell)
 //! - `y = ctx.cell_y + subcell_offset.dy` (cell-space; fire's internal
 //!   `normalized_fire_coord` flips this so `y=0` ends up at the flame base)
-//! - `t = ctx.absolute_t / 1000.0` (tui-vfx writes elapsed milliseconds
-//!   into `SignalContext::absolute_t` per the V3 direct-playback
-//!   convention; the shader's field math expects seconds).
+//!
+//! # Time-source convention
+//!
+//! Two callers feed time differently. Both are supported via a fallback:
+//!
+//! - **V3 direct-playback path:** `ctx.absolute_t` is set to elapsed
+//!   *milliseconds* per the V3 convention. We divide by 1000 to obtain
+//!   seconds for the shader's field math.
+//! - **`ScalarFieldGlyphFilter::apply` path** (compositor 0.4.0+):
+//!   `ctx.absolute_t` is left `None` and the `t` argument carries
+//!   normalized loop progress (0.0..=1.0) per the
+//!   [`tui_vfx_compositor::traits::filter::Filter`] trait. We pass this
+//!   through unchanged, matching the convention
+//!   [`tui_vfx_style::traits::StyleShader::style_at`] uses for the same
+//!   shader's non-glyph path.
+//!
+//! Setting `absolute_t = loop_t` from the filter path used to freeze the
+//! field at near-zero time; that bug was fixed in compositor 0.4.0 by
+//! dropping the spurious `with_absolute_time(loop_t)` call. See the
+//! companion regression test
+//! `test_apply_threads_loop_t_through_signal_t_arg` in
+//! `cls_scalar_field_glyph_filter` for the contract.
 //!
 //! # Send / Sync
 //!

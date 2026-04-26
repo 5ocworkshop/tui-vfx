@@ -23,7 +23,7 @@ supports shadows and `preserve_unfilled`.
 | Masks | 11 (+ `None`) | `tui_vfx_compositor::types::MaskSpec` |
 | Filters | 29 (+ `None`) | `tui_vfx_compositor::types::FilterSpec` |
 | Samplers | 6 (+ `None`) | `tui_vfx_compositor::types::SamplerSpec` |
-| Spatial Shaders | 26 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
+| Spatial Shaders | 27 (+ `None`) | `tui_vfx_style::models::SpatialShaderType` |
 | Style Effects | 10 (+ `None`) | `tui_vfx_style::models::StyleEffect` |
 | Content Transformers | 14 (+ `None`) | `tui_vfx_content::types::ContentEffect` |
 | Shadows | 5 styles | `tui_vfx_shadow::ShadowConfig / ShadowSpec` |
@@ -514,6 +514,7 @@ These are serializable shader variants for use in `CompositionSpec` and `ShaderL
 | `RevealWipe` | `direction` |
 | `StochasticSparkle` | `sparkle_density`, `brightness_boost`, `speed`, `apply_to` |
 | `SubCellShake` | `amplitude`, `frequency`, `axis`, `chromatic` |
+| `TerminalFire` | `mode`, `base_width`, `wind`, `rise_speed`, `turbulence`, `intensity`, `density`, `smoke`, `blue_core`, `sparks`, `apply_to` |
 | `TerminalWater` | `mode`, `layers`, `amplitude`, `wavelength`, `speed`, `direction`, `foam`, `glint`, `apply_to` |
 | `TracePath` | `speed`, `tail_length`, `vertical_weight`, `thickness`, `junction_boost`, `junction_glow`, `tail_mode`, `paths`, `color`, `apply_to` |
 | `TracePropagation` | `speed`, `grid_spacing`, `tail_length`, `origin`, `color` |

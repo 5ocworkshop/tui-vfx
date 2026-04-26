@@ -3370,6 +3370,93 @@
           "attention"
         ]
       },
+      "TerminalFire": {
+        "ai_hint": "Procedural emissive flame/smoke field. Unlike water (a lit surface), fire IS the light source — no light_direction; intensity drives emission.\nmode: Flame (default), Candle, Campfire, Embers, SmokePlume. Modes are tuning presets sharing one math pipeline. Use Candle for narrow vertical taper with strong blue reaction-zone core, Campfire for broad turbulent flame with heavy smoke and sparks, Embers for low ember bed (status strips), SmokePlume for smoke-dominant transition surfaces.\nbase_width, min_width: flame envelope at base/top.\nwind: lateral lean (-1..=1).\nrise_speed, turbulence: noise/animation rate and domain warp magnitude.\nintensity, density, cooling: global emission/opacity multipliers and vertical cooling rate.\nflicker_strength: coherent-noise flicker added to temperature.\nblue_core_strength, white_core_strength, smoke_strength: per-channel multipliers; the color selector branches on which channel dominates per cell.\nsparks: deterministic pseudo-particle config (seed, count 0..=32, intensity, rise_speed, drift). count=0 disables sparks entirely.\npalette: ColorConfig per channel (blue_core, white_core, yellow, orange, red, smoke).\napply_to: Foreground, Background, or Both.\nPairs with FireFieldSignal for glyph-rendering framework consumers (ScalarFieldGlyphFilter).\n",
+        "complexity": "complex",
+        "energy": "warm",
+        "name": "TerminalFire",
+        "pairs_with": [],
+        "parameters": [
+          {
+            "default": "Flame",
+            "doc": "Flame (default), Candle, Campfire, Embers, SmokePlume. Modes are tuning presets sharing one math pipeline. Use Candle for narrow vertical taper with strong blue reaction-zone core, Campfire for broad turbulent flame with heavy smoke and sparks, Embers for low ember bed (status strips), SmokePlume for smoke-dominant transition surfaces",
+            "name": "mode",
+            "ty": "FireMode"
+          },
+          {
+            "default": "0.55",
+            "doc": "Overall flame width at the base.",
+            "name": "base_width",
+            "ty": "f32"
+          },
+          {
+            "default": "0.00",
+            "doc": "Wind lean; negative leans left, positive leans right.",
+            "name": "wind",
+            "ty": "f32"
+          },
+          {
+            "default": "2.20",
+            "doc": "Upward noise/animation speed.",
+            "name": "rise_speed",
+            "ty": "f32"
+          },
+          {
+            "default": "1.00",
+            "doc": "Multiplier for domain warp.",
+            "name": "turbulence",
+            "ty": "f32"
+          },
+          {
+            "default": "1.00",
+            "doc": "Global emission/style blend multiplier.",
+            "name": "intensity",
+            "ty": "f32"
+          },
+          {
+            "default": "1.00",
+            "doc": "Global opacity/density multiplier.",
+            "name": "density",
+            "ty": "f32"
+          },
+          {
+            "default": "0.35",
+            "doc": "",
+            "name": "smoke",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "0.35",
+            "doc": "",
+            "name": "blue_core",
+            "ty": "ColorConfig"
+          },
+          {
+            "default": "8",
+            "doc": "deterministic pseudo-particle config (seed, count 0..=32, intensity, rise_speed, drift). count=0 disables sparks entirely",
+            "name": "sparks",
+            "ty": "FireSparkConfig"
+          },
+          {
+            "default": "Both",
+            "doc": "Foreground, Background, or Both",
+            "name": "apply_to",
+            "ty": "FireApplyTo"
+          }
+        ],
+        "premium": true,
+        "requires": [],
+        "rustdoc_description": "Emissive procedural flame/smoke field with rising turbulence, blue core, and sparks",
+        "rustdoc_summary": "Emissive procedural flame/smoke field with rising turbulence, blue core, and sparks",
+        "use_cases": [
+          "ambient",
+          "warm",
+          "warning",
+          "celebration",
+          "atmosphere",
+          "premium"
+        ]
+      },
       "TerminalWater": {
         "ai_hint": "Layered terminal water/ocean motion field with sine/Gerstner-style waves, ripples, rain rings, flow, wakes, foam, Fresnel/specular lighting, and optional glint.\nmode: Ocean, Ripple, Rain, Flow, Wake, OceanWithRipples, or Composite. Use Ripple for pebble drops/still pools, Rain for weather impacts, Wake for cursor/path trails, Flow for streams/currents, and Ocean/OceanWithRipples for ambient water surfaces.\nlayers: number of wave octaves (1..=4 recommended).\namplitude, wavelength, speed, direction_deg, steepness: core wave shape controls.\nnormal_strength, diffuse, specular, shininess, fresnel: lighting controls. glint_strength, glint_angle_deg, glint_width, glint_speed add existing glisten-band-style sparkle over water.\nfoam: blends foam_color from steepness/curvature; deep_color and shallow_color define the water palette.\napply_to: Foreground, Background, or Both.\nComposite supports combining water modes, but keep child mode lists small for terminal-frame performance.\n",
         "complexity": "complex",

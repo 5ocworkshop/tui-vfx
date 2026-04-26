@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_terminal_fire_shader.rs</FILE> - <DESC>Procedural emissive terminal fire shader</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Add a terminal_fire motion-field primitive: coherent rising turbulence, temperature/density/smoke/blue-core fields, deterministic sparks, mirroring TerminalWaterShader's catalog/V3/Phase 5 surface so a sibling FireFieldSignal can plug into ScalarFieldGlyphFilter.</WCTX>
-// <CLOG>0.1.0: initial TerminalFireShader implementation. Consumes mixed_signals::{math,noise} primitives directly per Intention 9 (no private helpers); FireSample omits cached slopes because fire's pipeline can't compute them analytically — SignalWithSlope's default central-differencing is the right tradeoff.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Document the live downstream consumers — StyleShader path for the color-blend recipes (5 mode debug fixtures) and glyph-rendering path via FireFieldSignal + SamplerRef::TerminalFire (1 glyph fixture, all six pass pipeline-validator).</WCTX>
+// <CLOG>0.2.0: extend module docs with the two consumer paths now both shipped: the StyleShader::style_at color path (5 mode recipes) and the ScalarFieldGlyphFilter glyph path via FireFieldSignal + SamplerRef::TerminalFire (1 glyph recipe).</CLOG>
 
 //! Procedural terminal fire shader.
 //!
@@ -14,6 +14,26 @@
 //!
 //! All scalar/noise math is consumed from `mixed_signals` upstream (per
 //! Intention 9). No private helper duplication.
+//!
+//! # Consumer paths
+//!
+//! Two shipped paths read this shader's per-cell field; both share one
+//! tested math pipeline ([`TerminalFireShader::sample_field_at`]):
+//!
+//! 1. **Color blend** — implements [`crate::traits::StyleShader`]. Recipes
+//!    invoke it via `{ "type": "terminal_fire", ... }` payloads on a
+//!    `shader` pipeline step. Reference fixtures:
+//!    `recipes/debug_recipes/shaders/primitives/shader_terminal_fire{,_candle,_campfire,_embers,_smoke_plume}_v3.json`.
+//! 2. **Glyph render** — wrapped by
+//!    [`super::cls_fire_field_signal::FireFieldSignal`] (a
+//!    [`mixed_signals::traits::Signal`]) and consumed by
+//!    [`tui_vfx_compositor::types::FilterSpec::ScalarFieldGlyph`] via
+//!    [`tui_vfx_compositor::types::SamplerRef::TerminalFire`]. Recipes
+//!    invoke it via `{ "type": "scalar_field_glyph", "sampler": { "kind":
+//!    "terminal_fire", "shader": {...} }, "encoder": {...} }`. Reference
+//!    fixture: `shader_terminal_fire_glyph_v3.json`.
+//!
+//! All six fixtures pass `pipeline-validator` on PROFILE/RENDER/SHADER/OUTPUT.
 
 use crate::models::{ColorConfig, ColorSpace};
 use crate::traits::{ShaderContext, StyleShader};

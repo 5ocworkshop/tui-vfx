@@ -1,14 +1,14 @@
 <!-- <FILE>docs/design/tui-vfx-terminal-fire-shader-plan.md</FILE> - <DESC>Implementation plan for a terminal fire/flame shader primitive.</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>Mark fire shipped on feature/fire-shader and combine with sibling Phase 7 doc closure: §9.0/§9.1/§9.10 reference the upstream mixed-signals primitives (saturate/finite_or/smoothstep/fade/lerp + hash01/hash3/value_noise3/fbm3) plus the FireFieldSignal pattern; an Implementation Status table near the top records phase shipping.</WCTX> -->
-<!-- <CLOG>0.4.0: combine sibling 0.3.0 (Phase 7 doc closure: §9.0/§9.1/§9.10 upstream-import notes with byte-equivalence references preserved) with feature/fire-shader 0.3.0 (Implementation Status table marking Phases 1–6 shipped). Phases 1–6 are Shipped; FireFieldSignal is Shipped (scope b); fire-glyph debug recipe is the next slice once SamplerRef::TerminalFire lands.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>Mark fire plan complete: 6b (fire-glyph recipe) shipped now that SamplerRef::TerminalFire + PreparedFilter::ScalarFieldGlyphFire wiring landed, plus a row recording the upstream ScalarFieldGlyphFilter loop_t freeze fix that surfaced when authoring the first fire-glyph fixture.</WCTX> -->
+<!-- <CLOG>0.5.0: 6b shipped (fire-glyph recipe + SamplerRef::TerminalFire + PreparedFilter::ScalarFieldGlyphFire). Add row 6c recording the ScalarFieldGlyphFilter::apply loop_t fix (dropped with_absolute_time(t) — Filter trait passes normalized progress, not ms). All acceptance criteria from §25 met.</CLOG> -->
 
 # Terminal Fire / Flame Shader Implementation Plan
 
 Date: 2026-04-26
 Repository: `/usr/projects/tui-vfx`
 Related recipe repository: `/usr/projects/tui-vfx-recipes`
-Status: **implemented on `feature/fire-shader` (worktree).** Phases 1–6 shipped — see Section 22 for per-phase status. The original planning sections below remain for archaeology; deviations from the plan are noted inline in the v0.3.0 CLOG above and in the per-phase status comments.
+Status: **complete.** All §25 acceptance criteria met; six debug recipes (5 modes + 1 glyph) validate clean through `pipeline-validator`; the FireFieldSignal scope-b extension and the SamplerRef::TerminalFire glyph-rendering integration both shipped. The original planning sections below remain for archaeology; deviations from the plan are noted inline in the per-phase status table directly below.
 Audience: junior Rust developer implementing under existing `tui-vfx` conventions.
 Related plan: [`tui-vfx-terminal-water-shader-plan.md`](tui-vfx-terminal-water-shader-plan.md)
 
@@ -21,9 +21,10 @@ Related plan: [`tui-vfx-terminal-water-shader-plan.md`](tui-vfx-terminal-water-s
 | 3. Spatial shader registration | **Shipped** | 8 catalog touch sites + xtask metadata + 3 integration tests. |
 | 4. V3 integration | **Shipped** | `VfxMotionFieldBehavior::TerminalFire { shader }` + bidirectional lowering + V3 round-trip test. |
 | 5. Docs / tooling / recipes | **Shipped** | This plan + `tui-vfx-v3-schema-overview.md` §6.2 + `tui-vfx-v3-recipe-vocabulary.md` + `tui-vfx-v3-capability-catalog.md` CC-08b + `tui-vfx-v3-schema-draft.json` Example 2c + `capabilities.toml`. 5 mode recipes in `tui-vfx-recipes`. |
-| 5b. FireFieldSignal | **Shipped (scope b extension)** | `cls_fire_field_signal.rs` + 12 tests. Mirrors WaterFieldSignal Phase 5 pattern. Uses SignalWithSlope's default central-differencing. Ready for `ScalarFieldGlyphFilter<FireFieldSignal>` once a glyph-recipe DSL surface exists. |
-| 6. Verification + review | **Shipped** | 593 style tests + 13 xtask tests passing. Clippy clean on fire files. Cross-repo audit (Intention 41): zero external consumers in mixed-signals, tui-vfx-recipes lib, gt-design — recipes are JSON fixtures only. |
-| 6b. Fire-glyph recipe | **Deferred** | Requires `FilterSpec::ScalarFieldGlyph` to gain a recipe-DSL surface. Tracked as a Phase 6 follow-up against the glyph-rendering-framework plan, not against this plan. |
+| 5b. FireFieldSignal | **Shipped (scope b extension)** | `cls_fire_field_signal.rs` + 12 tests. Mirrors WaterFieldSignal Phase 5 pattern. Uses SignalWithSlope's default central-differencing. Now wired through `ScalarFieldGlyphFilter<FireFieldSignal>` via SamplerRef::TerminalFire (see 6b). |
+| 6. Verification + review | **Shipped** | 606 style+xtask tests passing. Clippy clean on fire files. Cross-repo audit (Intention 41): zero external consumers in mixed-signals, tui-vfx-recipes lib, gt-design — recipes are JSON fixtures only. |
+| 6b. Fire-glyph recipe | **Shipped** | `SamplerRef::TerminalFire { shader: TerminalFireShader }` added in `cls_filter_spec.rs` v3.15.0 parallel to `SamplerRef::TerminalWater`. `PreparedFilter::ScalarFieldGlyphFire(ScalarFieldGlyphFilter<FireFieldSignal>)` wired in `cls_prepared_filter.rs`. `recipes/debug_recipes/shaders/primitives/shader_terminal_fire_glyph_v3.json` authored using `FilterSpec::ScalarFieldGlyph` + `braille_subcell` encoder. All 6 fire recipes pass pipeline-validator on PROFILE/RENDER/SHADER/OUTPUT. |
+| 6c. Loop-time freeze fix | **Shipped (upstream Phase 6 follow-up)** | `ScalarFieldGlyphFilter::apply` was setting `with_absolute_time(t)` — but the Filter trait documents `t` as normalized loop progress (0.0..=1.0), not elapsed milliseconds. FireFieldSignal/WaterFieldSignal interpret absolute_t as ms and divide by 1000 → field froze at near-zero time. Dropped the call in `cls_scalar_field_glyph_filter.rs` v0.4.0; `Signal::sample_with_context` already falls back to using the t arg directly. Test pin flipped from "absolute_t must equal t" to "absolute_t must remain None"; new `test_apply_threads_loop_t_through_signal_t_arg` regression added. Surfaced by authoring the first fire-glyph fixture. |
 
 ## 0. One-paragraph goal
 
