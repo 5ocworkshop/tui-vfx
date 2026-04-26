@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepare_context.rs</FILE> - <DESC>PrepareContext bundling per-frame values threaded into prepare_filter</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 0 P0.1 — thread runtime_params through the filter prepare stage</WCTX>
-// <CLOG>Introduce PrepareContext with loop_t, signal_ctx, runtime_params reference</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>TTE effects port phase 4b — add canvas width/height so prepare arms that bake per-cell schedules (FilterSpec::GlyphTimeline + PoissonBurst trigger) have the dimensions at construction time.</WCTX>
+// <CLOG>0.2.0: add `width: u16, height: u16` fields + update PrepareContext::new signature. Pre-existing production callers in orc_render_pipeline.rs already have width/height in scope.</CLOG>
 
 //! # PrepareContext
 //!
@@ -29,20 +29,34 @@ pub(crate) struct PrepareContext<'a> {
     pub loop_t: f64,
     pub signal_ctx: SignalContext,
     pub runtime_params: &'a ShaderRuntimeParams,
+    /// Canvas width in cells. Used by prepare arms that bake per-cell
+    /// schedules at construction time (e.g. `FilterSpec::GlyphTimeline`
+    /// with a `PoissonBurst` trigger calls
+    /// `tui_vfx_style::schedules::poisson_burst_schedule(width, height, ..)`).
+    pub width: u16,
+    /// Canvas height in cells. See `width`.
+    pub height: u16,
 }
 
 impl<'a> PrepareContext<'a> {
-    /// Build a PrepareContext from a loop time and a borrowed runtime-parameter
-    /// map. Constructs a fresh `SignalContext::for_loop` internally so the
-    /// caller only has to supply frame-level values.
-    pub(crate) fn new(loop_t: f64, runtime_params: &'a ShaderRuntimeParams) -> Self {
+    /// Build a PrepareContext from a loop time, runtime-parameter map,
+    /// and canvas dimensions. Constructs a fresh `SignalContext::for_loop`
+    /// internally so the caller only has to supply frame-level values.
+    pub(crate) fn new(
+        loop_t: f64,
+        runtime_params: &'a ShaderRuntimeParams,
+        width: u16,
+        height: u16,
+    ) -> Self {
         Self {
             loop_t,
             signal_ctx: SignalContext::for_loop(loop_t, 0),
             runtime_params,
+            width,
+            height,
         }
     }
 }
 
-// <FILE>tui-vfx-compositor/src/pipeline/cls_prepare_context.rs</FILE> - <DESC>PrepareContext bundling per-frame values threaded into prepare_filter</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <FILE>tui-vfx-compositor/src/pipeline/cls_prepare_context.rs</FILE>
+// <VERS>END OF VERSION: 0.2.0</VERS>

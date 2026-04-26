@@ -37,6 +37,7 @@ use crate::filters::cls_subcell_light::{
     SubcellLightRenderMode as ImplSubcellLightRenderMode,
 };
 use crate::filters::cls_tint::Tint;
+use crate::filters::cls_glyph_timeline::GlyphTimeline;
 use crate::filters::cls_underline_wipe::UnderlineWipe;
 use crate::filters::cls_vignette::Vignette;
 use crate::traits::filter::Filter;
@@ -86,6 +87,10 @@ pub(crate) enum PreparedFilter {
     ScalarFieldGlyphWater(ScalarFieldGlyphFilter<WaterFieldSignal>),
     /// [`ScalarFieldGlyphFilter`] backed by a [`FireFieldSignal`] sampler.
     ScalarFieldGlyphFire(ScalarFieldGlyphFilter<FireFieldSignal>),
+    /// Per-cell scripted glyph + color timeline (TTE-style scenes).
+    /// See [`crate::filters::cls_glyph_timeline::GlyphTimeline`] for the
+    /// trigger model and frame semantics.
+    GlyphTimeline(GlyphTimeline),
 }
 
 impl PreparedFilter {
@@ -192,6 +197,9 @@ impl PreparedFilter {
             PreparedFilter::ScalarFieldGlyphFire(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
+            PreparedFilter::GlyphTimeline(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
         }
     }
 
@@ -228,6 +236,7 @@ impl PreparedFilter {
             PreparedFilter::GlyphStyle(_) => "GlyphStyle",
             PreparedFilter::ScalarFieldGlyphWater(_) => "ScalarFieldGlyphWater",
             PreparedFilter::ScalarFieldGlyphFire(_) => "ScalarFieldGlyphFire",
+            PreparedFilter::GlyphTimeline(_) => "GlyphTimeline",
         }
     }
 }
@@ -510,6 +519,146 @@ pub(crate) fn prepare_filter(
                     *phase_offset_y_ms,
                 ),
             ))
+        }
+        FilterSpec::GlyphTimeline {
+            frames,
+            trigger,
+            on_complete,
+            apply_to,
+            affect,
+        } => {
+            use crate::filters::cls_charset_noise::AffectMode;
+            use crate::filters::cls_glyph_timeline::{
+                Frame, GlyphTimelineApplyTo as ImplApplyTo, JitterConfig as ImplJitter,
+                TimelineCompletion as ImplCompletion, TimelineTrigger as ImplTrigger,
+                WavefrontAxis as ImplAxis, WavefrontTriggerConfig as ImplWavefront,
+            };
+            use crate::types::cls_filter_spec::{
+                GlyphTimelineApplyTo as SpecApplyTo, GlyphTimelineAffect as SpecAffect,
+                GlyphTimelineCompletion as SpecCompletion,
+                GlyphTimelineLaneAxis as SpecLaneAxis,
+                GlyphTimelineTriggerSpec as SpecTrigger,
+                GlyphTimelineWavefrontAxis as SpecAxis,
+            };
+            use std::sync::Arc;
+            use tui_vfx_style::schedules::{
+                LaneAxis, PoissonBurstScheduleConfig, poisson_burst_schedule,
+            };
+
+            if frames.is_empty() {
+                // Mirror the validate-time guard at construction time.
+                return None;
+            }
+
+            let prepared_frames: Vec<Frame> = frames
+                .iter()
+                .map(|f| {
+                    Frame::new(
+                        f.glyph,
+                        f.fg.map(Color::from),
+                        f.bg.map(Color::from),
+                        f.duration_ticks,
+                    )
+                })
+                .collect();
+
+            let map_axis = |a: &SpecAxis| match a {
+                SpecAxis::LeftToRight => ImplAxis::LeftToRight,
+                SpecAxis::RightToLeft => ImplAxis::RightToLeft,
+                SpecAxis::TopToBottom => ImplAxis::TopToBottom,
+                SpecAxis::BottomToTop => ImplAxis::BottomToTop,
+                SpecAxis::DiagonalTlBr => ImplAxis::DiagonalTlBr,
+                SpecAxis::DiagonalTrBl => ImplAxis::DiagonalTrBl,
+            };
+
+            let prepared_trigger = match trigger {
+                SpecTrigger::Immediate => ImplTrigger::Immediate,
+                SpecTrigger::PhaseOffset {
+                    base_offset_seconds,
+                    phase_offset_x_ms,
+                    phase_offset_y_ms,
+                } => ImplTrigger::PhaseOffset {
+                    base_offset_seconds: *base_offset_seconds,
+                    phase_offset_x_ms: *phase_offset_x_ms,
+                    phase_offset_y_ms: *phase_offset_y_ms,
+                },
+                SpecTrigger::Wavefront {
+                    axis,
+                    total_duration_seconds,
+                    base_offset_seconds,
+                    easing,
+                    jitter,
+                } => ImplTrigger::Wavefront(ImplWavefront {
+                    axis: map_axis(axis),
+                    total_duration_seconds: *total_duration_seconds,
+                    base_offset_seconds: *base_offset_seconds,
+                    easing: *easing,
+                    jitter: jitter.as_ref().map(|j| ImplJitter {
+                        seed: j.seed,
+                        amount_seconds: j.amount_seconds,
+                    }),
+                }),
+                SpecTrigger::PoissonBurst {
+                    lane_axis,
+                    batch_period_frames,
+                    batch_size_min,
+                    batch_size_max,
+                    lane_speed_min,
+                    lane_speed_max,
+                    shuffle_seed,
+                    batch_seed,
+                    speed_seed,
+                    fps,
+                } => {
+                    let cfg = PoissonBurstScheduleConfig {
+                        lane_axis: match lane_axis {
+                            SpecLaneAxis::Row => LaneAxis::Row,
+                            SpecLaneAxis::Column => LaneAxis::Column,
+                        },
+                        batch_period_frames: *batch_period_frames,
+                        batch_size_min: *batch_size_min,
+                        batch_size_max: *batch_size_max,
+                        lane_speed_min: *lane_speed_min,
+                        lane_speed_max: *lane_speed_max,
+                        shuffle_seed: *shuffle_seed,
+                        batch_seed: *batch_seed,
+                        speed_seed: *speed_seed,
+                        fps: *fps,
+                    };
+                    let trigger_times = Arc::new(poisson_burst_schedule(
+                        prepare_ctx.width,
+                        prepare_ctx.height,
+                        &cfg,
+                    ));
+                    ImplTrigger::PerCellSchedule {
+                        trigger_times,
+                        width: prepare_ctx.width,
+                    }
+                }
+            };
+
+            let prepared_completion = match on_complete {
+                SpecCompletion::Hold => ImplCompletion::Hold,
+                SpecCompletion::Hide => ImplCompletion::Hide,
+                SpecCompletion::Loop => ImplCompletion::Loop,
+            };
+            let prepared_apply_to = match apply_to {
+                SpecApplyTo::Foreground => ImplApplyTo::Foreground,
+                SpecApplyTo::Background => ImplApplyTo::Background,
+                SpecApplyTo::Both => ImplApplyTo::Both,
+            };
+            let prepared_affect = match affect {
+                SpecAffect::All => AffectMode::All,
+                SpecAffect::NonEmpty => AffectMode::NonEmpty,
+            };
+
+            Some(PreparedFilter::GlyphTimeline(GlyphTimeline::new(
+                prepared_frames,
+                prepared_trigger,
+                prepared_completion,
+                prepared_apply_to,
+                prepared_affect,
+            )))
         }
         FilterSpec::MatrixRain {
             mode,
@@ -1073,7 +1222,7 @@ mod tests {
     fn kitt_scanner_progress_binding_resolves_from_runtime_params() {
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("demo_progress", 0.7_f32);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
 
         let spec = kitt_spec_with_progress(BindableValue::Binding("demo_progress".into()));
         let prepared = prepare_filter(&spec, &ctx).expect("KittScanner prepares");
@@ -1091,7 +1240,7 @@ mod tests {
     fn kitt_scanner_progress_binding_missing_param_falls_back_to_zero() {
         // Empty runtime_params → the Binding resolves to None → unwrap_or(0.0).
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
 
         let spec = kitt_spec_with_progress(BindableValue::Binding("missing".into()));
         let prepared = prepare_filter(&spec, &ctx).expect("KittScanner prepares");
@@ -1109,7 +1258,7 @@ mod tests {
     fn kitt_scanner_progress_static_literal_still_works() {
         // Regression guard: a pre-lift-style literal still passes through cleanly.
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
 
         let spec = kitt_spec_with_progress(BindableValue::static_f32(0.5));
         let prepared = prepare_filter(&spec, &ctx).expect("KittScanner prepares");
@@ -1132,11 +1281,11 @@ mod tests {
 
         let mut rp_a = ShaderRuntimeParams::new();
         rp_a.insert("demo_progress", 0.25_f32);
-        let ctx_a = PrepareContext::new(0.0, &rp_a);
+        let ctx_a = PrepareContext::new(0.0, &rp_a, 80, 24);
 
         let mut rp_b = ShaderRuntimeParams::new();
         rp_b.insert("demo_progress", 0.9_f32);
-        let ctx_b = PrepareContext::new(0.016, &rp_b);
+        let ctx_b = PrepareContext::new(0.016, &rp_b, 80, 24);
 
         let prepared_a = prepare_filter(&spec, &ctx_a).unwrap();
         let prepared_b = prepare_filter(&spec, &ctx_b).unwrap();
@@ -1153,7 +1302,7 @@ mod tests {
     #[test]
     fn kitt_scanner_bpm_overrides_bps_when_present() {
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
 
         let spec = FilterSpec::KittScanner {
             boost: 50,
@@ -1195,7 +1344,7 @@ mod tests {
     #[test]
     fn v3_payload_prepare_smoke_covers_all_filter_variants() {
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.25, &rp);
+        let ctx = PrepareContext::new(0.25, &rp, 80, 24);
         let cases = [
             ("none", json!({ "type": "none" }), None),
             (
@@ -1406,7 +1555,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = bind_ctx("p", 0.6);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = FilterSpec::SubPixelBar {
             progress: BindableValue::Binding("p".into()),
             direction: SubPixelBarDirection::default(),
@@ -1428,7 +1577,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = bind_ctx("p", 0.42);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = FilterSpec::HoverBar {
             base_eighths: 4,
             max_eighths: 12,
@@ -1452,7 +1601,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = bind_ctx("p", 0.8);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = FilterSpec::UnderlineWipe {
             direction: Default::default(),
             color: ColorConfig::Blue,
@@ -1477,7 +1626,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = bind_ctx("p", 0.33);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = FilterSpec::BracketEmphasis {
             left: '[',
             right: ']',
@@ -1499,7 +1648,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = bind_ctx("p", 1.0);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = FilterSpec::DotIndicator {
             indicator_char: '*',
             position: Default::default(),
@@ -1521,7 +1670,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = bind_ctx("p", 0.15);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = FilterSpec::PillButton {
             button_color: ColorConfig::Blue,
             bg_color: ColorConfig::Black,
@@ -1541,7 +1690,7 @@ mod tests {
     #[test]
     fn glisten_sweep_progress_binding_resolves() {
         let rp = bind_ctx("p", 0.55);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = FilterSpec::GlistenSweep {
             boost: 40,
             band_width: 0.2,
@@ -1564,7 +1713,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = bind_ctx("p", 0.75);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = FilterSpec::ShadeScanner {
             shade_color: ColorConfig::Gray,
             bps: 1.0,
@@ -1611,7 +1760,7 @@ mod tests {
     fn rigid_shake_num_shakes_binding_resolves_to_runtime_param() {
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("severity", 6_u16);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_with(1, Some("severity".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => {
@@ -1630,7 +1779,7 @@ mod tests {
         // clamps to 8. Binding 99 should land on the cap.
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("severity", 99_u16);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_with(1, Some("severity".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => {
@@ -1646,7 +1795,7 @@ mod tests {
     #[test]
     fn rigid_shake_num_shakes_missing_binding_falls_back_to_static() {
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_with(3, Some("missing".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => assert_eq!(filter.num_shakes(), 3),
@@ -1660,7 +1809,7 @@ mod tests {
     #[test]
     fn rigid_shake_no_binding_uses_static_field() {
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_with(4, None);
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => assert_eq!(filter.num_shakes(), 4),
@@ -1677,7 +1826,7 @@ mod tests {
     fn rigid_shake_damping_scale_binding_doubles_curve_when_scale_is_two() {
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("severity_damping", 2.0_f32);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_full(4, None, Some("severity_damping".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => {
@@ -1706,7 +1855,7 @@ mod tests {
     fn rigid_shake_damping_scale_binding_halves_curve_when_scale_is_half() {
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("severity_damping", 0.5_f32);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_full(4, None, Some("severity_damping".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => {
@@ -1735,7 +1884,7 @@ mod tests {
         // rather than 0.01 which would stall the shake entirely.
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("scale", 0.01_f32);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_full(4, None, Some("scale".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => {
@@ -1759,7 +1908,7 @@ mod tests {
         // (= 1.0 * 10.0) rather than blowing out the numeric range.
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("scale", 999.0_f32);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_full(4, None, Some("scale".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => {
@@ -1780,7 +1929,7 @@ mod tests {
     #[test]
     fn rigid_shake_damping_scale_binding_missing_falls_back_to_unscaled_curve() {
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_full(4, None, Some("missing".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => {
@@ -1811,7 +1960,7 @@ mod tests {
         // be the untouched static curve — no silent scaling by 1.0 that
         // could mask a regression later.
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = rigid_shake_spec_full(4, None, None);
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::RigidShake(filter) => {
@@ -1862,7 +2011,7 @@ mod tests {
                 b: 242,
             },
         );
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = fade_to_canvas_spec(ColorConfig::Black, Some("terminal_bg".to_string()));
         match prepare_filter(&spec, &ctx).unwrap() {
             PreparedFilter::FadeToCanvas(filter) => {
@@ -1880,7 +2029,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = fade_to_canvas_spec(
             ColorConfig::Rgb {
                 r: 10,
@@ -1910,7 +2059,7 @@ mod tests {
         // to the static canvas_color, not silently corrupt the fade target.
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("terminal_bg", ShaderRuntimeParamValue::Integer(42));
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = fade_to_canvas_spec(
             ColorConfig::Rgb { r: 7, g: 8, b: 9 },
             Some("terminal_bg".to_string()),
@@ -1931,7 +2080,7 @@ mod tests {
         use tui_vfx_style::models::ColorConfig;
 
         let rp = ShaderRuntimeParams::new();
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = fade_to_canvas_spec(
             ColorConfig::Rgb {
                 r: 180,
@@ -1980,7 +2129,7 @@ mod tests {
     fn matrix_rain_density_binding_resolves_runtime_param() {
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("density", 0.85_f32);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = matrix_rain_spec(
             BindableValue::Binding("density".to_owned()),
             BindableValue::static_f32(1.0),
@@ -2000,7 +2149,7 @@ mod tests {
     fn matrix_rain_speed_multiplier_binding_resolves_runtime_param() {
         let mut rp = ShaderRuntimeParams::new();
         rp.insert("speed_multiplier", 1.75_f32);
-        let ctx = PrepareContext::new(0.0, &rp);
+        let ctx = PrepareContext::new(0.0, &rp, 80, 24);
         let spec = matrix_rain_spec(
             BindableValue::static_f32(0.5),
             BindableValue::Binding("speed_multiplier".to_owned()),

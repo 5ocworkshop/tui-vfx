@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/filters/mod.rs</FILE> - <DESC>Filter implementations (internal)</DESC>
-// <VERS>VERSION: 3.0.0</VERS>
-// <WCTX>Glyph rendering framework Phase 4: add ScalarFieldGlyphFilter and CellColorIntensitySignal</WCTX>
-// <CLOG>3.0.0: MINOR — add cls_cell_color_intensity_signal and cls_scalar_field_glyph_filter modules; no re-exports (types are pub(crate) helpers, wired per-module)</CLOG>
+// <VERS>VERSION: 3.1.0</VERS>
+// <WCTX>TTE effects port — add cls_glyph_timeline (per-cell scripted-scene filter for TTE Beams + Sweep style timelines).</WCTX>
+// <CLOG>3.1.0: MINOR — add cls_glyph_timeline module; pub(crate) like the rest, wired per-module by the lowering layer.</CLOG>
 
 pub(crate) mod cls_animated_glyph_ramp;
 pub(crate) mod cls_bracket_emphasis;
@@ -16,6 +16,7 @@ pub(crate) mod cls_edge_grow;
 pub(crate) mod cls_fade_to_canvas;
 pub(crate) mod cls_glisten_sweep;
 pub(crate) mod cls_glyph_style;
+pub(crate) mod cls_glyph_timeline;
 pub(crate) mod cls_greyscale;
 pub(crate) mod cls_hover_bar;
 pub(crate) mod cls_interlace_curtain;
@@ -39,4 +40,4 @@ pub(crate) mod cls_vignette;
 pub(crate) mod test_support;
 
 // <FILE>tui-vfx-compositor/src/filters/mod.rs</FILE> - <DESC>Filter implementations (internal)</DESC>
-// <VERS>END OF VERSION: 3.0.0</VERS>
+// <VERS>END OF VERSION: 3.1.0</VERS>

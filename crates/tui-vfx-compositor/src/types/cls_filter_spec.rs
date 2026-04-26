@@ -73,8 +73,8 @@ use mixed_signals::types::SignalOrFloat;
 use serde::{Deserialize, Serialize, de::Error as _};
 use serde_json::{self, Value};
 use tui_vfx_style::models::{
-    cls_terminal_fire_shader::TerminalFireShader, cls_terminal_water_shader::TerminalWaterShader,
-    ColorConfig,
+    ColorConfig, cls_terminal_fire_shader::TerminalFireShader,
+    cls_terminal_water_shader::TerminalWaterShader,
 };
 
 /// Pattern types for filling cells.
@@ -1301,6 +1301,267 @@ pub enum FilterSpec {
         #[serde(default)]
         recolor: Option<GlyphRecolorSpec>,
     },
+    /// Per-cell scripted glyph + color timeline (TTE-style scenes).
+    ///
+    /// Each cell, when "triggered" by the configured trigger source,
+    /// plays a discrete-frame `Vec<GlyphTimelineFrameSpec>` once with
+    /// explicit per-frame durations (60 ticks/sec). After the last
+    /// frame, behavior is configurable via `on_complete`: `Hold`
+    /// (stay on the last frame), `Hide` (revert), or `Loop` (wrap).
+    ///
+    /// Closes the per-cell scripted-scene gap that
+    /// [`FilterSpec::AnimatedGlyphRamp`] cannot express:
+    /// `AnimatedGlyphRamp` is continuous-phase, uniform-dwell,
+    /// infinite-loop; `GlyphTimeline` is discrete-frame,
+    /// variable-dwell, one-shot. TTE Beams (per-cell beam-glyph
+    /// timelines) and TTE Sweep (per-cell block-cycle then settle)
+    /// both want the discrete form.
+    ///
+    /// # Trigger sources
+    ///
+    /// - `immediate` — every cell fires at `t = 0`.
+    /// - `phase_offset` — linear `base + x * x_ms / 1000 + y * y_ms / 1000`.
+    /// - `wavefront` — axis-driven sweep with optional easing and jitter.
+    /// - `poisson_burst` — pre-baked stochastic batch-cadence schedule
+    ///   (TTE Beams' "1-5 lanes per 6-frame batch"). Uses
+    ///   [`tui_vfx_style::schedules::poisson_burst_schedule`] under the
+    ///   hood; the lowering layer bakes the schedule once at recipe
+    ///   compile time.
+    ///
+    /// # Example — TTE-style two-pass sweep (Sweep effect)
+    ///
+    /// ```json
+    /// {
+    ///   "type": "glyph_timeline",
+    ///   "frames": [
+    ///     { "glyph": "█", "fg": {"type":"rgb","r":160,"g":160,"b":160}, "duration_ticks": 5 },
+    ///     { "glyph": "▓", "fg": {"type":"rgb","r":128,"g":128,"b":128}, "duration_ticks": 5 },
+    ///     { "glyph": "▒", "fg": {"type":"rgb","r":64,"g":64,"b":64},   "duration_ticks": 5 },
+    ///     { "glyph": "░", "fg": {"type":"rgb","r":32,"g":32,"b":32},   "duration_ticks": 5 }
+    ///   ],
+    ///   "trigger": {
+    ///     "kind": "wavefront",
+    ///     "axis": "right_to_left",
+    ///     "total_duration_seconds": 1.667,
+    ///     "easing": "circ_in_out"
+    ///   },
+    ///   "on_complete": "hold",
+    ///   "apply_to": "foreground",
+    ///   "affect": "non_empty"
+    /// }
+    /// ```
+    ///
+    /// `frames` must be non-empty; the lowering layer rejects empty
+    /// frame lists at recipe-compile time, and [`FilterSpec::validate`]
+    /// also catches it for early authoring feedback.
+    GlyphTimeline {
+        /// Frames in playback order. Must be non-empty.
+        frames: Vec<GlyphTimelineFrameSpec>,
+        /// Source of per-cell trigger time.
+        trigger: GlyphTimelineTriggerSpec,
+        /// What happens after the last frame's duration elapses.
+        /// Default `hold` (TTE behavior).
+        #[serde(default)]
+        on_complete: GlyphTimelineCompletion,
+        /// Which channel(s) the timeline writes into. Default
+        /// `foreground`.
+        #[serde(default)]
+        apply_to: GlyphTimelineApplyTo,
+        /// Which cells the timeline affects. Default `non_empty`.
+        #[serde(default)]
+        affect: GlyphTimelineAffect,
+    },
+}
+
+/// One frame in a [`FilterSpec::GlyphTimeline`].
+///
+/// Mirrors TTE's `FrameSpec`/`Visual` shape (`pro/main.rs:369-377`).
+/// `duration_ticks` is in TTE convention (60 ticks/sec); the lowering
+/// layer converts to seconds.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GlyphTimelineFrameSpec {
+    /// Glyph rendered while this frame is active.
+    pub glyph: char,
+    /// Optional foreground color. `None` leaves the cell's existing fg.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fg: Option<ColorConfig>,
+    /// Optional background color. `None` leaves the cell's existing bg.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bg: Option<ColorConfig>,
+    /// Tick count this frame holds for. 60 ticks/sec. Minimum 1
+    /// (clamped at lowering time).
+    pub duration_ticks: u16,
+}
+
+/// What happens after the last frame's duration elapses for a cell in
+/// [`FilterSpec::GlyphTimeline`].
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum GlyphTimelineCompletion {
+    /// Last frame stays rendered indefinitely. TTE default.
+    #[default]
+    Hold,
+    /// Cell is left untouched after the end (pre-trigger appearance
+    /// is preserved by subsequent filter passes).
+    Hide,
+    /// Timeline wraps to frame 0 and continues forever.
+    #[serde(rename = "loop")]
+    Loop,
+}
+
+/// Which channel(s) the [`FilterSpec::GlyphTimeline`] writes into.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum GlyphTimelineApplyTo {
+    /// Write into `cell.fg` only (default).
+    #[default]
+    Foreground,
+    /// Write into `cell.bg` only.
+    Background,
+    /// Write into both `cell.fg` and `cell.bg`.
+    Both,
+}
+
+/// Which cells [`FilterSpec::GlyphTimeline`] affects.
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum GlyphTimelineAffect {
+    /// Replace every cell, including whitespace.
+    All,
+    /// Skip space and empty braille (default).
+    #[default]
+    NonEmpty,
+}
+
+/// Wavefront axis for [`GlyphTimelineTriggerSpec::Wavefront`].
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum GlyphTimelineWavefrontAxis {
+    /// `x = 0` fires first.
+    #[default]
+    LeftToRight,
+    /// `x = w-1` fires first.
+    RightToLeft,
+    /// `y = 0` fires first.
+    TopToBottom,
+    /// `y = h-1` fires first.
+    BottomToTop,
+    /// Top-left fires first; sweep follows `(x - y)`.
+    DiagonalTlBr,
+    /// Top-right fires first; sweep follows `(x + y)`.
+    DiagonalTrBl,
+}
+
+/// Lane axis for [`GlyphTimelineTriggerSpec::PoissonBurst`].
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum GlyphTimelineLaneAxis {
+    /// Each row is one lane (TTE row beams).
+    #[default]
+    Row,
+    /// Each column is one lane (TTE column beams).
+    Column,
+}
+
+/// Optional deterministic per-cell jitter on top of a wavefront axis.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GlyphTimelineJitterSpec {
+    /// Seed for the deterministic per-cell jitter.
+    pub seed: u64,
+    /// Maximum absolute jitter applied per cell. Final per-cell
+    /// offset is in `[-amount_seconds, +amount_seconds)`.
+    pub amount_seconds: f64,
+}
+
+fn default_glyph_timeline_burst_period_frames() -> u16 {
+    6
+}
+fn default_glyph_timeline_burst_min() -> u16 {
+    1
+}
+fn default_glyph_timeline_burst_max() -> u16 {
+    5
+}
+fn default_glyph_timeline_fps() -> f64 {
+    60.0
+}
+
+/// Source of per-cell trigger time for [`FilterSpec::GlyphTimeline`].
+///
+/// `Immediate`, `PhaseOffset`, and `Wavefront` compute trigger time
+/// from a small declarative config. `PoissonBurst` is a pre-baked
+/// stochastic schedule (TTE Beams cadence) generated by
+/// [`tui_vfx_style::schedules::poisson_burst_schedule`] at recipe
+/// compile time; the lowering layer wraps the result into the
+/// filter's per-cell schedule trigger.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum GlyphTimelineTriggerSpec {
+    /// Every cell fires at `t = 0`.
+    Immediate,
+    /// Linear `t_trigger(x, y) = base + x * x_ms / 1000 + y * y_ms / 1000`.
+    /// Same shape as [`FilterSpec::AnimatedGlyphRamp`]'s
+    /// `phase_offset_*_ms` model.
+    PhaseOffset {
+        #[serde(default)]
+        base_offset_seconds: f64,
+        #[serde(default)]
+        phase_offset_x_ms: f64,
+        #[serde(default)]
+        phase_offset_y_ms: f64,
+    },
+    /// Axis-driven sweep with optional easing and jitter.
+    Wavefront {
+        axis: GlyphTimelineWavefrontAxis,
+        total_duration_seconds: f64,
+        #[serde(default)]
+        base_offset_seconds: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        easing: Option<tui_vfx_geometry::types::EasingCurve>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        jitter: Option<GlyphTimelineJitterSpec>,
+    },
+    /// TTE Beams stochastic batch-cadence schedule. The lowering layer
+    /// computes the per-cell schedule once via
+    /// [`tui_vfx_style::schedules::poisson_burst_schedule`] using
+    /// these parameters.
+    PoissonBurst {
+        lane_axis: GlyphTimelineLaneAxis,
+        /// Frames between successive activation batches. TTE: 6.
+        #[serde(default = "default_glyph_timeline_burst_period_frames")]
+        batch_period_frames: u16,
+        /// Minimum lanes activated per batch. TTE: 1.
+        #[serde(default = "default_glyph_timeline_burst_min")]
+        batch_size_min: u16,
+        /// Maximum lanes activated per batch. TTE: 5.
+        #[serde(default = "default_glyph_timeline_burst_max")]
+        batch_size_max: u16,
+        /// Minimum per-lane sweep speed in cells per frame.
+        lane_speed_min: f64,
+        /// Maximum per-lane sweep speed in cells per frame.
+        lane_speed_max: f64,
+        /// Seed for the lane-order shuffle.
+        shuffle_seed: u64,
+        /// Seed for the batch-size sequence.
+        batch_seed: u64,
+        /// Seed for per-lane speed jitter.
+        speed_seed: u64,
+        /// Frames per second (typically 60).
+        #[serde(default = "default_glyph_timeline_fps")]
+        fps: f64,
+    },
 }
 
 /// Direction of motion blur trail.
@@ -1914,6 +2175,12 @@ impl FilterSpec {
                     ),
                 }
             }
+            FilterSpec::GlyphTimeline { frames, .. } => {
+                if frames.is_empty() {
+                    return Err("glyph_timeline frames must not be empty".to_string());
+                }
+                Ok(())
+            }
             _ => Ok(()),
         }
     }
@@ -1952,6 +2219,7 @@ impl FilterSpec {
             FilterSpec::ShadeScanner { .. } => "ShadeScanner",
             FilterSpec::GlyphStyle { .. } => "GlyphStyle",
             FilterSpec::ScalarFieldGlyph { .. } => "ScalarFieldGlyph",
+            FilterSpec::GlyphTimeline { .. } => "GlyphTimeline",
         }
     }
 
@@ -2012,6 +2280,9 @@ impl FilterSpec {
             }
             FilterSpec::ScalarFieldGlyph { .. } => {
                 "Scalar-field-to-glyph filter: samples a 2D signal and encodes per-cell intensity as braille, block, or ramp glyphs"
+            }
+            FilterSpec::GlyphTimeline { .. } => {
+                "Per-cell discrete-frame scripted glyph + color timeline (TTE-style scenes); supports immediate / phase-offset / wavefront / poisson-burst trigger sources"
             }
         }
     }
@@ -2348,6 +2619,19 @@ impl FilterSpec {
                         .map(|r| format!("lit={:?} unlit={:?}", r.lit, r.unlit))
                         .unwrap_or_else(|| "none".to_string()),
                 ),
+            ],
+            FilterSpec::GlyphTimeline {
+                frames,
+                trigger,
+                on_complete,
+                apply_to,
+                affect,
+            } => vec![
+                ("frame_count", format!("{}", frames.len())),
+                ("trigger", format!("{:?}", trigger)),
+                ("on_complete", format!("{:?}", on_complete)),
+                ("apply_to", format!("{:?}", apply_to)),
+                ("affect", format!("{:?}", affect)),
             ],
         }
     }

@@ -156,7 +156,8 @@ pub fn render_pipeline(
     });
     let prepared_masks = prepare_masks(options.masks.as_ref());
     let loop_t = timing.effective_loop_t();
-    let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
+    let prepare_ctx =
+        PrepareContext::new(loop_t, options.runtime_params.as_ref(), width as u16, height as u16);
     let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
 
     // Dispatch to inspected or non-inspected loop
@@ -308,7 +309,8 @@ fn render_pipeline_with_shadow(
     let effective_sampler_specs = options.effective_samplers();
     let samplers = prepare_samplers(options.t, effective_sampler_specs.as_ref());
     let loop_t = timing.effective_loop_t();
-    let prepare_ctx = PrepareContext::new(loop_t, options.runtime_params.as_ref());
+    let prepare_ctx =
+        PrepareContext::new(loop_t, options.runtime_params.as_ref(), width as u16, height as u16);
     let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
     let shader_t = timing.shader_t();
     // Arc-wrap the source role map once so per-cell ShaderContext cloning
