@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_braille.rs</FILE> - <DESC>Braille pattern shadow renderer for dithered effects</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Honor explicit shared shadow inset controls so GTD can keep single-cell shadow spans while starting horizontal and vertical edges at different insets</WCTX>
-// <CLOG>Add trailing inset support for centered bottom/top and side shadow runs.</CLOG>
+// <VERS>VERSION: 0.4.1</VERS>
+// <WCTX>Glyph rendering framework Phase 4 audit: cross-reference private braille constants to tui_vfx_types::braille</WCTX>
+// <CLOG>0.4.1: Phase 4 audit — add cross-reference comments to BRAILLE_BASE, BRAILLE_DOTS, BRAILLE_RIGHT_DOTS documenting their equivalence to tui_vfx_types::braille; Option B (no replacement): BRAILLE_RIGHT_DOTS has no pre-built 4-element equivalent in tui_vfx_types::braille and would require runtime construction, so constants remain private with doc cross-refs</CLOG>
 
 //! Braille pattern shadow renderer.
 //!
@@ -18,7 +18,12 @@ use crate::types::ShadowConfig;
 /// Note: Requires terminal font with good braille support for best results.
 pub struct BrailleRenderer;
 
-/// Braille pattern base character (empty: ⠀)
+/// Braille pattern base character (empty: ⠀).
+///
+/// Cross-reference: byte-identical to `0x2800_u32` consumed by
+/// `tui_vfx_types::braille::braille()`. Intentionally kept private here
+/// because `density_to_braille` uses `char::from_u32` directly for a
+/// controlled 8-dot fill that doesn't map to a single `braille(bits)` call.
 const BRAILLE_BASE: u32 = 0x2800;
 
 /// Braille dot positions (each bit represents one dot in the 2x4 grid):
@@ -28,9 +33,22 @@ const BRAILLE_BASE: u32 = 0x2800;
 /// 0x04  0x20
 /// 0x40  0x80
 /// ```
+///
+/// Cross-reference: byte-identical to `GlyphEncoder`'s private `BRAILLE_DOTS`
+/// and `SubcellLight`'s former private constant (removed in Phase 4 refactor).
+/// The canonical bit semantics are documented in `tui_vfx_types::braille`.
+/// Intentionally kept private: `density_to_braille` performs an ordered
+/// sequential fill (`take(n)`) that differs from `tui_vfx_types::braille`'s
+/// `braille(bits)` API and from `GlyphEncoder`'s rotation-aware fill.
 const BRAILLE_DOTS: [u8; 8] = [0x01, 0x02, 0x04, 0x40, 0x08, 0x10, 0x20, 0x80];
 
-/// Right column dots only (for aspect-corrected right edge shadow)
+/// Right column dots only (for aspect-corrected right edge shadow).
+///
+/// Cross-reference: the set of bits `[0x08, 0x10, 0x20, 0x80]` corresponds
+/// to `tui_vfx_types::braille::RIGHT_COLUMN` (`0b1011_1000`). Kept as a
+/// 4-element array because `density_to_braille_right` performs a sequential
+/// ordered fill (`take(n)` up to 4 dots) that cannot be expressed as a
+/// single `braille(bits)` call without pre-building the same array at runtime.
 const BRAILLE_RIGHT_DOTS: [u8; 4] = [0x08, 0x10, 0x20, 0x80];
 
 impl BrailleRenderer {
@@ -340,4 +358,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-shadow/src/renderers/cls_braille.rs</FILE> - <DESC>Braille pattern shadow renderer for dithered effects</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>

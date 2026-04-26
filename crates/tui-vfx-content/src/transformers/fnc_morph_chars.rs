@@ -1,7 +1,7 @@
-// <FILE>tui-vfx-content/src/transformers/fnc_morph_chars.rs</FILE> - <DESC>Character generators for morph text transitions</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>OFPF refactoring: extract character generators from cls_morph.rs</WCTX>
-// <CLOG>Initial extraction of density, binary, and braille character generators</CLOG>
+// <FILE>crates/tui-vfx-content/src/transformers/fnc_morph_chars.rs</FILE> - <DESC>Character generators for morph text transitions</DESC>
+// <VERS>VERSION: 1.0.1</VERS>
+// <WCTX>Glyph rendering framework Phase 4 audit: cross-reference BRAILLE_LEFT_COL/BRAILLE_RIGHT_COL to tui_vfx_types::braille</WCTX>
+// <CLOG>1.0.1: Phase 4 audit — add cross-reference comments to BRAILLE_LEFT_COL and BRAILLE_RIGHT_COL; Option B (no replacement): these are pre-encoded character string literals, not bit constants; routing through tui_vfx_types::braille::braille() would cost a runtime char→&str step; kept as-is with doc cross-refs</CLOG>
 
 /// Get the density block character for a given progress (0.0-1.0)
 /// Progresses from sparse (░) to solid (█)
@@ -102,11 +102,21 @@ pub fn braille_char_down(local_progress: f32) -> &'static str {
     }
 }
 
-/// Left column only braille (dots 1,2,3,7) - used for half-cell wipe leading edge
+/// Left column only braille (dots 1,2,3,7) — used for half-cell wipe leading edge.
+///
+/// Cross-reference: encodes `tui_vfx_types::braille::LEFT_COLUMN` (`0b0100_0111`),
+/// equivalent to `braille(0x47)` = `'⡇'`. Kept as a `&str` literal rather than
+/// routing through `tui_vfx_types::braille::braille()` because the callers in
+/// `cls_morph.rs` push to a `String` directly; converting `char` to `&str` would
+/// require a temporary buffer. Phase 4 audit decision: Option B (comment only).
 pub const BRAILLE_LEFT_COL: &str = "⡇";
 
-/// Right column only braille (dots 4,5,6,8) - used for half-cell wipe leading edge
+/// Right column only braille (dots 4,5,6,8) — used for half-cell wipe leading edge.
+///
+/// Cross-reference: encodes `tui_vfx_types::braille::RIGHT_COLUMN` (`0b1011_1000`),
+/// equivalent to `braille(0xB8)` = `'⣸'`. Kept as a `&str` literal for the same
+/// reason as `BRAILLE_LEFT_COL`. Phase 4 audit decision: Option B (comment only).
 pub const BRAILLE_RIGHT_COL: &str = "⣸";
 
-// <FILE>tui-vfx-content/src/transformers/fnc_morph_chars.rs</FILE> - <DESC>Character generators for morph text transitions</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <FILE>crates/tui-vfx-content/src/transformers/fnc_morph_chars.rs</FILE> - <DESC>Character generators for morph text transitions</DESC>
+// <VERS>END OF VERSION: 1.0.1</VERS>
