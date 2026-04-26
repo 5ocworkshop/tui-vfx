@@ -45,7 +45,7 @@ pub(crate) use fnc_roll_cycle_window::roll_cycle_window;
 pub(crate) use fnc_roll_grid_window::roll_grid_window;
 pub(crate) use fnc_route_between::route_between;
 pub(crate) use fnc_split_flap_tile_frame::split_flap_tile_frame;
-pub(crate) use fnc_tile_progress::{tile_progress_for, TileScheduleMeta};
+pub(crate) use fnc_tile_progress::{TileScheduleMeta, tile_progress_for};
 pub(crate) use fnc_tile_rects::{blit_tile_grid, extract_tile_text, tile_rects};
 pub(crate) use types::{
     MechanicalSizing, MechanicalSource, MechanicalTile, validate_split_flap_tile,

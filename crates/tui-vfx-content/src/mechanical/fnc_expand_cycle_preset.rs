@@ -39,8 +39,7 @@ const SPLIT_FLAP_ALPHA_FACES: &[char] = &[
     'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.',
     ',', '-', '!', '?',
 ];
-const SPLIT_FLAP_DIGITS_FACES: &[char] =
-    &[' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const SPLIT_FLAP_DIGITS_FACES: &[char] = &[' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const SPLIT_FLAP_UPPER_FACES: &[char] = &[
     ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
     'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
@@ -116,7 +115,11 @@ mod tests {
             let mut sorted = faces.clone();
             sorted.sort();
             sorted.dedup();
-            assert_eq!(faces.len(), sorted.len(), "preset {preset:?} has duplicates");
+            assert_eq!(
+                faces.len(),
+                sorted.len(),
+                "preset {preset:?} has duplicates"
+            );
         }
     }
 }

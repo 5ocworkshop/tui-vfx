@@ -37,8 +37,6 @@ mod test_cls_linear_gradient_shader;
 mod test_cls_neon_flicker_shader;
 #[path = "models/test_cls_spatial_shader_type.rs"]
 mod test_cls_spatial_shader_type;
-#[path = "models/test_terminal_fire_recipes.rs"]
-mod test_terminal_fire_recipes;
 #[path = "models/test_cls_style_effect.rs"]
 mod test_cls_style_effect;
 #[path = "models/test_cls_style_layer.rs"]
@@ -61,6 +59,8 @@ mod test_fnc_style_region_should_style;
 mod test_serde_roundtrip;
 #[path = "models/test_style_region_legacy_parse_round_trip.rs"]
 mod test_style_region_legacy_parse_round_trip;
+#[path = "models/test_terminal_fire_recipes.rs"]
+mod test_terminal_fire_recipes;
 
 // <FILE>tui-vfx-style/tests/test_models.rs</FILE> - <DESC>Linker file for models integration tests</DESC>
 // <VERS>END OF VERSION: 0.8.0</VERS>

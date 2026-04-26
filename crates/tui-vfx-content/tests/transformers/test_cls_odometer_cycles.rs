@@ -49,12 +49,7 @@ fn forward_route() -> MechanicalRouteConfig {
 #[test]
 fn absent_mechanical_matches_explicit_pair_default() {
     let absent = odometer("AAA", "111", 1, None);
-    let explicit_pair = odometer(
-        "AAA",
-        "111",
-        1,
-        Some(MechanicalCycleConfig::default()),
-    );
+    let explicit_pair = odometer("AAA", "111", 1, Some(MechanicalCycleConfig::default()));
     for p in [0.0, 0.25, 0.34, 0.5, 0.67, 0.9, 1.0] {
         assert_eq!(
             sample(&absent, "111", p),

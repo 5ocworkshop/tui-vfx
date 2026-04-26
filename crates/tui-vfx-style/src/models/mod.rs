@@ -108,7 +108,7 @@ pub use cls_cursor_shader::{
 };
 pub use cls_diffusion_shader::{DiffusionApplyTo, DiffusionMode, DiffusionShader, DiffusionSource};
 pub use cls_edge_sheen_shader::{EdgeSheenApplyTo, EdgeSheenShader};
-pub use cls_fade_effect::{fade_effect, FadeDirection, FadeEffect, FadeToBlack, FadeToColor};
+pub use cls_fade_effect::{FadeDirection, FadeEffect, FadeToBlack, FadeToColor, fade_effect};
 pub use cls_fade_spec::{FadeApplyTo, FadeChain, FadeSegment, FadeSpec, FadeTarget};
 pub use cls_falloff_type::FalloffType;
 pub use cls_fire_field_signal::FireFieldSignal;
@@ -155,23 +155,24 @@ pub use cls_wayfinding_node_shader::{WayfindingNode, WayfindingNodeApplyTo, Wayf
 pub use fnc_apply_style_effects_to_scene::apply_style_effects_to_scene;
 pub use tui_vfx_geometry::easing::EasingType;
 pub use v3::{
-    lower_legacy_spatial_shader, try_lower_v3_spatial_shader_family, TryLowerV3SpatialShaderError,
-    TryLowerV3StyleEffectError, VfxAffordanceWakeZone, VfxConcealedLightMode,
-    VfxConcealedLightSource, VfxCursorMode, VfxCursorPrimary, VfxCursorShader, VfxCursorTrail,
-    VfxDiffusionMode, VfxDiffusionSource, VfxEdgeDistortionAxis, VfxEdgeDistortionBehavior,
-    VfxEdgeDistortionShader, VfxFocusFieldShape, VfxGradientRevealBehavior,
-    VfxGradientRevealShader, VfxGuidanceCueApplyTo, VfxGuidanceCueBehavior, VfxGuidanceCueShader,
-    VfxMaterialLightApplyTo, VfxMaterialLightBehavior, VfxMaterialLightShader,
-    VfxMotionFieldBehavior, VfxMotionFieldDirection, VfxMotionFieldShader,
-    VfxProgressEmphasisApplyTo, VfxProgressEmphasisDirection, VfxProgressEmphasisMode,
-    VfxProgressEmphasisRowMask, VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast,
-    VfxRevealDirection, VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
+    TryLowerV3SpatialShaderError, TryLowerV3StyleEffectError, VfxAffordanceWakeZone,
+    VfxConcealedLightMode, VfxConcealedLightSource, VfxCursorMode, VfxCursorPrimary,
+    VfxCursorShader, VfxCursorTrail, VfxDiffusionMode, VfxDiffusionSource, VfxEdgeDistortionAxis,
+    VfxEdgeDistortionBehavior, VfxEdgeDistortionShader, VfxFocusFieldShape,
+    VfxGradientRevealBehavior, VfxGradientRevealShader, VfxGuidanceCueApplyTo,
+    VfxGuidanceCueBehavior, VfxGuidanceCueShader, VfxMaterialLightApplyTo,
+    VfxMaterialLightBehavior, VfxMaterialLightShader, VfxMotionFieldBehavior,
+    VfxMotionFieldDirection, VfxMotionFieldShader, VfxProgressEmphasisApplyTo,
+    VfxProgressEmphasisDirection, VfxProgressEmphasisMode, VfxProgressEmphasisRowMask,
+    VfxProgressEmphasisShader, VfxProgressEmphasisTextContrast, VfxRevealDirection,
+    VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily,
     VfxStochasticTextureBehavior, VfxStochasticTextureShader, VfxStripeMotionBehavior,
     VfxStripeMotionShader, VfxStyleEffectFamily, VfxStyleEffectValue, VfxSurfaceDepthBehavior,
     VfxSurfaceDepthEdges, VfxSurfaceDepthLightDirection, VfxSurfaceDepthShader,
     VfxTextureSegmentMode, VfxTextureTarget, VfxTracePathTailMode, VfxTravelingBandApplyTo,
     VfxTravelingBandBehavior, VfxTravelingBandColor, VfxTravelingBandDirection,
-    VfxTravelingBandShader, VfxWayfindingNode,
+    VfxTravelingBandShader, VfxWayfindingNode, lower_legacy_spatial_shader,
+    try_lower_v3_spatial_shader_family,
 };
 
 // <FILE>tui-vfx-style/src/models/mod.rs</FILE> - <DESC>Style models module</DESC>

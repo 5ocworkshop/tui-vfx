@@ -211,9 +211,7 @@ fn legacy_traveling_band_colors(
 ) {
     match color {
         VfxTravelingBandColor::Solid { color } => (*color, None, None),
-        VfxTravelingBandColor::HeadTail { head, tail } => {
-            (*head, Some(*head), Some(*tail))
-        }
+        VfxTravelingBandColor::HeadTail { head, tail } => (*head, Some(*head), Some(*tail)),
     }
 }
 

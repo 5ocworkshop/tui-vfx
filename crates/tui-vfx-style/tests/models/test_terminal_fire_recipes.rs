@@ -25,14 +25,19 @@ fn recipes_dir() -> PathBuf {
 
 fn load_payload(path: &str) -> serde_json::Value {
     let full = recipes_dir().join(path);
-    let bytes = std::fs::read(&full)
-        .unwrap_or_else(|e| panic!("read recipe {}: {}", full.display(), e));
+    let bytes =
+        std::fs::read(&full).unwrap_or_else(|e| panic!("read recipe {}: {}", full.display(), e));
     let value: serde_json::Value =
         serde_json::from_slice(&bytes).expect("recipe must be valid JSON");
     value
         .pointer("/config/pipeline/step/payload")
         .cloned()
-        .unwrap_or_else(|| panic!("recipe {} missing /config/pipeline/step/payload", full.display()))
+        .unwrap_or_else(|| {
+            panic!(
+                "recipe {} missing /config/pipeline/step/payload",
+                full.display()
+            )
+        })
 }
 
 fn assert_recipe_deserializes(filename: &str, expected_mode: FireMode) {

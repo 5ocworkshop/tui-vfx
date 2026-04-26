@@ -108,7 +108,6 @@ pub enum WaterWaveMode {
     },
 }
 
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]
 pub struct WaterRippleEmitter {

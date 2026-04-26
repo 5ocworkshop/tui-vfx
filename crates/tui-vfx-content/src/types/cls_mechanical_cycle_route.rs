@@ -16,15 +16,7 @@ use serde::{Deserialize, Serialize};
 /// [`MechanicalContentSource`]: super::cls_mechanical_cycle_source::MechanicalContentSource
 /// [`OdometerDirection`]: super::cls_content_effect::OdometerDirection
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Default,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(deny_unknown_fields)]
 pub struct MechanicalRouteConfig {
@@ -47,15 +39,7 @@ pub struct MechanicalRouteConfig {
 
 /// Direction the route walks through an ordered cycle.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Default,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum CycleDirectionPolicy {
@@ -77,15 +61,7 @@ pub enum CycleDirectionPolicy {
 
 /// Tie-breaker for `CycleDirectionPolicy::Shortest`.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Default,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum CycleTieBreaker {
@@ -102,15 +78,7 @@ pub enum CycleTieBreaker {
 /// fallbacks deliberately, with awareness that fallbacks change the visible
 /// behavior.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Default,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum CycleMissingFacePolicy {
@@ -151,8 +119,7 @@ mod tests {
 
     #[test]
     fn extra_rotations_parses() {
-        let cfg: MechanicalRouteConfig =
-            serde_json::from_str(r#"{"extra_rotations":3}"#).unwrap();
+        let cfg: MechanicalRouteConfig = serde_json::from_str(r#"{"extra_rotations":3}"#).unwrap();
         assert_eq!(cfg.extra_rotations, 3);
     }
 

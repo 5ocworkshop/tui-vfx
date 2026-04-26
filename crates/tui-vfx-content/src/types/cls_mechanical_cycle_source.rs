@@ -73,21 +73,12 @@ pub enum MechanicalContentSource {
     },
 }
 
-
 /// Whether a cycle wraps around its endpoints.
 ///
 /// `Circular` is the natural fit for digit drums and Solari letter wheels;
 /// `Bounded` rejects routes that would require traversing past either end.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Default,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum CycleWrapMode {
@@ -103,16 +94,7 @@ pub enum CycleWrapMode {
 /// Each preset's exact face list is part of the public contract and is
 /// covered by tests. Adding a preset is an additive schema change; renaming
 /// or reordering an existing preset is a breaking change.
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MechanicalCyclePreset {
     /// Decimal digits `"0"` through `"9"`.
@@ -127,15 +109,7 @@ pub enum MechanicalCyclePreset {
 }
 
 /// One entry in a weighted cycle face list.
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]
 pub struct WeightedCycleFace {
     /// Face value. Newlines split the face into multiple grid rows.
@@ -151,7 +125,10 @@ mod tests {
 
     #[test]
     fn default_source_is_pair() {
-        assert_eq!(MechanicalContentSource::default(), MechanicalContentSource::Pair);
+        assert_eq!(
+            MechanicalContentSource::default(),
+            MechanicalContentSource::Pair
+        );
     }
 
     #[test]
@@ -174,7 +151,10 @@ mod tests {
         let parsed: MechanicalContentSource = serde_json::from_str(json).unwrap();
         match parsed {
             MechanicalContentSource::Ordered { faces, wrap } => {
-                assert_eq!(faces, vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+                assert_eq!(
+                    faces,
+                    vec!["A".to_string(), "B".to_string(), "C".to_string()]
+                );
                 assert_eq!(wrap, CycleWrapMode::Circular);
             }
             other => panic!("expected ordered, got {other:?}"),
@@ -199,8 +179,14 @@ mod tests {
     fn weighted_serde_roundtrip() {
         let cfg = MechanicalContentSource::Weighted {
             faces: vec![
-                WeightedCycleFace { value: "7".into(), weight: 1 },
-                WeightedCycleFace { value: "$".into(), weight: 2 },
+                WeightedCycleFace {
+                    value: "7".into(),
+                    weight: 1,
+                },
+                WeightedCycleFace {
+                    value: "$".into(),
+                    weight: 2,
+                },
             ],
             seed: 777,
             wrap: CycleWrapMode::Circular,
@@ -214,7 +200,10 @@ mod tests {
     fn unknown_field_rejected() {
         let json = r#"{"type":"ordered","faces":["A"],"flavor":"strawberry"}"#;
         let parsed: Result<MechanicalContentSource, _> = serde_json::from_str(json);
-        assert!(parsed.is_err(), "expected unknown field rejection, got {parsed:?}");
+        assert!(
+            parsed.is_err(),
+            "expected unknown field rejection, got {parsed:?}"
+        );
     }
 
     #[test]
@@ -223,7 +212,10 @@ mod tests {
         let parsed: MechanicalContentSource = serde_json::from_str(json).unwrap();
         assert!(matches!(
             parsed,
-            MechanicalContentSource::Ordered { wrap: CycleWrapMode::Bounded, .. }
+            MechanicalContentSource::Ordered {
+                wrap: CycleWrapMode::Bounded,
+                ..
+            }
         ));
     }
 }

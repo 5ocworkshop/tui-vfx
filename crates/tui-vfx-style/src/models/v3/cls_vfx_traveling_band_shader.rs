@@ -157,9 +157,7 @@ fn traveling_band_color_from_legacy(
     tail: Option<&crate::models::ColorConfig>,
 ) -> VfxTravelingBandColor {
     match (head, tail) {
-        (None, None) => VfxTravelingBandColor::Solid {
-            color: *color,
-        },
+        (None, None) => VfxTravelingBandColor::Solid { color: *color },
         _ => VfxTravelingBandColor::HeadTail {
             head: *head.unwrap_or(color),
             tail: *tail.unwrap_or(color),

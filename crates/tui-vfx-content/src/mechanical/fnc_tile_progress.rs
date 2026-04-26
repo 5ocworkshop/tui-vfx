@@ -275,7 +275,11 @@ mod tests {
             max_delay_fraction: 0.5,
         };
         for tile in 0..6 {
-            assert_close(tile_progress_for(&policy, 1.0, meta(tile, 6)), 1.0, F32_F64_TOL);
+            assert_close(
+                tile_progress_for(&policy, 1.0, meta(tile, 6)),
+                1.0,
+                F32_F64_TOL,
+            );
         }
     }
 }

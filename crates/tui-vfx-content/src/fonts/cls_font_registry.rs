@@ -124,7 +124,9 @@ impl FontRegistry {
 
     /// Iterate over (name, table) pairs in registration order.
     pub fn entries(&self) -> impl Iterator<Item = (&str, FontGlyphTable)> + '_ {
-        self.fonts.iter().map(|(name, table)| (name.as_str(), *table))
+        self.fonts
+            .iter()
+            .map(|(name, table)| (name.as_str(), *table))
     }
 }
 
@@ -154,7 +156,10 @@ mod tests {
     #[test]
     fn resolve_default_font_sentinel_returns_default_table() {
         let reg = FontRegistry::new();
-        assert_eq!(reg.resolve(DEFAULT_FONT_SENTINEL), Some(FontGlyphTable::Line3x3));
+        assert_eq!(
+            reg.resolve(DEFAULT_FONT_SENTINEL),
+            Some(FontGlyphTable::Line3x3)
+        );
     }
 
     #[test]
@@ -231,7 +236,10 @@ mod tests {
         reg.insert("alt", FontGlyphTable::Line3x3);
         reg.set_default("alt");
         // Sentinel resolution still works after default rebinds.
-        assert_eq!(reg.resolve(DEFAULT_FONT_SENTINEL), Some(FontGlyphTable::Line3x3));
+        assert_eq!(
+            reg.resolve(DEFAULT_FONT_SENTINEL),
+            Some(FontGlyphTable::Line3x3)
+        );
         assert_eq!(reg.default_name(), "alt");
     }
 

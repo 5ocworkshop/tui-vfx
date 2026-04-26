@@ -33,9 +33,7 @@ pub(crate) fn overshoot_face_for<'a>(
         CycleDirectionPolicy::Reverse => -1,
     };
     let next = match cycle.wrap {
-        CycleWrapMode::Circular => {
-            ((target_idx as i64 + step).rem_euclid(len as i64)) as usize
-        }
+        CycleWrapMode::Circular => ((target_idx as i64 + step).rem_euclid(len as i64)) as usize,
         CycleWrapMode::Bounded => {
             let raw = target_idx as i64 + step;
             if raw < 0 || raw >= len as i64 {

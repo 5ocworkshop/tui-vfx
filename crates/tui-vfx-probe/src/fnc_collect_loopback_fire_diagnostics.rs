@@ -40,9 +40,7 @@ pub fn collect_loopback_fire_diagnostics(report: &ProbeReport) -> Vec<ProbeDiagn
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cls_probe_report::{
-        ProbeFrame, ProbePoint, ProbeReportSource, ProbeSize,
-    };
+    use crate::cls_probe_report::{ProbeFrame, ProbePoint, ProbeReportSource, ProbeSize};
     use crate::cls_probe_request::{ProbeCellSelector, ProbePhase, ProbeRequest};
     use crate::cls_probe_runtime_context::ProbeRuntimeContext;
     use crate::cls_probe_summary::ProbeSummary;
@@ -70,11 +68,17 @@ mod tests {
                 tick_ms: None,
             },
             frame: ProbeFrame {
-                size: ProbeSize { width: 10, height: 1 },
+                size: ProbeSize {
+                    width: 10,
+                    height: 1,
+                },
             },
             widget: ProbeWidget {
                 abs_origin: ProbePoint { x: 0, y: 0 },
-                size: ProbeSize { width: 10, height: 1 },
+                size: ProbeSize {
+                    width: 10,
+                    height: 1,
+                },
             },
             // Construct via serde so the test stays robust against
             // ProbePipelineInventory field additions over time.
@@ -137,11 +141,7 @@ mod tests {
             supplied_params: Vec::new(),
             binding_requests: Vec::new(),
             binding_resolutions: Vec::new(),
-            loopback_fired_keys: vec![
-                "alpha".to_string(),
-                "beta".to_string(),
-                "gamma".to_string(),
-            ],
+            loopback_fired_keys: vec!["alpha".to_string(), "beta".to_string(), "gamma".to_string()],
         }));
         let diagnostics = collect_loopback_fire_diagnostics(&report);
         assert_eq!(diagnostics.len(), 3);

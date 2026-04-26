@@ -104,7 +104,7 @@
 //! [`crate::models::StyleEffect::Spatial`] for temporal animation.
 
 use crate::models::{
-    cls_affordance_wake_shader::AffordanceWakeShader,
+    LinearGradientShader, VfxSpatialShaderFamily, cls_affordance_wake_shader::AffordanceWakeShader,
     cls_ambient_occlusion_shader::AmbientOcclusionShader, cls_barber_pole_shader::BarberPoleShader,
     cls_bevel_shader::BevelShader, cls_border_sweep_shader::BorderSweepShader,
     cls_chromatic_edge_shader::ChromaticEdgeShader,
@@ -122,7 +122,7 @@ use crate::models::{
     cls_sub_cell_shake_shader::SubCellShakeShader, cls_terminal_fire_shader::TerminalFireShader,
     cls_terminal_water_shader::TerminalWaterShader, cls_trace_path_shader::TracePathShader,
     cls_trace_propagation_shader::TracePropagationShader,
-    cls_wayfinding_node_shader::WayfindingNodeShader, LinearGradientShader, VfxSpatialShaderFamily,
+    cls_wayfinding_node_shader::WayfindingNodeShader,
 };
 use mixed_signals::types::SignalOrFloat;
 
@@ -342,16 +342,17 @@ impl SpatialShaderType {
                 }
                 "concealed_light" => {
                     if let Some(spread) = object.get("spread").cloned()
-                        && spread.get("signal").is_some() {
-                            if let Some(default) = signal_default_f32(&spread) {
-                                object.insert(
-                                    "spread".into(),
-                                    serde_json::json!(default.round().clamp(1.0, 255.0) as u8),
-                                );
-                            }
-                            object.insert("mode".into(), serde_json::json!("drift"));
-                            object.insert("pulse_speed".into(), serde_json::json!(1.0));
+                        && spread.get("signal").is_some()
+                    {
+                        if let Some(default) = signal_default_f32(&spread) {
+                            object.insert(
+                                "spread".into(),
+                                serde_json::json!(default.round().clamp(1.0, 255.0) as u8),
+                            );
                         }
+                        object.insert("mode".into(), serde_json::json!("drift"));
+                        object.insert("pulse_speed".into(), serde_json::json!(1.0));
+                    }
                 }
                 "border_sweep" => {
                     extract_binding_object(object, "position", "position_binding");

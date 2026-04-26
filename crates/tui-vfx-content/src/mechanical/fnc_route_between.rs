@@ -68,8 +68,7 @@ pub(crate) fn route_between(
         },
     };
 
-    let direction =
-        resolve_direction(cycle, from_idx, to_idx, &config, numeric_hint, from, to)?;
+    let direction = resolve_direction(cycle, from_idx, to_idx, &config, numeric_hint, from, to)?;
 
     let walk = walk_indices(cycle, from_idx, to_idx, direction, config.extra_rotations)?;
     let faces: Vec<ResolvedMechanicalFace> = walk
@@ -152,9 +151,7 @@ fn resolve_direction(
         CycleDirectionPolicy::Forward | CycleDirectionPolicy::Reverse => Ok(config.direction),
         CycleDirectionPolicy::Authored => Err(MechanicalCycleError::AuthoredDirectionReserved),
         CycleDirectionPolicy::Shortest => resolve_shortest(cycle, from_idx, to_idx, config),
-        CycleDirectionPolicy::NumericDelta => {
-            resolve_numeric_delta(cycle, numeric_hint, from, to)
-        }
+        CycleDirectionPolicy::NumericDelta => resolve_numeric_delta(cycle, numeric_hint, from, to),
     }
 }
 
@@ -446,8 +443,7 @@ mod tests {
             extra_rotations: 0,
             missing_face: CycleMissingFacePolicy::Error,
         };
-        let route =
-            route_between(&cycle, "0", "5", forward_tie, None, tile(1, 1)).unwrap();
+        let route = route_between(&cycle, "0", "5", forward_tie, None, tile(1, 1)).unwrap();
         assert_eq!(route_values(&route), vec!["0", "1", "2", "3", "4", "5"]);
 
         let reverse_tie = MechanicalRouteConfig {
@@ -456,8 +452,7 @@ mod tests {
             extra_rotations: 0,
             missing_face: CycleMissingFacePolicy::Error,
         };
-        let route =
-            route_between(&cycle, "0", "5", reverse_tie, None, tile(1, 1)).unwrap();
+        let route = route_between(&cycle, "0", "5", reverse_tie, None, tile(1, 1)).unwrap();
         assert_eq!(route_values(&route), vec!["0", "9", "8", "7", "6", "5"]);
     }
 
@@ -688,7 +683,10 @@ mod tests {
         )
         .unwrap();
         // 8 > 2 → infer increment → forward → 2,3,4,5,6,7,8.
-        assert_eq!(route_values(&route), vec!["2", "3", "4", "5", "6", "7", "8"]);
+        assert_eq!(
+            route_values(&route),
+            vec!["2", "3", "4", "5", "6", "7", "8"]
+        );
     }
 
     #[test]

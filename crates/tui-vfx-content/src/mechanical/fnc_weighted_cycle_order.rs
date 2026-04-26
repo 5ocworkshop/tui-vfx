@@ -105,8 +105,7 @@ mod tests {
 
     #[test]
     fn duplicate_face_rejected() {
-        let err =
-            weighted_cycle_order(&[face("7", 1), face("$", 1), face("7", 2)], 0).unwrap_err();
+        let err = weighted_cycle_order(&[face("7", 1), face("$", 1), face("7", 2)], 0).unwrap_err();
         assert!(
             matches!(err, MechanicalCycleError::DuplicateFace { ref value } if value == "7"),
             "{err:?}",

@@ -26,11 +26,13 @@ pub fn fnc_advance_cursor(
     let wake_enabled = !matches!(cursor.wake.mode, WakeMode::Off);
 
     if let (Some(old), Some(new)) = (state.position, new_position)
-        && old != new && wake_enabled {
-            // E3: remove stale entry for old position (prevents double entries on revisit).
-            state.history.retain(|e| (e.0, e.1) != old);
-            state.history.push_back((old.0, old.1, now));
-        }
+        && old != new
+        && wake_enabled
+    {
+        // E3: remove stale entry for old position (prevents double entries on revisit).
+        state.history.retain(|e| (e.0, e.1) != old);
+        state.history.push_back((old.0, old.1, now));
+    }
 
     // Age out entries older than decay_seconds.
     if wake_enabled {

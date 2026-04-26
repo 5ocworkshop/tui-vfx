@@ -8,8 +8,8 @@
 //! grouped V3 primitive/composed family representation.
 
 use crate::models::{
-    v3::{VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily},
     SpatialShaderType,
+    v3::{VfxSpatialComposedPrimitive, VfxSpatialPrimitive, VfxSpatialShaderFamily},
 };
 
 impl VfxSpatialShaderFamily {

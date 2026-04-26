@@ -8,9 +8,9 @@ use std::collections::HashMap;
 use tui_vfx_compositor::types::{
     BindableValue, FilterSpec, GlyphEncoderSpec, MaskSpec, SamplerRef, SamplerSpec,
 };
-use tui_vfx_style::models::cls_terminal_water_shader::TerminalWaterShader;
 use tui_vfx_content::types::{ContentEffect, OdometerDirection, OdometerTravel};
 use tui_vfx_shadow::types::ShadowStyle;
+use tui_vfx_style::models::cls_terminal_water_shader::TerminalWaterShader;
 use tui_vfx_style::models::{ColorConfig, SpatialShaderType, StyleEffect};
 
 /// Metadata for a single effect variant.
@@ -399,7 +399,7 @@ fn extract_sampler_metadata() -> HashMap<String, EffectMetadata> {
 
 fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
     use tui_vfx_style::models::{
-        cls_affordance_wake_shader::AffordanceWakeShader,
+        Gradient, LinearGradientShader, cls_affordance_wake_shader::AffordanceWakeShader,
         cls_ambient_occlusion_shader::AmbientOcclusionShader,
         cls_barber_pole_shader::BarberPoleShader, cls_bevel_shader::BevelShader,
         cls_border_sweep_shader::BorderSweepShader, cls_chromatic_edge_shader::ChromaticEdgeShader,
@@ -416,7 +416,7 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         cls_terminal_fire_shader::TerminalFireShader,
         cls_terminal_water_shader::TerminalWaterShader, cls_trace_path_shader::TracePathShader,
         cls_trace_propagation_shader::TracePropagationShader,
-        cls_wayfinding_node_shader::WayfindingNodeShader, Gradient, LinearGradientShader,
+        cls_wayfinding_node_shader::WayfindingNodeShader,
     };
     use tui_vfx_types::Color;
 

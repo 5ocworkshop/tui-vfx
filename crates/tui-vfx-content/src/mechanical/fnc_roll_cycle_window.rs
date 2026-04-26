@@ -149,13 +149,7 @@ mod tests {
         // and face[2] at sub_progress 0 → face[1] = "9". Likewise:
         // 0.5 → "0"; 0.75 → "1"; 1.0 → "2".
         let r = route(&["8", "9", "0", "1", "2"]);
-        let samples = [
-            (0.0, "8"),
-            (0.25, "9"),
-            (0.5, "0"),
-            (0.75, "1"),
-            (1.0, "2"),
-        ];
+        let samples = [(0.0, "8"), (0.25, "9"), (0.5, "0"), (0.75, "1"), (1.0, "2")];
         for (p, expected) in samples {
             let out = roll_cycle_window(
                 &r,
@@ -176,10 +170,7 @@ mod tests {
     #[test]
     fn overshoot_returns_supplied_face_when_available() {
         let r = route(&["A", "B"]);
-        let overshoot_grid = grid_from_text(
-            "C",
-            super::super::types::MechanicalSizing::PadToMax,
-        );
+        let overshoot_grid = grid_from_text("C", super::super::types::MechanicalSizing::PadToMax);
         let out = roll_cycle_window(
             &r,
             SettleSample::Overshoot,

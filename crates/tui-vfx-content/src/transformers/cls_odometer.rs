@@ -4,10 +4,10 @@
 // <CLOG>4.0.0: route non-Pair sources tile-by-tile via route_between + cascade + settle + roll_cycle_window; Pair source preserves the existing whole-grid roll byte-for-byte.</CLOG>
 
 use crate::mechanical::{
+    MechanicalSizing, MechanicalSource, MechanicalTile, NumericRouteHint, TileScheduleMeta,
     blit_tile_grid, extract_tile_text, grid_from_text, grid_to_text, overshoot_face_for,
     paired_grids, resolve_mechanical_cycle, roll_cycle_window, roll_grid_window, route_between,
-    settle_sample_for, tile_progress_for, tile_rects, MechanicalSizing, MechanicalSource,
-    MechanicalTile, NumericRouteHint, TileScheduleMeta,
+    settle_sample_for, tile_progress_for, tile_rects,
 };
 use crate::traits::TextTransformer;
 use crate::types::{
@@ -179,15 +179,7 @@ impl Odometer {
                 // both faces normalized via grid_from_text padding.
                 pair_route_for_tile(from_face, to_face, tile)
             } else {
-                route_between(
-                    &cycle,
-                    from_face,
-                    to_face,
-                    cfg.route,
-                    numeric_hint,
-                    tile,
-                )
-                .ok()
+                route_between(&cycle, from_face, to_face, cfg.route, numeric_hint, tile).ok()
             };
 
             let Some(route) = route_result else {
@@ -202,23 +194,17 @@ impl Odometer {
                     from: grid_from_text(from_face, MechanicalSizing::PadToMax),
                     to: grid_from_text(to_face, MechanicalSizing::PadToMax),
                 };
-                let tile_grid = roll_grid_window(
-                    &pair_source,
-                    progress,
-                    self.direction,
-                    self.travel,
-                    tile,
-                );
+                let tile_grid =
+                    roll_grid_window(&pair_source, progress, self.direction, self.travel, tile);
                 blit_tile_grid(&mut output, &tile_grid, *rect, tile);
                 continue;
             };
 
-            let overshoot_grid =
-                if matches!(cfg.source, MechanicalContentSource::Pair) {
-                    None
-                } else {
-                    overshoot_face_for(&cycle, &route).cloned()
-                };
+            let overshoot_grid = if matches!(cfg.source, MechanicalContentSource::Pair) {
+                None
+            } else {
+                overshoot_face_for(&cycle, &route).cloned()
+            };
 
             let tile_grid = roll_cycle_window(
                 &route,
@@ -238,10 +224,7 @@ impl Odometer {
 fn is_legacy_equivalent(cfg: &MechanicalCycleConfig) -> bool {
     matches!(cfg.source, MechanicalContentSource::Pair)
         && matches!(cfg.cascade, MechanicalCascadePolicy::Simultaneous)
-        && matches!(
-            cfg.settle,
-            crate::types::MechanicalSettleConfig::None
-        )
+        && matches!(cfg.settle, crate::types::MechanicalSettleConfig::None)
 }
 
 fn pair_route_for_tile(
@@ -249,7 +232,7 @@ fn pair_route_for_tile(
     to_face: &str,
     tile: MechanicalTile,
 ) -> Option<crate::mechanical::MechanicalCycleRoute> {
-    use crate::mechanical::{normalize_cycle_face, ResolvedMechanicalFace};
+    use crate::mechanical::{ResolvedMechanicalFace, normalize_cycle_face};
     let from_grid = normalize_cycle_face(from_face, tile).ok()?;
     let to_grid = normalize_cycle_face(to_face, tile).ok()?;
     Some(crate::mechanical::MechanicalCycleRoute {

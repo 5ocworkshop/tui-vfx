@@ -18,9 +18,7 @@ pub enum MechanicalCascadePolicy {
     Simultaneous,
     /// Each tile starts later than the previous one by `fraction` of the
     /// total progress window. `fraction` is clamped to `0.0..=0.95`.
-    Staggered {
-        fraction: f32,
-    },
+    Staggered { fraction: f32 },
     /// Numeric carry: only digit positions that change between source and
     /// target advance, scheduled from least-significant to most-significant.
     NumericCarry {
@@ -30,12 +28,8 @@ pub enum MechanicalCascadePolicy {
         unchanged: UnchangedCellPolicy,
     },
     /// Each tile starts at a deterministic random offset derived from `seed`.
-    Randomized {
-        seed: u64,
-        max_delay_fraction: f32,
-    },
+    Randomized { seed: u64, max_delay_fraction: f32 },
 }
-
 
 fn default_stagger_fraction() -> f32 {
     0.35
@@ -44,15 +38,7 @@ fn default_stagger_fraction() -> f32 {
 /// What happens to tiles whose source and target faces are equal under
 /// `MechanicalCascadePolicy::NumericCarry`.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Default,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum UnchangedCellPolicy {
@@ -92,11 +78,8 @@ pub enum MechanicalSettleConfig {
     },
     /// Apply a named easing curve over the final stretch of the tile's
     /// local progress.
-    Ease {
-        easing: EasingCurveName,
-    },
+    Ease { easing: EasingCurveName },
 }
-
 
 /// Small named easing subset usable by `MechanicalSettleConfig`.
 ///
@@ -105,15 +88,7 @@ pub enum MechanicalSettleConfig {
 /// `mixed-signals` crate; broader settle expressiveness is a future
 /// extension once it gains `ConfigSchema` support.
 #[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Default,
-    Serialize,
-    Deserialize,
-    tui_vfx_core::ConfigSchema,
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum EasingCurveName {
@@ -129,12 +104,18 @@ mod tests {
 
     #[test]
     fn cascade_default_is_simultaneous() {
-        assert_eq!(MechanicalCascadePolicy::default(), MechanicalCascadePolicy::Simultaneous);
+        assert_eq!(
+            MechanicalCascadePolicy::default(),
+            MechanicalCascadePolicy::Simultaneous
+        );
     }
 
     #[test]
     fn settle_default_is_none() {
-        assert_eq!(MechanicalSettleConfig::default(), MechanicalSettleConfig::None);
+        assert_eq!(
+            MechanicalSettleConfig::default(),
+            MechanicalSettleConfig::None
+        );
     }
 
     #[test]
@@ -160,7 +141,10 @@ mod tests {
         let parsed: MechanicalCascadePolicy =
             serde_json::from_str(r#"{"type":"numeric_carry"}"#).unwrap();
         match parsed {
-            MechanicalCascadePolicy::NumericCarry { stagger_fraction, unchanged } => {
+            MechanicalCascadePolicy::NumericCarry {
+                stagger_fraction,
+                unchanged,
+            } => {
                 assert!((stagger_fraction - 0.35).abs() < f32::EPSILON);
                 assert_eq!(unchanged, UnchangedCellPolicy::Hold);
             }
@@ -170,7 +154,10 @@ mod tests {
 
     #[test]
     fn spring_settle_serde_roundtrip() {
-        let cfg = MechanicalSettleConfig::Spring { overshoot: 0.12, settle_fraction: 0.18 };
+        let cfg = MechanicalSettleConfig::Spring {
+            overshoot: 0.12,
+            settle_fraction: 0.18,
+        };
         let json = serde_json::to_string(&cfg).unwrap();
         let back: MechanicalSettleConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(back, cfg);
@@ -178,8 +165,9 @@ mod tests {
 
     #[test]
     fn unknown_settle_field_rejected() {
-        let parsed: Result<MechanicalSettleConfig, _> =
-            serde_json::from_str(r#"{"type":"spring","overshoot":0.1,"settle_fraction":0.2,"flair":"yes"}"#);
+        let parsed: Result<MechanicalSettleConfig, _> = serde_json::from_str(
+            r#"{"type":"spring","overshoot":0.1,"settle_fraction":0.2,"flair":"yes"}"#,
+        );
         assert!(parsed.is_err());
     }
 }

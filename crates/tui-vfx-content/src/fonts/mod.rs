@@ -24,7 +24,7 @@ mod col_line_3x3_heavy_glyphs;
 mod fnc_lookup_line_3x3_glyph;
 
 pub use cls_font_glyph_table::FontGlyphTable;
-pub use cls_font_registry::{FontRegistry, DEFAULT_FONT_SENTINEL};
+pub use cls_font_registry::{DEFAULT_FONT_SENTINEL, FontRegistry};
 pub use col_line_3x3_heavy_glyphs::line_3x3_heavy_glyphs;
 pub use fnc_lookup_line_3x3_glyph::{lookup_line_3x3_glyph, render_line_3x3_text};
 

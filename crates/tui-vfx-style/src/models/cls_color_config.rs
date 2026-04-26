@@ -136,19 +136,19 @@ impl<'de> Deserialize<'de> for ColorConfig {
         // Check if it's an object with r, g, b but no "type" field (RGB shorthand)
         if let serde_json::Value::Object(ref map) = value
             && !map.contains_key("type")
-                && map.contains_key("r")
-                && map.contains_key("g")
-                && map.contains_key("b")
-            {
-                // Try RGB shorthand
-                let shorthand: RgbShorthand = serde_json::from_value(value.clone())
-                    .map_err(|e| D::Error::custom(format!("Invalid RGB shorthand: {}", e)))?;
-                return Ok(ColorConfig::Rgb {
-                    r: shorthand.r,
-                    g: shorthand.g,
-                    b: shorthand.b,
-                });
-            }
+            && map.contains_key("r")
+            && map.contains_key("g")
+            && map.contains_key("b")
+        {
+            // Try RGB shorthand
+            let shorthand: RgbShorthand = serde_json::from_value(value.clone())
+                .map_err(|e| D::Error::custom(format!("Invalid RGB shorthand: {}", e)))?;
+            return Ok(ColorConfig::Rgb {
+                r: shorthand.r,
+                g: shorthand.g,
+                b: shorthand.b,
+            });
+        }
 
         // Fall back to tagged format
         let tagged: TaggedColorConfig = serde_json::from_value(value)

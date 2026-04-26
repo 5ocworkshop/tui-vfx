@@ -453,7 +453,11 @@ impl TextTransformer for SplitFlap {
                 target,
                 MechanicalSizing::PadToMax,
             );
-            let tile_cols = source.to.width().max(source.from.width()).div_ceil(tile.width as usize)
+            let tile_cols = source
+                .to
+                .width()
+                .max(source.from.width())
+                .div_ceil(tile.width as usize)
                 .max(1);
             let use_authentic = self.uses_authentic_timing();
             let grid = split_flap_tile_frame(&source, tile, |tile_col, tile_row| {

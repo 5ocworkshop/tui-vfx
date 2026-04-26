@@ -76,12 +76,8 @@ pub(crate) fn resolve_mechanical_cycle_with_context(
             let faces = match font {
                 None => raw_faces,
                 Some(bindable) => {
-                    let table =
-                        resolve_font_table(bindable, font_registry, runtime_params);
-                    raw_faces
-                        .iter()
-                        .map(|s| table.render_text(s))
-                        .collect()
+                    let table = resolve_font_table(bindable, font_registry, runtime_params);
+                    raw_faces.iter().map(|s| table.render_text(s)).collect()
                 }
             };
             resolve_from_face_strings(&faces, *wrap, tile)
@@ -105,8 +101,7 @@ pub(crate) fn resolve_mechanical_cycle_with_context(
                 let grid = normalize_cycle_face(&value, tile)?;
                 resolved_faces.push(ResolvedMechanicalFace { value, grid });
             }
-            if matches!(wrap, CycleWrapMode::Circular)
-                && distinct_value_count(&resolved_faces) < 2
+            if matches!(wrap, CycleWrapMode::Circular) && distinct_value_count(&resolved_faces) < 2
             {
                 return Err(MechanicalCycleError::CircularRequiresAtLeastTwoFaces);
             }
@@ -229,7 +224,10 @@ mod tests {
         };
         let cycle = resolve_mechanical_cycle(&src, tile(1, 1)).unwrap();
         assert_eq!(cycle.faces.len(), 10);
-        assert_eq!(values(&cycle), vec!["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+        assert_eq!(
+            values(&cycle),
+            vec!["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        );
     }
 
     #[test]
@@ -314,13 +312,8 @@ mod tests {
         let registry = FontRegistry::new();
         let mut params = ShaderRuntimeParams::new();
         params.insert("drum_font", "line-3x3".to_string());
-        let cycle = resolve_mechanical_cycle_with_context(
-            &src,
-            tile(3, 3),
-            &registry,
-            &params,
-        )
-        .unwrap();
+        let cycle =
+            resolve_mechanical_cycle_with_context(&src, tile(3, 3), &registry, &params).unwrap();
         assert_eq!(cycle.faces[0].value.lines().next(), Some("┏━┓"));
     }
 
