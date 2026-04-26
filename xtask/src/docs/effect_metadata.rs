@@ -399,7 +399,8 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         cls_radar_shader::RadarShader, cls_reflect_shader::ReflectShader,
         cls_reveal_wipe_shader::RevealWipeShader,
         cls_stochastic_sparkle_shader::StochasticSparkleShader,
-        cls_sub_cell_shake_shader::SubCellShakeShader, cls_trace_path_shader::TracePathShader,
+        cls_sub_cell_shake_shader::SubCellShakeShader,
+        cls_terminal_water_shader::TerminalWaterShader, cls_trace_path_shader::TracePathShader,
         cls_trace_propagation_shader::TracePropagationShader,
         cls_wayfinding_node_shader::WayfindingNodeShader,
     };
@@ -438,6 +439,7 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
         SpatialShaderType::GlitchLines(GlitchLinesShader::default()),
         SpatialShaderType::NeonFlicker(NeonFlickerShader::default()),
         SpatialShaderType::PulseWave(PulseWaveShader::default()),
+        SpatialShaderType::TerminalWater(TerminalWaterShader::default()),
         SpatialShaderType::TracePropagation(TracePropagationShader::default()),
         SpatialShaderType::TracePath(TracePathShader::default()),
         SpatialShaderType::FocusedRowGradient(FocusedRowGradientShader::default()),

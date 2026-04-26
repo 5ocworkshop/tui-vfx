@@ -675,3 +675,20 @@ runtime behavior.
 
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring</DESC> -->
 <!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+
+
+## Terminal water vocabulary
+
+Use `terminal_water` for natural water surfaces and interaction-driven ripples. It belongs to the shader/motion-field vocabulary rather than material-light: the primitive computes a height/normal/light field, then encodes it as style color.
+
+Preferred terms:
+
+- `ocean` — layered traveling wave field.
+- `ripple` — authored or runtime radial emitter, suitable for pebble drops.
+- `rain` — generated or authored drop emitters for weather surfaces.
+- `flow` — low-amplitude directional current.
+- `wake` — moving-source trail, especially cursor/path trails.
+- `glint` — water-normal/specular-modulated highlight; reuse glisten angle/width/speed vocabulary but keep it tied to water lighting.
+- `foam` — crest/curvature highlight, not a separate color sweep.
+
+Do not describe `terminal_water` as a glyph shader until a glyph-capable primitive/filter exists. For now it is a style shader with future braille/ramp derivations.

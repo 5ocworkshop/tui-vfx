@@ -227,6 +227,31 @@ Each family entry records:
 - **rationale:**
   - the audit repeatedly showed these are variations on one traveling-band idea with different visual treatment policies
 
+
+### CC-08a — Terminal water / natural surface fields
+
+- **lane:** shader (style-only today; glyph-capable derivations later)
+- **classification:** primitive motion-field subtree
+- **canonical primitive:** `terminal_water`
+- **collapsed source families:**
+  - ocean: layered sine/Gerstner-style waves
+  - ripple/rain: radial damped emitters
+  - flow/current: low-amplitude directional turbulence
+  - wake/trail: runtime path/cursor-source trails
+  - glint: water-normal/specular-modulated traveling highlight
+- **shared payload axes:**
+  - `mode` (`ocean`, `ripple`, `rain`, `flow`, `wake`, `ocean_with_ripples`, `composite`)
+  - wave controls: `layers`, `amplitude`, `wavelength`, `speed`, `direction_deg`, `steepness`
+  - lighting controls: `normal_strength`, `diffuse`, `specular`, `shininess`, `fresnel`, `foam`
+  - color controls: `deep_color`, `shallow_color`, `foam_color`, `apply_to`
+  - glint controls: `glint_strength`, `glint_angle_deg`, `glint_width`, `glint_speed`
+- **recommended implementation stance:**
+  - keep `terminal_water` in the motion-field primitive family while it renders style colors;
+  - keep glyph/braille output as a later cell/glyph-capable primitive that reuses the same field math;
+  - keep weather/wind derivation as a future preset layer, not part of the core shader contract.
+- **rationale:**
+  - water is a dynamic height surface whose normals/lighting produce the visible style. Ripples, rain, flow, wake, and ocean share one scalar field and should not become unrelated shader families.
+
 ### CC-09 — Pattern / procedural texture filters
 
 - **lane:** filter

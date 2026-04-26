@@ -881,6 +881,37 @@
             }
           },
 
+
+          # ---- Example 2b: terminal water motion-field shader --------
+          {
+            "kind": "shader",
+            "scope": { "kind": "all" },
+            "payload": {
+              "type": "terminal_water",
+              "mode": { "mode": "ocean" },
+              "layers": 3,
+              "amplitude": 0.35,
+              "wavelength": 12.0,
+              "speed": 1.0,
+              "direction_deg": 25.0,
+              "steepness": 0.45,
+              "normal_strength": 1.4,
+              "diffuse": 0.65,
+              "specular": 0.55,
+              "shininess": 24.0,
+              "fresnel": 0.35,
+              "foam": 0.5,
+              "deep_color": { "type": "rgb", "r": 5, "g": 32, "b": 64 },
+              "shallow_color": { "type": "rgb", "r": 40, "g": 170, "b": 210 },
+              "foam_color": { "type": "white" },
+              "glint_strength": 0.2,
+              "glint_angle_deg": -18.0,
+              "glint_width": 8.0,
+              "glint_speed": 1.0,
+              "apply_to": "both"
+            }
+          },
+
           # ---- Example 3: scoped style lane / style patch ------------
           {
             "kind": "style_effect",

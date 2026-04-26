@@ -413,6 +413,52 @@ These are important because they let the schema stay small **without** flattenin
 
 ---
 
+
+### 6.1 Terminal water motion-field shader
+
+`terminal_water` is the first natural-surface shader in the motion-field family. It remains style-only in the current `StyleShader` API, but its field math is designed so a later glyph-capable primitive can reuse the same `light_scalar` for 256-braille or ramped output.
+
+Minimal legacy-compatible payload:
+
+```json
+{
+  "kind": "shader",
+  "scope": { "kind": "all" },
+  "payload": {
+    "type": "terminal_water",
+    "mode": { "mode": "ocean" },
+    "layers": 3,
+    "amplitude": 0.35,
+    "wavelength": 12.0,
+    "speed": 1.0,
+    "direction_deg": 25.0,
+    "steepness": 0.45,
+    "normal_strength": 1.4,
+    "diffuse": 0.65,
+    "specular": 0.55,
+    "shininess": 24.0,
+    "fresnel": 0.35,
+    "foam": 0.5,
+    "deep_color": { "type": "rgb", "r": 5, "g": 32, "b": 64 },
+    "shallow_color": { "type": "rgb", "r": 40, "g": 170, "b": 210 },
+    "foam_color": { "type": "white" },
+    "glint_strength": 0.2,
+    "glint_angle_deg": -18.0,
+    "glint_width": 8.0,
+    "glint_speed": 1.0,
+    "apply_to": "both"
+  }
+}
+```
+
+Authoring notes:
+
+- use `mode.ocean` for broad ambient water;
+- use `mode.ripple` for a still pool / pebble drop;
+- use `mode.rain` for weather-driven surface drops;
+- use `mode.wake` for cursor/path trails;
+- keep wind/weather presets as a higher-level recipe layer until water behavior is stable.
+
 ## 7. Scoped regions and compression
 
 Large real recipes surfaced a practical truth:
