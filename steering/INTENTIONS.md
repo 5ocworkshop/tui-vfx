@@ -1,7 +1,7 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.5.8</VERS> -->
-<!-- <WCTX>Lock the Line 3x3 glyph table as the default and fallback font so recipes survive font drift without blank-screen failures.</WCTX> -->
-<!-- <CLOG>0.5.8: add Intention 36 establishing Line 3x3 as default/fallback font with one canonical home in tui-vfx-content; runtime falls back with a trace warning, validator may reject in strict mode.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.9</VERS> -->
+<!-- <WCTX>Add Intention 37 — every binding declaration must yield an effective loopback so recipes are always preview-playable before host wiring exists.</WCTX> -->
+<!-- <CLOG>0.5.9: add Intention 37 making loopback required for every requires_bindings entry (and recommended even where optional). Recipes that omit loopback fail strict-contracts; "production-only bindings" are not a valid category. Generalizes the principle: populate loopback fields anyway when they're optional, so player rendering driven by loopback params stays well-formed. 0.5.8: add Intention 36 establishing Line 3x3 as default/fallback font with one canonical home in tui-vfx-content.</CLOG> -->
 
 # Intentions
 
@@ -660,7 +660,74 @@ the recipe instead of falling back" is policy and lives at the validator
 boundary.
 
 
+## 37. Loopback is required: every binding declaration is preview-playable
+
+Every entry in a recipe's `requires_bindings` block (and, by parity, any
+future bindable-asset declarations under `requires_assets`) must yield an
+**effective loopback** value. Authors supply it explicitly via
+`loopback: <value-or-signal>`, or the legacy `default: N` form lifts to a
+static loopback automatically. The strict-contracts validator rejects any
+declaration where `effective_loopback()` returns `None`. "Production-only
+bindings" — declarations meant to be wired only by a live host with no
+preview behavior — are not a valid category.
+
+Rules:
+
+1. **Hard rule.** Every `requires_bindings` entry must yield an effective
+   loopback. Recipes that try to declare a binding without one fail
+   `--rules --strict-contracts`. The same rule extends to bindable
+   `requires_assets` entries when the loopback layer reaches them.
+2. **Best practice for fields where loopback is technically optional.**
+   Even where the schema does not enforce loopback (legacy fields, future
+   forward-compat shapes, or non-binding `requires_assets` slots that
+   carry a `canonical_path` instead), populate a loopback or canonical
+   default anyway. A populated value keeps the player rendering
+   well-formed when it's driven by loopback params, and it prevents
+   surprise empty-state cells from leaking into preview tiles.
+3. **Synthetic loopbacks for "production-only" intent.** When a binding's
+   real value only makes sense in production (live user count, runtime
+   metric, host-supplied scrubber), the recipe still declares a synthetic
+   loopback that makes preview meaningful — a static literal, a slow
+   `ramp` signal, or a sentinel like `default_font` once that forward-
+   compat shape lands. Never advise omitting loopback to "indicate
+   production-only intent." Document that intent in the entry's
+   `description`; supply a synthetic loopback for the player.
+4. **Forward-compat shapes still satisfy the gate.** A future
+   `loopback: { "player_default": "default_font" }` form delegates
+   fallback resolution to the player's authority; it still produces an
+   effective loopback at frame time, so it satisfies strict-contracts
+   without requiring authors to hardcode asset names in recipes.
+
+Why: a recipe that requires host wiring to render is a recipe that can't
+be reviewed in the browser, can't be exercised by `--probe`, can't be
+demoed, and rots unobserved between authoring and the production host
+coming online. Making preview-playable a per-recipe contract — enforced
+at the validator boundary — eliminates that whole class of "looks fine,
+fails in prod" failures. The user's framing was direct: *"I want loopback
+to be required so recipes are always functional and portable before the
+application that drives them is available."* That portability is a
+project-level commitment, not a per-recipe choice.
+
+What this is *not* saying: it is not requiring loopback to be a literal
+of the production value. The point is that *something visually meaningful*
+plays in preview, not that the preview matches production. A binding that
+selects a live user count can have `loopback: 42` (or a `ramp` signal) —
+the preview shows recognizable activity, the production host injects the
+real number, and both render correctly. Authors should reach for the
+loopback shape that best communicates the binding's role; "useless
+default" is rarely the right answer when a one-line synthetic gives the
+recipe a clean preview.
+
+Companions:
+
+- `docs/design/tui-vfx-binding-loopback.md` — design proposal, the WHY.
+- `docs/design/tui-vfx-binding-loopback-implementation-plan.md` — phased
+  HOW (L1 engine fallback, L2 `requires_bindings` typing + strict-
+  contracts gate, L3 visibility badge, L4 strictness modes, L5 probe +
+  browser integration).
+
+
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.5.8</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.9</VERS> -->
