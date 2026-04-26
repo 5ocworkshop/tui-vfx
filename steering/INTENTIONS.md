@@ -1,13 +1,13 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
-<!-- <VERS>VERSION: 0.6.1</VERS> -->
-<!-- <WCTX>Add Intention 40 — fix root causes; never per-site #[allow] suppressions; upstream extractions must be byte-equivalent to canonical pre-lift implementation.</WCTX> -->
-<!-- <CLOG>0.6.1: add Intention 40 codifying the no-landmines / no-loose-ends rule (no per-site #[allow], no algorithmic divergence on upstream extractions, no half-merged consolidations).</CLOG> -->
+<!-- <VERS>VERSION: 0.6.2</VERS> -->
+<!-- <WCTX>Add Intention 41 — cross-repo audits for large-scale changes must scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, and (when relevant) gt-design.</WCTX> -->
+<!-- <CLOG>0.6.2: add Intention 41 codifying the four-repo audit scope after Phase 1's two-repo rg missed tui-vfx-recipes and gt-design SignalContext call sites.</CLOG> -->
 
 # Intentions
 
 This file captures top-down decisions that steer implementation of tui-vfx. It is the durable framing that outlasts any individual release or schema version.
 
-**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), and we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40).
+**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), and cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41).
 
 **Companion:** `steering/MARKETING.md` answers *how we describe what we've built*; this file answers *how we decide what to build*. The two stay in sync; when they diverge, they must be brought back into agreement.
 
@@ -967,5 +967,70 @@ recall.
 
 ---
 
+## 41. Cross-repo audits scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design
+
+When a change touches a public surface that downstream consumers might reach
+— a struct field's visibility, a public type's shape, a free function's
+signature, an exported constant — the audit-time `rg` / `ofpf-search` /
+`ofpf-content` query MUST cover every repo where that surface could be
+consumed:
+
+1. `/usr/projects/tui-vfx`
+2. `/usr/projects/tui-vfx-recipes`
+3. `/usr/projects/mixed-signals`
+4. `/usr/projects/gt-design` (the first production consumer; in scope when
+   the surface is anything gt-design imports or constructs)
+
+Two-repo audits that stop at "tui-vfx + mixed-signals" are not enough.
+The four-repo scope is the default; narrowing requires a positive reason.
+
+Rules:
+
+1. **Audit before the change lands, not after.** The plan or packet that
+   introduces the change must list the audit query and the four-repo scope
+   explicitly. "I'll grep callers as I write the code" is not a plan; it's
+   how landmines slip through.
+2. **Use literal-pattern queries that match the actual construction
+   syntax.** `rg "SignalContext\s*\{"` finds struct-literal sites;
+   `rg "SignalContext::"` finds method/constructor calls;
+   `ofpf-content "<symbol>"` covers non-indexed scripts and docs. Pick the
+   query that matches the surface being changed and run it across all four
+   repos.
+3. **Subagent packets dispatching audit work must name the four-repo
+   scope explicitly.** Don't assume the agent will infer it; the packet
+   says "rg / ofpf-search the literal pattern across `/usr/projects/tui-vfx`,
+   `/usr/projects/tui-vfx-recipes`, `/usr/projects/mixed-signals`, and
+   `/usr/projects/gt-design`."
+4. **Field-visibility changes are a "large-scale" change.** Promoting a
+   field from `pub` to `pub(crate)` (or vice versa) breaks struct-literal
+   construction at every external call site. The audit catches them
+   before they break a downstream build.
+5. **Subagent reports include the audit output.** The packet asks the
+   agent to record the rg counts per repo in its final report so the
+   leader can verify the audit happened.
+
+Why: the SignalContext lift to `pub(crate) subcell_offset` shipped in
+glyph framework Phase 1 with a two-repo audit ("`rg "SignalContext\s*\{"`
+in `tui-vfx/crates` and `mixed-signals/src`"). That audit was correct
+syntax but wrong scope — it missed tui-vfx-recipes and gt-design, where
+~12 production call sites used struct-literal construction. The recipes
+build broke; the production consumers became blocked work; the field had
+to be promoted back to `pub` in a follow-up commit. Total: one extra
+commit, one cross-repo distraction, an Intention 40 violation surfaced,
+and the original "extensibility via `pub(crate)`" benefit forfeited.
+Cost of the four-repo audit at landing time: thirty seconds.
+
+What this is *not* saying: it is not requiring four-repo audits for every
+internal change. Refactoring a private function inside one crate stays
+local. The scope is set by the surface being changed: if it's
+public/exported/visible to consumers, the audit covers all four. If it's
+purely internal, the local repo is enough.
+
+Companion: `feedback_no_landmines.md` in auto-memory captures the
+underlying "no landmines" rule; this intention is the operational
+counter-force that prevents the audit-scope failure mode specifically.
+
+---
+
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.6.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.2</VERS> -->
