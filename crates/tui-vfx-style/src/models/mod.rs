@@ -27,6 +27,7 @@ pub mod cls_affordance_wake_shader;
 pub mod cls_ambient_occlusion_shader;
 pub mod cls_barber_pole_shader;
 pub mod cls_bevel_shader;
+pub mod cls_bindable_string;
 pub mod cls_bindable_u16;
 pub mod cls_blend_mode;
 pub mod cls_border_sweep_shader;
@@ -88,6 +89,7 @@ pub use cls_affordance_wake_shader::{
 pub use cls_ambient_occlusion_shader::{AOEdges, AmbientOcclusionShader};
 pub use cls_barber_pole_shader::BarberPoleShader;
 pub use cls_bevel_shader::{BevelShader, LightDirection};
+pub use cls_bindable_string::BindableString;
 pub use cls_bindable_u16::BindableU16;
 pub use cls_blend_mode::BlendMode;
 pub use cls_border_sweep_shader::BorderSweepShader;

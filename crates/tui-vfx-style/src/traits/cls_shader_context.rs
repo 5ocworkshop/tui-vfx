@@ -1,8 +1,7 @@
 // <FILE>tui-vfx-style/src/types/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>Sub-plan A Phase A.3.1 — ShaderContext gains role awareness. Adds a `roles: Arc<RoleMap>` field (Arc mirrors the existing `runtime_params: Arc<ShaderRuntimeParams>` pattern) so shaders can branch on per-cell RoleTag information without breaking the trait signature. Default defers to RoleMap::default() (empty 0x0 map). Constructor ShaderContext::new keeps its existing signature; a new `with_roles` builder and `role_at` accessor make role lookup ergonomic.</WCTX>
-// <CLOG>1.2.0: MINOR — add role-awareness fields/accessors/builder. Backward-compatible: struct literal callers must add `roles: <Arc<RoleMap>>`; ShaderContext::new callers are unchanged (roles default to Arc::default() i.e. empty map). `with_roles(self, roles: Arc<RoleMap>) -> Self` builder; `role_at(&self, (x, y)) -> Option<RoleTag>` reads from the role map; rustdoc explains the role-aware contract.
-// 1.1.0: add ShaderRuntimeParamValue::Rgb{r,g,b}, an as_color() accessor returning tui_vfx_types::Color, a From<Color> impl, and a ShaderRuntimeParams::get_color helper; extend kind_name / as_f32 / as_u16 / serde_json::Value conversion to handle the new variant.</CLOG>
+// <VERS>VERSION: 1.3.0</VERS>
+// <WCTX>Slice 6.1 of mechanical circular content cycles plan: add string-shaped runtime parameter access so BindableString can resolve its Binding variant against ShaderRuntimeParams without dragging in a new param-map surface.</WCTX>
+// <CLOG>1.3.0: MINOR — add ShaderRuntimeParamValue::as_text() returning Option<&str> for the existing Text variant, and ShaderRuntimeParams::get_text() helper. Both follow the established as_f32 / as_u16 / as_color shape. Used by BindableString::evaluate; future bindable-string consumers (font names, asset names, locale tokens) inherit the same lookup. 1.2.0: MINOR — add role-awareness fields/accessors/builder. 1.1.0: add ShaderRuntimeParamValue::Rgb{r,g,b}, an as_color() accessor, From<Color>, and ShaderRuntimeParams::get_color.</CLOG>
 
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
@@ -80,6 +79,17 @@ impl ShaderRuntimeParamValue {
     pub fn as_color(&self) -> Option<Color> {
         match self {
             Self::Rgb { r, g, b } => Some(Color::rgb(*r, *g, *b)),
+            _ => None,
+        }
+    }
+
+    /// Attempt to read this runtime value as a string slice. Returns
+    /// `None` for non-Text variants. Used by `BindableString::Binding`
+    /// resolution and any future bindable that consumes string-shaped
+    /// host parameters (font names, asset names, locale tokens, etc.).
+    pub fn as_text(&self) -> Option<&str> {
+        match self {
+            Self::Text(value) => Some(value.as_str()),
             _ => None,
         }
     }
@@ -237,6 +247,12 @@ impl ShaderRuntimeParams {
     /// Returns `None` for non-Rgb variants or unknown keys.
     pub fn get_color(&self, key: &str) -> Option<Color> {
         self.get(key).and_then(ShaderRuntimeParamValue::as_color)
+    }
+
+    /// Fetch a runtime parameter interpreted as a string slice.
+    /// Returns `None` for non-Text variants or unknown keys.
+    pub fn get_text(&self, key: &str) -> Option<&str> {
+        self.get(key).and_then(ShaderRuntimeParamValue::as_text)
     }
 }
 
