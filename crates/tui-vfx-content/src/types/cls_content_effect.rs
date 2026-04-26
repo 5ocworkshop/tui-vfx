@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>VERSION: 2.14.0</VERS>
-// <WCTX>Clarify mechanical display rustdocs for generated schema and capability docs.</WCTX>
-// <CLOG>Describe tile-grid Odometer replacement and SplitFlap Solari tile sizes.</CLOG>
+// <VERS>VERSION: 2.15.0</VERS>
+// <WCTX>Phase 3 of mechanical circular content cycles plan: attach the optional MechanicalCycleConfig field to the Odometer variant alongside the runtime that honors it.</WCTX>
+// <CLOG>2.15.0: add Optional MechanicalCycleConfig to ContentEffect::Odometer; absence preserves byte-identical legacy whole-grid roll behavior; Phase 4 attaches the same field on SplitFlap.</CLOG>
 
 //! # Content Effects
 //!
@@ -45,6 +45,7 @@
 
 use super::cls_dissolve_config::{DissolveDirection, DissolvePattern, DissolveReplacement};
 use super::cls_glyph_cascade::{GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern};
+use super::cls_mechanical_cycle_config::MechanicalCycleConfig;
 use super::cls_mirror_axis::MirrorAxis;
 use super::cls_morph_config::{MorphDirection, MorphProgression};
 use super::cls_scramble_charset::ScrambleCharset;
@@ -393,6 +394,16 @@ pub enum ContentEffect {
         /// Optional source message. Missing cells are padded with blanks by grid coordinate.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         from_message: Option<String>,
+        /// Optional ordered/circular cycle config. When absent (or set
+        /// to the explicit-Pair default), Odometer uses the existing
+        /// whole-grid pair-roll behavior byte-for-byte. When present
+        /// with a non-Pair source, tiles are individually routed
+        /// through the configured cycle, scheduled per the cascade
+        /// policy, and settled per `MechanicalSettleConfig`. Cascade
+        /// `NumericCarry` requires source/target numeric strings of
+        /// matching tile count and a `decimal_digits` source preset.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        mechanical: Option<MechanicalCycleConfig>,
     },
 
     /// Text redaction/censorship effect.
@@ -685,12 +696,14 @@ impl ContentEffect {
                 tile_width,
                 tile_height,
                 from_message,
+                mechanical,
             } => vec![
                 ("direction", format!("{:?}", direction)),
                 ("travel", format!("{:?}", travel)),
                 ("tile_width", format!("{}", tile_width)),
                 ("tile_height", format!("{}", tile_height)),
                 ("from_message", format!("{:?}", from_message)),
+                ("mechanical", format!("{:?}", mechanical)),
             ],
             ContentEffect::Redact { symbol } => vec![("symbol", format!("{}", symbol))],
             ContentEffect::Numeric { format } => vec![("format", format.clone())],

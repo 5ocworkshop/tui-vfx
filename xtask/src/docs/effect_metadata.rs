@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>VERSION: 1.4.3</VERS>
-// <WCTX>Keep content-effect samples in sync with public ContentEffect variants — Odometer/SplitFlap mechanical field lands in Phase 3/4.</WCTX>
-// <CLOG>Drop premature mechanical: None lines from Odometer and SplitFlap samples; the field doesn't exist on those variants yet.</CLOG>
+// <VERS>VERSION: 1.4.4</VERS>
+// <WCTX>Phase 3 of mechanical circular content cycles plan: Odometer sample now constructs the mechanical: None default to match the new variant shape.</WCTX>
+// <CLOG>1.4.4: re-add mechanical: None to the Odometer sample now that ContentEffect::Odometer carries the field; SplitFlap follows in Phase 4.</CLOG>
 
 use std::collections::HashMap;
 
@@ -615,6 +615,7 @@ fn extract_content_metadata() -> HashMap<String, EffectMetadata> {
             tile_width: 1,
             tile_height: 3,
             from_message: Some("AAA\nBBB\nCCC".to_string()),
+            mechanical: None,
         },
         ContentEffect::Redact { symbol: '█' },
         ContentEffect::Numeric {
@@ -701,4 +702,4 @@ fn extract_shadow_metadata() -> HashMap<String, EffectMetadata> {
 }
 
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>END OF VERSION: 1.4.3</VERS>
+// <VERS>END OF VERSION: 1.4.4</VERS>

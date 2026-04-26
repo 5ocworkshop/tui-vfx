@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-content/src/mechanical/mod.rs</FILE> - <DESC>Private mechanical display helper module</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Phase 2 of mechanical circular content cycles plan: register cycle-resolution and route-building helpers.</WCTX>
-// <CLOG>0.3.0: register enum_cycle_error, cls_resolved_cycle, fnc_expand_cycle_preset, fnc_normalize_cycle_face, fnc_weighted_cycle_order, fnc_resolve_mechanical_cycle, fnc_route_between.</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Phase 3 of mechanical circular content cycles plan: register tile-rect, tile-progress, settle, and cycle-window helpers consumed by the Odometer cycle path.</WCTX>
+// <CLOG>0.4.0: register fnc_tile_rects, fnc_tile_progress, fnc_apply_settle, fnc_roll_cycle_window.</CLOG>
 
 //! Mechanism-specific helpers for fixed-window mechanical display effects.
 //!
@@ -18,13 +18,18 @@
 
 mod cls_resolved_cycle;
 mod enum_cycle_error;
+mod fnc_apply_settle;
 mod fnc_expand_cycle_preset;
 mod fnc_grid_text;
 mod fnc_normalize_cycle_face;
+mod fnc_overshoot_face;
 mod fnc_resolve_mechanical_cycle;
+mod fnc_roll_cycle_window;
 mod fnc_roll_grid_window;
 mod fnc_route_between;
 mod fnc_split_flap_tile_frame;
+mod fnc_tile_progress;
+mod fnc_tile_rects;
 mod fnc_weighted_cycle_order;
 mod types;
 
@@ -32,13 +37,18 @@ pub(crate) use cls_resolved_cycle::{
     MechanicalCycleRoute, NumericRouteHint, ResolvedMechanicalCycle, ResolvedMechanicalFace,
 };
 pub(crate) use enum_cycle_error::MechanicalCycleError;
+pub(crate) use fnc_apply_settle::{settle_sample_for, SettleSample};
 pub(crate) use fnc_expand_cycle_preset::expand_cycle_preset;
-pub(crate) use fnc_grid_text::{grid_to_text, paired_grids};
+pub(crate) use fnc_grid_text::{grid_from_text, grid_to_text, paired_grids};
 pub(crate) use fnc_normalize_cycle_face::normalize_cycle_face;
+pub(crate) use fnc_overshoot_face::overshoot_face_for;
 pub(crate) use fnc_resolve_mechanical_cycle::resolve_mechanical_cycle;
+pub(crate) use fnc_roll_cycle_window::roll_cycle_window;
 pub(crate) use fnc_roll_grid_window::roll_grid_window;
 pub(crate) use fnc_route_between::route_between;
 pub(crate) use fnc_split_flap_tile_frame::split_flap_tile_frame;
+pub(crate) use fnc_tile_progress::{tile_progress_for, TileScheduleMeta};
+pub(crate) use fnc_tile_rects::{blit_tile_grid, extract_tile_text, tile_rects, TileRect};
 pub(crate) use fnc_weighted_cycle_order::{shuffle_in_place, weighted_cycle_order};
 pub(crate) use types::{
     MechanicalSizing, MechanicalSource, MechanicalTile, validate_split_flap_tile,

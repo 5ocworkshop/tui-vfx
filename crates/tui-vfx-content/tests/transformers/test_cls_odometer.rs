@@ -42,7 +42,7 @@ fn parses_structured_odometer_recipe() {
     let parsed: ContentEffect = serde_json::from_str(json).unwrap();
 
     assert!(
-        matches!(parsed, ContentEffect::Odometer { direction: OdometerDirection::Up, travel: OdometerTravel::Axis, tile_width: 1, tile_height: 3, ref from_message } if from_message.as_deref() == Some(FROM))
+        matches!(parsed, ContentEffect::Odometer { direction: OdometerDirection::Up, travel: OdometerTravel::Axis, tile_width: 1, tile_height: 3, ref from_message, mechanical: None } if from_message.as_deref() == Some(FROM))
     );
 }
 
@@ -71,6 +71,7 @@ fn missing_from_message_uses_blank_source_grid() {
         tile_width: 1,
         tile_height: 3,
         from_message: None,
+        mechanical: None,
     };
     let tx = get_transformer(&effect);
     assert_eq!(
@@ -116,6 +117,7 @@ fn content_effect_dispatches_structured_odometer() {
         tile_width: 1,
         tile_height: 3,
         from_message: Some(FROM.to_string()),
+        mechanical: None,
     };
     let tx = get_transformer(&effect);
     assert_eq!(

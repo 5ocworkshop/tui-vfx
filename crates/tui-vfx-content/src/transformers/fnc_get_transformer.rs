@@ -113,13 +113,17 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
             tile_width,
             tile_height,
             from_message,
-        } => Box::new(Odometer::new(
-            *direction,
-            *travel,
-            *tile_width,
-            *tile_height,
-            from_message.clone(),
-        )),
+            mechanical,
+        } => Box::new(
+            Odometer::new(
+                *direction,
+                *travel,
+                *tile_width,
+                *tile_height,
+                from_message.clone(),
+            )
+            .with_mechanical(mechanical.clone()),
+        ),
         ContentEffect::Redact { symbol } => Box::new(Redact::new(*symbol)),
         ContentEffect::Numeric { format } => Box::new(Numeric::new(format)),
         ContentEffect::Marquee { speed, width } => Box::new(Marquee::new(*width, speed.clone())),
