@@ -112,10 +112,24 @@ as a handoff.
    - what counts as done
    - what the biggest scope risk is
 4. Do the narrowest repo inspection needed before editing.
-5. If this is a `gpt-5.5` low lane, explicitly list the tricky semantics you
+5. **Cross-repo audit (Intention 41).** If the packet touches any public
+   surface that downstream consumers might construct, import, or reference
+   — struct fields, public types, exported constants, public function
+   signatures — run the appropriate `rg` / `ofpf-search` / `ofpf-content`
+   query across **all four repos**:
+   - `/usr/projects/tui-vfx`
+   - `/usr/projects/tui-vfx-recipes`
+   - `/usr/projects/mixed-signals`
+   - `/usr/projects/gt-design`
+
+   Report the per-repo hit counts in the final report. Two-repo audits are
+   the failure mode the SignalContext lift hit (struct-literal sites in
+   tui-vfx-recipes and gt-design were missed). If the packet is purely
+   internal to one crate, say so explicitly and skip.
+6. If this is a `gpt-5.5` low lane, explicitly list the tricky semantics you
    will test before implementation (coordinate frame, timing, cache, schema
    defaults, or other packet-specific risks).
-6. For schema/parser `gpt-5.5` low lanes, confirm the canonical JSON fixture
+7. For schema/parser `gpt-5.5` low lanes, confirm the canonical JSON fixture
    shape before editing and name the default/boundary assertions you will add.
 
 ## Hot-path watchpoints
@@ -134,6 +148,38 @@ If a command fails, report that exact failure before considering any follow-up c
 - in-scope failure
 - expected downstream fallout
 - or blocker
+
+## Pre-commit write-scope guard (Intention 40 §5)
+Before running `git commit`, verify your stage matches the declared write
+scope exactly:
+
+```bash
+git diff --cached --name-only
+```
+
+The output must list **only** files in this packet's "Exact write scope"
+section. If any other file appears (sibling agents' in-progress edits, files
+created during build, recyclebin moves, etc.), unstage them with
+`git restore --staged <path>` before committing. Sweeping up unrelated
+changes contaminates the commit identity even when the swept-up content is
+correct work — future archaeology can't tell which files belong to this
+packet.
+
+Report the `git diff --cached --name-only` output in your final report so
+the leader can verify the scope matched. Likewise: do not run
+`git add -A` or `git add .` — stage by explicit path only.
+
+## No-landmines pre-commit check (Intention 40)
+Run before commit:
+
+```bash
+git diff --cached | rg '^\+.*#\[allow|^\+.*#!\[allow' || echo "no new #[allow] suppressions"
+```
+
+If this surfaces new `#[allow]` lines, justify each in the commit message or
+remove them. Per-site `#[allow]` for clippy is a landmine; if a strict gate
+flags real code-style debt, fix the root cause or set explicit project-level
+policy in `clippy.toml`.
 
 ## Reporting contract
 Your final report must include:
