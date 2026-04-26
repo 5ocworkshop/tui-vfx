@@ -1,7 +1,7 @@
 <!-- <FILE>docs/API_HAND.md</FILE> - <DESC>Hand-maintained TUI-VFX API documentation</DESC> -->
-<!-- <VERS>VERSION: 2.20.0</VERS> -->
-<!-- <WCTX>Phase 7 prep: KittScanner gains a ScannerAxis field (Horizontal default / Vertical) so column-wise scanner reveals (TTE Beams) work without a sampler chain.</WCTX> -->
-<!-- <CLOG>Add KittScanner.axis to the filter row, add a ScannerAxis enum subsection, and expand the KittScanner notes paragraph to mention the new field.</CLOG> -->
+<!-- <VERS>VERSION: 2.21.0</VERS> -->
+<!-- <WCTX>Phase 3b: lift BindableU16 into RowRange/ColumnRange/Modulo coordinates (engine style 5.2.0 / models 2.6.0) so SynthGrid expand/collapse, animated stripe density, and scan-down reveals are first-class primitives.</WCTX> -->
+<!-- <CLOG>StyleRegion section: tag RowRange/ColumnRange/Modulo numeric fields as BindableU16 in the variant list and add a "BindableU16 fields (since style 5.2.0)" subsection covering authoring shapes and resolution semantics.</CLOG> -->
 
 # TUI-VFX Complete API Reference
 
@@ -637,10 +637,29 @@ Apply styles to targeted regions:
 `All`, `Role(RoleTag)` (canonical role-based form; the legacy
 `TextOnly` / `BorderOnly` / `BackgroundOnly` strings still parse via
 custom `Deserialize`),
-`Rows(Vec<u16>)`, `RowRange { start, end }`,
+`Rows(Vec<u16>)`,
+`RowRange { start: BindableU16, end: BindableU16 }`,
 `Cell { x: BindableU16, y: BindableU16 }`, `Cells(Vec<CellCoord>)`,
 `Column(u16)`, `Columns(Vec<u16>)`,
-`ColumnRange { start, end }`, `Modulo { axis, modulus, remainder }`
+`ColumnRange { start: BindableU16, end: BindableU16 }`,
+`Modulo { axis, modulus: BindableU16, remainder: BindableU16 }`
+
+### BindableU16 fields (since style 5.2.0)
+
+`RowRange`, `ColumnRange`, and `Modulo` all carry [`BindableU16`] for their
+numeric coordinates (alongside `Cell { x, y }`, which has carried it since
+phase 0). Authoring shapes accepted by the lenient deserializer:
+
+- bare integer: `1` (back-compat — pre-3b recipes keep working)
+- tagged literal: `{ "literal": 1 }`
+- runtime binding: `{ "binding": "synth_grid_end_row" }`
+
+Bindings resolve once per layer per frame on the render-pipeline hot loop
+via `StyleRegion::resolved(&ShaderRuntimeParams)` — predicates that see an
+unresolved `Binding` silently match nothing (mirroring the `Cell` contract
+since phase 0). This unlocks SynthGrid expand/collapse, animated stripe
+density, scan-down reveals, and similar runtime-driven scope animations
+without a sampler chain or a per-frame cells expansion.
 
 `ModuloAxis`: `Horizontal` (scans rows top→bottom — one match becomes
 one full-row stripe), `Vertical` (scans columns left→right — one match
@@ -652,7 +671,7 @@ where `coord` is `y` for `Horizontal` and `x` for `Vertical`. Use for
 CRT scanlines (`Horizontal`, modulus 2, remainder 0), ledger paper
 (`Horizontal`, modulus 3), or alternating column highlights
 (`Vertical`, modulus 2, remainder 1). Authored from V3 recipes via
-`{"kind": "modulo", "axis": "horizontal" | "vertical", "modulus": N, "remainder": K}`.
+`{"kind": "modulo", "axis": "horizontal" | "vertical", "modulus": N | {"binding": "name"}, "remainder": K | {"binding": "name"}}`.
 
 ## Spatial Shaders (`SpatialShaderType`)
 

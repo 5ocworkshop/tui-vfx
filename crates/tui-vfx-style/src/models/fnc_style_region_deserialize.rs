@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/fnc_style_region_deserialize.rs</FILE> - <DESC>Custom Deserialize for StyleRegion — back-compat for legacy bare-string variants (BorderOnly / TextOnly / BackgroundOnly) mapped to canonical Role(RoleTag) form</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.2 audit-1 remediation — extract Deserialize + shadow enum out of cls_style_region.rs to bring the main file back under OFPF cls_ LOC budget</WCTX>
-// <CLOG>0.1.0: extracted from cls_style_region.rs (prev lines 219–320); logic bit-preserved. Custom Deserialize captures input as serde_json::Value, short-circuits the three legacy bare strings to Role(...), and forwards every other variant through a shadow enum that mirrors StyleRegion's canonical variants.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase 3b: lift RowRange/ColumnRange/Modulo shadow fields to BindableU16 so the lenient deser surface accepts both bare integers (back-compat) and `{"binding": "name"}` shapes for those variants — the same authoring sugar Cell already supports.</WCTX>
+// <CLOG>RowRange/ColumnRange start+end and Modulo modulus+remainder shadow fields lifted to BindableU16; the From<StyleRegionShadow> impl just forwards the values now that the canonical enum carries the same types.</CLOG>
 
 use super::cls_bindable_u16::BindableU16;
 use super::cls_style_region::{CellCoord, ModuloAxis, StyleRegion};
@@ -21,8 +21,8 @@ enum StyleRegionShadow {
     Role(RoleTag),
     Rows(Vec<u16>),
     RowRange {
-        start: u16,
-        end: u16,
+        start: BindableU16,
+        end: BindableU16,
     },
     Cell {
         x: BindableU16,
@@ -32,13 +32,13 @@ enum StyleRegionShadow {
     Column(u16),
     Columns(Vec<u16>),
     ColumnRange {
-        start: u16,
-        end: u16,
+        start: BindableU16,
+        end: BindableU16,
     },
     Modulo {
         axis: ModuloAxis,
-        modulus: u16,
-        remainder: u16,
+        modulus: BindableU16,
+        remainder: BindableU16,
     },
 }
 
@@ -92,4 +92,4 @@ impl<'de> Deserialize<'de> for StyleRegion {
 }
 
 // <FILE>tui-vfx-style/src/models/fnc_style_region_deserialize.rs</FILE> - <DESC>Custom Deserialize for StyleRegion</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

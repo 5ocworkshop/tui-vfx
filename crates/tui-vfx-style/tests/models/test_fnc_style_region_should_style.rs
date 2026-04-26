@@ -72,7 +72,7 @@ fn rows_matches_listed_rows() {
 
 #[test]
 fn row_range_matches_half_open_interval() {
-    let region = StyleRegion::RowRange { start: 1, end: 4 };
+    let region = StyleRegion::RowRange { start: BindableU16::Literal(1), end: BindableU16::Literal(4) };
     let a = area(10, 5);
     assert!(!should_style(&region, 0, 0, None, a));
     assert!(should_style(&region, 0, 1, None, a));
@@ -90,7 +90,7 @@ fn column_matches_single_x() {
 
 #[test]
 fn column_range_matches_half_open_interval() {
-    let region = StyleRegion::ColumnRange { start: 2, end: 5 };
+    let region = StyleRegion::ColumnRange { start: BindableU16::Literal(2), end: BindableU16::Literal(5) };
     let a = area(10, 5);
     assert!(!should_style(&region, 1, 0, None, a));
     assert!(should_style(&region, 2, 0, None, a));
@@ -134,8 +134,8 @@ fn cell_with_unresolved_binding_never_matches() {
 fn modulo_horizontal_matches_chosen_rows() {
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 2,
-        remainder: 0,
+        modulus: BindableU16::Literal(2),
+        remainder: BindableU16::Literal(0),
     };
     let a = area(6, 6);
     assert!(should_style(&region, 3, 0, None, a));
@@ -147,8 +147,8 @@ fn modulo_horizontal_matches_chosen_rows() {
 fn modulo_zero_modulus_matches_nothing() {
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 0,
-        remainder: 0,
+        modulus: BindableU16::Literal(0),
+        remainder: BindableU16::Literal(0),
     };
     assert!(!should_style(&region, 0, 0, None, area(4, 4)));
 }
@@ -157,8 +157,8 @@ fn modulo_zero_modulus_matches_nothing() {
 fn modulo_remainder_exceeds_modulus_matches_nothing() {
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 2,
-        remainder: 5,
+        modulus: BindableU16::Literal(2),
+        remainder: BindableU16::Literal(5),
     };
     assert!(!should_style(&region, 0, 0, None, area(4, 4)));
 }

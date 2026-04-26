@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-style/src/models/fnc_style_region_should_style.rs</FILE> - <DESC>Pure function evaluating whether a StyleRegion matches a given cell (with optional role context)</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.2.0 — pre-extract should_style from cls_style_region.rs so we stay within the `cls_` LOC budget while adding the role-aware Role(RoleTag) variant</WCTX>
-// <CLOG>0.1.0: initial extraction. Signature matches plan A.2.0: `fn should_style(region, x, y, role, area) -> bool`. Geometry variants (All, Rows, Column, Modulo, Cell, …) preserve existing behavior bit-for-bit; Role(RoleTag) variant evaluates against the supplied `role` argument with None/mismatch returning false. Width/height derived from `area.width` / `area.height` so callers that previously supplied (w, h) separately pass `Rect::new(0, 0, w, h)` instead.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase 3b: RowRange/ColumnRange/Modulo fields became BindableU16, so the predicate must consult `.literal()` and silently mismatch when any coordinate field is still a Binding (callers are expected to resolve via StyleRegion::resolved before entering the hot loop, mirroring the Cell variant's contract).</WCTX>
+// <CLOG>RowRange / ColumnRange / Modulo arms now extract literals via `.literal()` and return false if any field is a Binding (matches the pre-existing Cell behavior).</CLOG>
 
 //! `should_style`: decide whether a `StyleRegion` targets a given cell.
 //!
@@ -64,7 +64,10 @@ pub fn should_style(
             None => false,
         },
         StyleRegion::Rows(rows) => rows.contains(&y),
-        StyleRegion::RowRange { start, end } => y >= *start && y < *end,
+        StyleRegion::RowRange { start, end } => match (literal_or(start), literal_or(end)) {
+            (Some(s), Some(e)) => y >= s && y < e,
+            _ => false,
+        },
         StyleRegion::Cell { x: cx, y: cy } => match (literal_or(cx), literal_or(cy)) {
             (Some(cx_lit), Some(cy_lit)) => x == cx_lit && y == cy_lit,
             _ => false,
@@ -72,20 +75,27 @@ pub fn should_style(
         StyleRegion::Cells(cells) => cells.iter().any(|c| c.x == x && c.y == y),
         StyleRegion::Column(col) => x == *col,
         StyleRegion::Columns(cols) => cols.contains(&x),
-        StyleRegion::ColumnRange { start, end } => x >= *start && x < *end,
+        StyleRegion::ColumnRange { start, end } => match (literal_or(start), literal_or(end)) {
+            (Some(s), Some(e)) => x >= s && x < e,
+            _ => false,
+        },
         StyleRegion::Modulo {
             axis,
             modulus,
             remainder,
         } => {
-            if *modulus == 0 || *remainder >= *modulus {
+            let (Some(modulus), Some(remainder)) = (literal_or(modulus), literal_or(remainder))
+            else {
+                return false;
+            };
+            if modulus == 0 || remainder >= modulus {
                 return false;
             }
             let coord = match axis {
                 ModuloAxis::Horizontal => y,
                 ModuloAxis::Vertical => x,
             };
-            coord % modulus == *remainder
+            coord % modulus == remainder
         }
         // Silence unused-variable warning when width/height aren't read by
         // the current variant set. They are preserved on the contract for
@@ -107,4 +117,4 @@ fn literal_or(b: &BindableU16) -> Option<u16> {
 }
 
 // <FILE>crates/tui-vfx-style/src/models/fnc_style_region_should_style.rs</FILE> - <DESC>Pure function evaluating whether a StyleRegion matches a given cell</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

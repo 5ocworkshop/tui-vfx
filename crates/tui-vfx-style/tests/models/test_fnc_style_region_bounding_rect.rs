@@ -41,8 +41,8 @@ fn column_is_unbounded_in_y() {
 fn modulo_is_unbounded() {
     let r = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 2,
-        remainder: 0,
+        modulus: BindableU16::Literal(2),
+        remainder: BindableU16::Literal(0),
     };
     assert!(bounding_rect(&r, a(10, 5)).is_none());
 }

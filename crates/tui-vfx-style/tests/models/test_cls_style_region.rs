@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/tests/models/test_cls_style_region.rs</FILE> - <DESC>Tests for StyleRegion</DESC>
-// <VERS>VERSION: 4.0.0</VERS>
-// <WCTX>Sub-plan A Phase A.2.1 — migrate legacy bare variants (BorderOnly/TextOnly/BackgroundOnly) to canonical Role(RoleTag::…) form and switch to the `*_legacy` method variants that preserve the old (x, y, w, h) / no-role call shape</WCTX>
-// <CLOG>4.0.0: MAJOR — bulk rewrite of legacy BorderOnly/TextOnly/BackgroundOnly → Role(RoleTag::…) and should_style/bounding_rect → should_style_legacy/bounding_rect_legacy. Serde test for legacy bare strings retired (see test_style_region_legacy_parse_round_trip.rs); serde PascalCase output test updated to canonical Role form.</CLOG>
+// <VERS>VERSION: 4.1.0</VERS>
+// <WCTX>Phase 3b: cover RowRange/ColumnRange/Modulo bindable behavior — pre-resolve mismatch, post-resolve match, Cow::Borrowed shortcut, lenient bare-integer back-compat, and `{"binding": "..."}` deserialise.</WCTX>
+// <CLOG>Add 7 new tests at the end of the file exercising the lifted variants; existing test bodies updated only by the bindable-wrap transform (raw u16s → BindableU16::Literal).</CLOG>
 
 use std::borrow::Cow;
 use tui_vfx_style::models::{BindableU16, StyleRegion};
@@ -145,7 +145,7 @@ fn test_rows_out_of_bounds_safe() {
 
 #[test]
 fn test_row_range_matches_range() {
-    let region = StyleRegion::RowRange { start: 1, end: 4 };
+    let region = StyleRegion::RowRange { start: BindableU16::Literal(1), end: BindableU16::Literal(4) };
     let (w, h) = (10, 5);
 
     // Rows in [1, 4) should match
@@ -162,7 +162,7 @@ fn test_row_range_matches_range() {
 #[test]
 fn test_row_range_single_row() {
     // Range of exactly one row
-    let region = StyleRegion::RowRange { start: 2, end: 3 };
+    let region = StyleRegion::RowRange { start: BindableU16::Literal(2), end: BindableU16::Literal(3) };
     let (w, h) = (10, 5);
 
     assert!(!region.should_style_legacy(0, 1, w, h));
@@ -173,7 +173,7 @@ fn test_row_range_single_row() {
 #[test]
 fn test_row_range_full_widget() {
     // Range covering entire widget
-    let region = StyleRegion::RowRange { start: 0, end: 5 };
+    let region = StyleRegion::RowRange { start: BindableU16::Literal(0), end: BindableU16::Literal(5) };
     let (w, h) = (10, 5);
 
     assert!(region.should_style_legacy(0, 0, w, h));
@@ -184,7 +184,7 @@ fn test_row_range_full_widget() {
 #[test]
 fn test_row_range_inverted_matches_nothing() {
     // Inverted range (start >= end) should match nothing
-    let region = StyleRegion::RowRange { start: 5, end: 2 };
+    let region = StyleRegion::RowRange { start: BindableU16::Literal(5), end: BindableU16::Literal(2) };
     let (w, h) = (10, 5);
 
     assert!(!region.should_style_legacy(0, 0, w, h));
@@ -196,7 +196,7 @@ fn test_row_range_inverted_matches_nothing() {
 #[test]
 fn test_row_range_empty_matches_nothing() {
     // Empty range (start == end)
-    let region = StyleRegion::RowRange { start: 2, end: 2 };
+    let region = StyleRegion::RowRange { start: BindableU16::Literal(2), end: BindableU16::Literal(2) };
     let (w, h) = (10, 5);
 
     assert!(!region.should_style_legacy(0, 1, w, h));
@@ -218,7 +218,7 @@ fn test_serde_rows_roundtrip() {
 
 #[test]
 fn test_serde_row_range_roundtrip() {
-    let region = StyleRegion::RowRange { start: 1, end: 5 };
+    let region = StyleRegion::RowRange { start: BindableU16::Literal(1), end: BindableU16::Literal(5) };
     let json = serde_json::to_string(&region).unwrap();
     let parsed: StyleRegion = serde_json::from_str(&json).unwrap();
     assert_eq!(region, parsed);
@@ -259,8 +259,8 @@ fn test_modulo_horizontal_every_other_row() {
     // Every other row starting from 0 (rows 0, 2, 4, ...)
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 2,
-        remainder: 0,
+        modulus: BindableU16::Literal(2),
+        remainder: BindableU16::Literal(0),
     };
     let (w, h) = (10, 6);
 
@@ -281,8 +281,8 @@ fn test_modulo_horizontal_odd_rows() {
     // Every other row starting from 1 (rows 1, 3, 5, ...)
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 2,
-        remainder: 1,
+        modulus: BindableU16::Literal(2),
+        remainder: BindableU16::Literal(1),
     };
     let (w, h) = (10, 6);
 
@@ -302,8 +302,8 @@ fn test_modulo_vertical_every_other_column() {
     // Every other column starting from 0 (columns 0, 2, 4, ...)
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Vertical,
-        modulus: 2,
-        remainder: 0,
+        modulus: BindableU16::Literal(2),
+        remainder: BindableU16::Literal(0),
     };
     let (w, h) = (6, 10);
 
@@ -324,8 +324,8 @@ fn test_modulo_every_third_row() {
     // Every third row (rows 0, 3, 6, ...)
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 3,
-        remainder: 0,
+        modulus: BindableU16::Literal(3),
+        remainder: BindableU16::Literal(0),
     };
     let (w, h) = (10, 10);
 
@@ -345,8 +345,8 @@ fn test_modulo_with_offset_remainder() {
     // Every third row, but offset by 1 (rows 1, 4, 7, ...)
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 3,
-        remainder: 1,
+        modulus: BindableU16::Literal(3),
+        remainder: BindableU16::Literal(1),
     };
     let (w, h) = (10, 10);
 
@@ -364,8 +364,8 @@ fn test_modulo_one_matches_everything() {
     // Modulo 1 with remainder 0 matches everything
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 1,
-        remainder: 0,
+        modulus: BindableU16::Literal(1),
+        remainder: BindableU16::Literal(0),
     };
     let (w, h) = (10, 5);
 
@@ -381,8 +381,8 @@ fn test_modulo_zero_matches_nothing() {
     // Modulo 0 is invalid - should match nothing (safe fallback)
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 0,
-        remainder: 0,
+        modulus: BindableU16::Literal(0),
+        remainder: BindableU16::Literal(0),
     };
     let (w, h) = (10, 5);
 
@@ -396,8 +396,8 @@ fn test_modulo_remainder_exceeds_modulus() {
     // Remainder >= modulus should match nothing
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 2,
-        remainder: 5, // impossible: no number % 2 == 5
+        modulus: BindableU16::Literal(2),
+        remainder: BindableU16::Literal(5), // impossible: no number % 2 == 5
     };
     let (w, h) = (10, 10);
 
@@ -410,8 +410,8 @@ fn test_modulo_remainder_exceeds_modulus() {
 fn test_serde_modulo_roundtrip() {
     let region = StyleRegion::Modulo {
         axis: ModuloAxis::Horizontal,
-        modulus: 2,
-        remainder: 0,
+        modulus: BindableU16::Literal(2),
+        remainder: BindableU16::Literal(0),
     };
     let json = serde_json::to_string(&region).unwrap();
     let parsed: StyleRegion = serde_json::from_str(&json).unwrap();
@@ -593,5 +593,118 @@ fn cell_binding_serde_roundtrip_normalizes_to_tagged_form() {
     assert_eq!(parsed, region);
 }
 
+// ---------------------------------------------------------------------------
+// Phase 3b: BindableU16 on RowRange / ColumnRange / Modulo
+// ---------------------------------------------------------------------------
+
+#[test]
+fn row_range_with_binding_silently_mismatches_until_resolved() {
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Binding("synth_grid_start_row".into()),
+        end: BindableU16::Literal(4),
+    };
+    let area = tui_vfx_types::Rect::new(0, 0, 10, 10);
+    assert!(!region.should_style(0, 1, None, area));
+    assert!(!region.should_style(0, 2, None, area));
+}
+
+#[test]
+fn row_range_resolved_lowers_binding_to_literal() {
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Binding("synth_grid_start_row".into()),
+        end: BindableU16::Binding("synth_grid_end_row".into()),
+    };
+    let mut rp = ShaderRuntimeParams::new();
+    rp.insert("synth_grid_start_row", 1_u16);
+    rp.insert("synth_grid_end_row", 4_u16);
+    let resolved = region.resolved(&rp);
+    let area = tui_vfx_types::Rect::new(0, 0, 10, 10);
+    assert!(resolved.should_style(0, 1, None, area));
+    assert!(resolved.should_style(0, 3, None, area));
+    assert!(!resolved.should_style(0, 4, None, area));
+    assert!(!resolved.should_style(0, 0, None, area));
+    assert!(matches!(resolved, Cow::Owned(_)));
+}
+
+#[test]
+fn row_range_resolved_borrows_when_already_literal() {
+    let region = StyleRegion::RowRange {
+        start: BindableU16::Literal(0),
+        end: BindableU16::Literal(2),
+    };
+    let rp = ShaderRuntimeParams::new();
+    let resolved = region.resolved(&rp);
+    assert!(matches!(resolved, Cow::Borrowed(_)));
+}
+
+#[test]
+fn column_range_resolved_lowers_binding_to_literal() {
+    let region = StyleRegion::ColumnRange {
+        start: BindableU16::Binding("scan_col_start".into()),
+        end: BindableU16::Literal(7),
+    };
+    let mut rp = ShaderRuntimeParams::new();
+    rp.insert("scan_col_start", 3_u16);
+    let resolved = region.resolved(&rp);
+    let area = tui_vfx_types::Rect::new(0, 0, 10, 10);
+    assert!(resolved.should_style(3, 0, None, area));
+    assert!(resolved.should_style(6, 0, None, area));
+    assert!(!resolved.should_style(2, 0, None, area));
+    assert!(!resolved.should_style(7, 0, None, area));
+}
+
+#[test]
+fn modulo_resolved_lowers_modulus_and_remainder() {
+    let region = StyleRegion::Modulo {
+        axis: tui_vfx_style::models::ModuloAxis::Horizontal,
+        modulus: BindableU16::Binding("stripe_period".into()),
+        remainder: BindableU16::Literal(0),
+    };
+    let mut rp = ShaderRuntimeParams::new();
+    rp.insert("stripe_period", 3_u16);
+    let resolved = region.resolved(&rp);
+    let area = tui_vfx_types::Rect::new(0, 0, 10, 10);
+    assert!(resolved.should_style(0, 0, None, area));
+    assert!(resolved.should_style(0, 3, None, area));
+    assert!(!resolved.should_style(0, 1, None, area));
+    assert!(!resolved.should_style(0, 2, None, area));
+}
+
+#[test]
+fn row_range_accepts_bare_integer_back_compat() {
+    let json = r#"{ "RowRange": { "start": 1, "end": 4 } }"#;
+    let parsed: StyleRegion = serde_json::from_str(json).unwrap();
+    assert_eq!(
+        parsed,
+        StyleRegion::RowRange {
+            start: BindableU16::Literal(1),
+            end: BindableU16::Literal(4),
+        }
+    );
+}
+
+#[test]
+fn modulo_accepts_binding_for_modulus() {
+    let json = r#"{
+        "Modulo": {
+            "axis": "Horizontal",
+            "modulus": { "binding": "stripe_period" },
+            "remainder": 0
+        }
+    }"#;
+    let parsed: StyleRegion = serde_json::from_str(json).unwrap();
+    match parsed {
+        StyleRegion::Modulo {
+            axis: _,
+            modulus,
+            remainder,
+        } => {
+            assert_eq!(modulus, BindableU16::Binding("stripe_period".into()));
+            assert_eq!(remainder, BindableU16::Literal(0));
+        }
+        other => panic!("expected StyleRegion::Modulo, got {:?}", other),
+    }
+}
+
 // <FILE>tui-vfx-style/tests/models/test_cls_style_region.rs</FILE> - <DESC>Tests for StyleRegion</DESC>
-// <VERS>END OF VERSION: 4.0.0</VERS>
+// <VERS>END OF VERSION: 4.1.0</VERS>

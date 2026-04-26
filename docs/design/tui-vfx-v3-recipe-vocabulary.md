@@ -1,10 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring. Consolidates direction/origin/shape/phase/basis terminology so schema docs, examples, fixtures, and runtime implementations use one shared language.</DESC> -->
-<!-- <VERS>VERSION: 0.4.1</VERS> -->
-<!-- <WCTX>Audit recommendation 1.4 — add the canonical V3 scope vocabulary section so authors learn the full scope kind list, including the new `modulo` authoring scope (axis + modulus + remainder) that exposes the engine's long-existing StyleRegion::Modulo to recipe writers.</WCTX> -->
-<!-- <CLOG>0.4.1: MINOR — add per-cell motion vocabulary for cell_motion homes, placements, and first-slice choreography limits.
-0.4.0: MINOR — add new section "Canonical V3 scope vocabulary" that catalogues all V3 scope kinds, documents the new `modulo` scope (axis: horizontal | vertical, plus integer modulus and remainder), explains the axis-naming rule (horizontal scans rows top→bottom, vertical scans columns left→right), and lists which scope kinds support runtime bindings today vs. literal-only.
-0.3.0: MINOR — wipe-direction vocabulary section grew from 12 canonical variants to 20 (cardinal + diagonal + centre/edge + corner-out + corner-in). Added the diagonal-vs-corner-arc explanatory note. Documented that the same vocabulary is shared by the Wipe mask, the RevealWipe shader, and the V3 grouped reveal family at the engine level via one canonical WipeDirection in tui-vfx-geometry.
-0.2.9: add sibling authoring-doc routing for ingredients, schema, procedural sources, and tooling.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>Phase 3b: row_range/column_range/modulo coordinates universally accept BindableU16 end-to-end (engine StyleRegion + V3 lowering); vocabulary doc now reflects the new bound-form contract for those scope kinds.</WCTX> -->
+<!-- <CLOG>row_range/column_range/modulo bullets and the "Runtime-binding support today" subsection updated to describe the bindable end-to-end path that lands in StyleRegion::* with BindableU16 fields and resolves once per layer per frame.</CLOG> -->
 
 # tui-vfx V3 recipe vocabulary
 
@@ -362,9 +359,13 @@ kinds (the strings authored in `"kind": "..."`) are:
 - `outer { margins }` / `inner { margins }` — perimeter band / interior
   area defined by per-edge margins
 - `rows { rows: [...] }` — specific row indices
-- `row_range { start, end }` — half-open contiguous row range
+- `row_range { start, end }` — half-open contiguous row range. `start` and
+  `end` accept literals or `{"binding": "name"}` (since style 5.2.0); a
+  bound endpoint flows through to `StyleRegion::RowRange { start: BindableU16,
+  end: BindableU16 }` and resolves once per layer per frame.
 - `columns { columns: [...] }` — specific column indices
-- `column_range { start, end }` — half-open contiguous column range
+- `column_range { start, end }` — half-open contiguous column range; same
+  bindable contract as `row_range`.
 
 ### Periodic / modular
 - `modulo { axis, modulus, remainder }` — every Nth row or column.
@@ -376,13 +377,16 @@ kinds (the strings authored in `"kind": "..."`) are:
   - `modulus: u16` is the period; `remainder: u16` is the offset within
     the period (`0` means rows/cols 0, N, 2N, …; `1` shifts by one).
   - Both `modulus` and `remainder` accept a literal integer or a
-    `{"binding": "name"}` form; when both are literals the recipe
-    compiler folds the scope into the compact `StaticModulo` shape, and
-    when either is a binding the scope is resolved per-frame against
+    `{"binding": "name"}` form. Literal-only inputs collapse to the
+    compact `StaticModulo` compile shape; bound inputs flow through
+    the dynamic path and emit
+    `StyleRegion::Modulo { modulus: BindableU16::Binding,
+    remainder: BindableU16::Binding }` (since style 5.2.0), which
+    `StyleRegion::resolved` lowers once per layer per frame against
     `ShaderRuntimeParams`.
   - Engine-level: this lowers to
     `StyleRegion::Modulo { axis: ModuloAxis::Horizontal | Vertical,
-    modulus, remainder }`.
+    modulus: BindableU16, remainder: BindableU16 }`.
 
 ### Content / glyph
 - `content { value }` — cells whose source character equals `value`
@@ -397,16 +401,16 @@ kinds (the strings authored in `"kind": "..."`) are:
 
 ### Runtime-binding support today
 
-The `BindableU16` form (`{"binding": "name"}`) is currently honoured on
-the coordinate fields of `cell`, `cells`, `cell_run`, `cell_runs`,
-`rect`, `rect_exclude`, and the literal margin fields of `outer` /
-`inner`. `row_range`, `column_range`, and `modulo` accept the same
-JSON binding shape at the V3 authoring layer; the recipe compiler keeps
-literal forms compact (`StaticRowRange` / `StaticColumnRange` /
-`StaticModulo`) and falls back to dynamic resolution when a binding is
-present. End-to-end binding plumbing for the range/modulo families
-remains an in-progress universalisation effort tracked under audit
-recommendation 1.5.
+The `BindableU16` form (`{"binding": "name"}`) is honoured on the
+coordinate fields of `cell`, `cells`, `cell_run`, `cell_runs`, `rect`,
+`rect_exclude`, the literal margin fields of `outer` / `inner`, and
+— since style 5.2.0 / recipes 1.16.0 — on `row_range.start` / `end`,
+`column_range.start` / `end`, and `modulo.modulus` / `remainder`.
+Literal-only inputs collapse to the compact `Static*` compile shapes;
+bound inputs lower to the bindable engine variants
+(`StyleRegion::RowRange { start: BindableU16, end: BindableU16 }`,
+`StyleRegion::ColumnRange { … }`, `StyleRegion::Modulo { modulus, remainder }`)
+and resolve once per layer per frame via `StyleRegion::resolved`.
 
 ### Authoring guidance
 
@@ -670,4 +674,4 @@ in one shared visual model while we continue normalizing schema, fixtures, and
 runtime behavior.
 
 <!-- <FILE>docs/design/tui-vfx-v3-recipe-vocabulary.md</FILE> - <DESC>Canonical recipe vocabulary for V3 authoring</DESC> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->

@@ -1,11 +1,12 @@
-// <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum (data-only; predicate + bounding-rect logic lives in fnc_style_region_* siblings; Deserialize and ConfigSchema impls live in fnc_style_region_deserialize / fnc_style_region_schema)</DESC>
-// <VERS>VERSION: 5.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.2 audit-1 remediation — Deserialize/shadow and ConfigSchema extracted to dedicated fnc_* sibling files to bring this file back under OFPF cls_ LOC budget. StyleRegion surface is unchanged; only the supporting machinery moved.</WCTX>
-// <CLOG>5.1.0: extract custom Deserialize + shadow enum to fnc_style_region_deserialize.rs; extract hand-written ConfigSchema to fnc_style_region_schema.rs. This file now holds only the StyleRegion enum + associated methods + the co-located CellCoord/ModuloAxis payload types (intentionally co-located because they are payload-shapes of Cell/Cells/Modulo variants). OFPF SIZE NOTE: post-extraction LOC remains slightly above the 200 cls_ soft target because CellCoord and ModuloAxis are cohesive with StyleRegion's variants and splitting them would produce import ceremony without improving clarity.
-// 5.0.0: MAJOR — legacy bare variants removed from the Rust enum; Role(RoleTag) added; custom Deserialize implements the one-way back-compat (parse legacy → emit canonical). should_style / bounding_rect methods become thin delegators to the new fnc_* files; signatures updated to accept `role: Option<RoleTag>` and `area: Rect` per plan A.2.0. A `legacy_` method-compat helper lifts the old `(x, y, w, h)` call shape to the new API so compositor-side delegation migrates in one step.</CLOG>
+// <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum (data-only; predicate + bounding-rect + resolved logic lives in fnc_style_region_* siblings; Deserialize and ConfigSchema impls live in fnc_style_region_deserialize / fnc_style_region_schema)</DESC>
+// <VERS>VERSION: 5.2.0</VERS>
+// <WCTX>Phase 3b: lift RowRange/ColumnRange start+end and Modulo modulus+remainder from raw u16 to BindableU16 so SynthGrid expand/collapse and animated stripe density become first-class authoring primitives. resolved() extracted to its own sibling so the new variant resolution doesn't push this cls_ further past its size budget.</WCTX>
+// <CLOG>RowRange/ColumnRange/Modulo fields are now BindableU16 (back-compat: bare integers still deserialise via BindableU16Repr::Bare). resolved() delegates to fnc_style_region_resolved which now also resolves the three new variants when any field is a Binding.</CLOG>
 
 use super::cls_bindable_u16::BindableU16;
-use super::{fnc_style_region_bounding_rect, fnc_style_region_should_style};
+use super::{
+    fnc_style_region_bounding_rect, fnc_style_region_resolved, fnc_style_region_should_style,
+};
 use crate::traits::ShaderRuntimeParams;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -90,12 +91,20 @@ pub enum StyleRegion {
     Role(RoleTag),
     /// Apply style only to specific rows (0-based from widget top)
     Rows(Vec<u16>),
-    /// Apply style to a contiguous range of rows [start, end)
+    /// Apply style to a contiguous range of rows [start, end).
+    ///
+    /// Both `start` and `end` are [`BindableU16`] so the range itself can be
+    /// runtime-bound (the SynthGrid expand/collapse animation drives a
+    /// `{"binding": "synth_grid_end_row"}` here). The binding must be
+    /// resolved into literals via [`StyleRegion::resolved`] before
+    /// `should_style` evaluates the range — the hot render loop in
+    /// `tui-vfx-compositor::pipeline::orc_render_pipeline` does this once
+    /// per layer per frame.
     RowRange {
         /// First row to include (0-based)
-        start: u16,
+        start: BindableU16,
         /// First row to exclude (exclusive end)
-        end: u16,
+        end: BindableU16,
     },
     /// Apply style to a single cell at (x, y).
     ///
@@ -119,23 +128,32 @@ pub enum StyleRegion {
     Column(u16),
     /// Apply style only to specific columns (0-based from left)
     Columns(Vec<u16>),
-    /// Apply style to a contiguous range of columns [start, end)
+    /// Apply style to a contiguous range of columns [start, end).
+    ///
+    /// `start` and `end` are [`BindableU16`] so the range can be driven by a
+    /// runtime parameter (column-wise SynthGrid animation, animated
+    /// reveal-by-column, etc.). See [`StyleRegion::resolved`] for the
+    /// resolution contract — same shape as `RowRange`.
     ColumnRange {
         /// First column to include (0-based)
-        start: u16,
+        start: BindableU16,
         /// First column to exclude (exclusive end)
-        end: u16,
+        end: BindableU16,
     },
     /// Apply style to rows/columns matching a modulo pattern.
     ///
-    /// Useful for CRT scanline effects, alternating stripes, or periodic patterns.
+    /// Useful for CRT scanline effects, alternating stripes, or periodic
+    /// patterns. `modulus` and `remainder` are [`BindableU16`] so stripe
+    /// density and phase can be driven by a runtime parameter (animated
+    /// frequency sweep, beat-synced stripes, etc.). See
+    /// [`StyleRegion::resolved`] for the resolution contract.
     Modulo {
         /// Which axis to apply the modulo pattern to
         axis: ModuloAxis,
         /// The divisor for the modulo operation (e.g., 2 for every other)
-        modulus: u16,
+        modulus: BindableU16,
         /// The remainder to match (e.g., 0 for 0,2,4... or 1 for 1,3,5...)
-        remainder: u16,
+        remainder: BindableU16,
     },
 }
 
@@ -195,26 +213,13 @@ impl StyleRegion {
     /// Return a version of this region with any runtime-parameter bindings
     /// resolved to concrete literals.
     ///
-    /// See the module docs for semantics. Borrows when no resolution is
-    /// needed; clones only for `Cell` variants with at least one
-    /// `Binding` coordinate.
+    /// Borrows when no resolution is needed; clones only for variants whose
+    /// `BindableU16` field is currently a `Binding`. Thin delegator to
+    /// [`fnc_style_region_resolved::resolved`].
     pub fn resolved<'a>(&'a self, runtime_params: &ShaderRuntimeParams) -> Cow<'a, StyleRegion> {
-        match self {
-            StyleRegion::Cell { x, y } => match (x, y) {
-                (BindableU16::Literal(_), BindableU16::Literal(_)) => Cow::Borrowed(self),
-                _ => {
-                    let x_lit = x.evaluate(runtime_params).unwrap_or(0);
-                    let y_lit = y.evaluate(runtime_params).unwrap_or(0);
-                    Cow::Owned(StyleRegion::Cell {
-                        x: BindableU16::Literal(x_lit),
-                        y: BindableU16::Literal(y_lit),
-                    })
-                }
-            },
-            _ => Cow::Borrowed(self),
-        }
+        fnc_style_region_resolved::resolved(self, runtime_params)
     }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_style_region.rs</FILE> - <DESC>Style region targeting enum</DESC>
-// <VERS>END OF VERSION: 5.1.0</VERS>
+// <VERS>END OF VERSION: 5.2.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/fnc_style_region_schema.rs</FILE> - <DESC>Hand-written ConfigSchema impl for StyleRegion (Role(RoleTag) variant requires manual schema because RoleTag lives in tui-vfx-types which doesn't depend on tui-vfx-core)</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.2 audit-1 remediation — extract ConfigSchema impl out of cls_style_region.rs to bring the main file back under OFPF cls_ LOC budget</WCTX>
-// <CLOG>0.1.0: extracted from cls_style_region.rs (prev lines 322–453); logic bit-preserved. `RoleTag` doesn't implement `ConfigSchema` (it lives in tui-vfx-types which does not depend on tui-vfx-core — adding that dep would invert the layer graph). The derive macro can't synthesize a schema for `Role(RoleTag)`, so the enum is described manually here. OFPF SIZE NOTE: file is slightly above the fnc_ soft target of 120 LOC because the schema describes a 10-variant enum declaratively; further splitting would fragment a single cohesive schema description without clarity gain.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Phase 3b: report RowRange/ColumnRange start+end and Modulo modulus+remainder as BindableU16 in the generated schema so authoring tools surface the literal-or-binding shape consistently with the Cell variant.</WCTX>
+// <CLOG>Use BindableU16::schema() for RowRange.start/end, ColumnRange.start/end, Modulo.modulus/remainder.</CLOG>
 
 use super::cls_bindable_u16::BindableU16;
 use super::cls_style_region::{CellCoord, ModuloAxis, StyleRegion};
@@ -65,8 +65,8 @@ impl ConfigSchema for StyleRegion {
                     description: Some("Apply to rows [start, end)".to_string()),
                     json_value: None,
                     fields: vec![
-                        plain_field("start", prim("u16")),
-                        plain_field("end", prim("u16")),
+                        plain_field("start", BindableU16::schema()),
+                        plain_field("end", BindableU16::schema()),
                     ],
                 },
                 SchemaVariant::Struct {
@@ -111,8 +111,8 @@ impl ConfigSchema for StyleRegion {
                     description: Some("Apply to columns [start, end)".to_string()),
                     json_value: None,
                     fields: vec![
-                        plain_field("start", prim("u16")),
-                        plain_field("end", prim("u16")),
+                        plain_field("start", BindableU16::schema()),
+                        plain_field("end", BindableU16::schema()),
                     ],
                 },
                 SchemaVariant::Struct {
@@ -121,8 +121,8 @@ impl ConfigSchema for StyleRegion {
                     json_value: None,
                     fields: vec![
                         plain_field("axis", ModuloAxis::schema()),
-                        plain_field("modulus", prim("u16")),
-                        plain_field("remainder", prim("u16")),
+                        plain_field("modulus", BindableU16::schema()),
+                        plain_field("remainder", BindableU16::schema()),
                     ],
                 },
             ],
@@ -131,4 +131,4 @@ impl ConfigSchema for StyleRegion {
 }
 
 // <FILE>tui-vfx-style/src/models/fnc_style_region_schema.rs</FILE> - <DESC>Hand-written ConfigSchema impl for StyleRegion</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

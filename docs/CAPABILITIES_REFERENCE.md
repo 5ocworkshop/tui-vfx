@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CAPABILITIES_REFERENCE.md</FILE> - <DESC>Hand-maintained capabilities reference</DESC> -->
-<!-- <VERS>VERSION: 1.29.0</VERS> -->
-<!-- <WCTX>Phase 7 prep: KittScanner gains a vertical axis, unlocking column-wise reveals and TTE Beams without a sampler chain.</WCTX> -->
-<!-- <CLOG>Document KittScanner's new `axis` field (horizontal default / vertical) in both the matrix and the per-filter detail block.</CLOG> -->
+<!-- <VERS>VERSION: 1.30.0</VERS> -->
+<!-- <WCTX>Phase 3b: lift BindableU16 into RowRange/ColumnRange/Modulo coordinates. Capabilities reference must surface the new bindable contract for SynthGrid expand/collapse, animated stripe density, and scan-down reveals.</WCTX> -->
+<!-- <CLOG>StyleRegion::Modulo block now lists modulus/remainder as BindableU16 with bound-form authoring example; new StyleRegion::RowRange/ColumnRange block documents the bindable endpoints and resolved() contract.</CLOG> -->
 # tui-vfx Capabilities Reference
 
 > **MAINTENANCE NOTE:** This document must be kept in sync with the source code.
@@ -1357,9 +1357,9 @@ on round-trip.
 
 ```rust
 StyleRegion::Modulo {
-    axis: ModuloAxis,   // Horizontal | Vertical
-    modulus: u16,       // period (0 produces no matches)
-    remainder: u16,     // offset within the period
+    axis: ModuloAxis,          // Horizontal | Vertical
+    modulus: BindableU16,      // period (0 produces no matches; bindable since 5.2.0)
+    remainder: BindableU16,    // offset within the period (bindable since 5.2.0)
 }
 ```
 
@@ -1372,7 +1372,8 @@ the rule iterates, not the orientation of the stripes it draws.
 
 Use cases: CRT scanlines (`Horizontal`, modulus 2, remainder 0),
 ledger paper (`Horizontal`, modulus 3, remainder 0), alternating
-column highlights (`Vertical`, modulus 2, remainder 1).
+column highlights (`Vertical`, modulus 2, remainder 1), animated
+stripe-density sweeps (Horizontal, `modulus: {"binding": "stripe_period"}`).
 
 Authored from V3 recipes via:
 
@@ -1385,16 +1386,49 @@ Authored from V3 recipes via:
 }
 ```
 
-The recipe compiler folds literal `modulus` and `remainder` into the
-compact `CompiledScope::StaticModulo` form; either field may be
-expressed as `{"binding": "name"}`, in which case the scope falls
-through to dynamic resolution against `ShaderRuntimeParams` per
-frame. Authors should keep `modulus >= 1`; a value of `0` would
-produce no matches at runtime (the rule never fires).
+`modulus` and `remainder` accept either a bare integer (back-compat),
+the tagged `{"literal": N}` form, or `{"binding": "name"}`. The recipe
+compiler folds literal-only inputs into `CompiledScope::StaticModulo`
+for the compact static path; bound inputs flow through the dynamic
+path and emit `StyleRegion::Modulo { modulus: BindableU16::Binding,
+remainder: BindableU16::Binding }`, which `StyleRegion::resolved` then
+lowers once per layer per frame against `ShaderRuntimeParams`.
+Authors should keep `modulus >= 1`; a value of `0` would produce
+no matches at runtime (the rule never fires).
 
 Debug recipes:
 - `recipes/debug_recipes/styles/style_modulo_horizontal_every_third_row.json`
 - `recipes/debug_recipes/styles/style_modulo_vertical_every_fourth_column_offset.json`
+
+#### `StyleRegion::RowRange` / `StyleRegion::ColumnRange`
+
+```rust
+StyleRegion::RowRange    { start: BindableU16, end: BindableU16 }  // [start, end)
+StyleRegion::ColumnRange { start: BindableU16, end: BindableU16 }  // [start, end)
+```
+
+`start` and `end` accept the same `BindableU16` shapes as `Modulo`'s
+numeric fields (bare integer / `{"literal": N}` / `{"binding": "name"}`).
+Use the bindable forms to drive SynthGrid-style expand/collapse
+animation, scan-down reveals, or any range whose endpoints come from a
+runtime parameter. The `should_style` predicate silently matches
+nothing when either endpoint is still a `Binding`; the render pipeline
+calls `StyleRegion::resolved` once per layer per frame to lower
+bindings to literals before the hot loop sees them.
+
+Authored from V3 recipes via:
+
+```json
+"scope": {
+  "kind": "row_range",
+  "start": { "binding": "synth_grid_start_row" },
+  "end": { "binding": "synth_grid_end_row" }
+}
+```
+
+Literal-only inputs collapse to `CompiledScope::StaticRowRange`
+(`StaticColumnRange`) at compile time and emit literal-typed
+`StyleRegion::RowRange` (`ColumnRange`) without any per-frame work.
 
 ### Render Order
 
