@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_terminal_water_shader.rs</FILE> - <DESC>Layered terminal water/ocean shader</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Add motion-field primitive for layered water lighting with foam, ripples, rain, flow, and wakes.</WCTX>
-// <CLOG>Initial terminal water shader model with deterministic field sampling and style application.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Migrate water shader's private math/noise helpers to mixed-signals upstream primitives (in-flight 0.3.0).</WCTX>
+// <CLOG>0.2.0: replace private smoothstep/finite_or/clamp_finite/hash01 with mixed_signals::math + mixed_signals::noise imports.</CLOG>
 
 //! Layered terminal water/ocean shader.
 //!
@@ -13,6 +13,8 @@
 use crate::models::{ColorConfig, ColorSpace};
 use crate::traits::{ShaderContext, StyleShader};
 use crate::utils::blend_colors;
+use mixed_signals::math::{finite_or, finite_or_clamp, smoothstep};
+use mixed_signals::noise::hash01;
 use serde::{Deserialize, Serialize};
 use tui_vfx_types::{Color, Style};
 
@@ -280,18 +282,19 @@ impl TerminalWaterShader {
 
     fn sample_field_at(&self, x: f32, y: f32, width: u16, height: u16, t: f32) -> WaterFieldSample {
         let layers = self.sanitized_layers();
-        let amplitude = clamp_finite(self.amplitude, DEFAULT_AMPLITUDE, 0.0, 2.0);
-        let wavelength = clamp_finite(self.wavelength, DEFAULT_WAVELENGTH, 1.0, 512.0);
+        let amplitude = finite_or_clamp(self.amplitude, 0.0, 2.0, DEFAULT_AMPLITUDE);
+        let wavelength = finite_or_clamp(self.wavelength, 1.0, 512.0, DEFAULT_WAVELENGTH);
         let speed = finite_or(self.speed, DEFAULT_SPEED);
         let direction_deg = finite_or(self.direction_deg, DEFAULT_DIRECTION_DEG);
-        let steepness = clamp_finite(self.steepness, DEFAULT_STEEPNESS, 0.0, 1.0);
-        let normal_strength = clamp_finite(self.normal_strength, DEFAULT_NORMAL_STRENGTH, 0.0, 4.0);
-        let diffuse_strength = clamp_finite(self.diffuse, DEFAULT_DIFFUSE, 0.0, 2.0);
-        let specular_strength = clamp_finite(self.specular, DEFAULT_SPECULAR, 0.0, 2.0);
-        let shininess = clamp_finite(self.shininess, DEFAULT_SHININESS, 1.0, 128.0);
-        let fresnel_strength = clamp_finite(self.fresnel, DEFAULT_FRESNEL, 0.0, 2.0);
-        let foam_strength = clamp_finite(self.foam, DEFAULT_FOAM, 0.0, 2.0);
-        let glint_strength = clamp_finite(self.glint_strength, 0.0, 0.0, 2.0);
+        let steepness = finite_or_clamp(self.steepness, 0.0, 1.0, DEFAULT_STEEPNESS);
+        let normal_strength =
+            finite_or_clamp(self.normal_strength, 0.0, 4.0, DEFAULT_NORMAL_STRENGTH);
+        let diffuse_strength = finite_or_clamp(self.diffuse, 0.0, 2.0, DEFAULT_DIFFUSE);
+        let specular_strength = finite_or_clamp(self.specular, 0.0, 2.0, DEFAULT_SPECULAR);
+        let shininess = finite_or_clamp(self.shininess, 1.0, 128.0, DEFAULT_SHININESS);
+        let fresnel_strength = finite_or_clamp(self.fresnel, 0.0, 2.0, DEFAULT_FRESNEL);
+        let foam_strength = finite_or_clamp(self.foam, 0.0, 2.0, DEFAULT_FOAM);
+        let glint_strength = finite_or_clamp(self.glint_strength, 0.0, 2.0, 0.0);
 
         let mut height_value = 0.0;
         let mut max_height = 0.0;
@@ -432,13 +435,13 @@ impl TerminalWaterShader {
     fn ocean_mix(&self) -> f32 {
         match &self.mode {
             WaterWaveMode::Ripple { base_shimmer, .. } => {
-                clamp_finite(*base_shimmer, 0.0, 0.0, 0.25)
+                finite_or_clamp(*base_shimmer, 0.0, 0.25, 0.0)
             }
             WaterWaveMode::OceanWithRipples { ocean_mix, .. } => {
-                clamp_finite(*ocean_mix, 0.55, 0.0, 1.0)
+                finite_or_clamp(*ocean_mix, 0.0, 1.0, 0.55)
             }
             WaterWaveMode::Flow { flow_strength, .. } => {
-                clamp_finite(*flow_strength, 0.35, 0.0, 1.0) * 0.35
+                finite_or_clamp(*flow_strength, 0.0, 1.0, 0.35) * 0.35
             }
             WaterWaveMode::Composite { .. } => 0.0,
             _ => 1.0,
@@ -469,7 +472,7 @@ impl TerminalWaterShader {
                 ..
             } => (
                 emitters.as_slice(),
-                clamp_finite(*ripple_mix, 1.0, 0.0, 2.0),
+                finite_or_clamp(*ripple_mix, 0.0, 2.0, 1.0),
             ),
             _ => return 0.0,
         };
@@ -515,7 +518,7 @@ impl TerminalWaterShader {
                 emitters.as_slice(),
                 *seed,
                 (*density).min(16),
-                clamp_finite(*drop_strength, 0.45, 0.0, 2.0),
+                finite_or_clamp(*drop_strength, 0.0, 2.0, 0.45),
             ),
             _ => return 0.0,
         };
@@ -593,10 +596,10 @@ impl TerminalWaterShader {
         let dir = finite_or(direction_deg, 0.0).to_radians();
         let dx = dir.cos();
         let dy = dir.sin();
-        let strength = clamp_finite(flow_strength, 0.35, 0.0, 2.0);
+        let strength = finite_or_clamp(flow_strength, 0.0, 2.0, 0.35);
         let k = 0.32;
         let phase = k * (dx * x + dy * y) + t * finite_or(speed, 1.0);
-        let turb = clamp_finite(turbulence, 0.18, 0.0, 2.0) * ((x * 0.17 + y * 0.11 + t).sin());
+        let turb = finite_or_clamp(turbulence, 0.0, 2.0, 0.18) * ((x * 0.17 + y * 0.11 + t).sin());
         let s = (phase + turb).sin();
         let c = (phase + turb).cos();
         let amp = 0.18 * strength;
@@ -632,9 +635,9 @@ impl TerminalWaterShader {
                 spread_deg,
             } => (
                 sources.as_slice(),
-                clamp_finite(*wake_strength, 0.65, 0.0, 2.0),
-                clamp_finite(*trail_length, 18.0, 1.0, 128.0),
-                clamp_finite(*spread_deg, 28.0, 1.0, 89.0),
+                finite_or_clamp(*wake_strength, 0.0, 2.0, 0.65),
+                finite_or_clamp(*trail_length, 1.0, 128.0, 18.0),
+                finite_or_clamp(*spread_deg, 1.0, 89.0, 28.0),
             ),
             _ => return 0.0,
         };
@@ -643,8 +646,8 @@ impl TerminalWaterShader {
         let mut scalar: f32 = 0.0;
         for source in sources.iter().take(MAX_WAKE_SOURCES) {
             let age = (t - finite_or(source.start_time, 0.0)).max(0.0);
-            let sx = clamp_finite(source.x, 0.5, 0.0, 1.0) * width_f;
-            let sy = clamp_finite(source.y, 0.5, 0.0, 1.0) * height_f;
+            let sx = finite_or_clamp(source.x, 0.0, 1.0, 0.5) * width_f;
+            let sy = finite_or_clamp(source.y, 0.0, 1.0, 0.5) * height_f;
             let dir = finite_or(source.direction_deg, 0.0).to_radians();
             let back_x = -dir.cos();
             let back_y = -dir.sin();
@@ -729,7 +732,7 @@ impl TerminalWaterShader {
     }
 
     fn glint_at(&self, x: f32, y: f32, t: f32) -> f32 {
-        let width = clamp_finite(self.glint_width, 8.0, 0.1, 128.0);
+        let width = finite_or_clamp(self.glint_width, 0.1, 128.0, 8.0);
         let angle = finite_or(self.glint_angle_deg, -18.0).to_radians();
         let axis = x * angle.cos() + y * angle.sin() + t * finite_or(self.glint_speed, 1.0) * 12.0;
         let band = (axis / width).fract();
@@ -830,17 +833,17 @@ fn add_single_emitter(
     }
     let width_f = width.max(1) as f32;
     let height_f = height.max(1) as f32 * 2.0;
-    let cx = clamp_finite(emitter.center_x, 0.5, 0.0, 1.0) * width_f;
-    let cy = clamp_finite(emitter.center_y, 0.5, 0.0, 1.0) * height_f;
+    let cx = finite_or_clamp(emitter.center_x, 0.0, 1.0, 0.5) * width_f;
+    let cy = finite_or_clamp(emitter.center_y, 0.0, 1.0, 0.5) * height_f;
     let dx = x - cx;
     let dy = y - cy;
     let r = (dx * dx + dy * dy).sqrt().max(0.001);
-    let amplitude = clamp_finite(emitter.amplitude, 0.6, 0.0, 2.0) * ripple_mix;
-    let speed = clamp_finite(emitter.speed, 8.0, 0.0, 128.0);
-    let frequency = clamp_finite(emitter.frequency, 1.6, 0.01, 32.0);
-    let ring_width = clamp_finite(emitter.ring_width, 2.5, 0.5, 64.0);
-    let decay = clamp_finite(emitter.decay, 0.45, 0.0, 8.0);
-    let damping = clamp_finite(emitter.damping, 0.025, 0.0, 2.0);
+    let amplitude = finite_or_clamp(emitter.amplitude, 0.0, 2.0, 0.6) * ripple_mix;
+    let speed = finite_or_clamp(emitter.speed, 0.0, 128.0, 8.0);
+    let frequency = finite_or_clamp(emitter.frequency, 0.01, 32.0, 1.6);
+    let ring_width = finite_or_clamp(emitter.ring_width, 0.5, 64.0, 2.5);
+    let decay = finite_or_clamp(emitter.decay, 0.0, 8.0, 0.45);
+    let damping = finite_or_clamp(emitter.damping, 0.0, 2.0, 0.025);
     let front = r - age * speed;
     let ring = (-(front * front) / (2.0 * ring_width * ring_width)).exp();
     let envelope = ring * (-decay * age).exp() * (-damping * r).exp();
@@ -860,12 +863,6 @@ fn add_single_emitter(
     envelope.clamp(0.0, 1.0)
 }
 
-fn finite_or(value: f32, fallback: f32) -> f32 {
-    if value.is_finite() { value } else { fallback }
-}
-fn clamp_finite(value: f32, fallback: f32, min: f32, max: f32) -> f32 {
-    finite_or(value, fallback).clamp(min, max)
-}
 fn dot3(a: Vec3, b: Vec3) -> f32 {
     a.x * b.x + a.y * b.y + a.z * b.z
 }
@@ -885,22 +882,6 @@ fn normalize3(x: f32, y: f32, z: f32) -> Vec3 {
         z: z * inv,
     }
 }
-fn smoothstep(edge0: f32, edge1: f32, x: f32) -> f32 {
-    if (edge1 - edge0).abs() <= f32::EPSILON {
-        return if x >= edge1 { 1.0 } else { 0.0 };
-    }
-    let t = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0);
-    t * t * (3.0 - 2.0 * t)
-}
-fn hash01(mut x: u32) -> f32 {
-    x ^= x >> 16;
-    x = x.wrapping_mul(0x7feb_352d);
-    x ^= x >> 15;
-    x = x.wrapping_mul(0x846c_a68b);
-    x ^= x >> 16;
-    x as f32 / u32::MAX as f32
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1060,4 +1041,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_terminal_water_shader.rs</FILE> - <DESC>Layered terminal water/ocean shader</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
