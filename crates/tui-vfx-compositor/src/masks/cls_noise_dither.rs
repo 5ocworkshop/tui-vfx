@@ -1,13 +1,18 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_noise_dither.rs</FILE> - <DESC>NoiseDither mask implementation</DESC>
-// <VERS>VERSION: 1.1.0 - 2025-12-23</VERS>
-// <WCTX>Pipeline configuration fix</WCTX>
-// <CLOG>Added seed and matrix config fields</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — migrate Mask trait to &VfxCellContext</WCTX>
+// <CLOG>1.2.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/t replace positional params (width/height not read by this impl).</CLOG>
 
 use crate::traits::mask::Mask;
 use crate::types::cls_mask_spec::DitherMatrix;
 use std::hash::{Hash, Hasher};
+use tui_vfx_types::VfxCellContext;
 
 /// Dithered noise pattern mask for halftone-style reveal.
+///
+/// Uses Bayer ordered-dithering matrices to produce a spatially structured
+/// reveal pattern. The seed offsets the dither pattern horizontally for
+/// visual variety across multiple simultaneous effects.
 pub struct NoiseDither {
     /// Seed for deterministic randomness
     pub seed: u64,
@@ -141,9 +146,9 @@ impl NoiseDither {
 }
 
 impl Mask for NoiseDither {
-    fn is_visible(&self, x: u16, y: u16, _w: u16, _h: u16, progress: f64) -> bool {
-        let progress = progress as f32;
-        let threshold = self.dither_threshold(x, y);
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool {
+        let progress = ctx.t as f32;
+        let threshold = self.dither_threshold(ctx.local_x, ctx.local_y);
         progress > threshold
     }
 }
@@ -152,34 +157,38 @@ impl Mask for NoiseDither {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_noise_dither_progress_zero_not_visible() {
         let mask = NoiseDither::new(0, DitherMatrix::Bayer4);
         // All thresholds are >= 0, so progress 0 should be invisible everywhere
-        assert!(!mask.is_visible(1, 1, 10, 10, 0.0));
+        assert!(!mask.is_visible(&ctx_at(1, 1, 10, 10, 0.0)));
     }
 
     #[test]
     fn test_noise_dither_progress_one_visible() {
         let mask = NoiseDither::new(0, DitherMatrix::Bayer4);
         // All thresholds are < 1.0, so progress 1.0 should be visible everywhere
-        assert!(mask.is_visible(1, 1, 10, 10, 1.0));
+        assert!(mask.is_visible(&ctx_at(1, 1, 10, 10, 1.0)));
     }
 
     #[test]
     fn test_noise_dither_bayer4_deterministic() {
         let mask = NoiseDither::new(0, DitherMatrix::Bayer4);
         // Same position with same seed should give consistent results
-        let v1 = mask.is_visible(3, 7, 10, 10, 0.5);
-        let v2 = mask.is_visible(3, 7, 10, 10, 0.5);
+        let v1 = mask.is_visible(&ctx_at(3, 7, 10, 10, 0.5));
+        let v2 = mask.is_visible(&ctx_at(3, 7, 10, 10, 0.5));
         assert_eq!(v1, v2);
     }
 
     #[test]
     fn test_noise_dither_bayer8_deterministic() {
         let mask = NoiseDither::new(0, DitherMatrix::Bayer8);
-        let v1 = mask.is_visible(5, 3, 10, 10, 0.5);
-        let v2 = mask.is_visible(5, 3, 10, 10, 0.5);
+        let v1 = mask.is_visible(&ctx_at(5, 3, 10, 10, 0.5));
+        let v2 = mask.is_visible(&ctx_at(5, 3, 10, 10, 0.5));
         assert_eq!(v1, v2);
     }
 
@@ -190,7 +199,7 @@ mod tests {
         let mut visible_count = 0;
         for x in 0..4 {
             for y in 0..4 {
-                if mask.is_visible(x, y, 10, 10, 0.5) {
+                if mask.is_visible(&ctx_at(x, y, 10, 10, 0.5)) {
                     visible_count += 1;
                 }
             }
@@ -201,4 +210,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/masks/cls_noise_dither.rs</FILE> - <DESC>NoiseDither mask implementation</DESC>
-// <VERS>END OF VERSION: 1.1.0 - 2025-12-23</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

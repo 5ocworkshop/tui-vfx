@@ -1,14 +1,14 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_materialize.rs</FILE>
 // <DESC>Organic materialization mask with radial bias and deterministic noise</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Refactor arbitrary-origin surface distance math onto the shared mixed-signals substrate now that configurable origin sampling exists there.</WCTX>
-// <CLOG>1.1.0: use mixed-signals SurfaceDistanceSignal for normalized origin-biased distance instead of open-coding distance-to-corners logic inside Materialize.
-// 1.0.0: Add Materialize mask combining origin-biased distance fields, chunking, deterministic noise, and optional soft edge blending</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — migrate Mask trait to &VfxCellContext</WCTX>
+// <CLOG>1.2.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/width/height/t replace positional params.</CLOG>
 
 use crate::masks::cls_radial::RadialOrigin;
 use crate::traits::mask::Mask;
 use mixed_signals::prelude::{Signal, SignalContext, SurfaceDistanceSignal};
 use std::hash::{Hash, Hasher};
+use tui_vfx_types::VfxCellContext;
 
 /// Organic reveal mask that materializes content from an origin with noisy breakup.
 ///
@@ -71,7 +71,7 @@ impl Materialize {
         SurfaceDistanceSignal::radius_from(origin_x, origin_y).sample_with_context(0.0, &signal_ctx)
     }
 
-    fn threshold(&self, x: u16, y: u16, w: u16, h: u16) -> f32 {
+    pub(crate) fn threshold(&self, x: u16, y: u16, w: u16, h: u16) -> f32 {
         let chunk = self.chunk_size as u16;
         let chunk_x = (x / chunk) * chunk + chunk / 2;
         let chunk_y = (y / chunk) * chunk + chunk / 2;
@@ -82,8 +82,8 @@ impl Materialize {
 }
 
 impl Mask for Materialize {
-    fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool {
-        let progress = progress as f32;
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool {
+        let progress = ctx.t as f32;
         if progress <= 0.0 {
             return false;
         }
@@ -91,7 +91,7 @@ impl Mask for Materialize {
             return true;
         }
 
-        let threshold = self.threshold(x, y, w, h);
+        let threshold = self.threshold(ctx.local_x, ctx.local_y, ctx.width, ctx.height);
         if self.soft_edge {
             let edge = 0.08 + self.noise * 0.12;
             if threshold <= progress - edge {
@@ -112,31 +112,35 @@ impl Mask for Materialize {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn zero_progress_hides_everything() {
         let mask = Materialize::default();
-        assert!(!mask.is_visible(5, 5, 10, 10, 0.0));
+        assert!(!mask.is_visible(&ctx_at(5, 5, 10, 10, 0.0)));
     }
 
     #[test]
     fn full_progress_shows_everything() {
         let mask = Materialize::default();
-        assert!(mask.is_visible(0, 0, 10, 10, 1.0));
-        assert!(mask.is_visible(9, 9, 10, 10, 1.0));
+        assert!(mask.is_visible(&ctx_at(0, 0, 10, 10, 1.0)));
+        assert!(mask.is_visible(&ctx_at(9, 9, 10, 10, 1.0)));
     }
 
     #[test]
     fn center_origin_biases_middle_first() {
         let mask = Materialize::new(RadialOrigin::Center, 3, 1, 0.0, false);
-        assert!(mask.is_visible(5, 5, 10, 10, 0.15));
-        assert!(!mask.is_visible(0, 0, 10, 10, 0.15));
+        assert!(mask.is_visible(&ctx_at(5, 5, 10, 10, 0.15)));
+        assert!(!mask.is_visible(&ctx_at(0, 0, 10, 10, 0.15)));
     }
 
     #[test]
     fn corner_origin_biases_corner_first() {
         let mask = Materialize::new(RadialOrigin::TopLeft, 3, 1, 0.0, false);
-        assert!(mask.is_visible(0, 0, 10, 10, 0.15));
-        assert!(!mask.is_visible(9, 9, 10, 10, 0.15));
+        assert!(mask.is_visible(&ctx_at(0, 0, 10, 10, 0.15)));
+        assert!(!mask.is_visible(&ctx_at(9, 9, 10, 10, 0.15)));
     }
 
     #[test]
@@ -150,4 +154,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/masks/cls_materialize.rs</FILE>
 // <DESC>Organic materialization mask with radial bias and deterministic noise</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

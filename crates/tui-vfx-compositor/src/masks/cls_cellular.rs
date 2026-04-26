@@ -1,11 +1,12 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_cellular.rs</FILE>
 // <DESC>Cellular/organic pattern mask</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>RNG performance optimization</WCTX>
-// <CLOG>Switched to fast_random for ~25x faster per-cell noise generation</CLOG>
+// <VERS>VERSION: 1.3.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — migrate Mask trait to &VfxCellContext</WCTX>
+// <CLOG>1.3.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/width/height/t replace positional params.</CLOG>
 
 use crate::traits::mask::Mask;
 use serde::{Deserialize, Serialize};
+use tui_vfx_types::VfxCellContext;
 
 /// Pattern type for cellular masks.
 #[derive(
@@ -96,8 +97,8 @@ impl Cellular {
 }
 
 impl Mask for Cellular {
-    fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool {
-        let progress = progress as f32;
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool {
+        let progress = ctx.t as f32;
 
         if progress <= 0.0 {
             return false;
@@ -109,14 +110,14 @@ impl Mask for Cellular {
         match self.pattern {
             CellularPattern::Voronoi => {
                 // Find the closest cell center and use its reveal order
-                let centers = self.generate_cell_centers(w, h);
+                let centers = self.generate_cell_centers(ctx.width, ctx.height);
 
                 let mut min_dist = f32::MAX;
                 let mut cell_order = 0.0_f32;
 
                 for (cx, cy, order) in &centers {
-                    let dx = x as f32 - cx;
-                    let dy = y as f32 - cy;
+                    let dx = ctx.local_x as f32 - cx;
+                    let dy = ctx.local_y as f32 - cy;
                     let dist = dx * dx + dy * dy; // Squared distance is fine for comparison
 
                     if dist < min_dist {
@@ -130,17 +131,20 @@ impl Mask for Cellular {
             }
             CellularPattern::Hexagonal => {
                 // Hexagonal grid pattern
-                let cell_size = ((w.max(h) as f32) / (self.cell_count as f32).sqrt()).max(1.0);
+                let cell_size =
+                    ((ctx.width.max(ctx.height) as f32) / (self.cell_count as f32).sqrt())
+                        .max(1.0);
 
                 // Calculate hex grid coordinates
-                let hex_x = (x as f32 / cell_size) as i32;
-                let hex_y = (y as f32 / (cell_size * 0.866)) as i32; // 0.866 ≈ sqrt(3)/2
+                let hex_x = (ctx.local_x as f32 / cell_size) as i32;
+                let hex_y = (ctx.local_y as f32 / (cell_size * 0.866)) as i32; // 0.866 ≈ sqrt(3)/2
 
                 // Offset every other row
                 let effective_x = if hex_y % 2 == 0 { hex_x } else { hex_x + 1 };
 
                 // Use hash of hex coordinates for reveal order
-                let order_hash = hash_value(self.seed, (effective_x as u64) << 16, hex_y as u64);
+                let order_hash =
+                    hash_value(self.seed, (effective_x as u64) << 16, hex_y as u64);
                 let order = order_hash as f32 / u64::MAX as f32;
 
                 order < progress
@@ -148,8 +152,8 @@ impl Mask for Cellular {
             CellularPattern::Organic => {
                 // Organic blob pattern using simplex-like noise approximation
                 let scale = 1.0 / ((self.cell_count as f32).sqrt() * 2.0);
-                let nx = x as f32 * scale;
-                let ny = y as f32 * scale;
+                let nx = ctx.local_x as f32 * scale;
+                let ny = ctx.local_y as f32 * scale;
 
                 // Simple pseudo-noise based on position and seed
                 let noise = pseudo_noise(nx, ny, self.seed);
@@ -214,24 +218,28 @@ fn corner_noise(x: i32, y: i32, seed: u64) -> f32 {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_cellular_at_zero_progress() {
         let mask = Cellular::default();
-        assert!(!mask.is_visible(5, 5, 10, 10, 0.0));
+        assert!(!mask.is_visible(&ctx_at(5, 5, 10, 10, 0.0)));
     }
 
     #[test]
     fn test_cellular_at_full_progress() {
         let mask = Cellular::default();
-        assert!(mask.is_visible(0, 0, 10, 10, 1.0));
-        assert!(mask.is_visible(9, 9, 10, 10, 1.0));
+        assert!(mask.is_visible(&ctx_at(0, 0, 10, 10, 1.0)));
+        assert!(mask.is_visible(&ctx_at(9, 9, 10, 10, 1.0)));
     }
 
     #[test]
     fn test_cellular_deterministic() {
         let mask = Cellular::voronoi(42, 8);
-        let result1 = mask.is_visible(5, 5, 20, 20, 0.5);
-        let result2 = mask.is_visible(5, 5, 20, 20, 0.5);
+        let result1 = mask.is_visible(&ctx_at(5, 5, 20, 20, 0.5));
+        let result2 = mask.is_visible(&ctx_at(5, 5, 20, 20, 0.5));
         assert_eq!(result1, result2);
     }
 
@@ -242,9 +250,9 @@ mod tests {
         let organic = Cellular::organic(0, 16);
 
         // All should work without panicking
-        let _ = voronoi.is_visible(5, 5, 20, 20, 0.5);
-        let _ = hex.is_visible(5, 5, 20, 20, 0.5);
-        let _ = organic.is_visible(5, 5, 20, 20, 0.5);
+        let _ = voronoi.is_visible(&ctx_at(5, 5, 20, 20, 0.5));
+        let _ = hex.is_visible(&ctx_at(5, 5, 20, 20, 0.5));
+        let _ = organic.is_visible(&ctx_at(5, 5, 20, 20, 0.5));
     }
 
     #[test]
@@ -256,7 +264,7 @@ mod tests {
 
         for y in 0..10 {
             for x in 0..10 {
-                if mask.is_visible(x, y, 10, 10, 0.5) {
+                if mask.is_visible(&ctx_at(x, y, 10, 10, 0.5)) {
                     visible_count += 1;
                 } else {
                     hidden_count += 1;
@@ -272,4 +280,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/masks/cls_cellular.rs</FILE>
 // <DESC>Cellular/organic pattern mask</DESC>
-// <VERS>END OF VERSION: 1.2.0</VERS>
+// <VERS>END OF VERSION: 1.3.0</VERS>

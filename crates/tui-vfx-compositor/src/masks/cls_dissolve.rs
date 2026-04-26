@@ -1,11 +1,12 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_dissolve.rs</FILE>
 // <DESC>Dissolve mask using deterministic noise</DESC>
-// <VERS>VERSION: 1.1.0 - 2025-12-23</VERS>
-// <WCTX>Pipeline configuration fix</WCTX>
-// <CLOG>Added chunk_size support for grouped pixel dissolve</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — migrate Mask trait to &VfxCellContext</WCTX>
+// <CLOG>1.2.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/t replace positional params (width/height not read by this impl).</CLOG>
 
 use crate::traits::mask::Mask;
 use std::hash::{Hash, Hasher};
+use tui_vfx_types::VfxCellContext;
 
 /// Dissolve mask that reveals/hides pixels based on deterministic noise.
 ///
@@ -39,17 +40,17 @@ impl Dissolve {
 }
 
 impl Mask for Dissolve {
-    fn is_visible(&self, x: u16, y: u16, _w: u16, _h: u16, progress: f64) -> bool {
-        if progress <= 0.0 {
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool {
+        if ctx.t <= 0.0 {
             return false;
         }
-        if progress >= 1.0 {
+        if ctx.t >= 1.0 {
             return true;
         }
 
         // Group pixels by chunk_size for chunkier dissolve
-        let chunk_x = x / self.chunk_size as u16;
-        let chunk_y = y / self.chunk_size as u16;
+        let chunk_x = ctx.local_x / self.chunk_size as u16;
+        let chunk_y = ctx.local_y / self.chunk_size as u16;
 
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         chunk_x.hash(&mut hasher);
@@ -60,7 +61,7 @@ impl Mask for Dissolve {
         // Normalize to [0, 1]
         let val = (hash as f64) / (u64::MAX as f64);
 
-        val < progress
+        val < ctx.t
     }
 }
 
@@ -68,23 +69,27 @@ impl Mask for Dissolve {
 mod tests {
     use super::*;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_dissolve_progress_zero_not_visible() {
         let mask = Dissolve::new(42, 1);
-        assert!(!mask.is_visible(0, 0, 10, 10, 0.0));
+        assert!(!mask.is_visible(&ctx_at(0, 0, 10, 10, 0.0)));
     }
 
     #[test]
     fn test_dissolve_progress_one_visible() {
         let mask = Dissolve::new(42, 1);
-        assert!(mask.is_visible(0, 0, 10, 10, 1.0));
+        assert!(mask.is_visible(&ctx_at(0, 0, 10, 10, 1.0)));
     }
 
     #[test]
     fn test_dissolve_deterministic() {
         let mask = Dissolve::new(42, 1);
-        let v1 = mask.is_visible(3, 7, 10, 10, 0.5);
-        let v2 = mask.is_visible(3, 7, 10, 10, 0.5);
+        let v1 = mask.is_visible(&ctx_at(3, 7, 10, 10, 0.5));
+        let v2 = mask.is_visible(&ctx_at(3, 7, 10, 10, 0.5));
         assert_eq!(v1, v2); // Same seed + position = same result
     }
 
@@ -92,8 +97,8 @@ mod tests {
     fn test_dissolve_chunk_grouping() {
         let mask = Dissolve::new(42, 2);
         // Pixels (0,0) and (1,1) both map to chunk (0,0)
-        let a = mask.is_visible(0, 0, 10, 10, 0.5);
-        let b = mask.is_visible(1, 1, 10, 10, 0.5);
+        let a = mask.is_visible(&ctx_at(0, 0, 10, 10, 0.5));
+        let b = mask.is_visible(&ctx_at(1, 1, 10, 10, 0.5));
         assert_eq!(a, b);
     }
 
@@ -105,7 +110,9 @@ mod tests {
         let mut differ = false;
         for x in 0..5 {
             for y in 0..5 {
-                if mask1.is_visible(x, y, 10, 10, 0.5) != mask2.is_visible(x, y, 10, 10, 0.5) {
+                if mask1.is_visible(&ctx_at(x, y, 10, 10, 0.5))
+                    != mask2.is_visible(&ctx_at(x, y, 10, 10, 0.5))
+                {
                     differ = true;
                     break;
                 }
@@ -117,4 +124,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/masks/cls_dissolve.rs</FILE>
 // <DESC>Dissolve mask using deterministic noise</DESC>
-// <VERS>END OF VERSION: 1.1.0 - 2025-12-23</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_mask.rs</FILE> - <DESC>Prepared mask enum for pipeline rendering</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Ergonomic reveal/hide schema for intuitive mask direction semantics</WCTX>
-// <CLOG>Use resolve_wipe() to handle reveal/hide/direction fields and pass invert flag</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — migrate Mask dispatcher to build VfxCellContext once per dispatch</WCTX>
+// <CLOG>1.2.0: MINOR — PreparedMask::is_visible now takes &VfxCellContext and delegates to trait impls; all 11 match arms updated. Tests build ctx once and reuse &ctx.</CLOG>
 
 use crate::masks::{
     cls_blinds::Blinds, cls_cellular::Cellular, cls_checkers::Checkers, cls_diamond::Diamond,
@@ -11,6 +11,7 @@ use crate::masks::{
 use crate::traits::mask::Mask;
 use crate::types::cls_mask_spec::MaskSpec;
 use smallvec::SmallVec;
+use tui_vfx_types::VfxCellContext;
 
 pub(crate) enum PreparedMask {
     None,
@@ -28,27 +29,20 @@ pub(crate) enum PreparedMask {
 }
 
 impl PreparedMask {
-    pub(crate) fn is_visible(
-        &self,
-        local_x: u16,
-        local_y: u16,
-        width: u16,
-        height: u16,
-        t: f64,
-    ) -> bool {
+    pub(crate) fn is_visible(&self, ctx: &VfxCellContext) -> bool {
         match self {
             PreparedMask::None => true,
-            PreparedMask::Wipe(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::Dissolve(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::Checkers(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::Blinds(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::Iris(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::Diamond(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::Materialize(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::NoiseDither(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::PathReveal(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::Radial(mask) => mask.is_visible(local_x, local_y, width, height, t),
-            PreparedMask::Cellular(mask) => mask.is_visible(local_x, local_y, width, height, t),
+            PreparedMask::Wipe(mask) => mask.is_visible(ctx),
+            PreparedMask::Dissolve(mask) => mask.is_visible(ctx),
+            PreparedMask::Checkers(mask) => mask.is_visible(ctx),
+            PreparedMask::Blinds(mask) => mask.is_visible(ctx),
+            PreparedMask::Iris(mask) => mask.is_visible(ctx),
+            PreparedMask::Diamond(mask) => mask.is_visible(ctx),
+            PreparedMask::Materialize(mask) => mask.is_visible(ctx),
+            PreparedMask::NoiseDither(mask) => mask.is_visible(ctx),
+            PreparedMask::PathReveal(mask) => mask.is_visible(ctx),
+            PreparedMask::Radial(mask) => mask.is_visible(ctx),
+            PreparedMask::Cellular(mask) => mask.is_visible(ctx),
         }
     }
 
@@ -240,16 +234,18 @@ mod tests {
         });
 
         assert_eq!(prepared.name(), "Wipe");
+        let ctx_visible = VfxCellContext::new(2, 0, 5, 1, 0, 0, 1.0);
+        let ctx_hidden = VfxCellContext::new(2, 0, 5, 1, 0, 0, 0.0);
         assert!(
-            prepared.is_visible(2, 0, 5, 1, 1.0),
+            prepared.is_visible(&ctx_visible),
             "hide wipes should be fully visible at exit start"
         );
         assert!(
-            !prepared.is_visible(2, 0, 5, 1, 0.0),
+            !prepared.is_visible(&ctx_hidden),
             "hide wipes should be hidden at exit end after prepare_mask resolves invert=true"
         );
     }
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_mask.rs</FILE> - <DESC>Prepared mask enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

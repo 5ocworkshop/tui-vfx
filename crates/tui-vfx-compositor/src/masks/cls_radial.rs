@@ -1,11 +1,11 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_radial.rs</FILE>
 // <DESC>Radial mask revealing from configurable origin</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Refactor arbitrary-origin radial reveal math onto the shared mixed-signals surface-distance substrate now that configurable origin sampling exists there.</WCTX>
-// <CLOG>1.1.0: use mixed-signals SurfaceDistanceSignal for normalized origin-relative radial distance instead of open-coding distance-to-corners logic locally.
-// 1.0.0: Initial implementation of Radial mask</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — migrate Mask trait to &VfxCellContext</WCTX>
+// <CLOG>1.2.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/width/height/t replace positional params.</CLOG>
 
 use crate::traits::mask::Mask;
+use tui_vfx_types::VfxCellContext;
 use mixed_signals::prelude::{Signal, SignalContext, SurfaceDistanceSignal};
 use serde::{Deserialize, Serialize};
 
@@ -85,8 +85,8 @@ impl Radial {
 }
 
 impl Mask for Radial {
-    fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool {
-        let progress = progress as f32;
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool {
+        let progress = ctx.t as f32;
 
         if progress <= 0.0 {
             return false;
@@ -97,8 +97,8 @@ impl Mask for Radial {
 
         let (origin_x, origin_y) = self.origin.as_fraction();
         let signal_ctx = SignalContext::new(0, 0)
-            .with_dimensions(w, h)
-            .with_cell_position(x, y);
+            .with_dimensions(ctx.width, ctx.height)
+            .with_cell_position(ctx.local_x, ctx.local_y);
         let normalized_dist = SurfaceDistanceSignal::radius_from(origin_x, origin_y)
             .sample_with_context(0.0, &signal_ctx);
 
@@ -128,6 +128,10 @@ mod tests {
     use crate::masks::cls_wipe::Wipe;
     use crate::types::cls_mask_spec::WipeDirection;
 
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
+
     #[test]
     fn test_radial_origin_fractions() {
         assert_eq!(RadialOrigin::Center.as_fraction(), (0.5, 0.5));
@@ -145,15 +149,15 @@ mod tests {
     fn test_center_at_zero_progress() {
         let mask = Radial::from_center();
         // At 0% progress, nothing visible
-        assert!(!mask.is_visible(5, 5, 10, 10, 0.0));
+        assert!(!mask.is_visible(&ctx_at(5, 5, 10, 10, 0.0)));
     }
 
     #[test]
     fn test_center_at_full_progress() {
         let mask = Radial::from_center();
         // At 100% progress, everything visible
-        assert!(mask.is_visible(0, 0, 10, 10, 1.0));
-        assert!(mask.is_visible(9, 9, 10, 10, 1.0));
+        assert!(mask.is_visible(&ctx_at(0, 0, 10, 10, 1.0)));
+        assert!(mask.is_visible(&ctx_at(9, 9, 10, 10, 1.0)));
     }
 
     #[test]
@@ -162,17 +166,17 @@ mod tests {
         // At partial progress, center should be visible before corners
         // For a 10x10 grid, center is (5, 5)
         // At low progress, center visible but corners not
-        assert!(mask.is_visible(5, 5, 10, 10, 0.1));
-        assert!(!mask.is_visible(0, 0, 10, 10, 0.1));
+        assert!(mask.is_visible(&ctx_at(5, 5, 10, 10, 0.1)));
+        assert!(!mask.is_visible(&ctx_at(0, 0, 10, 10, 0.1)));
     }
 
     #[test]
     fn test_corner_origin() {
         let mask = Radial::from_corner(RadialOrigin::TopLeft);
         // At partial progress, top-left should be visible first
-        assert!(mask.is_visible(0, 0, 10, 10, 0.1));
+        assert!(mask.is_visible(&ctx_at(0, 0, 10, 10, 0.1)));
         // Far corner should not be visible at low progress
-        assert!(!mask.is_visible(9, 9, 10, 10, 0.1));
+        assert!(!mask.is_visible(&ctx_at(9, 9, 10, 10, 0.1)));
     }
 
     #[test]
@@ -184,11 +188,11 @@ mod tests {
         // hide top-center because it is outside the circular threshold, while
         // a center-out wipe reveals it immediately because only horizontal
         // distance matters.
-        assert!(!radial.is_visible(5, 0, 11, 11, 0.5));
-        assert!(wipe.is_visible(5, 0, 11, 11, 0.5));
+        assert!(!radial.is_visible(&ctx_at(5, 0, 11, 11, 0.5)));
+        assert!(wipe.is_visible(&ctx_at(5, 0, 11, 11, 0.5)));
     }
 }
 
 // <FILE>tui-vfx-compositor/src/masks/cls_radial.rs</FILE>
 // <DESC>Radial mask revealing from configurable origin</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

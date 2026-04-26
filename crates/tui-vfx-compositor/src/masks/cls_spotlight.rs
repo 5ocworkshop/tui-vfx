@@ -1,11 +1,10 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_spotlight.rs</FILE> - <DESC>Spotlight (Iris) mask implementation</DESC>
-// <VERS>VERSION: 1.3.0 - 2026-04-23</VERS>
-// <WCTX>The earlier substrate refactor used the cell-space basis, but iris/spotlight semantics actually need the continuous surface-space basis to preserve the old reveal geometry on even-sized surfaces.</WCTX>
-// <CLOG>1.3.0: switch spotlight/iris distance evaluation onto the mixed-signals surface-space basis and add regression coverage against the pre-refactor formulas so circle/diamond/box semantics stay stable.
-// 1.2.0: use mixed-signals centered coordinate leaves and radial distance for spotlight distance evaluation instead of open-coding center-relative coordinate math.
-// 1.1.0: Added shape and soft_edge config fields</CLOG>
+// <VERS>VERSION: 1.4.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — migrate Mask trait to &VfxCellContext</WCTX>
+// <CLOG>1.4.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/width/height/t replace positional params.</CLOG>
 
 use crate::traits::mask::Mask;
+use tui_vfx_types::VfxCellContext;
 use crate::types::cls_mask_spec::IrisShape;
 use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
 
@@ -55,11 +54,11 @@ impl Spotlight {
 }
 
 impl Mask for Spotlight {
-    fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool {
-        let progress = progress as f32;
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool {
+        let progress = ctx.t as f32;
 
-        let dist = self.distance(x, y, w, h);
-        let max_dim = w.max(h) as f32;
+        let dist = self.distance(ctx.local_x, ctx.local_y, ctx.width, ctx.height);
+        let max_dim = ctx.width.max(ctx.height) as f32;
         let max_radius = max_dim * 0.75; // Reach corners approx
         let current_radius = max_radius * progress;
 
@@ -78,6 +77,10 @@ mod tests {
     use super::*;
     use crate::masks::cls_wipe::Wipe;
     use crate::types::cls_mask_spec::WipeDirection;
+
+    fn ctx_at(x: u16, y: u16, w: u16, h: u16, t: f64) -> VfxCellContext {
+        VfxCellContext::new(x, y, w, h, 0, 0, t)
+    }
 
     fn old_distance(shape: IrisShape, x: u16, y: u16, w: u16, h: u16) -> f32 {
         let cx = w as f32 / 2.0;
@@ -118,32 +121,32 @@ mod tests {
     fn test_spotlight_center_progress_zero_not_visible() {
         let mask = Spotlight::new(IrisShape::Circle, false);
         // Center of 10x10 is (5,5), but at progress=0 radius=0
-        assert!(!mask.is_visible(5, 5, 10, 10, 0.0));
+        assert!(!mask.is_visible(&ctx_at(5, 5, 10, 10, 0.0)));
     }
 
     #[test]
     fn test_spotlight_center_progress_one_visible() {
         let mask = Spotlight::new(IrisShape::Circle, false);
-        assert!(mask.is_visible(5, 5, 10, 10, 1.0));
+        assert!(mask.is_visible(&ctx_at(5, 5, 10, 10, 1.0)));
     }
 
     #[test]
     fn test_spotlight_circle_shape() {
         let mask = Spotlight::new(IrisShape::Circle, false);
         // At progress 0.5, radius covers center region
-        assert!(mask.is_visible(5, 5, 10, 10, 0.5)); // Center visible
+        assert!(mask.is_visible(&ctx_at(5, 5, 10, 10, 0.5))); // Center visible
     }
 
     #[test]
     fn test_spotlight_diamond_shape() {
         let mask = Spotlight::new(IrisShape::Diamond, false);
-        assert!(mask.is_visible(5, 5, 10, 10, 0.5)); // Center visible
+        assert!(mask.is_visible(&ctx_at(5, 5, 10, 10, 0.5))); // Center visible
     }
 
     #[test]
     fn test_spotlight_box_shape() {
         let mask = Spotlight::new(IrisShape::Box, false);
-        assert!(mask.is_visible(5, 5, 10, 10, 0.5)); // Center visible
+        assert!(mask.is_visible(&ctx_at(5, 5, 10, 10, 0.5))); // Center visible
     }
 
     #[test]
@@ -155,8 +158,8 @@ mod tests {
         // soft edge width = 7.5 * 0.1 = 0.75
         // A point at distance ~4 from center should be visible with soft but not hard
         // Distance from (5,5) to (9,5) is 4
-        let hard_vis = hard.is_visible(9, 5, 10, 10, 0.5);
-        let soft_vis = soft.is_visible(9, 5, 10, 10, 0.5);
+        let hard_vis = hard.is_visible(&ctx_at(9, 5, 10, 10, 0.5));
+        let soft_vis = soft.is_visible(&ctx_at(9, 5, 10, 10, 0.5));
         // Soft edge should make more positions visible
         assert!(soft_vis || !hard_vis); // If hard is visible, soft must be too
     }
@@ -179,7 +182,7 @@ mod tests {
                 for y in 0..10_u16 {
                     for x in 0..10_u16 {
                         assert_eq!(
-                            mask.is_visible(x, y, 10, 10, progress),
+                            mask.is_visible(&ctx_at(x, y, 10, 10, progress)),
                             old_visible(shape, soft_edge, x, y, 10, 10, progress),
                             "shape={shape:?} soft_edge={soft_edge} x={x} y={y} progress={progress}"
                         );
@@ -194,8 +197,8 @@ mod tests {
         let spotlight = Spotlight::new(IrisShape::Circle, false);
         let wipe = Wipe::new(WipeDirection::HorizontalCenterOut, false);
 
-        assert!(!spotlight.is_visible(5, 0, 11, 11, 0.5));
-        assert!(wipe.is_visible(5, 0, 11, 11, 0.5));
+        assert!(!spotlight.is_visible(&ctx_at(5, 0, 11, 11, 0.5)));
+        assert!(wipe.is_visible(&ctx_at(5, 0, 11, 11, 0.5)));
     }
 
     #[test]
@@ -205,10 +208,10 @@ mod tests {
 
         // Diamond reveal depends on both axes; a horizontal center-out wipe
         // reveals the full center column immediately.
-        assert!(!spotlight.is_visible(5, 0, 11, 11, 0.5));
-        assert!(wipe.is_visible(5, 0, 11, 11, 0.5));
+        assert!(!spotlight.is_visible(&ctx_at(5, 0, 11, 11, 0.5)));
+        assert!(wipe.is_visible(&ctx_at(5, 0, 11, 11, 0.5)));
     }
 }
 
 // <FILE>tui-vfx-compositor/src/masks/cls_spotlight.rs</FILE> - <DESC>Spotlight (Iris) mask implementation</DESC>
-// <VERS>END OF VERSION: 1.3.0 - 2026-04-23</VERS>
+// <VERS>END OF VERSION: 1.4.0</VERS>

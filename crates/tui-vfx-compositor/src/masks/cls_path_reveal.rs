@@ -1,10 +1,10 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_path_reveal.rs</FILE> - <DESC>Path-based reveal mask</DESC>
-// <VERS>VERSION: 1.1.0 - 2026-04-23</VERS>
-// <WCTX>Refactor center-based polar reveal math onto the shared mixed-signals surface-space distance and angle substrate now that both primitives exist.</WCTX>
-// <CLOG>1.1.0: use mixed-signals SurfaceDistanceSignal and SurfaceAngleSignal for center-based polar geometry instead of open-coding radius/atan2 math locally.
-// 1.0.0: Initial implementation with Spiral path support</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>Slice 6.6 §F.3 — migrate Mask trait to &VfxCellContext</WCTX>
+// <CLOG>1.2.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/width/height/t replace positional params.</CLOG>
 
 use crate::traits::mask::Mask;
+use tui_vfx_types::VfxCellContext;
 use mixed_signals::prelude::{Signal, SignalContext, SurfaceAngleSignal, SurfaceDistanceSignal};
 use std::f32::consts::{PI, TAU};
 
@@ -180,9 +180,9 @@ impl PathReveal {
 }
 
 impl Mask for PathReveal {
-    fn is_visible(&self, x: u16, y: u16, w: u16, h: u16, progress: f64) -> bool {
-        let progress = progress as f32;
-        let threshold = self.reveal_threshold(x, y, w, h);
+    fn is_visible(&self, ctx: &VfxCellContext) -> bool {
+        let progress = ctx.t as f32;
+        let threshold = self.reveal_threshold(ctx.local_x, ctx.local_y, ctx.width, ctx.height);
 
         if self.soft_edge {
             // Soft edge: cells near the current progress get partial visibility
@@ -283,4 +283,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/masks/cls_path_reveal.rs</FILE> - <DESC>Path-based reveal mask</DESC>
-// <VERS>END OF VERSION: 1.1.0 - 2026-04-23</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>
