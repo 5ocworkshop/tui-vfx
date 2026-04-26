@@ -1,11 +1,11 @@
 <!-- <FILE>docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md</FILE> - <DESC>Reviewed implementation plan for shared circular mechanical content cycles powering odometer drums, Solari flap stacks, slot reels, and explicit old/new Pair transitions</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>Mark Phases 1, 2, 3, and 5 complete (Odometer cycle path lands with vocabulary, route resolver, runtime, debug recipes, and docs); Phase 4 (SplitFlap migration) deferred to a dedicated follow-on session.</WCTX> -->
-<!-- <CLOG>0.4.0: Phases 1-3 + 5 marked complete with commit hashes; Phase 4 explicitly deferred with sub-plan notes for the SplitFlap surface; Intention 36 (Line 3x3 default font) added as the canonical glyph-table home in tui-vfx-content. 0.3.0: state per-tile settle composition with cascade; define cycle-level Spring vs legacy SplitFlap spring_settle precedence and a validator rejection for the combo; remove every "accepted but inert" allowance — schema fields must ship fully wired in their introducing phase.</CLOG> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>Add Phase 6 (font as a bindable field via the existing requires_assets / requires_bindings declaration shape locked by sibling's L2 design) and Phase 7 breadcrumb (rocketsplash .rss image painted onto a rect via recipe). Loopback is required per Intention 37 — no production-only carve-outs.</WCTX> -->
+<!-- <CLOG>0.5.0: introduce Phase 6 (font binding) and Phase 7 breadcrumb (rocketsplash asset binding) with five sub-slices; align with sibling's locked L2 shape — declarations live in the existing requires_bindings / requires_assets blocks; loopback is required per Intention 37 (no production-only bindings); snake_case for binding names + sentinels; validator near-miss check on undeclared bindings via Levenshtein. Forward-compat sentinel pattern (default_<noun>, e.g. default_font / default_logo) captured for v2 player_default delegation. 0.4.0: Phases 1-3 + 5 complete; Phase 4 explicitly deferred. 0.3.0: per-tile settle composition with cascade; cycle-level Spring vs legacy spring_settle precedence; remove every "accepted but inert" allowance.</CLOG> -->
 
 # Mechanical circular content cycles: drums, flap stacks, and reels
 
-## Implementation status (v0.4.0)
+## Implementation status (v0.5.0)
 
 | Phase | Scope | Status | Landing commits |
 | --- | --- | --- | --- |
@@ -13,8 +13,11 @@
 | 2 | Route resolver (preset, normalize, weighted shuffle, resolve, route_between) | **Complete** | `145ff36` |
 | 3 | Odometer schema attach + cycle rendering + cascade + per-tile settle | **Complete** | `c9a0182` |
 | — | Intention 36 + Line 3x3 default font (canonical glyph table home) | **Complete** | `b23838e` |
+| — | Intention 37 + loopback-required rule (every binding declaration is preview-playable) | **Complete** | `fe4db42` |
 | 5 | Docs (CAPABILITIES_REFERENCE, capabilities.toml, V3 schema draft) + debug recipes (3 new) + font assets | **Complete** | tui-vfx `91a1c0a`; tui-vfx-recipes `50ab1c1` |
-| 4 | SplitFlap schema attach + cycle rendering + Spring/spring_settle precedence | **Deferred** | Sub-plan in this doc; warrants a dedicated session given `cls_split_flap.rs` complexity (1642 LOC, 9-variant dispersion enum, hinge frames, rolling-flip, flicker). |
+| 4 | SplitFlap schema attach + cycle rendering + Spring/spring_settle precedence | **Deferred** | Sub-plan below. Warrants a dedicated session given `cls_split_flap.rs` complexity (1642 LOC, 9-variant dispersion enum, hinge frames, rolling-flip, flicker). |
+| 6 | Font as a bindable field via existing `requires_assets` / call-site `BindableString` | **Planned** | Sub-plan below. Migrates today's literal-glyph recipes to semantic form. Sits under the binding-loopback work (sibling's L2). |
+| 7 | Asset as a bindable field (rocketsplash `.rss` images painted onto a rect via recipe) | **Planned (breadcrumb)** | Sub-plan below. Real driver today; runtime already exists in `tui-vfx-content/src/sources/cls_rocketsplash_image.rs` but no recipe surface loads one. Reuses the same shape as Phase 6. |
 
 Phase 4 follow-up scoping notes:
 
@@ -22,6 +25,124 @@ Phase 4 follow-up scoping notes:
 - Multi-cell mechanical (2/4/6/8) follows in a sub-phase: per-tile routes feed adjacent route faces into the existing `split_flap_tile_frame` center-hinge helper.
 - Decision still needed: when `mechanical` is set, do legacy `cascade` / `dispersion` fields still apply, or does mechanical own all timing? Current lean: mechanical wins; non-Simultaneous mechanical cascade overrides legacy dispersion.
 - Tests must lock byte-equivalent legacy 1x1 snapshots for absent-mechanical recipes.
+
+## Phase 6 sub-plan — font as a bindable field
+
+**The problem.** The three debug recipes that landed in Phase 5 (`content_odometer_3x3_count.json`, `content_odometer_decimal_preset_carry.json`, `content_odometer_slot_reel.json`) carry their visual size as **literal multi-line glyph strings** in `mechanical.source.ordered.faces`. That bakes the player's font choice into every recipe; swapping the project default would require editing every recipe. Phase 6 lifts the font into a binding so recipes stay semantic ("count 099 → 100") and the player owns the glyph-table mapping.
+
+**The declaration home.** Per sibling's L2 lock, the recipe's binding contract lives in the existing top-level blocks at the recipe envelope:
+
+- `requires_bindings` — typed structured-value bindings (`u16`, `f32` in v1; per-entry `description` and `loopback`).
+- `requires_assets` — asset references with `type: "image" | "font"`, `format`, `canonical_path` (already exists in the schema).
+- `requires_tokens` — mustache-style template substitutions (already exists).
+
+Phase 6 lands font under **`requires_assets`**, since the canonical example for that block already shows a font/image slot shape. The pipeline-side reference syntax (`font: { "asset": "drum_font" }` vs. `font: "{{drum_font}}"` vs. another shape) is sibling's L2 call to type — Phase 6 uses whatever shape lands there. **Phase 6 does not introduce a parallel `bindings:` block.**
+
+**Authoring shape (target — exact reference syntax pending L2 lock):**
+
+```json
+"requires_assets": {
+  "drum_font": {
+    "type": "font",
+    "format": "rsf",
+    "canonical_path": "fonts/line-3x3.rsf",
+    "description": "Font for digit faces."
+  }
+},
+"config": {
+  "content": {
+    "effect": {
+      "type": "odometer",
+      "tile_width": 3, "tile_height": 3,
+      "from_message": "099", "message": "100",
+      "mechanical": {
+        "source": {
+          "type": "preset",
+          "preset": "decimal_digits",
+          "font": <reference to drum_font — exact shape per L2>
+        },
+        "route":   { "direction": "numeric_delta" },
+        "cascade": { "type": "numeric_carry", "stagger_fraction": 0.4, "unchanged": "hold" },
+        "settle":  { "type": "spring", "overshoot": 0.16, "settle_fraction": 0.2 }
+      }
+    }
+  }
+}
+```
+
+The recipe says nothing about line-3x3 in the call site; it names the asset slot. The player's `FontRegistry` knows what `canonical_path` resolves to today; tomorrow that mapping changes once and every recipe inherits.
+
+**Loopback is required (Intention 37).** Every recipe that consumes a bindable font asset must yield an effective loopback at validation time. For `requires_assets` entries, the canonical_path serves as the implicit loopback today; once sibling's L2 lands typed `loopback` per entry, recipes can author it explicitly and the strict-contracts gate enforces presence. Production-only font slots are not a valid category — every recipe ships preview-playable through the project's default font (Intention 36 + 37 in concert).
+
+**Forward-compat sentinel pattern.** Sibling's L2 brief reserves a v2 form `loopback: { "player_default": "default_font" }` that delegates fallback selection to the player's authority instead of hardcoding asset names in the recipe. Phase 6 recipes today carry the literal `canonical_path` form and migrate to `player_default` when v2 ships. Reserved sentinel naming convention: `default_<noun>` snake_case (`default_font`, `default_logo`, future `default_<kind>`); case-sensitive lookups make typos silent failures, so the validator near-miss check (Levenshtein over declared names + known sentinels) ships as part of L2 strict-contracts.
+
+**Sub-slices** (each independently shippable):
+
+| # | Slice | Scope |
+| --- | --- | --- |
+| 6.1 | `BindableString` type | New file `tui-vfx-style/src/models/cls_bindable_string.rs` mirroring `BindableU16`'s shape: `Literal(String) \| Binding(String)`, lenient deserialization (bare string accepted as `Literal`), `evaluate(&ShaderRuntimeParams) -> Option<&str>`, `ConfigSchema` derive. Inline tests for serde roundtrip, lenient bare-string parse, binding lookup against `ShaderRuntimeParams`. Used at the call site (e.g. `MechanicalContentSource::Preset.font`); the declaration home stays `requires_assets`. |
+| 6.2 | `FontRegistry` + `FontGlyphTable` | New surface in `tui-vfx-content/src/fonts/`: `FontGlyphTable` is the glyph-table contract (the existing Line 3x3 table satisfies it); `FontRegistry` holds `name -> FontGlyphTable` with one named entry as the default per Intention 36. `resolve(name)` short-circuits the `default_font` sentinel to the registered default once the v2 player_default form lands; v1 resolves by name from the `requires_assets` entry's canonical_path. Embedded Line 3x3 registers automatically; host code can register additional `.rsf`-backed tables. |
+| 6.3 | `font: Option<BindableString>` on `MechanicalContentSource::Preset` | Schema-bearing field, optional with `skip_serializing_if = Option::is_none`. When None, current behavior (1-cell digit faces). When Some, runtime calls `font.evaluate(&runtime_params)` → `FontRegistry::resolve(...)` → glyph table → expanded multi-line digit faces sized to the tile. `resolve_mechanical_cycle` gains `&dyn FontResolver` and `&ShaderRuntimeParams` parameters; existing call sites pass an empty resolver + empty params for byte-identical behavior on Phase 3 paths. |
+| 6.4 | Recipe migration | Rewrite the three Phase 5 recipes to declare `drum_font` in `requires_assets` (with canonical_path pointing at the line-3x3 .rsf) and consume it at the call site via the L2-locked reference shape. The literal-glyph versions move to a `recyclebin/recipes/` mirror so the visual reference stays available for diffing. |
+| 6.5 | Loopback integration (gated on sibling's L2 phase) | When sibling's L2 ships (typed `loopback` field on `requires_bindings` / `requires_assets` + strict-contracts gate enforcing Intention 37), Phase 6's recipes get full lookup precedence: host > loopback > resolver default. Until then, the canonical_path serves as the implicit loopback and recipes work as static config. Validator near-miss check (Levenshtein on undeclared binding/asset names) lands as part of L2's strict-contracts surface. |
+
+**Open questions Phase 6 closes only when implementation starts:**
+
+1. Exact pipeline-side reference syntax for a `requires_assets` entry — `{"asset": "drum_font"}` (tagged), `"{{drum_font}}"` (token), bare `"drum_font"` (loader-aware), or another shape. Sibling's L2 types this; Phase 6 adopts whatever lands.
+2. Should `MechanicalContentSource::Ordered` and `::Weighted` also gain a `font` field, or is `font` Preset-only? Lean: Preset-only initially (preset glyph expansion is the use case driving this); Ordered/Weighted carry literal face strings already, where the font choice is implicit in the strings the author writes.
+3. Does the `FontRegistry` belong in `tui-vfx-content` or in a new `tui-vfx-fonts` crate? Per Intention 36 rule 5: `tui-vfx-content` until a second consumer arrives; promote later if/when a sibling crate genuinely needs the registry independent of content effects.
+
+**Out of scope for Phase 6 (YAGNI).** Color, seed, locale, and easing bindings remain unbuilt — no real drivers today. The shape we're landing — `BindableString` at call sites + `requires_assets` for declarations — generalizes naturally when a real driver for another kind shows up. Phase 7 (asset binding) is the next real driver and gets its own breadcrumb sub-plan below.
+
+## Phase 7 sub-plan — asset binding for rocketsplash images on a rect (BREADCRUMB)
+
+**Status: deferred, breadcrumb only.** Real driver, no scheduled session yet. Captured here so the design doesn't get reinvented when the time comes.
+
+**The real case.** A recipe wants to load a rocketsplash `.rss` image and paint it onto a rect — a logo on a splash surface, an empty-state graphic, a sprite face on a slot reel — concrete cases that exist or are imminent. The runtime is already there: `tui-vfx-content/src/sources/cls_rocketsplash_image.rs` wraps `rocketsplash_rt::Splash::from_bytes(...)` and exposes `blit_into_grid(grid, x, y)`. What's missing is a recipe surface that names an asset and a resolver that turns the name into bytes.
+
+**Authoring shape (target — exact reference syntax pending L2 lock):**
+
+```json
+"requires_assets": {
+  "splash_logo": {
+    "type": "image",
+    "format": "rss",
+    "canonical_path": "assets/logo.rss",
+    "description": "Rocketsplash .rss image painted on the splash surface."
+  }
+},
+"config": {
+  "scene_layers": [
+    {
+      "source": {
+        "type": "rocketsplash_image",
+        "asset": <reference to splash_logo — exact shape per L2>
+      },
+      "layout": { "anchor": "center" }
+    }
+  ]
+}
+```
+
+**Reusing Phase 6's shape.** Same `requires_assets` declaration home. Same `BindableString` at the call site (the field consuming the resolved name). Same loopback rule (Intention 37 — every asset declaration must yield an effective loopback; canonical_path is the implicit one until L2 types it explicitly). Same lookup precedence (host > loopback > resolver default > missing). Only the resolver and the consuming source differ.
+
+**What's new vs. Phase 6:**
+
+1. **`AssetResolver` trait** — separate registry from `FontRegistry` since assets are bytes (loaded via `impl Read` per Intention 27: byte-source loading at all recipe boundaries) and fonts are pre-parsed glyph tables. The trait shape is parallel: `resolve(&self, name: &str) -> Option<AssetBytes>` with `default_<noun>` sentinels short-circuiting to a registered default once v2's player_default form lands.
+
+2. **A consuming source surface** — likely a new V3 scene-layer source variant (`type: "rocketsplash_image"`) carrying the bindable `asset` field plus optional anchor/offset. The runtime resolves the reference to a name, the resolver to bytes, decodes via `RocketsplashImage::from_bytes`, and blits via the existing `blit_into_grid` path.
+
+3. **Reserved sentinel: `default_logo`** (snake_case per Phase 6's casing rule). Other asset-role sentinels (`default_background`, `default_empty_state`, etc.) get added when they earn drivers — not pre-listed.
+
+**What stays unchanged:**
+
+- The `requires_assets` declaration block, the strict-contracts validator (with the Levenshtein near-miss check from Phase 6), the loopback layer's Intention-37 enforcement — all reused as-is. Asset binding is the second consumer of the binding shape, not a new mechanism.
+- Recipes never carry image bytes. They carry asset names; resolvers load.
+- The byte-source abstraction means filesystem, embedded, http, and wasm asset paths all work without per-environment recipe forks.
+
+**Sequencing.** Phase 7 lands after Phase 6 (it builds on `BindableString` and the L2-locked declaration shape). Implementation requires deciding the scene-layer source-variant shape, which intersects with the V3 scene-layer design — worth coordinating with sibling work on V3 layer composition before scheduling.
+
+**Stub-today path.** The literal form (a recipe naming `splash_logo` in `requires_assets` and referencing it at the call site once that shape lands) works as soon as Phase 6's `BindableString` lands and the source-variant gains the `asset` field — no resolver bytes loading yet, just static recipe-to-source plumbing. Bindable form lights up when the loopback layer ships and Intention 37 is enforced.
 
 ## Executive summary
 
