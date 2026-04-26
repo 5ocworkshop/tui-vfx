@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-outstanding-master-list.md</FILE> - <DESC>Master outstanding work list for completing tui-vfx V3 and retiring V2 only at the final stability gate.</DESC> -->
-<!-- <VERS>VERSION: 0.14.27</VERS> -->
-<!-- <WCTX>Keep the V3 master punch list aligned with active work, question-closure status, and explicitly deferred post-release specs.</WCTX> -->
-<!-- <CLOG>0.14.27: record transparent shadow falloff implementation slice.</CLOG> -->
+<!-- <VERS>VERSION: 0.14.28</VERS> -->
+<!-- <WCTX>Add V3-PROCRUNTIME01 release-blocking entry — procedurals need host-injection (&ShaderRuntimeParams in ProceduralCtx) for live progress-meter recipes; deferred to follow the binding-loopback side quest per owner direction.</WCTX> -->
+<!-- <CLOG>Add V3-PROCRUNTIME01 row above V3-R99 with the P0-narrow / P0-full split and pointer to tui-vfx-binding-loopback.md sections 9 and 12.</CLOG> -->
 
 # V3 outstanding master punch list
 
@@ -32,6 +32,7 @@ considered stable and before any V2 fallback/removal work is considered.
 | V3-BRAILLE01 | Braille dotfield strategy | Post-release strategy captured | Strategy is documented in `post-release/braille-dotfield-toolkit-plan.md#16-post-release-strategy`; implementation remains explicitly post-release. |
 | V3-GLYPHACTOR01 | Glyph actor procedural | Post-release spec captured | `docs/design/post-release/glyph-actor-procedural-spec.md`; implementation waits until core V3 release/migration stability. |
 | V3-WEATHER01 | Weather ambient fields | Post-release spec captured | `docs/design/post-release/weather-ambient-field-spec.md`; rain/snow/wind/fog/lightning/time-of-day ingredients are deferred until after V3 core stability. |
+| V3-PROCRUNTIME01 | Procedural source host-injection (`ShaderRuntimeParams` in `ProceduralCtx`) | **Release-blocking** / outstanding | Procedurals today consume only static recipe params + clock + signal_ctx; `ProceduralCtx` (at `crates/tui-vfx-recipes/src/scene/procedural/types/cls_procedural_ctx.rs`) does **not** carry `&ShaderRuntimeParams`, so live progress meters / counters / scrubber-fed procedural sources cannot be wired by host code. Phase P0 work: thread `&ShaderRuntimeParams` through `ProceduralCtx` and update affected source impls (start with `cls_subcell_shape_atlas` and the live-progress-meter target). Independently shippable as P0-narrow (host-injection only) before P0-full (which adds binding-loopback support per `tui-vfx-binding-loopback.md` section 9 once that side quest's L1+L2 ship). Driver: live progress-meter procedurals are release-blocking per owner. Two-cut split documented in `docs/design/tui-vfx-binding-loopback.md` section 12 and section 9. |
 | V3-R99 | Final V2 retirement plan | Blocked by design | Only after migration, stability, downstream adaptation, and owner approval. |
 
 ## Resolved owner decisions
