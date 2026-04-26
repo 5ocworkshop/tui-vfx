@@ -181,16 +181,54 @@ pub enum TimelineTrigger {
 /// Mirrors TTE's `FrameSpec` / `Visual` shape (`pro/main.rs:369-377`).
 /// Use [`Frame::new`] which clamps `duration_ticks` to a minimum of 1
 /// so the cumulative-end math is always well-defined.
-#[derive(Debug, Clone, Copy)]
+/// Foreground color for a frame: either a single static color applied
+/// to every cell, or a seeded palette from which the apply path picks
+/// a per-cell-per-frame color via `hash_to_index`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum FrameColor {
+    Static(Color),
+    Palette { colors: Vec<Color>, seed: u64 },
+}
+
+#[derive(Debug, Clone)]
 pub struct Frame {
-    pub glyph: char,
-    pub fg: Option<Color>,
+    /// `None` means "preserve the underlying cell glyph for this
+    /// frame" — used for color-only frames (e.g. TTE Beams' dim-letter
+    /// fade where the input character stays visible while the
+    /// foreground recolors).
+    pub glyph: Option<char>,
+    pub fg: Option<FrameColor>,
     pub bg: Option<Color>,
     pub duration_ticks: u16,
 }
 
 impl Frame {
-    pub fn new(glyph: char, fg: Option<Color>, bg: Option<Color>, duration_ticks: u16) -> Self {
+    /// Convenience constructor for the common case: optional static
+    /// foreground + background. For palette foregrounds use
+    /// [`Frame::new_with_fg`].
+    pub fn new(
+        glyph: Option<char>,
+        fg: Option<Color>,
+        bg: Option<Color>,
+        duration_ticks: u16,
+    ) -> Self {
+        Self {
+            glyph,
+            fg: fg.map(FrameColor::Static),
+            bg,
+            duration_ticks: duration_ticks.max(1),
+        }
+    }
+
+    /// Constructor accepting a `FrameColor` directly (Static or
+    /// Palette). Use this when lowering a `FrameColorSpec::Palette`
+    /// from the recipe schema.
+    pub fn new_with_fg(
+        glyph: Option<char>,
+        fg: Option<FrameColor>,
+        bg: Option<Color>,
+        duration_ticks: u16,
+    ) -> Self {
         Self {
             glyph,
             fg,
@@ -216,10 +254,11 @@ pub struct GlyphTimeline {
     affect: AffectMode,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct PreparedFrame {
-    glyph: char,
-    fg: Option<Color>,
+    /// `None` preserves the cell's existing glyph (color-only frame).
+    glyph: Option<char>,
+    fg: Option<FrameColor>,
     bg: Option<Color>,
     /// Cumulative end-time in seconds: sum of `duration_seconds` for
     /// frames `[0..=self_index]`. Used for binary-search frame lookup.
@@ -371,10 +410,23 @@ impl Filter for GlyphTimeline {
             return; // Hide-completed past end
         };
         let frame = &self.frames[idx];
-        cell.ch = frame.glyph;
+        if let Some(g) = frame.glyph {
+            cell.ch = g;
+        }
+        let resolved_fg = frame.fg.as_ref().map(|fc| match fc {
+            FrameColor::Static(c) => *c,
+            FrameColor::Palette { colors, seed } => {
+                let pos_seed = ((x as u64) << 32) | (y as u64);
+                let frame_seed = pos_seed
+                    .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                    .wrapping_add(idx as u64);
+                let bucket = hash_to_index(*seed, frame_seed, colors.len().max(1));
+                colors[bucket]
+            }
+        });
         match self.apply_to {
             GlyphTimelineApplyTo::Foreground => {
-                if let Some(c) = frame.fg {
+                if let Some(c) = resolved_fg {
                     cell.fg = c;
                 }
             }
@@ -384,7 +436,7 @@ impl Filter for GlyphTimeline {
                 }
             }
             GlyphTimelineApplyTo::Both => {
-                if let Some(c) = frame.fg {
+                if let Some(c) = resolved_fg {
                     cell.fg = c;
                 }
                 if let Some(c) = frame.bg {
@@ -436,9 +488,9 @@ mod tests {
 
     fn three_frames() -> Vec<Frame> {
         vec![
-            Frame::new('A', Some(rgb(255, 0, 0)), None, 6), // 0.10s
-            Frame::new('B', Some(rgb(0, 255, 0)), None, 12), // 0.20s
-            Frame::new('C', Some(rgb(0, 0, 255)), None, 6), // 0.10s
+            Frame::new(Some('A'), Some(rgb(255, 0, 0)), None, 6), // 0.10s
+            Frame::new(Some('B'), Some(rgb(0, 255, 0)), None, 12), // 0.20s
+            Frame::new(Some('C'), Some(rgb(0, 0, 255)), None, 6), // 0.10s
         ]
         // total = 24 ticks = 0.40s
     }
@@ -762,7 +814,7 @@ mod tests {
 
     #[test]
     fn apply_to_background_writes_bg_only() {
-        let frames = vec![Frame::new('X', Some(rgb(99, 0, 0)), Some(rgb(0, 99, 0)), 5)];
+        let frames = vec![Frame::new(Some('X'), Some(rgb(99, 0, 0)), Some(rgb(0, 99, 0)), 5)];
         let tl = GlyphTimeline::new(
             frames,
             TimelineTrigger::Immediate,
@@ -790,7 +842,7 @@ mod tests {
 
     #[test]
     fn frame_new_clamps_zero_duration() {
-        let f = Frame::new('A', None, None, 0);
+        let f = Frame::new(Some('A'), None, None, 0);
         assert_eq!(f.duration_ticks, 1);
     }
 

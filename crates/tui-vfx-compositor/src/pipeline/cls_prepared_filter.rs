@@ -553,12 +553,16 @@ pub(crate) fn prepare_filter(
             let prepared_frames: Vec<Frame> = frames
                 .iter()
                 .map(|f| {
-                    Frame::new(
-                        f.glyph,
-                        f.fg.map(Color::from),
-                        f.bg.map(Color::from),
-                        f.duration_ticks,
-                    )
+                    use crate::filters::cls_glyph_timeline::FrameColor;
+                    use crate::types::cls_filter_spec::FrameColorSpec;
+                    let fg = f.fg.as_ref().map(|fc| match fc {
+                        FrameColorSpec::Static(c) => FrameColor::Static(Color::from(c.clone())),
+                        FrameColorSpec::Palette { palette, seed } => FrameColor::Palette {
+                            colors: palette.iter().cloned().map(Color::from).collect(),
+                            seed: *seed,
+                        },
+                    });
+                    Frame::new_with_fg(f.glyph, fg, f.bg.clone().map(Color::from), f.duration_ticks)
                 })
                 .collect();
 
@@ -609,6 +613,7 @@ pub(crate) fn prepare_filter(
                     batch_seed,
                     speed_seed,
                     fps,
+                    direction_seed,
                 } => {
                     let cfg = PoissonBurstScheduleConfig {
                         lane_axis: match lane_axis {
@@ -624,6 +629,7 @@ pub(crate) fn prepare_filter(
                         batch_seed: *batch_seed,
                         speed_seed: *speed_seed,
                         fps: *fps,
+                        direction_seed: *direction_seed,
                     };
                     let trigger_times = Arc::new(poisson_burst_schedule(
                         prepare_ctx.width,

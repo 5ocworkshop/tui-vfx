@@ -1381,17 +1381,53 @@ pub enum FilterSpec {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(deny_unknown_fields)]
 pub struct GlyphTimelineFrameSpec {
-    /// Glyph rendered while this frame is active.
-    pub glyph: char,
-    /// Optional foreground color. `None` leaves the cell's existing fg.
+    /// Glyph rendered while this frame is active. `None` (or omitted)
+    /// preserves the cell's existing glyph — useful for color-only
+    /// frames like TTE Beams' fade-to-dim phase where the underlying
+    /// input character should remain visible while the foreground
+    /// recolors.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub fg: Option<ColorConfig>,
+    pub glyph: Option<char>,
+    /// Optional foreground color. `None` leaves the cell's existing fg.
+    /// Accepts a single `ColorConfig` (uniform across cells) or a
+    /// `{"palette": [...], "seed": N}` object — the latter picks a
+    /// per-cell-per-frame color via `hash_to_index(seed, x, y,
+    /// frame_idx) % palette.len()`. The palette form mirrors TTE
+    /// Sweep's `random.choice(shades_of_gray)` per-cell speckle.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fg: Option<FrameColorSpec>,
     /// Optional background color. `None` leaves the cell's existing bg.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bg: Option<ColorConfig>,
     /// Tick count this frame holds for. 60 ticks/sec. Minimum 1
     /// (clamped at lowering time).
     pub duration_ticks: u16,
+}
+
+/// Foreground color spec for a [`GlyphTimelineFrameSpec`]. Either a
+/// single static color or a seeded per-cell random palette pick.
+///
+/// `Static` is the back-compat form — recipes authored before this
+/// extension still parse cleanly because [`ColorConfig`]'s
+/// `{"type": "rgb", ...}` shape is recognized first by the untagged
+/// matcher.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
+#[serde(untagged)]
+pub enum FrameColorSpec {
+    /// Single color applied uniformly to every cell in the frame.
+    Static(ColorConfig),
+    /// Seeded per-cell random palette pick. Each cell gets
+    /// `palette[hash_to_index(seed, (x,y,frame_idx) bits, palette.len())]`,
+    /// so the same `(seed, x, y, frame_idx)` always yields the same
+    /// color but different cells (and different frames within the
+    /// same cell) get independently sampled colors. Empty `palette`
+    /// is rejected at validate time.
+    Palette {
+        /// Color choices to sample from. Must be non-empty.
+        palette: Vec<ColorConfig>,
+        /// Seed for the per-cell hash.
+        seed: u64,
+    },
 }
 
 /// What happens after the last frame's duration elapses for a cell in
@@ -1561,6 +1597,13 @@ pub enum GlyphTimelineTriggerSpec {
         /// Frames per second (typically 60).
         #[serde(default = "default_glyph_timeline_fps")]
         fps: f64,
+        /// Per-lane direction randomization seed. When set, each lane
+        /// independently flips intra-lane sweep direction with 50%
+        /// probability via `hash_to_index(seed, lane_idx, 2)` — TTE
+        /// Beams' `if rng.gen_bool(0.5) { reverse() }` per-group
+        /// behavior. When omitted, all lanes sweep forward.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        direction_seed: Option<u64>,
     },
 }
 
@@ -2178,6 +2221,15 @@ impl FilterSpec {
             FilterSpec::GlyphTimeline { frames, .. } => {
                 if frames.is_empty() {
                     return Err("glyph_timeline frames must not be empty".to_string());
+                }
+                for (i, f) in frames.iter().enumerate() {
+                    if let Some(FrameColorSpec::Palette { palette, .. }) = &f.fg {
+                        if palette.is_empty() {
+                            return Err(format!(
+                                "glyph_timeline frame {i} fg palette must not be empty"
+                            ));
+                        }
+                    }
                 }
                 Ok(())
             }

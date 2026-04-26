@@ -82,6 +82,13 @@ pub struct PoissonBurstScheduleConfig {
     /// Defaults to 60 in [`Self::tte_default`]; pass through for
     /// non-60-fps recipes.
     pub fps: f64,
+    /// Per-lane direction randomization. When `Some(seed)`, each lane
+    /// independently picks forward vs reversed intra-lane sweep via
+    /// `hash_to_index(seed, lane_idx, 2)` — this is main.rs's
+    /// `if rng.gen_bool(0.5) { characters.reverse(); }` per BeamGroup.
+    /// When `None`, all lanes sweep forward (left-to-right for rows,
+    /// top-to-bottom for columns).
+    pub direction_seed: Option<u64>,
 }
 
 impl PoissonBurstScheduleConfig {
@@ -99,6 +106,7 @@ impl PoissonBurstScheduleConfig {
             batch_seed,
             speed_seed,
             fps: 60.0,
+            direction_seed: None,
         }
     }
 
@@ -117,6 +125,7 @@ impl PoissonBurstScheduleConfig {
             batch_seed,
             speed_seed,
             fps: 60.0,
+            direction_seed: None,
         }
     }
 }
@@ -232,7 +241,16 @@ pub fn poisson_burst_schedule(
             };
             let activation = lane_activation[lane];
             let speed = lane_speed_per_sec[lane].max(1e-6);
-            out[y * width_us + x] = activation + (intra as f64) / speed;
+            let lane_reversed = match config.direction_seed {
+                Some(seed) => hash_to_index(seed, lane as u64, 2) == 1,
+                None => false,
+            };
+            let intra_offset = if lane_reversed {
+                intra_lane_extent.saturating_sub(1).saturating_sub(intra)
+            } else {
+                intra
+            };
+            out[y * width_us + x] = activation + (intra_offset as f64) / speed;
         }
     }
     out

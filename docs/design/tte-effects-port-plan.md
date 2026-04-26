@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tte-effects-port-plan.md</FILE> - <DESC>Implementation plan to port TTE Beams + Sweep effects from pro/main.rs into tui-vfx as composable additions across tui-vfx-style (HCT color ops), tui-vfx-compositor (filters + samplers), and tui-vfx-recipes (vocabulary + showcase recipes). Designed to be implementable by a developer with minimal oversight given the reference Rust in pro/main.rs.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Phases 1+2 landed via HCT-via-mcu in tui-vfx-style (collapsed because ColorSpace + blend_colors + Gradient.space were already in place); plan-doc updated to describe what shipped and why the pivot.</WCTX> -->
-<!-- <CLOG>0.2.0: revise Phases 1+2 to reflect HCT-via-mcu landing (not HSL-in-mixed-signals); add prologue documenting the architecture decisions, the existing-infrastructure discovery, and where things ended up living. Phases 3-5 still planned but to be reassessed before each kicks off.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Phases 3-4 landed: GlyphTimeline filter + PoissonBurst schedule + showcase recipes (recipes/tte_inspired/beams.json + sweep.json). Two schema extensions added during showcase tuning — PoissonBurst.direction_seed (per-lane 50% direction flip matching main.rs's BeamGroup randomization) and GlyphTimelineFrameSpec.glyph: Option<char> (preserve underlying glyph for color-only dim-letter frames).</WCTX> -->
+<!-- <CLOG>0.3.0: mark Phases 3-4 complete (Phase 3 collapsed into Phase 4 since HintRef wasn't load-bearing); record showcase-driven schema extensions and recipe location; Phase 5 (Diagonal scope) deferred — not load-bearing for either showcase.</CLOG> -->
 
 # TTE Effects Port — Implementation Plan
 
