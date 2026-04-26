@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.14.0</VERS>
-// <WCTX>Glyph rendering framework Phase 6: wire ScalarFieldGlyphFilter via FilterSpec::ScalarFieldGlyph.</WCTX>
-// <CLOG>3.14.0: add GlyphEncoderSpec, SamplerRef enums and FilterSpec::ScalarFieldGlyph variant; wire SamplerRef::TerminalWater with inline shader spec (Option A).
+// <VERS>VERSION: 3.15.0</VERS>
+// <WCTX>Glyph rendering framework Phase 6 follow-on: add SamplerRef::TerminalFire variant so the new terminal_fire shader can drive ScalarFieldGlyphFilter via FireFieldSignal — symmetric to the existing TerminalWater + WaterFieldSignal wiring.</WCTX>
+// <CLOG>3.15.0: add SamplerRef::TerminalFire { shader: TerminalFireShader } parallel to SamplerRef::TerminalWater. Lets fire-glyph debug recipes use { kind: terminal_fire, shader: {...} } via FilterSpec::ScalarFieldGlyph.
 
 //! # Filter Specifications
 //!
@@ -72,7 +72,10 @@ use super::cls_mask_spec::WipeDirection;
 use mixed_signals::types::SignalOrFloat;
 use serde::{Deserialize, Serialize, de::Error as _};
 use serde_json::{self, Value};
-use tui_vfx_style::models::{ColorConfig, cls_terminal_water_shader::TerminalWaterShader};
+use tui_vfx_style::models::{
+    cls_terminal_fire_shader::TerminalFireShader, cls_terminal_water_shader::TerminalWaterShader,
+    ColorConfig,
+};
 
 /// Pattern types for filling cells.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
@@ -375,14 +378,17 @@ pub enum GlyphEncoderSpec {
 /// Sampler kind for [`FilterSpec::ScalarFieldGlyph`].
 ///
 /// Each variant carries the parameters needed to construct a runtime signal
-/// at recipe-load time. The first variant, `TerminalWater`, wraps a
-/// [`TerminalWaterShader`] inline so the filter is self-contained — no
-/// cross-step reference required.
+/// at recipe-load time. Variants wrap their shader spec inline so the filter
+/// is self-contained — no cross-step reference required.
 ///
 /// # Example (JSON)
 ///
 /// ```json
 /// { "kind": "terminal_water", "shader": { "mode": { "mode": "ocean" }, "layers": 3 } }
+/// ```
+///
+/// ```json
+/// { "kind": "terminal_fire", "shader": { "mode": { "mode": "flame" } } }
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, tui_vfx_core::ConfigSchema)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -395,6 +401,14 @@ pub enum SamplerRef {
     TerminalWater {
         /// Water shader parameters to drive the glyph field signal.
         shader: TerminalWaterShader,
+    },
+    /// Samples a [`tui_vfx_style::models::FireFieldSignal`] constructed from
+    /// the given [`TerminalFireShader`] at recipe-load time. Mirror of
+    /// [`SamplerRef::TerminalWater`] — same self-contained pattern, different
+    /// underlying signal (emissive flame field instead of lit water surface).
+    TerminalFire {
+        /// Fire shader parameters to drive the glyph field signal.
+        shader: TerminalFireShader,
     },
 }
 

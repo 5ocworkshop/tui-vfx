@@ -60,6 +60,25 @@ impl Signal for ContextCapture {
     }
 }
 
+/// A signal that records the `t` arg it was called with. Used to prove
+/// the filter threads loop_t through to the signal's primary time arg
+/// (rather than burying it in `absolute_t` which signals interpret as ms).
+struct TimeCapture {
+    captured_t: Arc<Mutex<Option<SignalTime>>>,
+}
+
+impl Signal for TimeCapture {
+    fn sample(&self, t: SignalTime) -> f32 {
+        *self.captured_t.lock().unwrap() = Some(t);
+        0.5
+    }
+
+    fn sample_with_context(&self, t: SignalTime, _ctx: &SignalContext) -> f32 {
+        *self.captured_t.lock().unwrap() = Some(t);
+        0.5
+    }
+}
+
 fn default_filter(
     sampler: impl Signal,
     encoder: GlyphEncoder,
@@ -206,11 +225,15 @@ fn test_apply_recolor_none_preserves_colors() {
     );
 }
 
-/// width, height, and absolute_t must be populated; other optional fields default.
+/// width, height, cell_x, cell_y must be populated; absolute_t must NOT be set.
 ///
-/// This test pins the `SignalContext::new(...).with_dimensions(...).with_cell_position(...)
-/// .with_absolute_time(...)` construction form. It verifies that cell_x, cell_y,
-/// width, height, and absolute_t are set, while optional fields default to None.
+/// This test pins the `SignalContext::new(...).with_dimensions(...).with_cell_position(...)`
+/// construction form. The Filter trait's `t` is normalized loop progress
+/// (0.0..=1.0), not elapsed milliseconds — so we deliberately do NOT call
+/// `with_absolute_time(t)`. Signals receiving this context fall back to
+/// using the `t` arg of `sample_with_context` directly, which matches the
+/// `StyleShader::style_at` convention for the same shaders' non-glyph path.
+/// (See file's CLOG 0.4.0 for the Phase 6 follow-up that fixed the freeze.)
 #[test]
 fn test_apply_constructs_signal_context_with_default_form() {
     let captured: Arc<Mutex<Option<SignalContext>>> = Arc::new(Mutex::new(None));
@@ -240,13 +263,17 @@ fn test_apply_constructs_signal_context_with_default_form() {
     assert_eq!(ctx.height, 9, "height must be set");
     assert_eq!(ctx.cell_x, Some(3), "cell_x must be set");
     assert_eq!(ctx.cell_y, Some(5), "cell_y must be set");
-    assert!(ctx.absolute_t.is_some(), "absolute_t must be set");
-    assert!(
-        (ctx.absolute_t.unwrap() - 1.5).abs() < 1e-9,
-        "absolute_t must equal t"
-    );
     assert_eq!(ctx.frame, 42, "frame must be forwarded");
     assert_eq!(ctx.seed, 7, "seed must be forwarded");
+
+    // absolute_t must NOT be set: signals receive normalized loop_t through
+    // the `t` arg of sample_with_context, not via absolute_t (which they
+    // would interpret as elapsed milliseconds and divide by 1000, freezing
+    // the field at near-zero time).
+    assert!(
+        ctx.absolute_t.is_none(),
+        "absolute_t must remain None; the Filter trait passes normalized loop_t, not ms"
+    );
 
     // Optional fields default (not set by the filter)
     assert!(ctx.phase.is_none(), "phase must default to None");
@@ -256,6 +283,54 @@ fn test_apply_constructs_signal_context_with_default_form() {
     assert!(
         ctx.subcell_offset.is_none(),
         "subcell_offset must default to None"
+    );
+}
+
+/// Regression: the filter's `t` arg must thread through to
+/// `Signal::sample_with_context(t, ctx)`, not get buried in `ctx.absolute_t`.
+/// Field signals (WaterFieldSignal, FireFieldSignal) interpret `absolute_t`
+/// as elapsed milliseconds and divide by 1000; threading normalized loop_t
+/// through there freezes the field. This test pins the corrected contract:
+/// loop_t arrives at the signal's `t` arg with the same value the caller
+/// passed to `apply`.
+#[test]
+fn test_apply_threads_loop_t_through_signal_t_arg() {
+    let captured_t: Arc<Mutex<Option<SignalTime>>> = Arc::new(Mutex::new(None));
+    let filter = ScalarFieldGlyphFilter {
+        sampler: TimeCapture {
+            captured_t: captured_t.clone(),
+        },
+        encoder: GlyphEncoder::BlockHorizontal,
+        threshold: 0.0,
+        recolor: None,
+        only_blank: false,
+        frame: 0,
+        seed: 0,
+    };
+
+    let mut cell = make_cell(' ', Color::WHITE, Color::BLACK);
+    filter.apply(&mut cell, 0, 0, 4, 4, 0.42);
+
+    let t = captured_t
+        .lock()
+        .unwrap()
+        .take()
+        .expect("signal must have been called");
+    assert!(
+        (t - 0.42).abs() < 1e-9,
+        "filter must pass loop_t (0.42) to signal.t-arg, got {t}"
+    );
+
+    // And again at a different t — proves animation isn't pinned at zero.
+    filter.apply(&mut cell, 0, 0, 4, 4, 0.83);
+    let t2 = captured_t
+        .lock()
+        .unwrap()
+        .take()
+        .expect("signal must have been called twice");
+    assert!(
+        (t2 - 0.83).abs() < 1e-9,
+        "second call must thread its loop_t (0.83), got {t2}"
     );
 }
 

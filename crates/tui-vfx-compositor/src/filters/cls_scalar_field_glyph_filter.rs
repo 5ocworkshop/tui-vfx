@@ -1,8 +1,8 @@
 // <FILE>crates/tui-vfx-compositor/src/filters/cls_scalar_field_glyph_filter.rs</FILE>
 // <DESC>Generic scalar-field-to-glyph filter: samples any Signal and encodes intensity via GlyphEncoder</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Glyph rendering framework Phase 6: wire ScalarFieldGlyphFilter via FilterSpec::ScalarFieldGlyph.</WCTX>
-// <CLOG>0.3.0: remove #[cfg_attr(not(test), expect(dead_code))] — filter is now constructed from cls_prepared_filter.rs for FilterSpec::ScalarFieldGlyph; Phase 6 wiring fulfilled.</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Phase 6 follow-up: drop with_absolute_time(t) so per-cell sampling threads loop_t through the signal's t-arg fallback path instead of mislabeling normalized loop progress as elapsed milliseconds. Without this fix, FireFieldSignal/WaterFieldSignal divide loop_t by 1000 and freeze the field.</WCTX>
+// <CLOG>0.4.0: drop with_absolute_time(t). The Filter trait documents t as "animation progress 0.0..=1.0" (normalized loop_t), not milliseconds; signals already fall back to using t as f32 when absolute_t is None, matching the StyleShader::style_at convention. Fix unfreezes the glyph-rendered field.</CLOG>
 
 use mixed_signals::traits::{Signal, SignalContext};
 use tui_vfx_types::{Cell, Color, glyph::GlyphEncoder, glyph::sample_eight_subcells};
@@ -95,8 +95,19 @@ impl<S: Signal> Filter for ScalarFieldGlyphFilter<S> {
     /// Apply the scalar-field-to-glyph transform to one cell.
     ///
     /// No allocations. The `SignalContext` is stack-constructed via builder
-    /// methods. All fields that are not `width`/`height`/`cell_x`/`cell_y`/
-    /// `absolute_t` default to `None`/`0` via `SignalContext::new`.
+    /// methods. All fields that are not `width`/`height`/`cell_x`/`cell_y`
+    /// default to `None`/`0` via `SignalContext::new`.
+    ///
+    /// **Time threading.** The Filter trait's `t` is normalized loop progress
+    /// (0.0 = start, 1.0 = end of the recipe's clock period) — not elapsed
+    /// milliseconds. We therefore do **not** call `with_absolute_time(t)`:
+    /// `Signal::sample_with_context` falls back to using `t` directly when
+    /// `ctx.absolute_t` is `None`, which matches the convention
+    /// `StyleShader::style_at` uses for the same shaders' non-glyph path.
+    /// Setting `absolute_t = t` here would cause WaterFieldSignal /
+    /// FireFieldSignal (and any future field signal that follows the same
+    /// "absolute_t is in milliseconds" convention) to divide by 1000 and
+    /// freeze the field at near-zero time.
     fn apply(&self, cell: &mut Cell, x: u16, y: u16, width: u16, height: u16, t: f64) {
         if self.only_blank && cell.ch != ' ' {
             return;
@@ -104,8 +115,7 @@ impl<S: Signal> Filter for ScalarFieldGlyphFilter<S> {
 
         let ctx = SignalContext::new(self.frame, self.seed)
             .with_dimensions(width, height)
-            .with_cell_position(x, y)
-            .with_absolute_time(t);
+            .with_cell_position(x, y);
 
         let new_ch = match &self.encoder {
             GlyphEncoder::BrailleSubcell { .. } => {

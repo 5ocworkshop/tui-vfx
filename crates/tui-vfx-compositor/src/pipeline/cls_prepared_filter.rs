@@ -44,6 +44,7 @@ use crate::types::cls_filter_spec::{
     FilterSpec, GlyphEncoderSpec, GlyphRecolorSpec, PatternType, SamplerRef,
 };
 use smallvec::SmallVec;
+use tui_vfx_style::models::cls_fire_field_signal::FireFieldSignal;
 use tui_vfx_style::models::cls_water_field_signal::WaterFieldSignal;
 use tui_vfx_types::glyph::GlyphEncoder;
 use tui_vfx_types::{Cell, Color};
@@ -83,6 +84,8 @@ pub(crate) enum PreparedFilter {
     GlyphStyle(GlyphStyle),
     /// [`ScalarFieldGlyphFilter`] backed by a [`WaterFieldSignal`] sampler.
     ScalarFieldGlyphWater(ScalarFieldGlyphFilter<WaterFieldSignal>),
+    /// [`ScalarFieldGlyphFilter`] backed by a [`FireFieldSignal`] sampler.
+    ScalarFieldGlyphFire(ScalarFieldGlyphFilter<FireFieldSignal>),
 }
 
 impl PreparedFilter {
@@ -186,6 +189,9 @@ impl PreparedFilter {
             PreparedFilter::ScalarFieldGlyphWater(filter) => {
                 filter.apply(cell, local_x, local_y, width, height, loop_t);
             }
+            PreparedFilter::ScalarFieldGlyphFire(filter) => {
+                filter.apply(cell, local_x, local_y, width, height, loop_t);
+            }
         }
     }
 
@@ -221,6 +227,7 @@ impl PreparedFilter {
             PreparedFilter::ShadeScanner(_) => "ShadeScanner",
             PreparedFilter::GlyphStyle(_) => "GlyphStyle",
             PreparedFilter::ScalarFieldGlyphWater(_) => "ScalarFieldGlyphWater",
+            PreparedFilter::ScalarFieldGlyphFire(_) => "ScalarFieldGlyphFire",
         }
     }
 }
@@ -989,10 +996,10 @@ pub(crate) fn prepare_filter(
             // Build the signal sampler from the SamplerRef variant.
             // Option A: each SamplerRef variant carries its own parameters;
             // no cross-step reference needed.
-            let filter = match sampler {
+            match sampler {
                 SamplerRef::TerminalWater { shader } => {
                     let signal = WaterFieldSignal::new(shader.clone());
-                    ScalarFieldGlyphFilter {
+                    let filter = ScalarFieldGlyphFilter {
                         sampler: signal,
                         encoder: runtime_encoder,
                         recolor: runtime_recolor,
@@ -1000,10 +1007,23 @@ pub(crate) fn prepare_filter(
                         only_blank: *only_blank,
                         frame: 0,
                         seed: 0,
-                    }
+                    };
+                    Some(PreparedFilter::ScalarFieldGlyphWater(filter))
                 }
-            };
-            Some(PreparedFilter::ScalarFieldGlyphWater(filter))
+                SamplerRef::TerminalFire { shader } => {
+                    let signal = FireFieldSignal::new(shader.clone());
+                    let filter = ScalarFieldGlyphFilter {
+                        sampler: signal,
+                        encoder: runtime_encoder,
+                        recolor: runtime_recolor,
+                        threshold: *threshold,
+                        only_blank: *only_blank,
+                        frame: 0,
+                        seed: 0,
+                    };
+                    Some(PreparedFilter::ScalarFieldGlyphFire(filter))
+                }
+            }
         }
     }
 }
