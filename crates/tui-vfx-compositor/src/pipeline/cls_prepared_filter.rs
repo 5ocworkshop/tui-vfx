@@ -614,6 +614,7 @@ pub(crate) fn prepare_filter(
                     speed_seed,
                     fps,
                     direction_seed,
+                    jitter,
                 } => {
                     let cfg = PoissonBurstScheduleConfig {
                         lane_axis: match lane_axis {
@@ -630,6 +631,9 @@ pub(crate) fn prepare_filter(
                         speed_seed: *speed_seed,
                         fps: *fps,
                         direction_seed: *direction_seed,
+                        jitter: jitter
+                            .as_ref()
+                            .map(|j| (j.seed, j.amount_seconds)),
                     };
                     let trigger_times = Arc::new(poisson_burst_schedule(
                         prepare_ctx.width,

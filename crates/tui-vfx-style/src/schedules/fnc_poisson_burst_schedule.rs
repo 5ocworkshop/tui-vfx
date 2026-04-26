@@ -89,6 +89,12 @@ pub struct PoissonBurstScheduleConfig {
     /// When `None`, all lanes sweep forward (left-to-right for rows,
     /// top-to-bottom for columns).
     pub direction_seed: Option<u64>,
+    /// Optional per-cell trigger-time jitter on top of the lane
+    /// schedule. When `Some((seed, amount))`, each cell's trigger
+    /// time is offset by `(hash_to_index(seed, pos, 2048) / 1024 - 1)
+    /// * amount` seconds. Breaks up regimented sweeps without
+    /// disturbing the lane-batch cadence.
+    pub jitter: Option<(u64, f64)>,
 }
 
 impl PoissonBurstScheduleConfig {
@@ -107,6 +113,7 @@ impl PoissonBurstScheduleConfig {
             speed_seed,
             fps: 60.0,
             direction_seed: None,
+            jitter: None,
         }
     }
 
@@ -126,6 +133,7 @@ impl PoissonBurstScheduleConfig {
             speed_seed,
             fps: 60.0,
             direction_seed: None,
+            jitter: None,
         }
     }
 }
@@ -250,7 +258,14 @@ pub fn poisson_burst_schedule(
             } else {
                 intra
             };
-            out[y * width_us + x] = activation + (intra_offset as f64) / speed;
+            let mut t_trig = activation + (intra_offset as f64) / speed;
+            if let Some((seed, amount)) = config.jitter {
+                let pos_seed = ((x as u64) << 32) | (y as u64);
+                let bucket = hash_to_index(seed, pos_seed, 2048) as f64;
+                let signed = (bucket / 1024.0) - 1.0;
+                t_trig += signed * amount;
+            }
+            out[y * width_us + x] = t_trig.max(0.0);
         }
     }
     out

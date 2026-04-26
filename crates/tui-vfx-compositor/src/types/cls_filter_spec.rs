@@ -1604,6 +1604,13 @@ pub enum GlyphTimelineTriggerSpec {
         /// behavior. When omitted, all lanes sweep forward.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         direction_seed: Option<u64>,
+        /// Optional deterministic per-cell trigger-time jitter on top
+        /// of the lane-driven schedule. Same shape and semantics as
+        /// [`GlyphTimelineTriggerSpec::Wavefront::jitter`]. Useful
+        /// when the snake body is otherwise too regimented; small
+        /// amounts (~0.05s) add subtle shimmer.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        jitter: Option<GlyphTimelineJitterSpec>,
     },
 }
 
