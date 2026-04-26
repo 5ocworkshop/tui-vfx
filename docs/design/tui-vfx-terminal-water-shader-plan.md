@@ -757,6 +757,17 @@ impl Default for TerminalWaterShader {
 
 If `ColorConfig::Rgb` is not the exact variant shape, inspect `cls_color_config.rs` and adjust.
 
+## 5.9 Cross-plan helper note for terminal fire
+
+A sibling plan now exists for [`terminal_fire`](tui-vfx-terminal-fire-shader-plan.md). If water and fire are implemented in the same development window, extract only the small helper functions that both plans actually need:
+
+- `utils/fnc_scalar_math.rs`: `saturate`, `smoothstep`, `lerp_f32`, `safe_div`, and finite-value guards.
+- `utils/fnc_field_coords.rs`: normalized field coordinate conversion from `ShaderContext`, exposing both top-down and bottom-up `y` conventions.
+- `utils/fnc_procedural_noise.rs`: deterministic `hash01`, value noise, and capped `fbm2`/`fbm3` for water shimmer/flow and fire turbulence/smoke.
+- `utils/fnc_glyph_ramp.rs`: ramp indexing and Unicode braille bit mapping, but only when a glyph-capable primitive/filter exists.
+
+Do not create a broad “natural phenomena” abstraction. Water remains a lit height surface; fire remains an emissive density field. Share scalar/noise/glyph utilities, not domain models.
+
 ## 6. Scalar field helper design
 
 Make the core math reusable and testable. Keep helpers private for the style-shader path unless a glyph/filter implementation needs public access. If a glyph primitive lives in another crate, consider `pub(crate)` or a small public `TerminalWaterSample` only after API review.

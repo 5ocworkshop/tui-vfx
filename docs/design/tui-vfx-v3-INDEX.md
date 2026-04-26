@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-v3-INDEX.md</FILE> - <DESC>Single landing page for V3 planning, schema, implementation, tooling, and migration docs.</DESC> -->
-<!-- <VERS>VERSION: 0.6.2</VERS> -->
-<!-- <WCTX>Keep the V3 landing page current with active authoring, schema, tooling, lifecycle, water shader planning, and deferred post-release capability docs.</WCTX> -->
-<!-- <CLOG>0.6.2: add terminal water/ocean shader plan to active work surfaces.
+<!-- <VERS>VERSION: 0.6.3</VERS> -->
+<!-- <WCTX>Keep the V3 landing page current with active authoring, schema, tooling, lifecycle, water/fire shader planning, and deferred post-release capability docs.</WCTX> -->
+<!-- <CLOG>0.6.3: add terminal fire/flame shader plan next to the water shader plan and helper-abstraction guidance.
+0.6.2: add terminal water/ocean shader plan to active work surfaces.
 0.6.1: add token-safe TTE-inspired remaining-work handoff. 0.6.0: add the Task 24 glyph particle emitter plan to active V3 work surfaces.
 0.5.9: add the deterministic core-pipeline readiness matrix to the active V3 work surfaces and execution references.</CLOG> -->
 
@@ -85,6 +86,7 @@ These still shape implementation, validation, migration, or release-gate follow-
 - [V3 glyph particle emitter plan](tui-vfx-v3-glyph-particle-emitter-plan.md)
 - [V3 TTE-inspired remaining-work plan](tui-vfx-v3-tte-inspired-remaining-work-plan.md)
 - [Terminal water/ocean shader plan](tui-vfx-terminal-water-shader-plan.md)
+- [Terminal fire/flame shader plan](tui-vfx-terminal-fire-shader-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
 - [V3 recipe ingredients reference plan](tui-vfx-v3-recipe-ingredients-reference-plan.md)
 - [V3 release-gate manifest seed](tui-vfx-v3-release-gate-manifest.md)
@@ -152,6 +154,7 @@ primitive behavior.
 - [V3 glyph particle emitter plan](tui-vfx-v3-glyph-particle-emitter-plan.md)
 - [V3 TTE-inspired remaining-work plan](tui-vfx-v3-tte-inspired-remaining-work-plan.md)
 - [Terminal water/ocean shader plan](tui-vfx-terminal-water-shader-plan.md)
+- [Terminal fire/flame shader plan](tui-vfx-terminal-fire-shader-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
 
 ## Tooling and edge adapters
