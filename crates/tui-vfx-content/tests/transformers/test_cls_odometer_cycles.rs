@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_odometer_cycles.rs</FILE> - <DESC>Integration tests for Odometer with mechanical cycle config: ordered/preset routes, NumericCarry, settle, extra_rotations</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
-// <CLOG>0.2.0: route the sample() helper through a OnceLock-cached TransformContext so cycle-path tests compile against the new trait signature.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Phase C of TransformContext implementation plan: add transformer-level binding-form font round-trip tests.</WCTX>
+// <CLOG>0.3.0: add binding_form_font_resolves_via_runtime_params and binding_form_font_falls_back_to_default_when_runtime_param_missing proving the host-injection → resolver round-trip.</CLOG>
 
 use mixed_signals::prelude::SignalContext;
 use std::sync::OnceLock;
@@ -362,5 +362,96 @@ fn spring_settle_progress_one_returns_borrowed_target() {
     assert_eq!(sample(&effect, "9", 1.0), "9");
 }
 
+#[test]
+fn binding_form_font_resolves_via_runtime_params() {
+    use tui_vfx_style::models::BindableString;
+    use tui_vfx_style::traits::ShaderRuntimeParamValue;
+
+    // Construct an Odometer with a Preset { decimal_digits } source whose
+    // font is a Binding to "drum_font". We expect the runtime-params map
+    // to resolve "drum_font" -> "line-3x3", which routes through the font
+    // registry's Line 3x3 face. The resulting transform output, at progress
+    // 0.5, must NOT be the literal-glyph fallback (which is the
+    // ASCII-faces-without-glyph-expansion case).
+    let cfg = MechanicalCycleConfig {
+        source: MechanicalContentSource::Preset {
+            preset: MechanicalCyclePreset::DecimalDigits,
+            wrap: CycleWrapMode::Circular,
+            font: Some(BindableString::Binding("drum_font".to_string())),
+        },
+        route: forward_route(),
+        cascade: MechanicalCascadePolicy::Simultaneous,
+        settle: MechanicalSettleConfig::None,
+    };
+    let effect = ContentEffect::Odometer {
+        direction: OdometerDirection::Up,
+        travel: OdometerTravel::Axis,
+        tile_width: 3,
+        tile_height: 3,
+        from_message: Some("┏━┓\n┃ ┃\n┗━┛".to_string()), // 0 in line-3x3
+        mechanical: Some(cfg),
+    };
+
+    let mut params = ShaderRuntimeParams::new();
+    params.insert(
+        "drum_font".to_string(),
+        ShaderRuntimeParamValue::Text("line-3x3".to_string()),
+    );
+    let sig = SignalContext::default();
+    let ctx = TransformContext::new(&sig, &params);
+
+    let tx = get_transformer(&effect);
+    let target = "╺┓ \n ┃ \n╺┻╸"; // 1 in line-3x3
+    let out = tx.transform(target, 0.5, &ctx);
+
+    // Output is mid-roll between line-3x3 "0" and "1" — should be a 3-row,
+    // 3-col grid of box-drawing characters, not raw ASCII digits.
+    assert!(
+        out.contains('━') || out.contains('┓') || out.contains('┃'),
+        "expected line-3x3 box-drawing glyphs in mid-roll output, got {:?}",
+        out
+    );
+}
+
+#[test]
+fn binding_form_font_falls_back_to_default_when_runtime_param_missing() {
+    use tui_vfx_style::models::BindableString;
+
+    // Same effect as the previous test but with an empty runtime-params
+    // map. Per Intention 36, a missing binding falls back to the registry
+    // default (which is line-3x3). The output should contain line-3x3
+    // box-drawing glyphs from the default-font fallback path.
+    let cfg = MechanicalCycleConfig {
+        source: MechanicalContentSource::Preset {
+            preset: MechanicalCyclePreset::DecimalDigits,
+            wrap: CycleWrapMode::Circular,
+            font: Some(BindableString::Binding("drum_font".to_string())),
+        },
+        route: forward_route(),
+        cascade: MechanicalCascadePolicy::Simultaneous,
+        settle: MechanicalSettleConfig::None,
+    };
+    let effect = ContentEffect::Odometer {
+        direction: OdometerDirection::Up,
+        travel: OdometerTravel::Axis,
+        tile_width: 3,
+        tile_height: 3,
+        from_message: Some("┏━┓\n┃ ┃\n┗━┛".to_string()),
+        mechanical: Some(cfg),
+    };
+
+    let params = ShaderRuntimeParams::new(); // empty
+    let sig = SignalContext::default();
+    let ctx = TransformContext::new(&sig, &params);
+
+    let tx = get_transformer(&effect);
+    let out = tx.transform("╺┓ \n ┃ \n╺┻╸", 0.5, &ctx);
+    assert!(
+        out.contains('━') || out.contains('┓') || out.contains('┃'),
+        "expected default-font fallback to produce line-3x3 glyphs, got {:?}",
+        out
+    );
+}
+
 // <FILE>crates/tui-vfx-content/tests/transformers/test_cls_odometer_cycles.rs</FILE>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

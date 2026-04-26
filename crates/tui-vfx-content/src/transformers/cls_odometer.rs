@@ -1,14 +1,16 @@
 // <FILE>tui-vfx-content/src/transformers/cls_odometer.rs</FILE> - <DESC>Odometer transformer with optional mechanical cycle path covering ordered drums, slot reels, and per-tile spring settle</DESC>
-// <VERS>VERSION: 4.0.1</VERS>
-// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>. Phase C will switch the underscored parameter to read ctx.runtime_params.</WCTX>
-// <CLOG>4.0.1: TextTransformer signature now takes &TransformContext<'_>; the parameter stays underscored until Phase C wires runtime_params through resolve_mechanical_cycle_with_context.</CLOG>
+// <VERS>VERSION: 4.1.0</VERS>
+// <WCTX>Phase C of TransformContext implementation plan: wire ctx.runtime_params through roll_cycle into resolve_mechanical_cycle_with_context so binding-form fonts resolve at runtime.</WCTX>
+// <CLOG>4.1.0: drop underscore on ctx parameter; route ctx.runtime_params through roll_cycle to resolve_mechanical_cycle_with_context, enabling host-supplied font bindings to reach the resolver.</CLOG>
 
+use crate::fonts::FontRegistry;
 use crate::mechanical::{
     MechanicalSizing, MechanicalSource, MechanicalTile, NumericRouteHint, TileScheduleMeta,
     blit_tile_grid, extract_tile_text, grid_from_text, grid_to_text, overshoot_face_for,
-    paired_grids, resolve_mechanical_cycle, roll_cycle_window, roll_grid_window, route_between,
-    settle_sample_for, tile_progress_for, tile_rects,
+    paired_grids, resolve_mechanical_cycle_with_context, roll_cycle_window, roll_grid_window,
+    route_between, settle_sample_for, tile_progress_for, tile_rects,
 };
+use tui_vfx_style::traits::ShaderRuntimeParams;
 use crate::traits::{TextTransformer, TransformContext};
 use crate::types::{
     MechanicalCascadePolicy, MechanicalContentSource, MechanicalCycleConfig, OdometerDirection,
@@ -56,11 +58,21 @@ impl Odometer {
 }
 
 impl TextTransformer for Odometer {
+    /// Apply the odometer effect at the given `progress` (0.0 = full source,
+    /// 1.0 = full target).
+    ///
+    /// `ctx.runtime_params` is forwarded to the cycle resolver so that
+    /// binding-form font references (e.g. `font: { "binding": "drum_font" }`)
+    /// resolve to the host-supplied font name at runtime. When the binding is
+    /// absent from `runtime_params`, the resolver falls back to the registry's
+    /// registered default per [Intention 36][int36].
+    ///
+    /// [int36]: crate
     fn transform<'a>(
         &self,
         target: &'a str,
         progress: f64,
-        _ctx: &TransformContext<'_>,
+        ctx: &TransformContext<'_>,
     ) -> Cow<'a, str> {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
@@ -73,7 +85,7 @@ impl TextTransformer for Odometer {
             // Absent or default-Pair → legacy whole-grid roll.
             None => self.roll_legacy_pair(target, progress, tile),
             Some(cfg) if is_legacy_equivalent(cfg) => self.roll_legacy_pair(target, progress, tile),
-            Some(cfg) => self.roll_cycle(target, progress, tile, cfg),
+            Some(cfg) => self.roll_cycle(target, progress, tile, cfg, ctx.runtime_params),
         }
     }
 }
@@ -100,6 +112,7 @@ impl Odometer {
         progress: f64,
         tile: MechanicalTile,
         cfg: &MechanicalCycleConfig,
+        runtime_params: &ShaderRuntimeParams,
     ) -> Cow<'a, str> {
         // Build paired source/target grids using the same padding rules
         // as the legacy path so the cycle path agrees on grid extents.
@@ -111,10 +124,21 @@ impl Odometer {
         let grid_w = paired.from.width().max(paired.to.width());
         let grid_h = paired.from.height().max(paired.to.height());
 
+        // Construct the font registry once per roll_cycle invocation —
+        // not inside the per-tile loop below. FontRegistry::new() only
+        // registers the embedded Line 3x3 default and is the only
+        // allocation-introducing part of this slice.
+        let registry = FontRegistry::new();
+
         // Resolve the cycle once. Recipe-load-time validation is the
         // user-facing surface; runtime defensively falls back to the
         // legacy path if resolution fails.
-        let Ok(cycle) = resolve_mechanical_cycle(&cfg.source, tile) else {
+        let Ok(cycle) = resolve_mechanical_cycle_with_context(
+            &cfg.source,
+            tile,
+            &registry,
+            runtime_params,
+        ) else {
             return self.roll_legacy_pair(target, progress, tile);
         };
 
@@ -284,4 +308,4 @@ fn numeric_carry_hint(
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_odometer.rs</FILE>
-// <VERS>END OF VERSION: 4.0.1</VERS>
+// <VERS>END OF VERSION: 4.1.0</VERS>
