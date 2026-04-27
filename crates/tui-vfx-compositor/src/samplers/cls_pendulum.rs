@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_pendulum.rs</FILE> - <DESC>Pendulum sampler for bidirectional swaying motion</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
-// <CLOG>1.1.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
+// <CLOG>1.2.0: sample() now returns SamplerOutput; displacing branches carry axis delta; out-of-bounds returns no_displacement().</CLOG>
 
-use crate::traits::sampler::Sampler;
+use crate::traits::sampler::{Sampler, SamplerOutput};
 use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::Axis;
 use std::f32::consts::TAU;
@@ -60,7 +60,7 @@ impl Pendulum {
 }
 
 impl Sampler for Pendulum {
-    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
         let t = ctx.t as f32;
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
@@ -72,11 +72,13 @@ impl Sampler for Pendulum {
                 let offset = self.amplitude * phase.sin();
 
                 // Calculate source X (where to sample from)
-                let src_x = dest_x as f32 + offset;
-                if src_x < 0.0 {
-                    None
+                let src_x_f = dest_x as f32 + offset;
+                if src_x_f < 0.0 {
+                    SamplerOutput::no_displacement()
                 } else {
-                    Some((src_x.round() as u16, dest_y))
+                    let src_x = src_x_f.round() as u16;
+                    let delta_x = src_x as i32 - dest_x as i32;
+                    SamplerOutput::displaced(src_x, dest_y, delta_x, 0)
                 }
             }
             Axis::Y => {
@@ -85,11 +87,13 @@ impl Sampler for Pendulum {
                 let offset = self.amplitude * phase.sin();
 
                 // Calculate source Y (where to sample from)
-                let src_y = dest_y as f32 + offset;
-                if src_y < 0.0 {
-                    None
+                let src_y_f = dest_y as f32 + offset;
+                if src_y_f < 0.0 {
+                    SamplerOutput::no_displacement()
                 } else {
-                    Some((dest_x, src_y.round() as u16))
+                    let src_y = src_y_f.round() as u16;
+                    let delta_y = src_y as i32 - dest_y as i32;
+                    SamplerOutput::displaced(dest_x, src_y, 0, delta_y)
                 }
             }
         }
@@ -108,9 +112,9 @@ mod tests {
     fn test_pendulum_zero_amplitude_identity() {
         let sampler = Pendulum::new(0.0, 2.0, 0.3, Axis::X);
         // With zero amplitude, no displacement should occur
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)), Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)), Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)).source, Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)).source, Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)).source, Some((5, 7)));
     }
 
     #[test]
@@ -119,8 +123,8 @@ mod tests {
         // Y should always be unchanged for X-axis swing
         for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
             let result = sampler.sample(&ctx_at(5, 10, 20, 20, t));
-            assert!(result.is_some());
-            let (_, y) = result.unwrap();
+            assert!(result.source.is_some());
+            let (_, y) = result.source.unwrap();
             assert_eq!(y, 10);
         }
     }
@@ -131,8 +135,8 @@ mod tests {
         // X should always be unchanged for Y-axis swing
         for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
             let result = sampler.sample(&ctx_at(5, 10, 20, 20, t));
-            assert!(result.is_some());
-            let (x, _) = result.unwrap();
+            assert!(result.source.is_some());
+            let (x, _) = result.source.unwrap();
             assert_eq!(x, 5);
         }
     }
@@ -149,13 +153,13 @@ mod tests {
         let result_right = sampler.sample(&ctx_at(10, 5, 20, 20, 0.25));
         let result_left = sampler.sample(&ctx_at(10, 5, 20, 20, 0.75));
 
-        assert!(result_center.is_some());
-        assert!(result_right.is_some());
-        assert!(result_left.is_some());
+        assert!(result_center.source.is_some());
+        assert!(result_right.source.is_some());
+        assert!(result_left.source.is_some());
 
-        let (x_center, _) = result_center.unwrap();
-        let (x_right, _) = result_right.unwrap();
-        let (x_left, _) = result_left.unwrap();
+        let (x_center, _) = result_center.source.unwrap();
+        let (x_right, _) = result_right.source.unwrap();
+        let (x_left, _) = result_left.source.unwrap();
 
         // Right should be greater than center, left should be less
         assert!(
@@ -179,16 +183,29 @@ mod tests {
         let result_y0 = sampler.sample(&ctx_at(10, 0, 20, 20, 0.0));
         let result_y1 = sampler.sample(&ctx_at(10, 1, 20, 20, 0.0));
 
-        assert!(result_y0.is_some());
-        assert!(result_y1.is_some());
+        assert!(result_y0.source.is_some());
+        assert!(result_y1.source.is_some());
 
         // With phase_spread = 1.0, different rows should have different phases
         // Just verify both are valid
-        let (x0, _) = result_y0.unwrap();
-        let (x1, _) = result_y1.unwrap();
+        let (x0, _) = result_y0.source.unwrap();
+        let (x1, _) = result_y1.source.unwrap();
         let _ = (x0, x1); // Values will differ based on phase
+    }
+
+    #[test]
+    fn sample_emits_sampler_output_with_displacement_delta() {
+        // At t=0.25, phase = 0.25 * 1.0 * TAU = TAU/4; sin(TAU/4) = 1.0; offset = 2.0
+        // src_x = 10 + 2 = 12; delta_x = 2
+        let sampler = Pendulum::new(2.0, 1.0, 0.0, Axis::X);
+        let out = sampler.sample(&ctx_at(10, 5, 20, 20, 0.25));
+        assert!(out.source.is_some());
+        assert_eq!(out.delta_y, 0);
+        assert!(out.delta_x != 0);
+        let (src_x, _) = out.source.unwrap();
+        assert_eq!(out.delta_x, src_x as i32 - 10);
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_pendulum.rs</FILE> - <DESC>Pendulum sampler for bidirectional swaying motion</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_sine_wave.rs</FILE> - <DESC>SineWave sampler with axis and phase support</DESC>
-// <VERS>VERSION: 3.2.0</VERS>
-// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
-// <CLOG>3.2.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.
+// <VERS>VERSION: 3.3.0</VERS>
+// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
+// <CLOG>3.3.0: sample() now returns SamplerOutput; displacing branches carry axis delta; out-of-bounds returns no_displacement().</CLOG>
 
-use crate::traits::sampler::Sampler;
+use crate::traits::sampler::{Sampler, SamplerOutput};
 use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::Axis;
 use mixed_signals::prelude::{Normalized, Remap, Signal, SignalExt, Sine};
@@ -63,7 +63,7 @@ impl SineWave {
 }
 
 impl Sampler for SineWave {
-    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
         let t = ctx.t as f32;
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
@@ -72,22 +72,26 @@ impl Sampler for SineWave {
                 // Wave along Y, displaces X (horizontal wave motion)
                 let phase = dest_y as f32 * self.spatial_freq + t * self.speed + self.phase_offset;
                 let offset = self.signal.sample(phase.into());
-                let src_x = (dest_x as f32 + offset).round();
-                if src_x < 0.0 {
-                    None
+                let src_x_f = (dest_x as f32 + offset).round();
+                if src_x_f < 0.0 {
+                    SamplerOutput::no_displacement()
                 } else {
-                    Some((src_x as u16, dest_y))
+                    let src_x = src_x_f as u16;
+                    let delta_x = src_x as i32 - dest_x as i32;
+                    SamplerOutput::displaced(src_x, dest_y, delta_x, 0)
                 }
             }
             Axis::Y => {
                 // Wave along X, displaces Y (vertical wave motion)
                 let phase = dest_x as f32 * self.spatial_freq + t * self.speed + self.phase_offset;
                 let offset = self.signal.sample(phase.into());
-                let src_y = (dest_y as f32 + offset).round();
-                if src_y < 0.0 {
-                    None
+                let src_y_f = (dest_y as f32 + offset).round();
+                if src_y_f < 0.0 {
+                    SamplerOutput::no_displacement()
                 } else {
-                    Some((dest_x, src_y as u16))
+                    let src_y = src_y_f as u16;
+                    let delta_y = src_y as i32 - dest_y as i32;
+                    SamplerOutput::displaced(dest_x, src_y, 0, delta_y)
                 }
             }
         }
@@ -106,9 +110,9 @@ mod tests {
     fn test_sine_wave_zero_amplitude_identity() {
         let sampler = SineWave::new(0.0, 1.0, 1.0, Axis::X, 0.0);
         // With zero amplitude, no displacement should occur
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)), Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)), Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)).source, Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)).source, Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)).source, Some((5, 7)));
     }
 
     #[test]
@@ -116,8 +120,8 @@ mod tests {
         let sampler = SineWave::new(2.0, 0.5, 10.0, Axis::X, 0.0);
         // Should return same y, but potentially different x
         let result = sampler.sample(&ctx_at(5, 5, 10, 10, 0.0));
-        assert!(result.is_some());
-        let (_, y) = result.unwrap();
+        assert!(result.source.is_some());
+        let (_, y) = result.source.unwrap();
         assert_eq!(y, 5); // Y should be unchanged
     }
 
@@ -126,8 +130,8 @@ mod tests {
         let sampler = SineWave::new(2.0, 0.5, 10.0, Axis::Y, 0.0);
         // Should return same x, but potentially different y
         let result = sampler.sample(&ctx_at(5, 5, 10, 10, 0.0));
-        assert!(result.is_some());
-        let (x, _) = result.unwrap();
+        assert!(result.source.is_some());
+        let (x, _) = result.source.unwrap();
         assert_eq!(x, 5); // X should be unchanged
     }
 
@@ -135,16 +139,31 @@ mod tests {
     fn test_sine_wave_handles_edge_positions() {
         // Test that the sampler handles edge positions gracefully
         let sampler = SineWave::new(2.0, 0.5, 10.0, Axis::X, 0.0);
-        // Sampling at x=0 should either return a valid position or None
+        // Sampling at x=0 should either return a valid position or no_displacement
         let result = sampler.sample(&ctx_at(0, 5, 10, 10, 0.0));
         // Either valid Some(...) or None is acceptable - no panic
-        if let Some((x, y)) = result {
+        if let Some((x, y)) = result.source {
             assert_eq!(y, 5); // Y should still be unchanged
             // X might be 0 or nearby
             let _ = x;
         }
     }
+
+    #[test]
+    fn sample_emits_sampler_output_with_displacement_delta() {
+        // amplitude=2, spatial_freq=0.5, speed=10, Axis::X, phase_offset=0
+        // At dest_y=5, t=0: phase = 5*0.5 + 0 + 0 = 2.5; offset is non-zero for non-integer phase
+        // We just verify structure: delta_y=0 and delta_x == src_x - dest_x
+        let sampler = SineWave::new(2.0, 0.5, 10.0, Axis::X, 0.0);
+        let out = sampler.sample(&ctx_at(10, 5, 20, 20, 0.0));
+        assert!(out.source.is_some());
+        assert_eq!(out.delta_y, 0);
+        let (src_x, _) = out.source.unwrap();
+        assert_eq!(out.delta_x, src_x as i32 - 10);
+        // With amplitude=2 and phase=2.5, displacement should be non-zero
+        assert!(out.delta_x != 0);
+    }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_sine_wave.rs</FILE> - <DESC>SineWave sampler with axis and phase support</DESC>
-// <VERS>END OF VERSION: 3.2.0</VERS>
+// <VERS>END OF VERSION: 3.3.0</VERS>

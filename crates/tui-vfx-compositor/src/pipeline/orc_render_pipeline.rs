@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>VERSION: 12.4.0</VERS>
-// <WCTX>Pipeline observability Unit A — architect-flagged B2 follow-up: render_pipeline_with_shadow's element pass now emits the same per-stage block (Sampler/Mask/Shader/Filter) that render_loop_inspected uses, so a shadowed Role(Text)-on-all-Background recipe fires StageSkipped { ScopeMatchedZeroCells } instead of silently rendering zero cells.</WCTX>
-// <CLOG>12.4.0: refactor pre-loop / post-loop emit blocks into emit_per_stage_entered / emit_per_stage_finished helpers; render_pipeline_with_shadow's element pass calls them with start_step_id=2 (Shadow=1), and respects the returned skipped_shader_indices in its inline shader loop.</CLOG>
+// <VERS>VERSION: 13.0.0</VERS>
+// <WCTX>2026-04-26 packet Phase 4 — orchestrator now owns per-cell VfxCellContext construction so the sampler-accumulated resolved-coord delta reaches every downstream stage (mask, shader, filter).</WCTX>
+// <CLOG>13.0.0: BREAKING — sample_sampler_chain returns SamplerChainOutcome (source + delta); orchestrator threads (delta_x, delta_y) into VfxCellContext::with_sampler_resolution and ShaderContext::with_sampler_resolution; check_prepared_masks and PreparedFilter::apply now take &VfxCellContext.</CLOG>
 
 use super::cls_composition_options::CompositionOptions;
 use super::cls_composition_playback_timing::CompositionPlaybackTiming;
@@ -30,7 +30,7 @@ use std::sync::Arc;
 use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
 use tui_vfx_style::models::StyleRegion;
 use tui_vfx_style::traits::ShaderContext;
-use tui_vfx_types::{Grid, Rect, RoleMap, RoleTag, SemanticScene, Style};
+use tui_vfx_types::{Grid, Rect, RoleMap, RoleTag, SemanticScene, Style, VfxCellContext};
 
 // Thread-local cache for the Arc<RoleMap> the shader context receives.
 //
@@ -419,12 +419,22 @@ fn render_pipeline_with_shadow(
         for x in 0..width {
             let (local_x, local_y) = (x as u16, y as u16);
 
-            // Sample coordinates (sampler operates on element dimensions)
-            let (src_x, src_y) =
-                match sample_sampler_chain(&samplers, local_x, local_y, w16, h16, options.t) {
-                    (Some(sx), Some(sy)) => (sx, sy),
-                    _ => continue,
-                };
+            // Sample coordinates (sampler operates on element dimensions).
+            // The chain reports both the final source coord and the
+            // accumulated delta so downstream stages can react to the
+            // sampler-induced displacement.
+            let chain_outcome =
+                sample_sampler_chain(&samplers, local_x, local_y, w16, h16, options.t);
+            let (src_x, src_y) = match (chain_outcome.source_x, chain_outcome.source_y) {
+                (Some(sx), Some(sy)) => (sx, sy),
+                _ => continue,
+            };
+            let (delta_x, delta_y) = (chain_outcome.delta_x, chain_outcome.delta_y);
+
+            // Per-stage ctx template: same spatial fields, sampler delta
+            // threaded in. `t` is overridden per-stage from a Copy of this.
+            let base_ctx = VfxCellContext::new(local_x, local_y, w16, h16, 0, 0, options.t)
+                .with_sampler_resolution(delta_x, delta_y);
 
             // Get source cell
             let Some(source_cell) = source.get(src_x as usize, src_y as usize) else {
@@ -462,7 +472,8 @@ fn render_pipeline_with_shadow(
                         options.phase,
                         Some(options.runtime_params.clone()),
                     )
-                    .with_roles(roles_arc.clone());
+                    .with_roles(roles_arc.clone())
+                    .with_sampler_resolution(delta_x, delta_y);
                     let current_style = Style {
                         fg: out_cell.fg,
                         bg: out_cell.bg,
@@ -475,9 +486,11 @@ fn render_pipeline_with_shadow(
                 }
             }
 
-            // Apply filters
+            // Apply filters — derive per-stage ctx with t = loop_t.
+            let mut filter_ctx = base_ctx;
+            filter_ctx.t = loop_t;
             for filter in &prepared_filters {
-                filter.apply(&mut out_cell, local_x, local_y, w16, h16, loop_t);
+                filter.apply(&mut out_cell, &filter_ctx);
             }
 
             // Write to buffer at element position
@@ -512,13 +525,13 @@ fn render_pipeline_with_shadow(
             for x in 0..ext_width {
                 let (local_x, local_y) = (x as u16, y as u16);
 
-                // Check mask visibility over extended area
+                // Check mask visibility over extended area. No sampler runs
+                // in this write-back loop, so the mask sees a ctx with zero
+                // sampler delta (resolved == local).
+                let mask_ctx =
+                    VfxCellContext::new(local_x, local_y, ext_w16, ext_h16, 0, 0, mask_t);
                 if !check_prepared_masks(
-                    local_x,
-                    local_y,
-                    ext_w16,
-                    ext_h16,
-                    mask_t,
+                    &mask_ctx,
                     &prepared_masks,
                     options.mask_combine_mode,
                     Some(inspector),
@@ -642,13 +655,13 @@ fn render_pipeline_with_shadow(
             for x in 0..ext_width {
                 let (local_x, local_y) = (x as u16, y as u16);
 
-                // Check mask visibility over extended area
+                // Check mask visibility over extended area. No sampler runs
+                // in this write-back loop, so the mask sees a ctx with zero
+                // sampler delta (resolved == local).
+                let mask_ctx =
+                    VfxCellContext::new(local_x, local_y, ext_w16, ext_h16, 0, 0, mask_t);
                 if !check_prepared_masks(
-                    local_x,
-                    local_y,
-                    ext_w16,
-                    ext_h16,
-                    mask_t,
+                    &mask_ctx,
                     &prepared_masks,
                     options.mask_combine_mode,
                     None,
@@ -835,24 +848,24 @@ fn render_loop(
         for x in 0..width {
             let (local_x, local_y) = (x as u16, y as u16);
 
-            // Sample coordinates
-            let (src_x, src_y) =
-                match sample_sampler_chain(samplers, local_x, local_y, w16, h16, options.t) {
-                    (Some(sx), Some(sy)) => (sx, sy),
-                    _ => continue,
-                };
+            // Sample coordinates — capture both source and accumulated delta.
+            let chain_outcome =
+                sample_sampler_chain(samplers, local_x, local_y, w16, h16, options.t);
+            let (src_x, src_y) = match (chain_outcome.source_x, chain_outcome.source_y) {
+                (Some(sx), Some(sy)) => (sx, sy),
+                _ => continue,
+            };
+            let (delta_x, delta_y) = (chain_outcome.delta_x, chain_outcome.delta_y);
 
-            // Check mask visibility
-            if !check_prepared_masks(
-                local_x,
-                local_y,
-                w16,
-                h16,
-                mask_t,
-                prepared_masks,
-                options.mask_combine_mode,
-                None,
-            ) {
+            // Per-cell ctx with sampler delta threaded in. `t` is overridden
+            // per-stage from a Copy of this template.
+            let base_ctx = VfxCellContext::new(local_x, local_y, w16, h16, 0, 0, options.t)
+                .with_sampler_resolution(delta_x, delta_y);
+
+            // Check mask visibility — derive ctx with t = mask_t.
+            let mut mask_ctx = base_ctx;
+            mask_ctx.t = mask_t;
+            if !check_prepared_masks(&mask_ctx, prepared_masks, options.mask_combine_mode, None) {
                 continue;
             }
 
@@ -879,11 +892,15 @@ fn render_loop(
                 shader_area,
                 source_role,
                 &roles_arc,
+                delta_x,
+                delta_y,
             );
 
-            // Apply filters
+            // Apply filters — derive ctx with t = loop_t.
+            let mut filter_ctx = base_ctx;
+            filter_ctx.t = loop_t;
             for filter in prepared_filters {
-                filter.apply(&mut out_cell, local_x, local_y, w16, h16, loop_t);
+                filter.apply(&mut out_cell, &filter_ctx);
             }
 
             dest.set(offset_x + x, offset_y + y, out_cell);
@@ -967,31 +984,35 @@ fn render_loop_inspected(
         for x in 0..width {
             let (local_x, local_y) = (x as u16, y as u16);
 
-            // Sample coordinates
-            let (src_local_x, src_local_y) =
+            // Sample coordinates — capture both source and accumulated delta.
+            let chain_outcome =
                 sample_sampler_chain(samplers, local_x, local_y, w16, h16, options.t);
             if let Some(sampler_label) = sampler_label {
                 inspector.on_sampler_applied(
                     local_x,
                     local_y,
-                    src_local_x,
-                    src_local_y,
+                    chain_outcome.source_x,
+                    chain_outcome.source_y,
                     sampler_label,
                 );
             }
 
-            let (src_x, src_y) = match (src_local_x, src_local_y) {
+            let (src_x, src_y) = match (chain_outcome.source_x, chain_outcome.source_y) {
                 (Some(sx), Some(sy)) => (sx, sy),
                 _ => continue,
             };
+            let (delta_x, delta_y) = (chain_outcome.delta_x, chain_outcome.delta_y);
 
-            // Check masks with inspector
+            // Per-cell ctx with sampler delta threaded in. `t` is overridden
+            // per-stage from a Copy of this template.
+            let base_ctx = VfxCellContext::new(local_x, local_y, w16, h16, 0, 0, options.t)
+                .with_sampler_resolution(delta_x, delta_y);
+
+            // Check masks with inspector — derive ctx with t = mask_t.
+            let mut mask_ctx = base_ctx;
+            mask_ctx.t = mask_t;
             if !check_prepared_masks(
-                local_x,
-                local_y,
-                w16,
-                h16,
-                mask_t,
+                &mask_ctx,
                 prepared_masks,
                 options.mask_combine_mode,
                 Some(inspector),
@@ -1024,12 +1045,16 @@ fn render_loop_inspected(
                 source_role,
                 &roles_arc,
                 skipped_shader_indices,
+                delta_x,
+                delta_y,
             );
 
-            // Apply filters with inspector
+            // Apply filters with inspector — derive ctx with t = loop_t.
+            let mut filter_ctx = base_ctx;
+            filter_ctx.t = loop_t;
             for (filter_index, filter) in prepared_filters.iter().enumerate() {
                 let before_cell = out_cell;
-                filter.apply(&mut out_cell, local_x, local_y, w16, h16, loop_t);
+                filter.apply(&mut out_cell, &filter_ctx);
                 inspector.on_filter_applied(
                     local_x,
                     local_y,
@@ -1065,6 +1090,11 @@ fn compute_mask_t(options: &CompositionOptions<'_>) -> f64 {
 }
 
 /// Apply shader layers to a cell.
+///
+/// `delta_x` / `delta_y` carry the sampler chain's accumulated resolved-coord
+/// delta; the orchestrator threads them through so shader contexts observe
+/// per-cell sampler displacement via [`ShaderContext::with_sampler_resolution`]
+/// — a `Deref`-reachable read of `ctx.resolved_x` / `ctx.resolved_y`.
 #[allow(clippy::too_many_arguments)]
 fn apply_shaders(
     out_cell: &mut tui_vfx_types::Cell,
@@ -1080,6 +1110,8 @@ fn apply_shaders(
     shader_area: Rect,
     source_role: Option<tui_vfx_types::RoleTag>,
     roles_arc: &Arc<RoleMap>,
+    delta_x: i32,
+    delta_y: i32,
 ) {
     for (layer, resolved) in options.shader_layers.iter().zip(resolved_regions.iter()) {
         // `resolved` was produced once per layer per frame by the caller.
@@ -1099,7 +1131,8 @@ fn apply_shaders(
                 options.phase,
                 Some(options.runtime_params.clone()),
             )
-            .with_roles(roles_arc.clone());
+            .with_roles(roles_arc.clone())
+            .with_sampler_resolution(delta_x, delta_y);
 
             let current_style = Style {
                 fg: out_cell.fg,
@@ -1138,6 +1171,8 @@ fn apply_shaders_inspected(
     source_role: Option<tui_vfx_types::RoleTag>,
     roles_arc: &Arc<RoleMap>,
     skipped_shader_indices: &[usize],
+    delta_x: i32,
+    delta_y: i32,
 ) {
     for (shader_index, (layer, resolved)) in options
         .shader_layers
@@ -1164,7 +1199,8 @@ fn apply_shaders_inspected(
                 options.phase,
                 Some(options.runtime_params.clone()),
             )
-            .with_roles(roles_arc.clone());
+            .with_roles(roles_arc.clone())
+            .with_sampler_resolution(delta_x, delta_y);
 
             let before_style = Style {
                 fg: out_cell.fg,
@@ -1188,4 +1224,4 @@ fn apply_shaders_inspected(
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs</FILE> - <DESC>Pipeline orchestrator with signal-driven composition</DESC>
-// <VERS>END OF VERSION: 12.4.0</VERS>
+// <VERS>END OF VERSION: 13.0.0</VERS>

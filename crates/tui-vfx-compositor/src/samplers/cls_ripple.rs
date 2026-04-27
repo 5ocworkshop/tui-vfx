@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_ripple.rs</FILE> - <DESC>Ripple sampler with configurable center</DESC>
-// <VERS>VERSION: 3.2.0</VERS>
-// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
-// <CLOG>3.2.0: sample() now takes &VfxCellContext; dest_x/dest_y/width/height/t reach via ctx fields.
+// <VERS>VERSION: 3.3.0</VERS>
+// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
+// <CLOG>3.3.0: sample() now returns SamplerOutput; center short-circuit uses passthrough(); displacing branch carries full x/y deltas; out-of-bounds returns no_displacement().</CLOG>
 
-use crate::traits::sampler::Sampler;
+use crate::traits::sampler::{Sampler, SamplerOutput};
 use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::RippleCenter;
 use mixed_signals::prelude::{Normalized, Remap, Signal, SignalExt, Sine};
@@ -64,7 +64,7 @@ impl Ripple {
 }
 
 impl Sampler for Ripple {
-    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
         let t = ctx.t as f32;
@@ -80,7 +80,7 @@ impl Sampler for Ripple {
 
         if dist < 0.001 {
             // At the center, no displacement
-            return Some((dest_x, dest_y));
+            return SamplerOutput::passthrough(dest_x, dest_y);
         }
 
         // Calculate ripple displacement using remapped Sine
@@ -93,13 +93,17 @@ impl Sampler for Ripple {
         let ny = dy / dist;
 
         // Apply radial displacement
-        let src_x = dest_x as f32 + nx * displacement;
-        let src_y = dest_y as f32 + ny * displacement;
+        let src_x_f = dest_x as f32 + nx * displacement;
+        let src_y_f = dest_y as f32 + ny * displacement;
 
-        if src_x < 0.0 || src_y < 0.0 {
-            None
+        if src_x_f < 0.0 || src_y_f < 0.0 {
+            SamplerOutput::no_displacement()
         } else {
-            Some((src_x.round() as u16, src_y.round() as u16))
+            let src_x = src_x_f.round() as u16;
+            let src_y = src_y_f.round() as u16;
+            let delta_x = src_x as i32 - dest_x as i32;
+            let delta_y = src_y as i32 - dest_y as i32;
+            SamplerOutput::displaced(src_x, src_y, delta_x, delta_y)
         }
     }
 }
@@ -126,14 +130,14 @@ mod tests {
     fn test_ripple_at_center_no_displacement() {
         let ripple = Ripple::default();
         let result = ripple.sample(&ctx_at(10, 10, 0.0));
-        assert_eq!(result, Some((10, 10)));
+        assert_eq!(result.source, Some((10, 10)));
     }
 
     #[test]
     fn test_ripple_returns_some() {
         let ripple = Ripple::default();
         let result = ripple.sample(&ctx_at(5, 5, 0.5));
-        assert!(result.is_some());
+        assert!(result.source.is_some());
     }
 
     #[test]
@@ -141,9 +145,24 @@ mod tests {
         let ripple = Ripple::default();
         let r1 = ripple.sample(&ctx_at(15, 10, 0.0));
         let r2 = ripple.sample(&ctx_at(15, 10, 0.25));
-        assert!(r1.is_some() && r2.is_some());
+        assert!(r1.source.is_some() && r2.source.is_some());
+    }
+
+    #[test]
+    fn sample_emits_sampler_output_with_displacement_delta() {
+        // Off-center cell at (15, 10) is 5 cells from center (10, 10)
+        // At some t, the ripple phase produces a non-zero displacement
+        let ripple = Ripple::new(1.5, 4.0, 2.0, RippleCenter::Center);
+        let out = ripple.sample(&ctx_at(15, 10, 0.0));
+        assert!(out.source.is_some());
+        // Deltas must equal src - dest
+        let (src_x, src_y) = out.source.unwrap();
+        assert_eq!(out.delta_x, src_x as i32 - 15);
+        assert_eq!(out.delta_y, src_y as i32 - 10);
+        // With amplitude 1.5 and horizontal displacement from center, delta_x should be non-zero
+        assert!(out.delta_x != 0 || out.delta_y != 0);
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_ripple.rs</FILE> - <DESC>Ripple sampler with configurable center</DESC>
-// <VERS>END OF VERSION: 3.2.0</VERS>
+// <VERS>END OF VERSION: 3.3.0</VERS>

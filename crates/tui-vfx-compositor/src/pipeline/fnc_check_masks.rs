@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/fnc_check_masks.rs</FILE> - <DESC>Mask visibility checking with optional inspector</DESC>
-// <VERS>VERSION: 1.3.0</VERS>
-// <WCTX>Slice 6.6 §F.3 — migrate Mask dispatcher to build VfxCellContext once per cell</WCTX>
-// <CLOG>1.3.0: MINOR — build VfxCellContext once per call and pass &ctx to all 4 is_visible sites; screen_x/screen_y default to 0 until the dispatcher gains them (TODO F.6-followup).</CLOG>
+// <VERS>VERSION: 2.0.0</VERS>
+// <WCTX>2026-04-26 packet Phase 4 — orchestrator owns ctx construction so the sampler-accumulated resolved-coord delta reaches every mask check.</WCTX>
+// <CLOG>2.0.0: BREAKING — check_prepared_masks now takes &VfxCellContext instead of (local_x, local_y, width, height, t); call sites in orc_render_pipeline.rs build ctx once per cell with .with_sampler_resolution applied.</CLOG>
 
 use super::cls_prepared_mask::{PreparedMask, prepare_masks};
 use crate::traits::pipeline_inspector::CompositorInspector;
@@ -14,21 +14,14 @@ use tui_vfx_types::VfxCellContext;
 ///
 /// Optionally reports to an inspector for debugging.
 ///
-/// # Arguments
-/// * `local_x`, `local_y` - Position in local coordinates
-/// * `width`, `height` - Dimensions of the area
-/// * `t` - Progress value for mask evaluation
-/// * `masks` - Prepared masks to check against
-/// * `combine_mode` - How to combine multiple mask results
-/// * `inspector` - Optional inspector for debugging callbacks
-#[allow(clippy::too_many_arguments)]
+/// `ctx` is built once per cell by the caller and is expected to carry the
+/// sampler-accumulated resolved-coord delta (via
+/// [`VfxCellContext::with_sampler_resolution`]). Mask impls that read
+/// `ctx.resolved_x` / `ctx.resolved_y` will see per-cell sampler
+/// displacement when a sampler is in flight.
 #[inline]
 pub(crate) fn check_prepared_masks(
-    local_x: u16,
-    local_y: u16,
-    width: u16,
-    height: u16,
-    t: f64,
+    ctx: &VfxCellContext,
     masks: &SmallVec<[PreparedMask; 2]>,
     combine_mode: MaskCombineMode,
     inspector: Option<&mut dyn CompositorInspector>,
@@ -37,9 +30,6 @@ pub(crate) fn check_prepared_masks(
         return true;
     }
 
-    // TODO(F.6-followup): plumb screen offsets when the dispatcher gains them.
-    let ctx = VfxCellContext::new(local_x, local_y, width, height, 0, 0, t);
-
     // Inspector path: must evaluate every mask so every one is reported,
     // regardless of combine_mode. Collect and delegate to combine_results.
     if let Some(inspector) = inspector {
@@ -47,10 +37,10 @@ pub(crate) fn check_prepared_masks(
             .iter()
             .enumerate()
             .map(|(index, mask)| {
-                let visible = mask.is_visible(&ctx);
+                let visible = mask.is_visible(ctx);
                 inspector.on_mask_checked(
-                    local_x,
-                    local_y,
+                    ctx.local_x,
+                    ctx.local_y,
                     visible,
                     &format!("{}#{}", mask.name(), index + 1),
                 );
@@ -63,12 +53,12 @@ pub(crate) fn check_prepared_masks(
     // Non-inspector path: short-circuit mask evaluation when the outcome
     // is already decided.
     match combine_mode {
-        MaskCombineMode::All => masks.iter().all(|mask| mask.is_visible(&ctx)),
-        MaskCombineMode::Any => masks.iter().any(|mask| mask.is_visible(&ctx)),
+        MaskCombineMode::All => masks.iter().all(|mask| mask.is_visible(ctx)),
+        MaskCombineMode::Any => masks.iter().any(|mask| mask.is_visible(ctx)),
         MaskCombineMode::Blend { .. } => {
             let results: SmallVec<[bool; 2]> = masks
                 .iter()
-                .map(|mask| mask.is_visible(&ctx))
+                .map(|mask| mask.is_visible(ctx))
                 .collect();
             combine_results(&results, combine_mode)
         }
@@ -99,7 +89,11 @@ fn combine_results(results: &SmallVec<[bool; 2]>, combine_mode: MaskCombineMode)
 
 /// Public wrapper for mask checking using MaskSpec.
 ///
-/// Prepares masks from specs and delegates to check_prepared_masks.
+/// Prepares masks from specs and delegates to check_prepared_masks. The
+/// constructed ctx defaults `screen_x`/`screen_y` to 0 and starts with
+/// `resolved_x = local_x` / `resolved_y = local_y` (no sampler in flight)
+/// — callers that need a sampler-displaced resolved coord should drop to
+/// the lower-level wrapper that takes `&VfxCellContext` directly.
 pub fn check_masks(
     local_x: u16,
     local_y: u16,
@@ -110,17 +104,9 @@ pub fn check_masks(
     combine_mode: MaskCombineMode,
 ) -> bool {
     let prepared = prepare_masks(masks);
-    check_prepared_masks(
-        local_x,
-        local_y,
-        width,
-        height,
-        t,
-        &prepared,
-        combine_mode,
-        None,
-    )
+    let ctx = VfxCellContext::new(local_x, local_y, width, height, 0, 0, t);
+    check_prepared_masks(&ctx, &prepared, combine_mode, None)
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/fnc_check_masks.rs</FILE> - <DESC>Mask visibility checking with optional inspector</DESC>
-// <VERS>END OF VERSION: 1.3.0</VERS>
+// <VERS>END OF VERSION: 2.0.0</VERS>

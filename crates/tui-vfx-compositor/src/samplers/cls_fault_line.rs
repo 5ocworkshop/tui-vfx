@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_fault_line.rs</FILE> - <DESC>FaultLine sampler implementation</DESC>
-// <VERS>VERSION: 2.1.0</VERS>
-// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
-// <CLOG>2.1.0: sample() now takes &VfxCellContext; dest_x/dest_y/height/t reach via ctx fields.</CLOG>
+// <VERS>VERSION: 2.2.0</VERS>
+// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
+// <CLOG>2.2.0: sample() now returns SamplerOutput; displacing branch carries delta_x; out-of-bounds returns no_displacement().</CLOG>
 
-use crate::traits::sampler::Sampler;
+use crate::traits::sampler::{Sampler, SamplerOutput};
 use tui_vfx_types::VfxCellContext;
 use std::hash::{Hash, Hasher};
 
@@ -57,7 +57,7 @@ impl FaultLine {
 }
 
 impl Sampler for FaultLine {
-    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
         let t = ctx.t as f32;
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
@@ -70,16 +70,18 @@ impl Sampler for FaultLine {
         let base_offset = (1.0 - t) * 20.0 * self.intensity;
         let offset = base_offset.round() as i32;
 
-        let src_x = if dest_y < split_y {
+        let src_x_i = if dest_y < split_y {
             dest_x as i32 - offset
         } else {
             dest_x as i32 + offset
         };
 
-        if src_x < 0 {
-            None
+        if src_x_i < 0 {
+            SamplerOutput::no_displacement()
         } else {
-            Some((src_x as u16, dest_y))
+            let src_x = src_x_i as u16;
+            let delta_x = src_x as i32 - dest_x as i32;
+            SamplerOutput::displaced(src_x, dest_y, delta_x, 0)
         }
     }
 }
@@ -106,7 +108,7 @@ mod tests {
         let sampler = FaultLine::new(1, 1.0, 0.0);
         // At t=1.0, offset should be 0 (content comes together)
         let result = sampler.sample(&ctx_at(5, 0, 10, 10, 1.0));
-        assert_eq!(result, Some((5, 0)));
+        assert_eq!(result.source, Some((5, 0)));
     }
 
     #[test]
@@ -117,8 +119,8 @@ mod tests {
         // Above split: x - offset
         // offset = (1-0) * 20 * 1.0 = 20
         // src_x = 50 - 20 = 30
-        assert!(result.is_some());
-        let (x, _) = result.unwrap();
+        assert!(result.source.is_some());
+        let (x, _) = result.source.unwrap();
         assert_ne!(x, 50); // Should be displaced
     }
 
@@ -131,7 +133,7 @@ mod tests {
         let above = sampler.sample(&ctx_at(50, 0, 100, 10, 0.0));
         let below = sampler.sample(&ctx_at(50, 9, 100, 10, 0.0));
 
-        if let (Some((ax, _)), Some((bx, _))) = (above, below) {
+        if let (Some((ax, _)), Some((bx, _))) = (above.source, below.source) {
             // One should be < 50, other should be > 50 (or at different offsets)
             assert!(ax != bx);
         }
@@ -140,12 +142,24 @@ mod tests {
     #[test]
     fn test_fault_line_negative_x_returns_none() {
         let sampler = FaultLine::new(1, 1.0, 0.0);
-        // Small x with large offset should return None
+        // Small x with large offset should return no_displacement
         let result = sampler.sample(&ctx_at(5, 0, 100, 10, 0.0));
         // offset = 20, src_x = 5 - 20 = -15 < 0
-        assert_eq!(result, None);
+        assert_eq!(result.source, None);
+    }
+
+    #[test]
+    fn sample_emits_sampler_output_with_displacement_delta() {
+        // At t=0.5: offset = (1-0.5) * 20 * 1.0 = 10; row 0 is above split -> src_x = 50 - 10 = 40
+        let sampler = FaultLine::new(1, 1.0, 0.0);
+        let out = sampler.sample(&ctx_at(50, 0, 100, 10, 0.5));
+        assert!(out.source.is_some());
+        assert_eq!(out.delta_y, 0);
+        let (src_x, _) = out.source.unwrap();
+        assert_eq!(out.delta_x, src_x as i32 - 50);
+        assert!(out.delta_x != 0);
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_fault_line.rs</FILE> - <DESC>FaultLine sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.1.0</VERS>
+// <VERS>END OF VERSION: 2.2.0</VERS>

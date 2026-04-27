@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-types/src/glyph/fnc_sample_eight_subcells.rs</FILE> - <DESC>sample_eight_subcells and sample_eight_subcells_with_slope: sample any Signal at the eight braille subcell positions</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Glyph rendering framework Phase 3: subcell sampling helpers for water/fire/future field-effect glyph encoding</WCTX>
-// <CLOG>0.1.0: initial implementation with TDD coverage and rustdoc</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Resolve a pre-existing rustdoc-broken-intra-doc-link warning surfaced by `cargo doc -p tui-vfx-types`.</WCTX>
+// <CLOG>0.1.1: qualify [GlyphEncoder::encode_subcell] as [crate::glyph::GlyphEncoder::encode_subcell] so rustdoc resolves the link from this child module.</CLOG>
 
 use mixed_signals::traits::{Signal, SignalContext, SignalTime};
 use mixed_signals::traits::{SignalWithSlope, SlopeSample};
@@ -46,8 +46,8 @@ pub const SUBCELL_OFFSETS: [(f32, f32); 8] = [
 /// Sample any `Signal` at the eight braille subcell positions inside one cell.
 ///
 /// The returned array is indexed by braille dot number minus one (matches
-/// [`GlyphEncoder::encode_subcell`]'s expected order), so a `BrailleSubcell`
-/// encoder can pack the result directly without remap.
+/// [`crate::glyph::GlyphEncoder::encode_subcell`]'s expected order), so a
+/// `BrailleSubcell` encoder can pack the result directly without remap.
 ///
 /// Each subcell call clones `ctx`, applies `with_subcell_offset(dx, dy)`, and
 /// invokes `signal.sample_with_context(t, &sub_ctx)`. The cost is eight full
@@ -141,4 +141,4 @@ pub fn sample_eight_subcells_with_slope<S: SignalWithSlope>(
 mod tests;
 
 // <FILE>crates/tui-vfx-types/src/glyph/fnc_sample_eight_subcells.rs</FILE> - <DESC>sample_eight_subcells and sample_eight_subcells_with_slope: sample any Signal at the eight braille subcell positions</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

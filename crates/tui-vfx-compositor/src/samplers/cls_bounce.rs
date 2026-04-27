@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_bounce.rs</FILE> - <DESC>Bounce sampler for bouncing ball vertical displacement</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
-// <CLOG>1.1.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
+// <CLOG>1.2.0: sample() now returns SamplerOutput; displacing branch carries delta_y; out-of-bounds returns no_displacement().</CLOG>
 
-use crate::traits::sampler::Sampler;
+use crate::traits::sampler::{Sampler, SamplerOutput};
 use tui_vfx_types::VfxCellContext;
 use std::f32::consts::TAU;
 
@@ -61,7 +61,7 @@ impl Bounce {
 }
 
 impl Sampler for Bounce {
-    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
         let t = ctx.t as f32;
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
@@ -78,13 +78,15 @@ impl Sampler for Bounce {
         // Bounce moves UP (negative Y in terminal coordinates)
         // We're finding the SOURCE y to sample from for this DESTINATION y
         // If dest is at the "bounced up" position, source is lower (higher Y value)
-        let src_y = dest_y as f32 + bounce;
+        let src_y_f = dest_y as f32 + bounce;
 
         // Clamp to valid range
-        if src_y < 0.0 {
-            None
+        if src_y_f < 0.0 {
+            SamplerOutput::no_displacement()
         } else {
-            Some((dest_x, src_y.round() as u16))
+            let src_y = src_y_f.round() as u16;
+            let delta_y = src_y as i32 - dest_y as i32;
+            SamplerOutput::displaced(dest_x, src_y, 0, delta_y)
         }
     }
 }
@@ -101,9 +103,9 @@ mod tests {
     fn test_bounce_zero_amplitude_identity() {
         let sampler = Bounce::new(0.0, 4.0, 0.5);
         // With zero amplitude, no displacement should occur
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)), Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)), Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)), Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)).source, Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)).source, Some((5, 7)));
+        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)).source, Some((5, 7)));
     }
 
     #[test]
@@ -112,8 +114,8 @@ mod tests {
         // X should always be unchanged
         for t in [0.0, 0.25, 0.5, 0.75, 1.0] {
             let result = sampler.sample(&ctx_at(5, 10, 20, 20, t));
-            assert!(result.is_some());
-            let (x, _) = result.unwrap();
+            assert!(result.source.is_some());
+            let (x, _) = result.source.unwrap();
             assert_eq!(x, 5);
         }
     }
@@ -124,8 +126,8 @@ mod tests {
         // Source Y should always be >= dest Y (bounce adds positive offset)
         for t in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5] {
             let result = sampler.sample(&ctx_at(0, 10, 20, 20, t));
-            assert!(result.is_some());
-            let (_, y) = result.unwrap();
+            assert!(result.source.is_some());
+            let (_, y) = result.source.unwrap();
             assert!(y >= 10, "Source Y {} should be >= dest Y 10 at t={}", y, t);
         }
     }
@@ -137,11 +139,11 @@ mod tests {
         let result_x0 = sampler.sample(&ctx_at(0, 10, 20, 20, 0.0));
         let result_x1 = sampler.sample(&ctx_at(1, 10, 20, 20, 0.0));
 
-        assert!(result_x0.is_some());
-        assert!(result_x1.is_some());
+        assert!(result_x0.source.is_some());
+        assert!(result_x1.source.is_some());
 
-        let (_, y0) = result_x0.unwrap();
-        let (_, y1) = result_x1.unwrap();
+        let (_, y0) = result_x0.source.unwrap();
+        let (_, y1) = result_x1.source.unwrap();
 
         // With phase_spread = 1.0, adjacent columns should have different offsets
         // (unless we happen to hit a point where sin values coincide)
@@ -161,10 +163,10 @@ mod tests {
 
         for i in 0..100 {
             let t = i as f64 / 100.0;
-            if let Some((_, y)) = small_bounce.sample(&ctx_at(0, 10, 20, 20, t)) {
+            if let Some((_, y)) = small_bounce.sample(&ctx_at(0, 10, 20, 20, t)).source {
                 max_small = max_small.max(y.saturating_sub(10));
             }
-            if let Some((_, y)) = large_bounce.sample(&ctx_at(0, 10, 20, 20, t)) {
+            if let Some((_, y)) = large_bounce.sample(&ctx_at(0, 10, 20, 20, t)).source {
                 max_large = max_large.max(y.saturating_sub(10));
             }
         }
@@ -176,7 +178,20 @@ mod tests {
             max_small
         );
     }
+
+    #[test]
+    fn sample_emits_sampler_output_with_displacement_delta() {
+        // At t=0.25 with phase_spread=0, phase = 0.25*4*TAU = 2*PI = 0 mod TAU
+        // Use t=0.125 to get sin(pi/4) ~ 0.707, amplitude=2 -> bounce ~ 1.41 -> rounds to 1
+        let sampler = Bounce::new(2.0, 4.0, 0.0);
+        // At t=0.0625: phase = 0.0625 * 4 * TAU = TAU/4, sin(TAU/4) = 1.0, bounce = 2.0
+        let out = sampler.sample(&ctx_at(5, 10, 20, 20, 0.0625));
+        assert!(out.source.is_some());
+        assert_eq!(out.delta_x, 0);
+        // bounce = 2.0 * sin(TAU/4).abs() = 2.0 * 1.0 = 2.0, src_y = 10 + 2 = 12
+        assert_eq!(out.delta_y, 2);
+    }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_bounce.rs</FILE> - <DESC>Bounce sampler for bouncing ball vertical displacement</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

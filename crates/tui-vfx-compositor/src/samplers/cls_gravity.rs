@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_gravity.rs</FILE> - <DESC>Gravity sampler for parabolic acceleration displacement</DESC>
-// <VERS>VERSION: 1.1.0</VERS>
-// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
-// <CLOG>1.1.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.</CLOG>
+// <VERS>VERSION: 1.2.0</VERS>
+// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
+// <CLOG>1.2.0: sample() now returns SamplerOutput; displacing branches carry axis delta; out-of-bounds returns no_displacement().</CLOG>
 
-use crate::traits::sampler::Sampler;
+use crate::traits::sampler::{Sampler, SamplerOutput};
 use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::Axis;
 
@@ -61,7 +61,7 @@ impl Gravity {
 }
 
 impl Sampler for Gravity {
-    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
         let t = ctx.t as f32;
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
@@ -76,19 +76,23 @@ impl Sampler for Gravity {
 
         match self.axis {
             Axis::X => {
-                let src_x = dest_x as f32 + displacement;
-                if src_x < 0.0 {
-                    None
+                let src_x_f = dest_x as f32 + displacement;
+                if src_x_f < 0.0 {
+                    SamplerOutput::no_displacement()
                 } else {
-                    Some((src_x.round() as u16, dest_y))
+                    let src_x = src_x_f.round() as u16;
+                    let delta_x = src_x as i32 - dest_x as i32;
+                    SamplerOutput::displaced(src_x, dest_y, delta_x, 0)
                 }
             }
             Axis::Y => {
-                let src_y = dest_y as f32 + displacement;
-                if src_y < 0.0 {
-                    None
+                let src_y_f = dest_y as f32 + displacement;
+                if src_y_f < 0.0 {
+                    SamplerOutput::no_displacement()
                 } else {
-                    Some((dest_x, src_y.round() as u16))
+                    let src_y = src_y_f.round() as u16;
+                    let delta_y = src_y as i32 - dest_y as i32;
+                    SamplerOutput::displaced(dest_x, src_y, 0, delta_y)
                 }
             }
         }
@@ -106,15 +110,15 @@ mod tests {
     #[test]
     fn zero_time_no_displacement() {
         let sampler = Gravity::new(10.0, 20.0, Axis::Y);
-        assert_eq!(sampler.sample(&ctx_at(5, 10, 0.0)), Some((5, 10)));
+        assert_eq!(sampler.sample(&ctx_at(5, 10, 0.0)).source, Some((5, 10)));
     }
 
     #[test]
     fn positive_acceleration_increases_y() {
         let sampler = Gravity::new(8.0, 20.0, Axis::Y);
-        let (_, y0) = sampler.sample(&ctx_at(5, 10, 0.0)).unwrap();
-        let (_, y1) = sampler.sample(&ctx_at(5, 10, 0.5)).unwrap();
-        let (_, y2) = sampler.sample(&ctx_at(5, 10, 1.0)).unwrap();
+        let (_, y0) = sampler.sample(&ctx_at(5, 10, 0.0)).source.unwrap();
+        let (_, y1) = sampler.sample(&ctx_at(5, 10, 0.5)).source.unwrap();
+        let (_, y2) = sampler.sample(&ctx_at(5, 10, 1.0)).source.unwrap();
         assert!(y1 >= y0, "Should move downward over time");
         assert!(y2 >= y1, "Should accelerate");
     }
@@ -122,8 +126,8 @@ mod tests {
     #[test]
     fn negative_acceleration_decreases_y() {
         let sampler = Gravity::new(-8.0, 20.0, Axis::Y);
-        let (_, y0) = sampler.sample(&ctx_at(5, 10, 0.0)).unwrap();
-        let (_, y1) = sampler.sample(&ctx_at(5, 10, 0.5)).unwrap();
+        let (_, y0) = sampler.sample(&ctx_at(5, 10, 0.0)).source.unwrap();
+        let (_, y1) = sampler.sample(&ctx_at(5, 10, 0.5)).source.unwrap();
         assert!(y1 <= y0, "Negative accel should move upward");
     }
 
@@ -131,21 +135,21 @@ mod tests {
     fn terminal_velocity_caps_displacement() {
         let sampler = Gravity::new(100.0, 3.0, Axis::Y);
         // Even with huge acceleration, displacement capped at 3 cells
-        let (_, y) = sampler.sample(&ctx_at(5, 10, 10.0)).unwrap();
+        let (_, y) = sampler.sample(&ctx_at(5, 10, 10.0)).source.unwrap();
         assert!(y <= 10 + 3, "Should be capped at terminal velocity");
     }
 
     #[test]
     fn x_axis_preserves_y() {
         let sampler = Gravity::new(4.0, 10.0, Axis::X);
-        let (_, y) = sampler.sample(&ctx_at(5, 10, 1.0)).unwrap();
+        let (_, y) = sampler.sample(&ctx_at(5, 10, 1.0)).source.unwrap();
         assert_eq!(y, 10);
     }
 
     #[test]
     fn y_axis_preserves_x() {
         let sampler = Gravity::new(4.0, 10.0, Axis::Y);
-        let (x, _) = sampler.sample(&ctx_at(5, 10, 1.0)).unwrap();
+        let (x, _) = sampler.sample(&ctx_at(5, 10, 1.0)).source.unwrap();
         assert_eq!(x, 5);
     }
 
@@ -153,9 +157,21 @@ mod tests {
     fn returns_none_when_source_negative() {
         let sampler = Gravity::new(-100.0, 50.0, Axis::Y);
         // Large negative acceleration at high t should push source above 0
-        assert_eq!(sampler.sample(&ctx_at(5, 2, 5.0)), None);
+        assert_eq!(sampler.sample(&ctx_at(5, 2, 5.0)).source, None);
+    }
+
+    #[test]
+    fn sample_emits_sampler_output_with_displacement_delta() {
+        // At t=1.0: displacement = 0.5 * 8.0 * 1.0 = 4.0; src_y = 10 + 4 = 14; delta_y = 4
+        let sampler = Gravity::new(8.0, 20.0, Axis::Y);
+        let out = sampler.sample(&ctx_at(5, 10, 1.0));
+        assert!(out.source.is_some());
+        assert_eq!(out.delta_x, 0);
+        assert!(out.delta_y > 0);
+        let (_, src_y) = out.source.unwrap();
+        assert_eq!(out.delta_y, src_y as i32 - 10);
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_gravity.rs</FILE> - <DESC>Gravity sampler for parabolic acceleration displacement</DESC>
-// <VERS>END OF VERSION: 1.1.0</VERS>
+// <VERS>END OF VERSION: 1.2.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-style/src/traits/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects; composes VfxCellContext via Deref. Hosts ShaderRuntimeParams and its RuntimeParamsRead impl that bridges into tui-vfx-core's bindable family.</DESC>
-// <VERS>VERSION: 2.1.0</VERS>
-// <WCTX>Buy-once sweep finding 1.2.A Phase 1.5 — implement tui_vfx_core::bindable::RuntimeParamsRead for ShaderRuntimeParams so the inherent evaluate methods on each VfxBindable specialization can consult this map without tui-vfx-core having to depend on tui-vfx-style.</WCTX>
-// <CLOG>2.1.0: implement RuntimeParamsRead for ShaderRuntimeParams (forwards to existing get_u16 / get_text / get_f32 inherent methods); fix file-path drift in metadata header.</CLOG>
+// <VERS>VERSION: 2.2.0</VERS>
+// <WCTX>2026-04-26 packet Phase 4 — additive ShaderContext::with_sampler_resolution builder so the orchestrator can thread the sampler-accumulated delta into the shader-side ctx.cell.</WCTX>
+// <CLOG>2.2.0: MINOR — add with_sampler_resolution(delta_x, delta_y) builder that forwards into VfxCellContext::with_sampler_resolution; peer test asserts the delta is observable via Deref.</CLOG>
 
 use mixed_signals::traits::Phase;
 use serde::{Deserialize, Serialize};
@@ -386,6 +386,21 @@ impl ShaderContext {
         self
     }
 
+    /// Thread a sampler chain's accumulated resolved-coord delta into this
+    /// context. Forwards to [`VfxCellContext::with_sampler_resolution`] on
+    /// the inner `cell` bundle; downstream readers reach `ctx.resolved_x` /
+    /// `ctx.resolved_y` via [`Deref`].
+    ///
+    /// Builder shape so the orchestrator can chain it after
+    /// [`Self::new`] / [`Self::with_roles`] without widening any
+    /// argument list. Saturating accumulator semantics inherited from
+    /// [`VfxCellContext`].
+    #[inline]
+    pub fn with_sampler_resolution(mut self, delta_x: i32, delta_y: i32) -> Self {
+        self.cell = self.cell.with_sampler_resolution(delta_x, delta_y);
+        self
+    }
+
     /// Fetch the role tag at `(x, y)` from this context's role map.
     ///
     /// Returns `None` for out-of-bounds coordinates or when the role map
@@ -441,5 +456,32 @@ impl Default for ShaderContext {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn with_sampler_resolution_threads_delta_into_inner_cell() {
+        let ctx = ShaderContext::new(3, 5, 16, 16, 0, 0, 0.0, None, None)
+            .with_sampler_resolution(2, -1);
+        // Direct access via the inner bundle.
+        assert_eq!(ctx.cell.resolved_x, 5);
+        assert_eq!(ctx.cell.resolved_y, 4);
+        // Same field reached via Deref<Target = VfxCellContext>.
+        assert_eq!(ctx.resolved_x, 5);
+        assert_eq!(ctx.resolved_y, 4);
+        assert_eq!(ctx.displacement(), (2, -1));
+    }
+
+    #[test]
+    fn with_sampler_resolution_accumulates_across_chained_calls() {
+        let ctx = ShaderContext::new(0, 0, 16, 16, 0, 0, 0.0, None, None)
+            .with_sampler_resolution(3, 4)
+            .with_sampler_resolution(1, 1);
+        assert_eq!(ctx.resolved_x, 4);
+        assert_eq!(ctx.resolved_y, 5);
+    }
+}
+
 // <FILE>crates/tui-vfx-style/src/traits/cls_shader_context.rs</FILE> - <DESC>Context passed to StyleShader for spatial effects; composes VfxCellContext via Deref. Hosts ShaderRuntimeParams and its RuntimeParamsRead impl that bridges into tui-vfx-core's bindable family.</DESC>
-// <VERS>END OF VERSION: 2.1.0</VERS>
+// <VERS>END OF VERSION: 2.2.0</VERS>

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>VERSION: 2.17.0</VERS>
-// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
-// <CLOG>2.17.0: PreparedFilter::apply builds VfxCellContext once per cell and passes &ctx to every variant arm; drops five positional params from the inner dispatch.</CLOG>
+// <VERS>VERSION: 3.0.0</VERS>
+// <WCTX>2026-04-26 packet Phase 4 — orchestrator now owns ctx construction so the sampler-accumulated resolved-coord delta reaches every filter.</WCTX>
+// <CLOG>3.0.0: BREAKING — PreparedFilter::apply takes &VfxCellContext instead of (local_x, local_y, width, height, loop_t); Dim arm copies ctx and overrides .t with its factor.</CLOG>
 
 use super::cls_prepare_context::PrepareContext;
 use crate::filters::cls_animated_glyph_ramp::AnimatedGlyphRamp;
@@ -94,113 +94,117 @@ pub(crate) enum PreparedFilter {
 }
 
 impl PreparedFilter {
-    pub(crate) fn apply(
-        &self,
-        cell: &mut Cell,
-        local_x: u16,
-        local_y: u16,
-        width: u16,
-        height: u16,
-        loop_t: f64,
-    ) {
-        let ctx = VfxCellContext::new(local_x, local_y, width, height, 0, 0, loop_t);
+    /// Apply the filter to one cell.
+    ///
+    /// `ctx` is built once per cell by the orchestrator and carries the
+    /// sampler-accumulated resolved-coord delta via
+    /// [`VfxCellContext::with_sampler_resolution`]. Filters that read
+    /// `ctx.resolved_x` / `ctx.resolved_y` (or `ctx.displacement()`) will
+    /// observe per-cell sampler displacement when a sampler is in flight.
+    ///
+    /// The `Dim` arm is the one stage-specific override: it derives a copy
+    /// of `ctx` with `t` swapped for the configured `factor` so the
+    /// underlying [`Dim`] filter receives the strength on its existing
+    /// `t`-shaped channel.
+    pub(crate) fn apply(&self, cell: &mut Cell, ctx: &VfxCellContext) {
         match self {
             PreparedFilter::Dim { filter, factor } => {
-                let dim_ctx = VfxCellContext::new(local_x, local_y, width, height, 0, 0, *factor as f64);
+                let mut dim_ctx = *ctx;
+                dim_ctx.t = *factor as f64;
                 filter.apply(cell, &dim_ctx);
             }
             PreparedFilter::Invert(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::Tint(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::FadeToCanvas(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::Vignette(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::Crt(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::PatternFill(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::Greyscale(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::BrailleDust(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::CharsetNoise(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::AnimatedGlyphRamp(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::MatrixRain(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::InterlaceCurtain(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::MotionBlur(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::ColorBridgedShade(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::SubPixelBar(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::SubcellLight(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::SubCellShake(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::RigidShake(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::HoverBar(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::UnderlineWipe(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::BracketEmphasis(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::DotIndicator(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::EdgeGrow(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::PillButton(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::GlistenSweep(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::KittScanner(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::ShadeScanner(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::GlyphStyle(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::ScalarFieldGlyphWater(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::ScalarFieldGlyphFire(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
             PreparedFilter::GlyphTimeline(filter) => {
-                filter.apply(cell, &ctx);
+                filter.apply(cell, ctx);
             }
         }
     }
@@ -2179,4 +2183,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs</FILE> - <DESC>Prepared filter enum for pipeline rendering</DESC>
-// <VERS>END OF VERSION: 2.17.0</VERS>
+// <VERS>END OF VERSION: 3.0.0</VERS>

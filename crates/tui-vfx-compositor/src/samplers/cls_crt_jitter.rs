@@ -1,9 +1,9 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_crt_jitter.rs</FILE> - <DESC>CrtJitter sampler implementation</DESC>
-// <VERS>VERSION: 2.3.0</VERS>
-// <WCTX>Slice 6.6 §F.4 — migrate Sampler trait to take &VfxCellContext</WCTX>
-// <CLOG>2.3.0: sample() now takes &VfxCellContext; dest_x/dest_y/t reach via ctx.local_x/local_y/t.</CLOG>
+// <VERS>VERSION: 2.4.0</VERS>
+// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
+// <CLOG>2.4.0: sample() now returns SamplerOutput; displacing branch carries delta_x; out-of-bounds returns no_displacement().</CLOG>
 
-use crate::traits::sampler::Sampler;
+use crate::traits::sampler::{Sampler, SamplerOutput};
 use tui_vfx_types::VfxCellContext;
 
 /// CRT crash/jitter effect sampler.
@@ -47,7 +47,7 @@ impl CrtJitter {
 }
 
 impl Sampler for CrtJitter {
-    fn sample(&self, ctx: &VfxCellContext) -> Option<(u16, u16)> {
+    fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
         let t = ctx.t as f32;
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
@@ -59,12 +59,14 @@ impl Sampler for CrtJitter {
         // Generate row-based horizontal jitter
         let jitter = self.noise(dest_x, dest_y, t) * effective_intensity * 5.0;
 
-        let src_x = (dest_x as f32 + jitter).round();
+        let src_x_f = (dest_x as f32 + jitter).round();
 
-        if src_x < 0.0 {
-            None
+        if src_x_f < 0.0 {
+            SamplerOutput::no_displacement()
         } else {
-            Some((src_x as u16, dest_y))
+            let src_x = src_x_f as u16;
+            let delta_x = src_x as i32 - dest_x as i32;
+            SamplerOutput::displaced(src_x, dest_y, delta_x, 0)
         }
     }
 }
@@ -92,13 +94,13 @@ mod tests {
     fn test_crt_jitter_returns_some() {
         let jitter = CrtJitter::default();
         let result = jitter.sample(&ctx_at(10, 10, 0.5));
-        assert!(result.is_some());
+        assert!(result.source.is_some());
     }
 
     #[test]
     fn test_crt_jitter_preserves_y() {
         let jitter = CrtJitter::default();
-        let result = jitter.sample(&ctx_at(10, 15, 0.5)).unwrap();
+        let result = jitter.sample(&ctx_at(10, 15, 0.5)).source.unwrap();
         assert_eq!(result.1, 15);
     }
 
@@ -114,7 +116,7 @@ mod tests {
         };
         let r1 = jitter1.sample(&ctx_at(10, 10, 0.5));
         let r2 = jitter2.sample(&ctx_at(10, 10, 0.5));
-        assert_eq!(r1, r2);
+        assert_eq!(r1.source, r2.source);
     }
 
     #[test]
@@ -129,9 +131,24 @@ mod tests {
         };
         let r1 = jitter1.sample(&ctx_at(10, 10, 0.5));
         let r2 = jitter2.sample(&ctx_at(10, 10, 0.5));
-        assert!(r1 != r2 || r1.is_some());
+        assert!(r1.source != r2.source || r1.source.is_some());
+    }
+
+    #[test]
+    fn sample_emits_sampler_output_with_displacement_delta() {
+        // At t=0 decay_factor = exp(0) = 1.0; effective_intensity = 0.7
+        // With seed=42, row y=5 at time_slot 0 produces a known noise value
+        // We verify structure: delta_y is always 0 (jitter is horizontal only)
+        let jitter = CrtJitter { intensity: 0.7, speed_hz: 1.0, decay: 0.0, seed: 42 };
+        let out = jitter.sample(&VfxCellContext::new(20, 5, TEST_WIDTH, TEST_HEIGHT, 0, 0, 0.0));
+        // delta_y must always be 0 since jitter only displaces x
+        assert_eq!(out.delta_y, 0);
+        if let Some((src_x, _)) = out.source {
+            // delta_x == src_x - dest_x
+            assert_eq!(out.delta_x, src_x as i32 - 20);
+        }
     }
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_crt_jitter.rs</FILE> - <DESC>CrtJitter sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.3.0</VERS>
+// <VERS>END OF VERSION: 2.4.0</VERS>
