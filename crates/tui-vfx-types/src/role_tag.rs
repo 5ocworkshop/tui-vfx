@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-types/src/role_tag.rs</FILE> - <DESC>Per-cell semantic role tag enum (12 first-class variants + Custom)</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Sub-plan A Phase A.1 — foundation primitive for SemanticScene role map</WCTX>
-// <CLOG>0.1.0: initial 12-variant enum + Custom(InternedRoleName); shorthand parsing/name; serde via cfg_attr.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Packet 1.9.A.followup US-008: lift the hand-written RoleTag ConfigSchema impl with intentional-divergence-from-derive-output justification. The Custom(InternedRoleName) field's hand-emitted String::schema() shape is a deliberate simplification.</WCTX>
+// <CLOG>0.1.1: PATCH — add CONFIGSCHEMA-JUSTIFICATION comment above the hand-written impl (kind=intentional-divergence-from-derive-output). Comment documents the Custom-variant field flatten that derive cannot replicate without trading divergences. No behavior change.</CLOG>
 
 //! Per-cell semantic role tag.
 //!
@@ -121,6 +121,7 @@ pub enum RoleTag {
     Custom(InternedRoleName),
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: intentional-divergence-from-derive-output: the Custom(InternedRoleName) variant's field is hand-emitted as `String::schema()` to give consumers a string-shaped tooltip, even though the actual field type is the InternedRoleName newtype. Migrating to #[derive(ConfigSchema)] would either (a) require an `impl ConfigSchema for InternedRoleName` (replacing one hand-written impl with another) or (b) emit `SchemaNode::Opaque { type_name: "InternedRoleName" }` via #[config(opaque)] — which changes the schema's representation of the Custom field. Both options trade one form of divergence for another; the existing hand-written impl is the deliberate simplification.
 impl ConfigSchema for RoleTag {
     fn schema() -> SchemaNode {
         SchemaNode::Enum {
@@ -300,4 +301,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-types/src/role_tag.rs</FILE> - <DESC>Per-cell semantic role tag enum</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

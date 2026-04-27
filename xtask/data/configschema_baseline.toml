@@ -1,42 +1,24 @@
-# <FILE>xtask/data/configschema_baseline.toml</FILE> - <DESC>Baseline allowlist of pre-existing hand-written impl ConfigSchema for X blocks</DESC>
-# <VERS>VERSION: 1.4.0</VERS>
-# <WCTX>Packet 1.9.A.followup US-007: drain Never. The plan expected migration to #[derive(ConfigSchema)] given the dep edge, but execution-time cargo build revealed the derive macro's absolute paths can't resolve from within tui-vfx-core itself. Lift with uninhabited-type instead. Remaining 3 entries: StyleRegion (US-008), PathType (US-008), RoleTag (US-008).</WCTX>
-# <CLOG>1.4.0: MINOR — drain Never (lifted with uninhabited-type, not derive-migrated; macro-hygiene constraint discovered at execution time). Remaining baseline carries 3 entries.
+# <FILE>xtask/data/configschema_baseline.toml</FILE> - <DESC>Baseline allowlist of pre-existing hand-written impl ConfigSchema for X blocks. EMPTY as of US-010 close-out; per docs/CONFIGSCHEMA_JUSTIFICATION.md the file is kept around schema_version=1 with no entries so the gate continues to load it without complaint, even though every hand-written impl in the workspace now carries a source-side CONFIGSCHEMA-JUSTIFICATION comment.</DESC>
+# <VERS>VERSION: 2.0.0</VERS>
+# <WCTX>Packet 1.9.A.followup US-008: drain the last 3 entries (StyleRegion, PathType, RoleTag) — all lifted into source comments with intentional-divergence-from-derive-output justifications. The grandfathering window opened by 1.9.A is now closed; new hand-written impls must carry a CONFIGSCHEMA-JUSTIFICATION line at the source site.</WCTX>
+# <CLOG>2.0.0: MAJOR — drain the last 3 entries. Baseline is now empty. The gate enforces source-side justification for every hand-written impl in the workspace; the grandfathering door is closed. (US-010 may delete this file entirely per the empty-baseline policy in docs/CONFIGSCHEMA_JUSTIFICATION.md.)
+# 1.4.0: MINOR — drain Never (uninhabited-type lift; macro-hygiene constraint blocked the planned migration).
 # 1.3.0: MINOR — drain Color (migrated to derive in US-006).
 # 1.2.0: MINOR — drain 2 generic-bound entries (VfxBindable, Pool).
-# 1.1.0: MINOR — drain 8 foreign-type entries (5 from schema/mod.rs, 3 from mixed_signals_schema.rs).
+# 1.1.0: MINOR — drain 8 foreign-type entries.
 #
 # Entries here are exempt from the justification-comment requirement introduced
-# by packet 1.9.A. The followup audit packet (1.9.A.followup) walks each entry
-# and either:
-#   (a) adds a CONFIGSCHEMA-JUSTIFICATION comment to the impl (then removes the
-#       baseline entry), or
-#   (b) migrates the impl to #[derive(ConfigSchema)] if the derive macro handles
-#       the case (then removes the baseline entry).
+# by packet 1.9.A. As of v2.0.0 the list is empty — every hand-written impl
+# in the workspace carries a CONFIGSCHEMA-JUSTIFICATION comment at the source
+# site. The followup packet (1.9.A.followup) is closing this loop.
 #
 # New impls MUST NOT be added here. New hand-written impls must carry a
 # // CONFIGSCHEMA-JUSTIFICATION: <kind>: <reason>  line directly above the
-# impl line, or a ///  doc-comment block above containing CONFIGSCHEMA-JUSTIFICATION:.
+# impl line, or a /// doc-comment block above containing CONFIGSCHEMA-JUSTIFICATION:.
 #
-# Modification of this file requires explicit reviewer approval (it is the
-# only path to silently allow an unjustified hand-written impl).
+# Modification of this file requires explicit reviewer approval.
 
 schema_version = 1
 
-[[entry]]
-file = "crates/tui-vfx-style/src/models/fnc_style_region_schema.rs"
-type = "StyleRegion"
-note = "candidate for derive migration — StyleRegion has #[serde(rename_all = \"PascalCase\")] and per-variant /// doc comments, so the live derive would emit equivalent shape. The hand-written impl freezes json_value=None across all variants which is a deliberate schema divergence. US-008 will lift with intentional-divergence-from-derive-output."
-
-[[entry]]
-file = "crates/tui-vfx-geometry/src/types/path_type.rs"
-type = "PathType"
-note = "candidate for derive migration — PathType has #[serde(tag=\"type\", rename_all=\"snake_case\")] and /// doc comments on every variant, but per-field default/min/max metadata on Bounce.bounces and Step.steps is currently emitted via a helper rather than via #[config(...)] annotations on the struct definition. US-008 will lift with intentional-divergence-from-derive-output (or migrate if the leader chooses to add the source-side annotations)."
-
-[[entry]]
-file = "crates/tui-vfx-types/src/role_tag.rs"
-type = "RoleTag"
-note = "candidate for derive migration — RoleTag has /// doc comments on every variant and adding #[serde(rename_all=\"snake_case\")] would make derive emit the lowercase json_value strings the hand-written impl emits today. The Custom(InternedRoleName) field is the structural blocker: InternedRoleName has no ConfigSchema impl, and the hand-written impl flattens it to String::schema() as a deliberate simplification. US-008 will lift with intentional-divergence-from-derive-output."
-
 # <FILE>xtask/data/configschema_baseline.toml</FILE>
-# <VERS>END OF VERSION: 1.4.0</VERS>
+# <VERS>END OF VERSION: 2.0.0</VERS>

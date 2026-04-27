@@ -1,8 +1,7 @@
 // <FILE>tui-vfx-geometry/src/types/path_type.rs</FILE> - <DESC>Motion path types with physics integration</DESC>
-// <VERS>VERSION: 3.1.0 - 2026-04-24</VERS>
-// <WCTX>Architectural roadmap: Physics PathType variants</WCTX>
-// <CLOG>3.1.0: add CarrierOrbit with helix alias and FigureEight with infinity/lemniscate aliases, backed by mixed-signals route math.
-// Added Projectile, Friction, Orbit, Pendulum variants using mixed-signals physics</CLOG>
+// <VERS>VERSION: 3.1.1 - 2026-04-28</VERS>
+// <WCTX>Packet 1.9.A.followup US-008: lift the hand-written PathType ConfigSchema impl with intentional-divergence-from-derive-output justification. Migration would require ~30 source-side #[config(...)] annotations and /// field-level doc comments to preserve the current schema metadata; deferred to a separate packet.</WCTX>
+// <CLOG>3.1.1: PATCH — add CONFIGSCHEMA-JUSTIFICATION comment above the hand-written impl (kind=intentional-divergence-from-derive-output). Comment documents the per-field default/min/max metadata and helper-emitted descriptions that the live derive cannot synthesize without source-side annotations. No behavior change.</CLOG>
 
 use serde::{Deserialize, Serialize};
 use tui_vfx_core::{
@@ -198,6 +197,7 @@ pub enum PathType {
     },
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: intentional-divergence-from-derive-output: the hand-written impl emits per-field default/min/max metadata via local helpers (e.g. Bounce.bounces with default 3 / range 0..=12; Step.steps with default 5) and per-field description strings via positional helper args. Migrating to #[derive(ConfigSchema)] would require ~30 source-side annotations: #[config(default = X, min = Y, max = Z)] on the relevant fields plus /// doc comments on every variant field that today only carries a per-variant doc. Until those source-side annotations land in a separate packet, the hand-written impl freezes the schema shape consumers (capabilities.toml, generated docs) currently rely on.
 impl ConfigSchema for PathType {
     fn schema() -> SchemaNode {
         fn f32_field(name: &str, description: &str) -> SchemaField {
@@ -432,4 +432,4 @@ impl ConfigSchema for PathType {
 }
 
 // <FILE>tui-vfx-geometry/src/types/path_type.rs</FILE> - <DESC>Motion path types with physics integration</DESC>
-// <VERS>END OF VERSION: 3.1.0 - 2026-04-24</VERS>
+// <VERS>END OF VERSION: 3.1.1 - 2026-04-28</VERS>
