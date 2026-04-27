@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-core/src/bindable/cls_bindable.rs</FILE> - <DESC>Generic VfxBindable<T, S> envelope: Literal | Binding | Signal with S = Never default for non-signal types. Hand-written ConfigSchema gates on T: ConfigSchema and S: BindableSignal so non-signal instantiations omit a phantom Signal variant from the schema. Specialized inherent impls per (T, S) preserve the three legacy evaluate signatures without forcing a single shape across the family.</DESC>
-// <VERS>VERSION: 0.1.2</VERS>
-// <WCTX>Packet 1.9.A.followup US-005: add CONFIGSCHEMA-JUSTIFICATION marker to the existing rustdoc block above the generic VfxBindable<T,S> ConfigSchema impl so the audit gate sees the justification at the source site.</WCTX>
-// <CLOG>0.1.2: PATCH — extend the existing /// rustdoc block above the generic ConfigSchema impl with a CONFIGSCHEMA-JUSTIFICATION line (kind=derive-cannot-handle-generic-T). Refresh the prior rustdoc to point at lib.rs (the live macro) rather than the dead fnc_impl_config_schema.rs sibling. No behavior change.</CLOG>
+// <VERS>VERSION: 0.1.3</VERS>
+// <WCTX>Packet 1.9.A.followup US-007: lift the Never ConfigSchema impl with `uninhabited-type` justification. The plan called for migrating Never to #[derive(ConfigSchema)] now that the dep edge exists, but execution-time cargo build revealed the derive macro emits absolute path `::tui_vfx_core::ConfigSchema` which cannot resolve from within tui-vfx-core itself — so the migration requires a self-aliasing hack we don't want. Hand-written stays.</WCTX>
+// <CLOG>0.1.3: PATCH — add a CONFIGSCHEMA-JUSTIFICATION comment above the hand-written `impl ConfigSchema for Never` (kind=uninhabited-type). The comment also documents the macro-hygiene constraint that blocks derive migration here. No behavior change.</CLOG>
 
 use mixed_signals::traits::SignalContext;
 use mixed_signals::types::SignalOrFloat;
@@ -82,6 +82,11 @@ impl BindableSignal for Never {
     }
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: uninhabited-type: Never has no variants, so the
+// schema is a degenerate empty SchemaNode::Enum. The derive macro at
+// tui-vfx-core-macros emits absolute paths (::tui_vfx_core::ConfigSchema) that
+// cannot resolve from within tui-vfx-core itself, so #[derive(ConfigSchema)]
+// is not usable here without a self-aliasing hack — keep hand-written.
 impl ConfigSchema for Never {
     /// Schema for an uninhabited type: an empty enum. The schema is
     /// emitted for completeness but no value of this type can ever be
@@ -484,4 +489,4 @@ impl From<SignalOrFloat> for VfxBindable<f32, SignalOrFloat> {
 }
 
 // <FILE>crates/tui-vfx-core/src/bindable/cls_bindable.rs</FILE> - <DESC>Generic VfxBindable<T, S> envelope: Literal | Binding | Signal with S = Never default for non-signal types. Hand-written ConfigSchema gates on T: ConfigSchema and S: BindableSignal so non-signal instantiations omit a phantom Signal variant from the schema. Specialized inherent impls per (T, S) preserve the three legacy evaluate signatures without forcing a single shape across the family.</DESC>
-// <VERS>END OF VERSION: 0.1.2</VERS>
+// <VERS>END OF VERSION: 0.1.3</VERS>

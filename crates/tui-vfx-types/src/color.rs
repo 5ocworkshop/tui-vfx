@@ -1,57 +1,29 @@
 // <FILE>crates/tui-vfx-types/src/color.rs</FILE> - <DESC>RGBA color type with alpha compositing</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>Fix brightness jump at animation completion</WCTX>
-// <CLOG>Use round() instead of truncation in lerp/blend_over/brighten to prevent off-by-one errors</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Packet 1.9.A.followup US-006: migrate Color from a hand-written ConfigSchema impl to #[derive(ConfigSchema)] now that the live derive macro at tui-vfx-core-macros/src/lib.rs supports per-field range metadata via #[config(min, max)] and reads /// doc comments for descriptions.</WCTX>
+// <CLOG>0.2.0: MINOR — replace the hand-written `impl ConfigSchema for Color` (~30 lines) with `#[derive(tui_vfx_core::ConfigSchema)]` on the struct definition plus `#[config(min = 0, max = 255)]` annotations on each of the four u8 fields. Schema-output diff vs the hand-written impl: (1) struct-level `description` is now derived from the /// doc comment ("RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel to enable proper effect layering and transparency.") rather than the prior shorter "RGBA color with alpha compositing support" — informative improvement, no behavior change for validation; (2) field `a`'s description is now "Alpha channel (0=transparent, 255=opaque)" (from the /// comment) rather than "Alpha channel (0-255)" — also an informative improvement. All four fields' `range = Some(Range(0, 255))` and `optional = false` are preserved exactly. No tests in the workspace depend on the prior description strings (verified via rg).</CLOG>
 
 //! RGBA color type with alpha channel for compositing.
-
-use tui_vfx_core::{ConfigSchema, FieldMeta, Range, ScalarValue, SchemaField, SchemaNode};
 
 /// RGBA color with alpha channel for compositing.
 ///
 /// Unlike framework-specific color types, this includes an alpha channel
 /// to enable proper effect layering and transparency.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, tui_vfx_core::ConfigSchema)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Color {
     /// Red channel (0-255)
+    #[config(min = 0, max = 255)]
     pub r: u8,
     /// Green channel (0-255)
+    #[config(min = 0, max = 255)]
     pub g: u8,
     /// Blue channel (0-255)
+    #[config(min = 0, max = 255)]
     pub b: u8,
     /// Alpha channel (0=transparent, 255=opaque)
+    #[config(min = 0, max = 255)]
     pub a: u8,
-}
-
-impl ConfigSchema for Color {
-    fn schema() -> SchemaNode {
-        let u8_field = |name: &str, description: &str| {
-            SchemaField::new(
-                name,
-                u8::schema(),
-                FieldMeta {
-                    description: Some(description.to_string()),
-                    range: Some(Range::new(
-                        Some(ScalarValue::number("0")),
-                        Some(ScalarValue::number("255")),
-                    )),
-                    ..Default::default()
-                },
-            )
-        };
-        SchemaNode::Struct {
-            name: "Color".to_string(),
-            description: Some("RGBA color with alpha compositing support".to_string()),
-            json_name: None,
-            fields: vec![
-                u8_field("r", "Red channel (0-255)"),
-                u8_field("g", "Green channel (0-255)"),
-                u8_field("b", "Blue channel (0-255)"),
-                u8_field("a", "Alpha channel (0-255)"),
-            ],
-        }
-    }
 }
 
 impl Color {
@@ -191,4 +163,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-types/src/color.rs</FILE> - <DESC>RGBA color type with alpha compositing</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
