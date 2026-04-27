@@ -1,7 +1,7 @@
-// <FILE>xtask/src/audit/fnc_scan_file_for_impls.rs</FILE> - <DESC>Scan a single Rust source file for hand-written impl ConfigSchema for X lines</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>Packet 1.9.A — ConfigSchema justification lint</WCTX>
-// <CLOG>1.0.0: initial implementation with macro-body skip heuristic</CLOG>
+// <FILE>xtask/src/audit/fnc_scan_file_for_impls.rs</FILE> - <DESC>Scan a single Rust source file for hand-written impl ConfigSchema for X lines, including qualified-path forms like `impl tui_vfx_core::ConfigSchema for X`</DESC>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Packet 1.9.A.followup US-002 — close the qualified-path coverage gap that caused the scanner to silently miss four cursor impls (CursorShaderPrimary/Trail and VfxCursorPrimary/Trail) which use `impl tui_vfx_core::ConfigSchema for X` rather than the bare form.</WCTX>
+// <CLOG>1.1.0: strip_configschema now accepts both bare `ConfigSchema` and any path ending in `::ConfigSchema` (e.g. `tui_vfx_core::ConfigSchema`, `crate::ConfigSchema`, `::tui_vfx_core::ConfigSchema`). Previously the bare-prefix-only check meant qualified-path impls were silently invisible to the audit gate.</CLOG>
 
 /// A detected `impl ConfigSchema for X` match within a source file.
 #[derive(Debug, Clone)]
@@ -98,10 +98,36 @@ fn strip_impl_prefix(s: &str) -> Option<&str> {
     }
 }
 
-/// Consume `ConfigSchema` followed by whitespace from the start of `s`.
+/// Consume the trait reference `ConfigSchema` (bare or qualified-path) followed
+/// by whitespace from the start of `s`.
+///
+/// Accepts both:
+/// - Bare form: `ConfigSchema for X`
+/// - Qualified-path form: `<path>::ConfigSchema for X`, where `<path>` is any
+///   sequence of identifiers separated by `::`. Examples that match:
+///   `tui_vfx_core::ConfigSchema`, `crate::ConfigSchema`,
+///   `::tui_vfx_core::ConfigSchema`.
+///
+/// Returns `None` if the line does not start with the trait reference at all,
+/// or if it starts with a similarly-named trait that is NOT `ConfigSchema`
+/// (e.g. `ConfigSchemaExt`, `MyConfigSchema`).
 fn strip_configschema(s: &str) -> Option<&str> {
-    let rest = s.strip_prefix("ConfigSchema")?;
-    Some(rest.trim_start())
+    // Bare form: `ConfigSchema ...`
+    if let Some(rest) = s.strip_prefix("ConfigSchema") {
+        return Some(rest.trim_start());
+    }
+
+    // Qualified-path form: `<path>::ConfigSchema ...`. Find the first
+    // whitespace; the token before it is the trait reference. Accept iff the
+    // token ends with the literal `::ConfigSchema` (so `path::ConfigSchemaExt`
+    // and `path::ConfigSchema_v2` are correctly rejected).
+    let token_end = s.find(char::is_whitespace)?;
+    let token = &s[..token_end];
+    if token.ends_with("::ConfigSchema") {
+        Some(s[token_end..].trim_start())
+    } else {
+        None
+    }
 }
 
 /// Consume `for` followed by whitespace from the start of `s`.
@@ -158,5 +184,5 @@ fn extract_type_name(s: &str) -> String {
     s[..end].trim_end_matches('{').trim().to_string()
 }
 
-// <FILE>xtask/src/audit/fnc_scan_file_for_impls.rs</FILE> - <DESC>Scan a single Rust source file for hand-written impl ConfigSchema for X lines</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <FILE>xtask/src/audit/fnc_scan_file_for_impls.rs</FILE> - <DESC>Scan a single Rust source file for hand-written impl ConfigSchema for X lines, including qualified-path forms</DESC>
+// <VERS>END OF VERSION: 1.1.0</VERS>

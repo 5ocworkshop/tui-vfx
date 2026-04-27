@@ -1,7 +1,7 @@
-// <FILE>xtask/tests/test_audit_configschema.rs</FILE> - <DESC>Integration tests for the configschema justification lint</DESC>
-// <VERS>VERSION: 1.0.0</VERS>
-// <WCTX>Packet 1.9.A — ConfigSchema justification lint</WCTX>
-// <CLOG>1.0.0: initial test suite — 7 tests per the packet's test plan</CLOG>
+// <FILE>xtask/tests/test_audit_configschema.rs</FILE> - <DESC>Integration tests for the configschema justification lint, including qualified-path coverage</DESC>
+// <VERS>VERSION: 1.1.0</VERS>
+// <WCTX>Packet 1.9.A.followup US-002 — extend the test suite to cover qualified-path impls (`impl tui_vfx_core::ConfigSchema for X`) which the scanner originally missed and the four cursor impls in tui-vfx-style/src/models/{cls_cursor_shader.rs, v3/enum_vfx_cursor_behavior.rs} now exercise.</WCTX>
+// <CLOG>1.1.0: add 2 tests covering the qualified-path scanner behavior — qualified_path_unrecognized_kind_is_hard_error proves the scanner finds qualified-path impls and reaches kind validation; qualified_path_justified_impl_passes proves the full end-to-end works for a properly-justified qualified-path impl. Test count: 9.</CLOG>
 
 //! Integration tests for `cargo xtask audit configschema`.
 //!
@@ -204,6 +204,49 @@ fn unrecognized_kind_fails() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Test 8: qualified-path impl with an unrecognised kind is a hard error.
+//
+// This proves the scanner sees `impl tui_vfx_core::ConfigSchema for X` (the
+// form used by the four cursor impls in tui-vfx-style) and reaches the kind
+// validation step. Prior to packet 1.9.A.followup the scanner only matched
+// the bare `impl ConfigSchema for X` form, so qualified-path impls were
+// silently invisible to the audit gate.
+// ─────────────────────────────────────────────────────────────────────────────
+
+#[test]
+fn qualified_path_unrecognized_kind_is_hard_error() {
+    let fixture = make_fixture(&[(
+        "crates/foo/src/lib.rs",
+        QUALIFIED_PATH_UNRECOGNIZED_IMPL,
+    )]);
+    write_baseline(fixture.path(), "schema_version = 1\n");
+
+    let result = run_audit(fixture.path());
+    assert!(
+        result.is_err(),
+        "qualified-path impl with unrecognised kind must fail: {:?}",
+        result
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Test 9: qualified-path impl with a canonical justification passes.
+// ─────────────────────────────────────────────────────────────────────────────
+
+#[test]
+fn qualified_path_justified_impl_passes() {
+    let fixture = make_fixture(&[("crates/foo/src/lib.rs", QUALIFIED_PATH_JUSTIFIED_IMPL)]);
+    write_baseline(fixture.path(), "schema_version = 1\n");
+
+    let result = run_audit(fixture.path());
+    assert!(
+        result.is_ok(),
+        "qualified-path impl with canonical justification must pass: {:?}",
+        result
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Fixture source strings
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -248,6 +291,22 @@ impl ConfigSchema for NewType {
 }
 "#;
 
+const QUALIFIED_PATH_UNRECOGNIZED_IMPL: &str = r#"
+pub struct QualifiedType;
+// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-magic
+impl tui_vfx_core::ConfigSchema for QualifiedType {
+    fn schema() -> tui_vfx_core::SchemaNode { unimplemented!() }
+}
+"#;
+
+const QUALIFIED_PATH_JUSTIFIED_IMPL: &str = r#"
+pub struct QualifiedType;
+// CONFIGSCHEMA-JUSTIFICATION: intentional-divergence-from-derive-output: tuple field has no ConfigSchema impl.
+impl tui_vfx_core::ConfigSchema for QualifiedType {
+    fn schema() -> tui_vfx_core::SchemaNode { unimplemented!() }
+}
+"#;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: resolve workspace root used by run_audit at test call sites.
 // (Unused here but included to document the pattern.)
@@ -258,5 +317,5 @@ fn workspace_root_of_fixture(fixture: &TempDir) -> PathBuf {
     fixture.path().to_path_buf()
 }
 
-// <FILE>xtask/tests/test_audit_configschema.rs</FILE> - <DESC>Integration tests for the configschema justification lint</DESC>
-// <VERS>END OF VERSION: 1.0.0</VERS>
+// <FILE>xtask/tests/test_audit_configschema.rs</FILE> - <DESC>Integration tests for the configschema justification lint, including qualified-path coverage</DESC>
+// <VERS>END OF VERSION: 1.1.0</VERS>
