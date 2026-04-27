@@ -1,7 +1,7 @@
-<!-- <FILE>docs/design/tui-vfx-core-macros-lib-rs-cleanup-plan.md</FILE> - <DESC>Plan for the macro-crate hygiene packet — `tui-vfx-core-macros/src/lib.rs` carries 659 lines of inline logic that violates project OFPF discipline (every other lib.rs in the workspace is a clean re-export hub). Move the live functions into OFPF-prefixed files; delete the abandoned earlier OFPF-refactor siblings that share filenames but contain stale skeletons. Workspace audit confirmed the regression is localized to this single crate.</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>2026-04-27: discovered during configschema gate v3.0.0 verification pass. The live derive macro lives entirely in lib.rs; nine `fnc_*.rs` siblings + `types.rs` carry dead, never-compiled stubs from an earlier OFPF refactor that wasn't completed. lib.rs has no `mod` declarations.</WCTX>
-<!-- <CLOG>1.0.0: initial plan. Authored after a workspace-wide audit (`ofpf-sql` query for lib.rs sizes + per-file logic-vs-re-export grep) confirmed the regression is localized to `tui-vfx-core-macros/src/lib.rs` only. All 11 other lib.rs files are clean re-export hubs.</CLOG> -->
+<!-- <FILE>docs/design/completed/tui-vfx-core-macros-lib-rs-cleanup-plan.md</FILE> - <DESC>COMPLETED 2026-04-28 (commit 5401178). Plan for the macro-crate hygiene packet — `tui-vfx-core-macros/src/lib.rs` carried 659 lines of inline logic that violated project OFPF discipline (every other lib.rs in the workspace is a clean re-export hub). Live functions moved into OFPF-prefixed files; abandoned earlier OFPF-refactor stubs replaced with live versions. Workspace audit confirmed the regression was localized to this single crate.</DESC> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>2026-04-28 close-out: ralph US-016 — moved this plan to docs/design/completed/ after the cleanup landed in commit 5401178. lib.rs is now 37 lines (down from 659); 16 src/ files including 14 OFPF siblings + types.rs + lib.rs.</WCTX>
+<!-- <CLOG>1.1.0: MINOR — mark COMPLETED. Plan moved to docs/design/completed/. Closing commit 5401178 lifted 14 functions + 3 types out of inline lib.rs into OFPF siblings. All verification gates (build, test, clippy, docs check, audit) clean. 1.0.0: initial plan.</CLOG> -->
 
 # Plan — `tui-vfx-core-macros` lib.rs hygiene cleanup
 
@@ -255,5 +255,5 @@ This packet exists because the configschema gate v3.0.0 verification pass discov
 
 The workspace-wide audit confirmed the regression is bounded to one file. Per the project's "complete and thorough" planning rule, this plan was authored against full reads of every file in scope, with the dead-vs-live distinction confirmed before any prescription was written.
 
-<!-- <FILE>docs/design/tui-vfx-core-macros-lib-rs-cleanup-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <FILE>docs/design/completed/tui-vfx-core-macros-lib-rs-cleanup-plan.md</FILE> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->
