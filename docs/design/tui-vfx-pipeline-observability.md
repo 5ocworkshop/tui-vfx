@@ -1,13 +1,15 @@
 <!-- <FILE>docs/design/tui-vfx-pipeline-observability.md</FILE> - <DESC>Design spec for the inspection event bus, the pipeline-inspector tool, and the debugging-first cultural commitments that hold them together. Motivated by the focused_row_btop case study from 2026-04-26, where prose trace and ad-hoc probes concealed a role-map mismatch for 30+ minutes of investigation.</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Reframe the spec around the existing tui-vfx-debug::inspection surface (InspectionSink / TraceEvent / CompositorInspector / InspectionSinkBridge) discovered during ofpf-defs orientation; resolve eight open questions; collapse seven phases to three units; load-bearing work narrows to extending the shipped enum and trait, not a parallel taxonomy.</WCTX> -->
-<!-- <CLOG>0.2.0: orient against the codebase per Intention 43 — most of the v0.1.0 primitive layer already ships under InspectionSink/TraceEvent/CompositorInspector. Annotate §3 with shipped reality, narrow §11 to the questions that remain open after decisions land, collapse §12 to three units (A: extend tui-vfx; B: gt-design wiring; C: tui-vfx-trace explain subcommands).</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>2026-04-27: Unit A landed; align Units B and C with the pre/post-pass slot architecture decided in tui-vfx-effect-composition-model.md §11. Pre-pass and post-pass blocks become observable surfaces; PipelineStageKind grows two variants; Unit C explain subcommands learn the six-slot taxonomy.</WCTX> -->
+<!-- <CLOG>0.3.0: align observability plan with rollout plan §A–§H. PipelineStageKind grows PrePass/PostPass; Shadow variant deprecates at Phase G. §9.1 emit sites add pre-pass / post-pass driver rows. §10 Unit C scope extends to pass-block investigations + slot occupancy. §11.2 adds Q12–Q14. §13 cultural commitments extend to PrePass/PostPass impls. §16 sequencing line updated. New §17 records the alignment with cross-refs to rollout plan.</CLOG> -->
 
 # tui-vfx pipeline observability and inspector — design spec
 
 ## Status
 
-v0.2.0: revised against the codebase. The eight open questions in §11 are resolved (see §11). Three execution units identified in §12; Unit A (tui-vfx event extension) is the load-bearing single-PR work.
+v0.3.0: Unit A landed (see archived PRD/progress at `.omc/archive/2026-04-27-unit-a-pipeline-observability/`). Units B and C remain deferred work loops. This revision aligns Units B and C with the pre/post-pass slot architecture decided in `tui-vfx-effect-composition-model.md` §11 and rolled out per `tui-vfx-pre-post-pass-rollout-plan.md` §A–§H. Both unit scopes grow to cover the new surfaces; the bus design itself is unchanged. See §17 for the alignment summary.
+
+v0.2.0: revised against the codebase. The eight v0.1.0 open questions are resolved (see §11). Three execution units identified in §12; Unit A (tui-vfx event extension) is the load-bearing single-PR work.
 
 **v0.1.0 was written from steering docs without an `ofpf-defs` orientation pass and significantly understated shipped infrastructure.** The InspectionSink trait, TraceEvent enum (18 variants across lifecycle / resolution / composition / pipeline), CompositorInspector trait, InspectionSinkBridge, StageMask / TraceFilter / TraceSelector / TraceSink / TraceEnvelope / TraceEmitter / TraceFrameContext, the `bench_emit_overhead` and `bench_full_trace_60fps` criterion benches, the `tui-vfx-trace` CLI tool with `--select` / `--stages` / `--format ndjson|report`, and three production CompositorInspector impls (`ProbeInspector`, `StageInspector`, `TraceInspector`) all already exist as of 2026-04-26. v0.2.0 acknowledges that surface and narrows the spec to the genuinely-missing pieces: per-stage entry/exit/skip events, scope-evaluation evidence, a role-map-source discriminant, and a binding event pair.
 
@@ -153,7 +155,16 @@ pub enum TraceEvent {
     },
 }
 
-pub enum PipelineStageKind { Sampler, Mask, Shader, Filter, Shadow }
+pub enum PipelineStageKind {
+    // Pre/post-pass slots — listed in pipeline-execution order, top to bottom.
+    PrePass,        // added in rollout Phase C; emitted by the new pre-pass driver in Phase B
+    Sampler,
+    Mask,
+    Shader,
+    Filter,
+    PostPass,       // added in rollout Phase C; emitted by the new post-pass driver in Phase B
+    Shadow,         // deprecation alias during the migration window; removed in rollout Phase G
+}
 
 pub enum PipelineSkipReason {
     EmptyArea,
@@ -340,17 +351,21 @@ Existing per-cell call sites already exist (`on_sampler_applied`, `on_mask_check
 
 ### 9.1 Compositor (`crates/tui-vfx-compositor`) — Unit A
 
-| Location | Events emitted (new in Unit A) |
+Sites are listed in pipeline-execution order, top to bottom (pre-pass first, four element stages, post-pass last). Pre/post-pass rows land with rollout Phase C and ship together with the Phase B driver.
+
+| Location | Events emitted |
 |---|---|
-| Each Sampler iteration in `render_loop_inspected` (before/after) | `on_stage_entered` then `on_stage_finished` (or `on_stage_skipped` if zero-cell scope) |
-| Each Mask iteration | same |
-| Each Filter iteration in the existing filter loop | same |
-| Each Shader iteration in `apply_shaders_inspected` | same |
-| Shadow stage in `render_pipeline_with_shadow` | same (when shadow is configured) |
-| Scope predicate evaluator (one per stage application) | `on_scope_evaluated` summarising matched/skipped counts and role histogram |
+| Each pre-pass entry in the new pre-pass driver (rollout Phase B) | `on_stage_entered { kind: PrePass }` then `on_stage_finished` (or `on_stage_skipped` if `EmptyArea` / `DisabledByPolicy`) |
+| Each Sampler iteration in `render_loop_inspected` (before/after) | `on_stage_entered { kind: Sampler }` then `on_stage_finished` (or `on_stage_skipped` if zero-cell scope) |
+| Each Mask iteration | same with `kind: Mask` |
+| Each Shader iteration in `apply_shaders_inspected` | same with `kind: Shader` |
+| Each Filter iteration in the existing filter loop | same with `kind: Filter` |
+| Each post-pass entry in the new post-pass driver (rollout Phase B) | `on_stage_entered { kind: PostPass }` then `on_stage_finished` (or `on_stage_skipped` if the dest-aware blend short-circuits to a no-op) |
+| Shadow stage in legacy `render_pipeline_with_shadow` | `on_stage_entered { kind: Shadow }` (alias) until rollout Phase G removes the legacy fork; thereafter shadow emits as `kind: PrePass` from the new driver |
+| Scope predicate evaluator (one per stage application — element stages only) | `on_scope_evaluated` summarising matched/skipped counts and role histogram |
 | Role-map availability at render entry | `on_role_map_materialized` (initial Unit A emission uses `RoleMapSource::Injected`; gt-design upgrades to `ExplicitFromProducer` in Unit B) |
 
-`step_id` is a 1-based per-render counter assigned at iteration time (Sampler[1], Mask[2], …).
+`step_id` is a 1-based per-render counter assigned at iteration time, walking the pipeline in execution order: pre-passes increment first, then element stages, then post-passes. Pre/post-passes are whole-canvas operations and do not emit `ScopeEvaluated` (no per-cell scope predicate); they declare canvas extent on `StageEntered` and `cells_modified` on `StageFinished`.
 
 ### 9.2 Recipe runtime (`crates/tui-vfx-recipes`) — deferred
 
@@ -364,9 +379,11 @@ Existing per-cell call sites already exist (`on_sampler_applied`, `on_mask_check
 | `infer_source_roles` (legacy fallback) | `on_role_map_materialized` with `source: Inferred` |
 | `factory_trace_composition_preview` | DELETED (Q8). Replace `GTD_TRACE_RENDER=1` with an InspectionSinkBridge installed at the production render site, formatting events to the legacy prose line shape with a deprecation notice. |
 
-### 9.4 Style shaders, samplers, filters, masks (across crates)
+### 9.4 Element-stage and pass impls (across crates)
 
-Each implementation gets one `on_stage_entered`/`on_stage_finished` pair from the call site in the compositor — implementations themselves do not emit. Per-cell `*Applied` callbacks already exist and continue to fire as today.
+Each implementation gets one `on_stage_entered`/`on_stage_finished` pair from its call site in the compositor — implementations themselves do not emit. Per-cell `*Applied` callbacks already exist for element stages and continue to fire as today. Pre/post-pass impls emit only the stage-level pair (no per-cell pass-cell-applied event in v0.3.0; if a future investigation needs one, it lands additively per §11.2 Q12).
+
+Cultural commitment §13.1 extends to `PrePass` and `PostPass` impls: every new pass primitive ships with one peer test asserting the expected stage-level emit shape (kind / step_id ordering / canvas extent on entered / `cells_modified` on finished).
 
 ## 10. Acceptance criteria
 
@@ -398,11 +415,13 @@ B2. **Producer roles are explicit.** `apply_composition_with_roles` emits `RoleM
 
 ### Unit C (CLI subcommands and observability tooling)
 
-C1. **`tui-vfx-trace explain --empty-changes <recipe>`** produces an output that names the role-map mismatch as the cause without the operator reading any source file. Output includes the role histogram and the skip reason.
+C1. **`tui-vfx-trace explain --empty-changes <recipe>`** produces an output that names the cause without the operator reading any source file. Coverage includes the four element-stage skip reasons (role-map mismatch, scope-matched-zero, disabled-by-policy, budget-exceeded) AND pre/post-pass empty cases (pre-pass `EmptyArea`, post-pass dest-aware blend short-circuit). Output includes the role histogram, the skip reason, and pass occupancy if the recipe declares pre/post-passes.
 
-C2. **Tape format stable within v1.** A recorded tape replayed through `tui-vfx-trace replay` produces the same query results as the live render that recorded it. Round-trip test diffs query outputs. New event kinds and new fields land additively with `#[serde(default)]`.
+C2. **Tape format stable within v1.** A recorded tape replayed through `tui-vfx-trace replay` produces the same query results as the live render that recorded it. Round-trip test diffs query outputs. New event kinds and new fields land additively with `#[serde(default)]`. PipelineStageKind growing to include PrePass/PostPass (rollout Phase C) is itself an additive change covered by this rule.
 
-C3. **`pipeline-validator --probe` and `recipe-probe`** build their reports from the production event stream rather than parallel render paths.
+C3. **`pipeline-validator --probe` and `recipe-probe`** build their reports from the production event stream rather than parallel render paths. Reports surface slot occupancy (which of the six slots a recipe populates) using the contract-discovery surface from rollout Phase D.
+
+C4. **New investigation: `tui-vfx-trace explain --pass <name>`.** For a recipe that declares a pre/post-pass, this subcommand reports canvas extent, blend mode, `cells_modified` on the writeback, and (for pre-passes that interact with masks) whether the element-stage mask gated the writeback band. Driver: same diagnosis discipline as §2 case study, applied to the pass surfaces that ship with rollout Phase H and beyond.
 
 ### Cultural enforcement (continuous, all units)
 
@@ -438,6 +457,12 @@ The eight v0.1.0 questions are resolved. Any future open questions land below th
 
 **Q11 (Unit C scope).** Should `tui-vfx-trace record` and `tui-vfx-trace replay` round-trip the `RoleHistogram` and `PipelineSkipReason` enums by tagged union JSON, or by an internal binary format? Recommended default: **tagged union JSON** — the existing `TraceReport::to_ndjson()` is JSON; consistency over compactness; tapes are diff-friendly.
 
+**Q12 (rollout Phase C / Unit C scope).** Should pre/post-pass blocks emit a per-cell event analogous to the existing `ShadowCellApplied`, or stay stage-level only? Recommended default: **stage-level only at v0.3.0**, lift if a real investigation needs per-cell pass evidence (e.g. a glow blend mode subtly miscomposing one cell band). Per-cell pre/post events would multiply emit volume on whole-canvas passes; the bench gate (§7) would force a Tier-B feature flag if added speculatively. Per §4.3 (hooks earn their place), defer until a bug class drives it.
+
+**Q13 (rollout Phase C scope).** Where does `CanvasExtent` (the pre/post-pass canvas description: `Element` vs. `Extruded { extra_w, extra_h, offset_x, offset_y }`) surface in the event stream? Recommended default: **on `StageEntered` only, when `kind ∈ {PrePass, PostPass}`**, as an optional field with `#[serde(default)]`. Element-stage events leave it `None`. Authoring tools and `--pass <name>` investigations consume it; per-stage taxonomy stays homogeneous on the wire.
+
+**Q14 (rollout Phase D / Unit C scope).** Slot occupancy reporting: should the contract-discovery surface emit one event per recipe-load (`SlotOccupancyResolved { pre_passes: N, sampler: bool, mask: bool, shader: bool, filter: bool, post_passes: N }`), or surface only on demand via the validator API? Recommended default: **on-demand via the validator API**; recipe load already emits `RecipeBindingResolved` for the binding surface, and slot occupancy is derived from the same parsed structure. An on-load event would double-emit. The `explain --pass` and `--bindings` investigations call the API and pretty-print as part of their report.
+
 ## 12. Migration plan — three units
 
 The seven v0.1.0 phases collapse into three units once the shipped surface is acknowledged. Each unit is one PR-sized scope. Units land in order; A is the only one with no cross-repo dependencies.
@@ -454,12 +479,12 @@ Unit A is load-bearing: after it lands, the new events exist and any consumer ca
 
 The bus only stays useful if the codebase grows it. The commitments below are concrete enough to enforce at code review.
 
-**13.1 New stage implementation.** Every new `impl Filter`, `impl Mask`, `impl Sampler`, `impl StyleShader` ships with at least one peer test in its `test_*.rs` file that:
-- installs a `VfxAssertObserver` configured to expect the right `StageEntered` / `StageFinished` / `ScopeEvaluated` shape,
-- runs the stage against a known input,
+**13.1 New stage or pass implementation.** Every new `impl Filter`, `impl Mask`, `impl Sampler`, `impl StyleShader`, `impl PrePass`, or `impl PostPass` ships with at least one peer test in its `test_*.rs` file that:
+- installs an `AssertingInspector` configured to expect the right `StageEntered` / `StageFinished` / `ScopeEvaluated` shape (element stages) or `StageEntered` / `StageFinished` with the expected `CanvasExtent` and `cells_modified` (pre/post passes),
+- runs the stage or pass against a known input,
 - asserts the assertion passes.
 
-The test prevents silent emission drift and documents the expected observer footprint.
+The test prevents silent emission drift and documents the expected observer footprint. Pre/post passes additionally assert `step_id` ordering — pre-passes come before element stages, post-passes after — to catch driver-ordering regressions early.
 
 **13.2 New scope variant.** Adding a variant to the `VfxScope` enum requires updating the predicate-summary string used by `ScopeEvaluated` and `ScopeMatchedZeroCells`. The CI step that validates scope-summary coverage fails the PR if the new variant has no summary.
 
@@ -512,9 +537,59 @@ Bound to this spec; updated together when the architecture evolves:
 | V3 schema cutover (`docs/design/tui-vfx-v3-upgrade-plan/`) | Independent. Bus lives below the schema layer; works on V2 and V3 recipes equally. |
 | Buy-once sweep finding 1.1.A (Phase F, DONE) | `VfxCellContext` bundle is the right place to thread the observer reference into stage `apply` methods. Phase F enabled this spec. |
 | Buy-once sweep finding 1.2.A (`VfxBindable<T, S>`) | Bus's `BindingRequested`/`BindingResolved` events (deferred to Unit C) should be designed against the consolidated `VfxBindable<T, S>` shape, not the current three-sibling form. Sequencing: 1.2.A lands first; Unit C designs the binding event pair against the consolidated type. |
-| Effect-composition model decision (`docs/design/tui-vfx-effect-composition-model.md`) | Independent. Bus works for any composition model. Model B's named stages are reflected in `VfxStageKind`; a future Model A would need new variants. |
+| Effect-composition model decision (`docs/design/tui-vfx-effect-composition-model.md`) | Coupled. Model B is locked (§10 of that doc); §11 added pre/post-pass slots around the four element stages. `PipelineStageKind` grows two variants (`PrePass`, `PostPass`) under rollout Phase C. The `Shadow` variant deprecates at rollout Phase G. The bus design is otherwise unchanged; new variants slot into the existing taxonomy. |
+| Pre/post-pass rollout plan (`docs/design/tui-vfx-pre-post-pass-rollout-plan.md`) | Direct producer of new bus events. Phase B adds the pre/post-pass driver in `render_pipeline`; Phase C wires the inspector callbacks and bridge forwarding. Units B and C in this spec consume those events once they ship. See §17 for the alignment summary. |
 | Mixed-signals signal-facade proposal (`docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md`) | Independent. Signal-graph evaluation could emit a `SignalEvaluated` event in a future taxonomy revision; not in v0.1.0. |
 | ContentShell::card role-tagging fix (today's Phase 2) | Companion. The producer-side fix should land alongside Phase 3 of this migration so the `RoleMapMaterialized.histogram` test captures the corrected state. |
 
+## 17. Pre/post-pass alignment (v0.3.0)
+
+This section consolidates the alignment between this spec and `tui-vfx-pre-post-pass-rollout-plan.md`. None of the spec's design choices change; the surfaces grow.
+
+### 17.1 What grows (and where)
+
+| Surface | Change | Driven by rollout phase |
+|---|---|---|
+| `PipelineStageKind` | Add `PrePass`, `PostPass`. `Shadow` becomes a deprecation alias during the migration window. | Phase C (variants) + Phase G (alias removal) |
+| `CompositorInspector` | Add `on_pre_pass_entered` / `on_pre_pass_finished` / `on_post_pass_entered` / `on_post_pass_finished` callbacks with default empty bodies. Per-cell pass callback intentionally omitted (Q12 defer). | Phase C |
+| `InspectionSinkBridge` | Forward the four new callbacks to matching `TraceEvent::Stage*` variants (kind-discriminated). | Phase C |
+| Compositor emit sites | Pre/post-pass driver in `render_pipeline` emits the per-pass entered/finished pairs. Shadow's legacy emit folds into `kind: PrePass` once Phase G removes the legacy fork. | Phase B (driver) + Phase C (emit) + Phase G (cutover) |
+| Element-stage emit sites | Unchanged. Per-cell `*Applied` callbacks still fire for Sampler/Mask/Shader/Filter. | n/a |
+| `step_id` ordering | Pre-passes increment first, then element stages, then post-passes — pipeline-execution order, top to bottom. | Phase B (driver) |
+| `StageEntered` payload | Optional `canvas_extent` field populated when `kind ∈ {PrePass, PostPass}`. `#[serde(default)]`. | Phase C (Q13) |
+| Validator contract-discovery | Slot occupancy queryable via the validator API (six slots). | Phase D |
+| `tui-vfx-trace explain --empty-changes` | Coverage extends to pre/post-pass empty cases (`EmptyArea`, dest-aware blend short-circuit). | Phase C (Unit C consumer) |
+| `tui-vfx-trace explain --pass <name>` | New investigation reporting canvas extent, blend mode, writeback `cells_modified`, mask-gate interaction. | Phase H+ (when first PostPass primitive ships) |
+
+### 17.2 What does NOT change
+
+- `InspectionSink` trait signature, `TraceEnvelope` shape, sink composition model, NDJSON wire format, `TraceFilter` / `TraceSelector` / `StageMask` grammar — all stable. Pre/post-pass events flow through the existing surface.
+- The four element-stage emit sites (`render_loop_inspected`, `apply_shaders_inspected`) — unchanged.
+- The case-study test (`StageSkipped { ScopeMatchedZeroCells }` for Role(Text) on all-Background) — still valid against the element pipeline; pre/post-passes don't emit `ScopeEvaluated`.
+- Q1–Q11 decisions and their rationales.
+- The cultural commitment in §13.6 — driver-attribution discipline applies to pre/post-pass emit additions in the same way it applied to Unit A.
+
+### 17.3 Sequencing — when each piece of this spec moves
+
+| Spec section | Updated by | Lands when |
+|---|---|---|
+| §5.2 `PipelineStageKind` taxonomy | rollout Phase C | with the two new variants |
+| §9.1 emit sites table | rollout Phase B + C | when the driver and inspector callbacks ship together |
+| §9.4 cultural commitment | rollout Phase A | when `PrePass`/`PostPass` traits land (test obligation activates) |
+| §10 Unit B acceptance | rollout Phase F | gt-design recipes that adopt pre/post-pass primitives carry the producer-side coverage |
+| §10 Unit C acceptance C1, C3, C4 | Unit C work loop | after rollout Phase B+C+D land |
+| §11.2 Q12–Q14 | as drivers emerge | per §4.3, hooks earn their place by an investigation |
+| §13.1 cultural commitment | rollout Phase A | activated when first `PrePass` impl (Shadow port, Phase B) lands |
+| §16 sequencing | done in v0.3.0 | this revision |
+
+### 17.4 What this means for the deferred Unit B and Unit C work loops
+
+Neither unit blocks the rollout plan; the rollout plan blocks them. Concretely:
+
+- **Unit B (gt-design wiring)** can launch any time after rollout Phase C lands (the bridge has the new callbacks). If gt-design widgets adopt pre/post-pass primitives in the meantime, Unit B's producer-side coverage extends to those passes naturally — no extra design work.
+- **Unit C (CLI subcommands)** has two phases: the v0.2.0-scoped subcommands (`explain --empty-changes`, `record`, `replay`, `--bindings`, `--format sqlite`) can launch after rollout Phase C; the v0.3.0-scoped `explain --pass <name>` and slot-occupancy reporting wait until rollout Phase D and a real first PostPass primitive (Phase H) exist.
+
+Splitting Unit C into `C-pre-rollout` (today's scope) and `C-post-rollout` (pass-aware additions) is one option for whoever picks up that work loop. Alternative: defer all of Unit C until rollout Phase D lands and ship it as one larger work loop. Decision is the user's; the spec accommodates either.
+
 <!-- <FILE>docs/design/tui-vfx-pipeline-observability.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->

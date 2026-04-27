@@ -1,11 +1,13 @@
 <!-- <FILE>docs/design/tui-vfx-pre-post-pass-rollout-plan.md</FILE> - <DESC>Phased rollout plan for the pre/post-pass slot architecture decided in tui-vfx-effect-composition-model.md §11. Each phase is sized for one ralph run; phases end at clean build + green tests with a discussable artifact.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>2026-04-27: convert §12 deliverables into iteration-sized phases. Foundation traits, compositor port with parallel-running fallback, debug tooling, V3 schema + validator, authoring + autogen, V2→V3 lowering + corpus migration, cutover gate, first post-pass primitive.</WCTX> -->
-<!-- <CLOG>0.1.0: initial draft — eight phases (A–H) with stories, acceptance, dependencies, risk; explicit non-goals; deferred-work pointer to archived Unit A handoff for Units B/C.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>2026-04-27: cross-reference the observability spec v0.3.0 §17 alignment so Phase C consumers know where the contract for new bus events lives.</WCTX> -->
+<!-- <CLOG>0.2.0: add observability-alignment cross-reference to tui-vfx-pipeline-observability.md §17.</CLOG> -->
 
 # tui-vfx pre/post-pass slot architecture — phased rollout plan
 
 > **Companion to:** `docs/design/tui-vfx-effect-composition-model.md` §11 (decision) and §12 (deliverables list).
+>
+> **Observability alignment:** `docs/design/tui-vfx-pipeline-observability.md` v0.3.0 §17 maps each rollout phase to the Units B / C surfaces those phases unblock. Read that section before starting Phase C — it is the contract for what the new bus events look like.
 >
 > **Sizing:** each phase below is sized for one ralph run. A phase ends at clean workspace build, green tests, and a discussable artifact. Phases A–H are the closed set; nothing else ships in this rollout.
 >
@@ -247,4 +249,4 @@ A is foundation. B/C/D/E run in parallel after A. F depends on E. G is the cutov
 3. **Phase G dispatch removal.** After deleting `render_pipeline_with_shadow`, does `CompositionOptions.shadow` stay (deprecated, lowered into `pre_passes` at construction) or get removed? Recommend remove; consumers move to `pre_passes` form. Lowering rule in Phase F covers the recipe side; the in-code field rename is a one-time consumer audit.
 
 <!-- <FILE>docs/design/tui-vfx-pre-post-pass-rollout-plan.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
