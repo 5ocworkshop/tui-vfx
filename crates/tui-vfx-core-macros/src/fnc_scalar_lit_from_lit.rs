@@ -1,7 +1,7 @@
-// <FILE>tui-vfx-core-macros/src/fnc_scalar_lit_from_lit.rs</FILE> - <DESC>Parse syn::Lit into ScalarLit</DESC>
-// <VERS>VERSION: 0.1.1 - 2025-12-17T00:00:00Z</VERS>
-// <WCTX>OFPF slicing</WCTX>
-// <CLOG>Extracted scalar literal conversion</CLOG>
+// <FILE>tui-vfx-core-macros/src/fnc_scalar_lit_from_lit.rs</FILE> - <DESC>Convert a `syn::Lit` literal into the macro-internal `ScalarLit` form. Used by parse_scalar_lit when extracting `#[config(default = X)]` / `#[config(min = X)]` / `#[config(max = X)]` literal values.</DESC>
+// <VERS>VERSION: 0.2.0 - 2026-04-28</VERS>
+// <WCTX>Macro crate hygiene cleanup US-012 — promote from abandoned-refactor stub to live module. Body matches the live lib.rs version (logically identical; differs only in the formatter's line-wrap style for the error arm).</WCTX>
+// <CLOG>0.2.0: MAJOR — promote from abandoned-refactor stub to live module. Body unchanged in semantics. Will be reachable from lib.rs via `mod fnc_scalar_lit_from_lit;` in US-013.</CLOG>
 
 use syn::Lit;
 
@@ -19,5 +19,5 @@ pub(crate) fn scalar_lit_from_lit(lit: &Lit) -> syn::Result<ScalarLit> {
     }
 }
 
-// <FILE>tui-vfx-core-macros/src/fnc_scalar_lit_from_lit.rs</FILE> - <DESC>Parse syn::Lit into ScalarLit</DESC>
-// <VERS>END OF VERSION: 0.1.1 - 2025-12-17T00:00:00Z</VERS>
+// <FILE>tui-vfx-core-macros/src/fnc_scalar_lit_from_lit.rs</FILE> - <DESC>Convert syn::Lit → ScalarLit</DESC>
+// <VERS>END OF VERSION: 0.2.0 - 2026-04-28</VERS>

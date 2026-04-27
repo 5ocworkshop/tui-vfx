@@ -1,7 +1,7 @@
-// <FILE>tui-vfx-core-macros/src/fnc_parse_config_attrs.rs</FILE> - <DESC>Parse #[config(...)] attributes into ConfigAttr</DESC>
-// <VERS>VERSION: 0.1.1 - 2025-12-17T00:00:00Z</VERS>
-// <WCTX>OFPF slicing</WCTX>
-// <CLOG>Extracted attribute parser</CLOG>
+// <FILE>tui-vfx-core-macros/src/fnc_parse_config_attrs.rs</FILE> - <DESC>Parse `#[config(...)]` attributes (hidden, opaque, help, default, min, max) into a ConfigAttr. Errors on unrecognized args so typos don't silently slip through.</DESC>
+// <VERS>VERSION: 0.2.0 - 2026-04-28</VERS>
+// <WCTX>Macro crate hygiene cleanup US-012 — promote from abandoned-refactor stub to live module. Body matches lib.rs:49-91 verbatim.</WCTX>
+// <CLOG>0.2.0: MAJOR — promote from abandoned-refactor stub to live module. Body unchanged. Reachable from lib.rs in US-013.</CLOG>
 
 use syn::{Attribute, Expr};
 
@@ -52,6 +52,6 @@ pub(crate) fn parse_config_attrs(attrs: &[Attribute]) -> syn::Result<ConfigAttr>
     Ok(out)
 }
 
-// <FILE>tui-vfx-core-macros/src/fnc_parse_config_attrs.rs</FILE> - <DESC>Parse #[config(...)] attributes into ConfigAttr</DESC>
-// <VERS>END OF VERSION: 0.1.1 - 2025-12-17T00:00:00Z</VERS>
+// <FILE>tui-vfx-core-macros/src/fnc_parse_config_attrs.rs</FILE> - <DESC>Parse #[config(...)] → ConfigAttr</DESC>
+// <VERS>END OF VERSION: 0.2.0 - 2026-04-28</VERS>
 
