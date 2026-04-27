@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md</FILE> - <DESC>Proposal: ergonomic, normalized signal-source surface for recipe authors</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <VERS>VERSION: 0.5.1</VERS> -->
 <!-- <WCTX>2026-04-28 closeout: Phase γ, Phase 1, and Phase 2 shipped; Phase 3 in flight under packet 66. Phase 2 shipped a mid-flight redesign that diverged from the §9.3 plan — the facade type itself collapsed from a parallel enum + 45 transparent-wrapper structs to a thin newtype around mixed_signals::SignalSpec with a catalog-checked custom Deserialize. New §9.3a documents what shipped vs what was originally planned.</WCTX> -->
-<!-- <CLOG>0.5.0: mark γ ✅ Complete (commit 4cd6b8e), Phase 1 ✅ Complete (commit d480d32), Phase 2 ✅ Complete (commit 5a0ea2b); Phase 3 in flight (packet 66). Add §9.3a — what actually shipped subsection recording the facade newtype redesign and the two wire-format-parity failures that forced it. Cross-link Intention 44.
+<!-- <CLOG>0.5.1: PATCH — refresh §9.2 / §9.3 / §9.4 work-packet references to `steering/work-packets/completed/...` after the 64/65/66 trilogy moved out of the active dir. Fix pre-existing footer drift (was END OF 0.4.0, now matches header).
+0.5.0: mark γ ✅ Complete (commit 4cd6b8e), Phase 1 ✅ Complete (commit d480d32), Phase 2 ✅ Complete (commit 5a0ea2b); Phase 3 in flight (packet 66). Add §9.3a — what actually shipped subsection recording the facade newtype redesign and the two wire-format-parity failures that forced it. Cross-link Intention 44.
 0.4.0: mark α and β complete; mark γ partial (43/58 variants); add 2026-04-27 status snapshot with missing-variant audit; add Phase 1/2/3 completion plan; record architectural framing (facade is recipe-JSON deserialization seam, not a substitute for mixed-signals).</CLOG>
 
 # tui-vfx ⇄ mixed-signals: recipe-author signal surface
@@ -749,4 +750,4 @@ Phase 3 (next packet; can overlap with Phase 2)
 5. ✅ **Spec audit:** zero hallucinations; all 15 missing variants are real upstream types.
 
 <!-- <FILE>docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.1</VERS> -->

@@ -1,7 +1,8 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build. Organized in two parts: Part I durable principles, Part II project-specific rules; numbering stable across the split for cross-reference compatibility.</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <VERS>VERSION: 0.8.1</VERS> -->
 <!-- <WCTX>Phase 3 (packet 66) — engine-vs-recipe-player delineation. Add Intention 44 documenting the post-Phase-2 newtype-facade reality and the two-surface authoring model.</WCTX> -->
-<!-- <CLOG>0.8.0: MINOR — add Intention 44 (recipe-JSON signal authoring goes through VfxRecipeSignalSpec; engine direct-API consumers use mixed_signals::* directly). Describes the as-built newtype facade per packet 65, not the obsolete Phase γ wrapper sketch.
+<!-- <CLOG>0.8.1: PATCH — refresh Intention 44's Companion block to point at `steering/work-packets/completed/64-…/65-…/66-…` after the trilogy moved out of the active dir.
+0.8.0: MINOR — add Intention 44 (recipe-JSON signal authoring goes through VfxRecipeSignalSpec; engine direct-API consumers use mixed_signals::* directly). Describes the as-built newtype facade per packet 65, not the obsolete Phase γ wrapper sketch.
 0.7.1: promote two-part reorganization (Part I durable principles, Part II project-specific rules; numbering stable across the split). New Intention-shape subsection under Writing style — Why mandatory, length is judgment not a gate. New How-this-file-is-organized navigation section. Audit-pass edits: renamed second #26 to 26A; fixed grammar nit in Intention 38. Body content otherwise verbatim from v0.6.4.</CLOG> -->
 
 # Intentions
@@ -1322,4 +1323,4 @@ packets that shipped this surface).
 ---
 
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.8.1</VERS> -->
