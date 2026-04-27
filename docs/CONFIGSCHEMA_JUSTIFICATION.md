@@ -1,7 +1,7 @@
 <!-- <FILE>docs/CONFIGSCHEMA_JUSTIFICATION.md</FILE> - <DESC>Policy doc for hand-written impl ConfigSchema for X justification requirements</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
-<!-- <WCTX>Packet 1.9.A — ConfigSchema justification lint</WCTX> -->
-<!-- <CLOG>1.0.0: initial doc — format spec, canonical kinds, baseline allowlist, promotion schedule</CLOG> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <WCTX>Packet 1.9.A.followup US-010 close-out: baseline is now empty (every hand-written impl carries a source-side CONFIGSCHEMA-JUSTIFICATION comment). Add a status note so future readers see the followup has landed.</WCTX> -->
+<!-- <CLOG>1.1.0: MINOR — add a Status section noting that packet 1.9.A.followup landed 2026-04-28 and the baseline file is now empty (only schema_version remains). The followup paragraph that previously described future work is now historical context. 1.0.0: initial doc — format spec, canonical kinds, baseline allowlist, promotion schedule</CLOG> -->
 
 # Hand-written `impl ConfigSchema` justification policy
 
@@ -99,16 +99,27 @@ must satisfy the lint via a justification comment instead. Any change to the
 baseline requires explicit code-review approval — the baseline is the only
 path to silently allow an unjustified impl.
 
-The followup audit packet (1.9.A.followup) will walk each baseline entry and
-either:
-- Add a `CONFIGSCHEMA-JUSTIFICATION` comment to the impl (then remove the
-  baseline entry), or
-- Migrate the impl to `#[derive(ConfigSchema)]` if the derive macro handles
-  the case (then remove the baseline entry).
+**Status (2026-04-28):** packet 1.9.A.followup is **complete**. Every
+hand-written impl in the workspace now carries a source-side
+`CONFIGSCHEMA-JUSTIFICATION` comment; the baseline file is empty
+(only `schema_version = 1` remains). One impl (`Color`) was migrated to
+`#[derive(ConfigSchema)]` directly; the rest stay hand-written for documented
+reasons (foreign types, generic-bound limitations, intentional schema
+divergence, the macro-hygiene constraint that blocks within-crate derive on
+`Never`).
 
-When the baseline is empty, the file will be removed and the lint becomes
-universal — every hand-written impl in the workspace will require a justification
-comment.
+The followup walked each entry and either:
+- Added a `CONFIGSCHEMA-JUSTIFICATION` comment to the impl (then removed the
+  baseline entry), or
+- Migrated the impl to `#[derive(ConfigSchema)]` (then removed the baseline
+  entry).
+
+The empty baseline file is **kept** rather than deleted: `audit_configschema`
+currently errors when the baseline is absent (`fnc_load_baseline.rs`), so
+the empty schema-versioned shell is the right resting state. Removing the
+file entirely would require a small audit-code adjustment to handle the
+absent-baseline case gracefully — a potential cleanup for after the
+warn-only → hard-fail flip.
 
 ---
 
@@ -158,4 +169,4 @@ impl ConfigSchema for Color { ... }
 ```
 
 <!-- <FILE>docs/CONFIGSCHEMA_JUSTIFICATION.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->

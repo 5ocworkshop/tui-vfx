@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-buy-once-architecture-sweep.md</FILE> - <DESC>Repository-wide buy-once/cry-once architectural sweep — surfaces conversion points where a single deliberate change today would prevent repeated trait/signature/schema churn later. Modeled after the TransformContext bundle exemplar (Slice 6.6). Findings are evidence-based via ofpf-* tooling and filtered through Intentions 23 (rule of three) and 24 (changes earn their place).</DESC> -->
-<!-- <VERS>VERSION: 1.4.0</VERS> -->
-<!-- <WCTX>Mark Finding 1.2.A and Finding 1.7.A DONE — VfxBindable<T, S = Never> shipped in tui-vfx-core::bindable, three legacy types aliased, originals recyclebinned, cross-crate home decision resolved.</WCTX> -->
-<!-- <CLOG>1.4.0: mark Findings 1.2.A and 1.7.A DONE 2026-04-26. 1.3.0: mark Finding 1.1.A DONE — Slice 6.6 Phase F closed (commits 51f5204, c883683, b628abd, 5535b0e, 7821815).</CLOG> -->
+<!-- <VERS>VERSION: 1.5.0</VERS> -->
+<!-- <WCTX>Mark Finding 1.9.A DONE — packet 1.9.A.followup closed 2026-04-28 across 9 commits (3fc35cb..8abd94c).</WCTX> -->
+<!-- <CLOG>1.5.0: mark Finding 1.9.A DONE 2026-04-28 (packet 1.9.A.followup landed). 1.4.0: mark Findings 1.2.A and 1.7.A DONE 2026-04-26. 1.3.0: mark Finding 1.1.A DONE — Slice 6.6 Phase F closed (commits 51f5204, c883683, b628abd, 5535b0e, 7821815).</CLOG> -->
 
 # tui-vfx buy-once architecture sweep
 
@@ -550,7 +550,7 @@ Three different `evaluate` signatures across the Bindable family. Looks like a c
 | 1.6.A | FilterSpec / PreparedFilter / SplitFlap split-up | L | Next slice |
 | 1.7.A | BindableValue cross-crate home | S | **DONE 2026-04-26** (bundled with 1.2.A — home is tui-vfx-core) |
 | 1.8.A | tui-vfx-core/schema cycles | S | Wait for third trigger |
-| 1.9.A | Hand-written ConfigSchema audit | M | Next slice (as validation infra) |
+| 1.9.A | Hand-written ConfigSchema audit | M | **DONE 2026-04-28** (gate shipped under 1.9.A; followup packet 1.9.A.followup landed 9 commits 3fc35cb..8abd94c: scanner qualified-path bug fix, all 15 baseline entries lifted to source-side comments, Color migrated to `#[derive(ConfigSchema)]`, audit-all wired into `just check-all`/`just ci`. Workspace-wide rustfmt cleanup deferred — see `docs/design/tui-vfx-workspace-rustfmt-followup-plan.md`.) |
 
 **By risk tier:** S=6, M=2, L=4.
 
