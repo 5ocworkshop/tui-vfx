@@ -1,7 +1,7 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.18.0</VERS> -->
-<!-- <WCTX>Pipeline observability Unit A — point at the v0.2.0 spec, the five new TraceEvent variants, and the AssertingInspector test sink so debugging-from-the-CLI surfaces are discoverable.</WCTX> -->
-<!-- <CLOG>1.18.0: add pointer to the v0.2.0 pipeline-observability design spec and call out the new per-stage / scope-evidence TraceEvent variants + AssertingInspector landed in Unit A.</CLOG> -->
+<!-- <VERS>VERSION: 1.19.0</VERS> -->
+<!-- <WCTX>Packet 67 — engine/API signals doc relabel: list the renamed API_SIGNALS_REFERENCE.md under Generated with a one-line redirect note for recipe-author readers (recipe-side reference lives in tui-vfx-recipes).</WCTX> -->
+<!-- <CLOG>1.19.0: add API_SIGNALS_REFERENCE.md (renamed from SIGNALS_REFERENCE.md) under Generated with a one-line note pointing recipe authors at the recipe-side reference in tui-vfx-recipes.</CLOG> -->
 
 # Documentation Index
 
@@ -153,10 +153,11 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 
 ## Generated (via `cargo xtask docs`)
 - [generated/API.md](generated/API.md) — Auto-generated API reference from code + TOML templates
+- [generated/API_SIGNALS_REFERENCE.md](generated/API_SIGNALS_REFERENCE.md) — Engine / direct-API signal reference for `mixed_signals::*` primitives reached by direct construction in engine code (`tui-vfx-content`, `tui-vfx-style`, `gt-design` motion runtime). Recipe authors writing recipe JSON should use the recipe-side reference in `tui-vfx-recipes` instead.
 - [generated/CAPABILITIES.md](generated/CAPABILITIES.md) — Auto-generated capabilities inventory
 - [generated/ai-context.md](generated/ai-context.md) — Condensed AI context prompt
 - [generated/capabilities.json](generated/capabilities.json) — Machine-readable effect inventory
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.18.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.19.0</VERS> -->

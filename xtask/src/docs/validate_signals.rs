@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/validate_signals.rs</FILE> - <DESC>Validate signals.toml entries against the autogen catalog</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase α + β: signal-facade — signals pipeline validation gate</WCTX>
-// <CLOG>0.1.0: initial implementation — three checks: (1) editorial entries name real signals, (2) Core 12 entries are in the catalog, (3) warning when Core 12 entries lack a recipe_hint</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Packet 67 — engine/API doc relabel: post-Phase-A purge. DampedSpring now keys directly as "spring" via discriminant_override; the spring↔damped_spring fallback in is_known is no longer needed.</WCTX>
+// <CLOG>0.2.1: refresh validate() rustdoc to remove the stale is_parallel_channel reference (architect-review nit, non-blocking — same workset)</CLOG>
 
 use super::extract_signals_rustdoc::SignalsRustdocData;
 use super::parse_signals_toml::SignalsManifest;
@@ -13,9 +13,10 @@ use anyhow::Result;
 /// 1. Every `[signals.<name>]` entry names a signal that exists in the autogen catalog.
 ///    Failure is an error; message names the unknown discriminant and suggests checking
 ///    mixed-signals source for the real name.
-/// 2. Every name in `[core_12].order` is a valid discriminant in the catalog.
-///    `spring` (DampedSpring) is accepted even though it maps to the parallel channel
-///    because it is documented with an is_parallel_channel callout.
+/// 2. Every name in `[core_12].order` is a valid discriminant in the catalog. Post-Phase-A
+///    every Core 12 entry has a direct SignalSpec discriminant (including `spring`, which
+///    is the wire form of `DampedSpring` per `discriminant_override` in
+///    `extract_signals_rustdoc.rs`).
 /// 3. (Warning, not error) Every Core 12 entry should have a `[signals.<name>]` block
 ///    with at least a `recipe_hint`. Missing hints are logged to stderr but do not fail.
 pub fn validate(data: &SignalsRustdocData, toml: &SignalsManifest) -> Result<()> {
@@ -66,19 +67,11 @@ pub fn validate(data: &SignalsRustdocData, toml: &SignalsManifest) -> Result<()>
 
 /// Check whether `name` is a known discriminant in the catalog.
 ///
-/// Special case: "spring" is accepted even though DampedSpring's catalog key
-/// is "damped_spring" — it is one of the Core 12 and documented with a
-/// parallel-channel callout. The editorial overlay uses "spring" as a
-/// shorthand; the generator resolves it to the DampedSpring entry.
+/// Post-Phase-A every primitive (including the physics family) has a direct
+/// SignalSpec discriminant — DampedSpring keys as `spring`, BouncingDrop as
+/// `bounce`, etc. — so a single direct lookup is sufficient.
 fn is_known(data: &SignalsRustdocData, name: &str) -> bool {
-    if data.by_discriminant.contains_key(name) {
-        return true;
-    }
-    // Accept "spring" as an alias for "damped_spring" (parallel channel).
-    if name == "spring" && data.by_discriminant.contains_key("damped_spring") {
-        return true;
-    }
-    false
+    data.by_discriminant.contains_key(name)
 }
 
 /// Build a comma-separated suggestion list of discriminants similar to `name`.
@@ -109,4 +102,4 @@ fn sample_discriminants(data: &SignalsRustdocData, n: usize) -> String {
 }
 
 // <FILE>xtask/src/docs/validate_signals.rs</FILE> - <DESC>Validate signals.toml entries against the autogen catalog</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

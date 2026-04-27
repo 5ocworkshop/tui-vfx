@@ -74,7 +74,7 @@ pub fn generate() -> Result<()> {
     println!("  {} Generating API.md...", "→".dimmed());
     gen_api::generate_and_write(&api_data, &api_toml)?;
 
-    // SIGNALS_REFERENCE.md (separate pipeline: mixed-signals rustdoc + signals.toml)
+    // API_SIGNALS_REFERENCE.md (separate pipeline: mixed-signals rustdoc + signals.toml)
     println!("  {} Extracting Signal-impl rustdoc from mixed-signals...", "→".dimmed());
     let signal_data = extract_signals_rustdoc::extract()?;
     println!("  {} Parsing signals.toml...", "→".dimmed());
@@ -83,7 +83,7 @@ pub fn generate() -> Result<()> {
     validate_signals::validate(&signal_data, &signal_toml)?;
     println!("  {} Merging signal sources...", "→".dimmed());
     let signal_merged = merge_signals::merge(signal_data, signal_toml)?;
-    println!("  {} Generating SIGNALS_REFERENCE.md...", "→".dimmed());
+    println!("  {} Generating API_SIGNALS_REFERENCE.md...", "→".dimmed());
     gen_signals_markdown::generate(&signal_merged)?;
 
     println!(
@@ -146,14 +146,14 @@ pub fn check() -> Result<()> {
     let api_expected = gen_api::generate(&api_data, &api_toml)?;
     check_file("docs/generated/API.md", &api_expected, &mut stale);
 
-    // SIGNALS_REFERENCE.md (separate pipeline)
+    // API_SIGNALS_REFERENCE.md (separate pipeline)
     let signal_data = extract_signals_rustdoc::extract()?;
     let signal_toml = parse_signals_toml::parse()?;
     validate_signals::validate(&signal_data, &signal_toml)?;
     let signal_merged = merge_signals::merge(signal_data, signal_toml)?;
     let signals_expected = gen_signals_markdown::render(&signal_merged)?;
     check_file(
-        "docs/generated/SIGNALS_REFERENCE.md",
+        "docs/generated/API_SIGNALS_REFERENCE.md",
         &signals_expected,
         &mut stale,
     );
@@ -290,16 +290,16 @@ pub fn api_scaffold(write: bool) -> Result<()> {
 // SIGNAL REFERENCE DOCUMENTATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/// Generate SIGNALS_REFERENCE.md from mixed-signals rustdoc + signals.toml overlay.
+/// Generate API_SIGNALS_REFERENCE.md from mixed-signals rustdoc + signals.toml overlay.
 ///
 /// Runs the parallel signals pipeline:
 /// 1. Walk mixed-signals/src to extract Signal-impl rustdoc (Strategy A: walkdir + line parsing)
 /// 2. Parse docs/templates/signals.toml editorial overlay (only-overrides, Q2)
 /// 3. Validate: editorial entries name real signals; Core 12 entries are in the catalog (Q3)
 /// 4. Merge rustdoc + editorial data
-/// 5. Generate docs/generated/SIGNALS_REFERENCE.md (Core 12 cheatsheet + full catalog by family)
+/// 5. Generate docs/generated/API_SIGNALS_REFERENCE.md (Core 12 cheatsheet + full catalog by family)
 pub fn signals() -> Result<()> {
-    println!("{}", "Generating SIGNALS_REFERENCE.md...".bold());
+    println!("{}", "Generating API_SIGNALS_REFERENCE.md...".bold());
 
     println!("  {} Extracting Signal-impl rustdoc from mixed-signals...", "→".dimmed());
     let signal_data = extract_signals_rustdoc::extract()?;
@@ -313,19 +313,19 @@ pub fn signals() -> Result<()> {
     println!("  {} Merging sources...", "→".dimmed());
     let merged = merge_signals::merge(signal_data, toml_data)?;
 
-    println!("  {} Generating SIGNALS_REFERENCE.md...", "→".dimmed());
+    println!("  {} Generating API_SIGNALS_REFERENCE.md...", "→".dimmed());
     gen_signals_markdown::generate(&merged)?;
 
-    println!("{}", "✓ SIGNALS_REFERENCE.md generated successfully".green().bold());
+    println!("{}", "✓ API_SIGNALS_REFERENCE.md generated successfully".green().bold());
     Ok(())
 }
 
-/// Check that SIGNALS_REFERENCE.md is up-to-date.
+/// Check that API_SIGNALS_REFERENCE.md is up-to-date.
 ///
 /// Runs the same pipeline as `signals()` but compares output to the existing
 /// file instead of writing. Returns an error if the file would change.
 pub fn signals_check() -> Result<()> {
-    println!("{}", "Checking SIGNALS_REFERENCE.md freshness...".bold());
+    println!("{}", "Checking API_SIGNALS_REFERENCE.md freshness...".bold());
 
     let signal_data = extract_signals_rustdoc::extract()?;
     let toml_data = parse_signals_toml::parse()?;
@@ -333,14 +333,14 @@ pub fn signals_check() -> Result<()> {
     let merged = merge_signals::merge(signal_data, toml_data)?;
     let expected = gen_signals_markdown::render(&merged)?;
 
-    let current = fs::read_to_string("docs/generated/SIGNALS_REFERENCE.md")
+    let current = fs::read_to_string("docs/generated/API_SIGNALS_REFERENCE.md")
         .unwrap_or_default();
     if expected == current {
-        println!("{}", "✓ SIGNALS_REFERENCE.md is up-to-date".green().bold());
+        println!("{}", "✓ API_SIGNALS_REFERENCE.md is up-to-date".green().bold());
         Ok(())
     } else {
         bail!(
-            "docs/generated/SIGNALS_REFERENCE.md is out of date. \
+            "docs/generated/API_SIGNALS_REFERENCE.md is out of date. \
              Run `cargo xtask docs signals` to regenerate. \
              ({} bytes expected vs {} bytes actual)",
             expected.len(),

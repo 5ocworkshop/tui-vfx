@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/extract_signals_rustdoc.rs</FILE> - <DESC>Extract Signal-impl rustdoc from mixed-signals source files</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Phase α + β: signal-facade — parallel sibling pipeline (Q1 decision: separate extractor, not extending extract_rustdoc.rs)</WCTX>
-// <CLOG>0.2.0: resolve mixed-signals root via CARGO_MANIFEST_DIR/.. so tests pass under `cargo test -p xtask` (CWD = xtask) without breaking `cargo xtask` (CWD = workspace root)</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Packet 67 — engine/API doc relabel: post-Phase-A purge. SignalSpec now covers Spring/Bounce/Pendulum/Projectile/Orbit/Decay/Attractor; the is_parallel_channel flag (which conflated "not in SignalSpec" with "physics") is removed and the 7 physics struct-name → SignalSpec discriminant mappings are added to discriminant_override.</WCTX>
+// <CLOG>0.3.0: drop is_parallel_channel field on SignalDoc and the PHYSICS_STRUCTS gate; add discriminant_override entries DampedSpring→spring, BouncingDrop→bounce, SimplePendulum→pendulum, BallisticTrajectory→projectile, CircularOrbit→orbit, FrictionDecay→decay, PointAttractor→attractor; simplify core_12_is_subset_of_catalog test (drop spring↔damped_spring workaround)</CLOG>
 
 use anyhow::{Context, Result};
 use std::collections::HashMap;
@@ -23,8 +23,9 @@ pub struct SignalsRustdocData {
 /// Documentation for a single Signal primitive.
 #[derive(Debug, Clone)]
 pub struct SignalDoc {
-    /// SignalSpec discriminant (snake_case), e.g. "sine". For non-SignalSpec
-    /// signals this is the struct name lowercased.
+    /// SignalSpec discriminant (snake_case), e.g. "sine". Post-Phase-A every
+    /// primitive in this catalog is reachable through `SignalSpec` JSON; the
+    /// discriminant matches the upstream variant's snake_case form.
     pub discriminant: String,
     /// Rust struct name, e.g. "Sine".
     pub struct_name: String,
@@ -36,9 +37,6 @@ pub struct SignalDoc {
     pub description: String,
     /// Public fields with their doc comments.
     pub fields: Vec<SignalFieldDoc>,
-    /// True when this signal is NOT reachable through SignalSpec JSON today.
-    /// Set for physics primitives (the parallel motion-spec channel).
-    pub is_parallel_channel: bool,
 }
 
 /// Documentation for a single field on a Signal struct.
@@ -175,24 +173,19 @@ fn discriminant_override(struct_name: &str) -> Option<&'static str> {
         "SampleSurfaceAngleFrom" => Some("sample_surface_angle_from"),
         "LinearDecay" => Some("linear_decay"),
         "ExponentialDecay" => Some("exponential_decay"),
-        // Physics primitives are NOT in SignalSpec (parallel channel).
-        // They get a key derived from their struct name for catalog purposes;
-        // is_parallel_channel is set to true.
+        // Physics primitives — Phase A landed these as first-class SignalSpec
+        // variants. Map struct name → wire discriminant per
+        // mixed-signals/src/types/signal_spec.rs:322-379.
+        "DampedSpring" => Some("spring"),
+        "BouncingDrop" => Some("bounce"),
+        "SimplePendulum" => Some("pendulum"),
+        "BallisticTrajectory" => Some("projectile"),
+        "CircularOrbit" => Some("orbit"),
+        "FrictionDecay" => Some("decay"),
+        "PointAttractor" => Some("attractor"),
         _ => None,
     }
 }
-
-/// Physics struct names — these live in the parallel motion-spec channel,
-/// not in SignalSpec. Documented with an is_parallel_channel callout.
-const PHYSICS_STRUCTS: &[&str] = &[
-    "DampedSpring",
-    "BouncingDrop",
-    "FrictionDecay",
-    "SimplePendulum",
-    "CircularOrbit",
-    "BallisticTrajectory",
-    "PointAttractor",
-];
 
 /// Convert a struct name to a snake_case discriminant key.
 fn struct_name_to_key(struct_name: &str) -> String {
@@ -211,8 +204,10 @@ fn struct_name_to_key(struct_name: &str) -> String {
 ///
 /// Walks `mixed-signals/src/{generators,envelopes,physics,composition,noise,random,processing}`,
 /// parses `///` doc comments above `pub struct` declarations, and builds the catalog.
-/// Test-fixture types (listed in `TEST_FIXTURE_STRUCTS`) are excluded.
-/// Physics primitives are included with `is_parallel_channel = true`.
+/// Test-fixture types (listed in `TEST_FIXTURE_STRUCTS`) are excluded. Physics
+/// primitives map to their post-Phase-A SignalSpec discriminants
+/// (`spring`, `bounce`, `pendulum`, `projectile`, `orbit`, `decay`, `attractor`)
+/// via `discriminant_override`.
 pub fn extract() -> Result<SignalsRustdocData> {
     let ms_root = find_mixed_signals_root()?;
     let mut data = SignalsRustdocData::default();
@@ -348,8 +343,6 @@ fn parse_structs_from_source(source: &str, family: SignalFamily) -> Result<Vec<S
                 let description = doc_lines.join("\n");
                 let summary = doc_lines.first().cloned().unwrap_or_default();
 
-                let is_physics = PHYSICS_STRUCTS.contains(&name.as_str());
-
                 let discriminant = if let Some(ov) = discriminant_override(&name) {
                     ov.to_string()
                 } else {
@@ -363,7 +356,6 @@ fn parse_structs_from_source(source: &str, family: SignalFamily) -> Result<Vec<S
                     summary,
                     description,
                     fields,
-                    is_parallel_channel: is_physics,
                 });
             }
         }
@@ -550,7 +542,6 @@ fn parse_spatial_unit_variants(source: &str) -> Result<Vec<SignalDoc>> {
                 summary,
                 description,
                 fields: Vec::new(),
-                is_parallel_channel: false,
             });
         }
     }
@@ -606,14 +597,8 @@ mod tests {
         let toml = super::super::parse_signals_toml::parse().expect("parse failed");
 
         for name in &toml.core_12.order {
-            // spring is a special case: documented with is_parallel_channel=true
-            // but must still appear in the catalog (keyed as "damped_spring").
-            // We accept either the toml key or the canonical catalog entry.
-            let found = data.by_discriminant.contains_key(name)
-                || (name == "spring"
-                    && data.by_discriminant.contains_key("damped_spring"));
             assert!(
-                found,
+                data.by_discriminant.contains_key(name),
                 "Core 12 entry `{name}` not found in the autogen catalog"
             );
         }
@@ -636,4 +621,4 @@ mod tests {
 }
 
 // <FILE>xtask/src/docs/extract_signals_rustdoc.rs</FILE> - <DESC>Extract Signal-impl rustdoc from mixed-signals source files</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

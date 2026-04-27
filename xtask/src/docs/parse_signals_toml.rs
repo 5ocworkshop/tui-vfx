@@ -1,7 +1,7 @@
-// <FILE>xtask/src/docs/parse_signals_toml.rs</FILE> - <DESC>Parse docs/templates/signals.toml editorial overlay</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Phase α + β: signal-facade — parallel sibling pipeline for signal reference autogen</WCTX>
-// <CLOG>0.2.0: resolve docs/templates/signals.toml via CARGO_MANIFEST_DIR/.. so tests pass under `cargo test -p xtask` (CWD = xtask) without breaking `cargo xtask` (CWD = workspace root)</CLOG>
+// <FILE>xtask/src/docs/parse_signals_toml.rs</FILE> - <DESC>Parse docs/templates/signals.toml editorial overlay (engine / direct-API audience)</DESC>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Packet 67 — engine/API doc relabel: drop the is_parallel_channel field initializer in the unknown_signal_in_toml_fails_validation test now that SignalDoc no longer carries that field.</WCTX>
+// <CLOG>0.2.1: drop is_parallel_channel from the test-fixture SignalDoc so the test compiles after the SignalDoc field removal in extract_signals_rustdoc.rs v0.3.0</CLOG>
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -128,7 +128,6 @@ mod tests {
                 summary: "Sine wave oscillator.".into(),
                 description: "Sine wave oscillator.".into(),
                 fields: Vec::new(),
-                is_parallel_channel: false,
             },
         );
 
@@ -149,5 +148,5 @@ mod tests {
     }
 }
 
-// <FILE>xtask/src/docs/parse_signals_toml.rs</FILE> - <DESC>Parse docs/templates/signals.toml editorial overlay</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <FILE>xtask/src/docs/parse_signals_toml.rs</FILE> - <DESC>Parse docs/templates/signals.toml editorial overlay (engine / direct-API audience)</DESC>
+// <VERS>END OF VERSION: 0.2.1</VERS>

@@ -1,7 +1,7 @@
 // <FILE>xtask/src/docs/merge_signals.rs</FILE> - <DESC>Merge Signal-impl rustdoc with signals.toml editorial overlay</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase α + β: signal-facade — signals pipeline merge step</WCTX>
-// <CLOG>0.1.0: initial implementation — combines SignalsRustdocData + SignalsManifest into MergedSignals; builds Core 12 list; organizes full catalog by family</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Packet 67 — engine/API doc relabel: post-Phase-A purge. Drop the spring↔damped_spring lookup alias (DampedSpring now keys directly as "spring" via discriminant_override) and drop the is_parallel_channel early-return in build_example_json; add 7 physics arms emitting real SignalSpec JSON.</WCTX>
+// <CLOG>0.2.0: drop spring/damped_spring lookup alias in Core 12 resolution; drop is_parallel_channel placeholder branch in build_example_json; add field-aware JSON examples for spring, bounce, pendulum, projectile, orbit, decay, attractor (matching mixed_signals::SignalSpec defaults at signal_spec.rs:322-379)</CLOG>
 
 use super::extract_signals_rustdoc::{SignalDoc, SignalFamily, SignalsRustdocData};
 use super::parse_signals_toml::{SignalEntry, SignalsManifest};
@@ -28,8 +28,9 @@ pub struct MergedSignal {
     pub editorial: Option<SignalEntry>,
     /// Representative JSON snippet built from SignalSpec serde shape.
     pub example_json: String,
-    /// Display name from signals.toml (may differ from doc.discriminant for aliases
-    /// like "spring" which maps to the "damped_spring" catalog entry).
+    /// Display name as written in `[core_12].order` from signals.toml. Post-Phase-A
+    /// this matches `doc.discriminant` for every catalog entry; the field is kept
+    /// so the editorial source remains explicit at the rendering site.
     pub display_discriminant: String,
 }
 
@@ -38,16 +39,15 @@ pub struct MergedSignal {
 /// The Core 12 list is ordered by `[core_12].order` from signals.toml.
 /// The full catalog is organized by `SignalFamily`.
 pub fn merge(rustdoc: SignalsRustdocData, toml: SignalsManifest) -> Result<MergedSignals> {
-    // Build Core 12 list in the declared order.
+    // Build Core 12 list in the declared order. Post-Phase-A every Core 12
+    // entry has a direct discriminant in the catalog (spring/bounce/etc.); no
+    // alias resolution needed.
     let core_12 = toml
         .core_12
         .order
         .iter()
         .filter_map(|name| {
-            // Resolve "spring" → "damped_spring" for catalog lookup.
-            // The display name stays "spring" per the Core 12 cheatsheet.
-            let lookup_key = if name == "spring" { "damped_spring" } else { name.as_str() };
-            let doc = rustdoc.by_discriminant.get(lookup_key).cloned()?;
+            let doc = rustdoc.by_discriminant.get(name.as_str()).cloned()?;
             let editorial = toml.signals.get(name).cloned();
             let example_json = build_example_json(&doc);
             Some(MergedSignal {
@@ -90,18 +90,11 @@ pub fn merge(rustdoc: SignalsRustdocData, toml: SignalsManifest) -> Result<Merge
 
 /// Build a representative JSON snippet for a signal.
 ///
-/// For signals in SignalSpec, uses the known default values from signal_spec.rs.
-/// For physics primitives (is_parallel_channel=true), uses a descriptive placeholder.
-/// Composition signals that take sub-signals use `{...}` as sub-signal placeholders.
+/// Uses the known default values from `mixed_signals/src/types/signal_spec.rs`.
+/// Composition signals that take sub-signals use a small embedded subgraph as a
+/// placeholder. Physics primitives map to their post-Phase-A SignalSpec
+/// discriminants (`spring`, `bounce`, ...) and emit real wire-format examples.
 fn build_example_json(doc: &SignalDoc) -> String {
-    if doc.is_parallel_channel {
-        // Physics primitives are not JSON-deserializable via SignalSpec today.
-        return format!(
-            "// {} is in the parallel physics channel (not SignalSpec).\n// See DampedSpring struct docs for field shape.",
-            doc.struct_name
-        );
-    }
-
     let discriminant = &doc.discriminant;
 
     // Build the JSON from the known SignalSpec field defaults.
@@ -163,6 +156,15 @@ fn build_example_json(doc: &SignalDoc) -> String {
         // Linear/exponential decay envelopes.
         "linear_decay" => r#"{"type": "linear_decay", "duration": 1.0}"#.to_string(),
         "exponential_decay" => r#"{"type": "exponential_decay", "rate": 4.0}"#.to_string(),
+        // Physics primitives (Phase A — first-class SignalSpec variants).
+        // Field shapes mirror mixed_signals::SignalSpec at signal_spec.rs:322-379.
+        "spring" => r#"{"type": "spring", "mass": 1.0, "stiffness": 10.0, "damping": 1.0, "v0": 0.0, "x0": 1.0}"#.to_string(),
+        "bounce" => r#"{"type": "bounce", "start_height": 1.0, "ground_height": 0.0, "gravity": 9.81, "restitution": 0.7}"#.to_string(),
+        "pendulum" => r#"{"type": "pendulum", "length": 1.0, "gravity": 9.81, "theta0": 0.5, "damping": 0.1}"#.to_string(),
+        "projectile" => r#"{"type": "projectile", "start_x": 0.0, "start_y": 1.0, "v0_x": 1.0, "v0_y": 1.0, "gravity": 9.81, "ground_y": 0.0}"#.to_string(),
+        "orbit" => r#"{"type": "orbit", "center_x": 0.0, "center_y": 0.0, "radius": 1.0, "angular_velocity": 1.0, "start_phase": 0.0}"#.to_string(),
+        "decay" => r#"{"type": "decay", "v0": 1.0, "drag": 0.5}"#.to_string(),
+        "attractor" => r#"{"type": "attractor", "target_x": 0.0, "target_y": 0.0, "strength": 1.0, "falloff": 2.0}"#.to_string(),
         _ => format!(r#"{{"type": "{}"}}"#, discriminant),
     }
 }
@@ -201,4 +203,4 @@ mod tests {
 }
 
 // <FILE>xtask/src/docs/merge_signals.rs</FILE> - <DESC>Merge Signal-impl rustdoc with signals.toml editorial overlay</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

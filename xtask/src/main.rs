@@ -96,10 +96,10 @@ enum DocsAction {
     // ═══════════════════════════════════════════════════════════════════════════
     // SIGNAL REFERENCE DOCUMENTATION (phase α + β)
     // ═══════════════════════════════════════════════════════════════════════════
-    /// Generate SIGNALS_REFERENCE.md from mixed-signals rustdoc + signals.toml overlay
+    /// Generate API_SIGNALS_REFERENCE.md from mixed-signals rustdoc + signals.toml overlay
     Signals,
 
-    /// Check that SIGNALS_REFERENCE.md is up-to-date (for CI)
+    /// Check that API_SIGNALS_REFERENCE.md is up-to-date (for CI)
     SignalsCheck,
 
     /// Validate signals.toml: every named signal exists in mixed-signals,
@@ -155,7 +155,7 @@ fn main() -> Result<()> {
             DocsAction::ApiCheck => docs::api_check(),
             DocsAction::ApiValidate => docs::api_validate(),
             DocsAction::ApiScaffold { write } => docs::api_scaffold(write),
-            // SIGNALS_REFERENCE.md generation (phase α + β)
+            // API_SIGNALS_REFERENCE.md generation (phase α + β)
             DocsAction::Signals => docs::signals(),
             DocsAction::SignalsCheck => docs::signals_check(),
             DocsAction::SignalsValidate => docs::signals_validate(),

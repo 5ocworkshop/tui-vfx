@@ -1,16 +1,21 @@
-# <FILE>docs/templates/signals.toml</FILE> - <DESC>Editorial overlay for signal reference autogen</DESC>
-# <VERS>VERSION: 0.1.0</VERS>
-# <WCTX>Phase α + β: signal-facade — introduce signals editorial overlay with Core 12 list and recipe-author hints.</WCTX>
-# <CLOG>0.1.0: initial overlay — Core 12 list (data-driven per Q3); editorial entries for all 12 Core signals; advanced signals carry no entry (rustdoc-only autogen per Q2 only-overrides). Q1: parallel pipeline. Q2: only-overrides. Q3: toml-driven Core 12.</CLOG>
+# <FILE>docs/templates/signals.toml</FILE> - <DESC>Editorial overlay for the engine / direct-API signals reference autogen</DESC>
+# <VERS>VERSION: 0.2.0</VERS>
+# <WCTX>Packet 67 — engine/API doc relabel: rescope to engine / direct-API audience; drop the post-Phase-A stale "DampedSpring is in the parallel physics channel" sentences from the spring entry; recipe-author overlay copy lives in tui-vfx-recipes/docs/templates/signals.toml (Packet 01).</WCTX>
+# <CLOG>0.2.0: rescope to engine / direct-API audience; refresh leading comment block to reference API_SIGNALS_REFERENCE.md; drop stale parallel-channel claims from [signals.spring]; replace the [core_12] inline note for spring with the actual SignalSpec discriminant citation</CLOG>
 #
-# Editorial overlay for SIGNALS_REFERENCE.md autogen.
+# Editorial overlay for API_SIGNALS_REFERENCE.md autogen.
+#
+# Audience: engine / direct-API consumers (tui-vfx-content, tui-vfx-style,
+# gt-design motion runtime, escape-hatch users constructing mixed_signals::*
+# primitives directly). Recipe authors get a separate, repo-owned overlay
+# under tui-vfx-recipes/docs/templates/signals.toml.
 #
 # Entries here are MERGED with rustdoc extracted from mixed-signals source files.
 # Rustdoc carries the name, summary, and parameter table. This file adds
 # use_cases, recipe_hint, and the Core 12 ordered list.
 #
 # Run `cargo xtask docs signals` (or `cargo xtask docs generate`) to regenerate
-# docs/generated/SIGNALS_REFERENCE.md.
+# docs/generated/API_SIGNALS_REFERENCE.md.
 #
 # Architecture decisions recorded:
 #   Q1: parallel sibling pipeline (extract_signals_rustdoc.rs, not extending extract_rustdoc.rs)
@@ -21,8 +26,8 @@
 # not found in the mixed-signals catalog. Core 12 entries must be valid discriminants.
 
 [meta]
-version = "0.1.0"
-description = "tui-vfx signal reference editorial overlay"
+version = "0.2.0"
+description = "tui-vfx engine / direct-API signal reference editorial overlay"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # CORE 12 — data-driven per Q3 so editors can adjust without xtask code changes.
@@ -40,8 +45,8 @@ order = [
   "perlin",          # PerlinNoise — SignalSpec discriminant is "perlin"
   "spatial_noise",
   "adsr",
-  "spring",          # DampedSpring — NOT in SignalSpec today (parallel physics channel).
-                     # Documented here with a callout; see Risks in the α/β packet.
+  "spring",          # DampedSpring — `Spring` variant in mixed_signals::SignalSpec
+                     # (signal_spec.rs:324, post-Phase-A).
   "add",
   "multiply",
   "mix",
@@ -99,12 +104,10 @@ For TUI animations: drive alpha/opacity or scale through an event lifecycle."""
 
 [signals.spring]
 use_cases = ["physics", "tactile", "settle", "overshoot"]
-recipe_hint = """Damped harmonic motion. Three regimes: underdamped (bouncy),
-critically damped (snap-into-place), overdamped (glide).
-NOTE: DampedSpring is in the parallel physics channel, not SignalSpec today.
-It is documented here because it is one of the Core 12 for recipe authors;
-phase γ will collapse this gap. JSON shape uses the parallel effect-spec field.
-Tune `damping` first; `stiffness` controls speed."""
+recipe_hint = """Damped harmonic motion (`DampedSpring`, exposed as the `spring`
+SignalSpec variant). Three regimes: underdamped (bouncy), critically damped
+(snap-into-place), overdamped (glide). Tune `damping` first; `stiffness`
+controls speed."""
 
 [signals.add]
 use_cases = ["layering", "modulation", "bias"]
@@ -129,5 +132,5 @@ recipe_hint = """Constrain a signal to [min, max]. Common use: clamp a sum of si
 to [0, 1] before using as an alpha or brightness value.
 Also useful as a soft-limiter on physics outputs."""
 
-# <FILE>docs/templates/signals.toml</FILE> - <DESC>Editorial overlay for signal reference autogen</DESC>
-# <VERS>END OF VERSION: 0.1.0</VERS>
+# <FILE>docs/templates/signals.toml</FILE> - <DESC>Editorial overlay for the engine / direct-API signals reference autogen</DESC>
+# <VERS>END OF VERSION: 0.2.0</VERS>
