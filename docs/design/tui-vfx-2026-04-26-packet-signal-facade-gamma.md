@@ -86,7 +86,7 @@ find /usr/projects/tui-vfx/docs/templates -name "signals*" -print
 sed -n '393,572p' /usr/projects/tui-vfx/docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md
 
 # Read 1.2.A — the prerequisite that landed.
-sed -n '1,40p' /usr/projects/tui-vfx/docs/design/tui-vfx-2026-04-26-packet-1.2.A-bindable-generic.md
+sed -n '1,40p' /usr/projects/tui-vfx/docs/design/completed/tui-vfx-2026-04-26-packet-1.2.A-bindable-generic.md
 
 # Confirm 1.2.A's VfxBindable lives in tui-vfx-core::bindable as expected.
 ofpf-defs VfxBindable

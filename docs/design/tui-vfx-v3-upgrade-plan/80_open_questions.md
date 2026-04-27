@@ -425,7 +425,7 @@ Three mechanisms means "how long does this one effect take" has three possible a
 
 ## 240 — Q#24: Canonical normalized IR as explicit V3 artifact
 
-**Status.** Surfaced by the debug-recipes migration findings memo (docs/design/tui-vfx-v3-migration-findings-memo-claude.md §60). Partially implicit in Open Q #9 (validator redesign) and Q#10 (viewer), both of which the reviewer suggested should build on a normalized IR — but neither question names the IR as a standalone artifact with its own spec.
+**Status.** Surfaced by the debug-recipes migration findings memo (docs/design/history/tui-vfx-v3-migration-findings-memo-claude.md §60). Partially implicit in Open Q #9 (validator redesign) and Q#10 (viewer), both of which the reviewer suggested should build on a normalized IR — but neither question names the IR as a standalone artifact with its own spec.
 
 **The question.** Should V3 define a canonical normalized IR that `canonicalize(raw_recipe) → normalized_recipe` transforms author syntax into, with validator / viewer / property tests / migration equivalence all operating on the normalized form?
 

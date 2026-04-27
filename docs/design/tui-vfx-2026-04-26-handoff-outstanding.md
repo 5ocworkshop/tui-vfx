@@ -139,7 +139,7 @@ OFPF audit during the 2026-04-26 evening session found that two items the mornin
 
 | Finding | Risk | Recommendation | Status |
 |---|---|---|---|
-| **1.2.A** Bindable<T> generalization | L | Next slice | **Queued. Junior packet at `docs/design/tui-vfx-2026-04-26-packet-1.2.A-bindable-generic.md` (671 lines). Three open architectural Q's await leader decision — see §6 below.** |
+| **1.2.A** Bindable<T> generalization | L | Next slice | **Queued. Junior packet at `docs/design/completed/tui-vfx-2026-04-26-packet-1.2.A-bindable-generic.md` (671 lines). Three open architectural Q's await leader decision — see §6 below.** |
 | 1.2.B Pool<T> generalization | S | Do now | **DONE — landed at tui-vfx commit `8cad7a2` "Collapse five sibling pool types into Pool<T> with aliases (1.2.B)". Canonical at `crates/tui-vfx-content/src/pool/cls_pool.rs`; five hand-rolled files retired to `recyclebin/`.** |
 | 1.3.A VfxImageSource.image_name → BindableString | S | Do now | **DONE — landed at tui-vfx-recipes commit `e64cf56` "Lift VfxImageSource.image_name to BindableString (1.3.A)". Schema, compile-bridge resolver `resolve_image_source_bindings`, `MissingImageBinding` error variant, runtime `expect()`, and the `_bindable` debug recipe all in tree.** |
 | 1.1.B Bindable*::evaluate signature unification | M | Wait for third trigger | Bundled into 1.2.A per packet §1.2.A.4 |
@@ -282,9 +282,9 @@ From `docs/design/tui-vfx-buy-once-architecture-sweep.md` §4, excluding 1.2.A (
 *(Note: section number 7 was claimed late in the session after §8 was already written. File order is §1–§6, §8, §7, footer; numbering is correct for navigation.)*
 
 - `docs/design/tui-vfx-pipeline-observability.md` — design spec for the `VfxObserver` event bus and the `vfx-inspect` tool. Motivated by the focused_row_btop investigation, where existing trace and probe tooling concealed the role-map mismatch for 30+ minutes. Includes: event taxonomy, sink contracts, cost model, plumbing requirements, inspector CLI, cultural commitments, and §11 open architectural questions for leader decision.
-- `docs/design/tui-vfx-2026-04-26-packet-1.2.A-bindable-generic.md` — junior-ready packet for 1.2.A with the three open Q's above, full code snippets, test plan, acceptance criteria, and rollback plan.
-- `docs/design/tui-vfx-2026-04-26-packet-1.2.B-pool-generalization.md` — verification + follow-on workbook (the underlying work shipped at `8cad7a2`; packet codifies the post-ship audit).
-- `docs/design/tui-vfx-2026-04-26-packet-1.3.A-vfx-image-source-bindable-string.md` — verification + follow-on workbook (underlying work shipped at `e64cf56`).
+- `docs/design/completed/tui-vfx-2026-04-26-packet-1.2.A-bindable-generic.md` — junior-ready packet for 1.2.A with the three open Q's above, full code snippets, test plan, acceptance criteria, and rollback plan.
+- `docs/design/completed/tui-vfx-2026-04-26-packet-1.2.B-pool-generalization.md` — verification + follow-on workbook (the underlying work shipped at `8cad7a2`; packet codifies the post-ship audit).
+- `docs/design/completed/tui-vfx-2026-04-26-packet-1.3.A-vfx-image-source-bindable-string.md` — verification + follow-on workbook (underlying work shipped at `e64cf56`).
 
 ---
 

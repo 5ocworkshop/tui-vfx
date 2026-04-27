@@ -73,7 +73,7 @@ Use this vocabulary when adding or renaming public/schema-bearing V3 surfaces:
 ## Cutover rules
 
 Use this transition map while cutting over:
-[V3 naming implementation inventory](tui-vfx-v3-naming-implementation-inventory.md)
+[V3 naming implementation inventory](history/tui-vfx-v3-naming-implementation-inventory.md)
 
 1. Prefer one deliberate V3 naming cutover over repeated piecemeal renames.
 2. Use compatibility re-exports where needed during the cutover, but do not teach

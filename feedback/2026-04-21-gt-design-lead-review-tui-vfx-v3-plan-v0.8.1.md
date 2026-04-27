@@ -559,7 +559,7 @@ These are minor compared to the architectural points above, but worth tightening
 
 I also reviewed the companion workflow document:
 
-- `docs/design/tui-vfx-v3-upgrade-audit-workflow.md` version `0.2.0`
+- `docs/design/history/tui-vfx-v3-upgrade-audit-workflow.md` version `0.2.0`
 
 My overall view is positive: the workflow doc is useful, concrete, and much better than leaving the audit phase implicit. It does a good job turning “we should probably audit this later” into actual named workstreams.
 

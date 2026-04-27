@@ -31,9 +31,9 @@ This table is grounded in:
 
 - `steering/INTENTIONS.md`
 - `docs/design/tui-vfx-v3-execution-dag.md`
-- `docs/design/tui-vfx-v3-motion-spec.md`
-- `docs/design/tui-vfx-v3-shadow-spec.md`
-- `docs/design/tui-vfx-v3-vanishing-edge-spec.md`
+- `docs/design/history/tui-vfx-v3-motion-spec.md`
+- `docs/design/history/tui-vfx-v3-shadow-spec.md`
+- `docs/design/history/tui-vfx-v3-vanishing-edge-spec.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/57_v2_to_v3_lowering_rules.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md`
 - `crates/tui-vfx-geometry/src/types/path_type.rs`

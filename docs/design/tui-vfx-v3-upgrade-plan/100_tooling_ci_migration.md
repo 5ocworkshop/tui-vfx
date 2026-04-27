@@ -1,13 +1,13 @@
 <!-- <FILE>docs/design/tui-vfx-v3-upgrade-plan/100_tooling_ci_migration.md</FILE> - <DESC>Chapter 100 — tooling and CI migration: the release-blocking tooling work V3 forces. Enumerates ~36 V2-schema-touching components, estimates migration impact per component, sequences with Concerns B (migration workflow) and F (release gates), and provides the explicit tooling-slice release checklist.</DESC> -->
 <!-- <VERS>VERSION: 1.6.4</VERS> -->
-<!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (`../tui-vfx-v3-upgrade-debug-recipes-migration-log.md`).</WCTX> -->
+<!-- <WCTX>Extracted from the monolithic plan (v0.16.0) "Tooling and CI migration" section. The sub-agent tooling inventory that informs this chapter lives in the migration log (`../history/tui-vfx-v3-upgrade-debug-recipes-migration-log.md`).</WCTX> -->
 <!-- <CLOG>1.6.4: name tui-vfx-horseman as the packaged lightweight player and separate headless summaries from interactive preview.</CLOG> -->
 
 # 100 — Tooling and CI migration — release-blocking work
 
 V3 is a clean break at the schema and loader level; it is also a clean break at the surrounding tooling level. The tools and CI that keep the V2 schema honest — validators, preview/demo, doc generators, probe/trace, authoring guides, template-expansion machinery — all read or write V2-shape data and will either continue serving V2 alongside V3 during the cutover or cut over to V3 wholesale. This chapter names that work explicitly so it does not get missed, and flags which pieces are "repoint the deserializer" vs. which need real design effort.
 
-An exhaustive tooling inventory was conducted as part of the debug-recipes migration exercise (full report in `../tui-vfx-v3-upgrade-debug-recipes-migration-log.md`). The V2 schema specs themselves are archived at `docs/v2-spec-archive/`. The list below is the summary plus the plan implications.
+An exhaustive tooling inventory was conducted as part of the debug-recipes migration exercise (full report in `../history/tui-vfx-v3-upgrade-debug-recipes-migration-log.md`). The V2 schema specs themselves are archived at `docs/v2-spec-archive/`. The list below is the summary plus the plan implications.
 
 ## 10 — Inventory map
 

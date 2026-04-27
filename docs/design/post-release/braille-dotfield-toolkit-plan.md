@@ -52,9 +52,9 @@ This plan is grounded in:
 - `/usr/projects/madeira-flag/examples/demo.rs`
 - `/usr/projects/tui-vfx-recipes/recipes/madeira_flag/madeira_flag.json`
 - `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-spatial-field-hint-plan.md`
-- `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-motion-spec.md`
-- `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-shadow-spec.md`
-- `/usr/projects/tui-vfx/docs/design/tui-vfx-v3-vanishing-edge-spec.md`
+- `/usr/projects/tui-vfx/docs/design/history/tui-vfx-v3-motion-spec.md`
+- `/usr/projects/tui-vfx/docs/design/history/tui-vfx-v3-shadow-spec.md`
+- `/usr/projects/tui-vfx/docs/design/history/tui-vfx-v3-vanishing-edge-spec.md`
 - `/usr/projects/tui-vfx-recipes/src/scene/procedural/sources/cls_ballistic_fireworks.rs`
 - `/usr/projects/gt-design/crates/gtd-components/src/shared/col_braille_pip.rs`
 - `/usr/projects/gt-design/crates/gtd-components/src/dataviz/braille_*`

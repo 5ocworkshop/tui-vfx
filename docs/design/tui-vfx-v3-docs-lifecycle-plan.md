@@ -1,22 +1,31 @@
-<!-- <FILE>docs/design/tui-vfx-v3-docs-lifecycle-plan.md</FILE> - <DESC>Provisional V3 docs lifecycle/elevation plan: classifies live docs into core reference, active plan, retained record, stale-status cleanup, and later archive/merge buckets without moving or rewriting anything yet.</DESC> -->
-<!-- <VERS>VERSION: 0.2.1</VERS> -->
-<!-- <WCTX>Track the V3 docs lifecycle map and the current status of stale-status/link reconciliation without moving or rewriting docs broadly.</WCTX> -->
-<!-- <CLOG>0.2.1: clarify active follow-up after docs lifecycle reconciliation and add missing V3 docs to lifecycle buckets.</CLOG> -->
+<!-- <FILE>docs/design/tui-vfx-v3-docs-lifecycle-plan.md</FILE> - <DESC>V3 docs lifecycle/elevation plan: classifies docs into core reference, active plan, retained record, completed-work, and archive/merge buckets, with the 2026-04-27 cutover into completed/ and history/ subdirectories recorded.</DESC> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Record the 2026-04-27 cutover that moved completed implementation plans into docs/design/completed/ and historical/rationale records into docs/design/history/.</WCTX> -->
+<!-- <CLOG>0.3.0: record the 2026-04-27 cutover — completed implementation plans moved to completed/, historical/rationale records moved to history/; supersede the prior "do not move" guardrail and update bucket paths.</CLOG> -->
 
 # V3 docs lifecycle / elevation plan
 
-> Status: current classification map, with initial index/lifecycle reconciliation complete. Remaining docs-lifecycle work is active follow-up; no docs are moved, deleted, archived, or broadly rewritten in this pass.
+> Status: classification map updated for the 2026-04-27 cutover. Completed
+> implementation plans now live under `docs/design/completed/`; historical and
+> rationale records now live under `docs/design/history/`. The earlier
+> "non-destructive, no-move" stance is superseded.
 
-This file turns the V3-DOCS01 punch-list item into a concrete, non-destructive
-classification map. It keeps the focus on docs lifecycle and elevation, not on
-broader punch-list execution.
+This file turns the V3-DOCS01 punch-list item into a concrete classification
+map. It keeps the focus on docs lifecycle and elevation, not on broader
+punch-list execution.
 
 ## Scope and guardrails
 
-- Do not move, delete, archive, or rewrite any existing V3 docs in this pass.
+- The 2026-04-27 cutover moved completed plans into `completed/` and historical
+  records into `history/`. Bucket paths below reflect the post-cutover layout.
+- Two docs in the high-confidence DONE bucket were intentionally **left in
+  place** pending owner review:
+  `docs/design/tui-vfx-buy-once-architecture-sweep.md` (multi-finding sweep with
+  mixed status) and `docs/design/tui-vfx-terminal-water-shader-plan.md`
+  (downstream framework calls it implemented but the plan's own status text is
+  ambiguous).
 - Keep tui-vfx focused on architecture and docs that belong to tui-vfx.
 - Do not pull tui-vfx-recipes owner policy into this repo.
-- Treat the buckets below as recommendations, not final ownership decisions.
 - When a retained record says `draft`, `deferred`, or `open question`, verify
   current status against the master punch list before creating work from it.
 
@@ -110,24 +119,24 @@ particular shape, even when they are no longer the active work surface.
 - `docs/design/tui-vfx-v3-upgrade-plan/80_open_questions.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/90_deferred_design.md`
 - `docs/design/tui-vfx-v3-upgrade-plan/110_appendix_audits.md`
-- `docs/design/tui-vfx-v3-motion-spec.md` — draft motion design note.
-- `docs/design/tui-vfx-v3-shadow-spec.md` — draft shadow design note.
-- `docs/design/tui-vfx-v3-vanishing-edge-spec.md` — draft viewport-edge note.
+- `docs/design/history/tui-vfx-v3-motion-spec.md` — draft motion design note.
+- `docs/design/history/tui-vfx-v3-shadow-spec.md` — draft shadow design note.
+- `docs/design/history/tui-vfx-v3-vanishing-edge-spec.md` — draft viewport-edge note.
 - `docs/design/post-release/braille-dotfield-toolkit-plan.md` — post-release
   strategy note.
 - `docs/design/post-release/glyph-actor-procedural-spec.md` — post-release
   procedural spec.
 - `docs/design/post-release/weather-ambient-field-spec.md` — post-release
   ambient-field spec.
-- `docs/design/tui-vfx-v3-migration-findings-memo-claude.md` — migration
+- `docs/design/history/tui-vfx-v3-migration-findings-memo-claude.md` — migration
   findings memo.
-- `docs/design/tui-vfx-v3-upgrade-audit-workflow.md` — audit/curation workflows
+- `docs/design/history/tui-vfx-v3-upgrade-audit-workflow.md` — audit/curation workflows
   reference.
-- `docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md` — debug
+- `docs/design/history/tui-vfx-v3-upgrade-debug-recipes-migration-log.md` — debug
   recipes migration log and schema journal.
-- `docs/design/tui-vfx-v3-naming-implementation-inventory.md` — rename rollout
+- `docs/design/history/tui-vfx-v3-naming-implementation-inventory.md` — rename rollout
   inventory.
-- `docs/design/tui-vfx-v3-ra-to-vfx-rename-inventory.md` — legacy rename
+- `docs/design/history/tui-vfx-v3-ra-to-vfx-rename-inventory.md` — legacy rename
   inventory.
 - `docs/design/tui-vfx-v3-style-model-restructure-inventory.md` — style-model
   restructure inventory.
@@ -152,16 +161,16 @@ punch list and implemented evidence.
 These are not deletion orders. They are candidates for later consolidation once
 owners confirm the final cutover shape.
 
-- `docs/design/tui-vfx-v3-naming-implementation-inventory.md` → likely fold into
+- `docs/design/history/tui-vfx-v3-naming-implementation-inventory.md` → likely fold into
   `docs/design/tui-vfx-v3-naming-normalization-decisions.md` after rename
   cutover.
-- `docs/design/tui-vfx-v3-ra-to-vfx-rename-inventory.md` → likely fold into the
+- `docs/design/history/tui-vfx-v3-ra-to-vfx-rename-inventory.md` → likely fold into the
   same naming decision record after cutover.
 - `docs/design/tui-vfx-v3-release-gate-manifest.seed.json` → likely merge into
   `docs/design/tui-vfx-v3-release-gate-manifest.md` once the manifest shape is
   stable.
-- `docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md` and
-  `docs/design/tui-vfx-v3-migration-findings-memo-claude.md` → possible future
+- `docs/design/history/tui-vfx-v3-upgrade-debug-recipes-migration-log.md` and
+  `docs/design/history/tui-vfx-v3-migration-findings-memo-claude.md` → possible future
   synthesis record if the remaining schema-history detail can be frozen into one
   retained history artifact.
 - `docs/design/post-release/*.md` → keep separate and deferred unless the owner

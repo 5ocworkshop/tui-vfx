@@ -937,8 +937,8 @@ recipe a clean preview.
 
 Companions:
 
-- `docs/design/tui-vfx-binding-loopback.md` — design proposal, the WHY.
-- `docs/design/tui-vfx-binding-loopback-implementation-plan.md` — phased
+- `docs/design/completed/tui-vfx-binding-loopback.md` — design proposal, the WHY.
+- `docs/design/completed/tui-vfx-binding-loopback-implementation-plan.md` — phased
   HOW (L1 engine fallback, L2 `requires_bindings` typing + strict-
   contracts gate, L3 visibility badge, L4 strictness modes, L5 probe +
   browser integration).
@@ -1009,9 +1009,9 @@ that every recipe declare anything.
 
 Companion docs:
 
-- `docs/design/tui-vfx-binding-loopback.md` — the broader design
+- `docs/design/completed/tui-vfx-binding-loopback.md` — the broader design
   shape this convention bridges to.
-- `docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md` —
+- `docs/design/completed/tui-vfx-mechanical-circular-content-cycles-plan.md` —
   Phase 6 / Phase 7 sub-plans that produced the first bindable
   recipes; concrete examples of the marker in use.
 
@@ -1099,9 +1099,9 @@ puts pixels on the surface" is code.
 
 Companion docs:
 
-- `docs/design/tui-vfx-binding-loopback.md` — the design that
+- `docs/design/completed/tui-vfx-binding-loopback.md` — the design that
   surfaced this principle when L3 needed a visibility badge.
-- `docs/design/tui-vfx-binding-loopback-implementation-plan.md` —
+- `docs/design/completed/tui-vfx-binding-loopback-implementation-plan.md` —
   the L3 phase notes that record the recipe-based badge
   architecture.
 

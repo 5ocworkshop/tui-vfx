@@ -39,7 +39,7 @@ These are live entry points, not historical notes.
 6. [V3 docs lifecycle/elevation plan](tui-vfx-v3-docs-lifecycle-plan.md)
 7. [V3 I/O contract](tui-vfx-v3-io-contract.md)
 8. [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
-9. [V3 naming implementation inventory](tui-vfx-v3-naming-implementation-inventory.md)
+9. [V3 naming implementation inventory](history/tui-vfx-v3-naming-implementation-inventory.md)
 10. [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
 11. [V3 migration outcome policy](tui-vfx-v3-migration-outcome-policy.md)
 12. [V3 release-gate policy](tui-vfx-v3-release-gate-policy.md)
@@ -87,8 +87,8 @@ These still shape implementation, validation, migration, or release-gate follow-
 - [V3 glyph particle emitter plan](tui-vfx-v3-glyph-particle-emitter-plan.md)
 - [V3 TTE-inspired remaining-work plan](tui-vfx-v3-tte-inspired-remaining-work-plan.md)
 - [Terminal water/ocean shader plan](tui-vfx-terminal-water-shader-plan.md)
-- [Terminal fire/flame shader plan](tui-vfx-terminal-fire-shader-plan.md)
-- [Glyph rendering framework plan](tui-vfx-glyph-rendering-framework-plan.md)
+- [Terminal fire/flame shader plan](completed/tui-vfx-terminal-fire-shader-plan.md)
+- [Glyph rendering framework plan](completed/tui-vfx-glyph-rendering-framework-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
 - [V3 recipe ingredients reference plan](tui-vfx-v3-recipe-ingredients-reference-plan.md)
 - [V3 release-gate manifest seed](tui-vfx-v3-release-gate-manifest.md)
@@ -101,15 +101,15 @@ Read these for rationale or closed-out context. Do not treat stale `draft`,
 checking the master punch list and lifecycle plan.
 
 - [V3 upgrade-plan chapter index](tui-vfx-v3-upgrade-plan/00_INDEX.md)
-- [V3 motion spec](tui-vfx-v3-motion-spec.md)
+- [V3 motion spec](history/tui-vfx-v3-motion-spec.md)
 - [V3 motion compatibility table](tui-vfx-v3-motion-compatibility-table.md)
-- [V3 shadow spec](tui-vfx-v3-shadow-spec.md)
-- [V3 vanishing edge spec](tui-vfx-v3-vanishing-edge-spec.md)
-- [V3 migration findings memo](tui-vfx-v3-migration-findings-memo-claude.md)
-- [V3 upgrade audit workflow](tui-vfx-v3-upgrade-audit-workflow.md)
-- [V3 upgrade debug recipes migration log](tui-vfx-v3-upgrade-debug-recipes-migration-log.md)
-- [V3 naming implementation inventory](tui-vfx-v3-naming-implementation-inventory.md)
-- [V3 legacy Ra-to-Vfx rename inventory](tui-vfx-v3-ra-to-vfx-rename-inventory.md)
+- [V3 shadow spec](history/tui-vfx-v3-shadow-spec.md)
+- [V3 vanishing edge spec](history/tui-vfx-v3-vanishing-edge-spec.md)
+- [V3 migration findings memo](history/tui-vfx-v3-migration-findings-memo-claude.md)
+- [V3 upgrade audit workflow](history/tui-vfx-v3-upgrade-audit-workflow.md)
+- [V3 upgrade debug recipes migration log](history/tui-vfx-v3-upgrade-debug-recipes-migration-log.md)
+- [V3 naming implementation inventory](history/tui-vfx-v3-naming-implementation-inventory.md)
+- [V3 legacy Ra-to-Vfx rename inventory](history/tui-vfx-v3-ra-to-vfx-rename-inventory.md)
 
 ## Architecture and decisions
 
@@ -121,7 +121,7 @@ checking the master punch list and lifecycle plan.
 - [V3 scheduler batching plan](tui-vfx-v3-scheduler-batching-plan.md)
 - [V3 validator canonicalization checklist](tui-vfx-v3-validator-canonicalization-checklist.md)
 - [V3 naming normalization decisions](tui-vfx-v3-naming-normalization-decisions.md)
-- [V3 naming implementation inventory](tui-vfx-v3-naming-implementation-inventory.md)
+- [V3 naming implementation inventory](history/tui-vfx-v3-naming-implementation-inventory.md)
 - [V3 phase-scoping decision](tui-vfx-v3-phase-scoping-decision.md)
 - [V3 scope and composition decision](tui-vfx-v3-scope-composition-decision.md)
 - [V3 timing and metadata decision](tui-vfx-v3-timing-and-metadata-decision.md)
@@ -140,10 +140,10 @@ primitive behavior.
 - Sibling hand-maintained schema companion: `../../../tui-vfx-recipes/docs/schema/SCHEMA_REFERENCE.md`
 - Sibling generated V3 API inventory: `../../../tui-vfx-recipes/docs/generated/V3_API.md`
 - Sibling procedural source catalog: `../../../tui-vfx-recipes/docs/scene/PROCEDURAL_SOURCES.md`
-- [V3 motion spec](tui-vfx-v3-motion-spec.md)
+- [V3 motion spec](history/tui-vfx-v3-motion-spec.md)
 - [V3 motion compatibility table](tui-vfx-v3-motion-compatibility-table.md)
-- [V3 shadow spec](tui-vfx-v3-shadow-spec.md)
-- [V3 vanishing edge spec](tui-vfx-v3-vanishing-edge-spec.md)
+- [V3 shadow spec](history/tui-vfx-v3-shadow-spec.md)
+- [V3 vanishing edge spec](history/tui-vfx-v3-vanishing-edge-spec.md)
 
 ## I/O, composition, and execution
 
@@ -156,8 +156,8 @@ primitive behavior.
 - [V3 glyph particle emitter plan](tui-vfx-v3-glyph-particle-emitter-plan.md)
 - [V3 TTE-inspired remaining-work plan](tui-vfx-v3-tte-inspired-remaining-work-plan.md)
 - [Terminal water/ocean shader plan](tui-vfx-terminal-water-shader-plan.md)
-- [Terminal fire/flame shader plan](tui-vfx-terminal-fire-shader-plan.md)
-- [Glyph rendering framework plan](tui-vfx-glyph-rendering-framework-plan.md)
+- [Terminal fire/flame shader plan](completed/tui-vfx-terminal-fire-shader-plan.md)
+- [Glyph rendering framework plan](completed/tui-vfx-glyph-rendering-framework-plan.md)
 - [V3 style model restructure inventory](tui-vfx-v3-style-model-restructure-inventory.md)
 
 ## Tooling and edge adapters
@@ -171,10 +171,10 @@ primitive behavior.
 
 ## Migration and debug recipes
 
-- [V3 upgrade audit workflow](tui-vfx-v3-upgrade-audit-workflow.md)
+- [V3 upgrade audit workflow](history/tui-vfx-v3-upgrade-audit-workflow.md)
 - [V3 docs lifecycle/elevation plan](tui-vfx-v3-docs-lifecycle-plan.md)
-- [V3 upgrade debug recipes migration log](tui-vfx-v3-upgrade-debug-recipes-migration-log.md)
-- [V3 migration findings memo](tui-vfx-v3-migration-findings-memo-claude.md)
+- [V3 upgrade debug recipes migration log](history/tui-vfx-v3-upgrade-debug-recipes-migration-log.md)
+- [V3 migration findings memo](history/tui-vfx-v3-migration-findings-memo-claude.md)
 - [V3 migration outcome policy](tui-vfx-v3-migration-outcome-policy.md)
 - [V3 release-gate policy](tui-vfx-v3-release-gate-policy.md)
 - [V3 release-gate manifest seed](tui-vfx-v3-release-gate-manifest.md)

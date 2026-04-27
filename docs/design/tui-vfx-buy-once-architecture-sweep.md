@@ -118,14 +118,14 @@ pub fn evaluate<'a>(&'a self, runtime_params: &'a ShaderRuntimeParams) -> Option
 pub fn evaluate(&self, loop_t: f64, signal_ctx: &SignalContext, runtime_params: &ShaderRuntimeParams) -> Option<f32>;
 ```
 
-**Why now.** The asymmetry is structural: BindableValue has a `Signal` arm so it needs `(loop_t, signal_ctx)`; BindableU16 and BindableString today only have `Literal | Binding` arms. The binding-loopback design (`docs/design/tui-vfx-binding-loopback.md:336–344`) explicitly anticipates "Future bindable types (e.g. `BindableColor`, `BindableString`)" growing **Signal arms** for animated bindings. When BindableU16 grows a Signal arm — already discussed as the natural next step in `cls_bindable_u16.rs` rustdoc — every caller of `BindableU16::evaluate(&runtime_params)` will need to pass `loop_t` and `signal_ctx` too. That signature change ripples into every FilterSpec/MaskSpec field that uses BindableU16.
+**Why now.** The asymmetry is structural: BindableValue has a `Signal` arm so it needs `(loop_t, signal_ctx)`; BindableU16 and BindableString today only have `Literal | Binding` arms. The binding-loopback design (`docs/design/completed/tui-vfx-binding-loopback.md:336–344`) explicitly anticipates "Future bindable types (e.g. `BindableColor`, `BindableString`)" growing **Signal arms** for animated bindings. When BindableU16 grows a Signal arm — already discussed as the natural next step in `cls_bindable_u16.rs` rustdoc — every caller of `BindableU16::evaluate(&runtime_params)` will need to pass `loop_t` and `signal_ctx` too. That signature change ripples into every FilterSpec/MaskSpec field that uses BindableU16.
 
 **Existing instances.**
 1. `BindableU16::evaluate(runtime_params)` — narrow signature.
 2. `BindableString::evaluate(runtime_params)` — narrow signature with lifetime.
 3. `BindableValue::evaluate(loop_t, signal_ctx, runtime_params)` — wide signature.
 
-**Credible third trigger.** `docs/design/tui-vfx-binding-loopback.md:344` and `transform-context-implementation-plan.md:294` both name `BindableColor` / `BindableF32` as the next types. By Intention 23 the threshold has been crossed; the question is just *when* to consolidate.
+**Credible third trigger.** `docs/design/completed/tui-vfx-binding-loopback.md:344` and `transform-context-implementation-plan.md:294` both name `BindableColor` / `BindableF32` as the next types. By Intention 23 the threshold has been crossed; the question is just *when* to consolidate.
 
 **Estimated blast radius.** M. Today: ~30 BindableValue use sites in `cls_filter_spec.rs`, scattered BindableU16 / BindableString sites. After consolidation: every call site passes a single `&BindingContext { loop_t, signal_ctx, runtime_params }` (or whatever the bundle is named) regardless of whether the underlying Bindable variant uses signals.
 
@@ -167,8 +167,8 @@ All three have:
 3. `BindableValue` (compositor)
 
 **Credible third trigger.** `BindableColor` is named in:
-- `docs/design/tui-vfx-binding-loopback.md:344`
-- `docs/design/tui-vfx-transform-context-implementation-plan.md:294`
+- `docs/design/completed/tui-vfx-binding-loopback.md:344`
+- `docs/design/completed/tui-vfx-transform-context-implementation-plan.md:294`
 
 `BindableF32` is named in the same Transform Context plan. Two named-but-not-built types.
 
@@ -1195,7 +1195,7 @@ ofpf-blast crates/tui-vfx-content/src/pool/cls_image_pool.rs
 
 ```bash
 grep -rn "image_name" /usr/projects/tui-vfx-recipes/src/recipe_schema/scene/
-cat /usr/projects/tui-vfx/docs/design/tui-vfx-mechanical-circular-content-cycles-plan.md | grep -A3 "Phase 7.schema"
+cat /usr/projects/tui-vfx/docs/design/completed/tui-vfx-mechanical-circular-content-cycles-plan.md | grep -A3 "Phase 7.schema"
 ```
 
 ### Finding 1.2.A (Bindable<T>)

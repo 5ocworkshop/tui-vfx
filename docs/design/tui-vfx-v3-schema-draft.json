@@ -24,7 +24,7 @@
 #   - docs/design/tui-vfx-v3-recipe-vocabulary.md      — canonical vocabulary,
 #                                                         rect/scene diagrams,
 #                                                         basis language
-#   - docs/design/tui-vfx-v3-upgrade-debug-recipes-migration-log.md
+#   - docs/design/history/tui-vfx-v3-upgrade-debug-recipes-migration-log.md
 #                                                       — schema journal, drift,
 #                                                         final V2↔V3 audit
 # ============================================================================

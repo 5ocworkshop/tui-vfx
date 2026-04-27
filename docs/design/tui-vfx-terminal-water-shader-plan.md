@@ -759,7 +759,7 @@ If `ColorConfig::Rgb` is not the exact variant shape, inspect `cls_color_config.
 
 ## 5.9 Cross-plan helper note for terminal fire
 
-A sibling plan now exists for [`terminal_fire`](tui-vfx-terminal-fire-shader-plan.md). If water and fire are implemented in the same development window, extract only the small helper functions that both plans actually need:
+A sibling plan now exists for [`terminal_fire`](completed/tui-vfx-terminal-fire-shader-plan.md). If water and fire are implemented in the same development window, extract only the small helper functions that both plans actually need:
 
 - `utils/fnc_scalar_math.rs`: `saturate`, `smoothstep`, `lerp_f32`, `safe_div`, and finite-value guards.
 - `utils/fnc_field_coords.rs`: normalized field coordinate conversion from `ShaderContext`, exposing both top-down and bottom-up `y` conventions.
@@ -1534,7 +1534,7 @@ Keep this optional so the first implementation does not get blocked by recipe ae
 
 > **Status: Implemented (2026-04).** The design captured here landed via the
 > shared glyph-rendering framework — see
-> [`tui-vfx-glyph-rendering-framework-plan.md`](tui-vfx-glyph-rendering-framework-plan.md)
+> [`completed/tui-vfx-glyph-rendering-framework-plan.md`](completed/tui-vfx-glyph-rendering-framework-plan.md)
 > for the framework, plus the working debug recipe at
 > `recipes/debug_recipes/shaders/primitives/shader_terminal_water_glyph_v3.json`
 > in `tui-vfx-recipes`. The encoder vocabulary lives in
@@ -1936,7 +1936,7 @@ Keep this section as future design context only. The current plan should expose 
 
 > **Status: Implemented (2026-04).** Landed as part of the shared
 > glyph-rendering framework rather than as a water-specific primitive.
-> See `tui-vfx-glyph-rendering-framework-plan.md` and the debug recipe
+> See `completed/tui-vfx-glyph-rendering-framework-plan.md` and the debug recipe
 > `shader_terminal_water_glyph_v3.json` in `tui-vfx-recipes`. The
 > framework's `GlyphEncoder::BrailleSubcell` is the high-quality mode the
 > §21.1 sketch called out; the framework also provides `BrailleEighths`

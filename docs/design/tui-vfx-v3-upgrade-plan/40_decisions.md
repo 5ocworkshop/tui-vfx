@@ -46,7 +46,7 @@ During plan development we considered three positions:
 - **Primitive-only (no named compositions at all):** decompose everything to `ColoredOverlay + Pattern` and ship no named factories. Cleaner end state, but loses encoded design judgment — each existing named shader's specific parameter tuning represents someone's decision about what "warm diffusion" or "edge glow" should *look like*. A fresh re-authoring would re-litigate those decisions and likely drift.
 - **Primitive-by-default with earned named compositions (adopted):** primitives are the authoring vocabulary; named compositions accrue one at a time, each with documented rationale for why the specific parameter tuning encodes design judgment worth locking in.
 
-**The migration is not backwards-compat-driven. V2 recipes do not carry forward automatically.** Each existing named shader in V2 is evaluated during the shader-catalog audit (Workflow A in the sibling `tui-vfx-v3-upgrade-audit-workflow.md`) and classified as:
+**The migration is not backwards-compat-driven. V2 recipes do not carry forward automatically.** Each existing named shader in V2 is evaluated during the shader-catalog audit (Workflow A in the sibling `../history/tui-vfx-v3-upgrade-audit-workflow.md`) and classified as:
 
 - **Trivial composition** — drop the name; the V3 recipe corpus re-expresses this as `ColoredOverlay + Pattern::X` directly.
 - **Earned name** — preserve as a named preset in V3 with documented justification for its specific parameter tuning.
