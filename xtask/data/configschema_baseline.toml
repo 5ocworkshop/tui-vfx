@@ -1,13 +1,15 @@
 # <FILE>xtask/data/configschema_baseline.toml</FILE> - <DESC>Baseline allowlist of pre-existing hand-written impl ConfigSchema for X blocks</DESC>
-# <VERS>VERSION: 1.0.0</VERS>
-# <WCTX>Packet 1.9.A — ConfigSchema justification lint</WCTX>
-# <CLOG>1.0.0: initial baseline from live-tree audit on 2026-04-26 (15 impls; packet estimated 12 — 5 additional generic impls found at scan time; drift documented in report)</CLOG>
+# <VERS>VERSION: 1.1.0</VERS>
+# <WCTX>Packet 1.9.A.followup US-004: lift the 8 foreign-type baseline entries (String, &str, Option<T>, Vec<T>, Box<T>, SignalOrFloat, SignalSpec, EasingType) into source-side CONFIGSCHEMA-JUSTIFICATION comments. The rationale now lives next to the impl rather than only in this allowlist.</WCTX>
+# <CLOG>1.1.0: MINOR — drain 8 foreign-type entries (5 from schema/mod.rs, 3 from mixed_signals_schema.rs). Remaining baseline carries 7 entries: Never, StyleRegion, PathType, Color, RoleTag, VfxBindable<T,S>, Pool<T>. Each will be addressed in subsequent US-* stories of packet 1.9.A.followup.
 #
 # Entries here are exempt from the justification-comment requirement introduced
 # by packet 1.9.A. The followup audit packet (1.9.A.followup) walks each entry
 # and either:
-#   (a) adds a CONFIGSCHEMA-JUSTIFICATION comment and removes the entry, or
-#   (b) migrates the impl to #[derive(ConfigSchema)] and removes the entry.
+#   (a) adds a CONFIGSCHEMA-JUSTIFICATION comment to the impl (then removes the
+#       baseline entry), or
+#   (b) migrates the impl to #[derive(ConfigSchema)] if the derive macro handles
+#       the case (then removes the baseline entry).
 #
 # New impls MUST NOT be added here. New hand-written impls must carry a
 # // CONFIGSCHEMA-JUSTIFICATION: <kind>: <reason>  line directly above the
@@ -19,79 +21,39 @@
 schema_version = 1
 
 [[entry]]
-file = "crates/tui-vfx-core/src/schema/mod.rs"
-type = "String"
-note = "foreign primitive bridge — String has no MIN/MAX; cannot fold into macro"
-
-[[entry]]
-file = "crates/tui-vfx-core/src/schema/mod.rs"
-type = "&str"
-note = "foreign primitive bridge — thin str wrapper alongside String"
-
-[[entry]]
-file = "crates/tui-vfx-core/src/mixed_signals_schema.rs"
-type = "SignalOrFloat"
-note = "foreign type — lives in mixed-signals; orphan rules forbid #[derive]"
-
-[[entry]]
-file = "crates/tui-vfx-core/src/mixed_signals_schema.rs"
-type = "SignalSpec"
-note = "foreign type — lives in mixed-signals; orphan rules forbid #[derive]"
-
-[[entry]]
-file = "crates/tui-vfx-core/src/mixed_signals_schema.rs"
-type = "EasingType"
-note = "foreign type — lives in mixed-signals; orphan rules forbid #[derive]"
-
-[[entry]]
 file = "crates/tui-vfx-core/src/bindable/cls_bindable.rs"
 type = "Never"
-note = "uninhabited type — intentional divergence; derive would emit nothing useful"
+note = "uninhabited type — intentional divergence; derive would emit nothing useful. US-007 will migrate to #[derive(ConfigSchema)] once the dependency edge from tui-vfx-core to tui-vfx-core-macros is exercised here (the edge exists per Cargo.toml; the migration just needs to land)."
 
 [[entry]]
 file = "crates/tui-vfx-style/src/models/fnc_style_region_schema.rs"
 type = "StyleRegion"
-note = "cross-crate trait dep — Role(RoleTag) variant; RoleTag in tui-vfx-types which does not depend on tui-vfx-core"
+note = "candidate for derive migration — StyleRegion has #[serde(rename_all = \"PascalCase\")] and per-variant /// doc comments, so the live derive would emit equivalent shape. The hand-written impl freezes json_value=None across all variants which is a deliberate schema divergence. US-008 will lift with intentional-divergence-from-derive-output."
 
 [[entry]]
 file = "crates/tui-vfx-geometry/src/types/path_type.rs"
 type = "PathType"
-note = "candidate for derive migration — see followup packet"
+note = "candidate for derive migration — PathType has #[serde(tag=\"type\", rename_all=\"snake_case\")] and /// doc comments on every variant, but per-field default/min/max metadata on Bounce.bounces and Step.steps is currently emitted via a helper rather than via #[config(...)] annotations on the struct definition. US-008 will lift with intentional-divergence-from-derive-output (or migrate if the leader chooses to add the source-side annotations)."
 
 [[entry]]
 file = "crates/tui-vfx-types/src/color.rs"
 type = "Color"
-note = "wire-format primitive — declares per-channel RGBA range explicitly; intentional divergence from derive output"
+note = "wire-format primitive — declares per-channel RGBA range explicitly; intentional divergence from derive output today, but trivially migratable by adding #[config(min=0, max=255)] on each field. US-006 will migrate."
 
 [[entry]]
 file = "crates/tui-vfx-types/src/role_tag.rs"
 type = "RoleTag"
-note = "candidate for derive migration — Custom(InternedRoleName) arm; see followup packet"
-
-[[entry]]
-file = "crates/tui-vfx-core/src/schema/mod.rs"
-type = "Option<T>"
-note = "generic wrapper — derive-cannot-handle-generic-T; bridges Option into SchemaNode::Option"
-
-[[entry]]
-file = "crates/tui-vfx-core/src/schema/mod.rs"
-type = "Vec<T>"
-note = "generic wrapper — derive-cannot-handle-generic-T; bridges Vec into SchemaNode::Vec"
-
-[[entry]]
-file = "crates/tui-vfx-core/src/schema/mod.rs"
-type = "Box<T>"
-note = "generic wrapper — derive-cannot-handle-generic-T; bridges Box into SchemaNode::Box"
+note = "candidate for derive migration — RoleTag has /// doc comments on every variant and adding #[serde(rename_all=\"snake_case\")] would make derive emit the lowercase json_value strings the hand-written impl emits today. The Custom(InternedRoleName) field is the structural blocker: InternedRoleName has no ConfigSchema impl, and the hand-written impl flattens it to String::schema() as a deliberate simplification. US-008 will lift with intentional-divergence-from-derive-output."
 
 [[entry]]
 file = "crates/tui-vfx-core/src/bindable/cls_bindable.rs"
 type = "VfxBindable<T, S>"
-note = "generic impl — derive macro does not emit where T: ConfigSchema, S: BindableSignal bounds; hand-written until macro is extended"
+note = "generic impl — the live derive macro at tui-vfx-core-macros/src/lib.rs does not synthesize where T: ConfigSchema, S: BindableSignal bounds on the where clause. The hand-written impl also conditionally includes a Signal variant via S::signal_variant_schema() which is runtime trait dispatch and not expressible in derive. US-005 will lift; macro extension to synthesize ConfigSchema bounds is a separate packet."
 
 [[entry]]
 file = "crates/tui-vfx-content/src/pool/cls_pool.rs"
 type = "Pool<T>"
-note = "generic wrapper — derive-cannot-handle-generic-T; SchemaNode::Struct with selection policy variants"
+note = "generic wrapper — same blocker as VfxBindable<T,S>: derive does not synthesize T: ConfigSchema bound. US-005 will lift; macro extension is a separate packet."
 
 # <FILE>xtask/data/configschema_baseline.toml</FILE>
-# <VERS>END OF VERSION: 1.0.0</VERS>
+# <VERS>END OF VERSION: 1.1.0</VERS>

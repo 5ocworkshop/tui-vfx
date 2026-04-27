@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-core/src/schema/mod.rs</FILE> - <DESC>Schema model for configuration introspection</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>OFPF refactoring: extract JSON schema handlers</WCTX>
-// <CLOG>Add fnc_node_to_json_schema, fnc_variant_to_tagged_schema, fnc_variant_to_untagged_schema</CLOG>
+// <VERS>VERSION: 0.5.1</VERS>
+// <WCTX>Packet 1.9.A.followup US-004: lift the 5 foreign-type ConfigSchema baseline entries in this file (String, &str, Option, Vec, Box) into source-side CONFIGSCHEMA-JUSTIFICATION comments so the rationale lives next to the impl rather than only in xtask/data/configschema_baseline.toml.</WCTX>
+// <CLOG>0.5.1: PATCH — add CONFIGSCHEMA-JUSTIFICATION comments above the 5 hand-written foreign-type impls (String/&str: kind=primitive-bridge; Option/Vec/Box: kind=derive-cannot-handle-generic-T). No behavior change. Baseline entries removed in same packet.</CLOG>
 
 mod cls_json_writer;
 mod cls_schema_registry;
@@ -66,6 +66,7 @@ impl_int_schema!(u32, "u32");
 impl_int_schema!(u64, "u64");
 impl_int_schema!(u128, "u128");
 impl_int_schema!(usize, "usize");
+// CONFIGSCHEMA-JUSTIFICATION: primitive-bridge: String is a foreign std type with no MIN/MAX; the schema is a SchemaNode::Primitive literal that orphan rules forbid us from deriving on the foreign type itself.
 impl ConfigSchema for String {
     fn schema() -> SchemaNode {
         SchemaNode::Primitive {
@@ -74,6 +75,7 @@ impl ConfigSchema for String {
         }
     }
 }
+// CONFIGSCHEMA-JUSTIFICATION: primitive-bridge: &str is a foreign std type; thin str wrapper alongside String. Same orphan-rule blocker.
 impl ConfigSchema for &str {
     fn schema() -> SchemaNode {
         SchemaNode::Primitive {
@@ -82,6 +84,7 @@ impl ConfigSchema for &str {
         }
     }
 }
+// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-generic-T: Option<T> is a foreign std generic; orphan rules forbid #[derive] on foreign types, and the live derive macro does not synthesize T: ConfigSchema bounds. Hand-written bridge into SchemaNode::Option.
 impl<T: ConfigSchema> ConfigSchema for Option<T> {
     fn schema() -> SchemaNode {
         SchemaNode::Option {
@@ -89,6 +92,7 @@ impl<T: ConfigSchema> ConfigSchema for Option<T> {
         }
     }
 }
+// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-generic-T: Vec<T> is a foreign std generic; same blockers as Option<T>. Hand-written bridge into SchemaNode::Vec.
 impl<T: ConfigSchema> ConfigSchema for Vec<T> {
     fn schema() -> SchemaNode {
         SchemaNode::Vec {
@@ -96,6 +100,7 @@ impl<T: ConfigSchema> ConfigSchema for Vec<T> {
         }
     }
 }
+// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-generic-T: Box<T> is a foreign std generic; same blockers as Option<T>. Hand-written bridge into SchemaNode::Box.
 impl<T: ConfigSchema> ConfigSchema for Box<T> {
     fn schema() -> SchemaNode {
         SchemaNode::Box {
@@ -105,4 +110,4 @@ impl<T: ConfigSchema> ConfigSchema for Box<T> {
 }
 
 // <FILE>tui-vfx-core/src/schema/mod.rs</FILE> - <DESC>Schema model for configuration introspection</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.5.1</VERS>

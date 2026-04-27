@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-core/src/mixed_signals_schema.rs</FILE> - <DESC>ConfigSchema implementations for mixed_signals types</DESC>
-// <VERS>VERSION: 1.4.0</VERS>
-// <WCTX>Expand SignalSpec schema coverage</WCTX>
-// <CLOG>Model mixed_signals variants for recipe validation</CLOG>
+// <VERS>VERSION: 1.4.1</VERS>
+// <WCTX>Packet 1.9.A.followup US-004: lift the 3 foreign-type ConfigSchema baseline entries in this file (SignalOrFloat, SignalSpec, EasingType) into source-side CONFIGSCHEMA-JUSTIFICATION comments.</WCTX>
+// <CLOG>1.4.1: PATCH — add CONFIGSCHEMA-JUSTIFICATION comments above the 3 hand-written impls, all kind=derive-cannot-handle-foreign-type. The signal types live in mixed-signals and orphan rules forbid #[derive] outside the trait's home crate. No behavior change.</CLOG>
 
 use crate::schema::{ConfigSchema, FieldMeta, ScalarValue, SchemaField, SchemaNode, SchemaVariant};
 use mixed_signals::prelude::{EasingType, SignalOrFloat, SignalSpec};
@@ -29,6 +29,7 @@ fn opaque(type_name: &str) -> SchemaNode {
     }
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-foreign-type: SignalOrFloat lives in the mixed-signals crate; orphan rules forbid #[derive(ConfigSchema)] outside the trait's home crate.
 impl ConfigSchema for SignalOrFloat {
     fn schema() -> SchemaNode {
         SchemaNode::Enum {
@@ -79,6 +80,7 @@ impl ConfigSchema for SignalOrFloat {
     }
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-foreign-type: SignalSpec lives in the mixed-signals crate; orphan rules forbid #[derive(ConfigSchema)] outside the trait's home crate. The hand-written impl also uses signal_spec_ref()/Opaque to break the self-recursive shape that the derive cannot directly emit.
 impl ConfigSchema for SignalSpec {
     fn schema() -> SchemaNode {
         SchemaNode::Enum {
@@ -464,6 +466,7 @@ impl ConfigSchema for SignalSpec {
     }
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-foreign-type: EasingType lives in the mixed-signals crate; orphan rules forbid #[derive(ConfigSchema)] outside the trait's home crate.
 impl ConfigSchema for EasingType {
     fn schema() -> SchemaNode {
         SchemaNode::Enum {
@@ -603,4 +606,4 @@ impl ConfigSchema for EasingType {
 }
 
 // <FILE>tui-vfx-core/src/mixed_signals_schema.rs</FILE> - <DESC>ConfigSchema implementations for mixed_signals types</DESC>
-// <VERS>END OF VERSION: 1.3.0</VERS>
+// <VERS>END OF VERSION: 1.4.1</VERS>
