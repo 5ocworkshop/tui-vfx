@@ -1,7 +1,7 @@
 <!-- <FILE>steering/MARKETING.md</FILE> - <DESC>Marketing positioning and feature hierarchy for tui-vfx — 30s/60s/90s descriptions, primary/secondary/tertiary feature layers, callouts for uniquely powerful capabilities. The project's north star for how we describe ourselves.</DESC> -->
-<!-- <VERS>VERSION: 0.3.7</VERS> -->
-<!-- <WCTX>Keep marketing positioning aligned with V3's scene-renderer, VFX compositor, and recipe-runtime scope without over-promising beyond implementation evidence.</WCTX> -->
-<!-- <CLOG>0.3.7: record the suite-framing tension and gt-design-first product truth without turning it into a public marketing push.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.8</VERS> -->
+<!-- <WCTX>2026-04-27: align positioning with the pre/post-pass slot architecture decided in tui-vfx-effect-composition-model.md §11. Shadow stops being a one-off; it becomes the first instance of a closed pass framework that also covers glow, vignette, scanline, backdrop blur, scene underlays/overlays, motion trails.</WCTX> -->
+<!-- <CLOG>0.3.8: reframe secondary feature 10 as the pre/post-pass framework; add a sentence in the 90s description naming the framework; update tachyonfx comparison row from "shadow/offscreen composition" to the pass framework; add a callout under unique capabilities.</CLOG> -->
 
 # Marketing — tui-vfx positioning and feature hierarchy
 
@@ -119,7 +119,7 @@ It's built for teams shipping polished terminal applications — design systems 
 
 tui-vfx is a visual effects library for terminal UIs. It brings shader-like capabilities — shadows, gradients, masks, signal-driven motion along composable paths, multi-layer composition — to ratatui and other grid-based renderers.
 
-The compositor sits between your layout pass and the terminal render: cells in, cells out. You author effects as declarative JSON recipes. Effects chain into tree pipelines (sequence and parallel) where one step's output can feed another via named hints (`displacement`, `sampled_color`, `cell_density`, `alpha_mask`). The engine composes recipes per-cell with phase-aware lifecycles, targets anything from the full grid down to a single cell, and evaluates parameters as constants, runtime-bound values, or signal graphs. Shadows, glows, braille-supersampled images, scene-layer composition, and multi-pass offscreen rendering become declarative primitives instead of per-application code, rendered against a 60 fps / 16.7 ms frame budget target.
+The compositor sits between your layout pass and the terminal render: cells in, cells out. You author effects as declarative JSON recipes. Effects chain into tree pipelines (sequence and parallel) where one step's output can feed another via named hints (`displacement`, `sampled_color`, `cell_density`, `alpha_mask`). The engine composes recipes per-cell with phase-aware lifecycles, targets anything from the full grid down to a single cell, and evaluates parameters as constants, runtime-bound values, or signal graphs. A closed pre/post-pass framework wraps the four-stage element pipeline (Sampler → Mask → Shader → Filter), so shadow, glow, vignette, scanline overlays, backdrop blur, and scene-layer underlays/overlays all become declarative passes with their own canvas extent and blend mode rather than bespoke per-effect render paths. Braille-supersampled images and per-layer scene pipelines round out the V3 surface, all rendered against a 60 fps / 16.7 ms frame budget target.
 
 **Grid-first, ecosystem-agnostic architecture.** The compositor renders to an abstract cell grid; ratatui is *a* consumer, not *the* consumer. This makes plausible adjacent uses other terminal libraries rule out by construction — movie composers that render recipe timelines without a widget loop, static exporters (SVG / SIXEL / PNG), wasm-embedded terminal demos, CI visual regression via grid diffs.
 
@@ -166,7 +166,7 @@ Built for teams shipping polished terminal applications — design systems (gt-d
 
 8. **60 fps / 16.7 ms frame budget.** A release-gate criterion. The full-trace bench (80×24, 4 layers, full pipeline) targets ≤ 2 ms/frame at 60 fps; closed-vocabulary scope predicates cache as bitmasks; zero-allocation hot paths carry samplers and filters through the pipeline.
 9. **Grid-first, ecosystem-agnostic architecture.** Not locked to ratatui. Targets include ratatui today, movie player, static renderer, wasm embed, SIXEL / SVG export.
-10. **Shadow and offscreen composition.** Multi-pass rendering with offscreen buffers; shadows with depth-based intensity.
+10. **Pre/post-pass framework (V3).** Pre-passes and post-passes wrap the four-stage element pipeline. Each pass owns a buffer, declares canvas extent (element rect or extruded beyond it), and composites with a blend mode that may read the destination cell. Shadow, glow, vignette, scanline overlay, backdrop blur, reflection, scene-layer underlays/overlays, and motion-blur trails are all instances of this framework — declarative passes, not bespoke per-effect render paths. Closed six-slot taxonomy: `pre_pass`, `element.{sampler, mask, shader, filter}`, `post_pass`. Slot applicability is trait-implied for the common case; multi-slot primitives declare explicitly.
 11. **Probe / trace observability.** Every pipeline stage is inspectable; probe fixtures diff rendered output across schema changes; trace events surface per-layer composition.
 12. **Two-surface substitution API (V3).** Load-time `Substitutions` for text tokens, asset bytes, and one-shot structured values; per-frame `RuntimeBindings` for live app state.
 13. **Per-layer pipelines (V3).** Scene layers can carry their own effect pipelines independent of the recipe-global pipeline.
@@ -263,6 +263,20 @@ One signal graph (`Multiply(Sine, norm_x)`) drives both the geometry displacemen
 
 Level 1 is the signal library. Level 2 is uniform parameter access. Level 3 is inter-step data flow. Together they make composition the default authoring surface and remove the need for custom animation code in common cases.
 
+### Pre/post-pass framework wraps the element pipeline (V3)
+
+A closed two-slot framework wraps the canonical four-stage element pipeline (Sampler → Mask → Shader → Filter). Pre-passes run *before* the element pipeline; post-passes run *after*. Each pass owns its buffer, declares a canvas extent (element rect or extruded beyond it for shadow-style extrusion), and composites with a declared blend mode that may read the destination cell.
+
+Three structural properties make pre/post passes a separate slot family from the per-cell element stages:
+
+1. **Generated content.** A pre-pass can synthesize source from nothing. Shadow has no source cell to sample; it generates the buffer.
+2. **Extended canvas.** A pass may operate on a canvas larger than `element_rect` (shadow extrudes beyond it; backdrop blur reads dest beyond it).
+3. **Destination-aware blending.** Composite modes read the existing dest cell to mix under or over it. The four element stages only write.
+
+The same shape covers shadow, glow, vignette, scanline overlay, backdrop blur, reflection, scene-layer underlays/overlays, and motion-blur trails. Each becomes a declarative pass with parameters; the per-cell element pipeline stays untouched and cheap.
+
+Six closed slots — `pre_pass`, `element.{sampler, mask, shader, filter}`, `post_pass` — with slot applicability implied by trait shape for the common case. Multi-slot primitives (a `ColoredOverlay` that works either as a per-cell shader or a whole-frame post-pass tint) declare explicitly. AI authors hold the full slot vocabulary in head; the validator rejects misplacement at recipe-load time.
+
 ### Content animated along composable paths
 
 A first-class path library ships with the geometry crate: `Linear`, `Arc`, `Bezier`, `Spiral`, `Spring`, `Squash`, `Rectilinear`, `Hover`, `Step`. Any content — a toast, a card, a braille image, a single glyph — can travel along any path. Paths are parameterized by easings from sibling `mixed-signals`: `EaseInOut`, `BackOut`, `Elastic`, damped springs, ADSR envelopes, custom cubic-beziers.
@@ -291,7 +305,7 @@ Design choices diverge from there:
 - **Targeting.** tachyonfx's `CellFilter` covers color (`FgColor`), content (`Text`), and margin (`Outer`). tui-vfx covers those plus `Cell(x, y)`, `Rows`, `RowRange`, `Columns`, `ColumnRange`, `Cells`, `Role("primary")` (theme-resolved semantic role), and algebraic composition (`And` / `Or` / `Not`). Semantic role targeting re-skins automatically when themes switch.
 - **Animation.** tachyonfx uses per-effect timers with scalar interpolation. tui-vfx parameters bind to composed signal graphs from `mixed-signals` — `Add`, `Multiply`, `Mix`, plus physics primitives (`ADSR`, `DampedSpring`, spatial noise). Scalar tweens are a special case; the general case is an expression graph.
 - **Motion.** tachyonfx has a `Motion` enum for directional sweeps and a `translate` effect. tui-vfx ships a path library (linear, arc, bezier, spiral, spring, squash, rectilinear, hover, step) that content can travel along, with easings from `mixed-signals` parameterizing each path.
-- **Scope of the library.** tachyonfx is ratatui-native, single crate, focused on buffer-stage effects. tui-vfx is grid-first (ratatui is one consumer, not the consumer), ships as 12 crates sized to their responsibilities, and includes shadow/offscreen composition, scene layers with their own content sources, probe/trace observability, and a sibling recipe library designed for a 500+ recipe corpus.
+- **Scope of the library.** tachyonfx is ratatui-native, single crate, focused on buffer-stage effects. tui-vfx is grid-first (ratatui is one consumer, not the consumer), ships as 12 crates sized to their responsibilities, and includes a closed pre/post-pass framework around the element pipeline (shadow, glow, vignette, scanline, backdrop blur, scene underlays/overlays as declarative passes), scene layers with their own content sources, probe/trace observability, and a sibling recipe library designed for a 500+ recipe corpus.
 - **Audience.** tachyonfx is built for a Rust developer adding effects to a ratatui app. tui-vfx is built for teams shipping a design system, a platform, or a multi-surface product where recipe authoring is a separate concern from application code — and for AI-assisted authoring at library scale.
 
 **One-line version.** tachyonfx is the right choice for a ratatui-only app that wants a focused effects pack with a live DSL editor today. tui-vfx is the right choice for recipe-authored design systems, multi-surface products, AI-assisted authoring workflows, and future consumers beyond ratatui.

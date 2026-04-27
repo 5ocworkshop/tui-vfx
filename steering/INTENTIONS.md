@@ -567,6 +567,27 @@ Rules:
 7. **Respect metadata and index hygiene.** Keep `<CLOG>` entries to the latest
    one- or two-line summary, and update relevant `INDEX.md` files when docs or
    documented surfaces move, split, merge, or become canonical.
+8. **Tooling artifacts move with the architecture.** A material design change
+   to the main code (a new trait family, a new pipeline slot, a renamed
+   wire-format type, a new event variant, a migrated schema field, an added
+   blend mode, a new canvas-extent shape) propagates *in the same change* to
+   every tooling surface that consumes or describes it:
+   - tooling crate rustdocs (`tui-vfx-probe`, `tui-vfx-debug`, `tui-vfx-trace`,
+     `pipeline-validator`, `recipe-probe`),
+   - tooling design docs (`docs/design/pipeline-probe-design.md`,
+     `docs/design/tui-vfx-pipeline-observability.md`, plan docs that reference
+     the changed surface),
+   - authoring guides and the autogen reference (`docs/generated/`,
+     `docs/templates/capabilities.toml`, signals reference, schema reference),
+   - any work-packet plans for those tools that reference the changed surface
+     by name.
+
+   The trigger is "a reader of any of those artifacts would now read something
+   materially wrong." The discipline is "land the architecture work and the
+   tooling-artifact updates as one change, not as a follow-up." Architectural
+   drift across tools is the longest-tail debugging tax we ship: tooling that
+   describes a stale model produces investigations that confirm the wrong
+   mental model and miss the bug. This rule is the durable counter-force.
 
 Why: pipeline capability is the beating heart of V3. A shader or mask can be
 made to compile locally while still leaving stale timing language, undocumented
@@ -574,7 +595,8 @@ schema fields, missing fixtures, duplicated math, or untested authoring
 behavior behind it. Those debts are hardest to detect after context has cooled.
 Pipeline-touch work is therefore complete only when the family is coherent
 across implementation, generated documentation, hand documentation, recipes,
-and validation evidence.
+validation evidence, *and the tooling artifacts that describe the surface to
+the next investigator*.
 
 
 ## 35. Lead onboarding with the architectural identity

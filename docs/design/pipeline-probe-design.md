@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/pipeline-probe-design.md</FILE> - <DESC>First-pass design for the engine-owned AI-native pipeline observability crate and CLI</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Reflect the implemented phase-1.5 capabilities: the probe now has a truthful scene wrapper plus timeline/diff helpers and richer compositor traces, while style/content hooks remain pending.</WCTX> -->
-<!-- <CLOG>MINOR: Update the design doc to reflect shipped timeline/diff support and richer trace events while keeping style/content hooks on the remaining backlog.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>2026-04-27: align probe inspector strategy and verification plan with the pre/post-pass slot architecture decided in tui-vfx-effect-composition-model.md §11. Probe must capture pre/post-pass entered/finished pairs alongside the four element stages to remain truthful once rollout Phase B+C land.</WCTX> -->
+<!-- <CLOG>0.4.0: extend Phase 1 inspector strategy to call out PrePass/PostPass coverage; add §17 alignment section cross-referencing the rollout plan and observability spec; expand verification plan to include slot-occupancy reporting and pass-block fingerprint round-trip.</CLOG> -->
 
 # Pipeline Probe Design (Phase 1 draft)
 
@@ -189,15 +189,17 @@ Suggested orchestrators/helpers:
 ### Phase 1
 
 Use a new engine-side inspector implementation in `tui-vfx-probe` built on `CompositorInspector`.
-It should capture:
+Captured events, listed in pipeline-execution order (top to bottom — pre-pass first, four element stages, post-pass last):
 
+- pre-pass entered / finished (post rollout Phase C; whole-canvas events with declared `CanvasExtent` and `BlendMode`)
 - sampler events
 - mask events
 - shader before/after
 - filter before/after
+- post-pass entered / finished (post rollout Phase C)
 - final rendered cell
 
-This is sufficient for the first full-frame JSON dump plus `last_touch` attribution for compositor-owned stages.
+This is sufficient for the first full-frame JSON dump plus `last_touch` attribution for compositor-owned stages and pass blocks.
 
 ### Phase 1.5 / P0 follow-up
 
@@ -205,9 +207,13 @@ Extend the engine-side inspector contract to add:
 
 - `on_style_effect_applied(...)`
 - `on_content_effect_applied(...)`
+- `on_pre_pass_entered` / `on_pre_pass_finished` (rollout Phase C — landed in the compositor inspector contract; probe surfaces them in the JSON dump under a new `pass_blocks` field)
+- `on_post_pass_entered` / `on_post_pass_finished` (same)
 
-This closes the exact stage-coverage gap called out in idea #19.
+This closes the exact stage-coverage gap called out in idea #19 and extends it to the new pass surfaces.
 The current recipe-side trait already has style interpolation support, which is evidence that the pattern is viable, but the goal is to move the canonical hook surface into the engine-owned observability path.
+
+Per `tui-vfx-pipeline-observability.md` §11.2 Q12, pre/post passes do not emit per-cell events at v0.3.0 of the observability surface; the probe records only the stage-level entered/finished pairs plus `cells_modified` on finished. If a future investigation drives per-cell pass evidence, it lands additively.
 
 ## Input seam choice
 
@@ -309,6 +315,22 @@ If no objection appears, these defaults are the recommended implementation basel
 - Style/content effects are not yet fully engine-observable through the compositor hook alone; that gap must be closed deliberately, not hand-waved.
 - The timing contract must be treated as part of the schema, not debug-only metadata.
 - The probe now supports timeline/diff helpers, but adapter delegation and style/content-stage observability still remain on the backlog.
+- **Pre/post-pass coverage drift.** Once rollout Phase B+C land (`docs/design/tui-vfx-pre-post-pass-rollout-plan.md` §B, §C), the probe must capture pre/post-pass entered/finished events or its JSON dump becomes silently incomplete for any recipe that declares passes. The same fingerprint discipline that catches element-stage drift must extend to pass blocks.
+
+## Alignment with the pre/post-pass rollout
+
+This doc evolves with the rollout plan. The rollout plan owns the *when*; this doc owns *what the probe records about each new surface*. Cross-references:
+
+| Probe concern | Rollout phase that produces it | Observability spec section |
+|---|---|---|
+| `PipelineStageKind::PrePass` / `::PostPass` variants exist | Phase C | §5.2 |
+| Compositor emits per-pass entered/finished pairs | Phase B (driver) + Phase C (callbacks) | §9.1 |
+| Probe inspector consumes them | Phase C (probe-side wiring lands as part of the compositor work) | n/a — probe-design owns the integration |
+| Slot occupancy queryable from validator | Phase D | §10 C3 |
+| Probe report surfaces slot occupancy | follow-up after Phase D | §17.4 (Unit C-post-rollout) |
+| Pass-block fingerprint round-trip in `--debug-recipes-qc` | Phase F (corpus migration must fingerprint passes) + Phase G (cutover gate) | §17.3 |
+
+When any of those rollout phases lands, the probe-design doc and the probe crate's rustdoc both move in the same change per Intention 34 rule 8 (tooling artifacts move with the architecture).
 
 <!-- <FILE>docs/design/pipeline-probe-design.md</FILE> - <DESC>First-pass design for the engine-owned AI-native pipeline observability crate and CLI</DESC> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
