@@ -1,7 +1,8 @@
 # <FILE>crates/tui-vfx/Cargo.toml</FILE> - <DESC>Meta-crate that re-exports all tui-vfx components</DESC>
-# <VERS>VERSION: 0.2.1</VERS>
-# <WCTX>Release readiness metadata cleanup</WCTX>
-# <CLOG>Reference root README for crate documentation</CLOG>
+# <VERS>VERSION: 0.2.2</VERS>
+# <WCTX>Register direct_api_signal_strength example + add mixed-signals as a dev-dep.</WCTX>
+# <CLOG>0.2.2: PATCH — add mixed-signals dev-dep + [[example]] block for direct_api_signal_strength.
+# 0.2.1: Reference root README for crate documentation</CLOG>
 
 [package]
 name = "tui-vfx"
@@ -26,10 +27,15 @@ tui-vfx-shadow.workspace = true
 
 [dev-dependencies]
 tui-vfx-debug.workspace = true
+mixed-signals.workspace = true
 
 [[example]]
 name = "pipeline_effects_showcase"
 path = "../../examples/pipeline_effects_showcase.rs"
 
+[[example]]
+name = "direct_api_signal_strength"
+path = "../../examples/direct_api_signal_strength.rs"
+
 # <FILE>crates/tui-vfx/Cargo.toml</FILE> - <DESC>Meta-crate that re-exports all tui-vfx components</DESC>
-# <VERS>END OF VERSION: 0.2.1</VERS>
+# <VERS>END OF VERSION: 0.2.2</VERS>

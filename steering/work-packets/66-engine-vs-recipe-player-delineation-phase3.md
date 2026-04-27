@@ -1,9 +1,25 @@
 <!-- <FILE>steering/work-packets/66-engine-vs-recipe-player-delineation-phase3.md</FILE> - <DESC>Phase 3 of recipe-signal facade revised completion plan: delineate engine API vs recipe player in code-level rustdoc, examples, and steering; add Intention 44 as durable counter-force</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Recipe-signal facade Phase 3 — close the silent-delineation gap surfaced 2026-04-27. Engine API is direct-consumable; recipe player is a peer authoring layer; mixed-signals is the substrate. Two surfaces are intentional and meet at SignalOrFloat.</WCTX> -->
-<!-- <CLOG>0.1.0: initial packet — five stories US-3.1..US-3.5 covering tui-vfx lib.rs rustdoc delineation, recipe facade rustdoc, direct-API signal example, proposal doc closeout, and Intention 44.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <WCTX>Phase 1 (commit d480d32) and Phase 2 (commit 5a0ea2b) are committed; the Phase 2 packet shipped a mid-flight redesign that collapsed the parallel-enum + 45 transparent wrappers into a thin newtype around mixed_signals::SignalSpec with a catalog-checked custom Deserialize. Phase 3 docs the as-built reality, not the proposal's original §8.3 sketch.</WCTX> -->
+<!-- <CLOG>0.2.0: refresh against verified state via ofpf — record the Phase 2 newtype redesign so docs and Intention 44 describe what shipped. Reduce US-3.2 scope (most of signals/mod.rs rustdoc landed in the Phase 2 deslop pass). Correct US-3.3 to require explicit Cargo.toml example registration (examples/ paths in this workspace are not auto-discovered). Update US-3.5 Intention 44 text to reference the newtype + catalog-gated Deserialize, not wrappers + dispatch arms. Update US-3.4 closeout language to record divergence between the proposal §9.3 plan and what shipped.
+0.1.0: initial packet — five stories US-3.1..US-3.5 covering tui-vfx lib.rs rustdoc delineation, recipe facade rustdoc, direct-API signal example, proposal doc closeout, and Intention 44.</CLOG> -->
 
 # 66 — engine-vs-recipe-player delineation (Phase 3)
+
+## Status as of 2026-04-28 (verified via ofpf-* against /usr/projects/tui-vfx and /usr/projects/tui-vfx-recipes)
+
+Phase gates are satisfied; this packet documents the as-built post-Phase-2 reality.
+
+- **Phase 1 (packet 64) committed** as `d480d32` — "Phase 1: close 15-variant gap in VfxRecipeSignalSpec facade". Catalog grew 43 → 58.
+- **Phase 2 (packet 65) committed** as `5a0ea2b` — "Collapse VfxRecipeSignalSpec into a catalog-gated newtype around mixed_signals::SignalSpec". Mid-flight redesign: the parallel facade enum + 45 `#[serde(transparent)]` wrappers in `src/signals/{composition,envelopes,oscillators,physics,processing,random,spatial}/` collapsed to a thin newtype `pub struct VfxRecipeSignalSpec(pub mixed_signals::SignalSpec)` with a custom `Deserialize` that buffers the JSON, reads the `"type"` discriminant, and rejects any value not in `vfx_recipe_signal_catalog()`. The 45 wrapper files moved to `recyclebin/src/signals/`.
+- **Catalog ⊆ SignalSpec.** Post-redesign the catalog gates `Deserialize` rather than constraining the type system. Adding a recipe-author-reachable variant takes 3 things, not 5: (1) the variant exists in `mixed_signals::SignalSpec` with stable wire format, (2) a catalog entry in `vfx_recipe_signal_catalog`, (3) a round-trip serde test in `test_signals.rs`. The "wrapper struct + dispatch arm" steps are gone.
+- **`signals/mod.rs` rustdoc already covers most of US-3.2** (the Phase 2 deslop pass landed it). Surviving public surface: `VfxRecipeSignalSpec`, `VfxIntoRecipeSignal`, `VfxRecipeSignalMeta`, `vfx_recipe_signal_catalog`, `deserialize_signal_or_float_with_facade`. US-3.2 in this packet narrows accordingly.
+- **`tui-vfx::lib.rs` is at VERS 0.7.0** with comprehensive Architecture / Shadow / Framework Adapters / Prelude rustdoc that does not yet mention the engine-vs-recipe-player split — US-3.1 still applies in full.
+- **`tui-vfx-recipes::lib.rs` is at VERS 0.6.0** with utilitarian rustdoc that does not mention direct-API consumers — US-3.2 (the lib.rs half) applies in full.
+- **`MARKETING.md`** has no references to facade / recipe-side / direct-API / engine API; nothing to reconcile.
+- **INTENTIONS.md is at v0.7.1.** Last numbered intention is `## 43`; **Intention 44 is the next free number**.
+- **The proposal doc** lives at `/usr/projects/tui-vfx/docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md` v0.4.0. §9.3 documents Phase 2 as a wrapper-and-dispatch consolidation; that plan diverged. US-3.4 must record the divergence and the actual ship shape, not just bump the version.
+- **Examples are not auto-discovered** in this workspace — `crates/tui-vfx/Cargo.toml` registers `pipeline_effects_showcase` with `path = "../../examples/pipeline_effects_showcase.rs"`. The new `direct_api_signal_strength` example must add a parallel `[[example]]` block. US-3.3 corrected.
 
 ## Task first
 
@@ -45,8 +61,7 @@ Phase 3 may overlap with Phase 2 if and only if the writer is documenting Phase 
 - `/usr/projects/tui-vfx/docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md` (v0.4.0 §9.4)
 - `/usr/projects/tui-vfx/crates/tui-vfx/src/lib.rs` (the engine umbrella)
 - `/usr/projects/tui-vfx/crates/tui-vfx-compositor/src/lib.rs`
-- `/usr/projects/tui-vfx/crates/tui-vfx/examples/pipeline_effects_showcase.rs` (existing direct-API example pattern; the new example mirrors its style)
-- `/usr/projects/tui-vfx/examples/pipeline_effects_showcase.rs` (workspace-level example referenced from `cargo run -p tui-vfx --example`)
+- `/usr/projects/tui-vfx/examples/pipeline_effects_showcase.rs` (existing direct-API example pattern; the new example mirrors its style; registered in `crates/tui-vfx/Cargo.toml` as `[[example]] path = "../../examples/pipeline_effects_showcase.rs"` — examples in this workspace live at the repo-level `examples/` dir, not inside `crates/tui-vfx/`)
 - `/usr/projects/tui-vfx-recipes/src/lib.rs`
 - `/usr/projects/tui-vfx-recipes/src/signals/mod.rs`
 - `/usr/projects/tui-vfx-recipes/src/signals/cls_vfx_recipe_signal_spec.rs`
@@ -61,7 +76,7 @@ Only edit these paths:
 - `/usr/projects/tui-vfx-recipes/src/lib.rs` (US-3.2 — module-level rustdoc)
 - `/usr/projects/tui-vfx-recipes/src/signals/mod.rs` (US-3.2 — module-level rustdoc)
 - New file: `/usr/projects/tui-vfx/examples/direct_api_signal_strength.rs` (US-3.3)
-- `/usr/projects/tui-vfx/Cargo.toml` if needed to register the new example (verify before editing; `cargo run -p tui-vfx --example direct_api_signal_strength` should auto-discover from `examples/`).
+- `/usr/projects/tui-vfx/crates/tui-vfx/Cargo.toml` — required: add a new `[[example]]` block for `direct_api_signal_strength` mirroring the existing `pipeline_effects_showcase` registration. Examples are NOT auto-discovered from the repo-level `examples/` dir in this workspace.
 - `/usr/projects/tui-vfx/docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md` (US-3.4 — bump to 0.5.0; closeout)
 - `/usr/projects/tui-vfx/steering/INTENTIONS.md` (US-3.5 — Intention 44; bump VERS minor; one-line CLOG)
 - progress.txt at packet close.
@@ -108,7 +123,7 @@ Update `crates/tui-vfx/src/lib.rs` module-level rustdoc to state:
 - Recipes are a peer authoring layer in `tui-vfx-recipes`, optional for direct-API consumers. Recipes parse JSON and produce engine-native types; the engine does not depend on recipes.
 - `mixed_signals` is the signal substrate. Engine field types like `factor: SignalOrFloat`, `strength: SignalOrFloat` accept full upstream `SignalSpec` shapes constructed in Rust.
 - Both audiences are intentional. Direct-API consumers get type safety, IDE completion, lower per-frame cost (no JSON parse), and embedding in custom widgets. Recipe-JSON consumers get themability, hot-reload, AI-authoring, validation, and probe/trace visibility.
-- The two surfaces meet at `SignalOrFloat`-typed engine fields (and `BindableValue::Signal(SignalOrFloat)` per Decision 2A).
+- The two surfaces meet at `SignalOrFloat`-typed engine fields (and `VfxBindableValue::Signal(SignalOrFloat)` per Decision 2A — note: the type was renamed from `BindableValue` to `VfxBindableValue` per Intention 8's `Vfx*` prefix rule for cross-crate types).
 
 Style: per Intention writing-style. No marketing voice. No grandiose framing. One idea per sentence. Be specific about types.
 
@@ -120,83 +135,95 @@ Acceptance:
 - New rustdoc reads coherently as the entry point for a developer arriving cold at the engine.
 - The delineation appears in the rendered docs alongside the existing crate-architecture table.
 
-### US-3.2 — `tui-vfx-recipes::lib.rs` and `signals/mod.rs` rustdoc
+### US-3.2 — `tui-vfx-recipes::lib.rs` rustdoc (signals/mod.rs is mostly already done)
 
-Update `tui-vfx-recipes/src/lib.rs` module-level rustdoc to state:
+**lib.rs (write in full):** Update `tui-vfx-recipes/src/lib.rs` module-level rustdoc to state:
 
 - This crate is the recipe authoring + deserialization layer. It parses recipe JSON and produces engine-native types (`tui_vfx::*`) for `render_pipeline()` to render.
 - Direct-API consumers (those constructing engine specs in Rust) do not need this crate; they should depend on `tui-vfx` and `mixed_signals` directly.
 - The crate's public surface is the loader, validator, probe/trace tooling, and the canonical playback-item builder.
 
-Update `tui-vfx-recipes/src/signals/mod.rs` module-level rustdoc to state:
+Bump VERS minor on `lib.rs`; one-line CLOG.
 
-- The `signals` module is a recipe-JSON deserialization seam. `VfxRecipeSignalSpec` is a curated subset of `mixed_signals::*` primitives reachable from recipe JSON.
-- Direct-API consumers should `use mixed_signals::*` directly. The facade does not exist for them.
-- The facade's curation policy: each variant is a deliberate decision; new mixed-signals primitives do not auto-expose. Adding a variant requires the enum arm, the wrapper, the dispatch arm, the catalog entry, and a round-trip test.
-- Production effect code (filters, masks, samplers, shaders) keeps importing `mixed_signals::Signal` and calling `.sample_with_context(...)`. They do not know the facade exists.
+**signals/mod.rs (verify only, with one cross-link):** As of `signals/mod.rs` v1.0.0 (Phase 2 deslop pass), the module-level rustdoc already states the recipe-only scope, the "production code keeps importing `mixed_signals::*` directly" rule, and the curation policy. Reread before editing — most of the work this story originally called for is already in place.
 
-Bump VERS minor on both files; one-line CLOG each.
+Two refinements remain:
+
+1. The curation-policy block lists 3 steps (variant exists in `SignalSpec`, catalog entry, round-trip test). Confirm wording is post-redesign-correct: no mention of "wrapper struct" or "dispatch arm" since neither exists anymore.
+2. After Intention 44 lands (US-3.5), add a one-line cross-link from `signals/mod.rs` to it.
 
 Acceptance:
 
 - `cargo doc -p tui-vfx-recipes --no-deps` clean.
-- A reader of `signals/mod.rs` rustdoc understands the recipe-only scope and the curation contract.
+- A reader of `tui-vfx-recipes/src/lib.rs` rustdoc understands the crate's role and the direct-API alternative.
+- A reader of `signals/mod.rs` rustdoc understands the recipe-only scope and the post-redesign 3-step curation contract.
+- `signals/mod.rs` cross-links Intention 44 once it exists.
 
 ### US-3.3 — Direct-API signal example
 
-Add `/usr/projects/tui-vfx/examples/direct_api_signal_strength.rs`. Pattern: mirror `pipeline_effects_showcase.rs`. Demonstrate:
+Add `/usr/projects/tui-vfx/examples/direct_api_signal_strength.rs`. Pattern: mirror `examples/pipeline_effects_showcase.rs` (the existing direct-API example). Demonstrate:
 
-- Constructing a `FilterSpec` with a `SignalOrFloat::Signal(...)` parameter (e.g. `FilterSpec::Vignette { strength: SignalOrFloat::Signal(SignalSpec::Sine { frequency: 0.5, amplitude: 0.3, offset: 0.5, phase: 0.0 }), radius: SignalOrFloat::Static(0.6) }`).
-- Calling `render_pipeline()` directly with a constructed `CompositionOptions` and reading a few frames at different `t` values.
+- Constructing an effect spec with a `SignalOrFloat::Signal(...)` parameter using `mixed_signals::SignalSpec` constructed in Rust (e.g. a Vignette or comparable filter whose actual field shape matches the as-built engine API — verify via `ofpf-defs FilterSpec` against the tui-vfx workspace before drafting the example, then pick a filter with a `SignalOrFloat`-typed strength/factor field).
+- Calling `render_pipeline()` (or `render_pipeline_with_spec`, whichever the existing showcase uses) with a constructed `CompositionOptions` and reading a few frames at different `t` values.
 - Printing each frame so the example output is human-readable like `pipeline_effects_showcase`.
 
 The example doubles as documentation: a developer who reads it learns the direct-API signal usage pattern they could not learn from existing examples.
+
+**Cargo.toml registration is required.** `crates/tui-vfx/Cargo.toml` already has `[[example]] name = "pipeline_effects_showcase"; path = "../../examples/pipeline_effects_showcase.rs"` — add a parallel block for `direct_api_signal_strength`. Examples in this workspace are not auto-discovered; without the `[[example]]` block, `cargo run -p tui-vfx --example direct_api_signal_strength` will fail with "no example target named …".
 
 Acceptance:
 
 - `cargo run -p tui-vfx --example direct_api_signal_strength` runs and prints frames showing visible signal-driven variation across `t`.
 - `cargo build --workspace` in tui-vfx clean.
 - Example file carries OFPF metadata envelope.
+- `crates/tui-vfx/Cargo.toml` carries a new `[[example]]` block; bump that crate's VERS PATCH.
 
 ### US-3.4 — Closeout pass on the proposal doc
 
 Update `docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md` to v0.5.0:
 
 - Bump VERS, update WCTX, append one-line CLOG.
-- Update the "Status snapshot" table to mark Phase γ ✅ Complete (after Phase 1) and δ-renamed-to-Phase-2 ✅ Complete (after Phase 2).
-- Update §9 to reflect ship state. The plan stays for historical reference but the status changes from "planned" to "shipped" with the relevant packet IDs (64/65/66) recorded.
-- Cross-link Intention 44.
+- Update the "Status snapshot" table to mark Phase γ ✅ Complete (commit `4cd6b8e`), Phase 1 ✅ Complete (commit `d480d32`), Phase 2 ✅ Complete (commit `5a0ea2b`).
+- **§9.3 Phase 2 plan diverged from what shipped.** The original plan described "consolidate recipe-side signal access onto the facade" by routing `V3LoopbackValue::Signal` through `VfxRecipeSignalSpec` and adding a recipe-deserialization adapter that lowers to `SignalOrFloat`. That intent shipped, but the *facade type* itself was redesigned mid-flight: from a parallel enum `pub enum VfxRecipeSignalSpec { Sine(VfxRecipeSineSpec), Triangle(VfxRecipeTriangleSpec), … }` plus 45 transparent-wrapper structs — to a thin newtype `pub struct VfxRecipeSignalSpec(pub mixed_signals::SignalSpec)` with a custom `Deserialize` that gates the catalog. The redesign was forced by two wire-format-parity failures the original design had unintentionally introduced: (1) per-field `#[serde(default)]` annotations live on `SignalSpec`'s enum arms rather than the underlying structs, so transparent wrappers required fields the SignalSpec-shaped JSON omits; (2) `SignalSpec::Keyframes::keyframes: Vec<(f32, f32)>` and `mixed_signals::generators::Keyframes::keyframes: Vec<Keyframe { time, value }>` are not wire-format equivalent. Add a `§9.3a — what actually shipped` subsection capturing this; do not erase §9.3.
+- Update §9.4 (Phase 3) to mark "in flight under packet 66".
+- Cross-link Intention 44 once US-3.5 lands.
 
 Acceptance:
 
-- Doc reads as a coherent record: shipped status, packet history, current architecture.
+- Doc reads as a coherent record: shipped status, packet history (including the Phase 2 redesign), current architecture.
+- §9.3 stays as the original plan-of-record; §9.3a documents what actually shipped and why.
+- Status snapshot rows carry the actual commit hashes.
 - Markdown lints clean (existing lint config).
 
 ### US-3.5 — Intention 44 in steering/INTENTIONS.md
 
-Add Intention 44 (or next free number after audit; verify by reading the existing file end). Suggested content:
+Add Intention 44. Verified via ofpf against INTENTIONS.md v0.7.1: last numbered intention is `## 43`, so `44` is the next free number. Suggested content (rewritten to describe the as-built newtype facade, not the original wrapper sketch):
 
 > **44. Recipe-JSON signal authoring goes through `VfxRecipeSignalSpec`; engine direct-API consumers use `mixed_signals::*` directly.**
 >
-> The two surfaces are intentional and meet at `SignalOrFloat`-typed engine fields. The facade at `tui_vfx_recipes::signals::VfxRecipeSignalSpec` is the curated, recipe-JSON deserialization seam in front of `mixed_signals::*`. Direct-API consumers — those constructing `FilterSpec`, `MaskSpec`, `SamplerSpec` in Rust — depend on `tui-vfx` and `mixed_signals` directly. The facade does not exist for them.
+> The two surfaces are intentional and meet at `SignalOrFloat`-typed engine fields. The facade at `tui_vfx_recipes::signals::VfxRecipeSignalSpec` is a thin newtype around `mixed_signals::SignalSpec` with a custom `Deserialize` that gates the recipe-author catalog. Direct-API consumers — those constructing `FilterSpec`, `MaskSpec`, `SamplerSpec` in Rust — depend on `tui-vfx` and `mixed_signals` directly. The facade does not exist for them.
 >
 > Rules:
 >
-> 1. **Recipe deserialization seams use the facade.** Every JSON-deserialized signal expression in `tui-vfx-recipes` routes through `VfxRecipeSignalSpec`. Engine-native types (`SignalOrFloat`, `Box<dyn Signal>`) are produced at the seam, not directly from JSON.
-> 2. **Engine field types stay engine-native.** `FilterSpec.factor: SignalOrFloat`, `BindableValue::Signal(SignalOrFloat)`, and similar engine field types remain. The facade lives one layer above the engine.
-> 3. **Adding a recipe-author variant is a deliberate decision.** New `mixed_signals` primitives do not auto-expose. Each variant requires an enum arm, a wrapper or inline struct, a dispatch arm, a catalog entry, a round-trip test, and consideration of whether it earns its place per Intention 24.
-> 4. **Strict-contracts validator enforces the consolidation.** A recipe authoring an upstream-only `SignalSpec` discriminant (one not exposed by the facade) fails strict validation. Mechanical drift-prevention per Intention 25.
-> 5. **Direct-API examples use `mixed_signals::*` directly.** Examples in `tui-vfx/examples/` show signal usage through `SignalOrFloat::Signal(SignalSpec::...)`, not through the facade.
-> 6. **`Binding(String)` is orthogonal.** Host-supplied runtime values flow through `RuntimeBindings`. Both authoring paths can use them; this rule does not constrain bindings.
+> 1. **Recipe deserialization seams use the facade.** Every JSON-deserialized signal expression in `tui-vfx-recipes` routes through `VfxRecipeSignalSpec`. The newtype's `Deserialize` rejects any `"type"` discriminant not in `vfx_recipe_signal_catalog()`; the engine substrate `mixed_signals::SignalSpec` is produced one layer below.
+> 2. **Engine field types stay engine-native.** `FilterSpec.factor: SignalOrFloat`, `VfxBindableValue::Signal(SignalOrFloat)` (= `VfxBindable<f32, SignalOrFloat>::Signal(_)`), and similar engine field types remain. The facade lives one layer above the engine; lowering is a one-liner because the newtype wraps the substrate directly.
+> 3. **One wire format.** `VfxRecipeSignalSpec` and `mixed_signals::SignalSpec` share the JSON shape by construction. Recipes that worked through `mixed_signals::SignalSpec` continue to work through the facade. The catalog is the only thing that diverges — and only as a *subset* of `SignalSpec` discriminants, never a parallel encoding.
+> 4. **Adding a recipe-author variant is a deliberate decision.** New `mixed_signals` primitives do not auto-expose. Adding a variant requires three things: (a) the variant exists in `mixed_signals::SignalSpec` with stable wire format, (b) a `VfxRecipeSignalMeta` entry in `vfx_recipe_signal_catalog`, (c) a round-trip serde test in `test_signals.rs`. No wrapper struct, no dispatch arm — the newtype's `SignalSpec::build` delegation handles construction.
+> 5. **Strict-contracts validator enforces curation.** `validate_normalized_recipe_strict_contracts` walks the recipe's raw `Value` payloads (filter / shader / sampler payloads stay as `serde_json::Value`, not typed) and rejects any `{"signal": {"type": "<x>"}}` whose `<x>` is not in `vfx_recipe_signal_catalog()`. This catches authorings that bypass the typed `Deserialize` boundary. Drift-prevention per Intention 25.
+> 6. **Direct-API examples use `mixed_signals::*` directly.** Examples in `tui-vfx/examples/` show signal usage through `SignalOrFloat::Signal(SignalSpec::...)`, not through the facade.
+> 7. **`Binding(String)` is orthogonal.** Host-supplied runtime values flow through `RuntimeBindings`. Both authoring paths can use them; this rule does not constrain bindings.
 >
-> Why: a single recipe-author surface lets us swap, plug-in, exposure-limit, rename, or remap signals without touching recipes or examples; lets us attach authoring metadata once; and lets the validator enforce the curation invariant. The two-surface design is intentional because the audiences (Rust developers writing direct-API code; recipe authors writing JSON) have different ergonomic needs (type safety vs themability/AI-authoring/visibility).
+> Why: a single recipe-author entrypoint lets us swap, plug-in, exposure-limit, rename, or remap signals without touching recipes or examples; lets us attach authoring metadata once (the catalog drives `RECIPE_SIGNALS_REFERENCE.md` via the doc generator); and lets the validator enforce the curation invariant. The two-surface design is intentional because the audiences (Rust developers writing direct-API code; recipe authors writing JSON) have different ergonomic needs (type safety vs themability / AI-authoring / hot-reload / probe visibility).
+>
+> What this is *not* saying: it does not say the facade introduces a parallel type system or rename layer over `mixed_signals`. The facade is a *thin* newtype gate — wire format is identical to the substrate — not a re-encoding. Phase γ explored a parallel-enum + per-variant wrappers design and Phase 2 redesigned away from it because the parallel encoding leaked wire-format-parity gaps into the recipe corpus. Future contributors: do not reintroduce wrappers without weighing the parity-debt cost.
 
-Bump `INTENTIONS.md` VERS; one-line CLOG. Update the top-of-file "Top-of-mind intentions" paragraph if Intention 44 is load-bearing enough to belong there.
+Bump `INTENTIONS.md` VERS minor; one-line CLOG. Consider the top-of-file "Top-of-mind intentions" paragraph: Intention 44 is structurally important (defines a recurring decision boundary) — author may decide to surface it there.
 
 Acceptance:
 
-- INTENTIONS.md reads coherently with Intention 44 inserted in numerical order.
-- The new intention follows the existing voice and structure (rules block + Why block + What this is *not* saying — optional but matches existing pattern).
+- INTENTIONS.md reads coherently with Intention 44 inserted in numerical order at the appropriate file location (verify Part I/II split before placement).
+- The new intention follows the existing voice and structure (rules block + Why block + What this is *not* saying).
+- Rule 4's "three things" matches the as-built reality, not the obsolete five-point checklist from `signals/mod.rs` v0.2.0 era.
 - VERS / WCTX / CLOG hygiene maintained.
 
 ## Test-shape requirements
@@ -265,4 +292,4 @@ Final report includes:
 **Do not widen into:** code shape changes, MARKETING.md rewrite, autogen output edits, gt-design docs, mixed-signals docs.
 
 <!-- <FILE>steering/work-packets/66-engine-vs-recipe-player-delineation-phase3.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

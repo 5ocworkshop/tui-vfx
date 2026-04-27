@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx/src/lib.rs</FILE> - <DESC>Meta-crate re-exporting all tui-vfx components</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>Sub-plan A Phase A.2 — document the role-aware render_pipeline signature in the umbrella doc comment</WCTX>
-// <CLOG>0.7.0: MINOR — umbrella doc refreshed for the new `&RoleMap` + `&mut SemanticScene` call shape.
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>Engine-vs-recipe-player delineation per Intention 44.</WCTX>
+// <CLOG>0.8.0: MINOR — add Audiences section to module-level rustdoc per Intention 44.
+// 0.7.0: MINOR — umbrella doc refreshed for the new `&RoleMap` + `&mut SemanticScene` call shape.
 // 0.6.0: Add ShadowCompositeMode and ShadowGradeConfig to prelude exports</CLOG>
 
 //! # TUI VFX
@@ -12,6 +13,45 @@
 //! terminal cells. It provides masks, filters, samplers, shaders, shadows, and
 //! content transformers that work with any terminal rendering framework through
 //! the `Grid` trait.
+//!
+//! ## Audiences
+//!
+//! `tui-vfx` is the **engine API**: a public, fully-supported direct-consumption
+//! surface for Rust developers. Constructing [`CompositionSpec`], [`MaskSpec`],
+//! [`FilterSpec`], [`SamplerSpec`], [`ShaderLayerSpec`], and [`ShadowSpec`] in
+//! Rust and rendering them through [`render_pipeline`] (or
+//! [`render_pipeline_with_spec`]) is a first-class workflow. There is no need
+//! to go through recipes to use this engine.
+//!
+//! Recipes are a **peer authoring layer** in the `tui-vfx-recipes` crate.
+//! Recipes parse JSON and produce engine-native types; the engine does not
+//! depend on the recipe layer. If you are not parsing JSON, do not depend on
+//! `tui-vfx-recipes` — depend on `tui-vfx` plus `mixed_signals` directly.
+//!
+//! [`mixed_signals`] is the **signal substrate**. Engine field types like
+//! `factor: SignalOrFloat`, `strength: SignalOrFloat`, and
+//! `VfxBindableValue::Signal(SignalOrFloat)` accept full upstream
+//! [`mixed_signals::SignalSpec`] shapes constructed directly in Rust.
+//! See [`examples/direct_api_signal_strength.rs`](https://github.com/5ocworkshop/tui-vfx/blob/main/examples/direct_api_signal_strength.rs)
+//! for a working pattern.
+//!
+//! Both audiences are intentional. Direct-API consumers get type safety, IDE
+//! completion, lower per-frame cost (no JSON parse), and embedding in custom
+//! widgets. Recipe-JSON consumers get themability, hot-reload, AI-authoring,
+//! validation, and probe/trace visibility. The two surfaces meet at
+//! `SignalOrFloat`-typed engine fields. See **Intention 44** in
+//! `steering/INTENTIONS.md` for the durable rule.
+//!
+//! [`mixed_signals`]: https://docs.rs/mixed-signals
+//! [`mixed_signals::SignalSpec`]: https://docs.rs/mixed-signals/latest/mixed_signals/types/enum.SignalSpec.html
+//! [`CompositionSpec`]: tui_vfx_compositor::pipeline::CompositionSpec
+//! [`MaskSpec`]: tui_vfx_compositor::types::MaskSpec
+//! [`FilterSpec`]: tui_vfx_compositor::types::FilterSpec
+//! [`SamplerSpec`]: tui_vfx_compositor::types::SamplerSpec
+//! [`ShaderLayerSpec`]: tui_vfx_compositor::pipeline::ShaderLayerSpec
+//! [`ShadowSpec`]: tui_vfx_compositor::pipeline::ShadowSpec
+//! [`render_pipeline`]: tui_vfx_compositor::pipeline::render_pipeline
+//! [`render_pipeline_with_spec`]: tui_vfx_compositor::pipeline::render_pipeline_with_spec
 //!
 //! ## Architecture
 //!
@@ -195,4 +235,4 @@ pub mod prelude {
 }
 
 // <FILE>crates/tui-vfx/src/lib.rs</FILE> - <DESC>Meta-crate re-exporting all tui-vfx components</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

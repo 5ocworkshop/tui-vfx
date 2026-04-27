@@ -1,13 +1,14 @@
 <!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build. Organized in two parts: Part I durable principles, Part II project-specific rules; numbering stable across the split for cross-reference compatibility.</DESC> -->
-<!-- <VERS>VERSION: 0.7.1</VERS> -->
-<!-- <WCTX>2026-04-27 cutover: promote the two-part reorganization with audit-pass edits to the live file. Prior v0.6.4 archived at steering/archive_ignore/INTENTIONS-v0.6.4.md so the legacy wording stays available for comparison.</WCTX> -->
-<!-- <CLOG>0.7.1: promote two-part reorganization (Part I durable principles, Part II project-specific rules; numbering stable across the split). New Intention-shape subsection under Writing style — Why mandatory, length is judgment not a gate. New How-this-file-is-organized navigation section. Audit-pass edits: renamed second #26 to 26A; fixed grammar nit in Intention 38. Body content otherwise verbatim from v0.6.4.</CLOG> -->
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <WCTX>Phase 3 (packet 66) — engine-vs-recipe-player delineation. Add Intention 44 documenting the post-Phase-2 newtype-facade reality and the two-surface authoring model.</WCTX> -->
+<!-- <CLOG>0.8.0: MINOR — add Intention 44 (recipe-JSON signal authoring goes through VfxRecipeSignalSpec; engine direct-API consumers use mixed_signals::* directly). Describes the as-built newtype facade per packet 65, not the obsolete Phase γ wrapper sketch.
+0.7.1: promote two-part reorganization (Part I durable principles, Part II project-specific rules; numbering stable across the split). New Intention-shape subsection under Writing style — Why mandatory, length is judgment not a gate. New How-this-file-is-organized navigation section. Audit-pass edits: renamed second #26 to 26A; fixed grammar nit in Intention 38. Body content otherwise verbatim from v0.6.4.</CLOG> -->
 
 # Intentions
 
 This file captures top-down decisions that steer implementation of tui-vfx. It is the durable framing that outlasts any individual release or schema version.
 
-**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41), and the `ofpf-*` semantic suite is the default interface for any codebase question — read `steering/OFPF-TOOLS.md` for the practical reference (Intention 42).
+**Top-of-mind intentions:** tui-vfx is grid-first and ecosystem-agnostic (see Intention 1), recipe-authoring truth lives here and downstream consumers wrap rather than reinterpret our semantics (Intention 3), `mixed-signals` is the foundation for all signal primitives and is extended upstream rather than duplicated (Intention 9), recipe-authoring ergonomics are a first-class product goal not polish-to-apply-later (Intention 20), consolidation follows the rule of three (Intention 23), every additive change must earn its place through real value (Intention 24), V3 shader/filter/mask/sampler/style/effect work carries the full pipeline-touch definition of done (Intention 34), onboarding starts from the architecture-first identity rather than an effects-only mental model (Intention 35), we fix root causes rather than leaving landmines — no per-site `#[allow]`, no algorithmic divergence on upstream extractions, no half-finished consolidations (Intention 40), cross-repo audits for large-scale changes scope all four repos: tui-vfx, tui-vfx-recipes, mixed-signals, gt-design (Intention 41), the `ofpf-*` semantic suite is the default interface for any codebase question — read `steering/OFPF-TOOLS.md` for the practical reference (Intention 42), and recipe-JSON signal authoring goes through the `VfxRecipeSignalSpec` facade while engine direct-API consumers use `mixed_signals::*` directly — the two surfaces are intentional and meet at `SignalOrFloat`-typed engine fields (Intention 44).
 
 **Companion:** `steering/MARKETING.md` answers *how we describe what we've built*; this file answers *how we decide what to build*. The two stay in sync; when they diverge, they must be brought back into agreement.
 
@@ -1238,5 +1239,87 @@ upstream schema).
 
 ---
 
+## 44. Recipe-JSON signal authoring goes through `VfxRecipeSignalSpec`; engine direct-API consumers use `mixed_signals::*` directly
+
+The two surfaces are intentional and meet at `SignalOrFloat`-typed engine
+fields. The facade at `tui_vfx_recipes::signals::VfxRecipeSignalSpec` is a
+thin newtype around `mixed_signals::SignalSpec` with a custom `Deserialize`
+that gates the recipe-author catalog at the JSON boundary. Direct-API
+consumers — those constructing `FilterSpec`, `MaskSpec`, `SamplerSpec` in
+Rust — depend on `tui-vfx` and `mixed_signals` directly. The facade does
+not exist for them.
+
+Rules:
+
+1. **Recipe deserialization seams use the facade.** Every JSON-deserialized
+   signal expression in `tui-vfx-recipes` routes through
+   `VfxRecipeSignalSpec`. The newtype's `Deserialize` rejects any `"type"`
+   discriminant not in `vfx_recipe_signal_catalog()`; the engine substrate
+   `mixed_signals::SignalSpec` is produced one layer below.
+2. **Engine field types stay engine-native.** `FilterSpec.factor:
+   SignalOrFloat`, `VfxBindableValue::Signal(SignalOrFloat)` (which is
+   `VfxBindable<f32, SignalOrFloat>::Signal(_)`), and similar engine field
+   types remain. The facade lives one layer above the engine; lowering is a
+   one-liner because the newtype wraps the substrate directly.
+3. **One wire format.** `VfxRecipeSignalSpec` and
+   `mixed_signals::SignalSpec` share the JSON shape by construction.
+   Recipes that worked through `mixed_signals::SignalSpec` continue to work
+   through the facade. The catalog is the only thing that diverges — and
+   only as a *subset* of `SignalSpec` discriminants, never a parallel
+   encoding.
+4. **Adding a recipe-author variant is a deliberate decision.** New
+   `mixed_signals` primitives do not auto-expose. Adding a variant requires
+   three things: (a) the variant exists in `mixed_signals::SignalSpec` with
+   stable wire format, (b) a `VfxRecipeSignalMeta` entry in
+   `vfx_recipe_signal_catalog`, (c) a round-trip serde test in
+   `test_signals.rs`. No wrapper struct, no dispatch arm — the newtype's
+   delegation to `SignalSpec::build` handles construction.
+5. **Strict-contracts validator enforces curation.**
+   `validate_normalized_recipe_strict_contracts` walks the recipe's raw
+   `Value` payloads (filter / shader / sampler payloads stay as
+   `serde_json::Value`, not typed) and rejects any `{"signal": {"type":
+   "<x>"}}` whose `<x>` is not in `vfx_recipe_signal_catalog()`. This
+   catches authorings that bypass the typed `Deserialize` boundary.
+   Drift-prevention per Intention 25.
+6. **Direct-API examples use `mixed_signals::*` directly.** Examples in
+   `tui-vfx/examples/` (e.g. `direct_api_signal_strength.rs`) show signal
+   usage through `SignalOrFloat::Signal(SignalSpec::...)`, not through the
+   facade.
+7. **`Binding(String)` is orthogonal.** Host-supplied runtime values flow
+   through `RuntimeBindings`. Both authoring paths can use them; this rule
+   does not constrain bindings.
+
+Why: a single recipe-author entrypoint lets us swap, plug-in,
+exposure-limit, rename, or remap signals without touching recipes or
+examples; lets us attach authoring metadata once (the catalog drives
+`docs/generated/RECIPE_SIGNALS_REFERENCE.md` via the doc generator,
+packet 01); and lets the validator enforce the curation invariant. The
+two-surface design is intentional because the audiences (Rust developers
+writing direct-API code; recipe authors writing JSON) have different
+ergonomic needs (type safety vs themability / AI-authoring / hot-reload /
+probe visibility).
+
+What this is *not* saying: it does not say the facade introduces a parallel
+type system or a rename layer over `mixed_signals`. The facade is a *thin*
+newtype gate — wire format is identical to the substrate — not a
+re-encoding. Phase γ explored a parallel-enum + per-variant wrapper-struct
+design and Phase 2 (packet 65) redesigned away from it because the
+parallel encoding leaked wire-format-parity gaps into the recipe corpus
+(per-field `#[serde(default)]` annotations live on `SignalSpec`'s enum arms
+not the underlying structs; `SignalSpec::Keyframes::keyframes: Vec<(f32,
+f32)>` and `mixed_signals::generators::Keyframes::keyframes: Vec<Keyframe
+{ time, value }>` are not wire-format equivalent). Future contributors:
+do not reintroduce wrappers without weighing the parity-debt cost.
+
+Companion: `tui-vfx/docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md`
+§9 (the architectural plan and its as-built record);
+`tui-vfx-recipes/src/signals/mod.rs` (the facade module rustdoc);
+`steering/work-packets/64-recipe-signal-facade-completion-phase1.md`,
+`65-recipe-signal-facade-consolidation-phase2.md`,
+`66-engine-vs-recipe-player-delineation-phase3.md` (the three packets that
+shipped this surface).
+
+---
+
 <!-- <FILE>steering/INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.7.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->

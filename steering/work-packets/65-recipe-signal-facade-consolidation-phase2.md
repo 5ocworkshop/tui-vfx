@@ -1,9 +1,55 @@
 <!-- <FILE>steering/work-packets/65-recipe-signal-facade-consolidation-phase2.md</FILE> - <DESC>Phase 2 of recipe-signal facade revised completion plan: route every recipe-JSON signal-expression deserialization site through VfxRecipeSignalSpec; engine field types stay engine-native; Decision 2A for BindableValue</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>Recipe-signal facade Phase 2 — consolidate recipe-side signal access onto the facade after Phase 1 (packet 64) lands the missing 15 variants. Engine direct-API consumers unchanged.</WCTX> -->
-<!-- <CLOG>0.1.0: initial packet — seven stories US-2.1..US-2.7 covering V3LoopbackValue migration, recipe-side SignalOrFloat audit + adapter, strict-contracts validator gate, cross-repo audit, and verification.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>Recipe-signal facade Phase 2 — mid-execution architectural redesign: VfxRecipeSignalSpec collapses from a parallel enum + 45 transparent-wrapper structs to a thin newtype around mixed_signals::SignalSpec with a catalog-checked custom Deserialize. Single wire format, single type at the seam, single substrate; the catalog stays as the curation gate.</WCTX> -->
+<!-- <CLOG>0.3.0: record the mid-packet redesign — VfxRecipeSignalSpec is now `pub struct VfxRecipeSignalSpec(pub mixed_signals::SignalSpec)` with catalog-gated Deserialize; 45 transparent wrappers moved to recyclebin/. Phase γ's wire-format-parity assumption (parallel enum + struct wrappers) failed against the recipe corpus on Keyframes shape mismatch and missing optional-field defaults; the redesign restores wire-format identity with the engine substrate.
+0.2.0: gate-satisfaction header + dated status; audit US-2.2 pre-resolved (only V3LoopbackValue is JSON-deserialized; rest are code-constructed); strict-contracts gate (US-2.5) re-framed as positive curation check now that mixed-signals/recipe catalogs are 1:1 isomorphic.
+0.1.0: initial packet — seven stories US-2.1..US-2.7 covering V3LoopbackValue migration, recipe-side SignalOrFloat audit + adapter, strict-contracts validator gate, cross-repo audit, and verification.</CLOG> -->
 
 # 65 — recipe-signal facade consolidation (Phase 2)
+
+## Mid-execution redesign (2026-04-27, recorded post hoc)
+
+Phase γ's design — a parallel facade enum (`pub enum VfxRecipeSignalSpec { Sine(VfxRecipeSineSpec), ... }`) plus 45 `#[serde(transparent)]` wrapper structs over `mixed_signals::*` types — was the original deserialization seam this packet was scoped against. While executing US-2.1 the corpus regression test surfaced two structural problems that no per-recipe edit could fix:
+
+1. The transparent wrappers wrap upstream **structs** (`pub struct VfxRecipePerlinSpec(pub mixed_signals::noise::PerlinNoise)`), but the per-field `#[serde(default = "...")]` annotations live on `mixed_signals::SignalSpec`'s **enum arms**, not on the structs. Recipes that omit optional fields (e.g. `offset` on `perlin`) parse cleanly through `SignalSpec` but fail through the wrappers.
+2. Even when all fields are provided, `VfxRecipeSignalSpec` and `mixed_signals::SignalSpec` are not 1:1 wire-format equivalent for every variant. `SignalSpec::Keyframes::keyframes: Vec<(f32, f32)>` ≠ `mixed_signals::generators::Keyframes::keyframes: Vec<Keyframe { time, value }>`. Round-trip lowering through JSON breaks on this and possibly other variants.
+
+Decision (with packet-owner agreement): collapse the facade to a thin newtype with a catalog-checked custom `Deserialize`:
+
+```rust
+pub struct VfxRecipeSignalSpec(pub mixed_signals::SignalSpec);
+
+impl<'de> Deserialize<'de> for VfxRecipeSignalSpec {
+    // buffer the value, read "type" discriminant, reject if not in
+    // vfx_recipe_signal_catalog(), else delegate to SignalSpec's own serde.
+}
+```
+
+Effects:
+
+- Wire format identical to `mixed_signals::SignalSpec` by construction. No parity debt.
+- Curation gate moves from the type system (variant set) to `Deserialize` (catalog membership). Same outcome — uncatalogued discriminants are rejected at the JSON boundary.
+- `into_signal_or_float()` and `into_recipe_signal()` become one-liners.
+- 45 transparent-wrapper struct files moved to `recyclebin/src/signals/`.
+- Catalog (`vfx_recipe_signal_catalog`) is unchanged and stays load-bearing for: docs (RECIPE_SIGNALS_REFERENCE.md from packet 01), the strict-contracts validator gate, and the new `Deserialize` gate.
+- Stories US-2.1 (V3LoopbackValue migration), US-2.3 (signal_or_float adapter), and US-2.5 (strict-contracts gate) all completed under the redesign with the same end-state acceptance criteria. US-2.2 audit (only `V3LoopbackValue` is a JSON-deser site) and US-2.6 cross-repo audit are unaffected.
+
+Single-path framing: recipes have one wire format (catalog-curated subset of `SignalSpec`), one type at the seam (`VfxRecipeSignalSpec`), one substrate (`mixed_signals::SignalSpec`), one curation gate. The facade is now a thin gate, not a parallel reality.
+
+## Status as of 2026-04-27
+
+Both upstream gates are satisfied; this packet is unblocked.
+
+- `mixed_signals::types::signal_spec.rs` v2.7.0 (commit `c551ad0` — "Close SignalSpec envelope/physics coverage gap") closes the substrate-side coverage gap, exposing 7 physics primitives (Spring, Bounce, Pendulum, Projectile, Orbit, Decay, Attractor) and 2 absolute-time decay envelopes (LinearDecay, ExponentialDecay) through `Serialize + Deserialize + Signal`. The recipe-side facade no longer carries variants the upstream substrate cannot represent.
+- `tui-vfx-recipes` Phase 1 (commit `d480d32` — "Phase 1: close 15-variant gap in VfxRecipeSignalSpec facade") brings `VfxRecipeSignalSpec` to full 58-variant coverage in 1:1 correspondence with `mixed_signals::SignalSpec`. The catalog (`vfx_recipe_signal_catalog()`) and dispatch (`fnc_into_recipe_signal.rs` v0.3.0) match the facade enum exactly; the `catalog_completeness` test enforces this invariant.
+
+Audit findings (pre-resolved for US-2.2 — see scope adjustments below):
+
+- `src/v3/authoring/enum_v3_loopback_value.rs` is the only JSON-deserialized signal expression site that still imports `mixed_signals::SignalSpec` directly. **The single material migration target.**
+- `src/v3/compile/fnc_build_composition_spec_from_compiled_plan.rs:634` already routes through `VfxRecipeSignalSpec` (Phase γ).
+- `src/preview/fnc_derive_cursor_paint_ops_from_progress.rs`, `src/manager/fnc_populate_effects.rs`, `src/loopback/cls_loopback_declaration.rs`, `src/loopback/enum_loopback_value.rs`, `src/v3/authoring/cls_v3_binding_declaration.rs`, `src/v3/compile/fnc_compile_loopback_declarations.rs` all use `SignalOrFloat` only as a code-constructed value (literal `default:` lifting, `SignalOrFloat::Static(...)` initialisers, lowering helpers). None of them deserialize a signal expression from JSON. **Not migration targets.**
+
+Strict-contracts framing change: with mixed-signals and the recipe catalog now 1:1 isomorphic, the validator's job is no longer "reject upstream-only discriminants that the facade has not exposed yet" (the empty set, post-Phase-1). It is the positive curation gate: every `{"signal": {"type": "<discriminant>"}}` shape in a normalized recipe must carry a discriminant present in `vfx_recipe_signal_catalog()`. This catches typos, fabricated discriminants, and any future drift if mixed-signals adds a new SignalSpec variant before the recipe catalog is updated.
 
 ## Task first
 
@@ -38,6 +84,8 @@ BLOCKER_MODE.
 ## Gate
 
 Phase 1 (packet 64) must be **green and committed** before this packet starts. Without the full 58-variant facade, this consolidation regresses recipe-author capability.
+
+**Status (2026-04-27):** Gate satisfied. `tui-vfx-recipes` commit `d480d32` lands the 15-variant gap close (catalog 43→58); the upstream substrate is also in place via `mixed-signals` commit `c551ad0` (SignalSpec coverage normalization Phase A).
 
 ## Task-scope paths for grounding
 
@@ -186,13 +234,15 @@ Acceptance:
 
 ### US-2.5 — Strict-contracts validator gate
 
-Add a check in the strict-contracts validator (location identified by `ofpf-defs` or `ofpf-content "strict_contracts"`):
+Add a check in the strict-contracts validator (entry point: `src/v3/validate/fnc_validate_normalized_recipe.rs::validate_normalized_recipe_strict_contracts` — confirmed via `ofpf-content "strict_contracts"`):
 
 - A recipe authoring `{"signal": {"type": "<discriminant>"}}` where `<discriminant>` is **not** a member of `vfx_recipe_signal_catalog()` fails strict validation with a clear error message.
 - Error message names the offending discriminant and points at the catalog.
 - Non-strict (lenient) mode tolerates unknown discriminants per existing behavior; only strict mode rejects.
 
 Per Intention 25 (hunt for infrastructure wins), this is the mechanical drift-prevention gate that keeps the consolidation invariant once it lands. Without this check, a future contributor could introduce a fresh `SignalSpec`-typed field, bypass the facade, and break the consolidation silently.
+
+**Framing note (Phase 2 scope refresh, 2026-04-27):** post-Phase-1, `vfx_recipe_signal_catalog()` and `mixed_signals::SignalSpec` are 1:1 isomorphic, so the "upstream-only discriminant" failure mode this gate originally targeted is the empty set today. The gate's actual job is forward-looking: catch typos, fabricated discriminants, and any future drift between the upstream substrate and the recipe catalog. Implement positively — "every signal-shaped object's `type` must be in the catalog" — not negatively.
 
 Acceptance:
 
@@ -340,4 +390,4 @@ Final report includes:
 **Do not widen into:** engine crates, `BindableValue` source, new facade variants, mixed-signals, recipe corpus content, gt-design source.
 
 <!-- <FILE>steering/work-packets/65-recipe-signal-facade-consolidation-phase2.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
