@@ -621,7 +621,7 @@ The facade is **a recipe-JSON deserialization seam, not a substitute for mixed-s
 
 **Scope:** `VfxRecipeSignalSpec` reaches every Serialize/Deserialize-able primitive in `mixed_signals`. Catalog grows 43 → 58. No call-site migration.
 
-**Work packet:** `steering/work-packets/64-recipe-signal-facade-completion-phase1.md`.
+**Work packet:** `steering/work-packets/completed/64-recipe-signal-facade-completion-phase1.md`.
 
 | Story | Pattern | Variants |
 |---|---|---|
@@ -642,7 +642,7 @@ The facade is **a recipe-JSON deserialization seam, not a substitute for mixed-s
 
 **Gates:** Phase 1 must ship green.
 
-**Work packet:** `steering/work-packets/65-recipe-signal-facade-consolidation-phase2.md`.
+**Work packet:** `steering/work-packets/completed/65-recipe-signal-facade-consolidation-phase2.md`.
 
 **Migration sites identified by `ofpf-refs SignalSpec` against `tui-vfx-recipes`:**
 
@@ -695,7 +695,7 @@ The two failures pointed at the same root: the §8.3 design **double-encoded** t
 
 **Scope:** make the engine vs recipe-player split explicit in code-level rustdoc, examples, and steering. Closes the silent-delineation gap surfaced 2026-04-27.
 
-**Work packet:** `steering/work-packets/66-engine-vs-recipe-player-delineation-phase3.md`.
+**Work packet:** `steering/work-packets/completed/66-engine-vs-recipe-player-delineation-phase3.md`.
 
 | Story | Description |
 |---|---|

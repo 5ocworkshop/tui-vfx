@@ -1314,10 +1314,10 @@ do not reintroduce wrappers without weighing the parity-debt cost.
 Companion: `tui-vfx/docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md`
 §9 (the architectural plan and its as-built record);
 `tui-vfx-recipes/src/signals/mod.rs` (the facade module rustdoc);
-`steering/work-packets/64-recipe-signal-facade-completion-phase1.md`,
-`65-recipe-signal-facade-consolidation-phase2.md`,
-`66-engine-vs-recipe-player-delineation-phase3.md` (the three packets that
-shipped this surface).
+`steering/work-packets/completed/64-recipe-signal-facade-completion-phase1.md`,
+`completed/65-recipe-signal-facade-consolidation-phase2.md`,
+`completed/66-engine-vs-recipe-player-delineation-phase3.md` (the three
+packets that shipped this surface).
 
 ---
 
