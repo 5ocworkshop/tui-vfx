@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-2026-04-26-handoff-outstanding.md</FILE> - <DESC>Handoff capture of outstanding work from the 2026-04-26 Phase F session — single source so the next session can pick items off one at a time</DESC> -->
-<!-- <VERS>VERSION: 1.3.0</VERS> -->
-<!-- <WCTX>Mark 1.2.A + 1.7.A done after the VfxBindable<T, S> consolidation landed — three parallel hand-rolled Bindable types collapsed into one generic in tui-vfx-core, originals recyclebinned, downstream consumers compile against legacy alias names with no edits.</WCTX> -->
-<!-- <CLOG>1.3.0: mark sweep findings 1.2.A and 1.7.A done — VfxBindable<T, S = Never> shipped in tui-vfx-core::bindable; BindableU16 / BindableString / BindableValue are now thin re-export aliases; 35 new peer tests + 75 BindableValue regression tests green; sibling-agent build break in tui-vfx-debug (pipeline observability work) blocks the workspace verification gate but is unrelated to bindable scope.</CLOG> -->
+<!-- <VERS>VERSION: 1.4.0</VERS> -->
+<!-- <WCTX>§8.7 probe-fidelity fix — mark item 9 done</WCTX> -->
+<!-- <CLOG>1.4.0: mark §8.7 item 9 done — probe-fidelity regression fixed; `infer_roles_from_grid` replaces all-Background placeholder in `run_probe`; `btop_focused_row_demo.json` now returns modified_cells: 180; regression test added</CLOG> -->
 
 # Handoff — outstanding items as of 2026-04-26
 
@@ -15,14 +15,15 @@
 |---|---|---|---|---|---|
 | 1 | `focused_row_btop` recipe doesn't visually distinguish selected row | gt-design | **P1 — real product bug** | half-day to a day | **Deferred — gt-design work; auto-closes after items 7 or 8 land. See §8.6.** |
 | 2 | Decide effect-composition model (named stages vs free-form graph) | tui-vfx | architectural decision | one decision + small doc bump | **DECIDED 2026-04-26 — Model B accepted. Acceptance note appended to `tui-vfx-effect-composition-model.md` v0.2.0.** |
-| 3 | Decide signal-facade placement + scope (`tui_vfx_recipes::signals`) | tui-vfx-recipes | architectural decision | one decision + Slice α/β packets | **DECIDED 2026-04-26 — Option A accepted, phases α + β green-lit, γ + δ deferred until 1.2.A lands. Acceptance note appended to `tui-vfx-mixed-signals-recipe-surface-proposal.md` v0.3.0.** |
+| 3 | Decide signal-facade placement + scope (`tui_vfx_recipes::signals`) | tui-vfx-recipes | architectural decision | one decision + Slice α/β packets | **DECIDED 2026-04-26 — Option A accepted; γ Q4 = `VfxRecipeSignalSpec` (Vfx prefix per Intention 8). α/β + γ executors both in flight. Catalog source-of-truth split: γ owns runtime catalog inline in code; α/β owns editorial overlay in `signals.toml` (Core 12 list + enrichment). Phase δ still gated on γ landing. Audit caught two naming inaccuracies in the proposal doc: "Noise" → `PerlinNoise`, "DampedSpring" lives outside `SignalSpec` in the parallel motion-spec channel — γ documents the conceptual collapse without physically removing the motion-spec route.** |
 | 4 | Three Model B follow-on moves (composite-effect templates, filter-discard bit, resolved-coord fields) | tui-vfx | future Slice work | one Slice each | **Gated on item 2. Per-move recommendations in §8.3.** |
 | 5 | Buy-once sweep findings still queued | tui-vfx | future Slice work | per-finding | **1.2.B + 1.3.A DONE; 1.2.A + 1.7.A DONE 2026-04-26 (one slice — VfxBindable<T, S> in tui-vfx-core, three concrete types aliased, originals recyclebinned); other tier-2 findings tracked in §8.4.** |
 | 6 | Pipeline observability bus + `vfx-inspect` tool | tui-vfx | architectural foundation | per-phase | **IN FLIGHT (parallel session). Spec at `tui-vfx-pipeline-observability.md`.** |
-| 7 | Migrate gt-design recipe stack to V3 schema awareness | gt-design | unblocks item 1 + future V3-only recipes | multi-day packet | **Packet written 2026-04-26: `tui-vfx-2026-04-26-packet-gt-design-v3-stack-migration.md` (785 lines). Q4 recommends bundling item 8 (producer fix) into this packet. Deferred per leader direction until tui-vfx family is finished. See §8.5.** |
+| 7 | Migrate gt-design recipe stack to V3 schema awareness | gt-design | unblocks item 1 + future V3-only recipes | multi-day packet | **Packet written 2026-04-26: `tui-vfx-2026-04-26-packet-gt-design-v3-stack-migration.md` (785 lines). Q4 recommends bundling item 8 (producer fix) into this packet. Deferred per leader direction until tui-vfx family is finished. See §8.5. **Sequencing: item 12 (observability Unit B) lands FIRST in this lane** — gives diagnostic truth on gt-design side, aiding everything that follows.** |
+| 12 | Observability Unit B — wire gt-design factory into the inspection bus + delete `factory_trace_composition_preview` + swap `GTD_TRACE_RENDER=1` to read the production event stream | gt-design + tui-vfx | trace-fidelity payoff of the observability bus | one slice (per Unit A's deferral note) | **Held 2026-04-26 per leader direction: gt-design lane stays paused until tui-vfx-family executors converge. **When that lane reopens, Unit B is the first slice** — the diagnostic-truth machinery it lands aids item 7's V3 migration audit (every regression caught by the bus instead of by re-deriving from prose trace).** |
 | 8 | Producer-side fix: `ContentShell::card` tags every cell `Surface` instead of distinguishing inner content from border | gt-design | architectural debt V3 inherits | half-day | **Folded into item 7 packet per agent recommendation Q4=A. Co-execution rationale documented in the packet.** |
-| 9 | Probe-path fidelity regression: `pipeline-validator --probe` reports `modified_cells: 0` for known-working canonical schema_v1 recipes (e.g., `recipes/btop_focused_row_demo.json`) | tui-vfx-recipes | **silent diagnostic lie** | small bisect, then small fix | **New finding, 2026-04-26 evening. Recommended path in §8.7.** |
-| 10 | `--runtime-params-json` silently dropped on schema_v1 recipes (documented as wired only for compiled-V3 paths) | tui-vfx-recipes | small UX trap | small | **New finding. Recommended path in §8.8.** |
+| 9 | Probe-path fidelity regression: `pipeline-validator --probe` reports `modified_cells: 0` for known-working canonical schema_v1 recipes (e.g., `recipes/btop_focused_row_demo.json`) | tui-vfx-recipes + tui-vfx | **silent diagnostic lie** (broader than initially scoped — V3 path also affected) | small fix, no bisect needed | **FIXED 2026-04-26. Root cause: `tui-vfx@ec872a4` A.2 cutover left `RoleMap::all_background` placeholder in `run_probe` (Sub-plan C TODO that never landed). Fix: replaced placeholder with `infer_roles_from_grid` in `orc_run_probe.rs`; new helper `fnc_infer_roles_from_grid.rs`; regression test `tests/test_probe_fidelity_role_scoped.rs`. `btop_focused_row_demo.json` now returns `modified_cells: 180`.** |
+| 10 | `--runtime-params-json` silently dropped on schema_v1 recipes (documented as wired only for compiled-V3 paths) | tui-vfx-recipes | small UX trap | small | **FIXED 2026-04-26 evening (executor; ~50 LOC, unstaged for review). Diagnostic `runtime_params_dropped` (severity: warning) emitted at `tools/pipeline-validator/src/fnc_run_probe_mode.rs` post-build mutation; new test `cli_v1_probe_mode_emits_runtime_params_dropped_warning` at `tools/pipeline-validator/tests/test_schema_v1_probe_diagnostics.rs`. Manual reproduce confirmed.** |
 | 11 | Legacy `region: TextOnly` lowering produces `Role(Text)` scope, not the content-equivalent V3 produces | tui-vfx-recipes | architectural mismatch | small if standalone, free if folded into V3 cutover | **New finding. Recommended path in §8.9.** |
 
 ---
@@ -231,7 +232,13 @@ From `docs/design/tui-vfx-buy-once-architecture-sweep.md` §4, excluding 1.2.A (
 
 **Lowest-cost move:** when item 7 starts, fold path B into the same packet — both touch gt-design's role-tagging surface.
 
-### 8.7 Item 9 — Probe-path fidelity regression
+### 8.7 Item 9 — Probe-path fidelity regression ✓ DONE
+
+**Fixed 2026-04-26.** Root cause: `tui-vfx@ec872a4` (2026-04-20, A.2 cutover) introduced `RoleMap::all_background` as a placeholder in `run_probe`; the A.2 CLOG named it a Sub-plan C TODO that never landed. Any role-scoped scope predicate (`Role(Text)` from `region: "TextOnly"`) matched zero cells regardless of shader correctness.
+
+**Fix applied:** replaced the all-Background placeholder in `crates/tui-vfx-probe/src/orc_run_probe.rs` with a call to `infer_roles_from_grid` (new `crates/tui-vfx-probe/src/fnc_infer_roles_from_grid.rs`). The helper assigns `RoleTag::Text` to non-whitespace glyph cells, `RoleTag::Background` to blank cells. Coordinate-scoped recipes (region: All, Row, etc.) are unaffected. V3 content/text scope is unaffected (compiles to coordinate list, not role predicate).
+
+**Verification:** `recipes/btop_focused_row_demo.json` now produces `modified_cells: 180`; `themes/eichler/recipes/focused_row_btop.json` also produces 180. Regression test added: `tests/test_probe_fidelity_role_scoped.rs` in `tui-vfx-recipes`.
 
 **Symptom (verified 2026-04-26 evening):** `cargo run -q -p recipe-probe -- /usr/projects/tui-vfx-recipes/recipes/btop_focused_row_demo.json --phase dwelling --sample-t 1.0 --with-causation --widget-cell 4,3` returns `modified_cells: 0` despite `shader_count: 1` and a recipe that DF-010's evidence (2026-04-14) demonstrated as actively producing per-cell color changes.
 
@@ -295,4 +302,4 @@ From `docs/design/tui-vfx-buy-once-architecture-sweep.md` §4, excluding 1.2.A (
 - All design proposals written this session live under `docs/design/`. None of them have implementation packets yet — the next session decides which (if any) advance.
 
 <!-- <FILE>docs/design/tui-vfx-2026-04-26-handoff-outstanding.md</FILE> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.4.0</VERS> -->

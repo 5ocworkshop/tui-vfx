@@ -117,6 +117,12 @@ Reading order is the file number order. Chapters 10–30 set up philosophy, arch
 
 The monolithic `docs/design/tui-vfx-v3-upgrade-plan.md` (v0.16.0) is the source from which the chapters in this directory were extracted. **It is preserved intact** so reviewers can compare the chaptered form against the pre-chapter source. The monolith will be deprecated later via the `_DEPRECATED_` prefix convention once the chaptered form is reviewed and accepted.
 
+### Free wins at cutover
+
+The following defects close automatically when the V3 cutover retires the V2 schema path. No standalone packets needed; track here so the cutover author is aware they're closing them:
+
+- **Legacy `region: TextOnly` lowering produces `Role(Text)` scope** instead of a content-equivalent. The legacy lowering conflates a *content* predicate with a *role* predicate; V3 canonical (`{"kind": "content", "value": "text"}`) gets it right. Surfaced 2026-04-26 evening during the focused_row_btop investigation; full diagnosis at `docs/design/tui-vfx-2026-04-26-handoff-outstanding.md` §8.9. When V2 lowering retires, the bug class disappears.
+
 ### Companion documents
 
 - `docs/design/tui-vfx-v3-upgrade-audit-workflow.md` — Workflows A / B / C referenced from `110_appendix_audits.md`

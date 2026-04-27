@@ -226,5 +226,14 @@ These are explicit non-goals. Future re-evaluation requires a fresh proposal wit
 3. **Is the §5 follow-on work part of V3 or a separate Slice?** Argument for V3: schema cohesion. Argument for separate: V3 is already large; new trait surfaces deserve their own packet.
 4. **Does the four-stage taxonomy need a fifth slot?** Today's pipeline has Sampler / Mask / StyleShader / Filter. Some effects feel like they want a "compositor" or "blend" stage at the very end. Probably not, but flag for review during V3 design.
 
+## 10. Decision (2026-04-26)
+
+**Accepted:** Model B (named stages: sample → mask → shade → filter, with within-stage layered chaining). Model A (free-form graph) rejected for tui-vfx's lifetime per the §3 cost analysis — the per-cell traversal tax doesn't pay for itself on a 16ms terminal budget at ~10K cells/frame.
+
+**Consequences:**
+- §5 follow-on moves are ready to schedule. Per `docs/design/tui-vfx-2026-04-26-handoff-outstanding.md` §8.3, the order is: resolved-coord fields on `VfxCellContext` first (smallest, demonstrates the bundle pattern is the right place to grow per-cell context), filter-discard bit second, composite-effect templates third.
+- V3 schema vocabulary locks Model B's stage names per §7. The composite-effect template syntax (open question §9.1) becomes part of the V3 schema discussion.
+- The four-stage taxonomy (Sampler / Mask / StyleShader / Filter) stays. A fifth "compositor"/"blend" slot (open question §9.4) is not added without a concrete driver.
+
 <!-- <FILE>docs/design/tui-vfx-effect-composition-model.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->

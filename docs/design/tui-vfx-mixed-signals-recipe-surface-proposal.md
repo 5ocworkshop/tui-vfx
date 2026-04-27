@@ -555,5 +555,17 @@ The recipe-author surface and the type system end up consistent.
 3. **Direct passthrough vs re-wrapping.** The sketch in §8.3 wraps `Sine(mixed_signals::Sine)`. An alternative is to define the recipe shape in `tui-vfx-recipes-signals` as a transparent wrapper that deserializes via `mixed_signals::Sine`'s own serde derive (using `#[serde(transparent)]` or similar). The wrapper has zero behavioral cost and gives us a place to attach recipe-only authoring metadata. Probably the wrapper.
 4. **Versioning relationship to mixed-signals.** When mixed-signals adds a primitive, the facade doesn't *automatically* expose it. Adding a primitive to `RecipeSignalSpec` is a deliberate decision (each variant earns its place). This is a feature, not a bug — it keeps the recipe surface curated.
 
+## Decision (2026-04-26)
+
+**Accepted:** Option A — in-crate facade at `tui_vfx_recipes::signals::*`. Narrow scope: recipe-deserialization only; production code keeps importing `mixed_signals::*` directly. Promotion to a sub-crate (`tui-vfx-recipes-signals`, the proposal's Option B) stays on the table as a mechanical conversion if the module ever outgrows reasonable size.
+
+**Phase ordering accepted from §8.6:**
+- **α (green-lit, no further decision):** autogen `SIGNALS_REFERENCE.md` from `SignalSpec` rustdoc + `signals.toml` overlay. Doc-only.
+- **β (green-lit, no further decision):** curated "Core 12" cheatsheet (one section of α's autogen output). Doc-only.
+- **γ (deferred):** build the `signals` module + collapse the parallel physics channel. Wait until 1.2.A `VfxBindable<T>` lands so the symmetric Bindable family the module references is available.
+- **δ (deferred):** symmetric `BindableF32` / `BindableColor` family with signal-form variants pointing at `VfxRecipeSignalSpec`. Hard-gated on 1.2.A.
+
+**Acceptance also locks the headline maintenance lever:** locally-named/scoped interface point to drive recipe inputs; future swaps, plug-ins, exposure-limiting, and rename/remap stay in one place.
+
 <!-- <FILE>docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
