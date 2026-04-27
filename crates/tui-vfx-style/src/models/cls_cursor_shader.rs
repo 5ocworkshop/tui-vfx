@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/cls_cursor_shader.rs</FILE> - <DESC>CursorShader — paints primary-cell alpha and wake trail tint/ghost</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Cursor wake-trail visibility: the previous implementation only tinted base.fg, so cells without visible text showed no trail. Blend the tint onto base.bg too so the trail glows like a mouse-tail behind the cursor even on empty cells.</WCTX>
-// <CLOG>MINOR: trail cells now blend the tint into both base.fg and base.bg using the same alpha; primary-cell behavior unchanged</CLOG>
+// <VERS>VERSION: 0.5.1</VERS>
+// <WCTX>Packet 1.9.A.followup US-003: justify the two hand-written CursorShaderPrimary/Trail ConfigSchema impls now that the audit scanner sees qualified-path forms.</WCTX>
+// <CLOG>0.5.1: PATCH — add CONFIGSCHEMA-JUSTIFICATION comments above the two hand-written ConfigSchema impls (kind=intentional-divergence-from-derive-output). The (u16, u16) tuple field has no ConfigSchema impl in the workspace; hand-written impls emit a Primitive schema node as a non-fatal stand-in. No behavior change.</CLOG>
 
 use super::ColorConfig;
 use crate::traits::{ShaderContext, StyleShader};
@@ -40,6 +40,7 @@ pub struct CursorShaderPrimary {
 // not authored as recipe JSON, so the schema surface only needs to be
 // "non-fatal" for the SpatialShaderType enum derive (which requires every
 // variant to implement ConfigSchema).
+// CONFIGSCHEMA-JUSTIFICATION: intentional-divergence-from-derive-output: the (u16, u16) tuple field has no ConfigSchema impl in the workspace; hand-written impl emits a Primitive schema node as a non-fatal stand-in for the surrounding SpatialShaderType enum derive.
 impl tui_vfx_core::ConfigSchema for CursorShaderPrimary {
     fn schema() -> tui_vfx_core::SchemaNode {
         use tui_vfx_core::{FieldMeta, SchemaField, SchemaNode};
@@ -78,6 +79,7 @@ pub struct CursorShaderTrail {
     pub glyph: Option<String>,
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: intentional-divergence-from-derive-output: the (u16, u16) tuple field has no ConfigSchema impl in the workspace; hand-written impl emits a Primitive schema node as a non-fatal stand-in for the surrounding SpatialShaderType enum derive (same pattern as CursorShaderPrimary above).
 impl tui_vfx_core::ConfigSchema for CursorShaderTrail {
     fn schema() -> tui_vfx_core::SchemaNode {
         use tui_vfx_core::{FieldMeta, SchemaField, SchemaNode};
@@ -227,4 +229,4 @@ fn blend_rgb(base: Color, tint: Color, alpha: f32) -> Color {
 // cls_spatial_shader_type.rs.
 
 // <FILE>tui-vfx-style/src/models/cls_cursor_shader.rs</FILE> - <DESC>CursorShader — paints primary-cell alpha and wake trail tint/ghost</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.5.1</VERS>

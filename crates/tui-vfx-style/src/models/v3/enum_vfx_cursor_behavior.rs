@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-style/src/models/v3/enum_vfx_cursor_behavior.rs</FILE> - <DESC>V3 cursor family behavior surface</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Decision 2 migration slice — create a grouped V3 home for the cursor shader while preserving the legacy Cursor variant for current playback and per-frame cutover wiring.</WCTX>
-// <CLOG>Define the V3 cursor mode enum and flattened payload mirrors for the cursor family surface.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Packet 1.9.A.followup US-003: justify the two hand-written VfxCursorPrimary/Trail ConfigSchema impls now that the audit scanner sees qualified-path forms.</WCTX>
+// <CLOG>0.1.1: PATCH — add CONFIGSCHEMA-JUSTIFICATION comments above the two hand-written ConfigSchema impls (kind=intentional-divergence-from-derive-output). Same blocker as cls_cursor_shader.rs: (u16, u16) tuple field has no workspace ConfigSchema impl. No behavior change.</CLOG>
 
 //! V3 behavior surface for cursor shaders.
 //!
@@ -34,6 +34,7 @@ pub struct VfxCursorPrimary {
     pub alpha: f32,
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: intentional-divergence-from-derive-output: the (u16, u16) tuple field has no ConfigSchema impl in the workspace; hand-written impl emits a Primitive schema node as a non-fatal stand-in for the surrounding V3 cursor enum derive (same pattern as cls_cursor_shader.rs's CursorShaderPrimary/Trail).
 impl tui_vfx_core::ConfigSchema for VfxCursorPrimary {
     fn schema() -> tui_vfx_core::SchemaNode {
         use tui_vfx_core::{FieldMeta, SchemaField, SchemaNode};
@@ -70,6 +71,7 @@ pub struct VfxCursorTrail {
     pub glyph: Option<String>,
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: intentional-divergence-from-derive-output: the (u16, u16) tuple field has no ConfigSchema impl in the workspace; hand-written impl emits a Primitive schema node as a non-fatal stand-in (same pattern as VfxCursorPrimary above).
 impl tui_vfx_core::ConfigSchema for VfxCursorTrail {
     fn schema() -> tui_vfx_core::SchemaNode {
         use tui_vfx_core::{FieldMeta, SchemaField, SchemaNode};
@@ -104,4 +106,4 @@ impl tui_vfx_core::ConfigSchema for VfxCursorTrail {
 }
 
 // <FILE>tui-vfx-style/src/models/v3/enum_vfx_cursor_behavior.rs</FILE> - <DESC>V3 cursor family behavior surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>
