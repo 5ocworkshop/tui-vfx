@@ -1,7 +1,7 @@
-<!-- <FILE>steering/NEW_INTENTIONS.md</FILE> - <DESC>Draft reorganization of INTENTIONS.md into two parts (durable principles + project-specific rules) with an added Intention-shape subsection inside Writing style and a new file-organization section. Body content of every existing intention preserved verbatim from INTENTIONS.md v0.6.4; only structural headers, the shape subsection, and the organization section are new. Stable numbering across the split for cross-reference compatibility.</DESC> -->
-<!-- <VERS>VERSION: 0.7.1-draft</VERS> -->
-<!-- <WCTX>2026-04-27 audit pass: review wording of every intention. Found the corpus tight overall; only two surgical edits warranted — resolve the duplicate-26 anomaly by renaming Consolidation-Addressability to 26A (mirroring 12/12A), and fix one ungrammatical sentence in Intention 38. All 43 intentions verified to carry an articulated Why per the new shape gate. Body content otherwise unchanged.</WCTX> -->
-<!-- <CLOG>0.7.1-draft: rename second #26 (Consolidation Must Preserve Individual-Item Addressability) to 26A; remove the temporary audit-note placeholder; fix one ungrammatical sentence in Intention 38's Transitional framing paragraph; update How-this-file-is-organized listing and add a brief numbering-anomaly note recording the renumber.</CLOG> -->
+<!-- <FILE>steering/INTENTIONS.md</FILE> - <DESC>Top-down steering decisions for tui-vfx — the durable framing that outlasts any individual release. Captures engineering discipline, architectural boundaries, naming conventions, and project-level policy. Companion to steering/MARKETING.md: marketing describes what we've built; intentions describe how we decide what to build.</DESC> -->
+<!-- <VERS>VERSION: 0.6.4</VERS> -->
+<!-- <WCTX>Add Intention 43 — plans must orient against the codebase before claiming a contract exists; codifies the lesson from the TTE port plan v0.1.0 which assumed HintRef / sampler-emits-hint shipped when ofpf-defs returned zero hits.</WCTX> -->
+<!-- <CLOG>0.6.4: add Intention 43 — plans must run an ofpf-defs/ofpf-inspect orientation pass before claiming infrastructure exists; treat steering docs as 'what we want' and the codebase as 'what we have.'</CLOG> -->
 
 # Intentions
 
@@ -34,23 +34,6 @@ Why: developers filter for signal. Filler makes them work harder to find what ma
 
 What this is *not* saying: don't be dry for its own sake. Clarity and personality coexist. The rule is "cut the filler," not "strip the voice."
 
-### Intention shape
-
-Intentions follow the writing-style rules above and one additional content requirement: every intention articulates *why*. Without an articulated why, what you have is not an intention — it's an arbitrary rule wearing the wrong label. The name carries the weight: an intention is by definition a reasoned commitment.
-
-**Required content:**
-
-- **Headline statement** — one-liner, declarative or imperative.
-- **Body** — convey the issue, the explanation, and the why. The why is mandatory.
-- **(Optional) Project-specific example** — a real incident or pattern that triggered the rule. Examples that name a concrete situation make the rule stick where prose alone won't.
-- **(Optional) Bulleted rule list** — for discipline-style intentions where multiple sub-rules apply (see Intentions 23, 24, 25, 34, 40 for the established shape).
-
-**Length is judgment, not a gate.** Use what you need to fully convey the issue, reason, explanation, and example. No more. Some intentions are one paragraph; some need rules and a worked example; both are right when proportional to the topic. The test is whether trimming would lose load-bearing meaning. If trimming wouldn't lose meaning, the prose was padding; if it would, the length is honest.
-
-**Shape is guideline; content is requirement.** Sentence counts, item caps, and structural templates are guidelines that authors apply with judgment. The presence of a *why* — articulating the reason for the rule — is the gate.
-
-Why: rules without context are brittle. They get followed by string-match when they apply unambiguously and ignored or misapplied when they don't. Context-attached rules generalize — the why lets readers (human or AI) extend the rule to novel situations, weigh conflicts between rules, and detect when applying the rule literally would violate its spirit. This is true for human readers and especially load-bearing for AI agents, which can only act on what they understand rather than what they remember. The "why" is what makes a rule transferable, not just memorizable. Length caps as gates would convert judgment into bureaucracy and is exactly the failure mode the project's broader writing style avoids.
-
 ## Commit message provenance policy
 
 Do not add co-author credits to commit messages. This includes `Co-authored-by:`
@@ -66,30 +49,6 @@ without improving the technical record.
 
 ---
 
-## How this file is organized
-
-Intentions are split into two parts. Numbering is stable across the split — existing cross-references resolve to the same content.
-
-- **Part I — Durable principles.** Posture and engineering discipline that would survive a full rewrite of the codebase. These are identity-level commitments: how we approach documentation, consolidation, validation, audits, library design, and architectural strategy. They evolve slowly. Examples: rule-of-three, library-changes-must-earn-their-place, no-landmines, plan-from-codebase.
-- **Part II — Project-specific rules.** Operational rules tied to specific tui-vfx surfaces — crate boundaries, naming prefixes, schema versions, debug recipes, the binding system, the `ofpf-*` tooling, V3 vocabulary, ratatui baseline, and so on. These move with the codebase and may be retired when the surface they govern changes. Examples: `Vfx*` prefix policy, ratatui 0.30+ baseline, 3×3 glyph fallback, loopback-required.
-
-**Within each part, numbers are in original order but not sequential.** Part I contains intentions 1, 10, 11, 12, 14, 15, 22, 23, 24, 25, 26, 26A, 28, 29, 33, 40, 43. Part II contains the remaining 26 entries. The split is a navigation aid; the numbers are for cross-reference stability across the corpus of work-packets, design docs, commit messages, and rustdoc that already reference them.
-
-**Note on numbering anomalies.** The pre-split file (v0.6.4) had two intentions numbered 26. The audit pass that produced this file resolved the duplicate by renaming "Consolidation Must Preserve Individual-Item Addressability" to **26A**, mirroring the existing 12/12A pattern. Cross-references to "Intention 26" continue to resolve to "Prefer a Single Source of Truth Over Parallel Seams"; references that cited the second 26 by topic (consolidation, addressability) need a one-character update to 26A.
-
-**When adding a new intention,** decide which part it belongs to:
-
-- If the rule could apply to a different project with similar values, **Part I**.
-- If the rule names specific crates, schema fields, version numbers, file paths, or tools, **Part II**.
-
-Borderline cases lean Part II. Numbering continues from the highest existing number in the file, regardless of which part the new intention lands in.
-
----
-
-# Part I — Durable principles
-
-Posture and engineering discipline that would survive a full rewrite of the codebase. Read this part for orientation: how the project thinks about quality, consolidation, audits, documentation, and library design.
-
 ## 1. Grid-First, Ecosystem-Agnostic
 
 tui-vfx's compositor renders to an abstract cell grid; ratatui is *a* consumer, not *the* consumer. This is an intentional architectural commitment, not accidental optionality.
@@ -101,335 +60,6 @@ Rules:
 3. Plausible sibling consumers — movie composer, static renderer, wasm embed, SIXEL/SVG exporter, CI visual-regression via grid diffs — are first-class architectural targets, not hypothetical optionality.
 
 Why: grid-first earns its place through validated secondary uses. The cost of the parallel cell type is real; the payback is adjacent uses a single-terminal-library rules out by construction. If we were ratatui-native, we could not ship a movie-player binary without ratatui's widget/event-loop machinery, could not render to wasm without a terminal-emulator shim, could not produce static image exports cleanly. See `MARKETING.md` and the V3 upgrade plan's architectural framing.
-
-## 10. Clean-Sheet Naming and Ergonomics Reset at Version Boundaries
-Major-version boundaries are deliberate moments to clean up naming that evolved under rapid scope changes. When legacy names conflict with clarity or ergonomics, we prefer the clearer clean-sheet name and provide migration notes rather than preserving confusing historical naming by inertia.
-
-Why: incremental renames accumulate costs — each one is a breaking change, each one pays the migration tax for just its own rename. Bundled renames at version boundaries pay the breaking-change cost once and let the whole naming surface move forward together. V3 is this moment for tui-vfx — the `Ra*` → `Vfx*` prefix rename (Decision 4), the "preview" seam naming (Open Q #19), the vocabulary refresh (Open Q #15) all ride in one cutover.
-
-## 11. Hybrid Documentation: Generated Facts + Curated Guidance
-
-API and schema docs follow a hybrid model. Technical facts (public items, types, fields, serde shape, rustdoc) are extracted from Rust source. Human-curated editorial content (examples, context, policy, migration guides) is provided in dedicated documentation config files. Generated output files are treated as build artifacts, not hand-edited.
-
-Every change to public API or schema must include corresponding documentation inputs: rustdoc updates on affected public items, curated editorial updates where context changes, and generator validation passing for drift and coverage.
-
-Why: extraction catches drift mechanically — if a field changes shape, the generator notices. Curation carries judgment that extraction cannot — why a field exists, when to use it, what failure modes to watch for. Both layers are required; neither alone is sufficient.
-
-## 12. Documentation Is a First-Class Automated Engineering Contract
-
-Rustdoc coverage on public surfaces is mandatory, not optional. Public types, functions, traits, fields, enums/variants, and behavior-critical contracts must have meaningful rustdoc entries explaining intent, constraints, and usage. Generated API and schema docs are release-gating artifacts; drift and coverage checks run in CI and through `just` workflows. Code changes that affect behavior or contracts are incomplete unless accompanying rustdoc and documentation-generation inputs are updated and validation passes.
-
-Why: undocumented public surface is a perpetual tax on every new consumer who has to guess at intent, constraints, and failure modes. The generator plus drift-check infrastructure pays once; it catches undocumented additions on every subsequent build at zero marginal cost. This is the canonical example of Intention 25 applied to documentation.
-
-## 14. Engineering Workflow Is Test-First and Audit-Gated
-
-Development follows TDD: write tests first, observe failure (red), implement minimal code to pass (green), then refactor safely while preserving passing tests. Mocks are used sparingly; prefer real integration paths and realistic scenarios whenever practical, so behavior validates against actual contracts.
-
-At phase end, run formatting and lint gates (`rustfmt`, `clippy` with warnings-as-errors), and fix issues close to source rather than deferring cleanup. Each phase ends with an explicit audit against the phase plan and codebase, with checks for completeness, gaps, regressions, performance risks, security issues, and architecture-boundary violations.
-
-Why: red-green-refactor produces code testable by construction. Audit-gating catches what TDD's local focus misses — cross-module interactions, architectural drift, forgotten edge cases, performance regressions.
-
-## 15. Audit Pass Is a Hard Phase Gate
-
-A phase is not complete when development work is "done"; it is complete only when audit passes. If an audit returns findings, fixes must be applied and then the full audit must be rerun end-to-end. Partial or informal spot-checks are not a substitute. Teams move to the next phase only after an explicit auditor pass on the rerun.
-
-Why: "done" is a dangerous word. A passing audit is an evidence-based claim; "feels done" is wishful thinking that compounds into technical debt across every subsequent phase.
-
-## 22. Batteries-Included Behavior Must Be Resolved in the Library Path
-
-If tui-vfx presents a behavior as part of its product contract — canonical playback, probe fingerprinting, trace observability, signal resolution, shadow composition, binding-contract discovery — that behavior must be owned by library crates on the public path, not reconstructed in each application or example.
-
-Rules:
-
-1. When examples or apps need ad-hoc compensating logic to reach canonical tui-vfx behavior, that's evidence of a library contract gap and must be treated as a defect to fix in the library.
-2. Canonical examples, starter templates, and demos must exercise the intended batteries-included path. They may demonstrate explicit overrides where a real app deliberately wants them, but they must not be the place where baseline tui-vfx behavior is assembled by hand.
-3. Public APIs preserve escape hatches for intentional overrides, but the default path must already deliver the behavior the product claims to support.
-
-Why: batteries-included is a commitment that outlives any individual example. Shipping compensating logic in examples teaches contributors that the library doesn't deliver on its own promise; it erodes trust and guarantees duplicate workarounds in every consumer. The correct response to a batteries-included gap is to fix the library, not to paper over it at the call site.
-
-## 23. Top-Down Consolidation Discipline (Rule of Three)
-
-tui-vfx has a growing surface area — named shader factories, Pattern variants, hint-namespace kinds, fragment definitions, scope variants, and more. Feature-by-feature organic growth produces quiet fragmentation. The consolidation discipline below is the active counter-force.
-
-Rules:
-
-1. **The rule of three.** When three or more units (shader factories, Pattern variants, hint kinds, fragment definitions) implement behavior that is conceptually the same, extract a shared primitive into the appropriate crate before the next unit adds a fourth parallel implementation.
-2. **Top-down periodic review.** At major milestones, survey the surface top-down — walk the full catalog, group by category, look for behavioral overlap. Do not wait for pain to become acute; the longer fragmentation sits, the more expensive consolidation becomes.
-3. **Shared vocabulary over convenient nicknames.** When a new type is needed, first ask "does this match an existing primitive?" Canonical types are the first choice; per-case aliases are acceptable only when they compose over a shared primitive.
-4. **Additive migration, never breaking churn.** Consolidation adds shared primitives; it does not delete or rename existing types in the same change. Per-case types that duplicate a shared primitive get marked "internal implementation detail" and are gradually retargeted over releases.
-5. **Abstractions earn their place.** Only abstract when the generalization is genuine — three cases is the threshold, not two. Forced or speculative abstraction is worse than honest duplication.
-6. **Document the consolidation rationale.** Every shared primitive extraction includes a rustdoc comment explaining *why* it exists and *which* cases motivated the extraction. Future contributors need to see the pattern the primitive captures, or they will re-fragment it.
-
-Why: organic feature growth produces quiet fragmentation that compounds into cognitive load on consumers and maintenance cost on the team. A healthy tui-vfx is one where new shader variants, Pattern variants, or fragment definitions feel natural to compose because the primitives they build from already exist. The V3 Pattern-as-separable-axis model (Decision 2) is this intention applied to shader composition; the V3 `$use` fragment library (Open Q #17) is the planned application to recipe composition.
-
-Related: Intention 24 establishes when *not* to abstract — one case is fine without a new primitive. Both rules must pass for any additive change.
-
-## 24. Library Changes Must Earn Their Place Through Real Value
-
-Every additive change — new helper, new macro, new type, new method, new module — must earn its place by passing a deliberate step-back review before it lands. tui-vfx is easy to add to and hard to subtract from once shipped. The cost of a helper that does not pull its weight is not zero: it becomes public surface area every future contributor must read, document, and preserve.
-
-Rules:
-
-1. **Real value, not abstract principle.** A change must solve a problem visible in current code at current scale. "This would be useful if we had ten of these" is not a reason to add when we have three. The threshold is a concrete pain point a reader can point at in the repository today.
-2. **Move toward ecosystem norms.** When the idiomatic ratatui, Rust, or serde answer already covers the use case, use it. A macro when a direct method call is clearer is a step backward. Novel solutions need to clear a higher bar than idiomatic ones.
-3. **Reduce lines and reduce complexity at the call site.** Measure before/after at the canonical call site. If "after" has more lines, more tokens, or more nesting than "before" for the common case, the change has not earned its place yet.
-4. **Improve readability, measured at the reader side.** The test is not "is it more concise for the writer" but "is it easier for a cold reader to understand what is happening." Macros, trait objects, and generic bounds move complexity from writer to reader; they must produce a concrete readability win large enough to justify the shift.
-5. **The step-back test is mandatory.** After designing a helper, before committing: stop and read the before/after side by side. Ask "would I rather maintain the after for three years, or the before?" If the answer is "the before," the helper has not earned its place.
-6. **Watch for the rationalization chain.** When the argument for a new helper requires more than two sentences, that length is a signal. Good helpers justify themselves in one sentence. When the justification keeps growing — "this *also* does X", "this *also* prevents Y" — the helper is accumulating rationalizations rather than earning them.
-7. **When a change fails the filter, back out cleanly and record the lesson.** Reverts are not failures; unexamined accretion is the failure. A clean revert with a commit message explaining what filter the change did not pass is strictly better than a helper that lingers because reverting "felt like backtracking."
-8. **This filter does not apply to real features.** Net-new features that solve real product problems (new shader primitives, new scope variants, validator capabilities) pass a different gate — MARKETING alignment, scoped correctly, tested. This filter specifically targets the seductive "let me add a little helper" category where cost is invisible until shipped.
-
-Why: the failure mode is a chain of plausible-sounding rationalizations ("this batches the call", "this reduces duplication", "this is more discoverable") that individually seem reasonable but together add cognitive load without reducing call-site work. The step-back test catches the failure mode before shipping.
-
-Related: Intention 23 establishes when to *extract* shared primitives; Intention 24 establishes when *not* to. Both rules must pass for any additive change.
-
-## 25. Actively Hunt for Infrastructure Wins That Automate Validation
-
-Throughout every phase of work, actively look for opportunities to turn a manual audit or one-time correction into automated validation infrastructure. When an audit finds a drift class that required human investigation to detect, ask immediately: "could a mechanical check have caught this at introduction?" If yes, build the check in the same session when scope allows.
-
-Rules:
-
-1. **Look for infrastructure wins during every substantive change.** After completing a manual correction, pause and ask what mechanical check would have caught it. Building the check now while context is fresh is high-ROI; waiting loses the insight.
-2. **Prefer mechanization of drift classes already seen.** Building a check that catches a drift you just manually fixed always pays off — by construction, the drift has already happened. Generic "just in case" infrastructure is speculative and frequently expires before paying off.
-3. **Step back top-down before picking the integration point.** Ask what layer the check should live at — shell script, Rust unit test, integration test, build script, generator tool, CI workflow, `just` recipe. Pick what serves the whole project, not just the file you're editing. Ad-hoc integration fragments the gate system.
-4. **Consider positive and negative effects before adding.** A check that catches one drift class cheaply but breaks three other workflows is net negative. Describe scope, cost, and failure mode in one paragraph before writing code; if the paragraph runs long, the check is probably wrong or wrongly placed.
-5. **Prefer the smallest intervention that delivers full coverage.** A 15-line bash assertion comparing two counts is often strictly better than a 200-line Rust tool — easier to read, debug, modify, and approve. Reach for heavier tooling only when the simpler assertion genuinely cannot express the invariant.
-6. **Integrate with existing gates rather than inventing new ones.** New entry points fragment the mental model of "how do I run the checks" and multiply places where drift can hide.
-7. **Document the resolution playbook inside the check.** When a drift check fails, the contributor hit by it should be able to read the error message or surrounding comment and know exactly what to do. A check that fails without explaining how to fix is a trap.
-
-Why: validation infrastructure is the single highest-leverage category of work in any long-lived project. Every check gets reused at zero marginal cost on every subsequent build. Manual audits cost time every time; mechanical checks cost time once. This intention is the explicit counter-force against "defer automation to later" — later never arrives.
-
-Related: Intention 24 gates *ergonomic helpers* that do not earn their place. Intention 25 actively pursues *validation infrastructure* that prevents classes of failure. Both rules must pass for any additive change; the overlap is zero because they target disjoint categories.
-
-## 26. Prefer a Single Source of Truth Over Parallel Seams
-
-When multiple consumers need the same semantic operation, the default answer is a single upstream implementation, not multiple parallel ones.
-
-Rules:
-
-1. **Shared semantics live once.** Version detection, loader dispatch, normalization, validation, compile-to-execution-plan, and similar semantic seams should have one canonical upstream implementation. Tools and downstream consumers call that seam; they do not rebuild it locally.
-2. **Do not create parallel loaders.** If two binaries need to load recipes, the answer is not "write another loader for the second binary." The answer is to improve the canonical loader surface until both binaries can use it.
-3. **Abstract at the seam, not at the call sites.** Repeated branching in tools ("if V2 do X, if V3 do Y") is a signal that the upstream seam is incomplete. Fix the seam rather than proliferating policy in consumers.
-4. **SSOT beats convenience duplication.** A local shortcut that duplicates semantic logic is only cheaper today. It becomes long-term drift, conflicting fixes, and silent behavior mismatches.
-5. **Preserve escape hatches without forking meaning.** Specialized consumers may still have policy-specific wrappers, but those wrappers compose over the canonical seam rather than replacing it.
-
-Why: duplicated semantic seams are how drift becomes normal. The V2→V3 migration work made this concrete: schema-version detection, version-aware dispatch, load/normalize/validate/compile routing, and canonical playback semantics all want to spread into tools unless they are explicitly centralized. SSOT is the durable counter-force. The loader architecture is the clearest example — there should be one canonical loader family in `tui-vfx-recipes`, not multiple parallel loaders across binaries.
-
-## 26A. Consolidation Must Preserve Individual-Item Addressability
-
-When consolidating N independent units (recipe files, primitive definitions, fragment definitions, asset entries) into fewer containers via `template + variants`, `$use` fragment libraries, aggregator manifests, or future bundler primitives, the consolidation must preserve individual-item addressability for debug, preview, reference, and introspection use cases. The file path and unit identity are UX contracts with tooling, not just storage conventions.
-
-Rules:
-
-1. **Identify all consumers of individual-unit addressability before consolidating.** Debug players, file-pickers, documentation, search tooling, validators, probes, traces, external references. If any depend on per-unit addressability, that dependency must be addressed before consolidation lands.
-2. **Debug, preview, and reference recipes stay individual by default.** Their one-file-one-preview contract *is* their utility. Consolidation is for production recipe sets where individual items are implementation details.
-3. **Consolidation mechanisms that collapse addressable units must ship with tooling updates.** A canonical variant-URI scheme (e.g., `easing_family.json#back_out`) and validator + probe + trace support for that scheme are required. No consolidation lands until tooling supports its expanded form.
-4. **Metadata declares consumption mode.** Consolidated files declare intended consumption (`programmatic` / `individual_preview` / `both`). Tooling respects the declaration.
-5. **When in doubt, don't consolidate.** Duplication is cheaper than broken addressability. Abstract only when the generalization is proven and the tooling cost has been paid.
-6. **Retrospective corrections are valid and encouraged.** If a past consolidation broke addressability, fixing it by re-expanding or extending tooling is the right action — not living with the regression because "it was already shipped."
-
-Why: consolidation for file-count reduction serves programmatic consumers at the expense of human-facing and tool-facing consumers. Both matter. The `recipes/easing/easing_family.json` retrospective (26 individual files collapsed to 1 `template + variants` file, regressing the demo file-picker) is the canonical example of what this intention exists to prevent. This intention is Principle 4 of the V3 upgrade plan; it's codified here as a durable cross-version rule.
-
-## 28. Validator-Friendly Type Patterns at Boundaries
-
-Public types that cross crate boundaries — wire-format types, recipe schema types, playback items — use serde patterns that support trial deserialization: `#[serde(deny_unknown_fields)]` on tagged unions and strictly-typed structs; explicit discriminators; documented shape per variant. When a downstream consumer (gt-design's SSOT, or any future consumer) needs to validate our types at their own load time without duplicating our type definitions, our types must be pattern-compatible with that use.
-
-Why: strict-typed validation at the boundary is how consumers protect themselves from upstream drift. If our types are loose, their validation can't be tight. The pattern is low-cost on our side (serde attributes) and high-value for consumers (load-time validation instead of render-time surprises). gt-design's Intention 38 formalizes this from the consumer side — trial-deserialize our types against their typed definitions at SSOT load time. Our obligation is to make that possible by never shipping types that can't be cleanly trial-deserialized.
-
-## 29. The MARKETING / INTENTIONS Split
-
-`steering/MARKETING.md` answers *how we describe what we've built* — positioning, feature hierarchy, differentiators, talk-track. `steering/INTENTIONS.md` (this file) answers *how we decide what to build* — engineering discipline, architectural boundaries, naming conventions, project policy. The two documents are peers and stay in sync.
-
-Rules:
-
-1. When a new strategic decision shifts positioning (new primary audience, new headline feature, architecture pivot), update MARKETING.md's 90-second description first, then re-derive the 60s and 30s, then refresh callouts.
-2. When a new steering decision changes engineering discipline or architectural boundary, add or update an intention here; then check whether MARKETING.md's positioning needs a matching update.
-3. When the two documents diverge on fact or framing, neither is authoritative over the other — both must be brought back into agreement, with the code state as the tiebreaker.
-
-Why: a project that describes itself inconsistently loses the trust of both contributors and consumers. Keeping MARKETING and INTENTIONS as peers — one outward-facing, one inward-facing — acknowledges that both audiences matter and prevents either document from silently drifting.
-
-## 33. Documentation Indexes Are Navigation Contracts
-
-Every `INDEX.md` file is a navigation contract for a busy repository, not a
-best-effort table of contents. When docs move, split, merge, promote from plan
-to core documentation, or get archived as closed-out design history, update the
-nearest relevant index in the same workset.
-
-Rules:
-
-1. If a file path changes, update every index that pointed at the old path before
-   committing.
-2. If a planning document becomes durable core documentation, add or move its
-   link into the core docs index rather than leaving it discoverable only through
-   the V3 planning tree.
-3. If a document becomes transient/closed-out history, say so in the index or
-   move it to an archive section instead of letting stale status masquerade as
-   live guidance.
-4. Keep index descriptions short and concrete. They should answer "start here
-   or not?" without making the reader inspect every file.
-5. Treat missing index updates as a documentation bug, especially in V3 work
-   where plans, as-built docs, generated docs, and tooling guides all coexist.
-
-Why: large repos punish treasure hunts. Indexes are how humans and AI agents
-recover context quickly without grep archaeology. Keeping them current preserves
-trust, reduces duplicate work, and prevents old planning notes from pretending
-to be today's map. The occasional joke is welcome; a stale map with a funny hat
-is still a stale map.
-
----
-
-## 40. No landmines: fix root causes, no per-site `#[allow]`, no half-finished consolidations
-
-When a strict lint gate (e.g. `cargo clippy --all-targets -- -D warnings`)
-flags an issue, the answer is **never** a per-site `#[allow]` suppression.
-Find the root cause and fix it, set explicit project-level policy in
-`clippy.toml` with a comment explaining the rationale, or restructure the
-code so the lint doesn't fire. `#[allow]` is a landmine: the next code
-addition past the suppression silently inherits the bypass; the reason for
-the suppression decays in code review; and it hides downstream behaviour
-changes a future lint update would have caught.
-
-Rules:
-
-1. **No per-site `#[allow]` for clippy gates.** If the lint is firing on
-   real code-style debt, refactor the code. If the lint's default doesn't
-   fit the crate's nature (e.g. `too-many-arguments-threshold` for a
-   math/geometry crate where 8–9 positional `f32` args are idiomatic), set
-   the threshold globally in `clippy.toml` with a one-line comment
-   explaining why. That is a conscious, contributor-visible policy
-   decision; per-site suppressions are not.
-2. **`#[expect]` over `#[allow]` when suppression is genuinely required.**
-   `#[expect]` fails the build if the warning later goes away, so the
-   suppression doesn't outlive its reason. Reach for it only when (a)
-   restructuring is genuinely worse than the lint is right, and (b) a
-   short comment in source explains the trade-off.
-2A. **`-D warnings` is non-negotiable on the audit gate.** Weakening the
-    gate (`-W warnings`, dropping `--all-targets`, scoping out examples)
-    to "make it pass" is also a landmine. Fix the code or set the policy
-    in `clippy.toml`.
-3. **Upstream extractions must be byte-equivalent to the canonical
-   pre-lift implementation.** When lifting a primitive from one consumer
-   into a shared crate (e.g. `mixed-signals`), the upstream MUST reproduce
-   the canonical algorithm verbatim — exact magic numbers, exact shift
-   counts, exact normalization. Otherwise the migration silently changes
-   downstream behaviour (rain drop positions, spark seeds, render output)
-   and tests asserting range properties rather than exact values won't
-   catch it. Behaviour-preserving means **bit-equivalent**, not
-   *plausibly-similar*. Plan documents that say "behaviour-preserving
-   migration" mean exactly that.
-4. **No half-finished consolidations.** When extracting shared math or
-   collapsing duplicated patterns, every caller migrates in the same
-   workset that lands the upstream. A half-merged consolidation is a
-   landmine: the next contributor sees two implementations and has no way
-   to know which is canonical. Either complete the migration or revert
-   the extraction.
-5. **Disclosure obligation.** Subagent or solo work that hits an
-   out-of-scope clippy/test gate failure must surface it in the report,
-   not paper over it with `#[allow]`. Saying "I had to suppress X to keep
-   the lint clean" is a flag for the reviewer to evaluate the suppression;
-   silently landing the suppression is the failure mode this intention
-   exists to prevent.
-6. **Pre-commit verification.** Before declaring a workset done, run
-   `rg -n '#\[allow|#!\[allow'` over the diff. If new suppressions
-   appeared, justify each one in the commit message or remove it.
-
-Why: each landmine is silent at landing time and surfaces unpredictably
-later — sometimes weeks later, sometimes at a release boundary. The cost
-of fixing root causes once at landing is lower than the cost of a future
-contributor (or the same author) re-deriving the suppression's
-justification, then either re-suppressing it from inertia or removing it
-without understanding what it protected. The user's directive that
-prompted this rule was direct: *"stop leaving landmines."* Half-fixes
-look productive in the moment and degrade the codebase as durable
-infrastructure; this intention is the explicit counter-force.
-
-What this is *not* saying: it is not banning all `#[allow]` everywhere.
-Generated code, FFI shims, or genuinely platform-specific paths that
-clippy can't reason about may legitimately need one — but those are rare,
-documented, and reviewed. The default position when in doubt: don't
-suppress; fix.
-
-Companion memory: `feedback_no_landmines.md` in the auto-memory directory
-captures the same rule in a more conversational form for in-session
-recall.
-
----
-
-## 43. Plans must orient against the codebase before claiming a contract exists
-
-Implementation plans (anything in `docs/design/`, work-packet documents,
-`steering/work-packets/*`, or planning prose in PR descriptions) must run
-an `ofpf-defs` / `ofpf-inspect` / `ofpf-content` orientation pass against
-every infrastructure contract the plan references. Steering docs describe
-a mix of shipped capabilities and aspirational/V3-planned ones; plans
-that treat both as equally true bridge the wrong gap and fail on contact
-with reality.
-
-Rules:
-
-1. **Verify symbols exist before referencing them.** If a plan says
-   "extend `Foo` with `Bar`" or "produces a `HintRef<f32>`," run
-   `ofpf-defs Foo` and `ofpf-defs HintRef` first. If results are empty,
-   the plan must either build the missing infrastructure as a phase or
-   work around its absence — never assume aspirational vocabulary is
-   shipped.
-2. **Inspect the actual file before describing how to extend it.**
-   `ofpf-inspect <path>` returns role/metrics/callers in one call. A
-   plan that says "Phase 2 adds a color-space option to `Gradient`"
-   should be preceded by inspecting `Gradient` to confirm the option
-   isn't already there.
-3. **Treat steering docs as 'what we want.' Treat the codebase as
-   'what we have.'** When `MARKETING.md` describes a V3 capability,
-   verify shipped status before planning against it. The codebase is
-   authoritative; steering docs may describe planned-but-unshipped
-   contracts (this is normal — steering documents direction).
-4. **Document the orientation evidence in the plan.** Include the
-   `ofpf-*` queries that confirmed (or refuted) the existence of
-   referenced infrastructure, so future readers can re-verify and
-   understand which contracts were assumed shipped at plan-write time.
-5. **When orientation surfaces existing infrastructure that
-   simplifies the plan, say so explicitly.** If Phase N's work was
-   already done in prior unrelated work, mark the phase superseded
-   with a note about what shipped and where. Don't silently re-do or
-   silently skip.
-
-Why: a plan reads as authoritative once it's written; if it claims a
-contract exists, downstream readers (humans or agents) take that as
-truth and build on it. The TTE port plan's v0.1.0 was assembled by
-reasoning over `MARKETING.md` + `INTENTIONS.md` + `pro/main.rs`. It
-assumed a `HintRef<f32>` / sampler-emits-hint contract existed because
-MARKETING.md describes it as a V3 capability. `ofpf-defs HintRef`
-returned 0 hits — planned, not shipped. It also missed that
-`ColorSpace` + `blend_colors(..., space)` + `Gradient.space` were
-already in place, so what the plan called "Phase 2 — Gradient HSL
-color-space option" was already done in prior v2 work. Two phases
-collapsed and one needed a redesign on contact with reality. Cost of
-the orientation pass at plan-write time: a few minutes. Cost of
-discovering the gap at implementation time: a redesign mid-flight.
-
-This is Intention 42 ("default to `ofpf-*` for codebase questions")
-applied to the planning lifecycle. Intention 42 says use the tools for
-"where is X?" questions; Intention 43 makes it concrete that *plans
-themselves* are full of "where is X?" questions, often phrased as
-"extend the existing X."
-
-What this is *not* saying: it is not banning aspirational planning. A
-plan may legitimately propose new infrastructure that doesn't exist
-yet — that's the whole point of planning. The intention is that the
-plan be **honest about the gap**: "this requires building HintRef
-infrastructure as Phase 0; today the codebase has no equivalent" is a
-valid plan shape. "Phase 3 produces a `HintRef<f32>`" without
-acknowledging that `HintRef` doesn't exist is the failure mode.
-
-Companion: `feedback_plan_from_codebase.md` in auto-memory captures
-the same rule conversationally; `steering/OFPF-TOOLS.md` is the
-practical reference for the orientation queries.
-
----
-
-# Part II — Project-specific rules
-
-Operational rules tied to specific tui-vfx surfaces — crate boundaries, naming prefixes, schema versions, debug recipes, the binding system, the `ofpf-*` tooling, V3 vocabulary, ratatui baseline, and so on. These move with the codebase and may be retired when the surface they govern changes.
 
 ## 2. Public Crate Surface Is the Only Stable Surface
 
@@ -529,6 +159,25 @@ Why: overloading an existing primitive to mean two different geometric things
 creates hidden drift. A new explicit basis keeps both the substrate and the
 effect code legible.
 
+## 10. Clean-Sheet Naming and Ergonomics Reset at Version Boundaries
+Major-version boundaries are deliberate moments to clean up naming that evolved under rapid scope changes. When legacy names conflict with clarity or ergonomics, we prefer the clearer clean-sheet name and provide migration notes rather than preserving confusing historical naming by inertia.
+
+Why: incremental renames accumulate costs — each one is a breaking change, each one pays the migration tax for just its own rename. Bundled renames at version boundaries pay the breaking-change cost once and let the whole naming surface move forward together. V3 is this moment for tui-vfx — the `Ra*` → `Vfx*` prefix rename (Decision 4), the "preview" seam naming (Open Q #19), the vocabulary refresh (Open Q #15) all ride in one cutover.
+
+## 11. Hybrid Documentation: Generated Facts + Curated Guidance
+
+API and schema docs follow a hybrid model. Technical facts (public items, types, fields, serde shape, rustdoc) are extracted from Rust source. Human-curated editorial content (examples, context, policy, migration guides) is provided in dedicated documentation config files. Generated output files are treated as build artifacts, not hand-edited.
+
+Every change to public API or schema must include corresponding documentation inputs: rustdoc updates on affected public items, curated editorial updates where context changes, and generator validation passing for drift and coverage.
+
+Why: extraction catches drift mechanically — if a field changes shape, the generator notices. Curation carries judgment that extraction cannot — why a field exists, when to use it, what failure modes to watch for. Both layers are required; neither alone is sufficient.
+
+## 12. Documentation Is a First-Class Automated Engineering Contract
+
+Rustdoc coverage on public surfaces is mandatory, not optional. Public types, functions, traits, fields, enums/variants, and behavior-critical contracts must have meaningful rustdoc entries explaining intent, constraints, and usage. Generated API and schema docs are release-gating artifacts; drift and coverage checks run in CI and through `just` workflows. Code changes that affect behavior or contracts are incomplete unless accompanying rustdoc and documentation-generation inputs are updated and validation passes.
+
+Why: undocumented public surface is a perpetual tax on every new consumer who has to guess at intent, constraints, and failure modes. The generator plus drift-check infrastructure pays once; it catches undocumented additions on every subsequent build at zero marginal cost. This is the canonical example of Intention 25 applied to documentation.
+
 ## 12A. V3 Schema-Bearing Rust Types Must Meet V2-Grade Generation Standards
 
 For work in both `tui-vfx` and `tui-vfx-recipes`, V3 schema-bearing Rust types must be maintained to the same standard V2 established for schema/doc generation.
@@ -557,6 +206,20 @@ Why: the project already auto-generates substantial documentation from code, not
 Project workflow tasks — build, test, check, doc generation, validation, gates — are launched through `just` recipes or `xtask` subcommands as the central command surface for local development and CI. When a recurring task appears, we add a named recipe rather than relying on ad-hoc shell knowledge. Documentation generation and drift detection must be runnable via named `just`/`xtask` targets.
 
 Why: workflow discoverability is contributor experience. `just --list` or `cargo xtask --help` surfaces everything the project can do in one place. Shell-knowledge fragmentation produces "how does this project work?" confusion that silences new contributors.
+
+## 14. Engineering Workflow Is Test-First and Audit-Gated
+
+Development follows TDD: write tests first, observe failure (red), implement minimal code to pass (green), then refactor safely while preserving passing tests. Mocks are used sparingly; prefer real integration paths and realistic scenarios whenever practical, so behavior validates against actual contracts.
+
+At phase end, run formatting and lint gates (`rustfmt`, `clippy` with warnings-as-errors), and fix issues close to source rather than deferring cleanup. Each phase ends with an explicit audit against the phase plan and codebase, with checks for completeness, gaps, regressions, performance risks, security issues, and architecture-boundary violations.
+
+Why: red-green-refactor produces code testable by construction. Audit-gating catches what TDD's local focus misses — cross-module interactions, architectural drift, forgotten edge cases, performance regressions.
+
+## 15. Audit Pass Is a Hard Phase Gate
+
+A phase is not complete when development work is "done"; it is complete only when audit passes. If an audit returns findings, fixes must be applied and then the full audit must be rerun end-to-end. Partial or informal spot-checks are not a substitute. Teams move to the next phase only after an explicit auditor pass on the rerun.
+
+Why: "done" is a dangerous word. A passing audit is an evidence-based claim; "feels done" is wishful thinking that compounds into technical debt across every subsequent phase.
 
 ## 16. Official Validation Scope Is Linux-Only
 
@@ -601,11 +264,124 @@ Every effect parameter that a recipe can express — color, intensity, duration,
 
 Why: hardcoded parameters in consumer code are the exact failure mode recipes are designed to prevent. An effect baked into Rust code at the consumer is not themeable, not substitutable, not runtime-bindable, not previewable, not audit-visible, not AI-authorable. The value of recipes is that they make all of these things possible; bypassing recipes throws the value away and simultaneously reintroduces the weak-seam failure class Intention 3 exists to prevent.
 
+## 22. Batteries-Included Behavior Must Be Resolved in the Library Path
+
+If tui-vfx presents a behavior as part of its product contract — canonical playback, probe fingerprinting, trace observability, signal resolution, shadow composition, binding-contract discovery — that behavior must be owned by library crates on the public path, not reconstructed in each application or example.
+
+Rules:
+
+1. When examples or apps need ad-hoc compensating logic to reach canonical tui-vfx behavior, that's evidence of a library contract gap and must be treated as a defect to fix in the library.
+2. Canonical examples, starter templates, and demos must exercise the intended batteries-included path. They may demonstrate explicit overrides where a real app deliberately wants them, but they must not be the place where baseline tui-vfx behavior is assembled by hand.
+3. Public APIs preserve escape hatches for intentional overrides, but the default path must already deliver the behavior the product claims to support.
+
+Why: batteries-included is a commitment that outlives any individual example. Shipping compensating logic in examples teaches contributors that the library doesn't deliver on its own promise; it erodes trust and guarantees duplicate workarounds in every consumer. The correct response to a batteries-included gap is to fix the library, not to paper over it at the call site.
+
+## 23. Top-Down Consolidation Discipline (Rule of Three)
+
+tui-vfx has a growing surface area — named shader factories, Pattern variants, hint-namespace kinds, fragment definitions, scope variants, and more. Feature-by-feature organic growth produces quiet fragmentation. The consolidation discipline below is the active counter-force.
+
+Rules:
+
+1. **The rule of three.** When three or more units (shader factories, Pattern variants, hint kinds, fragment definitions) implement behavior that is conceptually the same, extract a shared primitive into the appropriate crate before the next unit adds a fourth parallel implementation.
+2. **Top-down periodic review.** At major milestones, survey the surface top-down — walk the full catalog, group by category, look for behavioral overlap. Do not wait for pain to become acute; the longer fragmentation sits, the more expensive consolidation becomes.
+3. **Shared vocabulary over convenient nicknames.** When a new type is needed, first ask "does this match an existing primitive?" Canonical types are the first choice; per-case aliases are acceptable only when they compose over a shared primitive.
+4. **Additive migration, never breaking churn.** Consolidation adds shared primitives; it does not delete or rename existing types in the same change. Per-case types that duplicate a shared primitive get marked "internal implementation detail" and are gradually retargeted over releases.
+5. **Abstractions earn their place.** Only abstract when the generalization is genuine — three cases is the threshold, not two. Forced or speculative abstraction is worse than honest duplication.
+6. **Document the consolidation rationale.** Every shared primitive extraction includes a rustdoc comment explaining *why* it exists and *which* cases motivated the extraction. Future contributors need to see the pattern the primitive captures, or they will re-fragment it.
+
+Why: organic feature growth produces quiet fragmentation that compounds into cognitive load on consumers and maintenance cost on the team. A healthy tui-vfx is one where new shader variants, Pattern variants, or fragment definitions feel natural to compose because the primitives they build from already exist. The V3 Pattern-as-separable-axis model (Decision 2) is this intention applied to shader composition; the V3 `$use` fragment library (Open Q #17) is the planned application to recipe composition.
+
+Related: Intention 24 establishes when *not* to abstract — one case is fine without a new primitive. Both rules must pass for any additive change.
+
+## 24. Library Changes Must Earn Their Place Through Real Value
+
+Every additive change — new helper, new macro, new type, new method, new module — must earn its place by passing a deliberate step-back review before it lands. tui-vfx is easy to add to and hard to subtract from once shipped. The cost of a helper that does not pull its weight is not zero: it becomes public surface area every future contributor must read, document, and preserve.
+
+Rules:
+
+1. **Real value, not abstract principle.** A change must solve a problem visible in current code at current scale. "This would be useful if we had ten of these" is not a reason to add when we have three. The threshold is a concrete pain point a reader can point at in the repository today.
+2. **Move toward ecosystem norms.** When the idiomatic ratatui, Rust, or serde answer already covers the use case, use it. A macro when a direct method call is clearer is a step backward. Novel solutions need to clear a higher bar than idiomatic ones.
+3. **Reduce lines and reduce complexity at the call site.** Measure before/after at the canonical call site. If "after" has more lines, more tokens, or more nesting than "before" for the common case, the change has not earned its place yet.
+4. **Improve readability, measured at the reader side.** The test is not "is it more concise for the writer" but "is it easier for a cold reader to understand what is happening." Macros, trait objects, and generic bounds move complexity from writer to reader; they must produce a concrete readability win large enough to justify the shift.
+5. **The step-back test is mandatory.** After designing a helper, before committing: stop and read the before/after side by side. Ask "would I rather maintain the after for three years, or the before?" If the answer is "the before," the helper has not earned its place.
+6. **Watch for the rationalization chain.** When the argument for a new helper requires more than two sentences, that length is a signal. Good helpers justify themselves in one sentence. When the justification keeps growing — "this *also* does X", "this *also* prevents Y" — the helper is accumulating rationalizations rather than earning them.
+7. **When a change fails the filter, back out cleanly and record the lesson.** Reverts are not failures; unexamined accretion is the failure. A clean revert with a commit message explaining what filter the change did not pass is strictly better than a helper that lingers because reverting "felt like backtracking."
+8. **This filter does not apply to real features.** Net-new features that solve real product problems (new shader primitives, new scope variants, validator capabilities) pass a different gate — MARKETING alignment, scoped correctly, tested. This filter specifically targets the seductive "let me add a little helper" category where cost is invisible until shipped.
+
+Why: the failure mode is a chain of plausible-sounding rationalizations ("this batches the call", "this reduces duplication", "this is more discoverable") that individually seem reasonable but together add cognitive load without reducing call-site work. The step-back test catches the failure mode before shipping.
+
+Related: Intention 23 establishes when to *extract* shared primitives; Intention 24 establishes when *not* to. Both rules must pass for any additive change.
+
+## 25. Actively Hunt for Infrastructure Wins That Automate Validation
+
+Throughout every phase of work, actively look for opportunities to turn a manual audit or one-time correction into automated validation infrastructure. When an audit finds a drift class that required human investigation to detect, ask immediately: "could a mechanical check have caught this at introduction?" If yes, build the check in the same session when scope allows.
+
+Rules:
+
+1. **Look for infrastructure wins during every substantive change.** After completing a manual correction, pause and ask what mechanical check would have caught it. Building the check now while context is fresh is high-ROI; waiting loses the insight.
+2. **Prefer mechanization of drift classes already seen.** Building a check that catches a drift you just manually fixed always pays off — by construction, the drift has already happened. Generic "just in case" infrastructure is speculative and frequently expires before paying off.
+3. **Step back top-down before picking the integration point.** Ask what layer the check should live at — shell script, Rust unit test, integration test, build script, generator tool, CI workflow, `just` recipe. Pick what serves the whole project, not just the file you're editing. Ad-hoc integration fragments the gate system.
+4. **Consider positive and negative effects before adding.** A check that catches one drift class cheaply but breaks three other workflows is net negative. Describe scope, cost, and failure mode in one paragraph before writing code; if the paragraph runs long, the check is probably wrong or wrongly placed.
+5. **Prefer the smallest intervention that delivers full coverage.** A 15-line bash assertion comparing two counts is often strictly better than a 200-line Rust tool — easier to read, debug, modify, and approve. Reach for heavier tooling only when the simpler assertion genuinely cannot express the invariant.
+6. **Integrate with existing gates rather than inventing new ones.** New entry points fragment the mental model of "how do I run the checks" and multiply places where drift can hide.
+7. **Document the resolution playbook inside the check.** When a drift check fails, the contributor hit by it should be able to read the error message or surrounding comment and know exactly what to do. A check that fails without explaining how to fix is a trap.
+
+Why: validation infrastructure is the single highest-leverage category of work in any long-lived project. Every check gets reused at zero marginal cost on every subsequent build. Manual audits cost time every time; mechanical checks cost time once. This intention is the explicit counter-force against "defer automation to later" — later never arrives.
+
+Related: Intention 24 gates *ergonomic helpers* that do not earn their place. Intention 25 actively pursues *validation infrastructure* that prevents classes of failure. Both rules must pass for any additive change; the overlap is zero because they target disjoint categories.
+
+## 26. Prefer a Single Source of Truth Over Parallel Seams
+
+When multiple consumers need the same semantic operation, the default answer is a single upstream implementation, not multiple parallel ones.
+
+Rules:
+
+1. **Shared semantics live once.** Version detection, loader dispatch, normalization, validation, compile-to-execution-plan, and similar semantic seams should have one canonical upstream implementation. Tools and downstream consumers call that seam; they do not rebuild it locally.
+2. **Do not create parallel loaders.** If two binaries need to load recipes, the answer is not "write another loader for the second binary." The answer is to improve the canonical loader surface until both binaries can use it.
+3. **Abstract at the seam, not at the call sites.** Repeated branching in tools ("if V2 do X, if V3 do Y") is a signal that the upstream seam is incomplete. Fix the seam rather than proliferating policy in consumers.
+4. **SSOT beats convenience duplication.** A local shortcut that duplicates semantic logic is only cheaper today. It becomes long-term drift, conflicting fixes, and silent behavior mismatches.
+5. **Preserve escape hatches without forking meaning.** Specialized consumers may still have policy-specific wrappers, but those wrappers compose over the canonical seam rather than replacing it.
+
+Why: duplicated semantic seams are how drift becomes normal. The V2→V3 migration work made this concrete: schema-version detection, version-aware dispatch, load/normalize/validate/compile routing, and canonical playback semantics all want to spread into tools unless they are explicitly centralized. SSOT is the durable counter-force. The loader architecture is the clearest example — there should be one canonical loader family in `tui-vfx-recipes`, not multiple parallel loaders across binaries.
+
+## 26. Consolidation Must Preserve Individual-Item Addressability
+
+When consolidating N independent units (recipe files, primitive definitions, fragment definitions, asset entries) into fewer containers via `template + variants`, `$use` fragment libraries, aggregator manifests, or future bundler primitives, the consolidation must preserve individual-item addressability for debug, preview, reference, and introspection use cases. The file path and unit identity are UX contracts with tooling, not just storage conventions.
+
+Rules:
+
+1. **Identify all consumers of individual-unit addressability before consolidating.** Debug players, file-pickers, documentation, search tooling, validators, probes, traces, external references. If any depend on per-unit addressability, that dependency must be addressed before consolidation lands.
+2. **Debug, preview, and reference recipes stay individual by default.** Their one-file-one-preview contract *is* their utility. Consolidation is for production recipe sets where individual items are implementation details.
+3. **Consolidation mechanisms that collapse addressable units must ship with tooling updates.** A canonical variant-URI scheme (e.g., `easing_family.json#back_out`) and validator + probe + trace support for that scheme are required. No consolidation lands until tooling supports its expanded form.
+4. **Metadata declares consumption mode.** Consolidated files declare intended consumption (`programmatic` / `individual_preview` / `both`). Tooling respects the declaration.
+5. **When in doubt, don't consolidate.** Duplication is cheaper than broken addressability. Abstract only when the generalization is proven and the tooling cost has been paid.
+6. **Retrospective corrections are valid and encouraged.** If a past consolidation broke addressability, fixing it by re-expanding or extending tooling is the right action — not living with the regression because "it was already shipped."
+
+Why: consolidation for file-count reduction serves programmatic consumers at the expense of human-facing and tool-facing consumers. Both matter. The `recipes/easing/easing_family.json` retrospective (26 individual files collapsed to 1 `template + variants` file, regressing the demo file-picker) is the canonical example of what this intention exists to prevent. This intention is Principle 4 of the V3 upgrade plan; it's codified here as a durable cross-version rule.
+
 ## 27. Byte-Source Loading at All Recipe Boundaries
 
 All recipe loaders, fragment resolvers, substitution APIs, and asset loaders accept byte-source abstractions — they do not assume filesystem access. Concrete implementations may read from the filesystem, embedded resources, zip archives, HTTP responses, or any `impl Read` source.
 
 Why: consumer apps ship in varied environments — embedded resources in binaries for distribution, wasm with no filesystem, mobile with sandboxed storage, CI with only in-memory fixtures. Filesystem-assuming loaders foreclose these cases. This intention preserves the option the V3 upgrade plan's distribution-and-packaging deferred-design section names; it does not require us to solve the packaging design today, only to not preclude it. It's a cheap discipline that costs nothing now and preserves every future option.
+
+## 28. Validator-Friendly Type Patterns at Boundaries
+
+Public types that cross crate boundaries — wire-format types, recipe schema types, playback items — use serde patterns that support trial deserialization: `#[serde(deny_unknown_fields)]` on tagged unions and strictly-typed structs; explicit discriminators; documented shape per variant. When a downstream consumer (gt-design's SSOT, or any future consumer) needs to validate our types at their own load time without duplicating our type definitions, our types must be pattern-compatible with that use.
+
+Why: strict-typed validation at the boundary is how consumers protect themselves from upstream drift. If our types are loose, their validation can't be tight. The pattern is low-cost on our side (serde attributes) and high-value for consumers (load-time validation instead of render-time surprises). gt-design's Intention 38 formalizes this from the consumer side — trial-deserialize our types against their typed definitions at SSOT load time. Our obligation is to make that possible by never shipping types that can't be cleanly trial-deserialized.
+
+## 29. The MARKETING / INTENTIONS Split
+
+`steering/MARKETING.md` answers *how we describe what we've built* — positioning, feature hierarchy, differentiators, talk-track. `steering/INTENTIONS.md` (this file) answers *how we decide what to build* — engineering discipline, architectural boundaries, naming conventions, project policy. The two documents are peers and stay in sync.
+
+Rules:
+
+1. When a new strategic decision shifts positioning (new primary audience, new headline feature, architecture pivot), update MARKETING.md's 90-second description first, then re-derive the 60s and 30s, then refresh callouts.
+2. When a new steering decision changes engineering discipline or architectural boundary, add or update an intention here; then check whether MARKETING.md's positioning needs a matching update.
+3. When the two documents diverge on fact or framing, neither is authoritative over the other — both must be brought back into agreement, with the code state as the tiebreaker.
+
+Why: a project that describes itself inconsistently loses the trust of both contributors and consumers. Keeping MARKETING and INTENTIONS as peers — one outward-facing, one inward-facing — acknowledges that both audiences matter and prevents either document from silently drifting.
 
 ## 30. Normalize vocabulary while normalizing math
 
@@ -723,6 +499,35 @@ tree, examples, docs, rustdocs, validators, and schema fields all use the same
 words. Ambiguous or varied language around defined fields makes the API feel
 less coherent, increases AI-authoring error rates, and forces humans to ask
 whether two different terms imply two different behaviors.
+
+
+## 33. Documentation Indexes Are Navigation Contracts
+
+Every `INDEX.md` file is a navigation contract for a busy repository, not a
+best-effort table of contents. When docs move, split, merge, promote from plan
+to core documentation, or get archived as closed-out design history, update the
+nearest relevant index in the same workset.
+
+Rules:
+
+1. If a file path changes, update every index that pointed at the old path before
+   committing.
+2. If a planning document becomes durable core documentation, add or move its
+   link into the core docs index rather than leaving it discoverable only through
+   the V3 planning tree.
+3. If a document becomes transient/closed-out history, say so in the index or
+   move it to an archive section instead of letting stale status masquerade as
+   live guidance.
+4. Keep index descriptions short and concrete. They should answer "start here
+   or not?" without making the reader inspect every file.
+5. Treat missing index updates as a documentation bug, especially in V3 work
+   where plans, as-built docs, generated docs, and tooling guides all coexist.
+
+Why: large repos punish treasure hunts. Indexes are how humans and AI agents
+recover context quickly without grep archaeology. Keeping them current preserves
+trust, reduces duplicate work, and prevents old planning notes from pretending
+to be today's map. The occasional joke is welcome; a stale map with a funny hat
+is still a stale map.
 
 
 ## 34. Pipeline-touch changes carry full family obligations
@@ -982,14 +787,13 @@ training, and recipe-browser filtering. Without an explicit marker,
 bindable recipes get lost in the noise.
 
 **Transitional framing.** This convention exists because the binding-
-loopback design is in flight: the strict-contracts validator has not
+loopback design is in flight and the strict-contracts validator hasn't
 yet typed the `requires_bindings` / `requires_assets` declaration
-shape, and that typing is the binding-loopback plan's L2 work. Once
-the validator can derive the same view from a recipe's declared
-binding contract — every recipe with a non-empty `requires_bindings`
-or `requires_assets` block IS bindable by definition — this marker
-may be retired or refined. Until that view exists, the explicit
-suffix + tag is the navigation aid.
+shape sibling's L2 work locks. Once the validator can derive the same
+view from a recipe's declared binding contract — every recipe with a
+non-empty `requires_bindings` or `requires_assets` block IS bindable
+by definition — this marker may be retired or refined. Until that
+view exists, the explicit suffix + tag is the navigation aid.
 
 Mechanical detail when retiring (forward note, not work today):
 
@@ -1105,6 +909,83 @@ Companion docs:
   the L3 phase notes that record the recipe-based badge
   architecture.
 
+
+---
+
+## 40. No landmines: fix root causes, no per-site `#[allow]`, no half-finished consolidations
+
+When a strict lint gate (e.g. `cargo clippy --all-targets -- -D warnings`)
+flags an issue, the answer is **never** a per-site `#[allow]` suppression.
+Find the root cause and fix it, set explicit project-level policy in
+`clippy.toml` with a comment explaining the rationale, or restructure the
+code so the lint doesn't fire. `#[allow]` is a landmine: the next code
+addition past the suppression silently inherits the bypass; the reason for
+the suppression decays in code review; and it hides downstream behaviour
+changes a future lint update would have caught.
+
+Rules:
+
+1. **No per-site `#[allow]` for clippy gates.** If the lint is firing on
+   real code-style debt, refactor the code. If the lint's default doesn't
+   fit the crate's nature (e.g. `too-many-arguments-threshold` for a
+   math/geometry crate where 8–9 positional `f32` args are idiomatic), set
+   the threshold globally in `clippy.toml` with a one-line comment
+   explaining why. That is a conscious, contributor-visible policy
+   decision; per-site suppressions are not.
+2. **`#[expect]` over `#[allow]` when suppression is genuinely required.**
+   `#[expect]` fails the build if the warning later goes away, so the
+   suppression doesn't outlive its reason. Reach for it only when (a)
+   restructuring is genuinely worse than the lint is right, and (b) a
+   short comment in source explains the trade-off.
+2A. **`-D warnings` is non-negotiable on the audit gate.** Weakening the
+    gate (`-W warnings`, dropping `--all-targets`, scoping out examples)
+    to "make it pass" is also a landmine. Fix the code or set the policy
+    in `clippy.toml`.
+3. **Upstream extractions must be byte-equivalent to the canonical
+   pre-lift implementation.** When lifting a primitive from one consumer
+   into a shared crate (e.g. `mixed-signals`), the upstream MUST reproduce
+   the canonical algorithm verbatim — exact magic numbers, exact shift
+   counts, exact normalization. Otherwise the migration silently changes
+   downstream behaviour (rain drop positions, spark seeds, render output)
+   and tests asserting range properties rather than exact values won't
+   catch it. Behaviour-preserving means **bit-equivalent**, not
+   *plausibly-similar*. Plan documents that say "behaviour-preserving
+   migration" mean exactly that.
+4. **No half-finished consolidations.** When extracting shared math or
+   collapsing duplicated patterns, every caller migrates in the same
+   workset that lands the upstream. A half-merged consolidation is a
+   landmine: the next contributor sees two implementations and has no way
+   to know which is canonical. Either complete the migration or revert
+   the extraction.
+5. **Disclosure obligation.** Subagent or solo work that hits an
+   out-of-scope clippy/test gate failure must surface it in the report,
+   not paper over it with `#[allow]`. Saying "I had to suppress X to keep
+   the lint clean" is a flag for the reviewer to evaluate the suppression;
+   silently landing the suppression is the failure mode this intention
+   exists to prevent.
+6. **Pre-commit verification.** Before declaring a workset done, run
+   `rg -n '#\[allow|#!\[allow'` over the diff. If new suppressions
+   appeared, justify each one in the commit message or remove it.
+
+Why: each landmine is silent at landing time and surfaces unpredictably
+later — sometimes weeks later, sometimes at a release boundary. The cost
+of fixing root causes once at landing is lower than the cost of a future
+contributor (or the same author) re-deriving the suppression's
+justification, then either re-suppressing it from inertia or removing it
+without understanding what it protected. The user's directive that
+prompted this rule was direct: *"stop leaving landmines."* Half-fixes
+look productive in the moment and degrade the codebase as durable
+infrastructure; this intention is the explicit counter-force.
+
+What this is *not* saying: it is not banning all `#[allow]` everywhere.
+Generated code, FFI shims, or genuinely platform-specific paths that
+clippy can't reason about may legitimately need one — but those are rare,
+documented, and reviewed. The default position when in doubt: don't
+suppress; fix.
+
+Companion memory: `feedback_no_landmines.md` in the auto-memory directory
+captures the same rule in a more conversational form for in-session
+recall.
 
 ---
 
@@ -1238,5 +1119,77 @@ upstream schema).
 
 ---
 
-<!-- <FILE>steering/NEW_INTENTIONS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.7.1-draft</VERS> -->
+## 43. Plans must orient against the codebase before claiming a contract exists
+
+Implementation plans (anything in `docs/design/`, work-packet documents,
+`steering/work-packets/*`, or planning prose in PR descriptions) must run
+an `ofpf-defs` / `ofpf-inspect` / `ofpf-content` orientation pass against
+every infrastructure contract the plan references. Steering docs describe
+a mix of shipped capabilities and aspirational/V3-planned ones; plans
+that treat both as equally true bridge the wrong gap and fail on contact
+with reality.
+
+Rules:
+
+1. **Verify symbols exist before referencing them.** If a plan says
+   "extend `Foo` with `Bar`" or "produces a `HintRef<f32>`," run
+   `ofpf-defs Foo` and `ofpf-defs HintRef` first. If results are empty,
+   the plan must either build the missing infrastructure as a phase or
+   work around its absence — never assume aspirational vocabulary is
+   shipped.
+2. **Inspect the actual file before describing how to extend it.**
+   `ofpf-inspect <path>` returns role/metrics/callers in one call. A
+   plan that says "Phase 2 adds a color-space option to `Gradient`"
+   should be preceded by inspecting `Gradient` to confirm the option
+   isn't already there.
+3. **Treat steering docs as 'what we want.' Treat the codebase as
+   'what we have.'** When `MARKETING.md` describes a V3 capability,
+   verify shipped status before planning against it. The codebase is
+   authoritative; steering docs may describe planned-but-unshipped
+   contracts (this is normal — steering documents direction).
+4. **Document the orientation evidence in the plan.** Include the
+   `ofpf-*` queries that confirmed (or refuted) the existence of
+   referenced infrastructure, so future readers can re-verify and
+   understand which contracts were assumed shipped at plan-write time.
+5. **When orientation surfaces existing infrastructure that
+   simplifies the plan, say so explicitly.** If Phase N's work was
+   already done in prior unrelated work, mark the phase superseded
+   with a note about what shipped and where. Don't silently re-do or
+   silently skip.
+
+Why: a plan reads as authoritative once it's written; if it claims a
+contract exists, downstream readers (humans or agents) take that as
+truth and build on it. The TTE port plan's v0.1.0 was assembled by
+reasoning over `MARKETING.md` + `INTENTIONS.md` + `pro/main.rs`. It
+assumed a `HintRef<f32>` / sampler-emits-hint contract existed because
+MARKETING.md describes it as a V3 capability. `ofpf-defs HintRef`
+returned 0 hits — planned, not shipped. It also missed that
+`ColorSpace` + `blend_colors(..., space)` + `Gradient.space` were
+already in place, so what the plan called "Phase 2 — Gradient HSL
+color-space option" was already done in prior v2 work. Two phases
+collapsed and one needed a redesign on contact with reality. Cost of
+the orientation pass at plan-write time: a few minutes. Cost of
+discovering the gap at implementation time: a redesign mid-flight.
+
+This is Intention 42 ("default to `ofpf-*` for codebase questions")
+applied to the planning lifecycle. Intention 42 says use the tools for
+"where is X?" questions; Intention 43 makes it concrete that *plans
+themselves* are full of "where is X?" questions, often phrased as
+"extend the existing X."
+
+What this is *not* saying: it is not banning aspirational planning. A
+plan may legitimately propose new infrastructure that doesn't exist
+yet — that's the whole point of planning. The intention is that the
+plan be **honest about the gap**: "this requires building HintRef
+infrastructure as Phase 0; today the codebase has no equivalent" is a
+valid plan shape. "Phase 3 produces a `HintRef<f32>`" without
+acknowledging that `HintRef` doesn't exist is the failure mode.
+
+Companion: `feedback_plan_from_codebase.md` in auto-memory captures
+the same rule conversationally; `steering/OFPF-TOOLS.md` is the
+practical reference for the orientation queries.
+
+---
+
+<!-- <FILE>steering/INTENTIONS.md</FILE> -->
+<!-- <VERS>END OF VERSION: 0.6.4</VERS> -->
