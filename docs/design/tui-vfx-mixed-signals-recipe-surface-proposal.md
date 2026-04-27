@@ -1,8 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md</FILE> - <DESC>Proposal: ergonomic, normalized signal-source surface for recipe authors</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>Surface audit + proposal triggered 2026-04-26 — articulate what's wired today between mixed-signals and the recipe layer, surface ergonomic + maintainability gaps, propose a curated core set and consolidation path without over-baking.</WCTX> -->
-<!-- <CLOG>0.2.0: replace upstream-physics Move 1 with a project-scoped facade (`tui_vfx_recipes::signals` module; if promoted later, crate name `tui-vfx-recipes-signals`); record headline maintenance-lever rationale per user direction.</CLOG> -->
-<!-- <CLOG>0.1.0: initial draft — current-state ASCII diagram, four observed gaps, four proposed moves, proposed-state ASCII diagram, scope-control gates.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>2026-04-27 audit + revised completion plan: Phases α and β shipped; γ partial at 43/58 facade variants. Capture missing-signal audit, set Phase 1 (close 15-variant gap), Phase 2 (recipe-side consolidation onto facade), Phase 3 (engine-vs-recipe-player delineation in docs).</WCTX> -->
+<!-- <CLOG>0.4.0: mark α and β complete; mark γ partial (43/58 variants); add 2026-04-27 status snapshot with missing-variant audit; add Phase 1/2/3 completion plan; record architectural framing (facade is recipe-JSON deserialization seam, not a substitute for mixed-signals).</CLOG>
 
 # tui-vfx ⇄ mixed-signals: recipe-author signal surface
 
@@ -22,6 +21,39 @@ Four moves to fix it without over-baking:
 4. **Autogen `SIGNALS_REFERENCE.md`** from `SignalSpec` rustdoc + a `signals.toml` authoring overlay — same pipeline that already generates `CAPABILITIES_REFERENCE.md`.
 
 None of these require breaking existing recipes. All are additive or consolidating.
+
+---
+
+## Status snapshot — 2026-04-27
+
+| Phase | Scope | Status | Evidence |
+|---|---|---|---|
+| α | Autogen `SIGNALS_REFERENCE.md` from rustdoc + `signals.toml` overlay | ✅ Complete | `docs/generated/SIGNALS_REFERENCE.md` + `docs/templates/signals.toml` ship; xtask handlers in `xtask/src/docs/{validate,merge,parse,extract,gen}_signals*.rs` |
+| β | Curated "Core 12" cheatsheet | ✅ Complete | 13 catalog entries flagged `in_core_12: true` in `tui_vfx_recipes::signals::vfx_recipe_signal_catalog`; reference doc surfaces a Core section |
+| γ | In-crate facade `tui_vfx_recipes::signals::*` (Option A) | ⚠️ Partial — 43/58 variants | Module ships `VfxRecipeSignalSpec`, `VfxIntoRecipeSignal`, `VfxRecipeSignalMeta`, `vfx_recipe_signal_catalog`. One deserialization site uses it (`v3/compile/fnc_build_composition_spec_from_compiled_plan.rs:635`). 15 mixed-signals primitives missing per audit below. |
+| δ | Symmetric Bindable family + `signal | binding` polymorphism | ⏸ Deferred → becomes Phase 2 of revised plan | Hard-gated on 1.2.A `VfxBindable<T, S>` (shipped in tui-vfx-core). |
+
+### Audit (2026-04-27): missing variants
+
+Cross-checked facade against `mixed_signals` public exports + `mixed_signals::SignalSpec`. **Zero hallucinations** — every primitive named in §1.1 and §3.1 exists in the library today.
+
+**15 missing variants; all are real upstream exports:**
+
+- **Random / RNG noise (9)** — `seeded_random`, `spatial_noise`, `gaussian_noise`, `poisson_noise`, `correlated_noise`, `pink_noise`, `per_character_noise`, `student_t_noise`, `impulse_noise`. All in `mixed_signals::random::*`. All in upstream `SignalSpec`.
+- **Envelopes (3)** — `linear_envelope`, `linear_decay`, `exponential_decay`. All in `mixed_signals::envelopes::*`. Only `linear_envelope` is in upstream `SignalSpec`; the facade can wrap the upstream Rust types directly without needing `SignalSpec` to grow.
+- **Composition (3)** — `vca_centered`, `phase_accumulator`, `phase_sine`. All in `mixed_signals::{composition,generators}::*`. All in upstream `SignalSpec`.
+
+**Wire-format compatibility risks identified:**
+
+- **`impulse_noise`** — upstream `ImpulseNoise` struct has 6 fields; `SignalSpec::ImpulseNoise` exposes 3 (`{seed, rate_hz, impulse_width}`). A `#[serde(transparent)]` wrapper would break SignalSpec-compatible JSON. Mitigation: inline struct mirroring the 3-field SignalSpec shape; build via `ImpulseNoise::with_width(rate_hz, seed, impulse_width)` in `into_recipe_signal()`.
+
+**Deferred (out of scope for this audit):**
+
+- **`weighted_mix`** — exists in `mixed_signals::composition` but is not Serialize/Deserialize (stores `Vec<(Box<dyn Signal>, f32)>`). Exposing it requires custom serde with `Vec<(VfxRecipeSignalSpec, f32)>` lowering at build time. Document in progress.txt; revisit when a recipe needs it.
+
+### Recipe corpus impact
+
+`grep -l '"type": "<discriminant>"' recipes/ debug_recipes/` for each of the 15 missing discriminants returned **0 hits in 14 cases and 1 hit for `spatial_noise`** (in `tui-vfx-recipes`). Closing the gap is purely additive; no in-tree recipe breaks.
 
 ---
 
@@ -567,5 +599,124 @@ The recipe-author surface and the type system end up consistent.
 
 **Acceptance also locks the headline maintenance lever:** locally-named/scoped interface point to drive recipe inputs; future swaps, plug-ins, exposure-limiting, and rename/remap stay in one place.
 
+---
+
+## 9. Revision (2026-04-27): completion plan after audit
+
+### 9.1 Architectural framing
+
+Two consumers, two paths — already separable in the codebase, but the delineation was undocumented.
+
+- **Engine API (direct consumers)** in `tui-vfx::*` crates uses `mixed_signals::*` directly. Field types like `factor: SignalOrFloat` stay engine-native. Direct-API consumers (gt-design factory integration, `pipeline_effects_showcase.rs`, future widget consumers) keep the full upstream signal palette and IDE completion. **No change to direct API.**
+- **Recipe player** in `tui-vfx-recipes` deserializes JSON through the facade and produces engine-native types at the seam. The facade's curation policy applies to JSON authoring only.
+- **`Binding(String)` (host-supplied runtime values)** is orthogonal. Apps drive per-frame values through `RuntimeBindings` regardless of which signal-expression authoring path produced the field's default.
+
+The facade is **a recipe-JSON deserialization seam, not a substitute for mixed-signals**. It lives one layer above the engine; the engine's contract with mixed-signals does not move.
+
+### 9.2 Phase 1 — close the 15-variant gap in the facade
+
+**Scope:** `VfxRecipeSignalSpec` reaches every Serialize/Deserialize-able primitive in `mixed_signals`. Catalog grows 43 → 58. No call-site migration.
+
+**Work packet:** `steering/work-packets/64-recipe-signal-facade-completion-phase1.md`.
+
+| Story | Pattern | Variants |
+|---|---|---|
+| US-1.1 | 8 transparent wrappers under `signals/random/` | `seeded_random`, `spatial_noise`, `gaussian_noise`, `poisson_noise`, `correlated_noise`, `pink_noise`, `per_character_noise`, `student_t_noise` |
+| US-1.2 | inline struct mirroring SignalSpec shape; build via `ImpulseNoise::with_width(...)` | `impulse_noise` |
+| US-1.3 | 3 transparent wrappers under `signals/envelopes/` (new family directory) | `linear_envelope`, `linear_decay`, `exponential_decay` |
+| US-1.4 | 3 inline structs with `Box<VfxRecipeSignalSpec>` recursion (mirrors existing `Add` / `Mix`) | `vca_centered`, `phase_accumulator`, `phase_sine` |
+| US-1.5 | wire enum + dispatch + catalog: 15 enum variants, 15 `into_recipe_signal()` arms, 15 catalog entries (`in_core_12: false`) | — |
+| US-1.6 | round-trip serde tests + bump `catalog_completeness` assertion 43 → 58 | — |
+| US-1.7 | rustdoc on every public item; metadata envelopes; one-line CLOG bumps | — |
+| US-1.8 | verification + cross-repo audit per Intention 41: all four repos `cargo build` clean; rg counts in progress.txt | — |
+
+**Phase 1 exit gates:** all 15 variants ship; catalog at 58; round-trip tests green; cross-repo `cargo build --workspace` clean; zero clippy warnings on `--all-targets -- -D warnings`; metadata envelopes complete; no `#[allow]` suppressions; progress.txt records audit evidence.
+
+### 9.3 Phase 2 — consolidate recipe-side signal access onto the facade
+
+**Scope:** every recipe-JSON deserialization site that accepts a signal expression routes through `VfxRecipeSignalSpec`. Engine field types (`SignalOrFloat`, `mixed_signals::*`) do not change. Direct-API consumers do not change.
+
+**Gates:** Phase 1 must ship green.
+
+**Work packet:** `steering/work-packets/65-recipe-signal-facade-consolidation-phase2.md`.
+
+**Migration sites identified by `ofpf-refs SignalSpec` against `tui-vfx-recipes`:**
+
+| Site | Current | Target |
+|---|---|---|
+| `src/v3/authoring/enum_v3_loopback_value.rs:35,71` | `V3LoopbackValue::Signal(SignalSpec)` | `V3LoopbackValue::Signal(VfxRecipeSignalSpec)`; lower at `to_signal_or_float()` via `into_recipe_signal()` |
+| `src/v3/compile/fnc_build_composition_spec_from_compiled_plan.rs:635` | already on facade | unchanged |
+| Recipe-deserialized `SignalOrFloat` fields (`fnc_derive_cursor_paint_ops_from_progress.rs`, `fnc_populate_effects.rs`, `cls_loopback_declaration.rs`, …) | engine-native `SignalOrFloat` directly from JSON | recipe-side adapter: accept `<number>` or `{"signal": <VfxRecipeSignalSpec>}`; lower to `SignalOrFloat` at the seam |
+| `BindableValue::Signal(SignalOrFloat)` | engine-native | **Decision 2A (confirmed):** keep engine-native; lower at the recipe seam. Smaller blast radius; preserves Intention 24. Promote to 2B (`RecipeBindableValue` with facade-typed signal) only if leakage is later discovered. |
+
+**Stories:**
+
+| Story | Description |
+|---|---|
+| US-2.1 | Migrate `V3LoopbackValue::Signal` to facade. Update lowering. Round-trip tests. |
+| US-2.2 | Audit recipe-side `SignalOrFloat`-typed fields; identify which are populated by JSON deserialization (recipe seam) vs. constructed in code. Recorded in progress.txt. |
+| US-2.3 | Implement a recipe-deserialization adapter (single helper) that accepts `<number>` or `{"signal": <VfxRecipeSignalSpec>}` and lowers to `SignalOrFloat`. |
+| US-2.4 | Apply the adapter at every recipe-deserialization site found in US-2.2. |
+| US-2.5 | Strict-contracts validator gate (Intention 25): a recipe authoring an upstream-only `SignalSpec` discriminant fails strict validation. |
+| US-2.6 | Cross-repo audit per Intention 41 across all four repos. |
+| US-2.7 | Verification: full workspace build + test green; recipe corpus validates clean; gt-design integration tests pass; pipeline_effects_showcase example unchanged. |
+
+**Phase 2 exit gates:** every recipe-JSON deserialization site that accepts a signal routes through `VfxRecipeSignalSpec`; strict-contracts validator rejects non-facade signal discriminants; cross-repo build green; zero behavior change for direct-API consumers.
+
+### 9.4 Phase 3 — engine-vs-recipe-player delineation in docs
+
+**Scope:** make the engine vs recipe-player split explicit in code-level rustdoc, examples, and steering. Closes the silent-delineation gap surfaced 2026-04-27.
+
+**Work packet:** `steering/work-packets/66-engine-vs-recipe-player-delineation-phase3.md`.
+
+| Story | Description |
+|---|---|
+| US-3.1 | `crates/tui-vfx/src/lib.rs` rustdoc: state that the engine API (`render_pipeline`, `CompositionSpec`, `MaskSpec`, `FilterSpec`, `SamplerSpec`, `ShadowSpec`) is a public, fully-supported direct-consumption surface. Recipes are a peer authoring layer in `tui-vfx-recipes`, optional for direct-API consumers. mixed-signals is the substrate; the engine consumes it directly. |
+| US-3.2 | `tui-vfx-recipes/src/lib.rs` and `src/signals/mod.rs` rustdoc: the facade is a recipe-JSON deserialization seam, recipe-only; direct-API consumers should `use mixed_signals::*` instead. |
+| US-3.3 | Add `examples/direct_api_signal_strength.rs` exercising `FilterSpec::Vignette { strength: SignalOrFloat::Signal(SignalSpec::Sine { ... }), ... }` constructed in Rust and passed to `render_pipeline()`. |
+| US-3.4 | Update this proposal doc to reflect Phase 1+2+3 ship state (final closeout). |
+| US-3.5 | Add Intention 44 to `steering/INTENTIONS.md`: "Recipe-JSON signal authoring goes through `VfxRecipeSignalSpec`; engine direct-API consumers use `mixed_signals::*` directly. The two surfaces are intentional and meet at `SignalOrFloat`-typed engine fields." Durable counter-force against future drift. |
+
+**Phase 3 exit gates:** delineation appears in `tui-vfx::lib.rs` rustdoc; one direct-API signal example ships; this doc updated; Intention 44 added to steering.
+
+### 9.5 Sequencing
+
+```
+Phase 1 (this packet)
+  ├── US-1.1 .. US-1.4 (variant additions, parallelizable per family)
+  ├── US-1.5 (wire enum + dispatch + catalog)        ← gates on US-1.1..1.4
+  ├── US-1.6 (tests)                                 ← gates on US-1.5
+  ├── US-1.7 (rustdoc hygiene)                       ← runs alongside
+  └── US-1.8 (verify + audit)                        ← gates on US-1.6
+                │
+                ▼
+Phase 2 (next packet; gates on Phase 1 green)
+  ├── US-2.1 (V3LoopbackValue migration)
+  ├── US-2.2 .. US-2.4 (audit + adapter + apply)
+  ├── US-2.5 (validator gate)
+  ├── US-2.6 (cross-repo audit)
+  └── US-2.7 (verify)
+                │
+                ▼
+Phase 3 (next packet; can overlap with Phase 2)
+  └── US-3.1 .. US-3.5 (docs + Intention 44)
+```
+
+### 9.6 Out of scope (across all three phases)
+
+- New mixed-signals primitives — Intention 9 (separate decision).
+- Replacing `SignalOrFloat` in engine field types — would break direct-API consumers.
+- App-driven SignalSpec injection at frame time — not used today; if needed later, an explicit `RecipeSignalRef` variant on the facade can absorb it.
+- `WeightedMix` exposure — non-Serialize upstream type; defer until a recipe needs it.
+- Replacement of the V3 binding layer (`Binding(String)`) — orthogonal; works with both paths.
+
+### 9.7 Decisions confirmed by user (2026-04-27)
+
+1. ✅ **Phase 1 only this session.** Phase 2 and 3 follow as separate packets.
+2. ✅ **Option 2A** for `BindableValue::Signal`: keep engine-native; lower at the recipe seam.
+3. ✅ **`WeightedMix` deferred.** Documented; revisit when a recipe needs it.
+4. ✅ **Intention 44** added in Phase 3 as the durable counter-force.
+5. ✅ **Spec audit:** zero hallucinations; all 15 missing variants are real upstream types.
+
 <!-- <FILE>docs/design/tui-vfx-mixed-signals-recipe-surface-proposal.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
