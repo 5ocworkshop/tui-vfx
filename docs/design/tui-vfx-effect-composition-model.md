@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-effect-composition-model.md</FILE> - <DESC>Architectural framing: named stages vs arbitrary chaining for effect composition; honest assessment under terminal constraints; recommendation + implications for the signal facade</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
-<!-- <WCTX>User direction 2026-04-26: signal facade decision is downstream of a larger question about effect-composition model. Articulate the two models, evaluate against terminal constraints, recommend stance, then make the signal facade fit the chosen model.</WCTX> -->
-<!-- <CLOG>0.1.0: initial draft — two models with ANSI diagrams, terminal-constraint analysis, recommendation (keep named stages + expand within-stage chaining + treat signals as parameter values not graph nodes), implications for the recipe-signals facade.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>2026-04-27: extend Model B with pre/post-pass slots around the four-stage element pipeline. Generalizes today's hardcoded shadow path; opens a clean home for glow, outline, vignette, scanline, backdrop blur, and scene-layer underlays/overlays. Resolves §9.4.</WCTX> -->
+<!-- <CLOG>0.4.0: add §12 enumerating the full deliverables list — trait surface, compositor port, V3 schema (draft + annotated), validator slot enforcement, debug/probe/trace tooling, authoring docs, rustdoc + capabilities autogen, V2→V3 lowering, corpus migration, tests, and release gates.</CLOG> -->
 
 # tui-vfx effect composition model
 
@@ -211,11 +211,13 @@ If V3 is also the moment to add the §5 follow-on moves (filter-discard bit, res
 To prevent over-baking:
 
 - **No node-graph runtime.** No node registry, no port-compat checker, no edge resolver, no per-cell graph traversal.
-- **No cross-stage reordering** (e.g. "filters run before masks in this recipe"). The four stages stay in fixed order.
+- **No cross-stage reordering** (e.g. "filters run before masks in this recipe"). The four element stages stay in fixed order.
 - **No structural signals.** Signals don't drive layer count, effect type selection, or recipe topology.
 - **No plugin loader.** Effects continue to be Rust impls compiled into the binary; recipes don't load `.so`/`.dll` plugins.
 
 These are explicit non-goals. Future re-evaluation requires a fresh proposal with concrete user demand, not speculative flexibility.
+
+**What is in scope (clarified by §11):** pre-pass and post-pass slots around the four-stage element pipeline. These are not "more steps" added to the per-cell loop — they are buffer-level operations with their own trait family (`PrePass`, `PostPass`). Generalizing today's hardcoded shadow path into a pre-pass slot is in scope and decided in §11; it is not a node-graph runtime.
 
 ---
 
@@ -224,7 +226,7 @@ These are explicit non-goals. Future re-evaluation requires a fresh proposal wit
 1. **Composite-effect template syntax.** SCSS-mixin-style (`"type": "ripple", "amplitude": 4` expands at recipe load) is one option; macro-style (`"@ripple": {...}`) is another. Pick one as part of the V3 schema discussion.
 2. **Where do composite templates live?** Probably alongside the signal facade — a sibling module in `tui_vfx_recipes`. Could even share the autogen pipeline.
 3. **Is the §5 follow-on work part of V3 or a separate Slice?** Argument for V3: schema cohesion. Argument for separate: V3 is already large; new trait surfaces deserve their own packet.
-4. **Does the four-stage taxonomy need a fifth slot?** Today's pipeline has Sampler / Mask / StyleShader / Filter. Some effects feel like they want a "compositor" or "blend" stage at the very end. Probably not, but flag for review during V3 design.
+4. ~~**Does the four-stage taxonomy need a fifth slot?**~~ **Resolved (2026-04-27).** The honest answer is *two* slots, not one, and they sit *around* the per-cell pipeline rather than inside it. See §11. Today's hardcoded shadow path is the canary; glow, outline, vignette, scanline, backdrop blur, and scene-layer underlays/overlays are the same shape and would otherwise each require their own fork.
 
 ## 10. Decision (2026-04-26)
 
@@ -233,7 +235,215 @@ These are explicit non-goals. Future re-evaluation requires a fresh proposal wit
 **Consequences:**
 - §5 follow-on moves are ready to schedule. Per `docs/design/tui-vfx-2026-04-26-handoff-outstanding.md` §8.3, the order is: resolved-coord fields on `VfxCellContext` first (smallest, demonstrates the bundle pattern is the right place to grow per-cell context), filter-discard bit second, composite-effect templates third.
 - V3 schema vocabulary locks Model B's stage names per §7. The composite-effect template syntax (open question §9.1) becomes part of the V3 schema discussion.
-- The four-stage taxonomy (Sampler / Mask / StyleShader / Filter) stays. A fifth "compositor"/"blend" slot (open question §9.4) is not added without a concrete driver.
+- The four element stages (Sampler / Mask / StyleShader / Filter) stay in fixed order. The "fifth slot" question (§9.4) is resolved separately by §11 — *around* the per-cell pipeline, not inside it.
+
+---
+
+## 11. Decision (2026-04-27) — Pre-pass / post-pass slots around the four-stage core
+
+**Accepted:** Generalize today's hardcoded shadow path into a closed two-slot framework around the canonical four-stage element pipeline. Shadow becomes the first pre-pass; glow, vignette, scanline overlays, backdrop blur, motion trails, and scene-layer underlays/overlays land naturally in the same framework.
+
+### 11.1 The pipeline shape
+
+```
+  recipe.pre_passes[]   →  Shadow, Outline, Reflection, BackdropBlur, …
+            ▼
+  ┌─────────────────────────────────────┐
+  │ ELEMENT PIPELINE (canonical 4)      │
+  │   Sampler → Mask → Shader → Filter  │   (per-cell, unchanged)
+  └─────────────────────────────────────┘
+            ▼
+  recipe.post_passes[]  →  Glow, Vignette, Scanline, MotionTrail, …
+            ▼
+                       dest
+```
+
+Pre-passes and post-passes operate on *buffers*, not per-cell. They have a different shape from the four element stages — `buffer in → buffer out + blend mode + canvas extent` — and live in their own trait family.
+
+### 11.2 The closed slot taxonomy
+
+Six slots, total. Closed vocabulary, in the same discipline as `Scope`:
+
+```
+  pre_pass
+  element.sampler
+  element.mask
+  element.shader
+  element.filter
+  post_pass
+```
+
+Adding a seventh slot requires a fresh proposal with a concrete driver, the same way §9.4 was treated. AI authors and contract-discovery tooling can hold the full set in head.
+
+### 11.3 Why pre/post and not a fifth-step-in-the-loop
+
+Three properties make these operations structurally different from the per-cell pipeline:
+
+1. **Generated content.** A pre-pass can synthesize source from nothing (shadow has no source cell to sample). The four-stage pipeline assumes you start from a source cell.
+2. **Extended canvas.** Pre/post-passes may operate on a canvas larger than `element_rect` (shadow extrudes beyond it; backdrop blur reads dest beyond it).
+3. **Destination-aware blending.** Composite modes read the existing dest cell to mix under or over it. The four-stage pipeline only writes; it never reads dest.
+
+A "fifth step" in the per-cell loop cannot honestly carry any of these. Forcing it would either (a) leak buffer-level concepts into a per-cell trait, or (b) silently grow the loop into a graph runtime, which §10 already rejected.
+
+### 11.4 Trait families
+
+The four element stages keep their existing traits (`Sampler`, `Mask`, `Shader`, `Filter`). Two new trait families land:
+
+| Trait | Slot | Shape |
+|---|---|---|
+| `PrePass` | `pre_pass` | `(canvas_extent, generate(buffer)) → buffer; declares blend mode for composition under element` |
+| `PostPass` | `post_pass` | `(canvas_extent, transform(buffer, dest)) → buffer; declares blend mode for composition over element` |
+
+The shadow code in `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs::render_pipeline_with_shadow` is the working sketch of the `PrePass` shape; formalize it into the trait, then port shadow onto it as the first instance.
+
+### 11.5 Slot applicability — trait shape implies the slot for free
+
+Most primitives are slot-locked by their trait shape. No metadata is required for the common case:
+
+```
+  impl PrePass  ⇒ valid only in pre_pass
+  impl Sampler  ⇒ valid only in element.sampler
+  impl Mask     ⇒ valid only in element.mask
+  impl Shader   ⇒ valid only in element.shader
+  impl Filter   ⇒ valid only in element.filter
+  impl PostPass ⇒ valid only in post_pass
+```
+
+(Listed in pipeline-execution order, top to bottom — pre-pass first, four element stages, post-pass last. Same convention applies everywhere in this doc and downstream authoring docs: never list slots in alphabetical or trait-introduction order, because pre-pass gets missed when it's not at the top.)
+
+The schema validator gets slot-correctness as a side-effect of typing.
+
+### 11.6 Multi-slot primitives — explicit declaration where the trait is ambiguous
+
+A small subset of primitives legitimately occupy more than one slot. They declare their applicability in the primitive registry:
+
+```
+  applicable_slots: ["element.shader", "post_pass"]
+```
+
+Examples in this category: `ColoredOverlay` (per-cell shader vs. whole-frame tint), `Pattern` (sampler redirect vs. backdrop generator), `Noise` (shader modulator vs. pre-pass texture).
+
+### 11.7 Naming discipline — family-named distinct primitives over slot-modulated semantics
+
+When the same conceptual operation has meaningfully different semantics per slot, prefer **distinct family-named primitives** (`CellTint` for shader, `FrameTint` for post-pass) over a single name with slot-dependent behavior. Reasons:
+
+- Flat contract discovery — each name has exactly one semantic.
+- Easier corpus search across the 500+ recipe library.
+- AI-authoring friendly — no slot-context reasoning required to predict behavior.
+
+Reserve same-name slot-modulated primitives for cases where the operation is genuinely identical across slots (rare).
+
+### 11.8 Slot validation lives on the contract-discovery surface
+
+The validator already reports recipe substitution and binding requirements (MARKETING tertiary 19). Slot occupancy and primitive applicability extend the same surface — one more table, same authoring guide, same introspection API. Do not build slot validation as a separate subsystem.
+
+### 11.9 Consequences
+
+- The shadow pathway in `render_pipeline_with_shadow` is the canary, not the contract. After the `PrePass` trait lands, shadow ports onto it and `render_pipeline` loses its hardcoded shadow fork.
+- Pipeline observability (Unit A) gets a uniform per-pass entered/finished pair instead of shadow-specific wiring.
+- The V3 schema gains two new top-level recipe fields (`pre_passes`, `post_passes`), each an ordered list. Default is empty for both — recipes that don't need passes are unaffected.
+- Open question §9.4 is resolved.
+- Effects that have been waiting for a home (glow, outline, vignette, scanline overlay, backdrop blur, motion trails) become schedulable.
+
+### 11.10 Non-goals (carried forward from §8 and refined)
+
+- The four element stages remain in fixed order. Pre/post passes do not unlock cross-stage reordering inside the element pipeline.
+- No node-graph runtime. Pre/post passes are an ordered list, not a DAG with typed ports between passes.
+- Pre/post passes do not introduce structural signals. The list of passes is recipe-static; signals continue to fill parameter slots within passes.
+- No plugin loader. Pre-pass and post-pass primitives are Rust impls compiled into the binary, like every other primitive.
+
+---
+
+## 12. Deliverables to land §11
+
+§11 is not done when the trait compiles. It is done when every consumer surface — schema, validator, debug tooling, authoring docs, autogen reference, and the recipe corpus — agrees that pre/post passes are first-class. The list below is the closed set of deliverables; nothing here is optional.
+
+### 12.1 Trait surface (tui-vfx-types or tui-vfx-compositor)
+
+- Define `PrePass` trait: `(canvas_extent, generate(buffer)) → buffer + blend mode`.
+- Define `PostPass` trait: `(canvas_extent, transform(buffer, dest)) → buffer + blend mode`.
+- Define `BlendMode` enum (initially: `GlyphOverlay`, `GradeUnderlying`, `BlendUnderlying`, `Additive`, `Screen`; lifted from existing shadow `ShadowCompositeMode` and extended).
+- Define `CanvasExtent` shape (`Element` for same-rect, `Extruded { extra_w, extra_h, offset_x, offset_y }` for shadow-style passes).
+
+### 12.2 Compositor pipeline port (tui-vfx-compositor)
+
+- `render_pipeline` gains an ordered driver: `pre_passes → element pipeline → post_passes`.
+- Port `Shadow` onto `PrePass` as the first concrete pre-pass primitive.
+- Delete the hardcoded shadow fork in `render_pipeline_with_shadow` once the port reaches rendering-equivalence with the legacy path (see §12.10 release gate).
+- The four-stage element pipeline is unchanged.
+
+### 12.3 V3 draft schema (`docs/design/tui-vfx-v3-schema-draft.json`)
+
+- Add `pre_passes: []` and `post_passes: []` as top-level recipe fields with documented annotations.
+- Add a worked-example pre-pass entry (shadow, since it's the canary).
+- Add a worked-example post-pass entry (vignette or scanline overlay — pick one and ship it).
+- Per-pass entry shape: `{ kind, payload, blend_mode, canvas_extent }`.
+- Update the document's TOP-DOWN AUTHORING MODEL block to name pre/post passes as recipe-level slots.
+- Document the six-slot taxonomy in the comment header.
+
+### 12.4 Annotated schema (the same draft file's `#` annotations)
+
+- Per-field rationale comments on `pre_passes` / `post_passes`: why they exist, when to use them, and the closed slot taxonomy.
+- Cross-reference §11 of this doc by path.
+- Document the `applicable_slots` registry surface where a primitive declaration lives (multi-slot primitives only).
+
+### 12.5 Recipe schema validator (tui-vfx-recipes / pipeline-validator)
+
+- Reject element-stage primitives placed in `pre_passes` / `post_passes`.
+- Reject pre/post-pass primitives placed in element-stage arrays.
+- Honour `applicable_slots` for multi-slot primitives; reject misplacement.
+- Reject empty / malformed canvas extents on extruded passes (e.g. zero offset, negative extras).
+- Extend the contract-discovery output: report which slots a recipe occupies and which primitive families.
+- Strict-contracts mode: reject recipes that reference a primitive name without a registered slot affinity (no silent default).
+
+### 12.6 Debug tooling (tui-vfx-debug, tui-vfx-probe, pipeline-validator)
+
+- `PipelineStageKind` gains `PrePass` and `PostPass` variants. Existing `Shadow` variant deprecates and aliases to `PrePass { kind: "shadow" }` during the migration window, then is removed.
+- Pipeline observability (Unit A): pre-pass and post-pass entered/finished pairs emitted via the shared per-stage helper. The shadow-specific stage emit folds into this.
+- `CompositorInspector` callbacks: `on_pre_pass_entered`, `on_pre_pass_finished`, `on_post_pass_entered`, `on_post_pass_finished`. Per-cell `on_shadow_cell_applied` generalizes to `on_pre_pass_cell_applied` (or stays specialised — pick one and document the choice in the rustdoc).
+- `pipeline-validator --probe` dumps per-pass buffers at named stages alongside per-element-stage probes.
+- `--debug-recipes-qc` fingerprints include pre/post-pass output so drift detection covers passes too.
+- Trace events: per-pass blocks emitted with the same step_id discipline existing stages use. No special-casing.
+
+### 12.7 Authoring docs
+
+- New top-level section in the V3 authoring guide (sibling of "Effects", "Scopes", "Signals"): **Passes** — explains the six-slot model, when to reach for a pre-pass vs. a post-pass, and how passes interact with masks (writeback gate semantic).
+- Per-primitive authoring guide entries gain a `Slot:` line listing the slot(s) the primitive is valid in. Single-slot primitives quote one; multi-slot primitives quote all and explain the per-slot semantic.
+- Document the family-named distinct primitive convention (`CellTint` vs `FrameTint`) and when to apply it.
+- Migration note: V2 `shadow:` field becomes V3 `pre_passes: [{ kind: "shadow", ... }]`.
+
+### 12.8 Rustdoc + autogen pipeline
+
+- `PrePass`, `PostPass`, `BlendMode`, `CanvasExtent` get full rustdoc on the trait/type and every public item: purpose, contract, expected canvas semantics, blend-mode interaction, examples.
+- Every new primitive impl carries rustdoc on its public methods describing slot semantic and any per-slot behavior differences.
+- `docs/templates/capabilities.toml` gains:
+  - The two new trait families as capability categories.
+  - The six-slot taxonomy as a vocabulary entry.
+  - Per-primitive slot-applicability metadata for the capabilities manifest.
+- `cargo xtask docs generate` regenerates `docs/generated/` so the capability manifest, schema reference, and authoring reference all reflect §11. CI freshness check (`cargo xtask docs check`) catches drift.
+- The signal facade autogen (`docs/templates/signals.toml`) is unaffected; passes consume signals through the same `ParamValue<T>` surface.
+
+### 12.9 V2 → V3 lowering and corpus migration
+
+- `docs/design/tui-vfx-v3-upgrade-plan/57_v2_to_v3_lowering_rules.md` gains a rule: V2 top-level `shadow:` lowers to a single-entry `pre_passes:` array in V3.
+- The migration script (xtask or in-tree tooling) mechanizes the lowering across the recipe corpus.
+- Recipes that use shadow-shaped effects ad-hoc (e.g. inlined scene-layer underlays) get migrated to pre/post-pass form as part of the cutover. The migration log records every change.
+
+### 12.10 Tests and release gates (`60_testing_release_gates.md`)
+
+- Unit tests for `PrePass` / `PostPass` traits (round-trip, canvas extent, blend mode contract).
+- Pipeline integration tests confirming the three-block ordering: `pre_passes → element pipeline → post_passes`.
+- Validator tests for slot-misplacement rejection (every misplacement category gets one test).
+- Probe/trace fixture tests covering pre-pass and post-pass entered/finished emission.
+- **Rendering-equivalence release gate (Concern F discipline):** the pre-pass shadow port must produce a rendered output identical to the legacy `render_pipeline_with_shadow` fork across the full debug-recipes corpus, fingerprint-checked. The legacy fork stays in-tree until the gate is green; only then does it delete.
+- Probe-fidelity gate: pre/post-pass probe events must round-trip through the trace recorder with the same step_id / payload discipline as element-stage events.
+- Performance gate: `bench_full_trace_60fps` continues to pass with one shadow pre-pass + one post-pass primitive (vignette) active. The 16.7 ms / 60 fps budget is non-negotiable.
+
+### 12.11 Memory hygiene
+
+- No partial implementation. The slot taxonomy is closed and curated; every slot must be wired through the full stack (trait → schema → validator → debug → authoring → autogen → tests). Partial coverage is stop-and-ask, not silent default.
+- No "accepted but inert" schema fields. `pre_passes` and `post_passes` ship fully wired in the same V3 phase that introduces them, or they don't ship.
+- Rustdoc is updated in the same change that adds or modifies any public item touched by §11; autogen runs and freshness check passes before the change merges.
 
 <!-- <FILE>docs/design/tui-vfx-effect-composition-model.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
