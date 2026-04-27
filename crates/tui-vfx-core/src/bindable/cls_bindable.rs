@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-core/src/bindable/cls_bindable.rs</FILE> - <DESC>Generic VfxBindable<T, S> envelope: Literal | Binding | Signal with S = Never default for non-signal types. Hand-written ConfigSchema gates on T: ConfigSchema and S: BindableSignal so non-signal instantiations omit a phantom Signal variant from the schema. Specialized inherent impls per (T, S) preserve the three legacy evaluate signatures without forcing a single shape across the family.</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>Buy-once sweep finding 1.2.A — collapse BindableU16, BindableString, BindableValue into one generic envelope so future additions (BindableF32, BindableColor, signal-facade phase δ) land as one-line type aliases instead of ~250 LOC of parallel scaffolding.</WCTX>
-// <CLOG>0.1.1: rustdoc audit — sweep stale Infallible references to Never (the project-local uninhabited type used because std::convert::Infallible cannot be (de)serialised under serde's orphan rules); add a one-line rustdoc to the From<T> blanket; clarify the ConfigSchema impl rationale.</CLOG>
+// <VERS>VERSION: 0.1.2</VERS>
+// <WCTX>Packet 1.9.A.followup US-005: add CONFIGSCHEMA-JUSTIFICATION marker to the existing rustdoc block above the generic VfxBindable<T,S> ConfigSchema impl so the audit gate sees the justification at the source site.</WCTX>
+// <CLOG>0.1.2: PATCH — extend the existing /// rustdoc block above the generic ConfigSchema impl with a CONFIGSCHEMA-JUSTIFICATION line (kind=derive-cannot-handle-generic-T). Refresh the prior rustdoc to point at lib.rs (the live macro) rather than the dead fnc_impl_config_schema.rs sibling. No behavior change.</CLOG>
 
 use mixed_signals::traits::SignalContext;
 use mixed_signals::types::SignalOrFloat;
@@ -267,13 +267,22 @@ where
 }
 
 /// Hand-written [`ConfigSchema`]. The `#[derive(ConfigSchema)]` macro at
-/// `crates/tui-vfx-core-macros/src/fnc_impl_config_schema.rs` forwards
-/// generic parameters but does **not** emit
-/// `where T: ConfigSchema, S: ConfigSchema` bounds (sweep finding 1.9.A
-/// is the queued macro improvement). Until that ships, this hand-written
-/// impl gates on the bounds explicitly and consults [`BindableSignal`] so
-/// non-signal instantiations (where `S = Never`) emit a two-variant
-/// schema instead of an inhabited-but-unreachable three-variant one.
+/// `crates/tui-vfx-core-macros/src/lib.rs` forwards generic parameters
+/// but does **not** emit `where T: ConfigSchema, S: ConfigSchema` bounds
+/// (sweep finding 1.9.A is the queued macro improvement). Until that
+/// ships, this hand-written impl gates on the bounds explicitly and
+/// consults [`BindableSignal`] so non-signal instantiations (where
+/// `S = Never`) emit a two-variant schema instead of an
+/// inhabited-but-unreachable three-variant one.
+///
+/// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-generic-T: the live
+/// derive macro at tui-vfx-core-macros/src/lib.rs:352 forwards
+/// `where_clause` verbatim and does NOT synthesize `T: ConfigSchema`
+/// bounds for type parameters used in the body. Additionally, the
+/// `S::signal_variant_schema()` runtime trait dispatch that conditionally
+/// includes the Signal variant is not expressible in the derive's
+/// compile-time emission. The macro-extension packet that would unblock
+/// this is tracked separately.
 impl<T, S> ConfigSchema for VfxBindable<T, S>
 where
     T: ConfigSchema + Clone + PartialEq + 'static,
@@ -475,4 +484,4 @@ impl From<SignalOrFloat> for VfxBindable<f32, SignalOrFloat> {
 }
 
 // <FILE>crates/tui-vfx-core/src/bindable/cls_bindable.rs</FILE> - <DESC>Generic VfxBindable<T, S> envelope: Literal | Binding | Signal with S = Never default for non-signal types. Hand-written ConfigSchema gates on T: ConfigSchema and S: BindableSignal so non-signal instantiations omit a phantom Signal variant from the schema. Specialized inherent impls per (T, S) preserve the three legacy evaluate signatures without forcing a single shape across the family.</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.1.2</VERS>

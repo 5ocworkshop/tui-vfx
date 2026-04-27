@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-content/src/pool/cls_pool.rs</FILE> - <DESC>Generic content-randomization pool. Five sibling pool types collapsed into one type; concrete pools are aliases (ImagePool / FontPool / EffectPool / PresetPool) — TextPool stays as a thin newtype because it sanitizes on construction.</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Buy-once sweep finding 1.2.B — five hand-rolled pool types collapse into one Pool&lt;T&gt; carrying the canonical { items, policy } shape and { new, pick, is_empty } API. Type aliases preserve the public names consumers import.</WCTX>
-// <CLOG>0.1.0: introduce Pool&lt;T&gt; with new / pick / is_empty / Default. Hand-written ConfigSchema impl gated on T: ConfigSchema (the derive macro does not yet emit the bound). Eq via separate manual impl gated on T: Eq.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>Packet 1.9.A.followup US-005: add CONFIGSCHEMA-JUSTIFICATION marker above the hand-written Pool&lt;T&gt; ConfigSchema impl now that the audit gate is operating against drained baseline entries.</WCTX>
+// <CLOG>0.1.1: PATCH — add a CONFIGSCHEMA-JUSTIFICATION comment above the hand-written ConfigSchema impl (kind=derive-cannot-handle-generic-T). The live derive macro does not synthesize T: ConfigSchema bounds; macro extension is a separate packet. No behavior change.</CLOG>
 
 //! Generic content-randomization pool.
 //!
@@ -65,6 +65,7 @@ impl<T> Pool<T> {
     }
 }
 
+// CONFIGSCHEMA-JUSTIFICATION: derive-cannot-handle-generic-T: the live derive macro at tui-vfx-core-macros/src/lib.rs:352 forwards `where_clause` verbatim and does NOT synthesize a `T: ConfigSchema` bound. The struct definition here intentionally does not carry the bound (callers like `Pool<Preset>` rely on Preset's existing ConfigSchema impl, not on a struct-level constraint), so the only way to land the schema today is hand-written. Macro extension to synthesize ConfigSchema bounds is a separate packet.
 impl<T: ConfigSchema> ConfigSchema for Pool<T> {
     fn schema() -> SchemaNode {
         SchemaNode::Struct {
@@ -150,4 +151,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-content/src/pool/cls_pool.rs</FILE> - <DESC>Pool&lt;T&gt;</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>
