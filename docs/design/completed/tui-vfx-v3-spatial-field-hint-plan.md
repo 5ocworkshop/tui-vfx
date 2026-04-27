@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-spatial-field-hint-plan.md</FILE> - <DESC>Design plan for spatial signals, typed field hints, and first-class chained visual fields in V3</DESC> -->
-<!-- <VERS>VERSION: 0.17.0</VERS> -->
-<!-- <WCTX>Keep the spatial field/hint plan aligned with the as-built V3 timing model and landed shared-consumer proofs, so the next tranche starts from the remaining showcase/runtime gaps instead of repeating complete field-hint work.</WCTX> -->
-<!-- <CLOG>0.17.0: record the XFC-02 post-Parallel sampler/style-effect consumer proof. 0.16.0: record the XFC-01 cross-family ordered sequence proof spanning sampler/filter/mask/shader/style-effect lanes. 0.15.0: record that SCHED-03 classifies field-hint Parallel joins as serial-required unless consumers are after the join and the join semantics are preserved. 0.14.0: record the time-varying scheduler Parallel join proof where a field feeds filter output and then mask input after the join. 0.13.0: record the scheduler-facing parallel-join I/O proof fixture. 0.12.0: record the binding-gated scene-layer local I/O proof. 0.11.0: record the content-before-pipeline proof where typewriter source generation feeds a sourced-output filter/shader chain. 0.10.0: record the scene-layer-local proof where spatial_signal, filter sourced output, and shader consumer run inside one scene layer pipeline. 0.9.0: record the mask consumer proof where a sourced output drives checkers.cell_size. 0.8.0: record the sourced-output proof where a filter consumes a field, re-emits its bound payload field, and drives a downstream shader. 0.7.0: record the nested style-effect shader consumer proof where dotted io.inputs bind an upstream field hint into payload.shader.intensity. 0.6.0: record the first Phase 5 Madeira asset-contract slice: braille flag artwork now resolves through requires_assets and has a scene debug fixture proving the reusable token path. 0.5.0: record the Phase 4 shared field-hint proof where one spatial_signal drives both displacement and field-correlated shading through a sequenced recipe-side debug fixture. 0.4.0: record that the first spatial-coordinate leaves and the basic cell-position threading work are already landed across mixed-signals and the current runtime seams, and shift the next active tranche toward typed field hints and real producer/consumer runtime support. 0.3.0: clarify the as-built timing model so docs distinguish normalized phase/loop progress from monotonic elapsed time and state that cadence-driven motion consumes elapsed time. 0.2.0: add the two-basis spatial model (cell basis vs surface/frame basis), explain why optical falloff consumers like vignette should not redefine the existing sample_radius leaf, and propose companion surface-space leaves as the next foundational mixed-signals extension. 0.1.0: initial design note defining the recommended staged path: mixed-signals spatial-coordinate leaves, typed per-step field hints, layer-model threading, and field-driven shader/filter consumers.</CLOG> -->
+<!-- <VERS>VERSION: 0.18.0</VERS> -->
+<!-- <WCTX>Close out the plan: Madeira showcase (Phase 6) is the working V3 reference; braille-dotfield consumers explicitly deferred to a post-release tranche.</WCTX> -->
+<!-- <CLOG>0.18.0: mark Phase 5 and Phase 6 landed; defer braille-dotfield to a post-release tranche.</CLOG> -->
 
 # tui-vfx V3 spatial field + hint plan
 
@@ -763,7 +763,7 @@ consumers remain open.**
   and future batching preserves the current hint snapshot/merge contract)
 - XFC-01 root cross-family sequence ✅ (`v3_cross_family_sequence_disjoint.json` spans sampler, filter, mask, shader, and style-effect lanes with authored I/O edges)
 - XFC-02 post-Parallel sampler/style consumers ✅ (`v3_scheduler_parallel_join_sampler_style.json` keeps sibling branches isolated, then feeds sampler amplitude and spatial style-effect shader intensity after the join)
-- broader showcase/braille-dotfield consumers remain follow-up work
+- braille-dotfield consumers deferred to a post-release tranche
 
 As-built proof artifacts:
 
@@ -823,14 +823,12 @@ style-effect shader intensity.
 
 ### Phase 5 — restore richer `madeira_flag`
 
-**Status: first asset-agnostic Madeira slice landed; richer showcase parity still
-in progress.**
+**Status: landed.** The Madeira flag recipe is the working showcase artifact;
+richer braille-dotfield consumer work is deferred to a post-release tranche.
 
-- move the flag from approximation subset back toward its intended semantics ✅
-  first step: contract-backed braille-dotfield artwork
-- keep fireworks procedural until/if they justify a more general particle-field substrate
-- keep building toward richer Madeira parity on top of the reusable
-  `braille_flag_field` path instead of re-embedding artwork in Rust
+- flag moved from approximation subset back to its intended semantics ✅
+- contract-backed braille flag artwork via `requires_assets` ✅
+- fireworks remain procedural until a particle-field substrate justifies generalization
 
 As-built proof artifacts:
 
@@ -840,20 +838,10 @@ As-built proof artifacts:
 
 ### Phase 6 — showcase parity and demonstration
 
-After the generic Phase 4 proof, the project should explicitly re-create the
-`/usr/projects/madeira-flag` demo as a first-class V3 recipe showcase using the
-new capabilities:
-
-- spatial signal field generation
-- typed hint/field propagation
-- displacement from upstream fields
-- field-correlated shading
-- scene-layer composition
-
-The point is not only compatibility.
-It is also to create a **showcase recipe** that demonstrates why the new
-substrate matters and gives the project a strong “look what V3 can do now”
-reference artifact.
+**Status: landed.** `recipes/madeira_flag/madeira_flag.json` is the first-class
+V3 recipe showcase, exercising spatial signal field generation, typed hint/field
+propagation, field-correlated shading, and scene-layer composition over the
+contract-backed braille flag asset.
 
 ---
 
