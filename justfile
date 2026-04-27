@@ -174,8 +174,8 @@ fmt:
 fmt-check:
     cargo fmt --all -- --check
 
-# Run all checks (fmt, lint, test, docs-all-check)
-check-all: fmt-check lint test docs-all-check
+# Run all checks (fmt, lint, test, docs-all-check, audit-all)
+check-all: fmt-check lint test docs-all-check audit-all
     @echo "All checks passed!"
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -323,7 +323,7 @@ audit-all: audit-configschema
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Run the full CI pipeline locally
-ci: fmt-check lint test docs-all-check
+ci: fmt-check lint test docs-all-check audit-all
     @echo ""
     @echo "══════════════════════════════════════════"
     @echo "  CI simulation passed!"

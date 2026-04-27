@@ -215,10 +215,7 @@ fn unrecognized_kind_fails() {
 
 #[test]
 fn qualified_path_unrecognized_kind_is_hard_error() {
-    let fixture = make_fixture(&[(
-        "crates/foo/src/lib.rs",
-        QUALIFIED_PATH_UNRECOGNIZED_IMPL,
-    )]);
+    let fixture = make_fixture(&[("crates/foo/src/lib.rs", QUALIFIED_PATH_UNRECOGNIZED_IMPL)]);
     write_baseline(fixture.path(), "schema_version = 1\n");
 
     let result = run_audit(fixture.path());
