@@ -15,5 +15,6 @@ prompts/
 CONTEXT.md
 TASKS.md
 .omx/
+.omc/
 PROMPT_*.md
 pro/
