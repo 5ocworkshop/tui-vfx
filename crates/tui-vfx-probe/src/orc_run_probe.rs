@@ -1,12 +1,12 @@
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
-// <WCTX>Loopback Phase L5 (deferred follow-on): splice ProbeSceneSpec.loopback_fired_keys onto ProbeRuntimeContext so collect_loopback_fire_diagnostics emits one Warning per key, and append those diagnostics alongside collect_basic_diagnostics in the report aggregation.</WCTX>
-// <CLOG>Wire scene.loopback_fired_keys → runtime.loopback_fired_keys (synthesizing a runtime context if none was inferred from composition) and call collect_loopback_fire_diagnostics alongside collect_basic_diagnostics in the report-builder scaffold.</CLOG>
+// <VERS>VERSION: 1.0.0</VERS>
+// <WCTX>§8.7 probe-fidelity fix — replace all-Background placeholder source roles with glyph-inferred roles so Role(Text)-scoped shaders match cells correctly</WCTX>
+// <CLOG>1.0.0: replace RoleMap::all_background placeholder with infer_roles_from_grid so role-scoped shaders (e.g. region: TextOnly lowered to Role(Text)) produce non-zero modified_cells; removes the A.2 Sub-plan C TODO placeholder</CLOG>
 
 use serde_json::{Value, json};
 use tui_vfx_compositor::pipeline::render_pipeline_with_spec;
 use tui_vfx_compositor::pipeline::{CompositionPlaybackTiming, CompositionSpec};
-use tui_vfx_types::{Grid, RoleMap, RoleTag, SemanticScene};
+use tui_vfx_types::{Grid, RoleTag, SemanticScene};
 
 use crate::cls_probe_cell::ProbeCell;
 use crate::cls_probe_diff_report::ProbeDiffReport;
@@ -20,6 +20,7 @@ use crate::cls_probe_summary::ProbeSummary;
 use crate::cls_probe_timing::ProbeTiming;
 use crate::cls_probe_widget::ProbeWidget;
 use crate::fnc_build_owned_grid::build_owned_grid;
+use crate::fnc_infer_roles_from_grid::infer_roles_from_grid;
 use crate::fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
 use crate::fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 use crate::fnc_collect_loopback_fire_diagnostics::collect_loopback_fire_diagnostics;
@@ -44,6 +45,21 @@ use crate::fnc_variant_name_from_debug::variant_name_from_debug;
 ///
 /// Phase 1 compares each rendered widget-local cell against the original source cell to
 /// determine whether it counts as `modified`.
+///
+/// # Source role inference
+///
+/// The probe infers a `RoleMap` from the source grid using
+/// [`infer_roles_from_grid`]: cells with a non-whitespace `ch` receive
+/// `RoleTag::Text`; all others receive `RoleTag::Background`. This ensures
+/// that role-scoped shader predicates such as `Role(Text)` — which appear
+/// in legacy `region: "TextOnly"` recipes — match the correct cells rather
+/// than matching nothing.
+///
+/// Callers that need a different role assignment (e.g. `Role(Border)` for
+/// decorative border recipes) must supply a producer-side role map directly
+/// via the compositor bridge. This inference covers the most common legacy
+/// probe case; Sub-plan C delivers producer-supplied role tagging for the
+/// full variety of first-class roles.
 pub fn run_probe(
     scene: &ProbeSceneSpec,
     request: &ProbeRequest,
@@ -98,14 +114,15 @@ pub fn run_probe(
     }
 
     let mut inspector = ProbeInspector::default();
-    // Probe has no semantic role information — pass all-Background source
-    // roles and wrap the destination grid in a SemanticScene so the
-    // role-aware pipeline signature is satisfied. A.2 uses
-    // RoleMap::all_background everywhere as the no-info default; real
-    // widget/recipe role-tagging is Sub-plan C's work.
-    let source_w = source.width() as u16;
-    let source_h = source.height() as u16;
-    let source_roles = RoleMap::all_background(source_w, source_h);
+    // Infer source roles from the rendered source grid so that role-scoped
+    // scope predicates (e.g. `Role(Text)` from legacy `region: "TextOnly"`)
+    // match the cells that contain non-whitespace glyphs rather than
+    // matching nothing. The inference assigns `RoleTag::Text` to every cell
+    // whose `ch` is not whitespace and `RoleTag::Background` to all others.
+    // This is the lightest contract that restores probe fidelity for the
+    // `Role(Text)` scope without requiring a producer-supplied role map
+    // (Sub-plan C territory). See §8.7 in the handoff doc.
+    let source_roles = infer_roles_from_grid(&scene.source);
     let mut destination_scene =
         SemanticScene::from_grid_with_default_role(destination_grid, RoleTag::Background);
     render_pipeline_with_spec(
@@ -472,4 +489,4 @@ pub fn run_probe_diff(
 }
 
 // <FILE>crates/tui-vfx-probe/src/orc_run_probe.rs</FILE> - <DESC>Run one structured pipeline probe</DESC>
-// <VERS>END OF VERSION: 0.9.0</VERS>
+// <VERS>END OF VERSION: 1.0.0</VERS>

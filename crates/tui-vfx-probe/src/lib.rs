@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>Probe-side diagnostics, operational analysis, and focused cell lookup exports</WCTX>
-// <CLOG>MINOR: Export a widget-cell lookup helper so direct and recipe-side CLIs can expose one-cell root-cause workflows without hand-rolled report scanning</CLOG>
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>§8.7 probe-fidelity fix — add infer_roles_from_grid helper and re-export it</WCTX>
+// <CLOG>0.8.0: add fnc_infer_roles_from_grid module and re-export infer_roles_from_grid so probe consumers can infer source roles from rendered grid content without the all-Background placeholder</CLOG>
 
 //! Engine-owned structured pipeline observability for `tui-vfx`.
 //!
@@ -55,6 +55,7 @@ mod cls_probe_trace_event;
 mod cls_probe_widget;
 mod fnc_build_owned_grid;
 mod fnc_build_probe_cell_root_cause;
+mod fnc_infer_roles_from_grid;
 mod fnc_collect_basic_diagnostics;
 mod fnc_collect_loopback_fire_diagnostics;
 mod fnc_collect_probe_operational_analysis;
@@ -97,6 +98,7 @@ pub use cls_probe_timing::ProbeTiming;
 pub use cls_probe_trace_event::ProbeTraceEvent;
 pub use cls_probe_widget::ProbeWidget;
 pub use fnc_build_probe_cell_root_cause::build_probe_cell_root_cause;
+pub use fnc_infer_roles_from_grid::infer_roles_from_grid;
 pub use fnc_collect_basic_diagnostics::collect_basic_diagnostics;
 pub use fnc_collect_loopback_fire_diagnostics::collect_loopback_fire_diagnostics;
 pub use fnc_collect_probe_operational_analysis::collect_probe_operational_analysis;
@@ -112,4 +114,4 @@ pub use orc_collect_timeline::collect_timeline;
 pub use orc_run_probe::{run_probe, run_probe_diff};
 
 // <FILE>crates/tui-vfx-probe/src/lib.rs</FILE> - <DESC>Library root for tui-vfx-probe</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>
