@@ -1,22 +1,27 @@
 // <FILE>xtask/src/docs/mod.rs</FILE> - <DESC>Documentation generation module</DESC>
-// <VERS>VERSION: 1.4.0</VERS>
-// <WCTX>Emit capabilities.json from merged manifest</WCTX>
-// <CLOG>Add effect_schemas.json export</CLOG>
+// <VERS>VERSION: 1.5.0</VERS>
+// <WCTX>Phase α + β: signal-facade — add signals pipeline</WCTX>
+// <CLOG>1.5.0: wire signals pipeline (extract_signals_rustdoc, parse_signals_toml, validate_signals, merge_signals, gen_signals_markdown) into generate() and check(); add signals(), signals_check(), signals_validate() entry points</CLOG>
 
 mod api_metadata;
 mod effect_metadata;
 mod extract_rustdoc;
+mod extract_signals_rustdoc;
 mod gen_ai_context;
 mod gen_api;
 mod gen_effect_schemas;
 mod gen_json;
 mod gen_markdown;
+mod gen_signals_markdown;
 mod merge;
+mod merge_signals;
 mod parse_api_toml;
+mod parse_signals_toml;
 mod parse_toml;
 pub mod scaffold;
 mod validate_api;
 mod validate_coverage;
+mod validate_signals;
 
 use anyhow::{Result, bail};
 use owo_colors::OwoColorize;
@@ -68,6 +73,18 @@ pub fn generate() -> Result<()> {
     let api_toml = parse_api_toml::parse()?;
     println!("  {} Generating API.md...", "→".dimmed());
     gen_api::generate_and_write(&api_data, &api_toml)?;
+
+    // SIGNALS_REFERENCE.md (separate pipeline: mixed-signals rustdoc + signals.toml)
+    println!("  {} Extracting Signal-impl rustdoc from mixed-signals...", "→".dimmed());
+    let signal_data = extract_signals_rustdoc::extract()?;
+    println!("  {} Parsing signals.toml...", "→".dimmed());
+    let signal_toml = parse_signals_toml::parse()?;
+    println!("  {} Validating signals coverage...", "→".dimmed());
+    validate_signals::validate(&signal_data, &signal_toml)?;
+    println!("  {} Merging signal sources...", "→".dimmed());
+    let signal_merged = merge_signals::merge(signal_data, signal_toml)?;
+    println!("  {} Generating SIGNALS_REFERENCE.md...", "→".dimmed());
+    gen_signals_markdown::generate(&signal_merged)?;
 
     println!(
         "{}",
@@ -128,6 +145,18 @@ pub fn check() -> Result<()> {
     let api_toml = parse_api_toml::parse()?;
     let api_expected = gen_api::generate(&api_data, &api_toml)?;
     check_file("docs/generated/API.md", &api_expected, &mut stale);
+
+    // SIGNALS_REFERENCE.md (separate pipeline)
+    let signal_data = extract_signals_rustdoc::extract()?;
+    let signal_toml = parse_signals_toml::parse()?;
+    validate_signals::validate(&signal_data, &signal_toml)?;
+    let signal_merged = merge_signals::merge(signal_data, signal_toml)?;
+    let signals_expected = gen_signals_markdown::render(&signal_merged)?;
+    check_file(
+        "docs/generated/SIGNALS_REFERENCE.md",
+        &signals_expected,
+        &mut stale,
+    );
 
     if stale.is_empty() {
         println!("{}", "✓ All generated docs are up-to-date".green().bold());
@@ -257,5 +286,81 @@ pub fn api_scaffold(write: bool) -> Result<()> {
     Ok(())
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SIGNAL REFERENCE DOCUMENTATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/// Generate SIGNALS_REFERENCE.md from mixed-signals rustdoc + signals.toml overlay.
+///
+/// Runs the parallel signals pipeline:
+/// 1. Walk mixed-signals/src to extract Signal-impl rustdoc (Strategy A: walkdir + line parsing)
+/// 2. Parse docs/templates/signals.toml editorial overlay (only-overrides, Q2)
+/// 3. Validate: editorial entries name real signals; Core 12 entries are in the catalog (Q3)
+/// 4. Merge rustdoc + editorial data
+/// 5. Generate docs/generated/SIGNALS_REFERENCE.md (Core 12 cheatsheet + full catalog by family)
+pub fn signals() -> Result<()> {
+    println!("{}", "Generating SIGNALS_REFERENCE.md...".bold());
+
+    println!("  {} Extracting Signal-impl rustdoc from mixed-signals...", "→".dimmed());
+    let signal_data = extract_signals_rustdoc::extract()?;
+
+    println!("  {} Parsing signals.toml...", "→".dimmed());
+    let toml_data = parse_signals_toml::parse()?;
+
+    println!("  {} Validating signals coverage...", "→".dimmed());
+    validate_signals::validate(&signal_data, &toml_data)?;
+
+    println!("  {} Merging sources...", "→".dimmed());
+    let merged = merge_signals::merge(signal_data, toml_data)?;
+
+    println!("  {} Generating SIGNALS_REFERENCE.md...", "→".dimmed());
+    gen_signals_markdown::generate(&merged)?;
+
+    println!("{}", "✓ SIGNALS_REFERENCE.md generated successfully".green().bold());
+    Ok(())
+}
+
+/// Check that SIGNALS_REFERENCE.md is up-to-date.
+///
+/// Runs the same pipeline as `signals()` but compares output to the existing
+/// file instead of writing. Returns an error if the file would change.
+pub fn signals_check() -> Result<()> {
+    println!("{}", "Checking SIGNALS_REFERENCE.md freshness...".bold());
+
+    let signal_data = extract_signals_rustdoc::extract()?;
+    let toml_data = parse_signals_toml::parse()?;
+    validate_signals::validate(&signal_data, &toml_data)?;
+    let merged = merge_signals::merge(signal_data, toml_data)?;
+    let expected = gen_signals_markdown::render(&merged)?;
+
+    let current = fs::read_to_string("docs/generated/SIGNALS_REFERENCE.md")
+        .unwrap_or_default();
+    if expected == current {
+        println!("{}", "✓ SIGNALS_REFERENCE.md is up-to-date".green().bold());
+        Ok(())
+    } else {
+        bail!(
+            "docs/generated/SIGNALS_REFERENCE.md is out of date. \
+             Run `cargo xtask docs signals` to regenerate. \
+             ({} bytes expected vs {} bytes actual)",
+            expected.len(),
+            current.len()
+        );
+    }
+}
+
+/// Validate signals.toml: every named signal exists in mixed-signals,
+/// and every Core 12 entry exists in the autogen catalog.
+pub fn signals_validate() -> Result<()> {
+    println!("{}", "Validating signals.toml coverage...".bold());
+
+    let signal_data = extract_signals_rustdoc::extract()?;
+    let toml_data = parse_signals_toml::parse()?;
+    validate_signals::validate(&signal_data, &toml_data)?;
+
+    println!("{}", "✓ signals.toml is valid".green().bold());
+    Ok(())
+}
+
 // <FILE>xtask/src/docs/mod.rs</FILE> - <DESC>Documentation generation module</DESC>
-// <VERS>END OF VERSION: 1.4.0</VERS>
+// <VERS>END OF VERSION: 1.5.0</VERS>

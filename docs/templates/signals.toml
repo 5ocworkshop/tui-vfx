@@ -1,0 +1,133 @@
+# <FILE>docs/templates/signals.toml</FILE> - <DESC>Editorial overlay for signal reference autogen</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>Phase α + β: signal-facade — introduce signals editorial overlay with Core 12 list and recipe-author hints.</WCTX>
+# <CLOG>0.1.0: initial overlay — Core 12 list (data-driven per Q3); editorial entries for all 12 Core signals; advanced signals carry no entry (rustdoc-only autogen per Q2 only-overrides). Q1: parallel pipeline. Q2: only-overrides. Q3: toml-driven Core 12.</CLOG>
+#
+# Editorial overlay for SIGNALS_REFERENCE.md autogen.
+#
+# Entries here are MERGED with rustdoc extracted from mixed-signals source files.
+# Rustdoc carries the name, summary, and parameter table. This file adds
+# use_cases, recipe_hint, and the Core 12 ordered list.
+#
+# Run `cargo xtask docs signals` (or `cargo xtask docs generate`) to regenerate
+# docs/generated/SIGNALS_REFERENCE.md.
+#
+# Architecture decisions recorded:
+#   Q1: parallel sibling pipeline (extract_signals_rustdoc.rs, not extending extract_rustdoc.rs)
+#   Q2: only-overrides — entries appear only when editorial enrichment is needed beyond rustdoc
+#   Q3: Core 12 list is data-driven in this file so editors can update without xtask code changes
+#
+# Validation: `cargo xtask docs signals-validate` rejects entries that name signals
+# not found in the mixed-signals catalog. Core 12 entries must be valid discriminants.
+
+[meta]
+version = "0.1.0"
+description = "tui-vfx signal reference editorial overlay"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CORE 12 — data-driven per Q3 so editors can adjust without xtask code changes.
+# Each name is the SignalSpec discriminant in snake_case (the JSON "type" value).
+# Order here is the order they appear in the cheatsheet table.
+# NOTE: update the test in extract_signals_rustdoc.rs if you change the count.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[core_12]
+order = [
+  "sine",
+  "triangle",
+  "ramp",
+  "keyframes",
+  "perlin",          # PerlinNoise — SignalSpec discriminant is "perlin"
+  "spatial_noise",
+  "adsr",
+  "spring",          # DampedSpring — NOT in SignalSpec today (parallel physics channel).
+                     # Documented here with a callout; see Risks in the α/β packet.
+  "add",
+  "multiply",
+  "mix",
+  "clamp",
+]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EDITORIAL ENTRIES
+# Only-overrides per Q2: entries appear only when recipe_hint or use_cases
+# add value beyond what rustdoc already provides. Advanced signals (Square,
+# Sawtooth, GaussianNoise, etc.) flow through rustdoc-only autogen.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+[signals.sine]
+use_cases = ["pulsing", "breathing", "musical-oscillation"]
+recipe_hint = """Smooth periodic oscillation. Most-reached-for signal in tui-vfx recipes.
+For TUI animations use frequency in cycles-per-second (0.5–2 Hz feels natural).
+Pair with `.normalized()` upstream when you need [0, 1] instead of [-1, 1]."""
+
+[signals.triangle]
+use_cases = ["pulsing", "linear-oscillation", "animation"]
+recipe_hint = """Linear ramp up then ramp down. Sharper corners than sine; no smooth peaks.
+Useful when you want a visually crisp oscillation rather than a smooth one.
+Output is bipolar [-1, 1]; use `.normalized()` for [0, 1]."""
+
+[signals.ramp]
+use_cases = ["progress", "transition", "animation-progress"]
+recipe_hint = """Linear interpolation from start to end over a fixed duration.
+Clamps to end value after duration. Pair with Clamp for cyclic progress.
+Most natural fit: driving opacity, size, or position over an animation window."""
+
+[signals.keyframes]
+use_cases = ["custom-curve", "easing", "arbitrary-shape"]
+recipe_hint = """Piecewise linear interpolation between (time, value) pairs.
+Use when no oscillator fits: bounce-in curves, multi-stage animations.
+Time values are normalized 0..1 unless you supply absolute times."""
+
+[signals.perlin]
+use_cases = ["organic-motion", "noise-texture", "atmospheric"]
+recipe_hint = """Smooth coherent noise (Perlin-like). More organic than SeededRandom.
+Use `octaves` > 1 for fractal detail. `scale` controls time compression.
+Discriminant: `perlin` (struct name: PerlinNoise)."""
+
+[signals.spatial_noise]
+use_cases = ["per-character", "spatial-variation", "texture"]
+recipe_hint = """Deterministic noise keyed on sample (cell_x, cell_y) position.
+Same position always returns the same value regardless of time.
+Ideal for per-character effects where character index is the spatial coordinate."""
+
+[signals.adsr]
+use_cases = ["envelope", "trigger", "synthesizer"]
+recipe_hint = """Classic synthesizer Attack-Decay-Sustain-Release envelope.
+Time is normalized 0..1 over envelope duration. Peak defaults to 1.0.
+For TUI animations: drive alpha/opacity or scale through an event lifecycle."""
+
+[signals.spring]
+use_cases = ["physics", "tactile", "settle", "overshoot"]
+recipe_hint = """Damped harmonic motion. Three regimes: underdamped (bouncy),
+critically damped (snap-into-place), overdamped (glide).
+NOTE: DampedSpring is in the parallel physics channel, not SignalSpec today.
+It is documented here because it is one of the Core 12 for recipe authors;
+phase γ will collapse this gap. JSON shape uses the parallel effect-spec field.
+Tune `damping` first; `stiffness` controls speed."""
+
+[signals.add]
+use_cases = ["layering", "modulation", "bias"]
+recipe_hint = """Sum of two signals. No clamping. Use `.normalized()` on result if needed.
+Typical use: add a slow-moving DC bias to a fast oscillator for a drifting wave."""
+
+[signals.multiply]
+use_cases = ["amplitude-modulation", "ring-mod", "gating"]
+recipe_hint = """Product of two signals (ring modulation). No clamping.
+Use to gate one signal with another (envelope × oscillator is the classic pattern).
+Output range is the product of the input ranges."""
+
+[signals.mix]
+use_cases = ["crossfade", "blend", "transition"]
+recipe_hint = """Linear crossfade: output = a*(1-mix) + b*mix.
+`mix` = 0 → all A. `mix` = 1 → all B. Use a third signal as the mix parameter
+for dynamic crossfades driven by time or spatial position."""
+
+[signals.clamp]
+use_cases = ["range-limiting", "safety", "normalization"]
+recipe_hint = """Constrain a signal to [min, max]. Common use: clamp a sum of signals
+to [0, 1] before using as an alpha or brightness value.
+Also useful as a soft-limiter on physics outputs."""
+
+# <FILE>docs/templates/signals.toml</FILE> - <DESC>Editorial overlay for signal reference autogen</DESC>
+# <VERS>END OF VERSION: 0.1.0</VERS>
