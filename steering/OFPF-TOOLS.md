@@ -1,7 +1,7 @@
-<!-- <FILE>steering/OFPF-TOOLS.md</FILE> - <DESC>Project-local practical reference for the ofpf-* tooling suite (a thin alias layer over librarian-cli, backed by a multi-tenant daemon). Lead-with framing for code access, the 80/20 tool surface, decision matrix by intent, composition rules that prevent wrong answers, output handling, multi-repo workflow, the raw_sql escape hatch, pitfalls, and the non-obvious flags that bite first-time users. Required reading per Intention 42.</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
-<!-- <WCTX>Add §9 raw_sql escape hatch — the daemon-side SQL surface (dispatcher-only, no CLI subcommand yet) discovered during practice session. Documents schema, safety envelope, default-vs-max limits, EXPLAIN/PRAGMA pitfalls, and example queries.</WCTX> -->
-<!-- <CLOG>0.3.0: add §9 raw_sql escape hatch with schema, safety envelope, examples, and surprises; renumber subsequent sections.</CLOG> -->
+<!-- <FILE>steering/OFPF-TOOLS.md</FILE> - <DESC>Project-local practical reference for the ofpf-* tooling suite (a thin alias layer over librarian-cli, backed by a multi-tenant daemon). Lead-with framing for code access, the 80/20 tool surface, decision matrix by intent, composition rules that prevent wrong answers, output handling, multi-repo workflow, the first-class sql subcommand, pitfalls, and the non-obvious flags that bite first-time users. Required reading per Intention 42.</DESC> -->
+<!-- <VERS>VERSION: 0.4.1</VERS> -->
+<!-- <WCTX>2026-04-27: encode the output-handling discipline rule in §6 — JSON output is optimized for direct reading; piping to Python to reformat it is the anti-pattern that turns one wrong key guess into a cancelled parallel tool batch.</WCTX> -->
+<!-- <CLOG>0.4.1: add §6 "Don't reformat the JSON — read it" subsection; four-rule priority list (read → --out text → jq → Python only for cross-row math, and only after probing shape); name the Python-pipe anti-pattern.</CLOG> -->
 
 # OFPF Tools — practical reference
 
@@ -9,7 +9,9 @@ The `ofpf-*` suite is a thin alias layer over `librarian-cli`, which talks to a 
 
 The global standards in `~/.claude/rules/ofpf.md` and `~/.claude/CLAUDE.md` introduce the suite and its philosophy. This file complements them with the operational detail a developer or AI agent needs in-flight.
 
-When in doubt about a flag or behavior, run `librarian-cli --help-json` (canonical command schema) and `librarian-cli meta` (decoder for the abbreviated response keys). Both are authoritative; this document is curated.
+When in doubt about a flag or behavior, run `librarian-cli --help-json` (canonical command schema) and `librarian-cli meta` / `ofpf-meta` (decoder for response wire keys — every key returned by every intent with a one-line description). Both are authoritative; this document is curated.
+
+> **2026-04-27 release note.** This doc tracks a release with breaking wire renames: `loc`→`pos` (position string), `lines`→`loc` (LOC count), `l`→`lines`, `n`→`ln`, `def`→`definition` (on `references`), `depth`→`max_depth` (request echo on `blast-deep`), `tests`→`test_files` (on `blast-deep`), `path`→`trace_path` (federated trace), `barrel`→`re_export` (role), `is_barrel`→`is_re_export` (virtual SQL column). No deprecation aliases. Update parsers and prompts before pulling new binaries; `librarian-cli meta` is the source of truth for the current key set.
 
 ---
 
@@ -24,8 +26,10 @@ Default for repo-shape questions:
 | What does this file do? | `ofpf-inspect <path>` |
 | What breaks if I change Z? | `ofpf-blast <path>` / `ofpf-blast-deep` / `ofpf-trace` |
 | Read just one symbol from a big file | `ofpf-extract <path> <symbol>` |
-| What is the *intent* of this file? | `ofpf-meta <q> --tag desc` (skip the source read) |
-| First contact with a repo | `ofpf-orientation` |
+| What is the *intent* of this file? | `ofpf-search-meta <q> --tag desc` (skip the source read) |
+| Decode a wire key returned by another intent | `ofpf-meta` (now points at the canonical decoder, not metadata search) |
+| Read-only SQL against the index | `librarian-cli sql "<query>"` / `ofpf-sql` (see §9) |
+| First contact with a repo | `ofpf-orientation` (now embeds the decoder — no separate `meta` round-trip needed) |
 
 Drop through to direct tools when:
 
@@ -60,7 +64,9 @@ Add these once you start mirroring patterns or planning edits:
 | `ofpf-focus <path>` | `focus` (`show`) | File + deps + dependents + tests in one bundle |
 | `ofpf-blast <path>` | `blast` (`affected`/`impact`) | What breaks if I change this? Add `--why` for the chain |
 | `ofpf-refs <name>` | `references` (`find-refs`/`refs`) | Files that import the defining file — see §4 |
-| `ofpf-orientation` | `orientation` | Architecture bundle: overview + hotspots + inspect — first call on a new repo |
+| `ofpf-orientation` | `orientation` | Architecture bundle: overview + hotspots + inspect — first call on a new repo. Now returns `data.bundle` (the original payload) plus `data.keys` (full wire-key decoder), `data.keys_version` (16-hex hash for cache invalidation), and `data.escape_hatches.sql` (pointer to `librarian-cli sql`). Self-decoding; cache by `keys_version` |
+| `ofpf-sql <query>` | `sql` (intent: `raw_sql`) | First-class read-only SQL against the index. Positional, `-q/--query`, `--query-file <path>`, or stdin (`-`). Mutations and PRAGMA denied by binding contract. See §9 |
+| `ofpf-meta` | `meta` | Wire-key decoder. Returns the `_keys` map of every wire key → one-line description. (Renamed: this alias used to mean OFPF metadata-header search; that capability moved to `ofpf-search-meta`) |
 
 ---
 
@@ -68,7 +74,7 @@ Add these once you start mirroring patterns or planning edits:
 
 | Intent | Tool | Notes |
 |---|---|---|
-| First contact with a repo | `ofpf-orientation` | Returns roles (hub/core/unit), top hotspots, fan-in/out metrics |
+| First contact with a repo | `ofpf-orientation` | Returns roles (`hub`/`core`/`unit`/`re_export`), top hotspots, fan-in/out metrics, plus the embedded decoder (`data.keys`, `data.keys_version`) |
 | "Where is symbol X defined?" | `ofpf-defs X` | Add `--kind function\|method\|class\|struct` to disambiguate |
 | "Who uses symbol X?" | `ofpf-refs X` **and** `ofpf-content X` | Two halves of the answer — see §4 |
 | "What calls function `foo`?" | `ofpf-callers foo` | Function-call edges; supports `--depth` |
@@ -84,9 +90,14 @@ Add these once you start mirroring patterns or planning edits:
 | "Is there a circular dependency?" | `ofpf-cycles` | Returns cycles with refactoring suggestions |
 | "Which files are too big?" | `ofpf-loc 300 --filter <prefix>` | Files over the threshold; `--filter` scopes to a subtree |
 | "What can run in parallel?" | `ofpf-dag` | Files grouped by execution tier |
-| "What `<DESC>` text does this file's metadata header carry?" | `ofpf-meta X --tag desc` | OFPF metadata search (`--tag desc\|wctx\|clog\|vers`) |
+| "What `<DESC>` text does this file's metadata header carry?" | `ofpf-search-meta X --tag desc` | OFPF metadata search (`--tag desc\|wctx\|clog\|vers`). **Note:** this used to be `ofpf-meta`; `ofpf-meta` now points at the wire-key decoder |
 | "What tests exist for this source?" | `ofpf-tests <path>` | Returns path + relation + confidence |
 | "Which files are imported by file `Y`?" | `ofpf-context <path>` | Imports graph for one file |
+| "Compact line-shaped output instead of JSON" | any text-mode-supported command + `--output-format text` (or `--out text`) | Supported on `defs`, `search-content` (full and `--files-with-matches`), `references`, `blast` / `blast-deep`, `verify`, `loc`, `dag`, `dead-code`, `trace`, `around`. Nested commands (`inspect`, `orientation`, `status`, `cycles`) always emit JSON |
+| "Files with matches plus per-file match counts" | `ofpf-content <q> --files-with-matches` | Each row carries `match_count`. Add `--with-match-lines` to also emit a `match_lines` array (line numbers). Lightweight mode stays lightweight unless you opt in |
+| "Cycles, ignoring re-export aggregators" | `ofpf-cycles --exclude-roles re_export` | Drops SCCs in which every node is a re-export aggregator (`mod.rs`, `lib.rs`, `__init__.py`, `index.{ts,tsx,js,jsx}`) |
+| "DAG tiers, ignoring re-export aggregators" | `ofpf-dag --exclude-roles re_export` | Discounts aggregator edges from tier computation. Typically widens parallelism several-fold on real repos |
+| "Read-only SQL across the index" | `librarian-cli sql "<query>"` / `ofpf-sql` | First-class subcommand (replaces hand-rolled `raw_sql` JSON envelopes). See §9 |
 
 ---
 
@@ -106,9 +117,11 @@ Concrete: `ofpf-refs VfxBindableU16` returns one file (the typedef's parent `mod
 
 ### File role ≠ symbol reach
 
-`ofpf-inspect` returns `role: unit | core | hub` based on the *file's* fan-in/fan-out in the import graph. A file with `role: unit` and `fan_in: 1` may still define a type used in 100 files — if all 100 import via a re-exporting `mod.rs`, the file's own fan-in stays at 1.
+`ofpf-inspect` returns `role: unit | core | hub | re_export` based on the *file's* fan-in/fan-out in the import graph. A file with `role: unit` and `fan_in: 1` may still define a type used in 100 files — if all 100 import via a re-exporting `mod.rs`, the file's own fan-in stays at 1.
 
 When the question is "is this type widely used?", inspect the type, not just the file. `ofpf-content "<TypeName>"` is the second call. `ofpf-blast` likewise reports the file's direct dependents, not the type's reach.
+
+The `re_export` role classifies pure-aggregator files (Rust `mod.rs` / `lib.rs`, Python `__init__.py`, JS/TS `index.{ts,tsx,js,jsx}`) after the base hub/core/unit pass. They inflate cycle and DAG output without representing real architectural coupling — pair `ofpf-cycles` and `ofpf-dag` with `--exclude-roles re_export` when the question is "what real cycles / parallelism do we have?"
 
 ---
 
@@ -137,8 +150,11 @@ When the question is "is this type widely used?", inspect the type, not just the
 | `status` | `health` |
 | `overview` | `summary` |
 | `extract` | `snippet`, `show-symbol` |
+| `sql` | (no rg/grep parallel — first-class read-only SQL) |
 
 Both positional and `--flag <value>` forms work for primary args (`-q`/`--query`, `-p`/`--path`, `-k`/`--kind`, `-l`/`--lang`, `-d`/`--depth`, `-s`/`--symbol`, `-S`/`--scope`).
+
+The global `--output-format <json|text>` flag (alias `--out`) selects compact line-shaped output for the commands listed in §3. Default remains `json`.
 
 ---
 
@@ -156,30 +172,58 @@ JSON is directly readable. Treat the structured form as the canonical output, no
 
 ### Response shapes vary by command
 
-A few examples worth knowing before you parse:
+A few examples worth knowing before you parse (post-2026-04-27 wire format):
 
-- `ofpf-defs <q>` → `[{"def": "<kind> <name>", "loc": "path:line"}]` — readable strings, no compact keys.
-- `ofpf-content <q>` → `[{"loc", "content", "kind", "match_start", "match_end"}]`.
-- `ofpf-inspect <p>` → `{"defs", "callers", "callees", "metrics": {"co", "in", "out", "role"}, "lines", ...}`.
-- `ofpf-around <p> <q>` → `{"bl": [{"s", "e", "l": [{"n", "t", "m"}]}]}` — blocks of lines with start/end and per-line line-number/text/match-flag.
+- `ofpf-defs <q>` → `[{"def": "<kind> <name>", "pos": "path:line"}]` — readable strings.
+- `ofpf-content <q>` → `[{"pos", "content", "kind", "match_start", "match_end"}]` (line hits) or, with `--files-with-matches`, `[{"pos": "<path>", "kind": "file", "match_count": N, ("match_lines": [...])}]`.
+- `ofpf-loc <threshold>` → `[{"loc": <int>, "p": "<path>"}]`.
+- `ofpf-inspect <p>` → `{"defs", "callers", "callees", "metrics": {"co", "in", "out", "role"}, ...}`.
+- `ofpf-around <p> <q>` → `{"bl": [{"s", "e", "lines": [{"ln", "t", "m"}]}]}` — blocks of lines with start/end and per-line line-number/text/match-flag.
+- `ofpf-blast-deep <p>` → `{"target", "max_depth", "breaks": {"1": [...], "2": [...]}, "test_files": [...], ...}`.
+- `ofpf-trace <from> <to>` (federated) → `{"trace_path": [...], "synthetic_edges_used": N, ...}`.
+- `ofpf-orientation` → `{"bundle": {...}, "keys": {...}, "keys_version": "<16-hex>", "escape_hatches": {"sql": {...}}}`.
 
-When a key looks unfamiliar, `librarian-cli meta` is the decoder. The most common abbreviations are:
+When a key looks unfamiliar, `librarian-cli meta` (a.k.a. `ofpf-meta`) is the decoder — every wire key returned by every intent with a one-line description. `ofpf-orientation` now embeds the same map inline as `data.keys` so consumers can self-decode without a separate round-trip; cache by `data.keys_version`. The most common keys you'll see:
 
-- `co` → cohesion
-- `in` → fan_in
-- `out` → fan_out
-- `f` → file
-- `p` → path
-- `n` → name (or, in `around`, line number)
-- `l` → line (number) — but inside `around.bl[].l[]` it is the line array
-- `k` → kind
-- `mod` → module
-- `bl` → blocks (in `around` results)
-- `ml` → matched-lines
-- `s`/`e` → start/end (block bounds)
-- `m` (boolean) → match marker on the matched line itself
+| Wire key | Meaning |
+|---|---|
+| `pos` | position string `<path>:<line>` (or just `<path>` for files-with-matches rows). **Renamed from `loc`.** |
+| `loc` | lines-of-code count (per-row in `loc`; threshold echo). **Renamed from `lines`.** |
+| `lines` | lines array inside `around` blocks (`bl[].lines[]`). **Renamed from `l`.** |
+| `ln` | 1-indexed line number inside `lines[]`. **Renamed from `n`.** |
+| `definition` | queried-definition info on `references`. **Renamed from `def`** to avoid colliding with the inner `<kind> <name>` `def` string. |
+| `max_depth` | request-echo max depth on `blast-deep`. **Renamed from `depth`** (per-row `depth` is still the dependency-chain depth). |
+| `test_files` | test files in a `blast-deep` blast radius. **Renamed from `tests`.** |
+| `trace_path` | ordered trace nodes on federated `trace`. **Renamed from `path`** to avoid colliding with the canonical filesystem-path key. |
+| `role` | `unit` / `hub` / `core` / `re_export`. **`re_export` replaces `barrel`.** |
+| `co` / `in` / `out` | cohesion / fan_in / fan_out |
+| `p` | path (relative to repo root) |
+| `f` | file |
+| `k` | kind |
+| `mod` | module |
+| `bl` | blocks (in `around` results) |
+| `s` / `e` | start / end line numbers of an `around` block |
+| `m` | match marker on a line |
+| `ml` | matched-lines array |
+| `match_count` | per-file match count on `--files-with-matches` rows |
+| `match_lines` | per-file line-number list (only when `--with-match-lines` is also set) |
+| `keys` / `keys_version` | embedded decoder + cache key on `orientation` |
+| `escape_hatches` | `orientation`-level pointer to lower-level capabilities (today: `sql`) |
 
-Run `librarian-cli meta` to refresh — the surface evolves.
+Run `librarian-cli meta` to refresh — the surface evolves and the decoder is the source of truth.
+
+### Don't reformat the JSON — read it
+
+The JSON output is optimized for direct reading. Keys are descriptive (`fan_in`, `fan_out`, `path`, `pos`, `role`, `match_count`); rows are short; the shape is consistent within a command. **Reading the raw response directly is the canonical path.** Piping to Python to "render it nicely" is the anti-pattern — it forces you to guess key names ahead of time, and a wrong guess (`KeyError`) inside a parallel tool batch cancels every sibling call. One assumption costs four queries.
+
+The rules, in order:
+
+1. **First time touching a command's response: just read the JSON.** It's terse. The keys are self-describing. The §6 keys table tells you what to expect. There is no "render step" to add — the JSON *is* the rendering.
+2. **For list output you want to grep or pipe further, use `--out text`.** Supported on `defs`, `search-content`, `references`, `blast` / `blast-deep`, `verify`, `loc`, `dag`, `dead-code`, `trace`, `around`. `librarian-cli search-defs -q apply --out text` already returns `path:line\t<def>` lines.
+3. **For filtering across many rows, use `jq`.** `jq` fails to `null` rather than throwing, so a wrong path produces empty output instead of cancelling parallel siblings. Example: `... | jq -r '.data[] | select(.fan_in > 30) | .path'`.
+4. **Reach for Python only for genuine cross-row computation** (joins, aggregations, math the daemon's SQL surface didn't already do). And in that case, look at the response shape first — save to `/tmp/x.json`, inspect, then write the parser. Don't invoke Python with key paths you haven't verified in the actual current output.
+
+The anti-pattern, named so it's recognizable: `librarian-cli <cmd> | python3 -c "import json,sys; d=json.load(sys.stdin)['data']; for r in d: print(r['guessed_key'])"`. Every word of that pipeline is unnecessary when the goal is just to see the result. The JSON above the pipe is already the answer.
 
 ### When filtering is worth it
 
@@ -190,9 +234,12 @@ Three patterns that earn the extra tokens:
 ofpf-content "<pattern>" | python3 -c "
 import json, sys
 for r in json.load(sys.stdin)['data']:
-    if not r['loc'].startswith('recyclebin/'):
-        print(r['loc'])
+    if not r['pos'].startswith('recyclebin/'):
+        print(r['pos'])
 "
+
+# Same query, no Python — text mode is a one-liner
+ofpf-content "<pattern>" --out text | grep -v '^recyclebin/'
 
 # Compact view of a wide ofpf-around response
 ofpf-around <path> "<query>" -A 4 -B 1 | python3 -c "
@@ -200,8 +247,8 @@ import json, sys
 d = json.load(sys.stdin)['data']
 for b in d['bl']:
     print('===', b['s'], '-', b['e'], '===')
-    for ln in b['l']:
-        print(f\"{'*' if ln['m'] else ' '}{ln['n']:4}: {ln['t']}\")
+    for ln in b['lines']:
+        print(f\"{'*' if ln['m'] else ' '}{ln['ln']:4}: {ln['t']}\")
 "
 
 # Just the high-signal fields from an inspect
@@ -275,11 +322,11 @@ Common arg keys in JSON mode: `q` (query OR command name in batch mode), `p` (pa
 
 ---
 
-## 9. The `raw_sql` escape hatch
+## 9. `librarian-cli sql` — first-class read-only SQL
 
-The daemon exposes a `raw_sql` intent that runs read-only SQL directly against the index database. It is reachable today through the JSON protocol only — there is no `librarian-cli sql` subcommand yet, and `librarian-cli --help` does not list `raw_sql`. A pending feature request asks for first-class CLI exposure (`librarian-cli sql` / `ofpf-sql`).
+The daemon exposes a read-only SQL surface against the index database. As of the 2026-04-27 release this is a **first-class CLI subcommand** (`librarian-cli sql` / `ofpf-sql` / `ofpf-rawsql`); the underlying wire intent is still `raw_sql`, but you no longer assemble JSON envelopes by hand.
 
-`raw_sql` is the universal answer to questions the high-level commands can't compose: filtering by multiple criteria, JOINs across metrics + paths + edges, custom aggregations, schema introspection.
+`sql` is the universal answer to questions the high-level commands can't compose: filtering by multiple criteria, JOINs across metrics + paths + edges, custom aggregations, schema introspection.
 
 ### When to reach for it
 
@@ -289,37 +336,45 @@ After exhausting:
 - The traversal commands (`inspect`, `blast`, `trace`, `focus`, `context`)
 - The composition rules in §4 (`refs` + `content`, `metrics` + `loc`)
 
-If the question still doesn't fit any single command — for example "files with high fan_in AND >400 LOC AND no test peer," or "top external crates by import count," or "all public traits across the workspace" — drop to `raw_sql`.
+If the question still doesn't fit any single command — for example "files with high fan_in AND >400 LOC AND no test peer," or "top external crates by import count," or "all public traits across the workspace" — drop to `librarian-cli sql`.
 
 ### Invocation
 
-JSON-API form (works today):
+Four input forms are equivalent — pick whichever fits the shell context:
 
 ```bash
-echo '{"q":"raw_sql","args":{"query":"SELECT COUNT(*) FROM files"}}' \
-    | librarian-cli --json --root /usr/projects/tui-vfx
+# Positional (most common)
+librarian-cli --root /usr/projects/tui-vfx sql "SELECT COUNT(*) FROM files"
+ofpf-sql "SELECT COUNT(*) FROM files"
+
+# Flag form (handy when the query embeds quotes)
+librarian-cli sql -q "SELECT lang, COUNT(*) FROM files GROUP BY lang"
+
+# Stdin
+echo "SELECT path FROM files LIMIT 5" | librarian-cli sql -
+
+# File
+librarian-cli sql --query-file /tmp/audit.sql
 ```
 
-`args` keys:
-
-- `query` (or `q`): the SQL string. Required.
-- `limit`: max rows. Default 100. Hard max 500.
-- `offset`: pagination offset.
-- `timeout_ms`: per-query timeout. Default 1000. Hard max 5000.
+Pagination uses the global `--limit` / `--offset` flags. The legacy JSON-envelope form (`{"q":"raw_sql","args":{...}}` via `--json`) still works for batch automation but is no longer the recommended interactive path.
 
 The query is auto-wrapped as `SELECT * FROM (<your-query>) AS _q LIMIT ?1 OFFSET ?2` for safety. Side effect: not every SQL form composes through that wrapper — see Surprises below.
 
-### Schema (15 tables)
+Per-query timeout defaults to 1000ms, hard cap 5000ms (`timeout_ms` arg in JSON-mode invocations; not a CLI flag today). Default `--limit` is 100, hard cap 500.
+
+### Schema (14 tables)
+
+The 2026-04-27 release removed the `resolved_imports` table — it was scaffolded but never populated or queried; pre-1.0 status meant no migration was owed.
 
 | Table | What it holds |
 |---|---|
 | `files` | id, path, kind, lang, lines, zero_deps, generated |
-| `file_metrics` | file_id, fan_in, fan_out, cohesion, role (`unit` / `hub` / `core` / `barrel`), is_barrel (virtual) |
+| `file_metrics` | file_id, fan_in, fan_out, cohesion, role (`unit` / `hub` / `core` / `re_export`), `is_re_export` (virtual: `role = 're_export'`) |
 | `file_edges` | source_file_id, target_file_id, edge_type (`logic` / `crate_dep`) |
 | `file_definitions` | id, file_id, name, kind, line, end_line, parent, doc, visibility, is_test, test_attributes |
 | `symbol_edges` | source_def_id, target_def_id, call_site_line, edge_type — call graph |
 | `dependencies` | source_file_id, target_module_id, is_dynamic — import edges |
-| `resolved_imports` | file_id, raw_statement, resolved_def_id, is_external, external_crate |
 | `test_links` | source_file_id, test_file_id, relation |
 | `ofpf_metadata` | file_id, file_path, description (DESC), version (VERS), work_context (WCTX), changelog (CLOG), is_ofpf |
 | `type_info` | def_id, type_signature, return_type, is_async, is_unsafe, generic_params |
@@ -342,10 +397,18 @@ SELECT sql FROM sqlite_master WHERE name='file_metrics';
 -- File counts by language
 SELECT lang, COUNT(*) FROM files GROUP BY lang ORDER BY 2 DESC;
 
+-- File counts by role (now includes re_export)
+SELECT role, COUNT(*) FROM file_metrics GROUP BY role ORDER BY 2 DESC;
+
 -- Hubs by fan_out
 SELECT f.path, m.fan_out, m.fan_in
 FROM file_metrics m JOIN files f ON f.id = m.file_id
 WHERE m.role = 'hub' ORDER BY m.fan_out DESC LIMIT 10;
+
+-- Re-export aggregators (was role='barrel' before 2026-04-27)
+SELECT f.path, m.fan_in, m.fan_out
+FROM file_metrics m JOIN files f ON f.id = m.file_id
+WHERE m.is_re_export = 1 ORDER BY m.fan_in DESC LIMIT 10;
 
 -- Risky to change: large AND high fan_in
 SELECT f.path, f.lines, m.fan_in
@@ -373,7 +436,7 @@ SELECT f.path, COUNT(d.id) AS n_defs FROM files f
 JOIN file_definitions d ON d.file_id = f.id
 GROUP BY f.id ORDER BY n_defs DESC LIMIT 10;
 
--- OFPF DESC text mentioning a topic (ofpf-meta is the higher-level form)
+-- OFPF DESC text mentioning a topic (ofpf-search-meta is the higher-level form)
 SELECT om.file_path, om.description FROM ofpf_metadata om
 WHERE om.description LIKE '%bindable%' AND om.is_ofpf = 1;
 
@@ -400,18 +463,37 @@ The SQLite authorizer hook allows: `Read`, `Select`, `Function`, `Recursive`, `T
 
 ### Pagination
 
-Every response carries a `pagination` block: `{returned, next_offset, has_more}`. Default `limit` is 100; the hard cap is 500. For corpus-wide walks:
+Every response carries a `pagination` block: `{returned, next_offset, has_more}`. Default `limit` is 100; the hard cap is 500. For corpus-wide walks, drive the subcommand from a shell loop or a small Python helper:
+
+```bash
+# Bash form — subcommand + global --limit / --offset
+offset=0
+while :; do
+  out=$(librarian-cli sql "SELECT path FROM files ORDER BY id" --limit 500 --offset "$offset")
+  echo "$out" | jq -r '.data.records[].path'
+  has_more=$(echo "$out" | jq -r '.data.pagination.has_more')
+  [ "$has_more" = "true" ] || break
+  offset=$(echo "$out" | jq -r '.data.pagination.next_offset')
+done
+```
 
 ```python
+# Python form — wrap the subcommand
+import json, subprocess
+def sql(query, limit=500, offset=0):
+    out = subprocess.check_output(
+        ["librarian-cli", "sql", query, "--limit", str(limit), "--offset", str(offset)],
+        text=True,
+    )
+    return json.loads(out)["data"]
+
 offset = 0
 while True:
-    args = {"query": "SELECT path FROM files ORDER BY id", "limit": 500, "offset": offset}
-    r = sql(args)
-    rows = r["data"]["records"]
-    if not rows: break
-    for row in rows: process(row)
-    if not r["data"]["pagination"]["has_more"]: break
-    offset = r["data"]["pagination"]["next_offset"]
+    d = sql("SELECT path FROM files ORDER BY id", offset=offset)
+    if not d["records"]: break
+    for row in d["records"]: print(row["path"])
+    if not d["pagination"]["has_more"]: break
+    offset = d["pagination"]["next_offset"]
 ```
 
 ### Surprises
@@ -420,34 +502,32 @@ while True:
 - **PRAGMA is universally denied.** Schema introspection uses `sqlite_master`, not `PRAGMA table_info`. Index list: `SELECT name FROM sqlite_master WHERE type='index'`.
 - **`EXPLAIN` is unreachable** through this surface. The auto-wrap subquery is incompatible with `EXPLAIN <query>`. There is no current path to inspect query plans.
 - **`definitions` is a link table** (module_id ↔ file_id) — it is *not* the symbol table. The symbol table is `file_definitions`. This is the most common mistake on first use.
-- **`file_metrics.is_barrel` is a virtual generated column** (`role = 'barrel'`), but no files in this repo currently carry the `barrel` role. The classification exists in code without being populated by the indexer here. Verify before relying on it.
+- **`file_metrics.is_re_export` is a virtual generated column** (`role = 're_export'`). Renamed from `is_barrel` in the 2026-04-27 release; old `role='barrel'` filters return nothing. As of this release the role is populated — Rust `mod.rs`/`lib.rs`, Python `__init__.py`, and JS/TS `index.{ts,tsx,js,jsx}` aggregators are classified as `re_export` after the base hub/core/unit pass.
 - **`zero_deps` and `generated` flags are always 0** in this repo. Either tui-vfx genuinely has no zero-dep / no generated files, or the indexer doesn't populate them. Check before filtering on them.
 - **Default `timeout_ms` is 1000.** Aggressive multi-JOIN queries against the full corpus need an explicit `timeout_ms: 5000` to use the headroom.
 - **Read-only side-effect functions are allowed.** `randomblob()`, `random()`, etc. work — they're SELECT-shaped and the authorizer permits them.
 
 ### Quoting from the shell
 
-The JSON-mode form requires JSON-encoded SQL, which means standard JSON escaping (`\"` for quotes, `\\` for backslashes). For interactive use, write the JSON request to a file or stdin:
+For interactive use, the positional form is the cleanest — wrap the SQL in double quotes and use single quotes for any embedded literals:
 
 ```bash
-cat <<'EOF' | librarian-cli --json --root /usr/projects/tui-vfx
-{"q":"raw_sql","args":{"query":"SELECT lang, COUNT(*) FROM files GROUP BY lang"}}
-EOF
+librarian-cli sql "SELECT path FROM files WHERE path LIKE 'crates/%' LIMIT 5"
 ```
 
-Or compose with Python (avoids all shell-quoting):
+When the query embeds many quotes or spans multiple lines, prefer `--query-file` or stdin to skip shell-quoting entirely:
 
-```python
-import json, subprocess
-def sql(query, **kw):
-    args = {"query": query, **kw}
-    p = subprocess.run(["librarian-cli","--json","--root","/usr/projects/tui-vfx"],
-                       input=json.dumps({"q":"raw_sql","args":args}),
-                       capture_output=True, text=True)
-    return json.loads(p.stdout)
+```bash
+librarian-cli sql --query-file /tmp/audit.sql
+librarian-cli sql - <<'SQL'
+SELECT f.path, COUNT(d.id) AS n_defs
+FROM files f
+JOIN file_definitions d ON d.file_id = f.id
+GROUP BY f.id ORDER BY n_defs DESC LIMIT 10
+SQL
 ```
 
-The pending CLI feature request proposes `librarian-cli sql "<query>"` (positional, double-quoted), `librarian-cli sql -` (stdin), and `librarian-cli sql --query-file <path>` to remove the JSON-encoding overhead for interactive use.
+The legacy JSON-envelope form (`{"q":"raw_sql","args":{...}}`) still works for batch automation, but the first-class subcommand is the recommended path for everything interactive.
 
 ---
 
@@ -460,7 +540,9 @@ Real things that bit the first-time user on real sessions.
 - **`ofpf-content` is literal by default.** Special characters (`<`, `>`, `(`) are searched literally, which is usually what you want — but `From<TerminalWaterShader>` matched zero lines because the actual code uses `From<&TerminalWaterShader>` (with the reference). Broaden first (`impl From` + `--glob`) when literal queries surprise you.
 - **`recyclebin/` is indexed and silently included** in `ofpf-content` / `ofpf-defs` results. Easy to mistake archived code for live code. Filter explicitly when the question is about live state (§6, §7).
 - **`ofpf-blast` looks larger than it is** when re-exporting `lib.rs` files appear. Crate roots that `pub use` the type count as direct dependents. Read the list before treating the count as the change blast radius.
-- **`ofpf-defs` uses readable names, not compact keys.** Response is `[{"def": "<kind> <name>", "loc": "path:line"}]`. Other commands use the abbreviated `{p, n, k, l}` keys; `defs` does not. `librarian-cli meta` decodes the abbreviated forms but does not enumerate which commands use them — let the response shape tell you.
+- **`ofpf-defs` uses readable names, not compact keys.** Response is `[{"def": "<kind> <name>", "pos": "path:line"}]` (post-2026-04-27 — `loc` was renamed to `pos`). Other commands use the abbreviated `{p, ln, k, lines}` keys; `defs` does not. `librarian-cli meta` decodes every wire key in scope; let the response shape tell you which command uses which.
+- **`ofpf-meta` is now the wire-key decoder, not metadata-header search.** Pre-2026-04-27 the alias meant "search OFPF `<DESC>`/`<WCTX>`/`<CLOG>`/`<VERS>` headers"; that capability moved to `ofpf-search-meta`. Updating muscle memory here saves a confusing empty-result session.
+- **Old wire keys are gone — no deprecation aliases.** If your tooling reads `loc` (for position), `lines` (for LOC count), `l`/`n` (in `around`), `def` (on `references`), `depth`/`tests` (on `blast-deep`), `path` (on federated `trace`), or `barrel` (role), it sees `null` / undefined until you rename. Run `librarian-cli meta | jq '._keys | keys'` to confirm the current shape.
 - **`ofpf-load --root <path>` is additive, not destructive.** It loads or refreshes that repo; it does not unload anything else. Up to ten repos may sit in memory at once.
 - **`ofpf-extract` requires both `<path>` AND `<symbol>`.** It is not a "show me anything in this file" tool. For that, use `ofpf-read --from N --to M` or `ofpf-inspect`.
 - **The daemon may blacklist noisy files.** Look for `notices[].code == "watcher_noisy_file_blacklisted"` in `ofpf-status`. Auto-generated docs and watch-rebuilt artifacts commonly trip this. Side effect: changes to those files do not invalidate the graph immediately.
@@ -486,13 +568,17 @@ Real things that bit the first-time user on real sessions.
 ## 12. Reference and escalation
 
 - **Canonical command schema:** `librarian-cli --help-json`
-- **Response key decoder:** `librarian-cli meta`
-- **Per-command help:** `librarian-cli <subcommand> --help` (e.g., `librarian-cli around --help`)
+- **Response key decoder:** `librarian-cli meta` / `ofpf-meta` (alias renamed in 2026-04-27 release; `ofpf-search-meta` is the new home for OFPF metadata-header search)
+- **Embedded decoder + escape hatches:** `ofpf-orientation` (returns `data.keys`, `data.keys_version`, `data.escape_hatches.sql`)
+- **Read-only SQL:** `librarian-cli sql "<query>"` / `ofpf-sql` (see §9)
+- **Per-command help:** `librarian-cli <subcommand> --help` (e.g., `librarian-cli around --help`, `librarian-cli sql --help`)
 - **Daemon health and graph age:** `ofpf-status`
 - **Force regenerate the graph:** `ofpf-load --root <path>`
 - **Daemon log file (default port 3333):** `/tmp/librarian-daemon-3333.log`
 - **Bug reports and feature requests:** `ofpf-bug` (template) → `ofpf-submit-bug` (file). Three failed retries with corrected syntax = stop and submit.
 - **Workflow templates:** `librarian-cli templates guide` and `librarian-cli templates report`.
+
+After a CLI/daemon upgrade, both versions must match — re-install the binary alongside the daemon (the upstream release notes call this out explicitly).
 
 ---
 
@@ -503,4 +589,4 @@ Per Intention 42, when you discover a non-obvious flag, an empty-result interpre
 If a section grows beyond ~80 lines, consider splitting it into a sibling reference (e.g., `OFPF-WORKSPACES.md` for federated multi-repo workflow) and link from here. Keep this top-level document scannable.
 
 <!-- <FILE>steering/OFPF-TOOLS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.3.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.1</VERS> -->
