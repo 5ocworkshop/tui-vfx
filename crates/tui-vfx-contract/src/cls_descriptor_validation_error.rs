@@ -1,11 +1,13 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase F1: report descriptor capability and input validation failures.</WCTX>
-// <CLOG>0.2.0: MINOR — add input id, value kind, range, and enum validation errors.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>New kernel Phase F2: report descriptor, value source, and binding validation failures.</WCTX>
+// <CLOG>0.3.0: MINOR — add parameter, signal, source-kind, map, and binding validation errors.
+// 0.2.0: MINOR — add input id, value kind, range, and enum validation errors.
 // 0.1.0: INIT — add structured validation errors for scope, write policy, and channel checks.</CLOG>
 
 use crate::{
-    CellChannel, CellWritePolicy, EffectInputId, RoleWritePolicyKind, ScopeKind, ValueKind,
+    CellChannel, CellWritePolicy, EffectInputId, ParameterId, RoleWritePolicyKind, ScopeKind,
+    SignalId, ValueKind,
 };
 
 /// Structured error returned when a request exceeds descriptor capabilities.
@@ -36,6 +38,53 @@ pub enum DescriptorValidationError {
     InvalidInputId {
         /// Invalid descriptor-local input id.
         id: EffectInputId,
+    },
+    /// Parameter id is outside the accepted identifier shape.
+    InvalidParameterId {
+        /// Invalid parameter id.
+        id: ParameterId,
+    },
+    /// Signal id is outside the accepted identifier shape.
+    InvalidSignalId {
+        /// Invalid signal id.
+        id: SignalId,
+    },
+    /// Value source references an undeclared parameter.
+    UnknownParameter {
+        /// Missing parameter id.
+        id: ParameterId,
+    },
+    /// Value source references an undeclared signal.
+    UnknownSignal {
+        /// Missing signal id.
+        id: SignalId,
+    },
+    /// Binding target references an undeclared parameter.
+    UnknownBindingParameterTarget {
+        /// Missing target parameter id.
+        id: ParameterId,
+    },
+    /// Binding targets a parameter that is not declared bindable.
+    ParameterNotBindable {
+        /// Non-bindable target parameter id.
+        id: ParameterId,
+    },
+    /// Map range is missing a bound needed for declarative mapping.
+    IncompleteMapRange {
+        /// Range label, such as `input` or `output`.
+        range: String,
+    },
+    /// Value source kind does not match the expected target kind.
+    SourceKindMismatch {
+        /// Expected target value kind.
+        expected: ValueKind,
+        /// Actual source value kind.
+        actual: ValueKind,
+    },
+    /// Map value source was applied to a non-numeric source kind.
+    NonNumericMapSource {
+        /// Actual non-numeric source kind.
+        actual: ValueKind,
     },
     /// Value kind does not match the expected value spec kind.
     ValueKindMismatch {
@@ -111,4 +160,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>New kernel Phase F1: include value and effect input schema roots.</WCTX>
-// <CLOG>0.3.0: MINOR — add value and effect input schema fixtures and description assertions.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>New kernel Phase F2: include value source, parameter, signal, and binding schema roots.</WCTX>
+// <CLOG>0.4.0: MINOR — add value source, parameter, signal, and binding schema fixtures.
+// 0.3.0: MINOR — add value and effect input schema fixtures and description assertions.
 // 0.2.0: MINOR — add effect descriptor schema fixture and description assertions.
 // 0.1.0: INIT — check strict rustdoc-backed schemas for stable surface, scope, write, diagnostic, scene, element, and outcome roots.</CLOG>
 
@@ -9,8 +10,8 @@ use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
-    CellWrite, EffectDescriptor, EffectInputSpec, Scene, SceneElement, SceneOutcome, ScopeSpec,
-    Surface, SurfaceDiagnostic, Value,
+    BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, ParameterSpec, Scene, SceneElement,
+    SceneOutcome, ScopeSpec, SignalSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -34,6 +35,13 @@ fn schema_roots() -> Vec<(&'static str, String)> {
             "effect-input.schema.json",
             canonical_schema::<EffectInputSpec>(),
         ),
+        (
+            "value-source.schema.json",
+            canonical_schema::<ValueSource>(),
+        ),
+        ("parameter.schema.json", canonical_schema::<ParameterSpec>()),
+        ("signal.schema.json", canonical_schema::<SignalSpec>()),
+        ("binding.schema.json", canonical_schema::<BindingSpec>()),
         (
             "diagnostic.schema.json",
             canonical_schema::<SurfaceDiagnostic>(),
@@ -123,6 +131,26 @@ fn effect_input_schema_is_current() {
 }
 
 #[test]
+fn value_source_schema_is_current() {
+    assert_schema_fixture_current::<ValueSource>("value-source.schema.json");
+}
+
+#[test]
+fn parameter_schema_is_current() {
+    assert_schema_fixture_current::<ParameterSpec>("parameter.schema.json");
+}
+
+#[test]
+fn signal_schema_is_current() {
+    assert_schema_fixture_current::<SignalSpec>("signal.schema.json");
+}
+
+#[test]
+fn binding_schema_is_current() {
+    assert_schema_fixture_current::<BindingSpec>("binding.schema.json");
+}
+
+#[test]
 fn effect_descriptor_schema_with_inputs_is_current() {
     let schema = canonical_schema::<EffectDescriptor>();
     assert!(schema.contains("Descriptor-local typed input specifications"));
@@ -182,6 +210,10 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
     assert!(all_schemas.contains("Minimal durable v3.1 effect descriptor contract"));
     assert!(all_schemas.contains("Canonical tagged literal value used by effect input specs"));
     assert!(all_schemas.contains("Descriptor-local specification for one effect input"));
+    assert!(all_schemas.contains("Declarative source for a typed value"));
+    assert!(all_schemas.contains("Public recipe parameter contract"));
+    assert!(all_schemas.contains("Host/runtime-provided signal contract"));
+    assert!(all_schemas.contains("Declarative binding from a value source to a parameter target"));
     assert!(all_schemas.contains("Cell channels an effect may read or write"));
     assert!(
         all_schemas.contains("Scope shapes and evaluation spaces an effect descriptor supports")
@@ -225,4 +257,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

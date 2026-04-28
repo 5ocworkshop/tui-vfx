@@ -1,0 +1,722 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BindingSpec",
+  "description": "Declarative binding from a value source to a parameter target.",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "description": "Declarative binding application mode.",
+      "$ref": "#/$defs/BindingMode"
+    },
+    "source": {
+      "description": "Source that provides the target value.",
+      "$ref": "#/$defs/ValueSource"
+    },
+    "target": {
+      "description": "Target that receives the source value.",
+      "$ref": "#/$defs/BindingTarget"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "target",
+    "source",
+    "mode"
+  ],
+  "$defs": {
+    "BindingMode": {
+      "description": "Declarative mode for applying a binding source to a target.",
+      "oneOf": [
+        {
+          "description": "Source replaces the target value.",
+          "type": "string",
+          "const": "replace"
+        }
+      ]
+    },
+    "BindingTarget": {
+      "description": "Declarative target for a value binding.",
+      "oneOf": [
+        {
+          "description": "Binding targets a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Referenced target parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        }
+      ]
+    },
+    "Color": {
+      "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "Alpha channel (0=transparent, 255=opaque)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "b": {
+          "description": "Blue channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "description": "Green channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "description": "Red channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ]
+    },
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "NumericRange": {
+      "description": "Optional inclusive numeric bounds for a value spec.",
+      "type": "object",
+      "properties": {
+        "max": {
+          "description": "Inclusive maximum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "min": {
+          "description": "Inclusive minimum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ParameterId": {
+      "description": "Stable public recipe parameter identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "Rect": {
+      "description": "Rectangle in cell coordinates.\n\nThis is the primary geometry type for defining effect regions.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "description": "Rectangle height in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "width": {
+          "description": "Rectangle width in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "x": {
+          "description": "Left edge x coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "y": {
+          "description": "Top edge y coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "ScopeSpec": {
+      "description": "Minimal Phase A/B scope algebra.",
+      "oneOf": [
+        {
+          "description": "Match every in-bounds cell.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "all"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells with the requested role in the active role space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "role": {
+              "description": "Role required in the active role space.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Match a rectangle in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "rect": {
+              "description": "Rectangle to match in the active coordinate space.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rect"
+          ]
+        },
+        {
+          "description": "Match rows `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "rowRange"
+            },
+            "start": {
+              "description": "Inclusive start row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match columns `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "columnRange"
+            },
+            "start": {
+              "description": "Inclusive start column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        }
+      ]
+    },
+    "SignalId": {
+      "description": "Stable host/runtime signal identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "Value": {
+      "description": "Canonical tagged literal value used by effect input specs.",
+      "oneOf": [
+        {
+          "description": "Explicit absence of a value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "null"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Boolean true/false literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "boolean"
+            },
+            "value": {
+              "description": "Boolean payload.",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Signed integer literal without a fractional component.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "integer"
+            },
+            "value": {
+              "description": "Integer payload.",
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Floating-point numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "number"
+            },
+            "value": {
+              "description": "Number payload.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Short machine-facing string literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "string"
+            },
+            "value": {
+              "description": "String payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Human-facing text literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "text"
+            },
+            "value": {
+              "description": "Text payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "RGBA color literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "color"
+            },
+            "value": {
+              "description": "Color payload.",
+              "$ref": "#/$defs/Color"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration literal expressed as seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "duration"
+            },
+            "value": {
+              "description": "Duration payload in seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Closed-set enum literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "enum"
+            },
+            "value": {
+              "description": "Selected enum value.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Semantic role literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "value": {
+              "description": "Role payload.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Surface scope literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "scope"
+            },
+            "value": {
+              "description": "Scope payload.",
+              "$ref": "#/$defs/ScopeSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Cell rectangle literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "value": {
+              "description": "Rectangle payload.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "ValueSource": {
+      "description": "Declarative source for a typed value.",
+      "oneOf": [
+        {
+          "description": "Source value is a typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "literal"
+            },
+            "value": {
+              "description": "Literal typed value.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the parameter is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared host/runtime signal.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the signal is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced signal id.",
+              "$ref": "#/$defs/SignalId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value maps a numeric source from one range to another.",
+          "type": "object",
+          "properties": {
+            "clamp": {
+              "description": "Whether values outside the input range should clamp before mapping.",
+              "type": "boolean"
+            },
+            "from": {
+              "description": "Nested numeric-compatible source to map.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "input": {
+              "description": "Inclusive input range for the nested source.",
+              "$ref": "#/$defs/NumericRange"
+            },
+            "kind": {
+              "type": "string",
+              "const": "map"
+            },
+            "output": {
+              "description": "Inclusive output range produced by the map.",
+              "$ref": "#/$defs/NumericRange"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "input",
+            "output",
+            "clamp"
+          ]
+        }
+      ]
+    }
+  }
+}

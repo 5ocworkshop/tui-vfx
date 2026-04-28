@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
-<!-- <WCTX>New kernel Phase F1: add typed input/value contract guidance.</WCTX> -->
-<!-- <CLOG>0.8.0: MINOR — add Phase F1 typed input/value contract guidance and F2 deferral.
+<!-- <VERS>VERSION: 0.9.0</VERS> -->
+<!-- <WCTX>New kernel Phase F2: add declarative value source and binding contract guidance.</WCTX> -->
+<!-- <CLOG>0.9.0: MINOR — add Phase F2 declarative value source and parameter binding guidance.
+0.8.0: MINOR — add Phase F1 typed input/value contract guidance and F2 deferral.
 0.7.0: MINOR — add EffectDescriptor capability model, schema root, and Phase F input deferral.
 0.6.0: MINOR — add tui-vfx-contract ownership, schema paths, and E0 phase guidance.
 0.5.0: MINOR — add Phase D3 contract/engine boundary guidance and mark D2 complete.
@@ -128,7 +129,7 @@ Phase D0 makes this a standing rule for all future clean-room phases:
 - Every public contract-visible type, field, variant, and non-obvious policy/default needs rustdoc.
 - Intentionally internal public helpers must be marked or explained in status docs.
 
-Checked stable contract schema roots live under `schemas/v3.1/contract/`: surface, scope, write, diagnostic, scene, element, outcome, and effect-descriptor. Proof-pipeline roots remain under `schemas/v3.1/next/`: sampler and pipeline.
+Checked stable contract schema roots live under `schemas/v3.1/contract/`: surface, scope, write, diagnostic, scene, element, outcome, effect-descriptor, value, effect-input, value-source, parameter, signal, and binding. Proof-pipeline roots remain under `schemas/v3.1/next/`: sampler and pipeline.
 
 ## Recyclebin protocol
 
@@ -392,7 +393,7 @@ Key docs:
 
 ### Phase F1 — typed Value / EffectInputSpec model
 
-Current phase.
+Completed phase.
 
 Target lock:
 
@@ -414,6 +415,32 @@ Key docs:
 - `docs/v3.1-contract-boundary.md`
 - `docs/v3.1-surface-contract.md`
 - `docs/new_kernel/PHASE_F1_STATUS.md` once created.
+
+
+### Phase F2 — declarative ValueSource / ParameterSpec / SignalSpec / BindingSpec
+
+Current phase.
+
+Target lock:
+
+- `ValueSource` represents literal, parameter, signal, and simple numeric map sources.
+- `ParameterId` / `ParameterSpec` define public recipe controls separately from effect inputs.
+- `SignalId` / `SignalSpec` define host/runtime-provided values separately from parameters.
+- `BindingSpec` is declarative and parameter-target only until node graph identity exists.
+- `BindingMode` is replace-only for F2.
+- Validation resolves parameter/signal references, checks source/target kind compatibility, validates fallbacks, and rejects non-numeric map sources.
+- Checked schemas include `value-source.schema.json`, `parameter.schema.json`, `signal.schema.json`, and `binding.schema.json`.
+
+Hard deferrals after F2:
+
+- Do not add runtime `ParameterStore` / `SignalStore`, live override execution, preset/profile persistence, node graph, `NodeId`, direct node/effect-input bindings, recipe compiler/schema, studio controls/manifest, expression language, phase graph, trigger engine, migration, real effect ports, or legacy aliases.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_F1.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/v3.1-surface-contract.md`
+- `docs/new_kernel/PHASE_F2_STATUS.md` once created.
 
 ## Verification gates
 
@@ -473,4 +500,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.9.0</VERS> -->

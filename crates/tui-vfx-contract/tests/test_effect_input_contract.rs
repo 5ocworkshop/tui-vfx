@@ -287,22 +287,5 @@ fn effect_descriptor_rejects_invalid_input_id() {
     ));
 }
 
-#[test]
-fn phase_f1_does_not_add_value_source_or_parameters() {
-    let src_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
-    let mut combined = String::new();
-    for entry in std::fs::read_dir(src_dir).expect("contract src can be read") {
-        let path = entry.expect("entry can be read").path();
-        if path.extension().is_some_and(|extension| extension == "rs") {
-            combined.push_str(&std::fs::read_to_string(path).expect("contract source can be read"));
-        }
-    }
-
-    assert!(!combined.contains("ValueSource"));
-    assert!(!combined.contains("ParameterSpec"));
-    assert!(!combined.contains("SignalSpec"));
-    assert!(!combined.contains("BindingSpec"));
-}
-
 // <FILE>crates/tui-vfx-contract/tests/test_effect_input_contract.rs</FILE> - <DESC>Typed effect input contract tests</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>
