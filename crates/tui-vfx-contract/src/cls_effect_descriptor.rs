@@ -1,18 +1,19 @@
 // <FILE>crates/tui-vfx-contract/src/cls_effect_descriptor.rs</FILE> - <DESC>Minimal effect descriptor contract DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase E1: add schema-backed durable effect descriptor model.</WCTX>
-// <CLOG>0.1.0: INIT — declare identity, domain, access, scope, write, and lifecycle capabilities.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase F1: attach typed input specs to the durable effect descriptor model.</WCTX>
+// <CLOG>0.2.0: MINOR — add descriptor-local typed input spec map and validation.
+// 0.1.0: INIT — declare identity, domain, access, scope, write, and lifecycle capabilities.</CLOG>
+
+use std::collections::BTreeMap;
 
 use crate::{
     CellAccess, CellChannel, CellWritePolicy, DescriptorValidationError, EffectDomain, EffectId,
-    EffectLifecycle, RoleWritePolicy, RoleWritePolicyKind, ScopeKind, ScopeSpec, ScopeSupport,
-    WriteSupport,
+    EffectInputId, EffectInputSpec, EffectLifecycle, RoleWritePolicy, RoleWritePolicyKind,
+    ScopeKind, ScopeSpec, ScopeSupport, WriteSupport,
 };
 
 /// Minimal durable v3.1 effect descriptor contract.
-#[derive(
-    Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct EffectDescriptor {
     /// Stable canonical effect identifier.
@@ -31,11 +32,38 @@ pub struct EffectDescriptor {
     pub scope_support: ScopeSupport,
     /// Cell and role write policies this effect supports.
     pub write_support: WriteSupport,
+    /// Descriptor-local typed input specifications keyed by stable input id.
+    #[schemars(transform = add_effect_input_key_pattern)]
+    pub inputs: BTreeMap<EffectInputId, EffectInputSpec>,
     /// Minimal lifecycle metadata for planning.
     pub lifecycle: EffectLifecycle,
 }
 
+fn add_effect_input_key_pattern(schema: &mut schemars::Schema) {
+    schema.insert(
+        "propertyNames".to_string(),
+        schemars::json_schema!({
+            "description": "Effect input ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        })
+        .to_value(),
+    );
+}
+
 impl EffectDescriptor {
+    /// Validate all descriptor-local input specifications.
+    pub fn validate_inputs(&self) -> Result<(), DescriptorValidationError> {
+        for (id, input) in &self.inputs {
+            if !id.is_valid() {
+                return Err(DescriptorValidationError::InvalidInputId { id: id.clone() });
+            }
+            input.validate()?;
+        }
+
+        Ok(())
+    }
+
     /// Validate that the descriptor supports the requested scope kind.
     pub fn validate_scope(&self, scope: &ScopeSpec) -> Result<(), DescriptorValidationError> {
         if self.scope_support.supports_scope(scope) {
@@ -87,4 +115,4 @@ impl EffectDescriptor {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_effect_descriptor.rs</FILE> - <DESC>Minimal effect descriptor contract DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

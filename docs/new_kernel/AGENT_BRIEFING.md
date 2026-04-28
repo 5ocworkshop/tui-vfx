@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.7.0</VERS> -->
-<!-- <WCTX>New kernel Phase E1: add minimal effect descriptor guidance.</WCTX> -->
-<!-- <CLOG>0.7.0: MINOR — add EffectDescriptor capability model, schema root, and Phase F input deferral.
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <WCTX>New kernel Phase F1: add typed input/value contract guidance.</WCTX> -->
+<!-- <CLOG>0.8.0: MINOR — add Phase F1 typed input/value contract guidance and F2 deferral.
+0.7.0: MINOR — add EffectDescriptor capability model, schema root, and Phase F input deferral.
 0.6.0: MINOR — add tui-vfx-contract ownership, schema paths, and E0 phase guidance.
 0.5.0: MINOR — add Phase D3 contract/engine boundary guidance and mark D2 complete.
 0.4.0: MINOR — add Phase D2 template composition design history and current-phase guidance.
@@ -369,7 +370,7 @@ Key docs:
 
 ### Phase E1 — minimal effect descriptor model
 
-Current phase.
+Completed phase.
 
 Target lock:
 
@@ -379,7 +380,7 @@ Target lock:
 - Descriptor validation accepts supported scope/write/channel requests and rejects unsupported ones with `DescriptorValidationError`.
 - `schemas/v3.1/contract/effect-descriptor.schema.json` is checked and rustdoc-described.
 - `PipelineStage`, `SurfacePipeline`, `PipelineSampler`, `SurfaceEngine`, and proof effects remain proof-only in `tui-vfx-next`.
-- Effect input contracts are intentionally deferred to Phase F. Do not add `ValueKind`, `ValueSource`, defaults, ranges, runtime mutability, parameters, signals, bindings, recipe nodes, registries, runtime graphs, studio controls, migration, or real effect ports.
+- Phase F1 now owns the first typed input contract. Do not backfill `ValueSource`, parameters, signals, bindings, recipe nodes, registries, runtime graphs, studio controls, migration, or real effect ports into E1-era descriptor capability work.
 
 Key docs:
 
@@ -387,6 +388,32 @@ Key docs:
 - `docs/v3.1-contract-boundary.md`
 - `docs/v3.1-surface-contract.md`
 - `docs/new_kernel/PHASE_E1_STATUS.md` once created.
+
+
+### Phase F1 — typed Value / EffectInputSpec model
+
+Current phase.
+
+Target lock:
+
+- `ValueKind` is a closed schema-backed vocabulary: `null`, `boolean`, `integer`, `number`, `string`, `text`, `color`, `duration`, `enum`, `role`, `scope`, and `rect`.
+- `Value` is a tagged typed literal, not raw JSON.
+- `ValueSpec` declares the expected kind, optional typed default, optional numeric range, enum allowed values, and documentation-only `unit` / `semantic` strings.
+- `EffectInputSpec` declares documentation-only `displayName` / `description`, `value`, `bindable`, and `runtimeMutability`.
+- `EffectDescriptor.inputs` is a descriptor-local map keyed by `EffectInputId`.
+- Descriptor validation validates input ids, default kind compatibility, numeric ranges, enum allowed values, and non-finite numeric values.
+- Checked schemas include `value.schema.json`, `effect-input.schema.json`, and the updated `effect-descriptor.schema.json`.
+
+Hard deferrals for F2 and later:
+
+- Do not add `ValueSource`, `ParameterSpec`, `SignalSpec`, `BindingSpec`, refs, expression languages, presets, runtime override precedence, recipe schema/compiler, template expansion, studio controls, phase graph, trigger engine, migration, real effect ports, or legacy aliases.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_E1.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/v3.1-surface-contract.md`
+- `docs/new_kernel/PHASE_F1_STATUS.md` once created.
 
 ## Verification gates
 
@@ -446,4 +473,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.7.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->

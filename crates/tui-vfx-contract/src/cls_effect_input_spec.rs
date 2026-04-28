@@ -1,0 +1,32 @@
+// <FILE>crates/tui-vfx-contract/src/cls_effect_input_spec.rs</FILE> - <DESC>Effect descriptor input specification DTO</DESC>
+// <VERS>VERSION: 0.1.0</VERS>
+// <WCTX>New kernel Phase F1: attach typed input specs to effect descriptors.</WCTX>
+// <CLOG>0.1.0: INIT — add input metadata, bindability, mutability, and validation wrapper.</CLOG>
+
+use crate::{DescriptorValidationError, RuntimeMutability, ValueSpec};
+
+/// Descriptor-local specification for one effect input.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EffectInputSpec {
+    /// Optional human-facing display name for documentation and catalogs.
+    pub display_name: Option<String>,
+    /// Optional human-facing description for documentation and catalogs.
+    pub description: Option<String>,
+    /// Typed value contract, including default, range, enum values, unit, and semantic hints.
+    pub value: ValueSpec,
+    /// Whether later phases may bind this input to a source; no binding model exists in F1.
+    pub bindable: bool,
+    /// When this input value may change during the effect lifecycle.
+    pub runtime_mutability: RuntimeMutability,
+}
+
+impl EffectInputSpec {
+    /// Validate the nested value contract for this input.
+    pub fn validate(&self) -> Result<(), DescriptorValidationError> {
+        self.value.validate()
+    }
+}
+
+// <FILE>crates/tui-vfx-contract/src/cls_effect_input_spec.rs</FILE> - <DESC>Effect descriptor input specification DTO</DESC>
+// <VERS>END OF VERSION: 0.1.0</VERS>

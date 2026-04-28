@@ -1,14 +1,15 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase E1: report unsupported descriptor capability requests.</WCTX>
-// <CLOG>0.1.0: INIT — add structured validation errors for scope, write policy, and channel checks.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase F1: report descriptor capability and input validation failures.</WCTX>
+// <CLOG>0.2.0: MINOR — add input id, value kind, range, and enum validation errors.
+// 0.1.0: INIT — add structured validation errors for scope, write policy, and channel checks.</CLOG>
 
-use crate::{CellChannel, CellWritePolicy, RoleWritePolicyKind, ScopeKind};
+use crate::{
+    CellChannel, CellWritePolicy, EffectInputId, RoleWritePolicyKind, ScopeKind, ValueKind,
+};
 
 /// Structured error returned when a request exceeds descriptor capabilities.
-#[derive(
-    Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum DescriptorValidationError {
     /// Requested scope kind is not declared in descriptor support.
@@ -30,6 +31,56 @@ pub enum DescriptorValidationError {
     UndeclaredWriteChannel {
         /// Cell channel requested for writing.
         channel: CellChannel,
+    },
+    /// Descriptor contains an input id outside the accepted local identifier shape.
+    InvalidInputId {
+        /// Invalid descriptor-local input id.
+        id: EffectInputId,
+    },
+    /// Value kind does not match the expected value spec kind.
+    ValueKindMismatch {
+        /// Expected value kind declared by the spec.
+        expected: ValueKind,
+        /// Actual value kind carried by the literal.
+        actual: ValueKind,
+    },
+    /// Numeric value is not finite and cannot be represented safely in JSON contracts.
+    NonFiniteNumericValue {
+        /// Non-finite numeric value that failed validation.
+        value: f64,
+    },
+    /// Numeric range bound is not finite and cannot be represented safely in JSON contracts.
+    NonFiniteNumericRangeBound {
+        /// Non-finite range bound that failed validation.
+        value: f64,
+    },
+    /// Numeric range was declared for a non-numeric value kind.
+    RangeOnNonNumericKind {
+        /// Non-numeric value kind that carried range metadata.
+        value_kind: ValueKind,
+    },
+    /// Numeric range minimum is greater than its maximum.
+    InvalidNumericRange {
+        /// Inclusive minimum value when present.
+        min: Option<f64>,
+        /// Inclusive maximum value when present.
+        max: Option<f64>,
+    },
+    /// Numeric value is outside the declared inclusive range.
+    NumericValueOutOfRange {
+        /// Numeric value that failed range validation.
+        value: f64,
+        /// Inclusive minimum value when present.
+        min: Option<f64>,
+        /// Inclusive maximum value when present.
+        max: Option<f64>,
+    },
+    /// Enum specs must declare at least one allowed value.
+    EmptyEnumAllowedValues,
+    /// Enum value is not one of the declared allowed values.
+    EnumValueNotAllowed {
+        /// Rejected enum value.
+        value: String,
     },
 }
 
@@ -60,4 +111,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

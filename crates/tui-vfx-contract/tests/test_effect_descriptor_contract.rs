@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-contract/tests/test_effect_descriptor_contract.rs</FILE> - <DESC>Minimal effect descriptor contract tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase E1: lock descriptor capability validation before implementation.</WCTX>
-// <CLOG>0.1.0: INIT — prove descriptor access, scope, write policy, and lifecycle capability behavior.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase F1: lock descriptor input value validation and E1 capabilities.</WCTX>
+// <CLOG>0.2.0: MINOR — prove typed value specs and descriptor input validation.
+// 0.1.0: INIT — prove descriptor access, scope, write policy, and lifecycle capability behavior.</CLOG>
+
+use std::collections::BTreeMap;
 
 use tui_vfx_contract::{
     CellAccess, CellChannel, CellWritePolicy, CoordinateSpace, EffectCompletion, EffectDescriptor,
@@ -42,6 +45,7 @@ fn visual_dim_descriptor() -> EffectDescriptor {
             ],
             role_policies: vec![RoleWritePolicyKind::PreserveDestination],
         },
+        inputs: BTreeMap::new(),
         lifecycle: EffectLifecycle {
             completion: EffectCompletion::Instant,
             resettable: true,
@@ -76,6 +80,7 @@ fn role_writer_descriptor() -> EffectDescriptor {
             cell_policies: vec![CellWritePolicy::WriteCell],
             role_policies: vec![RoleWritePolicyKind::SetExplicit],
         },
+        inputs: BTreeMap::new(),
         lifecycle: EffectLifecycle {
             completion: EffectCompletion::Instant,
             resettable: true,
@@ -105,6 +110,7 @@ fn sampler_descriptor() -> EffectDescriptor {
             cell_policies: vec![],
             role_policies: vec![],
         },
+        inputs: BTreeMap::new(),
         lifecycle: EffectLifecycle {
             completion: EffectCompletion::Instant,
             resettable: false,
@@ -250,4 +256,4 @@ fn descriptor_contract_does_not_import_proof_pipeline_stage() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_effect_descriptor_contract.rs</FILE> - <DESC>Minimal effect descriptor contract tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
