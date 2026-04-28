@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-next/src/lib.rs</FILE> - <DESC>Clean-room v3.1 proof engine over contract DTOs</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
-// <WCTX>New kernel Phase E1: remove old proof descriptor export after durable descriptor model lands in contract.</WCTX>
-// <CLOG>0.8.0: PATCH — stop exporting the old proof EffectDescriptor so contract owns the durable descriptor name.
+// <VERS>VERSION: 0.9.0</VERS>
+// <WCTX>New kernel Phase G2: expose canonical graph proof executor helpers.</WCTX>
+// <CLOG>0.9.0: MINOR — add proof GraphSpec executor, value snapshot, adapters, and execution errors.
+// 0.8.0: PATCH — stop exporting the old proof EffectDescriptor so contract owns the durable descriptor name.
 // 0.7.0: MINOR — depend on tui-vfx-contract, re-export contract vocabulary, and keep proof-only pipeline/effect helpers local.
 // 0.6.0: MINOR — add logical contract, proof, and schema-root re-export modules without changing runtime behavior.</CLOG>
 
@@ -14,25 +15,38 @@
 
 pub mod cls_dim_effect;
 pub mod cls_explicit_role_write_effect;
+pub mod cls_graph_execution_context;
+pub mod cls_graph_execution_error;
+pub mod cls_graph_execution_outcome;
+pub mod cls_graph_executor;
 pub mod cls_identity_sampler;
 pub mod cls_pipeline_outcome;
 pub mod cls_pipeline_sampler;
 pub mod cls_pipeline_stage;
+pub mod cls_proof_effect_adapter;
 pub mod cls_surface_engine;
 pub mod cls_surface_pipeline;
+pub mod fnc_annotate_node_diagnostics;
 pub mod fnc_annotate_stage_diagnostic;
 pub mod fnc_annotate_stage_diagnostics;
 pub mod fnc_apply_from_source_with_sampler;
+pub mod fnc_apply_proof_node;
+pub mod fnc_resolve_value_source;
 pub mod fnc_rewrite_glyph_cell;
 
 pub use tui_vfx_contract::*;
 
 pub use cls_dim_effect::DimEffect;
 pub use cls_explicit_role_write_effect::ExplicitRoleWriteEffect;
+pub use cls_graph_execution_context::GraphExecutionContext;
+pub use cls_graph_execution_error::GraphExecutionError;
+pub use cls_graph_execution_outcome::GraphExecutionOutcome;
+pub use cls_graph_executor::GraphExecutor;
 pub use cls_identity_sampler::IdentitySampler;
 pub use cls_pipeline_outcome::PipelineOutcome;
 pub use cls_pipeline_sampler::PipelineSampler;
 pub use cls_pipeline_stage::PipelineStage;
+pub use cls_proof_effect_adapter::ProofEffectAdapter;
 pub use cls_surface_engine::SurfaceEngine;
 pub use cls_surface_pipeline::SurfacePipeline;
 
@@ -48,8 +62,9 @@ pub mod contract {
 /// effect/stage shapes as the production descriptor model.
 pub mod proof {
     pub use crate::{
-        DimEffect, ExplicitRoleWriteEffect, IdentitySampler, PipelineStage, SurfaceEngine,
-        SurfacePipeline,
+        DimEffect, ExplicitRoleWriteEffect, GraphExecutionContext, GraphExecutionError,
+        GraphExecutionOutcome, GraphExecutor, IdentitySampler, PipelineStage, ProofEffectAdapter,
+        SurfaceEngine, SurfacePipeline,
     };
 }
 
@@ -62,4 +77,4 @@ pub mod schema_roots {
 }
 
 // <FILE>crates/tui-vfx-next/src/lib.rs</FILE> - <DESC>Clean-room v3.1 proof engine over contract DTOs</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>
