@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-next/tests/support/mod.rs</FILE> - <DESC>Shared graph execution proof fixtures</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G2: keep graph execution tests focused and OFPF-sized.</WCTX>
-// <CLOG>0.1.0: INIT — shared GraphSpec, descriptor, node, surface, and value builders.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G3: add topology and channel-specific proof fixtures.</WCTX>
+// <CLOG>0.2.0: MINOR — add channel proof descriptors, color nodes, and topology-ready graphs.
+// 0.1.0: INIT — shared GraphSpec, descriptor, node, surface, and value builders.</CLOG>
 
 #![allow(dead_code)]
 
@@ -143,6 +144,14 @@ pub fn standard_effects() -> BTreeMap<EffectId, EffectDescriptor> {
             EffectId::new("proof.explicitRoleWrite"),
             descriptor("proof.explicitRoleWrite", "role", ValueKind::Role),
         ),
+        (
+            EffectId::new("proof.setForeground"),
+            descriptor("proof.setForeground", "color", ValueKind::Color),
+        ),
+        (
+            EffectId::new("proof.setBackground"),
+            descriptor("proof.setBackground", "color", ValueKind::Color),
+        ),
     ])
 }
 
@@ -178,6 +187,7 @@ pub fn graph(nodes: Vec<NodeSpec>) -> GraphSpec {
         bindings: vec![],
         effects: standard_effects(),
         order: nodes.iter().map(|node| node.id.clone()).collect(),
+        topology: None,
         nodes: nodes
             .into_iter()
             .map(|node| (node.id.clone(), node))
@@ -216,6 +226,32 @@ pub fn role_node(id: &str, role: RoleTag) -> NodeSpec {
     node
 }
 
+pub fn foreground_node(id: &str, color: Color) -> NodeSpec {
+    node(
+        id,
+        "proof.setForeground",
+        BTreeMap::from([(
+            EffectInputId::new("color"),
+            ValueSource::Literal {
+                value: Value::Color(color),
+            },
+        )]),
+    )
+}
+
+pub fn background_node(id: &str, color: Color) -> NodeSpec {
+    node(
+        id,
+        "proof.setBackground",
+        BTreeMap::from([(
+            EffectInputId::new("color"),
+            ValueSource::Literal {
+                value: Value::Color(color),
+            },
+        )]),
+    )
+}
+
 pub fn binding_to(parameter_id: &str, source: ValueSource) -> BindingSpec {
     BindingSpec {
         target: BindingTarget::Parameter {
@@ -227,4 +263,4 @@ pub fn binding_to(parameter_id: &str, source: ValueSource) -> BindingSpec {
 }
 
 // <FILE>crates/tui-vfx-next/tests/support/mod.rs</FILE> - <DESC>Shared graph execution proof fixtures</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

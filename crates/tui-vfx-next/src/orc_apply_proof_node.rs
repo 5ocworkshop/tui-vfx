@@ -1,16 +1,16 @@
-// <FILE>crates/tui-vfx-next/src/fnc_apply_proof_node.rs</FILE> - <DESC>Apply one proof graph node adapter</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G2: keep proof adapter execution separate from graph orchestration.</WCTX>
-// <CLOG>0.1.0: INIT — apply copy, replace-glyph, dim, and explicit-role proof adapters.</CLOG>
+// <FILE>crates/tui-vfx-next/src/orc_apply_proof_node.rs</FILE> - <DESC>Apply one proof graph node adapter</DESC>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G3: add channel-specific foreground/background proof adapters.</WCTX>
+// <CLOG>0.2.0: MINOR — apply foreground/background-only proof nodes.
+// 0.1.0: INIT — apply copy, replace-glyph, dim, and explicit-role proof adapters.</CLOG>
 
 use std::collections::BTreeMap;
-
-use tui_vfx_types::RoleTag;
 
 use crate::{
     ApplyOutcome, CellWrite, CellWritePolicy, CoordinateSpace, EffectId, EffectInputId,
     GraphExecutionError, NodeSpec, ProofEffectAdapter, RoleSpace, RoleWritePolicy, ScopeSpec,
-    Surface, SurfaceEngine, Value, ValueKind,
+    Surface, SurfaceEngine, Value,
+    fnc_read_proof_input::{input_char, input_color, input_number, input_role},
 };
 
 pub(crate) fn apply_proof_node(
@@ -29,6 +29,12 @@ pub(crate) fn apply_proof_node(
         ProofEffectAdapter::Dim => apply_dim_node(effect, node, inputs, read, next),
         ProofEffectAdapter::ExplicitRoleWrite => {
             apply_explicit_role_write_node(effect, node, inputs, read, next)
+        }
+        ProofEffectAdapter::SetForeground => {
+            apply_color_node(effect, node, inputs, read, next, true)
+        }
+        ProofEffectAdapter::SetBackground => {
+            apply_color_node(effect, node, inputs, read, next, false)
         }
     }
 }
@@ -141,80 +147,45 @@ fn apply_explicit_role_write_node(
     ))
 }
 
+fn apply_color_node(
+    effect: &EffectId,
+    node: &NodeSpec,
+    inputs: &BTreeMap<EffectInputId, Value>,
+    read: &Surface,
+    next: &mut Surface,
+    foreground: bool,
+) -> Result<ApplyOutcome, GraphExecutionError> {
+    let color = input_color(effect, inputs, "color")?;
+    let scope = node_scope(node);
+    let cell_policy = node.cell_write_policy.unwrap_or(CellWritePolicy::WriteCell);
+    let role_policy = node
+        .role_write_policy
+        .clone()
+        .unwrap_or(RoleWritePolicy::PreserveDestination);
+    Ok(SurfaceEngine::apply_from_source(
+        read,
+        next,
+        &scope,
+        CoordinateSpace::default(),
+        RoleSpace::default(),
+        move |mut cell, _role| {
+            if foreground {
+                cell.fg = color;
+            } else {
+                cell.bg = color;
+            }
+            CellWrite {
+                cell,
+                cell_policy,
+                role_policy: role_policy.clone(),
+            }
+        },
+    ))
+}
+
 fn node_scope(node: &NodeSpec) -> ScopeSpec {
     node.scope.clone().unwrap_or(ScopeSpec::All)
 }
 
-fn input_value<'a>(
-    effect: &EffectId,
-    inputs: &'a BTreeMap<EffectInputId, Value>,
-    input: &str,
-) -> Result<&'a Value, GraphExecutionError> {
-    let input_id = EffectInputId::new(input);
-    inputs
-        .get(&input_id)
-        .ok_or_else(|| GraphExecutionError::MissingProofInput {
-            effect: effect.clone(),
-            input: input_id,
-        })
-}
-
-fn input_char(
-    effect: &EffectId,
-    inputs: &BTreeMap<EffectInputId, Value>,
-    input: &str,
-) -> Result<char, GraphExecutionError> {
-    match input_value(effect, inputs, input)? {
-        Value::Text(value) | Value::String(value) => Ok(value.chars().next().unwrap_or(' ')),
-        value => Err(unsupported_input(
-            effect,
-            input,
-            ValueKind::Text,
-            value.kind(),
-        )),
-    }
-}
-
-fn input_number(
-    effect: &EffectId,
-    inputs: &BTreeMap<EffectInputId, Value>,
-    input: &str,
-) -> Result<f64, GraphExecutionError> {
-    let value = input_value(effect, inputs, input)?;
-    value
-        .as_range_number()
-        .ok_or_else(|| unsupported_input(effect, input, ValueKind::Number, value.kind()))
-}
-
-fn input_role(
-    effect: &EffectId,
-    inputs: &BTreeMap<EffectInputId, Value>,
-    input: &str,
-) -> Result<RoleTag, GraphExecutionError> {
-    match input_value(effect, inputs, input)? {
-        Value::Role(role) => Ok(role.clone()),
-        value => Err(unsupported_input(
-            effect,
-            input,
-            ValueKind::Role,
-            value.kind(),
-        )),
-    }
-}
-
-fn unsupported_input(
-    effect: &EffectId,
-    input: &str,
-    expected: ValueKind,
-    actual: ValueKind,
-) -> GraphExecutionError {
-    GraphExecutionError::UnsupportedProofInput {
-        effect: effect.clone(),
-        input: EffectInputId::new(input),
-        expected,
-        actual,
-    }
-}
-
-// <FILE>crates/tui-vfx-next/src/fnc_apply_proof_node.rs</FILE> - <DESC>Apply one proof graph node adapter</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <FILE>crates/tui-vfx-next/src/orc_apply_proof_node.rs</FILE> - <DESC>Apply one proof graph node adapter</DESC>
+// <VERS>END OF VERSION: 0.2.0</VERS>

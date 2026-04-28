@@ -1,9 +1,13 @@
 // <FILE>crates/tui-vfx-next/src/cls_graph_execution_error.rs</FILE> - <DESC>Proof graph execution failure enum</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G2: report validation, adapter, and value-resolution failures.</WCTX>
-// <CLOG>0.1.0: INIT — add structured graph execution errors for proof tests.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G3: report channel-aware parallel merge conflicts.</WCTX>
+// <CLOG>0.2.0: MINOR — add same-channel parallel merge conflict error.
+// 0.1.0: INIT — add structured graph execution errors for proof tests.</CLOG>
 
-use crate::{DescriptorValidationError, EffectId, EffectInputId, ParameterId, SignalId, ValueKind};
+use crate::{
+    CellChannel, DescriptorValidationError, EffectId, EffectInputId, NodeId, ParameterId, SignalId,
+    ValueKind,
+};
 
 /// Structured failure returned by proof graph execution.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -53,6 +57,19 @@ pub enum GraphExecutionError {
         /// Actual input kind.
         actual: ValueKind,
     },
+    /// Parallel branches wrote the same cell channel under error-on-conflict policy.
+    ParallelMergeConflict {
+        /// Destination x coordinate.
+        x: usize,
+        /// Destination y coordinate.
+        y: usize,
+        /// Cell channel written by more than one branch.
+        channel: CellChannel,
+        /// Node that first wrote this channel.
+        prior_node: NodeId,
+        /// Later node that conflicted with the prior write.
+        conflicting_node: NodeId,
+    },
 }
 
 impl From<DescriptorValidationError> for GraphExecutionError {
@@ -62,4 +79,4 @@ impl From<DescriptorValidationError> for GraphExecutionError {
 }
 
 // <FILE>crates/tui-vfx-next/src/cls_graph_execution_error.rs</FILE> - <DESC>Proof graph execution failure enum</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

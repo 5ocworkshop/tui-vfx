@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-next/src/cls_proof_effect_adapter.rs</FILE> - <DESC>Toy proof effect adapter enum</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G2: map contract EffectId values to toy executors.</WCTX>
-// <CLOG>0.1.0: INIT — add proof-only adapter choices, not production effect ports.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G3: add channel-specific proof adapters for merge tests.</WCTX>
+// <CLOG>0.2.0: MINOR — add foreground/background-only proof adapters.
+// 0.1.0: INIT — add proof-only adapter choices, not production effect ports.</CLOG>
 
 /// Toy proof adapter registered for one effect id.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -15,7 +16,11 @@ pub enum ProofEffectAdapter {
     Dim,
     /// Write a resolved semantic role into matched destination cells.
     ExplicitRoleWrite,
+    /// Write only the foreground color channel for matched cells.
+    SetForeground,
+    /// Write only the background color channel for matched cells.
+    SetBackground,
 }
 
 // <FILE>crates/tui-vfx-next/src/cls_proof_effect_adapter.rs</FILE> - <DESC>Toy proof effect adapter enum</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

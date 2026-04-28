@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.11.0</VERS> -->
-<!-- <WCTX>New kernel Phase G2: add canonical graph execution proof guidance.</WCTX> -->
-<!-- <CLOG>0.11.0: MINOR — add Phase G2 canonical graph execution proof guidance.
+<!-- <VERS>VERSION: 0.12.0</VERS> -->
+<!-- <WCTX>New kernel Phase G3: add topology and channel-aware merge guidance.</WCTX> -->
+<!-- <CLOG>0.12.0: MINOR — add Phase G3 topology, parallel snapshot, and channel-aware merge guidance.
+0.11.0: MINOR — add Phase G2 canonical graph execution proof guidance.
 0.10.0: MINOR — add Phase G1 canonical graph container guidance.
 0.9.0: MINOR — add Phase F2 declarative value source and parameter binding guidance.
 0.8.0: MINOR — add Phase F1 typed input/value contract guidance and F2 deferral.
@@ -469,7 +470,7 @@ Key docs:
 
 ### Phase G2 — canonical graph execution proof
 
-Current phase.
+Completed phase.
 
 Target lock:
 
@@ -491,6 +492,32 @@ Key docs:
 - `docs/v3.1-architecture-overview.md`
 - `docs/v3.1-contract-boundary.md`
 - `docs/new_kernel/PHASE_G2_STATUS.md` once created.
+
+### Phase G3 — topology / parallel snapshot / channel-aware merge semantics
+
+Current phase.
+
+Target lock:
+
+- `GraphStep` is the stable topology DTO for node, sequence, and parallel graph execution.
+- `GraphSpec.topology` is optional; when absent, existing `GraphSpec.order` remains the linear fallback.
+- Topology validation rejects unknown node references, duplicate node references, and topologies that do not cover declared nodes.
+- Sequence children execute in order and later children see earlier writes.
+- Parallel children all read the same pre-parallel snapshot and do not see sibling branch writes before join.
+- Parallel branches produce proof deltas that record written cell channels.
+- Channel-aware merge composes different-channel writes and resolves same-channel conflicts by explicit `ParallelMergePolicy`.
+- Proof execution uses toy adapters only, including foreground/background-only adapters for merge tests.
+
+Hard deferrals after G3:
+
+- Do not add node I/O / hint value bus, source recipe schema/compiler, runtime `ParameterStore` / `SignalStore`, live override precedence, direct node/effect-input binding targets, phase graph, trigger engine, studio controls/manifest, migration, real effect ports, or legacy aliases.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_G2.md`
+- `docs/v3.1-architecture-overview.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/new_kernel/PHASE_G3_STATUS.md` once created.
 
 ## Verification gates
 
@@ -550,4 +577,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->

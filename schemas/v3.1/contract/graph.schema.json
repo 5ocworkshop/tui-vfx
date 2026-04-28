@@ -74,6 +74,17 @@
         "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
       }
     },
+    "topology": {
+      "description": "Optional explicit topology. When omitted, `order` is a linear sequence.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GraphStep"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "version": {
       "description": "Contract graph version string.",
       "type": "string"
@@ -505,6 +516,79 @@
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
     },
+    "GraphStep": {
+      "description": "Canonical execution topology for a graph.",
+      "oneOf": [
+        {
+          "description": "Execute one declared graph node.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "node"
+            },
+            "node": {
+              "description": "Graph-local node id to execute.",
+              "$ref": "#/$defs/NodeId"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "node"
+          ]
+        },
+        {
+          "description": "Execute child steps in order, where each child reads the prior output.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Ordered child steps.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GraphStep"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "sequence"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children"
+          ]
+        },
+        {
+          "description": "Execute child branches against the same input snapshot, then merge deltas.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Authored child branches. Child order is deterministic merge order.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GraphStep"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "parallel"
+            },
+            "mergePolicy": {
+              "description": "Policy used when multiple branches write the same cell channel.",
+              "$ref": "#/$defs/ParallelMergePolicy"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children",
+            "mergePolicy"
+          ]
+        }
+      ]
+    },
     "InternedRoleName": {
       "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
       "type": "string"
@@ -601,6 +685,21 @@
         }
       },
       "additionalProperties": false
+    },
+    "ParallelMergePolicy": {
+      "description": "Policy for resolving channel writes produced by parallel graph branches.",
+      "oneOf": [
+        {
+          "description": "Merge branches in authored child order; later same-channel writes win.",
+          "type": "string",
+          "const": "childOrderLastWriterWins"
+        },
+        {
+          "description": "Reject the merge when multiple branches write the same cell channel.",
+          "type": "string",
+          "const": "errorOnSameChannelConflict"
+        }
+      ]
     },
     "ParameterId": {
       "description": "Stable public recipe parameter identifier.",

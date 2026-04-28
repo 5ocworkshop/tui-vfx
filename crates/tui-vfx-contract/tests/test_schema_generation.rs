@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>New kernel Phase G1: include canonical graph and node schema roots.</WCTX>
-// <CLOG>0.5.0: MINOR — add graph and node schema fixtures.
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>New kernel Phase G3: include graph topology schema root.</WCTX>
+// <CLOG>0.6.0: MINOR — add graph-step schema fixture.
+// 0.5.0: MINOR — add graph and node schema fixtures.
 // 0.4.0: MINOR — add value source, parameter, signal, and binding schema fixtures.
 // 0.3.0: MINOR — add value and effect input schema fixtures and description assertions.
 // 0.2.0: MINOR — add effect descriptor schema fixture and description assertions.
@@ -11,9 +12,9 @@ use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
-    BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, GraphSpec, NodeSpec, ParameterSpec,
-    Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, Surface, SurfaceDiagnostic, Value,
-    ValueSource,
+    BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, GraphSpec, GraphStep, NodeSpec,
+    ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, Surface,
+    SurfaceDiagnostic, Value, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -45,6 +46,7 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         ("signal.schema.json", canonical_schema::<SignalSpec>()),
         ("binding.schema.json", canonical_schema::<BindingSpec>()),
         ("graph.schema.json", canonical_schema::<GraphSpec>()),
+        ("graph-step.schema.json", canonical_schema::<GraphStep>()),
         ("node.schema.json", canonical_schema::<NodeSpec>()),
         (
             "diagnostic.schema.json",
@@ -160,6 +162,11 @@ fn graph_schema_is_current() {
 }
 
 #[test]
+fn graph_step_schema_is_current() {
+    assert_schema_fixture_current::<GraphStep>("graph-step.schema.json");
+}
+
+#[test]
 fn node_schema_is_current() {
     assert_schema_fixture_current::<NodeSpec>("node.schema.json");
 }
@@ -229,6 +236,7 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
     assert!(all_schemas.contains("Host/runtime-provided signal contract"));
     assert!(all_schemas.contains("Declarative binding from a value source to a parameter target"));
     assert!(all_schemas.contains("Canonical v3.1 graph container"));
+    assert!(all_schemas.contains("Canonical execution topology for a graph"));
     assert!(all_schemas.contains("One effect node in a canonical v3.1 graph"));
     assert!(all_schemas.contains("Stable graph-local node identifier"));
     assert!(all_schemas.contains("Deterministic node order by graph-local node id"));
@@ -275,4 +283,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

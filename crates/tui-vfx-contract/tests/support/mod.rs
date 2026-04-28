@@ -136,6 +136,7 @@ pub fn base_graph(source: ValueSource) -> GraphSpec {
         effects: BTreeMap::from([(EffectId::new("terminal.opacity"), opacity_descriptor())]),
         nodes: BTreeMap::from([(NodeId::new("fadeIn"), base_node(source))]),
         order: vec![NodeId::new("fadeIn")],
+        topology: None,
     }
 }
 

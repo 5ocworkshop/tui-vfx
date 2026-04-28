@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.29.0</VERS> -->
-<!-- <WCTX>New kernel Phase G2: index canonical graph execution proof.</WCTX> -->
-<!-- <CLOG>1.29.0: note G2 canonical graph execution proof.
+<!-- <VERS>VERSION: 1.30.0</VERS> -->
+<!-- <WCTX>New kernel Phase G3: index graph topology and parallel merge semantics.</WCTX> -->
+<!-- <CLOG>1.30.0: note G3 graph topology and channel-aware parallel merge.
+1.29.0: note G2 canonical graph execution proof.
 1.28.0: note G1 graph and node contract roots.
 1.27.0: note F2 value source, parameter, signal, and binding contract roots.
 1.26.0: note F1 typed value/input contract and schema roots.
@@ -122,9 +123,9 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 
 ## V3 planning and tooling
 
-- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model, F1 typed input model, F2 declarative source/binding model, G1 canonical graph container, and G2 graph execution proof.
-- [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor/input/source/binding/graph/execution proof model, and handoff guardrails.
-- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0/E1/F1/F2/G1/G2 surface, sampling, pipeline, scene, descriptor/input/source/binding/graph/execution-proof, schema-reference, and contract/proof ownership.
+- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model, F1 typed input model, F2 declarative source/binding model, G1 canonical graph container, G2 graph execution proof, and G3 topology/channel-aware merge semantics.
+- [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor/input/source/binding/graph/execution proof/topology model, and handoff guardrails.
+- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0/E1/F1/F2/G1/G2/G3 surface, sampling, pipeline, scene, descriptor/input/source/binding/graph/execution-proof, schema-reference, and contract/proof ownership.
 - [v3.1-feature-contract-checklist.md](v3.1-feature-contract-checklist.md) — Checklist for future v3.1 contract-affecting feature work.
 - [v3.1-template-composition.md](v3.1-template-composition.md) — Phase D2 design for compile-time template/mixin/preset/profile expansion into canonical v3.1 recipes.
 - [new_kernel/INDEX.md](new_kernel/INDEX.md) — Clean-room kernel phase docs, architect responses, status memos, and schema artifacts.

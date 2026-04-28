@@ -1,21 +1,21 @@
 // <FILE>crates/tui-vfx-next/src/cls_graph_executor.rs</FILE> - <DESC>Canonical graph proof executor</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G2: execute validated GraphSpec values with toy proof adapters.</WCTX>
-// <CLOG>0.1.0: INIT — add validation-gated, ordered graph proof execution without runtime stores.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G3: execute optional graph topology with parallel snapshot merge.</WCTX>
+// <CLOG>0.2.0: MINOR — add sequence/parallel topology execution and channel-aware deltas.
+// 0.1.0: INIT — add validation-gated, ordered graph proof execution without runtime stores.</CLOG>
 
 use std::collections::BTreeMap;
 
 use crate::{
     EffectId, EffectInputId, GraphExecutionContext, GraphExecutionError, GraphExecutionOutcome,
     GraphSpec, NodeId, NodeSpec, ProofEffectAdapter, Surface, Value,
-    fnc_annotate_node_diagnostics::annotate_node_diagnostics,
-    fnc_apply_proof_node::apply_proof_node, fnc_resolve_value_source::resolve_value_source,
+    fnc_resolve_value_source::resolve_value_source, orc_execute_graph_step::linear_order_step,
 };
 
 /// Validation-gated proof executor for canonical graph contracts.
 #[derive(Clone, Debug, Default)]
 pub struct GraphExecutor {
-    adapters: BTreeMap<EffectId, ProofEffectAdapter>,
+    pub(crate) adapters: BTreeMap<EffectId, ProofEffectAdapter>,
 }
 
 impl GraphExecutor {
@@ -37,6 +37,14 @@ impl GraphExecutor {
                 EffectId::new("proof.explicitRoleWrite"),
                 ProofEffectAdapter::ExplicitRoleWrite,
             )
+            .with_adapter(
+                EffectId::new("proof.setForeground"),
+                ProofEffectAdapter::SetForeground,
+            )
+            .with_adapter(
+                EffectId::new("proof.setBackground"),
+                ProofEffectAdapter::SetBackground,
+            )
     }
 
     /// Register or replace one proof adapter.
@@ -56,54 +64,23 @@ impl GraphExecutor {
         self.validate_adapters(graph)?;
         let resolved_inputs = self.resolve_all_inputs(graph, context)?;
 
-        let mut current = input.clone();
-        let mut executed_nodes = Vec::with_capacity(graph.order.len());
-        let mut diagnostics = Vec::new();
-        let mut matched_cells = 0;
-        let mut written_cells = 0;
-
-        for (index, node_id) in graph.order.iter().enumerate() {
-            let node = graph
-                .nodes
-                .get(node_id)
-                .expect("GraphSpec validation requires ordered nodes to exist");
-            let adapter = self
-                .adapters
-                .get(&node.effect)
-                .expect("adapter preflight requires all node effects to be registered");
-            let read = current.clone();
-            let mut next = current.clone();
-            let mut outcome = apply_proof_node(
-                *adapter,
-                &node.effect,
-                node,
-                &resolved_inputs[node_id],
-                &read,
-                &mut next,
-            )?;
-            annotate_node_diagnostics(&mut outcome, index, node_id);
-            matched_cells += outcome.matched_cells;
-            written_cells += outcome.written_cells;
-            diagnostics.extend(outcome.diagnostics);
-            executed_nodes.push(node_id.clone());
-            current = next;
-        }
+        let step = graph
+            .topology
+            .clone()
+            .unwrap_or_else(|| linear_order_step(&graph.order));
+        let execution = self.execute_step(graph, &resolved_inputs, &step, input)?;
 
         Ok(GraphExecutionOutcome {
-            surface: current,
-            executed_nodes,
-            matched_cells,
-            written_cells,
-            diagnostics,
+            surface: execution.surface,
+            executed_nodes: execution.executed_nodes,
+            matched_cells: execution.matched_cells,
+            written_cells: execution.written_cells,
+            diagnostics: execution.diagnostics,
         })
     }
 
     fn validate_adapters(&self, graph: &GraphSpec) -> Result<(), GraphExecutionError> {
-        for node_id in &graph.order {
-            let node = graph
-                .nodes
-                .get(node_id)
-                .expect("GraphSpec validation requires ordered nodes to exist");
+        for node in graph.nodes.values() {
             if !self.adapters.contains_key(&node.effect) {
                 return Err(GraphExecutionError::MissingProofAdapter {
                     effect: node.effect.clone(),
@@ -159,4 +136,4 @@ impl GraphExecutor {
 }
 
 // <FILE>crates/tui-vfx-next/src/cls_graph_executor.rs</FILE> - <DESC>Canonical graph proof executor</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

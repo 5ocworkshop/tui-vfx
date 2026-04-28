@@ -1,14 +1,15 @@
 // <FILE>crates/tui-vfx-contract/tests/test_graph_policy_contract.rs</FILE> - <DESC>Canonical graph policy, order, and binding validation tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G1: prove node order, capability policy, bindings, and no-runtime boundaries.</WCTX>
-// <CLOG>0.1.0: INIT — lock policy support, deterministic ordering, and F2 binding reuse.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G3: prove topology validation while preserving linear order fallback.</WCTX>
+// <CLOG>0.2.0: MINOR — add unknown, duplicate, and coverage topology tests.
+// 0.1.0: INIT — lock policy support, deterministic ordering, and F2 binding reuse.</CLOG>
 
 mod support;
 
 use support::{base_graph, binding_to, literal_source, signal_source};
 use tui_vfx_contract::{
-    CellWritePolicy, DescriptorValidationError, NodeId, RoleWritePolicy, RoleWritePolicyKind,
-    ScopeKind, ScopeSpec,
+    CellWritePolicy, DescriptorValidationError, GraphStep, NodeId, ParallelMergePolicy,
+    RoleWritePolicy, RoleWritePolicyKind, ScopeKind, ScopeSpec,
 };
 use tui_vfx_types::{Rect, RoleTag};
 
@@ -97,6 +98,63 @@ fn graph_rejects_node_missing_from_order() {
 }
 
 #[test]
+fn graph_accepts_explicit_sequence_topology() {
+    let mut graph = base_graph(literal_source());
+    graph.topology = Some(GraphStep::sequence(vec![GraphStep::node(NodeId::new(
+        "fadeIn",
+    ))]));
+
+    assert!(graph.validate().is_ok());
+}
+
+#[test]
+fn graph_accepts_explicit_parallel_topology() {
+    let mut graph = base_graph(literal_source());
+    graph.topology = Some(GraphStep::parallel(
+        vec![GraphStep::node(NodeId::new("fadeIn"))],
+        ParallelMergePolicy::ChildOrderLastWriterWins,
+    ));
+
+    assert!(graph.validate().is_ok());
+}
+
+#[test]
+fn graph_rejects_topology_reference_to_unknown_node() {
+    let mut graph = base_graph(literal_source());
+    graph.topology = Some(GraphStep::node(NodeId::new("missing")));
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::UnknownOrderNode { id }) if id.as_str() == "missing"
+    ));
+}
+
+#[test]
+fn graph_rejects_duplicate_topology_node_entries() {
+    let mut graph = base_graph(literal_source());
+    graph.topology = Some(GraphStep::sequence(vec![
+        GraphStep::node(NodeId::new("fadeIn")),
+        GraphStep::node(NodeId::new("fadeIn")),
+    ]));
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::DuplicateOrderNode { id }) if id.as_str() == "fadeIn"
+    ));
+}
+
+#[test]
+fn graph_rejects_node_missing_from_topology() {
+    let mut graph = base_graph(literal_source());
+    graph.topology = Some(GraphStep::sequence(vec![]));
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::NodeMissingFromOrder { id }) if id.as_str() == "fadeIn"
+    ));
+}
+
+#[test]
 fn graph_accepts_f2_parameter_binding() {
     let mut graph = base_graph(literal_source());
     graph.bindings = vec![binding_to("opacity", signal_source("audioLevel"))];
@@ -146,4 +204,4 @@ fn g1_does_not_add_runtime_or_recipe_execution() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_graph_policy_contract.rs</FILE> - <DESC>Canonical graph policy, order, and binding validation tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

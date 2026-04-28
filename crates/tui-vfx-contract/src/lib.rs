@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>New kernel Phase G1: expose canonical graph and node contract vocabulary.</WCTX>
-// <CLOG>0.5.0: MINOR — export GraphSpec, NodeSpec, GraphId, NodeId, and schema roots.
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>New kernel Phase G3: expose graph topology and parallel merge policy vocabulary.</WCTX>
+// <CLOG>0.6.0: MINOR — export GraphStep, ParallelMergePolicy, and topology schema root.
+// 0.5.0: MINOR — export GraphSpec, NodeSpec, GraphId, NodeId, and schema roots.
 // 0.4.0: MINOR — export ValueSource, ParameterSpec, SignalSpec, BindingSpec, and schema roots.
 // 0.3.0: MINOR — export Value, ValueSpec, EffectInputSpec, and input schema roots.
 // 0.2.0: MINOR — export EffectDescriptor and descriptor capability DTOs/schema root.
@@ -37,10 +38,12 @@ pub mod cls_element_id;
 pub mod cls_element_placement;
 pub mod cls_graph_id;
 pub mod cls_graph_spec;
+pub mod cls_graph_step;
 pub mod cls_layer_id;
 pub mod cls_node_id;
 pub mod cls_node_spec;
 pub mod cls_numeric_range;
+pub mod cls_parallel_merge_policy;
 pub mod cls_parameter_id;
 pub mod cls_parameter_spec;
 pub mod cls_role_space;
@@ -67,6 +70,7 @@ pub mod cls_value_source;
 pub mod cls_value_spec;
 pub mod cls_write_support;
 pub mod fnc_scope_coordinate;
+pub mod orc_validate_graph_spec;
 pub mod tr_coordinate_sampler;
 
 pub use cls_apply_outcome::ApplyOutcome;
@@ -92,10 +96,12 @@ pub use cls_element_id::ElementId;
 pub use cls_element_placement::ElementPlacement;
 pub use cls_graph_id::GraphId;
 pub use cls_graph_spec::GraphSpec;
+pub use cls_graph_step::GraphStep;
 pub use cls_layer_id::LayerId;
 pub use cls_node_id::NodeId;
 pub use cls_node_spec::NodeSpec;
 pub use cls_numeric_range::NumericRange;
+pub use cls_parallel_merge_policy::ParallelMergePolicy;
 pub use cls_parameter_id::ParameterId;
 pub use cls_parameter_spec::ParameterSpec;
 pub use cls_role_space::RoleSpace;
@@ -128,11 +134,11 @@ pub use tr_coordinate_sampler::CoordinateSampler;
 /// These roots generate fixtures under `schemas/v3.1/contract/`.
 pub mod schema_roots {
     pub use crate::{
-        BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, GraphSpec, NodeSpec,
+        BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, GraphSpec, GraphStep, NodeSpec,
         ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, Surface,
         SurfaceDiagnostic, Value, ValueSource,
     };
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

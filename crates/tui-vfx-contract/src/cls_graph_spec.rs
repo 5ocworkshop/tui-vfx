@@ -1,13 +1,15 @@
 // <FILE>crates/tui-vfx-contract/src/cls_graph_spec.rs</FILE> - <DESC>Canonical graph container contract DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G1: validate descriptors, parameters, signals, bindings, nodes, and order together.</WCTX>
-// <CLOG>0.1.0: INIT — add canonical graph DTO and validation helpers without runtime execution.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G3: add optional execution topology while keeping linear order fallback.</WCTX>
+// <CLOG>0.2.0: MINOR — add optional topology and delegate validation to an OFPF-sized helper.
+// 0.1.0: INIT — add canonical graph DTO and validation helpers without runtime execution.</CLOG>
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use crate::{
-    BindingSpec, DescriptorValidationError, EffectDescriptor, EffectId, GraphId, NodeId, NodeSpec,
-    ParameterId, ParameterSpec, SignalId, SignalSpec,
+    BindingSpec, DescriptorValidationError, EffectDescriptor, EffectId, GraphId, GraphStep, NodeId,
+    NodeSpec, ParameterId, ParameterSpec, SignalId, SignalSpec,
+    orc_validate_graph_spec::validate_graph_spec,
 };
 
 /// Canonical v3.1 graph container produced by future recipe compilation.
@@ -33,153 +35,14 @@ pub struct GraphSpec {
     pub nodes: BTreeMap<NodeId, NodeSpec>,
     /// Deterministic node order by graph-local node id.
     pub order: Vec<NodeId>,
+    /// Optional explicit topology. When omitted, `order` is a linear sequence.
+    pub topology: Option<GraphStep>,
 }
 
 impl GraphSpec {
     /// Validate graph identity, declarations, node compatibility, bindings, and order.
     pub fn validate(&self) -> Result<(), DescriptorValidationError> {
-        if !self.id.is_valid() {
-            return Err(DescriptorValidationError::InvalidGraphId {
-                id: self.id.clone(),
-            });
-        }
-
-        self.validate_parameters()?;
-        self.validate_signals()?;
-        self.validate_bindings()?;
-        self.validate_effects()?;
-        self.validate_nodes()?;
-        self.validate_order()?;
-        Ok(())
-    }
-
-    fn validate_parameters(&self) -> Result<(), DescriptorValidationError> {
-        for (id, parameter) in &self.parameters {
-            if !id.is_valid() {
-                return Err(DescriptorValidationError::InvalidParameterId { id: id.clone() });
-            }
-            if &parameter.id != id {
-                return Err(DescriptorValidationError::ParameterIdMismatch {
-                    key: id.clone(),
-                    parameter: parameter.id.clone(),
-                });
-            }
-            parameter.validate()?;
-        }
-        Ok(())
-    }
-
-    fn validate_signals(&self) -> Result<(), DescriptorValidationError> {
-        for (id, signal) in &self.signals {
-            if !id.is_valid() {
-                return Err(DescriptorValidationError::InvalidSignalId { id: id.clone() });
-            }
-            if &signal.id != id {
-                return Err(DescriptorValidationError::SignalIdMismatch {
-                    key: id.clone(),
-                    signal: signal.id.clone(),
-                });
-            }
-            signal.validate()?;
-        }
-        Ok(())
-    }
-
-    fn validate_bindings(&self) -> Result<(), DescriptorValidationError> {
-        for binding in &self.bindings {
-            binding.validate(&self.parameters, &self.signals)?;
-        }
-        Ok(())
-    }
-
-    fn validate_effects(&self) -> Result<(), DescriptorValidationError> {
-        for (id, effect) in &self.effects {
-            if &effect.id != id {
-                return Err(DescriptorValidationError::EffectIdMismatch {
-                    key: id.clone(),
-                    effect: effect.id.clone(),
-                });
-            }
-            effect.validate_inputs()?;
-        }
-        Ok(())
-    }
-
-    fn validate_nodes(&self) -> Result<(), DescriptorValidationError> {
-        for (id, node) in &self.nodes {
-            if !id.is_valid() {
-                return Err(DescriptorValidationError::InvalidNodeId { id: id.clone() });
-            }
-            if &node.id != id {
-                return Err(DescriptorValidationError::NodeIdMismatch {
-                    key: id.clone(),
-                    node: node.id.clone(),
-                });
-            }
-            self.validate_node(node)?;
-        }
-        Ok(())
-    }
-
-    fn validate_node(&self, node: &NodeSpec) -> Result<(), DescriptorValidationError> {
-        let effect = self.effects.get(&node.effect).ok_or_else(|| {
-            DescriptorValidationError::UnknownEffect {
-                id: node.effect.clone(),
-            }
-        })?;
-        for (input_id, source) in &node.inputs {
-            if !input_id.is_valid() {
-                return Err(DescriptorValidationError::InvalidInputId {
-                    id: input_id.clone(),
-                });
-            }
-            let input = effect.inputs.get(input_id).ok_or_else(|| {
-                DescriptorValidationError::UnknownNodeInput {
-                    effect: node.effect.clone(),
-                    input: input_id.clone(),
-                }
-            })?;
-            source.validate_kind(input.value.kind, &self.parameters, &self.signals)?;
-        }
-
-        for (input_id, input) in &effect.inputs {
-            if !node.inputs.contains_key(input_id) && input.value.default.is_none() {
-                return Err(DescriptorValidationError::MissingRequiredNodeInput {
-                    effect: node.effect.clone(),
-                    input: input_id.clone(),
-                });
-            }
-        }
-
-        if let Some(scope) = &node.scope {
-            effect.validate_scope(scope)?;
-        }
-        if let Some(policy) = node.cell_write_policy {
-            effect.validate_cell_write_policy(policy)?;
-        }
-        if let Some(policy) = &node.role_write_policy {
-            effect.validate_role_write_policy(policy)?;
-        }
-
-        Ok(())
-    }
-
-    fn validate_order(&self) -> Result<(), DescriptorValidationError> {
-        let mut seen = BTreeSet::new();
-        for id in &self.order {
-            if !self.nodes.contains_key(id) {
-                return Err(DescriptorValidationError::UnknownOrderNode { id: id.clone() });
-            }
-            if !seen.insert(id) {
-                return Err(DescriptorValidationError::DuplicateOrderNode { id: id.clone() });
-            }
-        }
-        for id in self.nodes.keys() {
-            if !seen.contains(id) {
-                return Err(DescriptorValidationError::NodeMissingFromOrder { id: id.clone() });
-            }
-        }
-        Ok(())
+        validate_graph_spec(self)
     }
 }
 
@@ -208,4 +71,4 @@ fn add_identifier_key_pattern(schema: &mut schemars::Schema, description_prefix:
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_graph_spec.rs</FILE> - <DESC>Canonical graph container contract DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
