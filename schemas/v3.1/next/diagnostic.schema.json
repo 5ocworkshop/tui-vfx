@@ -70,6 +70,11 @@
           "description": "A source and destination surface pair had incompatible dimensions.",
           "type": "string",
           "const": "surfaceSizeMismatch"
+        },
+        {
+          "description": "A scene element had local cells clipped by the final scene bounds.",
+          "type": "string",
+          "const": "sceneElementClipped"
         }
       ]
     }

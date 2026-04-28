@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-next/tests/test_schema_generation.rs</FILE> - <DESC>Schema generation and staleness checks for v3.1 clean-room contracts</DESC>
-// <VERS>VERSION: 0.2.1</VERS>
-// <WCTX>New kernel Phase D0 verifier fix: require descriptions even for `$ref` payload properties.</WCTX>
-// <CLOG>0.2.1: TEST — require descriptions on `$ref` payload properties as well as inline properties.
+// <VERS>VERSION: 0.3.2</VERS>
+// <WCTX>New kernel Phase D1 verifier fix: include public scene outcome schema root.</WCTX>
+// <CLOG>0.3.2: TEST — include public SceneOutcome in checked schema roots.
+// 0.3.1: TEST — add named D1 scene schema freshness test.
+// 0.3.0: TEST — generate and validate Phase D1 scene and element schema roots.
+// 0.2.1: TEST — require descriptions on `$ref` payload properties as well as inline properties.
 // 0.2.0: TEST — assert schema object strictness and property descriptions for generated roots.
 // 0.1.0: INIT — generate/check the six Phase D0 schema roots and assert rustdoc descriptions are present.</CLOG>
 
@@ -9,7 +12,8 @@ use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_next::{
-    CellWrite, PipelineSampler, ScopeSpec, Surface, SurfaceDiagnostic, SurfacePipeline,
+    CellWrite, PipelineSampler, Scene, SceneElement, SceneOutcome, ScopeSpec, Surface,
+    SurfaceDiagnostic, SurfacePipeline,
 };
 
 fn schema_dir() -> PathBuf {
@@ -37,6 +41,9 @@ fn schema_roots() -> Vec<(&'static str, String)> {
             "diagnostic.schema.json",
             canonical_schema::<SurfaceDiagnostic>(),
         ),
+        ("scene.schema.json", canonical_schema::<Scene>()),
+        ("element.schema.json", canonical_schema::<SceneElement>()),
+        ("outcome.schema.json", canonical_schema::<SceneOutcome>()),
     ]
 }
 
@@ -121,6 +128,18 @@ fn generated_schema_contains_rustdoc_descriptions() {
         all_schemas.contains("Structured diagnostic emitted by surface contract operations"),
         "diagnostic rustdoc description should be present"
     );
+    assert!(
+        all_schemas.contains("Scene composed from one or more placed semantic elements"),
+        "scene rustdoc description should be present"
+    );
+    assert!(
+        all_schemas.contains("One placed semantic surface inside a scene"),
+        "element rustdoc description should be present"
+    );
+    assert!(
+        all_schemas.contains("Result of composing scene elements into one final semantic surface"),
+        "scene outcome rustdoc description should be present"
+    );
 }
 
 #[test]
@@ -130,6 +149,21 @@ fn generated_schema_objects_are_strict_and_described() {
         assert_object_shapes_are_strict(&value, file_name);
         assert_properties_are_described(&value, file_name);
     }
+}
+
+#[test]
+fn scene_schema_generation_is_current() {
+    let dir = schema_dir();
+    let scene_schema =
+        fs::read_to_string(dir.join("scene.schema.json")).expect("scene schema fixture exists");
+    let element_schema =
+        fs::read_to_string(dir.join("element.schema.json")).expect("element schema fixture exists");
+    let outcome_schema =
+        fs::read_to_string(dir.join("outcome.schema.json")).expect("outcome schema fixture exists");
+
+    assert_eq!(scene_schema, canonical_schema::<Scene>());
+    assert_eq!(element_schema, canonical_schema::<SceneElement>());
+    assert_eq!(outcome_schema, canonical_schema::<SceneOutcome>());
 }
 
 #[test]
@@ -157,4 +191,4 @@ fn checked_in_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-next/tests/test_schema_generation.rs</FILE> - <DESC>Schema generation and staleness checks for v3.1 clean-room contracts</DESC>
-// <VERS>END OF VERSION: 0.2.1</VERS>
+// <VERS>END OF VERSION: 0.3.2</VERS>

@@ -1,0 +1,487 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Scene",
+  "description": "Scene composed from one or more placed semantic elements.",
+  "type": "object",
+  "properties": {
+    "elements": {
+      "description": "Elements composed into the scene.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SceneElement"
+      }
+    },
+    "height": {
+      "description": "Height of the final composed scene in cells.",
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    },
+    "width": {
+      "description": "Width of the final composed scene in cells.",
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "width",
+    "height",
+    "elements"
+  ],
+  "$defs": {
+    "Cell": {
+      "description": "A single cell in a terminal display.\n\nEach cell contains a character and its styling information (colors and modifiers).",
+      "type": "object",
+      "properties": {
+        "bg": {
+          "description": "Background color.",
+          "$ref": "#/$defs/Color"
+        },
+        "ch": {
+          "description": "The character to display.",
+          "type": "string",
+          "maxLength": 1,
+          "minLength": 1
+        },
+        "fg": {
+          "description": "Foreground (text) color.",
+          "$ref": "#/$defs/Color"
+        },
+        "mod_alpha": {
+          "description": "Optional alpha override for modifier application (0-255).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "mods": {
+          "description": "Text modifiers (bold, italic, etc.).",
+          "$ref": "#/$defs/Modifiers"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "ch",
+        "fg",
+        "bg",
+        "mods"
+      ]
+    },
+    "CellWritePolicy": {
+      "description": "Policy for how a cell write updates cell channels.",
+      "oneOf": [
+        {
+          "description": "Write the cell exactly, including transparent empty cells.",
+          "type": "string",
+          "const": "writeCell"
+        },
+        {
+          "description": "Skip only transparent empty cell writes, preserving destination cell and role.",
+          "type": "string",
+          "const": "skipTransparentEmpty"
+        }
+      ]
+    },
+    "ClipPolicy": {
+      "description": "Policy for element cells that land outside the final scene bounds.",
+      "oneOf": [
+        {
+          "description": "Ignore out-of-bounds element cells and preserve the current composed surface.",
+          "type": "string",
+          "const": "clip"
+        },
+        {
+          "description": "Ignore out-of-bounds element cells and emit one element-aware warning diagnostic.",
+          "type": "string",
+          "const": "warn"
+        }
+      ]
+    },
+    "Color": {
+      "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "Alpha channel (0=transparent, 255=opaque)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "b": {
+          "description": "Blue channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "description": "Green channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "description": "Red channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ]
+    },
+    "ElementId": {
+      "description": "Stable scene element identity used by diagnostics and future recipe references.",
+      "type": "string"
+    },
+    "ElementPlacement": {
+      "description": "Placement of an element-local surface into scene coordinates.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Scene x coordinate where element-local x=0 lands.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "y": {
+          "description": "Scene y coordinate where element-local y=0 lands.",
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "LayerId": {
+      "description": "Optional scene layer identity used for grouping elements without a full layer graph.",
+      "type": "string"
+    },
+    "Modifiers": {
+      "description": "Text modifiers for terminal display.\n\nThese map to common terminal text attributes supported by most terminals.",
+      "type": "object",
+      "properties": {
+        "bold": {
+          "description": "Bold/intense text modifier.",
+          "type": "boolean"
+        },
+        "dim": {
+          "description": "Dim/faint text modifier.",
+          "type": "boolean"
+        },
+        "hidden": {
+          "description": "Hidden/invisible text (SGR 8). Note: Often disabled for security.",
+          "type": "boolean"
+        },
+        "italic": {
+          "description": "Italic text modifier.",
+          "type": "boolean"
+        },
+        "rapid_blink": {
+          "description": "Rapid blink (SGR 6). Note: Rarely supported by terminals.",
+          "type": "boolean"
+        },
+        "reverse": {
+          "description": "Reverse-video text modifier.",
+          "type": "boolean"
+        },
+        "slow_blink": {
+          "description": "Slow blink (SGR 5). Note: Poorly supported by modern terminals.",
+          "type": "boolean"
+        },
+        "strikethrough": {
+          "description": "Strikethrough text modifier.",
+          "type": "boolean"
+        },
+        "underline": {
+          "description": "Underline text modifier.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "bold",
+        "italic",
+        "underline",
+        "dim",
+        "reverse",
+        "strikethrough",
+        "slow_blink",
+        "rapid_blink",
+        "hidden"
+      ]
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "RoleWritePolicy": {
+      "description": "Policy for how a cell write updates the semantic role channel.",
+      "oneOf": [
+        {
+          "description": "Preserve the destination role.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "preserveDestination"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Copy the sampled-source role.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "copySampledSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Set one explicit role, used by procedural/shadow-style writers.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "setExplicit"
+            },
+            "role": {
+              "description": "Role to write into the destination role channel.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        }
+      ]
+    },
+    "SceneElement": {
+      "description": "One placed semantic surface inside a scene.",
+      "type": "object",
+      "properties": {
+        "cellWritePolicy": {
+          "description": "Policy for whether transparent empty local cells write or skip.",
+          "$ref": "#/$defs/CellWritePolicy"
+        },
+        "clipPolicy": {
+          "description": "Policy for local cells that land outside the final scene bounds.",
+          "$ref": "#/$defs/ClipPolicy"
+        },
+        "id": {
+          "description": "Stable element identity, distinct from semantic cell roles.",
+          "$ref": "#/$defs/ElementId"
+        },
+        "layer": {
+          "description": "Optional lightweight layer grouping identity.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayerId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "placement": {
+          "description": "Placement of the element-local surface in scene coordinates.",
+          "$ref": "#/$defs/ElementPlacement"
+        },
+        "roleWritePolicy": {
+          "description": "Policy for how a written cell updates the final scene role channel.",
+          "$ref": "#/$defs/RoleWritePolicy"
+        },
+        "surface": {
+          "description": "Element-local semantic surface.",
+          "$ref": "#/$defs/Surface"
+        },
+        "zIndex": {
+          "description": "Z order; higher values compose later and appear above lower values.",
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zIndex",
+        "placement",
+        "surface",
+        "clipPolicy",
+        "cellWritePolicy",
+        "roleWritePolicy"
+      ]
+    },
+    "Surface": {
+      "title": "Surface",
+      "description": "Dense rectangular semantic render surface used by the v3.1 clean-room kernel.\n\nA surface owns visual cells and one semantic role per cell in row-major order.\nThe cell and role vectors must both contain `width * height` entries.",
+      "type": "object",
+      "properties": {
+        "cells": {
+          "description": "Visual cell grid stored in row-major order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Cell"
+          }
+        },
+        "height": {
+          "description": "Surface height in cells.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "metadata": {
+          "description": "Optional producer and layer metadata.",
+          "$ref": "#/$defs/SurfaceMetadata"
+        },
+        "roles": {
+          "description": "One semantic role per surface cell, stored in row-major order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoleTag"
+          }
+        },
+        "width": {
+          "description": "Surface width in cells.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "cells",
+        "roles",
+        "metadata"
+      ]
+    },
+    "SurfaceMetadata": {
+      "description": "Metadata attached to a semantic surface.",
+      "type": "object",
+      "properties": {
+        "layer": {
+          "description": "Optional semantic layer label for future scene-layer integration.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "producer": {
+          "description": "Optional producer name for diagnostics and tests.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

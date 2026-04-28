@@ -1,8 +1,10 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>New kernel Phase D0: add schema/reference readiness and Phase D0 context to durable agent briefing.</WCTX> -->
-<!-- <CLOG>0.2.0: MINOR — add Phase D0 schema/reference readiness, architecture overview, and updated phase history.
-<!-- 0.1.2: PATCH — add 90_recycle_bin.md to read order and summarize move-instead-of-delete protocol. --></CLOG> -->
+<!-- <VERS>VERSION: 0.3.1</VERS> -->
+<!-- <WCTX>New kernel Phase D1 verifier fix: include outcome schema root in durable briefing.</WCTX> -->
+<!-- <CLOG>0.3.1: PATCH — include public SceneOutcome schema root in D1 guidance.
+0.3.0: MINOR — add Phase D1 scene composition history, schema roots, and verification gate.
+0.2.0: MINOR — add Phase D0 schema/reference readiness, architecture overview, and updated phase history.
+0.1.2: PATCH — add 90_recycle_bin.md to read order and summarize move-instead-of-delete protocol.</CLOG> -->
 
 # New Kernel Agent Briefing
 
@@ -119,7 +121,7 @@ Phase D0 makes this a standing rule for all future clean-room phases:
 - Every public contract-visible type, field, variant, and non-obvious policy/default needs rustdoc.
 - Intentionally internal public helpers must be marked or explained in status docs.
 
-Phase D0 checked schema roots live under `schemas/v3.1/next/`: surface, scope, write, sampler, pipeline, and diagnostic.
+Checked schema roots live under `schemas/v3.1/next/`: surface, scope, write, sampler, pipeline, diagnostic, scene, element, and outcome.
 
 ## Recyclebin protocol
 
@@ -213,23 +215,58 @@ Key docs:
 
 ### Phase D0 — schema/reference backfill
 
-Current phase.
-
-Target lock:
+Locked:
 
 - Public contract-visible Phase A/B/C types are schema-reference ready.
 - Rustdoc-backed Schemars output proves type, field, and variant descriptions are available to tools.
 - Checked schemas live in `schemas/v3.1/next/`.
 - The architecture overview records the contract-first philosophy and progressive phase stack.
-- Runtime behavior remains unchanged.
-- Descriptor expansion, recipes, studio, runtime bindings, real effects, and legacy migration stay out of scope.
+- Runtime behavior remained unchanged.
+- Descriptor expansion, recipes, studio, runtime bindings, real effects, and legacy migration stayed out of scope.
 
 Key docs:
 
 - `.omx/plans/prd-new-kernel-phase-d0.md`
 - `.omx/plans/test-spec-new-kernel-phase-d0.md`
 - `docs/v3.1-architecture-overview.md`
-- `docs/new_kernel/PHASE_D0_STATUS.md` once created.
+- `docs/new_kernel/PHASE_D0_STATUS.md`
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_D0.md`
+
+### Phase D1 — scene / element / layer composition semantics
+
+Current phase.
+
+Target lock:
+
+- `Scene` composes multiple placed `SceneElement` values into one final `Surface`.
+- `ElementId` is instance identity and remains distinct from `RoleTag`.
+- Optional `LayerId` is lightweight grouping only; no full layer graph.
+- Element placement uses signed scene coordinates so partially offscreen elements can clip.
+- Composition order is ascending `z_index`; declaration order breaks ties deterministically.
+- Higher/later written cells overwrite lower/current cells and roles according to write policy.
+- `SkipTransparentEmpty` on a top element preserves lower/current cell and role.
+- `WriteCell` writes transparent empty cells and can clear lower/current content.
+- Scene diagnostics identify element id with paths such as `scene.element[index].id`.
+- Scene, element, and outcome schema roots are checked under `schemas/v3.1/next/`.
+
+Still out of scope:
+
+- Effect descriptor expansion.
+- Recipe schema/compiler.
+- Studio manifest.
+- Runtime bindings.
+- Phase graph or trigger engine.
+- Legacy migration.
+- Real effect ports.
+- Template inheritance implementation.
+- Full layer graph or complex blending.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_D0.md`
+- `docs/v3.1-architecture-overview.md`
+- `docs/v3.1-surface-contract.md`
+- `docs/new_kernel/PHASE_D1_STATUS.md` once created.
 
 ## Verification gates
 
