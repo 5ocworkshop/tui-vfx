@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>New kernel Phase D2: add template composition design locks to durable briefing.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — add Phase D2 template composition design history and current-phase guidance.
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>New kernel Phase D3: add contract/proof boundary guidance and phase history.</WCTX> -->
+<!-- <CLOG>0.5.0: MINOR — add Phase D3 contract/engine boundary guidance and mark D2 complete.
+0.4.0: MINOR — add Phase D2 template composition design history and current-phase guidance.
 0.3.1: PATCH — include public SceneOutcome schema root in D1 guidance.
 0.3.0: MINOR — add Phase D1 scene composition history, schema roots, and verification gate.
 0.2.0: MINOR — add Phase D0 schema/reference readiness, architecture overview, and updated phase history.
@@ -34,6 +35,7 @@ Read these before planning or editing:
     - `docs/new_kernel/ARCH-RESP-TO-PHASE_C.md`
     - `docs/v3.1-architecture-overview.md`
     - `docs/v3.1-template-composition.md`
+    - `docs/v3.1-contract-boundary.md`
     - `.omx/plans/prd-new-kernel-phase-*.md`
     - `.omx/plans/test-spec-new-kernel-phase-*.md`
 
@@ -273,9 +275,7 @@ Key docs:
 
 ### Phase D2 — template composition design
 
-Current phase.
-
-Target lock:
+Locked:
 
 - Template composition is compile-time authoring behavior, not runtime inheritance.
 - Runtime receives only canonical expanded strict v3.1 recipes.
@@ -305,7 +305,39 @@ Key docs:
 
 - `docs/new_kernel/ARCH-RESP-TO-PHASE_D1.md`
 - `docs/v3.1-template-composition.md`
-- `docs/new_kernel/PHASE_D2_STATUS.md` once created.
+- `docs/new_kernel/PHASE_D2_STATUS.md`
+- `docs/new_kernel/PHASE_D2_STATUS_MEMO_TO_ARCHITECT.md`
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_D2.md`
+
+### Phase D3 — contract / engine boundary
+
+Current phase.
+
+Target lock:
+
+- Classify stable v3.1 public contract vocabulary.
+- Classify clean-room engine/proof implementation.
+- Classify test-only scaffolding.
+- Identify checked schema roots and proof roots.
+- Keep `tui-vfx-next` as one crate; use logical grouping before physical split.
+- Treat `ScopeSpec` as the current canonical generalized scope vocabulary.
+- Keep `CoordinateSpace` and `RoleSpace` as operation-level context for now.
+- Confirm pipeline and scene composition reuse `CellWritePolicy` and `RoleWritePolicy`.
+- Keep diagnostic path strings for now; defer structured identity fields until descriptor/recipe schemas exist.
+
+D3 guardrails:
+
+- `SurfacePipeline` is a checked proof-pipeline root, not the final runtime graph.
+- `PipelineStage` is a toy proof enum, not the future effect descriptor model.
+- `DimEffect`, `ExplicitRoleWriteEffect`, and the tiny `EffectDescriptor` are proof artifacts.
+- D3 must not implement descriptors, recipe schema/compiler, source authoring schemas, template expansion, runtime bindings, phase graph, trigger engine, studio manifest, legacy migration, real effect ports, full layer graph, or complex blending.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_D2.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/v3.1-surface-contract.md`
+- `docs/new_kernel/PHASE_D3_STATUS.md` once created.
 
 ## Verification gates
 
@@ -356,3 +388,6 @@ Final reports should be concise and evidence-dense:
 - Remaining risks/open questions.
 
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
+
+<!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->

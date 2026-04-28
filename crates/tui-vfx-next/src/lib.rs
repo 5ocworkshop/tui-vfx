@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-next/src/lib.rs</FILE> - <DESC>Clean-room v3.1 surface and pipeline contract spike</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>New kernel Phase D1: expose scene/element/layer composition contract types.</WCTX>
-// <CLOG>0.5.0: MINOR — expose Phase D1 scene composition DTOs and outcome.
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>New kernel Phase D3: expose logical contract/proof/schema-root module boundaries.</WCTX>
+// <CLOG>0.6.0: MINOR — add logical contract, proof, and schema-root re-export modules without changing runtime behavior.
+// 0.5.0: MINOR — expose Phase D1 scene composition DTOs and outcome.
 // 0.4.1: PATCH — wire fnc_annotate_stage_diagnostics after OFPF helper extraction.</CLOG>
 
 //! Clean-room v3.1 surface and scene contract spike.
@@ -9,9 +10,10 @@
 //! This crate proves the Phase A/B/C semantic surface, sampled-source, pipeline,
 //! and Phase D1 scene composition rules
 //! without depending on the legacy compositor, style, content, or shadow
-//! implementation crates. It is intentionally small: a surface, scope
-//! evaluation, coordinate sampling, write policy, diagnostics, and two tiny
-//! effects that make role preservation and explicit role writes testable.
+//! implementation crates. Phase D3 adds a logical boundary: [`contract`] is the
+//! stable vocabulary future descriptors should reuse, [`proof`] is the small
+//! execution harness used to prove behavior, and [`schema_roots`] lists checked
+//! schema fixtures that must remain current.
 
 pub mod cls_apply_outcome;
 pub mod cls_cell_channel;
@@ -86,5 +88,46 @@ pub use cls_surface_metadata::SurfaceMetadata;
 pub use cls_surface_pipeline::SurfacePipeline;
 pub use tr_coordinate_sampler::CoordinateSampler;
 
+/// Stable v3.1 contract vocabulary for future descriptors and canonical recipes.
+///
+/// These exports describe public semantic concepts: surfaces, scenes, scopes,
+/// writes, roles, samplers, diagnostics, ids, and operation outcomes. The module
+/// is a logical boundary; the crate intentionally remains physically unsplit in
+/// Phase D3.
+pub mod contract {
+    pub use crate::{
+        ApplyOutcome, CellChannel, CellWrite, CellWritePolicy, ClipPolicy, CoordinateSampler,
+        CoordinateSpace, DiagnosticLevel, EffectDomain, ElementId, ElementPlacement, LayerId,
+        PipelineOutcome, PipelineSampler, RoleSpace, RoleWritePolicy, Scene, SceneElement,
+        SceneOutcome, ScopeSpec, ShiftSampler, Surface, SurfaceDiagnostic, SurfaceDiagnosticCode,
+        SurfaceMetadata,
+    };
+}
+
+/// Clean-room proof harness and toy implementation pieces.
+///
+/// These exports are public so tests and downstream experiments can prove the
+/// contract, but future descriptor or recipe schemas must not copy their toy
+/// effect/stage shapes as the production descriptor model.
+pub mod proof {
+    pub use crate::{
+        CoordinateSampler, DimEffect, EffectDescriptor, ExplicitRoleWriteEffect, IdentitySampler,
+        PipelineStage, SurfaceEngine, SurfacePipeline,
+    };
+}
+
+/// Checked schema roots for the current clean-room public artifacts.
+///
+/// A type in this module is intentionally represented by a checked JSON Schema
+/// fixture under `schemas/v3.1/next/`. Some roots, especially the Phase C toy
+/// pipeline, are contract-visible proof artifacts rather than the future recipe
+/// or descriptor model.
+pub mod schema_roots {
+    pub use crate::{
+        CellWrite, PipelineSampler, Scene, SceneElement, SceneOutcome, ScopeSpec, Surface,
+        SurfaceDiagnostic, SurfacePipeline,
+    };
+}
+
 // <FILE>crates/tui-vfx-next/src/lib.rs</FILE> - <DESC>Clean-room v3.1 surface and pipeline contract spike</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>
