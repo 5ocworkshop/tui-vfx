@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.24.0</VERS> -->
-<!-- <WCTX>New kernel Phase E0: index physical contract split.</WCTX> -->
-<!-- <CLOG>1.24.0: note tui-vfx-contract ownership and schema path split.
+<!-- <VERS>VERSION: 1.25.0</VERS> -->
+<!-- <WCTX>New kernel Phase E1: index minimal effect descriptor contract.</WCTX> -->
+<!-- <CLOG>1.25.0: note E1 effect descriptor contract and schema root.
+1.24.0: note tui-vfx-contract ownership and schema path split.
 1.23.0: add v3.1 contract/engine boundary reference.
 1.22.0: add v3.1 template composition design reference.
 1.21.0: refresh clean-room v3.1 entries for Phase D1 scene composition.
@@ -117,9 +118,9 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 
 ## V3 planning and tooling
 
-- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, and E0 physical split.
-- [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0 classification of contract vocabulary, proof implementation, crate ownership, schema roots, and descriptor handoff guardrails.
-- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0 surface, sampling, pipeline, scene, schema-reference, and contract/proof ownership.
+- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model.
+- [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor model, and handoff guardrails.
+- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0/E1 surface, sampling, pipeline, scene, descriptor, schema-reference, and contract/proof ownership.
 - [v3.1-feature-contract-checklist.md](v3.1-feature-contract-checklist.md) — Checklist for future v3.1 contract-affecting feature work.
 - [v3.1-template-composition.md](v3.1-template-composition.md) — Phase D2 design for compile-time template/mixin/preset/profile expansion into canonical v3.1 recipes.
 - [new_kernel/INDEX.md](new_kernel/INDEX.md) — Clean-room kernel phase docs, architect responses, status memos, and schema artifacts.
@@ -171,4 +172,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.24.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.25.0</VERS> -->

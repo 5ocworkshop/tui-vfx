@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>New kernel Phase E0: add physical contract split guidance.</WCTX> -->
-<!-- <CLOG>0.6.0: MINOR — add tui-vfx-contract ownership, schema paths, and E0 phase guidance.
+<!-- <VERS>VERSION: 0.7.0</VERS> -->
+<!-- <WCTX>New kernel Phase E1: add minimal effect descriptor guidance.</WCTX> -->
+<!-- <CLOG>0.7.0: MINOR — add EffectDescriptor capability model, schema root, and Phase F input deferral.
+0.6.0: MINOR — add tui-vfx-contract ownership, schema paths, and E0 phase guidance.
 0.5.0: MINOR — add Phase D3 contract/engine boundary guidance and mark D2 complete.
 0.4.0: MINOR — add Phase D2 template composition design history and current-phase guidance.
 0.3.1: PATCH — include public SceneOutcome schema root in D1 guidance.
@@ -126,7 +127,7 @@ Phase D0 makes this a standing rule for all future clean-room phases:
 - Every public contract-visible type, field, variant, and non-obvious policy/default needs rustdoc.
 - Intentionally internal public helpers must be marked or explained in status docs.
 
-Checked stable contract schema roots live under `schemas/v3.1/contract/`: surface, scope, write, diagnostic, scene, element, and outcome. Proof-pipeline roots remain under `schemas/v3.1/next/`: sampler and pipeline.
+Checked stable contract schema roots live under `schemas/v3.1/contract/`: surface, scope, write, diagnostic, scene, element, outcome, and effect-descriptor. Proof-pipeline roots remain under `schemas/v3.1/next/`: sampler and pipeline.
 
 ## Recyclebin protocol
 
@@ -159,7 +160,7 @@ Forbidden unless the owner explicitly changes phase scope:
 - Do not add recipe compiler, studio manifest, phase graph, trigger engine, runtime binding system, or legacy aliases.
 - Do not depend on `tui-vfx-next`, `tui-vfx-compositor`, `tui-vfx-style`, `tui-vfx-content`, or `tui-vfx-shadow` from `tui-vfx-contract`.
 - Do not depend on `tui-vfx-compositor`, `tui-vfx-style`, `tui-vfx-content`, or `tui-vfx-shadow` from `tui-vfx-next`.
-- Do not implement broad descriptor/schema/runtime systems before the architect approves that phase.
+- Keep E1 descriptors capability-only; do not implement broad input/value/schema/runtime systems before the architect approves that phase.
 
 ## Phase history summary
 
@@ -331,7 +332,7 @@ D3 guardrails:
 
 - `SurfacePipeline` is a checked proof-pipeline root, not the final runtime graph.
 - `PipelineStage` is a toy proof enum, not the future effect descriptor model.
-- `DimEffect`, `ExplicitRoleWriteEffect`, and the tiny `EffectDescriptor` are proof artifacts.
+- `DimEffect` and `ExplicitRoleWriteEffect` are proof artifacts; the old tiny proof `EffectDescriptor` was retired when E1 added the durable contract descriptor.
 - D3 must not implement descriptors, recipe schema/compiler, source authoring schemas, template expansion, runtime bindings, phase graph, trigger engine, studio manifest, legacy migration, real effect ports, full layer graph, or complex blending.
 
 Key docs:
@@ -346,7 +347,7 @@ Key docs:
 
 ### Phase E0 — physical contract split
 
-Current phase.
+Locked.
 
 Target lock:
 
@@ -356,13 +357,36 @@ Target lock:
 - Stable schemas generate from `tui-vfx-contract` under `schemas/v3.1/contract/`.
 - Proof-pipeline schemas remain under `schemas/v3.1/next/`.
 - `PipelineStage` remains proof-only and is not promoted to descriptor model.
-- No effect descriptors, recipes, runtime, studio, migration, or real effects are implemented.
+- E0 implements no effect descriptors, recipes, runtime, studio, migration, or real effects.
 
 Key docs:
 
 - `docs/new_kernel/ARCH-RESP-TO-PHASE_D3.md`
 - `docs/v3.1-contract-boundary.md`
-- `docs/new_kernel/PHASE_E0_STATUS.md` once created.
+- `docs/new_kernel/PHASE_E0_STATUS.md`
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_E0.md`
+
+
+### Phase E1 — minimal effect descriptor model
+
+Current phase.
+
+Target lock:
+
+- `EffectDescriptor` lives in `tui-vfx-contract` as a durable schema-backed contract root.
+- Descriptor DTOs declare identity, `EffectDomain`, `CellAccess`, `ScopeSupport`, `WriteSupport`, and `EffectLifecycle`.
+- `EffectDomain` initial vocabulary is `contentGenerator`, `contentTransform`, `cellShader`, `frameFilter`, `coordinateSampler`, `mask`, `shadow`, `postProcess`, and `diagnosticTooling`.
+- Descriptor validation accepts supported scope/write/channel requests and rejects unsupported ones with `DescriptorValidationError`.
+- `schemas/v3.1/contract/effect-descriptor.schema.json` is checked and rustdoc-described.
+- `PipelineStage`, `SurfacePipeline`, `PipelineSampler`, `SurfaceEngine`, and proof effects remain proof-only in `tui-vfx-next`.
+- Effect input contracts are intentionally deferred to Phase F. Do not add `ValueKind`, `ValueSource`, defaults, ranges, runtime mutability, parameters, signals, bindings, recipe nodes, registries, runtime graphs, studio controls, migration, or real effect ports.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_E0.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/v3.1-surface-contract.md`
+- `docs/new_kernel/PHASE_E1_STATUS.md` once created.
 
 ## Verification gates
 
@@ -422,4 +446,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.7.0</VERS> -->

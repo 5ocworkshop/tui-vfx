@@ -1,12 +1,13 @@
 // <FILE>crates/tui-vfx-next/src/cls_explicit_role_write_effect.rs</FILE> - <DESC>Procedural explicit-role write effect for contract tests</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>New kernel Phase D0 schema/reference backfill after Phase C preflight OFPF split.</WCTX>
-// <CLOG>0.4.0: PATCH — add Serde/Schemars schema-reference readiness while preserving runtime behavior.
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>New kernel Phase E1: keep proof effect independent of durable descriptor DTO.</WCTX>
+// <CLOG>0.5.0: PATCH — remove old proof descriptor constant after durable descriptors move to tui-vfx-contract.
+// 0.4.0: PATCH — add Serde/Schemars schema-reference readiness while preserving runtime behavior.
 // 0.3.0: REFACTOR — extract ExplicitRoleWriteEffect into one cohesive class file.</CLOG>
 
 use tui_vfx_types::{Cell, RoleTag};
 
-use crate::{CellWrite, CellWritePolicy, EffectDescriptor, EffectDomain, RoleWritePolicy};
+use crate::{CellWrite, CellWritePolicy, RoleWritePolicy};
 
 /// Tiny procedural writer that can explicitly set a destination role.
 #[derive(
@@ -23,13 +24,6 @@ pub struct ExplicitRoleWriteEffect {
 }
 
 impl ExplicitRoleWriteEffect {
-    /// Descriptor for the procedural explicit-role writer.
-    pub const DESCRIPTOR: EffectDescriptor = EffectDescriptor {
-        id: "terminal.explicitRoleWrite",
-        domain: EffectDomain::Procedural,
-        can_write_roles: true,
-    };
-
     /// Create a writer that writes a cell and sets an explicit role.
     pub fn new(cell: Cell, role: RoleTag) -> Self {
         Self {
@@ -52,4 +46,4 @@ impl ExplicitRoleWriteEffect {
 }
 
 // <FILE>crates/tui-vfx-next/src/cls_explicit_role_write_effect.rs</FILE> - <DESC>Procedural explicit-role write effect for contract tests</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

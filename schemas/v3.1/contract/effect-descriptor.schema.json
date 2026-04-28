@@ -1,0 +1,386 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EffectDescriptor",
+  "description": "Minimal durable v3.1 effect descriptor contract.",
+  "type": "object",
+  "properties": {
+    "category": {
+      "description": "Optional human-facing category label for catalogs and docs.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "cellAccess": {
+      "description": "Cell channels the effect may read or write.",
+      "$ref": "#/$defs/CellAccess"
+    },
+    "displayName": {
+      "description": "Human-facing display name.",
+      "type": "string"
+    },
+    "domain": {
+      "description": "Broad execution domain for planning and capability grouping.",
+      "$ref": "#/$defs/EffectDomain"
+    },
+    "id": {
+      "description": "Stable canonical effect identifier.",
+      "$ref": "#/$defs/EffectId"
+    },
+    "lifecycle": {
+      "description": "Minimal lifecycle metadata for planning.",
+      "$ref": "#/$defs/EffectLifecycle"
+    },
+    "scopeSupport": {
+      "description": "Scope kinds and spaces this effect supports.",
+      "$ref": "#/$defs/ScopeSupport"
+    },
+    "version": {
+      "description": "Descriptor version string owned by the effect family.",
+      "type": "string"
+    },
+    "writeSupport": {
+      "description": "Cell and role write policies this effect supports.",
+      "$ref": "#/$defs/WriteSupport"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "displayName",
+    "domain",
+    "cellAccess",
+    "scopeSupport",
+    "writeSupport",
+    "lifecycle"
+  ],
+  "$defs": {
+    "CellAccess": {
+      "description": "Cell channels an effect may read or write.",
+      "type": "object",
+      "properties": {
+        "reads": {
+          "description": "Cell channels the effect may inspect.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellChannel"
+          }
+        },
+        "writes": {
+          "description": "Cell channels the effect may write.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellChannel"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "reads",
+        "writes"
+      ]
+    },
+    "CellChannel": {
+      "description": "Canonical channels that make up a cell write.",
+      "oneOf": [
+        {
+          "description": "Glyph character channel.",
+          "type": "string",
+          "const": "glyph"
+        },
+        {
+          "description": "Foreground color channel.",
+          "type": "string",
+          "const": "foreground"
+        },
+        {
+          "description": "Background color channel.",
+          "type": "string",
+          "const": "background"
+        },
+        {
+          "description": "Text modifier channel.",
+          "type": "string",
+          "const": "modifiers"
+        },
+        {
+          "description": "Modifier alpha channel.",
+          "type": "string",
+          "const": "modifierAlpha"
+        },
+        {
+          "description": "Semantic role channel. Role writes are governed by role policy.",
+          "type": "string",
+          "const": "role"
+        }
+      ]
+    },
+    "CellWritePolicy": {
+      "description": "Policy for how a cell write updates cell channels.",
+      "oneOf": [
+        {
+          "description": "Write the cell exactly, including transparent empty cells.",
+          "type": "string",
+          "const": "writeCell"
+        },
+        {
+          "description": "Skip only transparent empty cell writes, preserving destination cell and role.",
+          "type": "string",
+          "const": "skipTransparentEmpty"
+        }
+      ]
+    },
+    "CoordinateSpace": {
+      "description": "Coordinate space used by geometry scopes.",
+      "oneOf": [
+        {
+          "description": "Destination-local coordinates. This is the Phase A/B default.",
+          "type": "string",
+          "const": "destinationLocal"
+        },
+        {
+          "description": "Sampled-source local coordinates. Present to make the contract explicit.",
+          "type": "string",
+          "const": "sampledSource"
+        }
+      ]
+    },
+    "EffectCompletion": {
+      "description": "Minimal completion category for descriptor lifecycle metadata.",
+      "oneOf": [
+        {
+          "description": "The effect does not naturally complete on its own.",
+          "type": "string",
+          "const": "never"
+        },
+        {
+          "description": "The effect completes during the same evaluation step.",
+          "type": "string",
+          "const": "instant"
+        },
+        {
+          "description": "The effect completes after a bounded duration.",
+          "type": "string",
+          "const": "timeBound"
+        },
+        {
+          "description": "The effect eventually completes, but the bound is not part of E1.",
+          "type": "string",
+          "const": "eventual"
+        },
+        {
+          "description": "Completion is controlled by an external host signal.",
+          "type": "string",
+          "const": "external"
+        }
+      ]
+    },
+    "EffectDomain": {
+      "description": "Broad execution role declared by an effect descriptor.",
+      "oneOf": [
+        {
+          "description": "Generates content cells without requiring existing source content.",
+          "type": "string",
+          "const": "contentGenerator"
+        },
+        {
+          "description": "Transforms existing content while preserving its broad semantic role.",
+          "type": "string",
+          "const": "contentTransform"
+        },
+        {
+          "description": "Shades individual cell visual channels.",
+          "type": "string",
+          "const": "cellShader"
+        },
+        {
+          "description": "Filters a complete frame or surface after content exists.",
+          "type": "string",
+          "const": "frameFilter"
+        },
+        {
+          "description": "Changes which source coordinate a destination cell samples.",
+          "type": "string",
+          "const": "coordinateSampler"
+        },
+        {
+          "description": "Produces or applies a mask for later stages.",
+          "type": "string",
+          "const": "mask"
+        },
+        {
+          "description": "Produces shadow-like support content or role tagging.",
+          "type": "string",
+          "const": "shadow"
+        },
+        {
+          "description": "Runs after primary composition as a post-process.",
+          "type": "string",
+          "const": "postProcess"
+        },
+        {
+          "description": "Emits diagnostics or analysis without being a visual effect.",
+          "type": "string",
+          "const": "diagnosticTooling"
+        }
+      ]
+    },
+    "EffectId": {
+      "description": "Stable canonical effect identifier.",
+      "type": "string"
+    },
+    "EffectLifecycle": {
+      "description": "Minimal lifecycle metadata declared by an effect descriptor.",
+      "type": "object",
+      "properties": {
+        "completion": {
+          "description": "Completion category exposed to recipe and runtime planning.",
+          "$ref": "#/$defs/EffectCompletion"
+        },
+        "deterministicWithSeed": {
+          "description": "Whether seeded execution is deterministic for the same inputs.",
+          "type": "boolean"
+        },
+        "resettable": {
+          "description": "Whether the effect can be reset to its initial state.",
+          "type": "boolean"
+        },
+        "seekable": {
+          "description": "Whether the effect can be sampled at an arbitrary timeline position.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "completion",
+        "resettable",
+        "seekable",
+        "deterministicWithSeed"
+      ]
+    },
+    "RoleSpace": {
+      "description": "Role source used by role scopes.",
+      "oneOf": [
+        {
+          "description": "Role scopes inspect the sampled source role. This is the Phase A/B default.",
+          "type": "string",
+          "const": "sampledSource"
+        },
+        {
+          "description": "Role scopes inspect the destination role before the write.",
+          "type": "string",
+          "const": "destination"
+        }
+      ]
+    },
+    "RoleWritePolicyKind": {
+      "description": "Payload-free role write policy kind used by descriptor support declarations.",
+      "oneOf": [
+        {
+          "description": "Descriptor may preserve destination roles.",
+          "type": "string",
+          "const": "preserveDestination"
+        },
+        {
+          "description": "Descriptor may copy sampled-source roles.",
+          "type": "string",
+          "const": "copySampledSource"
+        },
+        {
+          "description": "Descriptor may set an explicit role chosen by the operation.",
+          "type": "string",
+          "const": "setExplicit"
+        }
+      ]
+    },
+    "ScopeKind": {
+      "description": "Scope shape a descriptor can explicitly support.",
+      "oneOf": [
+        {
+          "description": "Descriptor supports all-cell scopes.",
+          "type": "string",
+          "const": "all"
+        },
+        {
+          "description": "Descriptor supports role-based scopes.",
+          "type": "string",
+          "const": "role"
+        },
+        {
+          "description": "Descriptor supports rectangular geometry scopes.",
+          "type": "string",
+          "const": "rect"
+        },
+        {
+          "description": "Descriptor supports row range geometry scopes.",
+          "type": "string",
+          "const": "rowRange"
+        },
+        {
+          "description": "Descriptor supports column range geometry scopes.",
+          "type": "string",
+          "const": "columnRange"
+        }
+      ]
+    },
+    "ScopeSupport": {
+      "description": "Scope shapes and evaluation spaces an effect descriptor supports.",
+      "type": "object",
+      "properties": {
+        "coordinateSpaces": {
+          "description": "Supported coordinate spaces for geometry scopes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CoordinateSpace"
+          }
+        },
+        "kinds": {
+          "description": "Supported scope variant kinds.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScopeKind"
+          }
+        },
+        "roleSpaces": {
+          "description": "Supported role spaces for role scopes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoleSpace"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kinds",
+        "coordinateSpaces",
+        "roleSpaces"
+      ]
+    },
+    "WriteSupport": {
+      "description": "Cell and role write policies an effect descriptor supports.",
+      "type": "object",
+      "properties": {
+        "cellPolicies": {
+          "description": "Supported cell write policies.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellWritePolicy"
+          }
+        },
+        "rolePolicies": {
+          "description": "Supported role write policy kinds.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoleWritePolicyKind"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cellPolicies",
+        "rolePolicies"
+      ]
+    }
+  }
+}

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-next/src/lib.rs</FILE> - <DESC>Clean-room v3.1 proof engine over contract DTOs</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>New kernel Phase E0: keep proof execution in tui-vfx-next after moving stable DTOs to tui-vfx-contract.</WCTX>
-// <CLOG>0.7.0: MINOR — depend on tui-vfx-contract, re-export contract vocabulary, and keep proof-only pipeline/effect helpers local.
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>New kernel Phase E1: remove old proof descriptor export after durable descriptor model lands in contract.</WCTX>
+// <CLOG>0.8.0: PATCH — stop exporting the old proof EffectDescriptor so contract owns the durable descriptor name.
+// 0.7.0: MINOR — depend on tui-vfx-contract, re-export contract vocabulary, and keep proof-only pipeline/effect helpers local.
 // 0.6.0: MINOR — add logical contract, proof, and schema-root re-export modules without changing runtime behavior.</CLOG>
 
 //! Clean-room v3.1 proof engine for tui-vfx.
@@ -12,7 +13,6 @@
 //! style, content, and shadow implementation crates.
 
 pub mod cls_dim_effect;
-pub mod cls_effect_descriptor;
 pub mod cls_explicit_role_write_effect;
 pub mod cls_identity_sampler;
 pub mod cls_pipeline_outcome;
@@ -28,7 +28,6 @@ pub mod fnc_rewrite_glyph_cell;
 pub use tui_vfx_contract::*;
 
 pub use cls_dim_effect::DimEffect;
-pub use cls_effect_descriptor::EffectDescriptor;
 pub use cls_explicit_role_write_effect::ExplicitRoleWriteEffect;
 pub use cls_identity_sampler::IdentitySampler;
 pub use cls_pipeline_outcome::PipelineOutcome;
@@ -49,8 +48,8 @@ pub mod contract {
 /// effect/stage shapes as the production descriptor model.
 pub mod proof {
     pub use crate::{
-        DimEffect, EffectDescriptor, ExplicitRoleWriteEffect, IdentitySampler, PipelineStage,
-        SurfaceEngine, SurfacePipeline,
+        DimEffect, ExplicitRoleWriteEffect, IdentitySampler, PipelineStage, SurfaceEngine,
+        SurfacePipeline,
     };
 }
 
@@ -63,4 +62,4 @@ pub mod schema_roots {
 }
 
 // <FILE>crates/tui-vfx-next/src/lib.rs</FILE> - <DESC>Clean-room v3.1 proof engine over contract DTOs</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

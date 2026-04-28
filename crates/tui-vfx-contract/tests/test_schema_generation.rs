@@ -1,13 +1,15 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase E0: generate stable v3.1 schemas from tui-vfx-contract.</WCTX>
-// <CLOG>0.1.0: INIT — check strict rustdoc-backed schemas for stable surface, scope, write, diagnostic, scene, element, and outcome roots.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase E1: include effect descriptor schema root.</WCTX>
+// <CLOG>0.2.0: MINOR — add effect descriptor schema fixture and description assertions.
+// 0.1.0: INIT — check strict rustdoc-backed schemas for stable surface, scope, write, diagnostic, scene, element, and outcome roots.</CLOG>
 
 use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
-    CellWrite, Scene, SceneElement, SceneOutcome, ScopeSpec, Surface, SurfaceDiagnostic,
+    CellWrite, EffectDescriptor, Scene, SceneElement, SceneOutcome, ScopeSpec, Surface,
+    SurfaceDiagnostic,
 };
 
 fn schema_dir() -> PathBuf {
@@ -33,6 +35,10 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         ("scene.schema.json", canonical_schema::<Scene>()),
         ("element.schema.json", canonical_schema::<SceneElement>()),
         ("outcome.schema.json", canonical_schema::<SceneOutcome>()),
+        (
+            "effect-descriptor.schema.json",
+            canonical_schema::<EffectDescriptor>(),
+        ),
     ]
 }
 
@@ -102,6 +108,12 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
     assert!(
         all_schemas.contains("Result of composing scene elements into one final semantic surface")
     );
+    assert!(all_schemas.contains("Minimal durable v3.1 effect descriptor contract"));
+    assert!(all_schemas.contains("Cell channels an effect may read or write"));
+    assert!(
+        all_schemas.contains("Scope shapes and evaluation spaces an effect descriptor supports")
+    );
+    assert!(all_schemas.contains("Minimal lifecycle metadata declared by an effect descriptor"));
 }
 
 #[test]
@@ -138,4 +150,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
