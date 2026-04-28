@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>New kernel Phase D2: include D1 response and template composition artifacts.</WCTX> -->
-<!-- <CLOG>0.5.0: MINOR — add Phase D1 architect response plus Phase D2 template composition artifacts.
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>New kernel docs: add preserved contract decision tree to supporting artifacts.</WCTX> -->
+<!-- <CLOG>0.6.0: MINOR — add preserved contract-add decision tree supporting artifact.
+0.5.0: MINOR — add Phase D1 architect response plus Phase D2 template composition artifacts.
 0.4.0: MINOR — add Phase D1 architect status memo.
 0.3.1: PATCH — include public SceneOutcome schema root.
 0.3.0: MINOR — add Phase D0 architect response, Phase D1 status, and scene/element/outcome schema roots.
@@ -50,6 +51,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 
 ## Supporting artifacts
 
+- [`CONTRACT_ADD_DECISION_TREE.md`](CONTRACT_ADD_DECISION_TREE.md) — preserved source decision-tree draft for classifying contract-visible feature additions.
 - [`PROCESS_OVERVIEW_DIAGRAM.md`](PROCESS_OVERVIEW_DIAGRAM.md) — process overview diagram/notes.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 

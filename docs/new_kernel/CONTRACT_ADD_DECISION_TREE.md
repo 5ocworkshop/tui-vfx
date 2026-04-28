@@ -1,0 +1,1602 @@
+<!-- <FILE>docs/new_kernel/CONTRACT_ADD_DECISION_TREE.md</FILE> - <DESC>Source decision-tree draft for v3.1 contract feature classification</DESC> -->
+<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <WCTX>New kernel docs: preserve the original contract-add decision tree as a supporting artifact alongside the evolved v3.1 checklist.</WCTX> -->
+<!-- <CLOG>0.1.0: INIT — add metadata for tracking the preserved contract decision-tree draft.</CLOG> -->
+
+Below is a reusable **contract decision map** for future agents. I would put a version of this in something like:
+
+```text
+docs/v3.1-feature-contract-checklist.md
+```
+
+The purpose is to stop future work from jumping straight to implementation. Every new effect, scope, value type, runtime behavior, or visual feature should first be classified against the contract model.
+
+---
+
+# v3.1 feature contract checklist
+
+## Why the system is set up this way
+
+The v3.1 direction is contract-first because the old system grew useful behavior across many places:
+
+```text
+cells
+roles
+style regions
+samplers
+masks
+filters
+shaders
+shadow
+runtime params
+diagnostics
+legacy aliases
+```
+
+That made powerful effects possible, but it also made semantics implicit. For example:
+
+```text
+Does a role scope use destination role or sampled source role?
+Does a skipped cell preserve the destination role?
+Does a transparent empty cell clear content or count as no-op?
+Can a visual effect change semantic roles?
+Does a sampler affect geometry scopes, role scopes, or both?
+```
+
+Phases A and B proved that these questions can be answered cleanly in a new kernel before porting legacy effects.
+
+The guiding philosophy is:
+
+```text
+Every semantic fact has one owner.
+Every effect declares what it reads and writes.
+Every skip/write/role/scope behavior is explicit.
+Every new feature either fits the contract or forces a conscious contract update.
+Legacy behavior is inspiration, not authority.
+```
+
+The contract system exists to prevent “just add a field” changes from silently redefining the rendering model.
+
+---
+
+# Core principles
+
+```text
++====================================================================================+
+|                                v3.1 DESIGN PRINCIPLES                               |
++====================================================================================+
+
+  1. Contract first, implementation second.
+     Do not add a feature by only changing an effect implementation.
+
+  2. Semantic surface is canonical.
+     A render surface is cells + roles + metadata.
+
+  3. Cell visuals and semantic roles are separate.
+     Role is a surface-position semantic channel, not a Cell field.
+
+  4. Sampled-source semantics are explicit.
+     A stage may sample from a different source coordinate than the destination coordinate.
+
+  5. Geometry and role scopes are not the same thing.
+     Geometry scopes default to destination-local coordinates.
+     Role scopes default to sampled-source roles.
+
+  6. Skipping is not writing.
+     A skipped cell preserves destination cell and destination role.
+
+  7. Empty transparent write is still a write.
+     It only becomes a skip when an explicit write policy says so.
+
+  8. Visual-only effects preserve roles.
+     Effects that intentionally create semantic content must declare role writes.
+
+  9. Descriptors declare capability.
+     Effect implementations should not hide public semantics.
+
+  10. Strict v3.1 has no legacy aliases.
+      Aliases belong only in legacy migration/adapters.
+
++====================================================================================+
+```
+
+---
+
+# First question: is this actually a contract change?
+
+Before adding anything, classify it.
+
+```text
++====================================================================================+
+|                           CONTRACT CHANGE CLASSIFICATION                            |
++====================================================================================+
+
+  Ask:
+      Does this change affect what recipe authors can express?
+      Does this change affect what studio/tooling can discover?
+      Does this change affect runtime behavior visible to users?
+      Does this change affect surface/cell/role/scope/write semantics?
+      Does this change affect validation, diagnostics, or migration?
+      Does this change add a new public input, value type, event, role, or scope?
+
+  If YES to any:
+      It is a contract change.
+
+  If NO to all:
+      It is probably an implementation detail.
+
++====================================================================================+
+```
+
+Examples:
+
+```text
+Implementation detail:
+    optimize tint math
+    cache a role histogram
+    refactor an internal loop
+    reduce allocations without changing semantics
+
+Contract change:
+    add a new effect input
+    add a new role
+    add a new scope type
+    allow filters to target roles
+    change missing signal fallback behavior
+    add a new event
+    make an effect seekable
+    change what transparent cells do
+```
+
+If it is a contract change, it needs documentation, tests, validation, and descriptor/schema updates at the correct layer.
+
+---
+
+# Decision tree
+
+```text
++==================================================================================================+
+|                         ADDING A NEW EFFECT / CAPABILITY / DETAIL                                |
++==================================================================================================+
+
+  START
+    |
+    v
+  Is this visible to recipes, runtime, studio, diagnostics, or output semantics?
+    |
+    +-- NO ------------------------------------------------------------------+
+    |                                                                        |
+    |   Implementation-only change.                                           |
+    |   Keep it local. Add normal tests.                                      |
+    |   Do not update v3.1 contract unless semantics change.                  |
+    |                                                                        |
+    +------------------------------------------------------------------------+
+    |
+    +-- YES
+         |
+         v
+  What kind of contract concept is it?
+         |
+         +-- Surface / cell / role semantics ---------------> Update surface contract.
+         |
+         +-- Scope / targeting -----------------------------> Update ScopeSpec contract.
+         |
+         +-- Write / blend / skip behavior -----------------> Update write policy contract.
+         |
+         +-- Sampler / coordinate mapping ------------------> Update sampling contract.
+         |
+         +-- Effect capability -----------------------------> Update effect descriptor model.
+         |
+         +-- Effect input / parameter ----------------------> Update value/input contract.
+         |
+         +-- Runtime signal / binding ----------------------> Update value-source/runtime contract.
+         |
+         +-- Event / completion / lifecycle ----------------> Update lifecycle/trigger contract.
+         |
+         +-- Recipe authoring shape ------------------------> Update recipe v3.1 schema/compiler.
+         |
+         +-- Studio/tooling visibility ---------------------> Update manifest contract.
+         |
+         +-- Legacy compatibility --------------------------> Update migration bridge only.
+         |
+         v
+  Does the existing contract already express it?
+         |
+         +-- YES
+         |     Add descriptor/input/node/tests using existing concepts.
+         |
+         +-- NO
+               Add or amend contract concept first.
+               Write semantic tests before broad implementation.
+```
+
+---
+
+# The core questions every feature must answer
+
+## 1. What domain is this feature in?
+
+Choose one primary domain.
+
+```text
+contentGenerator
+    creates new cells from text/content/data
+
+contentTransform
+    transforms an existing semantic surface into another semantic surface
+
+cellShader
+    changes style channels per cell, usually preserving glyph and role
+
+frameFilter
+    post-processes cells, possibly changing glyph/style
+
+coordinateSampler
+    maps destination coordinates to sampled source coordinates
+
+mask
+    decides whether a destination cell write is visible/skipped
+
+shadow
+    generates shadow contribution, often with explicit shadow role
+
+postProcess
+    final output adjustment after main composition
+
+diagnostic/tooling
+    does not render, but describes/inspects behavior
+```
+
+Questions:
+
+```text
+Is it generating cells or modifying existing cells?
+Does it move/sample cells?
+Does it hide/reveal cells?
+Does it change only style?
+Does it change glyphs?
+Does it write roles?
+Does it emit events or diagnostics?
+```
+
+The answer determines which descriptor fields and tests are required.
+
+---
+
+## 2. What surface does it read, and what surface does it write?
+
+Every feature must answer:
+
+```text
+Read surface:
+    original source
+    current pipeline surface
+    sampled source surface
+    destination before stage
+    named layer/surface
+
+Write surface:
+    current stage output
+    destination surface
+    named layer/surface
+    diagnostic stream only
+```
+
+For the clean-room v3.1 direction, the default should be:
+
+```text
+Each stage reads the current surface and writes the next surface.
+Later stages see earlier stage cell and role writes.
+```
+
+Questions:
+
+```text
+Does this feature need original input, or current pipeline state?
+Does it need to inspect destination before writing?
+Does it write in-place or produce a new surface?
+Does it need multiple input surfaces?
+Does it produce a layer instead of writing directly?
+```
+
+If the answer requires a surface concept that does not exist, that is a surface-contract update, not just an effect implementation.
+
+---
+
+## 3. What cell channels does it read and write?
+
+Cell-position channels are:
+
+```text
+visual:
+    glyph
+    foreground
+    background
+    modifiers
+    modifierAlpha
+
+semantic:
+    role
+```
+
+Questions:
+
+```text
+Does it read glyph?
+Does it read foreground or background?
+Does it read modifiers?
+Does it read role?
+Does it write glyph?
+Does it write foreground?
+Does it write background?
+Does it write modifiers?
+Does it write modifierAlpha?
+Does it write role?
+```
+
+Common patterns:
+
+```text
+Visual-only shader:
+    reads fg/bg/mods/role maybe
+    writes fg/bg/mods
+    preserves role
+
+Glyph filter:
+    reads glyph/style
+    writes glyph and maybe style
+    usually preserves role
+
+Content generator:
+    writes glyph/style/role
+
+Shadow:
+    writes glyph/style/role = shadow
+
+Sampler:
+    does not directly write cell channels
+    changes sampled source coordinate
+
+Mask:
+    does not write channels
+    controls whether write is skipped
+```
+
+Descriptor implication:
+
+```json
+{
+  "cellAccess": {
+    "reads": ["glyph", "foreground", "background", "role"],
+    "writes": ["foreground", "background"],
+    "rolePolicy": "preserve"
+  }
+}
+```
+
+---
+
+## 4. What role policy applies?
+
+Available role policies should stay small and explicit.
+
+```text
+PreserveDestination
+    leave the destination role unchanged
+
+CopySampledSource
+    copy the role from the sampled source coordinate
+
+SetExplicit(role)
+    set a specific role such as Shadow, Text, Procedural
+
+ClearToBackground
+    set role to Background
+```
+
+Questions:
+
+```text
+Is this a visual-only effect?
+Does it copy or transform source cells?
+Does it generate new cells?
+Does it create shadow/procedural cells?
+Should it ever change semantic identity?
+Does role write depend on input role?
+```
+
+Default recommendations:
+
+```text
+source-to-destination copy/transform:
+    CopySampledSource
+
+in-place visual-only effect:
+    PreserveDestination
+
+content generator:
+    SetExplicit(Text) or declared output role
+
+shadow:
+    SetExplicit(Shadow)
+
+mask skip:
+    preserve destination role
+
+out-of-bounds sample:
+    preserve destination role
+```
+
+A feature that changes role behavior must update the surface/write contract and tests.
+
+---
+
+## 5. What scope does it support?
+
+Current minimal scope vocabulary:
+
+```text
+All
+Role(RoleTag)
+Rect(Rect)
+RowRange { start, end }
+ColumnRange { start, end }
+```
+
+Likely future vocabulary:
+
+```text
+Cell
+Cells
+Modulo
+And
+Or
+Not
+Mask-derived scope
+Layer scope
+Widget scope
+```
+
+Questions:
+
+```text
+Does this effect apply to the whole surface?
+Can it be role-scoped?
+Can it be rectangle-scoped?
+Can it be row/column scoped?
+Does it require boolean scope composition?
+Does it need a new targeting concept?
+Does the scope evaluate before or after sampling?
+Does zero-cell scope skip, warn, or error?
+```
+
+Default rules:
+
+```text
+Geometry scopes:
+    destination-local coordinates by default
+
+Role scopes:
+    sampled-source roles by default
+
+Zero-cell scope:
+    emit structured diagnostic and do not mutate
+```
+
+If a feature needs different behavior, it must say so explicitly:
+
+```json
+{
+  "scope": {
+    "kind": "role",
+    "role": "text",
+    "roleSpace": "destination"
+  }
+}
+```
+
+---
+
+## 6. Does this feature interact with sampling?
+
+Questions:
+
+```text
+Does it change source coordinates?
+Does it depend on sampled source coordinates?
+Does it depend on destination coordinates?
+Does it need both?
+What happens out of bounds?
+Does it clamp, wrap, skip, or error?
+Does it change role-scope behavior?
+Does it affect geometry-scope behavior?
+```
+
+Current locked default:
+
+```text
+destination (x, y)
+    -> sampler
+    -> sampled source (sx, sy)
+    -> sampled source cell
+    -> sampled source role
+```
+
+Out-of-bounds default:
+
+```text
+sampler returns None
+write is skipped
+destination cell and role are preserved
+```
+
+If a feature wants clamp or wrap, that is a new boundary policy:
+
+```text
+Skip
+Clamp
+Wrap
+Error
+```
+
+Do not bury that inside an effect without exposing it in the contract.
+
+---
+
+## 7. What write behavior does it need?
+
+Cell write policies:
+
+```text
+WriteCell
+    write visual cell channels exactly
+
+SkipTransparentEmpty
+    if source cell is empty transparent, skip and preserve destination
+
+Blend / Merge / Preserve variants
+    not fully locked yet; require contract update before use
+```
+
+Questions:
+
+```text
+Does it overwrite cells?
+Does it blend colors?
+Does it preserve glyph?
+Does it preserve style?
+Does it erase cells?
+Does transparent mean "clear" or "see through"?
+Does empty transparent write count as a real write?
+Does it need preserve-unfilled behavior?
+```
+
+Current locked behavior:
+
+```text
+Skipped:
+    no write; preserve destination cell and role
+
+Empty transparent write:
+    real write unless policy says SkipTransparentEmpty
+
+Unfilled:
+    behaves like skipped for that operation
+```
+
+If adding blend modes, make them explicit by channel:
+
+```text
+glyph:
+    preserve / replace / transform
+
+foreground:
+    preserve / replace / blend / transform
+
+background:
+    preserve / replace / blend / transform
+
+modifiers:
+    preserve / replace / merge
+
+role:
+    preserveDestination / copySampledSource / setExplicit / clearToBackground
+```
+
+---
+
+## 8. What inputs does it expose?
+
+For every input:
+
+```text
+name
+type
+default
+range
+unit
+semantic meaning
+runtime mutability
+bindability
+UI hint
+validation rules
+```
+
+Questions:
+
+```text
+Is this an authored look/timing parameter?
+Is this an implementation detail?
+Should it be bindable?
+Can it change live?
+Does changing it require reset?
+Does changing it require phase restart?
+Does changing it affect allocation/layout?
+Does it need a default?
+Does it need clamping or rejection?
+```
+
+Classify mutability:
+
+```text
+compileTime
+    cannot change after compilation
+
+phaseStart
+    can change when node starts
+
+resetOnly
+    can change only with node reset
+
+runtime
+    can change live while running
+```
+
+If an input changes behavior visible to recipes/studio, it belongs in the effect descriptor.
+
+If an input is purely internal tuning, keep it private.
+
+---
+
+## 9. What value type does it require?
+
+Use an existing value kind when possible.
+
+Likely value kinds:
+
+```text
+null
+boolean
+integer
+number
+string
+text
+color
+duration
+vec2
+rect
+enum
+curve
+palette
+glyphSet
+role
+scope
+```
+
+Questions:
+
+```text
+Can an existing ValueKind express this?
+Does this need a new primitive value type?
+Is this actually an enum?
+Is this a role, scope, or surface reference rather than a plain string?
+Does JSON representation need to be strict?
+Does studio need a control for it?
+```
+
+Avoid ad hoc strings when the value has semantics.
+
+For example:
+
+```text
+Bad:
+    "target": "text"
+
+Better:
+    "scope": { "kind": "role", "role": "text" }
+```
+
+---
+
+## 10. Is it a parameter, signal, binding, or direct input?
+
+Questions:
+
+```text
+Is this value authored by the recipe?
+Is it public recipe API?
+Is it supplied by the host app/game?
+Is it a live runtime value?
+Is it a studio override?
+Is it a preset override?
+Is it internal to the effect?
+```
+
+Ownership:
+
+```text
+effect input:
+    capability declared by effect implementation
+
+recipe parameter:
+    public recipe control
+
+signal:
+    runtime-provided external value
+
+binding:
+    mapping from signal/source to parameter/input
+
+preset:
+    saved override of recipe parameters
+```
+
+Default resolution order:
+
+```text
+live override
+    >
+runtime binding
+    >
+preset/profile override
+    >
+recipe default
+    >
+effect input default
+```
+
+Do not make every host value a recipe parameter automatically. Use parameters for public customization and signals for app/game state.
+
+---
+
+## 11. Does it complete, emit events, or participate in phases?
+
+Questions:
+
+```text
+Is the effect instant?
+Does it run forever?
+Does it complete naturally?
+Can it be cancelled?
+Can it be reset?
+Can it be seeked/scrubbed?
+Does it emit events?
+Does it produce node.completed?
+Can triggers wait for it?
+```
+
+Completion types:
+
+```text
+never
+    continuous effect; cannot be waited on
+
+instant
+    complete immediately
+
+timeBound
+    completes after duration
+
+eventual
+    completes when internal state reaches done
+
+external
+    completion driven by external signal/event
+```
+
+If an effect is `completion: never`, recipes must not be allowed to wait on `node.completed`.
+
+Events need names and payloads:
+
+```json
+{
+  "events": {
+    "completed": { "payload": "none" },
+    "charEmitted": {
+      "payload": {
+        "char": "char",
+        "index": "integer"
+      }
+    }
+  }
+}
+```
+
+---
+
+## 12. What diagnostics are needed?
+
+Questions:
+
+```text
+Can this fail validation?
+Can it fail at runtime?
+Can it produce zero-cell scope?
+Can it receive invalid inputs?
+Can it sample out of bounds?
+Can it exceed resource limits?
+Can it be unsupported by the effect descriptor?
+Can it be ambiguous?
+```
+
+Diagnostics should be structured:
+
+```json
+{
+  "level": "error",
+  "code": "surface.scope.zeroCell",
+  "message": "Scope matched zero cells.",
+  "path": "/nodes/crtPass/scope",
+  "hint": "Check role map or use roleSpace=destination."
+}
+```
+
+Avoid string-only errors for contract-visible behavior.
+
+Add new diagnostic codes when the failure class is meaningful to users/tools.
+
+---
+
+## 13. Does studio/tooling need to see it?
+
+Questions:
+
+```text
+Should studio show a control?
+Should studio show diagnostics?
+Should studio show usedBy links?
+Should studio show supported scopes?
+Should studio allow runtime editing?
+Should studio hide it as advanced?
+Should CLI/schema docs expose it?
+```
+
+If yes, the manifest contract eventually needs updates.
+
+Effect descriptor metadata should be enough for studio to generate controls:
+
+```text
+boolean:
+    switch
+
+number + range:
+    slider
+
+enum:
+    select
+
+color:
+    color picker
+
+text:
+    textarea
+
+role:
+    role selector
+
+scope:
+    scope editor
+
+duration:
+    duration field
+```
+
+Studio should consume generated manifests, not reverse-engineer raw recipe internals.
+
+---
+
+## 14. Does this affect legacy migration?
+
+Questions:
+
+```text
+Is there an old field or alias for this?
+Is the old name ambiguous?
+Can it be migrated automatically?
+Does it require manual review?
+Should strict v3.1 reject the old spelling?
+```
+
+Rule:
+
+```text
+No aliases in strict v3.1.
+```
+
+Aliases belong only here:
+
+```text
+legacy loader
+migration tool
+compatibility tests
+```
+
+Migration report should say:
+
+```text
+renamed field X -> Y
+inserted default Z
+removed unsupported alias A
+manual review required for B
+```
+
+---
+
+# Where contract updates happen
+
+```text
++==================================================================================================+
+|                             WHERE TO UPDATE FOR EACH CHANGE TYPE                                  |
++==================================================================================================+
+
+  Surface/cell/role/skip/write semantics
+      docs/v3.1-surface-contract.md
+      tui-vfx-next surface/write/scope modules
+      surface contract tests
+
+  Sampling semantics
+      docs/v3.1-surface-contract.md
+      sampler module
+      engine tests with non-identity sampling
+
+  Scope vocabulary
+      ScopeSpec contract
+      scope evaluator
+      diagnostics
+      tests for each coordinate/role-space behavior
+      later: recipe schema and studio manifest
+
+  New effect capability
+      EffectDescriptor model
+      descriptor tests
+      engine validation tests
+      later: recipe compiler and manifest
+
+  New effect input
+      effect descriptor input spec
+      value/type validation
+      runtime mutability rules
+      studio UI metadata
+      tests for invalid/default/range behavior
+
+  New value type
+      ValueKind / Value model
+      JSON schema generation
+      validation
+      studio control mapping
+      tests
+
+  New runtime signal/binding
+      ValueSource / BindingSpec
+      ParameterStore / SignalStore
+      runtime validation
+      tests for fallback/missing/clamp behavior
+
+  New phase/trigger/event behavior
+      lifecycle contract
+      trigger AST
+      event bus/latching/windowing rules
+      validation tests
+
+  Legacy alias/migration
+      legacy bridge only
+      migration report
+      strict v3.1 rejection tests
+
++==================================================================================================+
+```
+
+---
+
+# Feature addition workflow
+
+Every future agent should follow this sequence.
+
+```text
++==================================================================================================+
+|                               FEATURE ADDITION WORKFLOW                                          |
++==================================================================================================+
+
+  1. Classify the feature.
+       Is it implementation-only or contract-visible?
+
+  2. Identify the owning concept.
+       Surface? Scope? Write policy? Sampler? Effect descriptor?
+       Value type? Recipe schema? Runtime signal? Diagnostic? Manifest?
+
+  3. Answer the core questions.
+       Domain, surface read/write, cell channels, role policy, scope,
+       sampling, write behavior, inputs, values, lifecycle, diagnostics.
+
+  4. Check whether existing contract vocabulary is enough.
+       If yes, use it.
+       If no, propose a minimal contract extension.
+
+  5. Update docs first.
+       Add the semantic rule to the relevant contract doc.
+
+  6. Add semantic tests.
+       Tests should prove behavior independently of legacy compositor code.
+
+  7. Implement the smallest code change.
+       Prefer toy/proof implementation before real effect port.
+
+  8. Add descriptor/schema/manifest updates only when that layer exists.
+       Do not invent ad hoc JSON fields.
+
+  9. Add validation and diagnostics.
+       Invalid states should fail early with structured diagnostics.
+
+  10. Add migration only after strict v3.1 behavior is defined.
+       Legacy aliases never enter strict v3.1.
+
+  11. Run guardrails.
+       cargo fmt
+       cargo clippy
+       cargo test
+       dependency boundary checks
+
++==================================================================================================+
+```
+
+---
+
+# Required feature proposal template
+
+Future agents should fill this out before implementing.
+
+```markdown
+# Feature Contract Proposal
+
+## Feature name
+
+## Summary
+
+## Is this contract-visible?
+
+Yes / No
+
+Reason:
+
+## Domain
+
+One of:
+
+- contentGenerator
+- contentTransform
+- cellShader
+- frameFilter
+- coordinateSampler
+- mask
+- shadow
+- postProcess
+- diagnostic/tooling
+
+## Surface behavior
+
+Reads from:
+
+Writes to:
+
+In-place or read/write pass:
+
+## Sampling behavior
+
+Uses sampler?
+
+Coordinate space:
+
+Role space:
+
+Out-of-bounds behavior:
+
+## Scope behavior
+
+Supported scopes:
+
+Default scope:
+
+Zero-cell behavior:
+
+Needs new ScopeSpec variant?
+
+## Cell channel access
+
+Reads:
+
+Writes:
+
+## Role policy
+
+One of:
+
+- PreserveDestination
+- CopySampledSource
+- SetExplicit(role)
+- ClearToBackground
+- New policy required
+
+Reason:
+
+## Write behavior
+
+Cell write policy:
+
+Transparent/empty behavior:
+
+Skipped-cell behavior:
+
+Blend/merge behavior:
+
+## Inputs
+
+| input | type | default | range | bindable | mutability | notes |
+|---|---|---|---|---|---|---|
+
+## Values / parameters / signals
+
+Recipe parameters:
+
+Runtime signals:
+
+Bindings:
+
+Fallback behavior:
+
+## Lifecycle
+
+Completion:
+
+Resettable:
+
+Seekable:
+
+Events:
+
+## Diagnostics
+
+Validation errors:
+
+Runtime diagnostics:
+
+Diagnostic codes:
+
+## Studio/tooling impact
+
+Controls:
+
+Manifest fields:
+
+Used-by links:
+
+## Legacy/migration impact
+
+Legacy aliases:
+
+Migration strategy:
+
+Strict v3.1 behavior:
+
+## Tests required
+
+## Files expected to change
+
+## Non-goals
+```
+
+This template prevents “drive-by contract changes.”
+
+---
+
+# Common decision cases
+
+## Case A: Adding a new visual filter
+
+Example: “Sepia filter.”
+
+Questions:
+
+```text
+Does it only alter fg/bg?
+Does it preserve glyph?
+Does it preserve modifiers?
+Does it preserve roles?
+Can it be scoped?
+Does it support runtime strength?
+Does it need color-space inputs?
+```
+
+Likely decisions:
+
+```text
+domain:
+    frameFilter or cellShader
+
+cell access:
+    reads foreground/background
+    writes foreground/background
+
+role policy:
+    PreserveDestination for in-place visual pass
+    CopySampledSource if it is part of source-to-destination transform
+
+scope:
+    All + Role + Rect if supported
+
+completion:
+    never or instant depending on stage model
+
+inputs:
+    strength: number 0..1, runtime mutable
+```
+
+Contract update required only if existing descriptor/scope/write/value concepts are insufficient.
+
+---
+
+## Case B: Adding a new sampler
+
+Example: “Swirl sampler.”
+
+Questions:
+
+```text
+Does it map destination to source coordinates?
+Can it return out of bounds?
+Does it clamp, wrap, or skip?
+Does it need normalized center?
+Does it need deterministic seed?
+Does it affect role scopes?
+```
+
+Likely decisions:
+
+```text
+domain:
+    coordinateSampler
+
+writes:
+    no cell channels directly
+
+out-of-bounds:
+    default skip unless declared otherwise
+
+role scope:
+    sampled-source role after sampler
+
+geometry scope:
+    destination-local unless explicitly changed
+
+inputs:
+    center, strength, radius, time, seed
+```
+
+Contract update required if it needs a new boundary mode.
+
+---
+
+## Case C: Adding a new mask
+
+Example: “hex dissolve mask.”
+
+Questions:
+
+```text
+Does mask skip writes or write transparent cells?
+Does it apply before or after sampling?
+Does it use destination coordinate or sampled source coordinate?
+Does it preserve destination role on masked-out cells?
+Does it support soft edge?
+```
+
+Default:
+
+```text
+masked-out cell:
+    skipped write
+    preserve destination cell and role
+```
+
+If mask writes transparency instead of skipping, that is a different write policy and must be explicit.
+
+---
+
+## Case D: Adding a new content generator
+
+Example: “typewriter.”
+
+Questions:
+
+```text
+What role does generated text receive?
+Does it write background cells too?
+Does it preserve existing destination where no glyph is emitted?
+Does changing text reset?
+Does it complete?
+What events does it emit?
+Does cursor belong inside it or as separate effect?
+```
+
+Likely decisions:
+
+```text
+domain:
+    contentGenerator
+
+writes:
+    glyph, fg, bg, mods, role
+
+role policy:
+    SetExplicit(Text) or declared output role
+
+completion:
+    eventual
+
+events:
+    started, charEmitted, completed, skipped/cancelled maybe
+
+mutability:
+    text likely phaseStart or resetOnly
+    speed runtime
+```
+
+This almost certainly requires descriptor and lifecycle contract updates.
+
+---
+
+## Case E: Adding shadow behavior
+
+Questions:
+
+```text
+Is shadow generated from source envelope?
+Does it write only outside element bounds?
+Does it blend with destination?
+Does it write RoleTag::Shadow?
+Does it preserve underlying destination role when grading?
+Does shadow mask skip or clear?
+```
+
+Likely decisions:
+
+```text
+domain:
+    shadow
+
+role policy:
+    SetExplicit(Shadow) for shadow-only contribution
+
+write behavior:
+    blend/grade/glyph overlay must be explicit by channel
+
+scope:
+    source region / role region maybe
+
+diagnostics:
+    zero source envelope
+    out-of-bounds shadow extent
+```
+
+Shadow is contract-heavy. Do not port it until write/blend policies are locked.
+
+---
+
+## Case F: Adding a new role
+
+Questions:
+
+```text
+Is this really a semantic role or a state?
+Is it one primary identity per cell?
+Could it be represented by a signal/state instead?
+Does it need built-in stable ID?
+Does studio/tooling need to understand it?
+Is it common enough to be first-class?
+```
+
+Prefer not to add built-in roles casually.
+
+Use custom declared roles for recipe-specific semantics:
+
+```text
+logo.silhouette
+card.innerGlow
+hud.damageIndicator
+```
+
+Use signals/state for transient UI states:
+
+```text
+focused
+selected
+hovered
+disabled
+warning
+```
+
+A built-in role is an ecosystem commitment.
+
+---
+
+## Case G: Adding a new scope type
+
+Questions:
+
+```text
+Can this be expressed with existing scopes?
+Is it geometry, role, mask, layer, widget, or predicate based?
+Which coordinate space does it use?
+Can it match zero cells?
+Can it be evaluated efficiently?
+Does it require runtime values?
+Does it compose with other scopes?
+```
+
+Add tests for:
+
+```text
+matches intended cells
+does not match unintended cells
+zero-cell diagnostic
+coordinate-space behavior
+role-space behavior, if relevant
+non-identity sampling behavior
+```
+
+---
+
+## Case H: Adding a new runtime input/binding
+
+Questions:
+
+```text
+Is this a parameter or signal?
+What is its type?
+What is its default?
+What if absent?
+Can it change live?
+Does it clamp?
+Does it smooth/interpolate?
+What owns the binding?
+```
+
+Never add runtime string lookups ad hoc inside an effect. Route through the value-source/binding contract.
+
+---
+
+# Definition of done for any contract-visible feature
+
+A feature is done only when:
+
+```text
+1. Its contract owner is identified.
+
+2. The relevant contract doc is updated.
+
+3. The effect/capability descriptor declares the behavior, if descriptors exist.
+
+4. Surface read/write behavior is explicit.
+
+5. Scope behavior is explicit.
+
+6. Sampling behavior is explicit.
+
+7. Role policy is explicit.
+
+8. Empty/transparent/skipped behavior is explicit.
+
+9. Runtime inputs have types/defaults/mutability.
+
+10. Invalid states produce structured diagnostics.
+
+11. Tests prove the semantic behavior independent of legacy compositor code.
+
+12. No strict v3.1 aliases are introduced.
+
+13. Studio/schema/migration impact is either handled or explicitly deferred.
+```
+
+---
+
+# Anti-patterns to reject
+
+```text
+"Just add a field to the JSON."
+    Reject. Decide who owns the fact.
+
+"Just make unknown role strings custom."
+    Reject for strict v3.1. Require custom role declaration.
+
+"Just mutate the grid."
+    Reject. Surface writes must handle roles and skip policy.
+
+"Just skip transparent cells."
+    Reject. Empty transparent write and skip are distinct.
+
+"Just use destination role."
+    Reject unless RoleSpace::Destination is explicit.
+
+"Just precompute scope matches."
+    Reject if precompute semantics can disagree with sampled-source writes.
+
+"Just support legacy alias in v3.1."
+    Reject. Put aliases in migration bridge.
+
+"Just port the old effect shape."
+    Reject. Port behavior through descriptor/scope/write/value contracts.
+
+"Just add a studio control."
+    Reject. Studio controls come from descriptors/manifests.
+```
+
+---
+
+# Practical map for future agents
+
+```text
++==================================================================================================+
+|                                  FUTURE AGENT MAP                                                |
++==================================================================================================+
+
+  New idea arrives
+       |
+       v
+  1. Is it visible outside implementation?
+       |
+       +-- No --> local code + tests only
+       |
+       +-- Yes
+             |
+             v
+  2. Which contract layer owns it?
+             |
+             +-- surface/cell/role
+             +-- sampling
+             +-- scope
+             +-- write/blend/skip
+             +-- effect descriptor
+             +-- value/input/parameter
+             +-- signal/binding/runtime
+             +-- lifecycle/event/trigger
+             +-- recipe schema
+             +-- studio manifest
+             +-- legacy migration
+             |
+             v
+  3. Does existing vocabulary express it?
+             |
+             +-- Yes --> use existing contract; add tests
+             |
+             +-- No  --> propose minimal contract extension first
+             |
+             v
+  4. Prove semantics in clean kernel
+             |
+             v
+  5. Add descriptor/schema/tooling only after semantic proof
+             |
+             v
+  6. Port real implementation last
+```
+
+The most important habit is this:
+
+```text
+Do not ask, "How do I add this effect?"
+
+Ask first, "What semantic promise does this effect require the system to make?"
+```
+
+Once the promise is clear, the code location usually becomes obvious.
+
+<!-- <FOOTER>END OF VERSION 0.1.0</FOOTER> -->
