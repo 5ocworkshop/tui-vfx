@@ -1,26 +1,27 @@
 // <FILE>tui-vfx-content/src/transformers/cls_typewriter.rs</FILE> - <DESC>Typewriter transformer</DESC>
-// <VERS>VERSION: 4.0.0</VERS>
-// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer::transform and the inherent transform_with_cursor both take &TransformContext<'_>.</WCTX>
-// <CLOG>4.0.0: BREAKING — TextTransformer::transform signature now takes &TransformContext<'_>; the inherent transform_with_cursor mirrors that change. Reads ctx.signal_ctx for variance evaluation and forwards ctx.signal_ctx to fnc_advance_cursor / fnc_render_cursor.</CLOG>
+// <VERS>VERSION: 4.1.0</VERS>
+// <WCTX>Packet 69-A: speed_variance is now VfxBindableValue so hosts can drive typing jitter via runtime bindings without recipe rewrites.</WCTX>
+// <CLOG>4.1.0: MINOR — speed_variance field, Typewriter::new arg, Default impl, and the transform-time evaluate call all migrate from SignalOrFloat to VfxBindableValue. The evaluate call now passes ctx.runtime_params so {"binding": "key"} resolves against the host's ShaderRuntimeParams.</CLOG>
 
 use crate::traits::{TextTransformer, TransformContext};
 use crate::utils::fnc_graphemes::{len_graphemes, slice_graphemes};
-use mixed_signals::prelude::SignalOrFloat;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
+use tui_vfx_core::bindable::VfxBindableValue;
 
 /// Typewriter effect that reveals text character-by-character.
 ///
 /// Supports optional speed variance for organic, human-like typing rhythm.
 #[derive(Debug, Clone)]
 pub struct Typewriter {
-    /// Per-character timing variance (0.0 = uniform, higher = more variation)
-    /// Can be static or signal-driven for time-varying effects.
-    pub speed_variance: SignalOrFloat,
+    /// Per-character timing variance (0.0 = uniform, higher = more variation).
+    ///
+    /// Bindable: literal, host-supplied `{"binding": "name"}`, or `{"signal": ...}`.
+    pub speed_variance: VfxBindableValue,
 }
 
 impl Typewriter {
-    pub fn new(speed_variance: SignalOrFloat) -> Self {
+    pub fn new(speed_variance: VfxBindableValue) -> Self {
         Self { speed_variance }
     }
 }
@@ -28,7 +29,7 @@ impl Typewriter {
 impl Default for Typewriter {
     fn default() -> Self {
         Self {
-            speed_variance: SignalOrFloat::Static(0.0),
+            speed_variance: VfxBindableValue::Literal(0.0),
         }
     }
 }
@@ -52,10 +53,12 @@ impl TextTransformer for Typewriter {
             return Cow::Borrowed(target);
         }
 
-        // Evaluate speed_variance signal per-frame (unwrap with fallback to 0.0 on error)
+        // Evaluate speed_variance per-frame; resolves literal / runtime binding /
+        // signal expression through the bindable's three-arg evaluate. Fallback
+        // to 0.0 on missing bindings or signal-build errors.
         let variance = f64::from(
             self.speed_variance
-                .evaluate(progress, ctx.signal_ctx)
+                .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
                 .unwrap_or(0.0),
         );
 
@@ -150,5 +153,51 @@ impl Typewriter {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mixed_signals::prelude::SignalContext;
+    use tui_vfx_style::traits::ShaderRuntimeParams;
+
+    #[test]
+    fn speed_variance_binding_resolves_from_runtime_params() {
+        // The Binding arm on speed_variance must read through ctx.runtime_params.
+        // Verify by comparing the bindable's evaluate() with the host value
+        // directly — the transformer wires that result into per-char threshold
+        // perturbation, but the resolution itself is what packet 69-A enables.
+        let bound = VfxBindableValue::Binding("typing_jitter".to_string());
+        let mut params = ShaderRuntimeParams::new();
+        params.insert("typing_jitter", 0.5_f32);
+        let sig = SignalContext::default();
+        let resolved = bound.evaluate(0.0, &sig, &params).expect("binding hit");
+        assert!((resolved - 0.5).abs() < 1e-6);
+        // Sanity-check that the transformer accepts the bindable and produces
+        // some prefix (bound to the same params at the same progress); the
+        // exact prefix is governed by the hash function and is not asserted.
+        let tw = Typewriter::new(bound);
+        let result = tw.transform("Hello World", 0.5, &TransformContext::new(&sig, &params));
+        assert!("Hello World".starts_with(result.as_ref()));
+    }
+
+    #[test]
+    fn missing_runtime_binding_falls_back_to_zero_variance() {
+        // No host params supplied; the binding misses, evaluate() returns
+        // None, and transform() falls back to variance=0.0 (steady reveal).
+        let bound = Typewriter::new(VfxBindableValue::Binding("typing_jitter".to_string()));
+        let sig = SignalContext::default();
+        let params = ShaderRuntimeParams::new();
+        let result = bound
+            .transform("Hello World", 0.5, &TransformContext::new(&sig, &params))
+            .into_owned();
+        let baseline = Typewriter::new(VfxBindableValue::Literal(0.0))
+            .transform("Hello World", 0.5, &TransformContext::new(&sig, &params))
+            .into_owned();
+        assert_eq!(
+            result, baseline,
+            "missing binding must match the steady-reveal baseline"
+        );
+    }
+}
+
 // <FILE>tui-vfx-content/src/transformers/cls_typewriter.rs</FILE> - <DESC>Typewriter transformer</DESC>
-// <VERS>END OF VERSION: 4.0.0</VERS>
+// <VERS>END OF VERSION: 4.1.0</VERS>

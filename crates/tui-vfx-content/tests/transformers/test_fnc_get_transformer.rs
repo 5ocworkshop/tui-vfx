@@ -4,8 +4,8 @@
 // <CLOG>Include SlideShift shift_width in factory test</CLOG>
 
 use mixed_signals::prelude::SignalContext;
-use mixed_signals::types::SignalOrFloat;
 use tui_vfx_content::traits::TransformContext;
+use tui_vfx_core::bindable::VfxBindableValue;
 use tui_vfx_content::transformers::get_transformer;
 use tui_vfx_content::types::{
     ContentEffect, ScrambleCharset, SlideShiftFlowMode, SlideShiftLineMode,
@@ -43,7 +43,7 @@ fn test_signal_ctx() -> TransformContext<'static> {
 #[test]
 fn test_factory_typewriter() {
     let config = ContentEffect::Typewriter {
-        speed_variance: SignalOrFloat::Static(0.0),
+        speed_variance: VfxBindableValue::Literal(0.0),
         cursor: None,
     };
     let tx = get_transformer(&config);
@@ -61,7 +61,7 @@ fn test_factory_redact() {
 #[test]
 fn test_factory_scramble() {
     let config = ContentEffect::Scramble {
-        resolve_pace: SignalOrFloat::Static(1.0),
+        resolve_pace: VfxBindableValue::Literal(1.0),
         charset: ScrambleCharset::Binary,
         seed: 123,
     };
@@ -75,8 +75,8 @@ fn test_factory_scramble() {
 fn test_factory_glitch_shift_before_window() {
     let config = ContentEffect::GlitchShift {
         shift_amount: 5,
-        glitch_start: SignalOrFloat::Static(0.3),
-        glitch_end: SignalOrFloat::Static(0.4),
+        glitch_start: VfxBindableValue::Literal(0.3),
+        glitch_end: VfxBindableValue::Literal(0.4),
         seed: 42,
     };
     let tx = get_transformer(&config);
@@ -88,8 +88,8 @@ fn test_factory_glitch_shift_before_window() {
 fn test_factory_glitch_shift_during_window() {
     let config = ContentEffect::GlitchShift {
         shift_amount: 5,
-        glitch_start: SignalOrFloat::Static(0.3),
-        glitch_end: SignalOrFloat::Static(0.4),
+        glitch_start: VfxBindableValue::Literal(0.3),
+        glitch_end: VfxBindableValue::Literal(0.4),
         seed: 42,
     };
     let tx = get_transformer(&config);
@@ -104,8 +104,8 @@ fn test_factory_glitch_shift_during_window() {
 fn test_factory_glitch_shift_after_window() {
     let config = ContentEffect::GlitchShift {
         shift_amount: 5,
-        glitch_start: SignalOrFloat::Static(0.3),
-        glitch_end: SignalOrFloat::Static(0.4),
+        glitch_start: VfxBindableValue::Literal(0.3),
+        glitch_end: VfxBindableValue::Literal(0.4),
         seed: 42,
     };
     let tx = get_transformer(&config);
@@ -116,12 +116,12 @@ fn test_factory_glitch_shift_after_window() {
 #[test]
 fn test_factory_scramble_glitch_shift_before_window() {
     let config = ContentEffect::ScrambleGlitchShift {
-        resolve_pace: SignalOrFloat::Static(1.0),
+        resolve_pace: VfxBindableValue::Literal(1.0),
         charset: ScrambleCharset::Binary,
         scramble_seed: 42,
         shift_amount: 3,
-        glitch_start: SignalOrFloat::Static(0.3),
-        glitch_end: SignalOrFloat::Static(0.4),
+        glitch_start: VfxBindableValue::Literal(0.3),
+        glitch_end: VfxBindableValue::Literal(0.4),
     };
     let tx = get_transformer(&config);
     // At t=0.0, text should be scrambled but no shift
@@ -134,12 +134,12 @@ fn test_factory_scramble_glitch_shift_before_window() {
 #[test]
 fn test_factory_scramble_glitch_shift_during_window() {
     let config = ContentEffect::ScrambleGlitchShift {
-        resolve_pace: SignalOrFloat::Static(1.0),
+        resolve_pace: VfxBindableValue::Literal(1.0),
         charset: ScrambleCharset::Binary,
         scramble_seed: 42,
         shift_amount: 3,
-        glitch_start: SignalOrFloat::Static(0.3),
-        glitch_end: SignalOrFloat::Static(0.4),
+        glitch_start: VfxBindableValue::Literal(0.3),
+        glitch_end: VfxBindableValue::Literal(0.4),
     };
     let tx = get_transformer(&config);
     // During glitch window - should have shift applied
@@ -155,12 +155,12 @@ fn test_factory_scramble_glitch_shift_during_window() {
 #[test]
 fn test_factory_scramble_glitch_shift_resolved() {
     let config = ContentEffect::ScrambleGlitchShift {
-        resolve_pace: SignalOrFloat::Static(1.0),
+        resolve_pace: VfxBindableValue::Literal(1.0),
         charset: ScrambleCharset::Binary,
         scramble_seed: 42,
         shift_amount: 3,
-        glitch_start: SignalOrFloat::Static(0.3),
-        glitch_end: SignalOrFloat::Static(0.4),
+        glitch_start: VfxBindableValue::Literal(0.3),
+        glitch_end: VfxBindableValue::Literal(0.4),
     };
     let tx = get_transformer(&config);
     // At t=1.0, text should be fully resolved (original text), no shift

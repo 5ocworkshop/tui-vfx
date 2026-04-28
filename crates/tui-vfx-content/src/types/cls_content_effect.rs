@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>VERSION: 2.15.0</VERS>
-// <WCTX>Phase 3 of mechanical circular content cycles plan: attach the optional MechanicalCycleConfig field to the Odometer variant alongside the runtime that honors it.</WCTX>
-// <CLOG>2.15.0: add Optional MechanicalCycleConfig to ContentEffect::Odometer; absence preserves byte-identical legacy whole-grid roll behavior; Phase 4 attaches the same field on SplitFlap.</CLOG>
+// <VERS>VERSION: 2.16.0</VERS>
+// <WCTX>Packet 69-A: promote 11 rate-bearing fields from SignalOrFloat to VfxBindableValue so host applications can drive content-effect rates per frame via runtime bindings.</WCTX>
+// <CLOG>2.16.0: MINOR — change 11 rate-bearing fields (Typewriter.speed_variance, Scramble.resolve_pace, GlitchShift.{glitch_start, glitch_end}, ScrambleGlitchShift.{resolve_pace, glitch_start, glitch_end}, SplitFlap.{speed, cascade, cycles}, Marquee.speed) from SignalOrFloat to VfxBindableValue. Wire format preserved via VfxBindableRepr's lenient deserializer; existing JSON parses byte-equivalently. Inherent doctest and apply_with_runtime doc reference updated.</CLOG>
 
 //! # Content Effects
 //!
@@ -34,14 +34,23 @@
 //! [`Numeric`]: ContentEffect::Numeric
 //! [`WrapIndicator`]: ContentEffect::WrapIndicator
 //!
-//! ## Signal-Driven Parameters
+//! ## Bindable Rate Parameters
 //!
-//! Many parameters use [`SignalOrFloat`] for animation-driven values:
+//! Rate-bearing parameters (`speed_variance`, `resolve_pace`, `glitch_start`,
+//! `glitch_end`, `speed`, `cascade`, `cycles`) accept the three forms of
+//! [`VfxBindableValue`]: a static literal, a host-supplied runtime binding,
+//! or a signal expression evaluated per frame.
 //!
 //! ```json
-//! { "type": "typewriter", "speed_variance": 0.2 }            // Static
-//! { "type": "typewriter", "speed_variance": { "signal": "t" }} // Animated
+//! { "type": "typewriter", "speed_variance": 0.2 }                          // literal
+//! { "type": "typewriter", "speed_variance": { "binding": "typing_jitter" }} // runtime binding
+//! { "type": "typewriter", "speed_variance": { "signal": { "sine": { "frequency_hz": 0.5 } } }} // signal
 //! ```
+//!
+//! Bindings resolve against the host's `ShaderRuntimeParams` map; legacy
+//! `{"static": N}` shapes continue to parse via the lenient bare-signal fallback.
+//!
+//! [`VfxBindableValue`]: tui_vfx_core::bindable::VfxBindableValue
 
 use super::cls_dissolve_config::{DissolveDirection, DissolvePattern, DissolveReplacement};
 use super::cls_glyph_cascade::{GlyphCascadeAlphabet, GlyphCascadeMode, GlyphCascadePattern};
@@ -52,7 +61,7 @@ use super::cls_scramble_charset::ScrambleCharset;
 use super::cls_slide_shift_flow_mode::SlideShiftFlowMode;
 use super::cls_slide_shift_line_mode::SlideShiftLineMode;
 use super::cls_typewriter_cursor::TypewriterCursor;
-use mixed_signals::prelude::SignalOrFloat;
+use tui_vfx_core::bindable::VfxBindableValue;
 
 fn default_shift_width() -> u16 {
     1
@@ -127,17 +136,19 @@ pub enum OdometerTravel {
 ///
 /// ```
 /// use tui_vfx_content::prelude::*;
+/// use tui_vfx_core::bindable::VfxBindableValue;
 ///
 /// let effect = ContentEffect::Typewriter {
-///     speed_variance: SignalOrFloat::Static(0.0),
+///     speed_variance: VfxBindableValue::Literal(0.0),
 ///     cursor: None,
 /// };
 /// let revealed: String = effect.apply("Hello World", 0.5);
 /// ```
 ///
 /// For the borrowed-fast-path variant see
-/// [`apply_to_borrowed`](Self::apply_to_borrowed); for signal-driven pacing
-/// see [`apply_with_context`](Self::apply_with_context).
+/// [`apply_to_borrowed`](Self::apply_to_borrowed); for signal- or
+/// binding-driven pacing see
+/// [`apply_with_runtime`](Self::apply_with_runtime).
 ///
 /// # Categories
 ///
@@ -176,9 +187,9 @@ pub enum ContentEffect {
     /// - `speed_variance`: Randomizes typing speed for organic feel
     /// - `cursor`: Optional blinking cursor at typing position
     Typewriter {
-        /// Speed variation for organic typing feel (0.0 = steady, higher = more variable).
+        /// Speed variation for organic typing feel (0.0 = steady, higher = more variable). Bindable.
         #[serde(default)]
-        speed_variance: SignalOrFloat,
+        speed_variance: VfxBindableValue,
         /// Optional cursor displayed at the typing position.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         cursor: Option<TypewriterCursor>,
@@ -193,9 +204,9 @@ pub enum ContentEffect {
     ///
     /// Choose from predefined charsets (ASCII, digits, symbols) or custom.
     Scramble {
-        /// How quickly characters resolve (higher = faster stabilization).
+        /// How quickly characters resolve (higher = faster stabilization). Bindable.
         #[serde(default)]
-        resolve_pace: SignalOrFloat,
+        resolve_pace: VfxBindableValue,
         /// Character set for scrambled display.
         charset: ScrambleCharset,
         /// Seed for deterministic scramble patterns.
@@ -209,12 +220,12 @@ pub enum ContentEffect {
     GlitchShift {
         /// Number of characters to shift right (typically 4-6).
         shift_amount: u8,
-        /// Progress value when glitch starts (0.0-1.0).
+        /// Progress value when glitch starts (0.0-1.0). Bindable.
         #[serde(default)]
-        glitch_start: SignalOrFloat,
-        /// Progress value when glitch ends (0.0-1.0).
+        glitch_start: VfxBindableValue,
+        /// Progress value when glitch ends (0.0-1.0). Bindable.
         #[serde(default)]
-        glitch_end: SignalOrFloat,
+        glitch_end: VfxBindableValue,
         /// Seed for deterministic behavior.
         seed: u64,
     },
@@ -224,21 +235,21 @@ pub enum ContentEffect {
     /// Scrambles text progressively while adding a brief horizontal shift
     /// glitch. Combines the aesthetics of both effects.
     ScrambleGlitchShift {
-        /// How quickly characters resolve.
+        /// How quickly characters resolve. Bindable.
         #[serde(default)]
-        resolve_pace: SignalOrFloat,
+        resolve_pace: VfxBindableValue,
         /// Character set for scrambled display.
         charset: ScrambleCharset,
         /// Seed for scramble pattern.
         scramble_seed: u64,
         /// Number of characters to shift right.
         shift_amount: u8,
-        /// Progress value when glitch starts.
+        /// Progress value when glitch starts. Bindable.
         #[serde(default)]
-        glitch_start: SignalOrFloat,
-        /// Progress value when glitch ends.
+        glitch_start: VfxBindableValue,
+        /// Progress value when glitch ends. Bindable.
         #[serde(default)]
-        glitch_end: SignalOrFloat,
+        glitch_end: VfxBindableValue,
     },
 
     /// Glyph-cascade / symbol-evolution effect.
@@ -272,19 +283,19 @@ pub enum ContentEffect {
     /// preserves legacy character flips; even `tile_height` values `2`, `4`,
     /// `6`, and `8` render larger center-hinged Solari cards.
     SplitFlap {
-        /// Flip animation speed.
+        /// Flip animation speed. Bindable.
         #[serde(default)]
-        speed: SignalOrFloat,
+        speed: VfxBindableValue,
         /// Cascade delay between characters (0 = simultaneous, higher = wave).
         /// Authentic Solari boards use cascade=0; distance-based staggering
-        /// is provided by `authentic_timing` instead.
+        /// is provided by `authentic_timing` instead. Bindable.
         #[serde(default)]
-        cascade: SignalOrFloat,
+        cascade: VfxBindableValue,
         /// Minimum full character-pool cycles each char walks before
         /// landing, so low-distance targets (like "A") still flip through
-        /// a satisfying alphabet span.
+        /// a satisfying alphabet span. Bindable.
         #[serde(default)]
-        cycles: SignalOrFloat,
+        cycles: VfxBindableValue,
         /// Per-character deterministic cascade-timing variance (0.0-1.0).
         /// Breaks lockstep landings; cells arrive in bursts like a real
         /// Solari board.
@@ -429,9 +440,9 @@ pub enum ContentEffect {
     /// Text scrolls horizontally through a fixed-width viewport.
     /// Classic for news tickers or limited-space displays.
     Marquee {
-        /// Scroll speed.
+        /// Scroll speed. Bindable.
         #[serde(default)]
-        speed: SignalOrFloat,
+        speed: VfxBindableValue,
         /// Viewport width in characters.
         width: u16,
     },
@@ -760,5 +771,93 @@ impl ContentEffect {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mixed_signals::prelude::SignalContext;
+    use tui_vfx_core::bindable::VfxBindable;
+    use tui_vfx_style::traits::ShaderRuntimeParams;
+
+    /// Packet 69-A wire-format parity guard. Pre-69-A recipes used two
+    /// shapes for rate-bearing fields: bare numbers (SignalOrFloat::Static)
+    /// and tagged signal-spec objects like `{"type":"sine",...}`
+    /// (SignalOrFloat::Signal). Post-packet they must continue to parse
+    /// through the lenient `VfxBindableRepr` deserializer.
+    #[test]
+    fn legacy_bare_number_parses_as_literal() {
+        let effect: ContentEffect =
+            serde_json::from_str(r#"{"type":"typewriter","speed_variance":0.7}"#).expect("parse");
+        let ContentEffect::Typewriter { speed_variance, .. } = effect else {
+            panic!("expected Typewriter");
+        };
+        // Bare numbers route to Literal — the canonical home for static values.
+        assert!(matches!(speed_variance, VfxBindable::Literal(v) if (v - 0.7).abs() < 1e-6));
+    }
+
+    #[test]
+    fn legacy_signal_spec_object_parses_via_bare_signal_arm() {
+        // A tagged SignalSpec object — SignalOrFloat::Signal historically —
+        // lands in VfxBindableRepr::BareSignal and becomes
+        // Signal(SignalOrFloat::Signal{spec, ..}). At loop_t=0, a sine with
+        // amplitude=0.5 + offset=0.5 evaluates near 0.5 (sin(0) = 0). Tests
+        // packet §3's claim that existing JSON parses byte-equivalently.
+        let json = r#"{"type":"typewriter","speed_variance":{"type":"sine","frequency":1.0,"amplitude":0.5,"offset":0.5}}"#;
+        let effect: ContentEffect = serde_json::from_str(json).expect("parse");
+        let ContentEffect::Typewriter { speed_variance, .. } = effect else {
+            panic!("expected Typewriter");
+        };
+        assert!(
+            matches!(speed_variance, VfxBindable::Signal(_)),
+            "tagged SignalSpec must land in the Signal arm, got {speed_variance:?}"
+        );
+    }
+
+    #[test]
+    fn binding_arm_resolves_from_runtime_params() {
+        let effect: ContentEffect = serde_json::from_str(
+            r#"{"type":"typewriter","speed_variance":{"binding":"jitter"}}"#,
+        )
+        .expect("parse");
+        let ContentEffect::Typewriter { speed_variance, .. } = effect else {
+            panic!("expected Typewriter");
+        };
+        assert!(matches!(speed_variance, VfxBindable::Binding(_)));
+        let sig = SignalContext::default();
+        let mut params = ShaderRuntimeParams::new();
+        params.insert("jitter", 0.33_f32);
+        let v = speed_variance.evaluate(0.0, &sig, &params).expect("evaluate");
+        assert!((v - 0.33).abs() < 1e-6);
+    }
+
+    #[test]
+    fn split_flap_speed_round_trips_legacy_bare_number() {
+        // SplitFlap has three rate-bearing fields; one round-trip there
+        // suffices to prove the wire format flows through every variant.
+        let json = r#"{"type":"split_flap","speed":1.5,"cascade":0.0,"cycles":0.5}"#;
+        let effect: ContentEffect = serde_json::from_str(json).expect("parse");
+        let ContentEffect::SplitFlap { speed, .. } = effect else {
+            panic!("expected SplitFlap");
+        };
+        let sig = SignalContext::default();
+        let params = ShaderRuntimeParams::new();
+        let v = speed.evaluate(0.0, &sig, &params).expect("evaluate");
+        assert!((v - 1.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn marquee_speed_binding_resolves() {
+        let json = r#"{"type":"marquee","speed":{"binding":"scroll_rate"},"width":10}"#;
+        let effect: ContentEffect = serde_json::from_str(json).expect("parse");
+        let ContentEffect::Marquee { speed, .. } = effect else {
+            panic!("expected Marquee");
+        };
+        let sig = SignalContext::default();
+        let mut params = ShaderRuntimeParams::new();
+        params.insert("scroll_rate", 2.0_f32);
+        let v = speed.evaluate(0.0, &sig, &params).expect("evaluate");
+        assert!((v - 2.0).abs() < 1e-6);
+    }
+}
+
 // <FILE>tui-vfx-content/src/types/cls_content_effect.rs</FILE> - <DESC>ContentEffect enum with all content transformations</DESC>
-// <VERS>END OF VERSION: 2.14.0</VERS>
+// <VERS>END OF VERSION: 2.16.0</VERS>

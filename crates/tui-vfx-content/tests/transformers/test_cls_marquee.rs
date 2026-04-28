@@ -40,7 +40,7 @@ fn test_signal_ctx() -> TransformContext<'static> {
 
 #[test]
 fn test_scroll_start() {
-    let tx = Marquee::new(5, mixed_signals::prelude::SignalOrFloat::Static(1.0)); // Width 5
+    let tx = Marquee::new(5, tui_vfx_core::bindable::VfxBindableValue::Literal(1.0)); // Width 5
     // "Hello World"
     // t=0 -> "Hello"
     assert_eq!(
@@ -50,14 +50,14 @@ fn test_scroll_start() {
 }
 #[test]
 fn test_scroll_mid() {
-    let tx = Marquee::new(5, mixed_signals::prelude::SignalOrFloat::Static(1.0));
+    let tx = Marquee::new(5, tui_vfx_core::bindable::VfxBindableValue::Literal(1.0));
     // "0123456789" (10 chars)
     // t=0.5 -> Offset 5 -> "56789"
     assert_eq!(tx.transform("0123456789", 0.5, &test_signal_ctx()), "56789");
 }
 #[test]
 fn test_wrap_around() {
-    let tx = Marquee::new(3, mixed_signals::prelude::SignalOrFloat::Static(1.0));
+    let tx = Marquee::new(3, tui_vfx_core::bindable::VfxBindableValue::Literal(1.0));
     // "ABCDE" (5 chars)
     // t=0.8 -> Offset 4 ('E')
     // Window: "E" + "A" + "B" -> "EAB"
@@ -65,7 +65,7 @@ fn test_wrap_around() {
 }
 #[test]
 fn test_unicode_marquee() {
-    let tx = Marquee::new(2, mixed_signals::prelude::SignalOrFloat::Static(1.0));
+    let tx = Marquee::new(2, tui_vfx_core::bindable::VfxBindableValue::Literal(1.0));
     // "👋🌍🚀" (3 graphemes)
     // t=0.34 -> 1.02 -> Offset 1 ("🌍")
     // Window: "🌍" + "🚀" -> "🌍🚀"
@@ -74,14 +74,14 @@ fn test_unicode_marquee() {
 
 #[test]
 fn test_non_wrapping_returns_borrowed() {
-    let tx = Marquee::new(5, mixed_signals::prelude::SignalOrFloat::Static(1.0));
+    let tx = Marquee::new(5, tui_vfx_core::bindable::VfxBindableValue::Literal(1.0));
     let result = tx.transform("Hello World", 0.0, &test_signal_ctx());
     assert!(matches!(result, Cow::Borrowed(_)));
 }
 
 #[test]
 fn test_wrapping_returns_owned() {
-    let tx = Marquee::new(3, mixed_signals::prelude::SignalOrFloat::Static(1.0));
+    let tx = Marquee::new(3, tui_vfx_core::bindable::VfxBindableValue::Literal(1.0));
     let result = tx.transform("ABCDE", 0.8, &test_signal_ctx());
     assert!(matches!(result, Cow::Owned(_)));
 }

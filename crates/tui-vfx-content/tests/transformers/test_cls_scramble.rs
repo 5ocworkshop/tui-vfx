@@ -43,7 +43,7 @@ fn test_determinism() {
     let tx = Scramble::new(
         12345,
         ScrambleCharset::Binary,
-        mixed_signals::prelude::SignalOrFloat::Static(1.0),
+        tui_vfx_core::bindable::VfxBindableValue::Literal(1.0),
     );
     let input = "Hello";
     // Same seed + same progress = same output
@@ -56,7 +56,7 @@ fn test_resolve_complete() {
     let tx = Scramble::new(
         1,
         ScrambleCharset::Alphanumeric,
-        mixed_signals::prelude::SignalOrFloat::Static(1.0),
+        tui_vfx_core::bindable::VfxBindableValue::Literal(1.0),
     );
     assert_eq!(tx.transform("Matrix", 1.0, &test_signal_ctx()), "Matrix");
 }
@@ -65,7 +65,7 @@ fn test_scramble_logic() {
     let tx = Scramble::new(
         42,
         ScrambleCharset::Binary,
-        mixed_signals::prelude::SignalOrFloat::Static(1.0),
+        tui_vfx_core::bindable::VfxBindableValue::Literal(1.0),
     ); // Only 0 and 1
     let input = "ABC";
     // At 0.0, all should be scrambled (0 or 1)

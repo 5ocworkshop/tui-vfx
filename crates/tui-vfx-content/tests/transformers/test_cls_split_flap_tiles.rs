@@ -43,9 +43,9 @@ fn split_flap_deserializes_tile_geometry_fields() {
 fn split_flap_legacy_1x1_matches_existing_transformer_path() {
     let target = "AZ\nBY";
     let old = SplitFlap::new_mechanical(
-        SignalOrFloat::from(1.0),
-        SignalOrFloat::from(0.0_f32),
-        SignalOrFloat::from(0.0_f32),
+        tui_vfx_core::bindable::VfxBindableValue::Literal(1.0),
+        tui_vfx_core::bindable::VfxBindableValue::Literal(0.0_f32),
+        tui_vfx_core::bindable::VfxBindableValue::Literal(0.0_f32),
         0.0,
         SplitFlapCharset::Alpha,
         false,

@@ -5,22 +5,23 @@
 
 use std::borrow::Cow;
 
-use mixed_signals::prelude::{SignalContext, SignalOrFloat};
+use mixed_signals::prelude::SignalContext;
 use tui_vfx_content::traits::TransformContext;
 use tui_vfx_content::transformers::get_transformer;
 use tui_vfx_content::types::{ContentEffect, ScrambleCharset};
+use tui_vfx_core::bindable::VfxBindableValue;
 use tui_vfx_style::traits::ShaderRuntimeParams;
 
 fn typewriter() -> ContentEffect {
     ContentEffect::Typewriter {
-        speed_variance: SignalOrFloat::Static(0.0),
+        speed_variance: VfxBindableValue::Literal(0.0),
         cursor: None,
     }
 }
 
 fn scramble() -> ContentEffect {
     ContentEffect::Scramble {
-        resolve_pace: SignalOrFloat::Static(1.0),
+        resolve_pace: VfxBindableValue::Literal(1.0),
         charset: ScrambleCharset::Alphanumeric,
         seed: 42,
     }

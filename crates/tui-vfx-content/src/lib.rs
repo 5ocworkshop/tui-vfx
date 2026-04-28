@@ -23,9 +23,10 @@
 //!
 //! ```rust
 //! use tui_vfx_content::prelude::*;
+//! use tui_vfx_core::bindable::VfxBindableValue;
 //!
 //! let effect = ContentEffect::Typewriter {
-//!     speed_variance: SignalOrFloat::Static(0.0),
+//!     speed_variance: VfxBindableValue::Literal(0.0),
 //!     cursor: None,
 //! };
 //! let revealed: String = effect.apply("Hello World", 0.5);
@@ -56,26 +57,27 @@
 //! assert_eq!(output, "Hello");
 //! ```
 //!
-//! ## Static vs signal-driven parameters
+//! ## Bindable rate parameters and signal-driven pacing
 //!
-//! Every per-effect configuration field (cursor timing, scramble resolve
-//! pace, marquee speed, and so on) is typed as
-//! [`SignalOrFloat`](mixed_signals::prelude::SignalOrFloat). This enables
-//! advanced consumers to drive parameters from procedural signals — frame
-//! counters, spatial noise, phase-aware clocks — on a per-frame basis.
+//! Rate-bearing fields on the `ContentEffect` variants
+//! (`Typewriter.speed_variance`, `Scramble.resolve_pace`,
+//! `GlitchShift.glitch_start/end`, `SplitFlap.speed/cascade/cycles`,
+//! `Marquee.speed`, etc.) are typed as
+//! [`VfxBindableValue`](tui_vfx_core::bindable::VfxBindableValue) — the three
+//! arms `Literal`, `Binding`, and `Signal`:
 //!
-//! **The common case is `SignalOrFloat::Static(value)`.** Most effects are
-//! driven by a single external progress value (an animation timer, a
-//! transition lifecycle, a scroll position) while the per-effect parameters
-//! are constants. For that case wrap the raw number in
-//! `SignalOrFloat::Static(n)` and the effect behaves as a pure function of
-//! `(target, progress)`:
+//! - `Literal(0.0)` — a static value (the most common case);
+//! - `Binding("name")` — a named runtime parameter resolved per frame from
+//!   the host's `ShaderRuntimeParams`;
+//! - `Signal(SignalOrFloat::...)` — a `mixed_signals` expression evaluated
+//!   per frame against the supplied `SignalContext`.
 //!
 //! ```rust
 //! use tui_vfx_content::prelude::*;
+//! use tui_vfx_core::bindable::VfxBindableValue;
 //!
 //! let effect = ContentEffect::Scramble {
-//!     resolve_pace: SignalOrFloat::Static(1.0),
+//!     resolve_pace: VfxBindableValue::Literal(1.0),
 //!     charset: ScrambleCharset::Alphanumeric,
 //!     seed: 42,
 //! };
@@ -83,9 +85,12 @@
 //! assert_eq!(result, "SYSTEM ONLINE");
 //! ```
 //!
-//! For signal-driven pacing — dynamic blink rates, breathing cursors,
-//! parameters that vary with procedural noise — see the `mixed_signals`
-//! crate and
+//! For host-driven pacing — a runtime jitter knob a UI exposes, a metric
+//! piped from app state — use the `Binding` arm and supply the value via the
+//! host's [`ShaderRuntimeParams`](tui_vfx_style::traits::ShaderRuntimeParams)
+//! before each frame. For signal-driven pacing — dynamic blink rates,
+//! breathing cursors, parameters that vary with procedural noise — see the
+//! `mixed_signals` crate and
 //! [`ContentEffect::apply_with_runtime`](crate::types::ContentEffect::apply_with_runtime).
 //!
 //! ## Cursor presets

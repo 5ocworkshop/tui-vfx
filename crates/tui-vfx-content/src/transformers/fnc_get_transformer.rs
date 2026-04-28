@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/transformers/fnc_get_transformer.rs</FILE> - <DESC>Factory function for content transformers</DESC>
-// <VERS>VERSION: 3.11.0</VERS>
-// <WCTX>Wire SplitFlap tile geometry into transformer factory.</WCTX>
-// <CLOG>Pass tile_width/tile_height into SplitFlap transformer.</CLOG>
+// <VERS>VERSION: 3.12.0</VERS>
+// <WCTX>Packet 69-A: rate-bearing fields on ContentEffect changed type from SignalOrFloat to VfxBindableValue. The dispatcher passes them through with .clone(), so no body change is needed — version bump records the family touch per Intention 34.</WCTX>
+// <CLOG>3.12.0: PATCH — no logic change. Field-type migration on ContentEffect (Packet 69-A) flows through .clone() to the constructors transparently. Metadata envelope bumped to register this file as part of the bindable-parity family.</CLOG>
 
 use crate::traits::TextTransformer;
 use crate::transformers::{
@@ -14,19 +14,12 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
         ContentEffect::Typewriter {
             speed_variance,
             cursor: _,
-        } => {
-            // Per-frame evaluation: pass SignalOrFloat directly
-            // Note: cursor is handled at render layer, not by transformer
-            Box::new(Typewriter::new(speed_variance.clone()))
-        }
+        } => Box::new(Typewriter::new(speed_variance.clone())),
         ContentEffect::Scramble {
             resolve_pace,
             charset,
             seed,
-        } => {
-            // Per-frame evaluation: pass SignalOrFloat directly
-            Box::new(Scramble::new(*seed, *charset, resolve_pace.clone()))
-        }
+        } => Box::new(Scramble::new(*seed, *charset, resolve_pace.clone())),
         ContentEffect::GlitchShift {
             shift_amount,
             glitch_start,
@@ -171,4 +164,4 @@ pub fn get_transformer(effect: &ContentEffect) -> Box<dyn TextTransformer> {
 }
 
 // <FILE>tui-vfx-content/src/transformers/fnc_get_transformer.rs</FILE> - <DESC>Factory function for content transformers</DESC>
-// <VERS>END OF VERSION: 3.11.0</VERS>
+// <VERS>END OF VERSION: 3.12.0</VERS>

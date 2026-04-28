@@ -1,30 +1,33 @@
 // <FILE>tui-vfx-content/src/transformers/cls_scramble_glitch_shift.rs</FILE> - <DESC>Combined Scramble + GlitchShift transformer</DESC>
-// <VERS>VERSION: 3.2.0</VERS>
-// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
-// <CLOG>3.2.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for resolve_pace and glitch-window signal evaluation.</CLOG>
+// <VERS>VERSION: 3.3.0</VERS>
+// <WCTX>Packet 69-A: resolve_pace, glitch_start, glitch_end are now VfxBindableValue so hosts can drive every rate-bearing parameter via runtime bindings.</WCTX>
+// <CLOG>3.3.0: MINOR — resolve_pace, glitch_start, glitch_end fields + ScrambleGlitchShift::new args + Default impl all migrate from SignalOrFloat to VfxBindableValue. All three transform-time evaluate calls now pass ctx.runtime_params. Tests updated to use VfxBindableValue::Literal.</CLOG>
 
 use crate::traits::{TextTransformer, TransformContext};
 use crate::types::ScrambleCharset;
 use crate::utils::fnc_graphemes::len_graphemes;
-use mixed_signals::prelude::SignalOrFloat;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
+use tui_vfx_core::bindable::VfxBindableValue;
 use unicode_segmentation::UnicodeSegmentation;
 
 /// Combined transformer that scrambles text while adding a brief horizontal shift glitch.
 ///
 /// The scramble reveals text progressively (like the Scramble transformer).
 /// During the glitch window, spaces are prepended to shift content right.
-/// Text will naturally clip at the right border.
+/// Text will naturally clip at the right border. Pacing and window boundaries
+/// are bindable so hosts can drive them from app state.
 #[derive(Debug, Clone)]
 pub struct ScrambleGlitchShift {
     scramble_seed: u64,
     charset: ScrambleCharset,
     shift_amount: u8,
-    glitch_start: SignalOrFloat,
-    glitch_end: SignalOrFloat,
-    /// Controls reveal pacing (per-frame signal evaluation)
-    resolve_pace: SignalOrFloat,
+    /// Glitch-window start (0.0-1.0). Bindable.
+    glitch_start: VfxBindableValue,
+    /// Glitch-window end (0.0-1.0). Bindable.
+    glitch_end: VfxBindableValue,
+    /// Controls reveal pacing (per-frame). Bindable.
+    resolve_pace: VfxBindableValue,
 }
 
 impl ScrambleGlitchShift {
@@ -32,9 +35,9 @@ impl ScrambleGlitchShift {
         scramble_seed: u64,
         charset: ScrambleCharset,
         shift_amount: u8,
-        glitch_start: SignalOrFloat,
-        glitch_end: SignalOrFloat,
-        resolve_pace: SignalOrFloat,
+        glitch_start: VfxBindableValue,
+        glitch_end: VfxBindableValue,
+        resolve_pace: VfxBindableValue,
     ) -> Self {
         Self {
             scramble_seed,
@@ -53,9 +56,9 @@ impl Default for ScrambleGlitchShift {
             scramble_seed: 0,
             charset: ScrambleCharset::Binary,
             shift_amount: 5,
-            glitch_start: SignalOrFloat::Static(0.3),
-            glitch_end: SignalOrFloat::Static(0.4),
-            resolve_pace: SignalOrFloat::Static(1.0),
+            glitch_start: VfxBindableValue::Literal(0.3),
+            glitch_end: VfxBindableValue::Literal(0.4),
+            resolve_pace: VfxBindableValue::Literal(1.0),
         }
     }
 }
@@ -75,10 +78,12 @@ impl TextTransformer for ScrambleGlitchShift {
             if total == 0 {
                 Cow::Borrowed("")
             } else {
-                // Evaluate resolve_pace signal per-frame (unwrap with fallback to 1.0 on error)
+                // Evaluate resolve_pace per-frame; resolves literal / runtime
+                // binding / signal expression. Fallback to 1.0 on missing
+                // bindings or signal-build errors.
                 let pace = self
                     .resolve_pace
-                    .evaluate(progress, ctx.signal_ctx)
+                    .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
                     .unwrap_or(1.0)
                     .max(0.1);
 
@@ -105,16 +110,17 @@ impl TextTransformer for ScrambleGlitchShift {
             }
         };
 
-        // Then apply glitch shift if in the window
+        // Then apply glitch shift if in the window. Window boundaries resolve
+        // through ctx.runtime_params so {"binding": "..."} reaches the host.
         let progress_f32 = progress as f32;
         let glitch_start = self
             .glitch_start
-            .evaluate(progress, ctx.signal_ctx)
+            .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
             .unwrap_or(0.0)
             .clamp(0.0, 1.0);
         let glitch_end = self
             .glitch_end
-            .evaluate(progress, ctx.signal_ctx)
+            .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
             .unwrap_or(0.0)
             .clamp(0.0, 1.0);
         if progress_f32 >= glitch_start && progress_f32 < glitch_end {
@@ -142,9 +148,9 @@ mod tests {
             42,
             ScrambleCharset::Binary,
             5,
-            SignalOrFloat::Static(0.3),
-            SignalOrFloat::Static(0.4),
-            SignalOrFloat::Static(1.0),
+            VfxBindableValue::Literal(0.3),
+            VfxBindableValue::Literal(0.4),
+            VfxBindableValue::Literal(1.0),
         );
         // At progress 0.1, should be mostly scrambled, no shift
         let (sig, params) = empty_ctx();
@@ -158,9 +164,9 @@ mod tests {
             42,
             ScrambleCharset::Binary,
             5,
-            SignalOrFloat::Static(0.3),
-            SignalOrFloat::Static(0.4),
-            SignalOrFloat::Static(1.0),
+            VfxBindableValue::Literal(0.3),
+            VfxBindableValue::Literal(0.4),
+            VfxBindableValue::Literal(1.0),
         );
         // At progress 0.35, should be partially scrambled with shift
         let (sig, params) = empty_ctx();
@@ -174,9 +180,9 @@ mod tests {
             42,
             ScrambleCharset::Binary,
             5,
-            SignalOrFloat::Static(0.3),
-            SignalOrFloat::Static(0.4),
-            SignalOrFloat::Static(1.0),
+            VfxBindableValue::Literal(0.3),
+            VfxBindableValue::Literal(0.4),
+            VfxBindableValue::Literal(1.0),
         );
         // At progress 1.0, fully resolved, no shift
         let (sig, params) = empty_ctx();
@@ -190,9 +196,9 @@ mod tests {
             42,
             ScrambleCharset::Alphanumeric,
             6,
-            SignalOrFloat::Static(0.5),
-            SignalOrFloat::Static(0.6),
-            SignalOrFloat::Static(1.0),
+            VfxBindableValue::Literal(0.5),
+            VfxBindableValue::Literal(0.6),
+            VfxBindableValue::Literal(1.0),
         );
         let (sig, params) = empty_ctx();
         let result = effect.transform("test", 0.55, &TransformContext::new(&sig, &params));
@@ -201,4 +207,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_scramble_glitch_shift.rs</FILE> - <DESC>Combined Scramble + GlitchShift transformer</DESC>
-// <VERS>END OF VERSION: 3.2.0</VERS>
+// <VERS>END OF VERSION: 3.3.0</VERS>

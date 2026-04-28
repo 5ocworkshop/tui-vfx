@@ -34,9 +34,10 @@ impl ContentEffect {
     ///
     /// ```
     /// use tui_vfx_content::prelude::*;
+    /// use tui_vfx_core::bindable::VfxBindableValue;
     ///
     /// let effect = ContentEffect::Typewriter {
-    ///     speed_variance: SignalOrFloat::Static(0.0),
+    ///     speed_variance: VfxBindableValue::Literal(0.0),
     ///     cursor: None,
     /// };
     /// let revealed = effect.apply("Hello", 1.0);

@@ -1,7 +1,7 @@
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE> - <DESC>SplitFlap transformer with Solari-board mechanical feel (cycles, jitter, charset, hinge, spring, authentic timing, message transitions, flip-preview glyph, hinge-window flicker, per-column dispersion patterns)</DESC>
-// <VERS>VERSION: 3.5.0</VERS>
-// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
-// <CLOG>3.5.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for speed/cascade/cycles signal evaluation.</CLOG>
+// <VERS>VERSION: 3.6.0</VERS>
+// <WCTX>Packet 69-A: speed, cascade, cycles are now VfxBindableValue so hosts can drive flap rate / cascade-stagger / pool-cycles via runtime bindings.</WCTX>
+// <CLOG>3.6.0: MINOR — speed, cascade, cycles fields + new/new_mechanical constructor signatures + solari_preset + Default impl all migrate from SignalOrFloat to VfxBindableValue. Three transform-time evaluate calls now pass ctx.runtime_params. estimated_flap_ms pattern-matches the Literal arm directly (no helper added per rule of three).</CLOG>
 
 use crate::mechanical::{
     MechanicalSizing, MechanicalTile, grid_to_text, paired_grids, split_flap_tile_frame,
@@ -10,9 +10,9 @@ use crate::mechanical::{
 use crate::traits::{TextTransformer, TransformContext};
 use crate::utils::char_turn;
 use mixed_signals::physics::DampedSpring;
-use mixed_signals::prelude::SignalOrFloat;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use tui_vfx_core::bindable::{VfxBindable, VfxBindableValue};
 use tui_vfx_types::Grid;
 
 /// Character pool the flap cycles through.
@@ -117,9 +117,13 @@ pub enum SplitFlapDispersion {
 /// Split-flap (Solari) text transformer.
 #[derive(Debug, Clone)]
 pub struct SplitFlap {
-    pub speed: SignalOrFloat,
-    pub cascade: SignalOrFloat,
-    pub cycles: SignalOrFloat,
+    /// Flip animation speed. Bindable: literal, runtime binding, or signal.
+    pub speed: VfxBindableValue,
+    /// Cascade delay between characters (Legacy dispersion only). Bindable.
+    pub cascade: VfxBindableValue,
+    /// Minimum full character-pool cycles each char walks before landing.
+    /// Bindable.
+    pub cycles: VfxBindableValue,
     pub jitter: f32,
     pub charset: SplitFlapCharset,
     pub settle_overshoot: bool,
@@ -181,11 +185,11 @@ impl SplitFlap {
     pub const ALPHA_POOL_SIZE: f32 = 42.0;
 
     /// 2.1.0-compat constructor — speed + cascade only.
-    pub fn new(speed: SignalOrFloat, cascade: SignalOrFloat) -> Self {
+    pub fn new(speed: VfxBindableValue, cascade: VfxBindableValue) -> Self {
         Self {
             speed,
             cascade,
-            cycles: SignalOrFloat::default(),
+            cycles: VfxBindableValue::default(),
             jitter: 0.0,
             charset: SplitFlapCharset::Alpha,
             settle_overshoot: false,
@@ -206,9 +210,9 @@ impl SplitFlap {
     /// Full 3.0.0 constructor.
     #[allow(clippy::too_many_arguments)]
     pub fn new_mechanical(
-        speed: SignalOrFloat,
-        cascade: SignalOrFloat,
-        cycles: SignalOrFloat,
+        speed: VfxBindableValue,
+        cascade: VfxBindableValue,
+        cycles: VfxBindableValue,
         jitter: f32,
         charset: SplitFlapCharset,
         settle_overshoot: bool,
@@ -290,9 +294,9 @@ impl SplitFlap {
         let available_flaps = animation_ms / Self::AUTHENTIC_FLAP_MS;
         let cycles = (available_flaps / Self::ALPHA_POOL_SIZE).clamp(0.5, 3.0);
         Self::new_mechanical(
-            SignalOrFloat::from(1.0),
-            SignalOrFloat::from(0.0_f32), // cascade=0: real boards dispatch all columns simultaneously
-            SignalOrFloat::from(cycles),
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.0), // cascade=0: real boards dispatch all columns simultaneously
+            VfxBindableValue::Literal(cycles),
             0.15, // jitter: mechanical imperfection
             SplitFlapCharset::Alpha,
             false, // settle_overshoot
@@ -304,8 +308,12 @@ impl SplitFlap {
     }
 
     /// Estimated per-flap wall time for diagnostics. Aim for 30-50ms.
+    /// Returns `None` when cycles is bound to a runtime value or driven by a
+    /// signal — without evaluation context the static estimate is undefined.
     pub fn estimated_flap_ms(&self, animation_ms: f32) -> Option<f32> {
-        let cycles = self.cycles.as_static()?;
+        let VfxBindable::Literal(cycles) = &self.cycles else {
+            return None;
+        };
         let pool = self.charset.chars().len() as f32;
         let flaps_per_char = pool * cycles.max(0.0) + pool * 0.5;
         if flaps_per_char < 1.0 {
@@ -423,19 +431,22 @@ impl TextTransformer for SplitFlap {
         if progress >= 1.0 {
             return Cow::Borrowed(target);
         }
+        // Evaluate speed / cascade / cycles per-frame; resolves literal /
+        // runtime binding / signal expression. ctx.runtime_params lets hosts
+        // drive {"binding": "..."} fields from app state.
         let speed = self
             .speed
-            .evaluate(progress, ctx.signal_ctx)
+            .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
             .unwrap_or(0.0)
             .max(0.0);
         let cascade = self
             .cascade
-            .evaluate(progress, ctx.signal_ctx)
+            .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
             .unwrap_or(0.0)
             .max(0.0);
         let cycles = self
             .cycles
-            .evaluate(progress, ctx.signal_ctx)
+            .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
             .unwrap_or(0.0)
             .max(0.0) as f64;
 
@@ -767,9 +778,9 @@ mod tests {
         settle_hinge: bool,
     ) -> SplitFlap {
         SplitFlap::new_mechanical(
-            SignalOrFloat::from(1.0),
-            SignalOrFloat::from(0.0_f32),
-            SignalOrFloat::from(cycles as f32),
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.0_f32),
+            VfxBindableValue::Literal(cycles as f32),
             jitter,
             charset,
             settle_overshoot,
@@ -793,9 +804,9 @@ mod tests {
         authentic_timing: bool,
     ) -> SplitFlap {
         SplitFlap::new_mechanical(
-            SignalOrFloat::from(1.0),
-            SignalOrFloat::from(0.0_f32),
-            SignalOrFloat::from(cycles as f32),
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.0_f32),
+            VfxBindableValue::Literal(cycles as f32),
             jitter,
             charset,
             settle_overshoot,
@@ -810,7 +821,7 @@ mod tests {
 
     #[test]
     fn bare_constructor_preserves_defaults() {
-        let x = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.2));
+        let x = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.2));
         assert_eq!(x.jitter, 0.0);
         assert_eq!(x.charset, SplitFlapCharset::Alpha);
         assert!(!x.settle_overshoot);
@@ -1054,7 +1065,9 @@ mod tests {
     #[test]
     fn solari_preset_cycles_near_one_for_1500ms() {
         let p = SplitFlap::solari_preset(1500.0);
-        let cycles = p.cycles.as_static().unwrap();
+        let VfxBindable::Literal(cycles) = p.cycles else {
+            panic!("solari_preset must produce a Literal cycles, got {:?}", p.cycles);
+        };
         assert!((cycles - 1.02).abs() < 0.2, "got cycles={cycles}");
     }
 
@@ -1495,8 +1508,8 @@ mod tests {
     fn dispersion_legacy_matches_cascade_behavior() {
         // Legacy dispersion + cascade > 0 must produce the same output
         // as pre-3.2.0 code with the same cascade value.
-        let legacy = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.05));
-        let explicit = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.05))
+        let legacy = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.05));
+        let explicit = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.05))
             .with_dispersion(SplitFlapDispersion::Legacy);
         for t in [0.1, 0.3, 0.5, 0.7, 1.0] {
             assert_eq!(
@@ -1511,7 +1524,7 @@ mod tests {
     fn dispersion_simultaneous_lands_all_columns_together() {
         // Simultaneous => all columns have delay=0 => all at same
         // char_progress => all settle simultaneously.
-        let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.5))
+        let sf = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.5))
             .with_dispersion(SplitFlapDispersion::Simultaneous);
         assert_eq!(sf.transform("HELLO", 1.0, &tctx()), "HELLO");
         // At t close to 1.0 but not quite, all chars should be "in progress"
@@ -1529,7 +1542,7 @@ mod tests {
     fn dispersion_authentic_ignores_authentic_timing_field() {
         // dispersion: Authentic must enable Solari timing regardless of
         // the authentic_timing field's value.
-        let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.0))
+        let sf = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.0))
             .with_dispersion(SplitFlapDispersion::Authentic);
         // At progress=0.1, a short-distance char should have settled but
         // a long-distance char should still be rotating.
@@ -1546,7 +1559,7 @@ mod tests {
     fn dispersion_random_is_deterministic() {
         // Random dispersion uses FNV hash, so same target must produce
         // same output across runs.
-        let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.02))
+        let sf = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.02))
             .with_dispersion(SplitFlapDispersion::Random);
         assert_eq!(
             sf.transform("BOARDING", 0.5, &tctx()),
@@ -1562,9 +1575,9 @@ mod tests {
         //   edge char_progress(t=0.99)   = 0.99 - 2*0.3 = 0.39 → still walking
         // So middle emits a HINGE glyph while edges emit walk letters.
         let sf = SplitFlap::new_mechanical(
-            SignalOrFloat::from(1.0),
-            SignalOrFloat::from(0.3),
-            SignalOrFloat::from(0.0),
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.3),
+            VfxBindableValue::Literal(0.0),
             0.0,
             SplitFlapCharset::Alpha,
             false,
@@ -1593,9 +1606,9 @@ mod tests {
         // EdgeIn: edges have delay=0, middle has max delay — inverse of
         // CenterOut. At t=0.99: edges in hinge window, middle still walking.
         let sf = SplitFlap::new_mechanical(
-            SignalOrFloat::from(1.0),
-            SignalOrFloat::from(0.3),
-            SignalOrFloat::from(0.0),
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.3),
+            VfxBindableValue::Literal(0.0),
             0.0,
             SplitFlapCharset::Alpha,
             false,
@@ -1633,7 +1646,7 @@ mod tests {
             SplitFlapDispersion::EdgeIn,
             SplitFlapDispersion::Shuffled,
         ] {
-            let sf = SplitFlap::new(SignalOrFloat::from(1.0), SignalOrFloat::from(0.05))
+            let sf = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.05))
                 .with_dispersion(disp);
             assert_eq!(
                 sf.transform("FLIGHT 721", 1.0, &tctx()),
@@ -1650,4 +1663,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_split_flap.rs</FILE>
-// <VERS>END OF VERSION: 3.5.0</VERS>
+// <VERS>END OF VERSION: 3.6.0</VERS>

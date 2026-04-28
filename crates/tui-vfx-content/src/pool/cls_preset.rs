@@ -102,18 +102,18 @@ impl Preset {
 mod tests {
     use super::*;
     use crate::types::{ScrambleCharset, TypewriterCursor};
-    use mixed_signals::prelude::SignalOrFloat;
+    use tui_vfx_core::bindable::VfxBindableValue;
 
     fn tw() -> ContentEffect {
         ContentEffect::Typewriter {
-            speed_variance: SignalOrFloat::Static(0.0),
+            speed_variance: VfxBindableValue::Literal(0.0),
             cursor: Some(TypewriterCursor::block()),
         }
     }
 
     fn sc() -> ContentEffect {
         ContentEffect::Scramble {
-            resolve_pace: SignalOrFloat::Static(1.0),
+            resolve_pace: VfxBindableValue::Literal(1.0),
             charset: ScrambleCharset::Alphanumeric,
             seed: 0,
         }

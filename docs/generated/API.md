@@ -581,19 +581,19 @@ Content transformers modify text strings based on animation progress.
 ```rust
 pub enum ContentEffect {
     Dissolve { replacement: Space, pattern: Random, direction: LeftToRight, seed: 0 },
-    GlitchShift { shift_amount: 4, glitch_start: Static(0.0), glitch_end: Static(0.0), seed: 42 },
+    GlitchShift { shift_amount: 4, glitch_start: Literal(0.0), glitch_end: Literal(0.0), seed: 42 },
     GlyphCascade { alphabet: Circles, pattern: Sequential, direction: LeftToRight, seed: 42, mode: IntoTarget },
-    Marquee { speed: Static(0.0), width: 20 },
+    Marquee { speed: Literal(0.0), width: 20 },
     Mirror { axis: Horizontal },
     Morph { source: , progression: Linear, direction: LeftToRight, seed: 0 },
     Numeric { format: {} },
     Odometer { direction: Up, travel: Axis, tile_width: 1, tile_height: 3, from_message: Some("AAA\nBBB\nCCC"), mechanical: None },
     Redact { symbol: █ },
-    Scramble { resolve_pace: Static(0.0), charset: Alphanumeric, seed: 42 },
-    ScrambleGlitchShift { resolve_pace: Static(0.0), charset: Alphanumeric, scramble_seed: 42, shift_amount: 4, glitch_start: Static(0.0), glitch_end: Static(0.0) },
+    Scramble { resolve_pace: Literal(0.0), charset: Alphanumeric, seed: 42 },
+    ScrambleGlitchShift { resolve_pace: Literal(0.0), charset: Alphanumeric, scramble_seed: 42, shift_amount: 4, glitch_start: Literal(0.0), glitch_end: Literal(0.0) },
     SlideShift { start_col: 0, end_col: 0, start_row: 0, shift_col: 0, shift_width: 1, row_shift: 0, line_mode: Block, flow_mode: StayShifted },
-    SplitFlap { speed: Static(0.0), cascade: Static(0.0), cycles: Static(0.0), jitter: 0, charset: Alpha, settle_overshoot: false, leading_blocks: 0, settle_hinge: false, spring_settle: false, authentic_timing: false, from_message: None, rolling_flip: false, flip_preview: false, flip_flicker: false, dispersion: Legacy, tile_width: 1, tile_height: 2 },
-    Typewriter { speed_variance: Static(0.0) },
+    SplitFlap { speed: Literal(0.0), cascade: Literal(0.0), cycles: Literal(0.0), jitter: 0, charset: Alpha, settle_overshoot: false, leading_blocks: 0, settle_hinge: false, spring_settle: false, authentic_timing: false, from_message: None, rolling_flip: false, flip_preview: false, flip_flicker: false, dispersion: Legacy, tile_width: 1, tile_height: 2 },
+    Typewriter { speed_variance: Literal(0.0) },
     WrapIndicator { prefix: » , suffix:  « },
 }
 ```

@@ -95,16 +95,16 @@
             "ty": "u8"
           },
           {
-            "default": "Static(0.0)",
-            "doc": "Progress value when glitch starts (0.0-1.0).",
+            "default": "Literal(0.0)",
+            "doc": "Progress value when glitch starts (0.0-1.0). Bindable.",
             "name": "glitch_start",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
-            "default": "Static(0.0)",
-            "doc": "Progress value when glitch ends (0.0-1.0).",
+            "default": "Literal(0.0)",
+            "doc": "Progress value when glitch ends (0.0-1.0). Bindable.",
             "name": "glitch_end",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
             "default": "42",
@@ -180,10 +180,10 @@
         "pairs_with": [],
         "parameters": [
           {
-            "default": "Static(0.0)",
-            "doc": "Scroll speed.",
+            "default": "Literal(0.0)",
+            "doc": "Scroll speed. Bindable.",
             "name": "speed",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
             "default": "20",
@@ -380,10 +380,10 @@
         "pairs_with": [],
         "parameters": [
           {
-            "default": "Static(0.0)",
-            "doc": "How quickly characters resolve (higher = faster stabilization).",
+            "default": "Literal(0.0)",
+            "doc": "How quickly characters resolve (higher = faster stabilization).\n\nBindable: accepts a literal, a `{\"binding\": \"name\"}` reference, or a\n`{\"signal\": ...}` expression.",
             "name": "resolve_pace",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
             "default": "Alphanumeric",
@@ -416,10 +416,10 @@
         "pairs_with": [],
         "parameters": [
           {
-            "default": "Static(0.0)",
-            "doc": "How quickly characters resolve.",
+            "default": "Literal(0.0)",
+            "doc": "How quickly characters resolve. Bindable.",
             "name": "resolve_pace",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
             "default": "Alphanumeric",
@@ -440,16 +440,16 @@
             "ty": "u8"
           },
           {
-            "default": "Static(0.0)",
-            "doc": "Progress value when glitch starts.",
+            "default": "Literal(0.0)",
+            "doc": "Progress value when glitch starts. Bindable.",
             "name": "glitch_start",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
-            "default": "Static(0.0)",
-            "doc": "Progress value when glitch ends.",
+            "default": "Literal(0.0)",
+            "doc": "Progress value when glitch ends. Bindable.",
             "name": "glitch_end",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           }
         ],
         "premium": false,
@@ -536,22 +536,22 @@
         "pairs_with": [],
         "parameters": [
           {
-            "default": "Static(0.0)",
-            "doc": "Flip animation speed.",
+            "default": "Literal(0.0)",
+            "doc": "Flip animation speed. Bindable.",
             "name": "speed",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
-            "default": "Static(0.0)",
-            "doc": "Cascade delay between characters (0 = simultaneous, higher = wave).\nAuthentic Solari boards use cascade=0; distance-based staggering\nis provided by `authentic_timing` instead.",
+            "default": "Literal(0.0)",
+            "doc": "Cascade delay between characters (0 = simultaneous, higher = wave).\nAuthentic Solari boards use cascade=0; distance-based staggering\nis provided by `authentic_timing` instead. Bindable.",
             "name": "cascade",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
-            "default": "Static(0.0)",
-            "doc": "Minimum full character-pool cycles each char walks before\nlanding, so low-distance targets (like \"A\") still flip through\na satisfying alphabet span.",
+            "default": "Literal(0.0)",
+            "doc": "Minimum full character-pool cycles each char walks before\nlanding, so low-distance targets (like \"A\") still flip through\na satisfying alphabet span. Bindable.",
             "name": "cycles",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           },
           {
             "default": "0",
@@ -656,10 +656,10 @@
         "pairs_with": [],
         "parameters": [
           {
-            "default": "Static(0.0)",
-            "doc": "Speed variation for organic typing feel (0.0 = steady, higher = more variable).",
+            "default": "Literal(0.0)",
+            "doc": "Speed variation for organic typing feel (0.0 = steady, higher = more variable).\n\nBindable: accepts a literal, a `{\"binding\": \"name\"}` reference to a\nhost-supplied runtime parameter, or a `{\"signal\": ...}` expression.",
             "name": "speed_variance",
-            "ty": "SignalOrFloat"
+            "ty": "VfxBindable"
           }
         ],
         "premium": false,

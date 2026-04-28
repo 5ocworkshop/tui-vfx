@@ -1,23 +1,23 @@
 // <FILE>tui-vfx-content/src/transformers/cls_marquee.rs</FILE> - <DESC>Marquee transformer</DESC>
-// <VERS>VERSION: 2.1.0</VERS>
-// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
-// <CLOG>2.1.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for speed-signal evaluation.</CLOG>
+// <VERS>VERSION: 2.2.0</VERS>
+// <WCTX>Packet 69-A: speed is now VfxBindableValue so hosts can drive marquee scroll rate via runtime bindings.</WCTX>
+// <CLOG>2.2.0: MINOR — speed field, Marquee::new arg, Default impl, and the transform-time evaluate call all migrate from SignalOrFloat to VfxBindableValue. The evaluate call now passes ctx.runtime_params.</CLOG>
 
 use crate::traits::{TextTransformer, TransformContext};
 use crate::utils::fnc_graphemes::{len_graphemes, slice_graphemes};
-use mixed_signals::prelude::SignalOrFloat;
 use std::borrow::Cow;
+use tui_vfx_core::bindable::VfxBindableValue;
 
 #[derive(Debug, Clone)]
 pub struct Marquee {
     width: u16,
-    /// Controls scrolling speed (evaluated per-frame)
-    /// Higher values = faster scrolling
-    speed: SignalOrFloat,
+    /// Controls scrolling speed (evaluated per-frame). Bindable: literal,
+    /// runtime binding, or signal expression. Higher values = faster scrolling.
+    speed: VfxBindableValue,
 }
 
 impl Marquee {
-    pub fn new(width: u16, speed: SignalOrFloat) -> Self {
+    pub fn new(width: u16, speed: VfxBindableValue) -> Self {
         Self { width, speed }
     }
 }
@@ -26,7 +26,7 @@ impl Default for Marquee {
     fn default() -> Self {
         Self {
             width: 10,
-            speed: SignalOrFloat::Static(1.0),
+            speed: VfxBindableValue::Literal(1.0),
         }
     }
 }
@@ -42,10 +42,11 @@ impl TextTransformer for Marquee {
             return Cow::Owned(" ".repeat(self.width as usize));
         }
 
-        // Evaluate speed signal per-frame (unwrap with fallback to 1.0 on error)
+        // Evaluate speed per-frame; resolves literal / runtime binding / signal.
+        // Fallback to 1.0 on missing bindings or signal-build errors.
         let speed = f64::from(
             self.speed
-                .evaluate(progress, ctx.signal_ctx)
+                .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
                 .unwrap_or(1.0)
                 .max(0.0),
         );
@@ -79,4 +80,4 @@ impl TextTransformer for Marquee {
 }
 
 // <FILE>tui-vfx-content/src/transformers/cls_marquee.rs</FILE> - <DESC>Marquee transformer</DESC>
-// <VERS>END OF VERSION: 2.1.0</VERS>
+// <VERS>END OF VERSION: 2.2.0</VERS>

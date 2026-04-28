@@ -1,14 +1,14 @@
 // <FILE>tui-vfx-content/src/transformers/cls_scramble.rs</FILE> - <DESC>Scramble transformer</DESC>
-// <VERS>VERSION: 3.1.0</VERS>
-// <WCTX>Slice 6.6 of mechanical circular content cycles plan: TextTransformer signature now takes &TransformContext<'_>.</WCTX>
-// <CLOG>3.1.0: TextTransformer signature now takes &TransformContext<'_>; reads ctx.signal_ctx for resolve_pace signal evaluation.</CLOG>
+// <VERS>VERSION: 3.2.0</VERS>
+// <WCTX>Packet 69-A: resolve_pace is now VfxBindableValue so hosts can drive scramble pacing via runtime bindings.</WCTX>
+// <CLOG>3.2.0: MINOR — resolve_pace field, Scramble::new arg, Default impl, and the transform-time evaluate call all migrate from SignalOrFloat to VfxBindableValue. The evaluate call now passes ctx.runtime_params so {"binding": "key"} resolves against the host's ShaderRuntimeParams.</CLOG>
 
 use crate::traits::{TextTransformer, TransformContext};
 use crate::types::ScrambleCharset;
 use crate::utils::fnc_graphemes::len_graphemes;
-use mixed_signals::prelude::SignalOrFloat;
 use mixed_signals::random::hash_to_index;
 use std::borrow::Cow;
+use tui_vfx_core::bindable::VfxBindableValue;
 
 /// Scramble transformer that progressively reveals text with scrambled characters.
 ///
@@ -17,13 +17,13 @@ use std::borrow::Cow;
 pub struct Scramble {
     seed: u64,
     charset: ScrambleCharset,
-    /// Controls how quickly scrambled text resolves (0.5 = faster, 1.0 = normal, 2.0 = slower)
-    /// Evaluated per-frame for dynamic pacing
-    resolve_pace: SignalOrFloat,
+    /// Controls how quickly scrambled text resolves (0.5 = faster, 1.0 = normal,
+    /// 2.0 = slower). Bindable: literal, host-supplied runtime binding, or signal.
+    resolve_pace: VfxBindableValue,
 }
 
 impl Scramble {
-    pub fn new(seed: u64, charset: ScrambleCharset, resolve_pace: SignalOrFloat) -> Self {
+    pub fn new(seed: u64, charset: ScrambleCharset, resolve_pace: VfxBindableValue) -> Self {
         Self {
             seed,
             charset,
@@ -36,7 +36,7 @@ impl Default for Scramble {
         Self {
             seed: 0,
             charset: ScrambleCharset::Alphanumeric,
-            resolve_pace: SignalOrFloat::Static(1.0),
+            resolve_pace: VfxBindableValue::Literal(1.0),
         }
     }
 }
@@ -55,10 +55,11 @@ impl TextTransformer for Scramble {
             return Cow::Borrowed("");
         }
 
-        // Evaluate resolve_pace signal per-frame (unwrap with fallback to 1.0 on error)
+        // Evaluate resolve_pace per-frame; resolves literal / runtime binding /
+        // signal expression. Fallback to 1.0 on missing bindings or signal-build errors.
         let pace = self
             .resolve_pace
-            .evaluate(progress, ctx.signal_ctx)
+            .evaluate(progress, ctx.signal_ctx, ctx.runtime_params)
             .unwrap_or(1.0)
             .max(0.1);
 
@@ -90,4 +91,4 @@ impl TextTransformer for Scramble {
 use unicode_segmentation::UnicodeSegmentation;
 
 // <FILE>tui-vfx-content/src/transformers/cls_scramble.rs</FILE> - <DESC>Scramble transformer</DESC>
-// <VERS>END OF VERSION: 3.1.0</VERS>
+// <VERS>END OF VERSION: 3.2.0</VERS>
