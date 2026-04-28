@@ -1,7 +1,7 @@
 <!-- <FILE>steering/OFPF-TOOLS.md</FILE> - <DESC>Project-local practical reference for the ofpf-* tooling suite (a thin alias layer over librarian-cli, backed by a multi-tenant daemon). Lead-with framing for code access, the 80/20 tool surface, decision matrix by intent, composition rules that prevent wrong answers, output handling, multi-repo workflow, the first-class sql subcommand, pitfalls, and the non-obvious flags that bite first-time users. Required reading per Intention 42.</DESC> -->
-<!-- <VERS>VERSION: 0.4.1</VERS> -->
-<!-- <WCTX>2026-04-27: encode the output-handling discipline rule in §6 — JSON output is optimized for direct reading; piping to Python to reformat it is the anti-pattern that turns one wrong key guess into a cancelled parallel tool batch.</WCTX> -->
-<!-- <CLOG>0.4.1: add §6 "Don't reformat the JSON — read it" subsection; four-rule priority list (read → --out text → jq → Python only for cross-row math, and only after probing shape); name the Python-pipe anti-pattern.</CLOG> -->
+<!-- <VERS>VERSION: 0.4.2</VERS> -->
+<!-- <WCTX>2026-04-27: capture lessons from a session that exercised ofpf-sql against the full schema — column-value enumerations, per-crate aggregation pattern, and the multi-repo iteration recipe using --root rather than federation.</WCTX> -->
+<!-- <CLOG>0.4.2: enumerate kind/visibility values inline in the §9 schema table; add four §9 examples (per-crate aggregation, OFPF prefix audit, per-crate test coverage, metadata coverage); add three §9 surprises (visibility values, single-root SQL, path-slice trick); rewrite §7 multi-repo paragraph around per-`--root` iteration.</CLOG> -->
 
 # OFPF Tools — practical reference
 
@@ -86,7 +86,7 @@ Add these once you start mirroring patterns or planning edits:
 | "Read lines N–M of a file" | `ofpf-read <path> --from N --to M` | Or `--paths a.rs b.rs --range a.rs:10:30 --range b.rs:1:50` for multi-file |
 | "What does this file do?" | `ofpf-inspect <path>` | One call returns defs + callers + callees + role + metrics + tests |
 | "Should I be worried about changing this file?" | `ofpf-inspect <path>` then `ofpf-blast <path>` | High fan-in → wide blast radius. `--why` shows the dependency chain |
-| "Find dependency path between two files" | `ofpf-trace <from> <to>` | Single-repo with `--root`; federated with `--workspace-id` |
+| "Find dependency path between two files" | `ofpf-trace <from> <to>` | Pass `--root <path>` to target a specific loaded repo |
 | "Is there a circular dependency?" | `ofpf-cycles` | Returns cycles with refactoring suggestions |
 | "Which files are too big?" | `ofpf-loc 300 --filter <prefix>` | Files over the threshold; `--filter` scopes to a subtree |
 | "What can run in parallel?" | `ofpf-dag` | Files grouped by execution tier |
@@ -292,7 +292,15 @@ ofpf-extract --root /usr/projects/tui-vfx-recipes <path> <symbol>
 
 If you omit `--root`, the call resolves against the daemon's notion of the current root (typically the CWD when the daemon was started or the most recently loaded). Always pass `--root` explicitly when crossing repo boundaries — it removes ambiguity.
 
-For genuine federation across many repos in one query, see `--workspace-id` in `librarian-cli --help-json` (mutually exclusive with `--root`). Workspaces are the right tool when one search should span all four canonical repos (Intention 41) without per-repo iteration.
+For multi-repo audits (the four-repo scope per Intention 41), iterate the same query across each `--root` rather than reaching for federation. A small shell loop over the canonical roots is the recommended pattern — it keeps each result set scoped to one repo (so paths, IDs, and counts stay unambiguous) and composes cleanly with the response guard.
+
+```bash
+for root in /usr/projects/tui-vfx /usr/projects/tui-vfx-recipes \
+            /usr/projects/mixed-signals /usr/projects/gt-design; do
+  echo "=== $root ==="
+  ofpf-content --root "$root" "VfxBindableU16" --files-with-matches --out text
+done
+```
 
 ### When the graph is stale
 
@@ -372,7 +380,7 @@ The 2026-04-27 release removed the `resolved_imports` table — it was scaffolde
 | `files` | id, path, kind, lang, lines, zero_deps, generated |
 | `file_metrics` | file_id, fan_in, fan_out, cohesion, role (`unit` / `hub` / `core` / `re_export`), `is_re_export` (virtual: `role = 're_export'`) |
 | `file_edges` | source_file_id, target_file_id, edge_type (`logic` / `crate_dep`) |
-| `file_definitions` | id, file_id, name, kind, line, end_line, parent, doc, visibility, is_test, test_attributes |
+| `file_definitions` | id, file_id, name, kind (`function` / `method` / `module` / `struct` / `enum` / `constant` / `typealias` / `trait`), line, end_line, parent, doc, visibility (`public` / `private` / `crate`), is_test, test_attributes |
 | `symbol_edges` | source_def_id, target_def_id, call_site_line, edge_type — call graph |
 | `dependencies` | source_file_id, target_module_id, is_dynamic — import edges |
 | `test_links` | source_file_id, test_file_id, relation |
@@ -445,6 +453,57 @@ SELECT f.path, d.name, ti.is_async, ti.is_unsafe
 FROM type_info ti JOIN file_definitions d ON d.id = ti.def_id
 JOIN files f ON f.id = d.file_id
 WHERE ti.is_async = 1 OR ti.is_unsafe = 1;
+
+-- Per-crate aggregation: slice path on the second '/' to extract `crates/<name>`
+-- (instr finds the offset of '/' inside path[8..]; +6 lifts back to absolute).
+-- Reusable for LOC-per-crate, file-count-per-crate, defs-per-crate, etc.
+SELECT
+  CASE WHEN path LIKE 'crates/%'
+       THEN substr(path, 1, instr(substr(path, 8), '/') + 6)
+       ELSE 'other' END AS crate,
+  COUNT(*) AS files,
+  SUM(lines) AS total_loc
+FROM files WHERE lang='rs'
+GROUP BY crate ORDER BY total_loc DESC;
+
+-- OFPF prefix audit: files exceeding their per-prefix hard limit
+-- (cls_ > 200, fnc_ > 120, orc_ > 250, ui_ > 200, col_ > 100).
+SELECT path, lines AS loc,
+  CASE
+    WHEN path LIKE '%/cls_%' THEN 'cls_ (>200)'
+    WHEN path LIKE '%/fnc_%' THEN 'fnc_ (>120)'
+    WHEN path LIKE '%/orc_%' THEN 'orc_ (>250)'
+    WHEN path LIKE '%/ui_%'  THEN 'ui_ (>200)'
+    WHEN path LIKE '%/col_%' THEN 'col_ (>100)'
+  END AS prefix
+FROM files WHERE lang='rs' AND path LIKE 'crates/%' AND (
+  (path LIKE '%/cls_%' AND lines > 200) OR
+  (path LIKE '%/fnc_%' AND lines > 120) OR
+  (path LIKE '%/orc_%' AND lines > 250) OR
+  (path LIKE '%/ui_%'  AND lines > 200) OR
+  (path LIKE '%/col_%' AND lines > 100)
+) ORDER BY loc DESC LIMIT 20;
+
+-- Per-crate test peer coverage (% of source files with a linked test_)
+SELECT
+  CASE WHEN f.path LIKE 'crates/%'
+       THEN substr(f.path, 1, instr(substr(f.path, 8), '/') + 6)
+       ELSE 'other' END AS crate,
+  COUNT(*) AS src_files,
+  SUM(CASE WHEN tl.test_file_id IS NOT NULL THEN 1 ELSE 0 END) AS with_tests,
+  ROUND(100.0 * SUM(CASE WHEN tl.test_file_id IS NOT NULL THEN 1 ELSE 0 END) / COUNT(*), 1) AS pct
+FROM files f LEFT JOIN test_links tl ON tl.source_file_id = f.id
+WHERE f.lang='rs' AND f.path LIKE 'crates/%'
+  AND f.path NOT LIKE '%/test_%' AND f.path NOT LIKE '%/tests/%'
+  AND f.path NOT LIKE '%mod.rs' AND f.path NOT LIKE '%lib.rs'
+GROUP BY crate ORDER BY pct ASC;
+
+-- OFPF metadata header coverage (Intention 12 / 12A discipline check)
+SELECT
+  SUM(CASE WHEN om.is_ofpf = 1 THEN 1 ELSE 0 END) AS with_header,
+  SUM(CASE WHEN om.is_ofpf IS NULL OR om.is_ofpf = 0 THEN 1 ELSE 0 END) AS without_header
+FROM files f LEFT JOIN ofpf_metadata om ON om.file_id = f.id
+WHERE f.lang='rs' AND f.path LIKE 'crates/%';
 ```
 
 ### Safety envelope
@@ -506,6 +565,9 @@ while True:
 - **`zero_deps` and `generated` flags are always 0** in this repo. Either tui-vfx genuinely has no zero-dep / no generated files, or the indexer doesn't populate them. Check before filtering on them.
 - **Default `timeout_ms` is 1000.** Aggressive multi-JOIN queries against the full corpus need an explicit `timeout_ms: 5000` to use the headroom.
 - **Read-only side-effect functions are allowed.** `randomblob()`, `random()`, etc. work — they're SELECT-shaped and the authorizer permits them.
+- **`visibility` values are `public` / `private` / `crate`** — not `pub` / `pub(crate)`. Filtering on `visibility='pub'` returns zero rows silently; the schema table above enumerates the full set. Same trap applies to `kind` (`function` / `method`, not `fn`).
+- **SQL is scoped to one repo at a time.** Each query runs against a single `--root`. To audit across the canonical four-repo scope (Intention 41), loop the query over each `--root` (see §7) — there is no cross-repo `JOIN`. Counts and IDs are local to one root, so don't UNION raw IDs across runs; aggregate on `path` instead.
+- **Path slicing extracts the crate name.** `substr(path, 1, instr(substr(path, 8), '/') + 6)` reconstructs `crates/<name>` from any path under it. Reusable for any per-crate aggregation; see Examples.
 
 ### Quoting from the shell
 
@@ -586,7 +648,7 @@ After a CLI/daemon upgrade, both versions must match — re-install the binary a
 
 Per Intention 42, when you discover a non-obvious flag, an empty-result interpretation, a tool combination that solves a recurring question, or a new pitfall, add it here. The reference is a living artifact whose value compounds with every session that contributes to it. Bump the file's `<VERS>` (PATCH for additions, MINOR for restructuring), update `<WCTX>` to one line about the current pass, and update `<CLOG>` to one line about the most recent change only — git holds the running history.
 
-If a section grows beyond ~80 lines, consider splitting it into a sibling reference (e.g., `OFPF-WORKSPACES.md` for federated multi-repo workflow) and link from here. Keep this top-level document scannable.
+If a section grows beyond ~80 lines, consider splitting it into a sibling reference (e.g., `OFPF-SQL.md` for the §9 surface if the recipe library outgrows its block) and link from here. Keep this top-level document scannable.
 
 <!-- <FILE>steering/OFPF-TOOLS.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.4.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.2</VERS> -->
