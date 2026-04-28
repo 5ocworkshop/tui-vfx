@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.27.0</VERS> -->
-<!-- <WCTX>New kernel Phase F2: index declarative source/binding contract roots.</WCTX> -->
-<!-- <CLOG>1.27.0: note F2 value source, parameter, signal, and binding contract roots.
+<!-- <VERS>VERSION: 1.28.0</VERS> -->
+<!-- <WCTX>New kernel Phase G1: index canonical graph/node contract roots.</WCTX> -->
+<!-- <CLOG>1.28.0: note G1 graph and node contract roots.
+1.27.0: note F2 value source, parameter, signal, and binding contract roots.
 1.26.0: note F1 typed value/input contract and schema roots.
 1.25.0: note E1 effect descriptor contract and schema root.
 1.24.0: note tui-vfx-contract ownership and schema path split.
@@ -120,9 +121,9 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 
 ## V3 planning and tooling
 
-- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model, F1 typed input model, and F2 declarative source/binding model.
-- [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1/F1/F2 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor/input/source/binding model, and handoff guardrails.
-- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0/E1/F1/F2 surface, sampling, pipeline, scene, descriptor/input/source/binding, schema-reference, and contract/proof ownership.
+- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model, F1 typed input model, F2 declarative source/binding model, and G1 canonical graph container.
+- [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor/input/source/binding/graph model, and handoff guardrails.
+- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0/E1/F1/F2/G1 surface, sampling, pipeline, scene, descriptor/input/source/binding/graph, schema-reference, and contract/proof ownership.
 - [v3.1-feature-contract-checklist.md](v3.1-feature-contract-checklist.md) — Checklist for future v3.1 contract-affecting feature work.
 - [v3.1-template-composition.md](v3.1-template-composition.md) — Phase D2 design for compile-time template/mixin/preset/profile expansion into canonical v3.1 recipes.
 - [new_kernel/INDEX.md](new_kernel/INDEX.md) — Clean-room kernel phase docs, architect responses, status memos, and schema artifacts.
@@ -174,4 +175,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.27.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.28.0</VERS> -->

@@ -1,0 +1,1596 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GraphSpec",
+  "description": "Canonical v3.1 graph container produced by future recipe compilation.",
+  "type": "object",
+  "properties": {
+    "bindings": {
+      "description": "Declarative parameter-target bindings owned by this graph.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BindingSpec"
+      }
+    },
+    "effects": {
+      "description": "Effect descriptors available to nodes in this graph.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/EffectDescriptor"
+      }
+    },
+    "id": {
+      "description": "Stable canonical graph identifier.",
+      "$ref": "#/$defs/GraphId"
+    },
+    "nodes": {
+      "description": "Nodes keyed by stable graph-local node id.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]*$": {
+          "$ref": "#/$defs/NodeSpec"
+        }
+      },
+      "propertyNames": {
+        "description": "Node ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      }
+    },
+    "order": {
+      "description": "Deterministic node order by graph-local node id.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/NodeId"
+      }
+    },
+    "parameters": {
+      "description": "Public parameters available to graph value sources and bindings.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]*$": {
+          "$ref": "#/$defs/ParameterSpec"
+        }
+      },
+      "propertyNames": {
+        "description": "Parameter ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      }
+    },
+    "signals": {
+      "description": "Host/runtime signals available to graph value sources.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]*$": {
+          "$ref": "#/$defs/SignalSpec"
+        }
+      },
+      "propertyNames": {
+        "description": "Signal ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      }
+    },
+    "version": {
+      "description": "Contract graph version string.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "parameters",
+    "signals",
+    "bindings",
+    "effects",
+    "nodes",
+    "order"
+  ],
+  "$defs": {
+    "BindingMode": {
+      "description": "Declarative mode for applying a binding source to a target.",
+      "oneOf": [
+        {
+          "description": "Source replaces the target value.",
+          "type": "string",
+          "const": "replace"
+        }
+      ]
+    },
+    "BindingSpec": {
+      "description": "Declarative binding from a value source to a parameter target.",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "Declarative binding application mode.",
+          "$ref": "#/$defs/BindingMode"
+        },
+        "source": {
+          "description": "Source that provides the target value.",
+          "$ref": "#/$defs/ValueSource"
+        },
+        "target": {
+          "description": "Target that receives the source value.",
+          "$ref": "#/$defs/BindingTarget"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "source",
+        "mode"
+      ]
+    },
+    "BindingTarget": {
+      "description": "Declarative target for a value binding.",
+      "oneOf": [
+        {
+          "description": "Binding targets a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Referenced target parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        }
+      ]
+    },
+    "CellAccess": {
+      "description": "Cell channels an effect may read or write.",
+      "type": "object",
+      "properties": {
+        "reads": {
+          "description": "Cell channels the effect may inspect.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellChannel"
+          }
+        },
+        "writes": {
+          "description": "Cell channels the effect may write.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellChannel"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "reads",
+        "writes"
+      ]
+    },
+    "CellChannel": {
+      "description": "Canonical channels that make up a cell write.",
+      "oneOf": [
+        {
+          "description": "Glyph character channel.",
+          "type": "string",
+          "const": "glyph"
+        },
+        {
+          "description": "Foreground color channel.",
+          "type": "string",
+          "const": "foreground"
+        },
+        {
+          "description": "Background color channel.",
+          "type": "string",
+          "const": "background"
+        },
+        {
+          "description": "Text modifier channel.",
+          "type": "string",
+          "const": "modifiers"
+        },
+        {
+          "description": "Modifier alpha channel.",
+          "type": "string",
+          "const": "modifierAlpha"
+        },
+        {
+          "description": "Semantic role channel. Role writes are governed by role policy.",
+          "type": "string",
+          "const": "role"
+        }
+      ]
+    },
+    "CellWritePolicy": {
+      "description": "Policy for how a cell write updates cell channels.",
+      "oneOf": [
+        {
+          "description": "Write the cell exactly, including transparent empty cells.",
+          "type": "string",
+          "const": "writeCell"
+        },
+        {
+          "description": "Skip only transparent empty cell writes, preserving destination cell and role.",
+          "type": "string",
+          "const": "skipTransparentEmpty"
+        }
+      ]
+    },
+    "Color": {
+      "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "Alpha channel (0=transparent, 255=opaque)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "b": {
+          "description": "Blue channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "description": "Green channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "description": "Red channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ]
+    },
+    "CoordinateSpace": {
+      "description": "Coordinate space used by geometry scopes.",
+      "oneOf": [
+        {
+          "description": "Destination-local coordinates. This is the Phase A/B default.",
+          "type": "string",
+          "const": "destinationLocal"
+        },
+        {
+          "description": "Sampled-source local coordinates. Present to make the contract explicit.",
+          "type": "string",
+          "const": "sampledSource"
+        }
+      ]
+    },
+    "EffectCompletion": {
+      "description": "Minimal completion category for descriptor lifecycle metadata.",
+      "oneOf": [
+        {
+          "description": "The effect does not naturally complete on its own.",
+          "type": "string",
+          "const": "never"
+        },
+        {
+          "description": "The effect completes during the same evaluation step.",
+          "type": "string",
+          "const": "instant"
+        },
+        {
+          "description": "The effect completes after a bounded duration.",
+          "type": "string",
+          "const": "timeBound"
+        },
+        {
+          "description": "The effect eventually completes, but the bound is not part of E1.",
+          "type": "string",
+          "const": "eventual"
+        },
+        {
+          "description": "Completion is controlled by an external host signal.",
+          "type": "string",
+          "const": "external"
+        }
+      ]
+    },
+    "EffectDescriptor": {
+      "description": "Minimal durable v3.1 effect descriptor contract.",
+      "type": "object",
+      "properties": {
+        "category": {
+          "description": "Optional human-facing category label for catalogs and docs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cellAccess": {
+          "description": "Cell channels the effect may read or write.",
+          "$ref": "#/$defs/CellAccess"
+        },
+        "displayName": {
+          "description": "Human-facing display name.",
+          "type": "string"
+        },
+        "domain": {
+          "description": "Broad execution domain for planning and capability grouping.",
+          "$ref": "#/$defs/EffectDomain"
+        },
+        "id": {
+          "description": "Stable canonical effect identifier.",
+          "$ref": "#/$defs/EffectId"
+        },
+        "inputs": {
+          "description": "Descriptor-local typed input specifications keyed by stable input id.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/EffectInputSpec"
+          },
+          "propertyNames": {
+            "description": "Effect input ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "lifecycle": {
+          "description": "Minimal lifecycle metadata for planning.",
+          "$ref": "#/$defs/EffectLifecycle"
+        },
+        "scopeSupport": {
+          "description": "Scope kinds and spaces this effect supports.",
+          "$ref": "#/$defs/ScopeSupport"
+        },
+        "version": {
+          "description": "Descriptor version string owned by the effect family.",
+          "type": "string"
+        },
+        "writeSupport": {
+          "description": "Cell and role write policies this effect supports.",
+          "$ref": "#/$defs/WriteSupport"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "displayName",
+        "domain",
+        "cellAccess",
+        "scopeSupport",
+        "writeSupport",
+        "inputs",
+        "lifecycle"
+      ]
+    },
+    "EffectDomain": {
+      "description": "Broad execution role declared by an effect descriptor.",
+      "oneOf": [
+        {
+          "description": "Generates content cells without requiring existing source content.",
+          "type": "string",
+          "const": "contentGenerator"
+        },
+        {
+          "description": "Transforms existing content while preserving its broad semantic role.",
+          "type": "string",
+          "const": "contentTransform"
+        },
+        {
+          "description": "Shades individual cell visual channels.",
+          "type": "string",
+          "const": "cellShader"
+        },
+        {
+          "description": "Filters a complete frame or surface after content exists.",
+          "type": "string",
+          "const": "frameFilter"
+        },
+        {
+          "description": "Changes which source coordinate a destination cell samples.",
+          "type": "string",
+          "const": "coordinateSampler"
+        },
+        {
+          "description": "Produces or applies a mask for later stages.",
+          "type": "string",
+          "const": "mask"
+        },
+        {
+          "description": "Produces shadow-like support content or role tagging.",
+          "type": "string",
+          "const": "shadow"
+        },
+        {
+          "description": "Runs after primary composition as a post-process.",
+          "type": "string",
+          "const": "postProcess"
+        },
+        {
+          "description": "Emits diagnostics or analysis without being a visual effect.",
+          "type": "string",
+          "const": "diagnosticTooling"
+        }
+      ]
+    },
+    "EffectId": {
+      "description": "Stable canonical effect identifier.",
+      "type": "string"
+    },
+    "EffectInputSpec": {
+      "description": "Descriptor-local specification for one effect input.",
+      "type": "object",
+      "properties": {
+        "bindable": {
+          "description": "Whether later phases may bind this input to a source; no binding model exists in F1.",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "Optional human-facing description for documentation and catalogs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "description": "Optional human-facing display name for documentation and catalogs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtimeMutability": {
+          "description": "When this input value may change during the effect lifecycle.",
+          "$ref": "#/$defs/RuntimeMutability"
+        },
+        "value": {
+          "description": "Typed value contract, including default, range, enum values, unit, and semantic hints.",
+          "$ref": "#/$defs/ValueSpec"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "bindable",
+        "runtimeMutability"
+      ]
+    },
+    "EffectLifecycle": {
+      "description": "Minimal lifecycle metadata declared by an effect descriptor.",
+      "type": "object",
+      "properties": {
+        "completion": {
+          "description": "Completion category exposed to recipe and runtime planning.",
+          "$ref": "#/$defs/EffectCompletion"
+        },
+        "deterministicWithSeed": {
+          "description": "Whether seeded execution is deterministic for the same inputs.",
+          "type": "boolean"
+        },
+        "resettable": {
+          "description": "Whether the effect can be reset to its initial state.",
+          "type": "boolean"
+        },
+        "seekable": {
+          "description": "Whether the effect can be sampled at an arbitrary timeline position.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "completion",
+        "resettable",
+        "seekable",
+        "deterministicWithSeed"
+      ]
+    },
+    "GraphId": {
+      "description": "Stable canonical graph identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "NodeId": {
+      "description": "Stable node identifier inside a canonical graph.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "NodeSpec": {
+      "description": "One effect node in a canonical v3.1 graph.",
+      "type": "object",
+      "properties": {
+        "cellWritePolicy": {
+          "description": "Optional cell write policy requested by this node.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CellWritePolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effect": {
+          "description": "Effect descriptor used by this node.",
+          "$ref": "#/$defs/EffectId"
+        },
+        "id": {
+          "description": "Stable graph-local node identifier.",
+          "$ref": "#/$defs/NodeId"
+        },
+        "inputs": {
+          "description": "Declarative values supplied to descriptor-local effect inputs.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ValueSource"
+          },
+          "propertyNames": {
+            "description": "Effect input ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "roleWritePolicy": {
+          "description": "Optional role write policy requested by this node.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoleWritePolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "description": "Optional scope limiting where this node applies.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScopeSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "effect",
+        "inputs"
+      ]
+    },
+    "NumericRange": {
+      "description": "Optional inclusive numeric bounds for a value spec.",
+      "type": "object",
+      "properties": {
+        "max": {
+          "description": "Inclusive maximum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "min": {
+          "description": "Inclusive minimum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ParameterId": {
+      "description": "Stable public recipe parameter identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "ParameterSpec": {
+      "description": "Public recipe parameter contract.",
+      "type": "object",
+      "properties": {
+        "bindable": {
+          "description": "Whether later runtime layers may bind this parameter declaratively.",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "Optional human-facing description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "description": "Optional human-facing display name.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Stable public parameter identifier.",
+          "$ref": "#/$defs/ParameterId"
+        },
+        "value": {
+          "description": "Typed value contract, including any parameter default.",
+          "$ref": "#/$defs/ValueSpec"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value",
+        "bindable"
+      ]
+    },
+    "Rect": {
+      "description": "Rectangle in cell coordinates.\n\nThis is the primary geometry type for defining effect regions.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "description": "Rectangle height in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "width": {
+          "description": "Rectangle width in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "x": {
+          "description": "Left edge x coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "y": {
+          "description": "Top edge y coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "RoleSpace": {
+      "description": "Role source used by role scopes.",
+      "oneOf": [
+        {
+          "description": "Role scopes inspect the sampled source role. This is the Phase A/B default.",
+          "type": "string",
+          "const": "sampledSource"
+        },
+        {
+          "description": "Role scopes inspect the destination role before the write.",
+          "type": "string",
+          "const": "destination"
+        }
+      ]
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "RoleWritePolicy": {
+      "description": "Policy for how a cell write updates the semantic role channel.",
+      "oneOf": [
+        {
+          "description": "Preserve the destination role.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "preserveDestination"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Copy the sampled-source role.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "copySampledSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Set one explicit role, used by procedural/shadow-style writers.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "setExplicit"
+            },
+            "role": {
+              "description": "Role to write into the destination role channel.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        }
+      ]
+    },
+    "RoleWritePolicyKind": {
+      "description": "Payload-free role write policy kind used by descriptor support declarations.",
+      "oneOf": [
+        {
+          "description": "Descriptor may preserve destination roles.",
+          "type": "string",
+          "const": "preserveDestination"
+        },
+        {
+          "description": "Descriptor may copy sampled-source roles.",
+          "type": "string",
+          "const": "copySampledSource"
+        },
+        {
+          "description": "Descriptor may set an explicit role chosen by the operation.",
+          "type": "string",
+          "const": "setExplicit"
+        }
+      ]
+    },
+    "RuntimeMutability": {
+      "description": "Vocabulary describing when an effect input may change.",
+      "oneOf": [
+        {
+          "description": "Value is fixed when the effect contract is compiled or instantiated.",
+          "type": "string",
+          "const": "compileTime"
+        },
+        {
+          "description": "Value may be set at the start of a phase.",
+          "type": "string",
+          "const": "phaseStart"
+        },
+        {
+          "description": "Value may change only when the effect is reset.",
+          "type": "string",
+          "const": "resetOnly"
+        },
+        {
+          "description": "Value may change while the effect is running.",
+          "type": "string",
+          "const": "runtime"
+        }
+      ]
+    },
+    "ScopeKind": {
+      "description": "Scope shape a descriptor can explicitly support.",
+      "oneOf": [
+        {
+          "description": "Descriptor supports all-cell scopes.",
+          "type": "string",
+          "const": "all"
+        },
+        {
+          "description": "Descriptor supports role-based scopes.",
+          "type": "string",
+          "const": "role"
+        },
+        {
+          "description": "Descriptor supports rectangular geometry scopes.",
+          "type": "string",
+          "const": "rect"
+        },
+        {
+          "description": "Descriptor supports row range geometry scopes.",
+          "type": "string",
+          "const": "rowRange"
+        },
+        {
+          "description": "Descriptor supports column range geometry scopes.",
+          "type": "string",
+          "const": "columnRange"
+        }
+      ]
+    },
+    "ScopeSpec": {
+      "description": "Minimal Phase A/B scope algebra.",
+      "oneOf": [
+        {
+          "description": "Match every in-bounds cell.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "all"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells with the requested role in the active role space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "role": {
+              "description": "Role required in the active role space.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Match a rectangle in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "rect": {
+              "description": "Rectangle to match in the active coordinate space.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rect"
+          ]
+        },
+        {
+          "description": "Match rows `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "rowRange"
+            },
+            "start": {
+              "description": "Inclusive start row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match columns `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "columnRange"
+            },
+            "start": {
+              "description": "Inclusive start column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        }
+      ]
+    },
+    "ScopeSupport": {
+      "description": "Scope shapes and evaluation spaces an effect descriptor supports.",
+      "type": "object",
+      "properties": {
+        "coordinateSpaces": {
+          "description": "Supported coordinate spaces for geometry scopes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CoordinateSpace"
+          }
+        },
+        "kinds": {
+          "description": "Supported scope variant kinds.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScopeKind"
+          }
+        },
+        "roleSpaces": {
+          "description": "Supported role spaces for role scopes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoleSpace"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kinds",
+        "coordinateSpaces",
+        "roleSpaces"
+      ]
+    },
+    "SignalId": {
+      "description": "Stable host/runtime signal identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "SignalSpec": {
+      "description": "Host/runtime-provided signal contract.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Optional human-facing description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "description": "Optional human-facing display name.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Stable host/runtime signal identifier.",
+          "$ref": "#/$defs/SignalId"
+        },
+        "required": {
+          "description": "Whether a host must provide this signal when no default is declared.",
+          "type": "boolean"
+        },
+        "value": {
+          "description": "Typed value contract, including any fallback default.",
+          "$ref": "#/$defs/ValueSpec"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value",
+        "required"
+      ]
+    },
+    "Value": {
+      "description": "Canonical tagged literal value used by effect input specs.",
+      "oneOf": [
+        {
+          "description": "Explicit absence of a value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "null"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Boolean true/false literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "boolean"
+            },
+            "value": {
+              "description": "Boolean payload.",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Signed integer literal without a fractional component.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "integer"
+            },
+            "value": {
+              "description": "Integer payload.",
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Floating-point numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "number"
+            },
+            "value": {
+              "description": "Number payload.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Short machine-facing string literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "string"
+            },
+            "value": {
+              "description": "String payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Human-facing text literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "text"
+            },
+            "value": {
+              "description": "Text payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "RGBA color literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "color"
+            },
+            "value": {
+              "description": "Color payload.",
+              "$ref": "#/$defs/Color"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration literal expressed as seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "duration"
+            },
+            "value": {
+              "description": "Duration payload in seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Closed-set enum literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "enum"
+            },
+            "value": {
+              "description": "Selected enum value.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Semantic role literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "value": {
+              "description": "Role payload.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Surface scope literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "scope"
+            },
+            "value": {
+              "description": "Scope payload.",
+              "$ref": "#/$defs/ScopeSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Cell rectangle literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "value": {
+              "description": "Rectangle payload.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "ValueKind": {
+      "description": "Closed v3.1 vocabulary for typed effect input values.",
+      "oneOf": [
+        {
+          "description": "Explicit absence of a value.",
+          "type": "string",
+          "const": "null"
+        },
+        {
+          "description": "Boolean true/false value.",
+          "type": "string",
+          "const": "boolean"
+        },
+        {
+          "description": "Signed integer value without a fractional component.",
+          "type": "string",
+          "const": "integer"
+        },
+        {
+          "description": "Floating-point numeric value.",
+          "type": "string",
+          "const": "number"
+        },
+        {
+          "description": "Short machine-facing string value.",
+          "type": "string",
+          "const": "string"
+        },
+        {
+          "description": "Human-facing text value.",
+          "type": "string",
+          "const": "text"
+        },
+        {
+          "description": "RGBA color value.",
+          "type": "string",
+          "const": "color"
+        },
+        {
+          "description": "Duration value expressed as seconds.",
+          "type": "string",
+          "const": "duration"
+        },
+        {
+          "description": "One value selected from a declared closed string set.",
+          "type": "string",
+          "const": "enum"
+        },
+        {
+          "description": "Semantic role tag value.",
+          "type": "string",
+          "const": "role"
+        },
+        {
+          "description": "Surface scope value.",
+          "type": "string",
+          "const": "scope"
+        },
+        {
+          "description": "Cell rectangle value.",
+          "type": "string",
+          "const": "rect"
+        }
+      ]
+    },
+    "ValueSource": {
+      "description": "Declarative source for a typed value.",
+      "oneOf": [
+        {
+          "description": "Source value is a typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "literal"
+            },
+            "value": {
+              "description": "Literal typed value.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the parameter is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared host/runtime signal.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the signal is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced signal id.",
+              "$ref": "#/$defs/SignalId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value maps a numeric source from one range to another.",
+          "type": "object",
+          "properties": {
+            "clamp": {
+              "description": "Whether values outside the input range should clamp before mapping.",
+              "type": "boolean"
+            },
+            "from": {
+              "description": "Nested numeric-compatible source to map.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "input": {
+              "description": "Inclusive input range for the nested source.",
+              "$ref": "#/$defs/NumericRange"
+            },
+            "kind": {
+              "type": "string",
+              "const": "map"
+            },
+            "output": {
+              "description": "Inclusive output range produced by the map.",
+              "$ref": "#/$defs/NumericRange"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "input",
+            "output",
+            "clamp"
+          ]
+        }
+      ]
+    },
+    "ValueSpec": {
+      "description": "Contract specification for one typed effect input value.",
+      "type": "object",
+      "properties": {
+        "allowedValues": {
+          "description": "Allowed string values when `kind` is `enum`.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "default": {
+          "description": "Optional typed default value for the input.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "description": "Closed kind expected for values accepted by this spec.",
+          "$ref": "#/$defs/ValueKind"
+        },
+        "range": {
+          "description": "Optional inclusive range for numeric, integer, and duration values.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NumericRange"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "semantic": {
+          "description": "Optional human-facing semantic hint such as `opacity`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "description": "Optional human-facing unit label such as `ratio` or `seconds`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "WriteSupport": {
+      "description": "Cell and role write policies an effect descriptor supports.",
+      "type": "object",
+      "properties": {
+        "cellPolicies": {
+          "description": "Supported cell write policies.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellWritePolicy"
+          }
+        },
+        "rolePolicies": {
+          "description": "Supported role write policy kinds.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoleWritePolicyKind"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cellPolicies",
+        "rolePolicies"
+      ]
+    }
+  }
+}

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>New kernel Phase F2: expose declarative value source and binding contract vocabulary.</WCTX>
-// <CLOG>0.4.0: MINOR — export ValueSource, ParameterSpec, SignalSpec, BindingSpec, and schema roots.
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>New kernel Phase G1: expose canonical graph and node contract vocabulary.</WCTX>
+// <CLOG>0.5.0: MINOR — export GraphSpec, NodeSpec, GraphId, NodeId, and schema roots.
+// 0.4.0: MINOR — export ValueSource, ParameterSpec, SignalSpec, BindingSpec, and schema roots.
 // 0.3.0: MINOR — export Value, ValueSpec, EffectInputSpec, and input schema roots.
 // 0.2.0: MINOR — export EffectDescriptor and descriptor capability DTOs/schema root.
 // 0.1.0: INIT — expose stable surface, scene, scope, write, sampler, diagnostic, and schema-root contract vocabulary.</CLOG>
@@ -34,7 +35,11 @@ pub mod cls_effect_input_spec;
 pub mod cls_effect_lifecycle;
 pub mod cls_element_id;
 pub mod cls_element_placement;
+pub mod cls_graph_id;
+pub mod cls_graph_spec;
 pub mod cls_layer_id;
+pub mod cls_node_id;
+pub mod cls_node_spec;
 pub mod cls_numeric_range;
 pub mod cls_parameter_id;
 pub mod cls_parameter_spec;
@@ -85,7 +90,11 @@ pub use cls_effect_input_spec::EffectInputSpec;
 pub use cls_effect_lifecycle::EffectLifecycle;
 pub use cls_element_id::ElementId;
 pub use cls_element_placement::ElementPlacement;
+pub use cls_graph_id::GraphId;
+pub use cls_graph_spec::GraphSpec;
 pub use cls_layer_id::LayerId;
+pub use cls_node_id::NodeId;
+pub use cls_node_spec::NodeSpec;
 pub use cls_numeric_range::NumericRange;
 pub use cls_parameter_id::ParameterId;
 pub use cls_parameter_spec::ParameterSpec;
@@ -119,11 +128,11 @@ pub use tr_coordinate_sampler::CoordinateSampler;
 /// These roots generate fixtures under `schemas/v3.1/contract/`.
 pub mod schema_roots {
     pub use crate::{
-        BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, ParameterSpec, Scene,
-        SceneElement, SceneOutcome, ScopeSpec, SignalSpec, Surface, SurfaceDiagnostic, Value,
-        ValueSource,
+        BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, GraphSpec, NodeSpec,
+        ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, Surface,
+        SurfaceDiagnostic, Value, ValueSource,
     };
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

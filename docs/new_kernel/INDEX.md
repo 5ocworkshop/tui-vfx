@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.11.0</VERS> -->
-<!-- <WCTX>New kernel Phase F2: add declarative value source and binding artifacts.</WCTX> -->
-<!-- <CLOG>0.11.0: MINOR — add Phase F1 architect response, F2 status artifacts, and source/binding schema roots.
+<!-- <VERS>VERSION: 0.12.0</VERS> -->
+<!-- <WCTX>New kernel Phase G1: add canonical graph container artifacts.</WCTX> -->
+<!-- <CLOG>0.12.0: MINOR — add Phase F2 architect response, G1 status artifacts, and graph/node schema roots.
+0.11.0: MINOR — add Phase F1 architect response, F2 status artifacts, and source/binding/graph schema roots.
 0.10.0: MINOR — add Phase E1 architect response, F1 status artifacts, and value/input schema roots.
 0.9.0: MINOR — add Phase E0 architect response, E1 status artifacts, and effect descriptor schema root.
 0.8.0: MINOR — add Phase D3 architect response, E0 status artifacts, and contract/proof schema path split.
@@ -27,8 +28,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 
 ## v3.1 contract docs one level up
 
-- [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, D3 boundary, E0 split, E1 descriptor model, F1 typed inputs, and F2 declarative value sources/bindings.
-- [`../v3.1-contract-boundary.md`](../v3.1-contract-boundary.md) — D3/E0/E1/F1/F2 classification of contract vocabulary, proof implementation, crate ownership, descriptor/input/source/binding model, and schema roots.
+- [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, D3 boundary, E0 split, E1 descriptor model, F1 typed inputs, F2 declarative value sources/bindings, and G1 canonical graph container.
+- [`../v3.1-contract-boundary.md`](../v3.1-contract-boundary.md) — D3/E0/E1/F1/F2 classification of contract vocabulary, proof implementation, crate ownership, descriptor/input/source/binding/graph model, and schema roots.
 - [`../v3.1-surface-contract.md`](../v3.1-surface-contract.md) — current clean-room surface/sampling/pipeline/scene/descriptor contract owned by `tui-vfx-contract` and proven by `tui-vfx-next`.
 - [`../v3.1-feature-contract-checklist.md`](../v3.1-feature-contract-checklist.md) — reusable decision checklist for future contract-affecting features.
 - [`../v3.1-template-composition.md`](../v3.1-template-composition.md) — Phase D2 design for compile-time template composition into canonical recipes.
@@ -45,6 +46,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_E0.md`](ARCH-RESP-TO-PHASE_E0.md) — Phase E0 approval and Phase E1 minimal descriptor recommendation.
 - [`ARCH-RESP-TO-PHASE_E1.md`](ARCH-RESP-TO-PHASE_E1.md) — Phase E1 approval and Phase F1 typed value/input recommendation.
 - [`ARCH-RESP-TO-PHASE_F1.md`](ARCH-RESP-TO-PHASE_F1.md) — Phase F1 approval and Phase F2 value source / parameter / signal / binding recommendation.
+- [`ARCH-RESP-TO-PHASE_F2.md`](ARCH-RESP-TO-PHASE_F2.md) — Phase F2 approval and Phase G1 canonical node graph container recommendation.
 
 ## Status and memo artifacts
 
@@ -69,6 +71,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_F1_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_F1_STATUS_MEMO_TO_ARCHITECT.md) — Phase F1 architect memo requesting next assignment.
 - [`PHASE_F2_STATUS.md`](PHASE_F2_STATUS.md) — concise Phase F2 value source / binding status.
 - [`PHASE_F2_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_F2_STATUS_MEMO_TO_ARCHITECT.md) — Phase F2 architect memo requesting next assignment.
+- [`PHASE_G1_STATUS.md`](PHASE_G1_STATUS.md) — concise Phase G1 canonical graph container status.
+- [`PHASE_G1_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_G1_STATUS_MEMO_TO_ARCHITECT.md) — Phase G1 architect memo requesting next assignment.
 
 ## Supporting artifacts
 
@@ -87,4 +91,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->

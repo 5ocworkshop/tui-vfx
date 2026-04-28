@@ -1,13 +1,14 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>New kernel Phase F2: report descriptor, value source, and binding validation failures.</WCTX>
-// <CLOG>0.3.0: MINOR — add parameter, signal, source-kind, map, and binding validation errors.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>New kernel Phase G1: report graph, node, descriptor, source, and binding validation failures.</WCTX>
+// <CLOG>0.4.0: MINOR — add graph and node validation errors.
+// 0.3.0: MINOR — add parameter, signal, source-kind, map, and binding validation errors.
 // 0.2.0: MINOR — add input id, value kind, range, and enum validation errors.
 // 0.1.0: INIT — add structured validation errors for scope, write policy, and channel checks.</CLOG>
 
 use crate::{
-    CellChannel, CellWritePolicy, EffectInputId, ParameterId, RoleWritePolicyKind, ScopeKind,
-    SignalId, ValueKind,
+    CellChannel, CellWritePolicy, EffectId, EffectInputId, GraphId, NodeId, ParameterId,
+    RoleWritePolicyKind, ScopeKind, SignalId, ValueKind,
 };
 
 /// Structured error returned when a request exceeds descriptor capabilities.
@@ -38,6 +39,79 @@ pub enum DescriptorValidationError {
     InvalidInputId {
         /// Invalid descriptor-local input id.
         id: EffectInputId,
+    },
+
+    /// Graph id is outside the accepted identifier shape.
+    InvalidGraphId {
+        /// Invalid graph id.
+        id: GraphId,
+    },
+    /// Node id is outside the accepted identifier shape.
+    InvalidNodeId {
+        /// Invalid graph-local node id.
+        id: NodeId,
+    },
+    /// Graph parameter map key does not match the nested parameter id.
+    ParameterIdMismatch {
+        /// Parameter map key.
+        key: ParameterId,
+        /// Parameter id stored in the value.
+        parameter: ParameterId,
+    },
+    /// Graph signal map key does not match the nested signal id.
+    SignalIdMismatch {
+        /// Signal map key.
+        key: SignalId,
+        /// Signal id stored in the value.
+        signal: SignalId,
+    },
+    /// Graph node map key does not match the nested node id.
+    NodeIdMismatch {
+        /// Node map key.
+        key: NodeId,
+        /// Node id stored in the value.
+        node: NodeId,
+    },
+    /// Graph effect map key does not match the nested effect descriptor id.
+    EffectIdMismatch {
+        /// Effect map key.
+        key: EffectId,
+        /// Effect id stored in the descriptor.
+        effect: EffectId,
+    },
+    /// Node references an effect descriptor not declared in the graph.
+    UnknownEffect {
+        /// Missing effect id.
+        id: EffectId,
+    },
+    /// Node input references an input id not declared by the effect descriptor.
+    UnknownNodeInput {
+        /// Effect id whose input map was checked.
+        effect: EffectId,
+        /// Missing effect input id.
+        input: EffectInputId,
+    },
+    /// Node omits an effect input that has no descriptor default.
+    MissingRequiredNodeInput {
+        /// Effect id whose input is required.
+        effect: EffectId,
+        /// Missing effect input id.
+        input: EffectInputId,
+    },
+    /// Node order references a node id not declared in the graph.
+    UnknownOrderNode {
+        /// Missing ordered node id.
+        id: NodeId,
+    },
+    /// Node order repeats the same node id.
+    DuplicateOrderNode {
+        /// Duplicated ordered node id.
+        id: NodeId,
+    },
+    /// Graph declares a node that is absent from deterministic node order.
+    NodeMissingFromOrder {
+        /// Unordered node id.
+        id: NodeId,
     },
     /// Parameter id is outside the accepted identifier shape.
     InvalidParameterId {
@@ -160,4 +234,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

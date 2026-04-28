@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.9.0</VERS> -->
-<!-- <WCTX>New kernel Phase F2: add declarative value source and binding contract guidance.</WCTX> -->
-<!-- <CLOG>0.9.0: MINOR — add Phase F2 declarative value source and parameter binding guidance.
+<!-- <VERS>VERSION: 0.10.0</VERS> -->
+<!-- <WCTX>New kernel Phase G1: add canonical graph container guidance.</WCTX> -->
+<!-- <CLOG>0.10.0: MINOR — add Phase G1 canonical graph container guidance.
+0.9.0: MINOR — add Phase F2 declarative value source and parameter binding guidance.
 0.8.0: MINOR — add Phase F1 typed input/value contract guidance and F2 deferral.
 0.7.0: MINOR — add EffectDescriptor capability model, schema root, and Phase F input deferral.
 0.6.0: MINOR — add tui-vfx-contract ownership, schema paths, and E0 phase guidance.
@@ -419,21 +420,21 @@ Key docs:
 
 ### Phase F2 — declarative ValueSource / ParameterSpec / SignalSpec / BindingSpec
 
-Current phase.
+Completed phase.
 
 Target lock:
 
 - `ValueSource` represents literal, parameter, signal, and simple numeric map sources.
 - `ParameterId` / `ParameterSpec` define public recipe controls separately from effect inputs.
 - `SignalId` / `SignalSpec` define host/runtime-provided values separately from parameters.
-- `BindingSpec` is declarative and parameter-target only until node graph identity exists.
+- `BindingSpec` is declarative and parameter-target only; direct node/effect-input bindings remain deferred beyond G1.
 - `BindingMode` is replace-only for F2.
 - Validation resolves parameter/signal references, checks source/target kind compatibility, validates fallbacks, and rejects non-numeric map sources.
 - Checked schemas include `value-source.schema.json`, `parameter.schema.json`, `signal.schema.json`, and `binding.schema.json`.
 
 Hard deferrals after F2:
 
-- Do not add runtime `ParameterStore` / `SignalStore`, live override execution, preset/profile persistence, node graph, `NodeId`, direct node/effect-input bindings, recipe compiler/schema, studio controls/manifest, expression language, phase graph, trigger engine, migration, real effect ports, or legacy aliases.
+- Do not add runtime `ParameterStore` / `SignalStore`, live override execution, preset/profile persistence, direct node/effect-input bindings, recipe compiler/schema, studio controls/manifest, expression language, phase graph, trigger engine, migration, real effect ports, or legacy aliases.
 
 Key docs:
 
@@ -441,6 +442,29 @@ Key docs:
 - `docs/v3.1-contract-boundary.md`
 - `docs/v3.1-surface-contract.md`
 - `docs/new_kernel/PHASE_F2_STATUS.md` once created.
+
+### Phase G1 — canonical node graph container
+
+Current phase.
+
+Target lock:
+
+- `GraphId` and `NodeId` are stable, schema-constrained identifiers.
+- `NodeSpec` references an `EffectId`, supplies descriptor-local inputs as `BTreeMap<EffectInputId, ValueSource>`, and may request existing `ScopeSpec`, `CellWritePolicy`, and `RoleWritePolicy` vocabulary.
+- `GraphSpec` contains parameters, signals, F2 parameter-target bindings, declared effect descriptors, nodes, and deterministic node order.
+- Graph validation proves effect ids exist, node inputs are declared by descriptors, `ValueSource` kinds match `EffectInputSpec.value.kind`, parameter/signal refs are known, map sources remain numeric-only, requested scope/write policies are supported by descriptors, bindings validate through F2 rules, and order references exactly known nodes without duplicates.
+- Checked schemas include `graph.schema.json` and `node.schema.json`.
+
+Hard deferrals after G1:
+
+- Do not add runtime graph execution, runtime `ParameterStore` / `SignalStore`, live override execution, direct node/effect-input bindings, source recipe authoring schema, recipe compiler implementation, template expansion, studio controls/manifest, expression language, phase graph, trigger engine, migration, real effect ports, or legacy aliases.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_F2.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/v3.1-surface-contract.md`
+- `docs/new_kernel/PHASE_G1_STATUS.md` once created.
 
 ## Verification gates
 
@@ -500,4 +524,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.9.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.10.0</VERS> -->

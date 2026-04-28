@@ -162,7 +162,7 @@ fn binding_unknown_parameter_target_rejected() {
 }
 
 #[test]
-fn f2_does_not_add_runtime_store_or_node_graph() {
+fn f2_does_not_add_runtime_store_or_recipe_execution() {
     let src_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
     let mut combined = String::new();
     for entry in std::fs::read_dir(src_dir).expect("contract src can be read") {
@@ -174,7 +174,7 @@ fn f2_does_not_add_runtime_store_or_node_graph() {
 
     assert!(!combined.contains("ParameterStore"));
     assert!(!combined.contains("SignalStore"));
-    assert!(!combined.contains("NodeId"));
+    assert!(!combined.contains("RuntimeBinding"));
     assert!(!combined.contains("RecipeCompiler"));
 }
 
