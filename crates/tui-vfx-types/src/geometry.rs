@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-types/src/geometry.rs</FILE> - <DESC>Geometry types: Rect, Point, Size, Anchor</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>L2/L3 abstraction - extract core types to shared crate</WCTX>
-// <CLOG>Initial creation - migrate from mixed-animations adapter</CLOG>
+// <VERS>VERSION: 0.1.2</VERS>
+// <WCTX>New kernel Phase D0: expose geometry DTOs to generated clean-room schemas.</WCTX>
+// <CLOG>0.1.2: PATCH — deny unknown fields for strict generated geometry schemas.
+// 0.1.1: PATCH — derive JsonSchema behind the schemars feature for v3.1 scope schemas and add missing public field docs.
+// 0.1.0: Initial creation - migrate from mixed-animations adapter</CLOG>
 
 //! Geometry types for cell-based layouts.
 
@@ -10,10 +12,16 @@
 /// This is the primary geometry type for defining effect regions.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct Rect {
+    /// Left edge x coordinate in cells.
     pub x: u16,
+    /// Top edge y coordinate in cells.
     pub y: u16,
+    /// Rectangle width in cells.
     pub width: u16,
+    /// Rectangle height in cells.
     pub height: u16,
 }
 
@@ -113,8 +121,12 @@ impl Rect {
 /// Size without position.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct Size {
+    /// Width in cells.
     pub width: u16,
+    /// Height in cells.
     pub height: u16,
 }
 
@@ -138,8 +150,12 @@ impl Size {
 /// Point in cell coordinates.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct Point {
+    /// X coordinate in cells.
     pub x: u16,
+    /// Y coordinate in cells.
     pub y: u16,
 }
 
@@ -155,6 +171,8 @@ impl Point {
 /// Used to specify where effects anchor relative to a target rect.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub enum Anchor {
     #[default]
     TopLeft,
@@ -256,4 +274,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-types/src/geometry.rs</FILE> - <DESC>Geometry types: Rect, Point, Size, Anchor</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.2</VERS>

@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-types/src/cell.rs</FILE> - <DESC>Cell type: character with styling</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Remove modifier-alpha feature flag</WCTX>
-// <CLOG>Make mod_alpha field always present - no feature flag needed</CLOG>
+// <VERS>VERSION: 0.3.2</VERS>
+// <WCTX>New kernel Phase D0: expose Cell to generated clean-room schemas.</WCTX>
+// <CLOG>0.3.2: PATCH — deny unknown fields for strict generated cell schema.
+// 0.3.1: PATCH — derive JsonSchema behind the schemars feature so v3.1 clean-room schema roots can include cells.
+// 0.3.0: Make mod_alpha field always present - no feature flag needed</CLOG>
 
 //! Cell type representing a single styled character.
 
@@ -12,6 +14,8 @@ use crate::{Color, Modifiers};
 /// Each cell contains a character and its styling information (colors and modifiers).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct Cell {
     /// The character to display.
     pub ch: char,
@@ -136,4 +140,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-types/src/cell.rs</FILE> - <DESC>Cell type: character with styling</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.3.2</VERS>

@@ -14,6 +14,7 @@ resolver = "3"
 members = [
     "crates/tui-vfx",
     "crates/tui-vfx-types",
+    "crates/tui-vfx-next",
     "crates/tui-vfx-core",
     "crates/tui-vfx-core-macros",
     "crates/tui-vfx-geometry",
@@ -58,6 +59,7 @@ mcu-hct = "0.2.0"
 mcu-utils = "0.2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+schemars = "1.2.1"
 smallvec = "1.11"
 
 # Sister projects (co-designed; see docs/internal/plans/splash-library-and-vfx-integration.md)

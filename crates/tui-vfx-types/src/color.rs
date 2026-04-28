@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-types/src/color.rs</FILE> - <DESC>RGBA color type with alpha compositing</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Packet 1.9.A.followup US-006: migrate Color from a hand-written ConfigSchema impl to #[derive(ConfigSchema)] now that the live derive macro at tui-vfx-core-macros/src/lib.rs supports per-field range metadata via #[config(min, max)] and reads /// doc comments for descriptions.</WCTX>
-// <CLOG>0.2.0: MINOR — replace the hand-written `impl ConfigSchema for Color` (~30 lines) with `#[derive(tui_vfx_core::ConfigSchema)]` on the struct definition plus `#[config(min = 0, max = 255)]` annotations on each of the four u8 fields. Schema-output diff vs the hand-written impl: (1) struct-level `description` is now derived from the /// doc comment ("RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel to enable proper effect layering and transparency.") rather than the prior shorter "RGBA color with alpha compositing support" — informative improvement, no behavior change for validation; (2) field `a`'s description is now "Alpha channel (0=transparent, 255=opaque)" (from the /// comment) rather than "Alpha channel (0-255)" — also an informative improvement. All four fields' `range = Some(Range(0, 255))` and `optional = false` are preserved exactly. No tests in the workspace depend on the prior description strings (verified via rg).</CLOG>
+// <VERS>VERSION: 0.2.2</VERS>
+// <WCTX>New kernel Phase D0: expose Color to generated clean-room schemas.</WCTX>
+// <CLOG>0.2.2: PATCH — deny unknown fields for strict generated color schema.
+// 0.2.1: PATCH — derive JsonSchema behind the schemars feature so clean-room cell schemas include color channel docs.
+// 0.2.0: replace hand-written ConfigSchema impl with derived ConfigSchema while preserving color range metadata</CLOG>
 
 //! RGBA color type with alpha channel for compositing.
 
@@ -11,6 +13,8 @@
 /// to enable proper effect layering and transparency.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, tui_vfx_core::ConfigSchema)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct Color {
     /// Red channel (0-255)
     #[config(min = 0, max = 255)]
@@ -163,4 +167,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-types/src/color.rs</FILE> - <DESC>RGBA color type with alpha compositing</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.2</VERS>

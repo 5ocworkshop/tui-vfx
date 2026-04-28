@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-types/src/modifiers.rs</FILE> - <DESC>Text modifiers for terminal display</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Full modifier parity with ratatui</WCTX>
-// <CLOG>Add slow_blink, rapid_blink, hidden modifiers for full ratatui parity
+// <VERS>VERSION: 0.2.3</VERS>
+// <WCTX>New kernel Phase D0 verifier fix: add rustdoc to all schema-visible modifier fields.</WCTX>
+// <CLOG>0.2.3: PATCH — deny unknown fields for strict generated modifier schema.
+// 0.2.2: PATCH — document all modifier fields so generated clean-room schemas are complete.
+// 0.2.1: PATCH — derive JsonSchema behind the schemars feature for clean-room cell schemas.
+// 0.2.0: Add slow_blink, rapid_blink, hidden modifiers for full ratatui parity</CLOG>
 
 //! Text modifiers for terminal styling.
 
@@ -10,12 +13,20 @@
 /// These map to common terminal text attributes supported by most terminals.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct Modifiers {
+    /// Bold/intense text modifier.
     pub bold: bool,
+    /// Italic text modifier.
     pub italic: bool,
+    /// Underline text modifier.
     pub underline: bool,
+    /// Dim/faint text modifier.
     pub dim: bool,
+    /// Reverse-video text modifier.
     pub reverse: bool,
+    /// Strikethrough text modifier.
     pub strikethrough: bool,
     /// Slow blink (SGR 5). Note: Poorly supported by modern terminals.
     pub slow_blink: bool,
@@ -295,4 +306,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-types/src/modifiers.rs</FILE> - <DESC>Text modifiers for terminal display</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.3</VERS>

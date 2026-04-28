@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-types/src/role_tag.rs</FILE> - <DESC>Per-cell semantic role tag enum (12 first-class variants + Custom)</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>Packet 1.9.A.followup US-008: lift the hand-written RoleTag ConfigSchema impl with intentional-divergence-from-derive-output justification. The Custom(InternedRoleName) field's hand-emitted String::schema() shape is a deliberate simplification.</WCTX>
-// <CLOG>0.1.1: PATCH — add CONFIGSCHEMA-JUSTIFICATION comment above the hand-written impl (kind=intentional-divergence-from-derive-output). Comment documents the Custom-variant field flatten that derive cannot replicate without trading divergences. No behavior change.</CLOG>
+// <VERS>VERSION: 0.1.3</VERS>
+// <WCTX>New kernel Phase D0 verifier fix: describe RoleTag custom payload in generated schemas.</WCTX>
+// <CLOG>0.1.3: PATCH — add schema description to the Custom payload so generated RoleTag schemas have complete payload docs.
+// 0.1.2: PATCH — derive JsonSchema behind the schemars feature for v3.1 clean-room role-bearing schema roots.
+// 0.1.1: add CONFIGSCHEMA-JUSTIFICATION comment above the hand-written ConfigSchema impl</CLOG>
 
 //! Per-cell semantic role tag.
 //!
@@ -55,7 +57,13 @@ use tui_vfx_core::{ConfigSchema, FieldMeta, SchemaField, SchemaNode, SchemaVaria
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
-pub struct InternedRoleName(InternedString);
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[cfg_attr(feature = "schemars", schemars(transparent))]
+pub struct InternedRoleName(
+    /// Custom role name serialized as a string.
+    #[cfg_attr(feature = "schemars", schemars(with = "String"))]
+    InternedString,
+);
 
 impl InternedRoleName {
     /// Construct an interned role name from a `&str`.
@@ -92,6 +100,7 @@ impl From<String> for InternedRoleName {
 #[non_exhaustive]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub enum RoleTag {
     /// Fill cells (no glyph or styled space).
     Background,
@@ -117,8 +126,15 @@ pub enum RoleTag {
     Decoration,
     /// Cells produced by a procedural source.
     Procedural,
-    /// Author-declared custom role (e.g. `"logo_silhouette"`).
-    Custom(InternedRoleName),
+    /// Author-declared custom role, such as `"logo_silhouette"`.
+    Custom(
+        /// Custom role name serialized as a string.
+        #[cfg_attr(
+            feature = "schemars",
+            schemars(description = "Custom role name serialized as a string.")
+        )]
+        InternedRoleName,
+    ),
 }
 
 // CONFIGSCHEMA-JUSTIFICATION: intentional-divergence-from-derive-output: the Custom(InternedRoleName) variant's field is hand-emitted as `String::schema()` to give consumers a string-shaped tooltip, even though the actual field type is the InternedRoleName newtype. Migrating to #[derive(ConfigSchema)] would either (a) require an `impl ConfigSchema for InternedRoleName` (replacing one hand-written impl with another) or (b) emit `SchemaNode::Opaque { type_name: "InternedRoleName" }` via #[config(opaque)] — which changes the schema's representation of the Custom field. Both options trade one form of divergence for another; the existing hand-written impl is the deliberate simplification.
@@ -301,4 +317,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-types/src/role_tag.rs</FILE> - <DESC>Per-cell semantic role tag enum</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.1.3</VERS>

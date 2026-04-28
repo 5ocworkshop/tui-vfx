@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SurfaceDiagnostic",
+  "description": "Structured diagnostic emitted by surface contract operations.",
+  "type": "object",
+  "properties": {
+    "code": {
+      "description": "Stable machine-readable code.",
+      "$ref": "#/$defs/SurfaceDiagnosticCode"
+    },
+    "hint": {
+      "description": "Optional remediation hint.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "level": {
+      "description": "Severity level.",
+      "$ref": "#/$defs/DiagnosticLevel"
+    },
+    "message": {
+      "description": "Human-facing summary.",
+      "type": "string"
+    },
+    "path": {
+      "description": "Optional path-like location for future recipe/runtime integration.",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "level",
+    "code",
+    "message"
+  ],
+  "$defs": {
+    "DiagnosticLevel": {
+      "description": "Severity of a surface diagnostic.",
+      "oneOf": [
+        {
+          "description": "Informational note that does not indicate an invalid operation.",
+          "type": "string",
+          "const": "info"
+        },
+        {
+          "description": "Warning that records a suspicious but recoverable operation.",
+          "type": "string",
+          "const": "warning"
+        },
+        {
+          "description": "Error that records an invalid contract operation.",
+          "type": "string",
+          "const": "error"
+        }
+      ]
+    },
+    "SurfaceDiagnosticCode": {
+      "description": "Stable diagnostic codes for the surface contract.",
+      "oneOf": [
+        {
+          "description": "A scope matched zero cells. The destination must not be mutated.",
+          "type": "string",
+          "const": "zeroCellScope"
+        },
+        {
+          "description": "A source and destination surface pair had incompatible dimensions.",
+          "type": "string",
+          "const": "surfaceSizeMismatch"
+        }
+      ]
+    }
+  }
+}

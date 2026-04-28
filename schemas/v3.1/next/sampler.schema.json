@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PipelineSampler",
+  "description": "Samplers supported by the Phase C toy pipeline stages.",
+  "oneOf": [
+    {
+      "description": "Identity sampling, preserving Phase A behavior.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "identity"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    {
+      "description": "Shift sampling, preserving Phase B behavior inside a pipeline stage.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "shift"
+        },
+        "sampler": {
+          "description": "Shift sampler configuration.",
+          "$ref": "#/$defs/ShiftSampler"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "sampler"
+      ]
+    }
+  ],
+  "$defs": {
+    "ShiftSampler": {
+      "description": "Shift sampler: destination `(x, y)` samples source `(x + dx, y + dy)`.\n\nPositive `dx` samples from a source cell to the right of the destination;\npositive `dy` samples from a source cell below the destination. Coordinates\nshifted outside the source surface return `None` and skip the write.",
+      "type": "object",
+      "properties": {
+        "dx": {
+          "description": "Horizontal source offset relative to the destination coordinate.",
+          "type": "integer",
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
+        },
+        "dy": {
+          "description": "Vertical source offset relative to the destination coordinate.",
+          "type": "integer",
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "dx",
+        "dy"
+      ]
+    }
+  }
+}

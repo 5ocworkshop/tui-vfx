@@ -1,0 +1,20 @@
+# <FILE>crates/tui-vfx-next/Cargo.toml</FILE> - <DESC>Clean-room v3.1 surface contract spike crate</DESC>
+
+[package]
+name = "tui-vfx-next"
+description = "Clean-room v3.1 surface contract spike for tui-vfx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+tui-vfx-types = { workspace = true, features = ["schemars"] }
+serde.workspace = true
+schemars.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

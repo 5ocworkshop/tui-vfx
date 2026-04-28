@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Surface",
+  "description": "Dense rectangular semantic render surface used by the v3.1 clean-room kernel.\n\nA surface owns visual cells and one semantic role per cell in row-major order.\nThe cell and role vectors must both contain `width * height` entries.",
+  "type": "object",
+  "properties": {
+    "cells": {
+      "description": "Visual cell grid stored in row-major order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Cell"
+      }
+    },
+    "height": {
+      "description": "Surface height in cells.",
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    },
+    "metadata": {
+      "description": "Optional producer and layer metadata.",
+      "$ref": "#/$defs/SurfaceMetadata"
+    },
+    "roles": {
+      "description": "One semantic role per surface cell, stored in row-major order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RoleTag"
+      }
+    },
+    "width": {
+      "description": "Surface width in cells.",
+      "type": "integer",
+      "format": "uint",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "width",
+    "height",
+    "cells",
+    "roles",
+    "metadata"
+  ],
+  "$defs": {
+    "Cell": {
+      "description": "A single cell in a terminal display.\n\nEach cell contains a character and its styling information (colors and modifiers).",
+      "type": "object",
+      "properties": {
+        "bg": {
+          "description": "Background color.",
+          "$ref": "#/$defs/Color"
+        },
+        "ch": {
+          "description": "The character to display.",
+          "type": "string",
+          "maxLength": 1,
+          "minLength": 1
+        },
+        "fg": {
+          "description": "Foreground (text) color.",
+          "$ref": "#/$defs/Color"
+        },
+        "mod_alpha": {
+          "description": "Optional alpha override for modifier application (0-255).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "mods": {
+          "description": "Text modifiers (bold, italic, etc.).",
+          "$ref": "#/$defs/Modifiers"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "ch",
+        "fg",
+        "bg",
+        "mods"
+      ]
+    },
+    "Color": {
+      "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "Alpha channel (0=transparent, 255=opaque)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "b": {
+          "description": "Blue channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "description": "Green channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "description": "Red channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ]
+    },
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "Modifiers": {
+      "description": "Text modifiers for terminal display.\n\nThese map to common terminal text attributes supported by most terminals.",
+      "type": "object",
+      "properties": {
+        "bold": {
+          "description": "Bold/intense text modifier.",
+          "type": "boolean"
+        },
+        "dim": {
+          "description": "Dim/faint text modifier.",
+          "type": "boolean"
+        },
+        "hidden": {
+          "description": "Hidden/invisible text (SGR 8). Note: Often disabled for security.",
+          "type": "boolean"
+        },
+        "italic": {
+          "description": "Italic text modifier.",
+          "type": "boolean"
+        },
+        "rapid_blink": {
+          "description": "Rapid blink (SGR 6). Note: Rarely supported by terminals.",
+          "type": "boolean"
+        },
+        "reverse": {
+          "description": "Reverse-video text modifier.",
+          "type": "boolean"
+        },
+        "slow_blink": {
+          "description": "Slow blink (SGR 5). Note: Poorly supported by modern terminals.",
+          "type": "boolean"
+        },
+        "strikethrough": {
+          "description": "Strikethrough text modifier.",
+          "type": "boolean"
+        },
+        "underline": {
+          "description": "Underline text modifier.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "bold",
+        "italic",
+        "underline",
+        "dim",
+        "reverse",
+        "strikethrough",
+        "slow_blink",
+        "rapid_blink",
+        "hidden"
+      ]
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "SurfaceMetadata": {
+      "description": "Metadata attached to a semantic surface.",
+      "type": "object",
+      "properties": {
+        "layer": {
+          "description": "Optional semantic layer label for future scene-layer integration.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "producer": {
+          "description": "Optional producer name for diagnostics and tests.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.19.0</VERS> -->
-<!-- <WCTX>Packet 67 — engine/API signals doc relabel: list the renamed API_SIGNALS_REFERENCE.md under Generated with a one-line redirect note for recipe-author readers (recipe-side reference lives in tui-vfx-recipes).</WCTX> -->
-<!-- <CLOG>1.19.0: add API_SIGNALS_REFERENCE.md (renamed from SIGNALS_REFERENCE.md) under Generated with a one-line note pointing recipe authors at the recipe-side reference in tui-vfx-recipes.</CLOG> -->
+<!-- <VERS>VERSION: 1.20.0</VERS> -->
+<!-- <WCTX>New kernel Phase D0: index clean-room v3.1 architecture, contract, checklist, and new-kernel landing page.</WCTX> -->
+<!-- <CLOG>1.20.0: add clean-room v3.1 architecture/contract/checklist/new-kernel references.
+<!-- 1.19.0: add API_SIGNALS_REFERENCE.md (renamed from SIGNALS_REFERENCE.md) under Generated with a one-line note pointing recipe authors at the recipe-side reference in tui-vfx-recipes. --></CLOG> -->
 
 # Documentation Index
 
@@ -112,6 +113,10 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 
 ## V3 planning and tooling
 
+- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview and schema/reference path.
+- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0 surface, sampling, pipeline, and schema-reference contract.
+- [v3.1-feature-contract-checklist.md](v3.1-feature-contract-checklist.md) — Checklist for future v3.1 contract-affecting feature work.
+- [new_kernel/INDEX.md](new_kernel/INDEX.md) — Clean-room kernel phase docs, architect responses, status memos, and schema artifacts.
 - [design/tui-vfx-v3-INDEX.md](design/tui-vfx-v3-INDEX.md) — Single landing page for V3 planning, schema, I/O, migration, tooling, and outstanding work.
 - [design/tui-vfx-v3-naming-normalization-decisions.md](design/tui-vfx-v3-naming-normalization-decisions.md) — Accepted V3 naming normalization decisions for `Vfx*`, playback seams, timing, motion, and intent vocabulary.
 - [design/tui-vfx-v3-phase-scoping-decision.md](design/tui-vfx-v3-phase-scoping-decision.md) — Accepted V3 phase-scoping rule for step phases, container propagation, and normalized `PhaseSet` behavior.
@@ -160,4 +165,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.19.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.20.0</VERS> -->
