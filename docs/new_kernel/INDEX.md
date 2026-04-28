@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>New kernel Phase D1: include D0 response, D1 status, and scene/element/outcome schema roots.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — add Phase D1 architect status memo.
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>New kernel Phase D2: include D1 response and template composition artifacts.</WCTX> -->
+<!-- <CLOG>0.5.0: MINOR — add Phase D1 architect response plus Phase D2 template composition artifacts.
+0.4.0: MINOR — add Phase D1 architect status memo.
 0.3.1: PATCH — include public SceneOutcome schema root.
 0.3.0: MINOR — add Phase D0 architect response, Phase D1 status, and scene/element/outcome schema roots.
 0.2.1: PATCH — add Phase D0 architect memo to status artifacts.
@@ -23,6 +24,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, and schema/reference path.
 - [`../v3.1-surface-contract.md`](../v3.1-surface-contract.md) — current clean-room surface/sampling/pipeline contract proven by `tui-vfx-next`.
 - [`../v3.1-feature-contract-checklist.md`](../v3.1-feature-contract-checklist.md) — reusable decision checklist for future contract-affecting features.
+- [`../v3.1-template-composition.md`](../v3.1-template-composition.md) — Phase D2 design for compile-time template composition into canonical recipes.
 
 ## Architect responses
 
@@ -30,6 +32,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_B.md`](ARCH-RESP-TO-PHASE_B.md) — Phase B approval and Phase C recommendation.
 - [`ARCH-RESP-TO-PHASE_C.md`](ARCH-RESP-TO-PHASE_C.md) — Phase C approval and Phase D0 schema/reference backfill recommendation.
 - [`ARCH-RESP-TO-PHASE_D0.md`](ARCH-RESP-TO-PHASE_D0.md) — Phase D0 approval and Phase D1 scene/element/layer recommendation.
+- [`ARCH-RESP-TO-PHASE_D1.md`](ARCH-RESP-TO-PHASE_D1.md) — Phase D1 approval and Phase D2 template composition recommendation.
 
 ## Status and memo artifacts
 
@@ -42,6 +45,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_D0_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_D0_STATUS_MEMO_TO_ARCHITECT.md) — Phase D0 architect memo requesting next assignment.
 - [`PHASE_D1_STATUS.md`](PHASE_D1_STATUS.md) — concise Phase D1 scene/element/layer composition status.
 - [`PHASE_D1_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_D1_STATUS_MEMO_TO_ARCHITECT.md) — Phase D1 architect memo requesting next assignment.
+- [`PHASE_D2_STATUS.md`](PHASE_D2_STATUS.md) — concise Phase D2 template composition status.
+- [`PHASE_D2_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_D2_STATUS_MEMO_TO_ARCHITECT.md) — Phase D2 architect memo requesting next assignment.
 
 ## Supporting artifacts
 

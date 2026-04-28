@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.21.0</VERS> -->
-<!-- <WCTX>New kernel Phase D1: refresh clean-room v3.1 index descriptions for scene composition.</WCTX> -->
-<!-- <CLOG>1.21.0: refresh clean-room v3.1 entries for Phase D1 scene composition.
+<!-- <VERS>VERSION: 1.22.0</VERS> -->
+<!-- <WCTX>New kernel Phase D2: index template composition design document.</WCTX> -->
+<!-- <CLOG>1.22.0: add v3.1 template composition design reference.
+1.21.0: refresh clean-room v3.1 entries for Phase D1 scene composition.
 1.20.0: add clean-room v3.1 architecture/contract/checklist/new-kernel references.
 1.19.0: add API_SIGNALS_REFERENCE.md (renamed from SIGNALS_REFERENCE.md) under Generated with a one-line note pointing recipe authors at the recipe-side reference in tui-vfx-recipes.</CLOG> -->
 
@@ -117,6 +118,7 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, and schema/reference path.
 - [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1 surface, sampling, pipeline, scene, and schema-reference contract.
 - [v3.1-feature-contract-checklist.md](v3.1-feature-contract-checklist.md) — Checklist for future v3.1 contract-affecting feature work.
+- [v3.1-template-composition.md](v3.1-template-composition.md) — Phase D2 design for compile-time template/mixin/preset/profile expansion into canonical v3.1 recipes.
 - [new_kernel/INDEX.md](new_kernel/INDEX.md) — Clean-room kernel phase docs, architect responses, status memos, and schema artifacts.
 - [design/tui-vfx-v3-INDEX.md](design/tui-vfx-v3-INDEX.md) — Single landing page for V3 planning, schema, I/O, migration, tooling, and outstanding work.
 - [design/tui-vfx-v3-naming-normalization-decisions.md](design/tui-vfx-v3-naming-normalization-decisions.md) — Accepted V3 naming normalization decisions for `Vfx*`, playback seams, timing, motion, and intent vocabulary.
@@ -166,4 +168,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.21.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.22.0</VERS> -->

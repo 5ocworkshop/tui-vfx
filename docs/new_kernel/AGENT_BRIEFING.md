@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.3.1</VERS> -->
-<!-- <WCTX>New kernel Phase D1 verifier fix: include outcome schema root in durable briefing.</WCTX> -->
-<!-- <CLOG>0.3.1: PATCH — include public SceneOutcome schema root in D1 guidance.
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>New kernel Phase D2: add template composition design locks to durable briefing.</WCTX> -->
+<!-- <CLOG>0.4.0: MINOR — add Phase D2 template composition design history and current-phase guidance.
+0.3.1: PATCH — include public SceneOutcome schema root in D1 guidance.
 0.3.0: MINOR — add Phase D1 scene composition history, schema roots, and verification gate.
 0.2.0: MINOR — add Phase D0 schema/reference readiness, architecture overview, and updated phase history.
 0.1.2: PATCH — add 90_recycle_bin.md to read order and summarize move-instead-of-delete protocol.</CLOG> -->
@@ -32,6 +33,7 @@ Read these before planning or editing:
     - `docs/new_kernel/ARCH-RESP-TO-PHASE_B.md`
     - `docs/new_kernel/ARCH-RESP-TO-PHASE_C.md`
     - `docs/v3.1-architecture-overview.md`
+    - `docs/v3.1-template-composition.md`
     - `.omx/plans/prd-new-kernel-phase-*.md`
     - `.omx/plans/test-spec-new-kernel-phase-*.md`
 
@@ -234,9 +236,7 @@ Key docs:
 
 ### Phase D1 — scene / element / layer composition semantics
 
-Current phase.
-
-Target lock:
+Locked:
 
 - `Scene` composes multiple placed `SceneElement` values into one final `Surface`.
 - `ElementId` is instance identity and remains distinct from `RoleTag`.
@@ -266,7 +266,46 @@ Key docs:
 - `docs/new_kernel/ARCH-RESP-TO-PHASE_D0.md`
 - `docs/v3.1-architecture-overview.md`
 - `docs/v3.1-surface-contract.md`
-- `docs/new_kernel/PHASE_D1_STATUS.md` once created.
+- `docs/new_kernel/PHASE_D1_STATUS.md`
+- `docs/new_kernel/PHASE_D1_STATUS_MEMO_TO_ARCHITECT.md`
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_D1.md`
+
+
+### Phase D2 — template composition design
+
+Current phase.
+
+Target lock:
+
+- Template composition is compile-time authoring behavior, not runtime inheritance.
+- Runtime receives only canonical expanded strict v3.1 recipes.
+- Templates define reusable structure and slots.
+- Mixins/traits are additive reusable fragments with deterministic order.
+- Presets and profiles are values-only.
+- Expansion namespaces ids deterministically.
+- Slot contracts define accepted kind, cardinality, id namespace, and diagnostics.
+- Conflicts require explicit override syntax or fail.
+- Sealed/final fields protect safety and semantic identity.
+- Diagnostics report both source-template path and expanded canonical path.
+- Canonical v3.1 recipes contain no template refs, inheritance pointers, presets, profiles, mixin references, or legacy aliases.
+
+Still out of scope:
+
+- Template expansion implementation.
+- Recipe schema/compiler implementation.
+- Runtime inheritance.
+- Effect descriptor expansion.
+- Studio manifest.
+- Runtime bindings.
+- Phase graph or trigger engine.
+- Legacy migration.
+- Real effect ports.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_D1.md`
+- `docs/v3.1-template-composition.md`
+- `docs/new_kernel/PHASE_D2_STATUS.md` once created.
 
 ## Verification gates
 
