@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
 // <VERS>VERSION: 0.4.2</VERS>
 // <WCTX>New kernel Phase D0 verifier fix: make scope enum wire shape strict and fully described.</WCTX>
 // <CLOG>0.4.2: PATCH — add explicit Schemars descriptions for row/column range fields.
@@ -84,5 +84,5 @@ impl ScopeSpec {
     }
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
 // <VERS>END OF VERSION: 0.4.2</VERS>

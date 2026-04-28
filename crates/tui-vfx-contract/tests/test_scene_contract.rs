@@ -1,11 +1,11 @@
-// <FILE>crates/tui-vfx-next/tests/test_scene_contract.rs</FILE> - <DESC>Phase D1 scene/element/layer composition tests</DESC>
+// <FILE>crates/tui-vfx-contract/tests/test_scene_contract.rs</FILE> - <DESC>Phase D1 scene/element/layer composition tests</DESC>
 // <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>New kernel Phase D1 deslop: add direct scene role-write policy regression coverage.</WCTX>
 // <CLOG>0.2.0: TEST — cover PreserveDestination and SetExplicit role policies during scene composition.
 // 0.1.1: TEST — expect field-stable scene.element[index].id diagnostic paths.
 // 0.1.0: TEST — specify placement, z/declaration overlap, skip/write, role propagation, clipping, and element diagnostics.</CLOG>
 
-use tui_vfx_next::{
+use tui_vfx_contract::{
     CellWritePolicy, ClipPolicy, ElementId, ElementPlacement, LayerId, RoleWritePolicy, Scene,
     SceneElement, Surface, SurfaceDiagnosticCode,
 };
@@ -201,5 +201,5 @@ fn scene_diagnostics_include_element_identity() {
     assert!(outcome.diagnostics[0].message.contains("toast"));
 }
 
-// <FILE>crates/tui-vfx-next/tests/test_scene_contract.rs</FILE> - <DESC>Phase D1 scene/element/layer composition tests</DESC>
+// <FILE>crates/tui-vfx-contract/tests/test_scene_contract.rs</FILE> - <DESC>Phase D1 scene/element/layer composition tests</DESC>
 // <VERS>END OF VERSION: 0.2.0</VERS>

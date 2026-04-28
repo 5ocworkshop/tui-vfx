@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_scene.rs</FILE> - <DESC>Multi-element semantic scene composition contract</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_scene.rs</FILE> - <DESC>Multi-element semantic scene composition contract</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>New kernel Phase D1: compose placed semantic elements into one final surface.</WCTX>
 // <CLOG>0.1.0: ADD — lock deterministic placement, z/declaration order, overlap, skip/write, role, clip, and diagnostics semantics.</CLOG>
@@ -112,5 +112,5 @@ fn in_scene_bounds(x: i32, y: i32, width: usize, height: usize) -> Option<(usize
     (x < width && y < height).then_some((x, y))
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_scene.rs</FILE> - <DESC>Multi-element semantic scene composition contract</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_scene.rs</FILE> - <DESC>Multi-element semantic scene composition contract</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>

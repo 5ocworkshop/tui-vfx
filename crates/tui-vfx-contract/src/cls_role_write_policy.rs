@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_role_write_policy.rs</FILE> - <DESC>Semantic role write policy enum</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_role_write_policy.rs</FILE> - <DESC>Semantic role write policy enum</DESC>
 // <VERS>VERSION: 0.4.1</VERS>
 // <WCTX>New kernel Phase D0 verifier fix: make role-write enum wire shape strict and fully described.</WCTX>
 // <CLOG>0.4.1: PATCH — switch explicit-role payload to a named field for strict schema descriptions.
@@ -24,5 +24,5 @@ pub enum RoleWritePolicy {
     },
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_role_write_policy.rs</FILE> - <DESC>Semantic role write policy enum</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_role_write_policy.rs</FILE> - <DESC>Semantic role write policy enum</DESC>
 // <VERS>END OF VERSION: 0.4.1</VERS>

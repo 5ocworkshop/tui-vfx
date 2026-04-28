@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/tr_coordinate_sampler.rs</FILE> - <DESC>Coordinate sampler trait</DESC>
+// <FILE>crates/tui-vfx-contract/src/tr_coordinate_sampler.rs</FILE> - <DESC>Coordinate sampler trait</DESC>
 // <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>New kernel Phase C preflight OFPF split.</WCTX>
 // <CLOG>0.3.0: REFACTOR — extract CoordinateSampler trait.</CLOG>
@@ -18,5 +18,5 @@ pub trait CoordinateSampler {
     ) -> Option<(usize, usize)>;
 }
 
-// <FILE>crates/tui-vfx-next/src/tr_coordinate_sampler.rs</FILE> - <DESC>Coordinate sampler trait</DESC>
+// <FILE>crates/tui-vfx-contract/src/tr_coordinate_sampler.rs</FILE> - <DESC>Coordinate sampler trait</DESC>
 // <VERS>END OF VERSION: 0.3.0</VERS>

@@ -1,16 +1,17 @@
-// <FILE>crates/tui-vfx-next/tests/test_schema_generation.rs</FILE> - <DESC>Proof-pipeline schema generation checks for v3.1 clean-room incubator</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>New kernel Phase E0: keep only proof-pipeline schema roots in tui-vfx-next after contract split.</WCTX>
-// <CLOG>0.4.0: MINOR — move stable contract schema checks to tui-vfx-contract and retain sampler/pipeline proof roots here.
-// 0.3.2: TEST — include public SceneOutcome in checked schema roots.</CLOG>
+// <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
+// <VERS>VERSION: 0.1.0</VERS>
+// <WCTX>New kernel Phase E0: generate stable v3.1 schemas from tui-vfx-contract.</WCTX>
+// <CLOG>0.1.0: INIT — check strict rustdoc-backed schemas for stable surface, scope, write, diagnostic, scene, element, and outcome roots.</CLOG>
 
 use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
-use tui_vfx_next::{PipelineSampler, SurfacePipeline};
+use tui_vfx_contract::{
+    CellWrite, Scene, SceneElement, SceneOutcome, ScopeSpec, Surface, SurfaceDiagnostic,
+};
 
 fn schema_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../schemas/v3.1/next")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../schemas/v3.1/contract")
 }
 
 fn canonical_schema<T: JsonSchema>() -> String {
@@ -22,11 +23,16 @@ fn canonical_schema<T: JsonSchema>() -> String {
 
 fn schema_roots() -> Vec<(&'static str, String)> {
     vec![
-        ("sampler.schema.json", canonical_schema::<PipelineSampler>()),
+        ("surface.schema.json", canonical_schema::<Surface>()),
+        ("scope.schema.json", canonical_schema::<ScopeSpec>()),
+        ("write.schema.json", canonical_schema::<CellWrite>()),
         (
-            "pipeline.schema.json",
-            canonical_schema::<SurfacePipeline>(),
+            "diagnostic.schema.json",
+            canonical_schema::<SurfaceDiagnostic>(),
         ),
+        ("scene.schema.json", canonical_schema::<Scene>()),
+        ("element.schema.json", canonical_schema::<SceneElement>()),
+        ("outcome.schema.json", canonical_schema::<SceneOutcome>()),
     ]
 }
 
@@ -80,25 +86,26 @@ fn assert_properties_are_described(schema: &serde_json::Value, path: &str) {
 }
 
 #[test]
-fn generated_proof_schema_contains_rustdoc_descriptions() {
+fn generated_contract_schema_contains_rustdoc_descriptions() {
     let all_schemas = schema_roots()
         .into_iter()
         .map(|(_, schema)| schema)
         .collect::<Vec<_>>()
         .join("\n");
 
+    assert!(all_schemas.contains("Dense rectangular semantic render surface"));
+    assert!(all_schemas.contains("Minimal Phase A/B scope algebra"));
+    assert!(all_schemas.contains("Policy for how a cell write updates cell channels"));
+    assert!(all_schemas.contains("Structured diagnostic emitted by surface contract operations"));
+    assert!(all_schemas.contains("Scene composed from one or more placed semantic elements"));
+    assert!(all_schemas.contains("One placed semantic surface inside a scene"));
     assert!(
-        all_schemas.contains("Samplers supported by the Phase C toy pipeline stages"),
-        "sampler rustdoc description should be present"
-    );
-    assert!(
-        all_schemas.contains("Ordered multi-stage surface pipeline"),
-        "pipeline rustdoc description should be present"
+        all_schemas.contains("Result of composing scene elements into one final semantic surface")
     );
 }
 
 #[test]
-fn generated_proof_schema_objects_are_strict_and_described() {
+fn generated_contract_schema_objects_are_strict_and_described() {
     for (file_name, schema) in schema_roots() {
         let value: serde_json::Value = serde_json::from_str(&schema).expect("schema is JSON");
         assert_object_shapes_are_strict(&value, file_name);
@@ -107,7 +114,7 @@ fn generated_proof_schema_objects_are_strict_and_described() {
 }
 
 #[test]
-fn checked_in_proof_schemas_are_current() {
+fn checked_in_contract_schemas_are_current() {
     let dir = schema_dir();
     if std::env::var_os("UPDATE_SCHEMAS").is_some() {
         fs::create_dir_all(&dir).expect("schema directory can be created");
@@ -130,5 +137,5 @@ fn checked_in_proof_schemas_are_current() {
     }
 }
 
-// <FILE>crates/tui-vfx-next/tests/test_schema_generation.rs</FILE> - <DESC>Proof-pipeline schema generation checks for v3.1 clean-room incubator</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
+// <VERS>END OF VERSION: 0.1.0</VERS>

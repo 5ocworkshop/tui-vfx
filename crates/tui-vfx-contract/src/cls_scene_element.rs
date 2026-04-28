@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_scene_element.rs</FILE> - <DESC>Placed semantic surface element DTO</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_scene_element.rs</FILE> - <DESC>Placed semantic surface element DTO</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>New kernel Phase D1: represent one local semantic surface inside a composed scene.</WCTX>
 // <CLOG>0.1.0: ADD — introduce schema-ready scene elements with placement, z order, clipping, and write policies.</CLOG>
@@ -45,5 +45,5 @@ impl SceneElement {
     }
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_scene_element.rs</FILE> - <DESC>Placed semantic surface element DTO</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_scene_element.rs</FILE> - <DESC>Placed semantic surface element DTO</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>

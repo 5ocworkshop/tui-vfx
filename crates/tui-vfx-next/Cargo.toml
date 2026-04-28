@@ -1,8 +1,11 @@
-# <FILE>crates/tui-vfx-next/Cargo.toml</FILE> - <DESC>Clean-room v3.1 surface contract spike crate</DESC>
+# <FILE>crates/tui-vfx-next/Cargo.toml</FILE> - <DESC>Clean-room v3.1 proof engine crate manifest</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>New kernel Phase E0: depend on tui-vfx-contract after physical split.</WCTX>
+# <CLOG>0.1.0: INIT — add tui-vfx-contract dependency while keeping proof engine dependencies local.</CLOG>
 
 [package]
 name = "tui-vfx-next"
-description = "Clean-room v3.1 surface contract spike for tui-vfx"
+description = "Clean-room v3.1 proof engine over tui-vfx-contract"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,9 +15,13 @@ keywords.workspace = true
 categories.workspace = true
 
 [dependencies]
+tui-vfx-contract.workspace = true
 tui-vfx-types = { workspace = true, features = ["schemars"] }
 serde.workspace = true
 schemars.workspace = true
 
 [dev-dependencies]
 serde_json.workspace = true
+
+# <FILE>crates/tui-vfx-next/Cargo.toml</FILE> - <DESC>Clean-room v3.1 proof engine crate manifest</DESC>
+# <VERS>END OF VERSION: 0.1.0</VERS>

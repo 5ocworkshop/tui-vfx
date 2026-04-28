@@ -1291,6 +1291,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tui-vfx-contract"
+version = "0.11.0"
+dependencies = [
+ "schemars",
+ "serde",
+ "serde_json",
+ "tui-vfx-types",
+]
+
+[[package]]
 name = "tui-vfx-core"
 version = "0.11.0"
 dependencies = [
@@ -1342,6 +1352,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "tui-vfx-contract",
  "tui-vfx-types",
 ]
 

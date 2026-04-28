@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/fnc_scope_coordinate.rs</FILE> - <DESC>Select scope coordinate from evaluation input</DESC>
+// <FILE>crates/tui-vfx-contract/src/fnc_scope_coordinate.rs</FILE> - <DESC>Select scope coordinate from evaluation input</DESC>
 // <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>New kernel Phase C preflight OFPF split.</WCTX>
 // <CLOG>0.3.0: REFACTOR — extract coordinate selection helper.</CLOG>
@@ -16,5 +16,5 @@ pub(crate) fn scope_coordinate(
     }
 }
 
-// <FILE>crates/tui-vfx-next/src/fnc_scope_coordinate.rs</FILE> - <DESC>Select scope coordinate from evaluation input</DESC>
+// <FILE>crates/tui-vfx-contract/src/fnc_scope_coordinate.rs</FILE> - <DESC>Select scope coordinate from evaluation input</DESC>
 // <VERS>END OF VERSION: 0.3.0</VERS>

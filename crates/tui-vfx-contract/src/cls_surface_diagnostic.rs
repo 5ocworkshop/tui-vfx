@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_surface_diagnostic.rs</FILE> - <DESC>Structured surface diagnostic DTO</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_surface_diagnostic.rs</FILE> - <DESC>Structured surface diagnostic DTO</DESC>
 // <VERS>VERSION: 0.5.1</VERS>
 // <WCTX>New kernel Phase D1 verifier fix: make scene diagnostic paths field-stable.</WCTX>
 // <CLOG>0.5.1: PATCH — use field-stable scene.element[index].id diagnostic paths.
@@ -71,5 +71,5 @@ impl SurfaceDiagnostic {
     }
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_surface_diagnostic.rs</FILE> - <DESC>Structured surface diagnostic DTO</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_surface_diagnostic.rs</FILE> - <DESC>Structured surface diagnostic DTO</DESC>
 // <VERS>END OF VERSION: 0.5.1</VERS>

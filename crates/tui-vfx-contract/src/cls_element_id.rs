@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_element_id.rs</FILE> - <DESC>Stable scene element identifier</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_element_id.rs</FILE> - <DESC>Stable scene element identifier</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>New kernel Phase D1: distinguish element identity from semantic roles in scene composition.</WCTX>
 // <CLOG>0.1.0: ADD — introduce schema-visible element ids for scene diagnostics and future recipe references.</CLOG>
@@ -30,5 +30,5 @@ impl ElementId {
     }
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_element_id.rs</FILE> - <DESC>Stable scene element identifier</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_element_id.rs</FILE> - <DESC>Stable scene element identifier</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>

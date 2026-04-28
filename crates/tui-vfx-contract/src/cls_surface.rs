@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_surface.rs</FILE> - <DESC>Grid-first semantic surface type</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_surface.rs</FILE> - <DESC>Grid-first semantic surface type</DESC>
 // <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>New kernel Phase D0: make Surface schema-reference ready without exposing OwnedGrid storage.</WCTX>
 // <CLOG>0.4.0: PATCH — store explicit width/height/cells/roles fields so Serde/Schemars publish the public surface contract shape while preserving behavior.
@@ -133,5 +133,5 @@ impl Surface {
     }
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_surface.rs</FILE> - <DESC>Grid-first semantic surface type</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_surface.rs</FILE> - <DESC>Grid-first semantic surface type</DESC>
 // <VERS>END OF VERSION: 0.4.0</VERS>

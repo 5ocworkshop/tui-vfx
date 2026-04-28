@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>New kernel Phase D3: add contract/proof boundary guidance and phase history.</WCTX> -->
-<!-- <CLOG>0.5.0: MINOR — add Phase D3 contract/engine boundary guidance and mark D2 complete.
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>New kernel Phase E0: add physical contract split guidance.</WCTX> -->
+<!-- <CLOG>0.6.0: MINOR — add tui-vfx-contract ownership, schema paths, and E0 phase guidance.
+0.5.0: MINOR — add Phase D3 contract/engine boundary guidance and mark D2 complete.
 0.4.0: MINOR — add Phase D2 template composition design history and current-phase guidance.
 0.3.1: PATCH — include public SceneOutcome schema root in D1 guidance.
 0.3.0: MINOR — add Phase D1 scene composition history, schema roots, and verification gate.
@@ -10,7 +11,7 @@
 
 # New Kernel Agent Briefing
 
-This briefing is the reusable starting point for agents working on the clean-room `tui-vfx-next` kernel. It should evolve as phases complete. Phase-specific PRDs and test specs add local detail; this file carries durable institutional knowledge.
+This briefing is the reusable starting point for agents working on the clean-room `tui-vfx-contract` / `tui-vfx-next` kernel stack. It should evolve as phases complete. Phase-specific PRDs and test specs add local detail; this file carries durable institutional knowledge.
 
 ## Mandatory read order
 
@@ -82,11 +83,11 @@ Clean-room source files must follow OFPF naming unless there is a strong Rust mo
 
 Current clean-room convention:
 
-- `crates/tui-vfx-next/src/lib.rs` is the crate-root exception.
-- New source files under `crates/tui-vfx-next/src` should be prefixed (`cls_`, `fnc_`, `tr_`, etc.).
+- `crates/tui-vfx-contract/src/lib.rs` and `crates/tui-vfx-next/src/lib.rs` are crate-root exceptions.
+- New source files under `crates/tui-vfx-contract/src` and `crates/tui-vfx-next/src` should be prefixed (`cls_`, `fnc_`, `tr_`, etc.).
 - Keep one logical unit per file. Split before exceeding hard LOC limits.
 - Do not add broad aggregation files to dodge naming rules.
-- Test files under `crates/tui-vfx-next/tests` should use `test_*.rs`.
+- Test files under `crates/tui-vfx-contract/tests` and `crates/tui-vfx-next/tests` should use `test_*.rs`.
 
 ## Metadata rules
 
@@ -125,7 +126,7 @@ Phase D0 makes this a standing rule for all future clean-room phases:
 - Every public contract-visible type, field, variant, and non-obvious policy/default needs rustdoc.
 - Intentionally internal public helpers must be marked or explained in status docs.
 
-Checked schema roots live under `schemas/v3.1/next/`: surface, scope, write, sampler, pipeline, diagnostic, scene, element, and outcome.
+Checked stable contract schema roots live under `schemas/v3.1/contract/`: surface, scope, write, diagnostic, scene, element, and outcome. Proof-pipeline roots remain under `schemas/v3.1/next/`: sampler and pipeline.
 
 ## Recyclebin protocol
 
@@ -142,7 +143,7 @@ This may not be needed in every phase, but all agents must know the protocol bef
 
 ## Clean-room kernel boundaries
 
-`crates/tui-vfx-next` is a contract proof beside the existing engine.
+`crates/tui-vfx-contract` owns stable v3.1 DTOs and schema roots. `crates/tui-vfx-next` is a proof engine beside the existing legacy engine and depends on `tui-vfx-contract`.
 
 Allowed:
 
@@ -156,6 +157,7 @@ Forbidden unless the owner explicitly changes phase scope:
 - Do not replace/refactor legacy compositor code.
 - Do not port real CRT/typewriter/matrix/shadow/etc. effects.
 - Do not add recipe compiler, studio manifest, phase graph, trigger engine, runtime binding system, or legacy aliases.
+- Do not depend on `tui-vfx-next`, `tui-vfx-compositor`, `tui-vfx-style`, `tui-vfx-content`, or `tui-vfx-shadow` from `tui-vfx-contract`.
 - Do not depend on `tui-vfx-compositor`, `tui-vfx-style`, `tui-vfx-content`, or `tui-vfx-shadow` from `tui-vfx-next`.
 - Do not implement broad descriptor/schema/runtime systems before the architect approves that phase.
 
@@ -223,7 +225,7 @@ Locked:
 
 - Public contract-visible Phase A/B/C types are schema-reference ready.
 - Rustdoc-backed Schemars output proves type, field, and variant descriptions are available to tools.
-- Checked schemas live in `schemas/v3.1/next/`.
+- Checked schemas lived in `schemas/v3.1/next/` through D3; E0 moves stable roots to `schemas/v3.1/contract/`.
 - The architecture overview records the contract-first philosophy and progressive phase stack.
 - Runtime behavior remained unchanged.
 - Descriptor expansion, recipes, studio, runtime bindings, real effects, and legacy migration stayed out of scope.
@@ -249,7 +251,7 @@ Locked:
 - `SkipTransparentEmpty` on a top element preserves lower/current cell and role.
 - `WriteCell` writes transparent empty cells and can clear lower/current content.
 - Scene diagnostics identify element id with paths such as `scene.element[index].id`.
-- Scene, element, and outcome schema roots are checked under `schemas/v3.1/next/`.
+- Scene, element, and outcome schema roots are checked under `schemas/v3.1/contract/` after E0.
 
 Still out of scope:
 
@@ -311,7 +313,7 @@ Key docs:
 
 ### Phase D3 — contract / engine boundary
 
-Current phase.
+Locked.
 
 Target lock:
 
@@ -337,20 +339,49 @@ Key docs:
 - `docs/new_kernel/ARCH-RESP-TO-PHASE_D2.md`
 - `docs/v3.1-contract-boundary.md`
 - `docs/v3.1-surface-contract.md`
-- `docs/new_kernel/PHASE_D3_STATUS.md` once created.
+- `docs/new_kernel/PHASE_D3_STATUS.md`
+- `docs/new_kernel/PHASE_D3_STATUS_MEMO_TO_ARCHITECT.md`
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_D3.md`
+
+
+### Phase E0 — physical contract split
+
+Current phase.
+
+Target lock:
+
+- `crates/tui-vfx-contract` exists and owns stable v3.1 DTOs.
+- `crates/tui-vfx-next` depends on `tui-vfx-contract` and keeps proof execution.
+- `tui-vfx-contract` has no dependency on `tui-vfx-next` or legacy compositor/style/content/shadow crates.
+- Stable schemas generate from `tui-vfx-contract` under `schemas/v3.1/contract/`.
+- Proof-pipeline schemas remain under `schemas/v3.1/next/`.
+- `PipelineStage` remains proof-only and is not promoted to descriptor model.
+- No effect descriptors, recipes, runtime, studio, migration, or real effects are implemented.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_D3.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/new_kernel/PHASE_E0_STATUS.md` once created.
 
 ## Verification gates
 
 Before reporting completion for code changes, run and read output:
 
 ```bash
+cargo fmt --package tui-vfx-contract -- --check
 cargo fmt --package tui-vfx-next -- --check
+cargo clippy -p tui-vfx-contract --all-targets -- -D warnings
 cargo clippy -p tui-vfx-next --all-targets -- -D warnings
+cargo test -p tui-vfx-contract
 cargo test -p tui-vfx-next
-UPDATE_SCHEMAS=1 cargo test -p tui-vfx-next --test test_schema_generation -- checked_in_schemas_are_current
+UPDATE_SCHEMAS=1 cargo test -p tui-vfx-contract --test test_schema_generation -- checked_in_contract_schemas_are_current
+UPDATE_SCHEMAS=1 cargo test -p tui-vfx-next --test test_schema_generation -- checked_in_proof_schemas_are_current
+cargo test -p tui-vfx-contract --test test_schema_generation
 cargo test -p tui-vfx-next --test test_schema_generation
+cargo tree -p tui-vfx-contract
 cargo tree -p tui-vfx-next
-grep -R -nE 'tui_vfx_(compositor|style|content|shadow)|tui-vfx-(compositor|style|content|shadow)' crates/tui-vfx-next
+grep -R -nE 'tui_vfx_(compositor|style|content|shadow)|tui-vfx-(compositor|style|content|shadow)' crates/tui-vfx-contract crates/tui-vfx-next
 ```
 
 For phase completion, also run:
@@ -359,7 +390,8 @@ For phase completion, also run:
 cargo test --workspace
 ```
 
-The forbidden dependency grep should produce no matches. `cargo tree -p tui-vfx-next` should show no dependency on compositor/style/content/shadow crates.
+The forbidden dependency grep should produce no matches. `cargo tree -p tui-vfx-contract
+cargo tree -p tui-vfx-next` should show no dependency on compositor/style/content/shadow crates.
 
 ## Subagent packet requirements
 
@@ -390,4 +422,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->

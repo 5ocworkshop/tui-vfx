@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_scene_outcome.rs</FILE> - <DESC>Scene composition outcome DTO</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_scene_outcome.rs</FILE> - <DESC>Scene composition outcome DTO</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>New kernel Phase D1: report final composed surface and deterministic scene diagnostics.</WCTX>
 // <CLOG>0.1.0: ADD — introduce schema-ready scene composition outcome.</CLOG>
@@ -21,5 +21,5 @@ pub struct SceneOutcome {
     pub diagnostics: Vec<SurfaceDiagnostic>,
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_scene_outcome.rs</FILE> - <DESC>Scene composition outcome DTO</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_scene_outcome.rs</FILE> - <DESC>Scene composition outcome DTO</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>

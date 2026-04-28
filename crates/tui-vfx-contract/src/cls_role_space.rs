@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_role_space.rs</FILE> - <DESC>Role scope source enum</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_role_space.rs</FILE> - <DESC>Role scope source enum</DESC>
 // <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>New kernel Phase D0 schema/reference backfill after Phase C preflight OFPF split.</WCTX>
 // <CLOG>0.4.0: PATCH — add Serde/Schemars schema-reference readiness while preserving runtime behavior.
@@ -25,5 +25,5 @@ pub enum RoleSpace {
     Destination,
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_role_space.rs</FILE> - <DESC>Role scope source enum</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_role_space.rs</FILE> - <DESC>Role scope source enum</DESC>
 // <VERS>END OF VERSION: 0.4.0</VERS>

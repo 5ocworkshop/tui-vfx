@@ -1,0 +1,26 @@
+# <FILE>crates/tui-vfx-contract/Cargo.toml</FILE> - <DESC>v3.1 public contract DTO crate manifest</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>New kernel Phase E0: split stable contract DTOs out of tui-vfx-next before descriptor work.</WCTX>
+# <CLOG>0.1.0: INIT — add contract crate with foundational tui-vfx-types, serde, and schemars dependencies.</CLOG>
+
+[package]
+name = "tui-vfx-contract"
+description = "Stable v3.1 contract DTOs for tui-vfx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+tui-vfx-types = { workspace = true, features = ["schemars"] }
+serde.workspace = true
+schemars.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+# <FILE>crates/tui-vfx-contract/Cargo.toml</FILE> - <DESC>v3.1 public contract DTO crate manifest</DESC>
+# <VERS>END OF VERSION: 0.1.0</VERS>

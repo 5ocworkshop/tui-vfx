@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.7.0</VERS> -->
-<!-- <WCTX>New kernel Phase D3: add contract boundary docs and phase status artifacts.</WCTX> -->
-<!-- <CLOG>0.7.0: MINOR — add Phase D2 architect response, D3 boundary doc, and D3 status artifacts.
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <WCTX>New kernel Phase E0: add physical contract split artifacts.</WCTX> -->
+<!-- <CLOG>0.8.0: MINOR — add Phase D3 architect response, E0 status artifacts, and contract/proof schema path split.
+0.7.0: MINOR — add Phase D2 architect response, D3 boundary doc, and D3 status artifacts.
 0.6.0: MINOR — add preserved contract-add decision tree supporting artifact.
 0.5.0: MINOR — add Phase D1 architect response plus Phase D2 template composition artifacts.
 0.4.0: MINOR — add Phase D1 architect status memo.
@@ -24,8 +25,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 ## v3.1 contract docs one level up
 
 - [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, and D3 boundary.
-- [`../v3.1-contract-boundary.md`](../v3.1-contract-boundary.md) — Phase D3 classification of contract vocabulary, proof implementation, and schema roots.
-- [`../v3.1-surface-contract.md`](../v3.1-surface-contract.md) — current clean-room surface/sampling/pipeline contract proven by `tui-vfx-next`.
+- [`../v3.1-contract-boundary.md`](../v3.1-contract-boundary.md) — D3/E0 classification of contract vocabulary, proof implementation, crate ownership, and schema roots.
+- [`../v3.1-surface-contract.md`](../v3.1-surface-contract.md) — current clean-room surface/sampling/pipeline/scene contract owned by `tui-vfx-contract` and proven by `tui-vfx-next`.
 - [`../v3.1-feature-contract-checklist.md`](../v3.1-feature-contract-checklist.md) — reusable decision checklist for future contract-affecting features.
 - [`../v3.1-template-composition.md`](../v3.1-template-composition.md) — Phase D2 design for compile-time template composition into canonical recipes.
 
@@ -37,6 +38,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_D0.md`](ARCH-RESP-TO-PHASE_D0.md) — Phase D0 approval and Phase D1 scene/element/layer recommendation.
 - [`ARCH-RESP-TO-PHASE_D1.md`](ARCH-RESP-TO-PHASE_D1.md) — Phase D1 approval and Phase D2 template composition recommendation.
 - [`ARCH-RESP-TO-PHASE_D2.md`](ARCH-RESP-TO-PHASE_D2.md) — Phase D2 approval and Phase D3 contract/engine boundary recommendation.
+- [`ARCH-RESP-TO-PHASE_D3.md`](ARCH-RESP-TO-PHASE_D3.md) — Phase D3 approval and Phase E0 physical contract split recommendation.
 
 ## Status and memo artifacts
 
@@ -53,6 +55,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_D2_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_D2_STATUS_MEMO_TO_ARCHITECT.md) — Phase D2 architect memo requesting next assignment.
 - [`PHASE_D3_STATUS.md`](PHASE_D3_STATUS.md) — concise Phase D3 contract/engine boundary status.
 - [`PHASE_D3_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_D3_STATUS_MEMO_TO_ARCHITECT.md) — Phase D3 architect memo requesting next assignment.
+- [`PHASE_E0_STATUS.md`](PHASE_E0_STATUS.md) — concise Phase E0 physical contract split status.
+- [`PHASE_E0_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_E0_STATUS_MEMO_TO_ARCHITECT.md) — Phase E0 architect memo requesting next assignment.
 
 ## Supporting artifacts
 
@@ -62,7 +66,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 
 ## Schema artifacts
 
-- [`../../schemas/v3.1/next/`](../../schemas/v3.1/next/) — checked generated schemas for surface, scope, write, sampler, pipeline, diagnostics, scene, element, and outcome. Phase D3 changes no schema roots; it classifies sampler/pipeline roots as proof-pipeline artifacts.
+- [`../../schemas/v3.1/contract/`](../../schemas/v3.1/contract/) — checked generated stable contract schemas for surface, scope, write, diagnostics, scene, element, and outcome.
+- [`../../schemas/v3.1/next/`](../../schemas/v3.1/next/) — checked generated proof-pipeline schemas for sampler and pipeline artifacts.
 
 ## Ralph planning artifacts
 

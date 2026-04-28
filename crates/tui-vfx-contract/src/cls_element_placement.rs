@@ -1,4 +1,4 @@
-// <FILE>crates/tui-vfx-next/src/cls_element_placement.rs</FILE> - <DESC>Element-local to scene-coordinate placement</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_element_placement.rs</FILE> - <DESC>Element-local to scene-coordinate placement</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
 // <WCTX>New kernel Phase D1: lock signed scene placement for partially visible elements.</WCTX>
 // <CLOG>0.1.0: ADD — introduce schema-visible element placement in scene coordinates.</CLOG>
@@ -22,5 +22,5 @@ impl ElementPlacement {
     }
 }
 
-// <FILE>crates/tui-vfx-next/src/cls_element_placement.rs</FILE> - <DESC>Element-local to scene-coordinate placement</DESC>
+// <FILE>crates/tui-vfx-contract/src/cls_element_placement.rs</FILE> - <DESC>Element-local to scene-coordinate placement</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>
