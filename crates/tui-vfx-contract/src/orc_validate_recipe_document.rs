@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/orc_validate_recipe_document.rs</FILE> - <DESC>Validate canonical recipe document contracts</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase H1: validate cross-document recipe references.</WCTX>
-// <CLOG>0.1.0: INIT — validate recipe assets, source instances, graph, scenes, and element pipelines.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase I0: validate recipe lifecycle against graph parameters and signals.</WCTX>
+// <CLOG>0.2.0: MINOR — validate optional recipe lifecycle sources and predicates.
+// 0.1.0: INIT — validate recipe assets, source instances, graph, scenes, and element pipelines.</CLOG>
 
 use std::collections::BTreeSet;
 
@@ -20,6 +21,9 @@ pub(crate) fn validate_recipe_document(
     }
 
     recipe.graph.validate()?;
+    if let Some(lifecycle) = &recipe.lifecycle {
+        lifecycle.validate(&recipe.graph.parameters, &recipe.graph.signals)?;
+    }
     validate_assets(recipe)?;
     validate_source_descriptors(recipe)?;
     validate_sources(recipe)?;
@@ -178,4 +182,4 @@ fn validate_pipeline_node(
 }
 
 // <FILE>crates/tui-vfx-contract/src/orc_validate_recipe_document.rs</FILE> - <DESC>Validate canonical recipe document contracts</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

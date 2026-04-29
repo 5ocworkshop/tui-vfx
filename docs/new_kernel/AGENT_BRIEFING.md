@@ -1,7 +1,9 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.16.0</VERS> -->
-<!-- <WCTX>New kernel Phase H1: add canonical recipe document and vocabulary guidance.</WCTX> -->
-<!-- <CLOG>0.16.0: MINOR — add Phase H1 canonical recipe document, vocabulary, and recipe-evidence guidance.
+<!-- <VERS>VERSION: 0.17.1</VERS> -->
+<!-- <WCTX>New kernel Phase I0: add lifecycle/time/trigger contract guidance.</WCTX> -->
+<!-- <CLOG>0.17.1: PATCH — clarify recipe evidence root under tui-vfx-recipes debug_recipes.
+0.17.0: MINOR — add Phase I0 lifecycle/time/trigger vocabulary and deferral guidance.
+0.16.0: MINOR — add Phase H1 canonical recipe document, vocabulary, and recipe-evidence guidance.
 0.15.0: MINOR — add Phase H0 source/asset contract rules and contextual recipe-example read list.
 0.14.0: MINOR — replace role-suppressed gpt-5.5 dispatch guidance with role-routed OMX profile guidance.
 0.13.0: MINOR — add Phase G4 node I/O, graph value bus, and spatial field guidance.
@@ -557,6 +559,8 @@ Target lock:
 
 Context examples requested by the owner:
 
+Recipe evidence root for these examples is `/usr/projects/tui-vfx-recipes/recipes/debug_recipes`. Paths below are absolute to avoid ambiguity for subagents.
+
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_authoring_ladder_flag_asset_binding.json`
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_braille_flag_asset_token.json`
 - `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json`
@@ -585,7 +589,7 @@ Key docs:
 
 ### Phase H1 — canonical recipe document schema
 
-Current phase.
+Completed phase.
 
 Target lock:
 
@@ -617,6 +621,45 @@ Key docs:
 - `docs/v3.1-architecture-overview.md`
 - `docs/v3.1-contract-boundary.md`
 - `docs/new_kernel/PHASE_H1_STATUS.md` once created.
+
+
+### Phase I0 — time / lifecycle / trigger contract
+
+Current phase lock.
+
+Target lock:
+
+- `RecipeDocument.lifecycle: Option<LifecycleSpec>` attaches optional recipe-level lifecycle semantics to the canonical recipe root.
+- `ClockSpec` defines the lifecycle time sample space; `ClockMode::Looping` requires a period and `ClockMode::Monotonic` rejects one.
+- `LifecycleSpec` owns ordered `enter`, `dwell`, and `exit` phases.
+- `PhaseSpec` and `PhaseTiming` distinguish fixed phase durations from dwell-specific policy.
+- `DwellPolicy::Until` uses `maxDuration` as a cap; do not preserve legacy fallback naming.
+- `TriggerSpec` owns condition, latch, reset, and action. A trigger is not just a binding or value source.
+- `TriggerCondition` uses existing `ValueSource` plus typed `ValuePredicate`, but recipe-level lifecycle triggers reject `ValueSource::GraphValue`.
+- Prefer explicit predicates (`isTrue`, `nonZero`, `nonEmpty`, comparisons) over `truthy`; `truthy` is a documented/tested convenience, not the only semantics.
+- Host event-like inputs should generally be `SignalSpec` examples/tests rather than parameterized legacy `requires_bindings` language.
+- `docs/VOCABULARY.md` must preserve these distinctions: clock, lifecycle, phase, trigger, gate, binding/value source, loopback, effect-local schedule.
+
+Non-canonical evidence examples:
+
+- `dwell_until_binding`
+- `dwell_fallback_ms`
+- loopback demo wiring
+- scene visibility predicates
+- glyph timeline / poisson / wavefront local schedule names
+
+Hard deferrals during I0:
+
+- Do not implement runtime player, trigger engine, `ParameterStore` / `SignalStore`, binding execution, loopback execution, migration/lowering, template expansion, scene visibility gate execution, phase graph execution, effect-local schedule unification, source authoring syntax, studio manifests, real ports, or legacy aliases.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_H1.md`
+- `docs/VOCABULARY.md`
+- `docs/new_kernel/I0_EVENT_DWELL_EVIDENCE_NOTES.md`
+- `docs/v3.1-architecture-overview.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/new_kernel/PHASE_I0_STATUS.md` once created.
 
 ## Verification gates
 
@@ -680,4 +723,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.16.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.17.1</VERS> -->

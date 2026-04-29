@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
-// <WCTX>New kernel Phase H1: include canonical recipe document schema roots.</WCTX>
-// <CLOG>0.9.0: MINOR — add canonical recipe document schema fixtures.
+// <VERS>VERSION: 0.10.0</VERS>
+// <WCTX>New kernel Phase I0: include lifecycle, clock, duration, phase, trigger, and predicate schema roots.</WCTX>
+// <CLOG>0.10.0: MINOR — add lifecycle/time/trigger schema fixtures.
+// 0.9.0: MINOR — add canonical recipe document schema fixtures.
 // 0.8.0: MINOR — add source and asset schema fixtures.
 // 0.7.0: MINOR — add graph value and node output schema fixtures.
 // 0.6.0: MINOR — add graph-step schema fixture.
@@ -15,12 +16,13 @@ use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
-    AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, EffectDescriptor,
-    EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId, GraphValueKind,
-    GraphValueMergePolicy, GraphValueShape, NodeOutputSpec, NodeSpec, ParameterSpec,
-    RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene, RecipeSceneElement, Scene,
-    SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor, SourceInputSpec,
-    SourceInstanceId, SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
+    AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, DurationSpec,
+    DwellPolicy, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep,
+    GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec,
+    NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument, RecipeElementPipeline,
+    RecipeMetadata, RecipeScene, RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec,
+    SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec,
+    Surface, SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -51,6 +53,19 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         ("parameter.schema.json", canonical_schema::<ParameterSpec>()),
         ("signal.schema.json", canonical_schema::<SignalSpec>()),
         ("binding.schema.json", canonical_schema::<BindingSpec>()),
+        ("duration.schema.json", canonical_schema::<DurationSpec>()),
+        ("clock.schema.json", canonical_schema::<ClockSpec>()),
+        (
+            "dwell-policy.schema.json",
+            canonical_schema::<DwellPolicy>(),
+        ),
+        ("trigger.schema.json", canonical_schema::<TriggerSpec>()),
+        (
+            "value-predicate.schema.json",
+            canonical_schema::<ValuePredicate>(),
+        ),
+        ("phase.schema.json", canonical_schema::<PhaseSpec>()),
+        ("lifecycle.schema.json", canonical_schema::<LifecycleSpec>()),
         ("asset.schema.json", canonical_schema::<AssetSpec>()),
         (
             "asset-requirement.schema.json",
@@ -227,6 +242,22 @@ fn binding_schema_is_current() {
 }
 
 #[test]
+fn lifecycle_schema_roots_are_current() {
+    assert_schema_fixture_current::<DurationSpec>("duration.schema.json");
+    assert_schema_fixture_current::<ClockSpec>("clock.schema.json");
+    assert_schema_fixture_current::<DwellPolicy>("dwell-policy.schema.json");
+    assert_schema_fixture_current::<TriggerSpec>("trigger.schema.json");
+    assert_schema_fixture_current::<ValuePredicate>("value-predicate.schema.json");
+    assert_schema_fixture_current::<PhaseSpec>("phase.schema.json");
+    assert_schema_fixture_current::<LifecycleSpec>("lifecycle.schema.json");
+}
+
+#[test]
+fn recipe_schema_generation_is_current() {
+    assert_schema_fixture_current::<RecipeDocument>("recipe.schema.json");
+}
+
+#[test]
 fn source_schema_roots_are_current() {
     assert_schema_fixture_current::<AssetSpec>("asset.schema.json");
     assert_schema_fixture_current::<AssetRequirement>("asset-requirement.schema.json");
@@ -368,6 +399,18 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
     assert!(all_schemas.contains("Minimal lifecycle metadata declared by an effect descriptor"));
     assert!(all_schemas.contains("Whether later phases may bind this input to a source"));
     assert!(all_schemas.contains("When this input value may change during the effect lifecycle"));
+    assert!(
+        all_schemas.contains(
+            "Recipe-level lifecycle contract from enter through dwell and exit to finished"
+        )
+    );
+    assert!(all_schemas.contains(
+        "Canonical lifecycle trigger with explicit condition, latch, reset, and action semantics"
+    ));
+    assert!(
+        all_schemas
+            .contains("Policy controlling how long the dwell lifecycle phase remains active")
+    );
 }
 
 #[test]
@@ -404,4 +447,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.9.0</VERS>
+// <VERS>END OF VERSION: 0.10.0</VERS>

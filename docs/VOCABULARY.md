@@ -1,7 +1,9 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
-<!-- <WCTX>New kernel Phase H1: align vocabulary with canonical recipe document contracts.</WCTX> -->
-<!-- <CLOG>0.2.0: MINOR — add H1 RecipeDocument/RecipeScene/RecipeSceneElement/RecipeElementPipeline terms and clarify source-local pipeline seam.
+<!-- <VERS>VERSION: 0.3.1</VERS> -->
+<!-- <WCTX>New kernel Phase I0: define lifecycle, clock, phase, trigger, gate, loopback, and effect-local schedule distinctions.</WCTX> -->
+<!-- <CLOG>0.3.1: PATCH — document Truthy predicate per-kind semantics and maxDuration wire casing.
+0.3.0: MINOR — add I0 lifecycle/time/trigger vocabulary and distinctions.
+0.2.0: MINOR — add H1 RecipeDocument/RecipeScene/RecipeSceneElement/RecipeElementPipeline terms and clarify source-local pipeline seam.
 0.1.0: INIT — define canonical v3.1 terms, legacy distinctions, naming rules, deferrals, and change policy.</CLOG> -->
 
 # v3.1 Vocabulary
@@ -88,6 +90,156 @@ Example:
   "mode": "replace"
 }
 ```
+
+
+### Clock
+
+Definition:
+: The time sample space used to evaluate recipe-level lifecycle timing. A clock may be monotonic or looping, but the clock only defines how time is sampled; it does not itself choose lifecycle transitions.
+
+Rust contract type, if any:
+: `ClockSpec`, `ClockMode`, `DurationSpec`.
+
+JSON/schema surface, if any:
+: `schemas/v3.1/contract/clock.schema.json`, `duration.schema.json`.
+
+Not the same as:
+: A lifecycle phase, a trigger, or an effect-local schedule.
+
+Example:
+
+```json
+{ "mode": "looping", "period": { "kind": "milliseconds", "value": 1200 } }
+```
+
+### Lifecycle
+
+Definition:
+: The high-level recipe progression from enter to dwell to exit to finished. Recipe lifecycle is declarative contract data; Phase I0 does not implement a runtime player.
+
+Rust contract type, if any:
+: `LifecycleSpec`, `PhaseSpec`, `PhaseTiming`, `DwellPolicy`.
+
+JSON/schema surface, if any:
+: `schemas/v3.1/contract/lifecycle.schema.json`, `phase.schema.json`.
+
+Not the same as:
+: Graph execution, scene visibility execution, template expansion, migration, or source-local pipeline behavior.
+
+Example:
+
+```json
+{
+  "clock": { "mode": "monotonic" },
+  "phases": [
+    { "phase": "enter", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 120 } } },
+    { "phase": "dwell", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 5000 } } },
+    { "phase": "exit", "timing": { "kind": "fixed", "duration": { "kind": "milliseconds", "value": 180 } } }
+  ]
+}
+```
+
+### Phase
+
+Definition:
+: A named lifecycle interval with timing semantics. The initial recipe-level phase vocabulary is `enter`, `dwell`, and `exit`.
+
+Rust contract type, if any:
+: `LifecyclePhase`, `PhaseSpec`, `PhaseTiming`.
+
+JSON/schema surface, if any:
+: `schemas/v3.1/contract/phase.schema.json`.
+
+Not the same as:
+: An effect-local schedule or a graph topology step.
+
+### Trigger
+
+Definition:
+: A condition that requests an explicit lifecycle action when it fires, such as advancing from dwell to exit. A trigger has condition, latch policy, reset boundary, and action; those semantics must not be hidden in a value source.
+
+Rust contract type, if any:
+: `TriggerSpec`, `TriggerCondition`, `ValuePredicate`, `TriggerLatchPolicy`, `TriggerResetBoundary`, `TriggerAction`.
+
+JSON/schema surface, if any:
+: `schemas/v3.1/contract/trigger.schema.json`, `value-predicate.schema.json`.
+
+Not the same as:
+: A gate, a binding, a loopback, or `GlyphTimelineTriggerSpec`.
+
+Legacy/source-authoring synonyms, if useful:
+: Legacy `dwell_until_binding` is evidence for a lifecycle trigger, not a canonical field name. Legacy `dwell_fallback_ms` maps conceptually to a dwell `maxDuration` cap. The public JSON wire name is `maxDuration`; `max_duration` is not canonical.
+
+Truthy predicate semantics, if used:
+: `truthy` is a level predicate, not an edge trigger. I0 truth rules are boolean true, integer non-zero, finite number non-zero, string/text non-empty, color value present, and finite duration non-zero. `null`, enum, role, scope, and rect values have no I0 truth rule and must be rejected for `truthy`. Prefer explicit predicates (`isTrue`, `nonZero`, `nonEmpty`, comparisons) when the value kind is known.
+
+Example:
+
+```json
+{
+  "condition": {
+    "source": { "kind": "signal", "id": "userDismissed", "fallback": { "kind": "boolean", "value": false } },
+    "predicate": { "kind": "isTrue" }
+  },
+  "latch": "untilPhaseReset",
+  "reset": "phaseStart",
+  "action": "advancePhase"
+}
+```
+
+### Gate
+
+Definition:
+: A continuously sampled visibility or execution condition. Gates can show, hide, enable, or suppress something while a condition is true, but they do not request lifecycle transition actions.
+
+Rust contract type, if any:
+: Deferred for scene visibility/execution in Phase I0.
+
+JSON/schema surface, if any:
+: None in Phase I0.
+
+Not the same as:
+: A trigger. Trigger ≠ Gate. A gate does not advance lifecycle.
+
+### Loopback
+
+Definition:
+: A preview/demo value provider used when no host value is present. Loopback can supply values for examples and tests, but it does not define trigger semantics.
+
+Rust contract type, if any:
+: Deferred for demo/player work in Phase I0.
+
+JSON/schema surface, if any:
+: None in Phase I0.
+
+Not the same as:
+: A trigger or binding. Trigger ≠ Loopback. A loopback may feed a signal or parameter in a future demo layer, but lifecycle contract semantics still live in `TriggerSpec`.
+
+### Effect-local schedule
+
+Definition:
+: Per-effect activation timing such as glyph timelines, poisson bursts, wavefronts, or staggered cells. It belongs to effect/source internals or future descriptors, not recipe-level lifecycle progression.
+
+Rust contract type, if any:
+: Existing compositor/style schedule types are evidence only; no canonical Phase I0 contract root adopts their shape.
+
+JSON/schema surface, if any:
+: None in Phase I0.
+
+Not the same as:
+: Recipe lifecycle, phase timing, trigger, or gate. Lifecycle trigger ≠ GlyphTimelineTriggerSpec.
+
+### Trigger distinction rules
+
+```text
+Trigger ≠ Gate
+Trigger ≠ Binding
+Trigger ≠ Loopback
+Trigger ≠ ValueSource
+Lifecycle trigger ≠ GlyphTimelineTriggerSpec
+```
+
+A Binding / ValueSource supplies a value. A Trigger uses a `ValueSource` plus a typed `ValuePredicate` to request a lifecycle action.
 
 ### Demo
 

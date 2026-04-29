@@ -135,6 +135,7 @@ fn valid_recipe() -> RecipeDocument {
             authors: vec!["new-kernel".to_string()],
             tags: vec!["proof".to_string()],
         },
+        lifecycle: None,
         assets: BTreeMap::new(),
         source_descriptors: BTreeMap::from([(SourceId::new("source.text"), text_descriptor())]),
         sources: BTreeMap::from([(SourceInstanceId::new("heroText"), text_source())]),

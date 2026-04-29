@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DurationSpec",
+  "description": "Canonical duration used by lifecycle and trigger contracts.",
+  "oneOf": [
+    {
+      "description": "Duration expressed as whole milliseconds.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "milliseconds"
+        },
+        "value": {
+          "description": "Non-negative millisecond count.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ]
+    },
+    {
+      "description": "Duration expressed as finite seconds.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "seconds"
+        },
+        "value": {
+          "description": "Non-negative finite seconds.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ]
+    }
+  ]
+}

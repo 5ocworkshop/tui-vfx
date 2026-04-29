@@ -27,6 +27,17 @@
       "description": "Stable canonical recipe identifier.",
       "$ref": "#/$defs/RecipeId"
     },
+    "lifecycle": {
+      "description": "Optional recipe-level lifecycle semantics for enter, dwell, and exit.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LifecycleSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "metadata": {
       "description": "Human-facing metadata carried with the canonical document.",
       "$ref": "#/$defs/RecipeMetadata"
@@ -474,6 +485,46 @@
         }
       ]
     },
+    "ClockMode": {
+      "description": "Time sample-space mode for recipe-level lifecycle evaluation.",
+      "oneOf": [
+        {
+          "description": "Time advances monotonically for one recipe lifecycle pass.",
+          "type": "string",
+          "const": "monotonic"
+        },
+        {
+          "description": "Time wraps by an explicit period for preview/repeating lifecycle semantics.",
+          "type": "string",
+          "const": "looping"
+        }
+      ]
+    },
+    "ClockSpec": {
+      "description": "Recipe-level clock contract for lifecycle phase timing.",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "Time sample-space mode.",
+          "$ref": "#/$defs/ClockMode"
+        },
+        "period": {
+          "description": "Loop period required only when mode is `looping`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DurationSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ]
+    },
     "Color": {
       "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
       "type": "object",
@@ -527,6 +578,106 @@
           "description": "Sampled-source local coordinates. Present to make the contract explicit.",
           "type": "string",
           "const": "sampledSource"
+        }
+      ]
+    },
+    "DurationSpec": {
+      "description": "Canonical duration used by lifecycle and trigger contracts.",
+      "oneOf": [
+        {
+          "description": "Duration expressed as whole milliseconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "milliseconds"
+            },
+            "value": {
+              "description": "Non-negative millisecond count.",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration expressed as finite seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "seconds"
+            },
+            "value": {
+              "description": "Non-negative finite seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "DwellPolicy": {
+      "description": "Policy controlling how long the dwell lifecycle phase remains active.",
+      "oneOf": [
+        {
+          "description": "Dwell lasts for a fixed duration.",
+          "type": "object",
+          "properties": {
+            "duration": {
+              "description": "Duration of the dwell interval.",
+              "$ref": "#/$defs/DurationSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "fixed"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "duration"
+          ]
+        },
+        {
+          "description": "Dwell lasts until a lifecycle trigger fires, optionally capped by maxDuration.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "until"
+            },
+            "maxDuration": {
+              "description": "Maximum dwell duration before progressing even if the trigger never fires.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DurationSpec"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "trigger": {
+              "description": "Trigger that can end the dwell interval.",
+              "$ref": "#/$defs/TriggerSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "trigger"
+          ]
         }
       ]
     },
@@ -1064,6 +1215,48 @@
       "description": "Optional scene layer identity used for grouping elements without a full layer graph.",
       "type": "string"
     },
+    "LifecyclePhase": {
+      "description": "Named high-level interval in a recipe lifecycle.",
+      "oneOf": [
+        {
+          "description": "Initial appearance or setup interval.",
+          "type": "string",
+          "const": "enter"
+        },
+        {
+          "description": "Sustained interval that may be fixed or trigger-terminated.",
+          "type": "string",
+          "const": "dwell"
+        },
+        {
+          "description": "Final departure or teardown interval.",
+          "type": "string",
+          "const": "exit"
+        }
+      ]
+    },
+    "LifecycleSpec": {
+      "description": "Recipe-level lifecycle contract from enter through dwell and exit to finished.",
+      "type": "object",
+      "properties": {
+        "clock": {
+          "description": "Clock that defines the recipe-level time sample space.",
+          "$ref": "#/$defs/ClockSpec"
+        },
+        "phases": {
+          "description": "Ordered phase contracts. The initial profile is enter, dwell, then exit.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PhaseSpec"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "clock",
+        "phases"
+      ]
+    },
     "NodeId": {
       "description": "Stable node identifier inside a canonical graph.",
       "type": "string",
@@ -1286,6 +1479,68 @@
         "id",
         "value",
         "bindable"
+      ]
+    },
+    "PhaseSpec": {
+      "description": "One named lifecycle interval and its timing semantics.",
+      "type": "object",
+      "properties": {
+        "phase": {
+          "description": "Named lifecycle interval.",
+          "$ref": "#/$defs/LifecyclePhase"
+        },
+        "timing": {
+          "description": "Timing semantics for this interval.",
+          "$ref": "#/$defs/PhaseTiming"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "timing"
+      ]
+    },
+    "PhaseTiming": {
+      "description": "Timing semantics for one named lifecycle phase.",
+      "oneOf": [
+        {
+          "description": "Phase lasts for a fixed duration.",
+          "type": "object",
+          "properties": {
+            "duration": {
+              "description": "Duration of the phase interval.",
+              "$ref": "#/$defs/DurationSpec"
+            },
+            "kind": {
+              "type": "string",
+              "const": "fixed"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "duration"
+          ]
+        },
+        {
+          "description": "Dwell-specific timing policy.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "dwell"
+            },
+            "policy": {
+              "description": "Policy controlling dwell completion.",
+              "$ref": "#/$defs/DwellPolicy"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "policy"
+          ]
+        }
       ]
     },
     "RecipeElementPipeline": {
@@ -2380,6 +2635,104 @@
         "inputs"
       ]
     },
+    "TriggerAction": {
+      "description": "Lifecycle action requested when a trigger fires.",
+      "oneOf": [
+        {
+          "description": "Advance from the current phase to the next lifecycle phase.",
+          "type": "string",
+          "const": "advancePhase"
+        },
+        {
+          "description": "Finish the recipe lifecycle immediately.",
+          "type": "string",
+          "const": "finishRecipe"
+        }
+      ]
+    },
+    "TriggerCondition": {
+      "description": "Condition that can fire a lifecycle trigger when its predicate passes.",
+      "type": "object",
+      "properties": {
+        "predicate": {
+          "description": "Typed predicate applied to the sampled source value.",
+          "$ref": "#/$defs/ValuePredicate"
+        },
+        "source": {
+          "description": "Source sampled to evaluate the trigger condition.",
+          "$ref": "#/$defs/ValueSource"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "predicate"
+      ]
+    },
+    "TriggerLatchPolicy": {
+      "description": "Whether a lifecycle trigger remains fired after its condition first passes.",
+      "oneOf": [
+        {
+          "description": "Trigger is sampled each time and does not latch.",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "Trigger remains fired until the current lifecycle phase resets.",
+          "type": "string",
+          "const": "untilPhaseReset"
+        },
+        {
+          "description": "Trigger remains fired until the whole recipe lifecycle resets.",
+          "type": "string",
+          "const": "untilRecipeReset"
+        }
+      ]
+    },
+    "TriggerResetBoundary": {
+      "description": "Boundary that resets a lifecycle trigger's sampled/latch state.",
+      "oneOf": [
+        {
+          "description": "Reset when entering the phase that owns the trigger.",
+          "type": "string",
+          "const": "phaseStart"
+        },
+        {
+          "description": "Reset when the whole recipe lifecycle restarts.",
+          "type": "string",
+          "const": "recipeStart"
+        }
+      ]
+    },
+    "TriggerSpec": {
+      "description": "Canonical lifecycle trigger with explicit condition, latch, reset, and action semantics.",
+      "type": "object",
+      "properties": {
+        "action": {
+          "description": "Lifecycle action requested when the trigger fires.",
+          "$ref": "#/$defs/TriggerAction"
+        },
+        "condition": {
+          "description": "Condition sampled to determine whether the trigger fires.",
+          "$ref": "#/$defs/TriggerCondition"
+        },
+        "latch": {
+          "description": "Whether the trigger remains fired after first passing.",
+          "$ref": "#/$defs/TriggerLatchPolicy"
+        },
+        "reset": {
+          "description": "Boundary at which sampled/latch state is reset.",
+          "$ref": "#/$defs/TriggerResetBoundary"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "condition",
+        "latch",
+        "reset",
+        "action"
+      ]
+    },
     "Value": {
       "description": "Canonical tagged literal value used by effect input specs.",
       "oneOf": [
@@ -2673,6 +3026,157 @@
           "description": "Cell rectangle value.",
           "type": "string",
           "const": "rect"
+        }
+      ]
+    },
+    "ValuePredicate": {
+      "description": "Typed predicate evaluated against a lifecycle trigger value source.",
+      "oneOf": [
+        {
+          "description": "Source value must be boolean true.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "isTrue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source value must be boolean false.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "isFalse"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source value must be a non-zero integer, number, or duration.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "nonZero"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source value must be a non-empty string or text value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "nonEmpty"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source value must equal the typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "equals"
+            },
+            "value": {
+              "description": "Typed literal used for equality comparison.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value must not equal the typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "notEquals"
+            },
+            "value": {
+              "description": "Typed literal used for inequality comparison.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value must be greater than the typed numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "greaterThan"
+            },
+            "value": {
+              "description": "Typed numeric literal used as the exclusive lower bound.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value must be less than the typed numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "lessThan"
+            },
+            "value": {
+              "description": "Typed numeric literal used as the exclusive upper bound.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Convenience level predicate with documented per-kind truthiness behavior.\n\nThe contract truth table is boolean true, integer non-zero, finite number\nnon-zero, string/text non-empty, color value present, and finite duration\nnon-zero. Null, enum, role, scope, and rect have no I0 truth rule.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "truthy"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
         }
       ]
     },

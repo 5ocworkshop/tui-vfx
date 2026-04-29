@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>New kernel Phase H1: report recipe document validation failures.</WCTX>
-// <CLOG>0.7.0: MINOR — add recipe document, source instance, scene, and element-pipeline validation errors.
+// <CLOG>0.8.0: MINOR — add lifecycle clock, phase, trigger, and predicate validation errors.
+// 0.7.0: MINOR — add recipe document, source instance, scene, and element-pipeline validation errors.
 // 0.6.0: MINOR — add source descriptor, source input, asset reference, and source asset compatibility errors.
 // 0.5.0: MINOR — add effect output, graph value, and node output validation errors.
 // 0.4.0: MINOR — add graph and node validation errors.
@@ -11,9 +12,9 @@
 
 use crate::{
     AssetFormat, AssetId, AssetKind, CellChannel, CellWritePolicy, EffectId, EffectInputId,
-    EffectOutputId, ElementId, GraphId, GraphValueId, GraphValueShape, NodeId, ParameterId,
-    RecipeId, RoleWritePolicyKind, SceneId, ScopeKind, SignalId, SourceId, SourceInputId,
-    SourceInstanceId, ValueKind,
+    EffectOutputId, ElementId, GraphId, GraphValueId, GraphValueShape, LifecyclePhase, NodeId,
+    ParameterId, RecipeId, RoleWritePolicyKind, SceneId, ScopeKind, SignalId, SourceId,
+    SourceInputId, SourceInstanceId, ValueKind,
 };
 
 /// Structured error returned when a request exceeds descriptor capabilities.
@@ -86,6 +87,58 @@ pub enum DescriptorValidationError {
         node: NodeId,
     },
 
+    /// Lifecycle duration is negative or non-finite.
+    InvalidDuration {
+        /// Rejected duration value in seconds.
+        value: f64,
+    },
+    /// Looping clocks must declare an explicit loop period.
+    MissingClockPeriod,
+    /// Monotonic clocks must not declare a loop period.
+    UnexpectedClockPeriod,
+    /// Lifecycle declares the same phase more than once.
+    DuplicateLifecyclePhase {
+        /// Duplicated lifecycle phase.
+        phase: LifecyclePhase,
+    },
+    /// Lifecycle omits one of the required enter/dwell/exit phases.
+    MissingLifecyclePhase {
+        /// Missing lifecycle phase.
+        phase: LifecyclePhase,
+    },
+    /// Lifecycle phases are not ordered as enter, dwell, then exit.
+    UnexpectedLifecyclePhaseOrder {
+        /// Expected phase at this position.
+        expected: LifecyclePhase,
+        /// Actual phase at this position, or none when the list is too short.
+        actual: Option<LifecyclePhase>,
+    },
+    /// Dwell policy timing was attached to a non-dwell lifecycle phase.
+    DwellTimingOnNonDwellPhase {
+        /// Non-dwell phase carrying dwell timing.
+        phase: LifecyclePhase,
+    },
+    /// Recipe-level lifecycle trigger references a graph-local value source.
+    RecipeLifecycleGraphValueSourceNotAllowed {
+        /// Graph-local value source rejected at recipe lifecycle level.
+        id: GraphValueId,
+    },
+    /// Predicate is incompatible with the source value kind.
+    PredicateKindMismatch {
+        /// Stable predicate kind label.
+        predicate: String,
+        /// Actual source value kind.
+        actual: ValueKind,
+    },
+    /// Predicate literal has the wrong value kind for its source.
+    PredicateValueKindMismatch {
+        /// Stable predicate kind label.
+        predicate: String,
+        /// Expected value kind.
+        expected: ValueKind,
+        /// Actual literal value kind.
+        actual: ValueKind,
+    },
     /// Requested scope kind is not declared in descriptor support.
     UnsupportedScopeKind {
         /// Scope kind requested by the operation.
@@ -432,4 +485,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

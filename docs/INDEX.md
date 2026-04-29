@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.33.0</VERS> -->
-<!-- <WCTX>New kernel Phase H1: index vocabulary and canonical recipe document contracts.</WCTX> -->
-<!-- <CLOG>1.33.0: note H1 vocabulary and canonical recipe document contract semantics.
+<!-- <VERS>VERSION: 1.34.0</VERS> -->
+<!-- <WCTX>New kernel Phase I0: index lifecycle, clock, dwell, trigger, and predicate contracts.</WCTX> -->
+<!-- <CLOG>1.34.0: note I0 lifecycle/time/trigger contract semantics and schema roots.
+1.33.0: note H1 vocabulary and canonical recipe document contract semantics.
 1.32.0: note H0 source and asset contract semantics.
 1.31.0: note G4 node output and graph value bus semantics.
 1.30.0: note G3 graph topology and channel-aware parallel merge.
@@ -127,9 +128,9 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 ## V3 planning and tooling
 
 - [VOCABULARY.md](VOCABULARY.md) — Canonical v3.1 human vocabulary, legacy/non-canonical term mapping, naming rules, deferrals, and change policy.
-- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model, F1 typed input model, F2 declarative source/binding model, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 graph value-bus semantics, H0 source/asset/procedural source contracts, and H1 canonical recipe document packaging.
-- [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor/input/value-source/binding/graph/execution proof/topology/value-bus/source/asset/recipe model, and handoff guardrails.
-- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1 surface, sampling, pipeline, scene, descriptor/input/source/binding/graph/execution-proof, schema-reference, graph value-bus, source/asset/recipe document contracts, vocabulary, and contract/proof ownership.
+- [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model, F1 typed input model, F2 declarative source/binding model, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 graph value-bus semantics, H0 source/asset/procedural source contracts, H1 canonical recipe document packaging, and I0 lifecycle/time/trigger contracts.
+- [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1/I0 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor/input/value-source/binding/graph/execution proof/topology/value-bus/source/asset/recipe/lifecycle model, and handoff guardrails.
+- [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1/I0 surface, sampling, pipeline, scene, descriptor/input/source/binding/graph/execution-proof, schema-reference, graph value-bus, source/asset/recipe document/lifecycle contracts, vocabulary, and contract/proof ownership.
 - [v3.1-feature-contract-checklist.md](v3.1-feature-contract-checklist.md) — Checklist for future v3.1 contract-affecting feature work.
 - [v3.1-template-composition.md](v3.1-template-composition.md) — Phase D2 design for compile-time template/mixin/preset/profile expansion into canonical v3.1 recipes.
 - [new_kernel/INDEX.md](new_kernel/INDEX.md) — Clean-room kernel phase docs, architect responses, status memos, and schema artifacts.

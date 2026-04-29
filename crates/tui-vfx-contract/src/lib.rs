@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
-// <WCTX>New kernel Phase H1: expose canonical recipe document vocabulary.</WCTX>
-// <CLOG>0.9.0: MINOR — export canonical recipe document, recipe scene, source instance, and metadata schema roots.
+// <VERS>VERSION: 0.10.0</VERS>
+// <WCTX>New kernel Phase I0: expose lifecycle, clock, duration, phase, and trigger vocabulary.</WCTX>
+// <CLOG>0.10.0: MINOR — export recipe lifecycle, clock, duration, phase, and trigger schema roots.
+// 0.9.0: MINOR — export canonical recipe document, recipe scene, source instance, and metadata schema roots.
 // 0.8.0: MINOR — export source descriptor, source spec, asset, and source output schema roots.
 // 0.7.0: MINOR — export graph value, effect output, node output, and value merge schema roots.
 // 0.6.0: MINOR — export GraphStep, ParallelMergePolicy, and topology schema root.
@@ -34,9 +35,13 @@ pub mod cls_cell_channel;
 pub mod cls_cell_write;
 pub mod cls_cell_write_policy;
 pub mod cls_clip_policy;
+pub mod cls_clock_mode;
+pub mod cls_clock_spec;
 pub mod cls_coordinate_space;
 pub mod cls_descriptor_validation_error;
 pub mod cls_diagnostic_level;
+pub mod cls_duration_spec;
+pub mod cls_dwell_policy;
 pub mod cls_effect_completion;
 pub mod cls_effect_descriptor;
 pub mod cls_effect_domain;
@@ -56,6 +61,8 @@ pub mod cls_graph_value_kind;
 pub mod cls_graph_value_merge_policy;
 pub mod cls_graph_value_shape;
 pub mod cls_layer_id;
+pub mod cls_lifecycle_phase;
+pub mod cls_lifecycle_spec;
 pub mod cls_node_id;
 pub mod cls_node_output_source;
 pub mod cls_node_output_spec;
@@ -64,6 +71,8 @@ pub mod cls_numeric_range;
 pub mod cls_parallel_merge_policy;
 pub mod cls_parameter_id;
 pub mod cls_parameter_spec;
+pub mod cls_phase_spec;
+pub mod cls_phase_timing;
 pub mod cls_recipe_document;
 pub mod cls_recipe_element_pipeline;
 pub mod cls_recipe_id;
@@ -100,8 +109,14 @@ pub mod cls_surface;
 pub mod cls_surface_diagnostic;
 pub mod cls_surface_diagnostic_code;
 pub mod cls_surface_metadata;
+pub mod cls_trigger_action;
+pub mod cls_trigger_condition;
+pub mod cls_trigger_latch_policy;
+pub mod cls_trigger_reset_boundary;
+pub mod cls_trigger_spec;
 pub mod cls_value;
 pub mod cls_value_kind;
+pub mod cls_value_predicate;
 pub mod cls_value_source;
 pub mod cls_value_spec;
 pub mod cls_write_support;
@@ -128,9 +143,13 @@ pub use cls_cell_channel::CellChannel;
 pub use cls_cell_write::CellWrite;
 pub use cls_cell_write_policy::CellWritePolicy;
 pub use cls_clip_policy::ClipPolicy;
+pub use cls_clock_mode::ClockMode;
+pub use cls_clock_spec::ClockSpec;
 pub use cls_coordinate_space::CoordinateSpace;
 pub use cls_descriptor_validation_error::DescriptorValidationError;
 pub use cls_diagnostic_level::DiagnosticLevel;
+pub use cls_duration_spec::DurationSpec;
+pub use cls_dwell_policy::DwellPolicy;
 pub use cls_effect_completion::EffectCompletion;
 pub use cls_effect_descriptor::EffectDescriptor;
 pub use cls_effect_domain::EffectDomain;
@@ -150,6 +169,8 @@ pub use cls_graph_value_kind::GraphValueKind;
 pub use cls_graph_value_merge_policy::GraphValueMergePolicy;
 pub use cls_graph_value_shape::GraphValueShape;
 pub use cls_layer_id::LayerId;
+pub use cls_lifecycle_phase::LifecyclePhase;
+pub use cls_lifecycle_spec::LifecycleSpec;
 pub use cls_node_id::NodeId;
 pub use cls_node_output_source::NodeOutputSource;
 pub use cls_node_output_spec::NodeOutputSpec;
@@ -158,6 +179,8 @@ pub use cls_numeric_range::NumericRange;
 pub use cls_parallel_merge_policy::ParallelMergePolicy;
 pub use cls_parameter_id::ParameterId;
 pub use cls_parameter_spec::ParameterSpec;
+pub use cls_phase_spec::PhaseSpec;
+pub use cls_phase_timing::PhaseTiming;
 pub use cls_recipe_document::RecipeDocument;
 pub use cls_recipe_element_pipeline::RecipeElementPipeline;
 pub use cls_recipe_id::RecipeId;
@@ -194,8 +217,14 @@ pub use cls_surface::Surface;
 pub use cls_surface_diagnostic::SurfaceDiagnostic;
 pub use cls_surface_diagnostic_code::SurfaceDiagnosticCode;
 pub use cls_surface_metadata::SurfaceMetadata;
+pub use cls_trigger_action::TriggerAction;
+pub use cls_trigger_condition::TriggerCondition;
+pub use cls_trigger_latch_policy::TriggerLatchPolicy;
+pub use cls_trigger_reset_boundary::TriggerResetBoundary;
+pub use cls_trigger_spec::TriggerSpec;
 pub use cls_value::Value;
 pub use cls_value_kind::ValueKind;
+pub use cls_value_predicate::ValuePredicate;
 pub use cls_value_source::{GraphValueKinds, ValueSource};
 pub use cls_value_spec::ValueSpec;
 pub use cls_write_support::WriteSupport;
@@ -206,15 +235,16 @@ pub use tr_coordinate_sampler::CoordinateSampler;
 /// These roots generate fixtures under `schemas/v3.1/contract/`.
 pub mod schema_roots {
     pub use crate::{
-        AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, EffectDescriptor,
-        EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId, GraphValueKind,
-        GraphValueMergePolicy, GraphValueShape, NodeOutputSource, NodeOutputSpec, NodeSpec,
-        ParameterSpec, RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene,
-        RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec,
-        SourceDescriptor, SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec, Surface,
-        SurfaceDiagnostic, Value, ValueSource,
+        AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, DurationSpec,
+        DwellPolicy, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep,
+        GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec,
+        NodeOutputSource, NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument,
+        RecipeElementPipeline, RecipeMetadata, RecipeScene, RecipeSceneElement, Scene,
+        SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor, SourceInputSpec,
+        SourceInstanceId, SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, TriggerSpec,
+        Value, ValuePredicate, ValueSource,
     };
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.9.0</VERS>
+// <VERS>END OF VERSION: 0.10.0</VERS>

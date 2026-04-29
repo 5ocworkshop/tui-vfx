@@ -1,13 +1,14 @@
 // <FILE>crates/tui-vfx-contract/src/cls_recipe_document.rs</FILE> - <DESC>Canonical v3.1 recipe document root DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase H1: package stable contract pieces into one canonical recipe root.</WCTX>
-// <CLOG>0.1.0: INIT — add recipe document root and delegate cross-document validation.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase I0: allow canonical recipes to carry recipe-level lifecycle semantics.</WCTX>
+// <CLOG>0.2.0: MINOR — add optional recipe-level lifecycle contract.
+// 0.1.0: INIT — add recipe document root and delegate cross-document validation.</CLOG>
 
 use std::collections::BTreeMap;
 
 use crate::{
-    AssetId, AssetSpec, DescriptorValidationError, GraphSpec, RecipeId, RecipeMetadata,
-    RecipeScene, SourceDescriptor, SourceId, SourceInstanceId, SourceSpec,
+    AssetId, AssetSpec, DescriptorValidationError, GraphSpec, LifecycleSpec, RecipeId,
+    RecipeMetadata, RecipeScene, SourceDescriptor, SourceId, SourceInstanceId, SourceSpec,
     orc_validate_recipe_document::validate_recipe_document,
 };
 
@@ -21,6 +22,8 @@ pub struct RecipeDocument {
     pub version: String,
     /// Human-facing metadata carried with the canonical document.
     pub metadata: RecipeMetadata,
+    /// Optional recipe-level lifecycle semantics for enter, dwell, and exit.
+    pub lifecycle: Option<LifecycleSpec>,
     /// Assets declared once and referenced structurally by source instances.
     #[schemars(transform = add_asset_key_pattern)]
     pub assets: BTreeMap<AssetId, AssetSpec>,
@@ -37,7 +40,7 @@ pub struct RecipeDocument {
 }
 
 impl RecipeDocument {
-    /// Validate canonical recipe identity, assets, sources, graph, and scene references.
+    /// Validate canonical recipe identity, lifecycle, assets, sources, graph, and scene references.
     pub fn validate(&self) -> Result<(), DescriptorValidationError> {
         validate_recipe_document(self)
     }
@@ -72,4 +75,4 @@ fn add_key_pattern(schema: &mut schemars::Schema, description_prefix: &str, patt
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_recipe_document.rs</FILE> - <DESC>Canonical v3.1 recipe document root DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

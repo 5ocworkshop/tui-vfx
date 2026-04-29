@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClockSpec",
+  "description": "Recipe-level clock contract for lifecycle phase timing.",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "description": "Time sample-space mode.",
+      "$ref": "#/$defs/ClockMode"
+    },
+    "period": {
+      "description": "Loop period required only when mode is `looping`.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DurationSpec"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "mode"
+  ],
+  "$defs": {
+    "ClockMode": {
+      "description": "Time sample-space mode for recipe-level lifecycle evaluation.",
+      "oneOf": [
+        {
+          "description": "Time advances monotonically for one recipe lifecycle pass.",
+          "type": "string",
+          "const": "monotonic"
+        },
+        {
+          "description": "Time wraps by an explicit period for preview/repeating lifecycle semantics.",
+          "type": "string",
+          "const": "looping"
+        }
+      ]
+    },
+    "DurationSpec": {
+      "description": "Canonical duration used by lifecycle and trigger contracts.",
+      "oneOf": [
+        {
+          "description": "Duration expressed as whole milliseconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "milliseconds"
+            },
+            "value": {
+              "description": "Non-negative millisecond count.",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration expressed as finite seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "seconds"
+            },
+            "value": {
+              "description": "Non-negative finite seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    }
+  }
+}
