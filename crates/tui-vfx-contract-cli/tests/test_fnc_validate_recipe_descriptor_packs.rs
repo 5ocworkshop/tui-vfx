@@ -7,53 +7,52 @@ mod support;
 
 use serde_json::Value;
 use support::{
-    RECIPE_ROOT, mutated_recipe_path, read_recipe, remove_temp, run_failure_args, run_success,
-    write_json,
+    descriptor_pack_dir, descriptor_pack_path, mutated_recipe_path, read_recipe, recipe_path,
+    recipe_root, remove_temp, run_failure_args, run_success, write_json,
 };
-
-const PACK_PATH: &str = "/usr/projects/tui-vfx/descriptors/v3.1/packs/primitive.json";
-const PACK_DIR: &str = "/usr/projects/tui-vfx/descriptors/v3.1/packs";
 
 #[test]
 fn validates_canonical_recipe_directory_with_descriptor_pack() {
+    let pack_path = descriptor_pack_path();
+    let recipe_root = recipe_root();
     let report = run_success(&[
         "validate-recipe",
         "--descriptor-pack",
-        PACK_PATH,
+        pack_path.to_str().expect("utf8 pack path"),
         "--json",
         "--recursive",
-        RECIPE_ROOT,
+        recipe_root.to_str().expect("utf8 recipe root"),
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.validator.report.1");
     assert_eq!(report["descriptorPacks"][0]["id"], "v3.1.primitive");
-    assert_eq!(report["summary"]["total"], 16);
-    assert_eq!(report["summary"]["valid"], 16);
+    assert_eq!(report["summary"]["total"], 22);
+    assert_eq!(report["summary"]["valid"], 22);
     assert_eq!(report["summary"]["invalid"], 0);
 }
 
 #[test]
 fn validates_canonical_recipe_directory_with_descriptor_pack_dir() {
+    let pack_dir = descriptor_pack_dir();
+    let recipe_root = recipe_root();
     let report = run_success(&[
         "validate-recipe",
         "--descriptor-pack-dir",
-        PACK_DIR,
+        pack_dir.to_str().expect("utf8 pack dir"),
         "--json",
         "--recursive",
-        RECIPE_ROOT,
+        recipe_root.to_str().expect("utf8 recipe root"),
     ]);
 
     assert_eq!(report["descriptorPacks"][0]["id"], "v3.1.primitive");
-    assert_eq!(report["summary"]["total"], 16);
-    assert_eq!(report["summary"]["valid"], 16);
+    assert_eq!(report["summary"]["total"], 22);
+    assert_eq!(report["summary"]["valid"], 22);
 }
 
 #[test]
 fn rejects_missing_descriptor_pack_with_stable_code() {
-    let report = run_failure_args(&[
-        "validate-recipe",
-        &format!("{RECIPE_ROOT}/masks/mask_dissolve.json"),
-    ]);
+    let recipe_path = recipe_path("masks/mask_dissolve.json");
+    let report = run_failure_args(&["validate-recipe", recipe_path.to_str().expect("utf8 path")]);
 
     assert_eq!(
         report["recipes"][0]["errors"][0]["code"],
@@ -64,6 +63,7 @@ fn rejects_missing_descriptor_pack_with_stable_code() {
 #[test]
 fn rejects_pack_provided_unknown_descriptor_with_stable_code() {
     let path = mutated_recipe_path("unknown-pack-effect");
+    let pack_path = descriptor_pack_path();
     let mut recipe = read_recipe("masks/mask_dissolve.json");
     recipe["graph"]["nodes"]["maskDissolveEnter"]["effect"] = Value::from("mask.missing");
     write_json(&path, &recipe);
@@ -71,7 +71,7 @@ fn rejects_pack_provided_unknown_descriptor_with_stable_code() {
     let report = run_failure_args(&[
         "validate-recipe",
         "--descriptor-pack",
-        PACK_PATH,
+        pack_path.to_str().expect("utf8 pack path"),
         path.to_str().expect("utf8 path"),
     ]);
     remove_temp(&path);
@@ -83,6 +83,7 @@ fn rejects_pack_provided_unknown_descriptor_with_stable_code() {
 fn rejects_duplicate_pack_effect_descriptor_with_stable_code() {
     let recipe_path = mutated_recipe_path("duplicate-pack-recipe");
     let pack_path = mutated_recipe_path("duplicate-pack");
+    let primitive_pack_path = descriptor_pack_path();
     let mut recipe = read_recipe("masks/mask_dissolve.json");
     recipe["descriptorPacks"] = serde_json::json!([
         { "id": "v3.1.primitive" },
@@ -94,7 +95,7 @@ fn rejects_duplicate_pack_effect_descriptor_with_stable_code() {
     let report = run_failure_args(&[
         "validate-recipe",
         "--descriptor-pack",
-        PACK_PATH,
+        primitive_pack_path.to_str().expect("utf8 pack path"),
         "--descriptor-pack",
         pack_path.to_str().expect("utf8 path"),
         recipe_path.to_str().expect("utf8 path"),
@@ -109,8 +110,9 @@ fn rejects_duplicate_pack_effect_descriptor_with_stable_code() {
 }
 
 fn write_pack_with_duplicate_effect(path: &std::path::PathBuf) {
+    let pack_path = descriptor_pack_path();
     let mut pack: Value = serde_json::from_str(
-        &std::fs::read_to_string(PACK_PATH).expect("read primitive descriptor pack"),
+        &std::fs::read_to_string(pack_path).expect("read primitive descriptor pack"),
     )
     .expect("parse primitive descriptor pack");
     pack["id"] = Value::from("v3.1.duplicate");

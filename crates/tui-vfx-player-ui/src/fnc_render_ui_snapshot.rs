@@ -1,6 +1,6 @@
-// <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render K1 visual player state to terminal text</DESC>
+// <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render visual player state to terminal text</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K1: display K0 frame rows and diagnostics in a visual shell.</WCTX>
+// <WCTX>Player UI: display player frame rows and diagnostics in a visual shell.</WCTX>
 // <CLOG>0.1.0: INIT — add bordered frame, metadata, diagnostics, and help rendering.</CLOG>
 
 use crate::PlayerUiState;
@@ -12,7 +12,7 @@ pub fn render_ui_snapshot(state: &PlayerUiState, clear: bool) -> String {
     if clear {
         out.push_str("\x1b[2J\x1b[H");
     }
-    out.push_str("tui-vfx K1 contract-native player UI\n");
+    out.push_str("tui-vfx contract-native player UI\n");
     out.push_str(&format!("recipe: {}\n", state.recipe_path.display()));
     out.push_str(&format!(
         "phase: {:?}  sample_t: {:.2}  loop_t: {}  paused: {}  motion_disabled: {}\n",
@@ -70,5 +70,5 @@ fn help_text() -> &'static str {
     "\nhelp:\n  q       quit\n  ?       toggle help\n  space   pause/resume\n  r       reset/reload player session\n  m       motion-disabled stable sample\n  [ / ]   previous/next phase\n  left    sample_t - 0.05\n  right   sample_t + 0.05\n  t       fire canonical signal-backed dwell trigger\n  tick    advance elapsed time when unpaused\n"
 }
 
-// <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render K1 visual player state to terminal text</DESC>
+// <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render visual player state to terminal text</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>

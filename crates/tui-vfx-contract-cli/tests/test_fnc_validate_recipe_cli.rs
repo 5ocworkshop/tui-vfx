@@ -11,16 +11,17 @@ use std::fs;
 
 use serde_json::Value;
 use support::{
-    RECIPE_ROOT, mutated_recipe_path, read_recipe, remove_temp, run_failure_args, run_success,
+    mutated_recipe_path, read_recipe, recipe_path, remove_temp, run_failure_args, run_success,
     write_json,
 };
 
 #[test]
 fn validates_embedded_j0_recipe_without_descriptor_pack() {
+    let baseline_path = recipe_path("baseline.json");
     let report = run_success(&[
         "validate-recipe",
         "--json",
-        &format!("{RECIPE_ROOT}/baseline.json"),
+        baseline_path.to_str().expect("utf8 recipe path"),
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.validator.report.1");
@@ -30,10 +31,12 @@ fn validates_embedded_j0_recipe_without_descriptor_pack() {
 
 #[test]
 fn validates_multiple_recipe_files() {
+    let baseline_path = recipe_path("baseline.json");
+    let filter_path = recipe_path("filters/filter_dim.json");
     let report = run_success(&[
         "validate-recipe",
-        &format!("{RECIPE_ROOT}/baseline.json"),
-        &format!("{RECIPE_ROOT}/filters/filter_dim.json"),
+        baseline_path.to_str().expect("utf8 recipe path"),
+        filter_path.to_str().expect("utf8 recipe path"),
     ]);
 
     assert_eq!(report["root"], "<multiple>");

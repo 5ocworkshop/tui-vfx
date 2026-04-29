@@ -9,6 +9,7 @@
 //! missing adapter explicitly. It does not depend on the legacy recipes runtime.
 
 pub mod cls_player_error;
+pub mod cls_player_fixture_qc_report;
 pub mod cls_player_frame;
 pub mod cls_player_frame_diff_report;
 pub mod cls_player_frame_report;
@@ -49,6 +50,11 @@ mod fnc_apply_sampler_sine_wave;
 mod fnc_apply_shader_primitive;
 mod fnc_apply_style_primitive;
 mod fnc_apply_styled_primitive;
+mod fnc_build_fixture_qc_messages;
+mod fnc_build_fixture_qc_recipe_entries;
+pub mod fnc_build_fixture_qc_report;
+mod fnc_build_fixture_qc_reports;
+mod fnc_build_fixture_qc_summary;
 pub mod fnc_build_frame_diff_report;
 pub mod fnc_build_frame_timeline_report;
 mod fnc_build_migration_gap_family;
@@ -71,6 +77,7 @@ mod fnc_collect_styled_visual_cells;
 mod fnc_collect_unsupported_effect_ids;
 mod fnc_diff_visual_frame_cells;
 mod fnc_extract_recipe_inventory_ids;
+mod fnc_fixture_qc_smoke_passed;
 pub mod fnc_inventory_recipe_file;
 pub mod fnc_inventory_recipe_paths;
 pub mod fnc_load_descriptor_catalog;
@@ -93,6 +100,9 @@ mod fnc_summarize_primitive_field_coverage;
 mod fnc_summarize_visual_frames;
 
 pub use cls_player_error::PlayerError;
+pub use cls_player_fixture_qc_report::{
+    PlayerFixtureQcRecipe, PlayerFixtureQcReport, PlayerFixtureQcReports, PlayerFixtureQcSummary,
+};
 pub use cls_player_frame::PlayerFrame;
 pub use cls_player_frame_diff_report::{PlayerFrameDiffCell, PlayerFrameDiffReport};
 pub use cls_player_frame_report::PlayerFrameReport;
@@ -126,6 +136,7 @@ pub use cls_player_visual_frame_report::PlayerVisualFrameReport;
 pub use cls_player_warning::PlayerWarning;
 pub(crate) use cls_primitive_field_descriptor_coverage::PrimitiveFieldDescriptorCoverage;
 pub use cls_recipe_player::RecipePlayer;
+pub use fnc_build_fixture_qc_report::build_fixture_qc_report;
 pub use fnc_build_frame_diff_report::build_frame_diff_report;
 pub use fnc_build_frame_timeline_report::build_frame_timeline_report;
 pub use fnc_build_migration_gap_report::build_migration_gap_report;

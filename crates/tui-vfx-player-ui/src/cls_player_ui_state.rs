@@ -1,7 +1,7 @@
-// <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the K1 visual player shell</DESC>
+// <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the visual player shell</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K1: keep UI state layered on K0 player/session APIs.</WCTX>
-// <CLOG>0.1.0: INIT — load recipe/catalog, sample K0 frames, and mutate UI controls.</CLOG>
+// <WCTX>Player UI: keep UI state layered on player/session APIs.</WCTX>
+// <CLOG>0.1.0: INIT — load recipe/catalog, sample player frames, and mutate UI controls.</CLOG>
 
 use std::path::PathBuf;
 
@@ -20,6 +20,8 @@ use crate::{
 pub struct PlayerUiState {
     /// Loaded recipe path.
     pub recipe_path: PathBuf,
+    /// Canonical recipe browser root requested at startup.
+    pub recipes_root: Option<PathBuf>,
     /// Active recipe document.
     pub recipe: RecipeDocument,
     player: RecipePlayer,
@@ -35,12 +37,12 @@ pub struct PlayerUiState {
     pub message: String,
     /// Whether help should be visible.
     pub show_help: bool,
-    /// Most recent K0 frame report.
+    /// Most recent player frame report.
     pub last_report: PlayerFrameReport,
 }
 
 impl PlayerUiState {
-    /// Load a recipe, descriptor catalog, and initial K0 snapshot.
+    /// Load a recipe, descriptor catalog, and initial player snapshot.
     pub fn load(options: &CliOptions) -> Result<Self, String> {
         let descriptor_load =
             load_descriptor_catalog(&options.descriptor_packs, &options.descriptor_pack_dirs)?;
@@ -55,6 +57,7 @@ impl PlayerUiState {
         let last_report = player.render_recipe(&recipe, &request);
         Ok(Self {
             recipe_path: options.recipe_path.clone(),
+            recipes_root: options.recipes_root.clone(),
             recipe,
             player,
             session,
@@ -62,13 +65,13 @@ impl PlayerUiState {
             paused: false,
             motion_disabled: false,
             elapsed_ms: 0,
-            message: "loaded canonical v3.1 recipe through K0 player".to_string(),
+            message: "loaded canonical v3.1 recipe through player".to_string(),
             show_help: false,
             last_report,
         })
     }
 
-    /// Load another recipe path through the existing K0 player/catalog.
+    /// Load another recipe path through the existing player/catalog.
     pub fn load_recipe_path(&mut self, path: PathBuf) -> Result<(), String> {
         self.recipe = read_recipe(&path)?;
         self.recipe_path = path;
@@ -76,7 +79,7 @@ impl PlayerUiState {
         self.request.signals.clear();
         self.elapsed_ms = 0;
         self.paused = false;
-        self.message = "loaded selected canonical v3.1 recipe through K0 player".to_string();
+        self.message = "loaded selected canonical v3.1 recipe through player".to_string();
         self.render();
         Ok(())
     }
@@ -193,6 +196,5 @@ impl PlayerUiState {
         }
     }
 }
-
-// <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the K1 visual player shell</DESC>
+// <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the visual player shell</DESC>
 // <VERS>END OF VERSION: 0.1.0</VERS>

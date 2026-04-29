@@ -11,6 +11,7 @@ mod fnc_print_render_report;
 mod fnc_print_usage;
 mod fnc_report_root;
 mod fnc_run;
+mod fnc_run_fixture_qc;
 mod fnc_run_inventory_recipes;
 mod fnc_run_migration_gap;
 mod fnc_run_primitive_adapter_gap;

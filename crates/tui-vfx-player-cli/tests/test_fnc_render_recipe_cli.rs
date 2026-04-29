@@ -4,6 +4,7 @@
 // <CLOG>0.9.1: PATCH — rename transient packet-specific regression wording.</CLOG>
 
 use std::{
+    fs,
     path::PathBuf,
     process::{Command, Output},
 };
@@ -42,8 +43,8 @@ fn test_fnc_cli_renders_recursive_smoke_report_json() {
     );
 
     assert_eq!(report["schemaVersion"], "v3.1.player.run.1");
-    assert_eq!(report["summary"]["total"], 16);
-    assert_eq!(report["summary"]["rendered"], 16);
+    assert_eq!(report["summary"]["total"], 22);
+    assert_eq!(report["summary"]["rendered"], 22);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
 }
@@ -137,8 +138,8 @@ fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.inventory.1");
-    assert_eq!(report["summary"]["totalRecipes"], 16);
-    assert_eq!(report["summary"]["rendered"], 16);
+    assert_eq!(report["summary"]["totalRecipes"], 22);
+    assert_eq!(report["summary"]["rendered"], 22);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
     assert_eq!(report["summary"]["descriptorEffectIds"], 14);
@@ -178,7 +179,7 @@ fn test_fnc_cli_reports_migration_gap_summary_json() {
             .is_empty()
     );
     assert_eq!(report["summary"]["legacyRecipes"], 603);
-    assert_eq!(report["summary"]["v31Recipes"], 16);
+    assert_eq!(report["summary"]["v31Recipes"], 22);
     assert_eq!(report["summary"]["representedFamilies"], 8);
     assert_eq!(report["summary"]["unrepresentedFamilies"], 11);
     assert_eq!(report["summary"]["partiallyRepresentedFamilies"], 7);
@@ -213,7 +214,7 @@ fn test_fnc_cli_reports_migration_gap_family_status_json() {
     let complex = find_family(&report, "complex");
 
     assert_eq!(filters["legacyCount"], 98);
-    assert_eq!(filters["v31Count"], 4);
+    assert_eq!(filters["v31Count"], 6);
     assert_eq!(filters["coverage"], "partial");
     assert_eq!(filters["status"], "adapterExpansionReady");
     assert!(
@@ -280,11 +281,11 @@ fn test_fnc_cli_renders_recursive_visual_frame_report_json() {
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
-    assert_eq!(report["summary"]["total"], 16);
-    assert_eq!(report["summary"]["rendered"], 16);
+    assert_eq!(report["summary"]["total"], 22);
+    assert_eq!(report["summary"]["rendered"], 22);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
-    assert_eq!(report["frames"].as_array().expect("frames").len(), 16);
+    assert_eq!(report["frames"].as_array().expect("frames").len(), 22);
 }
 
 #[test]
@@ -359,7 +360,7 @@ fn test_fnc_cli_reports_primitive_field_coverage_for_fixture_corpus_json() {
         report["schemaVersion"],
         "v3.1.player.primitiveFieldCoverage.1"
     );
-    assert_eq!(report["summary"]["totalRecipes"], 16);
+    assert_eq!(report["summary"]["totalRecipes"], 22);
     assert_eq!(report["summary"]["usedButUnhandledInputFields"], 0);
     assert_eq!(report["summary"]["missingDescriptorInputFields"], 0);
     assert_eq!(report["summary"]["schemaDecisionNeededFields"], 0);
@@ -367,8 +368,86 @@ fn test_fnc_cli_reports_primitive_field_coverage_for_fixture_corpus_json() {
         report["summary"]["totalPrimitiveInstances"]
             .as_u64()
             .expect("instances")
-            > 16
+            > 22
     );
+}
+
+#[test]
+fn test_fnc_cli_reports_fixture_qc_for_fixture_corpus_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("fixture-qc"),
+            str_arg("--recursive"),
+            debug_recipe_root_path(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--json"),
+        ],
+        "fixture qc player cli",
+    );
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.fixtureQcReport.1");
+    assert_eq!(report["summary"]["totalRecipes"], 22);
+    assert_eq!(report["summary"]["validated"], 22);
+    assert_eq!(report["summary"]["validationErrors"], 0);
+    assert_eq!(report["summary"]["rendered"], 22);
+    assert_eq!(report["summary"]["unsupported"], 0);
+    assert_eq!(report["summary"]["playerErrors"], 0);
+    assert_eq!(report["summary"]["fieldCoverageUnhandled"], 0);
+    assert_eq!(report["summary"]["adapterGapUnresolved"], 0);
+    assert_eq!(report["summary"]["timelineSmokePassed"], true);
+    assert_eq!(report["summary"]["diffSmokePassed"], true);
+    assert_eq!(report["summary"]["overallStatus"], "pass");
+    assert_eq!(
+        report["reports"]["render"]["schemaVersion"],
+        "v3.1.player.run.1"
+    );
+    assert_eq!(
+        report["reports"]["visualFrame"]["schemaVersion"],
+        "v3.1.player.visualFrameReport.1"
+    );
+    assert_eq!(
+        report["reports"]["fieldCoverage"]["schemaVersion"],
+        "v3.1.player.primitiveFieldCoverage.1"
+    );
+    assert_eq!(
+        report["reports"]["adapterGap"]["schemaVersion"],
+        "v3.1.player.primitiveAdapterGap.1"
+    );
+}
+
+#[test]
+fn test_fnc_cli_fixture_qc_smoke_fields_fail_for_unrendered_recipe_json() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-fixture-qc-negative");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create temp fixture root");
+    let recipe = unsupported_effect_recipe();
+    let recipe_path = temp_root.join("unsupported.json");
+    fs::write(
+        &recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize negative recipe"),
+    )
+    .expect("write negative recipe");
+
+    let report = player_cli_json(
+        vec![
+            str_arg("fixture-qc"),
+            str_arg("--recursive"),
+            temp_root.display().to_string(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--json"),
+        ],
+        "negative fixture qc player cli",
+    );
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.fixtureQcReport.1");
+    assert_eq!(report["summary"]["totalRecipes"], 1);
+    assert_eq!(report["summary"]["rendered"], 0);
+    assert_eq!(report["summary"]["playerErrors"], 1);
+    assert_eq!(report["summary"]["timelineSmokePassed"], false);
+    assert_eq!(report["summary"]["diffSmokePassed"], false);
+    assert_eq!(report["summary"]["overallStatus"], "fail");
 }
 
 #[test]
@@ -704,6 +783,27 @@ fn workspace_root() -> PathBuf {
 
 fn str_arg(value: &str) -> String {
     value.to_owned()
+}
+
+fn unsupported_effect_recipe() -> serde_json::Value {
+    let text = fs::read_to_string(debug_recipe_root().join("baseline.json"))
+        .expect("read baseline fixture");
+    let mut recipe: serde_json::Value =
+        serde_json::from_str(&text).expect("baseline fixture parses");
+    recipe["graph"]["nodes"]["missingAdapter"] = serde_json::json!({
+        "id": "missingAdapter",
+        "effect": "effect.notInPack",
+        "inputs": {},
+        "outputs": {},
+        "scope": { "kind": "all" },
+        "cellWritePolicy": "writeCell",
+        "roleWritePolicy": { "kind": "preserveDestination" }
+    });
+    recipe["graph"]["order"]
+        .as_array_mut()
+        .expect("order array")
+        .push(serde_json::Value::String("missingAdapter".to_string()));
+    recipe
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K1: provide demo.rs-like browser plus preview panes over K0 frame reports.</WCTX>
-// <CLOG>0.1.0: INIT — render fast-fs browser, K0 snapshot, status, diagnostics, and help.</CLOG>
+// <WCTX>Player UI: provide demo.rs-like browser plus preview panes over player frame reports.</WCTX>
+// <CLOG>0.1.0: INIT — render fast-fs browser, player snapshot, status, diagnostics, and help.</CLOG>
 
 use ratatui::{
     Frame,
@@ -42,7 +42,7 @@ fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
     let text = vec![
         Line::from(vec![
             Span::styled(
-                "tui-vfx K1 ",
+                "tui-vfx player ",
                 Style::default()
                     .fg(Color::Cyan)
                     .add_modifier(Modifier::BOLD),
@@ -141,7 +141,7 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect) {
         Paragraph::new(state.report().rows.join("\n"))
             .block(
                 Block::default()
-                    .title(" K0 snapshot ")
+                    .title(" Player snapshot ")
                     .borders(Borders::ALL),
             )
             .wrap(Wrap { trim: false }),

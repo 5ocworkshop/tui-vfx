@@ -1,9 +1,9 @@
 // <FILE>crates/tui-vfx-player-ui/src/lib.rs</FILE> - <DESC>Contract-native visual player UI exports</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K1: expose ratatui visual shell over K0 player reports.</WCTX>
+// <WCTX>Player UI: expose ratatui visual shell over player reports.</WCTX>
 // <CLOG>0.1.0: INIT — export CLI parsing, app state, command handling, and snapshot rendering.</CLOG>
 
-//! Basic ratatui inspection shell layered on K0 contract-native snapshots.
+//! Basic ratatui inspection shell layered on contract-native player snapshots.
 //!
 //! The UI crate owns browser navigation, presentation, and command handling only. Recipe loading,
 //! descriptor catalog validation, sampled frames, lifecycle trigger latching,
@@ -13,6 +13,7 @@ pub mod cls_cli_options;
 pub mod cls_player_ui_app;
 pub mod cls_player_ui_command;
 pub mod cls_player_ui_state;
+mod fnc_find_startup_recipe_path;
 pub mod fnc_handle_player_ui_key;
 pub mod fnc_parse_cli_options;
 mod fnc_player_ui_state_support;

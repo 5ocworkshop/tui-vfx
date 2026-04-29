@@ -7,8 +7,6 @@ use std::{fs, path::PathBuf, process::Command};
 
 use serde_json::Value;
 
-pub const RECIPE_ROOT: &str = "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes";
-
 pub fn run_success(args: &[&str]) -> Value {
     let output = Command::new(contract_cli())
         .args(args)
@@ -39,9 +37,27 @@ pub fn run_failure_args(args: &[&str]) -> Value {
 }
 
 pub fn read_recipe(relative_path: &str) -> Value {
-    let path = PathBuf::from(RECIPE_ROOT).join(relative_path);
+    let path = recipe_root().join(relative_path);
     serde_json::from_str(&fs::read_to_string(path).expect("read canonical recipe"))
         .expect("parse canonical recipe")
+}
+
+pub fn recipe_path(relative_path: &str) -> PathBuf {
+    recipe_root().join(relative_path)
+}
+
+pub fn recipe_root() -> PathBuf {
+    recipe_repo_root().join("recipes/v3.1/debug_recipes")
+}
+
+#[allow(dead_code)]
+pub fn descriptor_pack_path() -> PathBuf {
+    workspace_root().join("descriptors/v3.1/packs/primitive.json")
+}
+
+#[allow(dead_code)]
+pub fn descriptor_pack_dir() -> PathBuf {
+    workspace_root().join("descriptors/v3.1/packs")
 }
 
 pub fn write_json(path: &PathBuf, value: &Value) {
@@ -65,6 +81,25 @@ pub fn remove_temp(path: &PathBuf) {
 
 fn contract_cli() -> &'static str {
     env!("CARGO_BIN_EXE_tui-vfx-contract-cli")
+}
+
+fn recipe_repo_root() -> PathBuf {
+    std::env::var_os("RECIPE_REPO")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            workspace_root()
+                .parent()
+                .expect("workspace has a parent")
+                .join("tui-vfx-recipes")
+        })
+}
+
+fn workspace_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(|path| path.parent())
+        .expect("crate lives under workspace crates directory")
+        .to_path_buf()
 }
 
 // <FILE>crates/tui-vfx-contract-cli/tests/support/mod.rs</FILE> - <DESC>Shared contract CLI integration-test helpers</DESC>

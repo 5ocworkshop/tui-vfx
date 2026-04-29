@@ -5,8 +5,8 @@
 
 use crate::{
     cls_cli_options::CliOptions, fnc_parse_cli_options::parse_cli_options,
-    fnc_print_usage::print_usage, fnc_run_inventory_recipes::run_inventory_recipes,
-    fnc_run_migration_gap::run_migration_gap,
+    fnc_print_usage::print_usage, fnc_run_fixture_qc::run_fixture_qc,
+    fnc_run_inventory_recipes::run_inventory_recipes, fnc_run_migration_gap::run_migration_gap,
     fnc_run_primitive_adapter_gap::run_primitive_adapter_gap,
     fnc_run_primitive_field_coverage::run_primitive_field_coverage,
     fnc_run_render_frame::run_render_frame, fnc_run_render_frame_diff::run_render_frame_diff,
@@ -41,6 +41,7 @@ fn is_known_command(command: &str) -> bool {
             | "migration-gap"
             | "primitive-adapter-gap"
             | "primitive-field-coverage"
+            | "fixture-qc"
             | "render-timeline"
             | "render-frame-diff"
     )
@@ -54,6 +55,7 @@ fn dispatch_command(command: &str, options: CliOptions) -> Result<(), String> {
         "migration-gap" => run_migration_gap(options),
         "primitive-adapter-gap" => run_primitive_adapter_gap(options),
         "primitive-field-coverage" => run_primitive_field_coverage(options),
+        "fixture-qc" => run_fixture_qc(options),
         "render-timeline" => run_render_timeline(options),
         "render-frame-diff" => run_render_frame_diff(options),
         _ => unreachable!("command already validated"),

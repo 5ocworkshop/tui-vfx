@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_app.rs</FILE> - <DESC>Ratatui app state with fast-fs browser</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K1: mirror demo.rs navigation by using fast_fs::nav for recipe browsing while keeping K0 as the only render engine.</WCTX>
+// <WCTX>Player UI: mirror demo.rs navigation by using fast_fs::nav while keeping rendering in the player crate.</WCTX>
 // <CLOG>0.1.0: INIT — add browser/list state wrapper for the contract-native player UI.</CLOG>
 
 use std::path::{Path, PathBuf};
@@ -15,7 +15,7 @@ use crate::PlayerUiState;
 pub enum PlayerUiFocus {
     /// Left recipe browser pane.
     Browser,
-    /// Right K0 preview pane.
+    /// Right preview pane.
     Preview,
 }
 
@@ -27,7 +27,7 @@ pub struct PlayerUiApp {
     pub browser: Browser,
     /// Stateful list cursor for ratatui rendering.
     pub list_state: ListState,
-    /// Active K0-backed player state.
+    /// Active player-backed UI state.
     pub player: PlayerUiState,
     /// Browser root selected for the session.
     pub browser_root: PathBuf,
@@ -36,7 +36,10 @@ pub struct PlayerUiApp {
 impl PlayerUiApp {
     /// Create the app around an already-loaded recipe.
     pub async fn new(player: PlayerUiState) -> Result<Self, String> {
-        let browser_root = browser_root_for(&player.recipe_path);
+        let browser_root = player
+            .recipes_root
+            .clone()
+            .unwrap_or_else(|| browser_root_for(&player.recipe_path));
         let browser = Browser::at_path(&browser_root, BrowserConfig::default())
             .await
             .map_err(|error| error.to_string())?;
