@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract-cli/src/fnc_load_descriptor_catalog.rs</FILE> - <DESC>Load descriptor packs into a catalog</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase J2: resolve descriptor pack JSON before recipe validation.</WCTX>
-// <CLOG>0.1.0: INIT — add descriptor pack deserialization, validation, and report metadata.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase K0: load the repository primitive descriptor pack by default for smoke commands.</WCTX>
+// <CLOG>0.2.0: PATCH — default to descriptors/v3.1/packs/primitive.json when no explicit packs are supplied.
+// 0.1.0: INIT — add descriptor pack deserialization, validation, and report metadata.</CLOG>
 
 use std::{collections::BTreeMap, path::PathBuf};
 
@@ -17,7 +18,12 @@ pub fn load_descriptor_catalog(
     files: &[String],
     dirs: &[String],
 ) -> Result<DescriptorPackLoad, String> {
-    let paths = collect_descriptor_pack_paths(files, dirs)?;
+    let mut paths = collect_descriptor_pack_paths(files, dirs)?;
+    if paths.is_empty()
+        && let Some(path) = default_primitive_pack_path()
+    {
+        paths.push(path);
+    }
     let mut packs = BTreeMap::<DescriptorPackId, DescriptorPack>::new();
     let mut reports = Vec::new();
     for path in paths {
@@ -46,6 +52,11 @@ pub fn load_descriptor_catalog(
     })
 }
 
+fn default_primitive_pack_path() -> Option<PathBuf> {
+    let path = PathBuf::from("descriptors/v3.1/packs/primitive.json");
+    path.is_file().then_some(path)
+}
+
 fn read_pack(path: &PathBuf) -> Result<DescriptorPack, String> {
     let text = std::fs::read_to_string(path)
         .map_err(|error| format!("read descriptor pack `{}` failed: {error}", path.display()))?;
@@ -54,4 +65,4 @@ fn read_pack(path: &PathBuf) -> Result<DescriptorPack, String> {
 }
 
 // <FILE>crates/tui-vfx-contract-cli/src/fnc_load_descriptor_catalog.rs</FILE> - <DESC>Load descriptor packs into a catalog</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

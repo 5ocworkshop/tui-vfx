@@ -1,0 +1,33 @@
+// <FILE>crates/tui-vfx-player/src/cls_player_frame.rs</FILE> - <DESC>Sampled skeleton player frame DTO</DESC>
+// <VERS>VERSION: 0.1.0</VERS>
+// <WCTX>New kernel Phase K0: carry deterministic text-grid frame output.</WCTX>
+// <CLOG>0.1.0: INIT — add rows, dimensions, hash, and non-empty count.</CLOG>
+
+/// Minimal semantic text-grid frame produced by the K0 skeleton player.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerFrame {
+    /// Frame width in terminal cells.
+    pub width: usize,
+    /// Frame height in terminal cells.
+    pub height: usize,
+    /// Deterministic hash over recipe/sample/adapter-visible output.
+    pub render_hash: u64,
+    /// Number of non-space cells in the sampled rows.
+    pub non_empty_cells: usize,
+    /// Text rows clipped/padded to the frame dimensions.
+    pub rows: Vec<String>,
+}
+
+impl PlayerFrame {
+    /// Count non-empty cells in frame rows.
+    pub fn count_non_empty(rows: &[String]) -> usize {
+        rows.iter()
+            .flat_map(|row| row.chars())
+            .filter(|ch| *ch != ' ')
+            .count()
+    }
+}
+
+// <FILE>crates/tui-vfx-player/src/cls_player_frame.rs</FILE> - <DESC>Sampled skeleton player frame DTO</DESC>
+// <VERS>END OF VERSION: 0.1.0</VERS>

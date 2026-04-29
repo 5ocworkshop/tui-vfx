@@ -1,0 +1,23 @@
+# <FILE>crates/tui-vfx-player-cli/Cargo.toml</FILE> - <DESC>Contract-native skeleton player CLI manifest</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>New kernel Phase K0: add render-recipe smoke CLI.</WCTX>
+# <CLOG>0.1.0: INIT — define focused player CLI without legacy runtime dependencies.</CLOG>
+
+[package]
+name = "tui-vfx-player-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+tui-vfx-contract.workspace = true
+tui-vfx-player.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# <FILE>crates/tui-vfx-player-cli/Cargo.toml</FILE> - <DESC>Contract-native skeleton player CLI manifest</DESC>
+# <VERS>END OF VERSION: 0.1.0</VERS>

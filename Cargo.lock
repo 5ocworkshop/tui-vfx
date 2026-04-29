@@ -1366,6 +1366,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "tui-vfx-player"
+version = "0.11.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tui-vfx-contract",
+]
+
+[[package]]
+name = "tui-vfx-player-cli"
+version = "0.11.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tui-vfx-contract",
+ "tui-vfx-player",
+]
+
+[[package]]
 name = "tui-vfx-probe"
 version = "0.11.0"
 dependencies = [

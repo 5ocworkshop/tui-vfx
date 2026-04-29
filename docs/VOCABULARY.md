@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>New kernel Phase J2: define descriptor pack/catalog vocabulary for shared primitive descriptors.</WCTX> -->
-<!-- <CLOG>0.5.0: MINOR — add J2 descriptor pack/catalog, embedded/pack-provided descriptor, collision, and canonical fixture terms.
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>New kernel Phase K0: define contract-native player and frame-report vocabulary.</WCTX> -->
+<!-- <CLOG>0.6.0: MINOR — add K0 Player, PlayerSession, Frame, RenderHash, and unsupported adapter terms.
+0.5.0: MINOR — add J2 descriptor pack/catalog, embedded/pack-provided descriptor, collision, and canonical fixture terms.
 0.4.0: MINOR — add J1 migration, structural validation, oracle, and visual parity terms.
 0.3.1: PATCH — document Truthy predicate per-kind semantics and maxDuration wire casing.
 0.3.0: MINOR — add I0 lifecycle/time/trigger vocabulary and distinctions.
@@ -99,6 +100,46 @@ Definition:
 
 Definition:
 : Machine-readable output from `tui-vfx-contract-cli validate-recipe`. J1 report schema `v3.1.validator.report.1` contains root, summary counts, and per-recipe errors/warnings.
+
+### Player
+
+Definition:
+: A contract-native runtime/probe component that consumes canonical v3.1 `RecipeDocument` values directly and samples them into frame evidence. The K0 implementation is `tui-vfx-player`.
+
+Not the same as:
+: The old `/usr/projects/tui-vfx-recipes/src` runtime, a visual parity oracle, or the contract validator. A player executes/render-samples; a validator checks structure and references.
+
+### PlayerSession
+
+Definition:
+: The stateful owner of player runtime state that is not part of the immutable recipe document, such as lifecycle trigger latch state.
+
+Policy:
+: Trigger latch state belongs in the session, not in `RecipeDocument`. Resetting a session clears sampled/latch state without mutating the recipe.
+
+### Frame
+
+Definition:
+: One sampled player output for a recipe, phase, dimensions, time value, and signal set. K0 frames are text-grid smoke evidence with `rows`, `width`, `height`, and `nonEmptyCells`.
+
+Not the same as:
+: Visual parity. A K0 frame proves that the contract-native player can sample a canonical fixture; it does not prove the result matches an old render.
+
+### RenderHash
+
+Definition:
+: A deterministic hash over player-visible recipe/sample/output tokens used to prove repeated samples of the same input are stable.
+
+Policy:
+: A render hash is regression evidence, not a perceptual image hash. Hash stability matters for the same player schema and adapter set; future player schema versions may deliberately change hash inputs.
+
+### UnsupportedAdapter
+
+Definition:
+: A structured player diagnostic emitted when a valid canonical recipe references a source or effect descriptor for which the current player has no adapter.
+
+Policy:
+: Unsupported adapters are explicit K0 smoke results, not silent success. Typical codes are `unsupportedSourceAdapter` and `unsupportedEffectAdapter`.
 
 ### DescriptorPack
 
@@ -669,32 +710,6 @@ Example:
   "value": { "kind": "number", "default": { "kind": "number", "value": 1.0 } },
   "bindable": true
 }
-```
-
-### Player
-
-Definition:
-: A future tool or runtime-facing application surface that can execute canonical contract data or demos. It is not the contract itself.
-
-Owns / owned by:
-: Deferred. Future player work should consume canonical recipe/runtime data, not legacy recipe internals.
-
-Rust contract type, if any:
-: None in the current contract.
-
-JSON/schema surface, if any:
-: None in the current contract.
-
-Not the same as:
-: Runtime semantics. A demo profile. A manifest. A recipe schema.
-
-Legacy/source-authoring synonyms, if useful:
-: Existing demo players and debug recipe runners are evidence for needs, not canonical vocabulary owners.
-
-Example:
-
-```text
-A future player can execute a canonical recipe without reading source-authoring template refs or legacy aliases.
 ```
 
 ### Preset
@@ -1268,4 +1283,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->

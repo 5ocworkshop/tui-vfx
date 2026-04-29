@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.21.0</VERS> -->
-<!-- <WCTX>New kernel Phase J2: add descriptor-pack response, status, evidence, schemas, and descriptor artifact.</WCTX> -->
-<!-- <CLOG>0.21.0: MINOR — add Phase J1 architect response plus J2 descriptor pack/catalog artifacts.
+<!-- <VERS>VERSION: 0.22.0</VERS> -->
+<!-- <WCTX>New kernel Phase K0: add skeleton player response, status, evidence, and player crates.</WCTX> -->
+<!-- <CLOG>0.22.0: MINOR — add Phase J2 architect response plus K0 player artifacts.
+0.21.0: MINOR — add Phase J1 architect response plus J2 descriptor pack/catalog artifacts.
 0.20.0: MINOR — add Phase J0 architect response plus J1 validator harness artifacts.
 0.19.0: MINOR — add Phase I0 architect response, J0 primitive migration artifacts, contract CLI, and canonical recipe root.
 0.18.0: MINOR — add Phase H1 architect response, I0 lifecycle/time/trigger artifacts, and schema roots.
@@ -66,6 +67,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_I0.md`](ARCH-RESP-TO-PHASE_I0.md) — Phase I0 response and Phase J0 primitive recipe migration pilot / validator recommendation.
 - [`ARCH-RESP-TO-PHASE_J0.md`](ARCH-RESP-TO-PHASE_J0.md) — Phase J0 approval and Phase J1 validator hardening / fixture harness recommendation.
 - [`ARCH-RESP-TO-PHASE_J1.md`](ARCH-RESP-TO-PHASE_J1.md) — Phase J1 approval and Phase J2 shared primitive descriptor catalog / second-ring migration recommendation.
+- [`ARCH-RESP-TO-PHASE_J2.md`](ARCH-RESP-TO-PHASE_J2.md) — Phase J2 response and Phase K0 contract-native skeleton player recommendation.
 
 ## Status and memo artifacts
 
@@ -110,6 +112,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_J1_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_J1_STATUS_MEMO_TO_ARCHITECT.md) — Phase J1 architect memo requesting next assignment.
 - [`PHASE_J2_STATUS.md`](PHASE_J2_STATUS.md) — concise Phase J2 descriptor pack / second-ring migration status.
 - [`PHASE_J2_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_J2_STATUS_MEMO_TO_ARCHITECT.md) — Phase J2 architect memo requesting next assignment.
+- [`PHASE_K0_STATUS.md`](PHASE_K0_STATUS.md) — concise Phase K0 contract-native skeleton player status.
+- [`PHASE_K0_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K0_STATUS_MEMO_TO_ARCHITECT.md) — Phase K0 architect memo requesting next assignment.
 
 ## Supporting artifacts
 
@@ -120,11 +124,14 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`J0_PRIMITIVE_MIGRATION_EVIDENCE.md`](J0_PRIMITIVE_MIGRATION_EVIDENCE.md) — primitive recipe migration pilot evidence, descriptor seed catalog, and validation proof.
 - [`J1_VALIDATOR_HARNESS_STATUS.md`](J1_VALIDATOR_HARNESS_STATUS.md) — validator hardening evidence, recursive report shape, and negative diagnostics coverage.
 - [`J2_DESCRIPTOR_PACK_STATUS.md`](J2_DESCRIPTOR_PACK_STATUS.md) — descriptor pack/catalog evidence, primitive pack contents, validator integration, and second-ring fixture status.
+- [`K0_PLAYER_STATUS.md`](K0_PLAYER_STATUS.md) — contract-native skeleton player evidence, rendered/unsupported fixture split, adapters, and schema pressure.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts
 
 - [`../../crates/tui-vfx-contract-cli/`](../../crates/tui-vfx-contract-cli/) — contract-only canonical v3.1 recipe validator CLI with recursive `validate-recipe` report schema `v3.1.validator.report.1`.
+- [`../../crates/tui-vfx-player/`](../../crates/tui-vfx-player/) — contract-native skeleton player API with `RecipePlayer`, `PlayerSession`, sampled frame reports, deterministic render hash, and explicit unsupported adapter diagnostics.
+- [`../../crates/tui-vfx-player-cli/`](../../crates/tui-vfx-player-cli/) — `render-recipe` smoke CLI emitting `v3.1.player.frame.1` and `v3.1.player.run.1` reports.
 - [`../../descriptors/v3.1/packs/primitive.json`](../../descriptors/v3.1/packs/primitive.json) — standard v3.1 primitive descriptor pack created by Phase J2.
 - `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/` — canonical v3.1 migrated debug recipe fixtures produced by Phase J0 and extended by Phase J2.
 
@@ -139,4 +146,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.21.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.22.0</VERS> -->
