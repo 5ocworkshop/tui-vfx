@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.13.0</VERS> -->
-<!-- <WCTX>New kernel Phase G4: add graph value bus and node output guidance.</WCTX> -->
-<!-- <CLOG>0.13.0: MINOR — add Phase G4 node I/O, graph value bus, and spatial field guidance.
+<!-- <VERS>VERSION: 0.14.0</VERS> -->
+<!-- <WCTX>Refresh reusable subagent briefing after OMX default profiles aligned with role-routed gpt-5.5 lanes.</WCTX> -->
+<!-- <CLOG>0.14.0: MINOR — replace role-suppressed gpt-5.5 dispatch guidance with role-routed OMX profile guidance.
+0.13.0: MINOR — add Phase G4 node I/O, graph value bus, and spatial field guidance.
 0.12.0: MINOR — add Phase G3 topology, parallel snapshot, and channel-aware merge guidance.
 0.11.0: MINOR — add Phase G2 canonical graph execution proof guidance.
 0.10.0: MINOR — add Phase G1 canonical graph container guidance.
@@ -579,7 +580,11 @@ Every subagent packet must include:
 - Report format requiring changed files, commands run, evidence, and risks.
 - A statement that the subagent is not alone in the codebase and must not revert others' edits.
 
-For the owner-requested unroled `gpt-5.5` lanes, do not set a role in the spawn request. Use exact write scopes and concrete tests to prevent architectural freelancing.
+When dispatching subagents, choose the role that matches the task shape (for
+example `executor`, `test-engineer`, `architect`, `writer`, or `verifier`) and
+rely on current OMX profiles for the correct gpt-5.5 lane. Do not leave roles
+unset merely to preserve a model choice; instead, keep exact write scopes and
+concrete tests to prevent architectural freelancing.
 
 ## Reporting expectations
 
@@ -594,4 +599,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.13.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.14.0</VERS> -->

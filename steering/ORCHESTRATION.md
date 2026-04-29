@@ -1,3 +1,8 @@
+<!-- <FILE>steering/ORCHESTRATION.md</FILE> - <DESC>Leader-facing orchestration protocol for routing subagents, preparing bounded work packets, and preserving OFPF steering discipline across long-running tui-vfx work.</DESC> -->
+<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <WCTX>Refresh subagent dispatch after OMX default profiles aligned with gpt-5.5 role routing.</WCTX> -->
+<!-- <CLOG>0.1.0: MINOR — add metadata and replace stale role-suppressed/model-pinned dispatch guidance with role-routed OMX profile guidance.</CLOG> -->
+
 # Orchestration Protocol
 
 Purpose: persistent instructions for how the leader agent should manage subagents and work packets during long-running V3 / library migration work, especially after context compaction or reset.
@@ -84,31 +89,30 @@ Each subagent packet should include, in this preferred order:
 12. reporting contract
 13. closing task reminder
 
-Default post-experiment stance:
-- use `gpt-5.4-mini` with `reasoning_effort: medium` as the default bounded-work
-  helper when the packet is concrete
-- reserve `gpt-5.4` with `reasoning_effort: medium` for ambiguity, multi-system
-  judgment, or higher-cost implementation mistakes
-- use `gpt-5.3-codex-spark` with `reasoning_effort: low` only for low-context,
-  doc-only helper lanes
-- use unroled `gpt-5.5` with `reasoning_effort: low` when the owner explicitly
-  wants that lane shape or when a packet is implementation-heavy but still
-  concrete enough to avoid architectural freelancing
-  - do not assign a role in the spawn request when the owner asks for this lane;
-    role selection can silently force a different model/effort profile
-  - keep the task packet narrower than a normal frontier packet: exact write
-    scope, exact non-goals, exact tests, and exact edge-case probes are required
-  - expect good in-scope execution and honest reporting, but leader review must
-    still check semantic edge cases, file-size/OFPF pressure, and whether tests
-    landed in the intended harness
-  - prefer sending one mid-flight status check after the first compile/test
-    failure report; do not repeatedly interrupt if the agent is making localized
-    progress
-  - after the agent returns, run the verification locally and do at least one
-    leader-owned edge-case review before accepting the lane
-  - include one canonical JSON/fixture shape when the packet touches parser,
-    schema, or DTO propagation; otherwise the agent may pass the concept but
-    miss a plan-required default or boundary assertion
+Default current dispatch stance:
+- choose a role-specialized subagent surface that matches the task shape instead
+  of suppressing roles to protect a model choice
+- OMX default agent profiles now align with the desired `gpt-5.5` lanes, so rely
+  on role routing plus the requested reasoning effort rather than suppressing the
+  role field or adding stale explicit model overrides
+- omit explicit model overrides unless the owner explicitly asks for one or the
+  current repo/runtime profile contract requires it
+- use `reasoning_effort: low` for tightly bounded doc, lookup, and small
+  mechanical lanes; `medium` for normal implementation/test lanes; and `high`
+  for architecture, safety, or ambiguity-heavy lanes
+- keep the task packet narrower than a normal frontier packet whenever the lane
+  is implementation-heavy but concrete: exact write scope, exact non-goals,
+  exact tests, and exact edge-case probes are required
+- expect good in-scope execution and honest reporting, but leader review must
+  still check semantic edge cases, file-size/OFPF pressure, and whether tests
+  landed in the intended harness
+- prefer sending one mid-flight status check after the first compile/test failure
+  report; do not repeatedly interrupt if the agent is making localized progress
+- after the agent returns, run the verification locally and do at least one
+  leader-owned edge-case review before accepting the lane
+- include one canonical JSON/fixture shape when the packet touches parser,
+  schema, or DTO propagation; otherwise the agent may pass the concept but miss a
+  plan-required default or boundary assertion
 - keep up to 5 useful lanes busy when independent work exists
 
 Work packet quality rule:
@@ -190,52 +194,25 @@ Post-experiment evidence trace:
   for reduced-motion source discovery plus remaining tooling touchpoints, rather
   than assuming the engine repo owns the whole path.
 
-Current model/task routing after the experiment family closed:
-- `gpt-5.4-mini` with `reasoning_effort: medium` is the operational default
-  bounded-work model when the packet is concrete
-  - use it for:
-    - blocker-scoped audits
-    - targeted tests and validator/tooling seams
-    - bounded fixture/doc cleanup
-    - small-to-medium implementation slices with clear file ownership
-    - packet-driven doc/process lanes that still need boundary discipline
-  - avoid using it as the first choice when:
-    - the lane is still ambiguous across repos or layers
-    - the packet cannot yet name the smallest justified write scope
-    - the task depends on non-trivial architectural tradeoff judgment
-  - expected review level:
-    - normal review always required
-    - closer review for interaction semantics, keybindings, nuanced UX, and any
-      lane where the packet still leaves real ambiguity
-- `gpt-5.3-codex-spark` with `reasoning_effort: low` is a fast doc-only helper
-  for low-context surfaces
-  - use it for:
-    - compact operator docs
-    - command references
-    - handoff notes
-    - small experiment/protocol drafts
-    - narrow steering/process edits that do not require broad repo-memory
-  - avoid using it by default for:
-    - runtime code changes
-    - architectural or ownership judgment
-    - packets that need sustained multi-doc synthesis or broad repository
-      context retention
-  - expected review level:
-    - moderate review for wording accuracy, path correctness, scope truth, and
-      final doc completeness
-- `gpt-5.4` with `reasoning_effort: medium` is the escalation model for harder
-  bounded lanes
-  - use it for:
-    - trickier architectural audits
-    - more ambiguous multi-system seams
-    - packets that need the leader to resolve competing repo-boundary signals
-    - harder implementation slices where the cost of a wrong move is higher
-  - review implication:
-    - expect a higher exactness-review burden on bounded packets; specifically
-      check that the helper named exact paths, exact commands, and a filled
-      final recommendation instead of abstract summaries
-  - do not use it reflexively when `gpt-5.4-mini` plus a better packet is
-    sufficient
+Current role/task routing after the OMX profile refresh:
+- use `explore` or an equivalent fast lookup role for read-only file, symbol,
+  relationship, or codebase-map questions
+- use `executor` for concrete implementation, cleanup, and refactor lanes with
+  clear file ownership
+- use `test-engineer` for test-first design, coverage gaps, fixtures, and flaky
+  verification hardening
+- use `debugger` for regression isolation and root-cause analysis before edits
+- use `architect` for multi-system tradeoffs, contract boundaries, and durable
+  API/schema decisions
+- use `critic` or `code-reviewer` for challenge/review lanes where independent
+  skepticism materially reduces risk
+- use `writer` for documentation, migration notes, status memos, and handoff
+  artifacts
+- use `verifier` for completion evidence and claim validation after integration
+- select reasoning effort by risk and ambiguity; improve packet specificity
+  before escalating effort
+- never suppress role selection merely to preserve `gpt-5.5`; role profiles
+  are now the supported way to reach the correct model/effort lane
 
 Grounding-first rule for research/evaluation packets:
 - if the packet is testing comprehension or prompt quality, require the helper
@@ -462,3 +439,6 @@ Escalation rule:
 - if the same type of issue appears in 2 or more recent packets, treat it as a
   briefing/prompt design failure and fix the orchestration materials before
   dispatching more similar work
+
+<!-- <FILE>steering/ORCHESTRATION.md</FILE> - <DESC>Leader-facing orchestration protocol for routing subagents, preparing bounded work packets, and preserving OFPF steering discipline across long-running tui-vfx work.</DESC> -->
+<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
