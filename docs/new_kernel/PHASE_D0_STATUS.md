@@ -1,9 +1,10 @@
 <!-- <FILE>docs/new_kernel/PHASE_D0_STATUS.md</FILE> - <DESC>Phase D0 schema/reference backfill status for the clean-room kernel</DESC> -->
-<!-- <VERS>VERSION: 0.2.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.1</VERS> -->
 <!-- <WCTX>New kernel Phase D0: record final verification, architect approval, and deslop status.</WCTX> -->
-<!-- <CLOG>0.2.0: MINOR — record final green verification and architect approval after D0 verifier fixes.
-<!-- 0.1.1: PATCH — record strict enum shape and complete generated-description verifier fixes. -->
-<!-- 0.1.0: INIT — record Phase D0 scope, schema roots, internal helpers, docs, and verification plan. --></CLOG> -->
+<!-- <CLOG>0.2.1: PATCH — fix metadata comment nesting after final memo pass.
+0.2.0: MINOR — record final green verification and architect approval after D0 verifier fixes.
+0.1.1: PATCH — record strict enum shape and complete generated-description verifier fixes.
+0.1.0: INIT — record Phase D0 scope, schema roots, internal helpers, docs, and verification plan.</CLOG> -->
 
 # Phase D0 Status — Schema/Reference Backfill
 
@@ -89,4 +90,4 @@ cargo test -p tui-vfx-next --test test_schema_generation
 - The schema export path is currently test-driven. A future `xtask schema --check` command can formalize it once the contract crate split or descriptor phase arrives.
 
 <!-- <FILE>docs/new_kernel/PHASE_D0_STATUS.md</FILE> - <DESC>Phase D0 schema/reference backfill status for the clean-room kernel</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.1</VERS> -->
