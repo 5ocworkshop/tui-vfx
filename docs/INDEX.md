@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.34.0</VERS> -->
-<!-- <WCTX>New kernel Phase I0: index lifecycle, clock, dwell, trigger, and predicate contracts.</WCTX> -->
-<!-- <CLOG>1.34.0: note I0 lifecycle/time/trigger contract semantics and schema roots.
+<!-- <VERS>VERSION: 1.35.0</VERS> -->
+<!-- <WCTX>V3.1 docs indexing: make schema and related directory ownership explicit.</WCTX> -->
+<!-- <CLOG>1.35.0: add v3.1 schema and related directory map.
+1.34.0: note I0 lifecycle/time/trigger contract semantics and schema roots.
 1.33.0: note H1 vocabulary and canonical recipe document contract semantics.
 1.32.0: note H0 source and asset contract semantics.
 1.31.0: note G4 node output and graph value bus semantics.
@@ -149,6 +150,17 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [design/tui-vfx-v3-outstanding-master-list.md](design/tui-vfx-v3-outstanding-master-list.md) — Master outstanding V3 work list, including the final-only V2 retirement gate.
 - [tooling/INDEX.md](tooling/INDEX.md) — Tooling hub for V3 preview, probe/database/frame diff, resize adapter, and edge ingestion workflows.
 
+## V3.1 schema and related directories
+
+- [`../schemas/v3.1/contract/`](../schemas/v3.1/contract/) — Checked generated stable v3.1 contract JSON Schemas. This is the canonical schema directory for `tui-vfx-contract` roots such as recipe, scene, element, effect descriptors, descriptor packs/catalogs, values, bindings, graph/node/value-bus types, sources/assets, lifecycle, phase, triggers, predicates, scopes, writes, diagnostics, and outcomes.
+- [`../schemas/v3.1/next/`](../schemas/v3.1/next/) — Checked generated proof-pipeline schemas owned by `tui-vfx-next`; currently sampler and pipeline artifacts.
+- [`../crates/tui-vfx-contract/`](../crates/tui-vfx-contract/) — Rust source of truth for stable v3.1 contract types and Serde/Schemars wire shape.
+- [`../crates/tui-vfx-next/`](../crates/tui-vfx-next/) — Clean-room proof crate used to pressure-test new schema/reference concepts before promotion.
+- [`../crates/tui-vfx-contract-cli/`](../crates/tui-vfx-contract-cli/) — Contract-only validator CLI for canonical v3.1 recipe validation reports.
+- [`../descriptors/v3.1/`](../descriptors/v3.1/) — Descriptor-pack artifacts for the v3.1 primitive catalog, including `packs/primitive.json`.
+- [`new_kernel/`](new_kernel/) — Phase-by-phase clean-room kernel docs, architect responses, status memos, review/de-slop reports, and K-series player evidence.
+- [`../../tui-vfx-recipes/recipes/v3.1/`](../../tui-vfx-recipes/recipes/v3.1/) — Sibling-repo canonical v3.1 migrated recipe fixtures when both repos are checked out under `/usr/projects`.
+
 ## Hand-Maintained
 - Recipe-authoring tool ownership:
   - **Preview / demo browser** (`tui-vfx-recipes` preview surfaces) is the canonical **recipe player** for human visual sign-off.
@@ -182,4 +194,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.33.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.35.0</VERS> -->

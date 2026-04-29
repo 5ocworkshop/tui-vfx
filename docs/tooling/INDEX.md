@@ -1,7 +1,8 @@
 <!-- <FILE>docs/tooling/INDEX.md</FILE> - <DESC>Tooling documentation index for tui-vfx and tui-vfx-recipes.</DESC> -->
-<!-- <VERS>VERSION: 0.2.4</VERS> -->
-<!-- <WCTX>Make the V3 tooling hub a command-first start page that maps the as-built validator, probe, diff/database, preview/player, resize, edge-ingestion, command-capture, trace, docs-generation, and headless smoke surfaces.</WCTX> -->
-<!-- <CLOG>0.2.4: add recipe-side V3 generated-doc and rustdoc gate commands to the tooling map.</CLOG> -->
+<!-- <VERS>VERSION: 0.2.5</VERS> -->
+<!-- <WCTX>Make the V3 tooling hub a command-first start page that maps as-built command surfaces and schema/reference directories.</WCTX> -->
+<!-- <CLOG>0.2.5: add v3.1 schema/reference directory map.
+0.2.4: add recipe-side V3 generated-doc and rustdoc gate commands to the tooling map.</CLOG> -->
 
 # Tooling documentation
 
@@ -41,6 +42,17 @@ deeper guide when you need more detail.
 | Recipe-side rustdoc gate | `RUSTDOCFLAGS="-D warnings" CARGO_TARGET_DIR=/tmp/tui-vfx-recipes-doc-target cargo doc -p tui-vfx-recipes --no-deps` from `/usr/projects/tui-vfx-recipes` | rustdoc | Public API rustdoc build without waiting on the shared workspace target lock. Use a throwaway target dir for evidence lanes. |
 | Headless Chapter 100 smoke | `cd /usr/projects/tui-vfx-recipes && just v3-headless-smoke` | as-built | Headless release-gate rehearsal for Chapter 100. Composes validator, debug-QC, probe, trace, release-gate probe evidence, and docs freshness checks while keeping a legacy fallback probe in the same run. |
 | First release-gate probe smoke | `cd /usr/projects/tui-vfx-recipes && just v3-release-gate-probe-smoke` | as-built | Smallest GUI-free evidence check: runs `recipe-probe --format json` for `probe_alarm_lighthouse` and validates the report status/cells shape. |
+
+## V3.1 schema/reference directories
+
+| Directory | Owner | Use |
+|---|---|---|
+| `/usr/projects/tui-vfx/schemas/v3.1/contract/` | `tui-vfx-contract` | Checked generated stable v3.1 JSON Schemas for recipe, scene, source/asset, descriptor, value/binding, graph/node/value-bus, lifecycle/time/trigger, scope/write/diagnostic/outcome, and related contract roots. |
+| `/usr/projects/tui-vfx/schemas/v3.1/next/` | `tui-vfx-next` | Checked generated proof schemas for sampler/pipeline concepts before stable promotion. |
+| `/usr/projects/tui-vfx/crates/tui-vfx-contract/` | Engine contract crate | Rust/Serde/Schemars source of truth for stable contract schema generation. |
+| `/usr/projects/tui-vfx/crates/tui-vfx-next/` | Clean-room proof crate | Experimental proof/reference types that can produce schema fixtures without changing the stable contract crate. |
+| `/usr/projects/tui-vfx/descriptors/v3.1/` | Descriptor catalog artifacts | Primitive descriptor packs loaded by the validator/player lanes. |
+| `/usr/projects/tui-vfx/docs/new_kernel/` | Kernel phase records | Architect responses, status memos, review/de-slop reports, and evidence docs that explain why each schema or player surface exists. |
 
 Status shorthand used above:
 
@@ -254,5 +266,5 @@ interrupting another cargo lane.
 - Frame/database evidence should continue to reuse probe reports and SQLite xray
   tables unless a concrete missing field forces a schema extension.
 
-<!-- <FILE>docs/tooling/INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.4</VERS> -->
+<!-- <FILE>docs/tooling/INDEX.md</FILE> - <DESC>Tooling documentation index for tui-vfx and tui-vfx-recipes.</DESC> -->
+<!-- <VERS>END OF VERSION: 0.2.5</VERS> -->

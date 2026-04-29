@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.23.0</VERS> -->
-<!-- <WCTX>New kernel Phase K1: add visual player UI response, status, evidence, and UI crate.</WCTX> -->
-<!-- <CLOG>0.23.0: MINOR — add Phase K0 architect response plus K1 visual player UI artifacts.
+<!-- <VERS>VERSION: 0.24.0</VERS> -->
+<!-- <WCTX>K2 player evidence indexing: add K2.0-K2.4 artifacts and explicit v3.1 schema directories.</WCTX> -->
+<!-- <CLOG>0.24.0: MINOR — add K2.0-K2.4 docs, review/de-slop artifacts, player reports, and schema directory details.
+0.23.0: MINOR — add Phase K0 architect response plus K1 visual player UI artifacts.
 0.22.0: MINOR — add Phase J2 architect response plus K0 player artifacts.
 0.21.0: MINOR — add Phase J1 architect response plus J2 descriptor pack/catalog artifacts.
 0.20.0: MINOR — add Phase J0 architect response plus J1 validator harness artifacts.
@@ -70,6 +71,10 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_J1.md`](ARCH-RESP-TO-PHASE_J1.md) — Phase J1 approval and Phase J2 shared primitive descriptor catalog / second-ring migration recommendation.
 - [`ARCH-RESP-TO-PHASE_J2.md`](ARCH-RESP-TO-PHASE_J2.md) — Phase J2 response and Phase K0 contract-native skeleton player recommendation.
 - [`ARCH-RESP-TO-PHASE_K0.md`](ARCH-RESP-TO-PHASE_K0.md) — Phase K0 response and Phase K1 basic visual player UI recommendation.
+- [`ARCH-RESP-TO-PHASE_K2_0.md`](ARCH-RESP-TO-PHASE_K2_0.md) — Phase K2.0 acceptance and updated K2 sequence.
+- [`ARCH-RESP-TO-PHASE_K2_1.md`](ARCH-RESP-TO-PHASE_K2_1.md) — Phase K2.1 response and K2.2 visual-frame substrate recommendation.
+- [`ARCH-RESP-TO-PHASE_K2_2.md`](ARCH-RESP-TO-PHASE_K2_2.md) — Phase K2.2 response and K2.3 primitive adapter burn-down recommendation.
+- [`ARCH-RESP-TO-PHASE_K2_3.md`](ARCH-RESP-TO-PHASE_K2_3.md) — Phase K2.3 response and K2.4 styled-cell visual substrate recommendation.
 
 ## Status and memo artifacts
 
@@ -118,6 +123,14 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K0_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K0_STATUS_MEMO_TO_ARCHITECT.md) — Phase K0 architect memo requesting next assignment.
 - [`PHASE_K1_STATUS.md`](PHASE_K1_STATUS.md) — concise Phase K1 visual player UI status.
 - [`PHASE_K1_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K1_STATUS_MEMO_TO_ARCHITECT.md) — Phase K1 architect memo requesting next assignment.
+- [`PHASE_K2_0_INVENTORY_GATE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_0_INVENTORY_GATE_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.0 inventory gate memo and primitive coverage baseline.
+- [`PHASE_K2_1_MIGRATION_GAP_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_1_MIGRATION_GAP_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.1 migration-gap memo and recipe-family roadmap evidence.
+- [`PHASE_K2_1_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_1_REVIEW_AND_DESLOP_REPORT.md) — third-party review and AI de-slop report for K2.1.
+- [`PHASE_K2_2_VISUAL_FRAME_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_2_VISUAL_FRAME_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.2 visual-frame substrate memo.
+- [`PHASE_K2_2_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_2_REVIEW_AND_DESLOP_REPORT.md) — third-party review and AI de-slop report for K2.2.
+- [`PHASE_K2_3_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_3_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.3 primitive adapter burn-down memo.
+- [`PHASE_K2_3_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_3_REVIEW_AND_DESLOP_REPORT.md) — third-party review and AI de-slop report for K2.3.
+- [`PHASE_K2_4_STYLED_CELL_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_4_STYLED_CELL_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.4 styled-cell substrate memo, verification, and de-slop summary.
 
 ## Supporting artifacts
 
@@ -130,21 +143,28 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`J2_DESCRIPTOR_PACK_STATUS.md`](J2_DESCRIPTOR_PACK_STATUS.md) — descriptor pack/catalog evidence, primitive pack contents, validator integration, and second-ring fixture status.
 - [`K0_PLAYER_STATUS.md`](K0_PLAYER_STATUS.md) — contract-native skeleton player evidence, rendered/unsupported fixture split, adapters, and schema pressure.
 - [`K1_PLAYER_UI_STATUS.md`](K1_PLAYER_UI_STATUS.md) — visual player shell evidence, controls, K0 API reuse, and fixture coverage.
+- [`DAY2_PLAN_K2.0_PACKET.md`](DAY2_PLAN_K2.0_PACKET.md) — Day-2 K2.0 inventory gate packet.
+- [`day2_briefing_report.md`](day2_briefing_report.md) — Day-2 reconnaissance report for K0/K1 architecture and route to visual evidence.
+- [`K2_2_VISUAL_FRAME_EVIDENCE.md`](K2_2_VISUAL_FRAME_EVIDENCE.md) — K2.2 render-frame/visual-frame evidence reference.
+- [`K2_3_PRIMITIVE_ADAPTER_GAP_EVIDENCE.md`](K2_3_PRIMITIVE_ADAPTER_GAP_EVIDENCE.md) — K2.3 primitive adapter support and blocker evidence reference.
+- [`K2_4_STYLED_CELL_SUBSTRATE_EVIDENCE.md`](K2_4_STYLED_CELL_SUBSTRATE_EVIDENCE.md) — K2.4 styled-cell substrate, `styleKnown`, and controlled styled-grid proof reference.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts
 
 - [`../../crates/tui-vfx-contract-cli/`](../../crates/tui-vfx-contract-cli/) — contract-only canonical v3.1 recipe validator CLI with recursive `validate-recipe` report schema `v3.1.validator.report.1`.
 - [`../../crates/tui-vfx-player/`](../../crates/tui-vfx-player/) — contract-native skeleton player API with `RecipePlayer`, `PlayerSession`, sampled frame reports, deterministic render hash, and explicit unsupported adapter diagnostics.
-- [`../../crates/tui-vfx-player-cli/`](../../crates/tui-vfx-player-cli/) — `render-recipe` smoke CLI emitting `v3.1.player.frame.1` and `v3.1.player.run.1` reports.
+- [`../../crates/tui-vfx-player-cli/`](../../crates/tui-vfx-player-cli/) — player CLI emitting `render-recipe` reports (`v3.1.player.frame.1`, `v3.1.player.run.1`), `render-frame` visual-frame reports (`v3.1.player.visualFrameReport.1`), inventory reports, migration-gap reports, and primitive-adapter-gap reports.
 - [`../../crates/tui-vfx-player-ui/`](../../crates/tui-vfx-player-ui/) — K1 ratatui/crossterm visual terminal shell with local fast-fs navigation layered on the K0 player/session APIs.
 - [`../../descriptors/v3.1/packs/primitive.json`](../../descriptors/v3.1/packs/primitive.json) — standard v3.1 primitive descriptor pack created by Phase J2.
 - `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/` — canonical v3.1 migrated debug recipe fixtures produced by Phase J0 and extended by Phase J2.
 
 ## Schema artifacts
 
-- [`../../schemas/v3.1/contract/`](../../schemas/v3.1/contract/) — checked generated stable contract schemas for surface, scope, write, diagnostics, scene, element, outcome, effect descriptor, descriptor pack/catalog, value, effect input, value source, parameter, signal, binding, graph, graph-step, node, source, source-descriptor, source-input, source-output, asset, asset-requirement, asset-ref, source-instance-id, recipe-metadata, recipe-element-pipeline, recipe-scene, recipe-scene-element, recipe, duration, clock, dwell-policy, trigger, value-predicate, phase, and lifecycle.
-- [`../../schemas/v3.1/next/`](../../schemas/v3.1/next/) — checked generated proof-pipeline schemas for sampler and pipeline artifacts.
+- [`../../schemas/v3.1/contract/`](../../schemas/v3.1/contract/) — checked generated stable contract schemas owned by `tui-vfx-contract`; includes surface, scope, write, diagnostic, scene/element/outcome, descriptor pack/catalog, effect descriptor/input/output, value/value-source/parameter/signal/binding, graph/graph-step/node/node-output/graph-value shapes, source/source-descriptor/source-input/source-output/source-instance-id, asset/asset-requirement/asset-ref, recipe metadata/scene/scene-element/element-pipeline/recipe, duration/clock/dwell-policy/trigger/value-predicate/phase/lifecycle.
+- [`../../schemas/v3.1/next/`](../../schemas/v3.1/next/) — checked generated proof-pipeline schemas owned by `tui-vfx-next`; currently `sampler.schema.json` and `pipeline.schema.json`.
+- [`../../crates/tui-vfx-contract/`](../../crates/tui-vfx-contract/) — Rust source of truth for the stable v3.1 contract schemas above.
+- [`../../crates/tui-vfx-next/`](../../crates/tui-vfx-next/) — proof crate for schema/reference concepts that are not yet promoted to the stable contract crate.
 
 ## Ralph planning artifacts
 
@@ -152,4 +172,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.23.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.24.0</VERS> -->
