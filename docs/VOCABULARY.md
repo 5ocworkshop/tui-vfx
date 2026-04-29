@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.14.0</VERS> -->
-<!-- <WCTX>K2.13 schema decision burn-down: document dispositions, gradients, optional inputs, sampled fields, and built-in scopes.</WCTX> -->
-<!-- <CLOG>0.14.0: MINOR — add schema-readiness dispositions, gradient values, optional inputs, sampled fields, and built-in scopes.
+<!-- <VERS>VERSION: 0.15.0</VERS> -->
+<!-- <WCTX>Fixture metadata and player diagnostics: document expected visual summaries and warning vocabulary.</WCTX> -->
+<!-- <CLOG>0.15.0: MINOR — add expected visual metadata and player warning vocabulary.
+0.14.0: MINOR — add schema-readiness dispositions, gradients, optional inputs, sampled fields, and built-in scopes.
 0.13.0: MINOR — add schema-readiness offender, declaration, and holdback vocabulary.
 0.12.0: MINOR — add migration mapping batch/report and descriptor decision vocabulary.
 0.11.0: MINOR — add K2.6 GUI, field coverage, migration loop, timeline, and diff evidence terms.</CLOG> -->
@@ -417,6 +418,34 @@ Definition:
 
 Not the same as:
 : An old source recipe. Canonical fixtures must validate as v3.1 `RecipeDocument` values, but they still do not prove visual parity.
+
+### Expected Visual
+
+Definition:
+: A short human-readable summary in recipe metadata describing the intended player/oracle-visible evidence for a canonical fixture.
+
+Owns / owned by:
+: `RecipeMetadata.expectedVisual` owns the summary. It is review metadata, not executable runtime behavior.
+
+Not the same as:
+: Visual parity, a golden image, a render hash, or a machine-enforced acceptance oracle.
+
+Policy:
+: Use expected visual summaries for fixture review and triage. Keep them honest when a fixture proves structural player evidence rather than legacy visual parity.
+
+### Player Warning
+
+Definition:
+: A structured non-fatal diagnostic emitted by the player when output is deterministic but caveated.
+
+Owns / owned by:
+: `PlayerWarning` owns the machine code, path, message, and hint in player frame reports.
+
+Common current codes:
+: `parallelGraphValueConflict`, `parallelSurfaceConflict`, and `imageFallbackRendered`.
+
+Not the same as:
+: A validation error, unsupported adapter error, or visual parity failure. Warnings preserve rendered status while exposing caveats.
 
 ## Canonical terms
 

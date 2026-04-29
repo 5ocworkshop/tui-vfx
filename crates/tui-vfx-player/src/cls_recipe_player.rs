@@ -8,9 +8,8 @@ use tui_vfx_contract::{DescriptorCatalog, RecipeDocument};
 
 use crate::{
     PlayerError, PlayerFrame, PlayerFrameReport, PlayerSampleRequest, PlayerStatus,
-    PlayerStyledGrid, fnc_apply_graph_effects::apply_graph_effects,
-    fnc_build_player_frame::build_player_frame, fnc_render_hash::render_hash,
-    fnc_render_scene::render_scene,
+    fnc_apply_graph_effects::apply_graph_effects, fnc_build_player_frame::build_player_frame,
+    fnc_render_hash::render_hash, fnc_render_scene::render_scene,
 };
 
 /// Contract-native player for a minimal primitive adapter subset.
@@ -34,9 +33,16 @@ impl RecipePlayer {
         if let Err(error) = recipe.validate_with_catalog(&self.catalog) {
             return self.error_report(recipe, request, format!("{error:?}"));
         }
-        let (mut rows, mut errors) = render_scene(recipe, request);
-        let mut styled_grid = PlayerStyledGrid::from_rows(&rows);
-        apply_graph_effects(recipe, request, &mut rows, &mut styled_grid, &mut errors);
+        let (mut rows, mut styled_grid, mut errors, mut warnings) = render_scene(recipe, request);
+        let mut graph_request = request.clone();
+        apply_graph_effects(
+            recipe,
+            &mut graph_request,
+            &mut rows,
+            &mut styled_grid,
+            &mut errors,
+            &mut warnings,
+        );
         let status = if errors.is_empty() {
             PlayerStatus::Rendered
         } else {
@@ -44,13 +50,14 @@ impl RecipePlayer {
         };
         let styled_grid = styled_grid.style_known().then_some(styled_grid);
         let frame = build_player_frame(recipe, request, &rows, &errors, styled_grid);
-        PlayerFrameReport::from_frame(
+        PlayerFrameReport::from_frame_with_warnings(
             recipe.id.as_str().to_string(),
             frame,
             status,
             request,
             false,
             errors,
+            warnings,
         )
     }
 

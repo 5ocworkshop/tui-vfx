@@ -11,7 +11,7 @@ use std::{
     process::{Command, Output},
 };
 
-const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 57;
+const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 67;
 
 #[test]
 fn test_fnc_cli_renders_single_recipe_frame_json() {
@@ -208,9 +208,9 @@ fn test_fnc_cli_reports_migration_gap_summary_json() {
         report["summary"]["v31Recipes"],
         RECURSIVE_DEBUG_FIXTURE_COUNT
     );
-    assert_eq!(report["summary"]["representedFamilies"], 10);
-    assert_eq!(report["summary"]["unrepresentedFamilies"], 10);
-    assert_eq!(report["summary"]["partiallyRepresentedFamilies"], 8);
+    assert_eq!(report["summary"]["representedFamilies"], 12);
+    assert_eq!(report["summary"]["unrepresentedFamilies"], 8);
+    assert_eq!(report["summary"]["partiallyRepresentedFamilies"], 10);
     assert_eq!(report["recommendedQueue"][0]["family"], "complex");
 }
 
@@ -254,8 +254,8 @@ fn test_fnc_cli_reports_migration_gap_family_status_json() {
     );
     assert_eq!(content["coverage"], "partial");
     assert_eq!(content["status"], "notYetClassified");
-    assert_eq!(complex["coverage"], "none");
-    assert_eq!(complex["status"], "adapterExpansionReady");
+    assert_eq!(complex["coverage"], "partial");
+    assert_eq!(complex["status"], "notYetClassified");
 }
 
 #[test]
@@ -305,7 +305,7 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.schemaReadiness.1");
     assert_eq!(report["summary"]["totalLegacyRecords"], 603);
-    assert_eq!(report["summary"]["schemaBlockedRecords"], 93);
+    assert_eq!(report["summary"]["schemaBlockedRecords"], 91);
     assert_eq!(report["summary"]["sourceBlockedRecords"], 61);
     assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 0);
     assert_eq!(report["summary"]["unknownRecords"], 0);
@@ -386,7 +386,7 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
     ]);
 
     let offenders = report["offenders"].as_array().expect("offenders");
-    assert_eq!(offenders.len(), 354);
+    assert_eq!(offenders.len(), 352);
     assert_eq!(report["summary"]["unresolvedSchemaBlockers"], 0);
     assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
     assert_eq!(report["summary"]["remainingOwnerDecisionCount"], 0);
@@ -409,7 +409,7 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
             ("lifecycleSemantics", 1),
             ("motionTimingSemantics", 34),
             ("oracleOnly", 2),
-            ("sceneSemantics", 26),
+            ("sceneSemantics", 24),
             ("sourceDescriptor", 68),
             ("valueSourceSemantics", 33),
         ])
@@ -568,7 +568,7 @@ fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
     }
     assert_eq!(report["summary"]["records"], 603);
     assert_eq!(report["summary"]["candidateReady"], 5);
-    assert_eq!(report["summary"]["schemaDecisionNeeded"], 93);
+    assert_eq!(report["summary"]["schemaDecisionNeeded"], 91);
 }
 
 #[test]

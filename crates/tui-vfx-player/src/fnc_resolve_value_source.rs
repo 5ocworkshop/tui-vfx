@@ -1,24 +1,35 @@
-// <FILE>crates/tui-vfx-player/src/fnc_resolve_value_source.rs</FILE> - <DESC>Resolve K0 value sources for player sampling</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K0: read literal, signal fallback, and simple map values.</WCTX>
-// <CLOG>0.1.0: INIT — add minimal resolver for source inputs and lifecycle triggers.</CLOG>
+// <FILE>crates/tui-vfx-player/src/fnc_resolve_value_source.rs</FILE> - <DESC>Resolve value sources for player sampling</DESC>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Player value resolution work: resolve graph-local values during topology execution.</WCTX>
+// <CLOG>0.2.0: MINOR — let graph-value sources read from the player graph value bus.
+// 0.1.0: INIT — add minimal resolver for source inputs and lifecycle triggers.</CLOG>
 
 use std::collections::BTreeMap;
 
-use tui_vfx_contract::{NumericRange, SignalId, Value, ValueSource};
+use tui_vfx_contract::{GraphValueId, NumericRange, SignalId, Value, ValueSource};
 
 /// Resolve a value source for K0 player needs.
 pub fn resolve_value_source(
     source: &ValueSource,
     signals: &BTreeMap<SignalId, Value>,
 ) -> Option<Value> {
+    resolve_value_source_with_graph_values(source, signals, &BTreeMap::new())
+}
+
+/// Resolve a value source with graph-local values available.
+pub fn resolve_value_source_with_graph_values(
+    source: &ValueSource,
+    signals: &BTreeMap<SignalId, Value>,
+    graph_values: &BTreeMap<GraphValueId, Value>,
+) -> Option<Value> {
     match source {
         ValueSource::Literal { value } => Some(value.clone()),
         ValueSource::Signal { id, fallback } => {
             signals.get(id).cloned().or_else(|| fallback.clone())
         }
-        ValueSource::Parameter { fallback, .. } | ValueSource::GraphValue { fallback, .. } => {
-            fallback.clone()
+        ValueSource::Parameter { fallback, .. } => fallback.clone(),
+        ValueSource::GraphValue { id, fallback } => {
+            graph_values.get(id).cloned().or_else(|| fallback.clone())
         }
         ValueSource::Map {
             from,
@@ -26,7 +37,7 @@ pub fn resolve_value_source(
             output,
             clamp,
         } => map_numeric(
-            resolve_value_source(from, signals)?,
+            resolve_value_source_with_graph_values(from, signals, graph_values)?,
             *input,
             *output,
             *clamp,
@@ -85,5 +96,5 @@ fn map_numeric(
     Some(Value::Number(min_out + t * (max_out - min_out)))
 }
 
-// <FILE>crates/tui-vfx-player/src/fnc_resolve_value_source.rs</FILE> - <DESC>Resolve K0 value sources for player sampling</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <FILE>crates/tui-vfx-player/src/fnc_resolve_value_source.rs</FILE> - <DESC>Resolve value sources for player sampling</DESC>
+// <VERS>END OF VERSION: 0.2.0</VERS>

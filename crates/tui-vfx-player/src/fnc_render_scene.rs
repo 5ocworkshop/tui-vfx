@@ -1,37 +1,74 @@
-// <FILE>crates/tui-vfx-player/src/fnc_render_scene.rs</FILE> - <DESC>Render recipe scenes into K0 text-grid rows</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase K0: render source.text using its canonical text input.</WCTX>
-// <CLOG>0.2.0: PATCH — distinguish source.card message input from source.text text input.
+// <FILE>crates/tui-vfx-player/src/fnc_render_scene.rs</FILE> - <DESC>Render recipe scenes into player-owned rows and styled cells</DESC>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Scene rendering carries element-local pipeline style evidence into the player surface.</WCTX>
+// <CLOG>0.3.0: MINOR — preserve local pipeline styled-cell evidence when placing scene elements.
+// 0.2.0: PATCH — distinguish source.card message input from source.text text input.
 // 0.1.0: INIT — add scene traversal, source rendering, and grid blitting helpers.</CLOG>
 
 use tui_vfx_contract::{RecipeDocument, SourceInputId, SourceSpec};
 
 use crate::{
-    PlayerError, PlayerSampleRequest, fnc_resolve_value_source::resolve_integer,
+    PlayerError, PlayerSampleRequest, PlayerStyledGrid, PlayerWarning,
+    fnc_apply_graph_effects::apply_graph_step_effects, fnc_resolve_value_source::resolve_integer,
     fnc_resolve_value_source::resolve_text,
 };
 
-/// Render the first recipe scene into K0 text-grid rows.
+/// Render the first recipe scene into player-owned rows and styled-cell evidence.
 pub fn render_scene(
     recipe: &RecipeDocument,
     request: &PlayerSampleRequest,
-) -> (Vec<String>, Vec<PlayerError>) {
+) -> (
+    Vec<String>,
+    PlayerStyledGrid,
+    Vec<PlayerError>,
+    Vec<PlayerWarning>,
+) {
     let Some(scene) = recipe.scenes.first() else {
-        return (vec![], vec![missing_scene_error()]);
+        return (
+            vec![],
+            PlayerStyledGrid::blank(0, 0, false),
+            vec![missing_scene_error()],
+            vec![],
+        );
     };
     let width = request.width.unwrap_or(scene.width);
     let height = request.height.unwrap_or(scene.height);
     let mut grid = blank_grid(width, height);
+    let mut styled_grid = PlayerStyledGrid::blank(width, height, false);
     let mut errors = Vec::new();
+    let mut warnings = Vec::new();
     let mut elements = scene.elements.iter().collect::<Vec<_>>();
     elements.sort_by_key(|element| element.z_index);
     for element in elements {
         match recipe.sources.get(&element.source) {
             Some(source) => {
-                let (source_rows, mut source_errors) = render_source(source, request);
+                let (mut source_rows, mut source_errors, mut source_warnings) =
+                    render_source(source, request);
+                warnings.append(&mut source_warnings);
+                let mut local_grid = PlayerStyledGrid::from_rows(&source_rows);
+                if let Some(pipeline) = &element.pipeline
+                    && let Some(topology) = &pipeline.topology
+                {
+                    let mut local_request = request.clone();
+                    apply_graph_step_effects(
+                        recipe,
+                        topology,
+                        &mut local_request,
+                        &mut source_rows,
+                        &mut local_grid,
+                        &mut source_errors,
+                        &mut warnings,
+                    );
+                }
                 blit_rows(
                     &mut grid,
                     &source_rows,
+                    element.placement.x,
+                    element.placement.y,
+                );
+                blit_styles(
+                    &mut styled_grid,
+                    &local_grid,
                     element.placement.x,
                     element.placement.y,
                 );
@@ -49,19 +86,25 @@ pub fn render_scene(
             )),
         }
     }
-    (grid_to_rows(&grid), errors)
+    let rows = grid_to_rows(&grid);
+    styled_grid.sync_glyphs_from_rows(&rows);
+    (rows, styled_grid, errors, warnings)
 }
 
 fn render_source(
     source: &SourceSpec,
     request: &PlayerSampleRequest,
-) -> (Vec<String>, Vec<PlayerError>) {
+) -> (Vec<String>, Vec<PlayerError>, Vec<PlayerWarning>) {
     match source.source.as_str() {
-        "source.card" => (render_text_source(source, request, "message"), vec![]),
-        "source.text" => (render_text_source(source, request, "text"), vec![]),
-        "source.ansi" => (render_ansi_source(source, request), vec![]),
-        "source.image" => (render_image_source(source, request), vec![]),
-        "source.procedural" => (render_procedural_source(source, request), vec![]),
+        "source.card" => (
+            render_text_source(source, request, "message"),
+            vec![],
+            vec![],
+        ),
+        "source.text" => (render_text_source(source, request, "text"), vec![], vec![]),
+        "source.ansi" => (render_ansi_source(source, request), vec![], vec![]),
+        "source.image" => render_image_source(source, request),
+        "source.procedural" => (render_procedural_source(source, request), vec![], vec![]),
         source_id => (
             vec![],
             vec![PlayerError::new(
@@ -71,6 +114,7 @@ fn render_source(
                 Some("Add a contract-native source adapter before expecting pixels."),
                 serde_json::json!({ "source": source_id }),
             )],
+            vec![],
         ),
     }
 }
@@ -113,14 +157,26 @@ fn render_ansi_source(source: &SourceSpec, request: &PlayerSampleRequest) -> Vec
     render_text_like_source(source, request, &strip_sgr_sequences(&ansi_text))
 }
 
-fn render_image_source(source: &SourceSpec, request: &PlayerSampleRequest) -> Vec<String> {
+fn render_image_source(
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+) -> (Vec<String>, Vec<PlayerError>, Vec<PlayerWarning>) {
     let asset = resolve_text(
         source.inputs.get(&SourceInputId::new("asset")),
         &request.signals,
         "missing",
     );
     let fallback = format!("[image fallback: {asset}]");
-    render_text_like_source(source, request, &fallback)
+    let rows = render_text_like_source(source, request, &fallback);
+    let warning = PlayerWarning::new(
+        "imageFallbackRendered",
+        "sources.*.inputs.asset",
+        format!("Image source rendered deterministic fallback for asset `{asset}`"),
+        Some(
+            "Provide an image resolver/backend adapter before treating source.image as visual parity.",
+        ),
+    );
+    (rows, vec![], vec![warning])
 }
 
 fn render_procedural_source(source: &SourceSpec, request: &PlayerSampleRequest) -> Vec<String> {
@@ -225,6 +281,31 @@ fn blit_row(destination: &mut [char], row: &str, dx: i32) {
     }
 }
 
+fn blit_styles(
+    destination: &mut PlayerStyledGrid,
+    source: &PlayerStyledGrid,
+    x_offset: i32,
+    y_offset: i32,
+) {
+    if !source.style_known() {
+        return;
+    }
+    for cell in source.cells() {
+        let x = x_offset + cell.x as i32;
+        let y = y_offset + cell.y as i32;
+        if x >= 0 && y >= 0 && destination.contains(x as usize, y as usize) {
+            destination.set_cell_style(
+                x as usize,
+                y as usize,
+                &cell.foreground,
+                &cell.background,
+                cell.modifiers.clone(),
+                cell.role.clone(),
+            );
+        }
+    }
+}
+
 fn grid_to_rows(grid: &[Vec<char>]) -> Vec<String> {
     grid.iter().map(|row| row.iter().collect()).collect()
 }
@@ -249,5 +330,5 @@ fn missing_scene_error() -> PlayerError {
     )
 }
 
-// <FILE>crates/tui-vfx-player/src/fnc_render_scene.rs</FILE> - <DESC>Render recipe scenes into K0 text-grid rows</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <FILE>crates/tui-vfx-player/src/fnc_render_scene.rs</FILE> - <DESC>Render recipe scenes into player-owned rows and styled cells</DESC>
+// <VERS>END OF VERSION: 0.3.0</VERS>

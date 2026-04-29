@@ -1,7 +1,9 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
 <!-- <VERS>VERSION: 0.31.0</VERS> -->
-<!-- <WCTX>K2.13 schema decision burn-down indexing: add decision reports, status memo, and schema/control docs.</WCTX> -->
-<!-- <CLOG>0.31.0: MINOR — add K2.13 schema decision burn-down reports, status memo, and schema/control artifacts.
+<!-- <WCTX>K2.15 graph execution and descriptor migration indexing.</WCTX> -->
+<!-- <CLOG>0.31.0: MINOR — add K2.15 graph execution, fixture, source, docs-gate, holdback, and review artifacts.
+0.30.2: PATCH — add K2.14 descriptor/adapter migration reports and review/de-slop artifact.
+0.30.1: PATCH — add K2.13 schema decision burn-down reports and review/de-slop artifact.
 0.30.0: MINOR — add K2.12 schema-lock decision sprint reports, status memo, and review/de-slop artifact.
 0.29.0: MINOR — add K2.11 briefing-first review and de-slop report.
 0.28.0: MINOR — add K2.11 schema-readiness ledger, source/content/scene table, studio preflight deferral, and status memo.
@@ -154,6 +156,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_13_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_13_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop closure, and verification evidence for K2.13.
 - [`PHASE_K2_14_DESCRIPTOR_ADAPTER_MIGRATION_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_14_DESCRIPTOR_ADAPTER_MIGRATION_STATUS_MEMO_TO_ARCHITECT.md) — descriptor/adapter migration tranche status memo, before/after metrics, risks, and next-packet recommendation.
 - [`PHASE_K2_14_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_14_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop closure, and verification evidence for K2.14.
+- [`PHASE_K2_15_GRAPH_DESCRIPTOR_MIGRATION_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_15_GRAPH_DESCRIPTOR_MIGRATION_STATUS_MEMO_TO_ARCHITECT.md) — K2.15 graph execution integration, fixture additions, final counters, and architect blocker memo.
+- [`PHASE_K2_15_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_15_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop cleanup, and verification evidence for K2.15.
 
 ## Supporting artifacts
 
@@ -203,6 +207,15 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_14_HOLDBACK_REGISTER.md`](K2_14_HOLDBACK_REGISTER.md) — backend/gui/oracle/duplicate holdback register.
 - [`K2_14_SCHEMA_API_DOCS_GATE.md`](K2_14_SCHEMA_API_DOCS_GATE.md) — reproducible schema/API/docs gate commands.
 - [`K2_14_STUDIO_CONTROL_DERIVATION_REPORT.md`](K2_14_STUDIO_CONTROL_DERIVATION_REPORT.md) — future studio-control derivation rules.
+- [`K2_15_BASELINE_AND_FINAL_COUNTERS.md`](K2_15_BASELINE_AND_FINAL_COUNTERS.md) — K2.15 before/after migration, render, field coverage, adapter, schema-readiness, and mapping counters.
+- [`K2_15_GRAPH_EXECUTION_INTEGRATION_REPORT.md`](K2_15_GRAPH_EXECUTION_INTEGRATION_REPORT.md) — player graph topology/value-bus executor integration evidence.
+- [`K2_15_GRAPH_IO_FIXTURE_REPORT.md`](K2_15_GRAPH_IO_FIXTURE_REPORT.md) — canonical graph I/O fixture additions and proof goals.
+- [`K2_15_SCENE_LAYER_PLAYER_EVIDENCE_REPORT.md`](K2_15_SCENE_LAYER_PLAYER_EVIDENCE_REPORT.md) — scene/layer-local player evidence and honest limits.
+- [`K2_15_DESCRIPTOR_ADAPTER_TRANCHE_2_REPORT.md`](K2_15_DESCRIPTOR_ADAPTER_TRANCHE_2_REPORT.md) — descriptor/adapter tranche status and zero-gap evidence.
+- [`K2_15_SOURCE_CONTENT_TRANCHE_2_REPORT.md`](K2_15_SOURCE_CONTENT_TRANCHE_2_REPORT.md) — source/content tranche status for ANSI, image, and procedural fixtures.
+- [`K2_15_HOLDBACK_REGISTER.md`](K2_15_HOLDBACK_REGISTER.md) — remaining holdbacks and high-level blockers.
+- [`K2_15_SCHEMA_API_DOCS_GATE.md`](K2_15_SCHEMA_API_DOCS_GATE.md) — docs/schema impact assessment and synchronization note.
+- [`K2_15_STUDIO_CONTROL_CATALOG_PREFLIGHT.md`](K2_15_STUDIO_CONTROL_CATALOG_PREFLIGHT.md) — studio-control/catalog preflight status after graph execution work.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts
@@ -227,4 +240,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.30.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.31.0</VERS> -->

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_frame_report.rs</FILE> - <DESC>Stable JSON player frame report DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Player reporting work: expose machine-readable sampled frame evidence.</WCTX>
-// <CLOG>0.2.0: MINOR — carry non-serialized styled-grid evidence into visual-frame reports.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Player reporting work: carry non-fatal graph merge diagnostics in frame reports.</WCTX>
+// <CLOG>0.3.0: MINOR — add warning-aware report construction without changing the serialized report schema label.
+// 0.2.0: MINOR — carry non-serialized styled-grid evidence into visual-frame reports.
 // 0.1.0: INIT — add v3.1.player.frame.1 report shape.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
@@ -57,6 +58,27 @@ impl PlayerFrameReport {
         dwell_terminated: bool,
         errors: Vec<PlayerError>,
     ) -> Self {
+        Self::from_frame_with_warnings(
+            recipe_id,
+            frame,
+            status,
+            request,
+            dwell_terminated,
+            errors,
+            vec![],
+        )
+    }
+
+    /// Build a frame report from a frame plus hard and non-fatal diagnostics.
+    pub fn from_frame_with_warnings(
+        recipe_id: String,
+        frame: PlayerFrame,
+        status: PlayerStatus,
+        request: &crate::PlayerSampleRequest,
+        dwell_terminated: bool,
+        errors: Vec<PlayerError>,
+        warnings: Vec<PlayerWarning>,
+    ) -> Self {
         Self {
             schema_version: "v3.1.player.frame.1",
             recipe_id,
@@ -73,10 +95,10 @@ impl PlayerFrameReport {
             rows: frame.rows,
             dwell_terminated,
             errors,
-            warnings: vec![],
+            warnings,
         }
     }
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_player_frame_report.rs</FILE> - <DESC>Stable JSON player frame report DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

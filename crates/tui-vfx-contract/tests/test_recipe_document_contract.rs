@@ -135,6 +135,7 @@ fn valid_recipe() -> RecipeDocument {
             title: Some("Hero Recipe".to_string()),
             description: Some("Canonical H1 proof recipe.".to_string()),
             authors: vec!["new-kernel".to_string()],
+            expected_visual: None,
             tags: vec!["proof".to_string()],
         },
         lifecycle: None,

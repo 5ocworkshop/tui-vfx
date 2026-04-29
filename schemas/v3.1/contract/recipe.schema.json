@@ -1665,6 +1665,14 @@
             "null"
           ]
         },
+        "expectedVisual": {
+          "description": "Optional expected visual summary for canonical fixture and review workflows.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "tags": {
           "description": "Optional catalog/search tags.",
           "type": "array",

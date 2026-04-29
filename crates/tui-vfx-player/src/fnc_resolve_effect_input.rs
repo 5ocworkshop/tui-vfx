@@ -1,14 +1,17 @@
 // <FILE>crates/tui-vfx-player/src/fnc_resolve_effect_input.rs</FILE> - <DESC>Resolve graph node effect inputs</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>K2.13 field coverage closure: resolve typed gradient effect inputs.</WCTX>
-// <CLOG>0.4.0: MINOR — add gradient input resolver.
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Player graph execution: resolve effect inputs against the graph value bus.</WCTX>
+// <CLOG>0.5.0: MINOR — thread graph-local values through effect input resolution.
+// 0.4.0: MINOR — add gradient input resolver.
 // 0.3.1: PATCH — centralize effect input lookup and RGBA label formatting.</CLOG>
 
 use tui_vfx_contract::{EffectInputId, GradientSpec, NodeSpec, Value};
 
 pub(crate) use crate::cls_resolved_color::ResolvedColor;
 
-use crate::{PlayerSampleRequest, fnc_resolve_value_source::resolve_value_source};
+use crate::{
+    PlayerSampleRequest, fnc_resolve_value_source::resolve_value_source_with_graph_values,
+};
 
 pub(crate) fn resolve_effect_number(
     node: &NodeSpec,
@@ -90,8 +93,10 @@ fn resolve_effect_value(
 ) -> Option<Value> {
     node.inputs
         .get(&EffectInputId::new(input_id))
-        .and_then(|source| resolve_value_source(source, &request.signals))
+        .and_then(|source| {
+            resolve_value_source_with_graph_values(source, &request.signals, &request.graph_values)
+        })
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_resolve_effect_input.rs</FILE> - <DESC>Resolve graph node effect inputs</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

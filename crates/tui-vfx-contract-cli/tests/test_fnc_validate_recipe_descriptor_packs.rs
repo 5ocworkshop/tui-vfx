@@ -13,7 +13,7 @@ use support::{
     recipe_root, remove_temp, run_failure_args, run_success, write_json,
 };
 
-const CANONICAL_RECIPE_COUNT: i64 = 57;
+const CANONICAL_RECIPE_COUNT: i64 = 67;
 
 #[test]
 fn validates_canonical_recipe_directory_with_descriptor_pack() {

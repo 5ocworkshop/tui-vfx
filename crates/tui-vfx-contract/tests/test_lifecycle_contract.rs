@@ -237,6 +237,7 @@ fn recipe_document_can_include_lifecycle() {
             title: Some("Lifecycle Recipe".to_string()),
             description: Some("I0 recipe lifecycle proof.".to_string()),
             authors: vec!["new-kernel".to_string()],
+            expected_visual: None,
             tags: vec!["lifecycle".to_string()],
         },
         lifecycle: Some(lifecycle_until(
