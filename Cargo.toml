@@ -1,7 +1,8 @@
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>VERSION: 0.10.0</VERS>
-# <WCTX>New kernel Phase E0 — add physical tui-vfx-contract crate before descriptor work.</WCTX>
-# <CLOG>0.10.0: MINOR add tui-vfx-contract workspace member/dependency for Phase E0 physical contract split.
+# <VERS>VERSION: 0.11.0</VERS>
+# <WCTX>New kernel Phase J0 — add contract-only recipe validator CLI crate.</WCTX>
+# <CLOG>0.11.0: MINOR add tui-vfx-contract-cli workspace member/dependency for Phase J0 canonical recipe validation.
+# 0.10.0: MINOR add tui-vfx-contract workspace member/dependency for Phase E0 physical contract split.
 # 0.9.0: MINOR bump workspace.package.version 0.10.0 → 0.11.0 and every internal-crate version floor 0.10.0 → 0.11.0 for Sub-plan B Phase B.1 — additive TraceEmitter + TraceFrameContext public API in tui-vfx-debug and bridge refactor in tui-vfx-compositor so seq_in_frame authority is centralized for shared emit sites.
 # 0.8.0: MINOR bump workspace.package.version 0.9.0 → 0.10.0 and every internal-crate version floor 0.9.0 → 0.10.0 for Sub-plan A Phase A.5 — SUB-PLAN-BOUNDARY: no new public API in A.5 itself (documentation-consistency pass + end-to-end integration test only); the bump marks the release boundary at which Sub-plan A (A.1 primitives + A.2 pipeline + A.3 shadow + A.4 inspection foundation) is fully landed and verified by cross-phase integration test `crates/tui-vfx/tests/test_foundation_end_to_end.rs`. Conservative bump chosen over 1.0.0-alpha.1 because additional pre-1.0 iteration is expected during Sub-plans B and C. See handoff at `gt-design/docs/superpowers/handoffs/2026-04-20-sub-plan-A-handoff.md`.
 # 0.7.0: MINOR bump workspace.package.version 0.8.0 → 0.9.0 and every internal-crate version floor 0.8.0 → 0.9.0 for Sub-plan A Phase A.4 — ADDITIVE: tui-vfx-debug gains public `inspection` module (TraceEvent / TraceEnvelope / TraceSelector / TraceFilter / StageMask / InspectionSink / TraceSink / TraceReport); tui-vfx-compositor gains `traits::cls_inspection_sink_bridge::InspectionSinkBridge`. CompositorInspector stays in tui-vfx-compositor. criterion dev-dep added to tui-vfx-debug for two new benches.
@@ -16,6 +17,7 @@ members = [
     "crates/tui-vfx",
     "crates/tui-vfx-types",
     "crates/tui-vfx-contract",
+    "crates/tui-vfx-contract-cli",
     "crates/tui-vfx-next",
     "crates/tui-vfx-core",
     "crates/tui-vfx-core-macros",
@@ -42,6 +44,7 @@ categories = ["command-line-interface", "graphics"]
 # Internal crates
 tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.11.0" }
 tui-vfx-contract = { path = "crates/tui-vfx-contract", version = "0.11.0" }
+tui-vfx-contract-cli = { path = "crates/tui-vfx-contract-cli", version = "0.11.0" }
 tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.11.0" }
 tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.11.0" }
 tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.11.0" }
@@ -69,7 +72,7 @@ smallvec = "1.11"
 rocketsplash-rt = "0.2.2"
 
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>END OF VERSION: 0.10.0</VERS>
+# <VERS>END OF VERSION: 0.11.0</VERS>
 # Example/demo workloads need meaningful optimization in dev too; otherwise
 # local cargo run / cargo test significantly under-represents real runtime
 # performance and makes the stack look slower than it is.

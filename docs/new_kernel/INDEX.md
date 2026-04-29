@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.18.0</VERS> -->
-<!-- <WCTX>New kernel Phase I0: add lifecycle/time/trigger status, evidence, and schema roots.</WCTX> -->
-<!-- <CLOG>0.18.0: MINOR — add Phase H1 architect response, I0 lifecycle/time/trigger artifacts, and schema roots.
+<!-- <VERS>VERSION: 0.19.0</VERS> -->
+<!-- <WCTX>New kernel Phase J0: add primitive migration pilot response, status, evidence, validator, and canonical recipe roots.</WCTX> -->
+<!-- <CLOG>0.19.0: MINOR — add Phase I0 architect response, J0 primitive migration artifacts, contract CLI, and canonical recipe root.
+0.18.0: MINOR — add Phase H1 architect response, I0 lifecycle/time/trigger artifacts, and schema roots.
 0.17.0: MINOR — add Phase H0 architect response, H1 vocabulary/evidence/status artifacts, and recipe schema roots.
 0.16.0: MINOR — add Phase G4 architect response, H0 status artifacts, and source/asset schema roots.
 0.15.0: MINOR — add Phase G3 architect response and G4 status artifacts.
@@ -35,7 +36,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 ## v3.1 contract docs one level up
 
 - [`../VOCABULARY.md`](../VOCABULARY.md) — canonical v3.1 human vocabulary and non-canonical legacy/source-authoring synonym map.
-- [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, D3 boundary, E0 split, E1 descriptor model, F1 typed inputs, F2 declarative value sources/bindings, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 node I/O value-bus semantics, H0 source/asset/procedural source contracts, H1 canonical recipe document packaging, and I0 lifecycle/time/trigger contracts.
+- [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, D3 boundary, E0 split, E1 descriptor model, F1 typed inputs, F2 declarative value sources/bindings, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 node I/O value-bus semantics, H0 source/asset/procedural source contracts, H1 canonical recipe document packaging, I0 lifecycle/time/trigger contracts, and J0 primitive migration pilot validation.
 - [`../v3.1-contract-boundary.md`](../v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1/I0 classification of contract vocabulary, proof implementation, crate ownership, descriptor/input/value-source/binding/graph/execution-proof/topology/value-bus/source/asset/recipe document/lifecycle model, schema roots, and handoff guardrails.
 - [`../v3.1-surface-contract.md`](../v3.1-surface-contract.md) — current clean-room surface/sampling/pipeline/scene/descriptor contract owned by `tui-vfx-contract` and proven by `tui-vfx-next`.
 - [`../v3.1-feature-contract-checklist.md`](../v3.1-feature-contract-checklist.md) — reusable decision checklist for future contract-affecting features.
@@ -60,6 +61,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_G4.md`](ARCH-RESP-TO-PHASE_G4.md) — Phase G4 approval and Phase H0 source / asset / procedural source recommendation.
 - [`ARCH-RESP-TO-PHASE_H0.md`](ARCH-RESP-TO-PHASE_H0.md) — Phase H0 response and Phase H1 canonical recipe document / vocabulary recommendation.
 - [`ARCH-RESP-TO-PHASE_H1.md`](ARCH-RESP-TO-PHASE_H1.md) — Phase H1 response and Phase I0 time / lifecycle / trigger contract recommendation.
+- [`ARCH-RESP-TO-PHASE_I0.md`](ARCH-RESP-TO-PHASE_I0.md) — Phase I0 response and Phase J0 primitive recipe migration pilot / validator recommendation.
 
 ## Status and memo artifacts
 
@@ -98,6 +100,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_H1_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_H1_STATUS_MEMO_TO_ARCHITECT.md) — Phase H1 architect memo requesting next assignment.
 - [`PHASE_I0_STATUS.md`](PHASE_I0_STATUS.md) — concise Phase I0 time / lifecycle / trigger contract status.
 - [`PHASE_I0_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_I0_STATUS_MEMO_TO_ARCHITECT.md) — Phase I0 architect memo requesting next assignment.
+- [`PHASE_J0_STATUS.md`](PHASE_J0_STATUS.md) — concise Phase J0 primitive recipe migration pilot status.
+- [`PHASE_J0_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_J0_STATUS_MEMO_TO_ARCHITECT.md) — Phase J0 architect memo requesting next assignment.
 
 ## Supporting artifacts
 
@@ -105,7 +109,13 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PROCESS_OVERVIEW_DIAGRAM.md`](PROCESS_OVERVIEW_DIAGRAM.md) — process overview diagram/notes.
 - [`H1_RECIPE_EVIDENCE_NOTES.md`](H1_RECIPE_EVIDENCE_NOTES.md) — curated recipe-evidence mapping pressure notes for canonical H1 schema work.
 - [`I0_EVENT_DWELL_EVIDENCE_NOTES.md`](I0_EVENT_DWELL_EVIDENCE_NOTES.md) — curated event-dwell/timing evidence notes for canonical I0 lifecycle/trigger work.
+- [`J0_PRIMITIVE_MIGRATION_EVIDENCE.md`](J0_PRIMITIVE_MIGRATION_EVIDENCE.md) — primitive recipe migration pilot evidence, descriptor seed catalog, and validation proof.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
+
+## Validator and recipe artifacts
+
+- [`../../crates/tui-vfx-contract-cli/`](../../crates/tui-vfx-contract-cli/) — contract-only canonical v3.1 recipe validator CLI.
+- `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/` — canonical v3.1 migrated debug recipe fixtures produced by Phase J0.
 
 ## Schema artifacts
 
@@ -118,4 +128,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.18.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.19.0</VERS> -->

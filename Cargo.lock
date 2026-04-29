@@ -1301,6 +1301,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tui-vfx-contract-cli"
+version = "0.11.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tui-vfx-contract",
+]
+
+[[package]]
 name = "tui-vfx-core"
 version = "0.11.0"
 dependencies = [
