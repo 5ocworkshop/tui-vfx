@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.10.0</VERS>
-// <WCTX>New kernel Phase I0: include lifecycle, clock, duration, phase, trigger, and predicate schema roots.</WCTX>
-// <CLOG>0.10.0: MINOR — add lifecycle/time/trigger schema fixtures.
+// <VERS>VERSION: 0.11.0</VERS>
+// <WCTX>New kernel Phase J2: include descriptor pack and catalog schema roots.</WCTX>
+// <CLOG>0.11.0: MINOR — add descriptor pack, pack ref, and catalog schema fixtures.
+// 0.10.0: MINOR — add lifecycle/time/trigger schema fixtures.
 // 0.9.0: MINOR — add canonical recipe document schema fixtures.
 // 0.8.0: MINOR — add source and asset schema fixtures.
 // 0.7.0: MINOR — add graph value and node output schema fixtures.
@@ -16,13 +17,14 @@ use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
-    AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, DurationSpec,
-    DwellPolicy, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep,
-    GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec,
-    NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument, RecipeElementPipeline,
-    RecipeMetadata, RecipeScene, RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec,
-    SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec,
-    Surface, SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
+    AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, DescriptorCatalog,
+    DescriptorPack, DescriptorPackId, DescriptorPackRef, DurationSpec, DwellPolicy,
+    EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId,
+    GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec, NodeOutputSpec,
+    NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument, RecipeElementPipeline, RecipeMetadata,
+    RecipeScene, RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec,
+    SourceDescriptor, SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec, Surface,
+    SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -67,6 +69,22 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         ("phase.schema.json", canonical_schema::<PhaseSpec>()),
         ("lifecycle.schema.json", canonical_schema::<LifecycleSpec>()),
         ("asset.schema.json", canonical_schema::<AssetSpec>()),
+        (
+            "descriptor-pack-id.schema.json",
+            canonical_schema::<DescriptorPackId>(),
+        ),
+        (
+            "descriptor-pack-ref.schema.json",
+            canonical_schema::<DescriptorPackRef>(),
+        ),
+        (
+            "descriptor-pack.schema.json",
+            canonical_schema::<DescriptorPack>(),
+        ),
+        (
+            "descriptor-catalog.schema.json",
+            canonical_schema::<DescriptorCatalog>(),
+        ),
         (
             "asset-requirement.schema.json",
             canonical_schema::<AssetRequirement>(),
@@ -260,6 +278,10 @@ fn recipe_schema_generation_is_current() {
 #[test]
 fn source_schema_roots_are_current() {
     assert_schema_fixture_current::<AssetSpec>("asset.schema.json");
+    assert_schema_fixture_current::<DescriptorPackId>("descriptor-pack-id.schema.json");
+    assert_schema_fixture_current::<DescriptorPackRef>("descriptor-pack-ref.schema.json");
+    assert_schema_fixture_current::<DescriptorPack>("descriptor-pack.schema.json");
+    assert_schema_fixture_current::<DescriptorCatalog>("descriptor-catalog.schema.json");
     assert_schema_fixture_current::<AssetRequirement>("asset-requirement.schema.json");
     assert_schema_fixture_current::<AssetRef>("asset-ref.schema.json");
     assert_schema_fixture_current::<SourceInputSpec>("source-input.schema.json");
@@ -382,6 +404,11 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
     assert!(all_schemas.contains("Strict canonical v3.1 recipe document"));
     assert!(
         all_schemas
+            .contains("Shared descriptor pack that can provide source and effect descriptors")
+    );
+    assert!(all_schemas.contains("Recipe-local declaration that an external descriptor pack"));
+    assert!(
+        all_schemas
             .contains("Scene element whose surface is produced by a declared source instance")
     );
     assert!(
@@ -447,4 +474,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.10.0</VERS>
+// <VERS>END OF VERSION: 0.11.0</VERS>

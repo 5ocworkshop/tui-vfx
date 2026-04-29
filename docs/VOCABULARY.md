@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
-<!-- <WCTX>New kernel Phase J1: define validator, migration-smoke, and parity terminology.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — add J1 migration, structural validation, oracle, and visual parity terms.
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
+<!-- <WCTX>New kernel Phase J2: define descriptor pack/catalog vocabulary for shared primitive descriptors.</WCTX> -->
+<!-- <CLOG>0.5.0: MINOR — add J2 descriptor pack/catalog, embedded/pack-provided descriptor, collision, and canonical fixture terms.
+0.4.0: MINOR — add J1 migration, structural validation, oracle, and visual parity terms.
 0.3.1: PATCH — document Truthy predicate per-kind semantics and maxDuration wire casing.
 0.3.0: MINOR — add I0 lifecycle/time/trigger vocabulary and distinctions.
 0.2.0: MINOR — add H1 RecipeDocument/RecipeScene/RecipeSceneElement/RecipeElementPipeline terms and clarify source-local pipeline seam.
@@ -98,6 +99,57 @@ Definition:
 
 Definition:
 : Machine-readable output from `tui-vfx-contract-cli validate-recipe`. J1 report schema `v3.1.validator.report.1` contains root, summary counts, and per-recipe errors/warnings.
+
+### DescriptorPack
+
+Definition:
+: A schema-backed shared descriptor bundle that provides reusable `SourceDescriptor` and `EffectDescriptor` values to canonical recipes.
+
+Current location:
+: Standard implementation-owned packs live under `/usr/projects/tui-vfx/descriptors/v3.1/packs/`.
+
+Policy:
+: Descriptor packs are contract/runtime catalog artifacts, not recipe corpus artifacts. Recipes may reference them; they should not copy standard primitive descriptor definitions unless they intentionally embed custom descriptors.
+
+### DescriptorCatalog
+
+Definition:
+: The loaded set of descriptor packs available to validator or runtime resolution for one validation/execution context.
+
+Not the same as:
+: The recipes repo, old recipe evidence, or a visual player. A catalog resolves descriptor definitions only.
+
+### EmbeddedDescriptor
+
+Definition:
+: A descriptor declared directly inside a canonical recipe, such as `sourceDescriptors.source.card` or `graph.effects.filter.dim`.
+
+Policy:
+: Embedded descriptors remain supported for compatibility and genuinely recipe-local/custom descriptors, but standard primitive descriptors should move toward pack-provided descriptors.
+
+### PackProvidedDescriptor
+
+Definition:
+: A source or effect descriptor supplied by a loaded `DescriptorPack` and used by a canonical recipe through a `DescriptorPackRef`.
+
+Policy:
+: Pack-provided descriptors must be stable enough to share across fixtures. Changing one can affect every recipe that references the pack.
+
+### DescriptorCollision
+
+Definition:
+: A validation error where two descriptor sources provide the same descriptor id, for example two packs both provide `mask.dissolve`, or a recipe embeds `filter.dim` while also referencing a pack that provides `filter.dim`.
+
+Default policy:
+: Collisions are errors. v3.1 does not silently override descriptors.
+
+### Canonical Fixture
+
+Definition:
+: A checked canonical v3.1 recipe JSON file used by tests or migration evidence. Current fixture corpus lives under `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/`.
+
+Not the same as:
+: An old source recipe. Canonical fixtures must validate as v3.1 `RecipeDocument` values, but they still do not prove visual parity.
 
 ## Canonical terms
 
@@ -1216,4 +1268,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.5.0</VERS> -->

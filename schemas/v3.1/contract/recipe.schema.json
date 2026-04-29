@@ -19,6 +19,13 @@
         "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
       }
     },
+    "descriptorPacks": {
+      "description": "External descriptor packs required to resolve source and effect descriptors.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DescriptorPackRef"
+      }
+    },
     "graph": {
       "description": "Canonical graph containing parameters, signals, bindings, effects, nodes, and topology.",
       "$ref": "#/$defs/GraphSpec"
@@ -579,6 +586,25 @@
           "type": "string",
           "const": "sampledSource"
         }
+      ]
+    },
+    "DescriptorPackId": {
+      "description": "Stable canonical descriptor pack identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z0-9][A-Za-z0-9_-]*)*$"
+    },
+    "DescriptorPackRef": {
+      "description": "Recipe-local declaration that an external descriptor pack is required.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Required descriptor pack id.",
+          "$ref": "#/$defs/DescriptorPackId"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id"
       ]
     },
     "DurationSpec": {

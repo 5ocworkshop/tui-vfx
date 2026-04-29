@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DescriptorPackRef",
+  "description": "Recipe-local declaration that an external descriptor pack is required.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Required descriptor pack id.",
+      "$ref": "#/$defs/DescriptorPackId"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "$defs": {
+    "DescriptorPackId": {
+      "description": "Stable canonical descriptor pack identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z0-9][A-Za-z0-9_-]*)*$"
+    }
+  }
+}

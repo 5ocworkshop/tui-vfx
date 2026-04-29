@@ -1,0 +1,1583 @@
+{
+  "id": "v3.1.primitive",
+  "version": "0.1.0",
+  "displayName": "v3.1 Primitive Descriptor Pack",
+  "category": "standard",
+  "sourceDescriptors": {
+    "source.card": {
+      "id": "source.card",
+      "version": "0.1.0",
+      "displayName": "Debug Card Source",
+      "category": "debug",
+      "kind": {
+        "kind": "card"
+      },
+      "inputs": {
+        "message": {
+          "displayName": "Message",
+          "description": "Text rendered in the debug card.",
+          "value": {
+            "kind": "text",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "width": {
+          "displayName": "Width",
+          "description": "Debug card width in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 35
+            },
+            "range": {
+              "min": 1.0,
+              "max": 512.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        },
+        "height": {
+          "displayName": "Height",
+          "description": "Debug card height in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 3
+            },
+            "range": {
+              "min": 1.0,
+              "max": 256.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        }
+      },
+      "assets": {},
+      "output": {
+        "size": {
+          "kind": "inputDriven"
+        },
+        "roles": {
+          "kind": "generated"
+        }
+      },
+      "lifecycle": {
+        "deterministicWithSeed": true,
+        "timeAware": false,
+        "resizeAware": true
+      }
+    }
+  },
+  "effects": {
+    "filter.dim": {
+      "id": "filter.dim",
+      "version": "0.1.0",
+      "displayName": "Dim Filter",
+      "category": "debug primitive",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "factor": {
+          "displayName": "Factor",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 0.3
+            },
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "brightness-scale"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Canonical replacement for old foreground/background channel-scoped filter payloads.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "both"
+            },
+            "range": null,
+            "allowedValues": [
+              "both",
+              "foreground",
+              "background"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.greyscale": {
+      "id": "filter.greyscale",
+      "version": "0.1.0",
+      "displayName": "Greyscale Filter",
+      "category": "debug primitive",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "strength": {
+          "displayName": "Strength",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 0.8
+            },
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "desaturation-ratio"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": null,
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "both"
+            },
+            "range": null,
+            "allowedValues": [
+              "both",
+              "foreground",
+              "background"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.invert": {
+      "id": "filter.invert",
+      "version": "0.1.0",
+      "displayName": "Invert Filter",
+      "category": "debug primitive",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Canonical replacement for old foreground/background channel-scoped filter payloads.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "both"
+            },
+            "range": null,
+            "allowedValues": [
+              "both",
+              "foreground",
+              "background"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.tint": {
+      "id": "filter.tint",
+      "version": "0.1.0",
+      "displayName": "Tint Filter",
+      "category": "debug primitive",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Tint Color",
+          "description": null,
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 255,
+                "g": 100,
+                "b": 50,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "strength": {
+          "displayName": "Strength",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 0.4
+            },
+            "range": {
+              "min": 0.0,
+              "max": 1.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "blend-ratio"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": null,
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "both"
+            },
+            "range": null,
+            "allowedValues": [
+              "both",
+              "foreground",
+              "background"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "mask.checkers": {
+      "id": "mask.checkers",
+      "version": "0.1.0",
+      "displayName": "Checkers Mask",
+      "category": "debug primitive",
+      "domain": "mask",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "cellSize": {
+          "displayName": "Cell Size",
+          "description": null,
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 2
+            },
+            "range": {
+              "min": 1.0,
+              "max": 64.0
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "mask.none": {
+      "id": "mask.none",
+      "version": "0.1.0",
+      "displayName": "None Mask",
+      "category": "debug primitive",
+      "domain": "mask",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {},
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "mask.wipe": {
+      "id": "mask.wipe",
+      "version": "0.1.0",
+      "displayName": "Wipe Mask",
+      "category": "debug primitive",
+      "domain": "mask",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "direction": {
+          "displayName": "Direction",
+          "description": null,
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "leftToRight"
+            },
+            "range": null,
+            "allowedValues": [
+              "leftToRight",
+              "rightToLeft"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "softEdge": {
+          "displayName": "Soft Edge",
+          "description": null,
+          "value": {
+            "kind": "boolean",
+            "default": {
+              "kind": "boolean",
+              "value": true
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "sampler.sineWave": {
+      "id": "sampler.sineWave",
+      "version": "0.1.0",
+      "displayName": "Sine Wave Sampler",
+      "category": "debug primitive",
+      "domain": "coordinateSampler",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "axis": {
+          "displayName": "Axis",
+          "description": null,
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "y"
+            },
+            "range": null,
+            "allowedValues": [
+              "x",
+              "y"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "amplitude": {
+          "displayName": "Amplitude",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 2.0
+            },
+            "range": {
+              "min": 0.0,
+              "max": null
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "frequency": {
+          "displayName": "Frequency",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 1.5
+            },
+            "range": {
+              "min": 0.0,
+              "max": null
+            },
+            "allowedValues": [],
+            "unit": "cycles",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 2.0
+            },
+            "range": {
+              "min": 0.0,
+              "max": null
+            },
+            "allowedValues": [],
+            "unit": "cycles-per-second",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "phaseOffset": {
+          "displayName": "Phase Offset",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 0.0
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": "radians",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "mask.dissolve": {
+      "id": "mask.dissolve",
+      "version": "0.1.0",
+      "displayName": "Dissolve Mask",
+      "category": "debug primitive",
+      "domain": "mask",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "seed": {
+          "displayName": "Seed",
+          "description": null,
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 42
+            },
+            "range": {
+              "min": 0,
+              "max": null
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "random-seed"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "chunkSize": {
+          "displayName": "Chunk Size",
+          "description": null,
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 1
+            },
+            "range": {
+              "min": 1,
+              "max": 64
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "cell-cluster-size"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "sampler.ripple": {
+      "id": "sampler.ripple",
+      "version": "0.1.0",
+      "displayName": "Ripple Sampler",
+      "category": "debug primitive",
+      "domain": "coordinateSampler",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "amplitude": {
+          "displayName": "Amplitude",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 1.5
+            },
+            "range": {
+              "min": 0,
+              "max": null
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "wavelength": {
+          "displayName": "Wavelength",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 5
+            },
+            "range": {
+              "min": 0.1,
+              "max": null
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 2
+            },
+            "range": {
+              "min": 0,
+              "max": null
+            },
+            "allowedValues": [],
+            "unit": "cycles-per-second",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "center": {
+          "displayName": "Center",
+          "description": "J2 canonical token for the old symbolic center point.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "center"
+            },
+            "range": null,
+            "allowedValues": [
+              "center"
+            ],
+            "unit": null,
+            "semantic": "symbolic-origin"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "style.colorFade": {
+      "id": "style.colorFade",
+      "version": "0.1.0",
+      "displayName": "Color Fade Style Effect",
+      "category": "debug primitive",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "colorSpace": {
+          "displayName": "Color Space",
+          "description": null,
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "rgb"
+            },
+            "range": null,
+            "allowedValues": [
+              "rgb",
+              "hsl"
+            ],
+            "unit": null,
+            "semantic": "color-interpolation-space"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "target": {
+          "displayName": "Target Color",
+          "description": null,
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 255,
+                "g": 200,
+                "b": 50,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "target-color"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "style.baseStyleOverride": {
+      "id": "style.baseStyleOverride",
+      "version": "0.1.0",
+      "displayName": "Base Style Override",
+      "category": "debug primitive",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "foreground": {
+          "displayName": "Foreground",
+          "description": null,
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 0,
+                "g": 255,
+                "b": 255,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "foreground-color"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "background": {
+          "displayName": "Background",
+          "description": null,
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 15,
+                "g": 40,
+                "b": 55,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "background-color"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.linearGradient": {
+      "id": "shader.linearGradient",
+      "version": "0.1.0",
+      "displayName": "Linear Gradient Shader",
+      "category": "debug primitive",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "startColor": {
+          "displayName": "Start Color",
+          "description": null,
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 255,
+                "g": 100,
+                "b": 50,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "gradient-start"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "endColor": {
+          "displayName": "End Color",
+          "description": null,
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 50,
+                "g": 100,
+                "b": 255,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "gradient-end"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "colorSpace": {
+          "displayName": "Color Space",
+          "description": null,
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "rgb"
+            },
+            "range": null,
+            "allowedValues": [
+              "rgb",
+              "hsl"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "angleDeg": {
+          "displayName": "Angle Degrees",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 45
+            },
+            "range": {
+              "min": 0,
+              "max": 360
+            },
+            "allowedValues": [],
+            "unit": "degrees",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 1
+            },
+            "range": {
+              "min": 0,
+              "max": 1
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "opacity"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.borderSweep": {
+      "id": "shader.borderSweep",
+      "version": "0.1.0",
+      "displayName": "Border Sweep Shader",
+      "category": "debug primitive",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Sweep Color",
+          "description": null,
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 0,
+                "g": 255,
+                "b": 255,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "accent-color"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": null,
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 1
+            },
+            "range": {
+              "min": 0,
+              "max": null
+            },
+            "allowedValues": [],
+            "unit": "loops-per-second",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "length": {
+          "displayName": "Length",
+          "description": null,
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 10
+            },
+            "range": {
+              "min": 1,
+              "max": 512
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    }
+  }
+}

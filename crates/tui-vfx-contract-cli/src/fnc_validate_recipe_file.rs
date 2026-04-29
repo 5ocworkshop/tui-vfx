@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract-cli/src/fnc_validate_recipe_file.rs</FILE> - <DESC>Validate one canonical RecipeDocument JSON file</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase J1: emit stable structured diagnostics for migration smoke fixtures.</WCTX>
-// <CLOG>0.2.0: MINOR — add code/path/hint diagnostics and report status.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>New kernel Phase J2: validate recipes against loaded descriptor catalogs.</WCTX>
+// <CLOG>0.3.0: MINOR — call catalog-aware validation for descriptor pack refs.
+// 0.2.0: MINOR — add code/path/hint diagnostics and report status.
 // 0.1.0: INIT — add contract-only recipe file validation.</CLOG>
 
 use std::path::Path;
@@ -9,10 +10,10 @@ use std::path::Path;
 use crate::{
     cls_validation_error_report::ValidationErrorReport, cls_validation_report::ValidationReport,
 };
-use tui_vfx_contract::RecipeDocument;
+use tui_vfx_contract::{DescriptorCatalog, RecipeDocument};
 
 /// Validate one canonical v3.1 recipe file through serde and contract checks.
-pub fn validate_recipe_file(path: &Path) -> ValidationReport {
+pub fn validate_recipe_file(path: &Path, catalog: &DescriptorCatalog) -> ValidationReport {
     let path_label = path.display().to_string();
     let text = match std::fs::read_to_string(path) {
         Ok(text) => text,
@@ -40,7 +41,7 @@ pub fn validate_recipe_file(path: &Path) -> ValidationReport {
             );
         }
     };
-    match recipe.validate() {
+    match recipe.validate_with_catalog(catalog) {
         Ok(()) => ValidationReport {
             path: path_label,
             status: "ok",
@@ -96,4 +97,4 @@ fn contract_error_code(details: &serde_json::Value) -> String {
 }
 
 // <FILE>crates/tui-vfx-contract-cli/src/fnc_validate_recipe_file.rs</FILE> - <DESC>Validate one canonical RecipeDocument JSON file</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

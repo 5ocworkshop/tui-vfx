@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
-// <WCTX>New kernel Phase H1: report recipe document validation failures.</WCTX>
-// <CLOG>0.8.0: MINOR — add lifecycle clock, phase, trigger, and predicate validation errors.
+// <VERS>VERSION: 0.9.0</VERS>
+// <WCTX>New kernel Phase J2: report descriptor-pack resolution failures.</WCTX>
+// <CLOG>0.9.0: MINOR — add descriptor pack identity, collision, and reference errors.
+// 0.8.0: MINOR — add lifecycle clock, phase, trigger, and predicate validation errors.
 // 0.7.0: MINOR — add recipe document, source instance, scene, and element-pipeline validation errors.
 // 0.6.0: MINOR — add source descriptor, source input, asset reference, and source asset compatibility errors.
 // 0.5.0: MINOR — add effect output, graph value, and node output validation errors.
@@ -11,10 +12,10 @@
 // 0.1.0: INIT — add structured validation errors for scope, write policy, and channel checks.</CLOG>
 
 use crate::{
-    AssetFormat, AssetId, AssetKind, CellChannel, CellWritePolicy, EffectId, EffectInputId,
-    EffectOutputId, ElementId, GraphId, GraphValueId, GraphValueShape, LifecyclePhase, NodeId,
-    ParameterId, RecipeId, RoleWritePolicyKind, SceneId, ScopeKind, SignalId, SourceId,
-    SourceInputId, SourceInstanceId, ValueKind,
+    AssetFormat, AssetId, AssetKind, CellChannel, CellWritePolicy, DescriptorPackId, EffectId,
+    EffectInputId, EffectOutputId, ElementId, GraphId, GraphValueId, GraphValueShape,
+    LifecyclePhase, NodeId, ParameterId, RecipeId, RoleWritePolicyKind, SceneId, ScopeKind,
+    SignalId, SourceId, SourceInputId, SourceInstanceId, ValueKind,
 };
 
 /// Structured error returned when a request exceeds descriptor capabilities.
@@ -35,6 +36,61 @@ pub enum DescriptorValidationError {
     InvalidSourceInstanceId {
         /// Invalid source instance id.
         id: SourceInstanceId,
+    },
+    /// Descriptor pack id is outside the accepted dotted identifier shape.
+    InvalidDescriptorPackId {
+        /// Invalid descriptor pack id.
+        id: DescriptorPackId,
+    },
+    /// Descriptor catalog map key does not match the nested descriptor pack id.
+    DescriptorPackIdMismatch {
+        /// Descriptor catalog map key.
+        key: DescriptorPackId,
+        /// Descriptor pack id stored in the value.
+        pack: DescriptorPackId,
+    },
+    /// Recipe references a descriptor pack that was not loaded.
+    UnknownDescriptorPack {
+        /// Missing descriptor pack id.
+        id: DescriptorPackId,
+    },
+    /// Descriptor pack source descriptor map key does not match the nested source descriptor id.
+    PackSourceDescriptorIdMismatch {
+        /// Descriptor pack that owns the source descriptor.
+        pack: DescriptorPackId,
+        /// Source descriptor map key.
+        key: SourceId,
+        /// Source descriptor id stored in the value.
+        source: SourceId,
+    },
+    /// Descriptor pack effect descriptor map key does not match the nested effect descriptor id.
+    PackEffectDescriptorIdMismatch {
+        /// Descriptor pack that owns the effect descriptor.
+        pack: DescriptorPackId,
+        /// Effect descriptor map key.
+        key: EffectId,
+        /// Effect descriptor id stored in the value.
+        effect: EffectId,
+    },
+    /// More than one loaded pack provides the same source descriptor id.
+    DuplicatePackSourceDescriptor {
+        /// Duplicated source descriptor id.
+        id: SourceId,
+    },
+    /// More than one loaded pack provides the same effect descriptor id.
+    DuplicatePackEffectDescriptor {
+        /// Duplicated effect descriptor id.
+        id: EffectId,
+    },
+    /// Embedded recipe source descriptor collides with a pack-provided source descriptor.
+    EmbeddedSourceDescriptorCollision {
+        /// Colliding source descriptor id.
+        id: SourceId,
+    },
+    /// Embedded recipe effect descriptor collides with a pack-provided effect descriptor.
+    EmbeddedEffectDescriptorCollision {
+        /// Colliding effect descriptor id.
+        id: EffectId,
     },
     /// Recipe asset map key does not match the nested asset id.
     AssetIdMismatch {
@@ -485,4 +541,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_lifecycle_contract.rs</FILE> - <DESC>Recipe lifecycle, time, and trigger contract tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase I0: prove schema-backed lifecycle and trigger DTO semantics.</WCTX>
-// <CLOG>0.1.0: INIT — lock clock, dwell, trigger, predicate, and RecipeDocument lifecycle validation.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>New kernel Phase J2: keep lifecycle recipe fixture current with descriptor pack refs.</WCTX>
+// <CLOG>0.1.1: PATCH — initialize empty descriptor pack refs in lifecycle recipe fixture.
+// 0.1.0: INIT — lock clock, dwell, trigger, predicate, and RecipeDocument lifecycle validation.</CLOG>
 
 mod support;
 
@@ -249,6 +250,7 @@ fn recipe_document_can_include_lifecycle() {
             Some(ms(5_000)),
         )),
         assets: BTreeMap::new(),
+        descriptor_packs: vec![],
         source_descriptors: BTreeMap::new(),
         sources: BTreeMap::new(),
         graph,
@@ -353,4 +355,4 @@ fn vocabulary_mentions_trigger_gate_loopback_and_effect_schedule_distinctions() 
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_lifecycle_contract.rs</FILE> - <DESC>Recipe lifecycle, time, and trigger contract tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

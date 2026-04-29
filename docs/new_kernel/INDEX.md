@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.20.0</VERS> -->
-<!-- <WCTX>New kernel Phase J1: add validator hardening response, status, evidence, and vocabulary update.</WCTX> -->
-<!-- <CLOG>0.20.0: MINOR — add Phase J0 architect response plus J1 validator harness artifacts.
+<!-- <VERS>VERSION: 0.21.0</VERS> -->
+<!-- <WCTX>New kernel Phase J2: add descriptor-pack response, status, evidence, schemas, and descriptor artifact.</WCTX> -->
+<!-- <CLOG>0.21.0: MINOR — add Phase J1 architect response plus J2 descriptor pack/catalog artifacts.
+0.20.0: MINOR — add Phase J0 architect response plus J1 validator harness artifacts.
 0.19.0: MINOR — add Phase I0 architect response, J0 primitive migration artifacts, contract CLI, and canonical recipe root.
 0.18.0: MINOR — add Phase H1 architect response, I0 lifecycle/time/trigger artifacts, and schema roots.
 0.17.0: MINOR — add Phase H0 architect response, H1 vocabulary/evidence/status artifacts, and recipe schema roots.
@@ -36,8 +37,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 
 ## v3.1 contract docs one level up
 
-- [`../VOCABULARY.md`](../VOCABULARY.md) — canonical v3.1 human vocabulary, non-canonical legacy/source-authoring synonym map, and J1 migration/validation/parity terminology.
-- [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, D3 boundary, E0 split, E1 descriptor model, F1 typed inputs, F2 declarative value sources/bindings, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 node I/O value-bus semantics, H0 source/asset/procedural source contracts, H1 canonical recipe document packaging, I0 lifecycle/time/trigger contracts, J0 primitive migration pilot validation, and J1 validator harness hardening.
+- [`../VOCABULARY.md`](../VOCABULARY.md) — canonical v3.1 human vocabulary, non-canonical legacy/source-authoring synonym map, J1 migration/validation/parity terminology, and J2 descriptor pack/catalog terms.
+- [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, D3 boundary, E0 split, E1 descriptor model, F1 typed inputs, F2 declarative value sources/bindings, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 node I/O value-bus semantics, H0 source/asset/procedural source contracts, H1 canonical recipe document packaging, I0 lifecycle/time/trigger contracts, J0 primitive migration pilot validation, J1 validator harness hardening, and J2 descriptor-pack catalog work.
 - [`../v3.1-contract-boundary.md`](../v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1/I0 classification of contract vocabulary, proof implementation, crate ownership, descriptor/input/value-source/binding/graph/execution-proof/topology/value-bus/source/asset/recipe document/lifecycle model, schema roots, and handoff guardrails.
 - [`../v3.1-surface-contract.md`](../v3.1-surface-contract.md) — current clean-room surface/sampling/pipeline/scene/descriptor contract owned by `tui-vfx-contract` and proven by `tui-vfx-next`.
 - [`../v3.1-feature-contract-checklist.md`](../v3.1-feature-contract-checklist.md) — reusable decision checklist for future contract-affecting features.
@@ -64,6 +65,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_H1.md`](ARCH-RESP-TO-PHASE_H1.md) — Phase H1 response and Phase I0 time / lifecycle / trigger contract recommendation.
 - [`ARCH-RESP-TO-PHASE_I0.md`](ARCH-RESP-TO-PHASE_I0.md) — Phase I0 response and Phase J0 primitive recipe migration pilot / validator recommendation.
 - [`ARCH-RESP-TO-PHASE_J0.md`](ARCH-RESP-TO-PHASE_J0.md) — Phase J0 approval and Phase J1 validator hardening / fixture harness recommendation.
+- [`ARCH-RESP-TO-PHASE_J1.md`](ARCH-RESP-TO-PHASE_J1.md) — Phase J1 approval and Phase J2 shared primitive descriptor catalog / second-ring migration recommendation.
 
 ## Status and memo artifacts
 
@@ -106,6 +108,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_J0_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_J0_STATUS_MEMO_TO_ARCHITECT.md) — Phase J0 architect memo requesting next assignment.
 - [`PHASE_J1_STATUS.md`](PHASE_J1_STATUS.md) — concise Phase J1 validator hardening status.
 - [`PHASE_J1_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_J1_STATUS_MEMO_TO_ARCHITECT.md) — Phase J1 architect memo requesting next assignment.
+- [`PHASE_J2_STATUS.md`](PHASE_J2_STATUS.md) — concise Phase J2 descriptor pack / second-ring migration status.
+- [`PHASE_J2_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_J2_STATUS_MEMO_TO_ARCHITECT.md) — Phase J2 architect memo requesting next assignment.
 
 ## Supporting artifacts
 
@@ -115,16 +119,18 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`I0_EVENT_DWELL_EVIDENCE_NOTES.md`](I0_EVENT_DWELL_EVIDENCE_NOTES.md) — curated event-dwell/timing evidence notes for canonical I0 lifecycle/trigger work.
 - [`J0_PRIMITIVE_MIGRATION_EVIDENCE.md`](J0_PRIMITIVE_MIGRATION_EVIDENCE.md) — primitive recipe migration pilot evidence, descriptor seed catalog, and validation proof.
 - [`J1_VALIDATOR_HARNESS_STATUS.md`](J1_VALIDATOR_HARNESS_STATUS.md) — validator hardening evidence, recursive report shape, and negative diagnostics coverage.
+- [`J2_DESCRIPTOR_PACK_STATUS.md`](J2_DESCRIPTOR_PACK_STATUS.md) — descriptor pack/catalog evidence, primitive pack contents, validator integration, and second-ring fixture status.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts
 
 - [`../../crates/tui-vfx-contract-cli/`](../../crates/tui-vfx-contract-cli/) — contract-only canonical v3.1 recipe validator CLI with recursive `validate-recipe` report schema `v3.1.validator.report.1`.
-- `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/` — canonical v3.1 migrated debug recipe fixtures produced by Phase J0.
+- [`../../descriptors/v3.1/packs/primitive.json`](../../descriptors/v3.1/packs/primitive.json) — standard v3.1 primitive descriptor pack created by Phase J2.
+- `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/` — canonical v3.1 migrated debug recipe fixtures produced by Phase J0 and extended by Phase J2.
 
 ## Schema artifacts
 
-- [`../../schemas/v3.1/contract/`](../../schemas/v3.1/contract/) — checked generated stable contract schemas for surface, scope, write, diagnostics, scene, element, outcome, effect descriptor, value, effect input, value source, parameter, signal, binding, graph, graph-step, node, source, source-descriptor, source-input, source-output, asset, asset-requirement, asset-ref, source-instance-id, recipe-metadata, recipe-element-pipeline, recipe-scene, recipe-scene-element, recipe, duration, clock, dwell-policy, trigger, value-predicate, phase, and lifecycle.
+- [`../../schemas/v3.1/contract/`](../../schemas/v3.1/contract/) — checked generated stable contract schemas for surface, scope, write, diagnostics, scene, element, outcome, effect descriptor, descriptor pack/catalog, value, effect input, value source, parameter, signal, binding, graph, graph-step, node, source, source-descriptor, source-input, source-output, asset, asset-requirement, asset-ref, source-instance-id, recipe-metadata, recipe-element-pipeline, recipe-scene, recipe-scene-element, recipe, duration, clock, dwell-policy, trigger, value-predicate, phase, and lifecycle.
 - [`../../schemas/v3.1/next/`](../../schemas/v3.1/next/) — checked generated proof-pipeline schemas for sampler and pipeline artifacts.
 
 ## Ralph planning artifacts
@@ -133,4 +139,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.20.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.21.0</VERS> -->

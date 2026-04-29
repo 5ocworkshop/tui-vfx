@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_recipe_document_contract.rs</FILE> - <DESC>Canonical recipe document validation tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase H1: prove canonical recipe root cross-document validation.</WCTX>
-// <CLOG>0.1.0: INIT — lock recipe metadata, graph/source/asset/scene references, and element pipeline validation.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>New kernel Phase J2: keep recipe fixture builders current with descriptor pack refs.</WCTX>
+// <CLOG>0.1.1: PATCH — initialize empty descriptor pack refs in recipe test fixtures.
+// 0.1.0: INIT — lock recipe metadata, graph/source/asset/scene references, and element pipeline validation.</CLOG>
 
 mod support;
 
@@ -137,6 +138,7 @@ fn valid_recipe() -> RecipeDocument {
         },
         lifecycle: None,
         assets: BTreeMap::new(),
+        descriptor_packs: vec![],
         source_descriptors: BTreeMap::from([(SourceId::new("source.text"), text_descriptor())]),
         sources: BTreeMap::from([(SourceInstanceId::new("heroText"), text_source())]),
         graph: base_graph(literal_source()),
@@ -490,4 +492,4 @@ fn recipe_rejects_duplicate_element_pipeline_node() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_recipe_document_contract.rs</FILE> - <DESC>Canonical recipe document validation tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

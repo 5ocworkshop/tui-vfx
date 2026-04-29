@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.10.0</VERS>
-// <WCTX>New kernel Phase I0: expose lifecycle, clock, duration, phase, and trigger vocabulary.</WCTX>
-// <CLOG>0.10.0: MINOR — export recipe lifecycle, clock, duration, phase, and trigger schema roots.
+// <VERS>VERSION: 0.11.0</VERS>
+// <WCTX>New kernel Phase J2: expose descriptor pack and catalog vocabulary.</WCTX>
+// <CLOG>0.11.0: MINOR — export descriptor pack, pack ref, catalog, and catalog-aware validation.
+// 0.10.0: MINOR — export recipe lifecycle, clock, duration, phase, and trigger schema roots.
 // 0.9.0: MINOR — export canonical recipe document, recipe scene, source instance, and metadata schema roots.
 // 0.8.0: MINOR — export source descriptor, source spec, asset, and source output schema roots.
 // 0.7.0: MINOR — export graph value, effect output, node output, and value merge schema roots.
@@ -38,6 +39,10 @@ pub mod cls_clip_policy;
 pub mod cls_clock_mode;
 pub mod cls_clock_spec;
 pub mod cls_coordinate_space;
+pub mod cls_descriptor_catalog;
+pub mod cls_descriptor_pack;
+pub mod cls_descriptor_pack_id;
+pub mod cls_descriptor_pack_ref;
 pub mod cls_descriptor_validation_error;
 pub mod cls_diagnostic_level;
 pub mod cls_duration_spec;
@@ -122,6 +127,7 @@ pub mod cls_value_spec;
 pub mod cls_write_support;
 pub mod fnc_collect_graph_value_kinds;
 pub mod fnc_scope_coordinate;
+pub mod fnc_validate_recipe_with_catalog;
 pub mod orc_validate_graph_spec;
 pub mod orc_validate_recipe_document;
 pub mod orc_validate_source_spec;
@@ -146,6 +152,10 @@ pub use cls_clip_policy::ClipPolicy;
 pub use cls_clock_mode::ClockMode;
 pub use cls_clock_spec::ClockSpec;
 pub use cls_coordinate_space::CoordinateSpace;
+pub use cls_descriptor_catalog::DescriptorCatalog;
+pub use cls_descriptor_pack::DescriptorPack;
+pub use cls_descriptor_pack_id::DescriptorPackId;
+pub use cls_descriptor_pack_ref::DescriptorPackRef;
 pub use cls_descriptor_validation_error::DescriptorValidationError;
 pub use cls_diagnostic_level::DiagnosticLevel;
 pub use cls_duration_spec::DurationSpec;
@@ -244,7 +254,8 @@ pub mod schema_roots {
         SourceInstanceId, SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, TriggerSpec,
         Value, ValuePredicate, ValueSource,
     };
+    pub use crate::{DescriptorCatalog, DescriptorPack, DescriptorPackId, DescriptorPackRef};
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.10.0</VERS>
+// <VERS>END OF VERSION: 0.11.0</VERS>

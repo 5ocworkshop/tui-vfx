@@ -1,14 +1,16 @@
 // <FILE>crates/tui-vfx-contract-cli/src/fnc_run.rs</FILE> - <DESC>Run canonical contract CLI commands</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>New kernel Phase J1: emit top-level recursive validation run reports.</WCTX>
-// <CLOG>0.3.0: MINOR — wrap recipe reports in schemaVersion/root/summary output.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>New kernel Phase J2: load descriptor packs before recipe validation.</WCTX>
+// <CLOG>0.4.0: MINOR — pass loaded descriptor catalog into per-recipe validation.
+// 0.3.0: MINOR — wrap recipe reports in schemaVersion/root/summary output.
 // 0.2.0: MINOR — add recursive path collection and stable JSON diagnostics.
 // 0.1.0: INIT — add command dispatcher.</CLOG>
 
 use crate::{
     fnc_build_run_report::build_run_report, fnc_collect_recipe_paths::collect_recipe_paths,
-    fnc_parse_cli_options::parse_cli_options, fnc_print_usage::print_usage,
-    fnc_report_root::report_root, fnc_validate_recipe_file::validate_recipe_file,
+    fnc_load_descriptor_catalog::load_descriptor_catalog, fnc_parse_cli_options::parse_cli_options,
+    fnc_print_usage::print_usage, fnc_report_root::report_root,
+    fnc_validate_recipe_file::validate_recipe_file,
 };
 
 /// Run the contract CLI and return the process exit code.
@@ -32,11 +34,16 @@ pub fn run(args: impl IntoIterator<Item = String>) -> i32 {
         Ok(_) => return usage_error("no JSON recipes found".to_string()),
         Err(error) => return usage_error(error),
     };
+    let descriptor_load =
+        match load_descriptor_catalog(&options.descriptor_packs, &options.descriptor_pack_dirs) {
+            Ok(load) => load,
+            Err(error) => return usage_error(error),
+        };
     let recipes = paths
         .iter()
-        .map(|path| validate_recipe_file(path))
+        .map(|path| validate_recipe_file(path, &descriptor_load.catalog))
         .collect::<Vec<_>>();
-    let report = build_run_report(report_root(&options), recipes);
+    let report = build_run_report(report_root(&options), descriptor_load.reports, recipes);
     let valid = report.summary.invalid == 0;
     println!(
         "{}",
@@ -52,4 +59,4 @@ fn usage_error(error: String) -> i32 {
 }
 
 // <FILE>crates/tui-vfx-contract-cli/src/fnc_run.rs</FILE> - <DESC>Run canonical contract CLI commands</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
