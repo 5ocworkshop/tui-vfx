@@ -1,7 +1,9 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>New kernel Phase K0: define contract-native player and frame-report vocabulary.</WCTX> -->
-<!-- <CLOG>0.6.0: MINOR — add K0 Player, PlayerSession, Frame, RenderHash, and unsupported adapter terms.
+<!-- <VERS>VERSION: 0.7.1</VERS> -->
+<!-- <WCTX>New kernel Phase K2.2 review: clarify text-grid visual-frame provenance fields.</WCTX> -->
+<!-- <CLOG>0.7.1: PATCH — document substrate, cellSource, styleKnown, and loopT semantics.
+0.7.0: MINOR — add K2.2 VisualFrameReport, VisualFrame, sparse visual cell, and frame evidence terms.
+0.6.0: MINOR — add K0 Player, PlayerSession, Frame, RenderHash, and unsupported adapter terms.
 0.5.0: MINOR — add J2 descriptor pack/catalog, embedded/pack-provided descriptor, collision, and canonical fixture terms.
 0.4.0: MINOR — add J1 migration, structural validation, oracle, and visual parity terms.
 0.3.1: PATCH — document Truthy predicate per-kind semantics and maxDuration wire casing.
@@ -140,6 +142,39 @@ Definition:
 
 Policy:
 : Unsupported adapters are explicit K0 smoke results, not silent success. Typical codes are `unsupportedSourceAdapter` and `unsupportedEffectAdapter`.
+
+
+### VisualFrameReport
+
+Definition:
+: A stable player JSON report with schema `v3.1.player.visualFrameReport.1`. It aggregates one or more visual-frame entries under `frames[]` and includes descriptor-pack provenance plus rendered/unsupported/error counts.
+
+Policy:
+: `VisualFrameReport` is additive evidence on top of the existing player output. It does not replace `render-recipe`, does not claim visual parity, and must reuse the existing contract-native player render path.
+
+### VisualFrame
+
+Definition:
+: One sampled frame entry in a `VisualFrameReport`. It preserves compact text `rows[]` while also exposing sparse non-default `cells[]` for machine inspection.
+
+Current limitation:
+: Current visual frames are derived from player text-grid rows. Glyph position, dimensions, status, hash, rows, lifecycle timing, and unsupported diagnostics are stable. Frame entries make this provenance explicit with `substrate: "textGrid"`, `cellSource: "rows"`, and `styleKnown: false`. Foreground, background, modifiers, and role are included in the cell schema for future visual substrates, but row-derived cells report transparent colors, no modifiers, and no role.
+
+### Sparse Visual Cell
+
+Definition:
+: A non-default cell entry with `x`, `y`, `glyph`, `foreground`, `background`, `modifiers`, and optional `role` fields.
+
+Policy:
+: Sparse cells are evidence cells, not a full framebuffer dump. Missing cells are default/empty for the current frame dimensions.
+
+### Frame Evidence
+
+Definition:
+: Machine-readable output proving what the player sampled for a canonical recipe at a given lifecycle phase and time. Current frame evidence includes text rows, sparse cells, render hash, status, unsupported ids, and diagnostics.
+
+Not the same as:
+: Visual parity. Frame evidence makes the current player output inspectable; parity still requires comparison against an oracle and human/automated review.
 
 ### DescriptorPack
 
@@ -1283,4 +1318,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.7.1</VERS> -->

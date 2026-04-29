@@ -1,15 +1,16 @@
 // <FILE>crates/tui-vfx-player/src/fnc_recommend_migration_queue.rs</FILE> - <DESC>Build conservative migration queue</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K2.1 de-slop: isolate provisional migration queue policy.</WCTX>
-// <CLOG>0.1.0: INIT — split queue recommendations from report construction.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>New kernel Phase K2.2 review: keep recommendation wording phase-neutral.</WCTX>
+// <CLOG>0.1.1: PATCH — remove phase labels from public recommendation rationales.
+// 0.1.0: INIT — split queue recommendations from report construction.</CLOG>
 
 use crate::PlayerMigrationQueueItem;
 
-/// Return the provisional, conservative migration/adaptation queue for K2 planning.
+/// Return the provisional, conservative migration/adaptation queue for migration planning.
 pub(crate) fn recommended_queue() -> Vec<PlayerMigrationQueueItem> {
     [
-        ("complex", "create a minimal v3.1 complex fixture", "exercise mask + sampler + filter + shader + style/source after K2.0 inventory evidence"),
-        ("primitive-adapters", "clear remaining primitive adapter blockers", "reduce the six unsupported K0 primitive ids before broad recipe migration"),
+        ("complex", "create a minimal v3.1 complex fixture", "exercise mask + sampler + filter + shader + style/source after inventory evidence"),
+        ("primitive-adapters", "clear remaining primitive adapter blockers", "reduce the six unsupported primitive ids before broad recipe migration"),
         ("content", "add a content family pilot", "content is legacy-present and v3.1-unrepresented but can start with path/descriptor inventory"),
         ("scene", "add a scene family pilot", "scene coverage is absent and should stay small until scene semantics are confirmed"),
         ("shadows", "add a shadow family pilot", "shadow migration needs descriptor decisions before broad parity claims"),
@@ -38,4 +39,4 @@ fn queue_item(
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_recommend_migration_queue.rs</FILE> - <DESC>Build conservative migration queue</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

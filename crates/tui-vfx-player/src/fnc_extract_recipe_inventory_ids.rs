@@ -7,7 +7,7 @@ use std::collections::BTreeSet;
 
 use tui_vfx_contract::RecipeDocument;
 
-use crate::PlayerError;
+use crate::{PlayerError, fnc_collect_unsupported_effect_ids::collect_unsupported_effect_ids};
 
 /// Extract source ids referenced by source instances in a recipe.
 pub(crate) fn recipe_source_ids(recipe: &RecipeDocument) -> BTreeSet<String> {
@@ -30,15 +30,7 @@ pub(crate) fn recipe_effect_ids(recipe: &RecipeDocument) -> BTreeSet<String> {
 
 /// Extract distinct unsupported effect ids from K0 render diagnostics.
 pub(crate) fn unsupported_effect_ids(errors: &[PlayerError]) -> Vec<String> {
-    errors
-        .iter()
-        .filter(|error| error.code == "unsupportedEffectAdapter")
-        .filter_map(|error| error.details.get("effect"))
-        .filter_map(|effect| effect.as_str())
-        .map(str::to_string)
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect()
+    collect_unsupported_effect_ids(errors)
 }
 
 /// Return sorted values also present in a descriptor set.

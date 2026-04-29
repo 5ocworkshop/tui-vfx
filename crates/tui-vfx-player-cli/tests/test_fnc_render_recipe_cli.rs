@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>New kernel Phase K2.1 de-slop: lock report behavior and scoped CLI validation.</WCTX>
-// <CLOG>0.4.0: PATCH — add migration-gap option validation regression.</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>New kernel Phase K2.2 review: lock text-grid visual-frame provenance.</WCTX>
+// <CLOG>0.6.0: PATCH — assert loop/provenance/style-placeholder fields.
+// 0.5.0: MINOR — add render-frame single, recursive, and unsupported tests.</CLOG>
 
 use std::process::Command;
 
@@ -219,6 +220,88 @@ fn test_fnc_cli_reports_migration_gap_family_status_json() {
     assert_eq!(complex["status"], "adapterExpansionReady");
 }
 
+#[test]
+fn test_fnc_cli_renders_single_visual_frame_json() {
+    let report = render_frame_report(&[
+        "render-frame",
+        "--recipe",
+        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json",
+    ]);
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
+    assert_eq!(report["summary"]["total"], 1);
+    assert_eq!(report["summary"]["rendered"], 1);
+    assert_eq!(report["frames"][0]["status"], "rendered");
+    assert_eq!(report["frames"][0]["sampleT"], 1.0);
+    assert!(report["frames"][0]["loopT"].is_null());
+    assert_eq!(report["frames"][0]["absoluteTimeMs"], 0);
+    assert_eq!(report["frames"][0]["substrate"], "textGrid");
+    assert_eq!(report["frames"][0]["cellSource"], "rows");
+    assert_eq!(report["frames"][0]["styleKnown"], false);
+    assert!(
+        !report["frames"][0]["rows"]
+            .as_array()
+            .expect("rows")
+            .is_empty()
+    );
+    assert!(
+        !report["frames"][0]["cells"]
+            .as_array()
+            .expect("cells")
+            .is_empty()
+    );
+    let first_cell = &report["frames"][0]["cells"][0];
+    assert_eq!(first_cell["foreground"], "transparent");
+    assert_eq!(first_cell["background"], "transparent");
+    assert!(
+        first_cell["modifiers"]
+            .as_array()
+            .expect("modifiers")
+            .is_empty()
+    );
+    assert!(first_cell["role"].is_null());
+}
+
+#[test]
+fn test_fnc_cli_renders_recursive_visual_frame_report_json() {
+    let report = render_frame_report(&[
+        "render-frame",
+        "--recursive",
+        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes",
+    ]);
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
+    assert_eq!(report["summary"]["total"], 16);
+    assert_eq!(report["summary"]["rendered"], 10);
+    assert_eq!(report["summary"]["unsupported"], 6);
+    assert_eq!(report["summary"]["errors"], 0);
+    assert_eq!(report["frames"].as_array().expect("frames").len(), 16);
+}
+
+#[test]
+fn test_fnc_cli_renders_unsupported_visual_frame_json() {
+    let report = render_frame_report(&[
+        "render-frame",
+        "--recipe",
+        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/shaders/primitives/shader_linear_gradient.json",
+    ]);
+
+    assert_eq!(report["frames"][0]["status"], "unsupported");
+    assert!(
+        report["frames"][0]["unsupportedEffectIds"]
+            .as_array()
+            .expect("unsupported effect ids")
+            .iter()
+            .any(|effect| effect == "shader.linearGradient")
+    );
+    assert!(
+        !report["frames"][0]["errors"]
+            .as_array()
+            .expect("errors")
+            .is_empty()
+    );
+}
+
 fn inventory_report(args: &[&str]) -> serde_json::Value {
     let descriptor_pack = descriptor_pack();
     let mut command_args = args.to_vec();
@@ -231,6 +314,23 @@ fn inventory_report(args: &[&str]) -> serde_json::Value {
         .args(command_args)
         .output()
         .expect("run inventory player cli");
+
+    assert!(output.status.success(), "stderr: {}", stderr(&output));
+    serde_json::from_slice(&output.stdout).expect("json report")
+}
+
+fn render_frame_report(args: &[&str]) -> serde_json::Value {
+    let descriptor_pack = descriptor_pack();
+    let mut command_args = args.to_vec();
+    command_args.extend([
+        "--descriptor-pack",
+        descriptor_pack.to_str().expect("utf8 path"),
+        "--json",
+    ]);
+    let output = Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
+        .args(command_args)
+        .output()
+        .expect("run render-frame player cli");
 
     assert!(output.status.success(), "stderr: {}", stderr(&output));
     serde_json::from_slice(&output.stdout).expect("json report")
@@ -287,4 +387,4 @@ fn descriptor_pack() -> std::path::PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

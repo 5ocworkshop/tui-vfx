@@ -1,421 +1,488 @@
-Based on the memo, I’d accept **K2.0** as complete for the bounded inventory packet.
+# ARCH-RESP-TO-PHASE_K2_1
 
-The important new standing rule should become part of every future packet:
+## Acceptance
 
-```text
-For every touched file:
-- look for small refactors that reduce complexity
-- keep code readable and OFPF-sized
-- improve naming when it clarifies intent
-- add or update rustdoc on public APIs
-- add schemars details where the touched type participates in schema generation
-- avoid unrelated broad rewrites
-```
+**Accepted.**
 
-## Updated day sequence
+K2.1 is a good report-only checkpoint. It gives us a planning control surface without changing recipes, without altering K1/compositor work, and without weakening the existing K0 CLI player/report behavior.
 
-Now that K2.0 exists, the next sequence should be:
+The important result is not that migration is “done”; it is that we now have a measurable migration gap:
 
 ```text
-K2.0  Inventory gate                                  DONE
-K2.1  Migration gap + recipe-family roadmap            NEXT
-K2.2  K0 visual-frame substrate                        AFTER K2.1
-K2.3  First compositor-backed primitive adapters        AFTER K2.2
-K2.4  K1 cell-aware preview blit                        AFTER K2.3
-K2.5  First v3.1 complex fixture                        AFTER FIRST ADAPTERS
-K2.6  Family-by-family recipe migration queue           AFTER GAP REPORT + FIRST COMPLEX
+legacy debug recipes: 603
+canonical v3.1 debug recipes: 16
+represented families: 8
+unrepresented families: 11
+partially represented families: 7
+K0/K2 renderable canonical fixtures: 10
+K0/K2 unsupported canonical fixtures: 6
 ```
 
-I would not jump straight into compositor wiring yet. The inventory gate now tells us what the current v3.1 set contains. The next missing control surface is the old/new recipe-family gap and migration roadmap.
+That is the right level of honesty.
 
----
+## Acceptance notes
 
-# Recommended next work packet
+The report correctly treats legacy recipes as **inventory evidence**, not as canonical semantic truth. The path/family inventory is enough for planning migration order, but it should not be interpreted as semantic coverage or parity.
 
-## Packet name
+The recommended queue has two `complex` entries with different meanings: one is “create a minimal v3.1 complex fixture,” and the other is “choose broader complex legacy replacement candidates.” That is fine for K2.1, but future reports should label those separately, for example:
 
 ```text
-K2.1 — Debug Recipe Migration Gap + Porting Roadmap Gate
+complex-minimal-fixture
+complex-corpus-candidate-selection
 ```
 
-## Objective
+No blocker.
 
-Add a small, repeatable report that compares:
+## Read of current state
+
+We now have these layers in place:
 
 ```text
-/usr/projects/tui-vfx-recipes/recipes/debug_recipes/
-/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/
+J0: primitive migration pilot + first contract validator
+J1: hardened validator + recursive fixture harness
+J2: shared primitive descriptor pack + second-ring migration batch
+K0: CLI player path for canonical v3.1 fixtures
+K2.0: render/inventory evidence over canonical fixtures
+K2.1: migration-gap report comparing legacy debug corpus to canonical v3.1 corpus
 ```
 
-and produces a machine-readable migration gap summary plus a human-readable status memo.
-
-This should answer:
+The current v3.1 fixture corpus is structurally valid and descriptor-backed, but still only partially renderable through the K0 player path:
 
 ```text
-Which old debug recipe families exist?
-Which v3.1 debug recipe families exist?
-Which families are unrepresented in v3.1?
-Which families are partially represented?
-Which families are ready for adapter work?
-Which families require schema/descriptor decisions before migration?
-Which old fixtures are obvious candidates for the next migration batch?
+canonical fixtures validate: yes
+descriptor pack resolves: yes
+render CLI can inspect corpus: yes
+all canonical fixtures visually supported: no
+visual parity with legacy: not claimed
 ```
 
-This packet should still be **report-only**. No recipe migration yet.
+That is exactly where we should be before expanding migration.
 
-## Architectural rule
+## Architectural decision
 
-Do not depend on the legacy runtime.
-
-The report may inspect legacy recipe JSON files as JSON documents or paths, but it should not revive legacy execution semantics, old preview fallback, or old runtime loading.
-
-K2.1 is about inventory and planning, not parity rendering.
-
-## Implementation repo
+Proceed to:
 
 ```text
-/usr/projects/tui-vfx
+Phase K2.2 — Visual Frame Substrate + Stable Frame Evidence
 ```
 
-## Recipe repo inputs
+This is **not** a replacement for K0. It is an additive enhancement on top of the established CLI player capability.
+
+K0 already gives us player authority. K2.2 should make that authority more inspectable by adding a stable visual-frame artifact that both humans and later tools can consume.
+
+The sequencing reason is simple: before migrating more recipe families, we need better evidence from the fixtures we already have. Text-row output is useful, but not sufficient for visual debugging because it loses or obscures important per-cell data such as foreground, background, modifiers, roles, dimensions, and frame metadata.
+
+## Phase K2.2 — Visual Frame Substrate + Stable Frame Evidence
+
+### Objective
+
+Add a stable visual-frame reporting substrate to the v3.1 player stack so canonical fixtures can produce machine-readable and human-inspectable frame evidence without changing existing K0 `render-recipe` behavior. The current text-row CLI output remains the regression authority; K2.2 adds a richer frame report alongside it.
+
+### Implementation assignment
+
+Implement K2.2 in `/usr/projects/tui-vfx`.
+
+Add a visual-frame DTO in `tui-vfx-player`, not in the recipes repo. The DTO should represent one rendered frame or one unsupported render attempt in a stable JSON shape.
+
+Recommended schema label:
 
 ```text
-/usr/projects/tui-vfx-recipes/recipes/debug_recipes/
-/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/
+v3.1.player.visualFrameReport.1
 ```
 
-## Likely implementation shape
+Recommended report shape:
 
-Add a K0/player-side report command, preferably:
+```text
+schemaVersion
+root
+descriptorPacks
+summary
+frames[]
+```
+
+Each frame entry should include, at minimum:
+
+```text
+recipePath
+status                         # rendered | unsupported | error
+phase
+sampleT
+absoluteTimeMs
+width
+height
+renderHash
+nonEmptyCells
+rows[]                         # compact glyph rows, preserving current human-readable value
+cells[]                        # sparse non-default cells
+unsupportedEffectIds[]
+errors[]
+warnings[]
+```
+
+Each sparse cell should include:
+
+```text
+x
+y
+glyph
+foreground
+background
+modifiers
+role                           # if available from the player surface
+```
+
+The exact field names can be adjusted to match existing player naming conventions, but the output must be deterministic and JSON-stable.
+
+Add a new CLI command rather than changing default `render-recipe` output:
 
 ```bash
-cargo run -p tui-vfx-player-cli -- migration-gap \
-  --legacy-root /usr/projects/tui-vfx-recipes/recipes/debug_recipes \
-  --v31-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
-  --descriptor-pack descriptors/v3.1/packs/primitive.json
+cargo run -p tui-vfx-player-cli -- render-frame \
+  --descriptor-pack descriptors/v3.1/packs/primitive.json \
+  /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json
 ```
 
-Alternative name is fine, but keep it distinct from `render-recipe` and `inventory-recipes`.
+Also support recursive mode:
 
-## Suggested files to touch
+```bash
+cargo run -p tui-vfx-player-cli -- render-frame \
+  --descriptor-pack descriptors/v3.1/packs/primitive.json \
+  --recursive /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes
+```
+
+The new command should reuse the existing K0/K2 rendering path. Do not create a second renderer.
+
+The current `render-recipe` command must remain unchanged by default. Its existing output shape and summary behavior should continue to pass all existing tests.
+
+For unsupported fixtures, `render-frame` should report `status: "unsupported"` with the unsupported effect ids. It should not treat unsupported primitives as hard errors unless the existing K0 render path already classifies them as errors.
+
+### Required inputs / context
+
+Use these implementation repo files as the player/control surface context:
 
 ```text
-crates/tui-vfx-player/src/lib.rs
-crates/tui-vfx-player/src/cls_player_migration_gap_report.rs
-crates/tui-vfx-player/src/fnc_collect_debug_recipe_family_inventory.rs
-crates/tui-vfx-player/src/fnc_build_migration_gap_report.rs
-crates/tui-vfx-player-cli/src/fnc_run.rs
-crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs
-crates/tui-vfx-player-cli/src/fnc_print_usage.rs
-crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs
-docs/new_kernel/PHASE_K2_1_MIGRATION_GAP_STATUS_MEMO_TO_ARCHITECT.md
+/usr/projects/tui-vfx/crates/tui-vfx-player/src/lib.rs
+/usr/projects/tui-vfx/crates/tui-vfx-player/src/cls_player_migration_gap_report.rs
+/usr/projects/tui-vfx/crates/tui-vfx-player/src/fnc_collect_debug_recipe_family_inventory.rs
+/usr/projects/tui-vfx/crates/tui-vfx-player/src/fnc_build_migration_gap_report.rs
+/usr/projects/tui-vfx/crates/tui-vfx-player-cli/src/cls_cli_options.rs
+/usr/projects/tui-vfx/crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs
+/usr/projects/tui-vfx/crates/tui-vfx-player-cli/src/fnc_run.rs
+/usr/projects/tui-vfx/crates/tui-vfx-player-cli/src/fnc_print_usage.rs
+/usr/projects/tui-vfx/crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs
 ```
 
-Use exact names that fit the repo’s conventions. Keep new modules OFPF-sized.
-
-## Required report shape
-
-Suggested schema label:
+Use this descriptor pack:
 
 ```text
-v3.1.player.migrationGap.1
+/usr/projects/tui-vfx/descriptors/v3.1/packs/primitive.json
 ```
 
-Top-level fields:
-
-```json
-{
-  "schemaVersion": "v3.1.player.migrationGap.1",
-  "legacyRoot": "...",
-  "v31Root": "...",
-  "summary": {
-    "legacyRecipes": 0,
-    "v31Recipes": 0,
-    "representedFamilies": 0,
-    "unrepresentedFamilies": 0,
-    "partiallyRepresentedFamilies": 0,
-    "readyFamilies": 0,
-    "blockedFamilies": 0
-  },
-  "families": [],
-  "recommendedQueue": []
-}
-```
-
-Per family:
-
-```json
-{
-  "family": "filters",
-  "legacyCount": 98,
-  "v31Count": 4,
-  "coverage": "partial",
-  "knownV31EffectIds": [
-    "filter.dim",
-    "filter.greyscale",
-    "filter.invert",
-    "filter.tint"
-  ],
-  "status": "adapterExpansionReady",
-  "blockers": [],
-  "recommendedNextCandidates": []
-}
-```
-
-Use stable string values for `coverage`:
+Use this canonical fixture root:
 
 ```text
-none
-partial
-represented
-notApplicable
+/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes
 ```
 
-Use stable string values for `status`:
+Use this legacy root only for comparison/report checks, not for rendering or mutation:
 
 ```text
-adapterExpansionReady
-schemaDecisionNeeded
-descriptorDecisionNeeded
-migrationCandidateReady
-ownerAuditNeeded
-notYetClassified
+/usr/projects/tui-vfx-recipes/recipes/debug_recipes
 ```
 
-## Family classification guidance
+### Non-goals
 
-Use path-based family classification first. Do not overfit to legacy internals.
-
-Expected broad family buckets:
+Do not modify old recipes:
 
 ```text
-baseline
-filters
-masks
-samplers
-shaders/primitives
-shaders/compositions
-styles
-content
-scene
-shadows
-complex
-event_driven_dwell
-signals
-easings
-subcell_shapes
-motion_routes
-loopback
-bindable_rates
-fixtures
-other
+/usr/projects/tui-vfx-recipes/recipes/debug_recipes/**/*
 ```
 
-The report should identify these current high-level statuses:
+Do not modify canonical migrated recipes unless a test fixture is explicitly needed and justified:
 
 ```text
-baseline              represented
-event_driven_dwell    partial / represented pilot
-filters               partial
-masks                 partial
-samplers              partial
-shaders/primitives    partial
-shaders/compositions  partial
-styles                partial
-content               none
-scene                 none
-shadows               none
-complex               none
-signals               none
-easings               none
-subcell_shapes        none
-motion_routes         none
-loopback              none
+/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/**/*
 ```
 
-## Recommended queue logic
+Do not broaden migration in K2.2.
 
-The report should produce a conservative next queue, not a full migration promise.
+Do not add new descriptor ids unless the visual-frame substrate cannot represent existing K2/J2 fixtures without them. If a descriptor gap is found, report it instead of silently expanding scope.
 
-Suggested queue order:
+Do not replace `render-recipe`.
 
-```text
-1. complex minimal fixture
-2. remaining primitive adapter blockers
-3. content pilot
-4. scene pilot
-5. shadow pilot
-6. complex legacy replacement candidates
-7. signals/easings/motion routes
-8. subcell/loopback/other advanced families
-```
+Do not claim visual parity.
 
-This queue can be hard-coded initially if clearly labeled as a recommendation from current inventory evidence.
+Do not build a full GUI in K2.2. The ratatui GUI path remains additive tooling; K2.2 is the stable frame evidence substrate that GUI/CLI/reporting can consume.
 
-## Cross-cutting refactor/documentation requirement
+Do not import or depend on the legacy recipe runtime from `/usr/projects/tui-vfx-recipes`. That repo remains fixture/evidence input.
 
-For every touched file:
+### Required verification
 
-```text
-- keep functions small and named by purpose
-- prefer DTO structs over ad hoc JSON assembly when public/report shapes stabilize
-- add rustdoc to public report structs and public helper functions
-- keep serialization field names stable with serde rename_all where appropriate
-- add schemars derives/details only if the crate/type already participates in schema generation or the touched contract type already uses schemars
-- update usage text when adding command flags
-- add focused tests rather than broad snapshot tests
-```
-
-Do not perform unrelated formatting or workspace-wide cleanup.
-
-## Non-goals
-
-Do not migrate recipe files.
-
-Do not edit `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/`.
-
-Do not edit `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/`.
-
-Do not add compositor adapters.
-
-Do not modify K1.
-
-Do not reinterpret old recipe semantics beyond path/family/candidate inventory.
-
-## Acceptance criteria
-
-K2.1 is acceptable when:
-
-```text
-new migration-gap command exists
-command accepts legacy root and v3.1 root
-command emits stable JSON
-report includes per-family legacy/v3.1 counts
-report identifies unrepresented v3.1 families
-report recommends a conservative migration queue
-existing K2.0 inventory-recipes still works
-existing render-recipe still works
-no recipe files are modified
-status memo is written
-```
-
-## Suggested verification commands
-
-Run from:
-
-```text
-/usr/projects/tui-vfx
-```
-
-Commands:
+Run the existing player checks:
 
 ```bash
 cargo fmt --package tui-vfx-player -- --check
 cargo fmt --package tui-vfx-player-cli -- --check
-
+cargo clippy -p tui-vfx-player -p tui-vfx-player-cli --all-targets -- -D warnings
 cargo test -p tui-vfx-player
 cargo test -p tui-vfx-player-cli
+```
 
+Re-run existing K0/K2 commands and confirm behavior did not regress:
+
+```bash
 cargo run -q -p tui-vfx-player-cli -- render-recipe \
-  --recursive \
   --descriptor-pack descriptors/v3.1/packs/primitive.json \
-  /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes
+  --recursive /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
+  > /tmp/tui-vfx-k22-render-report.json
+```
 
+Expected baseline should remain consistent with K2.1 unless the implementation deliberately fixed an adapter:
+
+```text
+total=16
+rendered=10
+unsupported=6
+errors=0
+```
+
+Run inventory:
+
+```bash
 cargo run -q -p tui-vfx-player-cli -- inventory-recipes \
-  --recursive \
   --descriptor-pack descriptors/v3.1/packs/primitive.json \
-  /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes
+  --recursive /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
+  > /tmp/tui-vfx-k22-inventory-report.json
+```
 
+Run migration gap:
+
+```bash
 cargo run -q -p tui-vfx-player-cli -- migration-gap \
   --legacy-root /usr/projects/tui-vfx-recipes/recipes/debug_recipes \
   --v31-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
-  --descriptor-pack descriptors/v3.1/packs/primitive.json
+  --descriptor-pack descriptors/v3.1/packs/primitive.json \
+  > /tmp/tui-vfx-k22-migration-gap-report.json
 ```
 
-If the implementer uses a different command name, the memo should record the actual command.
+Run the new visual-frame command on one fixture:
 
-## Required evidence memo
+```bash
+cargo run -q -p tui-vfx-player-cli -- render-frame \
+  --descriptor-pack descriptors/v3.1/packs/primitive.json \
+  /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json \
+  > /tmp/tui-vfx-k22-baseline-frame.json
+```
 
-At completion, write:
+Run it recursively:
+
+```bash
+cargo run -q -p tui-vfx-player-cli -- render-frame \
+  --descriptor-pack descriptors/v3.1/packs/primitive.json \
+  --recursive /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
+  > /tmp/tui-vfx-k22-visual-frame-report.json
+```
+
+Verify the new report has:
 
 ```text
-docs/new_kernel/PHASE_K2_1_MIGRATION_GAP_STATUS_MEMO_TO_ARCHITECT.md
+schemaVersion=v3.1.player.visualFrameReport.1
+total=16
+rendered=10
+unsupported=6
+errors=0
 ```
 
-The memo should include:
+Also verify the frame report contains deterministic `rows[]` and sparse `cells[]` for rendered fixtures.
+
+Run workspace and diff checks:
+
+```bash
+cargo test --workspace
+git diff --check
+```
+
+Confirm recipes were not modified:
+
+```bash
+git -C /usr/projects/tui-vfx-recipes status --short -- recipes/debug_recipes recipes/v3.1/debug_recipes
+```
+
+Expected output:
+
+```text
+# no output
+```
+
+### Deliverables
+
+Add or update:
+
+```text
+crates/tui-vfx-player/src/...
+crates/tui-vfx-player-cli/src/...
+crates/tui-vfx-player-cli/tests/...
+docs/VOCABULARY.md
+docs/new_kernel/PHASE_K2_2_VISUAL_FRAME_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md
+docs/new_kernel/K2_2_VISUAL_FRAME_EVIDENCE.md
+```
+
+The status memo should include:
 
 ```text
 new command shape
 new schema label
-files touched
-legacy root and v3.1 root inspected
-family count summary
-unrepresented families
-partially represented families
-recommended migration queue
-verification commands and pass/fail results
-confirmation that no recipes were modified
-recommended next packet
+report shape
+rendered/unsupported/error counts
+confirmation that render-recipe output was preserved
+confirmation that inventory-recipes and migration-gap still pass
+paths to captured JSON outputs
+recipe-root modification check
+verification commands and results
 ```
 
-## Draft implementer prompt
+### Draft implementer prompt
 
 ```text
-Implement K2.1: Debug Recipe Migration Gap + Porting Roadmap Gate.
+Implement Phase K2.2 — Visual Frame Substrate + Stable Frame Evidence.
 
-Use /usr/projects/tui-vfx as the implementation repo.
+Context:
+- Implementation repo: /usr/projects/tui-vfx
+- Recipe repo: /usr/projects/tui-vfx-recipes
+- Canonical v3.1 fixture root: /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes
+- Legacy debug recipe root, evidence only: /usr/projects/tui-vfx-recipes/recipes/debug_recipes
+- Descriptor pack: /usr/projects/tui-vfx/descriptors/v3.1/packs/primitive.json
 
-Inputs:
-- legacy root: /usr/projects/tui-vfx-recipes/recipes/debug_recipes
-- v3.1 root: /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes
-- descriptor pack: /usr/projects/tui-vfx/descriptors/v3.1/packs/primitive.json
+Goal:
+Add a stable visual-frame JSON report on top of the existing K0/K2 player CLI capability. This must not replace or alter the existing render-recipe default behavior. The current text-row output remains regression authority. K2.2 adds richer frame evidence for human and machine inspection.
 
-Do not migrate recipes.
-Do not modify either recipe root.
-Do not modify K1.
-Do not wire the compositor.
-Do not depend on the legacy runtime.
+Add a new player report schema:
 
-Add a report-only K0 player CLI command, preferably:
+  v3.1.player.visualFrameReport.1
 
-cargo run -p tui-vfx-player-cli -- migration-gap \
-  --legacy-root /usr/projects/tui-vfx-recipes/recipes/debug_recipes \
-  --v31-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
-  --descriptor-pack descriptors/v3.1/packs/primitive.json
+Add a new CLI command:
 
-The command should emit stable JSON with schemaVersion:
+  cargo run -p tui-vfx-player-cli -- render-frame \
+    --descriptor-pack descriptors/v3.1/packs/primitive.json \
+    <recipe.json>
 
-v3.1.player.migrationGap.1
+and recursive mode:
 
-The report must include:
-- legacy root
-- v3.1 root
-- summary counts
-- per-family legacy counts
-- per-family v3.1 counts
-- coverage classification: none, partial, represented, notApplicable
-- status classification: adapterExpansionReady, schemaDecisionNeeded, descriptorDecisionNeeded, migrationCandidateReady, ownerAuditNeeded, notYetClassified
-- recommended conservative migration queue
+  cargo run -p tui-vfx-player-cli -- render-frame \
+    --descriptor-pack descriptors/v3.1/packs/primitive.json \
+    --recursive /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes
 
-Use path-based family classification first. Do not attempt deep legacy semantic lowering.
+The report should include:
+- schemaVersion
+- root
+- descriptorPacks
+- summary
+- frames[]
 
-For every file touched:
-- look for small refactors that reduce complexity
-- keep code readable and maintainable
-- add rustdoc to public structs/functions
-- add schemars details only where appropriate for touched schema-bearing types
-- update usage text
-- keep tests focused
+Each frame entry should include:
+- recipePath
+- status: rendered | unsupported | error
+- phase
+- sampleT
+- absoluteTimeMs
+- width
+- height
+- renderHash
+- nonEmptyCells
+- rows[] as compact glyph rows
+- cells[] as sparse non-default cells
+- unsupportedEffectIds[]
+- errors[]
+- warnings[]
 
-Expected high-level result:
-- current v3.1 root has baseline, event_driven_dwell, filters, masks, samplers, shaders, and styles represented
-- content, scene, shadows, complex, signals, easings, subcell_shapes, motion_routes, loopback, and other advanced families remain unrepresented or not yet classified
+Each sparse cell should include:
+- x
+- y
+- glyph
+- foreground
+- background
+- modifiers
+- role, if available from the player surface
 
-Keep K2.0 inventory-recipes and K0 render-recipe behavior intact.
+Rules:
+- Reuse the existing K0 player render path. Do not create a separate renderer.
+- Preserve render-recipe behavior and tests.
+- Preserve inventory-recipes and migration-gap behavior.
+- Unsupported fixtures should report unsupported, not become hard errors.
+- Do not mutate old recipes.
+- Do not mutate canonical v3.1 recipes unless explicitly justified.
+- Do not broaden migration.
+- Do not claim visual parity.
+- Do not build a GUI in this phase.
+- Do not add legacy recipe-runtime dependencies.
 
-At completion, write:
+Required verification:
+  cargo fmt --package tui-vfx-player -- --check
+  cargo fmt --package tui-vfx-player-cli -- --check
+  cargo clippy -p tui-vfx-player -p tui-vfx-player-cli --all-targets -- -D warnings
+  cargo test -p tui-vfx-player
+  cargo test -p tui-vfx-player-cli
 
-docs/new_kernel/PHASE_K2_1_MIGRATION_GAP_STATUS_MEMO_TO_ARCHITECT.md
+  cargo run -q -p tui-vfx-player-cli -- render-recipe \
+    --descriptor-pack descriptors/v3.1/packs/primitive.json \
+    --recursive /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
+    > /tmp/tui-vfx-k22-render-report.json
 
-The memo must include the command shape, schema label, files touched, counts, unrepresented families, migration queue, verification results, and confirmation that recipe files were not modified.
+  cargo run -q -p tui-vfx-player-cli -- inventory-recipes \
+    --descriptor-pack descriptors/v3.1/packs/primitive.json \
+    --recursive /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
+    > /tmp/tui-vfx-k22-inventory-report.json
+
+  cargo run -q -p tui-vfx-player-cli -- migration-gap \
+    --legacy-root /usr/projects/tui-vfx-recipes/recipes/debug_recipes \
+    --v31-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
+    --descriptor-pack descriptors/v3.1/packs/primitive.json \
+    > /tmp/tui-vfx-k22-migration-gap-report.json
+
+  cargo run -q -p tui-vfx-player-cli -- render-frame \
+    --descriptor-pack descriptors/v3.1/packs/primitive.json \
+    /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json \
+    > /tmp/tui-vfx-k22-baseline-frame.json
+
+  cargo run -q -p tui-vfx-player-cli -- render-frame \
+    --descriptor-pack descriptors/v3.1/packs/primitive.json \
+    --recursive /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes \
+    > /tmp/tui-vfx-k22-visual-frame-report.json
+
+  cargo test --workspace
+  git diff --check
+  git -C /usr/projects/tui-vfx-recipes status --short -- recipes/debug_recipes recipes/v3.1/debug_recipes
+
+Expected corpus counts should remain:
+  total=16
+  rendered=10
+  unsupported=6
+  errors=0
+
+Deliver:
+- code changes in tui-vfx-player and tui-vfx-player-cli
+- tests for render-frame single file, recursive mode, unsupported reporting, and preservation of render-recipe behavior
+- docs/VOCABULARY.md update for VisualFrame / frame evidence / visual parity distinction
+- docs/new_kernel/K2_2_VISUAL_FRAME_EVIDENCE.md
+- docs/new_kernel/PHASE_K2_2_VISUAL_FRAME_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md
 ```
+
+## Notes for future phases
+
+After K2.2, the likely next decision should be based on the frame evidence:
+
+```text
+K2.3 — Primitive Adapter Reduction
+```
+
+Goal: reduce the six unsupported canonical primitive ids before migrating more recipes.
+
+The migration-gap report says broad migration pressure is large, especially:
+
+```text
+content: 111 legacy recipes, 0 v3.1
+filters: 98 legacy, 4 v3.1
+shaders/primitives: 94 legacy, 1 v3.1
+complex: 83 legacy, 0 v3.1
+```
+
+But we should not chase those until the current 16 canonical fixtures have stronger visual evidence and fewer unsupported player gaps.
