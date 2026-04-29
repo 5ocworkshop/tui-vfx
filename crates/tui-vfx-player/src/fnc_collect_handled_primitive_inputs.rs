@@ -1,9 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>K2.12 source fixture: mark source.text inputs as adapter-handled.</WCTX>
-// <CLOG>0.3.0: MINOR — add handled fields for source.text fixture coverage.
-// 0.2.0: MINOR — add handled fields for K2.9 simple masks.
-// 0.1.0: INIT — add current handled-input lookup for represented primitives.</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>K2.13 field coverage closure: mark gradient, applyTo, and position as player-handled.</WCTX>
+// <CLOG>0.4.0: MINOR — add handled shader gradient/applyTo/position fields.
+// 0.3.0: MINOR — add handled fields for source.text fixture coverage.</CLOG>
 
 use std::collections::BTreeSet;
 
@@ -34,11 +33,13 @@ pub(crate) fn collect_handled_primitive_inputs(
         "shader.linearGradient" => fields([
             "startColor",
             "endColor",
+            "gradient",
+            "applyTo",
             "angleDeg",
             "intensity",
             "colorSpace",
         ]),
-        "shader.borderSweep" => fields(["color", "speed", "length"]),
+        "shader.borderSweep" => fields(["color", "speed", "length", "position"]),
         _ => BTreeSet::new(),
     }
 }
@@ -62,4 +63,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

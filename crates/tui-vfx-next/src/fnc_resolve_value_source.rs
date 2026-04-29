@@ -37,6 +37,20 @@ pub fn resolve_value_source(
             output,
             clamp,
         } => resolve_map_source(graph, context, graph_values, from, *input, *output, *clamp),
+        ValueSource::SampledField {
+            field,
+            x,
+            y,
+            fallback,
+        } => resolve_sampled_field_source(
+            graph,
+            context,
+            graph_values,
+            field,
+            x,
+            y,
+            fallback.as_ref(),
+        ),
     }
 }
 
@@ -95,6 +109,44 @@ fn resolve_map_source(
         ProofValue::NumberCellField(field) => Ok(ProofValue::NumberCellField(
             field.map(|sample| map_number(sample, input, output, clamp)),
         )),
+    }
+}
+
+fn resolve_sampled_field_source(
+    graph: &GraphSpec,
+    context: &GraphExecutionContext,
+    graph_values: &BTreeMap<GraphValueId, ProofValue>,
+    field: &str,
+    x: &ValueSource,
+    y: &ValueSource,
+    fallback: Option<&Value>,
+) -> Result<ProofValue, GraphExecutionError> {
+    if field != "surfaceAngleFrom" {
+        return Err(crate::DescriptorValidationError::UnknownSampledField {
+            field: field.to_string(),
+        }
+        .into());
+    }
+    let _x = resolve_frame_number(graph, context, graph_values, x)?;
+    let _y = resolve_frame_number(graph, context, graph_values, y)?;
+    Ok(ProofValue::Frame(
+        fallback.cloned().unwrap_or(Value::Number(0.0)),
+    ))
+}
+
+fn resolve_frame_number(
+    graph: &GraphSpec,
+    context: &GraphExecutionContext,
+    graph_values: &BTreeMap<GraphValueId, ProofValue>,
+    source: &ValueSource,
+) -> Result<f64, GraphExecutionError> {
+    match resolve_value_source(graph, context, graph_values, source)? {
+        ProofValue::Frame(value) => value.as_range_number().ok_or_else(|| {
+            GraphExecutionError::NonNumericResolvedMapSource {
+                actual: value.kind(),
+            }
+        }),
+        ProofValue::NumberCellField(_) => Ok(0.0),
     }
 }
 

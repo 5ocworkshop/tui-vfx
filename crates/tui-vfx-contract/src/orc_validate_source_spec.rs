@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/orc_validate_source_spec.rs</FILE> - <DESC>Validate source specs against descriptors and assets</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase H0: validate typed source inputs and structural asset refs.</WCTX>
-// <CLOG>0.1.0: INIT — add source descriptor, input, required asset, asset compatibility, and value-source validation.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>K2.13 schema decision burn-down: support optional source inputs and sampled-field external source validation.</WCTX>
+// <CLOG>0.3.0: MINOR — honor optional source inputs and classify sampledField as external.
+// 0.2.0: MINOR — allow graph-local value sources when validating source specs inside graph context.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -62,7 +63,7 @@ fn validate_inputs(
     }
 
     for (id, input) in &descriptor.inputs {
-        if !spec.inputs.contains_key(id) && input.value.default.is_none() {
+        if !spec.inputs.contains_key(id) && input.value.default.is_none() && !input.optional {
             return Err(DescriptorValidationError::MissingRequiredSourceInput {
                 source: spec.source.clone(),
                 input: id.clone(),
@@ -130,10 +131,11 @@ fn uses_external_source(source: &ValueSource) -> bool {
         ValueSource::Literal { .. } => false,
         ValueSource::Parameter { .. }
         | ValueSource::Signal { .. }
-        | ValueSource::GraphValue { .. } => true,
+        | ValueSource::GraphValue { .. }
+        | ValueSource::SampledField { .. } => true,
         ValueSource::Map { from, .. } => uses_external_source(from),
     }
 }
 
 // <FILE>crates/tui-vfx-contract/src/orc_validate_source_spec.rs</FILE> - <DESC>Validate source specs against descriptors and assets</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

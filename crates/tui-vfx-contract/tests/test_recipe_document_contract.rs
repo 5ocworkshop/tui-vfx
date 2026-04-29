@@ -33,6 +33,7 @@ fn text_descriptor() -> SourceDescriptor {
                 display_name: Some("Text".to_string()),
                 description: Some("Text rendered into a source-produced surface.".to_string()),
                 value: text_value_spec(None),
+                optional: false,
                 bindable: true,
                 runtime_mutability: tui_vfx_contract::RuntimeMutability::Runtime,
             },

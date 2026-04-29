@@ -79,6 +79,48 @@
         "a"
       ]
     },
+    "GradientSpec": {
+      "description": "Canonical gradient value for descriptor inputs.",
+      "type": "object",
+      "properties": {
+        "space": {
+          "description": "Color interpolation space, such as `rgb` or `hct`.",
+          "type": "string"
+        },
+        "stops": {
+          "description": "Ordered or author-provided gradient stops.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GradientStop"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "stops",
+        "space"
+      ]
+    },
+    "GradientStop": {
+      "description": "One color stop in a canonical gradient value.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "description": "Color sampled at this stop.",
+          "$ref": "#/$defs/Color"
+        },
+        "position": {
+          "description": "Normalized stop position in the inclusive 0..1 range.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "color"
+      ]
+    },
     "InternedRoleName": {
       "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
       "type": "string"
@@ -341,6 +383,104 @@
             "start",
             "end"
           ]
+        },
+        {
+          "description": "Match rows where `row % modulus == remainder`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "moduloRows"
+            },
+            "modulus": {
+              "description": "Positive modulus used to select rows.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "remainder": {
+              "description": "Remainder selected by the modulo expression.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulus",
+            "remainder"
+          ]
+        },
+        {
+          "description": "Match columns where `column % modulus == remainder`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "moduloColumns"
+            },
+            "modulus": {
+              "description": "Positive modulus used to select columns.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "remainder": {
+              "description": "Remainder selected by the modulo expression.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulus",
+            "remainder"
+          ]
+        },
+        {
+          "description": "Match cells containing non-empty glyph content.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "nonEmpty"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match the outer perimeter band.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "outerBand"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells that are not on the outer perimeter.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "inner"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
         }
       ]
     },
@@ -469,6 +609,25 @@
             "value": {
               "description": "Color payload.",
               "$ref": "#/$defs/Color"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Gradient stop payload.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "gradient"
+            },
+            "value": {
+              "description": "Gradient payload.",
+              "$ref": "#/$defs/GradientSpec"
             }
           },
           "additionalProperties": false,
@@ -612,6 +771,11 @@
           "description": "RGBA color value.",
           "type": "string",
           "const": "color"
+        },
+        {
+          "description": "Ordered gradient stop value.",
+          "type": "string",
+          "const": "gradient"
         },
         {
           "description": "Duration value expressed as seconds.",

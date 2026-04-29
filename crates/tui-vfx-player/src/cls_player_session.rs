@@ -123,7 +123,7 @@ fn truthy(value: Option<&Value>) -> bool {
         Some(Value::Integer(value)) => *value != 0,
         Some(Value::Number(value) | Value::Duration(value)) => *value != 0.0,
         Some(Value::Text(value) | Value::String(value)) => !value.is_empty(),
-        Some(Value::Color(_)) => true,
+        Some(Value::Color(_) | Value::Gradient(_)) => true,
         _ => false,
     }
 }

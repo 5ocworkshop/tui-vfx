@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_value_predicate.rs</FILE> - <DESC>Lifecycle trigger value predicate DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase I0: define typed lifecycle trigger predicates.</WCTX>
-// <CLOG>0.1.0: INIT — add explicit value predicate vocabulary and kind validation.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>K2.13 schema decision burn-down: include gradient presence in truthy validation.</WCTX>
+// <CLOG>0.1.1: PATCH — allow gradient values in truthy predicate kind validation.
+// 0.1.0: INIT — add explicit value predicate vocabulary and kind validation.</CLOG>
 
 use crate::{DescriptorValidationError, Value, ValueKind};
 
@@ -40,7 +41,7 @@ pub enum ValuePredicate {
     /// Convenience level predicate with documented per-kind truthiness behavior.
     ///
     /// The contract truth table is boolean true, integer non-zero, finite number
-    /// non-zero, string/text non-empty, color value present, and finite duration
+    /// non-zero, string/text non-empty, color or gradient value present, and finite duration
     /// non-zero. Null, enum, role, scope, and rect have no I0 truth rule.
     Truthy,
 }
@@ -77,6 +78,7 @@ impl ValuePredicate {
                     ValueKind::String,
                     ValueKind::Text,
                     ValueKind::Color,
+                    ValueKind::Gradient,
                     ValueKind::Duration,
                 ],
             ),
@@ -132,4 +134,4 @@ fn require_kind(
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_value_predicate.rs</FILE> - <DESC>Lifecycle trigger value predicate DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

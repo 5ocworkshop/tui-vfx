@@ -1,8 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/orc_validate_graph_spec.rs</FILE> - <DESC>Validate canonical graph contracts</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase G4: validate graph value sources and node output declarations.</WCTX>
-// <CLOG>0.2.0: MINOR — validate graph-local value sources and node output declarations.
-// 0.1.0: INIT — validate graph declarations, order, and optional topology.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>K2.13 schema decision burn-down: honor optional effect inputs during node validation.</WCTX>
+// <CLOG>0.3.0: MINOR — allow descriptor inputs marked optional to be omitted without defaults.
+// 0.2.0: MINOR — validate graph-local value sources and node output declarations.</CLOG>
 
 use std::collections::BTreeSet;
 
@@ -131,7 +131,7 @@ fn validate_node(
     }
 
     for (input_id, input) in &effect.inputs {
-        if !node.inputs.contains_key(input_id) && input.value.default.is_none() {
+        if !node.inputs.contains_key(input_id) && input.value.default.is_none() && !input.optional {
             return Err(DescriptorValidationError::MissingRequiredNodeInput {
                 effect: node.effect.clone(),
                 input: input_id.clone(),
@@ -243,4 +243,4 @@ fn validate_node_coverage<'a>(
 }
 
 // <FILE>crates/tui-vfx-contract/src/orc_validate_graph_spec.rs</FILE> - <DESC>Validate canonical graph contracts</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

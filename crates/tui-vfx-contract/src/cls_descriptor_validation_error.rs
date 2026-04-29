@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
-// <WCTX>New kernel Phase J2: report descriptor-pack resolution failures.</WCTX>
-// <CLOG>0.9.0: MINOR — add descriptor pack identity, collision, and reference errors.
+// <VERS>VERSION: 0.10.1</VERS>
+// <WCTX>K2.13 schema decision burn-down: report invalid gradient and sampled-field payloads.</WCTX>
+// <CLOG>0.10.1: PATCH — add unknown sampled-field validation error.
+// 0.10.0: MINOR — add gradient stop validation error.
+// 0.9.0: MINOR — add descriptor pack identity, collision, and reference errors.
 // 0.8.0: MINOR — add lifecycle clock, phase, trigger, and predicate validation errors.
 // 0.7.0: MINOR — add recipe document, source instance, scene, and element-pipeline validation errors.
 // 0.6.0: MINOR — add source descriptor, source input, asset reference, and source asset compatibility errors.
@@ -507,6 +509,13 @@ pub enum DescriptorValidationError {
     },
     /// Enum specs must declare at least one allowed value.
     EmptyEnumAllowedValues,
+    /// Gradient values need at least two stops to define an interpolation span.
+    GradientRequiresAtLeastTwoStops,
+    /// Sampled-field value source references an unsupported field name.
+    UnknownSampledField {
+        /// Unsupported sampled field name.
+        field: String,
+    },
     /// Enum value is not one of the declared allowed values.
     EnumValueNotAllowed {
         /// Rejected enum value.
@@ -541,4 +550,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.9.0</VERS>
+// <VERS>END OF VERSION: 0.10.0</VERS>

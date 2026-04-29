@@ -1,14 +1,15 @@
 // <FILE>crates/tui-vfx-player/src/fnc_build_schema_readiness_blockers.rs</FILE> - <DESC>Build grouped schema-readiness blockers</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>K2.11 schema readiness: group migration mapping records into owner-facing blockers.</WCTX>
-// <CLOG>0.1.0: INIT — move blocker grouping out of report orchestration.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.13 schema decision burn-down: mark grouped blockers using final dispositions.</WCTX>
+// <CLOG>0.2.0: MINOR — use final disposition mapping for schema-readiness blocking status.
+// 0.1.0: INIT — move blocker grouping out of report orchestration.</CLOG>
 
 use std::collections::BTreeMap;
 
 use crate::{
-    PlayerMigrationMappingRecord, PlayerSchemaReadinessBlocker, is_schema_readiness_blocking,
-    schema_readiness_blocker_kind, schema_readiness_blocker_notes,
-    schema_readiness_blocking_decision, schema_readiness_next_packet,
+    PlayerMigrationMappingRecord, PlayerSchemaReadinessBlocker, schema_readiness_blocker_notes,
+    schema_readiness_blocking_decision, schema_readiness_disposition, schema_readiness_next_packet,
+    schema_readiness_offender_kind,
 };
 
 pub(crate) fn build_schema_readiness_blockers(
@@ -28,7 +29,7 @@ fn grouped_blocker_records(
         if record.status == "canonicalExists" || record.status == "candidateReady" {
             continue;
         }
-        let kind = schema_readiness_blocker_kind(record);
+        let kind = schema_readiness_offender_kind(record);
         groups
             .entry(format!(
                 "{}|{}|{}",
@@ -58,9 +59,13 @@ fn build_blocker(
         blocking_decision: schema_readiness_blocking_decision(&kind).to_string(),
         recommended_next_packet: schema_readiness_next_packet(&kind).to_string(),
         confidence: lowest_confidence(&group),
-        is_schema_readiness_blocking: is_schema_readiness_blocking(&kind),
+        is_schema_readiness_blocking: requires_owner_decision(&kind),
         notes: schema_readiness_blocker_notes(&group),
     }
+}
+
+fn requires_owner_decision(kind: &str) -> bool {
+    schema_readiness_disposition(kind) == "explicitOwnerDecisionNeeded"
 }
 
 fn representative_paths(records: &[&PlayerMigrationMappingRecord]) -> Vec<String> {
@@ -106,4 +111,4 @@ fn slug_part(value: &str) -> String {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_build_schema_readiness_blockers.rs</FILE> - <DESC>Build grouped schema-readiness blockers</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

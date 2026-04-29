@@ -8,9 +8,11 @@ use std::collections::BTreeMap;
 use tui_vfx_contract::{
     CellAccess, CellChannel, CellWritePolicy, CoordinateSpace, DescriptorValidationError,
     EffectCompletion, EffectDescriptor, EffectDomain, EffectId, EffectInputId, EffectInputSpec,
-    EffectLifecycle, NumericRange, RoleSpace, RoleWritePolicyKind, RuntimeMutability, ScopeKind,
-    ScopeSpec, ScopeSupport, Value, ValueKind, ValueSpec, WriteSupport,
+    EffectLifecycle, GradientSpec, GradientStop, NumericRange, RoleSpace, RoleWritePolicyKind,
+    RuntimeMutability, ScopeKind, ScopeSpec, ScopeSupport, Value, ValueKind, ValueSpec,
+    WriteSupport,
 };
+use tui_vfx_types::Color;
 use tui_vfx_types::RoleTag;
 
 fn visual_dim_descriptor() -> EffectDescriptor {
@@ -75,6 +77,7 @@ fn runtime_factor_input(default: Value) -> EffectInputSpec {
         display_name: Some("Factor".to_string()),
         description: Some("Opacity multiplier.".to_string()),
         value: number_value_spec(default),
+        optional: false,
         bindable: true,
         runtime_mutability: RuntimeMutability::Runtime,
     }
@@ -221,6 +224,80 @@ fn color_value_round_trips() {
     let decoded: Value = serde_json::from_str(&json).expect("color value deserializes");
 
     assert_eq!(decoded, value);
+}
+
+#[test]
+fn gradient_value_matches_gradient_kind() {
+    let gradient = GradientSpec {
+        stops: vec![
+            GradientStop {
+                position: 0.0,
+                color: Color::RED,
+            },
+            GradientStop {
+                position: 1.0,
+                color: Color::BLUE,
+            },
+        ],
+        space: "rgb".to_string(),
+    };
+    let spec = ValueSpec {
+        kind: ValueKind::Gradient,
+        default: Some(Value::Gradient(gradient)),
+        range: None,
+        allowed_values: vec![],
+        unit: None,
+        semantic: Some("gradient".to_string()),
+    };
+
+    assert!(spec.validate().is_ok());
+}
+
+#[test]
+fn gradient_value_rejects_underspecified_or_out_of_range_stops() {
+    let one_stop = ValueSpec {
+        kind: ValueKind::Gradient,
+        default: Some(Value::Gradient(GradientSpec {
+            stops: vec![GradientStop {
+                position: 0.0,
+                color: Color::RED,
+            }],
+            space: "rgb".to_string(),
+        })),
+        range: None,
+        allowed_values: vec![],
+        unit: None,
+        semantic: Some("gradient".to_string()),
+    };
+    assert!(matches!(
+        one_stop.validate(),
+        Err(DescriptorValidationError::GradientRequiresAtLeastTwoStops)
+    ));
+
+    let out_of_range = ValueSpec {
+        kind: ValueKind::Gradient,
+        default: Some(Value::Gradient(GradientSpec {
+            stops: vec![
+                GradientStop {
+                    position: 0.0,
+                    color: Color::RED,
+                },
+                GradientStop {
+                    position: 1.25,
+                    color: Color::BLUE,
+                },
+            ],
+            space: "rgb".to_string(),
+        })),
+        range: None,
+        allowed_values: vec![],
+        unit: None,
+        semantic: Some("gradient".to_string()),
+    };
+    assert!(matches!(
+        out_of_range.validate(),
+        Err(DescriptorValidationError::NumericValueOutOfRange { value, .. }) if value == 1.25
+    ));
 }
 
 #[test]

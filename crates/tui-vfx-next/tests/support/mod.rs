@@ -120,6 +120,7 @@ pub fn descriptor(effect: &str, input: &str, kind: ValueKind) -> EffectDescripto
                 display_name: Some(input.to_string()),
                 description: None,
                 value: value_spec(kind, None),
+                optional: false,
                 bindable: true,
                 runtime_mutability: RuntimeMutability::Runtime,
             },

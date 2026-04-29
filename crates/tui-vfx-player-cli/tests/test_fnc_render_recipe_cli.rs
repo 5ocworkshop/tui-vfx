@@ -305,11 +305,13 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.schemaReadiness.1");
     assert_eq!(report["summary"]["totalLegacyRecords"], 603);
-    assert_eq!(report["summary"]["schemaBlockedRecords"], 72);
+    assert_eq!(report["summary"]["schemaBlockedRecords"], 73);
     assert_eq!(report["summary"]["sourceBlockedRecords"], 67);
-    assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 4);
+    assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 0);
     assert_eq!(report["summary"]["unknownRecords"], 5);
-    assert_eq!(report["summary"]["canDeclareSchemaReady"], false);
+    assert_eq!(report["summary"]["canDeclareSchemaReady"], true);
+    assert_eq!(report["summary"]["unresolvedSchemaBlockers"], 0);
+    assert_eq!(report["summary"]["remainingOwnerDecisionCount"], 0);
 
     assert!(
         report["blockers"]
@@ -332,8 +334,7 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
             .as_array()
             .expect("blockers")
             .iter()
-            .any(|blocker| blocker["blockerKind"] == "fieldCoverage"
-                && blocker["statusFromMigrationMapping"] == "blockedByFieldCoverage")
+            .all(|blocker| blocker["blockerKind"] != "fieldCoverage")
     );
 }
 
@@ -350,12 +351,12 @@ fn test_fnc_cli_maps_schema_readiness_blockers_json() {
         value_source["statusFromMigrationMapping"],
         "schemaDecisionNeeded"
     );
-    assert_eq!(value_source["isSchemaReadinessBlocking"], true);
+    assert_eq!(value_source["isSchemaReadinessBlocking"], false);
 
     let source =
         find_readiness_blocker(&report, "sourceDescriptor", "content/content_marquee.json");
     assert_eq!(source["statusFromMigrationMapping"], "sourceDecisionNeeded");
-    assert_eq!(source["isSchemaReadinessBlocking"], true);
+    assert_eq!(source["isSchemaReadinessBlocking"], false);
     assert!(
         source["notes"]
             .as_array()
@@ -364,22 +365,12 @@ fn test_fnc_cli_maps_schema_readiness_blockers_json() {
             .any(|note| note.as_str().unwrap_or("").contains("source.marqueeText"))
     );
 
-    let field = find_readiness_blocker(
-        &report,
-        "fieldCoverage",
-        "shaders/primitives/shader_linear_gradient_diagonal.json",
-    );
-    assert_eq!(
-        field["statusFromMigrationMapping"],
-        "blockedByFieldCoverage"
-    );
-    assert_eq!(field["isSchemaReadinessBlocking"], true);
     assert!(
-        field["notes"]
+        report["blockers"]
             .as_array()
-            .expect("notes")
+            .expect("blockers")
             .iter()
-            .any(|note| note.as_str().unwrap_or("").contains("gradient"))
+            .all(|blocker| blocker["blockerKind"] != "fieldCoverage")
     );
 }
 
@@ -392,7 +383,19 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
     ]);
 
     let offenders = report["offenders"].as_array().expect("offenders");
-    assert_eq!(offenders.len(), 386);
+    assert_eq!(offenders.len(), 383);
+    assert_eq!(report["summary"]["unresolvedSchemaBlockers"], 0);
+    assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
+    assert_eq!(report["summary"]["remainingOwnerDecisionCount"], 0);
+    assert_eq!(report["summary"]["canDeclareSchemaReady"], true);
+    assert_eq!(
+        report["summary"]["dispositionCounts"]["acceptedSchema"],
+        125
+    );
+    assert_eq!(
+        report["summary"]["dispositionCounts"]["descriptorBacklog"],
+        263
+    );
     assert_eq!(
         offender_kind_counts(&report),
         BTreeMap::from([
@@ -400,14 +403,13 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
             ("bindingSemantics", 22),
             ("contentDescriptor", 5),
             ("descriptorPack", 189),
-            ("fieldCoverage", 4),
             ("guiHumanReview", 2),
             ("lifecycleSemantics", 1),
             ("motionTimingSemantics", 34),
             ("oracleOnly", 2),
             ("sceneSemantics", 26),
             ("sourceDescriptor", 74),
-            ("valueSourceSemantics", 12),
+            ("valueSourceSemantics", 13),
         ])
     );
     assert!(
@@ -420,55 +422,59 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
             .iter()
             .all(|offender| offender["blockerKind"] != "unknown")
     );
+    assert!(
+        report["blockers"]
+            .as_array()
+            .expect("blockers")
+            .iter()
+            .all(|blocker| blocker["blockerKind"] != "ownerAudit")
+    );
+    assert!(
+        report["blockers"]
+            .as_array()
+            .expect("blockers")
+            .iter()
+            .all(|blocker| blocker["blockerKind"] != "unknown")
+    );
+    assert!(offenders.iter().all(|offender| {
+        offender
+            .as_object()
+            .expect("offender")
+            .contains_key("disposition")
+    }));
+    assert!(offenders.iter().all(|offender| {
+        offender
+            .as_object()
+            .expect("offender")
+            .contains_key("schemaBlocking")
+    }));
 
     let source = find_readiness_offender(&report, "content/content_marquee.json");
     assert_eq!(source["blockerKind"], "sourceDescriptor");
-    assert_eq!(source["recommendedDisposition"], "deferForSourceDecision");
-    assert_eq!(source["schemaReadinessBlocking"], true);
+    assert_eq!(source["disposition"], "descriptorBacklog");
+    assert_eq!(source["recommendedDisposition"], "descriptorBacklog");
+    assert_eq!(source["schemaBlocking"], false);
+    assert_eq!(source["schemaReadinessBlocking"], false);
     assert_json_array_contains(&source["requiredSourceIds"], "source.marqueeText");
 
-    let field = find_readiness_offender(
-        &report,
-        "shaders/primitives/shader_linear_gradient_diagonal.json",
-    );
-    assert_eq!(field["blockerKind"], "fieldCoverage");
-    assert_eq!(field["schemaReadinessBlocking"], true);
-    assert_eq!(
-        field["recommendedDisposition"],
-        "deferForDescriptorDecision"
-    );
     assert!(
-        field["unsupportedInputFields"]
-            .as_array()
-            .expect("fields")
+        offenders
             .iter()
-            .any(|value| value == "gradient")
+            .all(|offender| offender["blockerKind"] != "fieldCoverage")
     );
-    assert_unsupported_fields(
-        find_readiness_offender(
-            &report,
-            "shaders/primitives/shader_linear_gradient_background_channel.json",
-        ),
-        &["gradient"],
+
+    let border_position = find_readiness_offender(
+        &report,
+        "shaders/compositions/shader_border_sweep_position_binding.json",
     );
-    assert_unsupported_fields(
-        find_readiness_offender(
-            &report,
-            "shaders/primitives/shader_linear_gradient_apply_to_both.json",
-        ),
-        &["applyTo", "gradient"],
-    );
-    assert_unsupported_fields(
-        find_readiness_offender(
-            &report,
-            "shaders/compositions/shader_border_sweep_position_binding.json",
-        ),
-        &["position"],
-    );
+    assert_eq!(border_position["blockerKind"], "valueSourceSemantics");
+    assert_eq!(border_position["disposition"], "acceptedSchema");
+    assert_eq!(border_position["schemaReadinessBlocking"], false);
 
     let command_capture =
         find_readiness_offender(&report, "fixtures/command_capture_chain.capture.json");
-    assert_eq!(command_capture["recommendedDisposition"], "markOracleOnly");
+    assert_eq!(command_capture["disposition"], "oracleOnly");
+    assert_eq!(command_capture["recommendedDisposition"], "oracleOnly");
     assert_eq!(command_capture["schemaReadinessBlocking"], false);
 }
 
@@ -496,26 +502,29 @@ fn test_fnc_cli_classifies_complex_and_style_offenders_json() {
     let sequence =
         find_readiness_offender(&report, "complex/complex_nested_parallel_sequences.json");
     assert_eq!(sequence["blockerKind"], "sceneSemantics");
-    assert_eq!(sequence["schemaReadinessBlocking"], true);
+    assert_eq!(sequence["disposition"], "acceptedSchema");
+    assert_eq!(sequence["schemaReadinessBlocking"], false);
 
     let visual_conflict = find_readiness_offender(
         &report,
         "complex/v3_scheduler_overlap_conflict_mixed_family.json",
     );
     assert_eq!(visual_conflict["blockerKind"], "guiHumanReview");
+    assert_eq!(visual_conflict["disposition"], "guiHumanReviewHoldback");
+    assert_eq!(visual_conflict["holdbackSignedOff"], true);
 
     let backend = find_readiness_offender(
         &report,
         "complex/complex_shadow_mask_sampler_shader_filter_native_mix.json",
     );
     assert_eq!(backend["blockerKind"], "backendRenderer");
+    assert_eq!(backend["disposition"], "backendHoldback");
+    assert_eq!(backend["holdbackSignedOff"], true);
 
     let style = find_readiness_offender(&report, "styles/style_non_empty_scope.json");
     assert_eq!(style["blockerKind"], "contentDescriptor");
-    assert_eq!(
-        style["recommendedDisposition"],
-        "deferForDescriptorDecision"
-    );
+    assert_eq!(style["disposition"], "acceptedSchema");
+    assert_eq!(style["recommendedDisposition"], "acceptedSchema");
     assert!(
         style["holdbackReason"]
             .as_str()
@@ -531,7 +540,7 @@ fn test_fnc_cli_classifies_complex_and_style_offenders_json() {
     ] {
         let style = find_readiness_offender(&report, style_path);
         assert_eq!(style["blockerKind"], "contentDescriptor");
-        assert_eq!(style["schemaReadinessBlocking"], true);
+        assert_eq!(style["schemaReadinessBlocking"], false);
     }
 }
 
@@ -563,8 +572,8 @@ fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
         );
     }
     assert_eq!(report["summary"]["records"], 603);
-    assert_eq!(report["summary"]["candidateReady"], 0);
-    assert_eq!(report["summary"]["schemaDecisionNeeded"], 72);
+    assert_eq!(report["summary"]["candidateReady"], 3);
+    assert_eq!(report["summary"]["schemaDecisionNeeded"], 73);
 }
 
 #[test]
@@ -904,7 +913,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 0);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 7);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -1263,12 +1272,6 @@ fn assert_json_array_contains(values: &serde_json::Value, expected: &str) {
             .any(|value| value == expected),
         "missing {expected} in {values:?}"
     );
-}
-
-fn assert_unsupported_fields(offender: &serde_json::Value, expected: &[&str]) {
-    for field in expected {
-        assert_json_array_contains(&offender["unsupportedInputFields"], field);
-    }
 }
 
 fn find_mapping_record<'a>(

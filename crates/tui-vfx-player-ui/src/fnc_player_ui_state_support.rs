@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_player_ui_state_support.rs</FILE> - <DESC>Player UI state helpers</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K1: keep player state small while preserving canonical lifecycle trigger handling.</WCTX>
-// <CLOG>0.1.0: INIT — factor recipe read, phase cycling, and signal-backed dwell trigger discovery.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>K2.13 schema decision burn-down: keep dwell trigger signal discovery exhaustive for sampled-field sources.</WCTX>
+// <CLOG>0.1.1: PATCH — recurse into sampled-field coordinate sources during signal discovery.
+// 0.1.0: INIT — factor recipe read, phase cycling, and signal-backed dwell trigger discovery.</CLOG>
 
 use std::{fs, path::Path};
 
@@ -54,6 +55,9 @@ fn signal_from_source(source: &ValueSource) -> Option<SignalId> {
     match source {
         ValueSource::Signal { id, .. } => Some(id.clone()),
         ValueSource::Map { from, .. } => signal_from_source(from),
+        ValueSource::SampledField { x, y, .. } => {
+            signal_from_source(x).or_else(|| signal_from_source(y))
+        }
         ValueSource::Literal { .. }
         | ValueSource::Parameter { .. }
         | ValueSource::GraphValue { .. } => None,
@@ -61,4 +65,4 @@ fn signal_from_source(source: &ValueSource) -> Option<SignalId> {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_player_ui_state_support.rs</FILE> - <DESC>Player UI state helpers</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_schema_readiness_report.rs</FILE> - <DESC>Schema-readiness report DTOs</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>K2.12 schema lock: expose opt-in offender rows for decision-board planning.</WCTX>
-// <CLOG>0.2.0: MINOR — add schema-readiness offender DTOs.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>K2.13 schema decision burn-down: expose disposition-based readiness declaration fields.</WCTX>
+// <CLOG>0.3.0: MINOR — add disposition counts and remaining owner decision DTOs.
+// 0.2.0: MINOR — add schema-readiness offender DTOs.
 // 0.1.0: INIT — add schema-readiness summary, family, blocker, and milestone DTOs.</CLOG>
 
 use std::collections::BTreeMap;
@@ -67,6 +68,32 @@ pub struct PlayerSchemaReadinessSummary {
     pub estimated_schema_readiness_percent: f64,
     /// Whether a 100% schema-readiness declaration is currently justified.
     pub can_declare_schema_ready: bool,
+    /// Offender rows that still block schema readiness after disposition mapping.
+    pub unresolved_schema_blockers: usize,
+    /// Offender rows signed off as explicit holdbacks.
+    pub signed_off_holdbacks: usize,
+    /// Offender rows that still need exact owner decisions.
+    pub explicit_owner_decision_needed: usize,
+    /// Counts grouped by resolved schema-decision disposition.
+    pub disposition_counts: BTreeMap<String, usize>,
+    /// Remaining exact owner decisions after disposition mapping.
+    pub remaining_owner_decision_count: usize,
+    /// Exact remaining owner decisions, if schema readiness cannot yet be declared.
+    pub remaining_owner_decisions: Vec<PlayerSchemaReadinessOwnerDecision>,
+}
+
+/// Exact remaining owner decision required before declaring schema readiness.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerSchemaReadinessOwnerDecision {
+    /// Legacy path requiring the decision.
+    pub path: String,
+    /// Legacy family bucket for the path.
+    pub family: String,
+    /// Current blocker kind after evidence classification.
+    pub blocker_kind: String,
+    /// Specific decision required from the owner.
+    pub exact_decision_required: String,
 }
 
 /// Per-family schema-readiness counts.
@@ -123,9 +150,19 @@ pub struct PlayerSchemaReadinessOffender {
     pub current_status: String,
     /// Concrete schema-readiness blocker kind.
     pub blocker_kind: String,
-    /// Whether this row still blocks schema-readiness declaration.
+    /// Backward-compatible alias for whether this row still blocks schema-readiness declaration.
     pub schema_readiness_blocking: bool,
-    /// Recommended concrete disposition.
+    /// Resolved schema-decision disposition for this row.
+    pub disposition: String,
+    /// Whether this row is still a schema blocker after disposition mapping.
+    pub schema_blocking: bool,
+    /// Whether a holdback/backlog disposition is explicitly signed off for schema lock.
+    pub holdback_signed_off: bool,
+    /// Exact owner decision still required, or empty when resolved.
+    pub exact_decision_required: String,
+    /// Concrete next action for this row after schema decision.
+    pub recommended_next_action: String,
+    /// Legacy recommendation vocabulary preserved for migration-report continuity.
     pub recommended_disposition: String,
     /// Recommended follow-up packet or tranche.
     pub recommended_next_packet: String,
@@ -164,4 +201,4 @@ pub struct PlayerSchemaReadinessMilestone {
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_player_schema_readiness_report.rs</FILE> - <DESC>Schema-readiness report DTOs</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

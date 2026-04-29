@@ -6,9 +6,10 @@
 use std::collections::BTreeMap;
 
 use tui_vfx_contract::{
-    DescriptorValidationError, NumericRange, ParameterId, ParameterSpec, SignalId, SignalSpec,
-    Value, ValueKind, ValueSource, ValueSpec,
+    DescriptorValidationError, GradientSpec, GradientStop, NumericRange, ParameterId,
+    ParameterSpec, SignalId, SignalSpec, Value, ValueKind, ValueSource, ValueSpec,
 };
+use tui_vfx_types::Color;
 
 fn ratio_value_spec(default: Value) -> ValueSpec {
     ValueSpec {
@@ -100,6 +101,24 @@ fn literal_value_source_rejects_wrong_target_kind() {
             expected: ValueKind::Number,
             actual: ValueKind::Boolean
         })
+    ));
+}
+
+#[test]
+fn literal_gradient_source_validates_gradient_shape() {
+    let source = ValueSource::Literal {
+        value: Value::Gradient(GradientSpec {
+            stops: vec![GradientStop {
+                position: 0.0,
+                color: Color::RED,
+            }],
+            space: "rgb".to_string(),
+        }),
+    };
+
+    assert!(matches!(
+        source.infer_kind(&parameter_map(), &signal_map()),
+        Err(DescriptorValidationError::GradientRequiresAtLeastTwoStops)
     ));
 }
 
@@ -273,6 +292,95 @@ fn map_source_output_kind_is_number() {
         source.infer_kind(&parameter_map(), &signal_map()).unwrap(),
         ValueKind::Number
     );
+}
+
+#[test]
+fn sampled_field_source_output_kind_is_number() {
+    let source = ValueSource::SampledField {
+        field: "surfaceAngleFrom".to_string(),
+        x: Box::new(ValueSource::Literal {
+            value: Value::Number(4.0),
+        }),
+        y: Box::new(ValueSource::Literal {
+            value: Value::Number(2.0),
+        }),
+        fallback: Some(Value::Number(0.0)),
+    };
+
+    assert_eq!(
+        source.infer_kind(&parameter_map(), &signal_map()).unwrap(),
+        ValueKind::Number
+    );
+    assert!(
+        source
+            .validate_kind(ValueKind::Number, &parameter_map(), &signal_map())
+            .is_ok()
+    );
+}
+
+#[test]
+fn sampled_field_source_rejects_non_number_fallback() {
+    let source = ValueSource::SampledField {
+        field: "surfaceAngleFrom".to_string(),
+        x: Box::new(ValueSource::Literal {
+            value: Value::Number(4.0),
+        }),
+        y: Box::new(ValueSource::Literal {
+            value: Value::Number(2.0),
+        }),
+        fallback: Some(Value::Text("bad".to_string())),
+    };
+
+    assert!(matches!(
+        source.infer_kind(&parameter_map(), &signal_map()),
+        Err(DescriptorValidationError::SourceKindMismatch {
+            expected: ValueKind::Number,
+            actual: ValueKind::Text
+        })
+    ));
+}
+
+#[test]
+fn sampled_field_source_validates_coordinate_sources() {
+    let source = ValueSource::SampledField {
+        field: "surfaceAngleFrom".to_string(),
+        x: Box::new(ValueSource::Parameter {
+            id: ParameterId::new("title"),
+            fallback: None,
+        }),
+        y: Box::new(ValueSource::Literal {
+            value: Value::Number(2.0),
+        }),
+        fallback: None,
+    };
+
+    assert!(matches!(
+        source.infer_kind(&parameter_map(), &signal_map()),
+        Err(DescriptorValidationError::SourceKindMismatch {
+            expected: ValueKind::Number,
+            actual: ValueKind::Text
+        })
+    ));
+}
+
+#[test]
+fn sampled_field_source_rejects_unknown_field_names() {
+    let source = ValueSource::SampledField {
+        field: "unregisteredField".to_string(),
+        x: Box::new(ValueSource::Literal {
+            value: Value::Number(4.0),
+        }),
+        y: Box::new(ValueSource::Literal {
+            value: Value::Number(2.0),
+        }),
+        fallback: None,
+    };
+
+    assert!(matches!(
+        source.infer_kind(&parameter_map(), &signal_map()),
+        Err(DescriptorValidationError::UnknownSampledField { field })
+            if field == "unregisteredField"
+    ));
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_value_source_binding_contract.rs</FILE> - <DESC>Declarative value source contract tests</DESC>

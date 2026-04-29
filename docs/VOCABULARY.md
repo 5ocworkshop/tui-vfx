@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.13.0</VERS> -->
-<!-- <WCTX>K2.12 schema lock: document schema-readiness offender and declaration terms.</WCTX> -->
-<!-- <CLOG>0.13.0: MINOR — add schema-readiness offender, declaration, and holdback vocabulary.
+<!-- <VERS>VERSION: 0.14.0</VERS> -->
+<!-- <WCTX>K2.13 schema decision burn-down: document dispositions, gradients, optional inputs, sampled fields, and built-in scopes.</WCTX> -->
+<!-- <CLOG>0.14.0: MINOR — add schema-readiness dispositions, gradient values, optional inputs, sampled fields, and built-in scopes.
+0.13.0: MINOR — add schema-readiness offender, declaration, and holdback vocabulary.
 0.12.0: MINOR — add migration mapping batch/report and descriptor decision vocabulary.
 0.11.0: MINOR — add K2.6 GUI, field coverage, migration loop, timeline, and diff evidence terms.</CLOG> -->
 
@@ -200,15 +201,15 @@ Policy:
 ### SchemaReadinessReport
 
 Definition:
-: A stable player JSON report with schema `v3.1.player.schemaReadiness.1`. It summarizes whether the legacy debug-recipe corpus can be declared ready for v3.1 schema lock, grouped by readiness counts, blocker lanes, milestones, and optional offender rows.
+: A stable player JSON report with schema `v3.1.player.schemaReadiness.1`. It summarizes whether the legacy debug-recipe corpus can be declared ready for v3.1 schema lock, grouped by readiness counts, blocker lanes, milestones, optional offender rows, resolved disposition counts, and remaining exact owner decisions.
 
 Policy:
-: The report is a planning and governance surface, not runtime behavior. During pre-release v3.1 work, additive report fields may be added without bumping the schema version when owner direction says the schema is not locked.
+: The report is a planning and governance surface, not runtime behavior. During pre-release v3.1 work, additive report fields may be added without bumping the schema version when owner direction says the schema is not locked. `canDeclareSchemaReady` is disposition-based; raw migration-status counters remain for backlog sizing.
 
 ### SchemaReadinessOffender
 
 Definition:
-: One opt-in `SchemaReadinessReport.offenders[]` row emitted by `schema-readiness --include-offenders`. It identifies a specific legacy path, current migration status, blocker kind, recommended disposition, next packet, descriptor/source requirements, unsupported fields, and holdback reason.
+: One opt-in `SchemaReadinessReport.offenders[]` row emitted by `schema-readiness --include-offenders`. It identifies a specific legacy path, current migration status, blocker kind, resolved disposition, schema-blocking flag, holdback signoff flag, exact decision text, recommended next action, descriptor/source requirements, unsupported fields, and holdback reason.
 
 Not the same as:
 : A permanent runtime error, canonical recipe field, or proof that the legacy recipe should be migrated unchanged. Offender rows are decision-board entries for schema-lock planning.
@@ -220,6 +221,18 @@ Definition:
 
 Policy:
 : A declaration cannot rest on vague phrases such as “unaddressed fields.” It must list the decision lane, impact, and next action.
+
+
+### Schema Readiness Disposition
+
+Definition:
+: The resolved schema-decision state for a legacy debug-recipes record after evidence classification.
+
+Canonical values:
+: `acceptedSchema`, `descriptorBacklog`, `adapterBacklog`, `backendHoldback`, `guiHumanReviewHoldback`, `oracleOnly`, `duplicateVariant`, `explicitOwnerDecisionNeeded`.
+
+Policy:
+: Only `explicitOwnerDecisionNeeded` blocks schema readiness after K2.13 disposition mapping. Backlog and holdback dispositions must still be visible; they are signed-off work queues, not hidden skips.
 
 ### Holdback Disposition
 
@@ -440,6 +453,54 @@ Example:
   "locator": { "kind": "logical", "locator": "demo.flagArt" }
 }
 ```
+
+
+### ValueSource
+
+Definition:
+: A declarative source for a typed value supplied to an input, trigger, source instance, or binding.
+
+Canonical families:
+: literal, parameter, signal, graph value, numeric map, and sampled field.
+
+Rust contract type, if any:
+: `ValueSource`.
+
+JSON/schema surface, if any:
+: `schemas/v3.1/contract/value-source.schema.json`.
+
+Not the same as:
+: A binding. A binding wires values; a value source produces or references one value.
+
+### SampledField ValueSource
+
+Definition:
+: A `ValueSource` family that samples a deterministic per-cell spatial field such as `surfaceAngleFrom` and produces a numeric value.
+
+Policy:
+: Sampled fields are not host signals and not graph values. Use `map`/`remap` around sampled-field output when numeric conversion is needed.
+
+### Gradient Value
+
+Definition:
+: A typed canonical value made of ordered color stops plus an interpolation space.
+
+Rust contract type, if any:
+: `GradientSpec`, `GradientStop`, `ValueKind::Gradient`, `Value::Gradient`.
+
+Policy:
+: `shader.linearGradient.gradient` is the canonical rich gradient input. `startColor` and `endColor` remain transitional shorthand for existing fixtures and adapters.
+
+### Optional Descriptor Input
+
+Definition:
+: An effect or source descriptor input that may be omitted by a node/source instance even when the input has no default value.
+
+Rust contract type, if any:
+: `EffectInputSpec.optional`, `SourceInputSpec.optional`.
+
+Policy:
+: Optional inputs are for additive canonical fields such as gradient stops or direct progress overrides. Do not use optionality to hide fields that a descriptor truly requires to render.
 
 ### Binding
 
@@ -1174,7 +1235,7 @@ Example:
 ### Scope
 
 Definition:
-: A small algebra for selecting cells: all cells, role cells, rectangles, row ranges, or column ranges. Coordinate and role spaces are operation-level context.
+: A small algebra for selecting cells: all cells, role cells, rectangles, row ranges, column ranges, row/column modulo selections, non-empty cells, the outer band, or the inner area. Coordinate and role spaces are operation-level context.
 
 Owns / owned by:
 : `ScopeSpec` owns shape. `ScopeKind` owns descriptor support vocabulary. `CoordinateSpace` and `RoleSpace` own operation-level evaluation spaces.
@@ -1186,7 +1247,7 @@ JSON/schema surface, if any:
 : `schemas/v3.1/contract/scope.schema.json`, with support declarations in `effect-descriptor.schema.json`.
 
 Not the same as:
-: A mask. A selector language. A scene element. A graph topology predicate. A legacy region alias.
+: A mask. An open-ended selector language. A scene element. A graph topology predicate. A legacy region alias. Generic predicate registries remain deferred.
 
 Legacy/source-authoring synonyms, if useful:
 : Old target/region fields may lower to scopes when they select surface cells. Predicate-based visibility remains deferred.
@@ -1194,7 +1255,7 @@ Legacy/source-authoring synonyms, if useful:
 Example:
 
 ```json
-{ "kind": "rect", "rect": { "x": 2, "y": 1, "width": 20, "height": 3 } }
+{ "kind": "moduloRows", "modulus": 3, "remainder": 0 }
 ```
 
 ### Signal

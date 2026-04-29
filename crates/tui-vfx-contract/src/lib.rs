@@ -58,6 +58,7 @@ pub mod cls_effect_output_id;
 pub mod cls_effect_output_spec;
 pub mod cls_element_id;
 pub mod cls_element_placement;
+pub mod cls_gradient_spec;
 pub mod cls_graph_id;
 pub mod cls_graph_spec;
 pub mod cls_graph_step;
@@ -171,6 +172,7 @@ pub use cls_effect_output_id::EffectOutputId;
 pub use cls_effect_output_spec::EffectOutputSpec;
 pub use cls_element_id::ElementId;
 pub use cls_element_placement::ElementPlacement;
+pub use cls_gradient_spec::{GradientSpec, GradientStop};
 pub use cls_graph_id::GraphId;
 pub use cls_graph_spec::GraphSpec;
 pub use cls_graph_step::GraphStep;
@@ -246,13 +248,13 @@ pub use tr_coordinate_sampler::CoordinateSampler;
 pub mod schema_roots {
     pub use crate::{
         AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, ClockSpec, DurationSpec,
-        DwellPolicy, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep,
-        GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec,
-        NodeOutputSource, NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument,
-        RecipeElementPipeline, RecipeMetadata, RecipeScene, RecipeSceneElement, Scene,
-        SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor, SourceInputSpec,
-        SourceInstanceId, SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, TriggerSpec,
-        Value, ValuePredicate, ValueSource,
+        DwellPolicy, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GradientSpec, GraphSpec,
+        GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape,
+        LifecycleSpec, NodeOutputSource, NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec,
+        RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene, RecipeSceneElement,
+        Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor,
+        SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec, Surface,
+        SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
     };
     pub use crate::{DescriptorCatalog, DescriptorPack, DescriptorPackId, DescriptorPackRef};
 }

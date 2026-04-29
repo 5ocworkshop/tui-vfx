@@ -52,6 +52,9 @@ impl SurfaceEngine {
                     .role(x, y)
                     .expect("in-bounds destination role")
                     .clone();
+                let sampled_source_cell = source
+                    .cell(source_x, source_y)
+                    .expect("sampler returned in-bounds source cell");
                 let input = ScopeEvalInput {
                     destination_x: x,
                     destination_y: y,
@@ -59,12 +62,15 @@ impl SurfaceEngine {
                     sampled_source_y: source_y,
                     sampled_source_role: sampled_source_role.clone(),
                     destination_role,
+                    destination_width: Some(destination.width()),
+                    destination_height: Some(destination.height()),
+                    sampled_source_width: Some(source.width()),
+                    sampled_source_height: Some(source.height()),
+                    destination_glyph: destination.cell(x, y).map(|cell| cell.ch.to_string()),
+                    sampled_source_glyph: Some(sampled_source_cell.ch.to_string()),
                 };
                 if scope.matches(&input, coordinate_space, role_space) {
-                    let cell = *source
-                        .cell(source_x, source_y)
-                        .expect("sampler returned in-bounds source cell");
-                    pending.push((x, y, cell, sampled_source_role));
+                    pending.push((x, y, *sampled_source_cell, sampled_source_role));
                 }
             }
         }

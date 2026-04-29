@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/cls_legacy_migration_mapping_evidence_collector.rs</FILE> - <DESC>Legacy migration mapping evidence collector</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>K2.10 corpus mapping: isolate recursive legacy JSON evidence collection.</WCTX>
-// <CLOG>0.2.0: MINOR — detect nested value-source-shaped effect inputs.
-// 0.1.1: PATCH — clarify finish-time evidence field names without changing collection behavior.</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>K2.13 field coverage closure: stop treating accepted gradient and position fields as undecided.</WCTX>
+// <CLOG>0.4.0: MINOR — accept gradient and position value-source fields for migration evidence.</CLOG>
 
 use std::collections::BTreeSet;
 
@@ -123,7 +122,7 @@ impl LegacyMigrationMappingEvidenceCollector {
         }
         for (key, value) in payload.iter().filter(|(key, _)| key.as_str() != "type") {
             let field = canonical_legacy_field(key);
-            if needs_value_source_decision(value) {
+            if needs_value_source_decision(&field, value) {
                 self.value_source_decision_fields.insert(field.clone());
             }
             self.fields.insert(field);
@@ -136,16 +135,23 @@ impl LegacyMigrationMappingEvidenceCollector {
     }
 }
 
-fn needs_value_source_decision(value: &Value) -> bool {
+fn needs_value_source_decision(field: &str, value: &Value) -> bool {
+    if matches!(field, "gradient" | "position") {
+        return false;
+    }
     match value {
         Value::Object(object) => {
             object.contains_key("type")
                 || object.contains_key("signal")
                 || object.contains_key("binding")
                 || object.contains_key("remap")
-                || object.values().any(needs_value_source_decision)
+                || object
+                    .values()
+                    .any(|child| needs_value_source_decision(field, child))
         }
-        Value::Array(items) => items.iter().any(needs_value_source_decision),
+        Value::Array(items) => items
+            .iter()
+            .any(|child| needs_value_source_decision(field, child)),
         _ => false,
     }
 }
@@ -155,4 +161,4 @@ fn sorted(values: BTreeSet<String>) -> Vec<String> {
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_legacy_migration_mapping_evidence_collector.rs</FILE> - <DESC>Legacy migration mapping evidence collector</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

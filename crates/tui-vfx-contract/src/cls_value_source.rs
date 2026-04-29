@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_value_source.rs</FILE> - <DESC>Declarative value source DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase G4: allow node inputs to consume graph-local values.</WCTX>
-// <CLOG>0.2.0: MINOR — add graphValue source and context-aware validation.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>K2.13 schema decision burn-down: add deterministic sampled-field value sources.</WCTX>
+// <CLOG>0.3.0: MINOR — add sampledField numeric value source.
+// 0.2.0: MINOR — add graphValue source and context-aware validation.
 // 0.1.0: INIT — add declarative ValueSource variants and reference/kind validation.</CLOG>
 
 use std::collections::BTreeMap;
@@ -55,6 +56,17 @@ pub enum ValueSource {
         /// Whether values outside the input range should clamp before mapping.
         clamp: bool,
     },
+    /// Source value samples a deterministic per-cell spatial field.
+    SampledField {
+        /// Canonical sampled field name, such as `surfaceAngleFrom`.
+        field: String,
+        /// X coordinate source used by the sampled field.
+        x: Box<ValueSource>,
+        /// Y coordinate source used by the sampled field.
+        y: Box<ValueSource>,
+        /// Optional fallback value when the sampled field is unavailable.
+        fallback: Option<Value>,
+    },
 }
 
 impl ValueSource {
@@ -75,7 +87,12 @@ impl ValueSource {
         graph_values: Option<&GraphValueKinds>,
     ) -> Result<ValueKind, DescriptorValidationError> {
         match self {
-            Self::Literal { value } => Ok(value.kind()),
+            Self::Literal { value } => {
+                if let Value::Gradient(gradient) = value {
+                    gradient.validate()?;
+                }
+                Ok(value.kind())
+            }
             Self::Parameter { id, fallback } => {
                 let spec = parameters.get(id).ok_or_else(|| {
                     DescriptorValidationError::UnknownParameter { id: id.clone() }
@@ -132,6 +149,33 @@ impl ValueSource {
                 }
                 Ok(ValueKind::Number)
             }
+            Self::SampledField {
+                field,
+                x,
+                y,
+                fallback,
+            } => {
+                validate_sampled_field_name(field)?;
+                validate_sampled_field_coordinate(x.infer_kind_with_graph_values(
+                    parameters,
+                    signals,
+                    graph_values,
+                )?)?;
+                validate_sampled_field_coordinate(y.infer_kind_with_graph_values(
+                    parameters,
+                    signals,
+                    graph_values,
+                )?)?;
+                if let Some(value) = fallback
+                    && value.kind() != ValueKind::Number
+                {
+                    return Err(DescriptorValidationError::SourceKindMismatch {
+                        expected: ValueKind::Number,
+                        actual: value.kind(),
+                    });
+                }
+                Ok(ValueKind::Number)
+            }
         }
     }
 
@@ -169,6 +213,27 @@ fn is_numeric_kind(kind: ValueKind) -> bool {
     )
 }
 
+fn validate_sampled_field_coordinate(kind: ValueKind) -> Result<(), DescriptorValidationError> {
+    if is_numeric_kind(kind) {
+        Ok(())
+    } else {
+        Err(DescriptorValidationError::SourceKindMismatch {
+            expected: ValueKind::Number,
+            actual: kind,
+        })
+    }
+}
+
+fn validate_sampled_field_name(field: &str) -> Result<(), DescriptorValidationError> {
+    if matches!(field, "surfaceAngleFrom") {
+        Ok(())
+    } else {
+        Err(DescriptorValidationError::UnknownSampledField {
+            field: field.to_string(),
+        })
+    }
+}
+
 fn validate_map_range(
     range: NumericRange,
     range_name: &str,
@@ -194,4 +259,4 @@ fn validate_map_range(
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_value_source.rs</FILE> - <DESC>Declarative value source DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

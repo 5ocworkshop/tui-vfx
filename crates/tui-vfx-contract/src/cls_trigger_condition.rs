@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_trigger_condition.rs</FILE> - <DESC>Lifecycle trigger condition DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase I0: bind lifecycle triggers to typed value predicates.</WCTX>
-// <CLOG>0.1.0: INIT — add ValueSource plus ValuePredicate trigger condition.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.13 schema decision burn-down: recurse into sampled-field coordinates during trigger validation.</WCTX>
+// <CLOG>0.2.0: MINOR — reject nested graph values inside sampled-field trigger sources.
+// 0.1.0: INIT — add ValueSource plus ValuePredicate trigger condition.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -39,6 +40,10 @@ fn reject_graph_value_source(source: &ValueSource) -> Result<(), DescriptorValid
             DescriptorValidationError::RecipeLifecycleGraphValueSourceNotAllowed { id: id.clone() },
         ),
         ValueSource::Map { from, .. } => reject_graph_value_source(from),
+        ValueSource::SampledField { x, y, .. } => {
+            reject_graph_value_source(x)?;
+            reject_graph_value_source(y)
+        }
         ValueSource::Literal { .. }
         | ValueSource::Parameter { .. }
         | ValueSource::Signal { .. } => Ok(()),
@@ -46,4 +51,4 @@ fn reject_graph_value_source(source: &ValueSource) -> Result<(), DescriptorValid
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_trigger_condition.rs</FILE> - <DESC>Lifecycle trigger condition DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

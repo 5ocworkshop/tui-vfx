@@ -7,6 +7,7 @@
 pub(crate) fn schema_readiness_blocking_decision(kind: &str) -> &'static str {
     match kind {
         "sourceDescriptor" => "decide source descriptor and adapter coverage",
+        "contentDescriptor" => "decide content descriptor vocabulary expansion",
         "descriptorPack" => "decide descriptor-pack vocabulary expansion",
         "fieldCoverage" => "decide whether authored fields are descriptor or schema blockers",
         "schemaModel" => "settle missing schema/model semantics",
@@ -18,6 +19,7 @@ pub(crate) fn schema_readiness_blocking_decision(kind: &str) -> &'static str {
         "playerAdapter" => "add or defer player adapter support",
         "ownerAudit" => "classify owner-audit records into explicit blocker kinds",
         "backendRenderer" => "decide backend renderer or compositor support boundary",
+        "guiHumanReview" => "confirm GUI/human-review holdback disposition",
         "duplicateOrVariant" => "confirm duplicate or variant disposition",
         "oracleOnly" => "confirm oracle-only disposition",
         _ => "perform owner audit and classify blocker",
@@ -27,7 +29,7 @@ pub(crate) fn schema_readiness_blocking_decision(kind: &str) -> &'static str {
 pub(crate) fn schema_readiness_next_packet(kind: &str) -> &'static str {
     match kind {
         "sourceDescriptor" => "source/content descriptor decision packet",
-        "descriptorPack" => "descriptor-pack vocabulary expansion packet",
+        "contentDescriptor" | "descriptorPack" => "descriptor-pack vocabulary expansion packet",
         "fieldCoverage" => "primitive descriptor/field-coverage closure packet",
         "valueSourceSemantics"
         | "bindingSemantics"

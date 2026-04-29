@@ -381,7 +381,7 @@
         "parameters": [
           {
             "default": "Literal(0.0)",
-            "doc": "How quickly characters resolve (higher = faster stabilization).\n\nBindable: accepts a literal, a `{\"binding\": \"name\"}` reference, or a\n`{\"signal\": ...}` expression.",
+            "doc": "How quickly characters resolve (higher = faster stabilization). Bindable.",
             "name": "resolve_pace",
             "ty": "VfxBindable"
           },
@@ -657,7 +657,7 @@
         "parameters": [
           {
             "default": "Literal(0.0)",
-            "doc": "Speed variation for organic typing feel (0.0 = steady, higher = more variable).\n\nBindable: accepts a literal, a `{\"binding\": \"name\"}` reference to a\nhost-supplied runtime parameter, or a `{\"signal\": ...}` expression.",
+            "doc": "Speed variation for organic typing feel (0.0 = steady, higher = more variable). Bindable.",
             "name": "speed_variance",
             "ty": "VfxBindable"
           }

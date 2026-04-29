@@ -1,9 +1,10 @@
 // <FILE>crates/tui-vfx-player/src/fnc_resolve_effect_input.rs</FILE> - <DESC>Resolve graph node effect inputs</DESC>
-// <VERS>VERSION: 0.3.1</VERS>
-// <WCTX>Player adapter de-slop: keep typed input resolution and color labels centralized.</WCTX>
-// <CLOG>0.3.1: PATCH — centralize effect input lookup and RGBA label formatting.</CLOG>
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>K2.13 field coverage closure: resolve typed gradient effect inputs.</WCTX>
+// <CLOG>0.4.0: MINOR — add gradient input resolver.
+// 0.3.1: PATCH — centralize effect input lookup and RGBA label formatting.</CLOG>
 
-use tui_vfx_contract::{EffectInputId, NodeSpec, Value};
+use tui_vfx_contract::{EffectInputId, GradientSpec, NodeSpec, Value};
 
 pub(crate) use crate::cls_resolved_color::ResolvedColor;
 
@@ -71,6 +72,17 @@ pub(crate) fn resolve_effect_color(
     }
 }
 
+pub(crate) fn resolve_effect_gradient(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    input_id: &str,
+) -> Option<GradientSpec> {
+    match resolve_effect_value(node, request, input_id) {
+        Some(Value::Gradient(value)) => Some(value),
+        _ => None,
+    }
+}
+
 fn resolve_effect_value(
     node: &NodeSpec,
     request: &PlayerSampleRequest,
@@ -82,4 +94,4 @@ fn resolve_effect_value(
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_resolve_effect_input.rs</FILE> - <DESC>Resolve graph node effect inputs</DESC>
-// <VERS>END OF VERSION: 0.3.1</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

@@ -92,6 +92,10 @@ impl ValueSpec {
             }
         }
 
+        if let Value::Gradient(gradient) = value {
+            gradient.validate()?;
+        }
+
         if self.kind == ValueKind::Enum {
             let Some(enum_value) = value.as_enum_value() else {
                 return Err(DescriptorValidationError::ValueKindMismatch {

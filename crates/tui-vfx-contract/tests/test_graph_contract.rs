@@ -100,6 +100,27 @@ fn graph_rejects_missing_required_input() {
 }
 
 #[test]
+fn graph_accepts_omitted_optional_input() {
+    let mut graph = base_graph(literal_source());
+    graph
+        .effects
+        .get_mut(&EffectId::new("terminal.opacity"))
+        .unwrap()
+        .inputs
+        .get_mut(&EffectInputId::new("amount"))
+        .unwrap()
+        .optional = true;
+    graph
+        .nodes
+        .get_mut(&NodeId::new("fadeIn"))
+        .unwrap()
+        .inputs
+        .clear();
+
+    assert!(graph.validate().is_ok());
+}
+
+#[test]
 fn graph_rejects_input_kind_mismatch() {
     let graph = base_graph(ValueSource::Literal {
         value: Value::Text("wrong".to_string()),

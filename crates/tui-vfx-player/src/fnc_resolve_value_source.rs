@@ -31,6 +31,7 @@ pub fn resolve_value_source(
             *output,
             *clamp,
         ),
+        ValueSource::SampledField { fallback, .. } => fallback.clone().or(Some(Value::Number(0.0))),
     }
 }
 

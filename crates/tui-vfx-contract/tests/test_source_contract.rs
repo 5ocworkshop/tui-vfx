@@ -44,6 +44,7 @@ fn source_input(value: ValueSpec, bindable: bool) -> SourceInputSpec {
         display_name: None,
         description: Some("Source input under test.".to_string()),
         value,
+        optional: false,
         bindable,
         runtime_mutability: RuntimeMutability::Runtime,
     }
@@ -250,6 +251,32 @@ fn source_spec_rejects_missing_required_input() {
         Err(DescriptorValidationError::MissingRequiredSourceInput { input, .. })
             if input.as_str() == "text"
     ));
+}
+
+#[test]
+fn source_spec_accepts_omitted_optional_input() {
+    let mut descriptor = text_source_descriptor();
+    descriptor
+        .inputs
+        .get_mut(&SourceInputId::new("text"))
+        .unwrap()
+        .optional = true;
+    let spec = SourceSpec {
+        source: SourceId::new("source.text"),
+        inputs: BTreeMap::new(),
+        assets: BTreeMap::new(),
+    };
+
+    assert!(
+        spec.validate(
+            &BTreeMap::from([(SourceId::new("source.text"), descriptor)]),
+            &BTreeMap::new(),
+            &BTreeMap::new(),
+            &BTreeMap::new(),
+            None,
+        )
+        .is_ok()
+    );
 }
 
 #[test]

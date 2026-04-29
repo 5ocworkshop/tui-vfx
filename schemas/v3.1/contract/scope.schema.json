@@ -110,6 +110,104 @@
         "start",
         "end"
       ]
+    },
+    {
+      "description": "Match rows where `row % modulus == remainder`.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "moduloRows"
+        },
+        "modulus": {
+          "description": "Positive modulus used to select rows.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "remainder": {
+          "description": "Remainder selected by the modulo expression.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "modulus",
+        "remainder"
+      ]
+    },
+    {
+      "description": "Match columns where `column % modulus == remainder`.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "moduloColumns"
+        },
+        "modulus": {
+          "description": "Positive modulus used to select columns.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "remainder": {
+          "description": "Remainder selected by the modulo expression.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "modulus",
+        "remainder"
+      ]
+    },
+    {
+      "description": "Match cells containing non-empty glyph content.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "nonEmpty"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    {
+      "description": "Match the outer perimeter band.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "outerBand"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    {
+      "description": "Match cells that are not on the outer perimeter.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "inner"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
     }
   ],
   "$defs": {

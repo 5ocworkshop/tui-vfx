@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_summarize_schema_readiness.rs</FILE> - <DESC>Summarize schema-readiness counts</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>K2.11 schema readiness: compute conservative readiness summary from migration mapping records.</WCTX>
-// <CLOG>0.1.0: INIT — move summary counting out of report orchestration.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.13 schema decision burn-down: initialize disposition summary fields.</WCTX>
+// <CLOG>0.2.0: MINOR — seed disposition and owner-decision summary fields.
+// 0.1.0: INIT — move summary counting out of report orchestration.</CLOG>
 
 use crate::{
     PlayerMigrationMappingRecord, PlayerSchemaReadinessSummary, schema_readiness_blocker_kind,
@@ -46,6 +47,12 @@ pub(crate) fn summarize_schema_readiness(
         unknown_records: unknown,
         estimated_schema_readiness_percent: readiness_percent(schema_ready, total),
         can_declare_schema_ready: total > 0 && hard_blockers == 0,
+        unresolved_schema_blockers: hard_blockers,
+        signed_off_holdbacks: oracle_only + duplicate_or_variant,
+        explicit_owner_decision_needed: owner_audit + unknown,
+        disposition_counts: Default::default(),
+        remaining_owner_decision_count: owner_audit + unknown,
+        remaining_owner_decisions: Vec::new(),
     }
 }
 
@@ -65,4 +72,4 @@ fn readiness_percent(schema_ready: usize, total: usize) -> f64 {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_summarize_schema_readiness.rs</FILE> - <DESC>Summarize schema-readiness counts</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

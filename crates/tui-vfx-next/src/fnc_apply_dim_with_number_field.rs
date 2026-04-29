@@ -47,6 +47,12 @@ pub(crate) fn apply_dim_with_number_field(
                 sampled_source_y: y,
                 sampled_source_role: role.clone(),
                 destination_role: role,
+                destination_width: Some(destination.width()),
+                destination_height: Some(destination.height()),
+                sampled_source_width: Some(source.width()),
+                sampled_source_height: Some(source.height()),
+                destination_glyph: destination.cell(x, y).map(|cell| cell.ch.to_string()),
+                sampled_source_glyph: source.cell(x, y).map(|cell| cell.ch.to_string()),
             };
             if !scope.matches(&input, CoordinateSpace::default(), RoleSpace::default()) {
                 continue;

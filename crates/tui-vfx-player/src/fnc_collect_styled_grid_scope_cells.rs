@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/fnc_collect_styled_grid_scope_cells.rs</FILE> - <DESC>Collect styled-grid cells for scopes</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Primitive adapter work: share styled-grid scope traversal helpers.</WCTX>
-// <CLOG>0.1.0: INIT — add scope and border cell collection helpers.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.13 scope decision: evaluate accepted built-in styled-grid scopes.</WCTX>
+// <CLOG>0.2.0: MINOR — support modulo, non-empty, outer-band, and inner styled-grid scopes.</CLOG>
 
 use tui_vfx_contract::ScopeSpec;
 
@@ -48,6 +48,18 @@ fn scope_matches(
         Some(ScopeSpec::Rect { rect }) => rect.contains(x as u16, y as u16),
         Some(ScopeSpec::RowRange { start, end }) => y >= *start && y < *end,
         Some(ScopeSpec::ColumnRange { start, end }) => x >= *start && x < *end,
+        Some(ScopeSpec::ModuloRows { modulus, remainder }) => {
+            *modulus > 0 && y % *modulus == *remainder
+        }
+        Some(ScopeSpec::ModuloColumns { modulus, remainder }) => {
+            *modulus > 0 && x % *modulus == *remainder
+        }
+        Some(ScopeSpec::NonEmpty) => styled_grid
+            .cells()
+            .iter()
+            .any(|cell| cell.x == x && cell.y == y && !cell.glyph.trim().is_empty()),
+        Some(ScopeSpec::OuterBand) => is_border(styled_grid, x, y),
+        Some(ScopeSpec::Inner) => styled_grid.contains(x, y) && !is_border(styled_grid, x, y),
     }
 }
 
@@ -57,4 +69,4 @@ fn is_border(styled_grid: &PlayerStyledGrid, x: usize, y: usize) -> bool {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_collect_styled_grid_scope_cells.rs</FILE> - <DESC>Collect styled-grid cells for scopes</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

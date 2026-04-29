@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.30.0</VERS> -->
-<!-- <WCTX>K2.12 schema-lock indexing: add decision sprint reports, status memo, and review/de-slop artifact.</WCTX> -->
-<!-- <CLOG>0.30.0: MINOR — add K2.12 schema-lock decision sprint reports, status memo, and review/de-slop artifact.
+<!-- <VERS>VERSION: 0.31.0</VERS> -->
+<!-- <WCTX>K2.13 schema decision burn-down indexing: add decision reports, status memo, and schema/control docs.</WCTX> -->
+<!-- <CLOG>0.31.0: MINOR — add K2.13 schema decision burn-down reports, status memo, and schema/control artifacts.
+0.30.0: MINOR — add K2.12 schema-lock decision sprint reports, status memo, and review/de-slop artifact.
 0.29.0: MINOR — add K2.11 briefing-first review and de-slop report.
 0.28.0: MINOR — add K2.11 schema-readiness ledger, source/content/scene table, studio preflight deferral, and status memo.
 0.27.0: MINOR — add K2.10 architect response and K2.11 schema-readiness recommendation.
@@ -85,6 +86,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_K2_9.md`](ARCH-RESP-TO-PHASE_K2_9.md) — Phase K2.9 response and K2.10 corpus-wide migration mapping/backlog packet.
 - [`ARCH-RESP-TO-PHASE_K2_10.md`](ARCH-RESP-TO-PHASE_K2_10.md) — Phase K2.10 acceptance and K2.11 schema-readiness ledger/source descriptor pilot packet.
 - [`ARCH-RESP-TO-PHASE_K2_11.md`](ARCH-RESP-TO-PHASE_K2_11.md) — Phase K2.11 response and K2.12 schema-lock decision sprint / low-friction burn-down packet.
+- [`ARCH-RESP-TO-PHASE_K2_12.md`](ARCH-RESP-TO-PHASE_K2_12.md) — Phase K2.12 response and K2.13 schema decision/offender burn-down packet.
+- [`ARCH-RESP-TO-PHASE_K2_13.md`](ARCH-RESP-TO-PHASE_K2_13.md) — Phase K2.13 extension memo with additional schema-settlement and high-confidence migration-unblocker steps folded into the K2.13 work packet.
 
 ## Status and memo artifacts
 
@@ -147,6 +150,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_11_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_11_REVIEW_AND_DESLOP_REPORT.md) — briefing-first formal review and AI de-slop evidence for K2.11.
 - [`PHASE_K2_12_SCHEMA_LOCK_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_12_SCHEMA_LOCK_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.12 schema-lock memo, offender ledger evidence, source.text fixture result, and blocker board.
 - [`PHASE_K2_12_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_12_REVIEW_AND_DESLOP_REPORT.md) — briefing-first formal review and AI de-slop evidence for K2.12.
+- [`PHASE_K2_13_SCHEMA_DECISION_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_13_SCHEMA_DECISION_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md) — K2.13 schema decision readiness declaration, blocker memo, and next-packet recommendation.
+- [`PHASE_K2_13_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_13_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop closure, and verification evidence for K2.13.
 
 ## Supporting artifacts
 
@@ -179,6 +184,16 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_12_DESCRIPTOR_EXPANSION_QUEUE.md`](K2_12_DESCRIPTOR_EXPANSION_QUEUE.md) — K2.12 descriptor expansion, field-coverage, and holdback queue.
 - [`K2_12_SCHEMA_API_DOC_INFRA_REPORT.md`](K2_12_SCHEMA_API_DOC_INFRA_REPORT.md) — K2.12 schema/API/docs verification infrastructure report.
 - [`K2_12_LOW_FRICTION_BURN_DOWN_REPORT.md`](K2_12_LOW_FRICTION_BURN_DOWN_REPORT.md) — K2.12 implemented low-friction work and explicit deferrals.
+- [`K2_13_SCHEMA_DECISION_CONTROL_SURFACE_REPORT.md`](K2_13_SCHEMA_DECISION_CONTROL_SURFACE_REPORT.md) — K2.13 additive schema-readiness disposition/control-surface report.
+- [`K2_13_SOURCE_CONTENT_DECISION_REPORT.md`](K2_13_SOURCE_CONTENT_DECISION_REPORT.md) — K2.13 source/content split, source descriptor placeholders, and command-capture holdback.
+- [`K2_13_RUNTIME_DYNAMISM_DECISION_REPORT.md`](K2_13_RUNTIME_DYNAMISM_DECISION_REPORT.md) — K2.13 parameter/signal/graph-value/binding and sampled-field value-source decision.
+- [`K2_13_SCENE_ELEMENT_LAYER_DECISION_REPORT.md`](K2_13_SCENE_ELEMENT_LAYER_DECISION_REPORT.md) — K2.13 scene/element/layer schema disposition and composition rules.
+- [`K2_13_MOTION_SCOPE_DECISION_REPORT.md`](K2_13_MOTION_SCOPE_DECISION_REPORT.md) — K2.13 motion/easing and built-in scope vocabulary decisions.
+- [`K2_13_FIELD_COVERAGE_CLOSURE_REPORT.md`](K2_13_FIELD_COVERAGE_CLOSURE_REPORT.md) — K2.13 gradient/applyTo/position field coverage closure report.
+- [`K2_13_COMPLEX_GRAPH_IO_DECISION_REPORT.md`](K2_13_COMPLEX_GRAPH_IO_DECISION_REPORT.md) — K2.13 complex graph I/O and sequence/parallel disposition report.
+- [`K2_13_SCHEMA_API_DOC_INFRA_REPORT.md`](K2_13_SCHEMA_API_DOC_INFRA_REPORT.md) — K2.13 schema/API/docs synchronization report.
+- [`K2_13_TEMPLATE_COMPOSITION_DECISION_NOTE.md`](K2_13_TEMPLATE_COMPOSITION_DECISION_NOTE.md) — K2.13 compile-time template composition boundary.
+- [`K2_13_STUDIO_CONTROL_SURFACE_PREFLIGHT.md`](K2_13_STUDIO_CONTROL_SURFACE_PREFLIGHT.md) — K2.13 studio control derivation preflight.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts

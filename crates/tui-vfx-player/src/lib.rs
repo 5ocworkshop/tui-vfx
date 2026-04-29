@@ -166,7 +166,8 @@ pub use cls_player_run_report::PlayerRunReport;
 pub use cls_player_sample_request::PlayerSampleRequest;
 pub use cls_player_schema_readiness_report::{
     PlayerSchemaReadinessBlocker, PlayerSchemaReadinessFamily, PlayerSchemaReadinessMilestone,
-    PlayerSchemaReadinessOffender, PlayerSchemaReadinessReport, PlayerSchemaReadinessSummary,
+    PlayerSchemaReadinessOffender, PlayerSchemaReadinessOwnerDecision, PlayerSchemaReadinessReport,
+    PlayerSchemaReadinessSummary,
 };
 pub use cls_player_session::PlayerSession;
 pub use cls_player_status::PlayerStatus;
@@ -189,7 +190,9 @@ pub use fnc_build_primitive_field_coverage_report::build_primitive_field_coverag
 pub(crate) use fnc_build_schema_readiness_blockers::build_schema_readiness_blockers;
 pub(crate) use fnc_build_schema_readiness_families::build_schema_readiness_families;
 pub(crate) use fnc_build_schema_readiness_milestones::build_schema_readiness_milestones;
-pub(crate) use fnc_build_schema_readiness_offenders::build_schema_readiness_offenders;
+pub(crate) use fnc_build_schema_readiness_offenders::{
+    build_schema_readiness_offenders, schema_readiness_offender_kind,
+};
 pub use fnc_build_schema_readiness_report::build_schema_readiness_report;
 pub use fnc_build_visual_frame::build_visual_frame_from_styled_grid;
 pub(crate) use fnc_classify_complex_schema_offender::classify_complex_schema_offender_path;
@@ -203,15 +206,15 @@ pub use fnc_primitive_adapter_gap_paths::primitive_adapter_gap_paths;
 pub use fnc_render_recipe_file::render_recipe_file;
 pub use fnc_render_visual_frame_paths::render_visual_frame_paths;
 pub use fnc_resolve_value_source::resolve_value_source;
-pub(crate) use fnc_schema_readiness_blocker_kind::{
-    is_schema_readiness_blocking, schema_readiness_blocker_kind,
-};
+pub(crate) use fnc_schema_readiness_blocker_kind::schema_readiness_blocker_kind;
 pub(crate) use fnc_schema_readiness_blocker_notes::schema_readiness_blocker_notes;
 pub(crate) use fnc_schema_readiness_blocker_text::{
     schema_readiness_blocking_decision, schema_readiness_next_packet,
 };
 pub(crate) use fnc_schema_readiness_offender_text::{
+    schema_readiness_disposition, schema_readiness_exact_decision_required,
     schema_readiness_holdback_reason, schema_readiness_recommended_disposition,
+    schema_readiness_recommended_next_action,
 };
 pub(crate) use fnc_summarize_schema_readiness::summarize_schema_readiness;
 

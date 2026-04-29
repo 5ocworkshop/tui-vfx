@@ -29,22 +29,6 @@ pub(crate) fn schema_readiness_blocker_kind(record: &PlayerMigrationMappingRecor
     }
 }
 
-pub(crate) fn is_schema_readiness_blocking(kind: &str) -> bool {
-    matches!(
-        kind,
-        "schemaModel"
-            | "sourceDescriptor"
-            | "fieldCoverage"
-            | "lifecycleSemantics"
-            | "bindingSemantics"
-            | "valueSourceSemantics"
-            | "sceneSemantics"
-            | "motionTimingSemantics"
-            | "ownerAudit"
-            | "unknown"
-    )
-}
-
 fn has_blocker(record: &PlayerMigrationMappingRecord, blocker: &str) -> bool {
     record
         .candidate_blockers

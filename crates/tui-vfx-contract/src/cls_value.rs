@@ -1,11 +1,12 @@
 // <FILE>crates/tui-vfx-contract/src/cls_value.rs</FILE> - <DESC>Tagged effect input literal value DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase F1: represent typed canonical effect input literals.</WCTX>
-// <CLOG>0.1.0: INIT — add strict tagged Value enum with schema-backed payloads.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.13 schema decision burn-down: add typed gradient literals.</WCTX>
+// <CLOG>0.2.0: MINOR — add gradient literal payload.
+// 0.1.0: INIT — add strict tagged Value enum with schema-backed payloads.</CLOG>
 
 use tui_vfx_types::{Color, Rect, RoleTag};
 
-use crate::{ScopeSpec, ValueKind};
+use crate::{GradientSpec, ScopeSpec, ValueKind};
 
 /// Canonical tagged literal value used by effect input specs.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
@@ -48,6 +49,11 @@ pub enum Value {
         /// Color payload.
         Color,
     ),
+    /// Gradient stop payload.
+    Gradient(
+        /// Gradient payload.
+        GradientSpec,
+    ),
     /// Duration literal expressed as seconds.
     Duration(
         /// Duration payload in seconds.
@@ -86,6 +92,7 @@ impl Value {
             Self::String(_) => ValueKind::String,
             Self::Text(_) => ValueKind::Text,
             Self::Color(_) => ValueKind::Color,
+            Self::Gradient(_) => ValueKind::Gradient,
             Self::Duration(_) => ValueKind::Duration,
             Self::Enum(_) => ValueKind::Enum,
             Self::Role(_) => ValueKind::Role,
@@ -113,4 +120,4 @@ impl Value {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_value.rs</FILE> - <DESC>Tagged effect input literal value DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

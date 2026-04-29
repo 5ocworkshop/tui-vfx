@@ -156,6 +156,244 @@
         "timeAware": false,
         "resizeAware": true
       }
+    },
+    "source.ansi": {
+      "id": "source.ansi",
+      "version": "0.1.0",
+      "displayName": "ANSI Text Source",
+      "category": "text",
+      "kind": {
+        "kind": "ansi"
+      },
+      "inputs": {
+        "ansiText": {
+          "displayName": "ANSI Text",
+          "description": "ANSI/VTE-styled text data parsed into styled cells.",
+          "value": {
+            "kind": "text",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "ansiText"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "width": {
+          "displayName": "Width",
+          "description": "Optional ANSI source width in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": {
+              "min": 1,
+              "max": 512
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime",
+          "optional": true
+        },
+        "height": {
+          "displayName": "Height",
+          "description": "Optional ANSI source height in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": {
+              "min": 1,
+              "max": 256
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime",
+          "optional": true
+        }
+      },
+      "assets": {},
+      "output": {
+        "size": {
+          "kind": "inputDriven"
+        },
+        "roles": {
+          "kind": "generated"
+        }
+      },
+      "lifecycle": {
+        "deterministicWithSeed": true,
+        "timeAware": false,
+        "resizeAware": true
+      }
+    },
+    "source.image": {
+      "id": "source.image",
+      "version": "0.1.0",
+      "displayName": "Image Source",
+      "category": "image",
+      "kind": {
+        "kind": "image"
+      },
+      "inputs": {
+        "asset": {
+          "displayName": "Asset",
+          "description": "Image asset identifier or symbolic image name.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "assetRef"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "width": {
+          "displayName": "Width",
+          "description": "Optional image source width in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": {
+              "min": 1,
+              "max": 512
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime",
+          "optional": true
+        },
+        "height": {
+          "displayName": "Height",
+          "description": "Optional image source height in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": {
+              "min": 1,
+              "max": 256
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime",
+          "optional": true
+        }
+      },
+      "assets": {},
+      "output": {
+        "size": {
+          "kind": "inputDriven"
+        },
+        "roles": {
+          "kind": "generated"
+        }
+      },
+      "lifecycle": {
+        "deterministicWithSeed": true,
+        "timeAware": false,
+        "resizeAware": true
+      }
+    },
+    "source.procedural": {
+      "id": "source.procedural",
+      "version": "0.1.0",
+      "displayName": "Procedural Source",
+      "category": "procedural",
+      "kind": {
+        "kind": "procedural"
+      },
+      "inputs": {
+        "generator": {
+          "displayName": "Generator",
+          "description": "Registered deterministic procedural source generator name.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "registeredGenerator"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Optional deterministic procedural seed.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "seed"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "width": {
+          "displayName": "Width",
+          "description": "Procedural source width in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": {
+              "min": 1,
+              "max": 512
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        },
+        "height": {
+          "displayName": "Height",
+          "description": "Procedural source height in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": {
+              "min": 1,
+              "max": 256
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        }
+      },
+      "assets": {},
+      "output": {
+        "size": {
+          "kind": "inputDriven"
+        },
+        "roles": {
+          "kind": "generated"
+        }
+      },
+      "lifecycle": {
+        "deterministicWithSeed": true,
+        "timeAware": false,
+        "resizeAware": true
+      }
     }
   },
   "effects": {
@@ -1637,6 +1875,24 @@
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
+        },
+        "position": {
+          "displayName": "Position",
+          "description": "Optional direct sweep progress in the inclusive 0..1 range; overrides speed/time when present.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": {
+              "min": 0,
+              "max": 1
+            },
+            "allowedValues": [],
+            "unit": "ratio",
+            "semantic": "progress"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
         }
       },
       "outputs": {},
@@ -1796,6 +2052,42 @@
             "allowedValues": [],
             "unit": null,
             "semantic": "opacity"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "gradient": {
+          "displayName": "Gradient",
+          "description": "Canonical gradient stops and interpolation space.",
+          "value": {
+            "kind": "gradient",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "gradient"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Cell channel target for the gradient.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "foreground"
+            },
+            "range": null,
+            "allowedValues": [
+              "foreground",
+              "background",
+              "both"
+            ],
+            "unit": null,
+            "semantic": "channel-target"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"

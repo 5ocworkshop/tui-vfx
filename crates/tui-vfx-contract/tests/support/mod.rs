@@ -96,6 +96,7 @@ pub fn opacity_descriptor() -> EffectDescriptor {
                 display_name: Some("Amount".to_string()),
                 description: Some("Opacity amount.".to_string()),
                 value: ratio_value_spec(None),
+                optional: false,
                 bindable: true,
                 runtime_mutability: RuntimeMutability::Runtime,
             },
