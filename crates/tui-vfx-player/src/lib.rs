@@ -38,6 +38,7 @@ mod fnc_aggregate_player_inventory_sources;
 pub mod fnc_apply_graph_effects;
 mod fnc_apply_mask_dissolve;
 mod fnc_apply_sampler_ripple;
+mod fnc_apply_styled_primitive;
 mod fnc_build_migration_gap_family;
 pub mod fnc_build_migration_gap_report;
 pub mod fnc_build_player_frame;

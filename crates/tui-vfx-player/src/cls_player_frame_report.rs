@@ -1,11 +1,12 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_frame_report.rs</FILE> - <DESC>Stable JSON player frame report DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Player reporting work: expose machine-readable sampled frame evidence.</WCTX>
-// <CLOG>0.1.0: INIT — add v3.1.player.frame.1 report shape.</CLOG>
+// <CLOG>0.2.0: MINOR — carry non-serialized styled-grid evidence into visual-frame reports.
+// 0.1.0: INIT — add v3.1.player.frame.1 report shape.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
 
-use crate::{PlayerError, PlayerFrame, PlayerStatus, PlayerWarning};
+use crate::{PlayerError, PlayerFrame, PlayerStatus, PlayerStyledGrid, PlayerWarning};
 
 /// Stable machine-readable report for one sampled player frame.
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
@@ -35,6 +36,9 @@ pub struct PlayerFrameReport {
     pub non_empty_cells: usize,
     /// Text rows for compact smoke-render inspection.
     pub rows: Vec<String>,
+    /// Styled-cell evidence for downstream visual-frame output.
+    #[serde(skip)]
+    pub styled_grid: Option<PlayerStyledGrid>,
     /// True when a trigger-terminated dwell policy has fired in this session.
     pub dwell_terminated: bool,
     /// Hard errors or explicit unsupported adapter diagnostics.
@@ -65,6 +69,7 @@ impl PlayerFrameReport {
             height: frame.height,
             render_hash: frame.render_hash,
             non_empty_cells: frame.non_empty_cells,
+            styled_grid: frame.styled_grid,
             rows: frame.rows,
             dwell_terminated,
             errors,
@@ -74,4 +79,4 @@ impl PlayerFrameReport {
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_player_frame_report.rs</FILE> - <DESC>Stable JSON player frame report DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

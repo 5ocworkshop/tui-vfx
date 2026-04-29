@@ -8,8 +8,9 @@ use tui_vfx_contract::{DescriptorCatalog, RecipeDocument};
 
 use crate::{
     PlayerError, PlayerFrame, PlayerFrameReport, PlayerSampleRequest, PlayerStatus,
-    fnc_apply_graph_effects::apply_graph_effects, fnc_build_player_frame::build_player_frame,
-    fnc_render_hash::render_hash, fnc_render_scene::render_scene,
+    PlayerStyledGrid, fnc_apply_graph_effects::apply_graph_effects,
+    fnc_build_player_frame::build_player_frame, fnc_render_hash::render_hash,
+    fnc_render_scene::render_scene,
 };
 
 /// Contract-native player for a minimal primitive adapter subset.
@@ -34,13 +35,15 @@ impl RecipePlayer {
             return self.error_report(recipe, request, format!("{error:?}"));
         }
         let (mut rows, mut errors) = render_scene(recipe, request);
-        apply_graph_effects(recipe, request, &mut rows, &mut errors);
+        let mut styled_grid = PlayerStyledGrid::from_rows(&rows);
+        apply_graph_effects(recipe, request, &mut rows, &mut styled_grid, &mut errors);
         let status = if errors.is_empty() {
             PlayerStatus::Rendered
         } else {
             PlayerStatus::Unsupported
         };
-        let frame = build_player_frame(recipe, request, &rows, &errors);
+        let styled_grid = styled_grid.style_known().then_some(styled_grid);
+        let frame = build_player_frame(recipe, request, &rows, &errors, styled_grid);
         PlayerFrameReport::from_frame(
             recipe.id.as_str().to_string(),
             frame,
@@ -63,6 +66,7 @@ impl RecipePlayer {
             render_hash: render_hash(&[recipe.id.as_str().to_string(), message.clone()]),
             non_empty_cells: 0,
             rows: vec![],
+            styled_grid: None,
         };
         PlayerFrameReport::from_frame(
             recipe.id.as_str().to_string(),

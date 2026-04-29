@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>VERSION: 0.5.1</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Styled-cell substrate work: keep player evidence tests portable and explicit.</WCTX>
-// <CLOG>0.5.1: PATCH — clarify styled-grid proof naming and recipe repo override.
+// <CLOG>0.6.0: MINOR — require K2.5 styled primitive adapters to emit real styled-cell evidence.
+// 0.5.1: PATCH — clarify styled-grid proof naming and recipe repo override.
 // 0.5.0: MINOR — assert styled-cell visual frames can carry non-default style evidence.
 // 0.4.0: MINOR — assert newly supported text-grid adapters produce player row evidence.
 // 0.3.0: PATCH — use project-derived recipe paths and switch unsupported adapter regression away from newly supported dissolve.
@@ -19,7 +20,7 @@ use tui_vfx_contract::{
 };
 use tui_vfx_player::{
     PlayerSampleRequest, PlayerSession, PlayerStatus, PlayerStyledGrid, RecipePlayer,
-    build_visual_frame_from_styled_grid,
+    build_visual_frame_from_styled_grid, render_visual_frame_paths,
 };
 
 #[test]
@@ -128,21 +129,71 @@ fn test_fnc_player_ripple_adapter_changes_row_evidence_by_loop_time() {
 }
 
 #[test]
-fn test_fnc_player_reports_unsupported_effect_adapter() {
+fn test_fnc_player_renders_k25_styled_primitive_adapters() {
     let player = player();
-    let recipe = recipe(&v31_debug_recipe(
+    for relative in [
+        "styles/style_color_fade.json",
+        "styles/style_role_scope_border.json",
         "shaders/primitives/shader_linear_gradient.json",
-    ));
+        "shaders/compositions/shader_border_sweep.json",
+    ] {
+        let recipe = recipe(&v31_debug_recipe(relative));
+        let report = player.render_recipe(&recipe, &PlayerSampleRequest::default());
 
-    let report = player.render_recipe(&recipe, &PlayerSampleRequest::default());
+        assert_eq!(report.status, PlayerStatus::Rendered, "{relative}");
+        assert!(report.errors.is_empty(), "{relative}");
+        assert!(report.styled_grid.is_some(), "{relative}");
+    }
+}
 
-    assert_eq!(report.status, PlayerStatus::Unsupported);
-    assert!(
-        report
-            .errors
-            .iter()
-            .any(|error| error.code == "unsupportedEffectAdapter")
+#[test]
+fn test_fnc_player_styled_primitive_visual_frames_are_style_known() {
+    let frames = render_visual_frame_paths(
+        &player(),
+        vec![],
+        &[v31_debug_recipe(
+            "shaders/primitives/shader_linear_gradient.json",
+        )],
+        "test".to_string(),
+        &PlayerSampleRequest::default(),
     );
+    let frame = frames.frames.into_iter().next().expect("visual frame");
+
+    assert_eq!(frame.status, PlayerStatus::Rendered);
+    assert_eq!(frame.substrate, "styledCell");
+    assert_eq!(frame.cell_source, "styledCells");
+    assert!(frame.style_known);
+    assert!(!frame.rows.is_empty());
+    assert!(frame.unsupported_effect_ids.is_empty());
+    assert!(frame.cells.iter().any(|cell| {
+        cell.foreground != "defaultForeground"
+            || cell.background != "transparent"
+            || !cell.modifiers.is_empty()
+            || cell.role.is_some()
+    }));
+}
+
+#[test]
+fn test_fnc_player_style_evidence_changes_hash_without_row_changes() {
+    let player = player();
+    let styled_recipe = recipe(&v31_debug_recipe("styles/style_color_fade.json"));
+    let mut plain_value: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(v31_debug_recipe("styles/style_color_fade.json"))
+            .expect("read style recipe"),
+    )
+    .expect("style recipe json");
+    plain_value["id"] = serde_json::json!("debugStyleColorFadePlain");
+    plain_value["graph"]["nodes"] = serde_json::json!({});
+    plain_value["graph"]["order"] = serde_json::json!([]);
+    let plain_recipe = serde_json::from_value(plain_value).expect("plain style recipe");
+    let request = PlayerSampleRequest::default();
+    let styled = player.render_recipe(&styled_recipe, &request);
+    let plain = player.render_recipe(&plain_recipe, &request);
+
+    assert_eq!(styled.rows, plain.rows);
+    assert_ne!(styled.render_hash, plain.render_hash);
+    assert!(styled.styled_grid.is_some());
+    assert!(plain.styled_grid.is_none());
 }
 
 #[test]
@@ -270,4 +321,4 @@ fn workspace_root() -> PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>END OF VERSION: 0.5.1</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

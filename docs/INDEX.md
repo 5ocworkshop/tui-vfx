@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.35.0</VERS> -->
-<!-- <WCTX>V3.1 docs indexing: make schema and related directory ownership explicit.</WCTX> -->
-<!-- <CLOG>1.35.0: add v3.1 schema and related directory map.
+<!-- <VERS>VERSION: 1.36.0</VERS> -->
+<!-- <WCTX>V3.1 docs indexing: add K2.5 styled primitive and tooling PRD references.</WCTX> -->
+<!-- <CLOG>1.36.0: add K2.5 styled primitive evidence and player tooling PRD references.
+1.35.0: add v3.1 schema and related directory map.
 1.34.0: note I0 lifecycle/time/trigger contract semantics and schema roots.
 1.33.0: note H1 vocabulary and canonical recipe document contract semantics.
 1.32.0: note H0 source and asset contract semantics.
@@ -135,6 +136,8 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [v3.1-feature-contract-checklist.md](v3.1-feature-contract-checklist.md) — Checklist for future v3.1 contract-affecting feature work.
 - [v3.1-template-composition.md](v3.1-template-composition.md) — Phase D2 design for compile-time template/mixin/preset/profile expansion into canonical v3.1 recipes.
 - [new_kernel/INDEX.md](new_kernel/INDEX.md) — Clean-room kernel phase docs, architect responses, status memos, and schema artifacts.
+- [new_kernel/K2_5_STYLED_PRIMITIVE_ADAPTER_EVIDENCE.md](new_kernel/K2_5_STYLED_PRIMITIVE_ADAPTER_EVIDENCE.md) — K2.5 styled primitive adapter evidence for `shader.borderSweep`, `shader.linearGradient`, `style.baseStyleOverride`, and `style.colorFade`.
+- [new_kernel/K2_PLAYER_TOOLING_VALIDATION_PRD.md](new_kernel/K2_PLAYER_TOOLING_VALIDATION_PRD.md) — Clean-room player tooling/validation PRD that classifies legacy tooling as oracle inspiration only.
 - [design/tui-vfx-v3-INDEX.md](design/tui-vfx-v3-INDEX.md) — Single landing page for V3 planning, schema, I/O, migration, tooling, and outstanding work.
 - [design/tui-vfx-v3-naming-normalization-decisions.md](design/tui-vfx-v3-naming-normalization-decisions.md) — Accepted V3 naming normalization decisions for `Vfx*`, playback seams, timing, motion, and intent vocabulary.
 - [design/tui-vfx-v3-phase-scoping-decision.md](design/tui-vfx-v3-phase-scoping-decision.md) — Accepted V3 phase-scoping rule for step phases, container propagation, and normalized `PhaseSet` behavior.
@@ -194,4 +197,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.35.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.36.0</VERS> -->

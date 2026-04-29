@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K1: lock one-shot, script, trigger, and unsupported diagnostic behavior.</WCTX>
-// <CLOG>0.1.0: INIT — add UI smoke tests over the K0 player path.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel player UI: lock one-shot, script, trigger, and rendered diagnostic behavior.</WCTX>
+// <CLOG>0.2.0: MINOR — expect styled primitive fixtures to render after K2.5 adapter burn-down.
+// 0.1.0: INIT — add UI smoke tests over the player path.</CLOG>
 
 use std::{path::PathBuf, process::Command};
 
@@ -44,7 +45,7 @@ fn test_fnc_ui_script_fires_event_dwell_trigger() {
 }
 
 #[test]
-fn test_fnc_ui_reports_unsupported_effects_visibly() {
+fn test_fnc_ui_reports_styled_primitives_visibly() {
     let mut state = PlayerUiState::load(&options(
         "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/shaders/primitives/shader_linear_gradient.json",
     ))
@@ -52,9 +53,9 @@ fn test_fnc_ui_reports_unsupported_effects_visibly() {
 
     let output = run_script(&mut state, "render", false);
 
-    assert!(output.contains("Unsupported"));
-    assert!(output.contains("unsupportedEffectAdapter"));
-    assert!(output.contains("shader.linearGradient"));
+    assert!(output.contains("status: Rendered"));
+    assert!(output.contains("render_hash:"));
+    assert!(output.contains("Shader: Linear Gradient"));
 }
 
 #[test]
@@ -108,4 +109,4 @@ fn stderr(output: &std::process::Output) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

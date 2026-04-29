@@ -1,14 +1,16 @@
-// <FILE>crates/tui-vfx-player/src/fnc_apply_graph_effects.rs</FILE> - <DESC>Apply graph effect adapters to text-grid rows</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Primitive adapter work: route text-grid mask and sampler adapters.</WCTX>
-// <CLOG>0.2.0: MINOR — add dissolve mask and ripple sampler support.
+// <FILE>crates/tui-vfx-player/src/fnc_apply_graph_effects.rs</FILE> - <DESC>Apply graph effect adapters to player frame evidence</DESC>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Primitive adapter work: route text-grid and styled-cell adapters.</WCTX>
+// <CLOG>0.3.0: MINOR — route K2.5 styled primitive adapters through player styled grids.
+// 0.2.0: MINOR — add dissolve mask and ripple sampler support.
 // 0.1.0: INIT — add primitive adapter switch and structured unsupported diagnostics.</CLOG>
 
 use tui_vfx_contract::RecipeDocument;
 
 use crate::{
-    PlayerError, PlayerSampleRequest, fnc_apply_mask_dissolve::apply_mask_dissolve,
-    fnc_apply_sampler_ripple::apply_sampler_ripple,
+    PlayerError, PlayerSampleRequest, PlayerStyledGrid,
+    fnc_apply_mask_dissolve::apply_mask_dissolve, fnc_apply_sampler_ripple::apply_sampler_ripple,
+    fnc_apply_styled_primitive::apply_styled_primitive,
 };
 
 /// Apply supported graph effects and collect unsupported adapter diagnostics.
@@ -16,6 +18,7 @@ pub fn apply_graph_effects(
     recipe: &RecipeDocument,
     request: &PlayerSampleRequest,
     rows: &mut [String],
+    styled_grid: &mut PlayerStyledGrid,
     errors: &mut Vec<PlayerError>,
 ) {
     for node_id in &recipe.graph.order {
@@ -25,10 +28,23 @@ pub fn apply_graph_effects(
         match node.effect.as_str() {
             "filter.dim" | "filter.tint" | "filter.invert" | "filter.greyscale" => {}
             "mask.none" | "sampler.sineWave" => {}
-            "mask.wipe" => apply_wipe(rows, request.phase_t),
-            "mask.checkers" => apply_checkers(rows, request.phase_t),
-            "mask.dissolve" => apply_mask_dissolve(node, request, rows),
-            "sampler.ripple" => apply_sampler_ripple(node, request, rows),
+            "mask.wipe" => {
+                apply_wipe(rows, request.phase_t);
+                styled_grid.sync_glyphs_from_rows(rows);
+            }
+            "mask.checkers" => {
+                apply_checkers(rows, request.phase_t);
+                styled_grid.sync_glyphs_from_rows(rows);
+            }
+            "mask.dissolve" => {
+                apply_mask_dissolve(node, request, rows);
+                styled_grid.sync_glyphs_from_rows(rows);
+            }
+            "sampler.ripple" => {
+                apply_sampler_ripple(node, request, rows);
+                styled_grid.sync_glyphs_from_rows(rows);
+            }
+            _ if apply_styled_primitive(node, request, styled_grid) => {}
             effect => errors.push(PlayerError::new(
                 "unsupportedEffectAdapter",
                 format!("graph.nodes.{}.effect", node.id.as_str()),
@@ -65,5 +81,5 @@ fn apply_checkers(rows: &mut [String], phase_t: f64) {
     }
 }
 
-// <FILE>crates/tui-vfx-player/src/fnc_apply_graph_effects.rs</FILE> - <DESC>Apply graph effect adapters to text-grid rows</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <FILE>crates/tui-vfx-player/src/fnc_apply_graph_effects.rs</FILE> - <DESC>Apply graph effect adapters to player frame evidence</DESC>
+// <VERS>END OF VERSION: 0.3.0</VERS>

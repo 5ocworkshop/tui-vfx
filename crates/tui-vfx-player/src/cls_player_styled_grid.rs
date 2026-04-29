@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_styled_grid.rs</FILE> - <DESC>Player-owned styled grid DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Styled-cell substrate work: carry sparse visual evidence before report conversion.</WCTX>
-// <CLOG>0.2.0: PATCH — keep row-derived grids style-unknown until real style is written.
+// <CLOG>0.3.0: MINOR — add graph-adapter mutation helpers for glyph sync and styled evidence.
+// 0.2.0: PATCH — keep row-derived grids style-unknown until real style is written.
 // 0.1.1: PATCH — clarify row-to-grid local naming.
 // 0.1.0: INIT — add styled-grid construction from rows plus style mutation seam.</CLOG>
 
@@ -68,6 +69,17 @@ impl PlayerStyledGrid {
         }
     }
 
+    /// Sync glyph evidence after a text-grid adapter mutates compact rows.
+    pub fn sync_glyphs_from_rows(&mut self, rows: &[String]) {
+        for (y, row) in rows.iter().enumerate() {
+            for (x, glyph) in row.chars().enumerate() {
+                if let Some(cell) = self.cell_mut(x, y) {
+                    cell.glyph = glyph.to_string();
+                }
+            }
+        }
+    }
+
     /// Frame width in terminal cells.
     pub fn width(&self) -> usize {
         self.width
@@ -88,6 +100,11 @@ impl PlayerStyledGrid {
         &self.cells
     }
 
+    /// Whether a coordinate is inside this grid.
+    pub fn contains(&self, x: usize, y: usize) -> bool {
+        x < self.width && y < self.height
+    }
+
     fn cell_mut(&mut self, x: usize, y: usize) -> Option<&mut PlayerStyledCell> {
         if x >= self.width || y >= self.height {
             return None;
@@ -97,4 +114,4 @@ impl PlayerStyledGrid {
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_player_styled_grid.rs</FILE> - <DESC>Player-owned styled grid DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

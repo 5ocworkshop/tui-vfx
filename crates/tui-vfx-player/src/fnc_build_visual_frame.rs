@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_build_visual_frame.rs</FILE> - <DESC>Build visual-frame entries from player frame reports</DESC>
-// <VERS>VERSION: 0.3.1</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Styled-cell substrate work: build visual frames from player-owned styled grids.</WCTX>
-// <CLOG>0.3.1: PATCH — clarify default visual-frame substrate construction.
+// <CLOG>0.4.0: MINOR — use styled-grid evidence carried by rendered player frames.
+// 0.3.1: PATCH — clarify default visual-frame substrate construction.
 // 0.3.0: MINOR — emit styled-cell substrate metadata and sparse styled cells.
 // 0.2.0: PATCH — carry loop_t and explicit substrate/style provenance.
 // 0.1.0: INIT — add one-way frame-report to visual-frame adapter.</CLOG>
@@ -14,7 +15,10 @@ use crate::{
 
 /// Build one visual-frame entry from a player frame report using styled-cell defaults.
 pub(crate) fn build_visual_frame(report: PlayerFrameReport) -> PlayerVisualFrame {
-    let styled_grid = PlayerStyledGrid::from_rows(&report.rows);
+    let styled_grid = report
+        .styled_grid
+        .clone()
+        .unwrap_or_else(|| PlayerStyledGrid::from_rows(&report.rows));
     build_visual_frame_from_styled_grid(report, styled_grid)
 }
 
@@ -57,4 +61,4 @@ fn visual_frame_provenance(styled_grid: &PlayerStyledGrid) -> (&'static str, &'s
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_build_visual_frame.rs</FILE> - <DESC>Build visual-frame entries from player frame reports</DESC>
-// <VERS>END OF VERSION: 0.3.1</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

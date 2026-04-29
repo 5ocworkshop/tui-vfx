@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify inventory adapter status</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Primitive adapter work: classify newly supported text-grid adapters.</WCTX>
-// <CLOG>0.2.0: MINOR — mark dissolve and ripple as visible text-grid adapters.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Primitive adapter work: classify supported text-grid and styled-cell adapters.</WCTX>
+// <CLOG>0.3.0: MINOR — mark K2.5 styled primitive adapters as supported styled evidence.
+// 0.2.0: MINOR — mark dissolve and ripple as visible text-grid adapters.
 // 0.1.0: INIT — split effect/source adapter status helpers from report DTO.</CLOG>
 
 /// Return the effect adapter classification used by inventory reports.
@@ -16,7 +17,7 @@ pub fn effect_adapter_status(effect_id: &str, descriptor_covered: bool) -> &'sta
         "shader.borderSweep"
         | "shader.linearGradient"
         | "style.baseStyleOverride"
-        | "style.colorFade" => "unsupported",
+        | "style.colorFade" => "styled",
         _ => "unknown",
     }
 }
@@ -33,4 +34,4 @@ pub fn source_adapter_status(source_id: &str, descriptor_covered: bool) -> &'sta
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify inventory adapter status</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

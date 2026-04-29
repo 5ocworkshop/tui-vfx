@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_frame.rs</FILE> - <DESC>Sampled skeleton player frame DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Player frame work: carry deterministic text-grid frame output.</WCTX>
-// <CLOG>0.1.0: INIT — add rows, dimensions, hash, and non-empty count.</CLOG>
+// <CLOG>0.2.0: MINOR — carry non-serialized styled-grid evidence for visual-frame reports.
+// 0.1.0: INIT — add rows, dimensions, hash, and non-empty count.</CLOG>
+
+use crate::PlayerStyledGrid;
 
 /// Minimal semantic text-grid frame produced by the contract-native skeleton player.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
@@ -17,6 +20,9 @@ pub struct PlayerFrame {
     pub non_empty_cells: usize,
     /// Text rows clipped/padded to the frame dimensions.
     pub rows: Vec<String>,
+    /// Styled-cell evidence for visual-frame output when a styled adapter wrote style data.
+    #[serde(skip)]
+    pub styled_grid: Option<PlayerStyledGrid>,
 }
 
 impl PlayerFrame {
@@ -30,4 +36,4 @@ impl PlayerFrame {
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_player_frame.rs</FILE> - <DESC>Sampled skeleton player frame DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

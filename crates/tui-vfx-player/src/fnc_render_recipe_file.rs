@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-player/src/fnc_render_recipe_file.rs</FILE> - <DESC>Render one recipe JSON file through RecipePlayer</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K0: bridge filesystem recipes to sampled frame reports.</WCTX>
+// <WCTX>Player filesystem bridge: read recipe JSON and return sampled frame reports.</WCTX>
 // <CLOG>0.1.0: INIT — add read/deserialize/render wrapper with path-bearing diagnostics.</CLOG>
 
 use std::path::Path;
@@ -46,6 +46,7 @@ fn file_error(
         render_hash: render_hash(&[path.clone(), code.to_string(), message.clone()]),
         non_empty_cells: 0,
         rows: vec![],
+        styled_grid: None,
     };
     let mut report = PlayerFrameReport::from_frame(
         "<unreadable>".to_string(),

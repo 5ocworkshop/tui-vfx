@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.9.1</VERS> -->
+<!-- <VERS>VERSION: 0.10.0</VERS> -->
 <!-- <WCTX>Styled-cell substrate work: document visual-frame styled evidence semantics.</WCTX> -->
-<!-- <CLOG>0.9.1: PATCH — align styled-cell blocker and VisualFrame wording after K2.4 de-slop.
+<!-- <CLOG>0.10.0: MINOR — add K2.5 styled primitive adapter and tooling PRD boundary terms.
+0.9.1: PATCH — align styled-cell blocker and VisualFrame wording after K2.4 de-slop.
 0.9.0: MINOR — add styled-cell substrate, styled grid, default style, and styleKnown semantics.
 0.8.0: MINOR — add primitive adapter gap report, outcome, text-grid adapter, and styled-cell adapter terms.
 0.7.1: PATCH — document substrate, cellSource, styleKnown, and loopT semantics.
@@ -187,6 +188,14 @@ Definition:
 Policy:
 : Styled-cell effects remain blocked until their adapters write real style/color/role changes into the styled-cell substrate.
 
+### StyledPrimitiveAdapter
+
+Definition:
+: A contract-native player adapter for a style, color, shader, or role-aware primitive that writes real styled-cell evidence into `PlayerStyledGrid` while preserving compact `rows[]`.
+
+Policy:
+: A styled primitive adapter may be classified as rendered only when its visual-frame evidence reports `substrate: "styledCell"`, `cellSource: "styledCells"`, and `styleKnown: true`. It is still player evidence, not a visual-parity oracle.
+
 ### StyledCellSubstrate
 
 Definition:
@@ -215,6 +224,14 @@ Policy:
 
 Definition:
 : A `VisualFrame` provenance field naming the source of sparse `cells[]`. Current values are `rows` for row-derived text-grid cells and `styledCells` for cells collected from the player styled-grid substrate.
+
+### Player Tooling Validation PRD
+
+Definition:
+: A K2 planning document that classifies useful legacy recipe-tooling capabilities as clean-room player/contract tooling candidates.
+
+Policy:
+: The PRD adopts capability patterns, not source code or legacy validation authority. New clean-room CLI features must report through schema-labeled v3.1 player or contract reports.
 
 ### VisualFrame
 
@@ -1382,4 +1399,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.9.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.10.0</VERS> -->

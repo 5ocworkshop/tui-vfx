@@ -1,7 +1,8 @@
 <!-- <FILE>docs/tooling/INDEX.md</FILE> - <DESC>Tooling documentation index for tui-vfx and tui-vfx-recipes.</DESC> -->
-<!-- <VERS>VERSION: 0.2.5</VERS> -->
-<!-- <WCTX>Make the V3 tooling hub a command-first start page that maps as-built command surfaces and schema/reference directories.</WCTX> -->
-<!-- <CLOG>0.2.5: add v3.1 schema/reference directory map.
+<!-- <VERS>VERSION: 0.2.6</VERS> -->
+<!-- <WCTX>Make the V3 tooling hub a command-first start page that maps as-built command surfaces, schema/reference directories, and future player tooling PRD.</WCTX> -->
+<!-- <CLOG>0.2.6: add K2 player tooling validation PRD reference.
+0.2.5: add v3.1 schema/reference directory map.
 0.2.4: add recipe-side V3 generated-doc and rustdoc gate commands to the tooling map.</CLOG> -->
 
 # Tooling documentation
@@ -53,6 +54,7 @@ deeper guide when you need more detail.
 | `/usr/projects/tui-vfx/crates/tui-vfx-next/` | Clean-room proof crate | Experimental proof/reference types that can produce schema fixtures without changing the stable contract crate. |
 | `/usr/projects/tui-vfx/descriptors/v3.1/` | Descriptor catalog artifacts | Primitive descriptor packs loaded by the validator/player lanes. |
 | `/usr/projects/tui-vfx/docs/new_kernel/` | Kernel phase records | Architect responses, status memos, review/de-slop reports, and evidence docs that explain why each schema or player surface exists. |
+| `/usr/projects/tui-vfx/docs/new_kernel/K2_PLAYER_TOOLING_VALIDATION_PRD.md` | K2 tooling PRD | Roadmap for adopting legacy tooling capability patterns without treating legacy tooling as v3.1 authority. |
 
 Status shorthand used above:
 
@@ -267,4 +269,4 @@ interrupting another cargo lane.
   tables unless a concrete missing field forces a schema extension.
 
 <!-- <FILE>docs/tooling/INDEX.md</FILE> - <DESC>Tooling documentation index for tui-vfx and tui-vfx-recipes.</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.5</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.6</VERS> -->

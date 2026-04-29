@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.8.1</VERS>
+// <VERS>VERSION: 0.9.0</VERS>
 // <WCTX>Styled-cell substrate work: keep CLI fixture paths portable and provenance assertions explicit.</WCTX>
-// <CLOG>0.8.1: PATCH — allow recipe repo override and clarify boolean style-known assertion.
+// <CLOG>0.9.0: MINOR — assert K2.5 styled primitive adapters render with styled-cell provenance.
+// 0.8.1: PATCH — allow recipe repo override and clarify boolean style-known assertion.
 // 0.8.0: MINOR — assert render-frame emits honest styled-cell substrate metadata.
 // 0.7.0: MINOR — add primitive adapter gap regression coverage and project-derived recipe paths.
 // 0.6.0: PATCH — assert loop/provenance/style-knowledge fields.
@@ -47,8 +48,8 @@ fn test_fnc_cli_renders_recursive_smoke_report_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.run.1");
     assert_eq!(report["summary"]["total"], 16);
-    assert_eq!(report["summary"]["rendered"], 12);
-    assert_eq!(report["summary"]["unsupported"], 4);
+    assert_eq!(report["summary"]["rendered"], 16);
+    assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
 }
 
@@ -101,14 +102,14 @@ fn test_fnc_cli_inventories_visible_effect_adapter_json() {
 }
 
 #[test]
-fn test_fnc_cli_inventories_unsupported_effect_adapter_json() {
+fn test_fnc_cli_inventories_styled_effect_adapter_json() {
     let report = inventory_report(vec![
         str_arg("inventory-recipes"),
         str_arg("--recipe"),
         recipe_path("shaders/primitives/shader_linear_gradient.json"),
     ]);
 
-    assert_eq!(report["recipes"][0]["status"], "unsupported");
+    assert_eq!(report["recipes"][0]["status"], "rendered");
     assert!(
         report["recipes"][0]["descriptorCoveredEffectIds"]
             .as_array()
@@ -126,11 +127,10 @@ fn test_fnc_cli_inventories_unsupported_effect_adapter_json() {
         report["recipes"][0]["unsupportedEffectIds"]
             .as_array()
             .expect("unsupported effects")
-            .iter()
-            .any(|effect| effect == "shader.linearGradient")
+            .is_empty()
     );
     let effect = find_effect(&report, "shader.linearGradient");
-    assert_eq!(effect["adapterStatus"], "unsupported");
+    assert_eq!(effect["adapterStatus"], "styled");
 }
 
 #[test]
@@ -143,13 +143,13 @@ fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.inventory.1");
     assert_eq!(report["summary"]["totalRecipes"], 16);
-    assert_eq!(report["summary"]["rendered"], 12);
-    assert_eq!(report["summary"]["unsupported"], 4);
+    assert_eq!(report["summary"]["rendered"], 16);
+    assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
     assert_eq!(report["summary"]["descriptorEffectIds"], 14);
     assert_eq!(report["summary"]["representedEffectIds"], 14);
     assert_eq!(report["summary"]["unrepresentedEffectIds"], 0);
-    assert_eq!(report["summary"]["unsupportedEffectIds"], 4);
+    assert_eq!(report["summary"]["unsupportedEffectIds"], 0);
 }
 
 #[test]
@@ -158,37 +158,17 @@ fn test_fnc_cli_reports_primitive_adapter_gap_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.primitiveAdapterGap.1");
     assert_eq!(report["summary"]["totalEffects"], 14);
-    assert_eq!(report["summary"]["rendered"], 10);
+    assert_eq!(report["summary"]["rendered"], 14);
     assert_eq!(report["summary"]["stillUnsupported"], 0);
-    assert_eq!(report["summary"]["blockedByStyledCellSubstrate"], 4);
+    assert_eq!(report["summary"]["blockedByStyledCellSubstrate"], 0);
     assert_eq!(report["summary"]["blockedBySemanticDecision"], 0);
 
     assert_gap_entry(&report, "mask.dissolve", "rendered", "textGrid");
     assert_gap_entry(&report, "sampler.ripple", "rendered", "textGrid");
-    assert_gap_entry(
-        &report,
-        "shader.borderSweep",
-        "blockedByStyledCellSubstrate",
-        "styledCell",
-    );
-    assert_gap_entry(
-        &report,
-        "shader.linearGradient",
-        "blockedByStyledCellSubstrate",
-        "styledCell",
-    );
-    assert_gap_entry(
-        &report,
-        "style.baseStyleOverride",
-        "blockedByStyledCellSubstrate",
-        "styledCell",
-    );
-    assert_gap_entry(
-        &report,
-        "style.colorFade",
-        "blockedByStyledCellSubstrate",
-        "styledCell",
-    );
+    assert_gap_entry(&report, "shader.borderSweep", "rendered", "styledCell");
+    assert_gap_entry(&report, "shader.linearGradient", "rendered", "styledCell");
+    assert_gap_entry(&report, "style.baseStyleOverride", "rendered", "styledCell");
+    assert_gap_entry(&report, "style.colorFade", "rendered", "styledCell");
 }
 
 #[test]
@@ -306,33 +286,48 @@ fn test_fnc_cli_renders_recursive_visual_frame_report_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
     assert_eq!(report["summary"]["total"], 16);
-    assert_eq!(report["summary"]["rendered"], 12);
-    assert_eq!(report["summary"]["unsupported"], 4);
+    assert_eq!(report["summary"]["rendered"], 16);
+    assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
     assert_eq!(report["frames"].as_array().expect("frames").len(), 16);
 }
 
 #[test]
-fn test_fnc_cli_renders_unsupported_visual_frame_json() {
+fn test_fnc_cli_renders_styled_visual_frame_json() {
     let report = render_frame_report(vec![
         str_arg("render-frame"),
         str_arg("--recipe"),
         recipe_path("shaders/primitives/shader_linear_gradient.json"),
     ]);
 
-    assert_eq!(report["frames"][0]["status"], "unsupported");
+    assert_eq!(report["frames"][0]["status"], "rendered");
     assert!(
         report["frames"][0]["unsupportedEffectIds"]
             .as_array()
             .expect("unsupported effect ids")
-            .iter()
-            .any(|effect| effect == "shader.linearGradient")
+            .is_empty()
     );
-    assert_eq!(report["frames"][0]["substrate"], "textGrid");
-    assert_eq!(report["frames"][0]["cellSource"], "rows");
-    assert_eq!(report["frames"][0]["styleKnown"], false);
+    assert_eq!(report["frames"][0]["substrate"], "styledCell");
+    assert_eq!(report["frames"][0]["cellSource"], "styledCells");
+    assert_eq!(report["frames"][0]["styleKnown"], true);
     assert!(
-        !report["frames"][0]["errors"]
+        !report["frames"][0]["rows"]
+            .as_array()
+            .expect("rows")
+            .is_empty()
+    );
+    assert!(
+        report["frames"][0]["cells"]
+            .as_array()
+            .expect("cells")
+            .iter()
+            .any(|cell| cell["foreground"] != "defaultForeground"
+                || cell["background"] != "transparent"
+                || !cell["modifiers"].as_array().expect("modifiers").is_empty()
+                || !cell["role"].is_null())
+    );
+    assert!(
+        report["frames"][0]["errors"]
             .as_array()
             .expect("errors")
             .is_empty()
@@ -494,4 +489,4 @@ fn str_arg(value: &str) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.8.1</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>

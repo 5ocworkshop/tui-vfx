@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.24.0</VERS> -->
-<!-- <WCTX>K2 player evidence indexing: add K2.0-K2.4 artifacts and explicit v3.1 schema directories.</WCTX> -->
-<!-- <CLOG>0.24.0: MINOR — add K2.0-K2.4 docs, review/de-slop artifacts, player reports, and schema directory details.
+<!-- <VERS>VERSION: 0.25.0</VERS> -->
+<!-- <WCTX>K2 player evidence indexing: add K2.5 styled primitive and tooling PRD artifacts.</WCTX> -->
+<!-- <CLOG>0.25.0: MINOR — add K2.5 architect response, evidence, tooling PRD, and status memo.
+0.24.0: MINOR — add K2.0-K2.4 docs, review/de-slop artifacts, player reports, and schema directory details.
 0.23.0: MINOR — add Phase K0 architect response plus K1 visual player UI artifacts.
 0.22.0: MINOR — add Phase J2 architect response plus K0 player artifacts.
 0.21.0: MINOR — add Phase J1 architect response plus J2 descriptor pack/catalog artifacts.
@@ -75,6 +76,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_K2_1.md`](ARCH-RESP-TO-PHASE_K2_1.md) — Phase K2.1 response and K2.2 visual-frame substrate recommendation.
 - [`ARCH-RESP-TO-PHASE_K2_2.md`](ARCH-RESP-TO-PHASE_K2_2.md) — Phase K2.2 response and K2.3 primitive adapter burn-down recommendation.
 - [`ARCH-RESP-TO-PHASE_K2_3.md`](ARCH-RESP-TO-PHASE_K2_3.md) — Phase K2.3 response and K2.4 styled-cell visual substrate recommendation.
+- [`ARCH-RESP-TO-PHASE_K2_4.md`](ARCH-RESP-TO-PHASE_K2_4.md) — Phase K2.4 response and K2.5 styled primitive/tooling PRD packet.
 
 ## Status and memo artifacts
 
@@ -131,6 +133,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_3_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_3_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.3 primitive adapter burn-down memo.
 - [`PHASE_K2_3_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_3_REVIEW_AND_DESLOP_REPORT.md) — third-party review and AI de-slop report for K2.3.
 - [`PHASE_K2_4_STYLED_CELL_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_4_STYLED_CELL_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.4 styled-cell substrate memo, verification, and de-slop summary.
+- [`PHASE_K2_5_STYLED_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_5_STYLED_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.5 styled primitive adapter burn-down memo and tooling PRD summary.
 
 ## Supporting artifacts
 
@@ -148,6 +151,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_2_VISUAL_FRAME_EVIDENCE.md`](K2_2_VISUAL_FRAME_EVIDENCE.md) — K2.2 render-frame/visual-frame evidence reference.
 - [`K2_3_PRIMITIVE_ADAPTER_GAP_EVIDENCE.md`](K2_3_PRIMITIVE_ADAPTER_GAP_EVIDENCE.md) — K2.3 primitive adapter support and blocker evidence reference.
 - [`K2_4_STYLED_CELL_SUBSTRATE_EVIDENCE.md`](K2_4_STYLED_CELL_SUBSTRATE_EVIDENCE.md) — K2.4 styled-cell substrate, `styleKnown`, and controlled styled-grid proof reference.
+- [`K2_5_STYLED_PRIMITIVE_ADAPTER_EVIDENCE.md`](K2_5_STYLED_PRIMITIVE_ADAPTER_EVIDENCE.md) — K2.5 styled primitive adapter evidence, visual-frame provenance, and report summaries.
+- [`K2_PLAYER_TOOLING_VALIDATION_PRD.md`](K2_PLAYER_TOOLING_VALIDATION_PRD.md) — K2 tooling/validation PRD that classifies legacy tooling capabilities as oracle inspiration only.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts
@@ -172,4 +177,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.24.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.25.0</VERS> -->
