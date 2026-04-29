@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.14.0</VERS> -->
-<!-- <WCTX>Refresh reusable subagent briefing after OMX default profiles aligned with role-routed gpt-5.5 lanes.</WCTX> -->
-<!-- <CLOG>0.14.0: MINOR — replace role-suppressed gpt-5.5 dispatch guidance with role-routed OMX profile guidance.
+<!-- <VERS>VERSION: 0.15.0</VERS> -->
+<!-- <WCTX>New kernel Phase H0: add source/asset contract guidance and recipe-example context.</WCTX> -->
+<!-- <CLOG>0.15.0: MINOR — add Phase H0 source/asset contract rules and contextual recipe-example read list.
+0.14.0: MINOR — replace role-suppressed gpt-5.5 dispatch guidance with role-routed OMX profile guidance.
 0.13.0: MINOR — add Phase G4 node I/O, graph value bus, and spatial field guidance.
 0.12.0: MINOR — add Phase G3 topology, parallel snapshot, and channel-aware merge guidance.
 0.11.0: MINOR — add Phase G2 canonical graph execution proof guidance.
@@ -134,7 +135,7 @@ Phase D0 makes this a standing rule for all future clean-room phases:
 - Every public contract-visible type, field, variant, and non-obvious policy/default needs rustdoc.
 - Intentionally internal public helpers must be marked or explained in status docs.
 
-Checked stable contract schema roots live under `schemas/v3.1/contract/`: surface, scope, write, diagnostic, scene, element, outcome, effect-descriptor, value, effect-input, value-source, parameter, signal, and binding. Proof-pipeline roots remain under `schemas/v3.1/next/`: sampler and pipeline.
+Checked stable contract schema roots live under `schemas/v3.1/contract/`: surface, scope, write, diagnostic, scene, element, outcome, effect-descriptor, value, effect-input, value-source, parameter, signal, binding, graph, graph-step, node, graph value/output, source, source descriptor, source input/output, asset, asset requirement, and asset ref. Proof-pipeline roots remain under `schemas/v3.1/next/`: sampler and pipeline.
 
 ## Recyclebin protocol
 
@@ -537,6 +538,49 @@ Key docs:
 - `docs/v3.1-contract-boundary.md`
 - `docs/new_kernel/PHASE_G4_STATUS.md` once created.
 
+### Phase H0 — source / asset / procedural source contract
+
+Current phase.
+
+Target lock:
+
+- `SourceDescriptor` describes a surface producer, not an effect over an existing surface.
+- `SourceSpec` instantiates a source descriptor with typed inputs and structural asset refs.
+- `SourceInputSpec` reuses `ValueSpec`, `Value`, `ValueKind`, and `ValueSource`; do not fork the value model.
+- `AssetSpec`, `AssetRequirement`, and `AssetRef` make assets explicit and structural. Canonical asset refs are ids, not string interpolation tokens such as `{{ flag_art }}`.
+- `SourceOutputSpec` declares produced-surface size behavior and role behavior (`Explicit`, `DefaultRole`, or `Generated`).
+- Source kinds account for text, card, procedural, image, ANSI, command-capture, asset-backed, scene-layer, and custom needs without adopting legacy recipe field names.
+- Validation rejects unknown sources, unknown source inputs, kind mismatches, missing required source inputs/assets, unknown asset refs, wrong asset kind/format, graph values outside graph context, and interpolated asset locators.
+- Source-local pipelines are future integration points after a source-produced surface exists; H0 does not add recipe syntax for them.
+
+Context examples requested by the owner:
+
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_authoring_ladder_flag_asset_binding.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_braille_flag_asset_token.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_braille_flag_runtime_wave.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_authoring_ladder_procedural_spinner_binding.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_layer_full_stack.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_layer_io_filter_shader.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_layer_visibility_binding_io.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/content/content_split_flap_solari_authentic.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/baseline.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/ansi_source_chain.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/scene/scene_image_source_bindable.json`
+- `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/complex/command_capture_chain.json`
+
+These recipes are not gospel. Use them to check source/asset needs only; do not adopt current recipe field names as canonical v3.1.
+
+Hard deferrals during H0:
+
+- Do not add canonical recipe document schema, source lowering/compiler, source-local pipeline syntax, real asset loading/resolution, real procedural rendering, runtime stores, phase/trigger/dwell engines, studio manifests, migration, loopback/demo execution, or real source/effect ports.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_G4.md`
+- `docs/v3.1-architecture-overview.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/new_kernel/PHASE_H0_STATUS.md` once created.
+
 ## Verification gates
 
 Before reporting completion for code changes, run and read output:
@@ -599,4 +643,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.14.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.15.0</VERS> -->

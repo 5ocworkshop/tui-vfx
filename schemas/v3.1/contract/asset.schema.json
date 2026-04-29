@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AssetSpec",
+  "description": "Canonical asset declaration available for structural source asset refs.",
+  "type": "object",
+  "properties": {
+    "description": {
+      "description": "Optional human-facing description for catalogs and generated reference docs.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "format": {
+      "description": "Exact asset format expected by the source adapter family.",
+      "$ref": "#/$defs/AssetFormat"
+    },
+    "id": {
+      "description": "Stable asset id referenced by source specs.",
+      "$ref": "#/$defs/AssetId"
+    },
+    "kind": {
+      "description": "Broad asset kind used for compatibility validation.",
+      "$ref": "#/$defs/AssetKind"
+    },
+    "locator": {
+      "description": "Structural locator for the asset material.",
+      "$ref": "#/$defs/AssetLocator"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "format",
+    "locator"
+  ],
+  "$defs": {
+    "AssetFormat": {
+      "description": "Stable asset format identifier, such as `tui-vfx.braille_flag_asset.v1`.",
+      "type": "string"
+    },
+    "AssetId": {
+      "description": "Stable asset identifier used by source contracts and structural asset refs.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "AssetKind": {
+      "description": "Broad source asset kind used for validation before runtime loading exists.",
+      "oneOf": [
+        {
+          "description": "Raster or vector image-like source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "image"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "ANSI/terminal capture source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "ansi"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Braille dotfield source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "brailleDotfield"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "JSON-encoded structured source data.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "json"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Pre-shaped cell-grid source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "cellGrid"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Opaque binary source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Project-defined asset kind with explicit stable name.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "custom"
+            },
+            "name": {
+              "description": "Stable custom asset kind name.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ]
+        }
+      ]
+    },
+    "AssetLocator": {
+      "description": "Structural locator for an asset declaration; not a string interpolation token.",
+      "oneOf": [
+        {
+          "description": "Repository- or package-relative path to asset material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "path"
+            },
+            "path": {
+              "description": "Canonical path string. Must not contain legacy interpolation markers.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path"
+          ]
+        },
+        {
+          "description": "Logical locator resolved by a later host/runtime resolver.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "logical"
+            },
+            "locator": {
+              "description": "Resolver-owned logical locator string.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "locator"
+          ]
+        }
+      ]
+    }
+  }
+}

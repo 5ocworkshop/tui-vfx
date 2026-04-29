@@ -1,15 +1,17 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>New kernel Phase G4: report graph value and node output validation failures.</WCTX>
-// <CLOG>0.5.0: MINOR — add effect output, graph value, and node output validation errors.
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>New kernel Phase H0: report source and asset validation failures.</WCTX>
+// <CLOG>0.6.0: MINOR — add source descriptor, source input, asset reference, and source asset compatibility errors.
+// 0.5.0: MINOR — add effect output, graph value, and node output validation errors.
 // 0.4.0: MINOR — add graph and node validation errors.
 // 0.3.0: MINOR — add parameter, signal, source-kind, map, and binding validation errors.
 // 0.2.0: MINOR — add input id, value kind, range, and enum validation errors.
 // 0.1.0: INIT — add structured validation errors for scope, write policy, and channel checks.</CLOG>
 
 use crate::{
-    CellChannel, CellWritePolicy, EffectId, EffectInputId, EffectOutputId, GraphId, GraphValueId,
-    NodeId, ParameterId, RoleWritePolicyKind, ScopeKind, SignalId, ValueKind,
+    AssetFormat, AssetId, AssetKind, CellChannel, CellWritePolicy, EffectId, EffectInputId,
+    EffectOutputId, GraphId, GraphValueId, NodeId, ParameterId, RoleWritePolicyKind, ScopeKind,
+    SignalId, SourceId, SourceInputId, ValueKind,
 };
 
 /// Structured error returned when a request exceeds descriptor capabilities.
@@ -50,6 +52,90 @@ pub enum DescriptorValidationError {
     InvalidGraphValueId {
         /// Invalid graph-local value id.
         id: GraphValueId,
+    },
+
+    /// Source id is outside the accepted dotted identifier shape.
+    InvalidSourceId {
+        /// Invalid source id.
+        id: SourceId,
+    },
+    /// Source input id is outside the accepted dotted identifier shape.
+    InvalidSourceInputId {
+        /// Invalid source input id.
+        id: SourceInputId,
+    },
+    /// Asset id is outside the accepted identifier shape.
+    InvalidAssetId {
+        /// Invalid asset id.
+        id: AssetId,
+    },
+    /// Source spec references a descriptor that is not declared.
+    UnknownSource {
+        /// Missing source id.
+        id: SourceId,
+    },
+    /// Source spec input references an input not declared by the source descriptor.
+    UnknownSourceInput {
+        /// Source descriptor id whose input map was checked.
+        source: SourceId,
+        /// Missing source input id.
+        input: SourceInputId,
+    },
+    /// Source spec omits a required input with no descriptor default.
+    MissingRequiredSourceInput {
+        /// Source descriptor id whose input is required.
+        source: SourceId,
+        /// Missing source input id.
+        input: SourceInputId,
+    },
+    /// Source spec uses an external value source for a non-bindable source input.
+    SourceInputNotBindable {
+        /// Source descriptor id whose input was checked.
+        source: SourceId,
+        /// Non-bindable source input id.
+        input: SourceInputId,
+    },
+    /// Source spec supplies an asset slot not declared by the source descriptor.
+    UnknownSourceAssetSlot {
+        /// Source descriptor id whose asset slots were checked.
+        source: SourceId,
+        /// Missing descriptor-local asset slot id.
+        asset: AssetId,
+    },
+    /// Source spec omits a required asset slot.
+    MissingRequiredAsset {
+        /// Source descriptor id whose asset slot is required.
+        source: SourceId,
+        /// Missing descriptor-local asset slot id.
+        asset: AssetId,
+    },
+    /// Source asset reference points at an undeclared asset.
+    UnknownAssetRef {
+        /// Missing asset id.
+        id: AssetId,
+    },
+    /// Source asset reference resolved to the wrong asset kind.
+    AssetKindMismatch {
+        /// Asset id that failed compatibility validation.
+        asset: AssetId,
+        /// Expected asset kind.
+        expected: AssetKind,
+        /// Actual asset kind.
+        actual: AssetKind,
+    },
+    /// Source asset reference resolved to the wrong asset format.
+    AssetFormatMismatch {
+        /// Asset id that failed compatibility validation.
+        asset: AssetId,
+        /// Expected asset format.
+        expected: AssetFormat,
+        /// Actual asset format.
+        actual: AssetFormat,
+    },
+    /// Asset locator uses legacy interpolation syntax instead of structural refs.
+    InterpolatedAssetLocator {
+        /// Locator string that still contains interpolation braces.
+        locator: String,
     },
 
     /// Graph id is outside the accepted identifier shape.
@@ -269,4 +355,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

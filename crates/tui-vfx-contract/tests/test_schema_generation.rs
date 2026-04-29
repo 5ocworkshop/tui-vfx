@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>New kernel Phase G4: include graph value and node output schema roots.</WCTX>
-// <CLOG>0.7.0: MINOR — add graph value and node output schema fixtures.
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>New kernel Phase H0: include source and asset schema roots.</WCTX>
+// <CLOG>0.8.0: MINOR — add source and asset schema fixtures.
+// 0.7.0: MINOR — add graph value and node output schema fixtures.
 // 0.6.0: MINOR — add graph-step schema fixture.
 // 0.5.0: MINOR — add graph and node schema fixtures.
 // 0.4.0: MINOR — add value source, parameter, signal, and binding schema fixtures.
@@ -13,10 +14,11 @@ use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
-    BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec,
-    GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape,
-    NodeOutputSpec, NodeSpec, ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec,
-    SignalSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
+    AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, EffectDescriptor,
+    EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId, GraphValueKind,
+    GraphValueMergePolicy, GraphValueShape, NodeOutputSpec, NodeSpec, ParameterSpec, Scene,
+    SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor, SourceInputSpec,
+    SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -47,6 +49,25 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         ("parameter.schema.json", canonical_schema::<ParameterSpec>()),
         ("signal.schema.json", canonical_schema::<SignalSpec>()),
         ("binding.schema.json", canonical_schema::<BindingSpec>()),
+        ("asset.schema.json", canonical_schema::<AssetSpec>()),
+        (
+            "asset-requirement.schema.json",
+            canonical_schema::<AssetRequirement>(),
+        ),
+        ("asset-ref.schema.json", canonical_schema::<AssetRef>()),
+        (
+            "source-input.schema.json",
+            canonical_schema::<SourceInputSpec>(),
+        ),
+        (
+            "source-output.schema.json",
+            canonical_schema::<SourceOutputSpec>(),
+        ),
+        (
+            "source-descriptor.schema.json",
+            canonical_schema::<SourceDescriptor>(),
+        ),
+        ("source.schema.json", canonical_schema::<SourceSpec>()),
         ("graph.schema.json", canonical_schema::<GraphSpec>()),
         ("graph-step.schema.json", canonical_schema::<GraphStep>()),
         (
@@ -183,6 +204,17 @@ fn binding_schema_is_current() {
 }
 
 #[test]
+fn source_schema_roots_are_current() {
+    assert_schema_fixture_current::<AssetSpec>("asset.schema.json");
+    assert_schema_fixture_current::<AssetRequirement>("asset-requirement.schema.json");
+    assert_schema_fixture_current::<AssetRef>("asset-ref.schema.json");
+    assert_schema_fixture_current::<SourceInputSpec>("source-input.schema.json");
+    assert_schema_fixture_current::<SourceOutputSpec>("source-output.schema.json");
+    assert_schema_fixture_current::<SourceDescriptor>("source-descriptor.schema.json");
+    assert_schema_fixture_current::<SourceSpec>("source.schema.json");
+}
+
+#[test]
 fn graph_schema_is_current() {
     assert_schema_fixture_current::<GraphSpec>("graph.schema.json");
 }
@@ -271,6 +303,18 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
     assert!(all_schemas.contains("Public recipe parameter contract"));
     assert!(all_schemas.contains("Host/runtime-provided signal contract"));
     assert!(all_schemas.contains("Declarative binding from a value source to a parameter target"));
+    assert!(
+        all_schemas
+            .contains("Canonical asset declaration available for structural source asset refs")
+    );
+    assert!(
+        all_schemas.contains("Structural reference from a source asset slot to a declared asset")
+    );
+    assert!(all_schemas.contains("Stable v3.1 descriptor for a source"));
+    assert!(all_schemas.contains("Canonical source instance referencing a source descriptor"));
+    assert!(
+        all_schemas.contains("Contract for the semantic surface produced by a source descriptor")
+    );
     assert!(all_schemas.contains("Canonical v3.1 graph container"));
     assert!(all_schemas.contains("Canonical execution topology for a graph"));
     assert!(all_schemas.contains("One effect node in a canonical v3.1 graph"));
@@ -319,4 +363,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

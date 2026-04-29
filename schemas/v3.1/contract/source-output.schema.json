@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SourceOutputSpec",
+  "description": "Contract for the semantic surface produced by a source descriptor.",
+  "type": "object",
+  "properties": {
+    "roles": {
+      "description": "Role assignment behavior of the produced surface.",
+      "$ref": "#/$defs/SourceRolePolicy"
+    },
+    "size": {
+      "description": "Size behavior of the produced surface.",
+      "$ref": "#/$defs/SourceOutputSize"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "size",
+    "roles"
+  ],
+  "$defs": {
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "SourceOutputSize": {
+      "description": "Declares how a source determines the size of its produced semantic surface.",
+      "oneOf": [
+        {
+          "description": "Output size is derived from source inputs or assets.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "inputDriven"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Output size is fixed by the descriptor.",
+          "type": "object",
+          "properties": {
+            "height": {
+              "description": "Fixed output height in cells.",
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "fixed"
+            },
+            "width": {
+              "description": "Fixed output width in cells.",
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "width",
+            "height"
+          ]
+        },
+        {
+          "description": "Output size is provided by the host or containing scene/recipe context.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "hostDriven"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "SourceRolePolicy": {
+      "description": "Declares how a source assigns roles to its produced semantic surface.",
+      "oneOf": [
+        {
+          "description": "Source writes roles explicitly per produced cell.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "explicit"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source applies one default role to produced cells unless overridden by a later rule.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "defaultRole"
+            },
+            "role": {
+              "description": "Default role assigned to produced cells.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Source generates roles structurally, such as card border/background/text roles.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "generated"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    }
+  }
+}

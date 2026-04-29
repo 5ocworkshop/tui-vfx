@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AssetRef",
+  "description": "Structural reference from a source asset slot to a declared asset.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Referenced asset id from the containing catalog/document.",
+      "$ref": "#/$defs/AssetId"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "$defs": {
+    "AssetId": {
+      "description": "Stable asset identifier used by source contracts and structural asset refs.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    }
+  }
+}

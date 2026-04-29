@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>New kernel Phase G4: expose graph value bus and node output vocabulary.</WCTX>
-// <CLOG>0.7.0: MINOR — export graph value, effect output, node output, and value merge schema roots.
+// <VERS>VERSION: 0.8.0</VERS>
+// <WCTX>New kernel Phase H0: expose source and asset contract vocabulary.</WCTX>
+// <CLOG>0.8.0: MINOR — export source descriptor, source spec, asset, and source output schema roots.
+// 0.7.0: MINOR — export graph value, effect output, node output, and value merge schema roots.
 // 0.6.0: MINOR — export GraphStep, ParallelMergePolicy, and topology schema root.
 // 0.5.0: MINOR — export GraphSpec, NodeSpec, GraphId, NodeId, and schema roots.
 // 0.4.0: MINOR — export ValueSource, ParameterSpec, SignalSpec, BindingSpec, and schema roots.
@@ -17,6 +18,13 @@
 //! compositor/style/content/shadow crates.
 
 pub mod cls_apply_outcome;
+pub mod cls_asset_format;
+pub mod cls_asset_id;
+pub mod cls_asset_kind;
+pub mod cls_asset_locator;
+pub mod cls_asset_ref;
+pub mod cls_asset_requirement;
+pub mod cls_asset_spec;
 pub mod cls_binding_mode;
 pub mod cls_binding_spec;
 pub mod cls_binding_target;
@@ -69,6 +77,16 @@ pub mod cls_scope_support;
 pub mod cls_shift_sampler;
 pub mod cls_signal_id;
 pub mod cls_signal_spec;
+pub mod cls_source_descriptor;
+pub mod cls_source_id;
+pub mod cls_source_input_id;
+pub mod cls_source_input_spec;
+pub mod cls_source_kind;
+pub mod cls_source_lifecycle;
+pub mod cls_source_output_size;
+pub mod cls_source_output_spec;
+pub mod cls_source_role_policy;
+pub mod cls_source_spec;
 pub mod cls_surface;
 pub mod cls_surface_diagnostic;
 pub mod cls_surface_diagnostic_code;
@@ -81,9 +99,17 @@ pub mod cls_write_support;
 pub mod fnc_collect_graph_value_kinds;
 pub mod fnc_scope_coordinate;
 pub mod orc_validate_graph_spec;
+pub mod orc_validate_source_spec;
 pub mod tr_coordinate_sampler;
 
 pub use cls_apply_outcome::ApplyOutcome;
+pub use cls_asset_format::AssetFormat;
+pub use cls_asset_id::AssetId;
+pub use cls_asset_kind::AssetKind;
+pub use cls_asset_locator::AssetLocator;
+pub use cls_asset_ref::AssetRef;
+pub use cls_asset_requirement::AssetRequirement;
+pub use cls_asset_spec::AssetSpec;
 pub use cls_binding_mode::BindingMode;
 pub use cls_binding_spec::BindingSpec;
 pub use cls_binding_target::BindingTarget;
@@ -136,6 +162,16 @@ pub use cls_scope_support::ScopeSupport;
 pub use cls_shift_sampler::ShiftSampler;
 pub use cls_signal_id::SignalId;
 pub use cls_signal_spec::SignalSpec;
+pub use cls_source_descriptor::SourceDescriptor;
+pub use cls_source_id::SourceId;
+pub use cls_source_input_id::SourceInputId;
+pub use cls_source_input_spec::SourceInputSpec;
+pub use cls_source_kind::SourceKind;
+pub use cls_source_lifecycle::SourceLifecycle;
+pub use cls_source_output_size::SourceOutputSize;
+pub use cls_source_output_spec::SourceOutputSpec;
+pub use cls_source_role_policy::SourceRolePolicy;
+pub use cls_source_spec::SourceSpec;
 pub use cls_surface::Surface;
 pub use cls_surface_diagnostic::SurfaceDiagnostic;
 pub use cls_surface_diagnostic_code::SurfaceDiagnosticCode;
@@ -152,12 +188,14 @@ pub use tr_coordinate_sampler::CoordinateSampler;
 /// These roots generate fixtures under `schemas/v3.1/contract/`.
 pub mod schema_roots {
     pub use crate::{
-        BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec,
-        GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape,
-        NodeOutputSource, NodeOutputSpec, NodeSpec, ParameterSpec, Scene, SceneElement,
-        SceneOutcome, ScopeSpec, SignalSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
+        AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, EffectDescriptor,
+        EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId, GraphValueKind,
+        GraphValueMergePolicy, GraphValueShape, NodeOutputSource, NodeOutputSpec, NodeSpec,
+        ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor,
+        SourceInputSpec, SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, Value,
+        ValueSource,
     };
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>
