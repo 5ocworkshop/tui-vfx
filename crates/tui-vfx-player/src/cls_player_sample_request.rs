@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_sample_request.rs</FILE> - <DESC>Player sample request DTO</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K0: make phase, time, dimensions, and signals explicit.</WCTX>
+// <WCTX>Player sampling work: make phase, time, dimensions, and signals explicit.</WCTX>
 // <CLOG>0.1.0: INIT — add sampled frame request contract for RecipePlayer.</CLOG>
 
 use std::collections::BTreeMap;
@@ -12,7 +12,7 @@ use tui_vfx_contract::{LifecyclePhase, SignalId, Value};
 pub struct PlayerSampleRequest {
     /// Lifecycle phase to sample.
     pub phase: LifecyclePhase,
-    /// Normalized phase progress in the range expected by K0 adapters.
+    /// Normalized phase progress in the range expected by player adapters.
     pub phase_t: f64,
     /// Optional loop-local normalized progress when a future looping source needs it.
     pub loop_t: Option<f64>,

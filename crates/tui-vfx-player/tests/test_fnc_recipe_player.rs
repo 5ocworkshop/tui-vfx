@@ -1,17 +1,26 @@
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Primitive adapter work: keep tests portable and unsupported regression on a styled-cell effect.</WCTX>
-// <CLOG>0.4.0: MINOR — assert newly supported text-grid adapters produce player row evidence.
+// <VERS>VERSION: 0.5.1</VERS>
+// <WCTX>Styled-cell substrate work: keep player evidence tests portable and explicit.</WCTX>
+// <CLOG>0.5.1: PATCH — clarify styled-grid proof naming and recipe repo override.
+// 0.5.0: MINOR — assert styled-cell visual frames can carry non-default style evidence.
+// 0.4.0: MINOR — assert newly supported text-grid adapters produce player row evidence.
 // 0.3.0: PATCH — use project-derived recipe paths and switch unsupported adapter regression away from newly supported dissolve.
 // 0.2.0: PATCH — add source.text text-input regression coverage.
 // 0.1.0: INIT — add primitive render, deterministic hash, unsupported effect, and session latch coverage.</CLOG>
 
-use std::{collections::BTreeMap, fs, path::Path};
+use std::{
+    collections::BTreeMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use tui_vfx_contract::{
     DescriptorCatalog, DescriptorPack, DescriptorPackId, RecipeDocument, SignalId, Value,
 };
-use tui_vfx_player::{PlayerSampleRequest, PlayerSession, PlayerStatus, RecipePlayer};
+use tui_vfx_player::{
+    PlayerSampleRequest, PlayerSession, PlayerStatus, PlayerStyledGrid, RecipePlayer,
+    build_visual_frame_from_styled_grid,
+};
 
 #[test]
 fn test_fnc_player_renders_baseline_with_stable_hash() {
@@ -35,6 +44,39 @@ fn test_fnc_player_renders_source_text_from_text_input() {
     assert_eq!(report.status, PlayerStatus::Rendered);
     assert!(report.non_empty_cells > 0);
     assert_eq!(report.rows[0].trim_end(), "HELLO TEXT");
+}
+
+#[test]
+fn test_fnc_player_styled_visual_frame_carries_real_style_evidence() {
+    let player = player();
+    let recipe = recipe(&v31_debug_recipe("baseline.json"));
+    let report = player.render_recipe(&recipe, &PlayerSampleRequest::default());
+    let mut styled_grid = PlayerStyledGrid::from_rows(&report.rows);
+
+    styled_grid.set_cell_style(
+        0,
+        0,
+        "ansi.red",
+        "ansi.blue",
+        vec!["bold".to_string()],
+        Some("Title".to_string()),
+    );
+
+    let frame = build_visual_frame_from_styled_grid(report, styled_grid);
+    let styled_cell = frame
+        .cells
+        .iter()
+        .find(|cell| cell.x == 0 && cell.y == 0)
+        .expect("styled cell evidence");
+
+    assert_eq!(frame.substrate, "styledCell");
+    assert_eq!(frame.cell_source, "styledCells");
+    assert!(frame.style_known);
+    assert!(!frame.rows.is_empty());
+    assert_eq!(styled_cell.foreground, "ansi.red");
+    assert_eq!(styled_cell.background, "ansi.blue");
+    assert_eq!(styled_cell.modifiers, vec!["bold".to_string()]);
+    assert_eq!(styled_cell.role.as_deref(), Some("Title"));
 }
 
 #[test]
@@ -202,20 +244,24 @@ fn recipe(path: &Path) -> RecipeDocument {
         .expect("deserialize recipe")
 }
 
-fn v31_debug_recipe(relative: &str) -> std::path::PathBuf {
+fn v31_debug_recipe(relative: &str) -> PathBuf {
     recipe_repo_root()
         .join("recipes/v3.1/debug_recipes")
         .join(relative)
 }
 
-fn recipe_repo_root() -> std::path::PathBuf {
+fn recipe_repo_root() -> PathBuf {
+    if let Ok(path) = std::env::var("RECIPE_REPO") {
+        return PathBuf::from(path);
+    }
+
     workspace_root()
         .parent()
         .expect("workspace parent")
         .join("tui-vfx-recipes")
 }
 
-fn workspace_root() -> std::path::PathBuf {
+fn workspace_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
         .nth(2)
@@ -224,4 +270,4 @@ fn workspace_root() -> std::path::PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.1</VERS>

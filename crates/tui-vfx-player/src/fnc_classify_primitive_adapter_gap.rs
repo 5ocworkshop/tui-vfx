@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_classify_primitive_adapter_gap.rs</FILE> - <DESC>Classify primitive adapter support outcomes</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>Primitive adapter work: distinguish text-grid support from styled-cell blockers.</WCTX>
-// <CLOG>0.1.0: INIT — classify represented primitive effect support outcomes.</CLOG>
+// <CLOG>0.1.1: PATCH — clarify styled-cell blocker reason after substrate support landed.
+// 0.1.0: INIT — classify represented primitive effect support outcomes.</CLOG>
 
 use crate::{PlayerInventoryEffect, PlayerPrimitiveAdapterGapEntry};
 
@@ -46,7 +47,7 @@ fn outcome_for_effect(
         "unsupported" if requires_styled_cell_adapter(&effect.id) => (
             "blockedByStyledCellSubstrate",
             "styledCell",
-            "The effect writes color, style, or role data that cannot be honestly represented while styleKnown is false.",
+            "The effect requires an adapter that writes real styled-cell color, style, or role evidence; the substrate exists, but this adapter is not implemented yet.",
         ),
         "unsupported" => (
             "stillUnsupported",
@@ -72,4 +73,4 @@ fn requires_styled_cell_adapter(effect_id: &str) -> bool {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_classify_primitive_adapter_gap.rs</FILE> - <DESC>Classify primitive adapter support outcomes</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

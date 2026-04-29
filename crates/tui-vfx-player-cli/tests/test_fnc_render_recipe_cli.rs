@@ -1,8 +1,10 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
-// <WCTX>Primitive adapter work: keep CLI fixtures portable and assert adapter-gap outcomes.</WCTX>
-// <CLOG>0.7.0: MINOR — add primitive adapter gap regression coverage and project-derived recipe paths.
-// 0.6.0: PATCH — assert loop/provenance/style-placeholder fields.
+// <VERS>VERSION: 0.8.1</VERS>
+// <WCTX>Styled-cell substrate work: keep CLI fixture paths portable and provenance assertions explicit.</WCTX>
+// <CLOG>0.8.1: PATCH — allow recipe repo override and clarify boolean style-known assertion.
+// 0.8.0: MINOR — assert render-frame emits honest styled-cell substrate metadata.
+// 0.7.0: MINOR — add primitive adapter gap regression coverage and project-derived recipe paths.
+// 0.6.0: PATCH — assert loop/provenance/style-knowledge fields.
 // 0.5.0: MINOR — add render-frame single, recursive, and unsupported tests.</CLOG>
 
 use std::{
@@ -283,7 +285,7 @@ fn test_fnc_cli_renders_single_visual_frame_json() {
             .is_empty()
     );
     let first_cell = &report["frames"][0]["cells"][0];
-    assert_eq!(first_cell["foreground"], "transparent");
+    assert_eq!(first_cell["foreground"], "defaultForeground");
     assert_eq!(first_cell["background"], "transparent");
     assert!(
         first_cell["modifiers"]
@@ -326,6 +328,9 @@ fn test_fnc_cli_renders_unsupported_visual_frame_json() {
             .iter()
             .any(|effect| effect == "shader.linearGradient")
     );
+    assert_eq!(report["frames"][0]["substrate"], "textGrid");
+    assert_eq!(report["frames"][0]["cellSource"], "rows");
+    assert_eq!(report["frames"][0]["styleKnown"], false);
     assert!(
         !report["frames"][0]["errors"]
             .as_array()
@@ -466,6 +471,10 @@ fn debug_recipe_root() -> PathBuf {
 }
 
 fn recipe_repo_root() -> PathBuf {
+    if let Ok(path) = std::env::var("RECIPE_REPO") {
+        return PathBuf::from(path);
+    }
+
     workspace_root()
         .parent()
         .expect("workspace parent")
@@ -485,4 +494,4 @@ fn str_arg(value: &str) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.1</VERS>

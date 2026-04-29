@@ -1,9 +1,9 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_frame.rs</FILE> - <DESC>Sampled skeleton player frame DTO</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K0: carry deterministic text-grid frame output.</WCTX>
+// <WCTX>Player frame work: carry deterministic text-grid frame output.</WCTX>
 // <CLOG>0.1.0: INIT — add rows, dimensions, hash, and non-empty count.</CLOG>
 
-/// Minimal semantic text-grid frame produced by the K0 skeleton player.
+/// Minimal semantic text-grid frame produced by the contract-native skeleton player.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerFrame {

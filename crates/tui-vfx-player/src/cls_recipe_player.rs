@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-player/src/cls_recipe_player.rs</FILE> - <DESC>Contract-native skeleton recipe player</DESC>
 // <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase K0: keep player coordinator OFPF-sized after adapter extraction.</WCTX>
+// <WCTX>Player orchestration work: keep coordinator focused after adapter extraction.</WCTX>
 // <CLOG>0.2.0: PATCH — split scene, effect, and frame helpers into OFPF-sized modules.
 // 0.1.0: INIT — add supported primitive adapters and explicit unsupported diagnostics.</CLOG>
 
@@ -12,7 +12,7 @@ use crate::{
     fnc_render_hash::render_hash, fnc_render_scene::render_scene,
 };
 
-/// Contract-native player for a minimal K0 primitive adapter subset.
+/// Contract-native player for a minimal primitive adapter subset.
 #[derive(Clone, Debug, Default)]
 pub struct RecipePlayer {
     catalog: DescriptorCatalog,

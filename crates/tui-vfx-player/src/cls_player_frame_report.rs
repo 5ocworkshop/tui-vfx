@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_frame_report.rs</FILE> - <DESC>Stable JSON player frame report DTO</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K0: expose machine-readable sampled frame evidence.</WCTX>
+// <WCTX>Player reporting work: expose machine-readable sampled frame evidence.</WCTX>
 // <CLOG>0.1.0: INIT — add v3.1.player.frame.1 report shape.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
@@ -33,7 +33,7 @@ pub struct PlayerFrameReport {
     pub render_hash: u64,
     /// Number of non-space cells in rows.
     pub non_empty_cells: usize,
-    /// Text rows for K0 smoke-render inspection.
+    /// Text rows for compact smoke-render inspection.
     pub rows: Vec<String>,
     /// True when a trigger-terminated dwell policy has fired in this session.
     pub dwell_terminated: bool,

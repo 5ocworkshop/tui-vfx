@@ -341,3 +341,19 @@ ci: fmt-check lint test docs-all-check audit-all
     @echo "══════════════════════════════════════════"
     @echo "  CI simulation passed!"
     @echo "══════════════════════════════════════════"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VOCABULARY EXTRACTION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Print canonical vocabulary terms from docs/VOCABULARY.md
+vocab-terms:
+    @awk '/^### / { print substr($$0, 5) }' docs/VOCABULARY.md
+
+# Print a compact Markdown table of term definitions from docs/VOCABULARY.md
+vocab-table:
+    @awk 'BEGIN { print "| Term | Definition |"; print "| --- | --- |" } function flush() { if (term != "") { gsub(/\|/, "\\|", def); print "| `" term "` | " def " |" } } /^### / { flush(); term = substr($$0, 5); def = ""; mode = ""; next } /^Definition:/ { mode = "definition"; next } mode == "definition" && /^: / { def = substr($$0, 3); mode = ""; next } END { flush() }' docs/VOCABULARY.md
+
+# Print a bullet-list AI vocabulary brief from docs/VOCABULARY.md
+vocab-ai-brief:
+    @awk 'function flush() { if (term != "") { print "- " term ": " def } } /^### / { flush(); term = substr($$0, 5); def = ""; mode = ""; next } /^Definition:/ { mode = "definition"; next } mode == "definition" && /^: / { def = substr($$0, 3); mode = ""; next } END { flush() }' docs/VOCABULARY.md

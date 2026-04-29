@@ -1,7 +1,9 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
-<!-- <WCTX>Primitive adapter work: document support classification and substrate blocker terms.</WCTX> -->
-<!-- <CLOG>0.8.0: MINOR — add primitive adapter gap report, outcome, text-grid adapter, and styled-cell adapter terms.
+<!-- <VERS>VERSION: 0.9.1</VERS> -->
+<!-- <WCTX>Styled-cell substrate work: document visual-frame styled evidence semantics.</WCTX> -->
+<!-- <CLOG>0.9.1: PATCH — align styled-cell blocker and VisualFrame wording after K2.4 de-slop.
+0.9.0: MINOR — add styled-cell substrate, styled grid, default style, and styleKnown semantics.
+0.8.0: MINOR — add primitive adapter gap report, outcome, text-grid adapter, and styled-cell adapter terms.
 0.7.1: PATCH — document substrate, cellSource, styleKnown, and loopT semantics.
 0.7.0: MINOR — add K2.2 VisualFrameReport, VisualFrame, sparse visual cell, and frame evidence terms.
 0.6.0: MINOR — add K0 Player, PlayerSession, Frame, RenderHash, and unsupported adapter terms.
@@ -159,7 +161,7 @@ Definition:
 : A stable player JSON report with schema `v3.1.player.primitiveAdapterGap.1`. It classifies represented primitive effect ids by honest current support outcome and the adapter substrate needed for support.
 
 Policy:
-: `PrimitiveAdapterGapReport` is a planning and burn-down report. It must not count a style, color, or role effect as rendered while the sampled frame still reports `styleKnown: false`.
+: `PrimitiveAdapterGapReport` is a planning and burn-down report. It must not count a style, color, or role effect as rendered until an adapter writes effect-specific styled-cell evidence; `styleKnown: true` alone is not adapter support.
 
 ### PrimitiveAdapterOutcome
 
@@ -183,7 +185,36 @@ Definition:
 : A player adapter that requires per-cell style, color, modifier, role, or compositor-backed evidence to be represented honestly.
 
 Policy:
-: Styled-cell effects remain blocked until player visual frames carry real style evidence instead of row-derived placeholder style fields.
+: Styled-cell effects remain blocked until their adapters write real style/color/role changes into the styled-cell substrate.
+
+### StyledCellSubstrate
+
+Definition:
+: A player visual-frame substrate that represents cells as glyph plus foreground, background, modifiers, and optional role evidence before serializing sparse `cells[]`. Controlled styled-grid frames use `substrate: "styledCell"` when sparse cells are collected from a player-owned styled grid with known style evidence. Row-derived production frames remain `textGrid` until a production adapter writes real style evidence.
+
+Policy:
+: A styled-cell substrate proves the player can carry style evidence; it does not by itself prove visual parity or mean every style/color effect has an adapter.
+
+### StyledGrid
+
+Definition:
+: The player-owned dense intermediate grid used to convert compact rows into sparse styled visual cells. It is intentionally separate from legacy runtime/compositor structures.
+
+Default style semantics:
+: A default cell has glyph space, foreground `defaultForeground`, background `transparent`, no modifiers, and no role. Sparse `cells[]` include cells where at least one observable field differs from that default.
+
+### styleKnown
+
+Definition:
+: A `VisualFrame` boolean indicating whether foreground, background, modifier, and role fields came from known styled-cell evidence for that frame, rather than row-derived defaults.
+
+Policy:
+: `styleKnown: true` is allowed only when real style evidence has been written into the styled-cell substrate. Row-derived frames must remain `styleKnown: false` even though their sparse cells include default style fields.
+
+### cellSource
+
+Definition:
+: A `VisualFrame` provenance field naming the source of sparse `cells[]`. Current values are `rows` for row-derived text-grid cells and `styledCells` for cells collected from the player styled-grid substrate.
 
 ### VisualFrame
 
@@ -191,7 +222,7 @@ Definition:
 : One sampled frame entry in a `VisualFrameReport`. It preserves compact text `rows[]` while also exposing sparse non-default `cells[]` for machine inspection.
 
 Current limitation:
-: Current visual frames are derived from player text-grid rows. Glyph position, dimensions, status, hash, rows, lifecycle timing, and unsupported diagnostics are stable. Frame entries make this provenance explicit with `substrate: "textGrid"`, `cellSource: "rows"`, and `styleKnown: false`. Foreground, background, modifiers, and role are included in the cell schema for future visual substrates, but row-derived cells report transparent colors, no modifiers, and no role.
+: Production visual frames that are still row-derived preserve player text-grid `rows[]` and report `substrate: "textGrid"`, `cellSource: "rows"`, and `styleKnown: false`. The K2.4 styled-cell substrate can emit `substrate: "styledCell"`, `cellSource: "styledCells"`, and `styleKnown: true` when real style evidence is written into `PlayerStyledGrid`. Visual parity and effect-specific styled/color adapters remain separate work.
 
 ### Sparse Visual Cell
 
@@ -1351,4 +1382,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.7.1</VERS> -->
+<!-- <VERS>END OF VERSION: 0.9.1</VERS> -->
