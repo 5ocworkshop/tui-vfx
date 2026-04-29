@@ -17,6 +17,8 @@ categories.workspace = true
 tui-vfx-contract.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+mcu-hct.workspace = true
+mcu-utils.workspace = true
 
 # <FILE>crates/tui-vfx-player/Cargo.toml</FILE> - <DESC>Contract-native skeleton player crate manifest</DESC>
 # <VERS>END OF VERSION: 0.1.0</VERS>

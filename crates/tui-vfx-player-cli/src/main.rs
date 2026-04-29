@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/src/main.rs</FILE> - <DESC>Contract-native player CLI entrypoint</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Primitive adapter work: register adapter gap command module.</WCTX>
-// <CLOG>0.4.0: MINOR — add primitive-adapter-gap command runner module.
-// 0.3.0: MINOR — add render-frame command runner module.</CLOG>
+// <VERS>VERSION: 0.5.1</VERS>
+// <WCTX>Player CLI de-slop: keep entrypoint metadata compact and current.</WCTX>
+// <CLOG>0.5.1: PATCH — collapse historical entrypoint metadata into latest-change context.</CLOG>
 
 mod cls_cli_options;
 mod fnc_cli_sample_request;
@@ -15,8 +14,11 @@ mod fnc_run;
 mod fnc_run_inventory_recipes;
 mod fnc_run_migration_gap;
 mod fnc_run_primitive_adapter_gap;
+mod fnc_run_primitive_field_coverage;
 mod fnc_run_render_frame;
+mod fnc_run_render_frame_diff;
 mod fnc_run_render_recipe;
+mod fnc_run_render_timeline;
 mod fnc_validate_migration_gap_options;
 
 fn main() {
@@ -24,4 +26,4 @@ fn main() {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/main.rs</FILE> - <DESC>Contract-native player CLI entrypoint</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.1</VERS>

@@ -1156,7 +1156,7 @@
             "range": null,
             "allowedValues": [
               "rgb",
-              "hsl"
+              "hct"
             ],
             "unit": null,
             "semantic": "color-interpolation-space"
@@ -1402,7 +1402,7 @@
             "range": null,
             "allowedValues": [
               "rgb",
-              "hsl"
+              "hct"
             ],
             "unit": null,
             "semantic": null

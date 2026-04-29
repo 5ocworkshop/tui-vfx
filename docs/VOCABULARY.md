@@ -1,19 +1,7 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.10.0</VERS> -->
+<!-- <VERS>VERSION: 0.11.0</VERS> -->
 <!-- <WCTX>Styled-cell substrate work: document visual-frame styled evidence semantics.</WCTX> -->
-<!-- <CLOG>0.10.0: MINOR — add K2.5 styled primitive adapter and tooling PRD boundary terms.
-0.9.1: PATCH — align styled-cell blocker and VisualFrame wording after K2.4 de-slop.
-0.9.0: MINOR — add styled-cell substrate, styled grid, default style, and styleKnown semantics.
-0.8.0: MINOR — add primitive adapter gap report, outcome, text-grid adapter, and styled-cell adapter terms.
-0.7.1: PATCH — document substrate, cellSource, styleKnown, and loopT semantics.
-0.7.0: MINOR — add K2.2 VisualFrameReport, VisualFrame, sparse visual cell, and frame evidence terms.
-0.6.0: MINOR — add K0 Player, PlayerSession, Frame, RenderHash, and unsupported adapter terms.
-0.5.0: MINOR — add J2 descriptor pack/catalog, embedded/pack-provided descriptor, collision, and canonical fixture terms.
-0.4.0: MINOR — add J1 migration, structural validation, oracle, and visual parity terms.
-0.3.1: PATCH — document Truthy predicate per-kind semantics and maxDuration wire casing.
-0.3.0: MINOR — add I0 lifecycle/time/trigger vocabulary and distinctions.
-0.2.0: MINOR — add H1 RecipeDocument/RecipeScene/RecipeSceneElement/RecipeElementPipeline terms and clarify source-local pipeline seam.
-0.1.0: INIT — define canonical v3.1 terms, legacy distinctions, naming rules, deferrals, and change policy.</CLOG> -->
+<!-- <CLOG>0.11.0: MINOR — add K2.6 GUI, field coverage, migration loop, timeline, and diff evidence terms.</CLOG> -->
 
 # v3.1 Vocabulary
 
@@ -147,6 +135,57 @@ Definition:
 Policy:
 : Unsupported adapters are explicit contract-native smoke results, not silent success. Typical codes are `unsupportedSourceAdapter` and `unsupportedEffectAdapter`.
 
+
+### Ratatui GUI Player
+
+Definition:
+: A future human-facing terminal UI built with ratatui on top of `tui-vfx-player` evidence and canonical v3.1 `RecipeDocument` values.
+
+Policy:
+: The GUI player is additive to CLI player capability. It does not replace `render-recipe`, `render-frame`, inventory, migration-gap, adapter-gap, field-coverage, timeline, or diff commands.
+
+Not the same as:
+: The legacy `../tui-vfx-recipes/examples/demo.rs` runtime. The legacy demo is UX inspiration and human playback oracle evidence, not canonical execution authority.
+
+### Human Playback Oracle
+
+Definition:
+: A legacy or human-operated playback surface used to understand expected workflow, controls, and visual intent during migration planning.
+
+Policy:
+: Human playback oracle evidence can guide GUI/player ergonomics and visual review, but it must not define strict v3.1 schema, descriptor, or runtime semantics.
+
+### PrimitiveFieldCoverageReport
+
+Definition:
+: A stable player JSON report with schema `v3.1.player.primitiveFieldCoverage.1`. It compares authored primitive inputs in canonical v3.1 recipes against descriptor-declared inputs and player-handled inputs.
+
+Policy:
+: Field coverage is not visual parity. It proves whether current canonical fixture fields are declared and consumed or explicitly classified; it does not prove the rendered cells match a legacy oracle.
+
+### MigrationMappingLoop
+
+Definition:
+: A repeatable recipe-by-recipe migration workflow that uses player/validator reports, descriptor packs, legacy source evidence, and status/recommendation vocabularies to decide whether a recipe can migrate or needs descriptor/schema/source/adapter work first.
+
+Policy:
+: The migration loop feeds schema, descriptor, and player hardening. It must not mutate legacy source recipes, add strict-schema aliases for old JSON, or treat old runtime behavior as canonical.
+
+### FrameTimelineReport
+
+Definition:
+: A stable player JSON report with schema `v3.1.player.frameTimeline.1`. It emits multiple deterministic `VisualFrame` samples for one canonical recipe across normalized sample time.
+
+Policy:
+: Timeline evidence is player-owned debugging evidence. It is not oracle comparison, not visual parity, and not a replacement for single-frame regression reports.
+
+### FrameDiffReport
+
+Definition:
+: A stable player JSON report with schema `v3.1.player.frameDiff.1`. It compares two sampled visual frames and reports changed cells, changed-cell count, render-hash change, and non-empty-cell delta.
+
+Policy:
+: Diff evidence helps humans inspect behavior between samples. It is not perceptual image comparison and does not prove visual parity against legacy output.
 
 ### VisualFrameReport
 
@@ -1399,4 +1438,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.10.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.11.0</VERS> -->

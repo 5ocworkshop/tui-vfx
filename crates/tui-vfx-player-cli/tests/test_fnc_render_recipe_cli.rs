@@ -1,12 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
-// <WCTX>Styled-cell substrate work: keep CLI fixture paths portable and provenance assertions explicit.</WCTX>
-// <CLOG>0.9.0: MINOR — assert K2.5 styled primitive adapters render with styled-cell provenance.
-// 0.8.1: PATCH — allow recipe repo override and clarify boolean style-known assertion.
-// 0.8.0: MINOR — assert render-frame emits honest styled-cell substrate metadata.
-// 0.7.0: MINOR — add primitive adapter gap regression coverage and project-derived recipe paths.
-// 0.6.0: PATCH — assert loop/provenance/style-knowledge fields.
-// 0.5.0: MINOR — add render-frame single, recursive, and unsupported tests.</CLOG>
+// <VERS>VERSION: 0.9.1</VERS>
+// <WCTX>Player CLI de-slop: keep regression names and metadata phase-neutral.</WCTX>
+// <CLOG>0.9.1: PATCH — rename transient packet-specific regression wording.</CLOG>
 
 use std::{
     path::PathBuf,
@@ -334,6 +329,199 @@ fn test_fnc_cli_renders_styled_visual_frame_json() {
     );
 }
 
+#[test]
+fn test_fnc_cli_renders_filter_field_handling_with_styled_visual_frame_json() {
+    let report = render_frame_report(vec![
+        str_arg("render-frame"),
+        str_arg("--recipe"),
+        recipe_path("filters/filter_tint.json"),
+    ]);
+
+    let frame = &report["frames"][0];
+    assert_eq!(frame["status"], "rendered");
+    assert_eq!(frame["substrate"], "styledCell");
+    assert_eq!(frame["cellSource"], "styledCells");
+    assert_eq!(frame["styleKnown"], true);
+    assert!(
+        frame["cells"]
+            .as_array()
+            .expect("cells")
+            .iter()
+            .any(|cell| cell["role"] == "FilterTint")
+    );
+}
+
+#[test]
+fn test_fnc_cli_reports_primitive_field_coverage_for_fixture_corpus_json() {
+    let report = primitive_field_coverage_report();
+
+    assert_eq!(
+        report["schemaVersion"],
+        "v3.1.player.primitiveFieldCoverage.1"
+    );
+    assert_eq!(report["summary"]["totalRecipes"], 16);
+    assert_eq!(report["summary"]["usedButUnhandledInputFields"], 0);
+    assert_eq!(report["summary"]["missingDescriptorInputFields"], 0);
+    assert_eq!(report["summary"]["schemaDecisionNeededFields"], 0);
+    assert!(
+        report["summary"]["totalPrimitiveInstances"]
+            .as_u64()
+            .expect("instances")
+            > 16
+    );
+}
+
+#[test]
+fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
+    let report = primitive_field_coverage_report();
+
+    assert_eq!(
+        report["summary"]["usedInputFields"],
+        report["summary"]["handledInputFields"]
+    );
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 0);
+
+    let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
+    assert!(
+        first_recipe["recipePath"]
+            .as_str()
+            .expect("recipe path")
+            .ends_with(".json")
+    );
+    assert_eq!(first_recipe["status"], "scanned");
+    assert!(
+        first_recipe["errors"]
+            .as_array()
+            .expect("errors")
+            .is_empty()
+    );
+
+    let instance = first_recipe["primitiveInstances"]
+        .as_array()
+        .expect("instances")
+        .first()
+        .expect("primitive instance");
+    assert!(instance["kind"] == "source" || instance["kind"] == "effect");
+    assert!(
+        instance["descriptorId"]
+            .as_str()
+            .expect("descriptor id")
+            .contains('.')
+    );
+    assert!(
+        instance["descriptorInputs"]
+            .as_array()
+            .expect("descriptor inputs")
+            .len()
+            >= instance["usedInputs"]
+                .as_array()
+                .expect("used inputs")
+                .len()
+    );
+    assert_eq!(instance["classification"], "usedAndHandled");
+    assert_eq!(instance["recommendation"], "none");
+}
+
+#[test]
+fn test_fnc_cli_keeps_render_frame_schema_unchanged_after_report_commands() {
+    let report = render_frame_report(vec![
+        str_arg("render-frame"),
+        str_arg("--recipe"),
+        recipe_path("baseline.json"),
+    ]);
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
+    assert_eq!(report["frames"][0]["sampleT"], 1.0);
+    assert_eq!(report["frames"][0]["absoluteTimeMs"], 0);
+    assert!(report["frames"][0]["from"].is_null());
+}
+
+#[test]
+fn test_fnc_cli_timeline_emits_deterministic_multiple_frames_json() {
+    let first = timeline_report();
+    let second = timeline_report();
+
+    assert_eq!(first["schemaVersion"], "v3.1.player.frameTimeline.1");
+    assert_eq!(first["frames"].as_array().expect("frames").len(), 3);
+    assert_eq!(first["frames"][0]["sampleT"], 0.0);
+    assert_eq!(first["frames"][2]["sampleT"], 1.0);
+    assert_eq!(first["frames"][1]["absoluteTimeMs"], 500);
+    assert_eq!(
+        first["frames"][0]["renderHash"],
+        second["frames"][0]["renderHash"]
+    );
+}
+
+#[test]
+fn test_fnc_cli_frame_diff_reports_changed_cells_when_sample_t_differs_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-frame-diff"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_wipe.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--from-sample-t"),
+            str_arg("0.0"),
+            str_arg("--to-sample-t"),
+            str_arg("1.0"),
+            str_arg("--json"),
+        ],
+        "render-frame-diff player cli",
+    );
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.frameDiff.1");
+    let report_object = report.as_object().expect("diff report object");
+    assert!(report_object.contains_key("from"));
+    assert!(report_object.contains_key("to"));
+    assert!(!report_object.contains_key("fromFrame"));
+    assert!(!report_object.contains_key("toFrame"));
+    assert_eq!(report["hashChanged"], true);
+    assert!(report["changedCellCount"].as_u64().expect("changed count") > 0);
+    assert!(
+        !report["changedCells"]
+            .as_array()
+            .expect("changed cells")
+            .is_empty()
+    );
+    assert_ne!(report["nonEmptyDelta"], 0);
+}
+
+#[test]
+fn test_fnc_cli_frame_diff_reports_styled_cell_changes_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-frame-diff"),
+            str_arg("--recipe"),
+            recipe_path("shaders/compositions/shader_border_sweep.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--from-sample-t"),
+            str_arg("0.0"),
+            str_arg("--to-sample-t"),
+            str_arg("0.5"),
+            str_arg("--json"),
+        ],
+        "styled render-frame-diff player cli",
+    );
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.frameDiff.1");
+    assert_eq!(report["from"]["substrate"], "styledCell");
+    assert_eq!(report["to"]["substrate"], "styledCell");
+    assert_eq!(report["hashChanged"], true);
+    assert!(report["changedCellCount"].as_u64().expect("changed count") > 0);
+    assert!(
+        report["changedCells"]
+            .as_array()
+            .expect("changed cells")
+            .iter()
+            .any(
+                |cell| cell["from"].as_str().expect("from cell").contains("fg=")
+                    || cell["to"].as_str().expect("to cell").contains("fg=")
+            )
+    );
+}
+
 fn inventory_report(mut args: Vec<String>) -> serde_json::Value {
     args.extend([
         str_arg("--descriptor-pack"),
@@ -363,6 +551,36 @@ fn primitive_adapter_gap_report() -> serde_json::Value {
             str_arg("--json"),
         ],
         "primitive adapter gap player cli",
+    )
+}
+
+fn primitive_field_coverage_report() -> serde_json::Value {
+    player_cli_json(
+        vec![
+            str_arg("primitive-field-coverage"),
+            str_arg("--recursive"),
+            debug_recipe_root_path(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--json"),
+        ],
+        "primitive field coverage player cli",
+    )
+}
+
+fn timeline_report() -> serde_json::Value {
+    player_cli_json(
+        vec![
+            str_arg("render-timeline"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_wipe.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--frames"),
+            str_arg("3"),
+            str_arg("--json"),
+        ],
+        "render-timeline player cli",
     )
 }
 
@@ -489,4 +707,4 @@ fn str_arg(value: &str) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.9.0</VERS>
+// <VERS>END OF VERSION: 0.9.1</VERS>

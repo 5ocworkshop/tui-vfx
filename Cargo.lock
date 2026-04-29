@@ -2470,6 +2470,8 @@ dependencies = [
 name = "tui-vfx-player"
 version = "0.11.0"
 dependencies = [
+ "mcu-hct",
+ "mcu-utils",
  "serde",
  "serde_json",
  "tui-vfx-contract",

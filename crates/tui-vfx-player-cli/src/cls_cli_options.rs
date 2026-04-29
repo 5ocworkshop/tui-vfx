@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase K2.1: parse render, inventory, and migration-gap options.</WCTX>
-// <CLOG>0.2.0: MINOR — add migration-gap legacy and v3.1 root options.</CLOG>
+// <VERS>VERSION: 0.3.1</VERS>
+// <WCTX>Player CLI de-slop: keep option metadata compact and current.</WCTX>
+// <CLOG>0.3.1: PATCH — collapse historical option metadata into latest-change context.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
 
@@ -32,6 +32,12 @@ pub struct CliOptions {
     pub legacy_root: Option<String>,
     /// Canonical v3.1 debug recipe root for migration-gap reports.
     pub v31_root: Option<String>,
+    /// Number of timeline frames to sample.
+    pub frames: usize,
+    /// Starting sample for frame-diff reports.
+    pub from_sample_t: f64,
+    /// Ending sample for frame-diff reports.
+    pub to_sample_t: f64,
 }
 
 impl Default for CliOptions {
@@ -49,9 +55,12 @@ impl Default for CliOptions {
             height: None,
             legacy_root: None,
             v31_root: None,
+            frames: 1,
+            from_sample_t: 0.0,
+            to_sample_t: 1.0,
         }
     }
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>

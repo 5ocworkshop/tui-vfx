@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse player CLI options</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase K2.1: parse shared player CLI flags without new dependencies.</WCTX>
-// <CLOG>0.2.0: MINOR — add migration-gap root flags.</CLOG>
+// <VERS>VERSION: 0.3.1</VERS>
+// <WCTX>Player CLI de-slop: keep parser metadata compact and current.</WCTX>
+// <CLOG>0.3.1: PATCH — collapse historical parser metadata into latest-change context.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
 
@@ -29,6 +29,13 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             "--height" => options.height = Some(parse_usize(&next_value(&mut args, "--height")?)?),
             "--legacy-root" => options.legacy_root = Some(next_value(&mut args, "--legacy-root")?),
             "--v31-root" => options.v31_root = Some(next_value(&mut args, "--v31-root")?),
+            "--frames" => options.frames = parse_usize(&next_value(&mut args, "--frames")?)?,
+            "--from-sample-t" => {
+                options.from_sample_t = parse_f64(&next_value(&mut args, "--from-sample-t")?)?
+            }
+            "--to-sample-t" => {
+                options.to_sample_t = parse_f64(&next_value(&mut args, "--to-sample-t")?)?
+            }
             "--" => continue,
             value if value.starts_with("--recipe=") => {
                 options.paths.push(value["--recipe=".len()..].to_string());
@@ -59,6 +66,15 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             }
             value if value.starts_with("--v31-root=") => {
                 options.v31_root = Some(value["--v31-root=".len()..].to_string());
+            }
+            value if value.starts_with("--frames=") => {
+                options.frames = parse_usize(&value["--frames=".len()..])?;
+            }
+            value if value.starts_with("--from-sample-t=") => {
+                options.from_sample_t = parse_f64(&value["--from-sample-t=".len()..])?;
+            }
+            value if value.starts_with("--to-sample-t=") => {
+                options.to_sample_t = parse_f64(&value["--to-sample-t=".len()..])?;
             }
             value if value.starts_with('-') => return Err(format!("unknown option `{value}`")),
             _ => options.paths.push(arg),
@@ -95,4 +111,4 @@ fn parse_usize(value: &str) -> Result<usize, String> {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse player CLI options</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>
