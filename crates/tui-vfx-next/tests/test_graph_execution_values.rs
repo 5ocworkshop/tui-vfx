@@ -460,3 +460,10 @@ fn parallel_output_conflict_can_error_if_policy_requires() {
 fn branch_local_output_does_not_leak_before_join() {
     parallel_sibling_cannot_see_other_sibling_output();
 }
+
+#[test]
+fn graph_io_migration_covers_sequence_join_and_conflict_evidence() {
+    sequence_node_can_consume_prior_node_output();
+    parallel_outputs_visible_after_join();
+    parallel_output_conflict_can_error_if_policy_requires();
+}

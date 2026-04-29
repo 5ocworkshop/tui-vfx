@@ -152,6 +152,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_12_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_12_REVIEW_AND_DESLOP_REPORT.md) — briefing-first formal review and AI de-slop evidence for K2.12.
 - [`PHASE_K2_13_SCHEMA_DECISION_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_13_SCHEMA_DECISION_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md) — K2.13 schema decision readiness declaration, blocker memo, and next-packet recommendation.
 - [`PHASE_K2_13_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_13_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop closure, and verification evidence for K2.13.
+- [`PHASE_K2_14_DESCRIPTOR_ADAPTER_MIGRATION_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_14_DESCRIPTOR_ADAPTER_MIGRATION_STATUS_MEMO_TO_ARCHITECT.md) — descriptor/adapter migration tranche status memo, before/after metrics, risks, and next-packet recommendation.
+- [`PHASE_K2_14_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_14_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop closure, and verification evidence for K2.14.
 
 ## Supporting artifacts
 
@@ -194,6 +196,13 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_13_SCHEMA_API_DOC_INFRA_REPORT.md`](K2_13_SCHEMA_API_DOC_INFRA_REPORT.md) — K2.13 schema/API/docs synchronization report.
 - [`K2_13_TEMPLATE_COMPOSITION_DECISION_NOTE.md`](K2_13_TEMPLATE_COMPOSITION_DECISION_NOTE.md) — K2.13 compile-time template composition boundary.
 - [`K2_13_STUDIO_CONTROL_SURFACE_PREFLIGHT.md`](K2_13_STUDIO_CONTROL_SURFACE_PREFLIGHT.md) — K2.13 studio control derivation preflight.
+- [`K2_14_DESCRIPTOR_ADAPTER_MIGRATION_REPORT.md`](K2_14_DESCRIPTOR_ADAPTER_MIGRATION_REPORT.md) — descriptor and adapter tranche summary with before/after counters.
+- [`K2_14_CANONICAL_FIXTURE_ADDITIONS.md`](K2_14_CANONICAL_FIXTURE_ADDITIONS.md) — canonical v3.1 debug fixture additions from the descriptor/adapter tranche.
+- [`K2_14_GRAPH_IO_EVIDENCE_REPORT.md`](K2_14_GRAPH_IO_EVIDENCE_REPORT.md) — graph I/O evidence status and player/proof integration gap.
+- [`K2_14_SCENE_SOURCE_EVIDENCE_REPORT.md`](K2_14_SCENE_SOURCE_EVIDENCE_REPORT.md) — source adapter and scene evidence status.
+- [`K2_14_HOLDBACK_REGISTER.md`](K2_14_HOLDBACK_REGISTER.md) — backend/gui/oracle/duplicate holdback register.
+- [`K2_14_SCHEMA_API_DOCS_GATE.md`](K2_14_SCHEMA_API_DOCS_GATE.md) — reproducible schema/API/docs gate commands.
+- [`K2_14_STUDIO_CONTROL_DERIVATION_REPORT.md`](K2_14_STUDIO_CONTROL_DERIVATION_REPORT.md) — future studio-control derivation rules.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts

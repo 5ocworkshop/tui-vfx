@@ -8,7 +8,9 @@ use tui_vfx_contract::NodeSpec;
 
 use crate::{
     PlayerSampleRequest,
-    fnc_resolve_effect_input::{resolve_effect_bool, resolve_effect_enum, resolve_effect_integer},
+    fnc_resolve_effect_input::{
+        resolve_effect_bool, resolve_effect_enum, resolve_effect_integer, resolve_effect_number,
+    },
 };
 
 /// Apply a blinds mask to text-grid rows.
@@ -47,6 +49,40 @@ pub(crate) fn apply_mask_radial(
     let _center_only_origin = resolve_effect_enum(node, request, "origin", "center");
     let soft_edge = resolve_effect_bool(node, request, "softEdge", true);
     apply_shape_mask(rows, request.phase_t, soft_edge, MaskShape::Circle);
+}
+
+/// Apply a materialize mask to text-grid rows.
+pub(crate) fn apply_mask_materialize(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    rows: &mut [String],
+) {
+    let _origin = resolve_effect_enum(node, request, "origin", "center");
+    let soft_edge = resolve_effect_bool(node, request, "softEdge", true);
+    let chunk_size = resolve_effect_integer(node, request, "chunkSize", 1).max(1) as usize;
+    let noise = resolve_effect_number(node, request, "noise", 0.0).clamp(0.0, 1.0);
+    let seed = resolve_effect_integer(node, request, "seed", 42).max(0) as usize;
+    let reveal = reveal_threshold((request.phase_t + noise * 0.1).clamp(0.0, 1.0), soft_edge);
+    let height = rows.len().max(1);
+    for (y, row) in rows.iter_mut().enumerate() {
+        let width = row.chars().count().max(1);
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                let quantized_x = x / chunk_size;
+                let quantized_y = y / chunk_size;
+                let jitter = ((quantized_x * 31 + quantized_y * 17 + seed) % 100) as f64 / 100.0;
+                if normalized_distance(x, y, width, height, MaskShape::Circle)
+                    <= reveal + jitter * noise
+                {
+                    glyph
+                } else {
+                    ' '
+                }
+            })
+            .collect();
+    }
 }
 
 /// Apply an iris mask to text-grid rows.

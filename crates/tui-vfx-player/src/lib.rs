@@ -46,6 +46,8 @@ pub mod cls_recipe_player;
 mod cls_resolved_color;
 mod fnc_aggregate_player_inventory_effects;
 mod fnc_aggregate_player_inventory_sources;
+mod fnc_apply_content_primitive;
+mod fnc_apply_distortion_sampler_primitives;
 mod fnc_apply_filter_primitive;
 pub mod fnc_apply_graph_effects;
 mod fnc_apply_mask_checkers;

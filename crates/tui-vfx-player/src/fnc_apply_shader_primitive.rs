@@ -26,6 +26,11 @@ pub(crate) fn apply_shader_primitive(
     match node.effect.as_str() {
         "shader.linearGradient" => apply_linear_gradient(node, request, styled_grid),
         "shader.borderSweep" => apply_border_sweep(node, request, styled_grid),
+        "shader.revealWipe" => apply_reveal_wipe(node, request, styled_grid),
+        "shader.highlighter" => apply_highlighter(node, request, styled_grid),
+        "shader.focusField" => apply_focus_field(node, request, styled_grid),
+        "shader.glistenBand" => apply_glisten_band(node, request, styled_grid),
+        "shader.wayfindingNode" => apply_wayfinding_node(node, request, styled_grid),
         _ => return false,
     }
     true
@@ -131,6 +136,189 @@ fn sample_gradient(gradient: &ResolvedGradient, position: f32) -> ResolvedColor 
         }
     }
     gradient.stops.last().map_or(first.color, |stop| stop.color)
+}
+
+fn apply_reveal_wipe(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(120, 220, 255));
+    let direction = resolve_effect_enum(node, request, "direction", "leftToRight");
+    let threshold = request.phase_t.clamp(0.0, 1.0);
+    let width = styled_grid.width().max(1);
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let progress = if direction == "rightToLeft" {
+            (width - x) as f64 / width as f64
+        } else {
+            (x + 1) as f64 / width as f64
+        };
+        if progress <= threshold {
+            apply_shader_style(styled_grid, x, y, "foreground", &color.rgba_label());
+        }
+    }
+}
+
+fn apply_highlighter(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(255, 225, 90));
+    let blend_strength = resolve_effect_number(node, request, "blendStrength", 1.0).clamp(0.0, 1.0);
+    let text_contrast = resolve_effect_number(node, request, "textContrast", 0.0).clamp(0.0, 1.0);
+    let soft_edge = resolve_effect_enum(node, request, "softEdge", "true") != "false";
+    let direction = resolve_effect_enum(node, request, "direction", "leftToRight");
+    let mode = resolve_effect_enum(node, request, "mode", "band");
+    let row_mask = resolve_effect_integer(node, request, "rowMask", -1);
+    let band_width = (resolve_effect_number(node, request, "bandWidth", 3.0).max(1.0)
+        * (1.0 + if soft_edge { 0.5 } else { 0.0 })) as usize;
+    let span = if matches!(direction.as_str(), "topToBottom" | "bottomToTop") {
+        styled_grid.height().max(1)
+    } else {
+        styled_grid.width().max(1)
+    };
+    let center = (request.phase_t.clamp(0.0, 1.0) * span as f64).round() as isize;
+    let active_color = color.lerp(
+        ResolvedColor::rgb(255, 255, 255),
+        (text_contrast * 0.25) as f32,
+    );
+    let apply_to = if mode == "row" { "both" } else { "background" };
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let axis = if matches!(direction.as_str(), "topToBottom" | "bottomToTop") {
+            y
+        } else {
+            x
+        };
+        if row_mask >= 0 && y as i64 != row_mask {
+            continue;
+        }
+        if (axis as isize - center).unsigned_abs() <= band_width {
+            let color = active_color.lerp(color, blend_strength as f32).rgba_label();
+            apply_shader_style(styled_grid, x, y, apply_to, &color);
+        }
+    }
+}
+
+fn apply_focus_field(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(120, 180, 255));
+    let rect_x = resolve_effect_number(node, request, "rectX", 0.0);
+    let rect_y = resolve_effect_number(node, request, "rectY", 0.0);
+    let rect_width = resolve_effect_number(node, request, "rectWidth", styled_grid.width() as f64);
+    let rect_height =
+        resolve_effect_number(node, request, "rectHeight", styled_grid.height() as f64);
+    let center_x = resolve_effect_number(node, request, "centerX", rect_x + rect_width / 2.0);
+    let center_y = resolve_effect_number(node, request, "centerY", rect_y + rect_height / 2.0);
+    let shape = resolve_effect_enum(node, request, "shape", "circle");
+    let radius_x = resolve_effect_number(
+        node,
+        request,
+        "radiusX",
+        resolve_effect_number(node, request, "radius", 4.0),
+    )
+    .max(0.5);
+    let radius_y = resolve_effect_number(node, request, "radiusY", radius_x).max(0.5);
+    let feather = resolve_effect_number(node, request, "feather", 0.0).clamp(0.0, 1.0);
+    let intensity = resolve_effect_number(node, request, "intensity", 1.0).clamp(0.0, 1.0) as f32;
+    let focus_color = color.lerp(ResolvedColor::rgb(255, 255, 255), (1.0 - intensity) * 0.25);
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let dx = (x as f64 - center_x).abs();
+        let dy = (y as f64 - center_y).abs();
+        let inside = if shape == "rect" {
+            x as f64 >= rect_x
+                && y as f64 >= rect_y
+                && x as f64 <= rect_x + rect_width
+                && y as f64 <= rect_y + rect_height
+        } else {
+            let normalized =
+                (dx / radius_x).mul_add(dx / radius_x, (dy / radius_y) * (dy / radius_y));
+            normalized.sqrt() <= 1.0 + feather
+        };
+        if inside {
+            apply_shader_style(styled_grid, x, y, "foreground", &focus_color.rgba_label());
+        }
+    }
+}
+
+fn apply_glisten_band(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(255, 255, 255));
+    let blend_strength =
+        resolve_effect_number(node, request, "blendStrength", 1.0).clamp(0.0, 1.0) as f32;
+    let angle = resolve_effect_number(node, request, "angleDeg", 0.0).to_radians();
+    let speed = resolve_effect_number(node, request, "speed", 1.0).max(0.0);
+    let head = resolve_effect_number(node, request, "head", 0.0).clamp(0.0, 1.0);
+    let tail = resolve_effect_number(node, request, "tail", 1.0).clamp(0.0, 1.0);
+    let band_width = resolve_effect_number(node, request, "bandWidth", 2.0).max(1.0)
+        * (tail - head).abs().max(0.25);
+    let direction = resolve_effect_enum(node, request, "direction", "leftToRight");
+    let mut center = (request.phase_t * speed).fract();
+    if direction == "rightToLeft" {
+        center = 1.0 - center;
+    }
+    let width = styled_grid.width().saturating_sub(1).max(1) as f64;
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let nx = x as f64 / width;
+        let diagonal = (nx * angle.cos()
+            + y as f64 * angle.sin() / styled_grid.height().max(1) as f64)
+            .fract();
+        if (diagonal - center).abs() <= band_width / width {
+            let color = color
+                .lerp(ResolvedColor::rgb(255, 255, 255), blend_strength)
+                .rgba_label();
+            apply_shader_style(styled_grid, x, y, "foreground", &color);
+        }
+    }
+}
+
+fn apply_wayfinding_node(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let active = resolve_effect_integer(node, request, "currentIndex", 0).max(0) as usize;
+    let node_count = resolve_effect_integer(node, request, "nodes", 1).max(1) as usize;
+    let previous_strength =
+        resolve_effect_number(node, request, "previousStrength", 0.3).clamp(0.0, 1.0) as f32;
+    let future_strength =
+        resolve_effect_number(node, request, "futureStrength", 0.4).clamp(0.0, 1.0) as f32;
+    let intensity = resolve_effect_number(node, request, "intensity", 1.0).clamp(0.0, 1.0) as f32;
+    let radius = resolve_effect_number(node, request, "radius", 1.0).max(0.0) as usize;
+    let color = resolve_effect_color(
+        node,
+        request,
+        "activeColor",
+        resolve_effect_color(node, request, "color", ResolvedColor::rgb(80, 255, 160)),
+    );
+    let cells = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid);
+    if cells.is_empty() {
+        return;
+    }
+    let active_index = active % cells.len().min(node_count).max(1);
+    for offset in 0..=radius {
+        for (index, strength) in [
+            (active_index.saturating_sub(offset), previous_strength),
+            (
+                (active_index + offset).min(cells.len() - 1),
+                future_strength,
+            ),
+        ] {
+            if let Some((x, y)) = cells.get(index).copied() {
+                let color = color.lerp(
+                    ResolvedColor::rgb(255, 255, 255),
+                    (1.0 - strength * intensity).clamp(0.0, 1.0),
+                );
+                apply_shader_style(styled_grid, x, y, "both", &color.rgba_label());
+            }
+        }
+    }
 }
 
 fn apply_border_sweep(

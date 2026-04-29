@@ -9,6 +9,8 @@ use tui_vfx_contract::RecipeDocument;
 
 use crate::{
     PlayerError, PlayerSampleRequest, PlayerStyledGrid,
+    fnc_apply_content_primitive::apply_content_primitive,
+    fnc_apply_distortion_sampler_primitives::apply_distortion_sampler_primitive,
     fnc_apply_filter_primitive::apply_filter_primitive,
     fnc_apply_mask_checkers::apply_mask_checkers,
     fnc_apply_mask_dissolve::apply_mask_dissolve,
@@ -16,7 +18,8 @@ use crate::{
     fnc_apply_sampler_ripple::apply_sampler_ripple,
     fnc_apply_sampler_sine_wave::apply_sampler_sine_wave,
     fnc_apply_simple_mask_primitives::{
-        apply_mask_blinds, apply_mask_diamond, apply_mask_iris, apply_mask_radial,
+        apply_mask_blinds, apply_mask_diamond, apply_mask_iris, apply_mask_materialize,
+        apply_mask_radial,
     },
     fnc_apply_styled_primitive::apply_styled_primitive,
 };
@@ -34,16 +37,33 @@ pub fn apply_graph_effects(
             continue;
         };
         let sync_text_grid = match node.effect.as_str() {
-            "filter.dim" | "filter.tint" | "filter.invert" | "filter.greyscale" => {
+            "filter.dim"
+            | "filter.tint"
+            | "filter.invert"
+            | "filter.greyscale"
+            | "filter.pillButton"
+            | "filter.fadeToCanvas"
+            | "filter.patternFill"
+            | "filter.crt"
+            | "filter.matrixRain" => {
                 apply_filter_primitive(node, request, styled_grid);
                 false
             }
             "mask.none" => false,
+            "content.typewriter"
+            | "content.marquee"
+            | "content.splitFlap"
+            | "content.wrapIndicator"
+            | "content.scramble"
+            | "content.morph" => {
+                apply_content_primitive(node, request, rows);
+                true
+            }
             "sampler.sineWave" => {
                 apply_sampler_sine_wave(node, request, rows);
                 true
             }
-            "mask.wipe" => {
+            "mask.wipe" | "mask.pathReveal" => {
                 apply_mask_wipe(node, request, rows);
                 true
             }
@@ -51,7 +71,7 @@ pub fn apply_graph_effects(
                 apply_mask_checkers(node, request, rows);
                 true
             }
-            "mask.dissolve" => {
+            "mask.dissolve" | "mask.noiseDither" => {
                 apply_mask_dissolve(node, request, rows);
                 true
             }
@@ -61,6 +81,10 @@ pub fn apply_graph_effects(
             }
             "mask.radial" => {
                 apply_mask_radial(node, request, rows);
+                true
+            }
+            "mask.materialize" => {
+                apply_mask_materialize(node, request, rows);
                 true
             }
             "mask.iris" => {
@@ -73,6 +97,10 @@ pub fn apply_graph_effects(
             }
             "sampler.ripple" => {
                 apply_sampler_ripple(node, request, rows);
+                true
+            }
+            "sampler.shredder" | "sampler.faultLine" | "sampler.radialTwist" => {
+                apply_distortion_sampler_primitive(node, request, rows);
                 true
             }
             _ if apply_styled_primitive(node, request, styled_grid) => false,

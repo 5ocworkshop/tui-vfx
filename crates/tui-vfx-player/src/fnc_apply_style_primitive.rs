@@ -19,7 +19,12 @@ pub(crate) fn apply_style_primitive(
 ) -> bool {
     match node.effect.as_str() {
         "style.colorFade" => apply_color_fade(node, request, styled_grid),
-        "style.baseStyleOverride" => apply_base_style_override(node, request, styled_grid),
+        "style.baseStyleOverride"
+        | "style.outerBand"
+        | "style.moduloRows"
+        | "style.moduloColumns"
+        | "style.nonEmpty"
+        | "style.inner" => apply_base_style_override(node, request, styled_grid),
         _ => return false,
     }
     true

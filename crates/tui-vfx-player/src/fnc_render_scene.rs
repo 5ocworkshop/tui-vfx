@@ -59,6 +59,9 @@ fn render_source(
     match source.source.as_str() {
         "source.card" => (render_text_source(source, request, "message"), vec![]),
         "source.text" => (render_text_source(source, request, "text"), vec![]),
+        "source.ansi" => (render_ansi_source(source, request), vec![]),
+        "source.image" => (render_image_source(source, request), vec![]),
+        "source.procedural" => (render_procedural_source(source, request), vec![]),
         source_id => (
             vec![],
             vec![PlayerError::new(
@@ -99,6 +102,92 @@ fn render_text_source(
         rows[index] = clip_or_pad(line, width);
     }
     rows
+}
+
+fn render_ansi_source(source: &SourceSpec, request: &PlayerSampleRequest) -> Vec<String> {
+    let ansi_text = resolve_text(
+        source.inputs.get(&SourceInputId::new("ansiText")),
+        &request.signals,
+        "",
+    );
+    render_text_like_source(source, request, &strip_sgr_sequences(&ansi_text))
+}
+
+fn render_image_source(source: &SourceSpec, request: &PlayerSampleRequest) -> Vec<String> {
+    let asset = resolve_text(
+        source.inputs.get(&SourceInputId::new("asset")),
+        &request.signals,
+        "missing",
+    );
+    let fallback = format!("[image fallback: {asset}]");
+    render_text_like_source(source, request, &fallback)
+}
+
+fn render_procedural_source(source: &SourceSpec, request: &PlayerSampleRequest) -> Vec<String> {
+    let generator = resolve_text(
+        source.inputs.get(&SourceInputId::new("generator")),
+        &request.signals,
+        "dots_spinner",
+    );
+    let glyphs = ["⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"];
+    let seed = resolve_integer(
+        source.inputs.get(&SourceInputId::new("seed")),
+        &request.signals,
+        0,
+    )
+    .max(0) as usize;
+    let frame = (((request.loop_t.unwrap_or(request.phase_t).clamp(0.0, 1.0) * glyphs.len() as f64)
+        .floor() as usize)
+        + seed)
+        % glyphs.len();
+    let text = if generator == "dots_spinner" {
+        format!("{} dots spinner", glyphs[frame])
+    } else {
+        format!("procedural fallback: {generator}")
+    };
+    render_text_like_source(source, request, &text)
+}
+
+fn render_text_like_source(
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+    text: &str,
+) -> Vec<String> {
+    let width = resolve_integer(
+        source.inputs.get(&SourceInputId::new("width")),
+        &request.signals,
+        fallback_width(text),
+    )
+    .max(1) as usize;
+    let height = resolve_integer(
+        source.inputs.get(&SourceInputId::new("height")),
+        &request.signals,
+        fallback_height(text),
+    )
+    .max(1) as usize;
+    let mut rows = vec![" ".repeat(width); height];
+    for (index, line) in text.lines().take(height).enumerate() {
+        rows[index] = clip_or_pad(line, width);
+    }
+    rows
+}
+
+fn strip_sgr_sequences(value: &str) -> String {
+    let mut output = String::new();
+    let mut chars = value.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '\u{1b}' && chars.peek() == Some(&'[') {
+            chars.next();
+            for next in chars.by_ref() {
+                if next.is_ascii_alphabetic() {
+                    break;
+                }
+            }
+        } else {
+            output.push(ch);
+        }
+    }
+    output
 }
 
 fn fallback_width(text: &str) -> i64 {
