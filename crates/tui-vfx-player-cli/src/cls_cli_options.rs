@@ -1,11 +1,11 @@
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K0: parse render-recipe sampling options.</WCTX>
-// <CLOG>0.1.0: INIT — add recursive, descriptor-pack, phase, size, and JSON options.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase K2.1: parse render, inventory, and migration-gap options.</WCTX>
+// <CLOG>0.2.0: MINOR — add migration-gap legacy and v3.1 root options.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
 
-/// Parsed options for `render-recipe`.
+/// Parsed options for player CLI commands.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CliOptions {
     /// Recursively collect JSON files from directory arguments.
@@ -28,6 +28,10 @@ pub struct CliOptions {
     pub width: Option<usize>,
     /// Optional frame height override.
     pub height: Option<usize>,
+    /// Legacy debug recipe root for migration-gap reports.
+    pub legacy_root: Option<String>,
+    /// Canonical v3.1 debug recipe root for migration-gap reports.
+    pub v31_root: Option<String>,
 }
 
 impl Default for CliOptions {
@@ -43,9 +47,11 @@ impl Default for CliOptions {
             loop_t: None,
             width: None,
             height: None,
+            legacy_root: None,
+            v31_root: None,
         }
     }
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -1,13 +1,13 @@
 // <FILE>crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse player CLI options</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K0: parse render-recipe flags without new dependencies.</WCTX>
-// <CLOG>0.1.0: INIT — add small hand-rolled parser to preserve dependency guardrail.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase K2.1: parse shared player CLI flags without new dependencies.</WCTX>
+// <CLOG>0.2.0: MINOR — add migration-gap root flags.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
 
 use crate::cls_cli_options::CliOptions;
 
-/// Parse render-recipe options after the command token.
+/// Parse player CLI options after the command token.
 pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOptions, String> {
     let mut options = CliOptions::default();
     let mut args = args.into_iter();
@@ -27,6 +27,8 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             "--loop-t" => options.loop_t = Some(parse_f64(&next_value(&mut args, "--loop-t")?)?),
             "--width" => options.width = Some(parse_usize(&next_value(&mut args, "--width")?)?),
             "--height" => options.height = Some(parse_usize(&next_value(&mut args, "--height")?)?),
+            "--legacy-root" => options.legacy_root = Some(next_value(&mut args, "--legacy-root")?),
+            "--v31-root" => options.v31_root = Some(next_value(&mut args, "--v31-root")?),
             "--" => continue,
             value if value.starts_with("--recipe=") => {
                 options.paths.push(value["--recipe=".len()..].to_string());
@@ -52,12 +54,15 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             value if value.starts_with("--height=") => {
                 options.height = Some(parse_usize(&value["--height=".len()..])?);
             }
+            value if value.starts_with("--legacy-root=") => {
+                options.legacy_root = Some(value["--legacy-root=".len()..].to_string());
+            }
+            value if value.starts_with("--v31-root=") => {
+                options.v31_root = Some(value["--v31-root=".len()..].to_string());
+            }
             value if value.starts_with('-') => return Err(format!("unknown option `{value}`")),
             _ => options.paths.push(arg),
         }
-    }
-    if options.paths.is_empty() {
-        return Err("missing recipe path".to_string());
     }
     Ok(options)
 }
@@ -90,4 +95,4 @@ fn parse_usize(value: &str) -> Result<usize, String> {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse player CLI options</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
