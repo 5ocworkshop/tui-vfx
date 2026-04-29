@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_migration_mapping_batch_report.rs</FILE> - <DESC>Migration mapping batch report DTOs</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Migration mapping reports: expose conservative per-legacy-recipe records.</WCTX>
-// <CLOG>0.2.0: MINOR — include full supported status-count vocabulary in batch summary.
-// 0.1.0: INIT — add report, summary, record, and queue DTOs.</CLOG>
+// <CLOG>0.3.0: MINOR — add corpus-wide legacy evidence fields without changing report schema.</CLOG>
 
 use crate::DescriptorPackReport;
 
@@ -102,6 +101,18 @@ pub struct PlayerMigrationMappingRecord {
     pub unsupported_input_fields: Vec<String>,
     /// Human-readable details and deferrals.
     pub notes: Vec<String>,
+    /// Legacy signal or signal-like keys observed in the recipe.
+    pub legacy_signals: Vec<String>,
+    /// Legacy binding keys observed in the recipe.
+    pub legacy_bindings: Vec<String>,
+    /// Legacy source-kind candidates observed in the recipe.
+    pub legacy_source_kinds: Vec<String>,
+    /// Effect family kinds observed in the recipe.
+    pub legacy_effect_families: Vec<String>,
+    /// Candidate blockers that keep this record out of candidateReady.
+    pub candidate_blockers: Vec<String>,
+    /// Conservative confidence label for the classification.
+    pub confidence: String,
 }
 
 /// Queued migration action derived from one or more records.
@@ -117,4 +128,4 @@ pub struct PlayerMigrationMappingQueueItem {
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_player_migration_mapping_batch_report.rs</FILE> - <DESC>Migration mapping batch report DTOs</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

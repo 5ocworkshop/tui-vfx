@@ -1,10 +1,13 @@
 // <FILE>crates/tui-vfx-player/src/fnc_build_migration_mapping_batch_report.rs</FILE> - <DESC>Build migration mapping batch reports</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>K2.9 migration mapping: classify legacy recipe records conservatively.</WCTX>
-// <CLOG>0.2.0: REFACTOR — delegate path collection, record construction, and summary aggregation.
-// 0.1.0: INIT — add read-only migration mapping report builder.</CLOG>
+// <VERS>VERSION: 0.3.1</VERS>
+// <WCTX>K2.10 corpus mapping: classify legacy recipe records conservatively.</WCTX>
+// <CLOG>0.3.1: PATCH — keep collection imports explicit for catalog field summaries.
+// 0.3.0: MINOR — pass descriptor field evidence into corpus-wide mapping records.</CLOG>
 
-use std::{collections::BTreeSet, path::Path};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    path::Path,
+};
 
 use tui_vfx_contract::DescriptorCatalog;
 
@@ -30,6 +33,7 @@ pub fn build_migration_mapping_batch_report(
     let paths = collect_migration_mapping_batch_paths(legacy_root, family, recursive)?;
     let descriptor_ids = catalog_effect_ids(catalog);
     let source_ids = catalog_source_ids(catalog);
+    let descriptor_input_fields = catalog_effect_input_fields(catalog);
     let mut records = paths
         .iter()
         .map(|path| {
@@ -39,6 +43,7 @@ pub fn build_migration_mapping_batch_report(
                 path,
                 &descriptor_ids,
                 &source_ids,
+                &descriptor_input_fields,
             )
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -78,5 +83,23 @@ fn catalog_source_ids(catalog: &DescriptorCatalog) -> BTreeSet<String> {
         .collect()
 }
 
+fn catalog_effect_input_fields(catalog: &DescriptorCatalog) -> BTreeMap<String, BTreeSet<String>> {
+    catalog
+        .packs
+        .values()
+        .flat_map(|pack| &pack.effects)
+        .map(|(id, descriptor)| {
+            (
+                id.as_str().to_string(),
+                descriptor
+                    .inputs
+                    .keys()
+                    .map(|field| field.as_str().to_string())
+                    .collect(),
+            )
+        })
+        .collect()
+}
+
 // <FILE>crates/tui-vfx-player/src/fnc_build_migration_mapping_batch_report.rs</FILE> - <DESC>Build migration mapping batch reports</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>

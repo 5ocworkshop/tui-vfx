@@ -1,14 +1,16 @@
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
+// <VERS>VERSION: 0.9.0</VERS>
 // <WCTX>Player crate de-slop: keep export metadata compact and current.</WCTX>
-// <CLOG>0.8.0: MINOR — expose K2.9 migration mapping report and simple mask adapters.
-// 0.7.1: PATCH — collapse historical export metadata into latest-change context.</CLOG>
+// <CLOG>0.9.0: MINOR — add corpus-wide migration mapping evidence helpers.</CLOG>
 
 //! Contract-native skeleton player for canonical v3.1 recipes.
 //!
 //! The skeleton player deliberately renders a tiny supported primitive subset and reports every
 //! missing adapter explicitly. It does not depend on the legacy recipes runtime.
 
+mod cls_legacy_migration_mapping_evidence;
+mod cls_legacy_migration_mapping_evidence_collector;
+mod cls_migration_mapping_record_classification;
 pub mod cls_player_error;
 pub mod cls_player_fixture_qc_report;
 pub mod cls_player_frame;
@@ -60,33 +62,42 @@ mod fnc_build_fixture_qc_reports;
 mod fnc_build_fixture_qc_summary;
 pub mod fnc_build_frame_diff_report;
 pub mod fnc_build_frame_timeline_report;
+mod fnc_build_legacy_migration_mapping_summary;
 mod fnc_build_migration_gap_family;
 pub mod fnc_build_migration_gap_report;
 pub mod fnc_build_migration_mapping_batch_report;
 mod fnc_build_migration_mapping_record;
+mod fnc_build_migration_mapping_record_classification;
+mod fnc_build_migration_mapping_record_paths;
 pub mod fnc_build_player_frame;
 pub mod fnc_build_primitive_adapter_gap_report;
 pub mod fnc_build_primitive_field_coverage_report;
 mod fnc_build_primitive_field_instance;
 mod fnc_build_visual_frame;
 mod fnc_classify_debug_recipe_family;
+mod fnc_classify_migration_mapping_effect_blocker;
+mod fnc_classify_migration_mapping_effect_record;
+mod fnc_classify_migration_mapping_record;
+mod fnc_classify_migration_mapping_record_family;
 mod fnc_classify_primitive_adapter_gap;
 mod fnc_classify_primitive_field_coverage;
 mod fnc_collect_debug_recipe_family_inventory;
 mod fnc_collect_descriptor_inventory_ids;
 mod fnc_collect_handled_primitive_inputs;
-mod fnc_collect_legacy_mask_payloads;
+mod fnc_collect_legacy_migration_mapping_evidence;
 mod fnc_collect_migration_gap_family_names;
 mod fnc_collect_migration_mapping_batch_paths;
 pub mod fnc_collect_recipe_paths;
 mod fnc_collect_styled_grid_scope_cells;
 mod fnc_collect_styled_visual_cells;
 mod fnc_collect_unsupported_effect_ids;
+mod fnc_collect_unsupported_migration_mapping_fields;
 mod fnc_diff_visual_frame_cells;
 mod fnc_extract_recipe_inventory_ids;
 mod fnc_fixture_qc_smoke_passed;
 pub mod fnc_inventory_recipe_file;
 pub mod fnc_inventory_recipe_paths;
+mod fnc_legacy_migration_mapping_names;
 pub mod fnc_load_descriptor_catalog;
 mod fnc_load_primitive_field_descriptor_coverage;
 mod fnc_player_inventory_adapter_status;
@@ -107,6 +118,9 @@ mod fnc_summarize_primitive_adapter_gaps;
 mod fnc_summarize_primitive_field_coverage;
 mod fnc_summarize_visual_frames;
 
+pub(crate) use cls_legacy_migration_mapping_evidence::LegacyMigrationMappingEvidence;
+pub(crate) use cls_legacy_migration_mapping_evidence_collector::LegacyMigrationMappingEvidenceCollector;
+pub(crate) use cls_migration_mapping_record_classification::MigrationMappingRecordClassification;
 pub use cls_player_error::PlayerError;
 pub use cls_player_fixture_qc_report::{
     PlayerFixtureQcRecipe, PlayerFixtureQcReport, PlayerFixtureQcReports, PlayerFixtureQcSummary,
@@ -168,4 +182,4 @@ pub use fnc_render_visual_frame_paths::render_visual_frame_paths;
 pub use fnc_resolve_value_source::resolve_value_source;
 
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>

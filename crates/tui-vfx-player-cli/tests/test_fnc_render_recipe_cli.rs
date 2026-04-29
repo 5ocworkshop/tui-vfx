@@ -1,8 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.10.0</VERS>
+// <VERS>VERSION: 0.11.1</VERS>
 // <WCTX>Player CLI de-slop: keep regression names and metadata phase-neutral.</WCTX>
-// <CLOG>0.10.0: MINOR — lock migration-mapping-batch report and simple mask expansion gates.
-// 0.9.1: PATCH — rename transient packet-specific regression wording.</CLOG>
+// <CLOG>0.11.1: PATCH — replace a migration-mapping unwrap with contextual failure text.
+// 0.11.0: MINOR — lock corpus-wide migration mapping, backlog docs, and read-only legacy guarantees.</CLOG>
 
 use std::{
     fs,
@@ -261,7 +261,7 @@ fn test_fnc_cli_reports_migration_mapping_batch_masks_json() {
     assert!(
         blinds["missingDescriptorIds"]
             .as_array()
-            .unwrap()
+            .expect("missing descriptor ids")
             .is_empty()
     );
     assert_eq!(blinds["requiredInputFields"][0], "count");
@@ -295,6 +295,114 @@ fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
             .iter()
             .any(|item| item["legacyFamily"] == "masks")
     );
+
+    let families = report["families"].as_array().expect("families");
+    for family in ["complex", "content", "filters", "masks", "samplers"] {
+        assert!(
+            families.iter().any(|entry| entry == family),
+            "missing family {family}"
+        );
+    }
+    assert_eq!(report["summary"]["records"], 603);
+    assert_eq!(report["summary"]["candidateReady"], 0);
+    assert_eq!(report["summary"]["schemaDecisionNeeded"], 72);
+}
+
+#[test]
+fn test_fnc_cli_reports_migration_mapping_batch_filter_records_json() {
+    let report = migration_mapping_batch_report(vec![
+        str_arg("migration-mapping-batch"),
+        str_arg("--family"),
+        str_arg("filters"),
+    ]);
+
+    assert_eq!(report["families"][0], "filters");
+    let dim = find_mapping_record(&report, "filters/filter_dim.json");
+    assert_eq!(dim["legacyFamily"], "filters");
+    assert_eq!(dim["requiredDescriptorIds"][0], "filter.dim");
+    assert_eq!(dim["status"], "canonicalExists");
+    assert_eq!(dim["recommendation"], "skipAsDuplicateVariant");
+
+    let unknown = find_mapping_record(&report, "filters/filter_crt.json");
+    assert_ne!(unknown["status"], "candidateReady");
+    assert_eq!(unknown["status"], "descriptorDecisionNeeded");
+    assert_eq!(unknown["recommendation"], "deferForDescriptorDecision");
+
+    let value_source_record =
+        find_mapping_record(&report, "filters/filter_dim_sample_surface_radius.json");
+    assert_ne!(value_source_record["status"], "candidateReady");
+    assert_eq!(value_source_record["status"], "schemaDecisionNeeded");
+    assert_eq!(
+        value_source_record["recommendation"],
+        "deferForSchemaDecision"
+    );
+    assert!(
+        value_source_record["unsupportedInputFields"]
+            .as_array()
+            .expect("unsupported input fields")
+            .iter()
+            .any(|field| field == "factor")
+    );
+    assert!(
+        value_source_record["candidateBlockers"]
+            .as_array()
+            .expect("candidate blockers")
+            .iter()
+            .any(|blocker| blocker == "valueSourceOrSignalDecision")
+    );
+}
+
+#[test]
+fn test_fnc_cli_reports_migration_mapping_batch_content_source_decisions_json() {
+    let report = migration_mapping_batch_report(vec![
+        str_arg("migration-mapping-batch"),
+        str_arg("--family"),
+        str_arg("content"),
+    ]);
+
+    let marquee = find_mapping_record(&report, "content/content_marquee.json");
+    assert_eq!(marquee["legacyFamily"], "content");
+    assert_eq!(marquee["status"], "sourceDecisionNeeded");
+    assert_eq!(marquee["recommendation"], "addSourceDescriptor");
+    assert!(
+        marquee["requiredSourceIds"]
+            .as_array()
+            .expect("required sources")
+            .iter()
+            .any(|source| source == "source.marqueeText")
+    );
+
+    let deprecated = find_mapping_record(&report, "content/_DEPRECATED_content_marquee.json");
+    assert_ne!(deprecated["status"], "candidateReady");
+    assert_eq!(deprecated["status"], "ownerAuditNeeded");
+}
+
+#[test]
+fn test_fnc_cli_reports_migration_mapping_batch_keeps_legacy_root_read_only() {
+    let before = legacy_recipe_file_snapshot();
+
+    let report = migration_mapping_batch_report(vec![
+        str_arg("migration-mapping-batch"),
+        str_arg("--recursive"),
+    ]);
+
+    assert_eq!(report["summary"]["records"], 603);
+    assert_eq!(before, legacy_recipe_file_snapshot());
+}
+
+#[test]
+fn test_fnc_cli_has_corpus_mapping_backlog_docs_checked_in() {
+    for relative in [
+        "docs/new_kernel/K2_10_DEBUG_RECIPE_CORPUS_MAPPING_REPORT.md",
+        "docs/new_kernel/K2_10_MIGRATION_BACKLOG_BOARD.md",
+        "docs/new_kernel/K2_10_RENDER_BACKEND_BOUNDARY_NOTE.md",
+        "docs/new_kernel/PHASE_K2_10_CORPUS_MAPPING_STATUS_MEMO_TO_ARCHITECT.md",
+    ] {
+        assert!(
+            workspace_root().join(relative).is_file(),
+            "missing checked-in doc {relative}"
+        );
+    }
 }
 
 #[test]
@@ -877,6 +985,40 @@ fn str_arg(value: &str) -> String {
     value.to_owned()
 }
 
+fn legacy_recipe_file_snapshot() -> Vec<(String, u64, std::time::SystemTime)> {
+    let root = recipe_repo_root().join("recipes/debug_recipes");
+    let mut snapshot = Vec::new();
+    collect_legacy_recipe_file_snapshot(&root, &root, &mut snapshot);
+    snapshot.sort_by(|left, right| left.0.cmp(&right.0));
+    snapshot
+}
+
+fn collect_legacy_recipe_file_snapshot(
+    root: &std::path::Path,
+    current: &std::path::Path,
+    snapshot: &mut Vec<(String, u64, std::time::SystemTime)>,
+) {
+    for entry in fs::read_dir(current).expect("read legacy recipe dir") {
+        let path = entry.expect("read legacy recipe entry").path();
+        if path.is_dir() {
+            collect_legacy_recipe_file_snapshot(root, &path, snapshot);
+        } else if path
+            .extension()
+            .is_some_and(|extension| extension == "json")
+        {
+            let metadata = fs::metadata(&path).expect("legacy recipe metadata");
+            snapshot.push((
+                path.strip_prefix(root)
+                    .expect("legacy relative path")
+                    .to_string_lossy()
+                    .replace(std::path::MAIN_SEPARATOR, "/"),
+                metadata.len(),
+                metadata.modified().expect("legacy recipe mtime"),
+            ));
+        }
+    }
+}
+
 fn unsupported_effect_recipe() -> serde_json::Value {
     let text = fs::read_to_string(debug_recipe_root().join("baseline.json"))
         .expect("read baseline fixture");
@@ -899,4 +1041,4 @@ fn unsupported_effect_recipe() -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.10.0</VERS>
+// <VERS>END OF VERSION: 0.11.1</VERS>

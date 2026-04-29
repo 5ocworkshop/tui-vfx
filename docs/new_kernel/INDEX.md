@@ -1,7 +1,9 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.25.0</VERS> -->
-<!-- <WCTX>K2 player evidence indexing: add K2.5 styled primitive and tooling PRD artifacts.</WCTX> -->
-<!-- <CLOG>0.25.0: MINOR — add K2.5 architect response, evidence, tooling PRD, and status memo.
+<!-- <VERS>VERSION: 0.27.0</VERS> -->
+<!-- <WCTX>K2.10 closeout indexing: add architect acceptance and K2.11 recommendation.</WCTX> -->
+<!-- <CLOG>0.27.0: MINOR — add K2.10 architect response and K2.11 schema-readiness recommendation.
+0.26.0: MINOR — add K2.9 architect response and K2.10 corpus mapping/backlog artifacts.
+0.25.0: MINOR — add K2.5 architect response, evidence, tooling PRD, and status memo.
 0.24.0: MINOR — add K2.0-K2.4 docs, review/de-slop artifacts, player reports, and schema directory details.
 0.23.0: MINOR — add Phase K0 architect response plus K1 visual player UI artifacts.
 0.22.0: MINOR — add Phase J2 architect response plus K0 player artifacts.
@@ -77,6 +79,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_K2_2.md`](ARCH-RESP-TO-PHASE_K2_2.md) — Phase K2.2 response and K2.3 primitive adapter burn-down recommendation.
 - [`ARCH-RESP-TO-PHASE_K2_3.md`](ARCH-RESP-TO-PHASE_K2_3.md) — Phase K2.3 response and K2.4 styled-cell visual substrate recommendation.
 - [`ARCH-RESP-TO-PHASE_K2_4.md`](ARCH-RESP-TO-PHASE_K2_4.md) — Phase K2.4 response and K2.5 styled primitive/tooling PRD packet.
+- [`ARCH-RESP-TO-PHASE_K2_9.md`](ARCH-RESP-TO-PHASE_K2_9.md) — Phase K2.9 response and K2.10 corpus-wide migration mapping/backlog packet.
+- [`ARCH-RESP-TO-PHASE_K2_10.md`](ARCH-RESP-TO-PHASE_K2_10.md) — Phase K2.10 acceptance and K2.11 schema-readiness ledger/source descriptor pilot packet.
 
 ## Status and memo artifacts
 
@@ -134,6 +138,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_3_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_3_REVIEW_AND_DESLOP_REPORT.md) — third-party review and AI de-slop report for K2.3.
 - [`PHASE_K2_4_STYLED_CELL_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_4_STYLED_CELL_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.4 styled-cell substrate memo, verification, and de-slop summary.
 - [`PHASE_K2_5_STYLED_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_5_STYLED_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.5 styled primitive adapter burn-down memo and tooling PRD summary.
+- [`PHASE_K2_10_CORPUS_MAPPING_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_10_CORPUS_MAPPING_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.10 corpus mapping memo, verification, review, and next-packet recommendation.
 
 ## Supporting artifacts
 
@@ -153,6 +158,9 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_4_STYLED_CELL_SUBSTRATE_EVIDENCE.md`](K2_4_STYLED_CELL_SUBSTRATE_EVIDENCE.md) — K2.4 styled-cell substrate, `styleKnown`, and controlled styled-grid proof reference.
 - [`K2_5_STYLED_PRIMITIVE_ADAPTER_EVIDENCE.md`](K2_5_STYLED_PRIMITIVE_ADAPTER_EVIDENCE.md) — K2.5 styled primitive adapter evidence, visual-frame provenance, and report summaries.
 - [`K2_PLAYER_TOOLING_VALIDATION_PRD.md`](K2_PLAYER_TOOLING_VALIDATION_PRD.md) — K2 tooling/validation PRD that classifies legacy tooling capabilities as oracle inspiration only.
+- [`K2_10_DEBUG_RECIPE_CORPUS_MAPPING_REPORT.md`](K2_10_DEBUG_RECIPE_CORPUS_MAPPING_REPORT.md) — K2.10 corpus-wide migration mapping report with per-family status counts.
+- [`K2_10_MIGRATION_BACKLOG_BOARD.md`](K2_10_MIGRATION_BACKLOG_BOARD.md) — K2.10 backlog board grouped by descriptor, source, schema, GUI, backend, owner-audit, and duplicate-variant buckets.
+- [`K2_10_RENDER_BACKEND_BOUNDARY_NOTE.md`](K2_10_RENDER_BACKEND_BOUNDARY_NOTE.md) — K2.10 note preserving the future render-backend adapter boundary.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts
@@ -162,7 +170,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`../../crates/tui-vfx-player-cli/`](../../crates/tui-vfx-player-cli/) — player CLI emitting `render-recipe` reports (`v3.1.player.frame.1`, `v3.1.player.run.1`), `render-frame` visual-frame reports (`v3.1.player.visualFrameReport.1`), inventory reports, migration-gap reports, and primitive-adapter-gap reports.
 - [`../../crates/tui-vfx-player-ui/`](../../crates/tui-vfx-player-ui/) — K1 ratatui/crossterm visual terminal shell with local fast-fs navigation layered on the K0 player/session APIs.
 - [`../../descriptors/v3.1/packs/primitive.json`](../../descriptors/v3.1/packs/primitive.json) — standard v3.1 primitive descriptor pack created by Phase J2.
-- `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/` — canonical v3.1 migrated debug recipe fixtures produced by Phase J0 and extended by Phase J2.
+- `../../../tui-vfx-recipes/recipes/v3.1/debug_recipes/` — canonical v3.1 migrated debug recipe fixtures produced by Phase J0 and extended by Phase J2.
 
 ## Schema artifacts
 
@@ -177,4 +185,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.25.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.26.0</VERS> -->
