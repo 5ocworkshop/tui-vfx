@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract-cli/tests/test_fnc_validate_recipe_descriptor_packs.rs</FILE> - <DESC>Validate descriptor-pack recipe CLI behavior</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase J2: prove external descriptor pack resolution and diagnostics.</WCTX>
-// <CLOG>0.1.0: INIT — cover pack file/dir loading, missing pack, unknown effect, and duplicate descriptor diagnostics.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Descriptor-pack validation: prove external pack resolution and diagnostics.</WCTX>
+// <CLOG>0.2.0: MINOR — update canonical fixture count after simple mask additions.
+// 0.1.0: INIT — cover pack file/dir loading, missing pack, unknown effect, and duplicate descriptor diagnostics.</CLOG>
 
 mod support;
 
@@ -26,8 +27,8 @@ fn validates_canonical_recipe_directory_with_descriptor_pack() {
 
     assert_eq!(report["schemaVersion"], "v3.1.validator.report.1");
     assert_eq!(report["descriptorPacks"][0]["id"], "v3.1.primitive");
-    assert_eq!(report["summary"]["total"], 22);
-    assert_eq!(report["summary"]["valid"], 22);
+    assert_eq!(report["summary"]["total"], 26);
+    assert_eq!(report["summary"]["valid"], 26);
     assert_eq!(report["summary"]["invalid"], 0);
 }
 
@@ -45,8 +46,8 @@ fn validates_canonical_recipe_directory_with_descriptor_pack_dir() {
     ]);
 
     assert_eq!(report["descriptorPacks"][0]["id"], "v3.1.primitive");
-    assert_eq!(report["summary"]["total"], 22);
-    assert_eq!(report["summary"]["valid"], 22);
+    assert_eq!(report["summary"]["total"], 26);
+    assert_eq!(report["summary"]["valid"], 26);
 }
 
 #[test]
@@ -123,4 +124,4 @@ fn write_pack_with_duplicate_effect(path: &std::path::PathBuf) {
 }
 
 // <FILE>crates/tui-vfx-contract-cli/tests/test_fnc_validate_recipe_descriptor_packs.rs</FILE> - <DESC>Validate descriptor-pack recipe CLI behavior</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

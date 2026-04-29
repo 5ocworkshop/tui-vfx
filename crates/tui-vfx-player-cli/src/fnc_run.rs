@@ -1,12 +1,14 @@
 // <FILE>crates/tui-vfx-player-cli/src/fnc_run.rs</FILE> - <DESC>Run player CLI commands</DESC>
-// <VERS>VERSION: 0.8.1</VERS>
+// <VERS>VERSION: 0.9.0</VERS>
 // <WCTX>Player CLI de-slop: keep dispatch metadata compact and current.</WCTX>
-// <CLOG>0.8.1: PATCH — collapse historical dispatch metadata into latest-change context.</CLOG>
+// <CLOG>0.9.0: MINOR — dispatch migration-mapping-batch reports.
+// 0.8.1: PATCH — collapse historical dispatch metadata into latest-change context.</CLOG>
 
 use crate::{
     cls_cli_options::CliOptions, fnc_parse_cli_options::parse_cli_options,
     fnc_print_usage::print_usage, fnc_run_fixture_qc::run_fixture_qc,
     fnc_run_inventory_recipes::run_inventory_recipes, fnc_run_migration_gap::run_migration_gap,
+    fnc_run_migration_mapping_batch::run_migration_mapping_batch,
     fnc_run_primitive_adapter_gap::run_primitive_adapter_gap,
     fnc_run_primitive_field_coverage::run_primitive_field_coverage,
     fnc_run_render_frame::run_render_frame, fnc_run_render_frame_diff::run_render_frame_diff,
@@ -39,6 +41,7 @@ fn is_known_command(command: &str) -> bool {
             | "render-frame"
             | "inventory-recipes"
             | "migration-gap"
+            | "migration-mapping-batch"
             | "primitive-adapter-gap"
             | "primitive-field-coverage"
             | "fixture-qc"
@@ -53,6 +56,7 @@ fn dispatch_command(command: &str, options: CliOptions) -> Result<(), String> {
         "render-frame" => run_render_frame(options),
         "inventory-recipes" => run_inventory_recipes(options),
         "migration-gap" => run_migration_gap(options),
+        "migration-mapping-batch" => run_migration_mapping_batch(options),
         "primitive-adapter-gap" => run_primitive_adapter_gap(options),
         "primitive-field-coverage" => run_primitive_field_coverage(options),
         "fixture-qc" => run_fixture_qc(options),
@@ -69,4 +73,4 @@ fn usage_error(error: String) -> i32 {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/fnc_run.rs</FILE> - <DESC>Run player CLI commands</DESC>
-// <VERS>END OF VERSION: 0.8.1</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>

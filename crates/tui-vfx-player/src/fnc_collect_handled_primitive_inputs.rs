@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Player evidence tooling: name current adapter-handled inputs for primitive field coverage.</WCTX>
-// <CLOG>0.1.0: INIT — add current handled-input lookup for represented primitives.</CLOG>
+// <CLOG>0.2.0: MINOR — add handled fields for K2.9 simple masks.
+// 0.1.0: INIT — add current handled-input lookup for represented primitives.</CLOG>
 
 use std::collections::BTreeSet;
 
@@ -20,6 +21,10 @@ pub(crate) fn collect_handled_primitive_inputs(
         "mask.wipe" => fields(["direction", "softEdge"]),
         "mask.checkers" => fields(["cellSize"]),
         "mask.dissolve" => fields(["chunkSize", "seed"]),
+        "mask.blinds" => fields(["orientation", "count"]),
+        "mask.radial" => fields(["origin", "softEdge"]),
+        "mask.iris" => fields(["shape", "softEdge"]),
+        "mask.diamond" => fields(["softEdge"]),
         "sampler.sineWave" => fields(["axis", "amplitude", "frequency", "speed", "phaseOffset"]),
         "sampler.ripple" => fields(["amplitude", "center", "speed", "wavelength"]),
         "style.colorFade" => fields(["colorSpace", "target"]),
@@ -55,4 +60,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

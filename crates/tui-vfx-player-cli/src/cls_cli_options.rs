@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>VERSION: 0.3.1</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Player CLI de-slop: keep option metadata compact and current.</WCTX>
-// <CLOG>0.3.1: PATCH — collapse historical option metadata into latest-change context.</CLOG>
+// <CLOG>0.4.0: MINOR — add migration mapping family filter.
+// 0.3.1: PATCH — collapse historical option metadata into latest-change context.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
 
@@ -32,6 +33,8 @@ pub struct CliOptions {
     pub legacy_root: Option<String>,
     /// Canonical v3.1 debug recipe root for migration-gap reports.
     pub v31_root: Option<String>,
+    /// Optional legacy family filter for migration mapping reports.
+    pub family: Option<String>,
     /// Number of timeline frames to sample.
     pub frames: usize,
     /// Starting sample for frame-diff reports.
@@ -55,6 +58,7 @@ impl Default for CliOptions {
             height: None,
             legacy_root: None,
             v31_root: None,
+            family: None,
             frames: 1,
             from_sample_t: 0.0,
             to_sample_t: 1.0,
@@ -63,4 +67,4 @@ impl Default for CliOptions {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>END OF VERSION: 0.3.1</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

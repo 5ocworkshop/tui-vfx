@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>VERSION: 0.7.1</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>Player crate de-slop: keep export metadata compact and current.</WCTX>
-// <CLOG>0.7.1: PATCH — collapse historical export metadata into latest-change context.</CLOG>
+// <CLOG>0.8.0: MINOR — expose K2.9 migration mapping report and simple mask adapters.
+// 0.7.1: PATCH — collapse historical export metadata into latest-change context.</CLOG>
 
 //! Contract-native skeleton player for canonical v3.1 recipes.
 //!
@@ -20,6 +21,7 @@ pub mod cls_player_inventory_report;
 pub mod cls_player_inventory_source;
 pub mod cls_player_inventory_summary;
 pub mod cls_player_migration_gap_report;
+pub mod cls_player_migration_mapping_batch_report;
 pub mod cls_player_primitive_adapter_gap_entry;
 pub mod cls_player_primitive_adapter_gap_report;
 pub mod cls_player_primitive_adapter_gap_summary;
@@ -48,6 +50,7 @@ mod fnc_apply_mask_wipe;
 mod fnc_apply_sampler_ripple;
 mod fnc_apply_sampler_sine_wave;
 mod fnc_apply_shader_primitive;
+mod fnc_apply_simple_mask_primitives;
 mod fnc_apply_style_primitive;
 mod fnc_apply_styled_primitive;
 mod fnc_build_fixture_qc_messages;
@@ -59,6 +62,8 @@ pub mod fnc_build_frame_diff_report;
 pub mod fnc_build_frame_timeline_report;
 mod fnc_build_migration_gap_family;
 pub mod fnc_build_migration_gap_report;
+pub mod fnc_build_migration_mapping_batch_report;
+mod fnc_build_migration_mapping_record;
 pub mod fnc_build_player_frame;
 pub mod fnc_build_primitive_adapter_gap_report;
 pub mod fnc_build_primitive_field_coverage_report;
@@ -70,7 +75,9 @@ mod fnc_classify_primitive_field_coverage;
 mod fnc_collect_debug_recipe_family_inventory;
 mod fnc_collect_descriptor_inventory_ids;
 mod fnc_collect_handled_primitive_inputs;
+mod fnc_collect_legacy_mask_payloads;
 mod fnc_collect_migration_gap_family_names;
+mod fnc_collect_migration_mapping_batch_paths;
 pub mod fnc_collect_recipe_paths;
 mod fnc_collect_styled_grid_scope_cells;
 mod fnc_collect_styled_visual_cells;
@@ -94,6 +101,7 @@ mod fnc_resolve_effect_input;
 pub mod fnc_resolve_value_source;
 mod fnc_scan_primitive_field_recipe;
 mod fnc_summarize_migration_gap_families;
+mod fnc_summarize_migration_mapping_batch;
 mod fnc_summarize_player_inventory;
 mod fnc_summarize_primitive_adapter_gaps;
 mod fnc_summarize_primitive_field_coverage;
@@ -115,6 +123,10 @@ pub use cls_player_inventory_summary::PlayerInventorySummary;
 pub use cls_player_migration_gap_report::{
     PlayerMigrationGapFamily, PlayerMigrationGapReport, PlayerMigrationGapSummary,
     PlayerMigrationQueueItem,
+};
+pub use cls_player_migration_mapping_batch_report::{
+    PlayerMigrationMappingBatchReport, PlayerMigrationMappingBatchSummary,
+    PlayerMigrationMappingQueueItem, PlayerMigrationMappingRecord,
 };
 pub use cls_player_primitive_adapter_gap_entry::PlayerPrimitiveAdapterGapEntry;
 pub use cls_player_primitive_adapter_gap_report::PlayerPrimitiveAdapterGapReport;
@@ -140,6 +152,7 @@ pub use fnc_build_fixture_qc_report::build_fixture_qc_report;
 pub use fnc_build_frame_diff_report::build_frame_diff_report;
 pub use fnc_build_frame_timeline_report::build_frame_timeline_report;
 pub use fnc_build_migration_gap_report::build_migration_gap_report;
+pub use fnc_build_migration_mapping_batch_report::build_migration_mapping_batch_report;
 pub use fnc_build_primitive_adapter_gap_report::build_primitive_adapter_gap_report;
 pub use fnc_build_primitive_field_coverage_report::build_primitive_field_coverage_report;
 pub use fnc_build_visual_frame::build_visual_frame_from_styled_grid;
@@ -155,4 +168,4 @@ pub use fnc_render_visual_frame_paths::render_visual_frame_paths;
 pub use fnc_resolve_value_source::resolve_value_source;
 
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>END OF VERSION: 0.7.1</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

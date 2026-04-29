@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/src/main.rs</FILE> - <DESC>Contract-native player CLI entrypoint</DESC>
-// <VERS>VERSION: 0.5.1</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Player CLI de-slop: keep entrypoint metadata compact and current.</WCTX>
-// <CLOG>0.5.1: PATCH — collapse historical entrypoint metadata into latest-change context.</CLOG>
+// <CLOG>0.6.0: MINOR — register migration mapping command runner module.
+// 0.5.1: PATCH — collapse historical entrypoint metadata into latest-change context.</CLOG>
 
 mod cls_cli_options;
 mod fnc_cli_sample_request;
@@ -14,6 +15,7 @@ mod fnc_run;
 mod fnc_run_fixture_qc;
 mod fnc_run_inventory_recipes;
 mod fnc_run_migration_gap;
+mod fnc_run_migration_mapping_batch;
 mod fnc_run_primitive_adapter_gap;
 mod fnc_run_primitive_field_coverage;
 mod fnc_run_render_frame;
@@ -27,4 +29,4 @@ fn main() {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/main.rs</FILE> - <DESC>Contract-native player CLI entrypoint</DESC>
-// <VERS>END OF VERSION: 0.5.1</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

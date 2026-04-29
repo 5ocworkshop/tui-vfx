@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.11.0</VERS> -->
-<!-- <WCTX>Styled-cell substrate work: document visual-frame styled evidence semantics.</WCTX> -->
-<!-- <CLOG>0.11.0: MINOR — add K2.6 GUI, field coverage, migration loop, timeline, and diff evidence terms.</CLOG> -->
+<!-- <VERS>VERSION: 0.12.0</VERS> -->
+<!-- <WCTX>K2.9 migration mapping: document batch report, record, and descriptor-decision terms.</WCTX> -->
+<!-- <CLOG>0.12.0: MINOR — add migration mapping batch/report and descriptor decision vocabulary.
+0.11.0: MINOR — add K2.6 GUI, field coverage, migration loop, timeline, and diff evidence terms.</CLOG> -->
 
 # v3.1 Vocabulary
 
@@ -170,6 +171,30 @@ Definition:
 
 Policy:
 : The migration loop feeds schema, descriptor, and player hardening. It must not mutate legacy source recipes, add strict-schema aliases for old JSON, or treat old runtime behavior as canonical.
+
+### MigrationMappingBatchReport
+
+Definition:
+: A stable player JSON report with schema `v3.1.player.migrationMappingBatch.1`. It classifies a legacy recipe family, or the recursive legacy root, into per-recipe migration records and a recommendation queue.
+
+Policy:
+: The report is read-only. It may inspect legacy source recipes and canonical v3.1 fixtures, but it must not generate or modify recipes. Conservative classifications are preferred over guessed descriptors or schema aliases.
+
+### MigrationMappingRecord
+
+Definition:
+: One `MigrationMappingBatchReport.records[]` entry that maps a legacy recipe path to a candidate canonical v3.1 path, required descriptor/source/input coverage, status, recommendation, and evidence notes.
+
+Policy:
+: Records describe migration readiness only. Values such as `canonicalExists`, `descriptorDecisionNeeded`, `duplicateOrVariant`, and `ownerAuditNeeded` are process classifications, not runtime behavior.
+
+### DescriptorDecisionReport
+
+Definition:
+: A human-readable decision artifact that records why a descriptor, descriptor field, or source descriptor was accepted, deferred, or rejected before canonical fixtures and adapters rely on it.
+
+Policy:
+: Descriptor decisions must be grounded in canonical v3.1 semantics and evidence. Do not add broad fields such as authored progress, radius, feather, or invert merely to approximate old recipe behavior without a schema/adapter decision.
 
 ### FrameTimelineReport
 
@@ -1438,4 +1463,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.11.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->

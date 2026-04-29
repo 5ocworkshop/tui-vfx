@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.9.1</VERS>
+// <VERS>VERSION: 0.10.0</VERS>
 // <WCTX>Player CLI de-slop: keep regression names and metadata phase-neutral.</WCTX>
-// <CLOG>0.9.1: PATCH — rename transient packet-specific regression wording.</CLOG>
+// <CLOG>0.10.0: MINOR — lock migration-mapping-batch report and simple mask expansion gates.
+// 0.9.1: PATCH — rename transient packet-specific regression wording.</CLOG>
 
 use std::{
     fs,
@@ -43,8 +44,8 @@ fn test_fnc_cli_renders_recursive_smoke_report_json() {
     );
 
     assert_eq!(report["schemaVersion"], "v3.1.player.run.1");
-    assert_eq!(report["summary"]["total"], 22);
-    assert_eq!(report["summary"]["rendered"], 22);
+    assert_eq!(report["summary"]["total"], 26);
+    assert_eq!(report["summary"]["rendered"], 26);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
 }
@@ -138,12 +139,12 @@ fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.inventory.1");
-    assert_eq!(report["summary"]["totalRecipes"], 22);
-    assert_eq!(report["summary"]["rendered"], 22);
+    assert_eq!(report["summary"]["totalRecipes"], 26);
+    assert_eq!(report["summary"]["rendered"], 26);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
-    assert_eq!(report["summary"]["descriptorEffectIds"], 14);
-    assert_eq!(report["summary"]["representedEffectIds"], 14);
+    assert_eq!(report["summary"]["descriptorEffectIds"], 18);
+    assert_eq!(report["summary"]["representedEffectIds"], 18);
     assert_eq!(report["summary"]["unrepresentedEffectIds"], 0);
     assert_eq!(report["summary"]["unsupportedEffectIds"], 0);
 }
@@ -153,13 +154,17 @@ fn test_fnc_cli_reports_primitive_adapter_gap_json() {
     let report = primitive_adapter_gap_report();
 
     assert_eq!(report["schemaVersion"], "v3.1.player.primitiveAdapterGap.1");
-    assert_eq!(report["summary"]["totalEffects"], 14);
-    assert_eq!(report["summary"]["rendered"], 14);
+    assert_eq!(report["summary"]["totalEffects"], 18);
+    assert_eq!(report["summary"]["rendered"], 18);
     assert_eq!(report["summary"]["stillUnsupported"], 0);
     assert_eq!(report["summary"]["blockedByStyledCellSubstrate"], 0);
     assert_eq!(report["summary"]["blockedBySemanticDecision"], 0);
 
     assert_gap_entry(&report, "mask.dissolve", "rendered", "textGrid");
+    assert_gap_entry(&report, "mask.blinds", "rendered", "textGrid");
+    assert_gap_entry(&report, "mask.radial", "rendered", "textGrid");
+    assert_gap_entry(&report, "mask.iris", "rendered", "textGrid");
+    assert_gap_entry(&report, "mask.diamond", "rendered", "textGrid");
     assert_gap_entry(&report, "sampler.ripple", "rendered", "textGrid");
     assert_gap_entry(&report, "shader.borderSweep", "rendered", "styledCell");
     assert_gap_entry(&report, "shader.linearGradient", "rendered", "styledCell");
@@ -179,7 +184,7 @@ fn test_fnc_cli_reports_migration_gap_summary_json() {
             .is_empty()
     );
     assert_eq!(report["summary"]["legacyRecipes"], 603);
-    assert_eq!(report["summary"]["v31Recipes"], 22);
+    assert_eq!(report["summary"]["v31Recipes"], 26);
     assert_eq!(report["summary"]["representedFamilies"], 8);
     assert_eq!(report["summary"]["unrepresentedFamilies"], 11);
     assert_eq!(report["summary"]["partiallyRepresentedFamilies"], 7);
@@ -228,6 +233,68 @@ fn test_fnc_cli_reports_migration_gap_family_status_json() {
     assert_eq!(content["status"], "migrationCandidateReady");
     assert_eq!(complex["coverage"], "none");
     assert_eq!(complex["status"], "adapterExpansionReady");
+}
+
+#[test]
+fn test_fnc_cli_reports_migration_mapping_batch_masks_json() {
+    let report = migration_mapping_batch_report(vec![
+        str_arg("migration-mapping-batch"),
+        str_arg("--family"),
+        str_arg("masks"),
+    ]);
+
+    assert_eq!(
+        report["schemaVersion"],
+        "v3.1.player.migrationMappingBatch.1"
+    );
+    assert_eq!(report["summary"]["families"], 1);
+    assert!(report["summary"]["records"].as_u64().expect("records") > 0);
+    assert_eq!(report["summary"]["candidateReady"], 0);
+    assert_eq!(report["summary"]["duplicateOrVariant"], 3);
+    assert_eq!(report["families"][0], "masks");
+
+    let blinds = find_mapping_record(&report, "masks/mask_blinds.json");
+    assert_eq!(blinds["legacyFamily"], "masks");
+    assert_eq!(blinds["status"], "canonicalExists");
+    assert_eq!(blinds["recommendation"], "skipAsDuplicateVariant");
+    assert_eq!(blinds["requiredDescriptorIds"][0], "mask.blinds");
+    assert!(
+        blinds["missingDescriptorIds"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(blinds["requiredInputFields"][0], "count");
+    assert_eq!(blinds["requiredInputFields"][1], "orientation");
+
+    let cellular = find_mapping_record(&report, "masks/mask_cellular.json");
+    assert_eq!(cellular["status"], "descriptorDecisionNeeded");
+    assert_eq!(cellular["recommendation"], "deferForDescriptorDecision");
+
+    let radial_square = find_mapping_record(&report, "masks/mask_radial_square.json");
+    assert_eq!(radial_square["status"], "duplicateOrVariant");
+    assert_eq!(radial_square["recommendation"], "skipAsDuplicateVariant");
+}
+
+#[test]
+fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
+    let report = migration_mapping_batch_report(vec![
+        str_arg("migration-mapping-batch"),
+        str_arg("--recursive"),
+    ]);
+
+    assert_eq!(
+        report["schemaVersion"],
+        "v3.1.player.migrationMappingBatch.1"
+    );
+    assert!(report["summary"]["families"].as_u64().expect("families") > 1);
+    assert!(
+        report["recommendationQueue"]
+            .as_array()
+            .expect("recommendation queue")
+            .iter()
+            .any(|item| item["legacyFamily"] == "masks")
+    );
 }
 
 #[test]
@@ -281,11 +348,11 @@ fn test_fnc_cli_renders_recursive_visual_frame_report_json() {
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
-    assert_eq!(report["summary"]["total"], 22);
-    assert_eq!(report["summary"]["rendered"], 22);
+    assert_eq!(report["summary"]["total"], 26);
+    assert_eq!(report["summary"]["rendered"], 26);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
-    assert_eq!(report["frames"].as_array().expect("frames").len(), 22);
+    assert_eq!(report["frames"].as_array().expect("frames").len(), 26);
 }
 
 #[test]
@@ -360,7 +427,7 @@ fn test_fnc_cli_reports_primitive_field_coverage_for_fixture_corpus_json() {
         report["schemaVersion"],
         "v3.1.player.primitiveFieldCoverage.1"
     );
-    assert_eq!(report["summary"]["totalRecipes"], 22);
+    assert_eq!(report["summary"]["totalRecipes"], 26);
     assert_eq!(report["summary"]["usedButUnhandledInputFields"], 0);
     assert_eq!(report["summary"]["missingDescriptorInputFields"], 0);
     assert_eq!(report["summary"]["schemaDecisionNeededFields"], 0);
@@ -368,7 +435,7 @@ fn test_fnc_cli_reports_primitive_field_coverage_for_fixture_corpus_json() {
         report["summary"]["totalPrimitiveInstances"]
             .as_u64()
             .expect("instances")
-            > 22
+            > 26
     );
 }
 
@@ -387,10 +454,10 @@ fn test_fnc_cli_reports_fixture_qc_for_fixture_corpus_json() {
     );
 
     assert_eq!(report["schemaVersion"], "v3.1.player.fixtureQcReport.1");
-    assert_eq!(report["summary"]["totalRecipes"], 22);
-    assert_eq!(report["summary"]["validated"], 22);
+    assert_eq!(report["summary"]["totalRecipes"], 26);
+    assert_eq!(report["summary"]["validated"], 26);
     assert_eq!(report["summary"]["validationErrors"], 0);
-    assert_eq!(report["summary"]["rendered"], 22);
+    assert_eq!(report["summary"]["rendered"], 26);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["playerErrors"], 0);
     assert_eq!(report["summary"]["fieldCoverageUnhandled"], 0);
@@ -679,6 +746,19 @@ fn migration_gap_report() -> serde_json::Value {
     )
 }
 
+fn migration_mapping_batch_report(mut args: Vec<String>) -> serde_json::Value {
+    args.extend([
+        str_arg("--legacy-root"),
+        legacy_debug_recipe_root_path(),
+        str_arg("--v31-root"),
+        debug_recipe_root_path(),
+        str_arg("--descriptor-pack"),
+        descriptor_pack_path(),
+        str_arg("--json"),
+    ]);
+    player_cli_json(args, "migration mapping batch player cli")
+}
+
 fn player_cli_json(args: Vec<String>, context: &str) -> serde_json::Value {
     let output = run_player_cli(args, context);
 
@@ -730,6 +810,18 @@ fn find_family<'a>(report: &'a serde_json::Value, family: &str) -> &'a serde_jso
         .iter()
         .find(|entry| entry["family"] == family)
         .expect("family entry")
+}
+
+fn find_mapping_record<'a>(
+    report: &'a serde_json::Value,
+    legacy_path: &str,
+) -> &'a serde_json::Value {
+    report["records"]
+        .as_array()
+        .expect("mapping records")
+        .iter()
+        .find(|entry| entry["legacyPath"] == legacy_path)
+        .expect("mapping record")
 }
 
 fn stderr(output: &std::process::Output) -> String {
@@ -807,4 +899,4 @@ fn unsupported_effect_recipe() -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.9.1</VERS>
+// <VERS>END OF VERSION: 0.10.0</VERS>
