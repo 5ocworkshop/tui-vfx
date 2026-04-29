@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GraphValueKind",
+  "description": "Closed vocabulary for values published on the graph-local value bus.",
+  "oneOf": [
+    {
+      "description": "Floating-point scalar value. Shape decides whether it is frame-wide or per-cell.",
+      "type": "string",
+      "const": "number"
+    }
+  ]
+}

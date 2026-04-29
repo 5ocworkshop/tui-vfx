@@ -1,16 +1,20 @@
 // <FILE>crates/tui-vfx-contract/tests/test_graph_contract.rs</FILE> - <DESC>Canonical graph source/input validation tests</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G1: prove canonical graph nodes validate descriptors and ValueSource inputs together.</WCTX>
-// <CLOG>0.1.0: INIT — lock literal, parameter, signal, effect, input, and source validation.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G4: validate graph value sources and node outputs.</WCTX>
+// <CLOG>0.2.0: MINOR — add graph value source and node output validation cases.
+// 0.1.0: INIT — lock literal, parameter, signal, effect, input, and source validation.</CLOG>
 
 mod support;
 
 use std::collections::BTreeMap;
 
-use support::{base_graph, literal_source, parameter_source, signal_source, text_value_spec};
+use support::{
+    base_graph, binding_to, graph_value_source, literal_source, output_from_effect,
+    output_from_input, parameter_source, signal_source, text_value_spec,
+};
 use tui_vfx_contract::{
-    DescriptorValidationError, EffectId, EffectInputId, NodeId, ParameterId, ParameterSpec, Value,
-    ValueKind, ValueSource,
+    DescriptorValidationError, EffectId, EffectInputId, NodeId, NodeSpec, ParameterId,
+    ParameterSpec, Value, ValueKind, ValueSource,
 };
 
 #[test]
@@ -152,4 +156,124 @@ fn graph_rejects_parameter_key_mismatch() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_graph_contract.rs</FILE> - <DESC>Canonical graph source/input validation tests</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
+
+#[test]
+fn graph_value_source_rejects_unknown_output() {
+    let graph = base_graph(graph_value_source("missing"));
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::UnknownGraphValue { id }) if id.as_str() == "missing"
+    ));
+}
+
+#[test]
+fn graph_value_source_rejects_kind_mismatch() {
+    let mut graph = base_graph(graph_value_source("numberOut"));
+    let mut producer_descriptor = graph
+        .effects
+        .get(&EffectId::new("terminal.opacity"))
+        .unwrap()
+        .clone();
+    producer_descriptor.id = EffectId::new("terminal.producer");
+    producer_descriptor.outputs = BTreeMap::from([(
+        tui_vfx_contract::EffectOutputId::new("value"),
+        support::number_output(tui_vfx_contract::GraphValueShape::FrameValue),
+    )]);
+    graph
+        .effects
+        .insert(EffectId::new("terminal.producer"), producer_descriptor);
+    let mut text_consumer = graph
+        .effects
+        .get_mut(&EffectId::new("terminal.opacity"))
+        .unwrap()
+        .clone();
+    let amount_spec = &mut text_consumer
+        .inputs
+        .get_mut(&EffectInputId::new("amount"))
+        .unwrap()
+        .value;
+    amount_spec.kind = ValueKind::Text;
+    amount_spec.range = None;
+    graph
+        .effects
+        .insert(EffectId::new("terminal.opacity"), text_consumer);
+    graph.nodes.insert(
+        NodeId::new("producer"),
+        output_from_effect(
+            NodeSpec {
+                id: NodeId::new("producer"),
+                effect: EffectId::new("terminal.producer"),
+                inputs: BTreeMap::from([(
+                    EffectInputId::new("amount"),
+                    ValueSource::Literal {
+                        value: Value::Number(0.5),
+                    },
+                )]),
+                outputs: BTreeMap::new(),
+                scope: None,
+                cell_write_policy: None,
+                role_write_policy: None,
+            },
+            "numberOut",
+            "value",
+        ),
+    );
+    graph.order.push(NodeId::new("producer"));
+
+    let error = graph
+        .validate()
+        .expect_err("graph value kind mismatch fails");
+    assert!(matches!(
+        error,
+        DescriptorValidationError::SourceKindMismatch {
+            expected: ValueKind::Text,
+            actual: ValueKind::Number
+        }
+    ));
+}
+
+#[test]
+fn descriptor_rejects_node_output_not_declared_by_effect() {
+    let mut graph = base_graph(literal_source());
+    let node = graph.nodes.get(&NodeId::new("fadeIn")).unwrap().clone();
+    graph.nodes.insert(
+        NodeId::new("fadeIn"),
+        output_from_effect(node, "dimFactor", "undeclared"),
+    );
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::UnknownEffectOutput { output, .. })
+            if output.as_str() == "undeclared"
+    ));
+}
+
+#[test]
+fn node_output_from_input_rejects_unknown_input() {
+    let mut graph = base_graph(literal_source());
+    let node = graph.nodes.get(&NodeId::new("fadeIn")).unwrap().clone();
+    graph.nodes.insert(
+        NodeId::new("fadeIn"),
+        output_from_input(node, "dimFactor", "unknown"),
+    );
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::UnknownNodeOutputInput { input, .. })
+            if input.as_str() == "unknown"
+    ));
+}
+
+#[test]
+fn graph_value_source_is_rejected_in_binding_context() {
+    let mut graph = base_graph(literal_source());
+    graph.bindings = vec![binding_to("opacity", graph_value_source("dimFactor"))];
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::GraphValueSourceNotAllowed { id })
+            if id.as_str() == "dimFactor"
+    ));
+}

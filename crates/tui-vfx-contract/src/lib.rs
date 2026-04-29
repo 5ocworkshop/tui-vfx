@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>New kernel Phase G3: expose graph topology and parallel merge policy vocabulary.</WCTX>
-// <CLOG>0.6.0: MINOR — export GraphStep, ParallelMergePolicy, and topology schema root.
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>New kernel Phase G4: expose graph value bus and node output vocabulary.</WCTX>
+// <CLOG>0.7.0: MINOR — export graph value, effect output, node output, and value merge schema roots.
+// 0.6.0: MINOR — export GraphStep, ParallelMergePolicy, and topology schema root.
 // 0.5.0: MINOR — export GraphSpec, NodeSpec, GraphId, NodeId, and schema roots.
 // 0.4.0: MINOR — export ValueSource, ParameterSpec, SignalSpec, BindingSpec, and schema roots.
 // 0.3.0: MINOR — export Value, ValueSpec, EffectInputSpec, and input schema roots.
@@ -34,13 +35,21 @@ pub mod cls_effect_id;
 pub mod cls_effect_input_id;
 pub mod cls_effect_input_spec;
 pub mod cls_effect_lifecycle;
+pub mod cls_effect_output_id;
+pub mod cls_effect_output_spec;
 pub mod cls_element_id;
 pub mod cls_element_placement;
 pub mod cls_graph_id;
 pub mod cls_graph_spec;
 pub mod cls_graph_step;
+pub mod cls_graph_value_id;
+pub mod cls_graph_value_kind;
+pub mod cls_graph_value_merge_policy;
+pub mod cls_graph_value_shape;
 pub mod cls_layer_id;
 pub mod cls_node_id;
+pub mod cls_node_output_source;
+pub mod cls_node_output_spec;
 pub mod cls_node_spec;
 pub mod cls_numeric_range;
 pub mod cls_parallel_merge_policy;
@@ -69,6 +78,7 @@ pub mod cls_value_kind;
 pub mod cls_value_source;
 pub mod cls_value_spec;
 pub mod cls_write_support;
+pub mod fnc_collect_graph_value_kinds;
 pub mod fnc_scope_coordinate;
 pub mod orc_validate_graph_spec;
 pub mod tr_coordinate_sampler;
@@ -92,13 +102,21 @@ pub use cls_effect_id::EffectId;
 pub use cls_effect_input_id::EffectInputId;
 pub use cls_effect_input_spec::EffectInputSpec;
 pub use cls_effect_lifecycle::EffectLifecycle;
+pub use cls_effect_output_id::EffectOutputId;
+pub use cls_effect_output_spec::EffectOutputSpec;
 pub use cls_element_id::ElementId;
 pub use cls_element_placement::ElementPlacement;
 pub use cls_graph_id::GraphId;
 pub use cls_graph_spec::GraphSpec;
 pub use cls_graph_step::GraphStep;
+pub use cls_graph_value_id::GraphValueId;
+pub use cls_graph_value_kind::GraphValueKind;
+pub use cls_graph_value_merge_policy::GraphValueMergePolicy;
+pub use cls_graph_value_shape::GraphValueShape;
 pub use cls_layer_id::LayerId;
 pub use cls_node_id::NodeId;
+pub use cls_node_output_source::NodeOutputSource;
+pub use cls_node_output_spec::NodeOutputSpec;
 pub use cls_node_spec::NodeSpec;
 pub use cls_numeric_range::NumericRange;
 pub use cls_parallel_merge_policy::ParallelMergePolicy;
@@ -124,7 +142,7 @@ pub use cls_surface_diagnostic_code::SurfaceDiagnosticCode;
 pub use cls_surface_metadata::SurfaceMetadata;
 pub use cls_value::Value;
 pub use cls_value_kind::ValueKind;
-pub use cls_value_source::ValueSource;
+pub use cls_value_source::{GraphValueKinds, ValueSource};
 pub use cls_value_spec::ValueSpec;
 pub use cls_write_support::WriteSupport;
 pub use tr_coordinate_sampler::CoordinateSampler;
@@ -134,11 +152,12 @@ pub use tr_coordinate_sampler::CoordinateSampler;
 /// These roots generate fixtures under `schemas/v3.1/contract/`.
 pub mod schema_roots {
     pub use crate::{
-        BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, GraphSpec, GraphStep, NodeSpec,
-        ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, Surface,
-        SurfaceDiagnostic, Value, ValueSource,
+        BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec,
+        GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape,
+        NodeOutputSource, NodeOutputSpec, NodeSpec, ParameterSpec, Scene, SceneElement,
+        SceneOutcome, ScopeSpec, SignalSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
     };
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

@@ -1,33 +1,42 @@
 // <FILE>crates/tui-vfx-next/src/fnc_resolve_value_source.rs</FILE> - <DESC>Resolve declarative ValueSource values for proof graph execution</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G2: convert graph ValueSource inputs into one-shot proof values.</WCTX>
-// <CLOG>0.1.0: INIT — resolve literals, parameters, signals, and numeric maps without runtime stores.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G4: resolve graph-local values alongside parameters and signals.</WCTX>
+// <CLOG>0.2.0: MINOR — return ProofValue and consume graph value bus entries.
+// 0.1.0: INIT — resolve literals, parameters, signals, and numeric maps without runtime stores.</CLOG>
+
+use std::collections::BTreeMap;
 
 use crate::{
-    GraphExecutionContext, GraphExecutionError, GraphSpec, NumericRange, ParameterId, SignalId,
-    Value, ValueKind, ValueSource,
+    GraphExecutionContext, GraphExecutionError, GraphSpec, GraphValueId, NumericRange, ParameterId,
+    ProofValue, SignalId, Value, ValueKind, ValueSource,
 };
 
-/// Resolve a declarative value source against graph declarations and one execution snapshot.
+/// Resolve a declarative value source against graph declarations and execution state.
 pub fn resolve_value_source(
     graph: &GraphSpec,
     context: &GraphExecutionContext,
+    graph_values: &BTreeMap<GraphValueId, ProofValue>,
     source: &ValueSource,
-) -> Result<Value, GraphExecutionError> {
+) -> Result<ProofValue, GraphExecutionError> {
     match source {
-        ValueSource::Literal { value } => Ok(value.clone()),
+        ValueSource::Literal { value } => Ok(ProofValue::Frame(value.clone())),
         ValueSource::Parameter { id, fallback } => {
-            resolve_parameter_source(graph, context, id, fallback.as_ref())
+            resolve_parameter_source(graph, context, id, fallback.as_ref()).map(ProofValue::Frame)
         }
         ValueSource::Signal { id, fallback } => {
-            resolve_signal_source(graph, context, id, fallback.as_ref())
+            resolve_signal_source(graph, context, id, fallback.as_ref()).map(ProofValue::Frame)
         }
+        ValueSource::GraphValue { id, fallback } => graph_values
+            .get(id)
+            .cloned()
+            .or_else(|| fallback.clone().map(ProofValue::Frame))
+            .ok_or_else(|| GraphExecutionError::MissingGraphValue { id: id.clone() }),
         ValueSource::Map {
             from,
             input,
             output,
             clamp,
-        } => resolve_map_source(graph, context, from, *input, *output, *clamp),
+        } => resolve_map_source(graph, context, graph_values, from, *input, *output, *clamp),
     }
 }
 
@@ -74,21 +83,46 @@ fn resolve_signal_source(
 fn resolve_map_source(
     graph: &GraphSpec,
     context: &GraphExecutionContext,
+    graph_values: &BTreeMap<GraphValueId, ProofValue>,
     from: &ValueSource,
     input: NumericRange,
     output: NumericRange,
     clamp: bool,
-) -> Result<Value, GraphExecutionError> {
-    let value = resolve_value_source(graph, context, from)?;
+) -> Result<ProofValue, GraphExecutionError> {
+    let value = resolve_value_source(graph, context, graph_values, from)?;
+    match value {
+        ProofValue::Frame(value) => map_frame_value(value, input, output, clamp),
+        ProofValue::NumberCellField(field) => Ok(ProofValue::NumberCellField(
+            field.map(|sample| map_number(sample, input, output, clamp)),
+        )),
+    }
+}
+
+fn map_frame_value(
+    value: Value,
+    input: NumericRange,
+    output: NumericRange,
+    clamp: bool,
+) -> Result<ProofValue, GraphExecutionError> {
     let Some(source) = value.as_range_number() else {
         return Err(GraphExecutionError::NonNumericResolvedMapSource {
             actual: value.kind(),
         });
     };
+    Ok(ProofValue::Frame(Value::Number(map_number(
+        source, input, output, clamp,
+    ))))
+}
+
+fn map_number(source: f64, input: NumericRange, output: NumericRange, clamp: bool) -> f64 {
     let input_min = input.min.expect("GraphSpec validation requires input min");
     let input_max = input.max.expect("GraphSpec validation requires input max");
-    let output_min = output.output_min();
-    let output_max = output.output_max();
+    let output_min = output
+        .min
+        .expect("GraphSpec validation requires output min");
+    let output_max = output
+        .max
+        .expect("GraphSpec validation requires output max");
     let source = if clamp {
         source.clamp(input_min, input_max)
     } else {
@@ -99,30 +133,13 @@ fn resolve_map_source(
     } else {
         (source - input_min) / (input_max - input_min)
     };
-    Ok(Value::Number(
-        output_min + ratio * (output_max - output_min),
-    ))
-}
-
-trait OutputBounds {
-    fn output_min(self) -> f64;
-    fn output_max(self) -> f64;
-}
-
-impl OutputBounds for NumericRange {
-    fn output_min(self) -> f64 {
-        self.min.expect("GraphSpec validation requires output min")
-    }
-
-    fn output_max(self) -> f64 {
-        self.max.expect("GraphSpec validation requires output max")
-    }
+    output_min + ratio * (output_max - output_min)
 }
 
 /// Return true when a resolved value has the requested kind.
-pub fn resolved_value_matches_kind(value: &Value, expected: ValueKind) -> bool {
+pub fn resolved_value_matches_kind(value: &ProofValue, expected: ValueKind) -> bool {
     value.kind() == expected
 }
 
 // <FILE>crates/tui-vfx-next/src/fnc_resolve_value_source.rs</FILE> - <DESC>Resolve declarative ValueSource values for proof graph execution</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -46,6 +46,7 @@ fn visual_dim_descriptor() -> EffectDescriptor {
             role_policies: vec![RoleWritePolicyKind::PreserveDestination],
         },
         inputs: BTreeMap::new(),
+        outputs: BTreeMap::new(),
         lifecycle: EffectLifecycle {
             completion: EffectCompletion::Instant,
             resettable: true,

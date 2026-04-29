@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/support/mod.rs</FILE> - <DESC>Shared graph contract test fixtures</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G1: keep graph validation test files focused and OFPF-sized.</WCTX>
-// <CLOG>0.1.0: INIT — shared descriptor, value, parameter, signal, and graph builders.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G4: add graph value validation fixtures.</WCTX>
+// <CLOG>0.2.0: MINOR — add graph value output and source fixture helpers.
+// 0.1.0: INIT — shared descriptor, value, parameter, signal, and graph builders.</CLOG>
 
 #![allow(dead_code)]
 
@@ -10,10 +11,11 @@ use std::collections::BTreeMap;
 use tui_vfx_contract::{
     BindingMode, BindingSpec, BindingTarget, CellAccess, CellChannel, CellWritePolicy,
     CoordinateSpace, EffectCompletion, EffectDescriptor, EffectDomain, EffectId, EffectInputId,
-    EffectInputSpec, EffectLifecycle, GraphId, GraphSpec, NodeId, NodeSpec, NumericRange,
-    ParameterId, ParameterSpec, RoleSpace, RoleWritePolicy, RoleWritePolicyKind, RuntimeMutability,
-    ScopeKind, ScopeSpec, ScopeSupport, SignalId, SignalSpec, Value, ValueKind, ValueSource,
-    ValueSpec, WriteSupport,
+    EffectInputSpec, EffectLifecycle, EffectOutputId, EffectOutputSpec, GraphId, GraphSpec,
+    GraphValueId, GraphValueKind, GraphValueShape, NodeId, NodeOutputSource, NodeOutputSpec,
+    NodeSpec, NumericRange, ParameterId, ParameterSpec, RoleSpace, RoleWritePolicy,
+    RoleWritePolicyKind, RuntimeMutability, ScopeKind, ScopeSpec, ScopeSupport, SignalId,
+    SignalSpec, Value, ValueKind, ValueSource, ValueSpec, WriteSupport,
 };
 pub fn ratio_value_spec(default: Option<Value>) -> ValueSpec {
     ValueSpec {
@@ -60,6 +62,14 @@ pub fn signal(id: &str, value: ValueSpec) -> SignalSpec {
     }
 }
 
+pub fn number_output(shape: GraphValueShape) -> EffectOutputSpec {
+    EffectOutputSpec {
+        kind: GraphValueKind::Number,
+        shape,
+        description: Some("Numeric proof output.".to_string()),
+    }
+}
+
 pub fn opacity_descriptor() -> EffectDescriptor {
     EffectDescriptor {
         id: EffectId::new("terminal.opacity"),
@@ -90,6 +100,7 @@ pub fn opacity_descriptor() -> EffectDescriptor {
                 runtime_mutability: RuntimeMutability::Runtime,
             },
         )]),
+        outputs: BTreeMap::new(),
         lifecycle: EffectLifecycle {
             completion: EffectCompletion::Instant,
             resettable: true,
@@ -104,6 +115,7 @@ pub fn base_node(source: ValueSource) -> NodeSpec {
         id: NodeId::new("fadeIn"),
         effect: EffectId::new("terminal.opacity"),
         inputs: BTreeMap::from([(EffectInputId::new("amount"), source)]),
+        outputs: BTreeMap::new(),
         scope: Some(ScopeSpec::All),
         cell_write_policy: Some(CellWritePolicy::WriteCell),
         role_write_policy: Some(RoleWritePolicy::PreserveDestination),
@@ -160,6 +172,37 @@ pub fn signal_source(id: &str) -> ValueSource {
     }
 }
 
+pub fn graph_value_source(id: &str) -> ValueSource {
+    ValueSource::GraphValue {
+        id: GraphValueId::new(id),
+        fallback: None,
+    }
+}
+
+pub fn output_from_input(mut node: NodeSpec, output: &str, input: &str) -> NodeSpec {
+    node.outputs = BTreeMap::from([(
+        GraphValueId::new(output),
+        NodeOutputSpec {
+            source: NodeOutputSource::Input {
+                id: EffectInputId::new(input),
+            },
+        },
+    )]);
+    node
+}
+
+pub fn output_from_effect(mut node: NodeSpec, output: &str, effect_output: &str) -> NodeSpec {
+    node.outputs = BTreeMap::from([(
+        GraphValueId::new(output),
+        NodeOutputSpec {
+            source: NodeOutputSource::EffectOutput {
+                id: EffectOutputId::new(effect_output),
+            },
+        },
+    )]);
+    node
+}
+
 pub fn binding_to(parameter_id: &str, source: ValueSource) -> BindingSpec {
     BindingSpec {
         target: BindingTarget::Parameter {
@@ -171,4 +214,4 @@ pub fn binding_to(parameter_id: &str, source: ValueSource) -> BindingSpec {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/support/mod.rs</FILE> - <DESC>Shared graph contract test fixtures</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

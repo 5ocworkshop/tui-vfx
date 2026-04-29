@@ -1,10 +1,11 @@
 // <FILE>crates/tui-vfx-contract/src/cls_graph_step.rs</FILE> - <DESC>Canonical graph execution topology step DTO</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>New kernel Phase G3: keep topology wire fields camelCase.</WCTX>
-// <CLOG>0.1.1: PATCH — serialize parallel merge policy as mergePolicy.
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G4: add explicit parallel graph-value merge policy.</WCTX>
+// <CLOG>0.2.0: MINOR — add valueMergePolicy to parallel topology steps.
+// 0.1.1: PATCH — serialize parallel merge policy as mergePolicy.
 // 0.1.0: INIT — add schema-backed recursive topology step contract.</CLOG>
 
-use crate::{NodeId, ParallelMergePolicy};
+use crate::{GraphValueMergePolicy, NodeId, ParallelMergePolicy};
 
 /// Canonical execution topology for a graph.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
@@ -27,6 +28,9 @@ pub enum GraphStep {
         /// Policy used when multiple branches write the same cell channel.
         #[serde(rename = "mergePolicy")]
         merge_policy: ParallelMergePolicy,
+        /// Policy used when multiple branches publish the same graph value id.
+        #[serde(default, rename = "valueMergePolicy")]
+        value_merge_policy: GraphValueMergePolicy,
     },
 }
 
@@ -43,12 +47,26 @@ impl GraphStep {
 
     /// Build a parallel step with an explicit merge policy.
     pub fn parallel(children: Vec<Self>, merge_policy: ParallelMergePolicy) -> Self {
+        Self::parallel_with_value_policy(
+            children,
+            merge_policy,
+            GraphValueMergePolicy::ChildOrderLastWriterWins,
+        )
+    }
+
+    /// Build a parallel step with explicit surface and value merge policies.
+    pub fn parallel_with_value_policy(
+        children: Vec<Self>,
+        merge_policy: ParallelMergePolicy,
+        value_merge_policy: GraphValueMergePolicy,
+    ) -> Self {
         Self::Parallel {
             children,
             merge_policy,
+            value_merge_policy,
         }
     }
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_graph_step.rs</FILE> - <DESC>Canonical graph execution topology step DTO</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -1,11 +1,15 @@
 // <FILE>crates/tui-vfx-contract/src/orc_validate_graph_spec.rs</FILE> - <DESC>Validate canonical graph contracts</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase G3: split graph validation and add topology coverage checks.</WCTX>
-// <CLOG>0.1.0: INIT — validate graph declarations, order, and optional topology.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase G4: validate graph value sources and node output declarations.</WCTX>
+// <CLOG>0.2.0: MINOR — validate graph-local value sources and node output declarations.
+// 0.1.0: INIT — validate graph declarations, order, and optional topology.</CLOG>
 
 use std::collections::BTreeSet;
 
-use crate::{DescriptorValidationError, GraphSpec, GraphStep, NodeId, NodeSpec};
+use crate::{
+    DescriptorValidationError, GraphSpec, GraphStep, GraphValueKinds, NodeId, NodeOutputSource,
+    NodeSpec, fnc_collect_graph_value_kinds::collect_graph_value_kinds,
+};
 
 pub(crate) fn validate_graph_spec(graph: &GraphSpec) -> Result<(), DescriptorValidationError> {
     if !graph.id.is_valid() {
@@ -18,7 +22,8 @@ pub(crate) fn validate_graph_spec(graph: &GraphSpec) -> Result<(), DescriptorVal
     validate_signals(graph)?;
     validate_bindings(graph)?;
     validate_effects(graph)?;
-    validate_nodes(graph)?;
+    let graph_values = collect_graph_value_kinds(graph)?;
+    validate_nodes(graph, &graph_values)?;
     validate_order(graph)?;
     validate_topology(graph)?;
     Ok(())
@@ -71,12 +76,15 @@ fn validate_effects(graph: &GraphSpec) -> Result<(), DescriptorValidationError> 
                 effect: effect.id.clone(),
             });
         }
-        effect.validate_inputs()?;
+        effect.validate_io()?;
     }
     Ok(())
 }
 
-fn validate_nodes(graph: &GraphSpec) -> Result<(), DescriptorValidationError> {
+fn validate_nodes(
+    graph: &GraphSpec,
+    graph_values: &GraphValueKinds,
+) -> Result<(), DescriptorValidationError> {
     for (id, node) in &graph.nodes {
         if !id.is_valid() {
             return Err(DescriptorValidationError::InvalidNodeId { id: id.clone() });
@@ -87,12 +95,16 @@ fn validate_nodes(graph: &GraphSpec) -> Result<(), DescriptorValidationError> {
                 node: node.id.clone(),
             });
         }
-        validate_node(graph, node)?;
+        validate_node(graph, node, graph_values)?;
     }
     Ok(())
 }
 
-fn validate_node(graph: &GraphSpec, node: &NodeSpec) -> Result<(), DescriptorValidationError> {
+fn validate_node(
+    graph: &GraphSpec,
+    node: &NodeSpec,
+    graph_values: &GraphValueKinds,
+) -> Result<(), DescriptorValidationError> {
     let effect = graph.effects.get(&node.effect).ok_or_else(|| {
         DescriptorValidationError::UnknownEffect {
             id: node.effect.clone(),
@@ -110,7 +122,12 @@ fn validate_node(graph: &GraphSpec, node: &NodeSpec) -> Result<(), DescriptorVal
                 input: input_id.clone(),
             }
         })?;
-        source.validate_kind(input.value.kind, &graph.parameters, &graph.signals)?;
+        source.validate_kind_with_graph_values(
+            input.value.kind,
+            &graph.parameters,
+            &graph.signals,
+            Some(graph_values),
+        )?;
     }
 
     for (input_id, input) in &effect.inputs {
@@ -119,6 +136,40 @@ fn validate_node(graph: &GraphSpec, node: &NodeSpec) -> Result<(), DescriptorVal
                 effect: node.effect.clone(),
                 input: input_id.clone(),
             });
+        }
+    }
+
+    for (output_id, output) in &node.outputs {
+        if !output_id.is_valid() {
+            return Err(DescriptorValidationError::InvalidGraphValueId {
+                id: output_id.clone(),
+            });
+        }
+        match &output.source {
+            NodeOutputSource::EffectOutput { id } => {
+                if !id.is_valid() {
+                    return Err(DescriptorValidationError::InvalidEffectOutputId {
+                        id: id.clone(),
+                    });
+                }
+                if !effect.outputs.contains_key(id) {
+                    return Err(DescriptorValidationError::UnknownEffectOutput {
+                        effect: node.effect.clone(),
+                        output: id.clone(),
+                    });
+                }
+            }
+            NodeOutputSource::Input { id } => {
+                if !id.is_valid() {
+                    return Err(DescriptorValidationError::InvalidInputId { id: id.clone() });
+                }
+                if !effect.inputs.contains_key(id) {
+                    return Err(DescriptorValidationError::UnknownNodeOutputInput {
+                        effect: node.effect.clone(),
+                        input: id.clone(),
+                    });
+                }
+            }
         }
     }
 
@@ -192,4 +243,4 @@ fn validate_node_coverage<'a>(
 }
 
 // <FILE>crates/tui-vfx-contract/src/orc_validate_graph_spec.rs</FILE> - <DESC>Validate canonical graph contracts</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

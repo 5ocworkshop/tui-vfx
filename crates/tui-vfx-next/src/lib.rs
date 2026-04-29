@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-next/src/lib.rs</FILE> - <DESC>Clean-room v3.1 proof engine over contract DTOs</DESC>
-// <VERS>VERSION: 0.10.0</VERS>
-// <WCTX>New kernel Phase G3: expose proof topology execution and channel delta helpers.</WCTX>
-// <CLOG>0.10.0: MINOR — add topology execution and proof-only channel-aware deltas.
+// <VERS>VERSION: 0.11.0</VERS>
+// <WCTX>New kernel Phase G4: expose proof graph value-bus helpers.</WCTX>
+// <CLOG>0.11.0: MINOR — add proof-only graph value bus and spatial field helpers.
+// 0.10.0: MINOR — add topology execution and proof-only channel-aware deltas.
 // 0.9.0: MINOR — add proof GraphSpec executor, value snapshot, adapters, and execution errors.
 // 0.8.0: PATCH — stop exporting the old proof EffectDescriptor so contract owns the durable descriptor name.
 // 0.7.0: MINOR — depend on tui-vfx-contract, re-export contract vocabulary, and keep proof-only pipeline/effect helpers local.
@@ -22,20 +23,27 @@ pub mod cls_graph_execution_context;
 pub mod cls_graph_execution_error;
 pub mod cls_graph_execution_outcome;
 pub mod cls_graph_executor;
+pub mod cls_graph_value_bus;
 pub mod cls_identity_sampler;
+pub mod cls_number_cell_field;
 pub mod cls_pipeline_outcome;
 pub mod cls_pipeline_sampler;
 pub mod cls_pipeline_stage;
 pub mod cls_proof_effect_adapter;
+pub mod cls_proof_value;
+pub mod cls_step_execution;
 pub mod cls_surface_delta;
 pub mod cls_surface_engine;
 pub mod cls_surface_pipeline;
 pub mod fnc_annotate_node_diagnostics;
 pub mod fnc_annotate_stage_diagnostic;
 pub mod fnc_annotate_stage_diagnostics;
+pub mod fnc_apply_dim_with_number_field;
 pub mod fnc_apply_from_source_with_sampler;
 pub mod fnc_apply_surface_delta;
+pub mod fnc_merge_graph_value_delta;
 pub mod fnc_merge_surface_delta;
+pub mod fnc_publish_node_outputs;
 pub mod fnc_read_proof_input;
 pub mod fnc_resolve_value_source;
 pub mod fnc_rewrite_glyph_cell;
@@ -53,11 +61,15 @@ pub use cls_graph_execution_context::GraphExecutionContext;
 pub use cls_graph_execution_error::GraphExecutionError;
 pub use cls_graph_execution_outcome::GraphExecutionOutcome;
 pub use cls_graph_executor::GraphExecutor;
+pub(crate) use cls_graph_value_bus::{GraphValueBus, GraphValueDelta};
 pub use cls_identity_sampler::IdentitySampler;
+pub use cls_number_cell_field::NumberCellField;
 pub use cls_pipeline_outcome::PipelineOutcome;
 pub use cls_pipeline_sampler::PipelineSampler;
 pub use cls_pipeline_stage::PipelineStage;
 pub use cls_proof_effect_adapter::ProofEffectAdapter;
+pub use cls_proof_value::ProofValue;
+pub(crate) use cls_step_execution::StepExecution;
 pub use cls_surface_delta::SurfaceDelta;
 pub use cls_surface_engine::SurfaceEngine;
 pub use cls_surface_pipeline::SurfacePipeline;
@@ -75,8 +87,9 @@ pub mod contract {
 pub mod proof {
     pub use crate::{
         CellChannelWrite, CellDelta, DimEffect, ExplicitRoleWriteEffect, GraphExecutionContext,
-        GraphExecutionError, GraphExecutionOutcome, GraphExecutor, IdentitySampler, PipelineStage,
-        ProofEffectAdapter, SurfaceDelta, SurfaceEngine, SurfacePipeline,
+        GraphExecutionError, GraphExecutionOutcome, GraphExecutor, IdentitySampler,
+        NumberCellField, PipelineStage, ProofEffectAdapter, ProofValue, SurfaceDelta,
+        SurfaceEngine, SurfacePipeline,
     };
 }
 
@@ -89,4 +102,4 @@ pub mod schema_roots {
 }
 
 // <FILE>crates/tui-vfx-next/src/lib.rs</FILE> - <DESC>Clean-room v3.1 proof engine over contract DTOs</DESC>
-// <VERS>END OF VERSION: 0.10.0</VERS>
+// <VERS>END OF VERSION: 0.11.0</VERS>

@@ -1,15 +1,16 @@
 // <FILE>crates/tui-vfx-contract/src/cls_effect_descriptor.rs</FILE> - <DESC>Minimal effect descriptor contract DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase F1: attach typed input specs to the durable effect descriptor model.</WCTX>
-// <CLOG>0.2.0: MINOR — add descriptor-local typed input spec map and validation.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>New kernel Phase G4: add descriptor-declared effect outputs.</WCTX>
+// <CLOG>0.3.0: MINOR — add descriptor-local typed output spec map and validation.
+// 0.2.0: MINOR — add descriptor-local typed input spec map and validation.
 // 0.1.0: INIT — declare identity, domain, access, scope, write, and lifecycle capabilities.</CLOG>
 
 use std::collections::BTreeMap;
 
 use crate::{
     CellAccess, CellChannel, CellWritePolicy, DescriptorValidationError, EffectDomain, EffectId,
-    EffectInputId, EffectInputSpec, EffectLifecycle, RoleWritePolicy, RoleWritePolicyKind,
-    ScopeKind, ScopeSpec, ScopeSupport, WriteSupport,
+    EffectInputId, EffectInputSpec, EffectLifecycle, EffectOutputId, EffectOutputSpec,
+    RoleWritePolicy, RoleWritePolicyKind, ScopeKind, ScopeSpec, ScopeSupport, WriteSupport,
 };
 
 /// Minimal durable v3.1 effect descriptor contract.
@@ -35,6 +36,9 @@ pub struct EffectDescriptor {
     /// Descriptor-local typed input specifications keyed by stable input id.
     #[schemars(transform = add_effect_input_key_pattern)]
     pub inputs: BTreeMap<EffectInputId, EffectInputSpec>,
+    /// Descriptor-local typed output specifications keyed by stable output id.
+    #[schemars(transform = add_effect_output_key_pattern)]
+    pub outputs: BTreeMap<EffectOutputId, EffectOutputSpec>,
     /// Minimal lifecycle metadata for planning.
     pub lifecycle: EffectLifecycle,
 }
@@ -51,9 +55,21 @@ fn add_effect_input_key_pattern(schema: &mut schemars::Schema) {
     );
 }
 
+fn add_effect_output_key_pattern(schema: &mut schemars::Schema) {
+    schema.insert(
+        "propertyNames".to_string(),
+        schemars::json_schema!({
+            "description": "Effect output ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        })
+        .to_value(),
+    );
+}
+
 impl EffectDescriptor {
-    /// Validate all descriptor-local input specifications.
-    pub fn validate_inputs(&self) -> Result<(), DescriptorValidationError> {
+    /// Validate all descriptor-local input and output specifications.
+    pub fn validate_io(&self) -> Result<(), DescriptorValidationError> {
         for (id, input) in &self.inputs {
             if !id.is_valid() {
                 return Err(DescriptorValidationError::InvalidInputId { id: id.clone() });
@@ -61,7 +77,18 @@ impl EffectDescriptor {
             input.validate()?;
         }
 
+        for id in self.outputs.keys() {
+            if !id.is_valid() {
+                return Err(DescriptorValidationError::InvalidEffectOutputId { id: id.clone() });
+            }
+        }
+
         Ok(())
+    }
+
+    /// Validate all descriptor-local input and output specifications.
+    pub fn validate_inputs(&self) -> Result<(), DescriptorValidationError> {
+        self.validate_io()
     }
 
     /// Validate that the descriptor supports the requested scope kind.
@@ -115,4 +142,4 @@ impl EffectDescriptor {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_effect_descriptor.rs</FILE> - <DESC>Minimal effect descriptor contract DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

@@ -35,6 +35,22 @@
         "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
       }
     },
+    "outputs": {
+      "description": "Graph-local values this node publishes after input resolution/effect execution.",
+      "type": "object",
+      "additionalProperties": false,
+      "default": {},
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]*$": {
+          "$ref": "#/$defs/NodeOutputSpec"
+        }
+      },
+      "propertyNames": {
+        "description": "Graph value ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      }
+    },
     "roleWritePolicy": {
       "description": "Optional role write policy requested by this node.",
       "anyOf": [
@@ -125,6 +141,20 @@
       "description": "Stable canonical effect identifier.",
       "type": "string"
     },
+    "EffectInputId": {
+      "description": "Stable descriptor-local effect input identifier.",
+      "type": "string"
+    },
+    "EffectOutputId": {
+      "description": "Stable descriptor-local effect output identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "GraphValueId": {
+      "description": "Stable value identifier published into a canonical graph-local value bus.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
     "InternedRoleName": {
       "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
       "type": "string"
@@ -133,6 +163,63 @@
       "description": "Stable node identifier inside a canonical graph.",
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "NodeOutputSource": {
+      "description": "Source used by a node to publish one graph-local value.",
+      "oneOf": [
+        {
+          "description": "Publish an output computed by the proof/real effect adapter.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Descriptor-local output id.",
+              "$ref": "#/$defs/EffectOutputId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "effectOutput"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Re-emit one resolved node input into the graph-local value bus.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Descriptor-local input id.",
+              "$ref": "#/$defs/EffectInputId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "input"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        }
+      ]
+    },
+    "NodeOutputSpec": {
+      "description": "Declaration for one graph-local value published by a node.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "description": "Where the value is read from after node input resolution/effect execution.",
+          "$ref": "#/$defs/NodeOutputSource"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "source"
+      ]
     },
     "NumericRange": {
       "description": "Optional inclusive numeric bounds for a value spec.",
@@ -757,6 +844,36 @@
             "kind": {
               "type": "string",
               "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from an earlier graph-local node output.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the value is unavailable at execution time.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced graph-local value id.",
+              "$ref": "#/$defs/GraphValueId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "graphValue"
             }
           },
           "additionalProperties": false,

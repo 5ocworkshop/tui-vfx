@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GraphValueShape",
+  "description": "Cardinality or sampling shape for a graph-local value.",
+  "oneOf": [
+    {
+      "description": "One value applies to the entire frame/node execution.",
+      "type": "string",
+      "const": "frameValue"
+    },
+    {
+      "description": "Value may vary per destination/sample cell.",
+      "type": "string",
+      "const": "cellField"
+    }
+  ]
+}

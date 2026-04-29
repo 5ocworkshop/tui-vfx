@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.12.0</VERS> -->
-<!-- <WCTX>New kernel Phase G3: add topology and channel-aware merge guidance.</WCTX> -->
-<!-- <CLOG>0.12.0: MINOR — add Phase G3 topology, parallel snapshot, and channel-aware merge guidance.
+<!-- <VERS>VERSION: 0.13.0</VERS> -->
+<!-- <WCTX>New kernel Phase G4: add graph value bus and node output guidance.</WCTX> -->
+<!-- <CLOG>0.13.0: MINOR — add Phase G4 node I/O, graph value bus, and spatial field guidance.
+0.12.0: MINOR — add Phase G3 topology, parallel snapshot, and channel-aware merge guidance.
 0.11.0: MINOR — add Phase G2 canonical graph execution proof guidance.
 0.10.0: MINOR — add Phase G1 canonical graph container guidance.
 0.9.0: MINOR — add Phase F2 declarative value source and parameter binding guidance.
@@ -495,29 +496,45 @@ Key docs:
 
 ### Phase G3 — topology / parallel snapshot / channel-aware merge semantics
 
+Completed phase.
+
+Locked:
+
+- `GraphStep` is the stable topology DTO for node, sequence, and parallel graph execution.
+- `GraphSpec.topology` is optional; when absent, `GraphSpec.order` remains the linear fallback.
+- Topology validation rejects unknown node references, duplicate node references, and topologies that do not cover declared nodes.
+- Sequence children execute in order and later children see earlier writes.
+- Parallel children all read the same pre-parallel surface snapshot and do not see sibling branch writes before join.
+- Parallel branches produce proof deltas that record written cell channels.
+- Channel-aware merge composes different-channel writes and resolves same-channel conflicts by explicit `ParallelMergePolicy`.
+
+### Phase G4 — node I/O / graph-local value bus
+
 Current phase.
 
 Target lock:
 
-- `GraphStep` is the stable topology DTO for node, sequence, and parallel graph execution.
-- `GraphSpec.topology` is optional; when absent, existing `GraphSpec.order` remains the linear fallback.
-- Topology validation rejects unknown node references, duplicate node references, and topologies that do not cover declared nodes.
-- Sequence children execute in order and later children see earlier writes.
-- Parallel children all read the same pre-parallel snapshot and do not see sibling branch writes before join.
-- Parallel branches produce proof deltas that record written cell channels.
-- Channel-aware merge composes different-channel writes and resolves same-channel conflicts by explicit `ParallelMergePolicy`.
-- Proof execution uses toy adapters only, including foreground/background-only adapters for merge tests.
+- `EffectDescriptor.outputs` declares descriptor-local effect outputs keyed by `EffectOutputId`.
+- `NodeSpec.outputs` publishes graph-local values keyed by `GraphValueId`.
+- `NodeOutputSource` supports `effectOutput` and input re-emission.
+- `ValueSource::GraphValue` is allowed for node inputs and rejected in binding/parameter/signal contexts.
+- `GraphValueKind` and `GraphValueShape` type outputs and distinguish frame-wide `frameValue` from per-cell `cellField`.
+- Spatial scalar fields such as normalized-x must remain cell fields and must not be collapsed to one global number.
+- Sequence execution updates the value bus after each node; later sequence nodes can consume prior outputs, and one output can fan out to multiple consumers.
+- Parallel branches receive the same value-bus snapshot, cannot see sibling outputs before join, and merge branch outputs after join.
+- `GraphValueMergePolicy` makes same-output parallel conflicts deterministic via child-order LWW or explicit error.
+- Proof execution uses toy `proof.*` adapters only; do not port real effects.
 
-Hard deferrals after G3:
+Hard deferrals after G4:
 
-- Do not add node I/O / hint value bus, source recipe schema/compiler, runtime `ParameterStore` / `SignalStore`, live override precedence, direct node/effect-input binding targets, phase graph, trigger engine, studio controls/manifest, migration, real effect ports, or legacy aliases.
+- Do not add source recipe schema/compiler, runtime `ParameterStore` / `SignalStore`, F2 binding execution, live override precedence, direct node/effect-input binding targets, phase graph, trigger/dwell/visibility engines, loopback/demo signal execution, asset/procedural source system, studio controls/manifest, migration, real effect ports, or legacy aliases.
 
 Key docs:
 
-- `docs/new_kernel/ARCH-RESP-TO-PHASE_G2.md`
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_G3.md`
 - `docs/v3.1-architecture-overview.md`
 - `docs/v3.1-contract-boundary.md`
-- `docs/new_kernel/PHASE_G3_STATUS.md` once created.
+- `docs/new_kernel/PHASE_G4_STATUS.md` once created.
 
 ## Verification gates
 
@@ -577,4 +594,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.13.0</VERS> -->

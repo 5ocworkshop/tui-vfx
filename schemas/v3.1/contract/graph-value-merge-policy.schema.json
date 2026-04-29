@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GraphValueMergePolicy",
+  "description": "Policy for resolving graph value outputs produced by parallel branches.",
+  "oneOf": [
+    {
+      "description": "Merge branch value outputs in authored child order; later outputs win.",
+      "type": "string",
+      "const": "childOrderLastWriterWins"
+    },
+    {
+      "description": "Reject the merge when multiple branches publish the same graph value id.",
+      "type": "string",
+      "const": "errorOnSameValueConflict"
+    }
+  ]
+}

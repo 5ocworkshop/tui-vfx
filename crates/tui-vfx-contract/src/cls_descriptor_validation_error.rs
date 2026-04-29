@@ -1,14 +1,15 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>New kernel Phase G1: report graph, node, descriptor, source, and binding validation failures.</WCTX>
-// <CLOG>0.4.0: MINOR — add graph and node validation errors.
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>New kernel Phase G4: report graph value and node output validation failures.</WCTX>
+// <CLOG>0.5.0: MINOR — add effect output, graph value, and node output validation errors.
+// 0.4.0: MINOR — add graph and node validation errors.
 // 0.3.0: MINOR — add parameter, signal, source-kind, map, and binding validation errors.
 // 0.2.0: MINOR — add input id, value kind, range, and enum validation errors.
 // 0.1.0: INIT — add structured validation errors for scope, write policy, and channel checks.</CLOG>
 
 use crate::{
-    CellChannel, CellWritePolicy, EffectId, EffectInputId, GraphId, NodeId, ParameterId,
-    RoleWritePolicyKind, ScopeKind, SignalId, ValueKind,
+    CellChannel, CellWritePolicy, EffectId, EffectInputId, EffectOutputId, GraphId, GraphValueId,
+    NodeId, ParameterId, RoleWritePolicyKind, ScopeKind, SignalId, ValueKind,
 };
 
 /// Structured error returned when a request exceeds descriptor capabilities.
@@ -39,6 +40,16 @@ pub enum DescriptorValidationError {
     InvalidInputId {
         /// Invalid descriptor-local input id.
         id: EffectInputId,
+    },
+    /// Descriptor contains an output id outside the accepted local identifier shape.
+    InvalidEffectOutputId {
+        /// Invalid descriptor-local output id.
+        id: EffectOutputId,
+    },
+    /// Node contains a graph value id outside the accepted identifier shape.
+    InvalidGraphValueId {
+        /// Invalid graph-local value id.
+        id: GraphValueId,
     },
 
     /// Graph id is outside the accepted identifier shape.
@@ -91,6 +102,20 @@ pub enum DescriptorValidationError {
         /// Missing effect input id.
         input: EffectInputId,
     },
+    /// Node output references an effect output not declared by the effect descriptor.
+    UnknownEffectOutput {
+        /// Effect id whose output map was checked.
+        effect: EffectId,
+        /// Missing descriptor-local output id.
+        output: EffectOutputId,
+    },
+    /// Node output re-emits an input not declared by the effect descriptor.
+    UnknownNodeOutputInput {
+        /// Effect id whose input map was checked.
+        effect: EffectId,
+        /// Missing descriptor-local input id.
+        input: EffectInputId,
+    },
     /// Node omits an effect input that has no descriptor default.
     MissingRequiredNodeInput {
         /// Effect id whose input is required.
@@ -132,6 +157,16 @@ pub enum DescriptorValidationError {
     UnknownSignal {
         /// Missing signal id.
         id: SignalId,
+    },
+    /// Value source references an undeclared graph-local value.
+    UnknownGraphValue {
+        /// Missing graph value id.
+        id: GraphValueId,
+    },
+    /// Graph-local value source was used outside a node input context.
+    GraphValueSourceNotAllowed {
+        /// Graph value id that was rejected.
+        id: GraphValueId,
     },
     /// Binding target references an undeclared parameter.
     UnknownBindingParameterTarget {
@@ -234,4 +269,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

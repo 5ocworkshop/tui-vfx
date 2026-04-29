@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NodeOutputSpec",
+  "description": "Declaration for one graph-local value published by a node.",
+  "type": "object",
+  "properties": {
+    "source": {
+      "description": "Where the value is read from after node input resolution/effect execution.",
+      "$ref": "#/$defs/NodeOutputSource"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "source"
+  ],
+  "$defs": {
+    "EffectInputId": {
+      "description": "Stable descriptor-local effect input identifier.",
+      "type": "string"
+    },
+    "EffectOutputId": {
+      "description": "Stable descriptor-local effect output identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "NodeOutputSource": {
+      "description": "Source used by a node to publish one graph-local value.",
+      "oneOf": [
+        {
+          "description": "Publish an output computed by the proof/real effect adapter.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Descriptor-local output id.",
+              "$ref": "#/$defs/EffectOutputId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "effectOutput"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Re-emit one resolved node input into the graph-local value bus.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Descriptor-local input id.",
+              "$ref": "#/$defs/EffectInputId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "input"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>New kernel Phase G3: include graph topology schema root.</WCTX>
-// <CLOG>0.6.0: MINOR — add graph-step schema fixture.
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>New kernel Phase G4: include graph value and node output schema roots.</WCTX>
+// <CLOG>0.7.0: MINOR — add graph value and node output schema fixtures.
+// 0.6.0: MINOR — add graph-step schema fixture.
 // 0.5.0: MINOR — add graph and node schema fixtures.
 // 0.4.0: MINOR — add value source, parameter, signal, and binding schema fixtures.
 // 0.3.0: MINOR — add value and effect input schema fixtures and description assertions.
@@ -12,9 +13,10 @@ use std::{fs, path::PathBuf};
 
 use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
-    BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, GraphSpec, GraphStep, NodeSpec,
-    ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, Surface,
-    SurfaceDiagnostic, Value, ValueSource,
+    BindingSpec, CellWrite, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec,
+    GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape,
+    NodeOutputSpec, NodeSpec, ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec,
+    SignalSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -47,6 +49,30 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         ("binding.schema.json", canonical_schema::<BindingSpec>()),
         ("graph.schema.json", canonical_schema::<GraphSpec>()),
         ("graph-step.schema.json", canonical_schema::<GraphStep>()),
+        (
+            "graph-value-id.schema.json",
+            canonical_schema::<GraphValueId>(),
+        ),
+        (
+            "graph-value-kind.schema.json",
+            canonical_schema::<GraphValueKind>(),
+        ),
+        (
+            "graph-value-shape.schema.json",
+            canonical_schema::<GraphValueShape>(),
+        ),
+        (
+            "graph-value-merge-policy.schema.json",
+            canonical_schema::<GraphValueMergePolicy>(),
+        ),
+        (
+            "effect-output.schema.json",
+            canonical_schema::<EffectOutputSpec>(),
+        ),
+        (
+            "node-output.schema.json",
+            canonical_schema::<NodeOutputSpec>(),
+        ),
         ("node.schema.json", canonical_schema::<NodeSpec>()),
         (
             "diagnostic.schema.json",
@@ -172,6 +198,16 @@ fn node_schema_is_current() {
 }
 
 #[test]
+fn graph_value_schema_roots_are_current() {
+    assert_schema_fixture_current::<GraphValueId>("graph-value-id.schema.json");
+    assert_schema_fixture_current::<GraphValueKind>("graph-value-kind.schema.json");
+    assert_schema_fixture_current::<GraphValueShape>("graph-value-shape.schema.json");
+    assert_schema_fixture_current::<GraphValueMergePolicy>("graph-value-merge-policy.schema.json");
+    assert_schema_fixture_current::<EffectOutputSpec>("effect-output.schema.json");
+    assert_schema_fixture_current::<NodeOutputSpec>("node-output.schema.json");
+}
+
+#[test]
 fn effect_descriptor_schema_with_inputs_is_current() {
     let schema = canonical_schema::<EffectDescriptor>();
     assert!(schema.contains("Descriptor-local typed input specifications"));
@@ -283,4 +319,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

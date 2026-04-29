@@ -1,12 +1,13 @@
 // <FILE>crates/tui-vfx-next/src/cls_graph_execution_error.rs</FILE> - <DESC>Proof graph execution failure enum</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase G3: report channel-aware parallel merge conflicts.</WCTX>
-// <CLOG>0.2.0: MINOR — add same-channel parallel merge conflict error.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>New kernel Phase G4: report graph value bus execution conflicts.</WCTX>
+// <CLOG>0.3.0: MINOR — add missing graph value and parallel value conflict errors.
+// 0.2.0: MINOR — add same-channel parallel merge conflict error.
 // 0.1.0: INIT — add structured graph execution errors for proof tests.</CLOG>
 
 use crate::{
-    CellChannel, DescriptorValidationError, EffectId, EffectInputId, NodeId, ParameterId, SignalId,
-    ValueKind,
+    CellChannel, DescriptorValidationError, EffectId, EffectInputId, GraphValueId, NodeId,
+    ParameterId, SignalId, ValueKind,
 };
 
 /// Structured failure returned by proof graph execution.
@@ -37,6 +38,11 @@ pub enum GraphExecutionError {
     NonNumericResolvedMapSource {
         /// Actual resolved value kind.
         actual: ValueKind,
+    },
+    /// Graph-local value was not available in this node's value-bus snapshot.
+    MissingGraphValue {
+        /// Missing graph value id.
+        id: GraphValueId,
     },
 
     /// Proof adapter required an input that was not resolved.
@@ -70,6 +76,15 @@ pub enum GraphExecutionError {
         /// Later node that conflicted with the prior write.
         conflicting_node: NodeId,
     },
+    /// Parallel branches published the same graph value under error-on-conflict policy.
+    ParallelValueMergeConflict {
+        /// Graph value id published by more than one branch.
+        id: GraphValueId,
+        /// Node that first published this value.
+        prior_node: NodeId,
+        /// Later node that conflicted with the prior publication.
+        conflicting_node: NodeId,
+    },
 }
 
 impl From<DescriptorValidationError> for GraphExecutionError {
@@ -79,4 +94,4 @@ impl From<DescriptorValidationError> for GraphExecutionError {
 }
 
 // <FILE>crates/tui-vfx-next/src/cls_graph_execution_error.rs</FILE> - <DESC>Proof graph execution failure enum</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

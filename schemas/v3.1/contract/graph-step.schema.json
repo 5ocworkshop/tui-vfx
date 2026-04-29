@@ -62,6 +62,11 @@
         "mergePolicy": {
           "description": "Policy used when multiple branches write the same cell channel.",
           "$ref": "#/$defs/ParallelMergePolicy"
+        },
+        "valueMergePolicy": {
+          "description": "Policy used when multiple branches publish the same graph value id.",
+          "$ref": "#/$defs/GraphValueMergePolicy",
+          "default": "childOrderLastWriterWins"
         }
       },
       "additionalProperties": false,
@@ -73,6 +78,21 @@
     }
   ],
   "$defs": {
+    "GraphValueMergePolicy": {
+      "description": "Policy for resolving graph value outputs produced by parallel branches.",
+      "oneOf": [
+        {
+          "description": "Merge branch value outputs in authored child order; later outputs win.",
+          "type": "string",
+          "const": "childOrderLastWriterWins"
+        },
+        {
+          "description": "Reject the merge when multiple branches publish the same graph value id.",
+          "type": "string",
+          "const": "errorOnSameValueConflict"
+        }
+      ]
+    },
     "NodeId": {
       "description": "Stable node identifier inside a canonical graph.",
       "type": "string",

@@ -83,6 +83,36 @@
       ]
     },
     {
+      "description": "Source value comes from an earlier graph-local node output.",
+      "type": "object",
+      "properties": {
+        "fallback": {
+          "description": "Optional fallback literal when the value is unavailable at execution time.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "description": "Referenced graph-local value id.",
+          "$ref": "#/$defs/GraphValueId"
+        },
+        "kind": {
+          "type": "string",
+          "const": "graphValue"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ]
+    },
+    {
       "description": "Source value maps a numeric source from one range to another.",
       "type": "object",
       "properties": {
@@ -158,6 +188,11 @@
         "b",
         "a"
       ]
+    },
+    "GraphValueId": {
+      "description": "Stable value identifier published into a canonical graph-local value bus.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
     },
     "InternedRoleName": {
       "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",

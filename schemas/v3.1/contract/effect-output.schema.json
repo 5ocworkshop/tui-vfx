@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EffectOutputSpec",
+  "description": "Descriptor-local specification for one effect-computed output.",
+  "type": "object",
+  "properties": {
+    "description": {
+      "description": "Optional human-facing description for docs and catalogs.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "kind": {
+      "description": "Typed value kind produced by this output.",
+      "$ref": "#/$defs/GraphValueKind"
+    },
+    "shape": {
+      "description": "Cardinality of the produced value.",
+      "$ref": "#/$defs/GraphValueShape"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "shape"
+  ],
+  "$defs": {
+    "GraphValueKind": {
+      "description": "Closed vocabulary for values published on the graph-local value bus.",
+      "oneOf": [
+        {
+          "description": "Floating-point scalar value. Shape decides whether it is frame-wide or per-cell.",
+          "type": "string",
+          "const": "number"
+        }
+      ]
+    },
+    "GraphValueShape": {
+      "description": "Cardinality or sampling shape for a graph-local value.",
+      "oneOf": [
+        {
+          "description": "One value applies to the entire frame/node execution.",
+          "type": "string",
+          "const": "frameValue"
+        },
+        {
+          "description": "Value may vary per destination/sample cell.",
+          "type": "string",
+          "const": "cellField"
+        }
+      ]
+    }
+  }
+}
