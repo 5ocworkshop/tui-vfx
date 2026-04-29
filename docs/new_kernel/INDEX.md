@@ -1,7 +1,9 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.27.0</VERS> -->
-<!-- <WCTX>K2.10 closeout indexing: add architect acceptance and K2.11 recommendation.</WCTX> -->
-<!-- <CLOG>0.27.0: MINOR — add K2.10 architect response and K2.11 schema-readiness recommendation.
+<!-- <VERS>VERSION: 0.29.0</VERS> -->
+<!-- <WCTX>K2.11 closeout indexing: add briefing-first review and de-slop report.</WCTX> -->
+<!-- <CLOG>0.29.0: MINOR — add K2.11 briefing-first review and de-slop report.
+0.28.0: MINOR — add K2.11 schema-readiness ledger, source/content/scene table, studio preflight deferral, and status memo.
+0.27.0: MINOR — add K2.10 architect response and K2.11 schema-readiness recommendation.
 0.26.0: MINOR — add K2.9 architect response and K2.10 corpus mapping/backlog artifacts.
 0.25.0: MINOR — add K2.5 architect response, evidence, tooling PRD, and status memo.
 0.24.0: MINOR — add K2.0-K2.4 docs, review/de-slop artifacts, player reports, and schema directory details.
@@ -139,6 +141,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_4_STYLED_CELL_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_4_STYLED_CELL_SUBSTRATE_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.4 styled-cell substrate memo, verification, and de-slop summary.
 - [`PHASE_K2_5_STYLED_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_5_STYLED_PRIMITIVE_ADAPTER_BURNDOWN_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.5 styled primitive adapter burn-down memo and tooling PRD summary.
 - [`PHASE_K2_10_CORPUS_MAPPING_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_10_CORPUS_MAPPING_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.10 corpus mapping memo, verification, review, and next-packet recommendation.
+- [`PHASE_K2_11_SCHEMA_READINESS_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_11_SCHEMA_READINESS_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.11 schema-readiness memo, source descriptor pilot, blocker ledger, and next-packet sequence.
+- [`PHASE_K2_11_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_11_REVIEW_AND_DESLOP_REPORT.md) — briefing-first formal review and AI de-slop evidence for K2.11.
 
 ## Supporting artifacts
 
@@ -161,13 +165,16 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_10_DEBUG_RECIPE_CORPUS_MAPPING_REPORT.md`](K2_10_DEBUG_RECIPE_CORPUS_MAPPING_REPORT.md) — K2.10 corpus-wide migration mapping report with per-family status counts.
 - [`K2_10_MIGRATION_BACKLOG_BOARD.md`](K2_10_MIGRATION_BACKLOG_BOARD.md) — K2.10 backlog board grouped by descriptor, source, schema, GUI, backend, owner-audit, and duplicate-variant buckets.
 - [`K2_10_RENDER_BACKEND_BOUNDARY_NOTE.md`](K2_10_RENDER_BACKEND_BOUNDARY_NOTE.md) — K2.10 note preserving the future render-backend adapter boundary.
+- [`K2_11_SCHEMA_READINESS_LEDGER.md`](K2_11_SCHEMA_READINESS_LEDGER.md) — K2.11 schema-readiness blocker ledger and resolution sequence.
+- [`K2_11_SOURCE_CONTENT_SCENE_DECISION_TABLE.md`](K2_11_SOURCE_CONTENT_SCENE_DECISION_TABLE.md) — K2.11 source/content/scene decision table for v3.1 migration blockers.
+- [`K2_11_STUDIO_CONTROL_SURFACE_PREFLIGHT.md`](K2_11_STUDIO_CONTROL_SURFACE_PREFLIGHT.md) — K2.11 control-surface preflight deferral and K3.0 trigger.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts
 
 - [`../../crates/tui-vfx-contract-cli/`](../../crates/tui-vfx-contract-cli/) — contract-only canonical v3.1 recipe validator CLI with recursive `validate-recipe` report schema `v3.1.validator.report.1`.
 - [`../../crates/tui-vfx-player/`](../../crates/tui-vfx-player/) — contract-native skeleton player API with `RecipePlayer`, `PlayerSession`, sampled frame reports, deterministic render hash, and explicit unsupported adapter diagnostics.
-- [`../../crates/tui-vfx-player-cli/`](../../crates/tui-vfx-player-cli/) — player CLI emitting `render-recipe` reports (`v3.1.player.frame.1`, `v3.1.player.run.1`), `render-frame` visual-frame reports (`v3.1.player.visualFrameReport.1`), inventory reports, migration-gap reports, and primitive-adapter-gap reports.
+- [`../../crates/tui-vfx-player-cli/`](../../crates/tui-vfx-player-cli/) — player CLI emitting `render-recipe` reports (`v3.1.player.frame.1`, `v3.1.player.run.1`), `render-frame` visual-frame reports (`v3.1.player.visualFrameReport.1`), inventory reports, migration-gap reports, primitive-adapter-gap reports, and schema-readiness reports.
 - [`../../crates/tui-vfx-player-ui/`](../../crates/tui-vfx-player-ui/) — K1 ratatui/crossterm visual terminal shell with local fast-fs navigation layered on the K0 player/session APIs.
 - [`../../descriptors/v3.1/packs/primitive.json`](../../descriptors/v3.1/packs/primitive.json) — standard v3.1 primitive descriptor pack created by Phase J2.
 - `../../../tui-vfx-recipes/recipes/v3.1/debug_recipes/` — canonical v3.1 migrated debug recipe fixtures produced by Phase J0 and extended by Phase J2.
@@ -185,4 +192,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.26.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.29.0</VERS> -->

@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/src/main.rs</FILE> - <DESC>Contract-native player CLI entrypoint</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>Player CLI de-slop: keep entrypoint metadata compact and current.</WCTX>
-// <CLOG>0.6.0: MINOR — register migration mapping command runner module.
-// 0.5.1: PATCH — collapse historical entrypoint metadata into latest-change context.</CLOG>
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>K2.11 schema readiness: register blocker ledger command.</WCTX>
+// <CLOG>0.7.0: MINOR — register schema-readiness command runner module.</CLOG>
 
 mod cls_cli_options;
 mod fnc_cli_sample_request;
@@ -22,6 +21,7 @@ mod fnc_run_render_frame;
 mod fnc_run_render_frame_diff;
 mod fnc_run_render_recipe;
 mod fnc_run_render_timeline;
+mod fnc_run_schema_readiness;
 mod fnc_validate_migration_gap_options;
 
 fn main() {
@@ -29,4 +29,4 @@ fn main() {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/main.rs</FILE> - <DESC>Contract-native player CLI entrypoint</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

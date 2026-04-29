@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.11.1</VERS>
-// <WCTX>Player CLI de-slop: keep regression names and metadata phase-neutral.</WCTX>
-// <CLOG>0.11.1: PATCH — replace a migration-mapping unwrap with contextual failure text.
-// 0.11.0: MINOR — lock corpus-wide migration mapping, backlog docs, and read-only legacy guarantees.</CLOG>
+// <VERS>VERSION: 0.12.0</VERS>
+// <WCTX>K2.11 schema readiness: lock CLI report shape before implementation.</WCTX>
+// <CLOG>0.12.0: MINOR — add schema-readiness CLI regression coverage.</CLOG>
 
 use std::{
     fs,
@@ -173,6 +172,20 @@ fn test_fnc_cli_reports_primitive_adapter_gap_json() {
 }
 
 #[test]
+fn test_fnc_cli_reports_source_text_descriptor_pilot_json() {
+    let report = inventory_report(vec![
+        str_arg("inventory-recipes"),
+        str_arg("--recursive"),
+        debug_recipe_root_path(),
+    ]);
+
+    let source = find_source(&report, "source.text");
+    assert_eq!(source["descriptorCovered"], true);
+    assert_eq!(source["representedByRecipes"], false);
+    assert_eq!(source["adapterStatus"], "visible");
+}
+
+#[test]
 fn test_fnc_cli_reports_migration_gap_summary_json() {
     let report = migration_gap_report();
 
@@ -274,6 +287,90 @@ fn test_fnc_cli_reports_migration_mapping_batch_masks_json() {
     let radial_square = find_mapping_record(&report, "masks/mask_radial_square.json");
     assert_eq!(radial_square["status"], "duplicateOrVariant");
     assert_eq!(radial_square["recommendation"], "skipAsDuplicateVariant");
+}
+
+#[test]
+fn test_fnc_cli_reports_schema_readiness_recursive_json() {
+    let report = schema_readiness_report(vec![str_arg("schema-readiness"), str_arg("--recursive")]);
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.schemaReadiness.1");
+    assert_eq!(report["summary"]["totalLegacyRecords"], 603);
+    assert_eq!(report["summary"]["schemaBlockedRecords"], 72);
+    assert_eq!(report["summary"]["sourceBlockedRecords"], 67);
+    assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 4);
+    assert_eq!(report["summary"]["unknownRecords"], 5);
+    assert_eq!(report["summary"]["canDeclareSchemaReady"], false);
+
+    assert!(
+        report["blockers"]
+            .as_array()
+            .expect("blockers")
+            .iter()
+            .any(|blocker| blocker["blockerKind"] == "motionTimingSemantics"
+                && blocker["statusFromMigrationMapping"] == "schemaDecisionNeeded")
+    );
+    assert!(
+        report["blockers"]
+            .as_array()
+            .expect("blockers")
+            .iter()
+            .any(|blocker| blocker["blockerKind"] == "sourceDescriptor"
+                && blocker["statusFromMigrationMapping"] == "sourceDecisionNeeded")
+    );
+    assert!(
+        report["blockers"]
+            .as_array()
+            .expect("blockers")
+            .iter()
+            .any(|blocker| blocker["blockerKind"] == "fieldCoverage"
+                && blocker["statusFromMigrationMapping"] == "blockedByFieldCoverage")
+    );
+}
+
+#[test]
+fn test_fnc_cli_maps_schema_readiness_blockers_json() {
+    let report = schema_readiness_report(vec![str_arg("schema-readiness"), str_arg("--recursive")]);
+
+    let value_source = find_readiness_blocker(
+        &report,
+        "valueSourceSemantics",
+        "filters/filter_dim_sample_surface_radius.json",
+    );
+    assert_eq!(
+        value_source["statusFromMigrationMapping"],
+        "schemaDecisionNeeded"
+    );
+    assert_eq!(value_source["isSchemaReadinessBlocking"], true);
+
+    let source =
+        find_readiness_blocker(&report, "sourceDescriptor", "content/content_marquee.json");
+    assert_eq!(source["statusFromMigrationMapping"], "sourceDecisionNeeded");
+    assert_eq!(source["isSchemaReadinessBlocking"], true);
+    assert!(
+        source["notes"]
+            .as_array()
+            .expect("notes")
+            .iter()
+            .any(|note| note.as_str().unwrap_or("").contains("source.marqueeText"))
+    );
+
+    let field = find_readiness_blocker(
+        &report,
+        "fieldCoverage",
+        "shaders/primitives/shader_linear_gradient_diagonal.json",
+    );
+    assert_eq!(
+        field["statusFromMigrationMapping"],
+        "blockedByFieldCoverage"
+    );
+    assert_eq!(field["isSchemaReadinessBlocking"], true);
+    assert!(
+        field["notes"]
+            .as_array()
+            .expect("notes")
+            .iter()
+            .any(|note| note.as_str().unwrap_or("").contains("gradient"))
+    );
 }
 
 #[test]
@@ -867,6 +964,19 @@ fn migration_mapping_batch_report(mut args: Vec<String>) -> serde_json::Value {
     player_cli_json(args, "migration mapping batch player cli")
 }
 
+fn schema_readiness_report(mut args: Vec<String>) -> serde_json::Value {
+    args.extend([
+        str_arg("--legacy-root"),
+        legacy_debug_recipe_root_path(),
+        str_arg("--v31-root"),
+        debug_recipe_root_path(),
+        str_arg("--descriptor-pack"),
+        descriptor_pack_path(),
+        str_arg("--json"),
+    ]);
+    player_cli_json(args, "schema readiness player cli")
+}
+
 fn player_cli_json(args: Vec<String>, context: &str) -> serde_json::Value {
     let output = run_player_cli(args, context);
 
@@ -891,6 +1001,15 @@ fn assert_gap_entry(
 
     assert_eq!(entry["outcome"], expected_outcome);
     assert_eq!(entry["adapterClass"], expected_adapter_class);
+}
+
+fn find_source<'a>(report: &'a serde_json::Value, id: &str) -> &'a serde_json::Value {
+    report["sources"]
+        .as_array()
+        .expect("sources")
+        .iter()
+        .find(|source| source["id"] == id)
+        .expect("source entry")
 }
 
 fn find_effect<'a>(report: &'a serde_json::Value, id: &str) -> &'a serde_json::Value {
@@ -918,6 +1037,26 @@ fn find_family<'a>(report: &'a serde_json::Value, family: &str) -> &'a serde_jso
         .iter()
         .find(|entry| entry["family"] == family)
         .expect("family entry")
+}
+
+fn find_readiness_blocker<'a>(
+    report: &'a serde_json::Value,
+    blocker_kind: &str,
+    legacy_path: &str,
+) -> &'a serde_json::Value {
+    report["blockers"]
+        .as_array()
+        .expect("readiness blockers")
+        .iter()
+        .find(|entry| {
+            entry["blockerKind"] == blocker_kind
+                && entry["representativeLegacyPaths"]
+                    .as_array()
+                    .expect("representative paths")
+                    .iter()
+                    .any(|path| path == legacy_path)
+        })
+        .expect("schema readiness blocker")
 }
 
 fn find_mapping_record<'a>(
@@ -1041,4 +1180,4 @@ fn unsupported_effect_recipe() -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.11.1</VERS>
+// <VERS>END OF VERSION: 0.12.0</VERS>

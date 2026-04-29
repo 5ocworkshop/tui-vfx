@@ -82,6 +82,80 @@
         "timeAware": false,
         "resizeAware": true
       }
+    },
+    "source.text": {
+      "id": "source.text",
+      "version": "0.1.0",
+      "displayName": "Plain Text Source",
+      "category": "text",
+      "kind": {
+        "kind": "text"
+      },
+      "inputs": {
+        "text": {
+          "displayName": "Text",
+          "description": "Plain text rendered into the source grid.",
+          "value": {
+            "kind": "text",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "sourceText"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "width": {
+          "displayName": "Width",
+          "description": "Optional text source width in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": {
+              "min": 1.0,
+              "max": 512.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        },
+        "height": {
+          "displayName": "Height",
+          "description": "Optional text source height in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": {
+              "min": 1.0,
+              "max": 256.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        }
+      },
+      "assets": {},
+      "output": {
+        "size": {
+          "kind": "inputDriven"
+        },
+        "roles": {
+          "kind": "defaultRole",
+          "role": "Text"
+        }
+      },
+      "lifecycle": {
+        "deterministicWithSeed": true,
+        "timeAware": false,
+        "resizeAware": true
+      }
     }
   },
   "effects": {

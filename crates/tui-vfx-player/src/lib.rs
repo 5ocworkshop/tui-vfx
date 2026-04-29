@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
-// <WCTX>Player crate de-slop: keep export metadata compact and current.</WCTX>
-// <CLOG>0.9.0: MINOR — add corpus-wide migration mapping evidence helpers.</CLOG>
+// <VERS>VERSION: 0.10.0</VERS>
+// <WCTX>K2.11 schema readiness: export blocker ledger report builder.</WCTX>
+// <CLOG>0.10.0: MINOR — export schema-readiness report DTOs and builder.</CLOG>
 
 //! Contract-native skeleton player for canonical v3.1 recipes.
 //!
@@ -30,6 +30,7 @@ pub mod cls_player_primitive_adapter_gap_summary;
 pub mod cls_player_primitive_field_coverage;
 pub mod cls_player_run_report;
 pub mod cls_player_sample_request;
+pub mod cls_player_schema_readiness_report;
 pub mod cls_player_session;
 pub mod cls_player_status;
 pub mod cls_player_styled_cell;
@@ -73,6 +74,10 @@ pub mod fnc_build_player_frame;
 pub mod fnc_build_primitive_adapter_gap_report;
 pub mod fnc_build_primitive_field_coverage_report;
 mod fnc_build_primitive_field_instance;
+mod fnc_build_schema_readiness_blockers;
+mod fnc_build_schema_readiness_families;
+mod fnc_build_schema_readiness_milestones;
+pub mod fnc_build_schema_readiness_report;
 mod fnc_build_visual_frame;
 mod fnc_classify_debug_recipe_family;
 mod fnc_classify_migration_mapping_effect_blocker;
@@ -111,11 +116,15 @@ pub mod fnc_render_visual_frame_paths;
 mod fnc_resolve_effect_input;
 pub mod fnc_resolve_value_source;
 mod fnc_scan_primitive_field_recipe;
+mod fnc_schema_readiness_blocker_kind;
+mod fnc_schema_readiness_blocker_notes;
+mod fnc_schema_readiness_blocker_text;
 mod fnc_summarize_migration_gap_families;
 mod fnc_summarize_migration_mapping_batch;
 mod fnc_summarize_player_inventory;
 mod fnc_summarize_primitive_adapter_gaps;
 mod fnc_summarize_primitive_field_coverage;
+mod fnc_summarize_schema_readiness;
 mod fnc_summarize_visual_frames;
 
 pub(crate) use cls_legacy_migration_mapping_evidence::LegacyMigrationMappingEvidence;
@@ -151,6 +160,10 @@ pub use cls_player_primitive_field_coverage::{
 };
 pub use cls_player_run_report::PlayerRunReport;
 pub use cls_player_sample_request::PlayerSampleRequest;
+pub use cls_player_schema_readiness_report::{
+    PlayerSchemaReadinessBlocker, PlayerSchemaReadinessFamily, PlayerSchemaReadinessMilestone,
+    PlayerSchemaReadinessReport, PlayerSchemaReadinessSummary,
+};
 pub use cls_player_session::PlayerSession;
 pub use cls_player_status::PlayerStatus;
 pub use cls_player_styled_cell::PlayerStyledCell;
@@ -169,6 +182,10 @@ pub use fnc_build_migration_gap_report::build_migration_gap_report;
 pub use fnc_build_migration_mapping_batch_report::build_migration_mapping_batch_report;
 pub use fnc_build_primitive_adapter_gap_report::build_primitive_adapter_gap_report;
 pub use fnc_build_primitive_field_coverage_report::build_primitive_field_coverage_report;
+pub(crate) use fnc_build_schema_readiness_blockers::build_schema_readiness_blockers;
+pub(crate) use fnc_build_schema_readiness_families::build_schema_readiness_families;
+pub(crate) use fnc_build_schema_readiness_milestones::build_schema_readiness_milestones;
+pub use fnc_build_schema_readiness_report::build_schema_readiness_report;
 pub use fnc_build_visual_frame::build_visual_frame_from_styled_grid;
 pub use fnc_collect_recipe_paths::collect_recipe_paths;
 pub use fnc_inventory_recipe_file::inventory_recipe_file;
@@ -180,6 +197,14 @@ pub use fnc_primitive_adapter_gap_paths::primitive_adapter_gap_paths;
 pub use fnc_render_recipe_file::render_recipe_file;
 pub use fnc_render_visual_frame_paths::render_visual_frame_paths;
 pub use fnc_resolve_value_source::resolve_value_source;
+pub(crate) use fnc_schema_readiness_blocker_kind::{
+    is_schema_readiness_blocking, schema_readiness_blocker_kind,
+};
+pub(crate) use fnc_schema_readiness_blocker_notes::schema_readiness_blocker_notes;
+pub(crate) use fnc_schema_readiness_blocker_text::{
+    schema_readiness_blocking_decision, schema_readiness_next_packet,
+};
+pub(crate) use fnc_summarize_schema_readiness::summarize_schema_readiness;
 
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>END OF VERSION: 0.9.0</VERS>
+// <VERS>END OF VERSION: 0.10.0</VERS>

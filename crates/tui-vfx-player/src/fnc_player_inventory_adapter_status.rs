@@ -1,10 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify inventory adapter status</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Primitive adapter work: classify supported text-grid and styled-cell adapters.</WCTX>
-// <CLOG>0.4.0: MINOR — classify K2.9 simple masks as visible text-grid adapters.
-// 0.3.0: MINOR — mark K2.5 styled primitive adapters as supported styled evidence.
-// 0.2.0: MINOR — mark dissolve and ripple as visible text-grid adapters.
-// 0.1.0: INIT — split effect/source adapter status helpers from report DTO.</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>K2.11 source descriptor pilot: classify source.text as visible.</WCTX>
+// <CLOG>0.5.0: MINOR — classify descriptor-backed source.text as a visible source adapter.</CLOG>
 
 /// Return the effect adapter classification used by inventory reports.
 pub fn effect_adapter_status(effect_id: &str, descriptor_covered: bool) -> &'static str {
@@ -30,10 +27,10 @@ pub fn source_adapter_status(source_id: &str, descriptor_covered: bool) -> &'sta
         return "missingDescriptor";
     }
     match source_id {
-        "source.card" => "visible",
+        "source.card" | "source.text" => "visible",
         _ => "unknown",
     }
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify inventory adapter status</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>
