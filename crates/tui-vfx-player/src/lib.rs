@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>New kernel Phase K2.2: expose stable visual-frame evidence APIs.</WCTX>
-// <CLOG>0.5.0: MINOR — export visual-frame report DTOs and render helpers.</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Primitive adapter work: expose adapter gap report APIs.</WCTX>
+// <CLOG>0.6.0: MINOR — export primitive adapter gap DTOs and helpers.
+// 0.5.0: MINOR — export visual-frame report DTOs and render helpers.</CLOG>
 
 //! Contract-native skeleton player for canonical v3.1 recipes.
 //!
@@ -17,6 +18,9 @@ pub mod cls_player_inventory_report;
 pub mod cls_player_inventory_source;
 pub mod cls_player_inventory_summary;
 pub mod cls_player_migration_gap_report;
+pub mod cls_player_primitive_adapter_gap_entry;
+pub mod cls_player_primitive_adapter_gap_report;
+pub mod cls_player_primitive_adapter_gap_summary;
 pub mod cls_player_run_report;
 pub mod cls_player_sample_request;
 pub mod cls_player_session;
@@ -30,11 +34,15 @@ pub mod cls_recipe_player;
 mod fnc_aggregate_player_inventory_effects;
 mod fnc_aggregate_player_inventory_sources;
 pub mod fnc_apply_graph_effects;
+mod fnc_apply_mask_dissolve;
+mod fnc_apply_sampler_ripple;
 mod fnc_build_migration_gap_family;
 pub mod fnc_build_migration_gap_report;
 pub mod fnc_build_player_frame;
+pub mod fnc_build_primitive_adapter_gap_report;
 mod fnc_build_visual_frame;
 mod fnc_classify_debug_recipe_family;
+mod fnc_classify_primitive_adapter_gap;
 mod fnc_collect_debug_recipe_family_inventory;
 mod fnc_collect_descriptor_inventory_ids;
 mod fnc_collect_migration_gap_family_names;
@@ -47,14 +55,17 @@ pub mod fnc_inventory_recipe_paths;
 pub mod fnc_load_descriptor_catalog;
 mod fnc_player_inventory_adapter_status;
 mod fnc_player_inventory_file_error;
+pub mod fnc_primitive_adapter_gap_paths;
 mod fnc_recommend_migration_queue;
 pub mod fnc_render_hash;
 pub mod fnc_render_recipe_file;
 pub mod fnc_render_scene;
 pub mod fnc_render_visual_frame_paths;
+mod fnc_resolve_effect_input;
 pub mod fnc_resolve_value_source;
 mod fnc_summarize_migration_gap_families;
 mod fnc_summarize_player_inventory;
+mod fnc_summarize_primitive_adapter_gaps;
 mod fnc_summarize_visual_frames;
 
 pub use cls_player_error::PlayerError;
@@ -69,6 +80,9 @@ pub use cls_player_migration_gap_report::{
     PlayerMigrationGapFamily, PlayerMigrationGapReport, PlayerMigrationGapSummary,
     PlayerMigrationQueueItem,
 };
+pub use cls_player_primitive_adapter_gap_entry::PlayerPrimitiveAdapterGapEntry;
+pub use cls_player_primitive_adapter_gap_report::PlayerPrimitiveAdapterGapReport;
+pub use cls_player_primitive_adapter_gap_summary::PlayerPrimitiveAdapterGapSummary;
 pub use cls_player_run_report::PlayerRunReport;
 pub use cls_player_sample_request::PlayerSampleRequest;
 pub use cls_player_session::PlayerSession;
@@ -80,15 +94,17 @@ pub use cls_player_visual_frame_report::PlayerVisualFrameReport;
 pub use cls_player_warning::PlayerWarning;
 pub use cls_recipe_player::RecipePlayer;
 pub use fnc_build_migration_gap_report::build_migration_gap_report;
+pub use fnc_build_primitive_adapter_gap_report::build_primitive_adapter_gap_report;
 pub use fnc_collect_recipe_paths::collect_recipe_paths;
 pub use fnc_inventory_recipe_file::inventory_recipe_file;
 pub use fnc_inventory_recipe_paths::inventory_recipe_paths;
 pub use fnc_load_descriptor_catalog::{
     DescriptorPackReport, LoadedDescriptorCatalog, load_descriptor_catalog,
 };
+pub use fnc_primitive_adapter_gap_paths::primitive_adapter_gap_paths;
 pub use fnc_render_recipe_file::render_recipe_file;
 pub use fnc_render_visual_frame_paths::render_visual_frame_paths;
 pub use fnc_resolve_value_source::resolve_value_source;
 
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

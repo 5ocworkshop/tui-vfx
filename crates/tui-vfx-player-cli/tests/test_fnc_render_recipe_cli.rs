@@ -1,28 +1,29 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>New kernel Phase K2.2 review: lock text-grid visual-frame provenance.</WCTX>
-// <CLOG>0.6.0: PATCH — assert loop/provenance/style-placeholder fields.
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>Primitive adapter work: keep CLI fixtures portable and assert adapter-gap outcomes.</WCTX>
+// <CLOG>0.7.0: MINOR — add primitive adapter gap regression coverage and project-derived recipe paths.
+// 0.6.0: PATCH — assert loop/provenance/style-placeholder fields.
 // 0.5.0: MINOR — add render-frame single, recursive, and unsupported tests.</CLOG>
 
-use std::process::Command;
+use std::{
+    path::PathBuf,
+    process::{Command, Output},
+};
 
 #[test]
 fn test_fnc_cli_renders_single_recipe_frame_json() {
-    let descriptor_pack = descriptor_pack();
-    let output = Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
-        .args([
-            "render-recipe",
-            "--recipe",
-            "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json",
-            "--descriptor-pack",
-            descriptor_pack.to_str().expect("utf8 path"),
-            "--json",
-        ])
-        .output()
-        .expect("run player cli");
+    let report = player_cli_json(
+        vec![
+            str_arg("render-recipe"),
+            str_arg("--recipe"),
+            recipe_path("baseline.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--json"),
+        ],
+        "render-recipe player cli",
+    );
 
-    assert!(output.status.success(), "stderr: {}", stderr(&output));
-    let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("json report");
     assert_eq!(report["schemaVersion"], "v3.1.player.frame.1");
     assert_eq!(report["status"], "rendered");
     assert!(report["nonEmptyCells"].as_u64().expect("cell count") > 0);
@@ -30,38 +31,31 @@ fn test_fnc_cli_renders_single_recipe_frame_json() {
 
 #[test]
 fn test_fnc_cli_renders_recursive_smoke_report_json() {
-    let descriptor_pack = descriptor_pack();
-    let output = Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
-        .args([
-            "render-recipe",
-            "--json",
-            "--recursive",
-            "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes",
-            "--descriptor-pack",
-            descriptor_pack.to_str().expect("utf8 path"),
-        ])
-        .output()
-        .expect("run recursive player cli");
+    let report = player_cli_json(
+        vec![
+            str_arg("render-recipe"),
+            str_arg("--json"),
+            str_arg("--recursive"),
+            debug_recipe_root_path(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+        ],
+        "recursive render-recipe player cli",
+    );
 
-    assert!(output.status.success(), "stderr: {}", stderr(&output));
-    let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("json report");
     assert_eq!(report["schemaVersion"], "v3.1.player.run.1");
     assert_eq!(report["summary"]["total"], 16);
-    assert!(report["summary"]["rendered"].as_u64().expect("rendered") > 0);
-    assert!(
-        report["summary"]["unsupported"]
-            .as_u64()
-            .expect("unsupported")
-            > 0
-    );
+    assert_eq!(report["summary"]["rendered"], 12);
+    assert_eq!(report["summary"]["unsupported"], 4);
+    assert_eq!(report["summary"]["errors"], 0);
 }
 
 #[test]
 fn test_fnc_cli_inventories_single_baseline_recipe_json() {
-    let report = inventory_report(&[
-        "inventory-recipes",
-        "--recipe",
-        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json",
+    let report = inventory_report(vec![
+        str_arg("inventory-recipes"),
+        str_arg("--recipe"),
+        recipe_path("baseline.json"),
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.inventory.1");
@@ -84,10 +78,10 @@ fn test_fnc_cli_inventories_single_baseline_recipe_json() {
 
 #[test]
 fn test_fnc_cli_inventories_visible_effect_adapter_json() {
-    let report = inventory_report(&[
-        "inventory-recipes",
-        "--recipe",
-        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/masks/mask_wipe.json",
+    let report = inventory_report(vec![
+        str_arg("inventory-recipes"),
+        str_arg("--recipe"),
+        recipe_path("masks/mask_wipe.json"),
     ]);
 
     assert_eq!(report["recipes"][0]["status"], "rendered");
@@ -106,10 +100,10 @@ fn test_fnc_cli_inventories_visible_effect_adapter_json() {
 
 #[test]
 fn test_fnc_cli_inventories_unsupported_effect_adapter_json() {
-    let report = inventory_report(&[
-        "inventory-recipes",
-        "--recipe",
-        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/shaders/primitives/shader_linear_gradient.json",
+    let report = inventory_report(vec![
+        str_arg("inventory-recipes"),
+        str_arg("--recipe"),
+        recipe_path("shaders/primitives/shader_linear_gradient.json"),
     ]);
 
     assert_eq!(report["recipes"][0]["status"], "unsupported");
@@ -139,21 +133,60 @@ fn test_fnc_cli_inventories_unsupported_effect_adapter_json() {
 
 #[test]
 fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
-    let report = inventory_report(&[
-        "inventory-recipes",
-        "--recursive",
-        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes",
+    let report = inventory_report(vec![
+        str_arg("inventory-recipes"),
+        str_arg("--recursive"),
+        debug_recipe_root_path(),
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.inventory.1");
     assert_eq!(report["summary"]["totalRecipes"], 16);
-    assert_eq!(report["summary"]["rendered"], 10);
-    assert_eq!(report["summary"]["unsupported"], 6);
+    assert_eq!(report["summary"]["rendered"], 12);
+    assert_eq!(report["summary"]["unsupported"], 4);
     assert_eq!(report["summary"]["errors"], 0);
     assert_eq!(report["summary"]["descriptorEffectIds"], 14);
     assert_eq!(report["summary"]["representedEffectIds"], 14);
     assert_eq!(report["summary"]["unrepresentedEffectIds"], 0);
-    assert_eq!(report["summary"]["unsupportedEffectIds"], 6);
+    assert_eq!(report["summary"]["unsupportedEffectIds"], 4);
+}
+
+#[test]
+fn test_fnc_cli_reports_primitive_adapter_gap_json() {
+    let report = primitive_adapter_gap_report();
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.primitiveAdapterGap.1");
+    assert_eq!(report["summary"]["totalEffects"], 14);
+    assert_eq!(report["summary"]["rendered"], 10);
+    assert_eq!(report["summary"]["stillUnsupported"], 0);
+    assert_eq!(report["summary"]["blockedByStyledCellSubstrate"], 4);
+    assert_eq!(report["summary"]["blockedBySemanticDecision"], 0);
+
+    assert_gap_entry(&report, "mask.dissolve", "rendered", "textGrid");
+    assert_gap_entry(&report, "sampler.ripple", "rendered", "textGrid");
+    assert_gap_entry(
+        &report,
+        "shader.borderSweep",
+        "blockedByStyledCellSubstrate",
+        "styledCell",
+    );
+    assert_gap_entry(
+        &report,
+        "shader.linearGradient",
+        "blockedByStyledCellSubstrate",
+        "styledCell",
+    );
+    assert_gap_entry(
+        &report,
+        "style.baseStyleOverride",
+        "blockedByStyledCellSubstrate",
+        "styledCell",
+    );
+    assert_gap_entry(
+        &report,
+        "style.colorFade",
+        "blockedByStyledCellSubstrate",
+        "styledCell",
+    );
 }
 
 #[test]
@@ -177,20 +210,19 @@ fn test_fnc_cli_reports_migration_gap_summary_json() {
 
 #[test]
 fn test_fnc_cli_rejects_migration_gap_recipe_paths() {
-    let descriptor_pack = descriptor_pack();
-    let output = Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
-        .args([
-            "migration-gap",
-            "accidental-path.json",
-            "--legacy-root",
-            "/usr/projects/tui-vfx-recipes/recipes/debug_recipes",
-            "--v31-root",
-            "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes",
-            "--descriptor-pack",
-            descriptor_pack.to_str().expect("utf8 path"),
-        ])
-        .output()
-        .expect("run migration gap player cli");
+    let output = run_player_cli(
+        vec![
+            str_arg("migration-gap"),
+            str_arg("accidental-path.json"),
+            str_arg("--legacy-root"),
+            legacy_debug_recipe_root_path(),
+            str_arg("--v31-root"),
+            debug_recipe_root_path(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+        ],
+        "migration gap player cli",
+    );
 
     assert!(!output.status.success());
     assert!(stderr(&output).contains("migration-gap does not accept recipe paths"));
@@ -222,10 +254,10 @@ fn test_fnc_cli_reports_migration_gap_family_status_json() {
 
 #[test]
 fn test_fnc_cli_renders_single_visual_frame_json() {
-    let report = render_frame_report(&[
-        "render-frame",
-        "--recipe",
-        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json",
+    let report = render_frame_report(vec![
+        str_arg("render-frame"),
+        str_arg("--recipe"),
+        recipe_path("baseline.json"),
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
@@ -264,26 +296,26 @@ fn test_fnc_cli_renders_single_visual_frame_json() {
 
 #[test]
 fn test_fnc_cli_renders_recursive_visual_frame_report_json() {
-    let report = render_frame_report(&[
-        "render-frame",
-        "--recursive",
-        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes",
+    let report = render_frame_report(vec![
+        str_arg("render-frame"),
+        str_arg("--recursive"),
+        debug_recipe_root_path(),
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
     assert_eq!(report["summary"]["total"], 16);
-    assert_eq!(report["summary"]["rendered"], 10);
-    assert_eq!(report["summary"]["unsupported"], 6);
+    assert_eq!(report["summary"]["rendered"], 12);
+    assert_eq!(report["summary"]["unsupported"], 4);
     assert_eq!(report["summary"]["errors"], 0);
     assert_eq!(report["frames"].as_array().expect("frames").len(), 16);
 }
 
 #[test]
 fn test_fnc_cli_renders_unsupported_visual_frame_json() {
-    let report = render_frame_report(&[
-        "render-frame",
-        "--recipe",
-        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/shaders/primitives/shader_linear_gradient.json",
+    let report = render_frame_report(vec![
+        str_arg("render-frame"),
+        str_arg("--recipe"),
+        recipe_path("shaders/primitives/shader_linear_gradient.json"),
     ]);
 
     assert_eq!(report["frames"][0]["status"], "unsupported");
@@ -302,58 +334,78 @@ fn test_fnc_cli_renders_unsupported_visual_frame_json() {
     );
 }
 
-fn inventory_report(args: &[&str]) -> serde_json::Value {
-    let descriptor_pack = descriptor_pack();
-    let mut command_args = args.to_vec();
-    command_args.extend([
-        "--descriptor-pack",
-        descriptor_pack.to_str().expect("utf8 path"),
-        "--json",
+fn inventory_report(mut args: Vec<String>) -> serde_json::Value {
+    args.extend([
+        str_arg("--descriptor-pack"),
+        descriptor_pack_path(),
+        str_arg("--json"),
     ]);
-    let output = Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
-        .args(command_args)
-        .output()
-        .expect("run inventory player cli");
-
-    assert!(output.status.success(), "stderr: {}", stderr(&output));
-    serde_json::from_slice(&output.stdout).expect("json report")
+    player_cli_json(args, "inventory player cli")
 }
 
-fn render_frame_report(args: &[&str]) -> serde_json::Value {
-    let descriptor_pack = descriptor_pack();
-    let mut command_args = args.to_vec();
-    command_args.extend([
-        "--descriptor-pack",
-        descriptor_pack.to_str().expect("utf8 path"),
-        "--json",
+fn render_frame_report(mut args: Vec<String>) -> serde_json::Value {
+    args.extend([
+        str_arg("--descriptor-pack"),
+        descriptor_pack_path(),
+        str_arg("--json"),
     ]);
-    let output = Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
-        .args(command_args)
-        .output()
-        .expect("run render-frame player cli");
+    player_cli_json(args, "render-frame player cli")
+}
 
-    assert!(output.status.success(), "stderr: {}", stderr(&output));
-    serde_json::from_slice(&output.stdout).expect("json report")
+fn primitive_adapter_gap_report() -> serde_json::Value {
+    player_cli_json(
+        vec![
+            str_arg("primitive-adapter-gap"),
+            str_arg("--recursive"),
+            debug_recipe_root_path(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--json"),
+        ],
+        "primitive adapter gap player cli",
+    )
 }
 
 fn migration_gap_report() -> serde_json::Value {
-    let descriptor_pack = descriptor_pack();
-    let output = Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
-        .args([
-            "migration-gap",
-            "--legacy-root",
-            "/usr/projects/tui-vfx-recipes/recipes/debug_recipes",
-            "--v31-root",
-            "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes",
-            "--descriptor-pack",
-            descriptor_pack.to_str().expect("utf8 path"),
-            "--json",
-        ])
-        .output()
-        .expect("run migration gap player cli");
+    player_cli_json(
+        vec![
+            str_arg("migration-gap"),
+            str_arg("--legacy-root"),
+            legacy_debug_recipe_root_path(),
+            str_arg("--v31-root"),
+            debug_recipe_root_path(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--json"),
+        ],
+        "migration gap player cli",
+    )
+}
+
+fn player_cli_json(args: Vec<String>, context: &str) -> serde_json::Value {
+    let output = run_player_cli(args, context);
 
     assert!(output.status.success(), "stderr: {}", stderr(&output));
     serde_json::from_slice(&output.stdout).expect("json report")
+}
+
+fn run_player_cli(args: Vec<String>, context: &str) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
+        .args(args)
+        .output()
+        .unwrap_or_else(|error| panic!("run {context}: {error}"))
+}
+
+fn assert_gap_entry(
+    report: &serde_json::Value,
+    effect_id: &str,
+    expected_outcome: &str,
+    expected_adapter_class: &str,
+) {
+    let entry = find_gap_entry(report, effect_id);
+
+    assert_eq!(entry["outcome"], expected_outcome);
+    assert_eq!(entry["adapterClass"], expected_adapter_class);
 }
 
 fn find_effect<'a>(report: &'a serde_json::Value, id: &str) -> &'a serde_json::Value {
@@ -363,6 +415,15 @@ fn find_effect<'a>(report: &'a serde_json::Value, id: &str) -> &'a serde_json::V
         .iter()
         .find(|effect| effect["id"] == id)
         .expect("effect entry")
+}
+
+fn find_gap_entry<'a>(report: &'a serde_json::Value, id: &str) -> &'a serde_json::Value {
+    report["effects"]
+        .as_array()
+        .expect("effects")
+        .iter()
+        .find(|effect| effect["effectId"] == id)
+        .expect("adapter gap entry")
 }
 
 fn find_family<'a>(report: &'a serde_json::Value, family: &str) -> &'a serde_json::Value {
@@ -378,13 +439,50 @@ fn stderr(output: &std::process::Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
 }
 
-fn descriptor_pack() -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+fn recipe_path(relative: &str) -> String {
+    debug_recipe_root().join(relative).display().to_string()
+}
+
+fn debug_recipe_root_path() -> String {
+    debug_recipe_root().display().to_string()
+}
+
+fn legacy_debug_recipe_root_path() -> String {
+    recipe_repo_root()
+        .join("recipes/debug_recipes")
+        .display()
+        .to_string()
+}
+
+fn descriptor_pack_path() -> String {
+    workspace_root()
+        .join("descriptors/v3.1/packs/primitive.json")
+        .display()
+        .to_string()
+}
+
+fn debug_recipe_root() -> PathBuf {
+    recipe_repo_root().join("recipes/v3.1/debug_recipes")
+}
+
+fn recipe_repo_root() -> PathBuf {
+    workspace_root()
+        .parent()
+        .expect("workspace parent")
+        .join("tui-vfx-recipes")
+}
+
+fn workspace_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
         .nth(2)
         .expect("workspace root")
-        .join("descriptors/v3.1/packs/primitive.json")
+        .to_path_buf()
+}
+
+fn str_arg(value: &str) -> String {
+    value.to_owned()
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

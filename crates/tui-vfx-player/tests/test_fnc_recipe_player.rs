@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase K0: lock canonical source.text rendering after acceptance rejection.</WCTX>
-// <CLOG>0.2.0: PATCH — add source.text text-input regression coverage.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Primitive adapter work: keep tests portable and unsupported regression on a styled-cell effect.</WCTX>
+// <CLOG>0.4.0: MINOR — assert newly supported text-grid adapters produce player row evidence.
+// 0.3.0: PATCH — use project-derived recipe paths and switch unsupported adapter regression away from newly supported dissolve.
+// 0.2.0: PATCH — add source.text text-input regression coverage.
 // 0.1.0: INIT — add primitive render, deterministic hash, unsupported effect, and session latch coverage.</CLOG>
 
 use std::{collections::BTreeMap, fs, path::Path};
@@ -14,7 +16,7 @@ use tui_vfx_player::{PlayerSampleRequest, PlayerSession, PlayerStatus, RecipePla
 #[test]
 fn test_fnc_player_renders_baseline_with_stable_hash() {
     let player = player();
-    let recipe = recipe("/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json");
+    let recipe = recipe(&v31_debug_recipe("baseline.json"));
     let request = PlayerSampleRequest::default();
 
     let first = player.render_recipe(&recipe, &request);
@@ -36,10 +38,59 @@ fn test_fnc_player_renders_source_text_from_text_input() {
 }
 
 #[test]
+fn test_fnc_player_dissolve_adapter_changes_row_evidence_by_phase() {
+    let player = player();
+    let recipe = recipe(&v31_debug_recipe("masks/mask_dissolve.json"));
+    let hidden = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase_t: 0.0,
+            ..PlayerSampleRequest::default()
+        },
+    );
+    let revealed = player.render_recipe(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(hidden.status, PlayerStatus::Rendered);
+    assert_eq!(revealed.status, PlayerStatus::Rendered);
+    assert_eq!(hidden.non_empty_cells, 0);
+    assert!(revealed.non_empty_cells > hidden.non_empty_cells);
+    assert_ne!(hidden.rows, revealed.rows);
+    assert_ne!(hidden.render_hash, revealed.render_hash);
+}
+
+#[test]
+fn test_fnc_player_ripple_adapter_changes_row_evidence_by_loop_time() {
+    let player = player();
+    let recipe = recipe(&v31_debug_recipe("samplers/sampler_ripple.json"));
+    let first = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            loop_t: Some(0.0),
+            ..PlayerSampleRequest::default()
+        },
+    );
+    let second = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            loop_t: Some(0.25),
+            ..PlayerSampleRequest::default()
+        },
+    );
+
+    assert_eq!(first.status, PlayerStatus::Rendered);
+    assert_eq!(second.status, PlayerStatus::Rendered);
+    assert!(first.non_empty_cells > 0);
+    assert!(second.non_empty_cells > 0);
+    assert_ne!(first.rows, second.rows);
+    assert_ne!(first.render_hash, second.render_hash);
+}
+
+#[test]
 fn test_fnc_player_reports_unsupported_effect_adapter() {
     let player = player();
-    let recipe =
-        recipe("/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/masks/mask_dissolve.json");
+    let recipe = recipe(&v31_debug_recipe(
+        "shaders/primitives/shader_linear_gradient.json",
+    ));
 
     let report = player.render_recipe(&recipe, &PlayerSampleRequest::default());
 
@@ -55,9 +106,9 @@ fn test_fnc_player_reports_unsupported_effect_adapter() {
 #[test]
 fn test_fnc_player_session_latches_event_driven_dwell() {
     let player = player();
-    let recipe = recipe(
-        "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/event_driven_dwell/bool_binding_demo.json",
-    );
+    let recipe = recipe(&v31_debug_recipe(
+        "event_driven_dwell/bool_binding_demo.json",
+    ));
     let mut session = PlayerSession::new();
     let mut request = PlayerSampleRequest::default();
 
@@ -81,10 +132,7 @@ fn test_fnc_player_session_latches_event_driven_dwell() {
 
 fn source_text_recipe() -> RecipeDocument {
     let mut value: serde_json::Value = serde_json::from_str(
-        &fs::read_to_string(
-            "/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json",
-        )
-        .expect("read baseline recipe"),
+        &fs::read_to_string(v31_debug_recipe("baseline.json")).expect("read baseline recipe"),
     )
     .expect("baseline json");
     value["id"] = serde_json::json!("debugTextSource");
@@ -149,9 +197,22 @@ fn descriptor_pack(path: &Path) -> DescriptorPack {
         .expect("deserialize descriptor pack")
 }
 
-fn recipe(path: &str) -> RecipeDocument {
-    serde_json::from_str(&fs::read_to_string(Path::new(path)).expect("read recipe"))
+fn recipe(path: &Path) -> RecipeDocument {
+    serde_json::from_str(&fs::read_to_string(path).expect("read recipe"))
         .expect("deserialize recipe")
+}
+
+fn v31_debug_recipe(relative: &str) -> std::path::PathBuf {
+    recipe_repo_root()
+        .join("recipes/v3.1/debug_recipes")
+        .join(relative)
+}
+
+fn recipe_repo_root() -> std::path::PathBuf {
+    workspace_root()
+        .parent()
+        .expect("workspace parent")
+        .join("tui-vfx-recipes")
 }
 
 fn workspace_root() -> std::path::PathBuf {
@@ -163,4 +224,4 @@ fn workspace_root() -> std::path::PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

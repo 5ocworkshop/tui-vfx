@@ -1,20 +1,19 @@
-// <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify K0 inventory adapter status</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K2.1 de-slop: isolate inventory adapter classification vocabulary.</WCTX>
-// <CLOG>0.1.0: INIT — split effect/source adapter status helpers from report DTO.</CLOG>
+// <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify inventory adapter status</DESC>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Primitive adapter work: classify newly supported text-grid adapters.</WCTX>
+// <CLOG>0.2.0: MINOR — mark dissolve and ripple as visible text-grid adapters.
+// 0.1.0: INIT — split effect/source adapter status helpers from report DTO.</CLOG>
 
-/// Return the K0 adapter classification used by inventory reports.
+/// Return the effect adapter classification used by inventory reports.
 pub fn effect_adapter_status(effect_id: &str, descriptor_covered: bool) -> &'static str {
     if !descriptor_covered {
         return "missingDescriptor";
     }
     match effect_id {
-        "mask.wipe" | "mask.checkers" => "visible",
+        "mask.wipe" | "mask.checkers" | "mask.dissolve" | "sampler.ripple" => "visible",
         "filter.dim" | "filter.tint" | "filter.invert" | "filter.greyscale" | "mask.none"
         | "sampler.sineWave" => "noop",
-        "mask.dissolve"
-        | "sampler.ripple"
-        | "shader.borderSweep"
+        "shader.borderSweep"
         | "shader.linearGradient"
         | "style.baseStyleOverride"
         | "style.colorFade" => "unsupported",
@@ -22,7 +21,7 @@ pub fn effect_adapter_status(effect_id: &str, descriptor_covered: bool) -> &'sta
     }
 }
 
-/// Return the K0 source adapter classification used by inventory reports.
+/// Return the source adapter classification used by inventory reports.
 pub fn source_adapter_status(source_id: &str, descriptor_covered: bool) -> &'static str {
     if !descriptor_covered {
         return "missingDescriptor";
@@ -33,5 +32,5 @@ pub fn source_adapter_status(source_id: &str, descriptor_covered: bool) -> &'sta
     }
 }
 
-// <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify K0 inventory adapter status</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify inventory adapter status</DESC>
+// <VERS>END OF VERSION: 0.2.0</VERS>

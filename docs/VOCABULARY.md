@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.7.1</VERS> -->
-<!-- <WCTX>New kernel Phase K2.2 review: clarify text-grid visual-frame provenance fields.</WCTX> -->
-<!-- <CLOG>0.7.1: PATCH — document substrate, cellSource, styleKnown, and loopT semantics.
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <WCTX>Primitive adapter work: document support classification and substrate blocker terms.</WCTX> -->
+<!-- <CLOG>0.8.0: MINOR — add primitive adapter gap report, outcome, text-grid adapter, and styled-cell adapter terms.
+0.7.1: PATCH — document substrate, cellSource, styleKnown, and loopT semantics.
 0.7.0: MINOR — add K2.2 VisualFrameReport, VisualFrame, sparse visual cell, and frame evidence terms.
 0.6.0: MINOR — add K0 Player, PlayerSession, Frame, RenderHash, and unsupported adapter terms.
 0.5.0: MINOR — add J2 descriptor pack/catalog, embedded/pack-provided descriptor, collision, and canonical fixture terms.
@@ -46,7 +47,7 @@ Not the same as:
 ### Source Recipe
 
 Definition:
-: An old recipe document used as evidence for migration. Current source recipes live under `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/` and are not canonical v3.1 documents.
+: An old recipe document used as evidence for migration. Current source recipes live under `../tui-vfx-recipes/recipes/debug_recipes/` when the repositories are checked out as siblings, and are not canonical v3.1 documents.
 
 Policy:
 : Source recipes may be read as evidence; they must not be mutated by v3.1 validator phases.
@@ -54,7 +55,7 @@ Policy:
 ### Migrated Recipe
 
 Definition:
-: A canonical recipe derived from source-recipe evidence and stored in the migrated v3.1 corpus. Current J0/J1 migrated fixtures live under `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/`.
+: A canonical recipe derived from source-recipe evidence and stored in the migrated v3.1 corpus. Current migrated fixtures live under `../tui-vfx-recipes/recipes/v3.1/debug_recipes/` when the repositories are checked out as siblings.
 
 Not the same as:
 : A visual match. Migration can be structural and semantic before it is visual.
@@ -106,10 +107,10 @@ Definition:
 ### Player
 
 Definition:
-: A contract-native runtime/probe component that consumes canonical v3.1 `RecipeDocument` values directly and samples them into frame evidence. The K0 implementation is `tui-vfx-player`.
+: A contract-native runtime/probe component that consumes canonical v3.1 `RecipeDocument` values directly and samples them into frame evidence. The current skeleton implementation is `tui-vfx-player`.
 
 Not the same as:
-: The old `/usr/projects/tui-vfx-recipes/src` runtime, a visual parity oracle, or the contract validator. A player executes/render-samples; a validator checks structure and references.
+: The old `../tui-vfx-recipes/src` runtime, a visual parity oracle, or the contract validator. A player executes/render-samples; a validator checks structure and references.
 
 ### PlayerSession
 
@@ -122,10 +123,10 @@ Policy:
 ### Frame
 
 Definition:
-: One sampled player output for a recipe, phase, dimensions, time value, and signal set. K0 frames are text-grid smoke evidence with `rows`, `width`, `height`, and `nonEmptyCells`.
+: One sampled player output for a recipe, phase, dimensions, time value, and signal set. Current skeleton frames are text-grid smoke evidence with `rows`, `width`, `height`, and `nonEmptyCells`.
 
 Not the same as:
-: Visual parity. A K0 frame proves that the contract-native player can sample a canonical fixture; it does not prove the result matches an old render.
+: Visual parity. A player frame proves that the contract-native player can sample a canonical fixture; it does not prove the result matches an old render.
 
 ### RenderHash
 
@@ -141,7 +142,7 @@ Definition:
 : A structured player diagnostic emitted when a valid canonical recipe references a source or effect descriptor for which the current player has no adapter.
 
 Policy:
-: Unsupported adapters are explicit K0 smoke results, not silent success. Typical codes are `unsupportedSourceAdapter` and `unsupportedEffectAdapter`.
+: Unsupported adapters are explicit contract-native smoke results, not silent success. Typical codes are `unsupportedSourceAdapter` and `unsupportedEffectAdapter`.
 
 
 ### VisualFrameReport
@@ -151,6 +152,38 @@ Definition:
 
 Policy:
 : `VisualFrameReport` is additive evidence on top of the existing player output. It does not replace `render-recipe`, does not claim visual parity, and must reuse the existing contract-native player render path.
+
+### PrimitiveAdapterGapReport
+
+Definition:
+: A stable player JSON report with schema `v3.1.player.primitiveAdapterGap.1`. It classifies represented primitive effect ids by honest current support outcome and the adapter substrate needed for support.
+
+Policy:
+: `PrimitiveAdapterGapReport` is a planning and burn-down report. It must not count a style, color, or role effect as rendered while the sampled frame still reports `styleKnown: false`.
+
+### PrimitiveAdapterOutcome
+
+Definition:
+: The per-effect support classification in a `PrimitiveAdapterGapReport`. Current values are `rendered`, `stillUnsupported`, `blockedByStyledCellSubstrate`, and `blockedBySemanticDecision`.
+
+Policy:
+: Outcomes should name the durable blocker or support state, not a transient work-packet or phase label.
+
+### TextGridAdapter
+
+Definition:
+: A player adapter that can honestly express an effect through glyph-row evidence alone, such as hiding/revealing cells or shifting row glyphs.
+
+Not the same as:
+: A styled-cell renderer, compositor output, or visual parity oracle. Text-grid adapters can prove deterministic player behavior but cannot prove color/style/role semantics.
+
+### StyledCellAdapter
+
+Definition:
+: A player adapter that requires per-cell style, color, modifier, role, or compositor-backed evidence to be represented honestly.
+
+Policy:
+: Styled-cell effects remain blocked until player visual frames carry real style evidence instead of row-derived placeholder style fields.
 
 ### VisualFrame
 
@@ -182,7 +215,7 @@ Definition:
 : A schema-backed shared descriptor bundle that provides reusable `SourceDescriptor` and `EffectDescriptor` values to canonical recipes.
 
 Current location:
-: Standard implementation-owned packs live under `/usr/projects/tui-vfx/descriptors/v3.1/packs/`.
+: Standard implementation-owned packs live under `descriptors/v3.1/packs/`.
 
 Policy:
 : Descriptor packs are contract/runtime catalog artifacts, not recipe corpus artifacts. Recipes may reference them; they should not copy standard primitive descriptor definitions unless they intentionally embed custom descriptors.
@@ -222,7 +255,7 @@ Default policy:
 ### Canonical Fixture
 
 Definition:
-: A checked canonical v3.1 recipe JSON file used by tests or migration evidence. Current fixture corpus lives under `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/`.
+: A checked canonical v3.1 recipe JSON file used by tests or migration evidence. Current fixture corpus lives under `../tui-vfx-recipes/recipes/v3.1/debug_recipes/` when the repositories are checked out as siblings.
 
 Not the same as:
 : An old source recipe. Canonical fixtures must validate as v3.1 `RecipeDocument` values, but they still do not prove visual parity.
