@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>VERSION: 0.15.0</VERS> -->
-<!-- <WCTX>New kernel Phase H0: add source/asset contract guidance and recipe-example context.</WCTX> -->
-<!-- <CLOG>0.15.0: MINOR — add Phase H0 source/asset contract rules and contextual recipe-example read list.
+<!-- <VERS>VERSION: 0.16.0</VERS> -->
+<!-- <WCTX>New kernel Phase H1: add canonical recipe document and vocabulary guidance.</WCTX> -->
+<!-- <CLOG>0.16.0: MINOR — add Phase H1 canonical recipe document, vocabulary, and recipe-evidence guidance.
+0.15.0: MINOR — add Phase H0 source/asset contract rules and contextual recipe-example read list.
 0.14.0: MINOR — replace role-suppressed gpt-5.5 dispatch guidance with role-routed OMX profile guidance.
 0.13.0: MINOR — add Phase G4 node I/O, graph value bus, and spatial field guidance.
 0.12.0: MINOR — add Phase G3 topology, parallel snapshot, and channel-aware merge guidance.
@@ -43,6 +44,7 @@ Read these before planning or editing:
     - `docs/new_kernel/ARCH-RESP-TO-PHASE_A.md`
     - `docs/new_kernel/ARCH-RESP-TO-PHASE_B.md`
     - `docs/new_kernel/ARCH-RESP-TO-PHASE_C.md`
+    - `docs/VOCABULARY.md`
     - `docs/v3.1-architecture-overview.md`
     - `docs/v3.1-template-composition.md`
     - `docs/v3.1-contract-boundary.md`
@@ -512,7 +514,7 @@ Locked:
 
 ### Phase G4 — node I/O / graph-local value bus
 
-Current phase.
+Completed phase.
 
 Target lock:
 
@@ -540,7 +542,7 @@ Key docs:
 
 ### Phase H0 — source / asset / procedural source contract
 
-Current phase.
+Completed phase.
 
 Target lock:
 
@@ -580,6 +582,41 @@ Key docs:
 - `docs/v3.1-architecture-overview.md`
 - `docs/v3.1-contract-boundary.md`
 - `docs/new_kernel/PHASE_H0_STATUS.md` once created.
+
+### Phase H1 — canonical recipe document schema
+
+Current phase.
+
+Target lock:
+
+- `RecipeDocument` is the strict canonical post-authoring/lowering root. It packages metadata, assets, source descriptors, source instances, graph, and scenes.
+- `RecipeMetadata` carries human-facing title/description/authors/tags only; it does not become a studio manifest or demo profile.
+- `SourceInstanceId` distinguishes recipe-local source instances from stable `SourceId` descriptors.
+- `RecipeScene` declares dimensions and source-backed `RecipeSceneElement` values. H1 scene elements reference source-produced surfaces by source instance id rather than embedding legacy layer/source fields.
+- `RecipeElementPipeline` is a future integration seam: it references the canonical graph/topology for element-local pipelines but does not execute runtime source-local pipeline syntax.
+- `docs/VOCABULARY.md` is now a standing contract artifact. Every phase that adds or changes public vocabulary must update it.
+- `docs/new_kernel/H1_RECIPE_EVIDENCE_NOTES.md` records mapping pressure from curated recipes as evidence only. Do not let old field names define canonical v3.1.
+
+Non-canonical legacy evidence examples:
+
+- `config.pipeline.step`
+- `io.outputs[].hint`
+- `requires_assets`
+- `{{ flag_art }}` interpolation tokens
+- `scene.layers[]` as a root concept
+
+Hard deferrals during H1:
+
+- Do not implement template expansion, legacy migration/lowering, runtime `ParameterStore` / `SignalStore`, F2 binding execution, direct node/effect-input binding targets, phase/trigger/dwell engines, studio manifests, demo/player execution, real asset loading, real procedural rendering, real effect/source ports, or visual parity.
+
+Key docs:
+
+- `docs/new_kernel/ARCH-RESP-TO-PHASE_H0.md`
+- `docs/VOCABULARY.md`
+- `docs/new_kernel/H1_RECIPE_EVIDENCE_NOTES.md`
+- `docs/v3.1-architecture-overview.md`
+- `docs/v3.1-contract-boundary.md`
+- `docs/new_kernel/PHASE_H1_STATUS.md` once created.
 
 ## Verification gates
 
@@ -643,4 +680,4 @@ Final reports should be concise and evidence-dense:
 Do not claim completion without fresh verification evidence and architect/reviewer approval when Ralph is active.
 
 <!-- <FILE>docs/new_kernel/AGENT_BRIEFING.md</FILE> - <DESC>Reusable briefing for clean-room kernel agents and phase workers</DESC> -->
-<!-- <VERS>END OF VERSION: 0.15.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.16.0</VERS> -->

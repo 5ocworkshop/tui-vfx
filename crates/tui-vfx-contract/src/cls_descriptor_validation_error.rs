@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
-// <WCTX>New kernel Phase H0: report source and asset validation failures.</WCTX>
-// <CLOG>0.6.0: MINOR — add source descriptor, source input, asset reference, and source asset compatibility errors.
+// <VERS>VERSION: 0.7.0</VERS>
+// <WCTX>New kernel Phase H1: report recipe document validation failures.</WCTX>
+// <CLOG>0.7.0: MINOR — add recipe document, source instance, scene, and element-pipeline validation errors.
+// 0.6.0: MINOR — add source descriptor, source input, asset reference, and source asset compatibility errors.
 // 0.5.0: MINOR — add effect output, graph value, and node output validation errors.
 // 0.4.0: MINOR — add graph and node validation errors.
 // 0.3.0: MINOR — add parameter, signal, source-kind, map, and binding validation errors.
@@ -10,14 +11,81 @@
 
 use crate::{
     AssetFormat, AssetId, AssetKind, CellChannel, CellWritePolicy, EffectId, EffectInputId,
-    EffectOutputId, GraphId, GraphValueId, NodeId, ParameterId, RoleWritePolicyKind, ScopeKind,
-    SignalId, SourceId, SourceInputId, ValueKind,
+    EffectOutputId, ElementId, GraphId, GraphValueId, GraphValueShape, NodeId, ParameterId,
+    RecipeId, RoleWritePolicyKind, SceneId, ScopeKind, SignalId, SourceId, SourceInputId,
+    SourceInstanceId, ValueKind,
 };
 
 /// Structured error returned when a request exceeds descriptor capabilities.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum DescriptorValidationError {
+    /// Recipe id is outside the accepted identifier shape.
+    InvalidRecipeId {
+        /// Invalid recipe id.
+        id: RecipeId,
+    },
+    /// Scene id is outside the accepted identifier shape.
+    InvalidSceneId {
+        /// Invalid scene id.
+        id: SceneId,
+    },
+    /// Source instance id is outside the accepted identifier shape.
+    InvalidSourceInstanceId {
+        /// Invalid source instance id.
+        id: SourceInstanceId,
+    },
+    /// Recipe asset map key does not match the nested asset id.
+    AssetIdMismatch {
+        /// Asset map key.
+        key: AssetId,
+        /// Asset id stored in the value.
+        asset: AssetId,
+    },
+    /// Recipe source descriptor map key does not match the nested source descriptor id.
+    SourceDescriptorIdMismatch {
+        /// Source descriptor map key.
+        key: SourceId,
+        /// Source descriptor id stored in the value.
+        source: SourceId,
+    },
+    /// Recipe scene element references an undeclared source instance.
+    UnknownSceneElementSource {
+        /// Scene that owns the element.
+        scene: SceneId,
+        /// Element whose source reference failed.
+        element: ElementId,
+        /// Missing source instance id.
+        source: SourceInstanceId,
+    },
+    /// Recipe scene element pipeline references an undeclared graph.
+    UnknownElementPipelineGraph {
+        /// Scene that owns the element.
+        scene: SceneId,
+        /// Element whose pipeline reference failed.
+        element: ElementId,
+        /// Missing graph id.
+        graph: GraphId,
+    },
+    /// Recipe scene element pipeline references an undeclared graph node.
+    UnknownElementPipelineNode {
+        /// Scene that owns the element.
+        scene: SceneId,
+        /// Element whose pipeline topology failed.
+        element: ElementId,
+        /// Missing node id.
+        node: NodeId,
+    },
+    /// Recipe scene element pipeline repeats a node in its local topology.
+    DuplicateElementPipelineNode {
+        /// Scene that owns the element.
+        scene: SceneId,
+        /// Element whose pipeline topology failed.
+        element: ElementId,
+        /// Duplicated node id.
+        node: NodeId,
+    },
+
     /// Requested scope kind is not declared in descriptor support.
     UnsupportedScopeKind {
         /// Scope kind requested by the operation.
@@ -249,6 +317,15 @@ pub enum DescriptorValidationError {
         /// Missing graph value id.
         id: GraphValueId,
     },
+    /// Two declarations for the same graph value id use incompatible shapes.
+    GraphValueShapeMismatch {
+        /// Graph value id with conflicting declarations.
+        id: GraphValueId,
+        /// Earlier declared shape.
+        expected: GraphValueShape,
+        /// Later declared shape.
+        actual: GraphValueShape,
+    },
     /// Graph-local value source was used outside a node input context.
     GraphValueSourceNotAllowed {
         /// Graph value id that was rejected.
@@ -355,4 +432,4 @@ impl DescriptorValidationError {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_descriptor_validation_error.rs</FILE> - <DESC>Descriptor capability validation error enum</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

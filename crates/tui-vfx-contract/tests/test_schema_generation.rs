@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
-// <WCTX>New kernel Phase H0: include source and asset schema roots.</WCTX>
-// <CLOG>0.8.0: MINOR — add source and asset schema fixtures.
+// <VERS>VERSION: 0.9.0</VERS>
+// <WCTX>New kernel Phase H1: include canonical recipe document schema roots.</WCTX>
+// <CLOG>0.9.0: MINOR — add canonical recipe document schema fixtures.
+// 0.8.0: MINOR — add source and asset schema fixtures.
 // 0.7.0: MINOR — add graph value and node output schema fixtures.
 // 0.6.0: MINOR — add graph-step schema fixture.
 // 0.5.0: MINOR — add graph and node schema fixtures.
@@ -16,9 +17,10 @@ use schemars::{JsonSchema, Schema, schema_for};
 use tui_vfx_contract::{
     AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, EffectDescriptor,
     EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId, GraphValueKind,
-    GraphValueMergePolicy, GraphValueShape, NodeOutputSpec, NodeSpec, ParameterSpec, Scene,
+    GraphValueMergePolicy, GraphValueShape, NodeOutputSpec, NodeSpec, ParameterSpec,
+    RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene, RecipeSceneElement, Scene,
     SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor, SourceInputSpec,
-    SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
+    SourceInstanceId, SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, Value, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -68,6 +70,27 @@ fn schema_roots() -> Vec<(&'static str, String)> {
             canonical_schema::<SourceDescriptor>(),
         ),
         ("source.schema.json", canonical_schema::<SourceSpec>()),
+        (
+            "source-instance-id.schema.json",
+            canonical_schema::<SourceInstanceId>(),
+        ),
+        (
+            "recipe-metadata.schema.json",
+            canonical_schema::<RecipeMetadata>(),
+        ),
+        (
+            "recipe-element-pipeline.schema.json",
+            canonical_schema::<RecipeElementPipeline>(),
+        ),
+        (
+            "recipe-scene.schema.json",
+            canonical_schema::<RecipeScene>(),
+        ),
+        (
+            "recipe-scene-element.schema.json",
+            canonical_schema::<RecipeSceneElement>(),
+        ),
+        ("recipe.schema.json", canonical_schema::<RecipeDocument>()),
         ("graph.schema.json", canonical_schema::<GraphSpec>()),
         ("graph-step.schema.json", canonical_schema::<GraphStep>()),
         (
@@ -215,6 +238,16 @@ fn source_schema_roots_are_current() {
 }
 
 #[test]
+fn recipe_schema_roots_are_current() {
+    assert_schema_fixture_current::<SourceInstanceId>("source-instance-id.schema.json");
+    assert_schema_fixture_current::<RecipeMetadata>("recipe-metadata.schema.json");
+    assert_schema_fixture_current::<RecipeElementPipeline>("recipe-element-pipeline.schema.json");
+    assert_schema_fixture_current::<RecipeScene>("recipe-scene.schema.json");
+    assert_schema_fixture_current::<RecipeSceneElement>("recipe-scene-element.schema.json");
+    assert_schema_fixture_current::<RecipeDocument>("recipe.schema.json");
+}
+
+#[test]
 fn graph_schema_is_current() {
     assert_schema_fixture_current::<GraphSpec>("graph.schema.json");
 }
@@ -315,6 +348,14 @@ fn generated_contract_schema_contains_rustdoc_descriptions() {
     assert!(
         all_schemas.contains("Contract for the semantic surface produced by a source descriptor")
     );
+    assert!(all_schemas.contains("Strict canonical v3.1 recipe document"));
+    assert!(
+        all_schemas
+            .contains("Scene element whose surface is produced by a declared source instance")
+    );
+    assert!(
+        all_schemas.contains("Optional element-local pipeline reference into the canonical graph")
+    );
     assert!(all_schemas.contains("Canonical v3.1 graph container"));
     assert!(all_schemas.contains("Canonical execution topology for a graph"));
     assert!(all_schemas.contains("One effect node in a canonical v3.1 graph"));
@@ -363,4 +404,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>

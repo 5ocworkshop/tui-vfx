@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RecipeElementPipeline",
+  "description": "Optional element-local pipeline reference into the canonical graph.",
+  "type": "object",
+  "properties": {
+    "graph": {
+      "description": "Graph that owns the nodes used by this element-local pipeline.",
+      "$ref": "#/$defs/GraphId"
+    },
+    "topology": {
+      "description": "Optional pipeline topology subset for this element.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/GraphStep"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "graph"
+  ],
+  "$defs": {
+    "GraphId": {
+      "description": "Stable canonical graph identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "GraphStep": {
+      "description": "Canonical execution topology for a graph.",
+      "oneOf": [
+        {
+          "description": "Execute one declared graph node.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "node"
+            },
+            "node": {
+              "description": "Graph-local node id to execute.",
+              "$ref": "#/$defs/NodeId"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "node"
+          ]
+        },
+        {
+          "description": "Execute child steps in order, where each child reads the prior output.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Ordered child steps.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GraphStep"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "sequence"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children"
+          ]
+        },
+        {
+          "description": "Execute child branches against the same input snapshot, then merge deltas.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Authored child branches. Child order is deterministic merge order.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GraphStep"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "parallel"
+            },
+            "mergePolicy": {
+              "description": "Policy used when multiple branches write the same cell channel.",
+              "$ref": "#/$defs/ParallelMergePolicy"
+            },
+            "valueMergePolicy": {
+              "description": "Policy used when multiple branches publish the same graph value id.",
+              "$ref": "#/$defs/GraphValueMergePolicy",
+              "default": "childOrderLastWriterWins"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children",
+            "mergePolicy"
+          ]
+        }
+      ]
+    },
+    "GraphValueMergePolicy": {
+      "description": "Policy for resolving graph value outputs produced by parallel branches.",
+      "oneOf": [
+        {
+          "description": "Merge branch value outputs in authored child order; later outputs win.",
+          "type": "string",
+          "const": "childOrderLastWriterWins"
+        },
+        {
+          "description": "Reject the merge when multiple branches publish the same graph value id.",
+          "type": "string",
+          "const": "errorOnSameValueConflict"
+        }
+      ]
+    },
+    "NodeId": {
+      "description": "Stable node identifier inside a canonical graph.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "ParallelMergePolicy": {
+      "description": "Policy for resolving channel writes produced by parallel graph branches.",
+      "oneOf": [
+        {
+          "description": "Merge branches in authored child order; later same-channel writes win.",
+          "type": "string",
+          "const": "childOrderLastWriterWins"
+        },
+        {
+          "description": "Reject the merge when multiple branches write the same cell channel.",
+          "type": "string",
+          "const": "errorOnSameChannelConflict"
+        }
+      ]
+    }
+  }
+}

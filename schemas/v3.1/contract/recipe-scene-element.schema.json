@@ -1,0 +1,413 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RecipeSceneElement",
+  "description": "Scene element whose surface is produced by a declared source instance.",
+  "type": "object",
+  "properties": {
+    "cellWritePolicy": {
+      "description": "Policy for whether transparent empty local cells write or skip.",
+      "$ref": "#/$defs/CellWritePolicy"
+    },
+    "clipPolicy": {
+      "description": "Policy for local cells that land outside the final scene bounds.",
+      "$ref": "#/$defs/ClipPolicy"
+    },
+    "id": {
+      "description": "Stable element identity, distinct from roles and source instances.",
+      "$ref": "#/$defs/ElementId"
+    },
+    "layer": {
+      "description": "Optional lightweight layer grouping identity.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LayerId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pipeline": {
+      "description": "Optional source-local or element-local pipeline reference.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RecipeElementPipeline"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "placement": {
+      "description": "Placement of the source-produced surface in scene coordinates.",
+      "$ref": "#/$defs/ElementPlacement"
+    },
+    "roleWritePolicy": {
+      "description": "Policy for how a written cell updates the final scene role channel.",
+      "$ref": "#/$defs/RoleWritePolicy"
+    },
+    "source": {
+      "description": "Source instance that produces this element-local semantic surface.",
+      "$ref": "#/$defs/SourceInstanceId"
+    },
+    "zIndex": {
+      "description": "Z order; higher values compose later and appear above lower values.",
+      "type": "integer",
+      "format": "int32"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "zIndex",
+    "placement",
+    "source",
+    "clipPolicy",
+    "cellWritePolicy",
+    "roleWritePolicy"
+  ],
+  "$defs": {
+    "CellWritePolicy": {
+      "description": "Policy for how a cell write updates cell channels.",
+      "oneOf": [
+        {
+          "description": "Write the cell exactly, including transparent empty cells.",
+          "type": "string",
+          "const": "writeCell"
+        },
+        {
+          "description": "Skip only transparent empty cell writes, preserving destination cell and role.",
+          "type": "string",
+          "const": "skipTransparentEmpty"
+        }
+      ]
+    },
+    "ClipPolicy": {
+      "description": "Policy for element cells that land outside the final scene bounds.",
+      "oneOf": [
+        {
+          "description": "Ignore out-of-bounds element cells and preserve the current composed surface.",
+          "type": "string",
+          "const": "clip"
+        },
+        {
+          "description": "Ignore out-of-bounds element cells and emit one element-aware warning diagnostic.",
+          "type": "string",
+          "const": "warn"
+        }
+      ]
+    },
+    "ElementId": {
+      "description": "Stable scene element identity used by diagnostics and future recipe references.",
+      "type": "string"
+    },
+    "ElementPlacement": {
+      "description": "Placement of an element-local surface into scene coordinates.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Scene x coordinate where element-local x=0 lands.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "y": {
+          "description": "Scene y coordinate where element-local y=0 lands.",
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "GraphId": {
+      "description": "Stable canonical graph identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "GraphStep": {
+      "description": "Canonical execution topology for a graph.",
+      "oneOf": [
+        {
+          "description": "Execute one declared graph node.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "node"
+            },
+            "node": {
+              "description": "Graph-local node id to execute.",
+              "$ref": "#/$defs/NodeId"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "node"
+          ]
+        },
+        {
+          "description": "Execute child steps in order, where each child reads the prior output.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Ordered child steps.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GraphStep"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "sequence"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children"
+          ]
+        },
+        {
+          "description": "Execute child branches against the same input snapshot, then merge deltas.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Authored child branches. Child order is deterministic merge order.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GraphStep"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "parallel"
+            },
+            "mergePolicy": {
+              "description": "Policy used when multiple branches write the same cell channel.",
+              "$ref": "#/$defs/ParallelMergePolicy"
+            },
+            "valueMergePolicy": {
+              "description": "Policy used when multiple branches publish the same graph value id.",
+              "$ref": "#/$defs/GraphValueMergePolicy",
+              "default": "childOrderLastWriterWins"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children",
+            "mergePolicy"
+          ]
+        }
+      ]
+    },
+    "GraphValueMergePolicy": {
+      "description": "Policy for resolving graph value outputs produced by parallel branches.",
+      "oneOf": [
+        {
+          "description": "Merge branch value outputs in authored child order; later outputs win.",
+          "type": "string",
+          "const": "childOrderLastWriterWins"
+        },
+        {
+          "description": "Reject the merge when multiple branches publish the same graph value id.",
+          "type": "string",
+          "const": "errorOnSameValueConflict"
+        }
+      ]
+    },
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "LayerId": {
+      "description": "Optional scene layer identity used for grouping elements without a full layer graph.",
+      "type": "string"
+    },
+    "NodeId": {
+      "description": "Stable node identifier inside a canonical graph.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "ParallelMergePolicy": {
+      "description": "Policy for resolving channel writes produced by parallel graph branches.",
+      "oneOf": [
+        {
+          "description": "Merge branches in authored child order; later same-channel writes win.",
+          "type": "string",
+          "const": "childOrderLastWriterWins"
+        },
+        {
+          "description": "Reject the merge when multiple branches write the same cell channel.",
+          "type": "string",
+          "const": "errorOnSameChannelConflict"
+        }
+      ]
+    },
+    "RecipeElementPipeline": {
+      "description": "Optional element-local pipeline reference into the canonical graph.",
+      "type": "object",
+      "properties": {
+        "graph": {
+          "description": "Graph that owns the nodes used by this element-local pipeline.",
+          "$ref": "#/$defs/GraphId"
+        },
+        "topology": {
+          "description": "Optional pipeline topology subset for this element.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GraphStep"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "graph"
+      ]
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "RoleWritePolicy": {
+      "description": "Policy for how a cell write updates the semantic role channel.",
+      "oneOf": [
+        {
+          "description": "Preserve the destination role.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "preserveDestination"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Copy the sampled-source role.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "copySampledSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Set one explicit role, used by procedural/shadow-style writers.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "setExplicit"
+            },
+            "role": {
+              "description": "Role to write into the destination role channel.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        }
+      ]
+    },
+    "SourceInstanceId": {
+      "description": "Stable recipe-local source instance identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    }
+  }
+}

@@ -1,0 +1,2910 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RecipeDocument",
+  "description": "Strict canonical v3.1 recipe document consumed after authoring/lowering.",
+  "type": "object",
+  "properties": {
+    "assets": {
+      "description": "Assets declared once and referenced structurally by source instances.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]*$": {
+          "$ref": "#/$defs/AssetSpec"
+        }
+      },
+      "propertyNames": {
+        "description": "Asset ids must follow the canonical identifier shape.",
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      }
+    },
+    "graph": {
+      "description": "Canonical graph containing parameters, signals, bindings, effects, nodes, and topology.",
+      "$ref": "#/$defs/GraphSpec"
+    },
+    "id": {
+      "description": "Stable canonical recipe identifier.",
+      "$ref": "#/$defs/RecipeId"
+    },
+    "metadata": {
+      "description": "Human-facing metadata carried with the canonical document.",
+      "$ref": "#/$defs/RecipeMetadata"
+    },
+    "scenes": {
+      "description": "Scene declarations referencing source-produced surfaces and optional element pipelines.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RecipeScene"
+      }
+    },
+    "sourceDescriptors": {
+      "description": "Source descriptors available to source instances.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$": {
+          "$ref": "#/$defs/SourceDescriptor"
+        }
+      },
+      "propertyNames": {
+        "description": "Source descriptor ids must follow the canonical identifier shape.",
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$"
+      }
+    },
+    "sources": {
+      "description": "Source instances keyed by recipe-local source instance id.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]*$": {
+          "$ref": "#/$defs/SourceSpec"
+        }
+      },
+      "propertyNames": {
+        "description": "Source instance ids must follow the canonical identifier shape.",
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      }
+    },
+    "version": {
+      "description": "Canonical recipe contract version string.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "metadata",
+    "assets",
+    "sourceDescriptors",
+    "sources",
+    "graph",
+    "scenes"
+  ],
+  "$defs": {
+    "AssetFormat": {
+      "description": "Stable asset format identifier, such as `tui-vfx.braille_flag_asset.v1`.",
+      "type": "string"
+    },
+    "AssetId": {
+      "description": "Stable asset identifier used by source contracts and structural asset refs.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "AssetKind": {
+      "description": "Broad source asset kind used for validation before runtime loading exists.",
+      "oneOf": [
+        {
+          "description": "Raster or vector image-like source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "image"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "ANSI/terminal capture source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "ansi"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Braille dotfield source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "brailleDotfield"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "JSON-encoded structured source data.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "json"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Pre-shaped cell-grid source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "cellGrid"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Opaque binary source material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Project-defined asset kind with explicit stable name.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "custom"
+            },
+            "name": {
+              "description": "Stable custom asset kind name.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ]
+        }
+      ]
+    },
+    "AssetLocator": {
+      "description": "Structural locator for an asset declaration; not a string interpolation token.",
+      "oneOf": [
+        {
+          "description": "Repository- or package-relative path to asset material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "path"
+            },
+            "path": {
+              "description": "Canonical path string. Must not contain legacy interpolation markers.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path"
+          ]
+        },
+        {
+          "description": "Logical locator resolved by a later host/runtime resolver.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "logical"
+            },
+            "locator": {
+              "description": "Resolver-owned logical locator string.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "locator"
+          ]
+        }
+      ]
+    },
+    "AssetRef": {
+      "description": "Structural reference from a source asset slot to a declared asset.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Referenced asset id from the containing catalog/document.",
+          "$ref": "#/$defs/AssetId"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ]
+    },
+    "AssetRequirement": {
+      "description": "Asset slot declared by a source descriptor.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Optional human-facing slot description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "description": "Exact asset format accepted by this source asset slot.",
+          "$ref": "#/$defs/AssetFormat"
+        },
+        "kind": {
+          "description": "Broad asset kind accepted by this source asset slot.",
+          "$ref": "#/$defs/AssetKind"
+        },
+        "required": {
+          "description": "Whether a source spec must supply this asset slot.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "format",
+        "required"
+      ]
+    },
+    "AssetSpec": {
+      "description": "Canonical asset declaration available for structural source asset refs.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Optional human-facing description for catalogs and generated reference docs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "description": "Exact asset format expected by the source adapter family.",
+          "$ref": "#/$defs/AssetFormat"
+        },
+        "id": {
+          "description": "Stable asset id referenced by source specs.",
+          "$ref": "#/$defs/AssetId"
+        },
+        "kind": {
+          "description": "Broad asset kind used for compatibility validation.",
+          "$ref": "#/$defs/AssetKind"
+        },
+        "locator": {
+          "description": "Structural locator for the asset material.",
+          "$ref": "#/$defs/AssetLocator"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "format",
+        "locator"
+      ]
+    },
+    "BindingMode": {
+      "description": "Declarative mode for applying a binding source to a target.",
+      "oneOf": [
+        {
+          "description": "Source replaces the target value.",
+          "type": "string",
+          "const": "replace"
+        }
+      ]
+    },
+    "BindingSpec": {
+      "description": "Declarative binding from a value source to a parameter target.",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "Declarative binding application mode.",
+          "$ref": "#/$defs/BindingMode"
+        },
+        "source": {
+          "description": "Source that provides the target value.",
+          "$ref": "#/$defs/ValueSource"
+        },
+        "target": {
+          "description": "Target that receives the source value.",
+          "$ref": "#/$defs/BindingTarget"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "source",
+        "mode"
+      ]
+    },
+    "BindingTarget": {
+      "description": "Declarative target for a value binding.",
+      "oneOf": [
+        {
+          "description": "Binding targets a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Referenced target parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        }
+      ]
+    },
+    "CellAccess": {
+      "description": "Cell channels an effect may read or write.",
+      "type": "object",
+      "properties": {
+        "reads": {
+          "description": "Cell channels the effect may inspect.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellChannel"
+          }
+        },
+        "writes": {
+          "description": "Cell channels the effect may write.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellChannel"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "reads",
+        "writes"
+      ]
+    },
+    "CellChannel": {
+      "description": "Canonical channels that make up a cell write.",
+      "oneOf": [
+        {
+          "description": "Glyph character channel.",
+          "type": "string",
+          "const": "glyph"
+        },
+        {
+          "description": "Foreground color channel.",
+          "type": "string",
+          "const": "foreground"
+        },
+        {
+          "description": "Background color channel.",
+          "type": "string",
+          "const": "background"
+        },
+        {
+          "description": "Text modifier channel.",
+          "type": "string",
+          "const": "modifiers"
+        },
+        {
+          "description": "Modifier alpha channel.",
+          "type": "string",
+          "const": "modifierAlpha"
+        },
+        {
+          "description": "Semantic role channel. Role writes are governed by role policy.",
+          "type": "string",
+          "const": "role"
+        }
+      ]
+    },
+    "CellWritePolicy": {
+      "description": "Policy for how a cell write updates cell channels.",
+      "oneOf": [
+        {
+          "description": "Write the cell exactly, including transparent empty cells.",
+          "type": "string",
+          "const": "writeCell"
+        },
+        {
+          "description": "Skip only transparent empty cell writes, preserving destination cell and role.",
+          "type": "string",
+          "const": "skipTransparentEmpty"
+        }
+      ]
+    },
+    "ClipPolicy": {
+      "description": "Policy for element cells that land outside the final scene bounds.",
+      "oneOf": [
+        {
+          "description": "Ignore out-of-bounds element cells and preserve the current composed surface.",
+          "type": "string",
+          "const": "clip"
+        },
+        {
+          "description": "Ignore out-of-bounds element cells and emit one element-aware warning diagnostic.",
+          "type": "string",
+          "const": "warn"
+        }
+      ]
+    },
+    "Color": {
+      "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "Alpha channel (0=transparent, 255=opaque)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "b": {
+          "description": "Blue channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "description": "Green channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "description": "Red channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ]
+    },
+    "CoordinateSpace": {
+      "description": "Coordinate space used by geometry scopes.",
+      "oneOf": [
+        {
+          "description": "Destination-local coordinates. This is the Phase A/B default.",
+          "type": "string",
+          "const": "destinationLocal"
+        },
+        {
+          "description": "Sampled-source local coordinates. Present to make the contract explicit.",
+          "type": "string",
+          "const": "sampledSource"
+        }
+      ]
+    },
+    "EffectCompletion": {
+      "description": "Minimal completion category for descriptor lifecycle metadata.",
+      "oneOf": [
+        {
+          "description": "The effect does not naturally complete on its own.",
+          "type": "string",
+          "const": "never"
+        },
+        {
+          "description": "The effect completes during the same evaluation step.",
+          "type": "string",
+          "const": "instant"
+        },
+        {
+          "description": "The effect completes after a bounded duration.",
+          "type": "string",
+          "const": "timeBound"
+        },
+        {
+          "description": "The effect eventually completes, but the bound is not part of E1.",
+          "type": "string",
+          "const": "eventual"
+        },
+        {
+          "description": "Completion is controlled by an external host signal.",
+          "type": "string",
+          "const": "external"
+        }
+      ]
+    },
+    "EffectDescriptor": {
+      "description": "Minimal durable v3.1 effect descriptor contract.",
+      "type": "object",
+      "properties": {
+        "category": {
+          "description": "Optional human-facing category label for catalogs and docs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cellAccess": {
+          "description": "Cell channels the effect may read or write.",
+          "$ref": "#/$defs/CellAccess"
+        },
+        "displayName": {
+          "description": "Human-facing display name.",
+          "type": "string"
+        },
+        "domain": {
+          "description": "Broad execution domain for planning and capability grouping.",
+          "$ref": "#/$defs/EffectDomain"
+        },
+        "id": {
+          "description": "Stable canonical effect identifier.",
+          "$ref": "#/$defs/EffectId"
+        },
+        "inputs": {
+          "description": "Descriptor-local typed input specifications keyed by stable input id.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/EffectInputSpec"
+          },
+          "propertyNames": {
+            "description": "Effect input ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "lifecycle": {
+          "description": "Minimal lifecycle metadata for planning.",
+          "$ref": "#/$defs/EffectLifecycle"
+        },
+        "outputs": {
+          "description": "Descriptor-local typed output specifications keyed by stable output id.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "$ref": "#/$defs/EffectOutputSpec"
+            }
+          },
+          "propertyNames": {
+            "description": "Effect output ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "scopeSupport": {
+          "description": "Scope kinds and spaces this effect supports.",
+          "$ref": "#/$defs/ScopeSupport"
+        },
+        "version": {
+          "description": "Descriptor version string owned by the effect family.",
+          "type": "string"
+        },
+        "writeSupport": {
+          "description": "Cell and role write policies this effect supports.",
+          "$ref": "#/$defs/WriteSupport"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "displayName",
+        "domain",
+        "cellAccess",
+        "scopeSupport",
+        "writeSupport",
+        "inputs",
+        "outputs",
+        "lifecycle"
+      ]
+    },
+    "EffectDomain": {
+      "description": "Broad execution role declared by an effect descriptor.",
+      "oneOf": [
+        {
+          "description": "Generates content cells without requiring existing source content.",
+          "type": "string",
+          "const": "contentGenerator"
+        },
+        {
+          "description": "Transforms existing content while preserving its broad semantic role.",
+          "type": "string",
+          "const": "contentTransform"
+        },
+        {
+          "description": "Shades individual cell visual channels.",
+          "type": "string",
+          "const": "cellShader"
+        },
+        {
+          "description": "Filters a complete frame or surface after content exists.",
+          "type": "string",
+          "const": "frameFilter"
+        },
+        {
+          "description": "Changes which source coordinate a destination cell samples.",
+          "type": "string",
+          "const": "coordinateSampler"
+        },
+        {
+          "description": "Produces or applies a mask for later stages.",
+          "type": "string",
+          "const": "mask"
+        },
+        {
+          "description": "Produces shadow-like support content or role tagging.",
+          "type": "string",
+          "const": "shadow"
+        },
+        {
+          "description": "Runs after primary composition as a post-process.",
+          "type": "string",
+          "const": "postProcess"
+        },
+        {
+          "description": "Emits diagnostics or analysis without being a visual effect.",
+          "type": "string",
+          "const": "diagnosticTooling"
+        }
+      ]
+    },
+    "EffectId": {
+      "description": "Stable canonical effect identifier.",
+      "type": "string"
+    },
+    "EffectInputId": {
+      "description": "Stable descriptor-local effect input identifier.",
+      "type": "string"
+    },
+    "EffectInputSpec": {
+      "description": "Descriptor-local specification for one effect input.",
+      "type": "object",
+      "properties": {
+        "bindable": {
+          "description": "Whether later phases may bind this input to a source; no binding model exists in F1.",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "Optional human-facing description for documentation and catalogs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "description": "Optional human-facing display name for documentation and catalogs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtimeMutability": {
+          "description": "When this input value may change during the effect lifecycle.",
+          "$ref": "#/$defs/RuntimeMutability"
+        },
+        "value": {
+          "description": "Typed value contract, including default, range, enum values, unit, and semantic hints.",
+          "$ref": "#/$defs/ValueSpec"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "bindable",
+        "runtimeMutability"
+      ]
+    },
+    "EffectLifecycle": {
+      "description": "Minimal lifecycle metadata declared by an effect descriptor.",
+      "type": "object",
+      "properties": {
+        "completion": {
+          "description": "Completion category exposed to recipe and runtime planning.",
+          "$ref": "#/$defs/EffectCompletion"
+        },
+        "deterministicWithSeed": {
+          "description": "Whether seeded execution is deterministic for the same inputs.",
+          "type": "boolean"
+        },
+        "resettable": {
+          "description": "Whether the effect can be reset to its initial state.",
+          "type": "boolean"
+        },
+        "seekable": {
+          "description": "Whether the effect can be sampled at an arbitrary timeline position.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "completion",
+        "resettable",
+        "seekable",
+        "deterministicWithSeed"
+      ]
+    },
+    "EffectOutputId": {
+      "description": "Stable descriptor-local effect output identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "EffectOutputSpec": {
+      "description": "Descriptor-local specification for one effect-computed output.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Optional human-facing description for docs and catalogs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Typed value kind produced by this output.",
+          "$ref": "#/$defs/GraphValueKind"
+        },
+        "shape": {
+          "description": "Cardinality of the produced value.",
+          "$ref": "#/$defs/GraphValueShape"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "shape"
+      ]
+    },
+    "ElementId": {
+      "description": "Stable scene element identity used by diagnostics and future recipe references.",
+      "type": "string"
+    },
+    "ElementPlacement": {
+      "description": "Placement of an element-local surface into scene coordinates.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Scene x coordinate where element-local x=0 lands.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "y": {
+          "description": "Scene y coordinate where element-local y=0 lands.",
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "GraphId": {
+      "description": "Stable canonical graph identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "GraphSpec": {
+      "description": "Canonical v3.1 graph container produced by future recipe compilation.",
+      "type": "object",
+      "properties": {
+        "bindings": {
+          "description": "Declarative parameter-target bindings owned by this graph.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BindingSpec"
+          }
+        },
+        "effects": {
+          "description": "Effect descriptors available to nodes in this graph.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/EffectDescriptor"
+          }
+        },
+        "id": {
+          "description": "Stable canonical graph identifier.",
+          "$ref": "#/$defs/GraphId"
+        },
+        "nodes": {
+          "description": "Nodes keyed by stable graph-local node id.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "$ref": "#/$defs/NodeSpec"
+            }
+          },
+          "propertyNames": {
+            "description": "Node ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "order": {
+          "description": "Deterministic node order by graph-local node id.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NodeId"
+          }
+        },
+        "parameters": {
+          "description": "Public parameters available to graph value sources and bindings.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "$ref": "#/$defs/ParameterSpec"
+            }
+          },
+          "propertyNames": {
+            "description": "Parameter ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "signals": {
+          "description": "Host/runtime signals available to graph value sources.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "$ref": "#/$defs/SignalSpec"
+            }
+          },
+          "propertyNames": {
+            "description": "Signal ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "topology": {
+          "description": "Optional explicit topology. When omitted, `order` is a linear sequence.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GraphStep"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "description": "Contract graph version string.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "parameters",
+        "signals",
+        "bindings",
+        "effects",
+        "nodes",
+        "order"
+      ]
+    },
+    "GraphStep": {
+      "description": "Canonical execution topology for a graph.",
+      "oneOf": [
+        {
+          "description": "Execute one declared graph node.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "node"
+            },
+            "node": {
+              "description": "Graph-local node id to execute.",
+              "$ref": "#/$defs/NodeId"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "node"
+          ]
+        },
+        {
+          "description": "Execute child steps in order, where each child reads the prior output.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Ordered child steps.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GraphStep"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "sequence"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children"
+          ]
+        },
+        {
+          "description": "Execute child branches against the same input snapshot, then merge deltas.",
+          "type": "object",
+          "properties": {
+            "children": {
+              "description": "Authored child branches. Child order is deterministic merge order.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/GraphStep"
+              }
+            },
+            "kind": {
+              "type": "string",
+              "const": "parallel"
+            },
+            "mergePolicy": {
+              "description": "Policy used when multiple branches write the same cell channel.",
+              "$ref": "#/$defs/ParallelMergePolicy"
+            },
+            "valueMergePolicy": {
+              "description": "Policy used when multiple branches publish the same graph value id.",
+              "$ref": "#/$defs/GraphValueMergePolicy",
+              "default": "childOrderLastWriterWins"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "children",
+            "mergePolicy"
+          ]
+        }
+      ]
+    },
+    "GraphValueId": {
+      "description": "Stable value identifier published into a canonical graph-local value bus.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "GraphValueKind": {
+      "description": "Closed vocabulary for values published on the graph-local value bus.",
+      "oneOf": [
+        {
+          "description": "Floating-point scalar value. Shape decides whether it is frame-wide or per-cell.",
+          "type": "string",
+          "const": "number"
+        }
+      ]
+    },
+    "GraphValueMergePolicy": {
+      "description": "Policy for resolving graph value outputs produced by parallel branches.",
+      "oneOf": [
+        {
+          "description": "Merge branch value outputs in authored child order; later outputs win.",
+          "type": "string",
+          "const": "childOrderLastWriterWins"
+        },
+        {
+          "description": "Reject the merge when multiple branches publish the same graph value id.",
+          "type": "string",
+          "const": "errorOnSameValueConflict"
+        }
+      ]
+    },
+    "GraphValueShape": {
+      "description": "Cardinality or sampling shape for a graph-local value.",
+      "oneOf": [
+        {
+          "description": "One value applies to the entire frame/node execution.",
+          "type": "string",
+          "const": "frameValue"
+        },
+        {
+          "description": "Value may vary per destination/sample cell.",
+          "type": "string",
+          "const": "cellField"
+        }
+      ]
+    },
+    "InternedRoleName": {
+      "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
+      "type": "string"
+    },
+    "LayerId": {
+      "description": "Optional scene layer identity used for grouping elements without a full layer graph.",
+      "type": "string"
+    },
+    "NodeId": {
+      "description": "Stable node identifier inside a canonical graph.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "NodeOutputSource": {
+      "description": "Source used by a node to publish one graph-local value.",
+      "oneOf": [
+        {
+          "description": "Publish an output computed by the proof/real effect adapter.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Descriptor-local output id.",
+              "$ref": "#/$defs/EffectOutputId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "effectOutput"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Re-emit one resolved node input into the graph-local value bus.",
+          "type": "object",
+          "properties": {
+            "id": {
+              "description": "Descriptor-local input id.",
+              "$ref": "#/$defs/EffectInputId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "input"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        }
+      ]
+    },
+    "NodeOutputSpec": {
+      "description": "Declaration for one graph-local value published by a node.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "description": "Where the value is read from after node input resolution/effect execution.",
+          "$ref": "#/$defs/NodeOutputSource"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "source"
+      ]
+    },
+    "NodeSpec": {
+      "description": "One effect node in a canonical v3.1 graph.",
+      "type": "object",
+      "properties": {
+        "cellWritePolicy": {
+          "description": "Optional cell write policy requested by this node.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CellWritePolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effect": {
+          "description": "Effect descriptor used by this node.",
+          "$ref": "#/$defs/EffectId"
+        },
+        "id": {
+          "description": "Stable graph-local node identifier.",
+          "$ref": "#/$defs/NodeId"
+        },
+        "inputs": {
+          "description": "Declarative values supplied to descriptor-local effect inputs.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ValueSource"
+          },
+          "propertyNames": {
+            "description": "Effect input ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "outputs": {
+          "description": "Graph-local values this node publishes after input resolution/effect execution.",
+          "type": "object",
+          "additionalProperties": false,
+          "default": {},
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "$ref": "#/$defs/NodeOutputSpec"
+            }
+          },
+          "propertyNames": {
+            "description": "Graph value ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "roleWritePolicy": {
+          "description": "Optional role write policy requested by this node.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoleWritePolicy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "description": "Optional scope limiting where this node applies.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScopeSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "effect",
+        "inputs"
+      ]
+    },
+    "NumericRange": {
+      "description": "Optional inclusive numeric bounds for a value spec.",
+      "type": "object",
+      "properties": {
+        "max": {
+          "description": "Inclusive maximum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "min": {
+          "description": "Inclusive minimum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ParallelMergePolicy": {
+      "description": "Policy for resolving channel writes produced by parallel graph branches.",
+      "oneOf": [
+        {
+          "description": "Merge branches in authored child order; later same-channel writes win.",
+          "type": "string",
+          "const": "childOrderLastWriterWins"
+        },
+        {
+          "description": "Reject the merge when multiple branches write the same cell channel.",
+          "type": "string",
+          "const": "errorOnSameChannelConflict"
+        }
+      ]
+    },
+    "ParameterId": {
+      "description": "Stable public recipe parameter identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "ParameterSpec": {
+      "description": "Public recipe parameter contract.",
+      "type": "object",
+      "properties": {
+        "bindable": {
+          "description": "Whether later runtime layers may bind this parameter declaratively.",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "Optional human-facing description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "description": "Optional human-facing display name.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Stable public parameter identifier.",
+          "$ref": "#/$defs/ParameterId"
+        },
+        "value": {
+          "description": "Typed value contract, including any parameter default.",
+          "$ref": "#/$defs/ValueSpec"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value",
+        "bindable"
+      ]
+    },
+    "RecipeElementPipeline": {
+      "description": "Optional element-local pipeline reference into the canonical graph.",
+      "type": "object",
+      "properties": {
+        "graph": {
+          "description": "Graph that owns the nodes used by this element-local pipeline.",
+          "$ref": "#/$defs/GraphId"
+        },
+        "topology": {
+          "description": "Optional pipeline topology subset for this element.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GraphStep"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "graph"
+      ]
+    },
+    "RecipeId": {
+      "description": "Stable canonical recipe document identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "RecipeMetadata": {
+      "description": "Human-facing metadata for a canonical recipe document.",
+      "type": "object",
+      "properties": {
+        "authors": {
+          "description": "Optional authors or owning teams.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "description": "Optional longer recipe description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tags": {
+          "description": "Optional catalog/search tags.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "title": {
+          "description": "Optional human-facing recipe title.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "RecipeScene": {
+      "description": "Canonical recipe scene declaration before source rendering/composition.",
+      "type": "object",
+      "properties": {
+        "elements": {
+          "description": "Source-backed elements composed into the scene.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RecipeSceneElement"
+          }
+        },
+        "height": {
+          "description": "Height of the final composed scene in cells.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Stable recipe-local scene id.",
+          "$ref": "#/$defs/SceneId"
+        },
+        "width": {
+          "description": "Width of the final composed scene in cells.",
+          "type": "integer",
+          "format": "uint",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "width",
+        "height",
+        "elements"
+      ]
+    },
+    "RecipeSceneElement": {
+      "description": "Scene element whose surface is produced by a declared source instance.",
+      "type": "object",
+      "properties": {
+        "cellWritePolicy": {
+          "description": "Policy for whether transparent empty local cells write or skip.",
+          "$ref": "#/$defs/CellWritePolicy"
+        },
+        "clipPolicy": {
+          "description": "Policy for local cells that land outside the final scene bounds.",
+          "$ref": "#/$defs/ClipPolicy"
+        },
+        "id": {
+          "description": "Stable element identity, distinct from roles and source instances.",
+          "$ref": "#/$defs/ElementId"
+        },
+        "layer": {
+          "description": "Optional lightweight layer grouping identity.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayerId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pipeline": {
+          "description": "Optional source-local or element-local pipeline reference.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecipeElementPipeline"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "placement": {
+          "description": "Placement of the source-produced surface in scene coordinates.",
+          "$ref": "#/$defs/ElementPlacement"
+        },
+        "roleWritePolicy": {
+          "description": "Policy for how a written cell updates the final scene role channel.",
+          "$ref": "#/$defs/RoleWritePolicy"
+        },
+        "source": {
+          "description": "Source instance that produces this element-local semantic surface.",
+          "$ref": "#/$defs/SourceInstanceId"
+        },
+        "zIndex": {
+          "description": "Z order; higher values compose later and appear above lower values.",
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zIndex",
+        "placement",
+        "source",
+        "clipPolicy",
+        "cellWritePolicy",
+        "roleWritePolicy"
+      ]
+    },
+    "Rect": {
+      "description": "Rectangle in cell coordinates.\n\nThis is the primary geometry type for defining effect regions.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "description": "Rectangle height in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "width": {
+          "description": "Rectangle width in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "x": {
+          "description": "Left edge x coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "y": {
+          "description": "Top edge y coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "RoleSpace": {
+      "description": "Role source used by role scopes.",
+      "oneOf": [
+        {
+          "description": "Role scopes inspect the sampled source role. This is the Phase A/B default.",
+          "type": "string",
+          "const": "sampledSource"
+        },
+        {
+          "description": "Role scopes inspect the destination role before the write.",
+          "type": "string",
+          "const": "destination"
+        }
+      ]
+    },
+    "RoleTag": {
+      "description": "Per-cell semantic role tag.\n\nTwelve first-class variants cover the common roles. `Custom(name)` covers\nad-hoc recipe-declared roles. `#[non_exhaustive]` preserves room for\nfuture first-class additions without a breaking change.\n\nEvery first-class variant has a stable numeric ID in `RoleInterner`\n(Background=0, Text=1, …, Procedural=11); Custom IDs start at 12.",
+      "oneOf": [
+        {
+          "description": "Fill cells (no glyph or styled space).",
+          "type": "string",
+          "const": "Background"
+        },
+        {
+          "description": "Primary content text.",
+          "type": "string",
+          "const": "Text"
+        },
+        {
+          "description": "Title / header text.",
+          "type": "string",
+          "const": "Title"
+        },
+        {
+          "description": "Secondary / sub text.",
+          "type": "string",
+          "const": "Caption"
+        },
+        {
+          "description": "Structural / decorative borders.",
+          "type": "string",
+          "const": "Border"
+        },
+        {
+          "description": "Image / pixel-art / glyph-art cells.",
+          "type": "string",
+          "const": "Image"
+        },
+        {
+          "description": "Small icon glyphs.",
+          "type": "string",
+          "const": "Icon"
+        },
+        {
+          "description": "Status / focus / selection markers.",
+          "type": "string",
+          "const": "Indicator"
+        },
+        {
+          "description": "Emphasized content (search hits, etc.).",
+          "type": "string",
+          "const": "Highlight"
+        },
+        {
+          "description": "Shadow content — source layer OR pipeline output.",
+          "type": "string",
+          "const": "Shadow"
+        },
+        {
+          "description": "Ornamental cells (dividers, ornaments).",
+          "type": "string",
+          "const": "Decoration"
+        },
+        {
+          "description": "Cells produced by a procedural source.",
+          "type": "string",
+          "const": "Procedural"
+        },
+        {
+          "description": "Author-declared custom role, such as `\"logo_silhouette\"`.",
+          "type": "object",
+          "properties": {
+            "Custom": {
+              "description": "Custom role name serialized as a string.",
+              "$ref": "#/$defs/InternedRoleName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "Custom"
+          ]
+        }
+      ]
+    },
+    "RoleWritePolicy": {
+      "description": "Policy for how a cell write updates the semantic role channel.",
+      "oneOf": [
+        {
+          "description": "Preserve the destination role.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "preserveDestination"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Copy the sampled-source role.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "copySampledSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Set one explicit role, used by procedural/shadow-style writers.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "setExplicit"
+            },
+            "role": {
+              "description": "Role to write into the destination role channel.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        }
+      ]
+    },
+    "RoleWritePolicyKind": {
+      "description": "Payload-free role write policy kind used by descriptor support declarations.",
+      "oneOf": [
+        {
+          "description": "Descriptor may preserve destination roles.",
+          "type": "string",
+          "const": "preserveDestination"
+        },
+        {
+          "description": "Descriptor may copy sampled-source roles.",
+          "type": "string",
+          "const": "copySampledSource"
+        },
+        {
+          "description": "Descriptor may set an explicit role chosen by the operation.",
+          "type": "string",
+          "const": "setExplicit"
+        }
+      ]
+    },
+    "RuntimeMutability": {
+      "description": "Vocabulary describing when an effect input may change.",
+      "oneOf": [
+        {
+          "description": "Value is fixed when the effect contract is compiled or instantiated.",
+          "type": "string",
+          "const": "compileTime"
+        },
+        {
+          "description": "Value may be set at the start of a phase.",
+          "type": "string",
+          "const": "phaseStart"
+        },
+        {
+          "description": "Value may change only when the effect is reset.",
+          "type": "string",
+          "const": "resetOnly"
+        },
+        {
+          "description": "Value may change while the effect is running.",
+          "type": "string",
+          "const": "runtime"
+        }
+      ]
+    },
+    "SceneId": {
+      "description": "Stable canonical recipe scene identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "ScopeKind": {
+      "description": "Scope shape a descriptor can explicitly support.",
+      "oneOf": [
+        {
+          "description": "Descriptor supports all-cell scopes.",
+          "type": "string",
+          "const": "all"
+        },
+        {
+          "description": "Descriptor supports role-based scopes.",
+          "type": "string",
+          "const": "role"
+        },
+        {
+          "description": "Descriptor supports rectangular geometry scopes.",
+          "type": "string",
+          "const": "rect"
+        },
+        {
+          "description": "Descriptor supports row range geometry scopes.",
+          "type": "string",
+          "const": "rowRange"
+        },
+        {
+          "description": "Descriptor supports column range geometry scopes.",
+          "type": "string",
+          "const": "columnRange"
+        }
+      ]
+    },
+    "ScopeSpec": {
+      "description": "Minimal Phase A/B scope algebra.",
+      "oneOf": [
+        {
+          "description": "Match every in-bounds cell.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "all"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells with the requested role in the active role space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "role": {
+              "description": "Role required in the active role space.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Match a rectangle in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "rect": {
+              "description": "Rectangle to match in the active coordinate space.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rect"
+          ]
+        },
+        {
+          "description": "Match rows `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "rowRange"
+            },
+            "start": {
+              "description": "Inclusive start row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match columns `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "columnRange"
+            },
+            "start": {
+              "description": "Inclusive start column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        }
+      ]
+    },
+    "ScopeSupport": {
+      "description": "Scope shapes and evaluation spaces an effect descriptor supports.",
+      "type": "object",
+      "properties": {
+        "coordinateSpaces": {
+          "description": "Supported coordinate spaces for geometry scopes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CoordinateSpace"
+          }
+        },
+        "kinds": {
+          "description": "Supported scope variant kinds.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScopeKind"
+          }
+        },
+        "roleSpaces": {
+          "description": "Supported role spaces for role scopes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoleSpace"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kinds",
+        "coordinateSpaces",
+        "roleSpaces"
+      ]
+    },
+    "SignalId": {
+      "description": "Stable host/runtime signal identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "SignalSpec": {
+      "description": "Host/runtime-provided signal contract.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Optional human-facing description.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "description": "Optional human-facing display name.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "Stable host/runtime signal identifier.",
+          "$ref": "#/$defs/SignalId"
+        },
+        "required": {
+          "description": "Whether a host must provide this signal when no default is declared.",
+          "type": "boolean"
+        },
+        "value": {
+          "description": "Typed value contract, including any fallback default.",
+          "$ref": "#/$defs/ValueSpec"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value",
+        "required"
+      ]
+    },
+    "SourceDescriptor": {
+      "description": "Stable v3.1 descriptor for a source that produces an initial semantic surface.",
+      "type": "object",
+      "properties": {
+        "assets": {
+          "description": "Descriptor-local asset slots keyed by stable asset slot id.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "$ref": "#/$defs/AssetRequirement"
+            }
+          },
+          "propertyNames": {
+            "description": "Asset slot ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "category": {
+          "description": "Optional human-facing category label for catalogs and docs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "description": "Human-facing display name.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Stable canonical source identifier.",
+          "$ref": "#/$defs/SourceId"
+        },
+        "inputs": {
+          "description": "Descriptor-local typed input specifications keyed by stable input id.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$": {
+              "$ref": "#/$defs/SourceInputSpec"
+            }
+          },
+          "propertyNames": {
+            "description": "Source input ids may be dotted paths; each segment starts with an ASCII letter and then contains only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$"
+          }
+        },
+        "kind": {
+          "description": "Broad source kind for planning and capability grouping.",
+          "$ref": "#/$defs/SourceKind"
+        },
+        "lifecycle": {
+          "description": "Minimal lifecycle metadata for planning.",
+          "$ref": "#/$defs/SourceLifecycle"
+        },
+        "output": {
+          "description": "Output semantic surface contract.",
+          "$ref": "#/$defs/SourceOutputSpec"
+        },
+        "version": {
+          "description": "Descriptor version string owned by the source family.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "displayName",
+        "kind",
+        "inputs",
+        "assets",
+        "output",
+        "lifecycle"
+      ]
+    },
+    "SourceId": {
+      "description": "Stable canonical source identifier for a surface-producing descriptor.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$"
+    },
+    "SourceInputSpec": {
+      "description": "Descriptor-local specification for one source input.",
+      "type": "object",
+      "properties": {
+        "bindable": {
+          "description": "Whether recipe/graph/runtime value sources may bind this input.",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "Optional human-facing description for documentation and catalogs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "displayName": {
+          "description": "Optional human-facing display name for documentation and catalogs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtimeMutability": {
+          "description": "When this source input value may change during the source lifecycle.",
+          "$ref": "#/$defs/RuntimeMutability"
+        },
+        "value": {
+          "description": "Typed value contract, reusing the shared v3.1 value vocabulary.",
+          "$ref": "#/$defs/ValueSpec"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "bindable",
+        "runtimeMutability"
+      ]
+    },
+    "SourceInstanceId": {
+      "description": "Stable recipe-local source instance identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "SourceKind": {
+      "description": "Broad source family for a descriptor that produces an initial semantic surface.",
+      "oneOf": [
+        {
+          "description": "Text source that lays out text into a semantic surface.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "text"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Structured card/panel source that may generate border, background, and text roles.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "card"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Image-like source material selected by typed inputs or asset refs.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "image"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "ANSI/VTE-styled source material that produces cells with authored styles.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "ansi"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Offline command-capture source material; H0 declares shape but does not execute commands.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "commandCapture"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Algorithmic source driven by typed inputs and optional assets.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "procedural"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source backed primarily by external asset material.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "assetBacked"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source that references or produces a scene layer surface.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "sceneLayer"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Project-defined source kind with explicit stable name.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "custom"
+            },
+            "name": {
+              "description": "Stable custom source kind name.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ]
+        }
+      ]
+    },
+    "SourceLifecycle": {
+      "description": "Minimal planning metadata for a source descriptor.",
+      "type": "object",
+      "properties": {
+        "deterministicWithSeed": {
+          "description": "Whether this source is deterministic when supplied the same seed and inputs.",
+          "type": "boolean"
+        },
+        "resizeAware": {
+          "description": "Whether this source may produce different output when the host size changes.",
+          "type": "boolean"
+        },
+        "timeAware": {
+          "description": "Whether this source can vary with time/clock input.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "deterministicWithSeed",
+        "timeAware",
+        "resizeAware"
+      ]
+    },
+    "SourceOutputSize": {
+      "description": "Declares how a source determines the size of its produced semantic surface.",
+      "oneOf": [
+        {
+          "description": "Output size is derived from source inputs or assets.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "inputDriven"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Output size is fixed by the descriptor.",
+          "type": "object",
+          "properties": {
+            "height": {
+              "description": "Fixed output height in cells.",
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "fixed"
+            },
+            "width": {
+              "description": "Fixed output width in cells.",
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "width",
+            "height"
+          ]
+        },
+        {
+          "description": "Output size is provided by the host or containing scene/recipe context.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "hostDriven"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "SourceOutputSpec": {
+      "description": "Contract for the semantic surface produced by a source descriptor.",
+      "type": "object",
+      "properties": {
+        "roles": {
+          "description": "Role assignment behavior of the produced surface.",
+          "$ref": "#/$defs/SourceRolePolicy"
+        },
+        "size": {
+          "description": "Size behavior of the produced surface.",
+          "$ref": "#/$defs/SourceOutputSize"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "size",
+        "roles"
+      ]
+    },
+    "SourceRolePolicy": {
+      "description": "Declares how a source assigns roles to its produced semantic surface.",
+      "oneOf": [
+        {
+          "description": "Source writes roles explicitly per produced cell.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "explicit"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source applies one default role to produced cells unless overridden by a later rule.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "defaultRole"
+            },
+            "role": {
+              "description": "Default role assigned to produced cells.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Source generates roles structurally, such as card border/background/text roles.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "generated"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "SourceSpec": {
+      "description": "Canonical source instance referencing a source descriptor and supplying inputs/assets.",
+      "type": "object",
+      "properties": {
+        "assets": {
+          "description": "Structural asset refs supplied to descriptor-local source asset slots.",
+          "type": "object",
+          "additionalProperties": false,
+          "default": {},
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "$ref": "#/$defs/AssetRef"
+            }
+          },
+          "propertyNames": {
+            "description": "Asset slot ids must start with an ASCII letter and then contain only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          }
+        },
+        "inputs": {
+          "description": "Declarative values supplied to descriptor-local source inputs.",
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$": {
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "propertyNames": {
+            "description": "Source input ids may be dotted paths; each segment starts with an ASCII letter and then contains only ASCII letters, digits, underscores, or hyphens.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$"
+          }
+        },
+        "source": {
+          "description": "Source descriptor id used by this instance.",
+          "$ref": "#/$defs/SourceId"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "inputs"
+      ]
+    },
+    "Value": {
+      "description": "Canonical tagged literal value used by effect input specs.",
+      "oneOf": [
+        {
+          "description": "Explicit absence of a value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "null"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Boolean true/false literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "boolean"
+            },
+            "value": {
+              "description": "Boolean payload.",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Signed integer literal without a fractional component.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "integer"
+            },
+            "value": {
+              "description": "Integer payload.",
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Floating-point numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "number"
+            },
+            "value": {
+              "description": "Number payload.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Short machine-facing string literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "string"
+            },
+            "value": {
+              "description": "String payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Human-facing text literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "text"
+            },
+            "value": {
+              "description": "Text payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "RGBA color literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "color"
+            },
+            "value": {
+              "description": "Color payload.",
+              "$ref": "#/$defs/Color"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration literal expressed as seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "duration"
+            },
+            "value": {
+              "description": "Duration payload in seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Closed-set enum literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "enum"
+            },
+            "value": {
+              "description": "Selected enum value.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Semantic role literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "value": {
+              "description": "Role payload.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Surface scope literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "scope"
+            },
+            "value": {
+              "description": "Scope payload.",
+              "$ref": "#/$defs/ScopeSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Cell rectangle literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "value": {
+              "description": "Rectangle payload.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "ValueKind": {
+      "description": "Closed v3.1 vocabulary for typed effect input values.",
+      "oneOf": [
+        {
+          "description": "Explicit absence of a value.",
+          "type": "string",
+          "const": "null"
+        },
+        {
+          "description": "Boolean true/false value.",
+          "type": "string",
+          "const": "boolean"
+        },
+        {
+          "description": "Signed integer value without a fractional component.",
+          "type": "string",
+          "const": "integer"
+        },
+        {
+          "description": "Floating-point numeric value.",
+          "type": "string",
+          "const": "number"
+        },
+        {
+          "description": "Short machine-facing string value.",
+          "type": "string",
+          "const": "string"
+        },
+        {
+          "description": "Human-facing text value.",
+          "type": "string",
+          "const": "text"
+        },
+        {
+          "description": "RGBA color value.",
+          "type": "string",
+          "const": "color"
+        },
+        {
+          "description": "Duration value expressed as seconds.",
+          "type": "string",
+          "const": "duration"
+        },
+        {
+          "description": "One value selected from a declared closed string set.",
+          "type": "string",
+          "const": "enum"
+        },
+        {
+          "description": "Semantic role tag value.",
+          "type": "string",
+          "const": "role"
+        },
+        {
+          "description": "Surface scope value.",
+          "type": "string",
+          "const": "scope"
+        },
+        {
+          "description": "Cell rectangle value.",
+          "type": "string",
+          "const": "rect"
+        }
+      ]
+    },
+    "ValueSource": {
+      "description": "Declarative source for a typed value.",
+      "oneOf": [
+        {
+          "description": "Source value is a typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "literal"
+            },
+            "value": {
+              "description": "Literal typed value.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the parameter is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared host/runtime signal.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the signal is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced signal id.",
+              "$ref": "#/$defs/SignalId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from an earlier graph-local node output.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the value is unavailable at execution time.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced graph-local value id.",
+              "$ref": "#/$defs/GraphValueId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "graphValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value maps a numeric source from one range to another.",
+          "type": "object",
+          "properties": {
+            "clamp": {
+              "description": "Whether values outside the input range should clamp before mapping.",
+              "type": "boolean"
+            },
+            "from": {
+              "description": "Nested numeric-compatible source to map.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "input": {
+              "description": "Inclusive input range for the nested source.",
+              "$ref": "#/$defs/NumericRange"
+            },
+            "kind": {
+              "type": "string",
+              "const": "map"
+            },
+            "output": {
+              "description": "Inclusive output range produced by the map.",
+              "$ref": "#/$defs/NumericRange"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "input",
+            "output",
+            "clamp"
+          ]
+        }
+      ]
+    },
+    "ValueSpec": {
+      "description": "Contract specification for one typed effect input value.",
+      "type": "object",
+      "properties": {
+        "allowedValues": {
+          "description": "Allowed string values when `kind` is `enum`.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "default": {
+          "description": "Optional typed default value for the input.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "description": "Closed kind expected for values accepted by this spec.",
+          "$ref": "#/$defs/ValueKind"
+        },
+        "range": {
+          "description": "Optional inclusive range for numeric, integer, and duration values.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NumericRange"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "semantic": {
+          "description": "Optional human-facing semantic hint such as `opacity`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "description": "Optional human-facing unit label such as `ratio` or `seconds`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ]
+    },
+    "WriteSupport": {
+      "description": "Cell and role write policies an effect descriptor supports.",
+      "type": "object",
+      "properties": {
+        "cellPolicies": {
+          "description": "Supported cell write policies.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CellWritePolicy"
+          }
+        },
+        "rolePolicies": {
+          "description": "Supported role write policy kinds.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoleWritePolicyKind"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cellPolicies",
+        "rolePolicies"
+      ]
+    }
+  }
+}

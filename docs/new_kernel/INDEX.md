@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.16.0</VERS> -->
-<!-- <WCTX>New kernel Phase H0: add source and asset contract artifacts.</WCTX> -->
-<!-- <CLOG>0.16.0: MINOR — add Phase G4 architect response, H0 status artifacts, and source/asset schema roots.
+<!-- <VERS>VERSION: 0.17.0</VERS> -->
+<!-- <WCTX>New kernel Phase H1: add vocabulary, recipe evidence, and canonical recipe artifacts.</WCTX> -->
+<!-- <CLOG>0.17.0: MINOR — add Phase H0 architect response, H1 vocabulary/evidence/status artifacts, and recipe schema roots.
+0.16.0: MINOR — add Phase G4 architect response, H0 status artifacts, and source/asset schema roots.
 0.15.0: MINOR — add Phase G3 architect response and G4 status artifacts.
 0.14.0: MINOR — add Phase G2 architect response and G3 status artifacts.
 0.13.0: MINOR — add Phase G1 architect response and G2 status artifacts.
@@ -32,8 +33,9 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 
 ## v3.1 contract docs one level up
 
-- [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, D3 boundary, E0 split, E1 descriptor model, F1 typed inputs, F2 declarative value sources/bindings, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 node I/O value-bus semantics, and H0 source/asset/procedural source contracts.
-- [`../v3.1-contract-boundary.md`](../v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3/G4/H0 classification of contract vocabulary, proof implementation, crate ownership, descriptor/input/value-source/binding/graph/execution-proof/topology/value-bus/source/asset model, and schema roots.
+- [`../VOCABULARY.md`](../VOCABULARY.md) — canonical v3.1 human vocabulary and non-canonical legacy/source-authoring synonym map.
+- [`../v3.1-architecture-overview.md`](../v3.1-architecture-overview.md) — contract-first overview, progressive phase stack, schema/reference path, D3 boundary, E0 split, E1 descriptor model, F1 typed inputs, F2 declarative value sources/bindings, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 node I/O value-bus semantics, H0 source/asset/procedural source contracts, and H1 canonical recipe document packaging.
+- [`../v3.1-contract-boundary.md`](../v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1 classification of contract vocabulary, proof implementation, crate ownership, descriptor/input/value-source/binding/graph/execution-proof/topology/value-bus/source/asset/recipe document model, and schema roots.
 - [`../v3.1-surface-contract.md`](../v3.1-surface-contract.md) — current clean-room surface/sampling/pipeline/scene/descriptor contract owned by `tui-vfx-contract` and proven by `tui-vfx-next`.
 - [`../v3.1-feature-contract-checklist.md`](../v3.1-feature-contract-checklist.md) — reusable decision checklist for future contract-affecting features.
 - [`../v3.1-template-composition.md`](../v3.1-template-composition.md) — Phase D2 design for compile-time template composition into canonical recipes.
@@ -55,6 +57,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_G2.md`](ARCH-RESP-TO-PHASE_G2.md) — Phase G2 approval and Phase G3 topology / parallel snapshot / channel-aware merge recommendation.
 - [`ARCH-RESP-TO-PHASE_G3.md`](ARCH-RESP-TO-PHASE_G3.md) — Phase G3 approval and Phase G4 node I/O / graph-local value bus recommendation.
 - [`ARCH-RESP-TO-PHASE_G4.md`](ARCH-RESP-TO-PHASE_G4.md) — Phase G4 approval and Phase H0 source / asset / procedural source recommendation.
+- [`ARCH-RESP-TO-PHASE_H0.md`](ARCH-RESP-TO-PHASE_H0.md) — Phase H0 response and Phase H1 canonical recipe document / vocabulary recommendation.
 
 ## Status and memo artifacts
 
@@ -89,16 +92,19 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_G4_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_G4_STATUS_MEMO_TO_ARCHITECT.md) — Phase G4 architect memo requesting next assignment.
 - [`PHASE_H0_STATUS.md`](PHASE_H0_STATUS.md) — concise Phase H0 source / asset / procedural source status.
 - [`PHASE_H0_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_H0_STATUS_MEMO_TO_ARCHITECT.md) — Phase H0 architect memo requesting next assignment.
+- [`PHASE_H1_STATUS.md`](PHASE_H1_STATUS.md) — concise Phase H1 canonical recipe document status.
+- [`PHASE_H1_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_H1_STATUS_MEMO_TO_ARCHITECT.md) — Phase H1 architect memo requesting next assignment.
 
 ## Supporting artifacts
 
 - [`CONTRACT_ADD_DECISION_TREE.md`](CONTRACT_ADD_DECISION_TREE.md) — preserved source decision-tree draft for classifying contract-visible feature additions.
 - [`PROCESS_OVERVIEW_DIAGRAM.md`](PROCESS_OVERVIEW_DIAGRAM.md) — process overview diagram/notes.
+- [`H1_RECIPE_EVIDENCE_NOTES.md`](H1_RECIPE_EVIDENCE_NOTES.md) — curated recipe-evidence mapping pressure notes for canonical H1 schema work.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Schema artifacts
 
-- [`../../schemas/v3.1/contract/`](../../schemas/v3.1/contract/) — checked generated stable contract schemas for surface, scope, write, diagnostics, scene, element, outcome, effect descriptor, value, effect input, value source, parameter, signal, binding, graph, graph-step, node, source, source-descriptor, source-input, source-output, asset, asset-requirement, and asset-ref.
+- [`../../schemas/v3.1/contract/`](../../schemas/v3.1/contract/) — checked generated stable contract schemas for surface, scope, write, diagnostics, scene, element, outcome, effect descriptor, value, effect input, value source, parameter, signal, binding, graph, graph-step, node, source, source-descriptor, source-input, source-output, asset, asset-requirement, asset-ref, source-instance-id, recipe-metadata, recipe-element-pipeline, recipe-scene, recipe-scene-element, and recipe.
 - [`../../schemas/v3.1/next/`](../../schemas/v3.1/next/) — checked generated proof-pipeline schemas for sampler and pipeline artifacts.
 
 ## Ralph planning artifacts
@@ -107,4 +113,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.16.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.17.0</VERS> -->

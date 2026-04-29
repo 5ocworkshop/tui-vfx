@@ -235,6 +235,71 @@ fn graph_value_source_rejects_kind_mismatch() {
 }
 
 #[test]
+fn graph_rejects_duplicate_graph_value_shape_mismatch() {
+    let mut graph = base_graph(literal_source());
+    let mut producer_descriptor = graph
+        .effects
+        .get(&EffectId::new("terminal.opacity"))
+        .unwrap()
+        .clone();
+    producer_descriptor.id = EffectId::new("terminal.producer");
+    producer_descriptor.outputs = BTreeMap::from([
+        (
+            tui_vfx_contract::EffectOutputId::new("frame"),
+            support::number_output(tui_vfx_contract::GraphValueShape::FrameValue),
+        ),
+        (
+            tui_vfx_contract::EffectOutputId::new("field"),
+            support::number_output(tui_vfx_contract::GraphValueShape::CellField),
+        ),
+    ]);
+    graph
+        .effects
+        .insert(EffectId::new("terminal.producer"), producer_descriptor);
+    graph.nodes.insert(
+        NodeId::new("frameProducer"),
+        output_from_effect(
+            NodeSpec {
+                id: NodeId::new("frameProducer"),
+                effect: EffectId::new("terminal.producer"),
+                inputs: BTreeMap::from([(EffectInputId::new("amount"), literal_source())]),
+                outputs: BTreeMap::new(),
+                scope: None,
+                cell_write_policy: None,
+                role_write_policy: None,
+            },
+            "sharedValue",
+            "frame",
+        ),
+    );
+    graph.nodes.insert(
+        NodeId::new("fieldProducer"),
+        output_from_effect(
+            NodeSpec {
+                id: NodeId::new("fieldProducer"),
+                effect: EffectId::new("terminal.producer"),
+                inputs: BTreeMap::from([(EffectInputId::new("amount"), literal_source())]),
+                outputs: BTreeMap::new(),
+                scope: None,
+                cell_write_policy: None,
+                role_write_policy: None,
+            },
+            "sharedValue",
+            "field",
+        ),
+    );
+    graph
+        .order
+        .extend([NodeId::new("frameProducer"), NodeId::new("fieldProducer")]);
+
+    assert!(matches!(
+        graph.validate(),
+        Err(DescriptorValidationError::GraphValueShapeMismatch { id, .. })
+            if id.as_str() == "sharedValue"
+    ));
+}
+
+#[test]
 fn descriptor_rejects_node_output_not_declared_by_effect() {
     let mut graph = base_graph(literal_source());
     let node = graph.nodes.get(&NodeId::new("fadeIn")).unwrap().clone();

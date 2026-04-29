@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
-// <WCTX>New kernel Phase H0: expose source and asset contract vocabulary.</WCTX>
-// <CLOG>0.8.0: MINOR — export source descriptor, source spec, asset, and source output schema roots.
+// <VERS>VERSION: 0.9.0</VERS>
+// <WCTX>New kernel Phase H1: expose canonical recipe document vocabulary.</WCTX>
+// <CLOG>0.9.0: MINOR — export canonical recipe document, recipe scene, source instance, and metadata schema roots.
+// 0.8.0: MINOR — export source descriptor, source spec, asset, and source output schema roots.
 // 0.7.0: MINOR — export graph value, effect output, node output, and value merge schema roots.
 // 0.6.0: MINOR — export GraphStep, ParallelMergePolicy, and topology schema root.
 // 0.5.0: MINOR — export GraphSpec, NodeSpec, GraphId, NodeId, and schema roots.
@@ -63,12 +64,19 @@ pub mod cls_numeric_range;
 pub mod cls_parallel_merge_policy;
 pub mod cls_parameter_id;
 pub mod cls_parameter_spec;
+pub mod cls_recipe_document;
+pub mod cls_recipe_element_pipeline;
+pub mod cls_recipe_id;
+pub mod cls_recipe_metadata;
+pub mod cls_recipe_scene;
+pub mod cls_recipe_scene_element;
 pub mod cls_role_space;
 pub mod cls_role_write_policy;
 pub mod cls_role_write_policy_kind;
 pub mod cls_runtime_mutability;
 pub mod cls_scene;
 pub mod cls_scene_element;
+pub mod cls_scene_id;
 pub mod cls_scene_outcome;
 pub mod cls_scope_eval_input;
 pub mod cls_scope_kind;
@@ -81,6 +89,7 @@ pub mod cls_source_descriptor;
 pub mod cls_source_id;
 pub mod cls_source_input_id;
 pub mod cls_source_input_spec;
+pub mod cls_source_instance_id;
 pub mod cls_source_kind;
 pub mod cls_source_lifecycle;
 pub mod cls_source_output_size;
@@ -99,6 +108,7 @@ pub mod cls_write_support;
 pub mod fnc_collect_graph_value_kinds;
 pub mod fnc_scope_coordinate;
 pub mod orc_validate_graph_spec;
+pub mod orc_validate_recipe_document;
 pub mod orc_validate_source_spec;
 pub mod tr_coordinate_sampler;
 
@@ -148,12 +158,19 @@ pub use cls_numeric_range::NumericRange;
 pub use cls_parallel_merge_policy::ParallelMergePolicy;
 pub use cls_parameter_id::ParameterId;
 pub use cls_parameter_spec::ParameterSpec;
+pub use cls_recipe_document::RecipeDocument;
+pub use cls_recipe_element_pipeline::RecipeElementPipeline;
+pub use cls_recipe_id::RecipeId;
+pub use cls_recipe_metadata::RecipeMetadata;
+pub use cls_recipe_scene::RecipeScene;
+pub use cls_recipe_scene_element::RecipeSceneElement;
 pub use cls_role_space::RoleSpace;
 pub use cls_role_write_policy::RoleWritePolicy;
 pub use cls_role_write_policy_kind::RoleWritePolicyKind;
 pub use cls_runtime_mutability::RuntimeMutability;
 pub use cls_scene::Scene;
 pub use cls_scene_element::SceneElement;
+pub use cls_scene_id::SceneId;
 pub use cls_scene_outcome::SceneOutcome;
 pub use cls_scope_eval_input::ScopeEvalInput;
 pub use cls_scope_kind::ScopeKind;
@@ -166,6 +183,7 @@ pub use cls_source_descriptor::SourceDescriptor;
 pub use cls_source_id::SourceId;
 pub use cls_source_input_id::SourceInputId;
 pub use cls_source_input_spec::SourceInputSpec;
+pub use cls_source_instance_id::SourceInstanceId;
 pub use cls_source_kind::SourceKind;
 pub use cls_source_lifecycle::SourceLifecycle;
 pub use cls_source_output_size::SourceOutputSize;
@@ -191,11 +209,12 @@ pub mod schema_roots {
         AssetRef, AssetRequirement, AssetSpec, BindingSpec, CellWrite, EffectDescriptor,
         EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId, GraphValueKind,
         GraphValueMergePolicy, GraphValueShape, NodeOutputSource, NodeOutputSpec, NodeSpec,
-        ParameterSpec, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor,
-        SourceInputSpec, SourceOutputSpec, SourceSpec, Surface, SurfaceDiagnostic, Value,
-        ValueSource,
+        ParameterSpec, RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene,
+        RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec,
+        SourceDescriptor, SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec, Surface,
+        SurfaceDiagnostic, Value, ValueSource,
     };
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.9.0</VERS>
