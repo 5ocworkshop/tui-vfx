@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_schema_readiness_report.rs</FILE> - <DESC>Schema-readiness report DTOs</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>K2.11 schema readiness: expose blocker ledger report shape.</WCTX>
-// <CLOG>0.1.0: INIT — add schema-readiness summary, family, blocker, and milestone DTOs.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.12 schema lock: expose opt-in offender rows for decision-board planning.</WCTX>
+// <CLOG>0.2.0: MINOR — add schema-readiness offender DTOs.
+// 0.1.0: INIT — add schema-readiness summary, family, blocker, and milestone DTOs.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -25,6 +26,9 @@ pub struct PlayerSchemaReadinessReport {
     pub families: Vec<PlayerSchemaReadinessFamily>,
     /// Grouped outstanding blockers with representative legacy paths.
     pub blockers: Vec<PlayerSchemaReadinessBlocker>,
+    /// Optional per-record offender rows for schema-lock planning.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub offenders: Vec<PlayerSchemaReadinessOffender>,
     /// Ordered milestones needed before a readiness declaration.
     pub readiness_milestones: Vec<PlayerSchemaReadinessMilestone>,
     /// Non-fatal warnings.
@@ -105,6 +109,48 @@ pub struct PlayerSchemaReadinessBlocker {
     pub notes: Vec<String>,
 }
 
+/// One offender row in the opt-in schema-readiness ledger.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerSchemaReadinessOffender {
+    /// Path relative to the legacy debug recipe root.
+    pub legacy_path: String,
+    /// Legacy family bucket.
+    pub family: String,
+    /// Legacy recipe file stem.
+    pub legacy_recipe_name: String,
+    /// Current migration-mapping status.
+    pub current_status: String,
+    /// Concrete schema-readiness blocker kind.
+    pub blocker_kind: String,
+    /// Whether this row still blocks schema-readiness declaration.
+    pub schema_readiness_blocking: bool,
+    /// Recommended concrete disposition.
+    pub recommended_disposition: String,
+    /// Recommended follow-up packet or tranche.
+    pub recommended_next_packet: String,
+    /// Conservative confidence label.
+    pub confidence: String,
+    /// Candidate canonical path relative to the v3.1 root.
+    pub candidate_canonical_path: String,
+    /// Whether the candidate canonical fixture already exists.
+    pub canonical_exists: bool,
+    /// Descriptor ids required by a faithful fixture.
+    pub required_descriptor_ids: Vec<String>,
+    /// Descriptor ids missing from loaded descriptor packs.
+    pub missing_descriptor_ids: Vec<String>,
+    /// Source descriptor ids required by a faithful fixture.
+    pub required_source_ids: Vec<String>,
+    /// Source descriptor ids missing from loaded descriptor packs.
+    pub missing_source_ids: Vec<String>,
+    /// Authored fields that remain unsupported or undecided.
+    pub unsupported_input_fields: Vec<String>,
+    /// Human-readable holdback reason.
+    pub holdback_reason: String,
+    /// Evidence notes from migration mapping.
+    pub notes: Vec<String>,
+}
+
 /// One readiness milestone needed before declaring 100% readiness.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -118,4 +164,4 @@ pub struct PlayerSchemaReadinessMilestone {
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_player_schema_readiness_report.rs</FILE> - <DESC>Schema-readiness report DTOs</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.29.0</VERS> -->
-<!-- <WCTX>K2.11 closeout indexing: add briefing-first review and de-slop report.</WCTX> -->
-<!-- <CLOG>0.29.0: MINOR — add K2.11 briefing-first review and de-slop report.
+<!-- <VERS>VERSION: 0.30.0</VERS> -->
+<!-- <WCTX>K2.12 schema-lock indexing: add decision sprint reports, status memo, and review/de-slop artifact.</WCTX> -->
+<!-- <CLOG>0.30.0: MINOR — add K2.12 schema-lock decision sprint reports, status memo, and review/de-slop artifact.
+0.29.0: MINOR — add K2.11 briefing-first review and de-slop report.
 0.28.0: MINOR — add K2.11 schema-readiness ledger, source/content/scene table, studio preflight deferral, and status memo.
 0.27.0: MINOR — add K2.10 architect response and K2.11 schema-readiness recommendation.
 0.26.0: MINOR — add K2.9 architect response and K2.10 corpus mapping/backlog artifacts.
@@ -83,6 +84,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_K2_4.md`](ARCH-RESP-TO-PHASE_K2_4.md) — Phase K2.4 response and K2.5 styled primitive/tooling PRD packet.
 - [`ARCH-RESP-TO-PHASE_K2_9.md`](ARCH-RESP-TO-PHASE_K2_9.md) — Phase K2.9 response and K2.10 corpus-wide migration mapping/backlog packet.
 - [`ARCH-RESP-TO-PHASE_K2_10.md`](ARCH-RESP-TO-PHASE_K2_10.md) — Phase K2.10 acceptance and K2.11 schema-readiness ledger/source descriptor pilot packet.
+- [`ARCH-RESP-TO-PHASE_K2_11.md`](ARCH-RESP-TO-PHASE_K2_11.md) — Phase K2.11 response and K2.12 schema-lock decision sprint / low-friction burn-down packet.
 
 ## Status and memo artifacts
 
@@ -143,6 +145,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_10_CORPUS_MAPPING_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_10_CORPUS_MAPPING_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.10 corpus mapping memo, verification, review, and next-packet recommendation.
 - [`PHASE_K2_11_SCHEMA_READINESS_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_11_SCHEMA_READINESS_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.11 schema-readiness memo, source descriptor pilot, blocker ledger, and next-packet sequence.
 - [`PHASE_K2_11_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_11_REVIEW_AND_DESLOP_REPORT.md) — briefing-first formal review and AI de-slop evidence for K2.11.
+- [`PHASE_K2_12_SCHEMA_LOCK_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_12_SCHEMA_LOCK_STATUS_MEMO_TO_ARCHITECT.md) — Phase K2.12 schema-lock memo, offender ledger evidence, source.text fixture result, and blocker board.
+- [`PHASE_K2_12_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_12_REVIEW_AND_DESLOP_REPORT.md) — briefing-first formal review and AI de-slop evidence for K2.12.
 
 ## Supporting artifacts
 
@@ -168,6 +172,13 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_11_SCHEMA_READINESS_LEDGER.md`](K2_11_SCHEMA_READINESS_LEDGER.md) — K2.11 schema-readiness blocker ledger and resolution sequence.
 - [`K2_11_SOURCE_CONTENT_SCENE_DECISION_TABLE.md`](K2_11_SOURCE_CONTENT_SCENE_DECISION_TABLE.md) — K2.11 source/content/scene decision table for v3.1 migration blockers.
 - [`K2_11_STUDIO_CONTROL_SURFACE_PREFLIGHT.md`](K2_11_STUDIO_CONTROL_SURFACE_PREFLIGHT.md) — K2.11 control-surface preflight deferral and K3.0 trigger.
+- [`K2_12_SCHEMA_LOCK_DECISION_REPORT.md`](K2_12_SCHEMA_LOCK_DECISION_REPORT.md) — K2.12 schema-readiness declaration, blocker decision board, and next-packet recommendation.
+- [`K2_12_SOURCE_CONTENT_DECISION_TABLE.md`](K2_12_SOURCE_CONTENT_DECISION_TABLE.md) — K2.12 source/content blocker classification and source.text fixture disposition.
+- [`K2_12_RUNTIME_DYNAMISM_DECISION_MATRIX.md`](K2_12_RUNTIME_DYNAMISM_DECISION_MATRIX.md) — K2.12 binding, signal, value-source, lifecycle, easing, and motion-route decision matrix.
+- [`K2_12_COMPLEX_STYLE_NORMALIZATION_REPORT.md`](K2_12_COMPLEX_STYLE_NORMALIZATION_REPORT.md) — K2.12 complex owner-audit and unknown-style normalization results.
+- [`K2_12_DESCRIPTOR_EXPANSION_QUEUE.md`](K2_12_DESCRIPTOR_EXPANSION_QUEUE.md) — K2.12 descriptor expansion, field-coverage, and holdback queue.
+- [`K2_12_SCHEMA_API_DOC_INFRA_REPORT.md`](K2_12_SCHEMA_API_DOC_INFRA_REPORT.md) — K2.12 schema/API/docs verification infrastructure report.
+- [`K2_12_LOW_FRICTION_BURN_DOWN_REPORT.md`](K2_12_LOW_FRICTION_BURN_DOWN_REPORT.md) — K2.12 implemented low-friction work and explicit deferrals.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
 
 ## Validator and recipe artifacts
@@ -192,4 +203,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.29.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.30.0</VERS> -->

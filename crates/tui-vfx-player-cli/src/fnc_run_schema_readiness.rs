@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/src/fnc_run_schema_readiness.rs</FILE> - <DESC>Run schema-readiness CLI command</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>K2.11 schema readiness: route read-only blocker ledger command.</WCTX>
-// <CLOG>0.1.0: INIT — add schema-readiness command runner.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.12 schema lock: pass through optional offender-ledger output.</WCTX>
+// <CLOG>0.2.0: MINOR — route include-offenders into schema-readiness reports.
+// 0.1.0: INIT — add schema-readiness command runner.</CLOG>
 
 use tui_vfx_player::{build_schema_readiness_report, load_descriptor_catalog};
 
@@ -21,6 +22,7 @@ pub fn run_schema_readiness(options: CliOptions) -> Result<(), String> {
         &descriptor_load.catalog,
         options.family.as_deref(),
         options.recursive,
+        options.include_offenders,
     )?;
     println!(
         "{}",
@@ -50,4 +52,4 @@ fn required_option<'a>(value: Option<&'a str>, option: &str) -> Result<&'a str, 
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/fnc_run_schema_readiness.rs</FILE> - <DESC>Run schema-readiness CLI command</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract-cli/tests/test_fnc_validate_recipe_descriptor_packs.rs</FILE> - <DESC>Validate descriptor-pack recipe CLI behavior</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Descriptor-pack validation: prove external pack resolution and diagnostics.</WCTX>
-// <CLOG>0.2.0: MINOR — update canonical fixture count after simple mask additions.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>K2.12 source fixture: keep descriptor-pack validation counts aligned with v3.1 corpus.</WCTX>
+// <CLOG>0.3.0: MINOR — update canonical fixture count after source.text fixture addition.
+// 0.2.0: MINOR — update canonical fixture count after simple mask additions.
 // 0.1.0: INIT — cover pack file/dir loading, missing pack, unknown effect, and duplicate descriptor diagnostics.</CLOG>
 
 mod support;
@@ -11,6 +12,8 @@ use support::{
     descriptor_pack_dir, descriptor_pack_path, mutated_recipe_path, read_recipe, recipe_path,
     recipe_root, remove_temp, run_failure_args, run_success, write_json,
 };
+
+const CANONICAL_RECIPE_COUNT: i64 = 27;
 
 #[test]
 fn validates_canonical_recipe_directory_with_descriptor_pack() {
@@ -27,8 +30,8 @@ fn validates_canonical_recipe_directory_with_descriptor_pack() {
 
     assert_eq!(report["schemaVersion"], "v3.1.validator.report.1");
     assert_eq!(report["descriptorPacks"][0]["id"], "v3.1.primitive");
-    assert_eq!(report["summary"]["total"], 26);
-    assert_eq!(report["summary"]["valid"], 26);
+    assert_eq!(report["summary"]["total"], CANONICAL_RECIPE_COUNT);
+    assert_eq!(report["summary"]["valid"], CANONICAL_RECIPE_COUNT);
     assert_eq!(report["summary"]["invalid"], 0);
 }
 
@@ -46,8 +49,8 @@ fn validates_canonical_recipe_directory_with_descriptor_pack_dir() {
     ]);
 
     assert_eq!(report["descriptorPacks"][0]["id"], "v3.1.primitive");
-    assert_eq!(report["summary"]["total"], 26);
-    assert_eq!(report["summary"]["valid"], 26);
+    assert_eq!(report["summary"]["total"], CANONICAL_RECIPE_COUNT);
+    assert_eq!(report["summary"]["valid"], CANONICAL_RECIPE_COUNT);
 }
 
 #[test]
@@ -124,4 +127,4 @@ fn write_pack_with_duplicate_effect(path: &std::path::PathBuf) {
 }
 
 // <FILE>crates/tui-vfx-contract-cli/tests/test_fnc_validate_recipe_descriptor_packs.rs</FILE> - <DESC>Validate descriptor-pack recipe CLI behavior</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

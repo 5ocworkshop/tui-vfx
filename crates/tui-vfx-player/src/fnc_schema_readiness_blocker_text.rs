@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_schema_readiness_blocker_text.rs</FILE> - <DESC>Describe schema-readiness blocker actions</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>K2.11 schema readiness: keep blocker action text stable and centralized.</WCTX>
-// <CLOG>0.1.0: INIT — isolate blocker decision and packet labels from grouping.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.12 schema lock: keep blocker action labels forward-looking after the decision sprint.</WCTX>
+// <CLOG>0.2.0: MINOR — update next-packet labels to durable decision lanes.
+// 0.1.0: INIT — isolate blocker decision and packet labels from grouping.</CLOG>
 
 pub(crate) fn schema_readiness_blocking_decision(kind: &str) -> &'static str {
     match kind {
@@ -25,23 +26,22 @@ pub(crate) fn schema_readiness_blocking_decision(kind: &str) -> &'static str {
 
 pub(crate) fn schema_readiness_next_packet(kind: &str) -> &'static str {
     match kind {
-        "sourceDescriptor" => "K2.12 source/content descriptor expansion tranche",
-        "descriptorPack" => "K2.12 descriptor-pack vocabulary tranche",
-        "fieldCoverage" => "K2.12 primitive descriptor/field-coverage closure tranche",
+        "sourceDescriptor" => "source/content descriptor decision packet",
+        "descriptorPack" => "descriptor-pack vocabulary expansion packet",
+        "fieldCoverage" => "primitive descriptor/field-coverage closure packet",
         "valueSourceSemantics"
         | "bindingSemantics"
         | "lifecycleSemantics"
-        | "motionTimingSemantics" => {
-            "K2.12 lifecycle/signal/binding/value-source schema decision packet"
-        }
-        "sceneSemantics" => "K2.12 scene/source-local pipeline schema decision packet",
-        "schemaModel" => "K2.12 schema/model decision packet",
-        "playerAdapter" => "K2.12 player adapter support tranche",
-        "backendRenderer" => "K2.12 backend renderer boundary tranche",
-        "duplicateOrVariant" | "oracleOnly" => "K2.11 owner-audit signoff",
-        _ => "K2.12 owner-audit normalization tranche",
+        | "motionTimingSemantics" => "runtime dynamism schema decision packet",
+        "sceneSemantics" => "scene/source-local pipeline schema decision packet",
+        "schemaModel" => "schema/model decision packet",
+        "playerAdapter" => "player adapter support tranche",
+        "backendRenderer" => "backend renderer boundary signoff",
+        "guiHumanReview" => "GUI/human-review holdback signoff",
+        "duplicateOrVariant" | "oracleOnly" => "owner-audit holdback signoff",
+        _ => "owner-audit normalization tranche",
     }
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_schema_readiness_blocker_text.rs</FILE> - <DESC>Describe schema-readiness blocker actions</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

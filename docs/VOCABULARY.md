@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.12.0</VERS> -->
-<!-- <WCTX>K2.9 migration mapping: document batch report, record, and descriptor-decision terms.</WCTX> -->
-<!-- <CLOG>0.12.0: MINOR — add migration mapping batch/report and descriptor decision vocabulary.
+<!-- <VERS>VERSION: 0.13.0</VERS> -->
+<!-- <WCTX>K2.12 schema lock: document schema-readiness offender and declaration terms.</WCTX> -->
+<!-- <CLOG>0.13.0: MINOR — add schema-readiness offender, declaration, and holdback vocabulary.
+0.12.0: MINOR — add migration mapping batch/report and descriptor decision vocabulary.
 0.11.0: MINOR — add K2.6 GUI, field coverage, migration loop, timeline, and diff evidence terms.</CLOG> -->
 
 # v3.1 Vocabulary
@@ -195,6 +196,38 @@ Definition:
 
 Policy:
 : Descriptor decisions must be grounded in canonical v3.1 semantics and evidence. Do not add broad fields such as authored progress, radius, feather, or invert merely to approximate old recipe behavior without a schema/adapter decision.
+
+### SchemaReadinessReport
+
+Definition:
+: A stable player JSON report with schema `v3.1.player.schemaReadiness.1`. It summarizes whether the legacy debug-recipe corpus can be declared ready for v3.1 schema lock, grouped by readiness counts, blocker lanes, milestones, and optional offender rows.
+
+Policy:
+: The report is a planning and governance surface, not runtime behavior. During pre-release v3.1 work, additive report fields may be added without bumping the schema version when owner direction says the schema is not locked.
+
+### SchemaReadinessOffender
+
+Definition:
+: One opt-in `SchemaReadinessReport.offenders[]` row emitted by `schema-readiness --include-offenders`. It identifies a specific legacy path, current migration status, blocker kind, recommended disposition, next packet, descriptor/source requirements, unsupported fields, and holdback reason.
+
+Not the same as:
+: A permanent runtime error, canonical recipe field, or proof that the legacy recipe should be migrated unchanged. Offender rows are decision-board entries for schema-lock planning.
+
+### Schema Readiness Declaration
+
+Definition:
+: The explicit owner-facing conclusion in a schema-lock memo. It must say either `SCHEMA READINESS DECLARATION: APPROVED` or `SCHEMA READINESS DECLARATION: NOT YET` and, when not yet, name exact remaining blocker lanes.
+
+Policy:
+: A declaration cannot rest on vague phrases such as “unaddressed fields.” It must list the decision lane, impact, and next action.
+
+### Holdback Disposition
+
+Definition:
+: An explicit decision to keep a legacy record out of schema-lock blocking because it is oracle-only, duplicate/variant, backend-renderer work, GUI/human-review work, or otherwise outside the current v3.1 schema lock.
+
+Policy:
+: Holdback is a named disposition, not a silent skip. A held-back record needs a reason and owner signoff so it does not reappear as an unresolved schema blocker.
 
 ### FrameTimelineReport
 
@@ -1463,4 +1496,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.13.0</VERS> -->

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>VERSION: 0.10.0</VERS>
-// <WCTX>K2.11 schema readiness: export blocker ledger report builder.</WCTX>
-// <CLOG>0.10.0: MINOR — export schema-readiness report DTOs and builder.</CLOG>
+// <VERS>VERSION: 0.11.0</VERS>
+// <WCTX>K2.12 schema lock: export offender-ledger classification helpers and DTOs.</WCTX>
+// <CLOG>0.11.0: MINOR — wire schema-readiness offender DTOs and classifier helpers.
+// 0.10.0: MINOR — export schema-readiness report DTOs and builder.</CLOG>
 
 //! Contract-native skeleton player for canonical v3.1 recipes.
 //!
@@ -77,8 +78,10 @@ mod fnc_build_primitive_field_instance;
 mod fnc_build_schema_readiness_blockers;
 mod fnc_build_schema_readiness_families;
 mod fnc_build_schema_readiness_milestones;
+mod fnc_build_schema_readiness_offenders;
 pub mod fnc_build_schema_readiness_report;
 mod fnc_build_visual_frame;
+mod fnc_classify_complex_schema_offender;
 mod fnc_classify_debug_recipe_family;
 mod fnc_classify_migration_mapping_effect_blocker;
 mod fnc_classify_migration_mapping_effect_record;
@@ -119,6 +122,7 @@ mod fnc_scan_primitive_field_recipe;
 mod fnc_schema_readiness_blocker_kind;
 mod fnc_schema_readiness_blocker_notes;
 mod fnc_schema_readiness_blocker_text;
+mod fnc_schema_readiness_offender_text;
 mod fnc_summarize_migration_gap_families;
 mod fnc_summarize_migration_mapping_batch;
 mod fnc_summarize_player_inventory;
@@ -162,7 +166,7 @@ pub use cls_player_run_report::PlayerRunReport;
 pub use cls_player_sample_request::PlayerSampleRequest;
 pub use cls_player_schema_readiness_report::{
     PlayerSchemaReadinessBlocker, PlayerSchemaReadinessFamily, PlayerSchemaReadinessMilestone,
-    PlayerSchemaReadinessReport, PlayerSchemaReadinessSummary,
+    PlayerSchemaReadinessOffender, PlayerSchemaReadinessReport, PlayerSchemaReadinessSummary,
 };
 pub use cls_player_session::PlayerSession;
 pub use cls_player_status::PlayerStatus;
@@ -185,8 +189,10 @@ pub use fnc_build_primitive_field_coverage_report::build_primitive_field_coverag
 pub(crate) use fnc_build_schema_readiness_blockers::build_schema_readiness_blockers;
 pub(crate) use fnc_build_schema_readiness_families::build_schema_readiness_families;
 pub(crate) use fnc_build_schema_readiness_milestones::build_schema_readiness_milestones;
+pub(crate) use fnc_build_schema_readiness_offenders::build_schema_readiness_offenders;
 pub use fnc_build_schema_readiness_report::build_schema_readiness_report;
 pub use fnc_build_visual_frame::build_visual_frame_from_styled_grid;
+pub(crate) use fnc_classify_complex_schema_offender::classify_complex_schema_offender_path;
 pub use fnc_collect_recipe_paths::collect_recipe_paths;
 pub use fnc_inventory_recipe_file::inventory_recipe_file;
 pub use fnc_inventory_recipe_paths::inventory_recipe_paths;
@@ -204,7 +210,10 @@ pub(crate) use fnc_schema_readiness_blocker_notes::schema_readiness_blocker_note
 pub(crate) use fnc_schema_readiness_blocker_text::{
     schema_readiness_blocking_decision, schema_readiness_next_packet,
 };
+pub(crate) use fnc_schema_readiness_offender_text::{
+    schema_readiness_holdback_reason, schema_readiness_recommended_disposition,
+};
 pub(crate) use fnc_summarize_schema_readiness::summarize_schema_readiness;
 
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>END OF VERSION: 0.10.0</VERS>
+// <VERS>END OF VERSION: 0.11.0</VERS>

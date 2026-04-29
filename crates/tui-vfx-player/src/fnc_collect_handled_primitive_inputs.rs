@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Player evidence tooling: name current adapter-handled inputs for primitive field coverage.</WCTX>
-// <CLOG>0.2.0: MINOR — add handled fields for K2.9 simple masks.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>K2.12 source fixture: mark source.text inputs as adapter-handled.</WCTX>
+// <CLOG>0.3.0: MINOR — add handled fields for source.text fixture coverage.
+// 0.2.0: MINOR — add handled fields for K2.9 simple masks.
 // 0.1.0: INIT — add current handled-input lookup for represented primitives.</CLOG>
 
 use std::collections::BTreeSet;
@@ -13,6 +14,7 @@ pub(crate) fn collect_handled_primitive_inputs(
 ) -> BTreeSet<String> {
     match descriptor_id {
         "source.card" => fields(["message", "width", "height"]),
+        "source.text" => fields(["text", "width", "height"]),
         "filter.dim" => fields(["factor", "applyTo"]),
         "filter.tint" => fields(["color", "strength", "applyTo"]),
         "filter.invert" => fields(["applyTo"]),
@@ -60,4 +62,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

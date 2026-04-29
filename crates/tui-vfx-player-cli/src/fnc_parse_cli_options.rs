@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse player CLI options</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Player CLI de-slop: keep parser metadata compact and current.</WCTX>
-// <CLOG>0.4.0: MINOR — parse migration mapping family filter.
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>K2.12 schema lock: parse offender-ledger output flag.</WCTX>
+// <CLOG>0.5.0: MINOR — parse schema-readiness offender detail flag.
+// 0.4.0: MINOR — parse migration mapping family filter.
 // 0.3.1: PATCH — collapse historical parser metadata into latest-change context.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
@@ -31,6 +32,7 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             "--legacy-root" => options.legacy_root = Some(next_value(&mut args, "--legacy-root")?),
             "--v31-root" => options.v31_root = Some(next_value(&mut args, "--v31-root")?),
             "--family" => options.family = Some(next_value(&mut args, "--family")?),
+            "--include-offenders" => options.include_offenders = true,
             "--frames" => options.frames = parse_usize(&next_value(&mut args, "--frames")?)?,
             "--from-sample-t" => {
                 options.from_sample_t = parse_f64(&next_value(&mut args, "--from-sample-t")?)?
@@ -116,4 +118,4 @@ fn parse_usize(value: &str) -> Result<usize, String> {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse player CLI options</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

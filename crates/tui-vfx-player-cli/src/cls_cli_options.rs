@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Player CLI de-slop: keep option metadata compact and current.</WCTX>
-// <CLOG>0.4.0: MINOR — add migration mapping family filter.
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>K2.12 schema lock: parse offender-ledger output flag.</WCTX>
+// <CLOG>0.5.0: MINOR — add schema-readiness offender detail flag.
+// 0.4.0: MINOR — add migration mapping family filter.
 // 0.3.1: PATCH — collapse historical option metadata into latest-change context.</CLOG>
 
 use tui_vfx_contract::LifecyclePhase;
@@ -35,6 +36,8 @@ pub struct CliOptions {
     pub v31_root: Option<String>,
     /// Optional legacy family filter for migration mapping reports.
     pub family: Option<String>,
+    /// Include per-record schema-readiness offender rows.
+    pub include_offenders: bool,
     /// Number of timeline frames to sample.
     pub frames: usize,
     /// Starting sample for frame-diff reports.
@@ -59,6 +62,7 @@ impl Default for CliOptions {
             legacy_root: None,
             v31_root: None,
             family: None,
+            include_offenders: false,
             frames: 1,
             from_sample_t: 0.0,
             to_sample_t: 1.0,
@@ -67,4 +71,4 @@ impl Default for CliOptions {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

@@ -1,13 +1,17 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.12.0</VERS>
-// <WCTX>K2.11 schema readiness: lock CLI report shape before implementation.</WCTX>
-// <CLOG>0.12.0: MINOR — add schema-readiness CLI regression coverage.</CLOG>
+// <VERS>VERSION: 0.13.0</VERS>
+// <WCTX>K2.12 schema lock: lock offender-ledger output and source.text fixture counts.</WCTX>
+// <CLOG>0.13.0: MINOR — add offender-ledger regressions and update recursive fixture count.
+// 0.12.0: MINOR — add schema-readiness CLI regression coverage.</CLOG>
 
 use std::{
+    collections::BTreeMap,
     fs,
     path::PathBuf,
     process::{Command, Output},
 };
+
+const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 27;
 
 #[test]
 fn test_fnc_cli_renders_single_recipe_frame_json() {
@@ -43,8 +47,8 @@ fn test_fnc_cli_renders_recursive_smoke_report_json() {
     );
 
     assert_eq!(report["schemaVersion"], "v3.1.player.run.1");
-    assert_eq!(report["summary"]["total"], 26);
-    assert_eq!(report["summary"]["rendered"], 26);
+    assert_eq!(report["summary"]["total"], RECURSIVE_DEBUG_FIXTURE_COUNT);
+    assert_eq!(report["summary"]["rendered"], RECURSIVE_DEBUG_FIXTURE_COUNT);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
 }
@@ -138,8 +142,11 @@ fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.inventory.1");
-    assert_eq!(report["summary"]["totalRecipes"], 26);
-    assert_eq!(report["summary"]["rendered"], 26);
+    assert_eq!(
+        report["summary"]["totalRecipes"],
+        RECURSIVE_DEBUG_FIXTURE_COUNT
+    );
+    assert_eq!(report["summary"]["rendered"], RECURSIVE_DEBUG_FIXTURE_COUNT);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
     assert_eq!(report["summary"]["descriptorEffectIds"], 18);
@@ -181,7 +188,7 @@ fn test_fnc_cli_reports_source_text_descriptor_pilot_json() {
 
     let source = find_source(&report, "source.text");
     assert_eq!(source["descriptorCovered"], true);
-    assert_eq!(source["representedByRecipes"], false);
+    assert_eq!(source["representedByRecipes"], true);
     assert_eq!(source["adapterStatus"], "visible");
 }
 
@@ -197,8 +204,11 @@ fn test_fnc_cli_reports_migration_gap_summary_json() {
             .is_empty()
     );
     assert_eq!(report["summary"]["legacyRecipes"], 603);
-    assert_eq!(report["summary"]["v31Recipes"], 26);
-    assert_eq!(report["summary"]["representedFamilies"], 8);
+    assert_eq!(
+        report["summary"]["v31Recipes"],
+        RECURSIVE_DEBUG_FIXTURE_COUNT
+    );
+    assert_eq!(report["summary"]["representedFamilies"], 9);
     assert_eq!(report["summary"]["unrepresentedFamilies"], 11);
     assert_eq!(report["summary"]["partiallyRepresentedFamilies"], 7);
     assert_eq!(report["recommendedQueue"][0]["family"], "complex");
@@ -371,6 +381,158 @@ fn test_fnc_cli_maps_schema_readiness_blockers_json() {
             .iter()
             .any(|note| note.as_str().unwrap_or("").contains("gradient"))
     );
+}
+
+#[test]
+fn test_fnc_cli_reports_schema_readiness_offenders_json() {
+    let report = schema_readiness_report(vec![
+        str_arg("schema-readiness"),
+        str_arg("--recursive"),
+        str_arg("--include-offenders"),
+    ]);
+
+    let offenders = report["offenders"].as_array().expect("offenders");
+    assert_eq!(offenders.len(), 386);
+    assert_eq!(
+        offender_kind_counts(&report),
+        BTreeMap::from([
+            ("backendRenderer", 15),
+            ("bindingSemantics", 22),
+            ("contentDescriptor", 5),
+            ("descriptorPack", 189),
+            ("fieldCoverage", 4),
+            ("guiHumanReview", 2),
+            ("lifecycleSemantics", 1),
+            ("motionTimingSemantics", 34),
+            ("oracleOnly", 2),
+            ("sceneSemantics", 26),
+            ("sourceDescriptor", 74),
+            ("valueSourceSemantics", 12),
+        ])
+    );
+    assert!(
+        offenders
+            .iter()
+            .all(|offender| offender["blockerKind"] != "ownerAudit")
+    );
+    assert!(
+        offenders
+            .iter()
+            .all(|offender| offender["blockerKind"] != "unknown")
+    );
+
+    let source = find_readiness_offender(&report, "content/content_marquee.json");
+    assert_eq!(source["blockerKind"], "sourceDescriptor");
+    assert_eq!(source["recommendedDisposition"], "deferForSourceDecision");
+    assert_eq!(source["schemaReadinessBlocking"], true);
+    assert_json_array_contains(&source["requiredSourceIds"], "source.marqueeText");
+
+    let field = find_readiness_offender(
+        &report,
+        "shaders/primitives/shader_linear_gradient_diagonal.json",
+    );
+    assert_eq!(field["blockerKind"], "fieldCoverage");
+    assert_eq!(field["schemaReadinessBlocking"], true);
+    assert_eq!(
+        field["recommendedDisposition"],
+        "deferForDescriptorDecision"
+    );
+    assert!(
+        field["unsupportedInputFields"]
+            .as_array()
+            .expect("fields")
+            .iter()
+            .any(|value| value == "gradient")
+    );
+    assert_unsupported_fields(
+        find_readiness_offender(
+            &report,
+            "shaders/primitives/shader_linear_gradient_background_channel.json",
+        ),
+        &["gradient"],
+    );
+    assert_unsupported_fields(
+        find_readiness_offender(
+            &report,
+            "shaders/primitives/shader_linear_gradient_apply_to_both.json",
+        ),
+        &["applyTo", "gradient"],
+    );
+    assert_unsupported_fields(
+        find_readiness_offender(
+            &report,
+            "shaders/compositions/shader_border_sweep_position_binding.json",
+        ),
+        &["position"],
+    );
+
+    let command_capture =
+        find_readiness_offender(&report, "fixtures/command_capture_chain.capture.json");
+    assert_eq!(command_capture["recommendedDisposition"], "markOracleOnly");
+    assert_eq!(command_capture["schemaReadinessBlocking"], false);
+}
+
+#[test]
+fn test_fnc_cli_classifies_complex_and_style_offenders_json() {
+    let report = schema_readiness_report(vec![
+        str_arg("schema-readiness"),
+        str_arg("--recursive"),
+        str_arg("--include-offenders"),
+    ]);
+
+    let complex = find_readiness_offender(&report, "complex/complex_full_pipeline.json");
+    assert_eq!(complex["blockerKind"], "sourceDescriptor");
+    assert_ne!(
+        complex["recommendedDisposition"],
+        "requiresArchitectDecision"
+    );
+    assert!(
+        complex["holdbackReason"]
+            .as_str()
+            .unwrap_or("")
+            .contains("composition")
+    );
+
+    let sequence =
+        find_readiness_offender(&report, "complex/complex_nested_parallel_sequences.json");
+    assert_eq!(sequence["blockerKind"], "sceneSemantics");
+    assert_eq!(sequence["schemaReadinessBlocking"], true);
+
+    let visual_conflict = find_readiness_offender(
+        &report,
+        "complex/v3_scheduler_overlap_conflict_mixed_family.json",
+    );
+    assert_eq!(visual_conflict["blockerKind"], "guiHumanReview");
+
+    let backend = find_readiness_offender(
+        &report,
+        "complex/complex_shadow_mask_sampler_shader_filter_native_mix.json",
+    );
+    assert_eq!(backend["blockerKind"], "backendRenderer");
+
+    let style = find_readiness_offender(&report, "styles/style_non_empty_scope.json");
+    assert_eq!(style["blockerKind"], "contentDescriptor");
+    assert_eq!(
+        style["recommendedDisposition"],
+        "deferForDescriptorDecision"
+    );
+    assert!(
+        style["holdbackReason"]
+            .as_str()
+            .unwrap_or("")
+            .contains("scope")
+    );
+    for style_path in [
+        "styles/style_modulo_horizontal_every_third_row.json",
+        "styles/style_modulo_vertical_every_fourth_column_offset.json",
+        "styles/style_non_empty_scope.json",
+        "styles/style_outer_scope_band.json",
+        "styles/style_predicate_interior.json",
+    ] {
+        let style = find_readiness_offender(&report, style_path);
+        assert_eq!(style["blockerKind"], "contentDescriptor");
+        assert_eq!(style["schemaReadinessBlocking"], true);
+    }
 }
 
 #[test]
@@ -553,11 +715,14 @@ fn test_fnc_cli_renders_recursive_visual_frame_report_json() {
     ]);
 
     assert_eq!(report["schemaVersion"], "v3.1.player.visualFrameReport.1");
-    assert_eq!(report["summary"]["total"], 26);
-    assert_eq!(report["summary"]["rendered"], 26);
+    assert_eq!(report["summary"]["total"], RECURSIVE_DEBUG_FIXTURE_COUNT);
+    assert_eq!(report["summary"]["rendered"], RECURSIVE_DEBUG_FIXTURE_COUNT);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
-    assert_eq!(report["frames"].as_array().expect("frames").len(), 26);
+    assert_eq!(
+        report["frames"].as_array().expect("frames").len() as i64,
+        RECURSIVE_DEBUG_FIXTURE_COUNT
+    );
 }
 
 #[test]
@@ -632,7 +797,10 @@ fn test_fnc_cli_reports_primitive_field_coverage_for_fixture_corpus_json() {
         report["schemaVersion"],
         "v3.1.player.primitiveFieldCoverage.1"
     );
-    assert_eq!(report["summary"]["totalRecipes"], 26);
+    assert_eq!(
+        report["summary"]["totalRecipes"],
+        RECURSIVE_DEBUG_FIXTURE_COUNT
+    );
     assert_eq!(report["summary"]["usedButUnhandledInputFields"], 0);
     assert_eq!(report["summary"]["missingDescriptorInputFields"], 0);
     assert_eq!(report["summary"]["schemaDecisionNeededFields"], 0);
@@ -640,7 +808,7 @@ fn test_fnc_cli_reports_primitive_field_coverage_for_fixture_corpus_json() {
         report["summary"]["totalPrimitiveInstances"]
             .as_u64()
             .expect("instances")
-            > 26
+            > RECURSIVE_DEBUG_FIXTURE_COUNT as u64
     );
 }
 
@@ -659,10 +827,16 @@ fn test_fnc_cli_reports_fixture_qc_for_fixture_corpus_json() {
     );
 
     assert_eq!(report["schemaVersion"], "v3.1.player.fixtureQcReport.1");
-    assert_eq!(report["summary"]["totalRecipes"], 26);
-    assert_eq!(report["summary"]["validated"], 26);
+    assert_eq!(
+        report["summary"]["totalRecipes"],
+        RECURSIVE_DEBUG_FIXTURE_COUNT
+    );
+    assert_eq!(
+        report["summary"]["validated"],
+        RECURSIVE_DEBUG_FIXTURE_COUNT
+    );
     assert_eq!(report["summary"]["validationErrors"], 0);
-    assert_eq!(report["summary"]["rendered"], 26);
+    assert_eq!(report["summary"]["rendered"], RECURSIVE_DEBUG_FIXTURE_COUNT);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["playerErrors"], 0);
     assert_eq!(report["summary"]["fieldCoverageUnhandled"], 0);
@@ -1057,6 +1231,44 @@ fn find_readiness_blocker<'a>(
                     .any(|path| path == legacy_path)
         })
         .expect("schema readiness blocker")
+}
+
+fn find_readiness_offender<'a>(
+    report: &'a serde_json::Value,
+    legacy_path: &str,
+) -> &'a serde_json::Value {
+    report["offenders"]
+        .as_array()
+        .expect("readiness offenders")
+        .iter()
+        .find(|entry| entry["legacyPath"] == legacy_path)
+        .expect("schema readiness offender")
+}
+
+fn offender_kind_counts(report: &serde_json::Value) -> BTreeMap<&str, usize> {
+    let mut counts = BTreeMap::new();
+    for offender in report["offenders"].as_array().expect("readiness offenders") {
+        let kind = offender["blockerKind"].as_str().expect("blocker kind");
+        *counts.entry(kind).or_insert(0) += 1;
+    }
+    counts
+}
+
+fn assert_json_array_contains(values: &serde_json::Value, expected: &str) {
+    assert!(
+        values
+            .as_array()
+            .expect("json array")
+            .iter()
+            .any(|value| value == expected),
+        "missing {expected} in {values:?}"
+    );
+}
+
+fn assert_unsupported_fields(offender: &serde_json::Value, expected: &[&str]) {
+    for field in expected {
+        assert_json_array_contains(&offender["unsupportedInputFields"], field);
+    }
 }
 
 fn find_mapping_record<'a>(
