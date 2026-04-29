@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract-cli/src/fnc_validate_recipe_file.rs</FILE> - <DESC>Validate one canonical RecipeDocument JSON file</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase J0: deserialize and validate canonical v3.1 recipe files.</WCTX>
-// <CLOG>0.1.0: INIT — add contract-only recipe file validation.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase J1: emit stable structured diagnostics for migration smoke fixtures.</WCTX>
+// <CLOG>0.2.0: MINOR — add code/path/hint diagnostics and report status.
+// 0.1.0: INIT — add contract-only recipe file validation.</CLOG>
 
 use std::path::Path;
 
@@ -17,9 +18,11 @@ pub fn validate_recipe_file(path: &Path) -> ValidationReport {
         Ok(text) => text,
         Err(error) => {
             return failed(
+                path_label.clone(),
+                "readFailed".to_string(),
                 path_label,
-                "read",
                 error.to_string(),
+                Some("Ensure the path exists and points to a readable recipe JSON file."),
                 serde_json::Value::Null,
             );
         }
@@ -29,8 +32,10 @@ pub fn validate_recipe_file(path: &Path) -> ValidationReport {
         Err(error) => {
             return failed(
                 path_label,
-                "deserialize",
+                "deserializeFailed".to_string(),
+                "$".to_string(),
                 error.to_string(),
+                Some("Fix JSON syntax and canonical RecipeDocument field shapes."),
                 serde_json::json!({ "line": error.line(), "column": error.column() }),
             );
         }
@@ -38,34 +43,57 @@ pub fn validate_recipe_file(path: &Path) -> ValidationReport {
     match recipe.validate() {
         Ok(()) => ValidationReport {
             path: path_label,
+            status: "ok",
             valid: true,
             errors: vec![],
+            warnings: vec![],
         },
-        Err(error) => failed(
-            path_label,
-            "contract",
-            format!("{error:?}"),
-            serde_json::to_value(error).unwrap_or(serde_json::Value::Null),
-        ),
+        Err(error) => {
+            let details = serde_json::to_value(&error).unwrap_or(serde_json::Value::Null);
+            failed(
+                path_label,
+                contract_error_code(&details),
+                "$".to_string(),
+                format!("{error:?}"),
+                Some(
+                    "Inspect the structured details and align descriptors, refs, inputs, and lifecycle declarations with tui-vfx-contract.",
+                ),
+                details,
+            )
+        }
     }
 }
 
 fn failed(
     path: String,
-    stage: &'static str,
+    code: String,
+    error_path: String,
     message: String,
+    hint: Option<&str>,
     details: serde_json::Value,
 ) -> ValidationReport {
     ValidationReport {
         path,
+        status: "error",
         valid: false,
         errors: vec![ValidationErrorReport {
-            stage,
+            code,
+            path: error_path,
             message,
+            hint: hint.map(str::to_string),
             details,
         }],
+        warnings: vec![],
     }
 }
 
+fn contract_error_code(details: &serde_json::Value) -> String {
+    details
+        .get("kind")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("contractValidationFailed")
+        .to_string()
+}
+
 // <FILE>crates/tui-vfx-contract-cli/src/fnc_validate_recipe_file.rs</FILE> - <DESC>Validate one canonical RecipeDocument JSON file</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

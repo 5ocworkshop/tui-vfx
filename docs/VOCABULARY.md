@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.3.1</VERS> -->
-<!-- <WCTX>New kernel Phase I0: define lifecycle, clock, phase, trigger, gate, loopback, and effect-local schedule distinctions.</WCTX> -->
-<!-- <CLOG>0.3.1: PATCH — document Truthy predicate per-kind semantics and maxDuration wire casing.
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <WCTX>New kernel Phase J1: define validator, migration-smoke, and parity terminology.</WCTX> -->
+<!-- <CLOG>0.4.0: MINOR — add J1 migration, structural validation, oracle, and visual parity terms.
+0.3.1: PATCH — document Truthy predicate per-kind semantics and maxDuration wire casing.
 0.3.0: MINOR — add I0 lifecycle/time/trigger vocabulary and distinctions.
 0.2.0: MINOR — add H1 RecipeDocument/RecipeScene/RecipeSceneElement/RecipeElementPipeline terms and clarify source-local pipeline seam.
 0.1.0: INIT — define canonical v3.1 terms, legacy distinctions, naming rules, deferrals, and change policy.</CLOG> -->
@@ -24,6 +25,79 @@ Legacy recipes are evidence only.
 Strict v3.1 terms must name the semantic concept they own, not the legacy field that happened to carry similar data.
 When an old recipe fails to map, classify the failure as a missing descriptor/source, a migration rule, a deferred feature, or a genuine contract gap.
 Do not add aliases to strict v3.1 just to make old JSON spellings validate. Names such as `config.pipeline.step`, `io.outputs[].hint`, `requires_assets`, interpolation tokens, and source-authoring aliases are non-canonical evidence, not vocabulary owners.
+
+
+## Migration and validation terms
+
+These terms are intentionally separate from old recipe authoring syntax. They describe migration process state, not new runtime behavior.
+
+### Canonical Recipe
+
+Definition:
+: A strict v3.1 `RecipeDocument` JSON document that deserializes through `tui_vfx_contract::RecipeDocument` and passes contract validation.
+
+Not the same as:
+: A legacy/source recipe, a rendered preview, or visual parity evidence.
+
+### Source Recipe
+
+Definition:
+: An old recipe document used as evidence for migration. Current source recipes live under `/usr/projects/tui-vfx-recipes/recipes/debug_recipes/` and are not canonical v3.1 documents.
+
+Policy:
+: Source recipes may be read as evidence; they must not be mutated by v3.1 validator phases.
+
+### Migrated Recipe
+
+Definition:
+: A canonical recipe derived from source-recipe evidence and stored in the migrated v3.1 corpus. Current J0/J1 migrated fixtures live under `/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/`.
+
+Not the same as:
+: A visual match. Migration can be structural and semantic before it is visual.
+
+### Migration Smoke Fixture
+
+Definition:
+: A deliberately small migrated recipe used to pressure-test canonical contracts and validator diagnostics before broad corpus migration.
+
+### Structural Validation
+
+Definition:
+: The recipe parses as strict canonical JSON, all ids and references resolve, and `RecipeDocument::validate()` succeeds.
+
+Not the same as:
+: Visual parity or runtime execution.
+
+### Semantic Validation
+
+Definition:
+: Human/architect review that old recipe intent maps cleanly to canonical v3.1 concepts such as descriptors, sources, graph nodes, value sources, and lifecycle.
+
+### Visual Parity
+
+Definition:
+: Evidence that a v3.1 player/probe output matches the old oracle render and passes human review. J1 does not provide visual parity.
+
+Rule:
+
+```text
+Valid canonical recipe ≠ visually confirmed recipe
+```
+
+### Oracle Recipe and Oracle Render
+
+Definition:
+: An old recipe and output from old validator/player/probe tooling used later as comparison evidence. The oracle stack is not the canonical v3.1 validator.
+
+### Primitive Fixture
+
+Definition:
+: A migration smoke fixture focused on one primitive family such as filter, mask, sampler, style effect, shader, lifecycle trigger, or role scope.
+
+### Validator Report
+
+Definition:
+: Machine-readable output from `tui-vfx-contract-cli validate-recipe`. J1 report schema `v3.1.validator.report.1` contains root, summary counts, and per-recipe errors/warnings.
 
 ## Canonical terms
 
@@ -1142,4 +1216,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
