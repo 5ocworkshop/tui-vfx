@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_app.rs</FILE> - <DESC>Ratatui app state with fast-fs browser</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>Player UI: mirror demo.rs navigation by using fast_fs::nav while keeping rendering in the player crate.</WCTX>
-// <CLOG>0.1.0: INIT — add browser/list state wrapper for the contract-native player UI.</CLOG>
+// <CLOG>0.1.1: PATCH — keep browser focus after recipe selection.
+// 0.1.0: INIT — add browser/list state wrapper for the contract-native player UI.</CLOG>
 
 use std::path::{Path, PathBuf};
 
@@ -46,7 +47,7 @@ impl PlayerUiApp {
         let mut list_state = ListState::default();
         list_state.select(Some(browser.cursor()));
         Ok(Self {
-            focus: PlayerUiFocus::Preview,
+            focus: PlayerUiFocus::Browser,
             browser,
             list_state,
             player,
@@ -93,7 +94,7 @@ impl PlayerUiApp {
             return;
         }
         match self.player.load_recipe_path(path) {
-            Ok(()) => self.focus = PlayerUiFocus::Preview,
+            Ok(()) => {}
             Err(error) => self.player.message = format!("recipe load failed: {error}"),
         }
     }
@@ -114,4 +115,4 @@ fn browser_root_for(recipe_path: &Path) -> PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_app.rs</FILE> - <DESC>Ratatui app state with fast-fs browser</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

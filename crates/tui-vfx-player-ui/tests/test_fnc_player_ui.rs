@@ -1,14 +1,17 @@
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.2.1</VERS>
 // <WCTX>New kernel player UI: lock one-shot, script, trigger, and rendered diagnostic behavior.</WCTX>
-// <CLOG>0.2.0: MINOR — expect styled primitive fixtures to render after adapter burn-down.
+// <CLOG>0.2.1: PATCH — lock browser focus startup and recipe-selection behavior.
+// 0.2.0: MINOR — expect styled primitive fixtures to render after adapter burn-down.
 // 0.1.0: INIT — add UI smoke tests over the player path.</CLOG>
 
-use std::{path::PathBuf, process::Command};
+use std::{fs, path::PathBuf, process::Command};
 
+use crossterm::event::KeyCode;
 use ratatui::{Terminal, backend::TestBackend};
 use tui_vfx_player_ui::{
-    CliOptions, PlayerUiApp, PlayerUiState, parse_cli_options, render_ratatui_ui, run_script,
+    CliOptions, PlayerUiApp, PlayerUiFocus, PlayerUiState, handle_player_ui_key, parse_cli_options,
+    render_ratatui_ui, run_script,
 };
 
 #[test]
@@ -98,10 +101,50 @@ fn test_fnc_ratatui_renderer_draws_without_terminal_io() {
         .expect("ratatui draw");
 }
 
+#[test]
+fn test_fnc_ratatui_app_starts_with_browser_focus() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+
+    let app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+
+    assert_eq!(app.focus, PlayerUiFocus::Browser);
+}
+
+#[test]
+fn test_fnc_ratatui_browser_load_keeps_browser_focus() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let browser_root = isolated_recipe_browser_root();
+    let state = PlayerUiState::load(&options_with_root(
+        browser_root.join("baseline.json"),
+        browser_root.clone(),
+    ))
+    .expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+
+    runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Enter, 10));
+
+    assert_eq!(app.focus, PlayerUiFocus::Browser);
+}
+
 fn options(recipe_path: PathBuf) -> CliOptions {
+    options_with_root(recipe_path, debug_recipe_root())
+}
+
+fn options_with_root(recipe_path: PathBuf, recipes_root: PathBuf) -> CliOptions {
     CliOptions {
         recipe_path,
-        recipes_root: Some(debug_recipe_root()),
+        recipes_root: Some(recipes_root),
         descriptor_packs: vec![descriptor_pack().display().to_string()],
         descriptor_pack_dirs: vec![],
         width: None,
@@ -110,6 +153,17 @@ fn options(recipe_path: PathBuf) -> CliOptions {
         script: None,
         no_clear: true,
     }
+}
+
+fn isolated_recipe_browser_root() -> PathBuf {
+    let root = std::env::temp_dir().join(format!(
+        "tui-vfx-player-ui-browser-focus-{}",
+        std::process::id()
+    ));
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).expect("create isolated recipe browser root");
+    fs::copy(recipe_path("baseline.json"), root.join("baseline.json")).expect("copy baseline");
+    root
 }
 
 fn descriptor_pack() -> PathBuf {
@@ -148,4 +202,4 @@ fn stderr(output: &std::process::Output) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>
