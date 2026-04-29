@@ -1,7 +1,8 @@
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>VERSION: 0.12.0</VERS>
-# <WCTX>New kernel Phase K0 — add contract-native skeleton player library and CLI crates.</WCTX>
-# <CLOG>0.12.0: MINOR add tui-vfx-player and tui-vfx-player-cli workspace members/dependencies for Phase K0 sampled frame reports.
+# <VERS>VERSION: 0.13.0</VERS>
+# <WCTX>New kernel Phase K1 — add contract-native visual player UI crate.</WCTX>
+# <CLOG>0.13.0: MINOR add tui-vfx-player-ui workspace member/dependency for Phase K1 visual shell over K0.
+# 0.12.0: MINOR add tui-vfx-player and tui-vfx-player-cli workspace members/dependencies for Phase K0 sampled frame reports.
 # 0.11.0: MINOR add tui-vfx-contract-cli workspace member/dependency for Phase J0 canonical recipe validation.
 # 0.10.0: MINOR add tui-vfx-contract workspace member/dependency for Phase E0 physical contract split.
 # 0.9.0: MINOR bump workspace.package.version 0.10.0 → 0.11.0 and every internal-crate version floor 0.10.0 → 0.11.0 for Sub-plan B Phase B.1 — additive TraceEmitter + TraceFrameContext public API in tui-vfx-debug and bridge refactor in tui-vfx-compositor so seq_in_frame authority is centralized for shared emit sites.
@@ -21,6 +22,7 @@ members = [
     "crates/tui-vfx-contract-cli",
     "crates/tui-vfx-player",
     "crates/tui-vfx-player-cli",
+    "crates/tui-vfx-player-ui",
     "crates/tui-vfx-next",
     "crates/tui-vfx-core",
     "crates/tui-vfx-core-macros",
@@ -50,6 +52,7 @@ tui-vfx-contract = { path = "crates/tui-vfx-contract", version = "0.11.0" }
 tui-vfx-contract-cli = { path = "crates/tui-vfx-contract-cli", version = "0.11.0" }
 tui-vfx-player = { path = "crates/tui-vfx-player", version = "0.11.0" }
 tui-vfx-player-cli = { path = "crates/tui-vfx-player-cli", version = "0.11.0" }
+tui-vfx-player-ui = { path = "crates/tui-vfx-player-ui", version = "0.11.0" }
 tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.11.0" }
 tui-vfx-core-macros = { path = "crates/tui-vfx-core-macros", version = "0.11.0" }
 tui-vfx-geometry = { path = "crates/tui-vfx-geometry", version = "0.11.0" }
@@ -72,12 +75,16 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 schemars = "1.2.1"
 smallvec = "1.11"
+ratatui = "0.30"
+crossterm = "0.28"
+fast-fs = { path = "../fast-libraries/crates/fast-fs", version = "0.2.1" }
+tokio = { version = "1.48", features = ["rt", "time"] }
 
 # Sister projects (co-designed; see docs/internal/plans/splash-library-and-vfx-integration.md)
 rocketsplash-rt = "0.2.2"
 
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>END OF VERSION: 0.12.0</VERS>
+# <VERS>END OF VERSION: 0.13.0</VERS>
 # Example/demo workloads need meaningful optimization in dev too; otherwise
 # local cargo run / cargo test significantly under-represents real runtime
 # performance and makes the stack look slower than it is.

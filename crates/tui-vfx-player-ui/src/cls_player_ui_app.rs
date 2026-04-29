@@ -1,0 +1,114 @@
+// <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_app.rs</FILE> - <DESC>Ratatui app state with fast-fs browser</DESC>
+// <VERS>VERSION: 0.1.0</VERS>
+// <WCTX>New kernel Phase K1: mirror demo.rs navigation by using fast_fs::nav for recipe browsing while keeping K0 as the only render engine.</WCTX>
+// <CLOG>0.1.0: INIT — add browser/list state wrapper for the contract-native player UI.</CLOG>
+
+use std::path::{Path, PathBuf};
+
+use fast_fs::nav::{ActionResult, Browser, BrowserConfig, KeyInput};
+use ratatui::widgets::ListState;
+
+use crate::PlayerUiState;
+
+/// Focus target for demo-style keyboard routing.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PlayerUiFocus {
+    /// Left recipe browser pane.
+    Browser,
+    /// Right K0 preview pane.
+    Preview,
+}
+
+/// Interactive ratatui app state.
+pub struct PlayerUiApp {
+    /// Current keyboard focus.
+    pub focus: PlayerUiFocus,
+    /// fast-fs directory browser for canonical recipe selection.
+    pub browser: Browser,
+    /// Stateful list cursor for ratatui rendering.
+    pub list_state: ListState,
+    /// Active K0-backed player state.
+    pub player: PlayerUiState,
+    /// Browser root selected for the session.
+    pub browser_root: PathBuf,
+}
+
+impl PlayerUiApp {
+    /// Create the app around an already-loaded recipe.
+    pub async fn new(player: PlayerUiState) -> Result<Self, String> {
+        let browser_root = browser_root_for(&player.recipe_path);
+        let browser = Browser::at_path(&browser_root, BrowserConfig::default())
+            .await
+            .map_err(|error| error.to_string())?;
+        let mut list_state = ListState::default();
+        list_state.select(Some(browser.cursor()));
+        Ok(Self {
+            focus: PlayerUiFocus::Preview,
+            browser,
+            list_state,
+            player,
+            browser_root,
+        })
+    }
+
+    /// Synchronize the ratatui list cursor with the fast-fs browser cursor.
+    pub fn sync_cursor(&mut self) {
+        self.list_state.select(Some(self.browser.cursor()));
+    }
+
+    /// Select or enter the focused browser item using fast-fs semantics.
+    pub async fn open_focused_entry(&mut self) {
+        match self.browser.handle_key(KeyInput::Enter).await {
+            ActionResult::FileSelected(path) => self.load_selected_file(path),
+            ActionResult::DirectoryChanged => self.sync_cursor(),
+            ActionResult::Done
+            | ActionResult::Unhandled
+            | ActionResult::NeedsConfirmation(_)
+            | ActionResult::NeedsInput(_)
+            | ActionResult::Clipboard(_) => {}
+        }
+    }
+
+    /// Move to the parent directory using fast-fs semantics.
+    pub async fn parent_directory(&mut self) {
+        let _ = self.browser.handle_key(KeyInput::Backspace).await;
+        self.sync_cursor();
+    }
+
+    /// Refresh the current browser directory from disk.
+    pub async fn refresh_browser(&mut self) {
+        match self.browser.refresh().await {
+            Ok(()) => self.player.message = "browser refreshed from disk".to_string(),
+            Err(error) => self.player.message = format!("browser refresh failed: {error}"),
+        }
+        self.sync_cursor();
+    }
+
+    fn load_selected_file(&mut self, path: PathBuf) {
+        if path.extension().is_none_or(|extension| extension != "json") {
+            self.player.message = "selected file is not JSON".to_string();
+            return;
+        }
+        match self.player.load_recipe_path(path) {
+            Ok(()) => self.focus = PlayerUiFocus::Preview,
+            Err(error) => self.player.message = format!("recipe load failed: {error}"),
+        }
+    }
+}
+
+fn browser_root_for(recipe_path: &Path) -> PathBuf {
+    let mut current = recipe_path.parent();
+    while let Some(path) = current {
+        if path.ends_with("recipes/v3.1/debug_recipes") {
+            return path.to_path_buf();
+        }
+        current = path.parent();
+    }
+    recipe_path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .to_path_buf()
+}
+
+// <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_app.rs</FILE> - <DESC>Ratatui app state with fast-fs browser</DESC>
+// <VERS>END OF VERSION: 0.1.0</VERS>

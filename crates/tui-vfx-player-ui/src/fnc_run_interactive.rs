@@ -1,0 +1,71 @@
+// <FILE>crates/tui-vfx-player-ui/src/fnc_run_interactive.rs</FILE> - <DESC>Run ratatui visual player interaction loop</DESC>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>New kernel Phase K1: replace line-mode shell with demo.rs-style ratatui/crossterm loop and fast-fs browsing.</WCTX>
+// <CLOG>0.2.0: MINOR use raw mode, alternate screen, fast-fs navigation, and ratatui rendering.
+// 0.1.0: INIT — read command lines, mutate UI state, and re-render snapshots.</CLOG>
+
+use std::{io::stdout, time::Duration};
+
+use crossterm::{
+    ExecutableCommand,
+    event::{self, Event, KeyEventKind},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
+use ratatui::{Terminal, backend::CrosstermBackend};
+use tokio::runtime::Builder;
+
+use crate::{PlayerUiApp, PlayerUiCommand, PlayerUiState, handle_player_ui_key, render_ratatui_ui};
+
+/// Run the raw terminal ratatui player UI loop.
+pub fn run_interactive(state: PlayerUiState) -> Result<(), String> {
+    let runtime = Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|error| error.to_string())?;
+    runtime.block_on(run_interactive_async(state))
+}
+
+async fn run_interactive_async(state: PlayerUiState) -> Result<(), String> {
+    let mut app = PlayerUiApp::new(state).await?;
+    enable_raw_mode().map_err(|error| error.to_string())?;
+    stdout()
+        .execute(EnterAlternateScreen)
+        .map_err(|error| error.to_string())?;
+    let _guard = TerminalGuard;
+    let mut terminal =
+        Terminal::new(CrosstermBackend::new(stdout())).map_err(|error| error.to_string())?;
+    let tick = Duration::from_millis(100);
+    loop {
+        terminal
+            .draw(|frame| render_ratatui_ui(&mut app, frame))
+            .map_err(|error| error.to_string())?;
+        let viewport_height = terminal
+            .size()
+            .map_err(|error| error.to_string())?
+            .height
+            .saturating_sub(4) as usize;
+        if event::poll(tick).map_err(|error| error.to_string())? {
+            if let Event::Key(key) = event::read().map_err(|error| error.to_string())?
+                && key.kind == KeyEventKind::Press
+                && !handle_player_ui_key(&mut app, key.code, viewport_height).await
+            {
+                break;
+            }
+        } else {
+            app.player.apply_command(PlayerUiCommand::Tick);
+        }
+    }
+    Ok(())
+}
+
+struct TerminalGuard;
+
+impl Drop for TerminalGuard {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let _ = stdout().execute(LeaveAlternateScreen);
+    }
+}
+
+// <FILE>crates/tui-vfx-player-ui/src/fnc_run_interactive.rs</FILE> - <DESC>Run ratatui visual player interaction loop</DESC>
+// <VERS>END OF VERSION: 0.2.0</VERS>

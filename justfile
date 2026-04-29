@@ -207,6 +207,19 @@ examples:
 example-pipeline-effects:
     cargo run -p tui-vfx --example pipeline_effects_showcase
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NEW KERNEL PLAYER
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Run the K1 ratatui inspection UI on a canonical v3.1 recipe
+player-ui recipe="/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json":
+    cargo run -p tui-vfx-player-ui -- "{{recipe}}"
+
+# Render one K1 inspection snapshot and exit for quick terminal smoke checks
+player-ui-once recipe="/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json":
+    cargo run -p tui-vfx-player-ui -- --once --no-clear "{{recipe}}"
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAINTENANCE
 # ═══════════════════════════════════════════════════════════════════════════════
