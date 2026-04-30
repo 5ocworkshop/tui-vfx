@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_pattern_fill.rs</FILE> - <DESC>Pattern fill filter for background textures</DESC>
-// <VERS>VERSION: 2.0.2</VERS>
-// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
-// <CLOG>2.0.2: migrate apply signature to &VfxCellContext.</CLOG>
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: represent authored pattern families and density in the compositor filter.</WCTX>
+// <CLOG>2.1.0: add Dots, Diagonal, Stripe, and density-gated placement to PatternFill.
+// 2.0.2: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use serde::{Deserialize, Serialize};
@@ -40,6 +41,15 @@ pub enum PatternType {
         /// Spacing between lines (line appears every N columns)
         spacing: u16,
     },
+
+    /// Sparse dotted texture.
+    Dots,
+
+    /// Diagonal slash texture.
+    Diagonal,
+
+    /// Horizontal stripe texture.
+    Stripe,
 }
 
 impl Default for PatternType {
@@ -83,6 +93,8 @@ pub struct PatternFill {
     pub fg_color: Option<Color>,
     /// Optional background color for the pattern
     pub bg_color: Option<Color>,
+    /// Fraction of candidate cells to fill.
+    pub density: f32,
 }
 
 impl PatternFill {
@@ -93,6 +105,7 @@ impl PatternFill {
             only_empty: false,
             fg_color: None,
             bg_color: None,
+            density: 1.0,
         }
     }
 
@@ -112,6 +125,12 @@ impl PatternFill {
     #[allow(dead_code)]
     pub fn with_bg(mut self, color: Color) -> Self {
         self.bg_color = Some(color);
+        self
+    }
+
+    /// Set the fraction of candidate cells filled by the pattern.
+    pub fn with_density(mut self, density: f32) -> Self {
+        self.density = density.clamp(0.0, 1.0);
         self
     }
 
@@ -154,7 +173,36 @@ impl PatternFill {
                     None
                 }
             }
+            PatternType::Dots => Some('·'),
+            PatternType::Diagonal => {
+                if (x + y).is_multiple_of(2) {
+                    Some('╱')
+                } else {
+                    None
+                }
+            }
+            PatternType::Stripe => {
+                if y.is_multiple_of(2) {
+                    Some('─')
+                } else {
+                    None
+                }
+            }
         }
+    }
+
+    fn density_allows(&self, x: u16, y: u16) -> bool {
+        if self.density >= 1.0 {
+            return true;
+        }
+        if self.density <= 0.0 {
+            return false;
+        }
+        let hash = (x as u32)
+            .wrapping_mul(73_856_093)
+            .wrapping_add((y as u32).wrapping_mul(19_349_663));
+        let threshold = hash % 10_000;
+        threshold < (self.density * 10_000.0).round() as u32
     }
 }
 
@@ -168,7 +216,9 @@ impl Filter for PatternFill {
         }
 
         // Get the character for this position
-        if let Some(c) = self.char_at(x, y) {
+        if self.density_allows(x, y)
+            && let Some(c) = self.char_at(x, y)
+        {
             // Set the character directly
             cell.ch = c;
 
@@ -376,6 +426,9 @@ mod tests {
                 line_char: '|',
                 spacing: 3,
             },
+            PatternType::Dots,
+            PatternType::Diagonal,
+            PatternType::Stripe,
         ];
 
         for pattern in patterns {
@@ -387,4 +440,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/filters/cls_pattern_fill.rs</FILE> - <DESC>Pattern fill filter for background textures</DESC>
-// <VERS>END OF VERSION: 2.0.2</VERS>
+// <VERS>END OF VERSION: 2.1.0</VERS>

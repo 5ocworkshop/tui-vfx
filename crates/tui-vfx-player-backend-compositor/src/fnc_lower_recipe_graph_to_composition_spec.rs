@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.2.1</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec content with honest fallback diagnostics.</WCTX>
-// <CLOG>0.2.1: PATCH — pass native lowering counts directly when building evidence.
+// <CLOG>0.3.0: MINOR — add strict native lowering for the current shader/filter/mask/sampler debug-recipe blocker set.
+// 0.2.2: PATCH — de-duplicate unsupported-native diagnostics and signed offset clamping helpers.
+// 0.2.1: PATCH — pass native lowering counts directly when building evidence.
 // 0.2.0: MINOR — add native/auto/irResolved lowering modes for filter, mask, sampler, shader, and style debug-recipes.
 // 0.1.0: INIT — carry playback timing and record that player IR already contains resolved recipe effects for this bounded slice.</CLOG>
 
@@ -9,12 +11,12 @@ use std::collections::BTreeMap;
 
 use mixed_signals::types::SignalOrFloat;
 use serde_json::json;
-use tui_vfx_compositor::types::cls_filter_spec::VignetteEdge;
+use tui_vfx_compositor::types::cls_filter_spec::{ScannerAxis, ScannerMotionMode, VignetteEdge};
 use tui_vfx_compositor::{
     pipeline::{CompositionSpec, ShaderLayerSpec},
     types::{
-        ApplyTo, Axis, BindableValue, FilterSpec, MaskSpec, RippleCenter, SamplerSpec,
-        WipeDirection,
+        ApplyTo, Axis, BindableValue, DitherMatrix, FilterSpec, MaskSpec, PatternType,
+        RadialOrigin, RippleCenter, SamplerSpec, WipeDirection,
     },
 };
 use tui_vfx_contract::{NodeSpec, RecipeDocument, Value, ValueSource};
@@ -24,7 +26,7 @@ use tui_vfx_player::{
 };
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, ColorSpace, Gradient, LinearGradientApplyTo,
-    LinearGradientShader, SpatialShaderType, StyleRegion,
+    LinearGradientShader, RevealWipeShader, SpatialShaderType, StyleRegion,
 };
 
 /// Complete lowering result used by the compositor backend adapter.
@@ -332,6 +334,8 @@ fn lower_node_into_spec(
         "filter.fadeToCanvas" => lower_fade_to_canvas(node, spec, request, warnings),
         "filter.vignette" => lower_vignette(node, spec, request, warnings),
         "filter.crt" => lower_crt(node, spec, request, warnings),
+        "filter.patternFill" => lower_pattern_fill(node, spec, request, warnings),
+        "filter.kittScanner" => lower_kitt_scanner(node, spec, request, warnings),
         "filter.pillButton" => {
             let progress = number_signal_input(node, request, "progress", 0.75);
             spec.filters.push(FilterSpec::Tint {
@@ -356,6 +360,10 @@ fn lower_node_into_spec(
             });
             NodeLoweringOutcome::Lowered { warnings }
         }
+        "mask.materialize" | "mask.materializeCorner" => {
+            lower_materialize_mask(node, spec, request, warnings)
+        }
+        "mask.noiseDither" => lower_noise_dither_mask(node, spec, request, warnings),
         "sampler.sineWave" => {
             spec.push_sampler(SamplerSpec::SineWave {
                 axis: axis_input(node, request, "axis"),
@@ -375,7 +383,11 @@ fn lower_node_into_spec(
             });
             NodeLoweringOutcome::Lowered { warnings }
         }
+        "sampler.faultLine" => lower_fault_line_sampler(node, spec, request, warnings),
+        "sampler.radialTwist" => lower_radial_twist_sampler(node, spec, request, warnings),
+        "sampler.shredder" => lower_shredder_sampler(node, spec, request, warnings),
         "shader.linearGradient" => lower_linear_gradient(node, spec, request, warnings),
+        "shader.revealWipe" => lower_reveal_wipe(node, spec, request, warnings),
         "shader.borderSweep" => lower_border_sweep(recipe, node, spec, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
@@ -618,6 +630,33 @@ fn unsupported_native_content_reason(
     effect_id: &str,
     supported_inputs: &[&str],
 ) -> Option<String> {
+    unsupported_native_reason(
+        node,
+        effect_id,
+        supported_inputs,
+        "compositor-backend native content-stage",
+    )
+}
+
+fn unsupported_native_effect_reason(
+    node: &NodeSpec,
+    effect_id: &str,
+    supported_inputs: &[&str],
+) -> Option<String> {
+    unsupported_native_reason(
+        node,
+        effect_id,
+        supported_inputs,
+        "compositor-native effect",
+    )
+}
+
+fn unsupported_native_reason(
+    node: &NodeSpec,
+    effect_id: &str,
+    supported_inputs: &[&str],
+    native_surface: &str,
+) -> Option<String> {
     let unsupported_inputs = node
         .inputs
         .keys()
@@ -626,14 +665,14 @@ fn unsupported_native_content_reason(
         .collect::<Vec<_>>();
     if !unsupported_inputs.is_empty() {
         return Some(format!(
-            "Effect `{effect_id}` uses input(s) `{}` that have no compositor-backend native content-stage equivalent without dropping authored semantics.",
-            unsupported_inputs.join("`, `")
+            "Effect `{effect_id}` uses input(s) `{}` that have no {native_surface} equivalent without dropping authored semantics.",
+            unsupported_inputs.join("`, `"),
         ));
     }
 
     if !node.outputs.is_empty() {
         return Some(format!(
-            "Effect `{effect_id}` declares graph outputs that the compositor-backend native content stage cannot publish without dropping authored semantics."
+            "Effect `{effect_id}` declares graph outputs that the {native_surface} cannot publish without dropping authored semantics."
         ));
     }
 
@@ -641,7 +680,7 @@ fn unsupported_native_content_reason(
         && !matches!(scope, tui_vfx_contract::ScopeSpec::All)
     {
         return Some(format!(
-            "Effect `{effect_id}` uses a non-all scope that is not yet supported by the compositor-backend native content stage without dropping authored semantics."
+            "Effect `{effect_id}` uses a non-all scope that is not yet supported by the {native_surface} without dropping authored semantics."
         ));
     }
 
@@ -746,6 +785,181 @@ fn lower_crt(
     NodeLoweringOutcome::Lowered { warnings }
 }
 
+fn lower_pattern_fill(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_effect_reason(node, "filter.patternFill", &["pattern", "density"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    spec.filters.push(FilterSpec::PatternFill {
+        pattern: pattern_type_input(node, request, "pattern"),
+        color: None,
+        only_empty: false,
+        density: number_input(node, request, "density", 0.5).clamp(0.0, 1.0) as f32,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_kitt_scanner(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_effect_reason(
+        node,
+        "filter.kittScanner",
+        &[
+            "scanColor",
+            "trailColor",
+            "speed",
+            "width",
+            "applyTo",
+            "progress",
+            "bandWidth",
+            "bpm",
+            "boost",
+            "boostSeparatorBg",
+            "axis",
+            "powerlineMode",
+            "motionMode",
+        ],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let (band_width, band_width_cells) = kitt_band_width_input(node, request);
+    let boost_separator_bg_color = color_input(node, request, "boostSeparatorBg");
+
+    spec.filters.push(FilterSpec::KittScanner {
+        boost: normalized_boost_input(node, request, "boost", 50),
+        band_width,
+        scan_color: color_input(node, request, "scanColor"),
+        trail_color: color_input(node, request, "trailColor"),
+        band_width_cells,
+        bpm: optional_number_input(node, request, "bpm").map(|value| value.max(0.0) as f32),
+        bps: number_input(node, request, "speed", 1.2).max(0.1) as f32,
+        progress: BindableValue::from(number_signal_input(node, request, "progress", 1.0)),
+        motion_mode: scanner_motion_mode_input(node, request, "motionMode"),
+        axis: scanner_axis_input(node, request, "axis"),
+        apply_to: apply_to_input(node, request, "applyTo"),
+        powerline_mode: bool_input(node, request, "powerlineMode", false),
+        boost_separator_bg: bool_or_color_presence_input(node, request, "boostSeparatorBg", false),
+        boost_separator_bg_color,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_materialize_mask(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_effect_reason(
+        node,
+        node.effect.as_str(),
+        &["origin", "softEdge", "chunkSize", "noise", "seed"],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    spec.masks.push(MaskSpec::Materialize {
+        origin: radial_origin_input(node, request, "origin"),
+        seed: integer_input(node, request, "seed", 0).max(0) as u64,
+        chunk_size: positive_u8_input(node, request, "chunkSize", 1),
+        noise: number_input(node, request, "noise", 0.18).clamp(0.0, 1.0) as f32,
+        soft_edge: bool_input(node, request, "softEdge", true),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_noise_dither_mask(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_effect_reason(node, "mask.noiseDither", &["chunkSize", "seed"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    spec.masks.push(MaskSpec::NoiseDither {
+        seed: integer_input(node, request, "seed", 0).max(0) as u64,
+        matrix: DitherMatrix::Bayer4,
+        chunk_size: positive_u8_input(node, request, "chunkSize", 1),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_fault_line_sampler(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_effect_reason(node, "sampler.faultLine", &["offset"]) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    spec.push_sampler(SamplerSpec::FaultLine {
+        seed: 0,
+        intensity: SignalOrFloat::Static(1.0),
+        split_bias: 0.0,
+        offset: Some(clamped_i16_input(node, request, "offset", 2)),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_radial_twist_sampler(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_effect_reason(node, "sampler.radialTwist", &["strength"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    spec.push_sampler(SamplerSpec::RadialTwist {
+        twist: number_signal_input(node, request, "strength", 1.0),
+        center: RippleCenter::Center,
+        radius_floor: SignalOrFloat::Static(0.1),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_shredder_sampler(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_effect_reason(node, "sampler.shredder", &["sliceWidth", "offset"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    spec.push_sampler(SamplerSpec::Shredder {
+        stripe_width: positive_u16_input(node, request, "sliceWidth", 2),
+        odd_speed: SignalOrFloat::Static(3.0),
+        even_speed: SignalOrFloat::Static(1.0),
+        offset: Some(clamped_i16_input(node, request, "offset", 1)),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
 fn lower_linear_gradient(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
@@ -761,6 +975,28 @@ fn lower_linear_gradient(
     };
     spec.shader_layers.push(ShaderLayerSpec {
         shader: SpatialShaderType::LinearGradient(shader),
+        region: StyleRegion::All,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_reveal_wipe(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_effect_reason(node, "shader.revealWipe", &["color", "direction"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::RevealWipe(RevealWipeShader {
+            direction: wipe_direction_input(node, request, "direction"),
+            color: color_input(node, request, "color"),
+        }),
         region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
@@ -962,6 +1198,14 @@ fn number_input(
         .unwrap_or(default)
 }
 
+fn optional_number_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Option<f64> {
+    input_value(node, request, key).and_then(Value::as_range_number)
+}
+
 fn integer_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -977,6 +1221,33 @@ fn integer_input(
         .unwrap_or(default)
 }
 
+fn clamped_i16_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: i64,
+) -> i16 {
+    integer_input(node, request, key, default).clamp(i16::MIN as i64, i16::MAX as i64) as i16
+}
+
+fn positive_u8_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: i64,
+) -> u8 {
+    integer_input(node, request, key, default).clamp(1, u8::MAX as i64) as u8
+}
+
+fn positive_u16_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: i64,
+) -> u16 {
+    integer_input(node, request, key, default).clamp(1, u16::MAX as i64) as u16
+}
+
 fn bool_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -987,6 +1258,21 @@ fn bool_input(
         .and_then(|value| match value {
             Value::Boolean(value) => Some(*value),
             _ => None,
+        })
+        .unwrap_or(default)
+}
+
+fn bool_or_color_presence_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: bool,
+) -> bool {
+    input_value(node, request, key)
+        .map(|value| match value {
+            Value::Boolean(value) => *value,
+            Value::Color(_) | Value::String(_) | Value::Text(_) => true,
+            _ => default,
         })
         .unwrap_or(default)
 }
@@ -1071,6 +1357,62 @@ fn apply_to_input(node: &NodeSpec, request: &PlayerRenderBackendRequest, key: &s
     }
 }
 
+fn scanner_axis_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> ScannerAxis {
+    match enum_input(node, request, key) {
+        Some("vertical" | "y" | "Y") => ScannerAxis::Vertical,
+        _ => ScannerAxis::Horizontal,
+    }
+}
+
+fn scanner_motion_mode_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> ScannerMotionMode {
+    match enum_input(node, request, key) {
+        Some("forwardWrap" | "forward_wrap" | "forward") => ScannerMotionMode::ForwardWrap,
+        Some("reverseWrap" | "reverse_wrap" | "reverse") => ScannerMotionMode::ReverseWrap,
+        _ => ScannerMotionMode::PingPong,
+    }
+}
+
+fn normalized_boost_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: u8,
+) -> u8 {
+    let value = number_input(node, request, key, default as f64);
+    let normalized = if (0.0..=1.0).contains(&value) {
+        value * 255.0
+    } else {
+        value
+    };
+    normalized.round().clamp(0.0, u8::MAX as f64) as u8
+}
+
+fn kitt_band_width_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> (f32, Option<u16>) {
+    if node_has_input(node, "width") {
+        return (0.15, Some(positive_u16_input(node, request, "width", 3)));
+    }
+
+    if let Some(value) = optional_number_input(node, request, "bandWidth") {
+        if value > 1.0 {
+            return (0.15, Some(value.round().clamp(1.0, u16::MAX as f64) as u16));
+        }
+        return (value.clamp(0.0, 0.5) as f32, None);
+    }
+
+    (0.15, None)
+}
+
 fn gradient_apply_to_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -1112,6 +1454,36 @@ fn wipe_direction_input(
             WipeDirection::BottomRightToTopLeft
         }
         _ => WipeDirection::LeftToRight,
+    }
+}
+
+fn radial_origin_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> RadialOrigin {
+    match enum_input(node, request, key) {
+        Some("topLeft" | "top_left") => RadialOrigin::TopLeft,
+        Some("topRight" | "top_right") => RadialOrigin::TopRight,
+        Some("bottomLeft" | "bottom_left") => RadialOrigin::BottomLeft,
+        Some("bottomRight" | "bottom_right") => RadialOrigin::BottomRight,
+        _ => RadialOrigin::Center,
+    }
+}
+
+fn pattern_type_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> PatternType {
+    match enum_input(node, request, key) {
+        Some("dot" | "dots") => PatternType::Dots,
+        Some("stripe" | "stripes") => PatternType::Stripe,
+        Some("diagonal") => PatternType::Diagonal,
+        Some(value) if value.chars().count() == 1 => PatternType::Single {
+            char: value.chars().next().unwrap_or('.'),
+        },
+        _ => PatternType::Diagonal,
     }
 }
 
@@ -1196,4 +1568,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.2.1</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

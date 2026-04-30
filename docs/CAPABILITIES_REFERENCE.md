@@ -70,7 +70,7 @@ Masks control the visibility of content during transitions. All masks operate on
 | **Blinds** | Venetian blinds effect | `orientation`, `count` |
 | **Iris** | Spotlight/iris from center | `shape`: Circle/Diamond/Box, `soft_edge` |
 | **Diamond** | Diamond expand from center | `soft_edge` |
-| **NoiseDither** | Dithered noise pattern | `seed`, `matrix`: Bayer4/Bayer8 |
+| **NoiseDither** | Dithered noise pattern | `seed`, `matrix`: Bayer4/Bayer8, `chunk_size` |
 | **Materialize** | Organic resolve/materialize reveal | `origin`, `seed`, `chunk_size`, `noise`, `soft_edge` |
 | **PathReveal** | Path-based reveal (spiral, radial sweep) | `path`: Spiral/Radial, `soft_edge` |
 | **Radial** | Radial expansion from origin | `origin`: Center/corners/Custom, `soft_edge` |
@@ -102,7 +102,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **Tint** | Apply color overlay | `color`, `strength`, `apply_to` |
 | **Vignette** | Edge darkening | `strength`, `radius` (signal-driven), `sides`, `dither_amount`, `temporal_dither_hz` |
 | **Crt** | CRT monitor post-processing | `scanline_strength`, `glow` |
-| **PatternFill** | Background texture patterns | `pattern`, `color`, `only_empty` |
+| **PatternFill** | Background texture patterns | `pattern`, `color`, `only_empty`, `density` |
 | **Greyscale** | Desaturate (BT.601 luminance) | `strength`, `apply_to` |
 | **BrailleDust** | Animated braille particles | `density`, `hz`, `seed`, `pattern`, `color`, `drift` |
 | **CharsetNoise** | Time-varying character replacement (living textures) | `hz`, `seed`, `jitter`, `affect`, `chars` (flat) or `gradient` (position-aware) |
@@ -120,7 +120,7 @@ Filters apply post-processing effects to the rendered output. Applied in order (
 | **EdgeGrow** | Generalized edge growth/stretch indicator | `rest_eighths`, `peak_eighths`, `edge`, `fill_color`, `bg_color`, `progress`, `margin_width` |
 | **PillButton** | Pill-shaped button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten`, `progress` |
 | **GlistenSweep** | Diagonal 45° brightness sweep (hover shine) | `boost` (u8, additive), `band_width` (f32, diagonal fraction), `speed`, `progress`, `powerline_mode`, `boost_separator_bg` |
-| **KittScanner** | Scanner sweep (KITT/Larson or one-way lighthouse wrap), horizontal or vertical | `boost` (u8), `band_width`, `bpm?`, `bps`, `progress`, `motion_mode`, `axis` (`horizontal` default / `vertical`), `apply_to`, `powerline_mode`, `boost_separator_bg` |
+| **KittScanner** | Scanner sweep (KITT/Larson or one-way lighthouse wrap), horizontal or vertical | `boost` (u8), `band_width`, `scan_color`, `trail_color`, `band_width_cells`, `bpm?`, `bps`, `progress`, `motion_mode`, `axis` (`horizontal` default / `vertical`), `apply_to`, `powerline_mode`, `boost_separator_bg`, `boost_separator_bg_color` |
 | **ShadeScanner** | Ping-pong scanner that dims text with shade overlay | `shade_color`, `bps`, `progress` |
 | **GlyphStyle** | Per-glyph-category fg/bg overrides via char-membership rules | `rules`: `[{chars, fg, bg, bg_alternate?}]` first-match-wins; unmatched cells unchanged. `bg_alternate` enables a coordinate-checkerboard bg modulation bounded by char match (subtle card-edge perception). |
 
@@ -151,8 +151,8 @@ Samplers distort pixel coordinates before rendering, creating spatial effects.
 | **None** | No distortion | — |
 | **SineWave** | Sinusoidal wave distortion | `axis`, `amplitude`, `frequency`, `speed`, `phase` |
 | **Ripple** | Circular ripple from center | `amplitude`, `wavelength`, `speed`, `center` |
-| **Shredder** | Paper shredder strips | `stripe_width`, `odd_speed`, `even_speed` |
-| **FaultLine** | Fault line displacement | `seed`, `intensity`, `split_bias` |
+| **Shredder** | Paper shredder strips | `stripe_width`, `odd_speed`, `even_speed`, `offset` |
+| **FaultLine** | Fault line displacement | `seed`, `intensity`, `split_bias`, `offset` |
 | **RadialTwist** | Center-weighted vortex/maelstrom coordinate warp | `twist`, `center`, `radius_floor` |
 | **Crt** | CRT scanlines + curvature | `scanline_strength`, `jitter`, `curvature` |
 | **CrtJitter** | CRT crash/jitter effect | `intensity`, `speed_hz`, `decay_ms` |

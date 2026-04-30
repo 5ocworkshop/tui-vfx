@@ -64,6 +64,7 @@ fn test_sampler_spec_shredder_serde_roundtrip() {
         stripe_width: 3,
         odd_speed: SignalOrFloat::Static(1.5),
         even_speed: SignalOrFloat::Static(-1.5),
+        offset: Some(2),
     };
     let json = serde_json::to_string(&spec).unwrap();
     let parsed: SamplerSpec = serde_json::from_str(&json).unwrap();
@@ -76,6 +77,7 @@ fn test_sampler_spec_fault_line_serde_roundtrip() {
         seed: 42,
         intensity: SignalOrFloat::Static(0.8),
         split_bias: 0.3,
+        offset: Some(2),
     };
     let json = serde_json::to_string(&spec).unwrap();
     let parsed: SamplerSpec = serde_json::from_str(&json).unwrap();

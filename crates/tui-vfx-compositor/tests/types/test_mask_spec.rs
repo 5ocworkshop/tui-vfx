@@ -121,6 +121,7 @@ fn test_mask_spec_noise_dither_serde_roundtrip() {
     let spec = MaskSpec::NoiseDither {
         seed: 123,
         matrix: DitherMatrix::Bayer8,
+        chunk_size: 2,
     };
     let json = serde_json::to_string(&spec).unwrap();
     let parsed: MaskSpec = serde_json::from_str(&json).unwrap();

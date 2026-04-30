@@ -1,10 +1,14 @@
 // <FILE>tui-vfx-style/src/models/cls_reveal_wipe_shader.rs</FILE> - <DESC>RevealWipe shader: progressively reveals text along a chosen wipe direction</DESC>
-// <VERS>VERSION: 2.0.0</VERS>
-// <WCTX>Audit recommendation 1.2 + 1.3 — close the regression where the RevealWipe shader carried only 4 cardinal directions while the Wipe mask supported 12 (cardinal + diagonal + centre/edges) and authors reaching for the shader vocabulary lost half the geometry. Replace the local RevealDirection enum (and its hand-rolled match) with a re-export of the canonical tui_vfx_geometry::WipeDirection plus a delegated call into the shared wipe_visible_at helper. Picks up the new corner-out / corner-in variants for free.</WCTX>
-// <CLOG>2.0.0: MAJOR — RevealDirection becomes a re-export of tui_vfx_geometry::WipeDirection (full 20-variant vocabulary including diagonal sweeps, centre-out, edges-in, and corner-out / corner-in arcs). style_at delegates to tui_vfx_geometry::wipe_visible_at, so the shader and the Wipe mask share the same per-cell visibility math. Existing recipes that say `direction: "left_to_right"` etc. continue to parse and behave identically. New directions are immediately available via the same field.
+// <VERS>VERSION: 2.1.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: preserve reveal-wipe foreground color in native compositor lowering.</WCTX>
+// <CLOG>2.1.0: add optional color for revealed cells while preserving the previous color-preserving default.
+// 2.0.0: MAJOR — RevealDirection becomes a re-export of tui_vfx_geometry::WipeDirection (full 20-variant vocabulary including diagonal sweeps, centre-out, edges-in, and corner-out / corner-in arcs). style_at delegates to tui_vfx_geometry::wipe_visible_at, so the shader and the Wipe mask share the same per-cell visibility math. Existing recipes that say `direction: "left_to_right"` etc. continue to parse and behave identically. New directions are immediately available via the same field.
 // 1.0.0: Initial implementation with 4 cardinal directions</CLOG>
 
-use crate::traits::{ShaderContext, StyleShader};
+use crate::{
+    models::ColorConfig,
+    traits::{ShaderContext, StyleShader},
+};
 use serde::{Deserialize, Serialize};
 use tui_vfx_geometry::{WipeDirection, wipe_visible_at};
 use tui_vfx_types::Style;
@@ -40,12 +44,18 @@ pub struct RevealWipeShader {
     /// full vocabulary; defaults to `LeftToRight`.
     #[serde(default)]
     pub direction: RevealDirection,
+    /// Optional foreground color applied to revealed cells.
+    ///
+    /// When absent, revealed cells preserve their incoming foreground color.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<ColorConfig>,
 }
 
 impl Default for RevealWipeShader {
     fn default() -> Self {
         Self {
             direction: RevealDirection::LeftToRight,
+            color: None,
         }
     }
 }
@@ -65,7 +75,11 @@ impl StyleShader for RevealWipeShader {
             ctx.height,
             progress,
         ) {
-            base
+            let mut style = base;
+            if let Some(color) = self.color {
+                style.fg = color.into();
+            }
+            style
         } else {
             let mut style = base;
             style.fg = base.bg;
@@ -96,6 +110,7 @@ mod tests {
     fn left_to_right_at_half_progress_reveals_left_half() {
         let shader = RevealWipeShader {
             direction: RevealDirection::LeftToRight,
+            color: None,
         };
         assert!(revealed(&shader, 0, 0, 10, 1, 0.5));
         assert!(revealed(&shader, 4, 0, 10, 1, 0.5));
@@ -107,6 +122,7 @@ mod tests {
     fn horizontal_center_out_at_half_progress_reveals_centre() {
         let shader = RevealWipeShader {
             direction: RevealDirection::HorizontalCenterOut,
+            color: None,
         };
         assert!(revealed(&shader, 4, 0, 10, 1, 0.5));
         assert!(revealed(&shader, 5, 0, 10, 1, 0.5));
@@ -118,6 +134,7 @@ mod tests {
     fn vertical_edges_in_at_half_progress_reveals_edges() {
         let shader = RevealWipeShader {
             direction: RevealDirection::VerticalEdgesIn,
+            color: None,
         };
         assert!(revealed(&shader, 0, 0, 10, 10, 0.5));
         assert!(revealed(&shader, 0, 9, 10, 10, 0.5));
@@ -128,6 +145,7 @@ mod tests {
     fn corner_out_from_top_left_reveals_anchor_corner_first() {
         let shader = RevealWipeShader {
             direction: RevealDirection::CornerOutFromTopLeft,
+            color: None,
         };
         assert!(revealed(&shader, 0, 0, 10, 10, 0.3));
         assert!(!revealed(&shader, 9, 9, 10, 10, 0.3));
@@ -137,6 +155,7 @@ mod tests {
     fn corner_in_to_bottom_right_hides_anchor_corner_first() {
         let shader = RevealWipeShader {
             direction: RevealDirection::CornerInToBottomRight,
+            color: None,
         };
         // CornerIn collapses TOWARD the corner — so the anchor corner is
         // the LAST to be revealed. At progress=0.3 the BR corner is still
@@ -187,4 +206,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-style/src/models/cls_reveal_wipe_shader.rs</FILE> - <DESC>RevealWipe shader</DESC>
-// <VERS>END OF VERSION: 2.0.0</VERS>
+// <VERS>END OF VERSION: 2.1.0</VERS>

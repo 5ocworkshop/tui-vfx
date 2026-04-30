@@ -195,22 +195,28 @@ pub(crate) fn prepare_sampler(t: f64, sampler_spec: &Option<SamplerSpec>) -> Pre
             stripe_width,
             odd_speed,
             even_speed,
+            offset,
         } => {
             let eval_odd_speed = odd_speed.evaluate(t, &signal_ctx).unwrap_or(1.0);
             let eval_even_speed = even_speed.evaluate(t, &signal_ctx).unwrap_or(1.0);
-            PreparedSampler::Shredder(Shredder::new(
-                *stripe_width,
-                eval_odd_speed,
-                eval_even_speed,
-            ))
+            let mut sampler = Shredder::new(*stripe_width, eval_odd_speed, eval_even_speed);
+            if let Some(offset) = offset {
+                sampler = sampler.with_fixed_offset(*offset);
+            }
+            PreparedSampler::Shredder(sampler)
         }
         SamplerSpec::FaultLine {
             seed,
             intensity,
             split_bias,
+            offset,
         } => {
             let eval_intensity = intensity.evaluate(t, &signal_ctx).unwrap_or(1.0);
-            PreparedSampler::FaultLine(FaultLine::new(*seed, eval_intensity, *split_bias))
+            let mut sampler = FaultLine::new(*seed, eval_intensity, *split_bias);
+            if let Some(offset) = offset {
+                sampler = sampler.with_fixed_offset(*offset);
+            }
+            PreparedSampler::FaultLine(sampler)
         }
         SamplerSpec::Crt {
             curvature,

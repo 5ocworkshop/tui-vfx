@@ -1273,7 +1273,7 @@
         ]
       },
       "KittScanner": {
-        "ai_hint": "Ping-pong scanner (KITT/Larson) effect — horizontal or vertical.\nboost: brightness increase (default 50).\nband_width: scanner band width as fraction of the active axis extent (0.15 default, 0.0-0.5).\nbpm: optional human-friendly beats-per-minute cadence; overrides bps when present.\nbps: beats per second for ping-pong cycle (1.2 default = 72 BPM healthy resting cadence).\nprogress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).\nmotion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).\naxis: 'horizontal' (default — band sweeps left↔right; classic KITT) or 'vertical' (band sweeps top↔bottom; column-wise reveals such as TTE Beams, scanline-down, top-down stage lights).\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nCadence-driven motion uses monotonic elapsed time; bpm/bps set the scanner rate independently of recipe loop period.\nClassic Knight Rider aesthetic for retro sci-fi hover states (horizontal); vertical axis covers reveal/scan effects that previously needed a sampler chain.",
+        "ai_hint": "Ping-pong scanner (KITT/Larson) effect — horizontal or vertical.\nboost: brightness increase (default 50).\nband_width: scanner band width as fraction of the active axis extent (0.15 default, 0.0-0.5).\nscan_color/trail_color: optional exact scanner head/trail colors.\nband_width_cells: optional authored scanner width in terminal cells, overriding band_width at apply time.\nbpm: optional human-friendly beats-per-minute cadence; overrides bps when present.\nbps: beats per second for ping-pong cycle (1.2 default = 72 BPM healthy resting cadence).\nprogress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).\nmotion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wrap'/'reverse_wrap' for one-way wrap sweep (lighthouse-style beam).\naxis: 'horizontal' (default — band sweeps left↔right; classic KITT) or 'vertical' (band sweeps top↔bottom; column-wise reveals such as TTE Beams, scanline-down, top-down stage lights).\napply_to: which channel to boost (fg, bg, or both) when not in powerline mode.\npowerline_mode: true to handle powerline separators safely.\nboost_separator_bg: true to also boost separator backgrounds in powerline mode.\nboost_separator_bg_color: optional exact separator background color when boosted.\nboost_separator_bg: true to also boost separator backgrounds for continuous powerlines.\nCadence-driven motion uses monotonic elapsed time; bpm/bps set the scanner rate independently of recipe loop period.\nClassic Knight Rider aesthetic for retro sci-fi hover states (horizontal); vertical axis covers reveal/scan effects that previously needed a sampler chain.",
         "complexity": "simple",
         "energy": "moderate",
         "name": "KittScanner",
@@ -1287,9 +1287,27 @@
           },
           {
             "default": "0.15",
-            "doc": "Width of the scanner band (0.0-0.5 of total width)",
+            "doc": "Width of the scanner band (0.0-0.5 of total sweep extent)",
             "name": "band_width",
             "ty": "f32"
+          },
+          {
+            "default": "none",
+            "doc": "Optional exact scanner head color.\n\nWhen both `scan_color` and `trail_color` are present, the runtime\npaints cells inside the scanner band from trail edge to scan head\ninstead of only boosting the existing colors.",
+            "name": "scan_color",
+            "ty": "Option<ColorConfig>"
+          },
+          {
+            "default": "none",
+            "doc": "Optional exact scanner trail color paired with `scan_color`.",
+            "name": "trail_color",
+            "ty": "Option<ColorConfig>"
+          },
+          {
+            "default": "none",
+            "doc": "Optional authored band width in terminal cells.\n\nThis preserves recipe fields named `width`/cell-sized `bandWidth`\nwithout forcing callers to pre-normalize by the render extent.",
+            "name": "band_width_cells",
+            "ty": "Option<u16>"
           },
           {
             "default": "72 BPM",
@@ -1338,6 +1356,12 @@
             "doc": "When true AND powerline_mode is true, also boost separator backgrounds.\nUse when powerline has continuous background (not terminal bg).",
             "name": "boost_separator_bg",
             "ty": "bool"
+          },
+          {
+            "default": "none",
+            "doc": "Optional exact separator background color used when\n`boost_separator_bg` is active in powerline mode.",
+            "name": "boost_separator_bg_color",
+            "ty": "Option<ColorConfig>"
           }
         ],
         "premium": false,
@@ -1405,7 +1429,7 @@
         ]
       },
       "PatternFill": {
-        "ai_hint": "Background texture patterns.\npattern: Single (char), Checkerboard (char_a, char_b), HorizontalLines, VerticalLines.\ncolor: pattern color. only_empty: only fill empty cells.\nSee PatternType variants for full options.",
+        "ai_hint": "Background texture patterns.\npattern: Single (char), Checkerboard (char_a, char_b), HorizontalLines, VerticalLines.\ncolor: pattern color. only_empty: only fill empty cells.\ndensity: deterministic fill density from 0.0 to 1.0.\nSee PatternType variants for full options.",
         "complexity": "simple",
         "energy": "calm",
         "name": "PatternFill",
@@ -1428,6 +1452,12 @@
             "doc": "If true, only fill cells that are empty (whitespace)",
             "name": "only_empty",
             "ty": "bool"
+          },
+          {
+            "default": "1",
+            "doc": "Fraction of candidate cells to fill.",
+            "name": "density",
+            "ty": "f32"
           }
         ],
         "premium": false,
@@ -2042,7 +2072,7 @@
         ]
       },
       "NoiseDither": {
-        "ai_hint": "Dithered noise pattern transition.\nseed: randomization seed for consistent patterns.\nmatrix: Bayer4 (subtle 4x4 dither), Bayer8 (more visible 8x8 dither).",
+        "ai_hint": "Dithered noise pattern transition.\nseed: randomization seed for consistent patterns.\nmatrix: Bayer4 (subtle 4x4 dither), Bayer8 (more visible 8x8 dither).\nchunk_size: cell block size that shares each dither threshold (1 = per-cell).",
         "complexity": "simple",
         "energy": "calm",
         "name": "NoiseDither",
@@ -2059,6 +2089,12 @@
             "doc": "Dither matrix size.\n\nLarger matrices produce smoother but less distinctive patterns.",
             "name": "matrix",
             "ty": "DitherMatrix"
+          },
+          {
+            "default": "1",
+            "doc": "Size of grouped dither cells.\n\nA value greater than one makes neighboring cells share the same\ndither threshold, matching debug-recipes that author `chunkSize`.",
+            "name": "chunk_size",
+            "ty": "u8"
           }
         ],
         "premium": false,
@@ -2247,7 +2283,7 @@
         ]
       },
       "FaultLine": {
-        "ai_hint": "Fault line displacement like tectonic shift.\nseed: randomization seed for fault placement.\nintensity: displacement amount.\nsplit_bias: tendency to split horizontally vs vertically.\nEarthquake/glitch effect for errors or dramatic moments.",
+        "ai_hint": "Fault line displacement like tectonic shift.\nseed: randomization seed for fault placement.\nintensity: displacement amount.\nsplit_bias: tendency to split horizontally vs vertically.\noffset: optional fixed lower-half displacement in cells for source-schema exact lowering.\nEarthquake/glitch effect for errors or dramatic moments.",
         "complexity": "moderate",
         "energy": "intense",
         "name": "FaultLine",
@@ -2270,6 +2306,12 @@
             "doc": "Bias toward upper (-1.0) or lower (+1.0) splits.",
             "name": "split_bias",
             "ty": "f32"
+          },
+          {
+            "default": "None",
+            "doc": "Optional fixed horizontal offset for player-authored fault-line effects.",
+            "name": "offset",
+            "ty": "Option<i16>"
           }
         ],
         "premium": false,
@@ -2342,7 +2384,7 @@
         ]
       },
       "Shredder": {
-        "ai_hint": "Paper shredder strips effect for destruction/transitions.\nstripe_width: width of each strip in cells.\nodd_speed: movement speed of odd-numbered strips.\neven_speed: movement speed of even-numbered strips (opposite creates shearing).",
+        "ai_hint": "Paper shredder strips effect for destruction/transitions.\nstripe_width: width of each strip in cells.\nodd_speed: movement speed of odd-numbered strips.\neven_speed: movement speed of even-numbered strips (opposite creates shearing).\noffset: optional fixed strip displacement in cells for source-schema exact lowering.",
         "complexity": "moderate",
         "energy": "intense",
         "name": "Shredder",
@@ -2365,6 +2407,12 @@
             "doc": "Speed of even-indexed stripes.",
             "name": "even_speed",
             "ty": "SignalOrFloat"
+          },
+          {
+            "default": "None",
+            "doc": "Optional fixed horizontal offset for player-authored slice effects.",
+            "name": "offset",
+            "ty": "Option<i16>"
           }
         ],
         "premium": false,

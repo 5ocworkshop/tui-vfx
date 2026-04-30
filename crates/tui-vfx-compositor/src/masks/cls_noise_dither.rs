@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/masks/cls_noise_dither.rs</FILE> - <DESC>NoiseDither mask implementation</DESC>
-// <VERS>VERSION: 1.2.0</VERS>
-// <WCTX>Slice 6.6 §F.3 — migrate Mask trait to &VfxCellContext</WCTX>
-// <CLOG>1.2.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/t replace positional params (width/height not read by this impl).</CLOG>
+// <VERS>VERSION: 1.3.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: honor authored chunkSize by grouping dither samples before threshold lookup.</WCTX>
+// <CLOG>1.3.0: add chunk_size to NoiseDither and quantize threshold lookup coordinates by chunk.
+// 1.2.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/t replace positional params (width/height not read by this impl).</CLOG>
 
 use crate::traits::mask::Mask;
 use crate::types::cls_mask_spec::DitherMatrix;
@@ -18,22 +19,31 @@ pub struct NoiseDither {
     pub seed: u64,
     /// Dither matrix size
     pub matrix: DitherMatrix,
+    /// Size of grouped dither cells.
+    pub chunk_size: u8,
 }
 
 impl Default for NoiseDither {
     fn default() -> Self {
-        Self::new(0, DitherMatrix::Bayer4)
+        Self::new(0, DitherMatrix::Bayer4, 1)
     }
 }
 
 impl NoiseDither {
     /// Create a new NoiseDither mask.
-    pub fn new(seed: u64, matrix: DitherMatrix) -> Self {
-        Self { seed, matrix }
+    pub fn new(seed: u64, matrix: DitherMatrix, chunk_size: u8) -> Self {
+        Self {
+            seed,
+            matrix,
+            chunk_size: chunk_size.max(1),
+        }
     }
 
     /// Get the dither threshold based on position and matrix
     fn dither_threshold(&self, x: u16, y: u16) -> f32 {
+        let chunk_size = self.chunk_size as u16;
+        let x = x / chunk_size;
+        let y = y / chunk_size;
         // Bayer dither matrices for ordered dithering
         const BAYER4: [[f32; 4]; 4] = [
             [0.0 / 16.0, 8.0 / 16.0, 2.0 / 16.0, 10.0 / 16.0],
@@ -163,21 +173,21 @@ mod tests {
 
     #[test]
     fn test_noise_dither_progress_zero_not_visible() {
-        let mask = NoiseDither::new(0, DitherMatrix::Bayer4);
+        let mask = NoiseDither::new(0, DitherMatrix::Bayer4, 1);
         // All thresholds are >= 0, so progress 0 should be invisible everywhere
         assert!(!mask.is_visible(&ctx_at(1, 1, 10, 10, 0.0)));
     }
 
     #[test]
     fn test_noise_dither_progress_one_visible() {
-        let mask = NoiseDither::new(0, DitherMatrix::Bayer4);
+        let mask = NoiseDither::new(0, DitherMatrix::Bayer4, 1);
         // All thresholds are < 1.0, so progress 1.0 should be visible everywhere
         assert!(mask.is_visible(&ctx_at(1, 1, 10, 10, 1.0)));
     }
 
     #[test]
     fn test_noise_dither_bayer4_deterministic() {
-        let mask = NoiseDither::new(0, DitherMatrix::Bayer4);
+        let mask = NoiseDither::new(0, DitherMatrix::Bayer4, 1);
         // Same position with same seed should give consistent results
         let v1 = mask.is_visible(&ctx_at(3, 7, 10, 10, 0.5));
         let v2 = mask.is_visible(&ctx_at(3, 7, 10, 10, 0.5));
@@ -186,7 +196,7 @@ mod tests {
 
     #[test]
     fn test_noise_dither_bayer8_deterministic() {
-        let mask = NoiseDither::new(0, DitherMatrix::Bayer8);
+        let mask = NoiseDither::new(0, DitherMatrix::Bayer8, 1);
         let v1 = mask.is_visible(&ctx_at(5, 3, 10, 10, 0.5));
         let v2 = mask.is_visible(&ctx_at(5, 3, 10, 10, 0.5));
         assert_eq!(v1, v2);
@@ -194,7 +204,7 @@ mod tests {
 
     #[test]
     fn test_noise_dither_partial_progress() {
-        let mask = NoiseDither::new(0, DitherMatrix::Bayer4);
+        let mask = NoiseDither::new(0, DitherMatrix::Bayer4, 1);
         // At progress 0.5, roughly half the pixels should be visible
         let mut visible_count = 0;
         for x in 0..4 {
@@ -207,7 +217,14 @@ mod tests {
         // Should be approximately 8 out of 16 (half)
         assert!(visible_count > 4 && visible_count < 12);
     }
+
+    #[test]
+    fn chunk_size_groups_neighboring_cells() {
+        let mask = NoiseDither::new(0, DitherMatrix::Bayer4, 2);
+        assert_eq!(mask.dither_threshold(0, 0), mask.dither_threshold(1, 1));
+        assert_eq!(mask.dither_threshold(2, 0), mask.dither_threshold(3, 1));
+    }
 }
 
 // <FILE>tui-vfx-compositor/src/masks/cls_noise_dither.rs</FILE> - <DESC>NoiseDither mask implementation</DESC>
-// <VERS>END OF VERSION: 1.2.0</VERS>
+// <VERS>END OF VERSION: 1.3.0</VERS>

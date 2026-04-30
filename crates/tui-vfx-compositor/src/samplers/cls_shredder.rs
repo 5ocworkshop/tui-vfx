@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_shredder.rs</FILE> - <DESC>Shredder sampler implementation</DESC>
-// <VERS>VERSION: 2.2.0</VERS>
-// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
-// <CLOG>2.2.0: sample() now returns SamplerOutput; displacing branch carries delta_y; gap case returns no_displacement().</CLOG>
+// <VERS>VERSION: 2.3.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: support fixed horizontal chunk offsets authored by debug sampler fixtures.</WCTX>
+// <CLOG>2.3.0: add optional fixed_offset mode for horizontal chunk shifts while preserving the existing falling-strip default.
+// 2.2.0: sample() now returns SamplerOutput; displacing branch carries delta_y; gap case returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
 use tui_vfx_types::VfxCellContext;
@@ -18,6 +19,8 @@ pub struct Shredder {
     pub odd_speed: f32,
     /// Speed multiplier for even-indexed strips
     pub even_speed: f32,
+    /// Optional fixed horizontal offset for row/chunk fixtures.
+    pub fixed_offset: Option<i16>,
 }
 
 impl Default for Shredder {
@@ -33,15 +36,40 @@ impl Shredder {
             stripe_width: stripe_width.max(1),
             odd_speed,
             even_speed,
+            fixed_offset: None,
         }
+    }
+
+    /// Use a fixed horizontal row/chunk offset instead of falling-strip motion.
+    pub fn with_fixed_offset(mut self, offset: i16) -> Self {
+        self.fixed_offset = Some(offset);
+        self
     }
 }
 
 impl Sampler for Shredder {
     fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
-        let t = ctx.t as f32;
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
+        if let Some(offset) = self.fixed_offset {
+            if !dest_y.is_multiple_of(2) {
+                return SamplerOutput::passthrough(dest_x, dest_y);
+            }
+            let strip_idx = dest_x / self.stripe_width;
+            let local_offset = if strip_idx.is_multiple_of(2) {
+                offset
+            } else {
+                -offset
+            } as i32;
+            let src_x_i = dest_x as i32 - local_offset;
+            if src_x_i < 0 || src_x_i >= ctx.width as i32 {
+                return SamplerOutput::no_displacement();
+            }
+            let src_x = src_x_i as u16;
+            return SamplerOutput::displaced(src_x, dest_y, src_x as i32 - dest_x as i32, 0);
+        }
+
+        let t = ctx.t as f32;
         let height = ctx.height;
 
         // Vertical strips: each column group falls at a different speed.
@@ -190,4 +218,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_shredder.rs</FILE> - <DESC>Shredder sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.2.0</VERS>
+// <VERS>END OF VERSION: 2.3.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/types/cls_mask_spec.rs</FILE> - <DESC>MaskSpec enum with full parameters</DESC>
-// <VERS>VERSION: 2.4.0</VERS>
-// <WCTX>Audit recommendation 1.2 + 1.3 — replace the locally-defined WipeDirection enum with a re-export of the canonical tui_vfx_geometry::WipeDirection so the mask, the RevealWipe shader, and the V3 grouped reveal family all share one source of truth and the new corner-out / corner-in variants are visible at every layer simultaneously.</WCTX>
-// <CLOG>2.4.0: replace local WipeDirection definition with a `pub use tui_vfx_geometry::WipeDirection` re-export. Local definition kept zero behavioural changes — same variants, same serde, same aliases — but is now a single source of truth that also carries the new CornerOutFrom* / CornerInTo* variants. All existing recipes continue to parse identically. The MaskSpec docs still cite the same direction families.
+// <VERS>VERSION: 2.5.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: carry NoiseDither chunk grouping through the compositor spec so player-authored chunkSize fields lower without semantic loss.</WCTX>
+// <CLOG>2.5.0: add NoiseDither.chunk_size with a default to preserve existing JSON while representing grouped dither cells.
+// 2.4.0: replace local WipeDirection definition with a `pub use tui_vfx_geometry::WipeDirection` re-export. Local definition kept zero behavioural changes — same variants, same serde, same aliases — but is now a single source of truth that also carries the new CornerOutFrom* / CornerInTo* variants. All existing recipes continue to parse identically. The MaskSpec docs still cite the same direction families.
 // 2.3.2: V3 MASK lane hardening</CLOG>
 
 //! # Mask Specifications
@@ -156,6 +157,10 @@ fn default_materialize_noise() -> f32 {
 
 fn default_materialize_soft_edge() -> bool {
     true
+}
+
+fn default_noise_dither_chunk_size() -> u8 {
+    1
 }
 
 impl Default for Materialize {
@@ -356,6 +361,7 @@ pub enum MaskSpec {
     ///
     /// - `seed`: Random seed for pattern variation
     /// - `matrix`: Dither matrix size (Bayer4 or Bayer8)
+    /// - `chunk_size`: Size of grouped dither cells
     ///
     /// # Matrix Selection
     ///
@@ -369,6 +375,13 @@ pub enum MaskSpec {
         ///
         /// Larger matrices produce smoother but less distinctive patterns.
         matrix: DitherMatrix,
+
+        /// Size of grouped dither cells.
+        ///
+        /// A value greater than one makes neighboring cells share the same
+        /// dither threshold, matching debug-recipes that author `chunkSize`.
+        #[serde(default = "default_noise_dither_chunk_size")]
+        chunk_size: u8,
     },
 
     /// Organic materialization reveal that blends an origin-biased field with deterministic noise.
@@ -629,9 +642,14 @@ impl MaskSpec {
                 ("noise", format!("{}", noise)),
                 ("soft_edge", format!("{}", soft_edge)),
             ],
-            MaskSpec::NoiseDither { seed, matrix } => vec![
+            MaskSpec::NoiseDither {
+                seed,
+                matrix,
+                chunk_size,
+            } => vec![
                 ("seed", format!("{}", seed)),
                 ("matrix", format!("{:?}", matrix)),
+                ("chunk_size", format!("{}", chunk_size)),
             ],
             MaskSpec::PathReveal { path, soft_edge } => vec![
                 ("path", format!("{:?}", path)),
@@ -778,4 +796,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_mask_spec.rs</FILE> - <DESC>MaskSpec enum with full parameters</DESC>
-// <VERS>END OF VERSION: 2.3.2</VERS>
+// <VERS>END OF VERSION: 2.5.0</VERS>

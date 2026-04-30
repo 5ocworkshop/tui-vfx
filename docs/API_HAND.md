@@ -361,7 +361,7 @@ Masks control cell visibility based on position and animation progress `t`.
 | `Blinds` | Venetian blinds | `orientation`, `count` |
 | `Iris` | Spotlight/iris reveal | `shape`, `soft_edge` |
 | `Diamond` | Diamond expand | `soft_edge` |
-| `NoiseDither` | Dithered noise | `seed`, `matrix` |
+| `NoiseDither` | Dithered noise | `seed`, `matrix`, `chunk_size` |
 | `PathReveal` | Spiral / radial sweep | `path`, `soft_edge` |
 | `Radial` | Radial expansion | `origin`, `soft_edge` |
 | `Cellular` | Organic cells | `pattern`, `seed`, `cell_count` |
@@ -444,7 +444,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `Tint` | Color overlay | `color: ColorConfig`, `strength: SignalOrFloat`, `apply_to` |
 | `Vignette` | Edge darkening | `strength: SignalOrFloat`, `radius: SignalOrFloat` |
 | `Crt` | CRT scanlines/glow | `scanline_strength: SignalOrFloat`, `glow: SignalOrFloat` |
-| `PatternFill` | Background texture | `pattern: PatternType`, `color: Option<ColorConfig>`, `only_empty: bool` |
+| `PatternFill` | Background texture | `pattern: PatternType`, `color: Option<ColorConfig>`, `only_empty: bool`, `density: f32` |
 | `Greyscale` | BT.601 desaturation | `strength: SignalOrFloat`, `apply_to` |
 | `BrailleDust` | Animated braille dust | `density`, `hz`, `seed`, `pattern: BraillePatternType`, `color: Option<ColorConfig>`, `drift` |
 | `CharsetNoise` | Time-varying char replacement (living textures) | `hz`, `seed`, `jitter`, `affect: CharsetNoiseAffect`, `chars: Option<String>` (flat) or `gradient: Option<Vec<CharsetNoiseGradientStop>>` (position-aware) |
@@ -460,7 +460,7 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `DotIndicator` | Dot/bullet marker | `indicator_char: char`, `position: HoverBarPosition`, `color`, `bg_color`, `progress` |
 | `PillButton` | Pill button with gradient edges | `button_color`, `bg_color`, `edge_width`, `glisten: bool`, `progress` |
 | `GlistenSweep` | Diagonal 45° highlight sweep | `boost: u8`, `band_width: f32`, `speed: f32`, `progress: f32`, `powerline_mode: bool`, `boost_separator_bg: bool` |
-| `KittScanner` | Scanner sweep (ping-pong or one-way wrap), horizontal or vertical | `boost: u8`, `band_width: f32`, `bpm: Option<f32>`, `bps: f32`, `progress: f32`, `motion_mode`, `axis: ScannerAxis`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool` |
+| `KittScanner` | Scanner sweep (ping-pong or one-way wrap), horizontal or vertical | `boost: u8`, `band_width: f32`, `scan_color: Option<ColorConfig>`, `trail_color: Option<ColorConfig>`, `band_width_cells: Option<u16>`, `bpm: Option<f32>`, `bps: f32`, `progress: f32`, `motion_mode`, `axis: ScannerAxis`, `apply_to`, `powerline_mode: bool`, `boost_separator_bg: bool`, `boost_separator_bg_color: Option<ColorConfig>` |
 | `ShadeScanner` | Ping-pong scanner w/ shade overlay | `shade_color`, `bps: f32`, `progress: f32` |
 
 ### ApplyTo
@@ -540,8 +540,8 @@ Samplers transform coordinate space before cell lookup.
 | `None` | No transform | - |
 | `SineWave` | Sinusoidal wave | `axis`, `amplitude`, `frequency`, `speed`, `phase` |
 | `Ripple` | Circular ripple | `amplitude`, `wavelength`, `speed`, `center` |
-| `Shredder` | Paper shredder | `stripe_width`, `odd_speed`, `even_speed` |
-| `FaultLine` | Displacement fault | `seed`, `intensity`, `split_bias` |
+| `Shredder` | Paper shredder | `stripe_width`, `odd_speed`, `even_speed`, `offset` |
+| `FaultLine` | Displacement fault | `seed`, `intensity`, `split_bias`, `offset` |
 | `Crt` | CRT distortion | `scanline_strength`, `jitter`, `curvature` |
 | `CrtJitter` | CRT crash/jitter | `intensity`, `speed_hz`, `decay_ms` |
 

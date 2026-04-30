@@ -751,6 +751,282 @@ fn test_fnc_cli_rejects_native_remaining_content_transform_unsupported_shapes_js
 }
 
 #[test]
+fn test_fnc_cli_renders_compositor_backend_native_exact_effect_blocker_subset_json() {
+    for (recipe, recipe_id, effect_id, summary_key) in [
+        (
+            "shaders/primitives/shader_reveal_wipe.json",
+            "debugShaderRevealWipe",
+            "shader.revealWipe",
+            "shaderLayers",
+        ),
+        (
+            "shaders/primitives/shader_reveal_wipe_corner_out_top_left.json",
+            "debugShaderRevealWipeCornerOutTopLeft",
+            "shader.revealWipe",
+            "shaderLayers",
+        ),
+        (
+            "shaders/primitives/shader_reveal_wipe_right_to_left.json",
+            "debugShaderRevealWipeRightToLeft",
+            "shader.revealWipe",
+            "shaderLayers",
+        ),
+        (
+            "filters/filter_pattern_fill.json",
+            "debugFilterPatternFill",
+            "filter.patternFill",
+            "filters",
+        ),
+        (
+            "filters/filter_pattern_fill_density_anchors.json",
+            "debugFilterPatternFillDensityAnchors",
+            "filter.patternFill",
+            "filters",
+        ),
+        (
+            "filters/filter_kitt_scanner.json",
+            "debugFilterKittScanner",
+            "filter.kittScanner",
+            "filters",
+        ),
+        (
+            "filters/filter_kitt_scanner_vertical.json",
+            "debugFilterKittScannerVertical",
+            "filter.kittScanner",
+            "filters",
+        ),
+        (
+            "masks/mask_materialize_center.json",
+            "debugMaskMaterializeCenter",
+            "mask.materialize",
+            "masks",
+        ),
+        (
+            "masks/mask_materialize_corner.json",
+            "debugMaskMaterializeCorner",
+            "mask.materializeCorner",
+            "masks",
+        ),
+        (
+            "masks/mask_materialize_progress.json",
+            "debugMaskMaterializeProgress",
+            "mask.materialize",
+            "masks",
+        ),
+        (
+            "masks/mask_noise_dither.json",
+            "debugMaskNoiseDither",
+            "mask.noiseDither",
+            "masks",
+        ),
+        (
+            "masks/mask_noise_dither_seed_profile.json",
+            "debugMaskNoiseDitherSeedProfile",
+            "mask.noiseDither",
+            "masks",
+        ),
+        (
+            "samplers/sampler_faultline.json",
+            "debugSamplerFaultLine",
+            "sampler.faultLine",
+            "samplers",
+        ),
+        (
+            "samplers/sampler_faultline_offset_positive.json",
+            "debugSamplerFaultlineOffsetPositive",
+            "sampler.faultLine",
+            "samplers",
+        ),
+        (
+            "samplers/sampler_shredder.json",
+            "debugSamplerShredder",
+            "sampler.shredder",
+            "samplers",
+        ),
+        (
+            "samplers/sampler_shredder_slice_width_stride.json",
+            "debugSamplerShredderSliceWidthStride",
+            "sampler.shredder",
+            "samplers",
+        ),
+        (
+            "samplers/sampler_radial_twist_strength_extremes.json",
+            "debugSamplerRadialTwistStrengthExtremes",
+            "sampler.radialTwist",
+            "samplers",
+        ),
+        (
+            "samplers/sampler_radial_twist_v3.json",
+            "debugSamplerRadialTwist",
+            "sampler.radialTwist",
+            "samplers",
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase-t"),
+                str_arg("0.35"),
+            ],
+            "render-backend native exact effect blocker subset player cli",
+        );
+
+        assert_eq!(report["backend"], "compositor", "{recipe}");
+        assert_eq!(report["recipeId"], recipe_id, "{recipe}");
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
+        assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
+        assert_eq!(report["compositionSpecSummary"][summary_key], 1, "{recipe}");
+        assert!(
+            report["loweredEffectIds"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!(effect_id)),
+            "{recipe}"
+        );
+        assert!(
+            report["diagnostics"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_exact_effect_blocker_subset_unsupported_shapes_json() {
+    for (effect_name, recipe_path_fragment, output_input_id) in [
+        (
+            "reveal_wipe",
+            "shaders/primitives/shader_reveal_wipe.json",
+            "direction",
+        ),
+        (
+            "pattern_fill",
+            "filters/filter_pattern_fill.json",
+            "pattern",
+        ),
+        (
+            "kitt_scanner",
+            "filters/filter_kitt_scanner.json",
+            "scanColor",
+        ),
+        (
+            "materialize",
+            "masks/mask_materialize_center.json",
+            "origin",
+        ),
+        ("noise_dither", "masks/mask_noise_dither.json", "seed"),
+        ("fault_line", "samplers/sampler_faultline.json", "offset"),
+        ("shredder", "samplers/sampler_shredder.json", "sliceWidth"),
+        (
+            "radial_twist",
+            "samplers/sampler_radial_twist_v3.json",
+            "strength",
+        ),
+    ] {
+        for (mutation_name, recipe) in [
+            (
+                "unsupported_input",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    Some(("unsupportedNativeField", unsupported_native_input())),
+                    None,
+                    None,
+                ),
+            ),
+            (
+                "unsupported_output",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    None,
+                    Some(serde_json::json!({
+                        "debugOutput": {
+                            "source": {
+                                "kind": "input",
+                                "id": output_input_id
+                            }
+                        }
+                    })),
+                    None,
+                ),
+            ),
+            (
+                "unsupported_scope",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    None,
+                    None,
+                    Some(serde_json::json!({
+                        "kind": "rowRange",
+                        "start": 0,
+                        "end": 1
+                    })),
+                ),
+            ),
+        ] {
+            let temp_root = std::env::temp_dir().join(format!(
+                "tui-vfx-native-{effect_name}-{mutation_name}-unsupported"
+            ));
+            let _ = fs::remove_dir_all(&temp_root);
+            fs::create_dir_all(&temp_root)
+                .expect("create temp unsupported exact effect fixture root");
+            let recipe_path = temp_root.join(format!("{effect_name}_{mutation_name}.json"));
+            fs::write(
+                &recipe_path,
+                serde_json::to_string_pretty(&recipe)
+                    .expect("serialize unsupported exact effect recipe"),
+            )
+            .expect("write unsupported exact effect recipe");
+
+            let output = run_player_cli(
+                vec![
+                    str_arg("render-backend"),
+                    str_arg("--recipe"),
+                    recipe_path.display().to_string(),
+                    str_arg("--descriptor-pack"),
+                    descriptor_pack_path(),
+                    str_arg("--backend"),
+                    str_arg("compositor"),
+                    str_arg("--composition-mode"),
+                    str_arg("native"),
+                    str_arg("--fail-on-fallback"),
+                    str_arg("--format"),
+                    str_arg("json"),
+                ],
+                "render-backend native unsupported exact effect blocker subset player cli",
+            );
+
+            assert!(
+                !output.status.success(),
+                "{effect_name}/{mutation_name} unexpectedly succeeded"
+            );
+            assert!(
+                stderr(&output).contains("unsupportedNativeEffect"),
+                "{effect_name}/{mutation_name} stderr: {}",
+                stderr(&output)
+            );
+        }
+    }
+}
+
+#[test]
 fn test_fnc_cli_renders_compositor_backend_ir_resolved_metadata_json() {
     let report = player_cli_json(
         vec![
@@ -2903,6 +3179,27 @@ fn unsupported_content_recipe(
     recipe
 }
 
+fn unsupported_native_effect_shape_recipe(
+    relative_recipe_path: &str,
+    unsupported_input: Option<(&str, serde_json::Value)>,
+    outputs: Option<serde_json::Value>,
+    scope: Option<serde_json::Value>,
+) -> serde_json::Value {
+    let text = fs::read_to_string(debug_recipe_root().join(relative_recipe_path))
+        .expect("read effect fixture");
+    let mut recipe: serde_json::Value = serde_json::from_str(&text).expect("effect fixture parses");
+    if let Some((key, value)) = unsupported_input {
+        recipe["graph"]["nodes"]["effectNode"]["inputs"][key] = value;
+    }
+    if let Some(outputs) = outputs {
+        recipe["graph"]["nodes"]["effectNode"]["outputs"] = outputs;
+    }
+    if let Some(scope) = scope {
+        recipe["graph"]["nodes"]["effectNode"]["scope"] = scope;
+    }
+    recipe
+}
+
 fn unsupported_native_input() -> serde_json::Value {
     serde_json::json!({
         "kind": "literal",
@@ -2914,4 +3211,4 @@ fn unsupported_native_input() -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.12.0</VERS>
+// <VERS>END OF VERSION: 0.13.0</VERS>

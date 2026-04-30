@@ -216,7 +216,7 @@ Masks control cell visibility based on position and animation progress `t`.
 | `Dissolve` | Random pixel dissolve effect | `seed`, `chunk_size` |
 | `Iris` | Iris/spotlight reveal from center | `shape`, `soft_edge` |
 | `Materialize` | Organic materialization reveal with origin bias and noise | `origin`, `seed`, `chunk_size`, `noise`, `soft_edge` |
-| `NoiseDither` | Dithered noise pattern reveal | `seed`, `matrix` |
+| `NoiseDither` | Dithered noise pattern reveal | `seed`, `matrix`, `chunk_size` |
 | `None` | No mask applied — content is fully visible | - |
 | `PathReveal` | Path-based reveal (spiral, radial sweep) | `path`, `soft_edge` |
 | `Radial` | Radial reveal expanding from configurable origin | `origin`, `soft_edge` |
@@ -315,10 +315,10 @@ Filters modify cell colors/styles after rendering (applied in order).
 | `HoverBar` | Progress-driven partial bar indicator for hover states | `base_eighths`, `max_eighths`, `position`, `progress` |
 | `InterlaceCurtain` | Scanline/interlace effect for backdrop dimming | `density`, `dim_factor`, `scroll_speed` |
 | `Invert` | Invert colors | `apply_to` |
-| `KittScanner` | Horizontal ping-pong scanner effect (KITT/Larson) | `boost`, `band_width`, `bpm`, `bps`, `progress`, `motion_mode`, `axis`, `apply_to`, `powerline_mode`, `boost_separator_bg` |
+| `KittScanner` | Horizontal ping-pong scanner effect (KITT/Larson) | `boost`, `band_width`, `scan_color`, `trail_color`, `band_width_cells`, `bpm`, `bps`, `progress`, `motion_mode`, `axis`, `apply_to`, `powerline_mode`, `boost_separator_bg`, `boost_separator_bg_color` |
 | `MotionBlur` | Motion blur trail effect with directional dimming | `trail_length`, `opacity_decay`, `direction` |
 | `None` | No filter effect | - |
-| `PatternFill` | Pattern fill effect for background textures | `pattern`, `color`, `only_empty` |
+| `PatternFill` | Pattern fill effect for background textures | `pattern`, `color`, `only_empty`, `density` |
 | `PillButton` | Pill-shaped button with gradient edges | `edge_width`, `glisten`, `progress` |
 | `RigidShake` | Rigid body shake filter with damped oscillation | `shake_period`, `num_shakes`, `pause_duration`, `max_eighths` |
 | `ScalarFieldGlyph` | Scalar-field-to-glyph filter: samples a 2D signal and encodes per-cell intensity as braille, block, or ramp glyphs | `encoder`, `threshold`, `only_blank`, `recolor` |
@@ -386,10 +386,10 @@ Samplers transform coordinate space before cell lookup.
 | --- | --- | --- |
 | `Crt` | CRT monitor effect with scanlines and curvature | `scanline_strength`, `jitter`, `curvature` |
 | `CrtJitter` | CRT crash/jitter effect with decay | `intensity`, `speed_hz`, `decay_ms` |
-| `FaultLine` | Fault line displacement effect | `seed`, `intensity`, `split_bias` |
+| `FaultLine` | Fault line displacement effect | `seed`, `intensity`, `split_bias`, `offset` |
 | `None` | No coordinate transformation | - |
 | `Ripple` | Circular ripple distortion from center point | `amplitude`, `wavelength`, `speed`, `center` |
-| `Shredder` | Paper shredder effect with alternating strips | `stripe_width`, `odd_speed`, `even_speed` |
+| `Shredder` | Paper shredder effect with alternating strips | `stripe_width`, `odd_speed`, `even_speed`, `offset` |
 | `SineWave` | Sinusoidal wave distortion | `axis`, `amplitude`, `frequency`, `speed`, `phase` |
 
 ### Axis

@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/types/cls_sampler_spec.rs</FILE> - <DESC>SamplerSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 2.7.0</VERS>
-// <WCTX>Compositor clippy cleanup pass</WCTX>
-// <CLOG>2.7.0: add RadialTwist sampler spec for center-weighted coordinate warps discovered from whoa.
+// <VERS>VERSION: 2.8.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: carry authored fixed offsets for fault-line and shredder samplers.</WCTX>
+// <CLOG>2.8.0: add optional offset fields to Shredder and FaultLine while preserving existing dynamic defaults.
+// 2.7.0: add RadialTwist sampler spec for center-weighted coordinate warps discovered from whoa.
 // 2.6.1: PATCH — collapse nested if-let in V3 payload normalization into Rust-2024 let-chains per clippy.
 // 2.6.0: add SamplerSpec::try_from_v3_payload for engine-owned sine-wave and ripple payload normalization from V3-authored forms.</CLOG>
 
@@ -255,6 +256,10 @@ pub enum SamplerSpec {
         /// Speed of even-indexed stripes.
         #[serde(default = "default_shredder_even_speed")]
         even_speed: SignalOrFloat,
+
+        /// Optional fixed horizontal offset for player-authored slice effects.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        offset: Option<i16>,
     },
 
     /// Fault line displacement effect.
@@ -277,6 +282,10 @@ pub enum SamplerSpec {
 
         /// Bias toward upper (-1.0) or lower (+1.0) splits.
         split_bias: f32,
+
+        /// Optional fixed horizontal offset for player-authored fault-line effects.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        offset: Option<i16>,
     },
 
     /// CRT monitor effect with scanlines and curvature.
@@ -678,19 +687,23 @@ impl SamplerSpec {
                 stripe_width,
                 odd_speed,
                 even_speed,
+                offset,
             } => vec![
                 ("stripe_width", format!("{}", stripe_width)),
                 ("odd_speed", format!("{:?}", odd_speed)),
                 ("even_speed", format!("{:?}", even_speed)),
+                ("offset", format!("{:?}", offset)),
             ],
             SamplerSpec::FaultLine {
                 seed,
                 intensity,
                 split_bias,
+                offset,
             } => vec![
                 ("seed", format!("{}", seed)),
                 ("intensity", format!("{:?}", intensity)),
                 ("split_bias", format!("{}", split_bias)),
+                ("offset", format!("{:?}", offset)),
             ],
             SamplerSpec::Crt {
                 scanline_strength,
@@ -753,4 +766,4 @@ impl SamplerSpec {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_sampler_spec.rs</FILE> - <DESC>SamplerSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 2.7.0</VERS>
+// <VERS>END OF VERSION: 2.8.0</VERS>

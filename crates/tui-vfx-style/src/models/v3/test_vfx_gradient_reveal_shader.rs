@@ -57,6 +57,7 @@ fn round_trips_explicit_apply_to_and_intensity() {
 fn converts_reveal_wipe_into_v3_gradient_reveal_surface() {
     let legacy = RevealWipeShader {
         direction: RevealDirection::BottomToTop,
+        color: None,
     };
 
     let converted = VfxGradientRevealShader::from(&legacy);
@@ -75,4 +76,4 @@ fn returns_none_for_non_gradient_reveal_legacy_variant() {
 }
 
 // <FILE>tui-vfx-style/src/models/v3/test_vfx_gradient_reveal_shader.rs</FILE> - <DESC>Focused tests for the V3 gradient-reveal family surface</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

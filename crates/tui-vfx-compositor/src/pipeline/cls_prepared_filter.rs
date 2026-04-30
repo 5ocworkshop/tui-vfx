@@ -264,6 +264,9 @@ fn convert_pattern_type(spec: &PatternType) -> crate::filters::cls_pattern_fill:
             line_char: *line_char,
             spacing: *spacing,
         },
+        PatternType::Dots => ImplPatternType::Dots,
+        PatternType::Diagonal => ImplPatternType::Diagonal,
+        PatternType::Stripe => ImplPatternType::Stripe,
     }
 }
 
@@ -373,9 +376,11 @@ pub(crate) fn prepare_filter(
             pattern,
             color,
             only_empty,
+            density,
         } => {
-            let mut filter =
-                PatternFill::new(convert_pattern_type(pattern)).only_empty(*only_empty);
+            let mut filter = PatternFill::new(convert_pattern_type(pattern))
+                .only_empty(*only_empty)
+                .with_density(*density);
             if let Some(color_config) = color {
                 let c: Color = (*color_config).into();
                 filter = filter.with_fg(c);
@@ -1066,6 +1071,9 @@ pub(crate) fn prepare_filter(
         FilterSpec::KittScanner {
             boost,
             band_width,
+            scan_color,
+            trail_color,
+            band_width_cells,
             bpm,
             bps,
             progress,
@@ -1074,6 +1082,7 @@ pub(crate) fn prepare_filter(
             apply_to,
             powerline_mode,
             boost_separator_bg,
+            boost_separator_bg_color,
         } => {
             let evaluated_progress = progress
                 .evaluate(loop_t, signal_ctx, prepare_ctx.runtime_params)
@@ -1082,12 +1091,15 @@ pub(crate) fn prepare_filter(
                 let base = KittScanner::new()
                     .with_boost(*boost)
                     .with_band_width(*band_width)
+                    .with_colors(scan_color.map(Into::into), trail_color.map(Into::into))
+                    .with_band_width_cells(*band_width_cells)
                     .with_progress(evaluated_progress)
                     .with_motion_mode(*motion_mode)
                     .with_axis(*axis)
                     .with_apply_to(*apply_to)
                     .with_powerline_mode(*powerline_mode)
-                    .with_boost_separator_bg(*boost_separator_bg);
+                    .with_boost_separator_bg(*boost_separator_bg)
+                    .with_boost_separator_bg_color(boost_separator_bg_color.map(Into::into));
                 if let Some(bpm) = bpm {
                     base.with_bpm(*bpm)
                 } else {
@@ -1219,6 +1231,9 @@ mod tests {
         FilterSpec::KittScanner {
             boost: 50,
             band_width: 0.15,
+            scan_color: None,
+            trail_color: None,
+            band_width_cells: None,
             bpm: None,
             bps: 1.2,
             progress,
@@ -1227,6 +1242,7 @@ mod tests {
             apply_to: ApplyTo::Both,
             powerline_mode: false,
             boost_separator_bg: false,
+            boost_separator_bg_color: None,
         }
     }
 
@@ -1319,6 +1335,9 @@ mod tests {
         let spec = FilterSpec::KittScanner {
             boost: 50,
             band_width: 0.15,
+            scan_color: None,
+            trail_color: None,
+            band_width_cells: None,
             bpm: Some(84.0),
             bps: 9.9,
             progress: BindableValue::static_f32(1.0),
@@ -1327,6 +1346,7 @@ mod tests {
             apply_to: ApplyTo::Both,
             powerline_mode: false,
             boost_separator_bg: false,
+            boost_separator_bg_color: None,
         };
         let prepared = prepare_filter(&spec, &ctx).expect("KittScanner prepares");
 

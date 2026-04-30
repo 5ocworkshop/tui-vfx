@@ -1,8 +1,10 @@
 // <FILE>tui-vfx-compositor/src/filters/cls_kitt_scanner.rs</FILE>
 // <DESC>Ping-pong scanner effect like KITT from Knight Rider, horizontal or vertical</DESC>
-// <VERS>VERSION: 1.9.1</VERS>
-// <WCTX>Slice 6.6 §F.5 — migrate Filter trait to VfxCellContext bundle</WCTX>
-// <CLOG>1.9.1: migrate apply signature to &VfxCellContext.</CLOG>
+// <VERS>VERSION: 1.10.1</VERS>
+// <WCTX>v3.1 native debug-recipes closure: preserve authored KITT scanner color and cell-width controls.</WCTX>
+// <CLOG>1.10.1: de-duplicate powerline separator checks in scanner highlight application.
+// 1.10.0: add optional scan/trail color painting and cell-sized band width.
+// 1.9.1: migrate apply signature to &VfxCellContext.</CLOG>
 
 use crate::traits::filter::Filter;
 use crate::types::cls_filter_spec::{ApplyTo, ScannerAxis, ScannerMotionMode, kitt_bps_from_bpm};
@@ -44,6 +46,12 @@ pub struct KittScanner {
     pub boost: u8,
     /// Width of the scanner band (0.0-1.0 of total width)
     pub band_width: f32,
+    /// Optional exact scanner head color.
+    pub scan_color: Option<Color>,
+    /// Optional exact scanner trail color.
+    pub trail_color: Option<Color>,
+    /// Optional scanner band width in cells, normalized at apply time.
+    pub band_width_cells: Option<u16>,
     /// Animation progress (0.0 = inactive, 1.0 = fully active)
     pub progress: f32,
     /// Beats per second for the ping-pong oscillator.
@@ -65,6 +73,8 @@ pub struct KittScanner {
     /// When true AND powerline_mode is true, also boost separator backgrounds.
     /// Use this when your powerline has a continuous background (not terminal bg).
     pub boost_separator_bg: bool,
+    /// Optional exact background color for boosted powerline separators.
+    pub boost_separator_bg_color: Option<Color>,
 }
 
 impl Default for KittScanner {
@@ -72,6 +82,9 @@ impl Default for KittScanner {
         Self {
             boost: 50,
             band_width: 0.15,
+            scan_color: None,
+            trail_color: None,
+            band_width_cells: None,
             progress: 0.0,
             bps: Self::bps_from_bpm(72.0), // healthy resting-adult cadence
             motion_mode: ScannerMotionMode::PingPong,
@@ -79,6 +92,7 @@ impl Default for KittScanner {
             apply_to: ApplyTo::Both,
             powerline_mode: false,
             boost_separator_bg: false,
+            boost_separator_bg_color: None,
         }
     }
 }
@@ -103,6 +117,19 @@ impl KittScanner {
     /// Set the band width (0.0-1.0).
     pub fn with_band_width(mut self, width: f32) -> Self {
         self.band_width = width.clamp(0.0, 0.5);
+        self
+    }
+
+    /// Set optional exact scanner colors.
+    pub fn with_colors(mut self, scan_color: Option<Color>, trail_color: Option<Color>) -> Self {
+        self.scan_color = scan_color;
+        self.trail_color = trail_color;
+        self
+    }
+
+    /// Set an optional scanner band width in terminal cells.
+    pub fn with_band_width_cells(mut self, width: Option<u16>) -> Self {
+        self.band_width_cells = width.filter(|value| *value > 0);
         self
     }
 
@@ -166,6 +193,19 @@ impl KittScanner {
         self.boost_separator_bg = enabled;
         self
     }
+
+    /// Set an optional exact background color for boosted powerline separators.
+    pub fn with_boost_separator_bg_color(mut self, color: Option<Color>) -> Self {
+        self.boost_separator_bg_color = color;
+        self
+    }
+
+    fn effective_band_width(&self, extent: u16) -> f32 {
+        self.band_width_cells
+            .map(|cells| cells as f32 / extent.max(1) as f32)
+            .unwrap_or(self.band_width)
+            .clamp(0.0, 0.5)
+    }
 }
 
 impl Filter for KittScanner {
@@ -188,6 +228,10 @@ impl Filter for KittScanner {
         if extent == 0 {
             return;
         }
+        let band_width = self.effective_band_width(extent);
+        if band_width <= 0.0 {
+            return;
+        }
         let extent_f = extent.max(1) as f32;
         let pos = match self.axis {
             ScannerAxis::Horizontal => x as f32 / extent_f,
@@ -206,7 +250,7 @@ impl Filter for KittScanner {
                     return;
                 }
                 let visible_t = phase * 2.0;
-                let center = -self.band_width + visible_t * (1.0 + 2.0 * self.band_width);
+                let center = -band_width + visible_t * (1.0 + 2.0 * band_width);
                 (nx - center).abs()
             }
             ScannerMotionMode::ReverseWrap => {
@@ -215,14 +259,14 @@ impl Filter for KittScanner {
                     return;
                 }
                 let visible_t = phase * 2.0;
-                let center = 1.0 + self.band_width - visible_t * (1.0 + 2.0 * self.band_width);
+                let center = 1.0 + band_width - visible_t * (1.0 + 2.0 * band_width);
                 (nx - center).abs()
             }
         };
 
         // Apply highlight if within band (applies to all rows for full-height effect)
-        if dist < self.band_width {
-            let intensity = 1.0 - (dist / self.band_width);
+        if dist < band_width {
+            let intensity = 1.0 - (dist / band_width);
             // Smooth cubic falloff
             let intensity = intensity * intensity * (3.0 - 2.0 * intensity);
             let boost = (intensity * self.boost as f32 * self.progress) as u8;
@@ -232,9 +276,10 @@ impl Filter for KittScanner {
             // - Regular text: boost bg only (segment background glows)
             // - Separator glyphs: boost fg only by default, or fg+bg if boost_separator_bg
             // Both get the same boost amount so brightness is uniform
+            let is_powerline_separator_cell =
+                self.powerline_mode && is_powerline_separator(cell.ch);
             let (boost_fg, boost_bg) = if self.powerline_mode {
-                let is_separator = is_powerline_separator(cell.ch);
-                if is_separator {
+                if is_powerline_separator_cell {
                     // Separator: always boost fg, optionally boost bg
                     (true, self.boost_separator_bg)
                 } else {
@@ -256,6 +301,26 @@ impl Filter for KittScanner {
                 boost
             };
             let bg_boost = boost / 2;
+
+            if self.boost_separator_bg
+                && is_powerline_separator_cell
+                && let Some(separator_background) = self.boost_separator_bg_color
+            {
+                cell.bg = cell
+                    .bg
+                    .lerp(separator_background, intensity * self.progress);
+            }
+
+            if let (Some(scan_color), Some(trail_color)) = (self.scan_color, self.trail_color) {
+                let painted_color = trail_color.lerp(scan_color, intensity * self.progress);
+                if boost_fg {
+                    cell.fg = painted_color;
+                }
+                if boost_bg {
+                    cell.bg = trail_color.lerp(painted_color, 0.5);
+                }
+                return;
+            }
 
             // Boost foreground if enabled and not transparent
             if boost_fg && cell.fg.a > 0 {
@@ -764,4 +829,4 @@ mod tests {
 
 // <FILE>tui-vfx-compositor/src/filters/cls_kitt_scanner.rs</FILE>
 // <DESC>Ping-pong scanner effect like KITT from Knight Rider, horizontal or vertical</DESC>
-// <VERS>END OF VERSION: 1.9.1</VERS>
+// <VERS>END OF VERSION: 1.10.1</VERS>

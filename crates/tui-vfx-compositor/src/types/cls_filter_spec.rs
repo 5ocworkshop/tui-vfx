@@ -1,7 +1,9 @@
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>VERSION: 3.15.0</VERS>
-// <WCTX>Glyph rendering framework Phase 6 follow-on: add SamplerRef::TerminalFire variant so the new terminal_fire shader can drive ScalarFieldGlyphFilter via FireFieldSignal — symmetric to the existing TerminalWater + WaterFieldSignal wiring.</WCTX>
-// <CLOG>3.15.0: add SamplerRef::TerminalFire { shader: TerminalFireShader } parallel to SamplerRef::TerminalWater. Lets fire-glyph debug recipes use { kind: terminal_fire, shader: {...} } via FilterSpec::ScalarFieldGlyph.
+// <VERS>VERSION: 3.17.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: carry authored scanner color and cell-width controls through FilterSpec.</WCTX>
+// <CLOG>3.17.0: add KittScanner scan/trail colors and band-width cell override for strict native recipe lowering.
+// 3.16.0: add PatternType::Dots/Diagonal/Stripe and FilterSpec::PatternFill.density so debug-recipes lower without dropping authored density.
+// 3.15.0: add SamplerRef::TerminalFire { shader: TerminalFireShader } parallel to SamplerRef::TerminalWater. Lets fire-glyph debug recipes use { kind: terminal_fire, shader: {...} } via FilterSpec::ScalarFieldGlyph.
 
 //! # Filter Specifications
 //!
@@ -110,6 +112,15 @@ pub enum PatternType {
         /// Spacing between lines (line appears every N columns)
         spacing: u16,
     },
+
+    /// Sparse dotted texture.
+    Dots,
+
+    /// Diagonal slash texture.
+    Diagonal,
+
+    /// Horizontal stripe texture.
+    Stripe,
 }
 
 impl Default for PatternType {
@@ -541,6 +552,9 @@ pub enum FilterSpec {
         /// If true, only fill cells that are empty (whitespace)
         #[serde(default)]
         only_empty: bool,
+        /// Fraction of candidate cells to fill.
+        #[serde(default = "default_pattern_fill_density")]
+        density: f32,
     },
     /// Greyscale/desaturate filter using BT.601 luminance
     ///
@@ -1173,9 +1187,25 @@ pub enum FilterSpec {
         /// Brightness boost added to cells under the scanner
         #[serde(default = "default_kitt_boost")]
         boost: u8,
-        /// Width of the scanner band (0.0-0.5 of total width)
+        /// Width of the scanner band (0.0-0.5 of total sweep extent)
         #[serde(default = "default_kitt_band_width")]
         band_width: f32,
+        /// Optional exact scanner head color.
+        ///
+        /// When both `scan_color` and `trail_color` are present, the runtime
+        /// paints cells inside the scanner band from trail edge to scan head
+        /// instead of only boosting the existing colors.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        scan_color: Option<ColorConfig>,
+        /// Optional exact scanner trail color paired with `scan_color`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        trail_color: Option<ColorConfig>,
+        /// Optional authored band width in terminal cells.
+        ///
+        /// This preserves recipe fields named `width`/cell-sized `bandWidth`
+        /// without forcing callers to pre-normalize by the render extent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        band_width_cells: Option<u16>,
         /// Human-readable cadence in beats per minute.
         ///
         /// When present, this is converted to `bps` via
@@ -1217,6 +1247,10 @@ pub enum FilterSpec {
         /// Use when powerline has continuous background (not terminal bg).
         #[serde(default)]
         boost_separator_bg: bool,
+        /// Optional exact separator background color used when
+        /// `boost_separator_bg` is active in powerline mode.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        boost_separator_bg_color: Option<ColorConfig>,
     },
     /// Ping-pong scanner that dims text with light shade overlay
     ///
@@ -1721,6 +1755,10 @@ fn default_crt_glow() -> SignalOrFloat {
 
 fn default_greyscale_strength() -> SignalOrFloat {
     SignalOrFloat::Static(1.0)
+}
+
+fn default_pattern_fill_density() -> f32 {
+    1.0
 }
 
 fn default_braille_density() -> f32 {
@@ -2402,10 +2440,12 @@ impl FilterSpec {
                 pattern,
                 color,
                 only_empty,
+                density,
             } => vec![
                 ("pattern", format!("{:?}", pattern)),
                 ("color", format!("{:?}", color)),
                 ("only_empty", format!("{}", only_empty)),
+                ("density", format!("{}", density)),
             ],
             FilterSpec::Greyscale { strength, apply_to } => vec![
                 ("strength", format!("{:?}", strength)),
@@ -2625,6 +2665,9 @@ impl FilterSpec {
             FilterSpec::KittScanner {
                 boost,
                 band_width,
+                scan_color,
+                trail_color,
+                band_width_cells,
                 bpm,
                 bps,
                 progress,
@@ -2633,9 +2676,28 @@ impl FilterSpec {
                 apply_to,
                 powerline_mode,
                 boost_separator_bg,
+                boost_separator_bg_color,
             } => vec![
                 ("boost", format!("{}", boost)),
                 ("band_width", format!("{}", band_width)),
+                (
+                    "scan_color",
+                    scan_color
+                        .map(|value| format!("{value:?}"))
+                        .unwrap_or_else(|| "none".to_string()),
+                ),
+                (
+                    "trail_color",
+                    trail_color
+                        .map(|value| format!("{value:?}"))
+                        .unwrap_or_else(|| "none".to_string()),
+                ),
+                (
+                    "band_width_cells",
+                    band_width_cells
+                        .map(|value| value.to_string())
+                        .unwrap_or_else(|| "none".to_string()),
+                ),
                 (
                     "bpm",
                     bpm.map(|value| format!("{value} BPM"))
@@ -2648,6 +2710,12 @@ impl FilterSpec {
                 ("apply_to", format!("{:?}", apply_to)),
                 ("powerline_mode", format!("{}", powerline_mode)),
                 ("boost_separator_bg", format!("{}", boost_separator_bg)),
+                (
+                    "boost_separator_bg_color",
+                    boost_separator_bg_color
+                        .map(|value| format!("{value:?}"))
+                        .unwrap_or_else(|| "none".to_string()),
+                ),
             ],
             FilterSpec::ShadeScanner {
                 shade_color,
@@ -2822,4 +2890,4 @@ mod tests_scalar_field_glyph {
 }
 
 // <FILE>tui-vfx-compositor/src/types/cls_filter_spec.rs</FILE> - <DESC>FilterSpec enum with signal-driven parameters</DESC>
-// <VERS>END OF VERSION: 3.14.0</VERS>
+// <VERS>END OF VERSION: 3.17.0</VERS>

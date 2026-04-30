@@ -100,9 +100,11 @@ pub(crate) fn prepare_mask(spec: &MaskSpec) -> PreparedMask {
             *noise,
             *soft_edge,
         )),
-        MaskSpec::NoiseDither { seed, matrix } => {
-            PreparedMask::NoiseDither(NoiseDither::new(*seed, *matrix))
-        }
+        MaskSpec::NoiseDither {
+            seed,
+            matrix,
+            chunk_size,
+        } => PreparedMask::NoiseDither(NoiseDither::new(*seed, *matrix, *chunk_size)),
         MaskSpec::PathReveal { path, soft_edge } => {
             PreparedMask::PathReveal(PathReveal::new(path.clone(), *soft_edge))
         }
@@ -185,6 +187,7 @@ mod tests {
                 MaskSpec::NoiseDither {
                     seed: 9,
                     matrix: DitherMatrix::Bayer8,
+                    chunk_size: 2,
                 },
                 "NoiseDither",
             ),

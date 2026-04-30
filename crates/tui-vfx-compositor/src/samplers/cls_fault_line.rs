@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_fault_line.rs</FILE> - <DESC>FaultLine sampler implementation</DESC>
-// <VERS>VERSION: 2.2.0</VERS>
-// <WCTX>2026-04-26 packet — migrate sample() return to SamplerOutput so the orchestrator can thread the displacement delta into ctx.resolved_x.</WCTX>
-// <CLOG>2.2.0: sample() now returns SamplerOutput; displacing branch carries delta_x; out-of-bounds returns no_displacement().</CLOG>
+// <VERS>VERSION: 2.3.0</VERS>
+// <WCTX>v3.1 native debug-recipes closure: support fixed lower-half horizontal offsets authored by debug sampler fixtures.</WCTX>
+// <CLOG>2.3.0: add optional fixed_offset mode while preserving the existing dynamic fault-line default.
+// 2.2.0: sample() now returns SamplerOutput; displacing branch carries delta_x; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
 use std::hash::{Hash, Hasher};
@@ -18,6 +19,8 @@ pub struct FaultLine {
     pub intensity: f32,
     /// Bias toward upper (negative) or lower (positive) split position
     pub split_bias: f32,
+    /// Optional fixed offset for lower-half player-authored fixtures.
+    pub fixed_offset: Option<i16>,
 }
 
 impl Default for FaultLine {
@@ -38,7 +41,14 @@ impl FaultLine {
             seed,
             intensity,
             split_bias: split_bias.clamp(-1.0, 1.0),
+            fixed_offset: None,
         }
+    }
+
+    /// Use a fixed lower-half horizontal offset instead of dynamic split motion.
+    pub fn with_fixed_offset(mut self, offset: i16) -> Self {
+        self.fixed_offset = Some(offset);
+        self
     }
 
     /// Compute split position based on seed and bias
@@ -58,10 +68,23 @@ impl FaultLine {
 
 impl Sampler for FaultLine {
     fn sample(&self, ctx: &VfxCellContext) -> SamplerOutput {
-        let t = ctx.t as f32;
         let dest_x = ctx.local_x;
         let dest_y = ctx.local_y;
         let height = ctx.height;
+
+        if let Some(offset) = self.fixed_offset {
+            if dest_y < height / 2 {
+                return SamplerOutput::passthrough(dest_x, dest_y);
+            }
+            let src_x_i = dest_x as i32 - offset as i32;
+            if src_x_i < 0 || src_x_i >= ctx.width as i32 {
+                return SamplerOutput::no_displacement();
+            }
+            let src_x = src_x_i as u16;
+            return SamplerOutput::displaced(src_x, dest_y, src_x as i32 - dest_x as i32, 0);
+        }
+
+        let t = ctx.t as f32;
 
         // Calculate split position using actual widget height
         let split_y = self.split_y(height);
@@ -162,4 +185,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_fault_line.rs</FILE> - <DESC>FaultLine sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.2.0</VERS>
+// <VERS>END OF VERSION: 2.3.0</VERS>

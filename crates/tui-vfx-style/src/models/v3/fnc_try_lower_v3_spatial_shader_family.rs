@@ -600,6 +600,7 @@ impl From<&crate::models::v3::VfxGradientRevealShader> for SpatialShaderType {
             VfxGradientRevealBehavior::RevealWipe { direction } => {
                 SpatialShaderType::RevealWipe(RevealWipeShader {
                     direction: (*direction),
+                    color: None,
                 })
             }
         }
@@ -986,4 +987,4 @@ impl From<VfxTracePathTailMode> for TraceTailMode {
 }
 
 // <FILE>tui-vfx-style/src/models/v3/fnc_try_lower_v3_spatial_shader_family.rs</FILE> - <DESC>Lower grouped V3 spatial shader families back into the executable legacy runtime surface</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

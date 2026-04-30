@@ -100,7 +100,8 @@ energy = "calm"
 complexity = "simple"
 ai_hint = """Dithered noise pattern transition.
 seed: randomization seed for consistent patterns.
-matrix: Bayer4 (subtle 4x4 dither), Bayer8 (more visible 8x8 dither)."""
+matrix: Bayer4 (subtle 4x4 dither), Bayer8 (more visible 8x8 dither).
+chunk_size: cell block size that shares each dither threshold (1 = per-cell)."""
 
 [effects.masks.PathReveal]
 use_cases = ["transition", "creative", "animated"]
@@ -206,6 +207,7 @@ complexity = "simple"
 ai_hint = """Background texture patterns.
 pattern: Single (char), Checkerboard (char_a, char_b), HorizontalLines, VerticalLines.
 color: pattern color. only_empty: only fill empty cells.
+density: deterministic fill density from 0.0 to 1.0.
 See PatternType variants for full options."""
 
 [effects.filters.Greyscale]
@@ -383,6 +385,8 @@ complexity = "simple"
 ai_hint = """Ping-pong scanner (KITT/Larson) effect — horizontal or vertical.
 boost: brightness increase (default 50).
 band_width: scanner band width as fraction of the active axis extent (0.15 default, 0.0-0.5).
+scan_color/trail_color: optional exact scanner head/trail colors.
+band_width_cells: optional authored scanner width in terminal cells, overriding band_width at apply time.
 bpm: optional human-friendly beats-per-minute cadence; overrides bps when present.
 bps: beats per second for ping-pong cycle (1.2 default = 72 BPM healthy resting cadence).
 progress: 0.0=inactive, 1.0=fully active (accepts raw number, signal, or runtime binding).
@@ -390,6 +394,8 @@ motion_mode: 'ping_pong' (default, classic Larson back-and-forth) or 'forward_wr
 axis: 'horizontal' (default — band sweeps left↔right; classic KITT) or 'vertical' (band sweeps top↔bottom; column-wise reveals such as TTE Beams, scanline-down, top-down stage lights).
 apply_to: which channel to boost (fg, bg, or both) when not in powerline mode.
 powerline_mode: true to handle powerline separators safely.
+boost_separator_bg: true to also boost separator backgrounds in powerline mode.
+boost_separator_bg_color: optional exact separator background color when boosted.
 boost_separator_bg: true to also boost separator backgrounds for continuous powerlines.
 Cadence-driven motion uses monotonic elapsed time; bpm/bps set the scanner rate independently of recipe loop period.
 Classic Knight Rider aesthetic for retro sci-fi hover states (horizontal); vertical axis covers reveal/scan effects that previously needed a sampler chain."""
@@ -479,7 +485,8 @@ complexity = "moderate"
 ai_hint = """Paper shredder strips effect for destruction/transitions.
 stripe_width: width of each strip in cells.
 odd_speed: movement speed of odd-numbered strips.
-even_speed: movement speed of even-numbered strips (opposite creates shearing)."""
+even_speed: movement speed of even-numbered strips (opposite creates shearing).
+offset: optional fixed strip displacement in cells for source-schema exact lowering."""
 
 [effects.samplers.FaultLine]
 use_cases = ["glitch", "error", "dramatic"]
@@ -489,6 +496,7 @@ ai_hint = """Fault line displacement like tectonic shift.
 seed: randomization seed for fault placement.
 intensity: displacement amount.
 split_bias: tendency to split horizontally vs vertically.
+offset: optional fixed lower-half displacement in cells for source-schema exact lowering.
 Earthquake/glitch effect for errors or dramatic moments."""
 
 [effects.samplers.Crt]

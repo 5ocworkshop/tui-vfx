@@ -75,6 +75,7 @@ fn extract_mask_metadata() -> HashMap<String, EffectMetadata> {
         MaskSpec::NoiseDither {
             seed: 0,
             matrix: Default::default(),
+            chunk_size: 1,
         },
         MaskSpec::Materialize {
             origin: Default::default(),
@@ -152,6 +153,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             pattern: Default::default(),
             color: None,
             only_empty: false,
+            density: 1.0,
         },
         FilterSpec::Greyscale {
             strength: Default::default(),
@@ -297,6 +299,9 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
         FilterSpec::KittScanner {
             boost: 50,
             band_width: 0.15,
+            scan_color: None,
+            trail_color: None,
+            band_width_cells: None,
             bpm: Some(72.0),
             bps: 1.2,
             progress: BindableValue::static_f32(0.0),
@@ -305,6 +310,7 @@ fn extract_filter_metadata() -> HashMap<String, EffectMetadata> {
             apply_to: Default::default(),
             powerline_mode: false,
             boost_separator_bg: false,
+            boost_separator_bg_color: None,
         },
         FilterSpec::ShadeScanner {
             shade_color: ColorConfig::Gray,
@@ -361,11 +367,13 @@ fn extract_sampler_metadata() -> HashMap<String, EffectMetadata> {
             stripe_width: 4,
             odd_speed: Default::default(),
             even_speed: Default::default(),
+            offset: None,
         },
         SamplerSpec::FaultLine {
             seed: 0,
             intensity: Default::default(),
             split_bias: 0.0,
+            offset: None,
         },
         SamplerSpec::Crt {
             scanline_strength: Default::default(),
@@ -719,4 +727,4 @@ fn extract_shadow_metadata() -> HashMap<String, EffectMetadata> {
 }
 
 // <FILE>xtask/src/docs/effect_metadata.rs</FILE> - <DESC>Effect metadata extraction from runtime introspection</DESC>
-// <VERS>END OF VERSION: 1.4.4</VERS>
+// <VERS>END OF VERSION: 1.4.5</VERS>
