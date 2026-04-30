@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.27.0</VERS>
+// <VERS>VERSION: 0.28.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.27.0: MINOR — lower mask.iris into compositor MaskSpec::Iris instead of source-stage player semantics.
+// <CLOG>0.28.0: MINOR — lower mask.blinds into compositor MaskSpec::Blinds instead of source-stage player semantics.
+// 0.27.0: lower mask.iris into compositor MaskSpec::Iris instead of source-stage player semantics.
 // 0.26.0: lower mask.dissolve into compositor MaskSpec::Dissolve instead of source-stage player semantics.
 // 0.25.0: lower mask.diamond into compositor MaskSpec::Diamond instead of source-stage player semantics.
 // 0.24.0: lower mask.radial into compositor MaskSpec::Radial instead of source-stage player semantics.
@@ -22,7 +23,8 @@ use tui_vfx_compositor::{
     pipeline::{CompositionSpec, ShaderLayerSpec},
     types::{
         ApplyTo, Axis, BindableValue, CellularPattern, DitherMatrix, FilterSpec, HoverBarPosition,
-        IrisShape, MaskSpec, PatternType, RadialOrigin, RippleCenter, SamplerSpec, WipeDirection,
+        IrisShape, MaskSpec, Orientation, PatternType, RadialOrigin, RippleCenter, SamplerSpec,
+        WipeDirection,
     },
 };
 use tui_vfx_contract::{NodeSpec, RecipeDocument, ScopeSpec, StructuredValue, Value, ValueSource};
@@ -158,8 +160,6 @@ pub enum NativeContentStage {
         width: usize,
         height: usize,
     },
-    /// Apply player-compatible blinds mask semantics to source rows.
-    BlindsMask { orientation: String, count: usize },
     /// Apply player-compatible wipe/path-reveal mask semantics to source rows.
     WipeMask { direction: String, soft_edge: bool },
 }
@@ -671,7 +671,7 @@ fn lower_node_into_spec(
             });
             NodeLoweringOutcome::Lowered { warnings }
         }
-        "mask.blinds" => lower_blinds_mask(node, content_stages, request, warnings),
+        "mask.blinds" => lower_blinds_mask(node, spec, request, warnings),
         "mask.cellular" => lower_cellular_mask(node, spec, request, warnings),
         "mask.diamond" => lower_diamond_mask(node, spec, request, warnings),
         "mask.dissolve" => lower_dissolve_mask(node, spec, request, warnings),
@@ -1396,12 +1396,12 @@ fn lower_kitt_scanner(
 
 fn lower_blinds_mask(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) =
-        unsupported_native_content_reason(node, "mask.blinds", &["orientation", "count"])
+        unsupported_native_effect_reason(node, "mask.blinds", &["orientation", "count"])
     {
         return NodeLoweringOutcome::Unsupported { reason };
     }
@@ -1413,12 +1413,15 @@ fn lower_blinds_mask(
         &["horizontal", "vertical"],
         "mask.blinds",
     ) {
-        Ok(orientation) => orientation,
+        Ok(orientation) => match orientation.as_str() {
+            "vertical" => Orientation::Vertical,
+            _ => Orientation::Horizontal,
+        },
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
-    content_stages.push(NativeContentStage::BlindsMask {
+    spec.masks.push(MaskSpec::Blinds {
         orientation,
-        count: integer_input(node, request, "count", 4).max(1) as usize,
+        count: integer_input(node, request, "count", 4).max(1) as u16,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3822,4 +3825,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.27.0</VERS>
+// <VERS>END OF VERSION: 0.28.0</VERS>

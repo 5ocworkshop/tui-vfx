@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.25.0</VERS>
+// <VERS>VERSION: 0.26.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.25.0: PATCH — remove backend-owned iris mask source-stage rendering after mask.iris moved to compositor MaskSpec.
+// <CLOG>0.26.0: PATCH — remove backend-owned blinds mask source-stage rendering after mask.blinds moved to compositor MaskSpec.
+// 0.25.0: remove backend-owned iris mask source-stage rendering after mask.iris moved to compositor MaskSpec.
 // 0.24.0: remove backend-owned dissolve mask source-stage rendering after mask.dissolve moved to compositor MaskSpec.
 // 0.23.0: remove backend-owned diamond mask source-stage rendering after mask.diamond moved to compositor MaskSpec.
 // 0.22.0: remove backend-owned radial mask source-stage rendering after mask.radial moved to compositor MaskSpec.
@@ -280,9 +281,6 @@ fn scene_ir_with_native_content_stages(
                 *width,
                 *height,
             ),
-            NativeContentStage::BlindsMask { orientation, count } => {
-                apply_blinds_mask_content_stage(&mut staged, orientation, *count)
-            }
             NativeContentStage::WipeMask {
                 direction,
                 soft_edge,
@@ -1139,35 +1137,6 @@ fn fault_line_split(row_count: usize, seed: u64, split_bias: f64) -> usize {
     let base_split = (seed.wrapping_mul(31) % row_count as u64) as f64;
     (base_split + split_bias.clamp(-1.0, 1.0) * row_count as f64 * 0.3)
         .clamp(1.0, (row_count - 1) as f64) as usize
-}
-
-fn apply_blinds_mask_content_stage(
-    report: &mut PlayerRenderIrReport,
-    orientation: &str,
-    count: usize,
-) {
-    let report_columns = report_width(report);
-    let report_rows = report_height(report);
-    let mut rows = dense_rows(report, report_columns, report_rows);
-    let count = count.max(1);
-    let reveal = report.phase_t.clamp(0.0, 1.0);
-    let height = rows.len().max(1);
-    for (y, row) in rows.iter_mut().enumerate() {
-        let width = row.chars().count().max(1);
-        *row = row
-            .chars()
-            .enumerate()
-            .map(|(x, glyph)| {
-                if blinds_keeps_cell(x, y, width, height, count, orientation, reveal) {
-                    glyph
-                } else {
-                    ' '
-                }
-            })
-            .collect();
-    }
-    report.rows = rows;
-    sync_styled_cells_to_rows(report);
 }
 
 fn apply_wipe_mask_content_stage(
@@ -2590,31 +2559,6 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
     }
 }
 
-fn blinds_keeps_cell(
-    x: usize,
-    y: usize,
-    width: usize,
-    height: usize,
-    count: usize,
-    orientation: &str,
-    reveal: f64,
-) -> bool {
-    let position = if orientation == "vertical" {
-        x as f64
-    } else {
-        y as f64
-    };
-    let size = if orientation == "vertical" {
-        width as f64
-    } else {
-        height as f64
-    };
-    let blind_size = (size / count.max(1) as f64).max(1.0);
-    let blind_index = (position / blind_size).floor();
-    let position_in_blind = position - blind_index * blind_size;
-    position_in_blind < blind_size * reveal.clamp(0.0, 1.0)
-}
-
 fn wipe_cutoff(width: usize, reveal: f64, soft_edge: bool) -> usize {
     let mut scaled = width as f64 * reveal;
     if soft_edge {
@@ -3120,4 +3064,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.25.0</VERS>
+// <VERS>END OF VERSION: 0.26.0</VERS>
