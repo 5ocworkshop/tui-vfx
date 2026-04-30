@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>0.3.0: PATCH — mark mask.radial lowerer/player-stage cleanup as completed for the second compositor-first slice.
+<!-- <CLOG>0.4.0: PATCH — mark mask.diamond lowerer/player-stage cleanup as completed for the third compositor-first slice.
+0.3.0: mark mask.radial lowerer/player-stage cleanup as completed for the second compositor-first slice.
 0.2.0: mark mask.cellular descriptor/lowerer/player-stage cleanup as completed for the first compositor-first slice.
 0.1.0: INIT — record compositor mask/filter/sampler/shader surfaces and first migration priorities.</CLOG> -->
 
@@ -53,6 +54,7 @@ First mask priorities:
 | --- | --- | --- |
 | `mask.cellular` | `MaskSpec::Cellular { pattern, seed, cell_count }` | Done in first slice: descriptor exposes `pattern`/`seed`/`cellCount`, lowerer emits `MaskSpec::Cellular`, and backend source-stage cellular rendering was deleted. |
 | `mask.radial` | `MaskSpec::Radial { origin, soft_edge }` | Done in second slice for current `center` descriptor support: lowerer emits `MaskSpec::Radial` and backend source-stage radial rendering was deleted. |
+| `mask.diamond` | `MaskSpec::Diamond { soft_edge }` | Done in third slice: lowerer emits `MaskSpec::Diamond` and backend source-stage diamond rendering was deleted. |
 | `mask.noiseDither` | `MaskSpec::NoiseDither { seed, matrix, chunk_size }` | Verify descriptor exposes matrix/chunk size and lowerer maps without player semantics. |
 | `mask.pathReveal` | `MaskSpec::PathReveal { path, soft_edge }` | Verify descriptor can express V2 path payload, not just a wipe-like direction. |
 | `mask.centerWipeFadeModal` V2 recipe | likely `mask.wipe` + style fade | Missing from v3.1 hierarchy; migrate after direct mask mappings are clean. |

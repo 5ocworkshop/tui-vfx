@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.22.0</VERS>
+// <VERS>VERSION: 0.23.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.22.0: PATCH — remove backend-owned radial mask source-stage rendering after mask.radial moved to compositor MaskSpec.
+// <CLOG>0.23.0: PATCH — remove backend-owned diamond mask source-stage rendering after mask.diamond moved to compositor MaskSpec.
+// 0.22.0: remove backend-owned radial mask source-stage rendering after mask.radial moved to compositor MaskSpec.
 // 0.21.0: remove backend-owned cellular mask source-stage rendering after mask.cellular moved to compositor MaskSpec.
 // 0.20.0: brighten cell-scoped focused-row gradients at the targeted cell.
 // 0.19.0: MINOR — render cell-scoped style.spatial focused row gradients.
@@ -279,9 +280,6 @@ fn scene_ir_with_native_content_stages(
             ),
             NativeContentStage::BlindsMask { orientation, count } => {
                 apply_blinds_mask_content_stage(&mut staged, orientation, *count)
-            }
-            NativeContentStage::DiamondMask { soft_edge } => {
-                apply_shape_mask_content_stage(&mut staged, *soft_edge, SourceMaskShape::Diamond)
             }
             NativeContentStage::DissolveMask { seed, chunk_size } => {
                 apply_dissolve_mask_content_stage(&mut staged, *seed, *chunk_size)
@@ -3234,4 +3232,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.22.0</VERS>
+// <VERS>END OF VERSION: 0.23.0</VERS>
