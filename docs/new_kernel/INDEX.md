@@ -1,7 +1,9 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.45.0</VERS> -->
-<!-- <WCTX>K2.24 native content-stage/lifecycle closure indexing.</WCTX> -->
-<!-- <CLOG>0.45.0: MINOR — add K2.24 review/de-slop report.
+<!-- <VERS>VERSION: 0.47.0</VERS> -->
+<!-- <WCTX>K2.25 remaining content-stage closure indexing.</WCTX> -->
+<!-- <CLOG>0.47.0: MINOR — add K2.25 review/de-slop report.
+0.46.0: MINOR — add K2.25 packet and remaining content-stage results.
+0.45.0: MINOR — add K2.24 review/de-slop report.
 0.44.0: MINOR — add K2.24 packet, content-stage results, and lifecycle clock results.
 0.43.0: MINOR — add K2.23 status memo and review/de-slop report.
 0.42.0: MINOR — add K2.23 player/studio and content typewriter results.
@@ -353,6 +355,12 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_24_LIFECYCLE_CLOCK_RESULTS.md`](K2_24_LIFECYCLE_CLOCK_RESULTS.md) — lifecycle-duration-aware UI ticking result.
 - [`PHASE_K2_24_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_24_REVIEW_AND_DESLOP_REPORT.md) — formal review pass, AI de-slop actions, and verification evidence.
 
+### K2.25 remaining native content transforms
+
+- [`ARCH-RESP-TO-PHASE_K2_25.md`](ARCH-RESP-TO-PHASE_K2_25.md) — self-generated packet for cell motion, marquee, morph, scramble, and wrap-indicator native content stages.
+- [`K2_25_REMAINING_CONTENT_STAGE_RESULTS.md`](K2_25_REMAINING_CONTENT_STAGE_RESULTS.md) — strict native remaining content transform results and coverage movement.
+- [`PHASE_K2_25_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_25_REVIEW_AND_DESLOP_REPORT.md) — formal review pass, AI de-slop actions, and verification evidence.
+
 
 ## Validator and recipe artifacts
 
@@ -376,4 +384,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.45.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.47.0</VERS> -->

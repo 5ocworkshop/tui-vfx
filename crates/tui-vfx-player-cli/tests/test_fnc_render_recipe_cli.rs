@@ -541,6 +541,216 @@ fn test_fnc_cli_rejects_native_split_flap_and_odometer_unsupported_content_shape
 }
 
 #[test]
+fn test_fnc_cli_renders_compositor_backend_native_remaining_content_transforms_json() {
+    for (recipe, recipe_id, effect_id) in [
+        (
+            "content/content_cell_motion_middle_out.json",
+            "debugContentCellMotionMiddleOut",
+            "content.cellMotion",
+        ),
+        (
+            "content/content_cell_motion_root_border_fixed.json",
+            "debugContentCellMotionRootBorderFixed",
+            "content.cellMotion",
+        ),
+        (
+            "content/content_cell_motion_slice.json",
+            "debugContentCellMotionSlice",
+            "content.cellMotion",
+        ),
+        (
+            "content/content_marquee.json",
+            "debugContentMarquee",
+            "content.marquee",
+        ),
+        (
+            "content/content_marquee_direction_reverse.json",
+            "debugContentMarqueeDirectionReverse",
+            "content.marquee",
+        ),
+        (
+            "content/content_morph.json",
+            "debugContentMorph",
+            "content.morph",
+        ),
+        (
+            "content/content_morph_target_dots.json",
+            "debugContentMorphTargetDots",
+            "content.morph",
+        ),
+        (
+            "content/content_scramble.json",
+            "debugContentScramble",
+            "content.scramble",
+        ),
+        (
+            "content/content_scramble_seed_charset.json",
+            "debugContentScrambleSeedCharset",
+            "content.scramble",
+        ),
+        (
+            "content/content_wrap_indicator.json",
+            "debugContentWrapIndicator",
+            "content.wrapIndicator",
+        ),
+        (
+            "content/content_wrap_indicator_every_timing.json",
+            "debugContentWrapIndicatorEveryTiming",
+            "content.wrapIndicator",
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase-t"),
+                str_arg("0.35"),
+            ],
+            "render-backend native remaining content transforms player cli",
+        );
+
+        assert_eq!(report["backend"], "compositor", "{recipe}");
+        assert_eq!(report["recipeId"], recipe_id, "{recipe}");
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
+        assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"]["contentStages"], 1,
+            "{recipe}"
+        );
+        assert!(
+            report["loweredEffectIds"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!(effect_id)),
+            "{recipe}"
+        );
+        assert!(
+            report["diagnostics"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_remaining_content_transform_unsupported_shapes_json() {
+    for (effect_name, recipe_path_fragment, output_input_id) in [
+        (
+            "cell_motion",
+            "content/content_cell_motion_slice.json",
+            "route",
+        ),
+        ("marquee", "content/content_marquee.json", "direction"),
+        ("morph", "content/content_morph.json", "target"),
+        ("scramble", "content/content_scramble.json", "seed"),
+        (
+            "wrap_indicator",
+            "content/content_wrap_indicator.json",
+            "every",
+        ),
+    ] {
+        for (mutation_name, recipe) in [
+            (
+                "unsupported_input",
+                unsupported_content_recipe(
+                    recipe_path_fragment,
+                    Some(("unsupportedNativeField", unsupported_native_input())),
+                    None,
+                    None,
+                ),
+            ),
+            (
+                "unsupported_output",
+                unsupported_content_recipe(
+                    recipe_path_fragment,
+                    None,
+                    Some(serde_json::json!({
+                        "debugOutput": {
+                            "source": {
+                                "kind": "input",
+                                "id": output_input_id
+                            }
+                        }
+                    })),
+                    None,
+                ),
+            ),
+            (
+                "unsupported_scope",
+                unsupported_content_recipe(
+                    recipe_path_fragment,
+                    None,
+                    None,
+                    Some(serde_json::json!({
+                        "kind": "rowRange",
+                        "start": 0,
+                        "end": 1
+                    })),
+                ),
+            ),
+        ] {
+            let temp_root = std::env::temp_dir().join(format!(
+                "tui-vfx-native-{effect_name}-{mutation_name}-unsupported"
+            ));
+            let _ = fs::remove_dir_all(&temp_root);
+            fs::create_dir_all(&temp_root).expect("create temp unsupported content fixture root");
+            let recipe_path = temp_root.join(format!("{effect_name}_{mutation_name}.json"));
+            fs::write(
+                &recipe_path,
+                serde_json::to_string_pretty(&recipe)
+                    .expect("serialize unsupported content recipe"),
+            )
+            .expect("write unsupported content recipe");
+
+            let output = run_player_cli(
+                vec![
+                    str_arg("render-backend"),
+                    str_arg("--recipe"),
+                    recipe_path.display().to_string(),
+                    str_arg("--descriptor-pack"),
+                    descriptor_pack_path(),
+                    str_arg("--backend"),
+                    str_arg("compositor"),
+                    str_arg("--composition-mode"),
+                    str_arg("native"),
+                    str_arg("--fail-on-fallback"),
+                    str_arg("--format"),
+                    str_arg("json"),
+                ],
+                "render-backend native unsupported remaining content transform player cli",
+            );
+
+            assert!(
+                !output.status.success(),
+                "{effect_name}/{mutation_name} unexpectedly succeeded"
+            );
+            assert!(
+                stderr(&output).contains("unsupportedNativeEffect"),
+                "{effect_name}/{mutation_name} stderr: {}",
+                stderr(&output)
+            );
+        }
+    }
+}
+
+#[test]
 fn test_fnc_cli_renders_compositor_backend_ir_resolved_metadata_json() {
     let report = player_cli_json(
         vec![

@@ -193,6 +193,23 @@ fn scene_ir_with_native_content_stages(
                 *tile_width,
                 *tile_height,
             ),
+            NativeContentStage::CellMotion {
+                route,
+                stagger,
+                affect,
+            } => apply_cell_motion_content_stage(&mut staged, route, *stagger, affect),
+            NativeContentStage::Marquee {
+                direction,
+                speed,
+                width,
+            } => apply_marquee_content_stage(&mut staged, direction, *speed, *width),
+            NativeContentStage::Morph { target } => apply_morph_content_stage(&mut staged, target),
+            NativeContentStage::Scramble { seed, charset } => {
+                apply_scramble_content_stage(&mut staged, *seed, charset)
+            }
+            NativeContentStage::WrapIndicator { every } => {
+                apply_wrap_indicator_content_stage(&mut staged, *every)
+            }
         }
     }
     staged
@@ -358,6 +375,150 @@ fn apply_odometer_content_stage(
     sync_styled_cells_to_rows(report);
 }
 
+fn apply_cell_motion_content_stage(
+    report: &mut PlayerRenderIrReport,
+    route: &str,
+    stagger: usize,
+    affect: &str,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let progress = report.phase_t.clamp(0.0, 1.0);
+    let reveals_from_left = matches!(route, "fromLeft" | "left");
+    let preserve_empty_cells = affect == "nonEmpty";
+
+    for (y, row) in rows.iter_mut().enumerate() {
+        let row_width = row.chars().count().max(1);
+        let line_threshold = ((y * stagger) % 10) as f64 / 20.0;
+        if progress < line_threshold {
+            row.clear();
+            continue;
+        }
+        if reveals_from_left {
+            let visible = (row_width as f64 * progress).round() as usize;
+            *row = row
+                .chars()
+                .enumerate()
+                .map(|(x, glyph)| {
+                    if x < visible && (!preserve_empty_cells || glyph != ' ') {
+                        glyph
+                    } else {
+                        ' '
+                    }
+                })
+                .collect();
+        } else if progress <= 0.0 {
+            row.clear();
+        }
+    }
+
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_marquee_content_stage(
+    report: &mut PlayerRenderIrReport,
+    direction: &str,
+    speed: f64,
+    authored_width: usize,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let rotate_right = direction == "right";
+
+    for row in &mut rows {
+        let marquee_width = authored_width.max(row.chars().count());
+        if marquee_width == 0 {
+            continue;
+        }
+        let offset = ((report.phase_t * speed.max(0.0) * marquee_width as f64).round() as usize)
+            % marquee_width;
+        let rotation_offset = if rotate_right {
+            marquee_width - offset
+        } else {
+            offset
+        };
+        *row = rotate_row(row, rotation_offset);
+    }
+
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_morph_content_stage(report: &mut PlayerRenderIrReport, target: &str) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let progress = report.phase_t.clamp(0.0, 1.0);
+    let replacement_glyph = if target == "dots" { '·' } else { '█' };
+
+    for row in &mut rows {
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(index, glyph)| {
+                if glyph == ' ' || (index as f64 / row.len().max(1) as f64) > progress {
+                    glyph
+                } else {
+                    replacement_glyph
+                }
+            })
+            .collect();
+    }
+
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_scramble_content_stage(report: &mut PlayerRenderIrReport, seed: usize, charset: &str) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let scramble_charset = charset.chars().collect::<Vec<_>>();
+    let resolved_progress = report.phase_t.clamp(0.0, 1.0);
+
+    for (y, row) in rows.iter_mut().enumerate() {
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                if glyph == ' ' || cell_threshold(x + seed, y) <= resolved_progress {
+                    glyph
+                } else {
+                    scramble_glyph(x + y + seed, &scramble_charset)
+                }
+            })
+            .collect();
+    }
+
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_wrap_indicator_content_stage(report: &mut PlayerRenderIrReport, every: usize) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let row_interval = every.max(1);
+
+    for (index, row) in rows.iter_mut().enumerate() {
+        if index % row_interval != 0 || row.is_empty() {
+            continue;
+        }
+
+        let mut chars = row.chars().collect::<Vec<_>>();
+        if let Some(last) = chars.last_mut() {
+            *last = '↵';
+        }
+        *row = chars.into_iter().collect();
+    }
+
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
 fn dense_rows(report: &PlayerRenderIrReport, width: usize, height: usize) -> Vec<String> {
     let mut rows = (0..height)
         .map(|y| {
@@ -490,6 +651,16 @@ fn rotate_row(row: &str, offset: usize) -> String {
 
 fn cell_threshold(x: usize, y: usize) -> f64 {
     ((x * 37 + y * 17) % 100) as f64 / 99.0
+}
+
+fn scramble_glyph(index: usize, charset: &[char]) -> char {
+    const FALLBACK_GLYPHS: &[char] = &['#', '%', '&', '?', '+', '*'];
+    let glyphs = if charset.is_empty() {
+        FALLBACK_GLYPHS
+    } else {
+        charset
+    };
+    glyphs[index % glyphs.len()]
 }
 
 fn scene_ir_for_request(

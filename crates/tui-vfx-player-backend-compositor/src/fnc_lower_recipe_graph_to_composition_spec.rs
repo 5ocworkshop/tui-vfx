@@ -70,6 +70,24 @@ pub enum NativeContentStage {
         tile_width: usize,
         tile_height: usize,
     },
+    /// Reveal/move source glyphs by row/cell routes.
+    CellMotion {
+        route: String,
+        stagger: usize,
+        affect: String,
+    },
+    /// Rotate each source row inside its authored marquee width.
+    Marquee {
+        direction: String,
+        speed: f64,
+        width: usize,
+    },
+    /// Replace progressively resolved glyphs with a target glyph family.
+    Morph { target: String },
+    /// Replace unresolved glyphs with deterministic scramble glyphs.
+    Scramble { seed: usize, charset: String },
+    /// Mark wrapping rows with an end-of-line indicator.
+    WrapIndicator { every: usize },
 }
 
 /// Cursor wake behavior for native typewriter content.
@@ -276,6 +294,13 @@ fn lower_node_into_spec(
         "content.typewriter" => lower_content_typewriter(node, request, content_stages, warnings),
         "content.splitFlap" => lower_content_split_flap(node, request, content_stages, warnings),
         "content.odometer" => lower_content_odometer(node, request, content_stages, warnings),
+        "content.cellMotion" => lower_content_cell_motion(node, request, content_stages, warnings),
+        "content.marquee" => lower_content_marquee(node, request, content_stages, warnings),
+        "content.morph" => lower_content_morph(node, request, content_stages, warnings),
+        "content.scramble" => lower_content_scramble(node, request, content_stages, warnings),
+        "content.wrapIndicator" => {
+            lower_content_wrap_indicator(node, request, content_stages, warnings)
+        }
         "filter.tint" => {
             spec.filters.push(FilterSpec::Tint {
                 color: color_input(node, request, "color").unwrap_or(ColorConfig::White),
@@ -471,6 +496,111 @@ fn lower_content_odometer(
             .to_string(),
         tile_width: native_content_tile_size(node, request, "tileWidth"),
         tile_height: native_content_tile_size(node, request, "tileHeight"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_cell_motion(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(
+        node,
+        "content.cellMotion",
+        &["route", "stagger", "affect"],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::CellMotion {
+        route: enum_input(node, request, "route")
+            .unwrap_or("fromTop")
+            .to_string(),
+        stagger: integer_input(node, request, "stagger", 0).max(0) as usize,
+        affect: enum_input(node, request, "affect")
+            .unwrap_or("all")
+            .to_string(),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_marquee(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "content.marquee", &["direction", "speed", "width"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::Marquee {
+        direction: enum_input(node, request, "direction")
+            .unwrap_or("left")
+            .to_string(),
+        speed: number_input(node, request, "speed", 1.0).max(0.0),
+        width: integer_input(node, request, "width", 0).max(0) as usize,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_morph(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(node, "content.morph", &["target"]) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::Morph {
+        target: enum_input(node, request, "target")
+            .unwrap_or("blocks")
+            .to_string(),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_scramble(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "content.scramble", &["seed", "charset"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::Scramble {
+        seed: integer_input(node, request, "seed", 7).max(0) as usize,
+        charset: enum_input(node, request, "charset")
+            .unwrap_or("#%&?+*")
+            .to_string(),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_wrap_indicator(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "content.wrapIndicator", &["every"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::WrapIndicator {
+        every: integer_input(node, request, "every", 1).max(1) as usize,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
