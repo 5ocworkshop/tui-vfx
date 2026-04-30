@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.24.0</VERS>
+// <VERS>VERSION: 0.25.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.24.0: PATCH — remove backend-owned dissolve mask source-stage rendering after mask.dissolve moved to compositor MaskSpec.
+// <CLOG>0.25.0: PATCH — remove backend-owned iris mask source-stage rendering after mask.iris moved to compositor MaskSpec.
+// 0.24.0: remove backend-owned dissolve mask source-stage rendering after mask.dissolve moved to compositor MaskSpec.
 // 0.23.0: remove backend-owned diamond mask source-stage rendering after mask.diamond moved to compositor MaskSpec.
 // 0.22.0: remove backend-owned radial mask source-stage rendering after mask.radial moved to compositor MaskSpec.
 // 0.21.0: remove backend-owned cellular mask source-stage rendering after mask.cellular moved to compositor MaskSpec.
@@ -281,9 +282,6 @@ fn scene_ir_with_native_content_stages(
             ),
             NativeContentStage::BlindsMask { orientation, count } => {
                 apply_blinds_mask_content_stage(&mut staged, orientation, *count)
-            }
-            NativeContentStage::IrisMask { shape, soft_edge } => {
-                apply_iris_mask_content_stage(&mut staged, shape, *soft_edge)
             }
             NativeContentStage::WipeMask {
                 direction,
@@ -1161,43 +1159,6 @@ fn apply_blinds_mask_content_stage(
             .enumerate()
             .map(|(x, glyph)| {
                 if blinds_keeps_cell(x, y, width, height, count, orientation, reveal) {
-                    glyph
-                } else {
-                    ' '
-                }
-            })
-            .collect();
-    }
-    report.rows = rows;
-    sync_styled_cells_to_rows(report);
-}
-
-fn apply_iris_mask_content_stage(report: &mut PlayerRenderIrReport, shape: &str, soft_edge: bool) {
-    let mask_shape = if shape == "diamond" {
-        SourceMaskShape::Diamond
-    } else {
-        SourceMaskShape::Circle
-    };
-    apply_shape_mask_content_stage(report, soft_edge, mask_shape);
-}
-
-fn apply_shape_mask_content_stage(
-    report: &mut PlayerRenderIrReport,
-    soft_edge: bool,
-    shape: SourceMaskShape,
-) {
-    let report_columns = report_width(report);
-    let report_rows = report_height(report);
-    let mut rows = dense_rows(report, report_columns, report_rows);
-    let height = rows.len().max(1);
-    for (y, row) in rows.iter_mut().enumerate() {
-        let width = row.chars().count().max(1);
-        let reveal_radius = source_mask_spotlight_radius(report.phase_t, width, height, soft_edge);
-        *row = row
-            .chars()
-            .enumerate()
-            .map(|(x, glyph)| {
-                if source_mask_spotlight_distance(x, y, width, height, shape) < reveal_radius {
                     glyph
                 } else {
                     ' '
@@ -2654,39 +2615,6 @@ fn blinds_keeps_cell(
     position_in_blind < blind_size * reveal.clamp(0.0, 1.0)
 }
 
-#[derive(Clone, Copy)]
-enum SourceMaskShape {
-    Circle,
-    Diamond,
-}
-
-fn source_mask_spotlight_radius(phase_t: f64, width: usize, height: usize, soft_edge: bool) -> f64 {
-    let max_radius = width.max(height) as f64;
-    let radius = max_radius * phase_t.clamp(0.0, 1.0);
-    if soft_edge {
-        radius + max_radius * 0.1
-    } else {
-        radius
-    }
-}
-
-fn source_mask_spotlight_distance(
-    x: usize,
-    y: usize,
-    width: usize,
-    height: usize,
-    shape: SourceMaskShape,
-) -> f64 {
-    let center_x = width as f64 / 2.0;
-    let center_y = height as f64 / 2.0;
-    let dx = (x as f64 - center_x).abs();
-    let dy = (y as f64 - center_y).abs();
-    match shape {
-        SourceMaskShape::Circle => dx.mul_add(dx, dy * dy).sqrt(),
-        SourceMaskShape::Diamond => dx + dy,
-    }
-}
-
 fn wipe_cutoff(width: usize, reveal: f64, soft_edge: bool) -> usize {
     let mut scaled = width as f64 * reveal;
     if soft_edge {
@@ -3192,4 +3120,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.24.0</VERS>
+// <VERS>END OF VERSION: 0.25.0</VERS>
