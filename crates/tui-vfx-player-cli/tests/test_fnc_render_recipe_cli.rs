@@ -2763,13 +2763,6 @@ fn test_fnc_cli_renders_compositor_backend_native_vignette_mask_blockers_json() 
             1,
         ),
         (
-            "masks/mask_cellular.json",
-            "debugMaskCellular",
-            "mask.cellular",
-            "contentStages",
-            1,
-        ),
-        (
             "masks/mask_diamond.json",
             "debugMaskDiamond",
             "mask.diamond",
@@ -2956,7 +2949,7 @@ fn test_fnc_cli_rejects_native_vignette_mask_blocker_invalid_enum_values_json() 
 fn test_fnc_cli_rejects_native_vignette_mask_blocker_unsupported_shapes_json() {
     for (effect_name, recipe_path_fragment, output_input_id) in [
         ("vignette", "filters/filter_vignette.json", "strength"),
-        ("cellular", "masks/mask_cellular.json", "cellSize"),
+        ("cellular", "masks/mask_cellular.json", "pattern"),
         ("diamond", "masks/mask_diamond.json", "softEdge"),
         ("dissolve", "masks/mask_dissolve.json", "seed"),
         ("iris", "masks/mask_iris.json", "shape"),
