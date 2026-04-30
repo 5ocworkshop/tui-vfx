@@ -1239,6 +1239,86 @@ fn test_fnc_cli_native_style_color_shift_matches_v2_deprecated_letter_cell_oracl
 }
 
 #[test]
+fn test_fnc_cli_native_sampler_faultline_matches_v2_deprecated_rows_json() {
+    for (phase, expected_sampler_count, expected_letter_cells, expected_rows) in [
+        (
+            "enter",
+            1,
+            26,
+            [
+                "        ╭───────────────────────────────",
+                "        │SAMPLER TEST: FaultLine Effect",
+                "                               │",
+                "                               │",
+                "───────────────────────────────╯",
+            ],
+        ),
+        (
+            "dwell",
+            0,
+            26,
+            [
+                "╭──────────────────────────────────────╮",
+                "│SAMPLER TEST: FaultLine Effect        │",
+                "│                                      │",
+                "│                                      │",
+                "╰──────────────────────────────────────╯",
+            ],
+        ),
+        (
+            "exit",
+            1,
+            23,
+            [
+                "            ╭───────────────────────────",
+                "            │SAMPLER TEST: FaultLine Eff",
+                "            │",
+                "                           │",
+                "───────────────────────────╯",
+            ],
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path("samplers/sampler_faultline.json"),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg("0.5"),
+            ],
+            "render-backend native V2 deprecated sampler fault-line oracle player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{phase}");
+        assert_eq!(report["fallbackUsed"], false, "{phase}");
+        assert_eq!(
+            report["compositionSpecSummary"]["samplers"], expected_sampler_count,
+            "{phase}"
+        );
+        assert_eq!(report["rows"].as_array().expect("rows").len(), 5, "{phase}");
+        for (index, expected_row) in expected_rows.iter().enumerate() {
+            assert_eq!(report["rows"][index], *expected_row, "{phase} row {index}");
+        }
+        assert_eq!(
+            report["letterCellEvidence"]["foregroundBackgroundClassCounts"]["fg=rgba(255,255,0,255) bg=rgba(50,40,20,255)"],
+            expected_letter_cells,
+            "{phase}"
+        );
+    }
+}
+
+#[test]
 fn test_fnc_cli_native_sub_pixel_bar_matches_v2_deprecated_glyph_oracle_json() {
     let report = player_cli_json(
         vec![
@@ -2065,7 +2145,6 @@ fn test_fnc_cli_rejects_native_exact_effect_blocker_subset_unsupported_shapes_js
             "origin",
         ),
         ("noise_dither", "masks/mask_noise_dither.json", "seed"),
-        ("fault_line", "samplers/sampler_faultline.json", "offset"),
         ("shredder", "samplers/sampler_shredder.json", "sliceWidth"),
         (
             "radial_twist",
@@ -4301,7 +4380,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 651);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 652);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(

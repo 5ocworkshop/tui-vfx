@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/samplers/cls_fault_line.rs</FILE> - <DESC>FaultLine sampler implementation</DESC>
-// <VERS>VERSION: 2.3.0</VERS>
+// <VERS>VERSION: 2.3.1</VERS>
 // <WCTX>v3.1 native debug-recipes closure: support fixed lower-half horizontal offsets authored by debug sampler fixtures.</WCTX>
-// <CLOG>2.3.0: add optional fixed_offset mode while preserving the existing dynamic fault-line default.
+// <CLOG>2.3.1: crop dynamic right-edge displacement instead of sampling outside the source width.
+// 2.3.0: add optional fixed_offset mode while preserving the existing dynamic fault-line default.
 // 2.2.0: sample() now returns SamplerOutput; displacing branch carries delta_x; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
@@ -99,7 +100,7 @@ impl Sampler for FaultLine {
             dest_x as i32 + offset
         };
 
-        if src_x_i < 0 {
+        if src_x_i < 0 || src_x_i >= ctx.width as i32 {
             SamplerOutput::no_displacement()
         } else {
             let src_x = src_x_i as u16;
@@ -185,4 +186,4 @@ mod tests {
 }
 
 // <FILE>tui-vfx-compositor/src/samplers/cls_fault_line.rs</FILE> - <DESC>FaultLine sampler implementation</DESC>
-// <VERS>END OF VERSION: 2.3.0</VERS>
+// <VERS>END OF VERSION: 2.3.1</VERS>

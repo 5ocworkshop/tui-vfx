@@ -170,7 +170,7 @@ pub(crate) fn collect_handled_primitive_inputs(
         "sampler.sineWave" => fields(["axis", "amplitude", "frequency", "speed", "phaseOffset"]),
         "sampler.ripple" => fields(["amplitude", "center", "speed", "wavelength"]),
         "sampler.shredder" => fields(["sliceWidth", "offset"]),
-        "sampler.faultLine" => fields(["offset"]),
+        "sampler.faultLine" => fields(["offset", "seed", "intensity", "splitBias"]),
         "sampler.radialTwist" => fields(["strength"]),
         "sampler.crt" => fields(["curvature", "scanlineStrength", "jitter"]),
         "sampler.crtJitter" => fields(["amplitude", "frequency", "seed"]),

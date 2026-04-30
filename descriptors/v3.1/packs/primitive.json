@@ -8522,6 +8522,66 @@
         ]
       },
       "inputs": {
+        "seed": {
+          "displayName": "Seed",
+          "description": "Deterministic seed used to choose the fault split position.",
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 42
+            },
+            "range": {
+              "min": 0,
+              "max": 4294967295
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "random-seed"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Strength multiplier for the dynamic fault-line displacement.",
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 1.0
+            },
+            "range": {
+              "min": 0.0,
+              "max": 4.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "displacement-strength"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "splitBias": {
+          "displayName": "Split Bias",
+          "description": "Bias toward an upper (-1.0) or lower (+1.0) split line.",
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 0.0
+            },
+            "range": {
+              "min": -1.0,
+              "max": 1.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "split-bias"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
         "offset": {
           "displayName": "Offset",
           "description": null,

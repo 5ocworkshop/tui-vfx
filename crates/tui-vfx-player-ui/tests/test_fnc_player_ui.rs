@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>Player UI: lock playback and drawer presentation behavior for migrated primitive review.</WCTX>
-// <CLOG>0.5.0: MINOR — assert Eichler-inspired stats drawer status colors.</CLOG>
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Player UI: lock playback, drawer, wrapped recipe-summary, and local theme surface behavior for migrated primitive review.</WCTX>
+// <CLOG>0.6.0: MINOR — assert wrapped summary descriptions and Eichler-inspired canvas/panel surfaces.</CLOG>
 
 use std::{fs, path::PathBuf, process::Command};
 
@@ -390,6 +390,89 @@ fn test_fnc_ratatui_stats_drawer_uses_eichler_status_colors() {
 }
 
 #[test]
+fn test_fnc_ratatui_preview_summary_wraps_long_recipe_description() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut state =
+        PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    state.recipe.metadata.description = Some(
+        "Long description: Eichler-inspired recipe guidance should wrap inside the summary panel \
+         with sunlit atrium context, humane scan rhythm, keyboard-safe metadata, and edge-case \
+         text that must remain visible instead of running off the terminal canvas."
+            .to_string(),
+    );
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.stats_drawer_open = false;
+    let backend = TestBackend::new(92, 28);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal);
+    let description_rows = rows
+        .iter()
+        .filter(|row| {
+            row.contains("Long description:")
+                || row.contains("guidance should wrap")
+                || row.contains("sunlit")
+                || row.contains("atrium context")
+                || row.contains("edge-case text")
+        })
+        .count();
+
+    assert!(
+        description_rows >= 3,
+        "description should wrap across multiple visible rows:\n{}",
+        rows.join("\n")
+    );
+    assert!(
+        rows.iter().any(|row| row.contains("Player snapshot")),
+        "preview content should remain visible below wrapped metadata:\n{}",
+        rows.join("\n")
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_canvas_and_panels_use_eichler_theme_surfaces() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let backend = TestBackend::new(110, 30);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+
+    assert_eq!(
+        terminal.backend().buffer()[(0, 0)].bg,
+        Color::Rgb(16, 22, 28)
+    );
+    assert_eq!(
+        cell_background_at_text(&terminal, " Browser ", 1),
+        Some(Color::Rgb(32, 42, 50))
+    );
+    assert_eq!(
+        cell_background_at_text(&terminal, " Recipe ", 1),
+        Some(Color::Rgb(42, 54, 64))
+    );
+    assert_eq!(
+        cell_foreground_at_text(&terminal, "tui-vfx player ", 0),
+        Some(Color::Rgb(80, 220, 205))
+    );
+}
+
+#[test]
 fn test_fnc_ratatui_stats_drawer_width_matches_widest_stats_line() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -620,6 +703,20 @@ fn cell_foreground_at_text(
     Some(buffer[(column as u16, area.y + row_index as u16)].fg)
 }
 
+fn cell_background_at_text(
+    terminal: &Terminal<TestBackend>,
+    needle: &str,
+    character_offset: usize,
+) -> Option<Color> {
+    let rows = terminal_rows(terminal);
+    let row_index = rows.iter().position(|row| row.contains(needle))?;
+    let byte_index = rows[row_index].find(needle)?;
+    let column = rows[row_index][..byte_index].chars().count() + character_offset;
+    let buffer = terminal.backend().buffer();
+    let area = *buffer.area();
+    Some(buffer[(column as u16, area.y + row_index as u16)].bg)
+}
+
 fn expected_stats_lines(app: &PlayerUiApp) -> Vec<String> {
     let report = app.player.report();
     vec![
@@ -726,4 +823,4 @@ fn stderr(output: &std::process::Output) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

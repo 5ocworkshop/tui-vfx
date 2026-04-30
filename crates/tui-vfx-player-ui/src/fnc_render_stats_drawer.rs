@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_stats_drawer.rs</FILE> - <DESC>Render the player UI stats drawer</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Player UI: keep rapidly changing playback/backend evidence in a compact side drawer.</WCTX>
-// <CLOG>0.2.0: MINOR — render Eichler-inspired styled stats drawer lines.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Player UI: keep rapidly changing playback/backend evidence in a compact themed side drawer.</WCTX>
+// <CLOG>0.3.0: MINOR — apply local Eichler-inspired drawer surface background.</CLOG>
 
 use ratatui::{
     Frame,
@@ -28,12 +28,14 @@ pub(crate) fn render_stats_drawer(app: &PlayerUiApp, frame: &mut Frame<'_>, area
                         theme.drawer_title_style(),
                     )))
                     .borders(Borders::ALL)
-                    .border_style(theme.drawer_border_style()),
+                    .border_style(theme.drawer_border_style())
+                    .style(theme.drawer_panel_style()),
             )
+            .style(theme.drawer_panel_style())
             .wrap(Wrap { trim: false }),
         area,
     );
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_stats_drawer.rs</FILE> - <DESC>Render the player UI stats drawer</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

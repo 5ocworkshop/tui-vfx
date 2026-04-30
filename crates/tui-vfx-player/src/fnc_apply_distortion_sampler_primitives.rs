@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_distortion_sampler_primitives.rs</FILE> - <DESC>Apply bounded distortion-sampler adapters to text-grid rows</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>v3.1 descriptor/adapter migration: add honest distortion-sampler evidence.</WCTX>
-// <CLOG>0.1.0: INIT — add shredder, fault-line, and radial-twist approximations.</CLOG>
+// <CLOG>0.2.0: MINOR — align fault-line sampler with V2 seed/intensity/splitBias dynamics.
+// 0.1.0: INIT — add shredder, fault-line, and radial-twist approximations.</CLOG>
 
 use tui_vfx_contract::NodeSpec;
 
@@ -37,11 +38,44 @@ fn apply_shredder(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [St
 }
 
 fn apply_fault_line(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [String]) {
-    let offset = resolve_effect_integer(node, request, "offset", 2);
-    let split = rows.len() / 2;
-    for row in rows.iter_mut().skip(split) {
-        *row = shift_row(row, offset);
+    let explicit_offset = resolve_optional_effect_integer(node, request, "offset");
+    let split = explicit_offset
+        .map(|_| rows.len() / 2)
+        .unwrap_or_else(|| fault_line_split(rows.len(), node, request));
+    let dynamic_offset =
+        explicit_offset.unwrap_or_else(|| fault_line_dynamic_offset(node, request));
+    for (row_index, row) in rows.iter_mut().enumerate() {
+        if row_index < split {
+            *row = shift_row(row, dynamic_offset);
+        } else {
+            *row = shift_row(row, -dynamic_offset);
+        }
     }
+}
+
+fn fault_line_split(row_count: usize, node: &NodeSpec, request: &PlayerSampleRequest) -> usize {
+    if row_count < 3 {
+        return row_count / 2;
+    }
+    let seed = resolve_effect_integer(node, request, "seed", 0).max(0) as u64;
+    let split_bias = resolve_effect_number(node, request, "splitBias", 0.0).clamp(-1.0, 1.0);
+    let base_split = ((seed.wrapping_mul(31)) % row_count as u64) as f64;
+    (base_split + split_bias * row_count as f64 * 0.3).clamp(1.0, (row_count - 1) as f64) as usize
+}
+
+fn fault_line_dynamic_offset(node: &NodeSpec, request: &PlayerSampleRequest) -> i64 {
+    let intensity = resolve_effect_number(node, request, "intensity", 1.0).max(0.0);
+    ((1.0 - request.phase_t.clamp(0.0, 1.0)) * 20.0 * intensity).round() as i64
+}
+
+fn resolve_optional_effect_integer(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    key: &str,
+) -> Option<i64> {
+    node.inputs
+        .get(&tui_vfx_contract::EffectInputId::new(key))
+        .map(|_| resolve_effect_integer(node, request, key, 0))
 }
 
 fn apply_radial_twist(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [String]) {
@@ -125,4 +159,4 @@ fn drop_every_nth_glyph(row: &str, scanline_strength: f64) -> String {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_apply_distortion_sampler_primitives.rs</FILE> - <DESC>Apply bounded distortion-sampler adapters to text-grid rows</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -263,6 +263,20 @@ fn scene_ir_with_native_content_stages(
                 frequency,
                 seed,
             } => apply_crt_jitter_sampler_content_stage(&mut staged, *amplitude, *frequency, *seed),
+            NativeContentStage::FaultLineSampler {
+                seed,
+                intensity,
+                split_bias,
+                width,
+                height,
+            } => apply_fault_line_sampler_content_stage(
+                &mut staged,
+                *seed,
+                *intensity,
+                *split_bias,
+                *width,
+                *height,
+            ),
             NativeContentStage::CellularMask {
                 cell_size,
                 seed,
@@ -1025,6 +1039,43 @@ fn apply_crt_jitter_sampler_content_stage(
     }
     report.rows = rows;
     sync_styled_cells_to_rows(report);
+}
+
+fn apply_fault_line_sampler_content_stage(
+    report: &mut PlayerRenderIrReport,
+    seed: u64,
+    intensity: f64,
+    split_bias: f64,
+    width: usize,
+    height: usize,
+) {
+    let report_columns = width;
+    let report_rows = height;
+    let split = fault_line_split(report_rows, seed, split_bias);
+    let offset =
+        ((1.0 - report.phase_t.clamp(0.0, 1.0)) * 20.0 * intensity.max(0.0)).round() as isize;
+    report.rows = dense_rows(report, report_columns, report_rows)
+        .into_iter()
+        .enumerate()
+        .map(|(row_index, row)| {
+            if row_index < split {
+                shift_row(&row, offset)
+            } else {
+                shift_row(&row, -offset)
+            }
+        })
+        .map(|row| row.trim_end().to_string())
+        .collect();
+    sync_styled_cells_to_rows(report);
+}
+
+fn fault_line_split(row_count: usize, seed: u64, split_bias: f64) -> usize {
+    if row_count < 3 {
+        return row_count / 2;
+    }
+    let base_split = (seed.wrapping_mul(31) % row_count as u64) as f64;
+    (base_split + split_bias.clamp(-1.0, 1.0) * row_count as f64 * 0.3)
+        .clamp(1.0, (row_count - 1) as f64) as usize
 }
 
 fn apply_cellular_mask_content_stage(

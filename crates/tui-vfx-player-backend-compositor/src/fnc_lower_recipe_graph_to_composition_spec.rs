@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.11.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.11.0: MINOR — lower style.colorFade through source-owned player-compatible style stages.
+// <CLOG>0.12.0: MINOR — lower V2-parity fault-line sampler seed/intensity/split-bias fields.
+// 0.11.0: MINOR — lower style.colorFade through source-owned player-compatible style stages.
 // 0.10.0: MINOR — lower current shader blockers through source-owned player-compatible style stages.
 // 0.9.0: MINOR — lower CRT samplers through source-owned player-compatible content stages.
 // 0.8.2: PATCH — share the supported wipe direction list between path-reveal and wipe-corner lowering.
@@ -154,6 +155,14 @@ pub enum NativeContentStage {
         amplitude: f64,
         frequency: f64,
         seed: usize,
+    },
+    /// Apply V2-compatible fault-line row displacement to source rows.
+    FaultLineSampler {
+        seed: u64,
+        intensity: f64,
+        split_bias: f64,
+        width: usize,
+        height: usize,
     },
     /// Apply player-compatible cellular mask semantics to source rows.
     CellularMask {
@@ -676,7 +685,9 @@ fn lower_node_into_spec(
         }
         "sampler.crt" => lower_crt_sampler(node, content_stages, request, warnings),
         "sampler.crtJitter" => lower_crt_jitter_sampler(node, content_stages, request, warnings),
-        "sampler.faultLine" => lower_fault_line_sampler(node, spec, request, warnings),
+        "sampler.faultLine" => {
+            lower_fault_line_sampler(node, spec, content_stages, request, warnings)
+        }
         "sampler.radialTwist" => lower_radial_twist_sampler(node, spec, request, warnings),
         "sampler.shredder" => lower_shredder_sampler(node, spec, request, warnings),
         "shader.linearGradient" => lower_linear_gradient(node, spec, request, warnings),
@@ -1687,19 +1698,45 @@ fn lower_crt_jitter_sampler(
 fn lower_fault_line_sampler(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
+    content_stages: &mut Vec<NativeContentStage>,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
-    if let Some(reason) = unsupported_native_effect_reason(node, "sampler.faultLine", &["offset"]) {
+    if let Some(reason) = unsupported_native_effect_reason(
+        node,
+        "sampler.faultLine",
+        &["offset", "seed", "intensity", "splitBias"],
+    ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    spec.push_sampler(SamplerSpec::FaultLine {
-        seed: 0,
-        intensity: SignalOrFloat::Static(1.0),
-        split_bias: 0.0,
-        offset: Some(clamped_i16_input(node, request, "offset", 2)),
-    });
+    if let Some(offset) = optional_i16_input(node, request, "offset") {
+        spec.push_sampler(SamplerSpec::FaultLine {
+            seed: 0,
+            intensity: SignalOrFloat::Static(1.0),
+            split_bias: 0.0,
+            offset: Some(offset),
+        });
+    } else {
+        spec.push_sampler(SamplerSpec::None);
+        content_stages.push(NativeContentStage::FaultLineSampler {
+            seed: integer_input(node, request, "seed", 0).max(0) as u64,
+            intensity: number_input(node, request, "intensity", 1.0).max(0.0),
+            split_bias: number_input(node, request, "splitBias", 0.0).clamp(-1.0, 1.0),
+            width: request
+                .recipe
+                .scenes
+                .first()
+                .map(|scene| scene.width)
+                .unwrap_or(request.source_ir.width),
+            height: request
+                .recipe
+                .scenes
+                .first()
+                .map(|scene| scene.height)
+                .unwrap_or(request.source_ir.height),
+        });
+    }
     NodeLoweringOutcome::Lowered { warnings }
 }
 
@@ -2827,6 +2864,20 @@ fn optional_number_input(
     key: &str,
 ) -> Option<f64> {
     input_value(node, request, key).and_then(Value::as_range_number)
+}
+
+fn optional_i16_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Option<i16> {
+    input_value(node, request, key).and_then(|value| match value {
+        Value::Integer(value) => Some((*value).clamp(i16::MIN as i64, i16::MAX as i64) as i16),
+        Value::Number(value) => {
+            Some((*value as i64).clamp(i16::MIN as i64, i16::MAX as i64) as i16)
+        }
+        _ => None,
+    })
 }
 
 fn integer_input(

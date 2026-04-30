@@ -1,25 +1,35 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Player UI: provide browser, preview panes, and a quiet stats drawer over player frame reports.</WCTX>
-// <CLOG>0.2.0: MINOR — move rapidly updating stats into a right-side drawer.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Player UI: provide themed browser, preview, studio, and quiet stats surfaces over player frame reports.</WCTX>
+// <CLOG>0.3.0: MINOR — apply Eichler-inspired surfaces and reserve wrapped recipe-summary space.</CLOG>
 
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
+    widgets::{Block, Borders, Paragraph, Wrap},
 };
 use tui_vfx_player::{PlayerRenderBackendOutput, PlayerRenderCell};
 
 use crate::{
     PlayerUiApp, PlayerUiFocus, PlayerUiState,
+    cls_player_ui_theme::PlayerUiTheme,
+    col_player_ui_recipe_summary::{
+        player_ui_recipe_summary_height, player_ui_recipe_summary_lines,
+        player_ui_recipe_summary_wrap,
+    },
     col_player_ui_stats_drawer::player_ui_stats_drawer_width,
-    fnc_render_ratatui_help::render_ratatui_help, fnc_render_stats_drawer::render_stats_drawer,
+    fnc_render_player_browser::render_player_browser,
+    fnc_render_ratatui_help::render_ratatui_help,
+    fnc_render_stats_drawer::render_stats_drawer,
+    fnc_render_studio_controls::render_studio_controls,
 };
 
 /// Render the full interactive player UI frame.
 pub fn render_ratatui_ui(app: &mut PlayerUiApp, frame: &mut Frame<'_>) {
+    let theme = PlayerUiTheme::eichler();
+    frame.render_widget(Block::default().style(theme.canvas_style()), frame.area());
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -37,6 +47,7 @@ pub fn render_ratatui_ui(app: &mut PlayerUiApp, frame: &mut Frame<'_>) {
 }
 
 fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
+    let theme = PlayerUiTheme::eichler();
     let focus = match app.focus {
         PlayerUiFocus::Browser => "browser",
         PlayerUiFocus::Preview => "preview",
@@ -50,16 +61,20 @@ fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
     let text = Line::from(vec![
         Span::styled(
             "tui-vfx player ",
-            Style::default()
-                .fg(Color::Cyan)
+            theme
+                .chrome_style()
+                .fg(Color::Rgb(80, 220, 205))
                 .add_modifier(Modifier::BOLD),
         ),
-        Span::raw(format!(
-            "focus={focus} root={} | {drawer_hint}",
-            app.browser_root.display()
-        )),
+        Span::styled(
+            format!(
+                "focus={focus} root={} | {drawer_hint}",
+                app.browser_root.display()
+            ),
+            theme.chrome_style(),
+        ),
     ]);
-    frame.render_widget(Paragraph::new(text), area);
+    frame.render_widget(Paragraph::new(text).style(theme.chrome_style()), area);
 }
 
 fn render_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
@@ -86,7 +101,7 @@ fn render_main_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
                 Constraint::Percentage(25),
             ])
             .split(area);
-        render_browser(app, frame, panes[0]);
+        render_player_browser(app, frame, panes[0]);
         render_preview(&app.player, frame, panes[1]);
         render_studio_controls(app, frame, panes[2]);
     } else {
@@ -94,146 +109,72 @@ fn render_main_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
             .direction(Direction::Horizontal)
             .constraints([Constraint::Percentage(34), Constraint::Percentage(66)])
             .split(area);
-        render_browser(app, frame, panes[0]);
+        render_player_browser(app, frame, panes[0]);
         render_preview(&app.player, frame, panes[1]);
     }
 }
 
-fn render_browser(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
-    let title = if app.focus == PlayerUiFocus::Browser {
-        " Browser * "
-    } else {
-        " Browser "
-    };
-    let items = app
-        .browser
-        .files()
-        .iter()
-        .map(|entry| {
-            let style = if entry.is_dir {
-                Style::default()
-                    .fg(Color::LightBlue)
-                    .add_modifier(Modifier::BOLD)
-            } else if entry.name.ends_with(".json") {
-                Style::default().fg(Color::LightGreen)
-            } else {
-                Style::default().fg(Color::Gray)
-            };
-            let prefix = if entry.is_dir { "📁 " } else { "📄 " };
-            ListItem::new(Line::from(vec![
-                Span::raw(prefix),
-                Span::styled(entry.name.clone(), style),
-            ]))
-        })
-        .collect::<Vec<_>>();
-    let list = List::new(items)
-        .block(Block::default().title(title).borders(Borders::ALL))
-        .highlight_symbol("▶ ")
-        .highlight_style(Style::default().fg(Color::White).bg(Color::Blue));
-    frame.render_stateful_widget(list, area, &mut app.list_state);
-}
-
 fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect) {
-    let sections = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(6),
-            Constraint::Min(5),
-            Constraint::Length(5),
-        ])
-        .split(area);
+    let theme = PlayerUiTheme::eichler();
     let active = if state.paused { "paused" } else { "playing" };
     let motion = if state.motion_disabled {
         "motion-disabled"
     } else {
         "motion"
     };
+    let summary_height = player_ui_recipe_summary_height(state, area.width, area.height);
+    let sections = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(summary_height),
+            Constraint::Min(5),
+            Constraint::Length(5),
+        ])
+        .split(area);
     frame.render_widget(
-        Paragraph::new(preview_context_lines(state, active, motion))
-            .block(Block::default().title(" Preview ").borders(Borders::ALL)),
+        Paragraph::new(player_ui_recipe_summary_lines(state, active, motion))
+            .style(theme.elevated_panel_style())
+            .block(
+                Block::default()
+                    .title(Line::from(Span::styled(" Recipe ", theme.title_style())))
+                    .borders(Borders::ALL)
+                    .border_style(theme.elevated_border_style())
+                    .style(theme.elevated_panel_style()),
+            )
+            .wrap(player_ui_recipe_summary_wrap()),
         sections[0],
     );
     frame.render_widget(
         Paragraph::new(backend_preview_lines(&state.last_backend_output))
             .block(
                 Block::default()
-                    .title(" Player snapshot ")
-                    .borders(Borders::ALL),
+                    .title(Line::from(Span::styled(
+                        " Player snapshot ",
+                        theme.title_style(),
+                    )))
+                    .borders(Borders::ALL)
+                    .border_style(theme.elevated_border_style())
+                    .style(theme.elevated_panel_style()),
             )
+            .style(theme.elevated_panel_style())
             .wrap(Wrap { trim: false }),
         sections[1],
     );
     frame.render_widget(
-        Paragraph::new(diagnostic_lines(state)).block(
-            Block::default()
-                .title(" Diagnostics ")
-                .borders(Borders::ALL),
-        ),
+        Paragraph::new(diagnostic_lines(state))
+            .block(
+                Block::default()
+                    .title(Line::from(Span::styled(
+                        " Diagnostics ",
+                        theme.title_style(),
+                    )))
+                    .borders(Borders::ALL)
+                    .border_style(theme.elevated_border_style())
+                    .style(theme.elevated_panel_style()),
+            )
+            .style(theme.elevated_panel_style()),
         sections[2],
     );
-}
-
-fn render_studio_controls(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
-    let title = if app.focus == PlayerUiFocus::Studio {
-        " Studio controls * "
-    } else {
-        " Studio controls "
-    };
-    let lines = if app.player.controls.is_empty() {
-        vec![Line::from("no descriptor-derived controls")]
-    } else {
-        app.player
-            .controls
-            .iter()
-            .enumerate()
-            .map(|(index, control)| {
-                let marker = if index == app.studio_control_index {
-                    "▶"
-                } else {
-                    " "
-                };
-                let current_value = control
-                    .current_value
-                    .as_ref()
-                    .map(|value| value.to_string())
-                    .unwrap_or_else(|| "none".to_string());
-                Line::from(format!(
-                    "{marker} {} [{}] {} -> {}",
-                    control.label, control.control_kind, control.target_kind, current_value
-                ))
-            })
-            .collect()
-    };
-    frame.render_widget(
-        Paragraph::new(lines)
-            .block(Block::default().title(title).borders(Borders::ALL))
-            .wrap(Wrap { trim: false }),
-        area,
-    );
-}
-
-fn preview_context_lines(state: &PlayerUiState, active: &str, motion: &str) -> Vec<Line<'static>> {
-    let metadata = &state.recipe.metadata;
-    vec![
-        Line::from(format!("recipe: {}", state.recipe_path.display())),
-        Line::from(format!(
-            "title: {}",
-            metadata.title.as_deref().unwrap_or("<untitled>")
-        )),
-        Line::from(format!(
-            "description: {}",
-            metadata.description.as_deref().unwrap_or("<none>")
-        )),
-        Line::from(format!(
-            "expected: {}",
-            metadata.expected_visual.as_deref().unwrap_or("<none>")
-        )),
-        Line::from(format!(
-            "status: {:?}  backend={}  {active}  {motion}",
-            state.report().status,
-            state.last_backend_output.backend
-        )),
-    ]
 }
 
 fn backend_preview_lines(output: &PlayerRenderBackendOutput) -> Vec<Line<'static>> {
@@ -364,6 +305,7 @@ fn diagnostic_lines(state: &PlayerUiState) -> Vec<Line<'static>> {
 }
 
 fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
+    let theme = PlayerUiTheme::eichler();
     let text = match app.focus {
         PlayerUiFocus::Browser => {
             "Tab preview | ↑/↓ j/k move | Enter/Right open | Left parent | Ctrl+←/→ stats | q quit | ? help"
@@ -380,10 +322,15 @@ fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
         }
     };
     frame.render_widget(
-        Paragraph::new(text).block(Block::default().borders(Borders::TOP)),
+        Paragraph::new(text).style(theme.chrome_style()).block(
+            Block::default()
+                .borders(Borders::TOP)
+                .border_style(theme.panel_border_style())
+                .style(theme.chrome_style()),
+        ),
         area,
     );
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

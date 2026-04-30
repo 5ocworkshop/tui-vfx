@@ -1,12 +1,13 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_content_primitive.rs</FILE> - <DESC>Apply bounded content-effect primitives to text-grid rows</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>v3.1 descriptor/adapter migration: provide honest content-effect evidence for first canonical adapter coverage set.</WCTX>
-// <CLOG>0.1.0: INIT — add typewriter, marquee, split-flap, wrap-indicator, scramble, and morph adapters.</CLOG>
+// <VERS>VERSION: 0.1.1</VERS>
+// <WCTX>v3.1 content adapters: dispatch supported content primitives to focused implementations.</WCTX>
+// <CLOG>0.1.1: PATCH — move typewriter primitive behavior into its own OFPF function file.</CLOG>
 
 use tui_vfx_contract::NodeSpec;
 
 use crate::{
     PlayerSampleRequest,
+    fnc_apply_typewriter_content_primitive::apply_typewriter_content_primitive,
     fnc_resolve_effect_input::{
         resolve_effect_enum, resolve_effect_integer, resolve_effect_number,
     },
@@ -19,7 +20,7 @@ pub(crate) fn apply_content_primitive(
     rows: &mut [String],
 ) -> bool {
     match node.effect.as_str() {
-        "content.typewriter" => apply_typewriter(node, request, rows),
+        "content.typewriter" => apply_typewriter_content_primitive(node, request, rows),
         "content.marquee" => apply_marquee(node, request, rows),
         "content.splitFlap" => apply_split_flap(node, request, rows),
         "content.wrapIndicator" => apply_wrap_indicator(node, request, rows),
@@ -40,50 +41,6 @@ pub(crate) fn apply_content_primitive(
         _ => return false,
     }
     true
-}
-
-fn apply_typewriter(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [String]) {
-    let speed = resolve_effect_number(node, request, "speed", 1.0).max(0.0);
-    let speed_variance = resolve_effect_number(node, request, "speedVariance", 0.0).clamp(0.0, 1.0);
-    let visible_fraction =
-        (request.phase_t * (speed + speed_variance * request.phase_t)).clamp(0.0, 1.0);
-    let total = rows.iter().map(|row| row.chars().count()).sum::<usize>();
-    let visible = (total as f64 * visible_fraction).round() as usize;
-    let mut seen = 0usize;
-    let cursor = resolve_effect_enum(node, request, "cursorCharacter", "▌")
-        .chars()
-        .next()
-        .unwrap_or('▌');
-    let wake_mode = resolve_effect_enum(node, request, "cursorWake", "off");
-    let wake_cells = resolve_effect_integer(node, request, "wakeCells", 1).max(0) as usize;
-    for row in rows {
-        let mut wrote_cursor = false;
-        let mut cursor_index = None;
-        let mut chars = Vec::new();
-        for (index, glyph) in row.chars().enumerate() {
-            seen += 1;
-            if seen <= visible || glyph == ' ' {
-                chars.push(glyph);
-            } else if !wrote_cursor {
-                wrote_cursor = true;
-                cursor_index = Some(index);
-                chars.push(cursor);
-            } else {
-                chars.push(' ');
-            }
-        }
-        if (wake_mode == "ghost" || wake_mode == "tint")
-            && let Some(cursor_index) = cursor_index
-        {
-            let start = cursor_index.saturating_sub(wake_cells);
-            for glyph in &mut chars[start..cursor_index] {
-                if *glyph != ' ' {
-                    *glyph = if wake_mode == "ghost" { '░' } else { '·' };
-                }
-            }
-        }
-        *row = chars.into_iter().collect();
-    }
 }
 
 fn apply_marquee(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [String]) {
@@ -667,4 +624,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_apply_content_primitive.rs</FILE> - <DESC>Apply bounded content-effect primitives to text-grid rows</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

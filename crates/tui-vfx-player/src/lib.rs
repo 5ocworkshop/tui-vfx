@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>VERSION: 0.11.0</VERS>
-// <WCTX>K2.12 schema lock: export offender-ledger classification helpers and DTOs.</WCTX>
-// <CLOG>0.11.0: MINOR — wire schema-readiness offender DTOs and classifier helpers.
-// 0.10.0: MINOR — export schema-readiness report DTOs and builder.</CLOG>
+// <VERS>VERSION: 0.11.1</VERS>
+// <WCTX>Exports player modules plus public report and rendering APIs.</WCTX>
+// <CLOG>0.11.1: PATCH — register the extracted typewriter content primitive module.</CLOG>
 
 //! Contract-native skeleton player for canonical v3.1 recipes.
 //!
@@ -66,6 +65,7 @@ mod fnc_apply_shader_primitive;
 mod fnc_apply_simple_mask_primitives;
 mod fnc_apply_style_primitive;
 mod fnc_apply_styled_primitive;
+mod fnc_apply_typewriter_content_primitive;
 pub mod fnc_build_control_catalog_report;
 mod fnc_build_fixture_qc_messages;
 mod fnc_build_fixture_qc_recipe_entries;
@@ -260,4 +260,4 @@ pub(crate) use fnc_schema_readiness_offender_text::{
 pub(crate) use fnc_summarize_schema_readiness::summarize_schema_readiness;
 
 // <FILE>crates/tui-vfx-player/src/lib.rs</FILE> - <DESC>Contract-native skeleton player exports</DESC>
-// <VERS>END OF VERSION: 0.11.0</VERS>
+// <VERS>END OF VERSION: 0.11.1</VERS>
