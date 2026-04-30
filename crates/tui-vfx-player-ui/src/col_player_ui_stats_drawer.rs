@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/src/col_player_ui_stats_drawer.rs</FILE> - <DESC>Stats drawer presentation helpers for the player UI</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.3.1</VERS>
 // <WCTX>Player UI: keep rapidly changing playback/backend evidence out of the top status line.</WCTX>
-// <CLOG>0.3.0: PATCH — reserve stable drawer width and isolate hash evidence lines.</CLOG>
+// <CLOG>0.3.1: PATCH — move phase/sample timing out of the stats drawer.</CLOG>
 
 use ratatui::text::{Line, Span};
 
@@ -15,11 +15,6 @@ const PLAYER_UI_STATS_DRAWER_WIDTH_PADDING: u16 = 4;
 pub(crate) fn player_ui_stats_drawer_text_lines(app: &PlayerUiApp) -> Vec<String> {
     let report = app.player.report();
     vec![
-        format!(
-            "phase={:?} sample_t={:.2}",
-            app.player.phase(),
-            app.player.phase_t()
-        ),
         format!(
             "loop_t={} elapsed={}ms",
             app.player
@@ -55,19 +50,6 @@ pub(crate) fn player_ui_stats_drawer_lines(app: &PlayerUiApp) -> Vec<Line<'stati
     let theme = PlayerUiTheme::eichler();
     let report = app.player.report();
     vec![
-        Line::from(vec![
-            Span::styled("phase=", theme.metric_label_style()),
-            Span::styled(
-                format!("{:?}", app.player.phase()),
-                theme.healthy_status_style(),
-            ),
-            Span::raw(" "),
-            Span::styled("sample_t=", theme.metric_label_style()),
-            Span::styled(
-                format!("{:.2}", app.player.phase_t()),
-                theme.healthy_status_style(),
-            ),
-        ]),
         Line::from(vec![
             Span::styled("loop_t=", theme.metric_label_style()),
             Span::styled(
@@ -165,4 +147,4 @@ fn format_player_ui_hash(value: u64) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/col_player_ui_stats_drawer.rs</FILE> - <DESC>Stats drawer presentation helpers for the player UI</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>

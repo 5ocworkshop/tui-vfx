@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.3.1</VERS>
 // <WCTX>Player UI: provide themed browser, preview, studio, and quiet stats surfaces over player frame reports.</WCTX>
-// <CLOG>0.3.0: MINOR — apply Eichler-inspired surfaces and reserve wrapped recipe-summary space.</CLOG>
+// <CLOG>0.3.1: PATCH — show color-coded phase/sample timing in the snapshot title.</CLOG>
 
 use ratatui::{
     Frame,
@@ -148,10 +148,7 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect) {
         Paragraph::new(backend_preview_lines(&state.last_backend_output))
             .block(
                 Block::default()
-                    .title(Line::from(Span::styled(
-                        " Player snapshot ",
-                        theme.title_style(),
-                    )))
+                    .title(player_snapshot_title(state, theme))
                     .borders(Borders::ALL)
                     .border_style(theme.elevated_border_style())
                     .style(theme.elevated_panel_style()),
@@ -175,6 +172,18 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect) {
             .style(theme.elevated_panel_style()),
         sections[2],
     );
+}
+
+fn player_snapshot_title(state: &PlayerUiState, theme: PlayerUiTheme) -> Line<'static> {
+    Line::from(vec![
+        Span::styled(" Player Snapshot (", theme.title_style()),
+        Span::styled("phase=", theme.label_style()),
+        Span::styled(format!("{:?}", state.phase()), theme.title_style()),
+        Span::raw(" "),
+        Span::styled("sample_t=", theme.label_style()),
+        Span::styled(format!("{:.2}", state.phase_t()), theme.title_style()),
+        Span::styled(") ", theme.title_style()),
+    ])
 }
 
 fn backend_preview_lines(output: &PlayerRenderBackendOutput) -> Vec<Line<'static>> {
@@ -333,4 +342,4 @@ fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>

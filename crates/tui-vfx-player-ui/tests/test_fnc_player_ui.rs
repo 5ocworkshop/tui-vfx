@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>VERSION: 0.7.1</VERS>
+// <VERS>VERSION: 0.7.2</VERS>
 // <WCTX>Player UI: lock playback, drawer, wrapped recipe-summary, and local theme surface behavior for migrated primitive review.</WCTX>
-// <CLOG>0.7.1: PATCH — assert stable padded stats drawer hash layout.</CLOG>
+// <CLOG>0.7.2: PATCH — assert phase/sample timing lives in the snapshot title.</CLOG>
 
 use std::{fs, path::PathBuf, process::Command};
 
@@ -350,6 +350,10 @@ fn test_fnc_ratatui_stats_drawer_starts_open_and_owns_rapid_stats() {
     assert!(!rows[0].contains("backend_hash="));
     assert!(rows.iter().any(|row| row.contains(" Stats ")));
     assert!(rows.iter().any(|row| row.contains("phase=Enter")));
+    assert!(
+        rows.iter()
+            .any(|row| row.contains("Player Snapshot (phase=Enter sample_t=0.00)"))
+    );
     assert!(rows.iter().any(|row| row.contains("backend_hash=")));
     assert!(rows.iter().any(|row| row.contains("hash=")
         && !row.contains("backend_hash=")
@@ -385,6 +389,14 @@ fn test_fnc_ratatui_stats_drawer_uses_eichler_status_colors() {
     assert_eq!(
         cell_foreground_at_text(&terminal, " Stats ", 1),
         Some(Color::Rgb(80, 220, 205))
+    );
+    assert_eq!(
+        cell_foreground_at_text(&terminal, "phase=Enter", "phase=".chars().count()),
+        Some(Color::Rgb(80, 220, 205))
+    );
+    assert_eq!(
+        cell_foreground_at_text(&terminal, "sample_t=0.00", 0),
+        Some(Color::Rgb(255, 225, 80))
     );
     assert_eq!(
         cell_foreground_at_text(&terminal, "fallback=false", "fallback=".chars().count()),
@@ -438,7 +450,7 @@ fn test_fnc_ratatui_preview_summary_wraps_long_recipe_description() {
         rows.join("\n")
     );
     assert!(
-        rows.iter().any(|row| row.contains("Player snapshot")),
+        rows.iter().any(|row| row.contains("Player Snapshot")),
         "preview content should remain visible below wrapped metadata:\n{}",
         rows.join("\n")
     );
@@ -479,8 +491,8 @@ fn test_fnc_ratatui_preview_summary_keeps_snapshot_anchor_for_normal_description
         .expect("wrapped ratatui draw");
 
     assert_eq!(
-        row_index_containing(&short_terminal, " Player snapshot "),
-        row_index_containing(&wrapped_terminal, " Player snapshot "),
+        row_index_containing(&short_terminal, " Player Snapshot "),
+        row_index_containing(&wrapped_terminal, " Player Snapshot "),
         "normal wrapped metadata should not bob the playback surface"
     );
 }
@@ -775,11 +787,6 @@ fn expected_stats_lines(app: &PlayerUiApp) -> Vec<String> {
     let report = app.player.report();
     vec![
         format!(
-            "phase={:?} sample_t={:.2}",
-            app.player.phase(),
-            app.player.phase_t()
-        ),
-        format!(
             "loop_t={} elapsed={}ms",
             app.player
                 .loop_t()
@@ -882,4 +889,4 @@ fn stderr(output: &std::process::Output) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>END OF VERSION: 0.7.1</VERS>
+// <VERS>END OF VERSION: 0.7.2</VERS>
