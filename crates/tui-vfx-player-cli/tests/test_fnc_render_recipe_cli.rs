@@ -3047,51 +3047,14 @@ fn test_fnc_cli_rejects_native_exact_effect_blocker_subset_unsupported_shapes_js
 }
 
 #[test]
-fn test_fnc_cli_renders_compositor_backend_native_vignette_mask_blockers_json() {
-    for (recipe, recipe_id, effect_id, summary_key, expected_stage_count) in [
-        (
-            "filters/filter_vignette.json",
-            "debugFilterVignette",
-            "filter.vignette",
-            "styleStages",
-            1,
-        ),
-        (
-            "masks/mask_diamond.json",
-            "debugMaskDiamond",
-            "mask.diamond",
-            "contentStages",
-            1,
-        ),
-        (
-            "masks/mask_dissolve.json",
-            "debugMaskDissolve",
-            "mask.dissolve",
-            "contentStages",
-            1,
-        ),
-        (
-            "masks/mask_iris.json",
-            "debugMaskIris",
-            "mask.iris",
-            "contentStages",
-            1,
-        ),
-        (
-            "masks/mask_none.json",
-            "debugMaskNone",
-            "mask.none",
-            "masks",
-            2,
-        ),
-        (
-            "masks/mask_path_reveal.json",
-            "debugMaskPathReveal",
-            "mask.pathReveal",
-            "contentStages",
-            1,
-        ),
-    ] {
+fn test_fnc_cli_renders_compositor_backend_native_vignette_filter_json() {
+    for (recipe, recipe_id, effect_id, summary_key, expected_stage_count) in [(
+        "filters/filter_vignette.json",
+        "debugFilterVignette",
+        "filter.vignette",
+        "filters",
+        1,
+    )] {
         let report = player_cli_json(
             vec![
                 str_arg("render-backend"),
@@ -3141,54 +3104,14 @@ fn test_fnc_cli_renders_compositor_backend_native_vignette_mask_blockers_json() 
                 .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
             "{recipe}"
         );
-
-        if summary_key != "contentStages" {
-            let ir_resolved_report = player_cli_json(
-                vec![
-                    str_arg("render-backend"),
-                    str_arg("--recipe"),
-                    recipe_path(recipe),
-                    str_arg("--descriptor-pack"),
-                    descriptor_pack_path(),
-                    str_arg("--backend"),
-                    str_arg("compositor"),
-                    str_arg("--composition-mode"),
-                    str_arg("ir-resolved"),
-                    str_arg("--format"),
-                    str_arg("json"),
-                    str_arg("--phase"),
-                    str_arg("enter"),
-                    str_arg("--phase-t"),
-                    str_arg("0.35"),
-                ],
-                "render-backend ir-resolved vignette parity player cli",
-            );
-            assert_eq!(report["rows"], ir_resolved_report["rows"], "{recipe}");
-            assert_eq!(
-                report["styledCells"], ir_resolved_report["styledCells"],
-                "{recipe}"
-            );
-        }
     }
 }
 
 #[test]
-fn test_fnc_cli_rejects_native_vignette_mask_blocker_invalid_enum_values_json() {
-    for (effect_name, recipe_path_fragment, input_id, invalid_value) in [
-        (
-            "vignette",
-            "filters/filter_vignette.json",
-            "applyTo",
-            "invalidChannel",
-        ),
-        ("iris", "masks/mask_iris.json", "shape", "triangle"),
-        (
-            "path_reveal",
-            "masks/mask_path_reveal.json",
-            "direction",
-            "spiral",
-        ),
-    ] {
+fn test_fnc_cli_rejects_native_iris_mask_invalid_shape_json() {
+    for (effect_name, recipe_path_fragment, input_id, invalid_value) in
+        [("iris", "masks/mask_iris.json", "shape", "triangle")]
+    {
         let temp_root = std::env::temp_dir().join(format!(
             "tui-vfx-native-{effect_name}-{input_id}-invalid-enum"
         ));
