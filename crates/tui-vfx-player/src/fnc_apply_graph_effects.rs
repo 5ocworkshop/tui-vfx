@@ -9,8 +9,8 @@
 use std::collections::BTreeMap;
 
 use tui_vfx_contract::{
-    GraphStep, GraphValueId, GraphValueMergePolicy, NodeId, NodeOutputSource, NodeSpec,
-    ParallelMergePolicy, RecipeDocument, Value,
+    DescriptorCatalog, EffectDescriptor, GraphStep, GraphValueId, GraphValueMergePolicy, NodeId,
+    NodeOutputSource, NodeSpec, ParallelMergePolicy, RecipeDocument, Value, ValueKind, ValueSource,
 };
 
 use crate::{
@@ -34,6 +34,7 @@ use crate::{
 /// Apply supported graph effects and collect unsupported adapter diagnostics.
 pub fn apply_graph_effects(
     recipe: &RecipeDocument,
+    catalog: Option<&DescriptorCatalog>,
     request: &mut PlayerSampleRequest,
     rows: &mut [String],
     styled_grid: &mut PlayerStyledGrid,
@@ -43,6 +44,7 @@ pub fn apply_graph_effects(
     if let Some(topology) = &recipe.graph.topology {
         execute_graph_step(
             recipe,
+            catalog,
             topology,
             request,
             rows,
@@ -51,13 +53,14 @@ pub fn apply_graph_effects(
             warnings,
         );
     } else {
-        execute_node_order(recipe, request, rows, styled_grid, errors);
+        execute_node_order(recipe, catalog, request, rows, styled_grid, errors);
     }
 }
 
 /// Apply one explicit graph topology step to an already prepared local surface.
 pub fn apply_graph_step_effects(
     recipe: &RecipeDocument,
+    catalog: Option<&DescriptorCatalog>,
     step: &GraphStep,
     request: &mut PlayerSampleRequest,
     rows: &mut [String],
@@ -65,11 +68,21 @@ pub fn apply_graph_step_effects(
     errors: &mut Vec<PlayerError>,
     warnings: &mut Vec<PlayerWarning>,
 ) {
-    execute_graph_step(recipe, step, request, rows, styled_grid, errors, warnings);
+    execute_graph_step(
+        recipe,
+        catalog,
+        step,
+        request,
+        rows,
+        styled_grid,
+        errors,
+        warnings,
+    );
 }
 
 fn execute_graph_step(
     recipe: &RecipeDocument,
+    catalog: Option<&DescriptorCatalog>,
     step: &GraphStep,
     request: &mut PlayerSampleRequest,
     rows: &mut [String],
@@ -79,11 +92,20 @@ fn execute_graph_step(
 ) {
     match step {
         GraphStep::Node { node } => {
-            execute_node_id(recipe, node, request, rows, styled_grid, errors)
+            execute_node_id(recipe, catalog, node, request, rows, styled_grid, errors)
         }
         GraphStep::Sequence { children } => {
             for child in children {
-                execute_graph_step(recipe, child, request, rows, styled_grid, errors, warnings);
+                execute_graph_step(
+                    recipe,
+                    catalog,
+                    child,
+                    request,
+                    rows,
+                    styled_grid,
+                    errors,
+                    warnings,
+                );
             }
         }
         GraphStep::Parallel {
@@ -92,6 +114,7 @@ fn execute_graph_step(
             value_merge_policy,
         } => execute_parallel_step(
             recipe,
+            catalog,
             children,
             *merge_policy,
             *value_merge_policy,
@@ -106,18 +129,20 @@ fn execute_graph_step(
 
 fn execute_node_order(
     recipe: &RecipeDocument,
+    catalog: Option<&DescriptorCatalog>,
     request: &mut PlayerSampleRequest,
     rows: &mut [String],
     styled_grid: &mut PlayerStyledGrid,
     errors: &mut Vec<PlayerError>,
 ) {
     for node_id in &recipe.graph.order {
-        execute_node_id(recipe, node_id, request, rows, styled_grid, errors);
+        execute_node_id(recipe, catalog, node_id, request, rows, styled_grid, errors);
     }
 }
 
 fn execute_node_id(
     recipe: &RecipeDocument,
+    catalog: Option<&DescriptorCatalog>,
     node_id: &NodeId,
     request: &mut PlayerSampleRequest,
     rows: &mut [String],
@@ -137,8 +162,127 @@ fn execute_node_id(
         ));
         return;
     };
+    push_graph_value_input_diagnostics(recipe, catalog, node, request, errors);
     apply_node(node, request, rows, styled_grid, errors);
     publish_node_outputs(node, request, errors);
+}
+
+fn push_graph_value_input_diagnostics(
+    recipe: &RecipeDocument,
+    catalog: Option<&DescriptorCatalog>,
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    errors: &mut Vec<PlayerError>,
+) {
+    for (input_id, source) in &node.inputs {
+        let ValueSource::GraphValue { id, fallback } = source else {
+            continue;
+        };
+        let Some(value) = request.graph_values.get(id) else {
+            if fallback.is_none() {
+                errors.push(PlayerError::new(
+                    "missingGraphValue",
+                    format!(
+                        "graph.nodes.{}.inputs.{}",
+                        node.id.as_str(),
+                        input_id.as_str()
+                    ),
+                    format!(
+                        "Node `{}` input `{}` requires graph value `{}` but no value was published",
+                        node.id.as_str(),
+                        input_id.as_str(),
+                        id.as_str()
+                    ),
+                    Some(
+                        "Publish the graph value earlier in the topology or author an explicit fallback.",
+                    ),
+                    serde_json::json!({
+                        "node": node.id.as_str(),
+                        "input": input_id.as_str(),
+                        "graphValue": id.as_str()
+                    }),
+                ));
+            }
+            continue;
+        };
+        let Some(expected) = expected_graph_value_kind(recipe, catalog, node, input_id) else {
+            continue;
+        };
+        let actual = value.kind();
+        if actual != expected {
+            errors.push(PlayerError::new(
+                "graphValueKindMismatch",
+                format!(
+                    "graph.nodes.{}.inputs.{}",
+                    node.id.as_str(),
+                    input_id.as_str()
+                ),
+                format!(
+                    "Node `{}` input `{}` expected graph value `{}` to be {} but received {}",
+                    node.id.as_str(),
+                    input_id.as_str(),
+                    id.as_str(),
+                    value_kind_label(expected),
+                    value_kind_label(actual)
+                ),
+                Some("Publish a graph value whose kind matches the consuming descriptor input."),
+                serde_json::json!({
+                    "node": node.id.as_str(),
+                    "input": input_id.as_str(),
+                    "graphValue": id.as_str(),
+                    "expected": value_kind_label(expected),
+                    "actual": value_kind_label(actual)
+                }),
+            ));
+        }
+    }
+}
+
+fn expected_graph_value_kind(
+    recipe: &RecipeDocument,
+    catalog: Option<&DescriptorCatalog>,
+    node: &NodeSpec,
+    input_id: &tui_vfx_contract::EffectInputId,
+) -> Option<ValueKind> {
+    effect_descriptor(recipe, catalog, node).and_then(|descriptor| {
+        descriptor
+            .inputs
+            .get(input_id)
+            .map(|input| input.value.kind)
+    })
+}
+
+fn effect_descriptor<'a>(
+    recipe: &'a RecipeDocument,
+    catalog: Option<&'a DescriptorCatalog>,
+    node: &NodeSpec,
+) -> Option<&'a EffectDescriptor> {
+    recipe.graph.effects.get(&node.effect).or_else(|| {
+        catalog.and_then(|catalog| {
+            catalog
+                .packs
+                .values()
+                .find_map(|pack| pack.effects.get(&node.effect))
+        })
+    })
+}
+
+fn value_kind_label(kind: ValueKind) -> &'static str {
+    match kind {
+        ValueKind::Null => "null",
+        ValueKind::Boolean => "boolean",
+        ValueKind::Integer => "integer",
+        ValueKind::Number => "number",
+        ValueKind::String => "string",
+        ValueKind::Text => "text",
+        ValueKind::Color => "color",
+        ValueKind::Gradient => "gradient",
+        ValueKind::Duration => "duration",
+        ValueKind::Enum => "enum",
+        ValueKind::Role => "role",
+        ValueKind::Scope => "scope",
+        ValueKind::Rect => "rect",
+    }
 }
 
 fn apply_node(
@@ -282,6 +426,7 @@ fn publish_node_outputs(
 #[allow(clippy::too_many_arguments)]
 fn execute_parallel_step(
     recipe: &RecipeDocument,
+    catalog: Option<&DescriptorCatalog>,
     children: &[GraphStep],
     merge_policy: ParallelMergePolicy,
     value_merge_policy: GraphValueMergePolicy,
@@ -308,6 +453,7 @@ fn execute_parallel_step(
         branch_request.graph_values = base_values.clone();
         execute_graph_step(
             recipe,
+            catalog,
             child,
             &mut branch_request,
             &mut branch_rows,

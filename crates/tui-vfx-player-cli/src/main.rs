@@ -19,6 +19,7 @@ mod fnc_run_primitive_adapter_gap;
 mod fnc_run_primitive_field_coverage;
 mod fnc_run_render_frame;
 mod fnc_run_render_frame_diff;
+mod fnc_run_render_ir;
 mod fnc_run_render_recipe;
 mod fnc_run_render_timeline;
 mod fnc_run_schema_readiness;

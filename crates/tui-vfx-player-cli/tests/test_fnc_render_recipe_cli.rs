@@ -11,7 +11,7 @@ use std::{
     process::{Command, Output},
 };
 
-const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 67;
+const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 88;
 
 #[test]
 fn test_fnc_cli_renders_single_recipe_frame_json() {
@@ -30,6 +30,43 @@ fn test_fnc_cli_renders_single_recipe_frame_json() {
     assert_eq!(report["schemaVersion"], "v3.1.player.frame.1");
     assert_eq!(report["status"], "rendered");
     assert!(report["nonEmptyCells"].as_u64().expect("cell count") > 0);
+}
+
+#[test]
+fn test_fnc_cli_renders_single_recipe_render_ir_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-ir"),
+            str_arg("--recipe"),
+            recipe_path("complex/graph_parallel_overlap_conflict_snapshot.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--json"),
+        ],
+        "render-ir player cli",
+    );
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.renderIr.1");
+    assert_eq!(report["status"], "rendered");
+    assert!(
+        !report["styledCells"]
+            .as_array()
+            .expect("styled cells")
+            .is_empty()
+    );
+    assert!(
+        !report["provenance"]
+            .as_array()
+            .expect("provenance")
+            .is_empty()
+    );
+    assert!(
+        report["warnings"]
+            .as_array()
+            .expect("warnings")
+            .iter()
+            .any(|warning| warning["code"] == "parallelGraphValueConflict")
+    );
 }
 
 #[test]
@@ -150,8 +187,8 @@ fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
     assert_eq!(report["summary"]["descriptorEffectIds"], 45);
-    assert_eq!(report["summary"]["representedEffectIds"], 43);
-    assert_eq!(report["summary"]["unrepresentedEffectIds"], 2);
+    assert_eq!(report["summary"]["representedEffectIds"], 45);
+    assert_eq!(report["summary"]["unrepresentedEffectIds"], 0);
     assert_eq!(report["summary"]["unsupportedEffectIds"], 0);
 }
 
@@ -160,8 +197,8 @@ fn test_fnc_cli_reports_primitive_adapter_gap_json() {
     let report = primitive_adapter_gap_report();
 
     assert_eq!(report["schemaVersion"], "v3.1.player.primitiveAdapterGap.1");
-    assert_eq!(report["summary"]["totalEffects"], 43);
-    assert_eq!(report["summary"]["rendered"], 43);
+    assert_eq!(report["summary"]["totalEffects"], 45);
+    assert_eq!(report["summary"]["rendered"], 45);
     assert_eq!(report["summary"]["stillUnsupported"], 0);
     assert_eq!(report["summary"]["blockedByStyledCellSubstrate"], 0);
     assert_eq!(report["summary"]["blockedBySemanticDecision"], 0);
@@ -242,7 +279,7 @@ fn test_fnc_cli_reports_migration_gap_family_status_json() {
     let complex = find_family(&report, "complex");
 
     assert_eq!(filters["legacyCount"], 98);
-    assert_eq!(filters["v31Count"], 9);
+    assert_eq!(filters["v31Count"], 13);
     assert_eq!(filters["coverage"], "partial");
     assert_eq!(filters["status"], "adapterExpansionReady");
     assert!(
@@ -567,7 +604,7 @@ fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
         );
     }
     assert_eq!(report["summary"]["records"], 603);
-    assert_eq!(report["summary"]["candidateReady"], 5);
+    assert_eq!(report["summary"]["candidateReady"], 0);
     assert_eq!(report["summary"]["schemaDecisionNeeded"], 91);
 }
 
@@ -587,8 +624,8 @@ fn test_fnc_cli_reports_migration_mapping_batch_filter_records_json() {
     assert_eq!(dim["recommendation"], "skipAsDuplicateVariant");
 
     let crt = find_mapping_record(&report, "filters/filter_crt.json");
-    assert_eq!(crt["status"], "candidateReady");
-    assert_eq!(crt["recommendation"], "createCanonicalFixture");
+    assert_eq!(crt["status"], "canonicalExists");
+    assert_eq!(crt["recommendation"], "skipAsDuplicateVariant");
 
     let value_source_record =
         find_mapping_record(&report, "filters/filter_dim_sample_surface_radius.json");
@@ -907,7 +944,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 44);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 57);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(

@@ -29,6 +29,7 @@ pub mod cls_player_primitive_adapter_gap_entry;
 pub mod cls_player_primitive_adapter_gap_report;
 pub mod cls_player_primitive_adapter_gap_summary;
 pub mod cls_player_primitive_field_coverage;
+pub mod cls_player_render_ir;
 pub mod cls_player_run_report;
 pub mod cls_player_sample_request;
 pub mod cls_player_schema_readiness_report;
@@ -74,6 +75,7 @@ mod fnc_build_migration_mapping_record;
 mod fnc_build_migration_mapping_record_classification;
 mod fnc_build_migration_mapping_record_paths;
 pub mod fnc_build_player_frame;
+mod fnc_build_player_render_ir;
 pub mod fnc_build_primitive_adapter_gap_report;
 pub mod fnc_build_primitive_field_coverage_report;
 mod fnc_build_primitive_field_instance;
@@ -116,6 +118,7 @@ pub mod fnc_primitive_adapter_gap_paths;
 mod fnc_recommend_migration_queue;
 pub mod fnc_render_hash;
 pub mod fnc_render_recipe_file;
+pub mod fnc_render_recipe_file_ir;
 pub mod fnc_render_scene;
 pub mod fnc_render_visual_frame_paths;
 mod fnc_resolve_effect_input;
@@ -164,6 +167,9 @@ pub use cls_player_primitive_field_coverage::{
     PlayerPrimitiveFieldCoverageInstance, PlayerPrimitiveFieldCoverageRecipe,
     PlayerPrimitiveFieldCoverageReport, PlayerPrimitiveFieldCoverageSummary,
 };
+pub use cls_player_render_ir::{
+    PlayerRenderCell, PlayerRenderGraphValueSnapshot, PlayerRenderIrReport, PlayerRenderProvenance,
+};
 pub use cls_player_run_report::PlayerRunReport;
 pub use cls_player_sample_request::PlayerSampleRequest;
 pub use cls_player_schema_readiness_report::{
@@ -206,6 +212,7 @@ pub use fnc_load_descriptor_catalog::{
 };
 pub use fnc_primitive_adapter_gap_paths::primitive_adapter_gap_paths;
 pub use fnc_render_recipe_file::render_recipe_file;
+pub use fnc_render_recipe_file_ir::render_recipe_file_ir;
 pub use fnc_render_visual_frame_paths::render_visual_frame_paths;
 pub use fnc_resolve_value_source::resolve_value_source;
 pub(crate) use fnc_schema_readiness_blocker_kind::schema_readiness_blocker_kind;

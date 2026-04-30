@@ -11,8 +11,8 @@ use crate::{
     fnc_run_primitive_adapter_gap::run_primitive_adapter_gap,
     fnc_run_primitive_field_coverage::run_primitive_field_coverage,
     fnc_run_render_frame::run_render_frame, fnc_run_render_frame_diff::run_render_frame_diff,
-    fnc_run_render_recipe::run_render_recipe, fnc_run_render_timeline::run_render_timeline,
-    fnc_run_schema_readiness::run_schema_readiness,
+    fnc_run_render_ir::run_render_ir, fnc_run_render_recipe::run_render_recipe,
+    fnc_run_render_timeline::run_render_timeline, fnc_run_schema_readiness::run_schema_readiness,
 };
 
 /// Run the player CLI and return the process exit code.
@@ -39,6 +39,7 @@ fn is_known_command(command: &str) -> bool {
         command,
         "render-recipe"
             | "render-frame"
+            | "render-ir"
             | "inventory-recipes"
             | "migration-gap"
             | "migration-mapping-batch"
@@ -55,6 +56,7 @@ fn dispatch_command(command: &str, options: CliOptions) -> Result<(), String> {
     match command {
         "render-recipe" => run_render_recipe(options),
         "render-frame" => run_render_frame(options),
+        "render-ir" => run_render_ir(options),
         "inventory-recipes" => run_inventory_recipes(options),
         "migration-gap" => run_migration_gap(options),
         "migration-mapping-batch" => run_migration_mapping_batch(options),

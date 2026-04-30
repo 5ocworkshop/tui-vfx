@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.15.0</VERS> -->
-<!-- <WCTX>Fixture metadata and player diagnostics: document expected visual summaries and warning vocabulary.</WCTX> -->
-<!-- <CLOG>0.15.0: MINOR — add expected visual metadata and player warning vocabulary.
+<!-- <VERS>VERSION: 0.16.0</VERS> -->
+<!-- <WCTX>Player render IR work: document render IR as the player-owned backend seam evidence object.</WCTX> -->
+<!-- <CLOG>0.16.0: MINOR — add player render IR vocabulary and backend seam distinction.
+0.15.0: MINOR — add expected visual metadata and player warning vocabulary.
 0.14.0: MINOR — add schema-readiness dispositions, gradients, optional inputs, sampled fields, and built-in scopes.
 0.13.0: MINOR — add schema-readiness offender, declaration, and holdback vocabulary.
 0.12.0: MINOR — add migration mapping batch/report and descriptor decision vocabulary.
@@ -114,6 +115,21 @@ Definition:
 
 Policy:
 : Trigger latch state belongs in the session, not in `RecipeDocument`. Resetting a session clears sampled/latch state without mutating the recipe.
+
+
+### Player Render IR
+
+Definition:
+: A player-owned, serializable render evidence object that carries sampled rows, styled cells, scene/source provenance, graph value snapshots, diagnostics, and sample-clock fields for one canonical recipe sample. Current report schema label is `v3.1.player.renderIr.1`.
+
+Owns / owned by:
+: `PlayerRenderIrReport` in `tui-vfx-player` owns this report surface. The CLI `render-ir` command only prints it; the UI and future backends consume it.
+
+Not the same as:
+: A compositor DTO, ratatui buffer, golden image, visual parity artifact, or contract schema. Render IR is the player/backend seam input for future lowering.
+
+Policy:
+: Keep render IR player-owned. Do not make `tui-vfx-player-ui` construct compositor internals, and do not use render IR to claim visual parity without backend/oracle evidence.
 
 ### Frame
 
@@ -1586,4 +1602,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.13.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.16.0</VERS> -->

@@ -4,11 +4,14 @@
 // <CLOG>0.2.0: PATCH — split scene, effect, and frame helpers into OFPF-sized modules.
 // 0.1.0: INIT — add supported primitive adapters and explicit unsupported diagnostics.</CLOG>
 
-use tui_vfx_contract::{DescriptorCatalog, RecipeDocument};
+use std::collections::BTreeMap;
+
+use tui_vfx_contract::{DescriptorCatalog, GraphValueId, RecipeDocument, Value};
 
 use crate::{
-    PlayerError, PlayerFrame, PlayerFrameReport, PlayerSampleRequest, PlayerStatus,
-    fnc_apply_graph_effects::apply_graph_effects, fnc_build_player_frame::build_player_frame,
+    PlayerError, PlayerFrame, PlayerFrameReport, PlayerRenderIrReport, PlayerSampleRequest,
+    PlayerStatus, fnc_apply_graph_effects::apply_graph_effects,
+    fnc_build_player_frame::build_player_frame, fnc_build_player_render_ir::build_player_render_ir,
     fnc_render_hash::render_hash, fnc_render_scene::render_scene,
 };
 
@@ -30,13 +33,35 @@ impl RecipePlayer {
         recipe: &RecipeDocument,
         request: &PlayerSampleRequest,
     ) -> PlayerFrameReport {
+        self.render_recipe_with_graph_values(recipe, request).0
+    }
+
+    /// Render one canonical recipe sample into the player-owned render IR.
+    pub fn render_recipe_ir(
+        &self,
+        recipe: &RecipeDocument,
+        request: &PlayerSampleRequest,
+    ) -> PlayerRenderIrReport {
+        let (report, graph_values) = self.render_recipe_with_graph_values(recipe, request);
+        build_player_render_ir(recipe, report, graph_values)
+    }
+
+    fn render_recipe_with_graph_values(
+        &self,
+        recipe: &RecipeDocument,
+        request: &PlayerSampleRequest,
+    ) -> (PlayerFrameReport, BTreeMap<GraphValueId, Value>) {
         if let Err(error) = recipe.validate_with_catalog(&self.catalog) {
-            return self.error_report(recipe, request, format!("{error:?}"));
+            return (
+                self.error_report(recipe, request, format!("{error:?}")),
+                BTreeMap::new(),
+            );
         }
         let (mut rows, mut styled_grid, mut errors, mut warnings) = render_scene(recipe, request);
         let mut graph_request = request.clone();
         apply_graph_effects(
             recipe,
+            Some(&self.catalog),
             &mut graph_request,
             &mut rows,
             &mut styled_grid,
@@ -50,7 +75,7 @@ impl RecipePlayer {
         };
         let styled_grid = styled_grid.style_known().then_some(styled_grid);
         let frame = build_player_frame(recipe, request, &rows, &errors, styled_grid);
-        PlayerFrameReport::from_frame_with_warnings(
+        let report = PlayerFrameReport::from_frame_with_warnings(
             recipe.id.as_str().to_string(),
             frame,
             status,
@@ -58,7 +83,8 @@ impl RecipePlayer {
             false,
             errors,
             warnings,
-        )
+        );
+        (report, graph_request.graph_values)
     }
 
     fn error_report(

@@ -5,7 +5,7 @@
 // 0.2.0: PATCH — distinguish source.card message input from source.text text input.
 // 0.1.0: INIT — add scene traversal, source rendering, and grid blitting helpers.</CLOG>
 
-use tui_vfx_contract::{RecipeDocument, SourceInputId, SourceSpec};
+use tui_vfx_contract::{CellWritePolicy, RecipeDocument, SourceInputId, SourceSpec};
 
 use crate::{
     PlayerError, PlayerSampleRequest, PlayerStyledGrid, PlayerWarning,
@@ -37,9 +37,9 @@ pub fn render_scene(
     let mut styled_grid = PlayerStyledGrid::blank(width, height, false);
     let mut errors = Vec::new();
     let mut warnings = Vec::new();
-    let mut elements = scene.elements.iter().collect::<Vec<_>>();
-    elements.sort_by_key(|element| element.z_index);
-    for element in elements {
+    let mut elements = scene.elements.iter().enumerate().collect::<Vec<_>>();
+    elements.sort_by_key(|(declaration_index, element)| (element.z_index, *declaration_index));
+    for (_, element) in elements {
         match recipe.sources.get(&element.source) {
             Some(source) => {
                 let (mut source_rows, mut source_errors, mut source_warnings) =
@@ -52,6 +52,7 @@ pub fn render_scene(
                     let mut local_request = request.clone();
                     apply_graph_step_effects(
                         recipe,
+                        None,
                         topology,
                         &mut local_request,
                         &mut source_rows,
@@ -65,12 +66,14 @@ pub fn render_scene(
                     &source_rows,
                     element.placement.x,
                     element.placement.y,
+                    element.cell_write_policy,
                 );
                 blit_styles(
                     &mut styled_grid,
                     &local_grid,
                     element.placement.x,
                     element.placement.y,
+                    element.cell_write_policy,
                 );
                 errors.append(&mut source_errors);
             }
@@ -262,20 +265,29 @@ fn blank_grid(width: usize, height: usize) -> Vec<Vec<char>> {
     vec![vec![' '; width]; height]
 }
 
-fn blit_rows(grid: &mut [Vec<char>], rows: &[String], dx: i32, dy: i32) {
+fn blit_rows(
+    grid: &mut [Vec<char>],
+    rows: &[String],
+    dx: i32,
+    dy: i32,
+    cell_write_policy: CellWritePolicy,
+) {
     for (source_y, row) in rows.iter().enumerate() {
         let y = dy + source_y as i32;
         if y < 0 || y as usize >= grid.len() {
             continue;
         }
-        blit_row(&mut grid[y as usize], row, dx);
+        blit_row(&mut grid[y as usize], row, dx, cell_write_policy);
     }
 }
 
-fn blit_row(destination: &mut [char], row: &str, dx: i32) {
+fn blit_row(destination: &mut [char], row: &str, dx: i32, cell_write_policy: CellWritePolicy) {
     for (source_x, ch) in row.chars().enumerate() {
         let x = dx + source_x as i32;
-        if x >= 0 && (x as usize) < destination.len() && ch != ' ' {
+        if x >= 0
+            && (x as usize) < destination.len()
+            && (ch != ' ' || cell_write_policy == CellWritePolicy::WriteCell)
+        {
             destination[x as usize] = ch;
         }
     }
@@ -286,11 +298,15 @@ fn blit_styles(
     source: &PlayerStyledGrid,
     x_offset: i32,
     y_offset: i32,
+    cell_write_policy: CellWritePolicy,
 ) {
     if !source.style_known() {
         return;
     }
     for cell in source.cells() {
+        if cell_write_policy == CellWritePolicy::SkipTransparentEmpty && cell.glyph == " " {
+            continue;
+        }
         let x = x_offset + cell.x as i32;
         let y = y_offset + cell.y as i32;
         if x >= 0 && y >= 0 && destination.contains(x as usize, y as usize) {

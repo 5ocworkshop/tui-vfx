@@ -16,7 +16,8 @@ use std::{
 };
 
 use tui_vfx_contract::{
-    DescriptorCatalog, DescriptorPack, DescriptorPackId, RecipeDocument, SignalId, Value,
+    DescriptorCatalog, DescriptorPack, DescriptorPackId, GraphValueId, RecipeDocument, SignalId,
+    Value,
 };
 use tui_vfx_player::{
     PlayerSampleRequest, PlayerSession, PlayerStatus, PlayerStyledGrid, RecipePlayer,
@@ -45,6 +46,47 @@ fn test_fnc_player_renders_source_text_from_text_input() {
     assert_eq!(report.status, PlayerStatus::Rendered);
     assert!(report.non_empty_cells > 0);
     assert_eq!(report.rows[0].trim_end(), "HELLO TEXT");
+}
+
+#[test]
+fn test_fnc_player_render_ir_carries_rows_styles_provenance_and_graph_values() {
+    let player = player();
+    let recipe = recipe(&v31_debug_recipe(
+        "complex/graph_io_sequence_filter_to_tint.json",
+    ));
+    let report = player.render_recipe_ir(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(report.schema_version, "v3.1.player.renderIr.1");
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert!(!report.rows.is_empty());
+    assert_eq!(
+        report.render_hash,
+        player
+            .render_recipe(&recipe, &PlayerSampleRequest::default())
+            .render_hash
+    );
+    assert!(
+        report
+            .styled_cells
+            .iter()
+            .any(|cell| cell.foreground != "defaultForeground"),
+        "render IR should carry styled-cell evidence"
+    );
+    assert!(
+        report
+            .provenance
+            .iter()
+            .any(|entry| entry.source_id.as_deref() == Some("mainText")
+                && entry.source_descriptor_id.as_deref() == Some("source.text")),
+        "render IR should carry scene/source provenance"
+    );
+    assert!(
+        report
+            .graph_values
+            .iter()
+            .any(|value| value.id == "sharedStrength"),
+        "render IR should carry graph value snapshots"
+    );
 }
 
 #[test]
@@ -536,6 +578,122 @@ fn graph_parallel_conflicts_emit_deterministic_warnings() {
 }
 
 #[test]
+fn graph_missing_required_value_emits_structured_player_diagnostic() {
+    let recipe = graph_recipe(
+        serde_json::json!({
+            "consumeBeforePublish": {
+                "id": "consumeBeforePublish",
+                "effect": "filter.tint",
+                "inputs": {
+                    "strength": graph_required_source("lateStrength"),
+                    "color": color_source(255, 0, 0),
+                    "applyTo": enum_source("foreground")
+                },
+                "outputs": {},
+                "scope": { "kind": "all" },
+                "cellWritePolicy": "writeCell",
+                "roleWritePolicy": { "kind": "preserveDestination" }
+            },
+            "publishLate": {
+                "id": "publishLate",
+                "effect": "filter.dim",
+                "inputs": {
+                    "factor": number_source(0.5),
+                    "applyTo": enum_source("foreground")
+                },
+                "outputs": {
+                    "lateStrength": { "source": { "kind": "input", "id": "factor" } }
+                },
+                "scope": { "kind": "all" },
+                "cellWritePolicy": "writeCell",
+                "roleWritePolicy": { "kind": "preserveDestination" }
+            }
+        }),
+        serde_json::json!(["consumeBeforePublish", "publishLate"]),
+        Some(serde_json::json!({
+            "kind": "sequence",
+            "children": [
+                { "kind": "node", "node": "consumeBeforePublish" },
+                { "kind": "node", "node": "publishLate" }
+            ]
+        })),
+        &["filter.tint", "filter.dim"],
+    );
+
+    let report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(report.status, PlayerStatus::Unsupported);
+    assert!(
+        report
+            .errors
+            .iter()
+            .any(|error| error.code == "missingGraphValue")
+    );
+}
+
+#[test]
+fn graph_value_kind_mismatch_emits_structured_player_diagnostic() {
+    let recipe = graph_recipe(
+        serde_json::json!({
+            "consumeWrongKind": {
+                "id": "consumeWrongKind",
+                "effect": "filter.dim",
+                "inputs": {
+                    "factor": graph_required_source("lateStrength"),
+                    "applyTo": enum_source("foreground")
+                },
+                "outputs": {},
+                "scope": { "kind": "all" },
+                "cellWritePolicy": "writeCell",
+                "roleWritePolicy": { "kind": "preserveDestination" }
+            },
+            "publishLate": {
+                "id": "publishLate",
+                "effect": "filter.dim",
+                "inputs": {
+                    "factor": number_source(0.5),
+                    "applyTo": enum_source("foreground")
+                },
+                "outputs": {
+                    "lateStrength": { "source": { "kind": "input", "id": "factor" } }
+                },
+                "scope": { "kind": "all" },
+                "cellWritePolicy": "writeCell",
+                "roleWritePolicy": { "kind": "preserveDestination" }
+            }
+        }),
+        serde_json::json!(["consumeWrongKind", "publishLate"]),
+        Some(serde_json::json!({
+            "kind": "sequence",
+            "children": [
+                { "kind": "node", "node": "consumeWrongKind" },
+                { "kind": "node", "node": "publishLate" }
+            ]
+        })),
+        &["filter.dim"],
+    );
+    let mut request = PlayerSampleRequest::default();
+    request.graph_values.insert(
+        GraphValueId::new("lateStrength"),
+        Value::Text("wrong".to_string()),
+    );
+
+    let report = player().render_recipe(&recipe, &request);
+
+    assert_eq!(report.status, PlayerStatus::Unsupported);
+    let error = report
+        .errors
+        .iter()
+        .find(|error| error.code == "graphValueKindMismatch")
+        .expect("kind mismatch diagnostic");
+    assert!(
+        error
+            .message
+            .contains("expected graph value `lateStrength` to be number")
+    );
+}
+
+#[test]
 fn graph_order_fallback_still_executes_without_topology() {
     let recipe = graph_recipe(
         serde_json::json!({
@@ -711,6 +869,14 @@ fn graph_number_source(id: &str, fallback: f64) -> serde_json::Value {
         "kind": "graphValue",
         "id": id,
         "fallback": { "kind": "number", "value": fallback }
+    })
+}
+
+fn graph_required_source(id: &str) -> serde_json::Value {
+    serde_json::json!({
+        "kind": "graphValue",
+        "id": id,
+        "fallback": null
     })
 }
 

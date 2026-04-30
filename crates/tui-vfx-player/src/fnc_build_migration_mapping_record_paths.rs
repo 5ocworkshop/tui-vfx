@@ -27,7 +27,18 @@ pub(crate) fn migration_mapping_canonical_path_for(legacy_path: &str, recipe_nam
     if recipe_name.starts_with("_DEPRECATED_") {
         return legacy_path.replacen("_DEPRECATED_", "", 1);
     }
-    legacy_path.to_string()
+    canonical_renamed_fixture_path(legacy_path)
+        .unwrap_or(legacy_path)
+        .to_string()
+}
+
+fn canonical_renamed_fixture_path(legacy_path: &str) -> Option<&'static str> {
+    match legacy_path {
+        "shaders/primitives/shader_reveal_wipe_corner_in_bottom_right.json" => {
+            Some("shaders/primitives/shader_reveal_wipe_right_to_left.json")
+        }
+        _ => None,
+    }
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_build_migration_mapping_record_paths.rs</FILE> - <DESC>Build path fields for migration mapping records</DESC>
