@@ -175,6 +175,7 @@ pub(crate) fn collect_handled_primitive_inputs(
         "sampler.crt" => fields(["curvature", "scanlineStrength", "jitter"]),
         "sampler.crtJitter" => fields(["amplitude", "frequency", "seed"]),
         "style.colorFade" => fields(["colorSpace", "target"]),
+        "style.colorShift" => fields(["hueShift", "saturationShift", "lightnessShift"]),
         "style.fadeIn" | "style.fadeOut" => fields(["from", "to", "ease", "easing", "applyTo"]),
         "style.pulse" => fields(["color", "pulseColor", "frequency", "applyTo"]),
         "style.italicWindow" => fields(["start", "end"]),

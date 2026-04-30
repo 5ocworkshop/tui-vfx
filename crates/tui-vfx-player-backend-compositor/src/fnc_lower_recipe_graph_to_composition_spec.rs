@@ -194,6 +194,12 @@ pub enum NativeStyleStage {
     },
     /// Apply player-compatible color fade styling to existing foreground/background channels.
     ColorFade { target: String, color_space: String },
+    /// Apply player-compatible HSL color shift styling to existing channels.
+    ColorShift {
+        hue_shift: f64,
+        saturation_shift: f64,
+        lightness_shift: f64,
+    },
     /// Apply player-compatible vignette filter styling.
     Vignette {
         strength: f64,
@@ -686,6 +692,7 @@ fn lower_node_into_spec(
         "shader.diffusion" => lower_diffusion_shader(node, style_stages, request, warnings),
         "shader.radar" => lower_radar_shader(node, style_stages, request, warnings),
         "style.colorFade" => lower_style_color_fade(node, style_stages, request, warnings),
+        "style.colorShift" => lower_style_color_shift(node, style_stages, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
@@ -1935,6 +1942,29 @@ fn lower_style_color_fade(
     style_stages.push(NativeStyleStage::ColorFade {
         target: color_label_input(node, request, "target", (255, 200, 50)),
         color_space: enum_label_input(node, request, "colorSpace", "rgb"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_style_color_shift(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.colorShift",
+        &["hueShift", "saturationShift", "lightnessShift"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::ColorShift {
+        hue_shift: number_input(node, request, "hueShift", 0.0),
+        saturation_shift: number_input(node, request, "saturationShift", 0.0),
+        lightness_shift: number_input(node, request, "lightnessShift", 0.0),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }

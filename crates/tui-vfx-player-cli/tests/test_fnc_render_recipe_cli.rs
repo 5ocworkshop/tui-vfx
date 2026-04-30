@@ -14,7 +14,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 145;
+const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 146;
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() {
@@ -1202,6 +1202,40 @@ fn test_fnc_cli_native_style_color_fade_matches_v2_deprecated_letter_cell_oracle
             "{phase}@{phase_t}"
         );
     }
+}
+
+#[test]
+fn test_fnc_cli_native_style_color_shift_matches_v2_deprecated_letter_cell_oracle_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_color_shift.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.5"),
+        ],
+        "render-backend native V2 deprecated style color-shift oracle player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 1);
+    assert_eq!(report["letterCellEvidence"]["letterCellCount"], 19);
+    assert_eq!(
+        report["letterCellEvidence"]["foregroundBackgroundClassCounts"]["fg=rgba(0,57,230,255) bg=rgba(26,18,106,255)"],
+        19
+    );
 }
 
 #[test]
@@ -3516,8 +3550,8 @@ fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
     assert_eq!(report["summary"]["descriptorEffectIds"], 120);
-    assert_eq!(report["summary"]["representedEffectIds"], 75);
-    assert_eq!(report["summary"]["unrepresentedEffectIds"], 45);
+    assert_eq!(report["summary"]["representedEffectIds"], 76);
+    assert_eq!(report["summary"]["unrepresentedEffectIds"], 44);
     assert_eq!(report["summary"]["unsupportedEffectIds"], 0);
 }
 
@@ -3526,8 +3560,8 @@ fn test_fnc_cli_reports_primitive_adapter_gap_json() {
     let report = primitive_adapter_gap_report();
 
     assert_eq!(report["schemaVersion"], "v3.1.player.primitiveAdapterGap.1");
-    assert_eq!(report["summary"]["totalEffects"], 75);
-    assert_eq!(report["summary"]["rendered"], 75);
+    assert_eq!(report["summary"]["totalEffects"], 76);
+    assert_eq!(report["summary"]["rendered"], 76);
     assert_eq!(report["summary"]["stillUnsupported"], 0);
     assert_eq!(report["summary"]["blockedByStyledCellSubstrate"], 0);
     assert_eq!(report["summary"]["blockedBySemanticDecision"], 0);
@@ -3933,7 +3967,7 @@ fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
         );
     }
     assert_eq!(report["summary"]["records"], 603);
-    assert_eq!(report["summary"]["candidateReady"], 220);
+    assert_eq!(report["summary"]["candidateReady"], 219);
     assert_eq!(report["summary"]["schemaDecisionNeeded"], 0);
 }
 
@@ -4431,21 +4465,21 @@ fn test_fnc_cli_reports_implementation_readiness_disposition_first_json() {
             .expect("summary")
             .contains_key("dispositionCounts")
     );
-    assert_eq!(report["summary"]["candidateReady"], 181);
+    assert_eq!(report["summary"]["candidateReady"], 180);
     assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
     assert_eq!(report["summary"]["implementationBlocking"], 0);
-    assert_eq!(report["summary"]["canonicalExists"], 165);
+    assert_eq!(report["summary"]["canonicalExists"], 167);
     assert_eq!(
         report["summary"]["dispositionCounts"]["backendHoldbackSignedOff"],
         91
     );
     assert_eq!(
         report["summary"]["dispositionCounts"]["candidateReady"],
-        181
+        180
     );
     assert_eq!(
         report["summary"]["dispositionCounts"]["deprecatedLegacySignedOff"],
-        125
+        124
     );
     assert_eq!(
         report["summary"]["dispositionCounts"]["duplicateVariantSignedOff"],

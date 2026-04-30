@@ -66,6 +66,7 @@ pub fn effect_adapter_status(effect_id: &str, descriptor_covered: bool) -> &'sta
         | "shader.linearGradient"
         | "style.baseStyleOverride"
         | "style.colorFade"
+        | "style.colorShift"
         | "style.outerBand"
         | "style.moduloRows"
         | "style.moduloColumns"

@@ -75,6 +75,7 @@ fn requires_styled_cell_adapter(effect_id: &str) -> bool {
             | "shader.linearGradient"
             | "style.baseStyleOverride"
             | "style.colorFade"
+            | "style.colorShift"
     )
 }
 

@@ -23,6 +23,7 @@ pub(crate) fn apply_style_primitive(
 ) -> bool {
     match node.effect.as_str() {
         "style.colorFade" => apply_color_fade(node, request, styled_grid),
+        "style.colorShift" => apply_color_shift(node, request, styled_grid),
         "style.fadeIn" => apply_fade_in(node, request, styled_grid),
         "style.fadeOut" => apply_fade_out(node, request, styled_grid),
         "style.pulse" => apply_pulse(node, request, styled_grid),
@@ -92,6 +93,49 @@ fn apply_fade_in(
         ResolvedColor::rgb(0, 0, 0),
         ResolvedColor::rgb(255, 255, 255),
     );
+}
+
+fn apply_color_shift(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let hue_shift =
+        resolve_effect_number(node, request, "hueShift", 0.0) as f32 * request.phase_t as f32;
+    let saturation_shift = resolve_effect_number(node, request, "saturationShift", 0.0) as f32
+        * request.phase_t as f32;
+    let lightness_shift =
+        resolve_effect_number(node, request, "lightnessShift", 0.0) as f32 * request.phase_t as f32;
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let existing = styled_grid
+            .cells()
+            .iter()
+            .find(|cell| cell.x == x && cell.y == y)
+            .cloned();
+        let Some(existing) = existing else {
+            continue;
+        };
+        let foreground = resolved_color_from_rgba_label(&existing.foreground)
+            .map(|color| {
+                shift_resolved_color_hsl(color, hue_shift, saturation_shift, lightness_shift)
+                    .rgba_label()
+            })
+            .unwrap_or(existing.foreground);
+        let background = resolved_color_from_rgba_label(&existing.background)
+            .map(|color| {
+                shift_resolved_color_hsl(color, hue_shift, saturation_shift, lightness_shift)
+                    .rgba_label()
+            })
+            .unwrap_or(existing.background);
+        styled_grid.set_cell_style(
+            x,
+            y,
+            &foreground,
+            &background,
+            existing.modifiers,
+            existing.role,
+        );
+    }
 }
 
 fn apply_fade_out(
@@ -373,6 +417,21 @@ fn rgb_to_hsl(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
         (r - g) / delta + 4.0
     };
     (hue * 60.0, saturation, lightness)
+}
+
+fn shift_resolved_color_hsl(
+    color: ResolvedColor,
+    hue_shift: f32,
+    saturation_shift: f32,
+    lightness_shift: f32,
+) -> ResolvedColor {
+    let (hue, saturation, lightness) = rgb_to_hsl(color.r, color.g, color.b);
+    let (r, g, b) = hsl_to_rgb(
+        (hue + hue_shift).rem_euclid(360.0),
+        (saturation + saturation_shift).clamp(0.0, 1.0),
+        (lightness + lightness_shift).clamp(0.0, 1.0),
+    );
+    ResolvedColor::new(r, g, b, color.a)
 }
 
 fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (u8, u8, u8) {

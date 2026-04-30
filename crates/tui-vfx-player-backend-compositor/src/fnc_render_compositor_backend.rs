@@ -319,6 +319,16 @@ fn scene_ir_with_native_content_stages(
                 target,
                 color_space,
             } => apply_color_fade_style_stage(&mut staged, target, color_space),
+            NativeStyleStage::ColorShift {
+                hue_shift,
+                saturation_shift,
+                lightness_shift,
+            } => apply_color_shift_style_stage(
+                &mut staged,
+                *hue_shift,
+                *saturation_shift,
+                *lightness_shift,
+            ),
             NativeStyleStage::Vignette {
                 strength,
                 edge_color,
@@ -1319,6 +1329,45 @@ fn apply_color_fade_style_stage(
                 target,
                 progress,
                 color_space,
+            )
+            .unwrap_or(existing_background);
+            set_report_cell_style(report, x, y, Some(&foreground), Some(&background), None);
+        }
+    }
+}
+
+fn apply_color_shift_style_stage(
+    report: &mut PlayerRenderIrReport,
+    hue_shift: f64,
+    saturation_shift: f64,
+    lightness_shift: f64,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let progress = report.phase_t.clamp(0.0, 1.0);
+    let hue_shift = (hue_shift * progress) as f32;
+    let saturation_shift = (saturation_shift * progress) as f32;
+    let lightness_shift = (lightness_shift * progress) as f32;
+    for y in 0..height {
+        for x in 0..width {
+            let (existing_foreground, existing_background) = report
+                .styled_cells
+                .iter()
+                .find(|cell| cell.x == x && cell.y == y)
+                .map(|cell| (cell.foreground.clone(), cell.background.clone()))
+                .unwrap_or_else(|| (DEFAULT_FOREGROUND.to_string(), TRANSPARENT_RGBA.to_string()));
+            let foreground = color_shift_label(
+                existing_foreground.as_str(),
+                hue_shift,
+                saturation_shift,
+                lightness_shift,
+            )
+            .unwrap_or(existing_foreground);
+            let background = color_shift_label(
+                existing_background.as_str(),
+                hue_shift,
+                saturation_shift,
+                lightness_shift,
             )
             .unwrap_or(existing_background);
             set_report_cell_style(report, x, y, Some(&foreground), Some(&background), None);
@@ -2534,6 +2583,22 @@ fn legacy_color_fade_label(from: &str, target: &str, t: f32, color_space: &str) 
         legacy_rgb_rgba(from, target, t)
     };
     Some(rgba_label(blended.0, blended.1, blended.2, blended.3))
+}
+
+fn color_shift_label(
+    label: &str,
+    hue_shift: f32,
+    saturation_shift: f32,
+    lightness_shift: f32,
+) -> Option<String> {
+    let (r, g, b, a) = parse_rgba_label(label)?;
+    let (hue, saturation, lightness) = rgb_to_hsl(r, g, b);
+    let (r, g, b) = hsl_to_rgb(
+        (hue + hue_shift).rem_euclid(360.0),
+        (saturation + saturation_shift).clamp(0.0, 1.0),
+        (lightness + lightness_shift).clamp(0.0, 1.0),
+    );
+    Some(rgba_label(r, g, b, a))
 }
 
 fn legacy_rgb_rgba(from: (u8, u8, u8, u8), target: (u8, u8, u8, u8), t: f32) -> (u8, u8, u8, u8) {
