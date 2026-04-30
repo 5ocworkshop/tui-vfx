@@ -21,6 +21,7 @@ pub fn run_implementation_readiness(options: CliOptions) -> Result<(), String> {
         &descriptor_load.catalog,
         options.family.as_deref(),
         options.recursive,
+        options.include_blockers,
     )?;
     println!(
         "{}",

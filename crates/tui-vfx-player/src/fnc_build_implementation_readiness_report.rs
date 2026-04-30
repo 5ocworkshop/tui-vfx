@@ -22,6 +22,7 @@ pub fn build_implementation_readiness_report(
     catalog: &DescriptorCatalog,
     family: Option<&str>,
     recursive: bool,
+    include_blockers: bool,
 ) -> Result<PlayerImplementationReadinessReport, String> {
     let mapping = build_migration_mapping_batch_report(
         legacy_root,
@@ -37,8 +38,21 @@ pub fn build_implementation_readiness_report(
         .map(readiness_record)
         .collect::<Vec<_>>();
     let summary = summarize_readiness_records(&records);
-    let priority_queues = build_priority_queues(&records);
-    let holdbacks = build_holdbacks(&records);
+    let priority_queues = if include_blockers {
+        build_priority_queues(&records)
+    } else {
+        Vec::new()
+    };
+    let holdbacks = if include_blockers {
+        build_holdbacks(&records)
+    } else {
+        Vec::new()
+    };
+    let records = if include_blockers {
+        records
+    } else {
+        Vec::new()
+    };
     Ok(PlayerImplementationReadinessReport {
         schema_version: "v3.1.player.implementationReadiness.1",
         legacy_root: legacy_root.display().to_string(),

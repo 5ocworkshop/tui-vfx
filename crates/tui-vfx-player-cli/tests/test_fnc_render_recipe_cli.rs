@@ -1140,6 +1140,17 @@ fn test_fnc_cli_reports_implementation_readiness_disposition_first_json() {
             .expect("priority queues")
             .is_empty()
     );
+    assert!(
+        report["records"].as_array().expect("records").is_empty(),
+        "path-level records should require --include-blockers"
+    );
+    assert!(
+        report["holdbacks"]
+            .as_array()
+            .expect("holdbacks")
+            .is_empty(),
+        "path-level holdbacks should require --include-blockers"
+    );
 }
 
 #[test]
@@ -1147,6 +1158,7 @@ fn test_fnc_cli_reports_implementation_readiness_uses_content_vocabulary_json() 
     let report = implementation_readiness_report(vec![
         str_arg("implementation-readiness"),
         str_arg("--recursive"),
+        str_arg("--include-blockers"),
     ]);
 
     let serialized = serde_json::to_string(&report).expect("serialize readiness report");
