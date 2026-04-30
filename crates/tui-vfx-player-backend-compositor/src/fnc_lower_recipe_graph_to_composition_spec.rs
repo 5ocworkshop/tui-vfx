@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.22.0</VERS>
+// <VERS>VERSION: 0.24.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.22.0: MINOR — lower all-scope structured style.spatial radar payloads natively.
+// <CLOG>0.24.0: MINOR — lower mask.radial into compositor MaskSpec::Radial instead of source-stage player semantics.
+// 0.23.0: lower mask.cellular into compositor MaskSpec::Cellular instead of source-stage player semantics.
+// 0.22.0: lower all-scope structured style.spatial radar payloads natively.
 // 0.21.0: MINOR — lower cell-scoped style.spatial focused row gradients natively.
 // 0.20.0: MINOR — lower style.glitch V2 parity recipe natively.
 // 0.19.0: MINOR — lower style.rainbow V2 parity recipe natively.
@@ -16,8 +18,8 @@ use tui_vfx_compositor::types::cls_filter_spec::{ScannerAxis, ScannerMotionMode,
 use tui_vfx_compositor::{
     pipeline::{CompositionSpec, ShaderLayerSpec},
     types::{
-        ApplyTo, Axis, BindableValue, DitherMatrix, FilterSpec, HoverBarPosition, MaskSpec,
-        PatternType, RadialOrigin, RippleCenter, SamplerSpec, WipeDirection,
+        ApplyTo, Axis, BindableValue, CellularPattern, DitherMatrix, FilterSpec, HoverBarPosition,
+        MaskSpec, PatternType, RadialOrigin, RippleCenter, SamplerSpec, WipeDirection,
     },
 };
 use tui_vfx_contract::{NodeSpec, RecipeDocument, ScopeSpec, StructuredValue, Value, ValueSource};
@@ -153,12 +155,6 @@ pub enum NativeContentStage {
         width: usize,
         height: usize,
     },
-    /// Apply player-compatible cellular mask semantics to source rows.
-    CellularMask {
-        cell_size: usize,
-        seed: usize,
-        threshold: f64,
-    },
     /// Apply player-compatible blinds mask semantics to source rows.
     BlindsMask { orientation: String, count: usize },
     /// Apply player-compatible diamond mask semantics to source rows.
@@ -167,8 +163,6 @@ pub enum NativeContentStage {
     DissolveMask { seed: u64, chunk_size: usize },
     /// Apply player-compatible iris mask semantics to source rows.
     IrisMask { shape: String, soft_edge: bool },
-    /// Apply player-compatible radial mask semantics to source rows.
-    RadialMask { soft_edge: bool },
     /// Apply player-compatible wipe/path-reveal mask semantics to source rows.
     WipeMask { direction: String, soft_edge: bool },
 }
@@ -681,13 +675,13 @@ fn lower_node_into_spec(
             NodeLoweringOutcome::Lowered { warnings }
         }
         "mask.blinds" => lower_blinds_mask(node, content_stages, request, warnings),
-        "mask.cellular" => lower_cellular_mask(node, content_stages, request, warnings),
+        "mask.cellular" => lower_cellular_mask(node, spec, request, warnings),
         "mask.diamond" => lower_diamond_mask(node, content_stages, request, warnings),
         "mask.dissolve" => lower_dissolve_mask(node, content_stages, request, warnings),
         "mask.iris" => lower_iris_mask(node, content_stages, request, warnings),
         "mask.none" => lower_none_mask(node, spec, warnings),
         "mask.pathReveal" => lower_path_reveal_mask(node, content_stages, request, warnings),
-        "mask.radial" => lower_radial_mask(node, content_stages, request, warnings),
+        "mask.radial" => lower_radial_mask(node, spec, request, warnings),
         "mask.wipeCorner" => lower_wipe_corner_mask(node, content_stages, request, warnings),
         "mask.materialize" | "mask.materializeCorner" => {
             lower_materialize_mask(node, spec, request, warnings)
@@ -1434,19 +1428,36 @@ fn lower_blinds_mask(
 
 fn lower_cellular_mask(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) =
-        unsupported_native_content_reason(node, "mask.cellular", &["cellSize", "seed", "threshold"])
+        unsupported_native_content_reason(node, "mask.cellular", &["pattern", "seed", "cellCount"])
     {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    content_stages.push(NativeContentStage::CellularMask {
-        cell_size: integer_input(node, request, "cellSize", 2).max(1) as usize,
-        seed: integer_input(node, request, "seed", 7).max(0) as usize,
-        threshold: number_input(node, request, "threshold", 0.5).clamp(0.0, 1.0),
+
+    let pattern = match strict_enum_input(
+        node,
+        request,
+        "pattern",
+        "voronoi",
+        &["voronoi", "hexagonal", "organic"],
+        "mask.cellular",
+    ) {
+        Ok(pattern) => match pattern.as_str() {
+            "hexagonal" => CellularPattern::Hexagonal,
+            "organic" => CellularPattern::Organic,
+            _ => CellularPattern::Voronoi,
+        },
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+
+    spec.masks.push(MaskSpec::Cellular {
+        pattern,
+        seed: integer_input(node, request, "seed", 7).max(0) as u64,
+        cell_count: integer_input(node, request, "cellCount", 16).max(1) as u16,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -1587,12 +1598,12 @@ fn lower_wipe_mask(
 
 fn lower_radial_mask(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) =
-        unsupported_native_content_reason(node, "mask.radial", &["origin", "softEdge"])
+        unsupported_native_effect_reason(node, "mask.radial", &["origin", "softEdge"])
     {
         return NodeLoweringOutcome::Unsupported { reason };
     }
@@ -1606,7 +1617,8 @@ fn lower_radial_mask(
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    content_stages.push(NativeContentStage::RadialMask {
+    spec.masks.push(MaskSpec::Radial {
+        origin: RadialOrigin::Center,
         soft_edge: bool_input(node, request, "softEdge", true),
     });
     NodeLoweringOutcome::Lowered { warnings }
@@ -3810,4 +3822,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.17.0</VERS>
+// <VERS>END OF VERSION: 0.24.0</VERS>

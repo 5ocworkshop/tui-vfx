@@ -549,17 +549,19 @@ fn test_fnc_cli_renders_native_crt_jitter_sampler_with_clamped_numeric_values_js
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_radial_wipe_corner_blockers_json() {
-    for (recipe, recipe_id, effect_id, expected_stage_count) in [
+    for (recipe, recipe_id, effect_id, expected_mask_count, expected_content_stage_count) in [
         (
             "masks/mask_radial.json",
             "debugMaskRadial",
             "mask.radial",
-            2,
+            1,
+            0,
         ),
         (
             "masks/mask_wipe_corner_out_from_top_left.json",
             "debugMaskWipeCornerOutFromTopLeft",
             "mask.wipeCorner",
+            0,
             1,
         ),
     ] {
@@ -594,7 +596,11 @@ fn test_fnc_cli_renders_compositor_backend_native_radial_wipe_corner_blockers_js
         assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
         assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
         assert_eq!(
-            report["compositionSpecSummary"]["contentStages"], expected_stage_count,
+            report["compositionSpecSummary"]["masks"], expected_mask_count,
+            "{recipe}"
+        );
+        assert_eq!(
+            report["compositionSpecSummary"]["contentStages"], expected_content_stage_count,
             "{recipe}"
         );
         assert!(
@@ -613,6 +619,55 @@ fn test_fnc_cli_renders_compositor_backend_native_radial_wipe_corner_blockers_js
             "{recipe}"
         );
     }
+}
+
+#[test]
+fn test_fnc_cli_lowers_cellular_mask_to_compositor_mask_not_source_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_cellular.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native cellular mask compositor lowering player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugMaskCellular");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringAttempted"], true);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["sourceRenderMode"], "sourceOnly");
+    assert_eq!(report["nativeSourceIsolated"], true);
+    assert!(
+        report["loweredEffectIds"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!("mask.cellular"))
+    );
+    assert_eq!(report["compositionSpecSummary"]["masks"], 1);
+    assert_eq!(report["compositionSpecSummary"]["contentStages"], 0);
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect")
+    );
 }
 
 #[test]

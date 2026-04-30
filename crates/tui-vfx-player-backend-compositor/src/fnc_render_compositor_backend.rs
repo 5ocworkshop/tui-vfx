@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.20.0</VERS>
+// <VERS>VERSION: 0.22.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.20.0: MINOR — brighten cell-scoped focused-row gradients at the targeted cell.
+// <CLOG>0.22.0: PATCH — remove backend-owned radial mask source-stage rendering after mask.radial moved to compositor MaskSpec.
+// 0.21.0: remove backend-owned cellular mask source-stage rendering after mask.cellular moved to compositor MaskSpec.
+// 0.20.0: brighten cell-scoped focused-row gradients at the targeted cell.
 // 0.19.0: MINOR — render cell-scoped style.spatial focused row gradients.
 // 0.18.0: MINOR — render style.glitch native stage.
 // 0.17.0: MINOR — render style.rainbow native stage.
@@ -275,11 +277,6 @@ fn scene_ir_with_native_content_stages(
                 *width,
                 *height,
             ),
-            NativeContentStage::CellularMask {
-                cell_size,
-                seed,
-                threshold,
-            } => apply_cellular_mask_content_stage(&mut staged, *cell_size, *seed, *threshold),
             NativeContentStage::BlindsMask { orientation, count } => {
                 apply_blinds_mask_content_stage(&mut staged, orientation, *count)
             }
@@ -291,9 +288,6 @@ fn scene_ir_with_native_content_stages(
             }
             NativeContentStage::IrisMask { shape, soft_edge } => {
                 apply_iris_mask_content_stage(&mut staged, shape, *soft_edge)
-            }
-            NativeContentStage::RadialMask { soft_edge } => {
-                apply_shape_mask_content_stage(&mut staged, *soft_edge, SourceMaskShape::Circle)
             }
             NativeContentStage::WipeMask {
                 direction,
@@ -1151,39 +1145,6 @@ fn fault_line_split(row_count: usize, seed: u64, split_bias: f64) -> usize {
     let base_split = (seed.wrapping_mul(31) % row_count as u64) as f64;
     (base_split + split_bias.clamp(-1.0, 1.0) * row_count as f64 * 0.3)
         .clamp(1.0, (row_count - 1) as f64) as usize
-}
-
-fn apply_cellular_mask_content_stage(
-    report: &mut PlayerRenderIrReport,
-    cell_size: usize,
-    seed: usize,
-    threshold: f64,
-) {
-    let report_columns = report_width(report);
-    let report_rows = report_height(report);
-    let mut rows = dense_rows(report, report_columns, report_rows);
-    let cell_size = cell_size.max(1);
-    let threshold = threshold.clamp(0.0, 1.0);
-    let reveal = report.phase_t.clamp(0.0, 1.0);
-    let visible_threshold = (threshold * 0.5 + reveal * 0.75).min(1.0);
-    for (y, row) in rows.iter_mut().enumerate() {
-        *row = row
-            .chars()
-            .enumerate()
-            .map(|(x, glyph)| {
-                let cell_x = x / cell_size;
-                let cell_y = y / cell_size;
-                let noise = deterministic_cell_noise(cell_x, cell_y, seed);
-                if noise <= visible_threshold {
-                    glyph
-                } else {
-                    ' '
-                }
-            })
-            .collect();
-    }
-    report.rows = rows;
-    sync_styled_cells_to_rows(report);
 }
 
 fn apply_blinds_mask_content_stage(
@@ -2759,14 +2720,6 @@ fn source_mask_spotlight_distance(
     }
 }
 
-fn deterministic_cell_noise(cell_x: usize, cell_y: usize, seed: usize) -> f64 {
-    let mixed = cell_x
-        .wrapping_mul(73_856_093)
-        .wrapping_add(cell_y.wrapping_mul(19_349_663))
-        .wrapping_add(seed.wrapping_mul(83_492_791));
-    (mixed % 1000) as f64 / 999.0
-}
-
 fn dissolve_cell_noise(seed: u64, x: usize, y: usize) -> f64 {
     let mut hash = seed ^ 0xcbf2_9ce4_8422_2325u64;
     for value in [x as u64, y as u64] {
@@ -3281,4 +3234,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.15.0</VERS>
+// <VERS>END OF VERSION: 0.22.0</VERS>

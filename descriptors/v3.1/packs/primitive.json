@@ -6926,7 +6926,7 @@
     },
     "mask.cellular": {
       "id": "mask.cellular",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "displayName": "Cellular Mask",
       "category": "debug primitive",
       "domain": "mask",
@@ -6972,22 +6972,23 @@
         ]
       },
       "inputs": {
-        "cellSize": {
-          "displayName": "Cell Size",
+        "pattern": {
+          "displayName": "Pattern",
           "description": null,
           "value": {
-            "kind": "integer",
+            "kind": "enum",
             "default": {
-              "kind": "integer",
-              "value": 2
+              "kind": "enum",
+              "value": "voronoi"
             },
-            "range": {
-              "min": 1,
-              "max": 12
-            },
-            "allowedValues": [],
-            "unit": "cells",
-            "semantic": null
+            "range": null,
+            "allowedValues": [
+              "voronoi",
+              "hexagonal",
+              "organic"
+            ],
+            "unit": null,
+            "semantic": "cellular-pattern"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
@@ -7012,21 +7013,21 @@
           "bindable": true,
           "runtimeMutability": "phaseStart"
         },
-        "threshold": {
-          "displayName": "Threshold",
+        "cellCount": {
+          "displayName": "Cell Count",
           "description": null,
           "value": {
-            "kind": "number",
+            "kind": "integer",
             "default": {
-              "kind": "number",
-              "value": 0.45
+              "kind": "integer",
+              "value": 16
             },
             "range": {
-              "min": 0,
-              "max": 1
+              "min": 1,
+              "max": 256
             },
             "allowedValues": [],
-            "unit": null,
+            "unit": "cells",
             "semantic": null
           },
           "bindable": true,

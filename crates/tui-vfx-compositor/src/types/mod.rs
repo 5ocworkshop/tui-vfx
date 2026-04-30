@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-compositor/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>VERSION: 2.10.0</VERS>
-// <WCTX>Glyph rendering framework Phase 6: wire ScalarFieldGlyphFilter via FilterSpec::ScalarFieldGlyph.</WCTX>
-// <CLOG>2.10.0: re-export GlyphEncoderSpec and SamplerRef from cls_filter_spec.</CLOG>
+// <VERS>VERSION: 2.11.0</VERS>
+// <WCTX>Compositor-first v3.1 lowering: expose cellular mask pattern for backend adapters.</WCTX>
+// <CLOG>2.11.0: MINOR — re-export CellularPattern so player backend lowerers can construct MaskSpec::Cellular without touching mask internals.
+// 2.10.0: re-export GlyphEncoderSpec and SamplerRef from cls_filter_spec.</CLOG>
 
 pub mod cls_bindable_value;
 pub mod cls_filter_spec;
@@ -11,6 +12,7 @@ pub mod cls_sampler_spec;
 pub mod cls_shadow_spec;
 pub mod mask_combine_mode;
 
+pub use crate::masks::cls_cellular::CellularPattern;
 pub use crate::masks::cls_radial::RadialOrigin;
 pub use cls_bindable_value::BindableValue;
 pub use cls_filter_spec::{
@@ -27,4 +29,4 @@ pub use cls_shadow_spec::ShadowSpec;
 pub use mask_combine_mode::MaskCombineMode;
 
 // <FILE>tui-vfx-compositor/src/types/mod.rs</FILE> - <DESC>Types module</DESC>
-// <VERS>END OF VERSION: 2.10.0</VERS>
+// <VERS>END OF VERSION: 2.11.0</VERS>

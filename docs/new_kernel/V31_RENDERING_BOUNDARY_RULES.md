@@ -1,7 +1,7 @@
 <!-- <FILE>docs/new_kernel/V31_RENDERING_BOUNDARY_RULES.md</FILE> - <DESC>Formal v3.1 recipe-to-playback boundary, lowering ownership, and compositor adapter decision rules</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>v3.1 rendering boundary discipline for recipe migration, player playback, compositor backend lowering, and native adapter ownership.</WCTX> -->
-<!-- <CLOG>0.1.0: INIT — document v3.1 recipe-to-playback ownership boundaries and lowering decision rules.</CLOG> -->
+<!-- <CLOG>0.2.0: MINOR — anchor V2/V3/v3.1 rendering pathways and hard layer responsibilities.</CLOG> -->
 
 # v3.1 Rendering Boundary Rules
 
@@ -12,6 +12,226 @@ The goal is to preserve the discipline of the v3.1 schema and data model while p
 ## Executive rule
 
 Keep the v3.1 contract as the source of truth until the selected backend needs an executable render plan.
+
+The player samples recipes. The backend lowerer maps sampled graph intent to an executable backend plan. The compositor executes visual semantics. Presentation surfaces display evidence. Do not collapse those roles.
+
+```text
+V2/V3 oracle behavior
+        │
+        ▼
+v3.1 authored contract recipe
+        │
+        ▼
+player resolves timing/source/input values only
+        │
+        ▼
+backend lowerer maps graph nodes to compositor primitives
+        │
+        ▼
+compositor executes the visual effect
+        │
+        ▼
+CLI/player evidence proves parity
+```
+
+## Historical oracle pathways
+
+V2 and V3 recipe tooling are migration oracles. They prove the intended visual behavior for existing debug recipes. They are not the architecture to copy into v3.1.
+
+### V2 `_DEPRECATED_` pathway
+
+```text
+┌──────────────────────────────────────────────┐
+│ V2 debug recipe JSON                         │
+│ recipes/debug_recipes/.../_DEPRECATED_*.json │
+│                                              │
+│ config.message                               │
+│ config.layout                                │
+│ config.border                                │
+│ config.lifecycle                             │
+│ config.pipeline.mask/style/filter/sampler    │
+└───────────────────────┬──────────────────────┘
+                        │ legacy recipe tooling
+                        ▼
+┌──────────────────────────────────────────────┐
+│ recipe-probe                                 │
+│ /usr/projects/tui-vfx-recipes                │
+│                                              │
+│ Reads V2 config directly, builds legacy      │
+│ pipeline intent, samples entering/dwelling/  │
+│ exiting, and emits frame/cell evidence.      │
+└───────────────────────┬──────────────────────┘
+                        │ primitive execution
+                        ▼
+┌──────────────────────────────────────────────┐
+│ tui-vfx compositor primitives                │
+│                                              │
+│ MaskSpec / FilterSpec / SamplerSpec / Style  │
+│ own the reusable effect semantics.           │
+└───────────────────────┬──────────────────────┘
+                        │ evidence
+                        ▼
+┌──────────────────────────────────────────────┐
+│ V2 oracle evidence                           │
+│                                              │
+│ cells, reconstructed rows, foreground/        │
+│ background, touched cells, causation.         │
+└──────────────────────────────────────────────┘
+```
+
+### V3 pathway
+
+```text
+┌──────────────────────────────────────────────┐
+│ V3 debug recipe JSON                         │
+│ recipes/debug_recipes/.../*.json             │
+│                                              │
+│ schema_version: 3                            │
+│ config.pipeline.step                         │
+│ small pipeline algebra                       │
+└───────────────────────┬──────────────────────┘
+                        │ V3 recipe tooling
+                        ▼
+┌──────────────────────────────────────────────┐
+│ V3 parser / normalizer / probe path          │
+│ /usr/projects/tui-vfx-recipes                │
+│                                              │
+│ Normalizes the step tree, samples lifecycle, │
+│ and emits preview/probe evidence.            │
+└───────────────────────┬──────────────────────┘
+                        │ primitive execution
+                        ▼
+┌──────────────────────────────────────────────┐
+│ tui-vfx compositor primitive path            │
+│                                              │
+│ Still ultimately relies on compositor-owned  │
+│ mask/filter/sampler/style behavior.          │
+└───────────────────────┬──────────────────────┘
+                        │ evidence
+                        ▼
+┌──────────────────────────────────────────────┐
+│ V3 oracle evidence                           │
+│                                              │
+│ Useful when V2 and V3 agree; V2 wins when    │
+│ the two conflict during v3.1 migration.      │
+└──────────────────────────────────────────────┘
+```
+
+## v3.1 target pathway
+
+This is the path all migrated recipes must prove through `tui-vfx-player-cli render-backend --backend compositor --composition-mode native --fail-on-fallback`.
+
+```text
+┌──────────────────────────────────────────────┐
+│ v3.1 recipe JSON                             │
+│ recipes/v3.1/debug_recipes/.../*.json        │
+│                                              │
+│ Contract data model:                         │
+│ - metadata                                   │
+│ - lifecycle                                  │
+│ - sources                                    │
+│ - scenes                                     │
+│ - graph nodes                                │
+│ - descriptor-backed primitive inputs         │
+└───────────────────────┬──────────────────────┘
+                        │ parse + validate
+                        ▼
+┌──────────────────────────────────────────────┐
+│ Contract / descriptor layer                  │
+│ crates/tui-vfx-contract                      │
+│ descriptors/v3.1/packs/primitive.json        │
+│                                              │
+│ Owns authored vocabulary and validation.     │
+│ Does not execute visual semantics.           │
+└───────────────────────┬──────────────────────┘
+                        │ sample request
+                        ▼
+┌──────────────────────────────────────────────┐
+│ Player layer                                 │
+│ crates/tui-vfx-player                        │
+│                                              │
+│ Owns sampled runtime facts:                  │
+│ - selected phase                             │
+│ - phase_t / timing                           │
+│ - source rows / styled source cells          │
+│ - resolved graph inputs/signals              │
+│                                              │
+│ Does not implement native compositor effect  │
+│ semantics.                                   │
+└───────────────────────┬──────────────────────┘
+                        │ backend request
+                        ▼
+┌──────────────────────────────────────────────┐
+│ Compositor backend lowerer                   │
+│ crates/tui-vfx-player-backend-compositor     │
+│                                              │
+│ Translates sampled v3.1 graph nodes into:    │
+│                                              │
+│ A) compositor-native CompositionSpec         │
+│    MaskSpec / FilterSpec / SamplerSpec /     │
+│    ShaderLayerSpec / style-capable specs     │
+│                                              │
+│ B) narrow backend-owned adapter stages only  │
+│    when the compositor lacks an exact        │
+│    reusable primitive.                       │
+│                                              │
+│ Rejects unsupported semantics honestly.      │
+└───────────────────────┬──────────────────────┘
+                        │ render
+                        ▼
+┌──────────────────────────────────────────────┐
+│ tui-vfx compositor                           │
+│ crates/tui-vfx-compositor                    │
+│                                              │
+│ Owns reusable visual semantics:              │
+│ - masks                                      │
+│ - filters                                    │
+│ - samplers                                   │
+│ - shaders                                    │
+│ - styles                                     │
+└───────────────────────┬──────────────────────┘
+                        │ evidence
+                        ▼
+┌──────────────────────────────────────────────┐
+│ CLI / player evidence                        │
+│ tui-vfx-player-cli render-backend            │
+│                                              │
+│ Reports rows, styledCells, letter evidence,  │
+│ compositionSpecSummary, native status,       │
+│ fallback status, and diagnostics.            │
+└──────────────────────────────────────────────┘
+```
+
+### Concrete lowering example: `mask.cellular`
+
+```text
+v3.1 graph node
+  effect: mask.cellular
+  inputs: pattern, seed, cellCount
+        │
+        ▼
+backend lowerer
+  validate supported inputs and enum values
+  map v3.1 field names to compositor vocabulary
+        │
+        ▼
+CompositionSpec
+  MaskSpec::Cellular {
+    pattern,
+    seed,
+    cell_count
+  }
+        │
+        ▼
+compositor
+  Cellular::is_visible(ctx)
+        │
+        ▼
+CLI evidence
+  rows/styledCells/letterCellEvidence
+```
+
+Do not implement `mask.cellular` semantics inside the player to make rows match. If v3.1 native output differs from the V2 oracle, fix the recipe mapping, descriptor vocabulary, backend lowering, or compositor primitive. The player should only supply the sampled source grid and resolved inputs.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────┐
@@ -107,6 +327,7 @@ Player layer must not own:
 - UI-only layout choices.
 - Compositor-internal filter/shader implementation details.
 - Backend-native lowering decisions that vary by backend.
+- Native compositor effect semantics for masks, filters, shaders, samplers, or styles.
 
 Why: the player is the single sampled view of the recipe. CLI, player UI, studio UI, and clients should all observe the same sampled model.
 
@@ -119,12 +340,14 @@ Backend lowering owns:
 - Rejecting unsupported semantics honestly instead of silently dropping fields.
 - Deciding whether a primitive maps directly to compositor IR or needs a backend-owned adapter stage.
 - Producing diagnostics and `nativeLoweringSucceeded`/`fallbackUsed` evidence.
+- Mapping v3.1 field names to existing compositor vocabulary when the concepts are the same.
 
 Backend lowering must not own:
 - New author-facing schema fields.
 - Descriptor vocabulary without updating descriptors and docs.
 - UI presentation behavior.
 - Broad replacement rendering engines hidden behind helper functions.
+- Reimplementations of compositor primitives that already exist as reusable compositor operations.
 
 Why: lowering is the contract between stable authored intent and backend execution. It is allowed to be backend-specific, but it must be explicit and auditable.
 
@@ -355,6 +578,8 @@ Why not build a separate compositor? Because then every primitive must be reimpl
 6. When two adapter stages duplicate math, extract a backend helper first; promote to compositor only after the generic operation is clear.
 7. When a primitive is migrated from V2, prove it through CLI evidence and the same path used by player UI and studio UI.
 8. If a lowering decision is ambiguous, document the decision before coding the next slice.
+9. If a compositor primitive already exists, lower to it instead of implementing the primitive in the player.
+10. Player fallback adapters are not proof of strict-native compositor support.
 
 ## Evidence requirements at the boundary
 
@@ -406,4 +631,4 @@ Before committing a boundary-affecting change, verify:
 - Tests prove the selected boundary with strict native mode and no fallback.
 
 <!-- <FILE>docs/new_kernel/V31_RENDERING_BOUNDARY_RULES.md</FILE> - <DESC>Formal v3.1 recipe-to-playback boundary, lowering ownership, and compositor adapter decision rules</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
