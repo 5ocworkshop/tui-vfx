@@ -1398,6 +1398,15 @@ fn madeira_flag_full_scene_fixture_maps_source_bindings_assets_and_visibility() 
         "scene/scene_madeira_flag_full_scene.json",
     ));
 
+    let source_start_report = player().render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase_t: 0.0,
+            loop_t: Some(0.0),
+            absolute_t_ms: Some(0.0),
+            ..PlayerSampleRequest::default()
+        },
+    );
     let loopback_report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
     let mut host_request = PlayerSampleRequest::default();
     host_request
@@ -1411,6 +1420,7 @@ fn madeira_flag_full_scene_fixture_maps_source_bindings_assets_and_visibility() 
         .insert(SignalId::new("wave_speed"), Value::Number(4.0));
     let host_report = player().render_recipe(&recipe, &host_request);
 
+    assert_eq!(source_start_report.status, PlayerStatus::Rendered);
     assert_eq!(loopback_report.status, PlayerStatus::Rendered);
     assert_eq!(host_report.status, PlayerStatus::Rendered);
     assert_eq!(
@@ -1426,6 +1436,18 @@ fn madeira_flag_full_scene_fixture_maps_source_bindings_assets_and_visibility() 
         "Madeira scene rows should preserve the source recipe's 80-column layout"
     );
     assert!(loopback_report.rows[0].ends_with("[LB]"));
+    assert_eq!(
+        braille_bbox(&source_start_report.rows),
+        Some((20, 2, 59, 18, 548)),
+        "source Madeira scene keeps the flag centered with the same braille bbox/count at t0"
+    );
+    for (x, y) in [(32, 2), (21, 3), (22, 3), (24, 3), (34, 3), (35, 3)] {
+        assert_eq!(
+            char_at(&source_start_report.rows, x, y),
+            Some(' '),
+            "source scene composition lets the flag layer's transparent cells occlude fireworks at ({x},{y})"
+        );
+    }
     assert!(
         loopback_report.rows[19].contains("Feliz Ano Novo"),
         "source sibling-relative placement puts greeting below the flag at row 19"
@@ -2175,6 +2197,10 @@ fn assert_no_foreground(grid: &PlayerStyledGrid, forbidden: &str) {
         grid.cells().iter().all(|cell| cell.foreground != forbidden),
         "did not expect foreground {forbidden}"
     );
+}
+
+fn char_at(rows: &[String], x: usize, y: usize) -> Option<char> {
+    rows.get(y)?.chars().nth(x)
 }
 
 fn braille_bbox(rows: &[String]) -> Option<(usize, usize, usize, usize, usize)> {
