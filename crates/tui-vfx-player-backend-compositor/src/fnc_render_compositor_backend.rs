@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.8.0</VERS>
+// <VERS>VERSION: 0.9.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.8.0: MINOR — apply source-owned radial and wipe-corner mask stages for player-compatible parity.
+// <CLOG>0.9.0: MINOR — apply source-owned CRT sampler stages for player-compatible parity.
+// 0.8.0: MINOR — apply source-owned radial and wipe-corner mask stages for player-compatible parity.
 // 0.7.0: MINOR — apply source-owned mask stages for player-compatible mask parity.
 // 0.6.1: PATCH — hoist stable cellular reveal threshold calculation and sync metadata footer.
 // 0.6.0: MINOR — apply source-owned vignette and cellular mask stages for non-isomorphic debug-recipe blockers.
@@ -244,6 +245,21 @@ fn scene_ir_with_native_content_stages(
             NativeContentStage::SlideShift { start_col, end_col } => {
                 apply_slide_shift_content_stage(&mut staged, *start_col, *end_col)
             }
+            NativeContentStage::CrtSampler {
+                curvature,
+                scanline_strength,
+                jitter,
+            } => apply_crt_sampler_content_stage(
+                &mut staged,
+                *curvature,
+                *scanline_strength,
+                *jitter,
+            ),
+            NativeContentStage::CrtJitterSampler {
+                amplitude,
+                frequency,
+                seed,
+            } => apply_crt_jitter_sampler_content_stage(&mut staged, *amplitude, *frequency, *seed),
             NativeContentStage::CellularMask {
                 cell_size,
                 seed,
@@ -800,6 +816,55 @@ fn apply_slide_shift_content_stage(
     let offset = (start_col as f64 + (end_col - start_col) as f64 * progress).round() as isize;
     for row in &mut rows {
         *row = shift_row(row, offset);
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_crt_sampler_content_stage(
+    report: &mut PlayerRenderIrReport,
+    curvature: f64,
+    scanline_strength: f64,
+    jitter: f64,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let center = rows.len() as f64 / 2.0;
+    let curvature = curvature.clamp(0.0, 1.0);
+    let scanline_strength = scanline_strength.clamp(0.0, 1.0);
+    let jitter = jitter.max(0.0);
+    let time = report.loop_t.unwrap_or(report.phase_t);
+    for (y, row) in rows.iter_mut().enumerate() {
+        let bow = ((y as f64 - center) * curvature * report.phase_t).round() as isize;
+        let time_jitter = ((time * 10.0 + y as f64).sin() * jitter).round() as isize;
+        let shifted = shift_row(row, bow + time_jitter);
+        if scanline_strength > 0.0 && y % 2 == 1 {
+            *row = drop_every_nth_glyph(&shifted, scanline_strength);
+        } else {
+            *row = shifted;
+        }
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_crt_jitter_sampler_content_stage(
+    report: &mut PlayerRenderIrReport,
+    amplitude: f64,
+    frequency: f64,
+    seed: usize,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let time = report.loop_t.unwrap_or(report.phase_t);
+    let amplitude = amplitude.max(0.0);
+    let frequency = frequency.max(0.0);
+    let seed = seed as f64;
+    for (y, row) in rows.iter_mut().enumerate() {
+        let wave = ((time * frequency + y as f64 * 0.37 + seed * 0.01).sin() * amplitude).round();
+        *row = shift_row(row, wave as isize);
     }
     report.rows = rows;
     sync_styled_cells_to_rows(report);
@@ -1571,6 +1636,20 @@ fn shift_row(row: &str, offset: isize) -> String {
                 ' '
             }
         })
+        .collect()
+}
+
+fn drop_every_nth_glyph(row: &str, scanline_strength: f64) -> String {
+    let interval = if scanline_strength >= 0.66 {
+        3
+    } else if scanline_strength >= 0.33 {
+        5
+    } else {
+        8
+    };
+    row.chars()
+        .enumerate()
+        .map(|(index, glyph)| if index % interval == 0 { ' ' } else { glyph })
         .collect()
 }
 

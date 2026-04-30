@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.18.1</VERS>
+// <VERS>VERSION: 0.19.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.18.1: PATCH — reuse the native fail-on-fallback command helper in radial/wipe-corner rejection tests.
+// <CLOG>0.19.0: MINOR — add CRT sampler strict-native parity and rejection regressions.
+// 0.18.1: PATCH — reuse the native fail-on-fallback command helper in radial/wipe-corner rejection tests.
 // 0.18.0: MINOR — add radial and wipe-corner strict-native parity and rejection regressions.
 // 0.17.2: PATCH — cover invalid vignette applyTo rejection in strict-native mode.
 // 0.17.1: PATCH — remove redundant parity gating from vignette/mask native blocker regression.
@@ -23,6 +24,173 @@ use std::{
 };
 
 const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 144;
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_native_crt_sampler_blockers_json() {
+    for (recipe, recipe_id, effect_id) in [
+        (
+            "samplers/sampler_crt.json",
+            "debugSamplerCrt",
+            "sampler.crt",
+        ),
+        (
+            "samplers/sampler_crt_jitter.json",
+            "debugSamplerCrtJitter",
+            "sampler.crtJitter",
+        ),
+    ] {
+        let report = assert_native_backend_matches_ir_resolved_at_phase(
+            recipe_path(recipe),
+            recipe_id,
+            effect_id,
+            "0.35",
+            "render-backend native CRT sampler blockers player cli",
+        );
+
+        assert_eq!(
+            report["compositionSpecSummary"]["contentStages"], 1,
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_crt_sampler_unsupported_shapes_json() {
+    for (effect_name, recipe_path_fragment, output_input_id) in [
+        ("crt", "samplers/sampler_crt.json", "curvature"),
+        (
+            "crt_jitter",
+            "samplers/sampler_crt_jitter.json",
+            "amplitude",
+        ),
+    ] {
+        for (mutation_name, recipe) in [
+            (
+                "unsupported_input",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    Some(("unsupportedNativeField", unsupported_native_input())),
+                    None,
+                    None,
+                ),
+            ),
+            (
+                "unsupported_output",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    None,
+                    Some(serde_json::json!({
+                        "debugOutput": {
+                            "source": {
+                                "kind": "input",
+                                "id": output_input_id
+                            }
+                        }
+                    })),
+                    None,
+                ),
+            ),
+            (
+                "unsupported_scope",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    None,
+                    None,
+                    Some(serde_json::json!({
+                        "kind": "rowRange",
+                        "start": 0,
+                        "end": 1
+                    })),
+                ),
+            ),
+        ] {
+            let temp_root = std::env::temp_dir().join(format!(
+                "tui-vfx-native-{effect_name}-{mutation_name}-unsupported"
+            ));
+            let _ = fs::remove_dir_all(&temp_root);
+            fs::create_dir_all(&temp_root).expect("create temp unsupported CRT fixture root");
+            let recipe_path = temp_root.join(format!("{effect_name}_{mutation_name}.json"));
+            fs::write(
+                &recipe_path,
+                serde_json::to_string_pretty(&recipe).expect("serialize unsupported CRT recipe"),
+            )
+            .expect("write unsupported CRT recipe");
+
+            let output = run_native_render_backend_with_fail_on_fallback(
+                recipe_path.display().to_string(),
+                "render-backend native unsupported CRT sampler player cli",
+            );
+
+            assert!(
+                !output.status.success(),
+                "{effect_name}/{mutation_name} unexpectedly succeeded"
+            );
+            assert!(
+                stderr(&output).contains("unsupportedNativeEffect"),
+                "{effect_name}/{mutation_name} stderr: {}",
+                stderr(&output)
+            );
+        }
+    }
+}
+
+#[test]
+fn test_fnc_cli_renders_native_crt_sampler_with_clamped_numeric_values_json() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-native-crt-clamped-values");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create temp clamped CRT fixture root");
+    let mut recipe =
+        unsupported_native_effect_shape_recipe("samplers/sampler_crt.json", None, None, None);
+    let inputs = &mut recipe["graph"]["nodes"]["effectNode"]["inputs"];
+    inputs["curvature"] = literal_number_input(-1.0);
+    inputs["scanlineStrength"] = literal_number_input(2.0);
+    inputs["jitter"] = literal_number_input(-3.0);
+    let recipe_path = temp_root.join("crt_clamped_values.json");
+    fs::write(
+        &recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize clamped CRT recipe"),
+    )
+    .expect("write clamped CRT recipe");
+
+    assert_native_backend_matches_ir_resolved_at_phase(
+        recipe_path.display().to_string(),
+        "debugSamplerCrt",
+        "sampler.crt",
+        "0.35",
+        "render-backend native clamped CRT sampler player cli",
+    );
+}
+
+#[test]
+fn test_fnc_cli_renders_native_crt_jitter_sampler_with_clamped_numeric_values_json() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-native-crt-jitter-clamped-values");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create temp clamped CRT jitter fixture root");
+    let mut recipe = unsupported_native_effect_shape_recipe(
+        "samplers/sampler_crt_jitter.json",
+        None,
+        None,
+        None,
+    );
+    let inputs = &mut recipe["graph"]["nodes"]["effectNode"]["inputs"];
+    inputs["amplitude"] = literal_number_input(-2.0);
+    inputs["frequency"] = literal_number_input(-3.0);
+    inputs["seed"] = literal_integer_input(-7);
+    let recipe_path = temp_root.join("crt_jitter_clamped_values.json");
+    fs::write(
+        &recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize clamped CRT jitter recipe"),
+    )
+    .expect("write clamped CRT jitter recipe");
+
+    assert_native_backend_matches_ir_resolved_at_phase(
+        recipe_path.display().to_string(),
+        "debugSamplerCrtJitter",
+        "sampler.crtJitter",
+        "0.35",
+        "render-backend native clamped CRT jitter sampler player cli",
+    );
+}
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_radial_wipe_corner_blockers_json() {
@@ -3928,6 +4096,83 @@ fn player_cli_json(args: Vec<String>, context: &str) -> serde_json::Value {
     serde_json::from_slice(&output.stdout).expect("json report")
 }
 
+fn assert_native_backend_matches_ir_resolved_at_phase(
+    recipe_path: String,
+    recipe_id: &str,
+    effect_id: &str,
+    phase_t: &str,
+    context: &str,
+) -> serde_json::Value {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path.clone(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase-t"),
+            str_arg(phase_t),
+        ],
+        context,
+    );
+
+    assert_eq!(report["backend"], "compositor", "{context}");
+    assert_eq!(report["recipeId"], recipe_id, "{context}");
+    assert_eq!(report["compositionMode"], "native", "{context}");
+    assert_eq!(report["fallbackUsed"], false, "{context}");
+    assert_eq!(report["nativeLoweringAttempted"], true, "{context}");
+    assert_eq!(report["nativeLoweringSucceeded"], true, "{context}");
+    assert_eq!(report["sourceRenderMode"], "sourceOnly", "{context}");
+    assert_eq!(report["nativeSourceIsolated"], true, "{context}");
+    assert!(
+        report["loweredEffectIds"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!(effect_id)),
+        "{context}"
+    );
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
+        "{context}"
+    );
+
+    let ir_resolved_report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path,
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("ir-resolved"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase-t"),
+            str_arg(phase_t),
+        ],
+        context,
+    );
+    assert_eq!(report["rows"], ir_resolved_report["rows"], "{context}");
+    assert_eq!(
+        report["styledCells"], ir_resolved_report["styledCells"],
+        "{context}"
+    );
+    report
+}
+
 fn run_player_cli(args: Vec<String>, context: &str) -> Output {
     Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
         .args(args)
@@ -4285,6 +4530,26 @@ fn unsupported_native_input() -> serde_json::Value {
         "value": {
             "kind": "string",
             "value": "must stay unsupported"
+        }
+    })
+}
+
+fn literal_number_input(value: f64) -> serde_json::Value {
+    serde_json::json!({
+        "kind": "literal",
+        "value": {
+            "kind": "number",
+            "value": value
+        }
+    })
+}
+
+fn literal_integer_input(value: i64) -> serde_json::Value {
+    serde_json::json!({
+        "kind": "literal",
+        "value": {
+            "kind": "integer",
+            "value": value
         }
     })
 }

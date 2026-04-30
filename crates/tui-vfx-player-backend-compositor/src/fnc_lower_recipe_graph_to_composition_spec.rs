@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.8.2</VERS>
+// <VERS>VERSION: 0.9.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.8.2: PATCH — share the supported wipe direction list between path-reveal and wipe-corner lowering.
+// <CLOG>0.9.0: MINOR — lower CRT samplers through source-owned player-compatible content stages.
+// 0.8.2: PATCH — share the supported wipe direction list between path-reveal and wipe-corner lowering.
 // 0.8.1: PATCH — align wipe-corner default direction with descriptor and player primitive defaults.
 // 0.8.0: MINOR — lower radial and wipe-corner masks through player-compatible source-owned stages.
 // 0.7.2: PATCH — reject unsupported vignette applyTo values in strict source-style lowering.
@@ -139,6 +140,18 @@ pub enum NativeContentStage {
     GlitchShift { amount: usize, seed: usize },
     /// Shift source rows between authored start/end columns.
     SlideShift { start_col: i64, end_col: i64 },
+    /// Apply player-compatible CRT bow, jitter, and scanline semantics to source rows.
+    CrtSampler {
+        curvature: f64,
+        scanline_strength: f64,
+        jitter: f64,
+    },
+    /// Apply player-compatible CRT jitter row shifting to source rows.
+    CrtJitterSampler {
+        amplitude: f64,
+        frequency: f64,
+        seed: usize,
+    },
     /// Apply player-compatible cellular mask semantics to source rows.
     CellularMask {
         cell_size: usize,
@@ -571,6 +584,8 @@ fn lower_node_into_spec(
             });
             NodeLoweringOutcome::Lowered { warnings }
         }
+        "sampler.crt" => lower_crt_sampler(node, content_stages, request, warnings),
+        "sampler.crtJitter" => lower_crt_jitter_sampler(node, content_stages, request, warnings),
         "sampler.faultLine" => lower_fault_line_sampler(node, spec, request, warnings),
         "sampler.radialTwist" => lower_radial_twist_sampler(node, spec, request, warnings),
         "sampler.shredder" => lower_shredder_sampler(node, spec, request, warnings),
@@ -1491,6 +1506,50 @@ fn lower_noise_dither_mask(
         seed: integer_input(node, request, "seed", 0).max(0) as u64,
         matrix: DitherMatrix::Bayer4,
         chunk_size: positive_u8_input(node, request, "chunkSize", 1),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_crt_sampler(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(
+        node,
+        "sampler.crt",
+        &["curvature", "scanlineStrength", "jitter"],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::CrtSampler {
+        curvature: number_input(node, request, "curvature", 0.4).clamp(0.0, 1.0),
+        scanline_strength: number_input(node, request, "scanlineStrength", 0.35).clamp(0.0, 1.0),
+        jitter: number_input(node, request, "jitter", 0.0).max(0.0),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_crt_jitter_sampler(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(
+        node,
+        "sampler.crtJitter",
+        &["amplitude", "frequency", "seed"],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::CrtJitterSampler {
+        amplitude: number_input(node, request, "amplitude", 1.0).max(0.0),
+        frequency: number_input(node, request, "frequency", 2.0).max(0.0),
+        seed: integer_input(node, request, "seed", 13).max(0) as usize,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
