@@ -1,7 +1,8 @@
 <!-- <FILE>docs/design/post-release/INDEX.md</FILE> - <DESC>Index of post-release V3 capability ideas that are intentionally deferred until the core V3 release is stable.</DESC> -->
-<!-- <VERS>VERSION: 0.1.3</VERS> -->
+<!-- <VERS>VERSION: 0.1.4</VERS> -->
 <!-- <WCTX>Collect deferred capability specs without mixing post-release creative work into the active V3 release gate.</WCTX> -->
-<!-- <CLOG>0.1.3: add spatial-constraint relative-motion spec (PinnedOffset / Repulsion / OrbitPair).
+<!-- <CLOG>0.1.4: add dynamic light primitive spec for tui-vfx-shadow (Directional + Positional Light enum, project_light_to_offset math, surface-shader direction_at accessor); companion to gt-design's integration PRD.
+0.1.3: add spatial-constraint relative-motion spec (PinnedOffset / Repulsion / OrbitPair).
 0.1.2: add weather ambient field spec.</CLOG> -->
 
 # Post-release capability specs
@@ -24,6 +25,12 @@ until V3 playback, validation, docs, and recipe migration are stable.
   per-frame `PinnedOffset` / `Repulsion` / `OrbitPair` route variants that
   generalise today's static `sibling_id` anchoring and temporal `follow.lag_ms`
   into true layer-to-layer spatial constraints.
+- [Dynamic light primitive spec](dynamic-light-shadow-primitive-spec.md) —
+  grid-aware `Light` enum (`Directional` / `Positional`) plus pure
+  `project_light_to_offset` math at the `tui-vfx-shadow` layer, providing the
+  canonical light type reused by gtd-factory's elevation-aware shadow build,
+  the Madeira flag's surface-normal shading, and any future tui-vfx consumer
+  that needs coordinated dynamic shadows or surface lighting.
 
 ## Rules
 
@@ -35,4 +42,4 @@ until V3 playback, validation, docs, and recipe migration are stable.
   glyph rendering and effect semantics stay in `tui-vfx` / `tui-vfx-recipes`.
 
 <!-- <FILE>docs/design/post-release/INDEX.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.2</VERS> -->
+<!-- <VERS>END OF VERSION: 0.1.4</VERS> -->
