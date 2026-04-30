@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.12.0</VERS>
+// <VERS>VERSION: 0.13.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.12.0: MINOR — lower canvas-aware style fade endpoints through native FadeToCanvas.</CLOG>
+// <CLOG>0.13.0: MINOR — lower style.italicWindow through a source-owned native style stage.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -190,6 +190,8 @@ pub enum NativeStyleStage {
         saturation_shift: f64,
         lightness_shift: f64,
     },
+    /// Apply player-compatible italic-window styling.
+    ItalicWindow { start: f64, end: f64 },
     /// Apply player-compatible vignette filter styling.
     Vignette {
         strength: f64,
@@ -686,6 +688,7 @@ fn lower_node_into_spec(
         "style.colorFade" => lower_style_color_fade(node, style_stages, request, warnings),
         "style.colorShift" => lower_style_color_shift(node, style_stages, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
+        "style.italicWindow" => lower_style_italic_window(node, style_stages, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
@@ -2023,6 +2026,27 @@ fn lower_style_color_shift(
         saturation_shift: number_input(node, request, "saturationShift", 0.0),
         lightness_shift: number_input(node, request, "lightnessShift", 0.0),
     });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_style_italic_window(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.italicWindow",
+        &["start", "end"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let start = number_input(node, request, "start", 0.0).clamp(0.0, 1.0);
+    let end = number_input(node, request, "end", 1.0).clamp(start, 1.0);
+    style_stages.push(NativeStyleStage::ItalicWindow { start, end });
     NodeLoweringOutcome::Lowered { warnings }
 }
 
@@ -3400,4 +3424,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.12.0</VERS>
+// <VERS>END OF VERSION: 0.13.0</VERS>

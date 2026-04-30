@@ -1,21 +1,7 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.11.0</VERS>
+// <VERS>VERSION: 0.12.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.11.0: MINOR — apply native style color-fade stages with V2-compatible color interpolation.
-// 0.10.1: PATCH — compute wayfinding node cell positions directly instead of materializing a temporary grid vector.
-// 0.10.0: MINOR — apply source-owned shader style stages for player-compatible parity.
-// 0.9.0: MINOR — apply source-owned CRT sampler stages for player-compatible parity.
-// 0.8.0: MINOR — apply source-owned radial and wipe-corner mask stages for player-compatible parity.
-// 0.7.0: MINOR — apply source-owned mask stages for player-compatible mask parity.
-// 0.6.1: PATCH — hoist stable cellular reveal threshold calculation and sync metadata footer.
-// 0.6.0: MINOR — apply source-owned vignette and cellular mask stages for non-isomorphic debug-recipe blockers.
-// 0.5.1: PATCH — simplify one-off filter styling helpers without changing rendered cells.
-// 0.5.0: MINOR — apply one-off content/filter native stages with player-compatible styled-cell parity.
-// 0.4.0: MINOR — apply source-only native style stages and residual content stages before compositor rendering.
-// 0.3.1: PATCH — consolidate repeated composition metadata population without changing emitted keys.
-// 0.3.0: MINOR — route native compositor requests through source-only IR unless auto mode explicitly falls back.
-// 0.2.0: MINOR — add request-based render path for native/auto/irResolved composition modes.
-// 0.1.0: INIT — implement PlayerRenderBackend over SemanticScene lowering and backend output collection.</CLOG>
+// <CLOG>0.12.0: MINOR — apply native italic-window style stages for V2-compatible modifier parity.</CLOG>
 
 use std::{borrow::Cow, collections::BTreeMap};
 
@@ -343,6 +329,9 @@ fn scene_ir_with_native_content_stages(
                 *saturation_shift,
                 *lightness_shift,
             ),
+            NativeStyleStage::ItalicWindow { start, end } => {
+                apply_italic_window_style_stage(&mut staged, *start, *end)
+            }
             NativeStyleStage::Vignette {
                 strength,
                 edge_color,
@@ -1422,6 +1411,19 @@ fn apply_color_shift_style_stage(
             )
             .unwrap_or(existing_background);
             set_report_cell_style(report, x, y, Some(&foreground), Some(&background), None);
+        }
+    }
+}
+
+fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64, end: f64) {
+    if !(start..=end).contains(&report.phase_t) {
+        return;
+    }
+    let width = report_width(report);
+    let height = report_height(report);
+    for y in 0..height {
+        for x in 0..width {
+            set_report_cell_style(report, x, y, None, None, Some("italic"));
         }
     }
 }
@@ -2939,4 +2941,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.11.0</VERS>
+// <VERS>END OF VERSION: 0.12.0</VERS>

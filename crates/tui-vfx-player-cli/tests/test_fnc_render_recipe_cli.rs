@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.27.1</VERS>
+// <VERS>VERSION: 0.28.1</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.27.1: PATCH — clarify the standard style fade V2 oracle cell-count assertion.</CLOG>
+// <CLOG>0.28.1: PATCH — name the V2 italic-window card-cell oracle count.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -1269,6 +1269,48 @@ fn test_fnc_cli_native_style_fades_match_v2_deprecated_channel_oracle_json() {
             "{recipe} should fade all 35x3 card cells while preserving distinct source foreground/background channels"
         );
     }
+}
+
+#[test]
+fn test_fnc_cli_native_style_italic_window_matches_v2_deprecated_modifier_oracle_json() {
+    const V2_ITALIC_WINDOW_CARD_CELL_COUNT: usize = 35 * 3;
+
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_italic_window.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.5"),
+        ],
+        "render-backend native V2 deprecated italic-window oracle player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 1);
+    assert_eq!(report["rows"][0], "╭─────────────────────────────────╮");
+    assert_eq!(report["rows"][1], "│STYLE TEST: ItalicWindow         │");
+    assert_eq!(
+        styled_cell_modifier_count(
+            &report,
+            "rgba(255,255,0,255)",
+            "rgba(50,40,20,255)",
+            "italic"
+        ),
+        V2_ITALIC_WINDOW_CARD_CELL_COUNT
+    );
 }
 
 #[test]
@@ -4639,7 +4681,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 643);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 639);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -5575,6 +5617,28 @@ fn styled_cell_color_count(
         .count()
 }
 
+fn styled_cell_modifier_count(
+    report: &serde_json::Value,
+    foreground: &str,
+    background: &str,
+    modifier: &str,
+) -> usize {
+    report["styledCells"]
+        .as_array()
+        .expect("styled cells array")
+        .iter()
+        .filter(|cell| {
+            cell["foreground"] == foreground
+                && cell["background"] == background
+                && cell["modifiers"]
+                    .as_array()
+                    .expect("modifiers")
+                    .iter()
+                    .any(|value| value == modifier)
+        })
+        .count()
+}
+
 fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
     serde_json::json!({
         "kind": "literal",
@@ -5586,4 +5650,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.27.1</VERS>
+// <VERS>END OF VERSION: 0.28.1</VERS>

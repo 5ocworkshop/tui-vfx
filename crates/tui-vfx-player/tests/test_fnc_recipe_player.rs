@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>VERSION: 0.6.2</VERS>
+// <VERS>VERSION: 0.6.4</VERS>
 // <WCTX>Styled-cell substrate work: keep player evidence tests portable and explicit.</WCTX>
-// <CLOG>0.6.2: PATCH — expect fade-out-to-canvas fixtures to affect both color channels.</CLOG>
+// <CLOG>0.6.4: PATCH — make italic-window fixture phase samples explicit.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -588,52 +588,61 @@ fn test_fnc_player_styled_primitive_visual_frames_are_style_known() {
 #[test]
 fn test_fnc_player_renders_added_shader_and_style_fixtures() {
     let player = player();
-    for (relative, effect_id, expectation) in [
+    for (relative, effect_id, expectation, phase) in [
         (
             "styles/style_fade_in_apply_to_both.json",
             "style.fadeIn",
             "foregroundAndBackground",
+            LifecyclePhase::Dwell,
         ),
         (
             "styles/style_fade_out_to_canvas_color.json",
             "style.fadeOut",
             "foregroundAndBackground",
+            LifecyclePhase::Dwell,
         ),
         (
             "styles/style_pulse_runtime_frequency.json",
             "style.pulse",
             "foregroundOnly",
+            LifecyclePhase::Dwell,
         ),
         (
             "styles/style_italic_window.json",
             "style.italicWindow",
             "italicModifier",
+            LifecyclePhase::Enter,
         ),
         (
             "styles/style_neon_flicker_modifier.json",
             "style.neonFlicker",
             "foregroundAndItalic",
+            LifecyclePhase::Dwell,
         ),
         (
             "shaders/primitives/shader_barber_pole.json",
             "shader.barberPole",
             "backgroundOnly",
+            LifecyclePhase::Dwell,
         ),
         (
             "shaders/primitives/shader_diffusion_background.json",
             "shader.diffusion",
             "backgroundOnly",
+            LifecyclePhase::Dwell,
         ),
         (
             "shaders/primitives/shader_radar_sweep.json",
             "shader.radar",
             "foregroundOnly",
+            LifecyclePhase::Dwell,
         ),
     ] {
         let recipe = recipe_with_descriptor_fixture_effect(relative, effect_id);
         let report = player.render_recipe(
             &recipe,
             &PlayerSampleRequest {
+                phase,
                 phase_t: 0.5,
                 loop_t: Some(0.25),
                 ..PlayerSampleRequest::default()
@@ -704,6 +713,7 @@ fn test_fnc_player_renders_added_shader_and_style_fixtures() {
             let outside_window = player.render_recipe(
                 &recipe,
                 &PlayerSampleRequest {
+                    phase: LifecyclePhase::Enter,
                     phase_t: 0.95,
                     ..PlayerSampleRequest::default()
                 },
@@ -2026,4 +2036,4 @@ fn workspace_root() -> PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>END OF VERSION: 0.6.2</VERS>
+// <VERS>END OF VERSION: 0.6.4</VERS>
