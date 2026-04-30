@@ -1,26 +1,7 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.11.0</VERS>
+// <VERS>VERSION: 0.12.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.12.0: MINOR — lower V2-parity fault-line sampler seed/intensity/split-bias fields.
-// 0.11.0: MINOR — lower style.colorFade through source-owned player-compatible style stages.
-// 0.10.0: MINOR — lower current shader blockers through source-owned player-compatible style stages.
-// 0.9.0: MINOR — lower CRT samplers through source-owned player-compatible content stages.
-// 0.8.2: PATCH — share the supported wipe direction list between path-reveal and wipe-corner lowering.
-// 0.8.1: PATCH — align wipe-corner default direction with descriptor and player primitive defaults.
-// 0.8.0: MINOR — lower radial and wipe-corner masks through player-compatible source-owned stages.
-// 0.7.2: PATCH — reject unsupported vignette applyTo values in strict source-style lowering.
-// 0.7.1: PATCH — inline the single-use native mask unsupported-reason wrapper.
-// 0.7.0: MINOR — route non-isomorphic masks through source-owned content stages and reject unsupported enum values.
-// 0.6.1: PATCH — clarify vignette mixed-field lowering checks and sync metadata footer.
-// 0.6.0: MINOR — lower vignette and remaining mask debug-recipe blockers through native specs or source-owned semantic stages.
-// 0.5.1: PATCH — tune one-off filter native lowering metadata without changing native output.
-// 0.5.0: MINOR — add source-only native content/filter style stages for one-off debug-recipe blockers.
-// 0.4.0: MINOR — add source-only native content/style stages for residual style and content debug-recipe blockers.
-// 0.3.0: MINOR — add strict native lowering for the current shader/filter/mask/sampler debug-recipe blocker set.
-// 0.2.2: PATCH — de-duplicate unsupported-native diagnostics and signed offset clamping helpers.
-// 0.2.1: PATCH — pass native lowering counts directly when building evidence.
-// 0.2.0: MINOR — add native/auto/irResolved lowering modes for filter, mask, sampler, shader, and style debug-recipes.
-// 0.1.0: INIT — carry playback timing and record that player IR already contains resolved recipe effects for this bounded slice.</CLOG>
+// <CLOG>0.12.0: MINOR — lower canvas-aware style fade endpoints through native FadeToCanvas.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -1882,28 +1863,54 @@ fn lower_style_fade(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
-    mut warnings: Vec<PlayerRenderBackendDiagnostic>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
+    let progress = eased_style_progress(node, request);
+    let canvas_fade = match node.effect.as_str() {
+        "style.fadeIn" if node_has_input(node, "from") && !node_has_input(node, "to") => {
+            Some(("from", 1.0 - progress))
+        }
+        "style.fadeOut" if node_has_input(node, "to") && !node_has_input(node, "from") => {
+            Some(("to", progress))
+        }
+        _ => None,
+    };
+    if let Some((canvas_input, strength)) = canvas_fade {
+        spec.filters.push(FilterSpec::FadeToCanvas {
+            canvas_color: color_input(node, request, canvas_input).unwrap_or(ColorConfig::Black),
+            canvas_color_binding: None,
+            strength: BindableValue::from(SignalOrFloat::Static(strength)),
+            apply_to: apply_to_input(node, request, "applyTo"),
+        });
+        return NodeLoweringOutcome::Lowered { warnings };
+    }
+
     let from = color_input(node, request, "from").unwrap_or(ColorConfig::Black);
     let to = color_input(node, request, "to").unwrap_or(ColorConfig::White);
-    let progress = request.ir.phase_t.clamp(0.0, 1.0);
-    let style_color = blend_color_config(from, to, progress);
-    if node
-        .inputs
-        .contains_key(&tui_vfx_contract::EffectInputId::new("easing"))
-    {
-        warnings.push(PlayerRenderBackendDiagnostic {
-            code: "fieldIgnoredWithWarning".to_string(),
-            path: format!("graph.nodes.{}.inputs.easing", node.id.as_str()),
-            message: "Native compositor style fade currently applies linear progress; authored easing is reported rather than silently ignored.".to_string(),
-        });
-    }
+    let style_color = blend_color_config(from, to, progress as f64);
     spec.filters.push(FilterSpec::Tint {
         color: style_color,
         strength: SignalOrFloat::Static(1.0),
         apply_to: apply_to_input(node, request, "applyTo"),
     });
     NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn eased_style_progress(node: &NodeSpec, request: &PlayerRenderBackendRequest) -> f32 {
+    let phase = request.ir.phase_t.clamp(0.0, 1.0) as f32;
+    let easing = enum_input(node, request, "easing").unwrap_or("linear");
+    match enum_input(node, request, "ease").unwrap_or(easing) {
+        "easeIn" => phase * phase,
+        "easeOut" => 1.0 - (1.0 - phase) * (1.0 - phase),
+        "easeInOut" => {
+            if phase < 0.5 {
+                2.0 * phase * phase
+            } else {
+                1.0 - (-2.0 * phase + 2.0).powi(2) / 2.0
+            }
+        }
+        _ => phase,
+    }
 }
 
 fn lower_style_modulo_columns(
@@ -3393,4 +3400,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.11.0</VERS>
+// <VERS>END OF VERSION: 0.12.0</VERS>

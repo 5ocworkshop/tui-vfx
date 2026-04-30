@@ -1,14 +1,7 @@
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>VERSION: 0.6.1</VERS>
+// <VERS>VERSION: 0.6.2</VERS>
 // <WCTX>Styled-cell substrate work: keep player evidence tests portable and explicit.</WCTX>
-// <CLOG>0.6.1: PATCH — keep style-hash evidence valid after source card style parity migration.
-// 0.6.0: MINOR — require K2.5 styled primitive adapters to emit real styled-cell evidence.
-// 0.5.1: PATCH — clarify styled-grid proof naming and recipe repo override.
-// 0.5.0: MINOR — assert styled-cell visual frames can carry non-default style evidence.
-// 0.4.0: MINOR — assert newly supported text-grid adapters produce player row evidence.
-// 0.3.0: PATCH — use project-derived recipe paths and switch unsupported adapter regression away from newly supported dissolve.
-// 0.2.0: PATCH — add source.text text-input regression coverage.
-// 0.1.0: INIT — add primitive render, deterministic hash, unsupported effect, and session latch coverage.</CLOG>
+// <CLOG>0.6.2: PATCH — expect fade-out-to-canvas fixtures to affect both color channels.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -604,7 +597,7 @@ fn test_fnc_player_renders_added_shader_and_style_fixtures() {
         (
             "styles/style_fade_out_to_canvas_color.json",
             "style.fadeOut",
-            "backgroundOnly",
+            "foregroundAndBackground",
         ),
         (
             "styles/style_pulse_runtime_frequency.json",
@@ -2033,4 +2026,4 @@ fn workspace_root() -> PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>END OF VERSION: 0.6.1</VERS>
+// <VERS>END OF VERSION: 0.6.2</VERS>

@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_style_primitive.rs</FILE> - <DESC>Apply style primitives to player styled grids</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Player adapter de-slop: reuse centralized RGBA report labels.</WCTX>
-// <CLOG>0.2.0: MINOR — fade style color channels from existing cell styles for V2 ColorFade parity.
-// 0.1.1: PATCH — remove duplicate style-local RGBA label formatting.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Player adapter style parity: preserve source color channels while applying recipe style primitives.</WCTX>
+// <CLOG>0.3.0: MINOR — preserve distinct source color channels for canvas-aware fade endpoints.</CLOG>
 
 use tui_vfx_contract::{NodeSpec, ScopeSpec};
 
@@ -86,6 +85,16 @@ fn apply_fade_in(
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
+    if has_effect_input(node, "from") && !has_effect_input(node, "to") {
+        apply_canvas_endpoint_fade(
+            node,
+            request,
+            styled_grid,
+            "from",
+            1.0 - eased_phase(node, request),
+        );
+        return;
+    }
     apply_fade(
         node,
         request,
@@ -143,6 +152,10 @@ fn apply_fade_out(
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
+    if has_effect_input(node, "to") && !has_effect_input(node, "from") {
+        apply_canvas_endpoint_fade(node, request, styled_grid, "to", eased_phase(node, request));
+        return;
+    }
     apply_fade(
         node,
         request,
@@ -150,6 +163,57 @@ fn apply_fade_out(
         ResolvedColor::rgb(255, 255, 255),
         ResolvedColor::rgb(0, 0, 0),
     );
+}
+
+fn apply_canvas_endpoint_fade(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+    canvas_input: &str,
+    strength: f32,
+) {
+    let canvas_color =
+        resolve_effect_color(node, request, canvas_input, ResolvedColor::rgb(0, 0, 0));
+    let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let Some(existing) = styled_grid
+            .cells()
+            .iter()
+            .find(|cell| cell.x == x && cell.y == y)
+            .cloned()
+        else {
+            continue;
+        };
+        let foreground = if matches!(apply_to.as_str(), "foreground" | "both") {
+            canvas_endpoint_label(&existing.foreground, canvas_color, strength)
+        } else {
+            existing.foreground.clone()
+        };
+        let background = if matches!(apply_to.as_str(), "background" | "both") {
+            canvas_endpoint_label(&existing.background, canvas_color, strength)
+        } else {
+            existing.background.clone()
+        };
+        styled_grid.set_cell_style(
+            x,
+            y,
+            &foreground,
+            &background,
+            existing.modifiers,
+            existing.role,
+        );
+    }
+}
+
+fn canvas_endpoint_label(label: &str, canvas_color: ResolvedColor, strength: f32) -> String {
+    resolved_color_from_rgba_label(label)
+        .map(|color| color.lerp(canvas_color, strength).rgba_label())
+        .unwrap_or_else(|| label.to_string())
+}
+
+fn has_effect_input(node: &NodeSpec, key: &str) -> bool {
+    node.inputs
+        .contains_key(&tui_vfx_contract::EffectInputId::new(key))
 }
 
 fn apply_fade(
@@ -475,4 +539,4 @@ fn hue_to_rgb(p: f32, q: f32, mut t: f32) -> f32 {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_apply_style_primitive.rs</FILE> - <DESC>Apply style primitives to player styled grids</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

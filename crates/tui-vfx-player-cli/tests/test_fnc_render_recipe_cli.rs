@@ -1,9 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.25.0</VERS>
+// <VERS>VERSION: 0.26.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.25.0: MINOR — add V2 oracle coverage for style color-fade migration.
-// 0.24.0: MINOR — add V2-to-v3.1 CLI letter-cell oracle coverage for simple filter primitives.
-// 0.23.2: PATCH — keep playback timeout and field-coverage shape checks focused on durable evidence.</CLOG>
+// <CLOG>0.26.0: MINOR — assert canvas-aware style fades preserve source color channels without fallback.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -1151,6 +1149,64 @@ fn test_fnc_cli_native_hover_bar_matches_v2_deprecated_glyph_oracle_json() {
         3
     );
     assert_eq!(report["rows"][1], " █OVER BAR                     │");
+}
+
+#[test]
+fn test_fnc_cli_native_style_fades_preserve_canvas_color_endpoints_json() {
+    for (recipe, phase, expected_foreground, expected_background) in [
+        (
+            "styles/style_fade_in_from_canvas.json",
+            "enter",
+            "rgba(27,31,37,255)",
+            "rgba(194,196,196,255)",
+        ),
+        (
+            "styles/style_fade_out_to_canvas_color.json",
+            "exit",
+            "rgba(102,187,201,255)",
+            "rgba(11,24,49,255)",
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg("0.5"),
+            ],
+            "render-backend native canvas-aware style fade player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["compositionSpecSummary"]["filters"], 1, "{recipe}");
+        assert!(
+            styled_cell_color_count(&report, expected_foreground, expected_background) > 0,
+            "{recipe} should preserve source foreground/background as distinct channels while fading to canvas"
+        );
+        assert_eq!(
+            styled_cell_color_count(&report, "rgba(0,0,0,255)", "rgba(0,0,0,255)"),
+            0,
+            "{recipe} must not flash through hardcoded black"
+        );
+        assert_eq!(
+            styled_cell_color_count(&report, "rgba(255,255,255,255)", "rgba(255,255,255,255)"),
+            0,
+            "{recipe} must not flash through hardcoded white"
+        );
+    }
 }
 
 #[test]
@@ -3589,7 +3645,7 @@ fn test_fnc_cli_play_backend_ansi_emits_compositor_color_without_clear_when_no_c
     assert!(stdout.contains("\x1b[38;2;") || stdout.contains("\x1b[48;2;"));
     assert!(stdout.contains("frame: 0"));
     assert!(stdout.contains("frame: 1"));
-    assert!(stdout.contains("styled_cells=240"));
+    assert!(stdout.contains("styled_cells=105"));
     assert!(!stdout.contains("\x1b[2J"));
     let hashes = stdout
         .lines()
@@ -4521,7 +4577,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 655);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 649);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -5468,4 +5524,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.25.0</VERS>
+// <VERS>END OF VERSION: 0.26.0</VERS>
