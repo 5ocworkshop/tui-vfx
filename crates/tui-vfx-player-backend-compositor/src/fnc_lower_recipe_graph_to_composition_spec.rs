@@ -1,7 +1,12 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.5.1</VERS>
+// <VERS>VERSION: 0.7.2</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.5.1: PATCH — tune one-off filter native lowering metadata without changing native output.
+// <CLOG>0.7.2: PATCH — reject unsupported vignette applyTo values in strict source-style lowering.
+// 0.7.1: PATCH — inline the single-use native mask unsupported-reason wrapper.
+// 0.7.0: MINOR — route non-isomorphic masks through source-owned content stages and reject unsupported enum values.
+// 0.6.1: PATCH — clarify vignette mixed-field lowering checks and sync metadata footer.
+// 0.6.0: MINOR — lower vignette and remaining mask debug-recipe blockers through native specs or source-owned semantic stages.
+// 0.5.1: PATCH — tune one-off filter native lowering metadata without changing native output.
 // 0.5.0: MINOR — add source-only native content/filter style stages for one-off debug-recipe blockers.
 // 0.4.0: MINOR — add source-only native content/style stages for residual style and content debug-recipe blockers.
 // 0.3.0: MINOR — add strict native lowering for the current shader/filter/mask/sampler debug-recipe blocker set.
@@ -116,6 +121,22 @@ pub enum NativeContentStage {
     GlitchShift { amount: usize, seed: usize },
     /// Shift source rows between authored start/end columns.
     SlideShift { start_col: i64, end_col: i64 },
+    /// Apply player-compatible cellular mask semantics to source rows.
+    CellularMask {
+        cell_size: usize,
+        seed: usize,
+        threshold: f64,
+    },
+    /// Apply player-compatible blinds mask semantics to source rows.
+    BlindsMask { orientation: String, count: usize },
+    /// Apply player-compatible diamond mask semantics to source rows.
+    DiamondMask { soft_edge: bool },
+    /// Apply player-compatible dissolve mask semantics to source rows.
+    DissolveMask { seed: u64, chunk_size: usize },
+    /// Apply player-compatible iris mask semantics to source rows.
+    IrisMask { shape: String, soft_edge: bool },
+    /// Apply player-compatible wipe/path-reveal mask semantics to source rows.
+    WipeMask { direction: String, soft_edge: bool },
 }
 
 /// Native style transform stage owned by the compositor backend adapter.
@@ -134,6 +155,12 @@ pub enum NativeStyleStage {
         stability: f64,
         dim_amount: f64,
         italic_window: bool,
+    },
+    /// Apply player-compatible vignette filter styling.
+    Vignette {
+        strength: f64,
+        edge_color: String,
+        apply_to: String,
     },
     /// Apply player-compatible bracket emphasis filter styling.
     BracketEmphasis {
@@ -453,7 +480,7 @@ fn lower_node_into_spec(
             NodeLoweringOutcome::Lowered { warnings }
         }
         "filter.fadeToCanvas" => lower_fade_to_canvas(node, spec, request, warnings),
-        "filter.vignette" => lower_vignette(node, spec, request, warnings),
+        "filter.vignette" => lower_vignette(node, spec, style_stages, request, warnings),
         "filter.crt" => lower_crt(node, spec, request, warnings),
         "filter.patternFill" => lower_pattern_fill(node, spec, request, warnings),
         "filter.kittScanner" => lower_kitt_scanner(node, spec, request, warnings),
@@ -492,6 +519,13 @@ fn lower_node_into_spec(
             });
             NodeLoweringOutcome::Lowered { warnings }
         }
+        "mask.blinds" => lower_blinds_mask(node, content_stages, request, warnings),
+        "mask.cellular" => lower_cellular_mask(node, content_stages, request, warnings),
+        "mask.diamond" => lower_diamond_mask(node, content_stages, request, warnings),
+        "mask.dissolve" => lower_dissolve_mask(node, content_stages, request, warnings),
+        "mask.iris" => lower_iris_mask(node, content_stages, request, warnings),
+        "mask.none" => lower_none_mask(node, spec, warnings),
+        "mask.pathReveal" => lower_path_reveal_mask(node, content_stages, request, warnings),
         "mask.materialize" | "mask.materializeCorner" => {
             lower_materialize_mask(node, spec, request, warnings)
         }
@@ -1023,31 +1057,64 @@ fn lower_fade_to_canvas(
 fn lower_vignette(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
-    let unsupported_inputs = [
+    let source_style_inputs = ["edgeColor", "applyTo"];
+    let direct_filter_only_inputs = ["radius", "sides", "ditherAmount", "temporalDitherHz"];
+    let supported_inputs = [
+        "strength",
+        "radius",
+        "sides",
+        "ditherAmount",
+        "temporalDitherHz",
         "edgeColor",
         "applyTo",
-        "bgColor",
-        "color",
-        "fillColor",
-        "filledColor",
-        "unfilledColor",
-        "left",
-        "right",
-        "progress",
-    ]
-    .into_iter()
-    .filter(|key| node_has_input(node, key))
-    .collect::<Vec<_>>();
-    if !unsupported_inputs.is_empty() {
-        return NodeLoweringOutcome::Unsupported {
-            reason: format!(
-                "Effect `filter.vignette` uses input(s) `{}` that have no compositor-native FilterSpec equivalent without dropping authored semantics.",
-                unsupported_inputs.join("`, `")
-            ),
+    ];
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "filter.vignette",
+        &supported_inputs,
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let has_source_style_input = source_style_inputs
+        .iter()
+        .any(|key| node_has_input(node, key));
+    if has_source_style_input {
+        if direct_filter_only_inputs
+            .iter()
+            .any(|key| node_has_input(node, key))
+        {
+            return NodeLoweringOutcome::Unsupported {
+                reason: "Effect `filter.vignette` cannot mix source-style-only fields with compositor FilterSpec-only fields without dropping authored semantics.".to_string(),
+            };
+        }
+        let edge_color = color_input(node, request, "edgeColor").unwrap_or(ColorConfig::Rgb {
+            r: 10,
+            g: 20,
+            b: 36,
+        });
+        let apply_to = match strict_enum_input(
+            node,
+            request,
+            "applyTo",
+            "both",
+            &["foreground", "background", "both"],
+            "filter.vignette",
+        ) {
+            Ok(apply_to) => apply_to,
+            Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
         };
+        style_stages.push(NativeStyleStage::Vignette {
+            strength: number_input(node, request, "strength", 0.6).clamp(0.0, 1.0),
+            edge_color: color_label_from_config(edge_color),
+            apply_to,
+        });
+        return NodeLoweringOutcome::Lowered { warnings };
     }
 
     spec.filters.push(FilterSpec::Vignette {
@@ -1149,6 +1216,172 @@ fn lower_kitt_scanner(
         powerline_mode: bool_input(node, request, "powerlineMode", false),
         boost_separator_bg: bool_or_color_presence_input(node, request, "boostSeparatorBg", false),
         boost_separator_bg_color,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_blinds_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "mask.blinds", &["orientation", "count"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let orientation = match strict_enum_input(
+        node,
+        request,
+        "orientation",
+        "horizontal",
+        &["horizontal", "vertical"],
+        "mask.blinds",
+    ) {
+        Ok(orientation) => orientation,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    content_stages.push(NativeContentStage::BlindsMask {
+        orientation,
+        count: integer_input(node, request, "count", 4).max(1) as usize,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_cellular_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "mask.cellular", &["cellSize", "seed", "threshold"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    content_stages.push(NativeContentStage::CellularMask {
+        cell_size: integer_input(node, request, "cellSize", 2).max(1) as usize,
+        seed: integer_input(node, request, "seed", 7).max(0) as usize,
+        threshold: number_input(node, request, "threshold", 0.5).clamp(0.0, 1.0),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_diamond_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(node, "mask.diamond", &["softEdge"]) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    content_stages.push(NativeContentStage::DiamondMask {
+        soft_edge: bool_input(node, request, "softEdge", true),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_dissolve_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "mask.dissolve", &["seed", "chunkSize"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    content_stages.push(NativeContentStage::DissolveMask {
+        seed: integer_input(node, request, "seed", 42).max(0) as u64,
+        chunk_size: integer_input(node, request, "chunkSize", 1).max(1) as usize,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_iris_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "mask.iris", &["shape", "softEdge"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let shape = match strict_enum_input(
+        node,
+        request,
+        "shape",
+        "circle",
+        &["circle", "diamond"],
+        "mask.iris",
+    ) {
+        Ok(shape) => shape,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    content_stages.push(NativeContentStage::IrisMask {
+        shape,
+        soft_edge: bool_input(node, request, "softEdge", true),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_none_mask(
+    node: &NodeSpec,
+    spec: &mut CompositionSpec,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_reason(node, "mask.none", &[], "compositor-backend native mask")
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    spec.masks.push(MaskSpec::None);
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_path_reveal_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "mask.pathReveal", &["direction", "softEdge"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let direction = match strict_enum_input(
+        node,
+        request,
+        "direction",
+        "leftToRight",
+        &[
+            "leftToRight",
+            "rightToLeft",
+            "topToBottom",
+            "bottomToTop",
+            "outFromTopLeft",
+            "outFromTopRight",
+            "outFromBottomLeft",
+            "outFromBottomRight",
+            "inToTopLeft",
+            "inToTopRight",
+            "inToBottomLeft",
+            "inToBottomRight",
+        ],
+        "mask.pathReveal",
+    ) {
+        Ok(direction) => direction,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    content_stages.push(NativeContentStage::WipeMask {
+        direction,
+        soft_edge: bool_input(node, request, "softEdge", false),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -1921,6 +2154,23 @@ fn enum_label_input(
         .to_string()
 }
 
+fn strict_enum_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: &str,
+    supported_values: &[&str],
+    effect_id: &str,
+) -> Result<String, String> {
+    let value = enum_input(node, request, key).unwrap_or(default);
+    if supported_values.contains(&value) {
+        return Ok(value.to_string());
+    }
+    Err(format!(
+        "Effect `{effect_id}` uses `{key}` value `{value}` that has no compositor-backend native content-stage equivalent without dropping authored semantics."
+    ))
+}
+
 fn color_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -2213,4 +2463,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.5.1</VERS>
+// <VERS>END OF VERSION: 0.7.2</VERS>

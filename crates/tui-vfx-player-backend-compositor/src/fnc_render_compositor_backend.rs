@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.5.1</VERS>
+// <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.5.1: PATCH — simplify one-off filter styling helpers without changing rendered cells.
+// <CLOG>0.7.0: MINOR — apply source-owned mask stages for player-compatible mask parity.
+// 0.6.1: PATCH — hoist stable cellular reveal threshold calculation and sync metadata footer.
+// 0.6.0: MINOR — apply source-owned vignette and cellular mask stages for non-isomorphic debug-recipe blockers.
+// 0.5.1: PATCH — simplify one-off filter styling helpers without changing rendered cells.
 // 0.5.0: MINOR — apply one-off content/filter native stages with player-compatible styled-cell parity.
 // 0.4.0: MINOR — apply source-only native style stages and residual content stages before compositor rendering.
 // 0.3.1: PATCH — consolidate repeated composition metadata population without changing emitted keys.
@@ -240,6 +243,27 @@ fn scene_ir_with_native_content_stages(
             NativeContentStage::SlideShift { start_col, end_col } => {
                 apply_slide_shift_content_stage(&mut staged, *start_col, *end_col)
             }
+            NativeContentStage::CellularMask {
+                cell_size,
+                seed,
+                threshold,
+            } => apply_cellular_mask_content_stage(&mut staged, *cell_size, *seed, *threshold),
+            NativeContentStage::BlindsMask { orientation, count } => {
+                apply_blinds_mask_content_stage(&mut staged, orientation, *count)
+            }
+            NativeContentStage::DiamondMask { soft_edge } => {
+                apply_shape_mask_content_stage(&mut staged, *soft_edge, SourceMaskShape::Diamond)
+            }
+            NativeContentStage::DissolveMask { seed, chunk_size } => {
+                apply_dissolve_mask_content_stage(&mut staged, *seed, *chunk_size)
+            }
+            NativeContentStage::IrisMask { shape, soft_edge } => {
+                apply_iris_mask_content_stage(&mut staged, shape, *soft_edge)
+            }
+            NativeContentStage::WipeMask {
+                direction,
+                soft_edge,
+            } => apply_wipe_mask_content_stage(&mut staged, direction, *soft_edge),
         }
     }
     for stage in &lowered_spec.style_stages {
@@ -268,6 +292,11 @@ fn scene_ir_with_native_content_stages(
                 *dim_amount,
                 *italic_window,
             ),
+            NativeStyleStage::Vignette {
+                strength,
+                edge_color,
+                apply_to,
+            } => apply_vignette_style_stage(&mut staged, *strength, edge_color, apply_to),
             NativeStyleStage::BracketEmphasis {
                 emphasis_color,
                 edge_width,
@@ -772,6 +801,165 @@ fn apply_slide_shift_content_stage(
     sync_styled_cells_to_rows(report);
 }
 
+fn apply_cellular_mask_content_stage(
+    report: &mut PlayerRenderIrReport,
+    cell_size: usize,
+    seed: usize,
+    threshold: f64,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let cell_size = cell_size.max(1);
+    let threshold = threshold.clamp(0.0, 1.0);
+    let reveal = report.phase_t.clamp(0.0, 1.0);
+    let visible_threshold = (threshold * 0.5 + reveal * 0.75).min(1.0);
+    for (y, row) in rows.iter_mut().enumerate() {
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                let cell_x = x / cell_size;
+                let cell_y = y / cell_size;
+                let noise = deterministic_cell_noise(cell_x, cell_y, seed);
+                if noise <= visible_threshold {
+                    glyph
+                } else {
+                    ' '
+                }
+            })
+            .collect();
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_blinds_mask_content_stage(
+    report: &mut PlayerRenderIrReport,
+    orientation: &str,
+    count: usize,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let count = count.max(1);
+    let reveal = report.phase_t.clamp(0.0, 1.0);
+    let height = rows.len().max(1);
+    for (y, row) in rows.iter_mut().enumerate() {
+        let width = row.chars().count().max(1);
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                let band = blinds_band(x, y, width, height, count, orientation);
+                if (band + 1) as f64 / count as f64 <= reveal {
+                    glyph
+                } else {
+                    ' '
+                }
+            })
+            .collect();
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_dissolve_mask_content_stage(
+    report: &mut PlayerRenderIrReport,
+    seed: u64,
+    chunk_size: usize,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let chunk_size = chunk_size.max(1);
+    let reveal_threshold = report.phase_t.clamp(0.0, 1.0);
+    for (y, row) in rows.iter_mut().enumerate() {
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                if glyph == ' '
+                    || dissolve_cell_noise(seed, x / chunk_size, y / chunk_size) <= reveal_threshold
+                {
+                    glyph
+                } else {
+                    ' '
+                }
+            })
+            .collect();
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_iris_mask_content_stage(report: &mut PlayerRenderIrReport, shape: &str, soft_edge: bool) {
+    let mask_shape = if shape == "diamond" {
+        SourceMaskShape::Diamond
+    } else {
+        SourceMaskShape::Circle
+    };
+    apply_shape_mask_content_stage(report, soft_edge, mask_shape);
+}
+
+fn apply_shape_mask_content_stage(
+    report: &mut PlayerRenderIrReport,
+    soft_edge: bool,
+    shape: SourceMaskShape,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let reveal = source_mask_reveal_threshold(report.phase_t, soft_edge);
+    let height = rows.len().max(1);
+    for (y, row) in rows.iter_mut().enumerate() {
+        let width = row.chars().count().max(1);
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                if source_mask_normalized_distance(x, y, width, height, shape) <= reveal {
+                    glyph
+                } else {
+                    ' '
+                }
+            })
+            .collect();
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_wipe_mask_content_stage(
+    report: &mut PlayerRenderIrReport,
+    direction: &str,
+    soft_edge: bool,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let reveal = report.phase_t.clamp(0.0, 1.0);
+    let height = rows.len().max(1);
+    let vertical_cutoff = wipe_cutoff(height, reveal, soft_edge);
+    for (y, row) in rows.iter_mut().enumerate() {
+        let width = row.chars().count();
+        let cutoff = wipe_cutoff(width, reveal, soft_edge);
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(index, glyph)| {
+                if wipe_keeps_cell(index, y, width, height, cutoff, vertical_cutoff, direction) {
+                    glyph
+                } else {
+                    ' '
+                }
+            })
+            .collect();
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
 fn apply_modulo_columns_style_stage(
     report: &mut PlayerRenderIrReport,
     modulus: usize,
@@ -817,6 +1005,36 @@ fn apply_neon_flicker_style_stage(
                 Some(foreground.as_str()),
                 None,
                 italic_window.then_some("italic"),
+            );
+        }
+    }
+}
+
+fn apply_vignette_style_stage(
+    report: &mut PlayerRenderIrReport,
+    strength: f64,
+    edge_color: &str,
+    apply_to: &str,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let strength = strength.clamp(0.0, 1.0) as f32;
+    let max_distance = vignette_corner_distance(width, height).max(1.0);
+    for y in 0..height {
+        for x in 0..width {
+            let distance = vignette_distance_from_center(x, y, width, height);
+            let mix = ((distance / max_distance) as f32 * strength).clamp(0.0, 1.0);
+            let foreground = lerp_rgba_label(WHITE_RGBA, edge_color, mix);
+            let background = lerp_rgba_label(edge_color, BLACK_RGBA, 1.0 - mix);
+            set_report_filter_cell(
+                report,
+                x,
+                y,
+                apply_to,
+                foreground.as_str(),
+                background.as_str(),
+                &[],
+                "FilterVignette",
             );
         }
     }
@@ -1364,6 +1582,163 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
     }
 }
 
+fn blinds_band(
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
+    count: usize,
+    orientation: &str,
+) -> usize {
+    if orientation == "vertical" {
+        (x * count / width).min(count.saturating_sub(1))
+    } else {
+        (y * count / height).min(count.saturating_sub(1))
+    }
+}
+
+#[derive(Clone, Copy)]
+enum SourceMaskShape {
+    Circle,
+    Diamond,
+}
+
+fn source_mask_reveal_threshold(phase_t: f64, soft_edge: bool) -> f64 {
+    let reveal = phase_t.clamp(0.0, 1.0);
+    if soft_edge {
+        (reveal + 0.06).min(1.0)
+    } else {
+        reveal
+    }
+}
+
+fn source_mask_normalized_distance(
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
+    shape: SourceMaskShape,
+) -> f64 {
+    let origin_x = width.saturating_sub(1) as f64 / 2.0;
+    let origin_y = height.saturating_sub(1) as f64 / 2.0;
+    let half_width = ((width.saturating_sub(1)) as f64 / 2.0).max(1.0);
+    let half_height = ((height.saturating_sub(1)) as f64 / 2.0).max(1.0);
+    let dx = (x as f64 - origin_x).abs() / half_width;
+    let dy = (y as f64 - origin_y).abs() / half_height;
+    match shape {
+        SourceMaskShape::Circle => dx.mul_add(dx, dy * dy).sqrt(),
+        SourceMaskShape::Diamond => dx + dy,
+    }
+}
+
+fn deterministic_cell_noise(cell_x: usize, cell_y: usize, seed: usize) -> f64 {
+    let mixed = cell_x
+        .wrapping_mul(73_856_093)
+        .wrapping_add(cell_y.wrapping_mul(19_349_663))
+        .wrapping_add(seed.wrapping_mul(83_492_791));
+    (mixed % 1000) as f64 / 999.0
+}
+
+fn dissolve_cell_noise(seed: u64, x: usize, y: usize) -> f64 {
+    let mut hash = seed ^ 0xcbf2_9ce4_8422_2325u64;
+    for value in [x as u64, y as u64] {
+        hash ^= value.wrapping_mul(0x9e37_79b9_7f4a_7c15);
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    (hash % 10_000) as f64 / 9_999.0
+}
+
+fn wipe_cutoff(width: usize, reveal: f64, soft_edge: bool) -> usize {
+    let scaled = width as f64 * reveal;
+    if soft_edge {
+        scaled.round() as usize
+    } else {
+        scaled.floor() as usize
+    }
+}
+
+fn wipe_keeps_cell(
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
+    horizontal_cutoff: usize,
+    vertical_cutoff: usize,
+    direction: &str,
+) -> bool {
+    match direction {
+        "rightToLeft" => x >= width.saturating_sub(horizontal_cutoff),
+        "topToBottom" => y < vertical_cutoff,
+        "bottomToTop" => y >= height.saturating_sub(vertical_cutoff),
+        "outFromTopLeft" => {
+            x.saturating_add(y) <= horizontal_cutoff.saturating_add(vertical_cutoff)
+        }
+        "outFromTopRight" => {
+            width.saturating_sub(1).saturating_sub(x).saturating_add(y)
+                <= horizontal_cutoff.saturating_add(vertical_cutoff)
+        }
+        "outFromBottomLeft" => {
+            x.saturating_add(height.saturating_sub(1).saturating_sub(y))
+                <= horizontal_cutoff.saturating_add(vertical_cutoff)
+        }
+        "outFromBottomRight" => {
+            width
+                .saturating_sub(1)
+                .saturating_sub(x)
+                .saturating_add(height.saturating_sub(1).saturating_sub(y))
+                <= horizontal_cutoff.saturating_add(vertical_cutoff)
+        }
+        "inToTopLeft" => {
+            x.saturating_add(y)
+                >= width.saturating_add(height).saturating_sub(
+                    horizontal_cutoff
+                        .saturating_add(vertical_cutoff)
+                        .saturating_add(2),
+                )
+        }
+        "inToTopRight" => {
+            width.saturating_sub(1).saturating_sub(x).saturating_add(y)
+                >= width.saturating_add(height).saturating_sub(
+                    horizontal_cutoff
+                        .saturating_add(vertical_cutoff)
+                        .saturating_add(2),
+                )
+        }
+        "inToBottomLeft" => {
+            x.saturating_add(height.saturating_sub(1).saturating_sub(y))
+                >= width.saturating_add(height).saturating_sub(
+                    horizontal_cutoff
+                        .saturating_add(vertical_cutoff)
+                        .saturating_add(2),
+                )
+        }
+        "inToBottomRight" => {
+            width
+                .saturating_sub(1)
+                .saturating_sub(x)
+                .saturating_add(height.saturating_sub(1).saturating_sub(y))
+                >= width.saturating_add(height).saturating_sub(
+                    horizontal_cutoff
+                        .saturating_add(vertical_cutoff)
+                        .saturating_add(2),
+                )
+        }
+        _ => x < horizontal_cutoff,
+    }
+}
+
+fn vignette_distance_from_center(x: usize, y: usize, width: usize, height: usize) -> f64 {
+    let center_x = (width.saturating_sub(1)) as f64 / 2.0;
+    let center_y = (height.saturating_sub(1)) as f64 / 2.0;
+    let dx = x as f64 - center_x;
+    let dy = y as f64 - center_y;
+    dx.mul_add(dx, dy * dy).sqrt()
+}
+
+fn vignette_corner_distance(width: usize, height: usize) -> f64 {
+    vignette_distance_from_center(0, 0, width, height)
+}
+
 const DEFAULT_FOREGROUND: &str = "defaultForeground";
 const TRANSPARENT_RGBA: &str = "transparent";
 const WHITE_RGBA: &str = "rgba(255,255,255,255)";
@@ -1608,4 +1983,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.5.1</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

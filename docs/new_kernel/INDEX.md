@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.56.0</VERS> -->
-<!-- <WCTX>K2.29 remaining vignette/mask native blocker packet indexing.</WCTX> -->
-<!-- <CLOG>0.56.0: MINOR — add K2.29 remaining vignette/mask native blocker packet.
+<!-- <VERS>VERSION: 0.57.0</VERS> -->
+<!-- <WCTX>K2.29 remaining vignette/mask native blocker result and review indexing.</WCTX> -->
+<!-- <CLOG>0.57.0: MINOR — add K2.29 vignette/mask native blocker result and review docs.
+0.56.0: MINOR — add K2.29 remaining vignette/mask native blocker packet.
 0.55.0: MINOR — add K2.28 one-off content/filter review/de-slop report.
 0.54.0: MINOR — add K2.28 one-off content/filter native blocker results.
 0.53.0: MINOR — add K2.28 one-off content/filter native blocker packet.
@@ -391,6 +392,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 ### K2.29 remaining vignette/mask native blockers
 
 - [`ARCH-RESP-TO-PHASE_K2_29.md`](ARCH-RESP-TO-PHASE_K2_29.md) — self-generated packet for current top vignette/mask debug-recipe native fallbacks.
+- [`K2_29_VIGNETTE_MASK_RESULTS.md`](K2_29_VIGNETTE_MASK_RESULTS.md) — strict-native vignette/mask blocker closure results and coverage movement.
+- [`PHASE_K2_29_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_29_REVIEW_AND_DESLOP_REPORT.md) — formal review, AI de-slop, and post-cleanup verification evidence.
 
 
 ## Validator and recipe artifacts
@@ -415,4 +418,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.56.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.57.0</VERS> -->
