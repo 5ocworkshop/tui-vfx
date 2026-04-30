@@ -1630,7 +1630,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "\u2588"
+              "value": "█"
             },
             "range": null,
             "allowedValues": [],
@@ -2278,7 +2278,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "\u258c"
+              "value": "▌"
             },
             "range": null,
             "allowedValues": [],
@@ -3282,7 +3282,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "\u2022"
+              "value": "•"
             },
             "range": null,
             "allowedValues": [],
@@ -18925,7 +18925,7 @@
           "displayName": "Num Shakes",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "string",
+            "kind": "integer",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -18940,7 +18940,7 @@
           "displayName": "Pause Duration",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "integer",
+            "kind": "number",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -18955,7 +18955,7 @@
           "displayName": "Shake Period",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "integer",
+            "kind": "number",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -19002,7 +19002,8 @@
       "scopeSupport": {
         "kinds": [
           "all",
-          "role"
+          "role",
+          "cell"
         ],
         "coordinateSpaces": [
           "destinationLocal",
@@ -19028,7 +19029,7 @@
           "displayName": "Shader",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "color",
+            "kind": "structured",
             "default": null,
             "range": null,
             "allowedValues": [],

@@ -121,6 +121,11 @@
         "color"
       ]
     },
+    "GraphValueId": {
+      "description": "Stable value identifier published into a canonical graph-local value bus.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
     "InternedRoleName": {
       "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
       "type": "string"
@@ -329,6 +334,30 @@
           ]
         },
         {
+          "description": "Match one cell using value sources for each coordinate.\n\nThis preserves runtime-bound cell targeting from the source pathway while\nstill allowing static literal coordinates for deterministic validation.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "cell"
+            },
+            "x": {
+              "description": "X coordinate source in the active coordinate space.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "y": {
+              "description": "Y coordinate source in the active coordinate space.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "x",
+            "y"
+          ]
+        },
+        {
           "description": "Match rows `[start, end)` in the active coordinate space.",
           "type": "object",
           "properties": {
@@ -483,6 +512,11 @@
           ]
         }
       ]
+    },
+    "SignalId": {
+      "description": "Stable host/runtime signal identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
     },
     "StructuredValue": {
       "description": "JSON-compatible structured payload owned by a descriptor field.\n\nUse this only when the primitive owns a nested payload whose stable shape is\ndescriptor-specific, such as path lists, particle options, or glyph-style\nrule tables. Prefer narrower typed values whenever a field has scalar,\ncolor, gradient, duration, scope, or rect semantics.",
@@ -861,6 +895,194 @@
           "description": "Descriptor-owned structured JSON payload for fields whose shape is primitive-specific.",
           "type": "string",
           "const": "structured"
+        }
+      ]
+    },
+    "ValueSource": {
+      "description": "Declarative source for a typed value.",
+      "oneOf": [
+        {
+          "description": "Source value is a typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "literal"
+            },
+            "value": {
+              "description": "Literal typed value.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the parameter is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared host/runtime signal.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the signal is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced signal id.",
+              "$ref": "#/$defs/SignalId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from an earlier graph-local node output.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the value is unavailable at execution time.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced graph-local value id.",
+              "$ref": "#/$defs/GraphValueId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "graphValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value maps a numeric source from one range to another.",
+          "type": "object",
+          "properties": {
+            "clamp": {
+              "description": "Whether values outside the input range should clamp before mapping.",
+              "type": "boolean"
+            },
+            "from": {
+              "description": "Nested numeric-compatible source to map.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "input": {
+              "description": "Inclusive input range for the nested source.",
+              "$ref": "#/$defs/NumericRange"
+            },
+            "kind": {
+              "type": "string",
+              "const": "map"
+            },
+            "output": {
+              "description": "Inclusive output range produced by the map.",
+              "$ref": "#/$defs/NumericRange"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "input",
+            "output",
+            "clamp"
+          ]
+        },
+        {
+          "description": "Source value samples a deterministic per-cell spatial field.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback value when the sampled field is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "field": {
+              "description": "Canonical sampled field name, such as `surfaceAngleFrom`.",
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "sampledField"
+            },
+            "x": {
+              "description": "X coordinate source used by the sampled field.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "y": {
+              "description": "Y coordinate source used by the sampled field.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "field",
+            "x",
+            "y"
+          ]
         }
       ]
     },

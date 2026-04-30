@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_scope_kind.rs</FILE> - <DESC>Descriptor-supported scope kind enum</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>K2.13 schema decision burn-down: mirror accepted built-in scope variants in descriptor support.</WCTX>
-// <CLOG>0.2.0: MINOR — add modulo, non-empty, outer-band, and inner scope support kinds.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>v3.1 descriptor support: mirror accepted built-in scope variants.</WCTX>
+// <CLOG>0.3.0: MINOR — expose single-cell descriptor scope support.
+// 0.2.0: MINOR — add modulo, non-empty, outer-band, and inner scope support kinds.
 // 0.1.0: INIT — mirror ScopeSpec variants as supportable descriptor kinds.</CLOG>
 
 use crate::ScopeSpec;
@@ -18,6 +19,8 @@ pub enum ScopeKind {
     Role,
     /// Descriptor supports rectangular geometry scopes.
     Rect,
+    /// Descriptor supports a single cell scope.
+    Cell,
     /// Descriptor supports row range geometry scopes.
     RowRange,
     /// Descriptor supports column range geometry scopes.
@@ -40,6 +43,7 @@ impl From<&ScopeSpec> for ScopeKind {
             ScopeSpec::All => Self::All,
             ScopeSpec::Role { .. } => Self::Role,
             ScopeSpec::Rect { .. } => Self::Rect,
+            ScopeSpec::Cell { .. } => Self::Cell,
             ScopeSpec::RowRange { .. } => Self::RowRange,
             ScopeSpec::ColumnRange { .. } => Self::ColumnRange,
             ScopeSpec::ModuloRows { .. } => Self::ModuloRows,

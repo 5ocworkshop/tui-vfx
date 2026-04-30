@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_shader_primitive.rs</FILE> - <DESC>Apply shader primitives to player styled grids</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>K2.13 field coverage closure: support gradient stops, applyTo, and direct border-sweep position.</WCTX>
-// <CLOG>0.3.0: MINOR — honor shader highlighter/focusField applyTo targets.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Player shader parity: support gradient stops, applyTo, and direct border-sweep position.</WCTX>
+// <CLOG>0.4.0: MINOR — bridge structured style.spatial shader payloads for migrated style fixtures.
+// 0.3.0: MINOR — honor shader highlighter/focusField applyTo targets.
 // 0.2.0: MINOR — support canonical gradient, channel target, and position inputs.
 // 0.1.1: PATCH — remove duplicate shader-local RGBA label formatting.</CLOG>
 
@@ -14,7 +15,7 @@ use crate::{
     },
     fnc_resolve_effect_input::{
         ResolvedColor, resolve_effect_color, resolve_effect_enum, resolve_effect_gradient,
-        resolve_effect_integer, resolve_effect_number,
+        resolve_effect_integer, resolve_effect_number, resolve_effect_structured,
     },
 };
 
@@ -35,6 +36,7 @@ pub(crate) fn apply_shader_primitive(
         "shader.barberPole" => apply_barber_pole(node, request, styled_grid),
         "shader.diffusion" => apply_diffusion(node, request, styled_grid),
         "shader.radar" => apply_radar(node, request, styled_grid),
+        "style.spatial" => return apply_spatial_style(node, request, styled_grid),
         _ => return false,
     }
     true
@@ -51,7 +53,7 @@ fn apply_linear_gradient(
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let max_x = styled_grid.width().saturating_sub(1).max(1) as f64;
     let max_y = styled_grid.height().saturating_sub(1).max(1) as f64;
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let nx = x as f64 / max_x;
         let ny = y as f64 / max_y;
         let projection = (nx * angle.cos() + ny * angle.sin() + 1.0) / 2.0;
@@ -151,7 +153,7 @@ fn apply_reveal_wipe(
     let direction = resolve_effect_enum(node, request, "direction", "leftToRight");
     let threshold = request.phase_t.clamp(0.0, 1.0);
     let width = styled_grid.width().max(1);
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let progress = if direction == "rightToLeft" {
             (width - x) as f64 / width as f64
         } else {
@@ -193,7 +195,7 @@ fn apply_highlighter(
         ResolvedColor::rgb(255, 255, 255),
         (text_contrast * 0.25) as f32,
     );
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let axis = if matches!(direction.as_str(), "topToBottom" | "bottomToTop") {
             y
         } else {
@@ -235,7 +237,7 @@ fn apply_focus_field(
     let intensity = resolve_effect_number(node, request, "intensity", 1.0).clamp(0.0, 1.0) as f32;
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let focus_color = color.lerp(ResolvedColor::rgb(255, 255, 255), (1.0 - intensity) * 0.25);
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let dx = (x as f64 - center_x).abs();
         let dy = (y as f64 - center_y).abs();
         let inside = if shape == "rect" {
@@ -274,7 +276,7 @@ fn apply_glisten_band(
         center = 1.0 - center;
     }
     let width = styled_grid.width().saturating_sub(1).max(1) as f64;
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let nx = x as f64 / width;
         let diagonal = (nx * angle.cos()
             + y as f64 * angle.sin() / styled_grid.height().max(1) as f64)
@@ -307,7 +309,7 @@ fn apply_wayfinding_node(
         "activeColor",
         resolve_effect_color(node, request, "color", ResolvedColor::rgb(80, 255, 160)),
     );
-    let cells = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid);
+    let cells = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request);
     if cells.is_empty() {
         return;
     }
@@ -386,7 +388,7 @@ fn apply_barber_pole(
     let period = stripe_width + gap_width;
     let phase_offset = (request.loop_t.unwrap_or(request.phase_t) * speed * period as f64).round();
 
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let projection = x as f64 * angle.cos() + y as f64 * angle.sin() + phase_offset;
         let position = projection.rem_euclid(period as f64) as usize;
         let color = if position < stripe_width {
@@ -420,7 +422,7 @@ fn apply_diffusion(
     let intensity = resolve_effect_number(node, request, "intensity", 1.0).clamp(0.0, 1.0) as f32;
     let apply_to = resolve_effect_enum(node, request, "applyTo", "background");
 
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let distance = ((x as f64 - center_x).powi(2) + (y as f64 - center_y).powi(2)).sqrt();
         let falloff = (1.0 - distance / radius).clamp(0.0, 1.0) as f32;
         if falloff > 0.0 {
@@ -431,16 +433,109 @@ fn apply_diffusion(
     }
 }
 
+fn apply_spatial_style(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) -> bool {
+    let Some(shader) = resolve_effect_structured(node, request, "shader") else {
+        return false;
+    };
+    match shader.get("type").and_then(serde_json::Value::as_str) {
+        Some("radar") => apply_structured_radar(node, request, styled_grid, &shader),
+        Some("focused_row_gradient") => {
+            apply_structured_focused_row_gradient(node, request, styled_grid, &shader)
+        }
+        _ => return false,
+    }
+    true
+}
+
+fn apply_structured_radar(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+    shader: &serde_json::Value,
+) {
+    let color = color_from_json(shader.get("color"), ResolvedColor::rgb(80, 255, 160));
+    let speed = json_f64(shader.get("speed")).unwrap_or(1.0).max(0.0);
+    let tail_length_radians = json_f64(shader.get("tail_length"))
+        .or_else(|| json_f64(shader.get("tailLength")))
+        .unwrap_or(std::f64::consts::FRAC_PI_2);
+    let tail_length = (tail_length_radians / std::f64::consts::TAU).clamp(0.01, 1.0);
+    apply_radar_with_params(
+        node,
+        request,
+        styled_grid,
+        color,
+        speed,
+        tail_length,
+        "foreground",
+    );
+}
+
+fn apply_structured_focused_row_gradient(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+    shader: &serde_json::Value,
+) {
+    let bright = color_from_json(shader.get("bright_color"), ResolvedColor::rgb(255, 180, 80));
+    let dim = color_from_json(shader.get("dim_color"), ResolvedColor::rgb(20, 20, 35));
+    let selected_row =
+        json_f64(shader.get("selected_row")).or_else(|| json_f64(shader.get("selectedRow")));
+    let selected_row_ratio = json_f64(shader.get("selected_row_ratio")).unwrap_or(0.5);
+    let falloff_distance = json_f64(shader.get("falloff_distance"))
+        .unwrap_or(1.0)
+        .max(0.01);
+    let apply_to = shader
+        .get("apply_to")
+        .or_else(|| shader.get("applyTo"))
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("background")
+        .to_ascii_lowercase();
+    let max_y = styled_grid.height().saturating_sub(1) as f64;
+    let selected_y = selected_row
+        .map(|row| row.clamp(0.0, max_y))
+        .unwrap_or_else(|| selected_row_ratio.clamp(0.0, 1.0) * max_y);
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
+        let distance = (y as f64 - selected_y).abs();
+        let strength = (1.0 - distance / falloff_distance).clamp(0.0, 1.0) as f32;
+        let color = dim.lerp(bright, strength);
+        apply_shader_style(styled_grid, x, y, &apply_to, &color.rgba_label());
+    }
+}
+
 fn apply_radar(node: &NodeSpec, request: &PlayerSampleRequest, styled_grid: &mut PlayerStyledGrid) {
     let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(80, 255, 160));
     let speed = resolve_effect_number(node, request, "speed", 1.0).max(0.0);
     let tail_length = resolve_effect_number(node, request, "tailLength", 0.25).clamp(0.01, 1.0);
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
+    apply_radar_with_params(
+        node,
+        request,
+        styled_grid,
+        color,
+        speed,
+        tail_length,
+        &apply_to,
+    );
+}
+
+fn apply_radar_with_params(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+    color: ResolvedColor,
+    speed: f64,
+    tail_length: f64,
+    apply_to: &str,
+) {
     let center_x = styled_grid.width().saturating_sub(1) as f64 / 2.0;
     let center_y = styled_grid.height().saturating_sub(1) as f64 / 2.0;
     let sweep = (request.loop_t.unwrap_or(request.phase_t) * speed).fract();
 
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let angle = ((y as f64 - center_y).atan2(x as f64 - center_x) + std::f64::consts::TAU)
             % std::f64::consts::TAU;
         let position = angle / std::f64::consts::TAU;
@@ -448,9 +543,29 @@ fn apply_radar(node: &NodeSpec, request: &PlayerSampleRequest, styled_grid: &mut
         if distance_behind <= tail_length {
             let strength = (1.0 - distance_behind / tail_length) as f32;
             let radar_color = ResolvedColor::rgb(0, 0, 0).lerp(color, strength);
-            apply_shader_style(styled_grid, x, y, &apply_to, &radar_color.rgba_label());
+            apply_shader_style(styled_grid, x, y, apply_to, &radar_color.rgba_label());
         }
     }
+}
+
+fn color_from_json(value: Option<&serde_json::Value>, fallback: ResolvedColor) -> ResolvedColor {
+    let Some(value) = value else {
+        return fallback;
+    };
+    ResolvedColor::new(
+        json_u8(value.get("r")).unwrap_or(fallback.r),
+        json_u8(value.get("g")).unwrap_or(fallback.g),
+        json_u8(value.get("b")).unwrap_or(fallback.b),
+        json_u8(value.get("a")).unwrap_or(fallback.a),
+    )
+}
+
+fn json_u8(value: Option<&serde_json::Value>) -> Option<u8> {
+    json_f64(value).map(|value| value.round().clamp(0.0, 255.0) as u8)
+}
+
+fn json_f64(value: Option<&serde_json::Value>) -> Option<f64> {
+    value.and_then(serde_json::Value::as_f64)
 }
 
 fn apply_shader_style(

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_player_inventory_adapter_status.rs</FILE> - <DESC>Classify inventory adapter status</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>K2.11 source descriptor pilot: classify source.text as visible.</WCTX>
-// <CLOG>0.5.0: MINOR — classify descriptor-backed source.text as a visible source adapter.</CLOG>
+// <CLOG>0.6.0: MINOR — classify migrated style adapters with rendered styled-cell evidence.
+// 0.5.0: MINOR — classify descriptor-backed source.text as a visible source adapter.
 
 /// Return the effect adapter classification used by inventory reports.
 pub fn effect_adapter_status(effect_id: &str, descriptor_covered: bool) -> &'static str {
@@ -84,7 +85,11 @@ pub fn effect_adapter_status(effect_id: &str, descriptor_covered: bool) -> &'sta
         | "style.fadeOut"
         | "style.pulse"
         | "style.italicWindow"
-        | "style.neonFlicker" => "styled",
+        | "style.neonFlicker"
+        | "style.rainbow"
+        | "style.glitch"
+        | "style.rigidShakeStyle"
+        | "style.spatial" => "styled",
         _ => "unknown",
     }
 }

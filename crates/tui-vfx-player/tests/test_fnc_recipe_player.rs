@@ -2111,11 +2111,7 @@ fn source_card_chrome_recipe() -> RecipeDocument {
         &fs::read_to_string(v31_debug_recipe("baseline.json")).expect("read baseline recipe"),
     )
     .expect("baseline json");
-    let pack: serde_json::Value =
-        serde_json::from_str(&fs::read_to_string(descriptor_pack_path()).expect("pack json"))
-            .expect("descriptor pack json");
     value["id"] = serde_json::json!("debugCardChromeSource");
-    value["sourceDescriptors"]["source.card"] = pack["sourceDescriptors"]["source.card"].clone();
     value["sources"]["mainCard"]["inputs"] = serde_json::json!({
         "message": { "kind": "literal", "value": { "kind": "text", "value": "CARD" } },
         "width": { "kind": "literal", "value": { "kind": "integer", "value": 10 } },
@@ -2320,7 +2316,8 @@ fn graph_recipe_value(
             .expect("descriptor pack json");
     let effects = effect_ids
         .iter()
-        .map(|id| ((*id).to_string(), pack["effects"][*id].clone()))
+        .filter(|id| pack["effects"].get(**id).is_none())
+        .map(|id| ((*id).to_string(), descriptor_fixture_effect(id)))
         .collect::<serde_json::Map<_, _>>();
     value["id"] = serde_json::json!("debugGraphExecutorTest");
     value["graph"]["effects"] = serde_json::Value::Object(effects);

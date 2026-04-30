@@ -396,6 +396,30 @@
           ]
         },
         {
+          "description": "Match one cell using value sources for each coordinate.\n\nThis preserves runtime-bound cell targeting from the source pathway while\nstill allowing static literal coordinates for deterministic validation.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "cell"
+            },
+            "x": {
+              "description": "X coordinate source in the active coordinate space.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "y": {
+              "description": "Y coordinate source in the active coordinate space.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "x",
+            "y"
+          ]
+        },
+        {
           "description": "Match rows `[start, end)` in the active coordinate space.",
           "type": "object",
           "properties": {

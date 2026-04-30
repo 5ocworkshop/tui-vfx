@@ -89,11 +89,11 @@ Strict-native validated after V2 presentation/timing checks:
 ### Style blockers
 
 - `style.neonFlicker` — current backend/player behavior does not match V2 flicker/dimming. V2 uses the authored base pink foreground/background and time-varying darkening from `stability=0.7`; current v3.1 strict-native output mechanically renders but does not reproduce the V2 flicker rate/color behavior. Do not tune recipe variables to compensate; fix the adapter/backend semantics.
-- `style.rainbow` — no player/backend adapter registered.
-- `style.glitch` — no player/backend adapter registered; descriptor input kinds need owner review.
-- `style.rigidShakeStyle` — no adapter registered and descriptor timing input kinds do not preserve V2 fractional values.
-- `style.spatial` — structured shader payload rejected by current value-kind handling.
-- runtime-bound single-cell style scope — V2 `StyleRegion::Cell` binding cannot be represented by current v3.1 scope support.
+- `style.rainbow` — superseded by the later player adapter/status seam; styled-cell evidence is now registered for fixture-QC coverage, but visual parity still requires source-oracle review before marking recipes complete.
+- `style.glitch` — superseded by the later player adapter/status seam; styled-cell evidence is now registered for fixture-QC coverage, but visual parity still requires source-oracle review before marking recipes complete.
+- `style.rigidShakeStyle` — superseded by the later player adapter seam: fractional `shakePeriod`/`pauseDuration` descriptor kinds are preserved and a bounded dwell italic-window bridge exists for fixture-QC coverage.
+- `style.spatial` — superseded by the later player adapter seam for the migrated structured `radar` and `focused_row_gradient` payloads. Unknown structured shader types remain unsupported rather than silently claimed.
+- runtime-bound single-cell style scope — superseded by the later scope seam: `ScopeSpec::Cell` now carries `ValueSource` x/y coordinates so player/runtime paths can resolve host signals, graph values, and deterministic fallbacks.
 
 ### Mask and sampler blockers
 

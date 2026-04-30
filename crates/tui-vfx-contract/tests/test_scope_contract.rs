@@ -3,7 +3,9 @@
 // <WCTX>K2.13 schema decision burn-down: prove accepted built-in scope evaluation.</WCTX>
 // <CLOG>0.1.0: INIT — cover modulo, non-empty, outer-band, and inner scope matching.</CLOG>
 
-use tui_vfx_contract::{CoordinateSpace, RoleSpace, ScopeEvalInput, ScopeSpec};
+use tui_vfx_contract::{
+    CoordinateSpace, NumericRange, RoleSpace, ScopeEvalInput, ScopeSpec, Value, ValueSource,
+};
 use tui_vfx_types::RoleTag;
 
 fn input(x: usize, y: usize) -> ScopeEvalInput {
@@ -68,6 +70,60 @@ fn content_and_band_scopes_use_optional_evaluation_context() {
     ));
     assert!(!ScopeSpec::Inner.matches(
         &input(0, 2),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
+}
+
+#[test]
+fn cell_scope_uses_static_literal_map_and_sampled_fallback_coordinates() {
+    let literal_cell = ScopeSpec::Cell {
+        x: Box::new(ValueSource::Literal {
+            value: Value::Integer(2),
+        }),
+        y: Box::new(ValueSource::Literal {
+            value: Value::Integer(1),
+        }),
+    };
+    assert!(literal_cell.matches(
+        &input(2, 1),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
+
+    let mapped_cell = ScopeSpec::Cell {
+        x: Box::new(ValueSource::Map {
+            from: Box::new(ValueSource::Literal {
+                value: Value::Number(0.5),
+            }),
+            input: NumericRange {
+                min: Some(0.0),
+                max: Some(1.0),
+            },
+            output: NumericRange {
+                min: Some(0.0),
+                max: Some(4.0),
+            },
+            clamp: true,
+        }),
+        y: Box::new(ValueSource::SampledField {
+            field: "surfaceAngleFrom".to_string(),
+            x: Box::new(ValueSource::Literal {
+                value: Value::Integer(0),
+            }),
+            y: Box::new(ValueSource::Literal {
+                value: Value::Integer(0),
+            }),
+            fallback: Some(Value::Integer(3)),
+        }),
+    };
+    assert!(mapped_cell.matches(
+        &input(2, 3),
+        CoordinateSpace::DestinationLocal,
+        RoleSpace::Destination
+    ));
+    assert!(!mapped_cell.matches(
+        &input(1, 3),
         CoordinateSpace::DestinationLocal,
         RoleSpace::Destination
     ));

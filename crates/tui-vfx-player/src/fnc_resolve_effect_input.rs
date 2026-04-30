@@ -1,11 +1,11 @@
 // <FILE>crates/tui-vfx-player/src/fnc_resolve_effect_input.rs</FILE> - <DESC>Resolve graph node effect inputs</DESC>
 // <VERS>VERSION: 0.5.0</VERS>
 // <WCTX>Player graph execution: resolve effect inputs against the graph value bus.</WCTX>
-// <CLOG>0.5.0: MINOR — thread graph-local values through effect input resolution.
+// <CLOG>0.5.0: MINOR — expose structured effect input resolution for migrated style shaders.
 // 0.4.0: MINOR — add gradient input resolver.
 // 0.3.1: PATCH — centralize effect input lookup and RGBA label formatting.</CLOG>
 
-use tui_vfx_contract::{EffectInputId, GradientSpec, NodeSpec, Value};
+use tui_vfx_contract::{EffectInputId, GradientSpec, NodeSpec, StructuredValue, Value};
 
 pub(crate) use crate::cls_resolved_color::ResolvedColor;
 
@@ -95,6 +95,35 @@ pub(crate) fn resolve_effect_gradient(
     match resolve_effect_value(node, request, input_id) {
         Some(Value::Gradient(value)) => Some(value),
         _ => None,
+    }
+}
+
+pub(crate) fn resolve_effect_structured(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    input_id: &str,
+) -> Option<serde_json::Value> {
+    match resolve_effect_value(node, request, input_id) {
+        Some(Value::Structured(value)) => Some(structured_value_to_json(&value)),
+        _ => None,
+    }
+}
+
+fn structured_value_to_json(value: &StructuredValue) -> serde_json::Value {
+    match value {
+        StructuredValue::Null => serde_json::Value::Null,
+        StructuredValue::Boolean(value) => serde_json::Value::Bool(*value),
+        StructuredValue::Number(value) => serde_json::json!(value),
+        StructuredValue::String(value) => serde_json::Value::String(value.clone()),
+        StructuredValue::Array(values) => {
+            serde_json::Value::Array(values.iter().map(structured_value_to_json).collect())
+        }
+        StructuredValue::Object(values) => serde_json::Value::Object(
+            values
+                .iter()
+                .map(|(key, value)| (key.clone(), structured_value_to_json(value)))
+                .collect(),
+        ),
     }
 }
 

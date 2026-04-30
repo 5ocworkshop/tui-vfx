@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_style_primitive.rs</FILE> - <DESC>Apply style primitives to player styled grids</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
+// <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>Player adapter style parity: preserve source color channels while applying recipe style primitives.</WCTX>
-// <CLOG>0.6.0: MINOR — add bounded style.glitch evidence rendering.
+// <CLOG>0.7.0: MINOR — add bounded rigid shake style rendering.
+// 0.6.0: MINOR — add bounded style.glitch evidence rendering.
 // 0.5.0: MINOR — add bounded style.rainbow evidence rendering.
 // 0.4.1: PATCH — align neon flicker default color with V2 style oracle.</CLOG>
 
@@ -12,7 +13,7 @@ use crate::{
     fnc_collect_styled_grid_scope_cells::collect_styled_grid_scope_cells,
     fnc_resolve_effect_input::{
         ResolvedColor, resolve_effect_bool, resolve_effect_color, resolve_effect_enum,
-        resolve_effect_number,
+        resolve_effect_integer, resolve_effect_number,
     },
 };
 
@@ -32,6 +33,7 @@ pub(crate) fn apply_style_primitive(
         "style.neonFlicker" => apply_neon_flicker(node, request, styled_grid),
         "style.rainbow" => apply_rainbow(node, request, styled_grid),
         "style.glitch" => apply_glitch(node, request, styled_grid),
+        "style.rigidShakeStyle" => apply_rigid_shake_style(node, request, styled_grid),
         "style.baseStyleOverride"
         | "style.outerBand"
         | "style.moduloRows"
@@ -50,7 +52,7 @@ fn apply_color_fade(
 ) {
     let target = resolve_effect_color(node, request, "target", ResolvedColor::rgb(255, 200, 50));
     let color_space = resolve_effect_enum(node, request, "colorSpace", "rgb");
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let existing = styled_grid
             .cells()
             .iter()
@@ -119,7 +121,7 @@ fn apply_color_shift(
         * request.phase_t as f32;
     let lightness_shift =
         resolve_effect_number(node, request, "lightnessShift", 0.0) as f32 * request.phase_t as f32;
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let existing = styled_grid
             .cells()
             .iter()
@@ -179,7 +181,7 @@ fn apply_canvas_endpoint_fade(
     let canvas_color =
         resolve_effect_color(node, request, canvas_input, ResolvedColor::rgb(0, 0, 0));
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let Some(existing) = styled_grid
             .cells()
             .iter()
@@ -234,6 +236,7 @@ fn apply_fade(
     let color = from.lerp_in_color_space(to, eased_phase(node, request), &color_space);
     apply_style_to_scope(
         node,
+        request,
         styled_grid,
         Some(&apply_to),
         Some(color.rgba_label()),
@@ -253,7 +256,7 @@ fn apply_pulse(node: &NodeSpec, request: &PlayerSampleRequest, styled_grid: &mut
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let clock = request.loop_t.unwrap_or(request.phase_t);
     let strength = (clock * frequency * std::f64::consts::TAU).sin() * 0.5 + 0.5;
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let Some(existing) = styled_grid
             .cells()
             .iter()
@@ -310,7 +313,7 @@ fn apply_italic_window(
     let start = resolve_effect_number(node, request, "start", 0.0).clamp(0.0, 1.0);
     let end = resolve_effect_number(node, request, "end", 1.0).clamp(start, 1.0);
     if (start..=end).contains(&request.phase_t) {
-        apply_style_to_scope(node, styled_grid, None, None, Some("italic"));
+        apply_style_to_scope(node, request, styled_grid, None, None, Some("italic"));
     }
 }
 
@@ -333,6 +336,7 @@ fn apply_neon_flicker(
     let neon_color = ResolvedColor::rgb(0, 0, 0).lerp(color, active_strength);
     apply_style_to_scope(
         node,
+        request,
         styled_grid,
         Some("foreground"),
         Some(neon_color.rgba_label()),
@@ -346,7 +350,7 @@ fn apply_rainbow(
     styled_grid: &mut PlayerStyledGrid,
 ) {
     let _rotation_speed = resolve_effect_number(node, request, "rotationSpeed", 1.0);
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         apply_style_to_scope_cell(
             styled_grid,
             x,
@@ -369,7 +373,7 @@ fn apply_glitch(
     let italic_end =
         resolve_effect_number(node, request, "italicEnd", 1.0).clamp(italic_start, 1.0);
     let italic = (italic_start..=italic_end).contains(&request.phase_t);
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         apply_style_to_scope_cell(
             styled_grid,
             x,
@@ -378,6 +382,26 @@ fn apply_glitch(
             ResolvedColor::rgb(0, 255, 255).rgba_label(),
             italic.then_some("italic"),
         );
+    }
+}
+
+fn apply_rigid_shake_style(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let shake_period = resolve_effect_number(node, request, "shakePeriod", 0.29).max(0.001);
+    let num_shakes = resolve_effect_integer(node, request, "numShakes", 4).max(0) as f64;
+    let pause_duration = resolve_effect_number(node, request, "pauseDuration", 0.52).max(0.0);
+    let elapsed_seconds = request
+        .absolute_t_ms
+        .map(|value| value.max(0.0) / 1000.0)
+        .unwrap_or_else(|| request.loop_t.unwrap_or(request.phase_t).max(0.0));
+    let cycle = shake_period + pause_duration;
+    let cycle_index = (elapsed_seconds / cycle).floor();
+    let cycle_t = elapsed_seconds.rem_euclid(cycle);
+    if cycle_index < num_shakes && cycle_t <= shake_period {
+        apply_style_to_scope(node, request, styled_grid, None, None, Some("italic"));
     }
 }
 
@@ -392,6 +416,7 @@ fn apply_base_style_override(
         resolve_effect_color(node, request, "background", ResolvedColor::rgb(15, 40, 55));
     apply_color_to_scope(
         node,
+        request,
         styled_grid,
         foreground.rgba_label(),
         &background.rgba_label(),
@@ -401,24 +426,26 @@ fn apply_base_style_override(
 
 fn apply_color_to_scope(
     node: &NodeSpec,
+    request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
     foreground: String,
     background: &str,
     role: Option<String>,
 ) {
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         styled_grid.set_cell_style(x, y, &foreground, background, vec![], role.clone());
     }
 }
 
 fn apply_style_to_scope(
     node: &NodeSpec,
+    request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
     apply_to: Option<&str>,
     color: Option<String>,
     modifier: Option<&str>,
 ) {
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let existing = styled_grid
             .cells()
             .iter()

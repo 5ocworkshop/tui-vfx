@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>VERSION: 0.7.1</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>v3.1 descriptor/adapter migration: track player-handled primitive field coverage.</WCTX>
-// <CLOG>0.7.1: PATCH — mark procedural params handled by the player adapter.
+// <CLOG>0.8.0: MINOR — mark migrated spatial and rigid-shake style inputs as handled.
+// 0.7.1: PATCH — mark procedural params handled by the player adapter.
 // 0.7.0: MINOR — mark style.glitch fields handled after lowering support.
 // 0.6.0: MINOR — mark rainbow and shader applyTo fields handled after lowering support.
 // 0.5.1: PATCH — mark sampler.crtJitter decayMs as handled.
@@ -193,6 +194,8 @@ pub(crate) fn collect_handled_primitive_inputs(
         "style.neonFlicker" => fields(["color", "dimAmount", "italicWindow", "stability"]),
         "style.rainbow" => fields(["rotationSpeed"]),
         "style.glitch" => fields(["seed", "intensity", "italicStart", "italicEnd"]),
+        "style.rigidShakeStyle" => fields(["shakePeriod", "numShakes", "pauseDuration"]),
+        "style.spatial" => fields(["shader"]),
         "style.baseStyleOverride" => fields(["foreground", "background"]),
         "style.outerBand"
         | "style.moduloRows"

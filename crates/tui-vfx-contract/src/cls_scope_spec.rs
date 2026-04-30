@@ -1,17 +1,19 @@
 // <FILE>crates/tui-vfx-contract/src/cls_scope_spec.rs</FILE> - <DESC>Minimal surface scope algebra</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>K2.13 schema decision burn-down: add accepted built-in style scope vocabulary.</WCTX>
-// <CLOG>0.5.0: MINOR — add modulo, non-empty, outer-band, and inner scopes.
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>v3.1 scope contract: add accepted built-in style scope vocabulary.</WCTX>
+// <CLOG>0.6.0: MINOR — add value-source-backed single-cell scopes for runtime-selected cells.
+// 0.5.0: MINOR — add modulo, non-empty, outer-band, and inner scopes.
 // 0.4.2: PATCH — add explicit Schemars descriptions for row/column range fields.</CLOG>
 
 use tui_vfx_types::{Rect, RoleTag};
 
-use crate::{CoordinateSpace, RoleSpace, ScopeEvalInput, fnc_scope_coordinate::scope_coordinate};
+use crate::{
+    CoordinateSpace, NumericRange, RoleSpace, ScopeEvalInput, Value, ValueSource,
+    fnc_scope_coordinate::scope_coordinate,
+};
 
 /// Minimal Phase A/B scope algebra.
-#[derive(
-    Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ScopeSpec {
     /// Match every in-bounds cell.
@@ -25,6 +27,16 @@ pub enum ScopeSpec {
     Rect {
         /// Rectangle to match in the active coordinate space.
         rect: Rect,
+    },
+    /// Match one cell using value sources for each coordinate.
+    ///
+    /// This preserves runtime-bound cell targeting from the source pathway while
+    /// still allowing static literal coordinates for deterministic validation.
+    Cell {
+        /// X coordinate source in the active coordinate space.
+        x: Box<ValueSource>,
+        /// Y coordinate source in the active coordinate space.
+        y: Box<ValueSource>,
     },
     /// Match rows `[start, end)` in the active coordinate space.
     RowRange {
@@ -90,6 +102,16 @@ impl ScopeSpec {
                 };
                 rect.contains(x, y)
             }
+            ScopeSpec::Cell { x, y } => {
+                let Some(target_x) = static_coordinate_source(x) else {
+                    return false;
+                };
+                let Some(target_y) = static_coordinate_source(y) else {
+                    return false;
+                };
+                let (cell_x, cell_y) = scope_coordinate(input, coordinate_space);
+                cell_x == target_x && cell_y == target_y
+            }
             ScopeSpec::RowRange { start, end } => {
                 let (_, y) = scope_coordinate(input, coordinate_space);
                 y >= *start && y < *end
@@ -124,6 +146,56 @@ impl ScopeSpec {
                 })
             }
         }
+    }
+}
+
+fn static_coordinate_source(source: &ValueSource) -> Option<usize> {
+    resolve_static_value_source(source).and_then(|value| value_to_usize(&value))
+}
+
+fn resolve_static_value_source(source: &ValueSource) -> Option<Value> {
+    match source {
+        ValueSource::Literal { value } => Some(value.clone()),
+        ValueSource::Signal { fallback, .. }
+        | ValueSource::Parameter { fallback, .. }
+        | ValueSource::GraphValue { fallback, .. }
+        | ValueSource::SampledField { fallback, .. } => fallback.clone(),
+        ValueSource::Map {
+            from,
+            input,
+            output,
+            clamp,
+        } => map_static_numeric(resolve_static_value_source(from)?, *input, *output, *clamp),
+    }
+}
+
+fn map_static_numeric(
+    value: Value,
+    input: NumericRange,
+    output: NumericRange,
+    clamp: bool,
+) -> Option<Value> {
+    let number = match value {
+        Value::Integer(value) => value as f64,
+        Value::Number(value) | Value::Duration(value) => value,
+        _ => return None,
+    };
+    let min_in = input.min?;
+    let max_in = input.max?;
+    let min_out = output.min?;
+    let max_out = output.max?;
+    let mut normalized = (number - min_in) / (max_in - min_in);
+    if clamp {
+        normalized = normalized.clamp(0.0, 1.0);
+    }
+    Some(Value::Number(min_out + normalized * (max_out - min_out)))
+}
+
+fn value_to_usize(value: &Value) -> Option<usize> {
+    match value {
+        Value::Integer(value) => usize::try_from(*value).ok(),
+        Value::Number(value) if value.is_finite() && *value >= 0.0 => Some(value.round() as usize),
+        _ => None,
     }
 }
 

@@ -49,6 +49,7 @@ fn apply_dim_filter(
     let factor = resolve_effect_number(node, request, "factor", 0.5).clamp(0.0, 1.0) as f32;
     apply_cell_color_filter(
         node,
+        request,
         styled_grid,
         &resolve_effect_enum(node, request, "applyTo", "both"),
         "FilterDim",
@@ -63,7 +64,7 @@ fn apply_tint_filter(
     let tint = resolve_effect_color(node, request, "color", ResolvedColor::rgb(255, 180, 80));
     let strength = resolve_effect_number(node, request, "strength", 0.5).clamp(0.0, 1.0) as f32;
     let apply_to = resolve_effect_enum(node, request, "applyTo", "both");
-    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid);
+    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request);
     for (x, y) in coordinates {
         let Some(cell) = styled_grid
             .cells()
@@ -103,7 +104,7 @@ fn apply_invert_filter(
     styled_grid: &mut PlayerStyledGrid,
 ) {
     let apply_to = resolve_effect_enum(node, request, "applyTo", "both");
-    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid);
+    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request);
     for (x, y) in coordinates {
         let Some(cell) = styled_grid
             .cells()
@@ -138,6 +139,7 @@ fn apply_greyscale_filter(
     let strength = resolve_effect_number(node, request, "strength", 1.0).clamp(0.0, 1.0) as f32;
     apply_cell_color_filter(
         node,
+        request,
         styled_grid,
         &resolve_effect_enum(node, request, "applyTo", "both"),
         "FilterGreyscale",
@@ -185,6 +187,7 @@ fn apply_pill_button_filter(
         .rgba_label();
     apply_filter_style(
         node,
+        request,
         styled_grid,
         "both",
         active,
@@ -211,6 +214,7 @@ fn apply_fade_to_canvas_filter(
         .rgba_label();
     apply_filter_style(
         node,
+        request,
         styled_grid,
         "both",
         foreground,
@@ -228,6 +232,7 @@ fn apply_pattern_fill_filter(
     let level = (90.0 + density * 120.0) as u8;
     apply_filter_style(
         node,
+        request,
         styled_grid,
         "foreground",
         ResolvedColor::rgb(level, level, 255).rgba_label(),
@@ -247,6 +252,7 @@ fn apply_crt_filter(
     let level = (120.0 + (intensity + glow * 0.5 + scanline * 0.25).min(1.0) * 100.0) as u8;
     apply_filter_style(
         node,
+        request,
         styled_grid,
         "foreground",
         ResolvedColor::rgb(level, 255, level).rgba_label(),
@@ -295,6 +301,7 @@ fn apply_matrix_rain_filter(
         .rgba_label();
     apply_filter_style(
         node,
+        request,
         styled_grid,
         "foreground",
         color,
@@ -317,7 +324,7 @@ fn apply_vignette_filter(
         resolve_effect_color(node, request, "edgeColor", ResolvedColor::rgb(10, 20, 36));
     let apply_to = resolve_effect_enum(node, request, "applyTo", "both");
     let max_distance = vignette_corner_distance(styled_grid.width(), styled_grid.height()).max(1.0);
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let distance =
             vignette_distance_from_center(x, y, styled_grid.width(), styled_grid.height());
         let mix = ((distance / max_distance) as f32 * strength).clamp(0.0, 1.0);
@@ -353,7 +360,7 @@ fn apply_bracket_emphasis_filter(
     let edge_width = resolve_effect_integer(node, request, "edgeWidth", 1).max(0) as usize;
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let width = styled_grid.width();
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let on_edge = x < edge_width || x + edge_width >= width;
         let foreground = if on_edge {
             color.rgba_label()
@@ -405,7 +412,7 @@ fn apply_dot_indicator_filter(
     let background = background.rgba_label();
     let width = styled_grid.width().max(1);
     let height = styled_grid.height().max(1);
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let is_target = match position.as_str() {
             "right" => x == width.saturating_sub(1),
             "top" => y == 0 && x == width / 2,
@@ -439,7 +446,7 @@ fn apply_edge_grow_filter(
     let apply_to = resolve_effect_enum(node, request, "applyTo", "both");
     let width = styled_grid.width().max(1);
     let height = styled_grid.height().max(1);
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let coordinate = match direction.as_str() {
             "right" => width.saturating_sub(1).saturating_sub(x),
             "top" => y,
@@ -480,7 +487,7 @@ fn apply_hover_bar_filter(
         resolve_effect_number(node, request, "position", request.phase_t).clamp(0.0, 1.0);
     let apply_to = resolve_effect_enum(node, request, "applyTo", "background");
     let center_y = ((styled_grid.height().saturating_sub(1)) as f64 * position).round() as usize;
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let distance = y.abs_diff(center_y);
         let mix = if distance < thickness { 0.0 } else { 0.8 };
         let foreground = color
@@ -523,7 +530,7 @@ fn apply_kitt_scanner_filter(
     } else {
         span * 2 - sweep
     };
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let coordinate = if is_vertical_axis(&axis) { y } else { x };
         let distance = coordinate.abs_diff(center);
         let mix = (distance as f32 / scanner_width as f32).clamp(0.0, 1.0);
@@ -562,7 +569,7 @@ fn apply_underline_wipe_filter(
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let cutoff = (styled_grid.width() as f64 * progress).ceil() as usize;
     let height = styled_grid.height();
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let underlined = x < cutoff && y + thickness >= height;
         let foreground = if underlined {
             color.rgba_label()
@@ -617,7 +624,7 @@ fn apply_sub_pixel_bar_filter(
     );
     let total_subcells = if horizontal { width } else { height }.saturating_mul(8);
     let filled_subcells = (total_subcells as f64 * progress).ceil() as usize;
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let coordinate = if horizontal { x } else { y };
         let filled = filled_subcells
             .saturating_sub(coordinate.saturating_mul(8))
@@ -656,12 +663,13 @@ fn sub_pixel_bar_glyph(filled: usize) -> &'static str {
 
 fn apply_cell_color_filter(
     node: &NodeSpec,
+    request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
     apply_to: &str,
     role: &str,
     transform: impl Fn(ResolvedColor) -> ResolvedColor,
 ) {
-    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid);
+    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request);
     for (x, y) in coordinates {
         let Some(cell) = styled_grid
             .cells()
@@ -749,6 +757,7 @@ fn parse_rgba_label(label: &str, fallback: ResolvedColor) -> ResolvedColor {
 
 fn apply_filter_style(
     node: &NodeSpec,
+    request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
     apply_to: &str,
     foreground: String,
@@ -765,7 +774,7 @@ fn apply_filter_style(
     } else {
         "transparent".to_string()
     };
-    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         styled_grid.set_cell_style(x, y, &foreground, &background, vec![], role.clone());
     }
 }
