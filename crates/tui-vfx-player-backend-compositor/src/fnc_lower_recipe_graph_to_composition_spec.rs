@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.28.0</VERS>
+// <VERS>VERSION: 0.29.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.28.0: MINOR — lower mask.blinds into compositor MaskSpec::Blinds instead of source-stage player semantics.
+// <CLOG>0.29.0: MINOR — lower mask.wipe and mask.wipeCorner into compositor MaskSpec::Wipe where exact directions exist.
+// 0.28.0: lower mask.blinds into compositor MaskSpec::Blinds instead of source-stage player semantics.
 // 0.27.0: lower mask.iris into compositor MaskSpec::Iris instead of source-stage player semantics.
 // 0.26.0: lower mask.dissolve into compositor MaskSpec::Dissolve instead of source-stage player semantics.
 // 0.25.0: lower mask.diamond into compositor MaskSpec::Diamond instead of source-stage player semantics.
@@ -664,7 +665,7 @@ fn lower_node_into_spec(
             });
             NodeLoweringOutcome::Lowered { warnings }
         }
-        "mask.wipe" => lower_wipe_mask(node, content_stages, request, warnings),
+        "mask.wipe" => lower_wipe_mask(node, spec, request, warnings),
         "mask.checkers" => {
             spec.masks.push(MaskSpec::Checkers {
                 cell_size: integer_input(node, request, "cellSize", 2).max(1) as u16,
@@ -679,7 +680,7 @@ fn lower_node_into_spec(
         "mask.none" => lower_none_mask(node, spec, warnings),
         "mask.pathReveal" => lower_path_reveal_mask(node, content_stages, request, warnings),
         "mask.radial" => lower_radial_mask(node, spec, request, warnings),
-        "mask.wipeCorner" => lower_wipe_corner_mask(node, content_stages, request, warnings),
+        "mask.wipeCorner" => lower_wipe_corner_mask(node, spec, request, warnings),
         "mask.materialize" | "mask.materializeCorner" => {
             lower_materialize_mask(node, spec, request, warnings)
         }
@@ -1572,16 +1573,16 @@ fn lower_path_reveal_mask(
 
 fn lower_wipe_mask(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) =
-        unsupported_native_content_reason(node, "mask.wipe", &["direction", "softEdge"])
+        unsupported_native_effect_reason(node, "mask.wipe", &["direction", "softEdge"])
     {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    let direction = match strict_enum_input(
+    if let Err(reason) = strict_enum_input(
         node,
         request,
         "direction",
@@ -1589,11 +1590,12 @@ fn lower_wipe_mask(
         SUPPORTED_WIPE_DIRECTIONS,
         "mask.wipe",
     ) {
-        Ok(direction) => direction,
-        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
-    };
-    content_stages.push(NativeContentStage::WipeMask {
-        direction,
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    spec.masks.push(MaskSpec::Wipe {
+        reveal: Some(wipe_direction_input(node, request, "direction")),
+        hide: None,
+        direction: None,
         soft_edge: bool_input(node, request, "softEdge", false),
     });
     NodeLoweringOutcome::Lowered { warnings }
@@ -1629,16 +1631,16 @@ fn lower_radial_mask(
 
 fn lower_wipe_corner_mask(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) =
-        unsupported_native_content_reason(node, "mask.wipeCorner", &["direction", "softEdge"])
+        unsupported_native_effect_reason(node, "mask.wipeCorner", &["direction", "softEdge"])
     {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    let direction = match strict_enum_input(
+    if let Err(reason) = strict_enum_input(
         node,
         request,
         "direction",
@@ -1646,11 +1648,12 @@ fn lower_wipe_corner_mask(
         SUPPORTED_WIPE_DIRECTIONS,
         "mask.wipeCorner",
     ) {
-        Ok(direction) => direction,
-        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
-    };
-    content_stages.push(NativeContentStage::WipeMask {
-        direction,
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    spec.masks.push(MaskSpec::Wipe {
+        reveal: Some(wipe_direction_input(node, request, "direction")),
+        hide: None,
+        direction: None,
         soft_edge: bool_input(node, request, "softEdge", false),
     });
     NodeLoweringOutcome::Lowered { warnings }
@@ -3708,6 +3711,20 @@ fn wipe_direction_input(
         Some("bottomRightToTopLeft" | "bottom_right_to_top_left") => {
             WipeDirection::BottomRightToTopLeft
         }
+        Some("horizontalCenterOut" | "horizontal_center_out") => WipeDirection::HorizontalCenterOut,
+        Some("horizontalEdgesIn" | "horizontal_edges_in") => WipeDirection::HorizontalEdgesIn,
+        Some("outFromTopLeft" | "out_from_top_left") => WipeDirection::CornerOutFromTopLeft,
+        Some("outFromTopRight" | "out_from_top_right") => WipeDirection::CornerOutFromTopRight,
+        Some("outFromBottomLeft" | "out_from_bottom_left") => {
+            WipeDirection::CornerOutFromBottomLeft
+        }
+        Some("outFromBottomRight" | "out_from_bottom_right") => {
+            WipeDirection::CornerOutFromBottomRight
+        }
+        Some("inToTopLeft" | "in_to_top_left") => WipeDirection::CornerInToTopLeft,
+        Some("inToTopRight" | "in_to_top_right") => WipeDirection::CornerInToTopRight,
+        Some("inToBottomLeft" | "in_to_bottom_left") => WipeDirection::CornerInToBottomLeft,
+        Some("inToBottomRight" | "in_to_bottom_right") => WipeDirection::CornerInToBottomRight,
         _ => WipeDirection::LeftToRight,
     }
 }
@@ -3825,4 +3842,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.28.0</VERS>
+// <VERS>END OF VERSION: 0.29.0</VERS>

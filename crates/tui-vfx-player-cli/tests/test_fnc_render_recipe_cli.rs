@@ -561,8 +561,8 @@ fn test_fnc_cli_renders_compositor_backend_native_radial_wipe_corner_blockers_js
             "masks/mask_wipe_corner_out_from_top_left.json",
             "debugMaskWipeCornerOutFromTopLeft",
             "mask.wipeCorner",
-            0,
             1,
+            0,
         ),
     ] {
         let report = player_cli_json(
@@ -854,6 +854,55 @@ fn test_fnc_cli_lowers_blinds_mask_to_compositor_mask_not_source_stage_json() {
             .as_array()
             .unwrap()
             .contains(&serde_json::json!("mask.blinds"))
+    );
+    assert_eq!(report["compositionSpecSummary"]["masks"], 1);
+    assert_eq!(report["compositionSpecSummary"]["contentStages"], 0);
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect")
+    );
+}
+
+#[test]
+fn test_fnc_cli_lowers_wipe_mask_to_compositor_mask_not_source_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_wipe.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native wipe mask compositor lowering player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugMaskWipe");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringAttempted"], true);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["sourceRenderMode"], "sourceOnly");
+    assert_eq!(report["nativeSourceIsolated"], true);
+    assert!(
+        report["loweredEffectIds"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!("mask.wipe"))
     );
     assert_eq!(report["compositionSpecSummary"]["masks"], 1);
     assert_eq!(report["compositionSpecSummary"]["contentStages"], 0);
