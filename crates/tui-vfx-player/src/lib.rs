@@ -31,7 +31,10 @@ pub mod cls_player_primitive_adapter_gap_entry;
 pub mod cls_player_primitive_adapter_gap_report;
 pub mod cls_player_primitive_adapter_gap_summary;
 pub mod cls_player_primitive_field_coverage;
+pub mod cls_player_render_backend_options;
 pub mod cls_player_render_backend_output;
+pub mod cls_player_render_backend_request;
+pub mod cls_player_render_composition_mode;
 pub mod cls_player_render_ir;
 pub mod cls_player_run_report;
 pub mod cls_player_sample_request;
@@ -183,9 +186,13 @@ pub use cls_player_primitive_field_coverage::{
     PlayerPrimitiveFieldCoverageInstance, PlayerPrimitiveFieldCoverageRecipe,
     PlayerPrimitiveFieldCoverageReport, PlayerPrimitiveFieldCoverageSummary,
 };
+pub use cls_player_render_backend_options::PlayerRenderBackendOptions;
 pub use cls_player_render_backend_output::{
-    PlayerRenderBackendDiagnostic, PlayerRenderBackendOutput,
+    PlayerRenderBackendCompositionEvidence, PlayerRenderBackendDiagnostic,
+    PlayerRenderBackendOutput,
 };
+pub use cls_player_render_backend_request::PlayerRenderBackendRequest;
+pub use cls_player_render_composition_mode::PlayerRenderCompositionMode;
 pub use cls_player_render_ir::{
     PlayerRenderCell, PlayerRenderGraphValueSnapshot, PlayerRenderIrReport, PlayerRenderLayer,
     PlayerRenderProvenance,

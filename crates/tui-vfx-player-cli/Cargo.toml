@@ -16,6 +16,7 @@ categories.workspace = true
 [dependencies]
 tui-vfx-contract.workspace = true
 tui-vfx-player.workspace = true
+tui-vfx-player-backend-compositor.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 

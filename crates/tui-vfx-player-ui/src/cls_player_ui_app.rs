@@ -18,6 +18,8 @@ pub enum PlayerUiFocus {
     Browser,
     /// Right preview pane.
     Preview,
+    /// Descriptor-derived studio controls pane.
+    Studio,
 }
 
 /// Interactive ratatui app state.
@@ -32,6 +34,8 @@ pub struct PlayerUiApp {
     pub player: PlayerUiState,
     /// Browser root selected for the session.
     pub browser_root: PathBuf,
+    /// Selected studio control row for keyboard mutation.
+    pub studio_control_index: usize,
 }
 
 impl PlayerUiApp {
@@ -46,12 +50,14 @@ impl PlayerUiApp {
             .map_err(|error| error.to_string())?;
         let mut list_state = ListState::default();
         list_state.select(Some(browser.cursor()));
+        let studio_control_index = default_studio_control_index(&player);
         Ok(Self {
             focus: PlayerUiFocus::Browser,
             browser,
             list_state,
             player,
             browser_root,
+            studio_control_index,
         })
     }
 
@@ -116,3 +122,11 @@ fn browser_root_for(recipe_path: &Path) -> PathBuf {
 
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_app.rs</FILE> - <DESC>Ratatui app state with fast-fs browser</DESC>
 // <VERS>END OF VERSION: 0.1.1</VERS>
+
+fn default_studio_control_index(player: &PlayerUiState) -> usize {
+    player
+        .controls
+        .iter()
+        .position(|control| control.value_kind == "text" || control.value_kind == "string")
+        .unwrap_or(0)
+}

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_handle_player_ui_key.rs</FILE> - <DESC>Handle ratatui player UI keys</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase K1: keep demo.rs-style browser navigation and preview controls separated by focus.</WCTX>
-// <CLOG>0.1.0: INIT — route crossterm keys into fast-fs browser actions or K0 player commands.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>K2.23 UI foundation: intercept help overlay input and route studio control keys.</WCTX>
+// <CLOG>0.2.0: MINOR — make help modal dismiss-on-input and add studio focus mutation keys.
+// 0.1.0: INIT — route crossterm keys into fast-fs browser actions or K0 player commands.</CLOG>
 
 use crossterm::event::KeyCode;
 
@@ -13,20 +14,38 @@ pub async fn handle_player_ui_key(
     code: KeyCode,
     viewport_height: usize,
 ) -> bool {
+    if app.player.show_help {
+        return handle_help_overlay_key(app, code);
+    }
     match code {
         KeyCode::Char('q') => false,
         KeyCode::Char('?') => app.player.apply_command(PlayerUiCommand::Help),
         KeyCode::Tab => {
-            app.focus = match app.focus {
-                PlayerUiFocus::Browser => PlayerUiFocus::Preview,
-                PlayerUiFocus::Preview => PlayerUiFocus::Browser,
-            };
+            app.focus = next_focus(app.focus, app.player.studio);
             true
         }
         _ => match app.focus {
             PlayerUiFocus::Browser => handle_browser_key(app, code, viewport_height).await,
             PlayerUiFocus::Preview => handle_preview_key(app, code),
+            PlayerUiFocus::Studio => handle_studio_key(app, code),
         },
+    }
+}
+
+fn handle_help_overlay_key(app: &mut PlayerUiApp, code: KeyCode) -> bool {
+    if matches!(code, KeyCode::Char('q')) {
+        return false;
+    }
+
+    app.player.show_help = false;
+    true
+}
+
+fn next_focus(focus: PlayerUiFocus, studio_enabled: bool) -> PlayerUiFocus {
+    match (focus, studio_enabled) {
+        (PlayerUiFocus::Browser, _) => PlayerUiFocus::Preview,
+        (PlayerUiFocus::Preview, true) => PlayerUiFocus::Studio,
+        (PlayerUiFocus::Preview, false) | (PlayerUiFocus::Studio, _) => PlayerUiFocus::Browser,
     }
 }
 
@@ -73,5 +92,31 @@ fn handle_preview_key(app: &mut PlayerUiApp, code: KeyCode) -> bool {
     app.player.apply_command(command)
 }
 
+fn handle_studio_key(app: &mut PlayerUiApp, code: KeyCode) -> bool {
+    match code {
+        KeyCode::Esc => app.focus = PlayerUiFocus::Preview,
+        KeyCode::Char('j') | KeyCode::Down => move_studio_cursor(app, 1),
+        KeyCode::Char('k') | KeyCode::Up => move_studio_cursor(app, -1),
+        KeyCode::Enter | KeyCode::Char('e') | KeyCode::Char(' ') => app
+            .player
+            .mutate_studio_control_interactively(app.studio_control_index),
+        KeyCode::Char('r') => {
+            app.player.apply_command(PlayerUiCommand::Reset);
+        }
+        _ => {}
+    }
+    true
+}
+
+fn move_studio_cursor(app: &mut PlayerUiApp, delta: isize) {
+    let count = app.player.controls.len();
+    if count == 0 {
+        app.studio_control_index = 0;
+        return;
+    }
+    app.studio_control_index =
+        (app.studio_control_index as isize + delta).rem_euclid(count as isize) as usize;
+}
+
 // <FILE>crates/tui-vfx-player-ui/src/fnc_handle_player_ui_key.rs</FILE> - <DESC>Handle ratatui player UI keys</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

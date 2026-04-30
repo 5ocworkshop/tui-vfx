@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse visual player UI CLI options</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Player UI: parse recipe-root and startup recipe flags without hard-coded paths.</WCTX>
-// <CLOG>0.2.0: MINOR — support --recipes-root and --recipe startup forms.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Native compositor lowering: parse composition mode, fallback policy, and studio mode.</WCTX>
+// <CLOG>0.3.0: MINOR — parse --composition-mode, --fail-on-fallback, and --studio.
+// 0.2.0: MINOR — support --recipes-root and --recipe startup forms.</CLOG>
 
 use std::path::PathBuf;
 
@@ -11,6 +12,10 @@ use crate::{CliOptions, fnc_find_startup_recipe_path::find_startup_recipe_path};
 pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOptions, String> {
     let mut descriptor_packs = Vec::new();
     let mut descriptor_pack_dirs = Vec::new();
+    let mut backend = "styledCell".to_string();
+    let mut composition_mode = "irResolved".to_string();
+    let mut fail_on_fallback = false;
+    let mut studio = false;
     let mut width = None;
     let mut height = None;
     let mut once = false;
@@ -31,6 +36,10 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
                 recipes_root = Some(PathBuf::from(next_value(&mut args, "--recipes-root")?))
             }
             "--recipe" => paths.push(next_value(&mut args, "--recipe")?),
+            "--backend" => backend = next_value(&mut args, "--backend")?,
+            "--composition-mode" => composition_mode = next_value(&mut args, "--composition-mode")?,
+            "--fail-on-fallback" => fail_on_fallback = true,
+            "--studio" => studio = true,
             "--width" => width = Some(parse_usize(&next_value(&mut args, "--width")?)?),
             "--height" => height = Some(parse_usize(&next_value(&mut args, "--height")?)?),
             "--once" => once = true,
@@ -47,6 +56,12 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             }
             value if value.starts_with("--recipe=") => {
                 paths.push(value["--recipe=".len()..].to_string());
+            }
+            value if value.starts_with("--backend=") => {
+                backend = value["--backend=".len()..].to_string();
+            }
+            value if value.starts_with("--composition-mode=") => {
+                composition_mode = value["--composition-mode=".len()..].to_string();
             }
             value if value.starts_with("--width=") => {
                 width = Some(parse_usize(&value["--width=".len()..])?);
@@ -73,6 +88,10 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
         recipes_root,
         descriptor_packs,
         descriptor_pack_dirs,
+        backend,
+        composition_mode,
+        fail_on_fallback,
+        studio,
         width,
         height,
         once,
@@ -94,4 +113,4 @@ fn parse_usize(value: &str) -> Result<usize, String> {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse visual player UI CLI options</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

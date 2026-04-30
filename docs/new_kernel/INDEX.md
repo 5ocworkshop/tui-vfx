@@ -1,7 +1,16 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.34.0</VERS> -->
-<!-- <WCTX>K2.18 blocker closure indexing.</WCTX> -->
-<!-- <CLOG>0.34.0: MINOR — add K2.18 blocker ledger, closure reports, docs gate, status memo, and review/de-slop artifact.
+<!-- <VERS>VERSION: 0.43.0</VERS> -->
+<!-- <WCTX>K2.23 public-demo player/studio closure, review, and status indexing.</WCTX> -->
+<!-- <CLOG>0.43.0: MINOR — add K2.23 status memo and review/de-slop report.
+0.42.0: MINOR — add K2.23 player/studio and content typewriter results.
+0.41.0: MINOR — add K2.23 public-demo player/studio packet.
+0.40.0: MINOR — add K2.22 status memo and review/de-slop report.
+0.39.0: MINOR — add K2.22 simple filter native lowerer results.
+0.38.0: MINOR — add K2.22 native coverage packet and full debug_recipes audit.
+0.37.0: MINOR — add K2.21 source-isolated native results, status memo, and review/de-slop artifacts.
+0.36.0: MINOR — add K2.20 native compositor lowering, demo commands, architect memo, and review/de-slop artifacts.
+0.35.0: MINOR — add K2.19 compositor backend, studio pilot, demo commands, docs gate, status memo, and review/de-slop artifacts.
+0.34.0: MINOR — add K2.18 blocker ledger, closure reports, docs gate, status memo, and review/de-slop artifact.
 0.33.0: MINOR — add K2.17 descriptor/source burn-down reports, implementation-readiness, control catalog, holdbacks, docs gate, review, and architect memo artifacts.
 0.32.0: MINOR — add K2.16 player render IR, scene/source fidelity, backlog normalization, burn-down, docs-gate, holdback, review, and architect memo artifacts.
 0.31.0: MINOR — add K2.15 graph execution, fixture, source, docs-gate, holdback, and review artifacts.
@@ -96,6 +105,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_K2_16.md`](ARCH-RESP-TO-PHASE_K2_16.md) — Phase K2.16 response and player render IR, scene/source fidelity, and backlog burn-down packet.
 - [`ARCH-RESP-TO-PHASE_K2_17.md`](ARCH-RESP-TO-PHASE_K2_17.md) — K2.17 descriptor/source burn-down, implementation-readiness, and control-catalog packet.
 - [`ARCH-RESP-TO-PHASE_K2_18.md`](ARCH-RESP-TO-PHASE_K2_18.md) — K2.18 blocker closure sprint packet.
+- [`ARCH-RESP-TO-PHASE_K2_19.md`](ARCH-RESP-TO-PHASE_K2_19.md) — K2.19 visible compositor playback and studio-control pilot packet.
 
 ## Status and memo artifacts
 
@@ -166,6 +176,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_15_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_15_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop cleanup, and verification evidence for K2.15.
 - [`PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md) — K2.18 blocker closure status, final counters, signed holdbacks, and verification matrix.
 - [`PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop closure, and verification evidence for K2.18.
+- [`PHASE_K2_19_VISUAL_PLAYBACK_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_19_VISUAL_PLAYBACK_STATUS_MEMO_TO_ARCHITECT.md) — K2.19 results-first visible playback memo, studio hash changes, and next blocker recommendation.
+- [`PHASE_K2_19_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_19_REVIEW_AND_DESLOP_REPORT.md) — K2.19 formal review, anti-slop closure, and verification evidence.
 - [`PHASE_K2_16_PLAYER_IR_BACKLOG_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_16_PLAYER_IR_BACKLOG_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md) — K2.16 player render IR, scene/source fidelity, 21-fixture burn-down, final counters, and architect blocker memo.
 - [`PHASE_K2_16_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_16_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop cleanup, and verification evidence for K2.16.
 - [`PHASE_K2_17_DESCRIPTOR_SOURCE_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_17_DESCRIPTOR_SOURCE_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md) — K2.17 descriptor/source burn-down, fixture growth, final counters, and architect blocker memo.
@@ -283,6 +295,56 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md) — final blocker closure status memo.
 - [`PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md) — final review and de-slop evidence.
 
+### K2.19 visible playback and studio pilot
+
+- [`K2_19_COMPOSITOR_BACKEND_RESULTS.md`](K2_19_COMPOSITOR_BACKEND_RESULTS.md) — compositor backend adapter result evidence.
+- [`K2_19_PLAYER_IR_TO_COMPOSITOR_LOWERING.md`](K2_19_PLAYER_IR_TO_COMPOSITOR_LOWERING.md) — player IR to `OwnedGrid`/`RoleMap`/`SemanticScene` lowering notes.
+- [`K2_19_STUDIO_CONTROL_PILOT_RESULTS.md`](K2_19_STUDIO_CONTROL_PILOT_RESULTS.md) — descriptor-derived studio snapshot before/after hash evidence.
+- [`K2_19_VISUAL_DEMO_COMMANDS.md`](K2_19_VISUAL_DEMO_COMMANDS.md) — user-runnable demo harness and representative commands.
+- [`K2_19_BACKEND_LIMITATIONS_AND_HOLDBACKS.md`](K2_19_BACKEND_LIMITATIONS_AND_HOLDBACKS.md) — explicit backend limitations and next blocker.
+- [`K2_19_SCHEMA_API_DOCS_GATE.md`](K2_19_SCHEMA_API_DOCS_GATE.md) — schema/API/docs impact and verification gate.
+- [`PHASE_K2_19_VISUAL_PLAYBACK_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_19_VISUAL_PLAYBACK_STATUS_MEMO_TO_ARCHITECT.md) — results-first architect memo.
+- [`PHASE_K2_19_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_19_REVIEW_AND_DESLOP_REPORT.md) — review and de-slop evidence.
+
+
+### K2.20 native compositor lowering and studio pilot
+
+- [`K2_20_NATIVE_COMPOSITION_RESULTS.md`](K2_20_NATIVE_COMPOSITION_RESULTS.md) — native compositor render artifacts, summary counts, and pass/fail table.
+- [`K2_20_EFFECT_LOWERING_COVERAGE.md`](K2_20_EFFECT_LOWERING_COVERAGE.md) — bounded native filter/mask/sampler/shader/style lowering coverage.
+- [`K2_20_NATIVE_BACKEND_DEMO_COMMANDS.md`](K2_20_NATIVE_BACKEND_DEMO_COMMANDS.md) — user-runnable native backend, playback, and studio commands.
+- [`K2_20_STUDIO_UI_CONTROL_RESULTS.md`](K2_20_STUDIO_UI_CONTROL_RESULTS.md) — generated studio control before/after hash evidence.
+- [`K2_20_NATIVE_GRAPH_LOWERING_RESULTS.md`](K2_20_NATIVE_GRAPH_LOWERING_RESULTS.md) — backend request boundary and graph-to-CompositionSpec lowering evidence.
+- [`K2_20_BACKEND_LIMITATIONS_AND_HOLDBACKS.md`](K2_20_BACKEND_LIMITATIONS_AND_HOLDBACKS.md) — remaining native-source/studio/effect-lane blockers.
+- [`K2_20_SCHEMA_API_DOCS_GATE.md`](K2_20_SCHEMA_API_DOCS_GATE.md) — schema/API/docs synchronization gate.
+- [`PHASE_K2_20_NATIVE_COMPOSITOR_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_20_NATIVE_COMPOSITOR_STATUS_MEMO_TO_ARCHITECT.md) — results-first architect memo.
+- [`PHASE_K2_20_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_20_REVIEW_AND_DESLOP_REPORT.md) — review and de-slop evidence.
+
+### K2.21 source-isolated native playback and studio controls
+
+- [`ARCH-RESP-TO-PHASE_K2_21.md`](ARCH-RESP-TO-PHASE_K2_21.md) — self-generated next packet for source-isolated native compositor playback, descriptor-driven studio controls, and animated user-runnable demos.
+
+- [`K2_21_SOURCE_ISOLATED_NATIVE_RESULTS.md`](K2_21_SOURCE_ISOLATED_NATIVE_RESULTS.md) — source-only native compositor evidence, descriptor-driven studio mutation proof, and user-runnable commands.
+- [`PHASE_K2_21_SOURCE_ISOLATED_NATIVE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_21_SOURCE_ISOLATED_NATIVE_STATUS_MEMO_TO_ARCHITECT.md) — results-first architect memo for source-isolated native playback and generated studio controls.
+- [`PHASE_K2_21_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_21_REVIEW_AND_DESLOP_REPORT.md) — formal review finding closure, AI de-slop actions, and regression evidence.
+
+### K2.22 native coverage and studio completeness
+
+- [`ARCH-RESP-TO-PHASE_K2_22.md`](ARCH-RESP-TO-PHASE_K2_22.md) — self-generated native coverage, lowerer expansion, and studio completeness packet.
+- [`K2_22_NATIVE_COVERAGE_AUDIT.md`](K2_22_NATIVE_COVERAGE_AUDIT.md) — full non-deprecated v3.1 debug recipe native coverage audit and implementation order.
+- [`K2_22_SIMPLE_FILTER_NATIVE_RESULTS.md`](K2_22_SIMPLE_FILTER_NATIVE_RESULTS.md) — simple filter native lowerer expansion and coverage movement.
+- [`PHASE_K2_22_NATIVE_COVERAGE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_22_NATIVE_COVERAGE_STATUS_MEMO_TO_ARCHITECT.md) — results-first native coverage and blocker memo.
+- [`PHASE_K2_22_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_22_REVIEW_AND_DESLOP_REPORT.md) — review/de-slop and verification evidence.
+
+### K2.23 public-demo player and studio
+
+- [`ARCH-RESP-TO-PHASE_K2_23.md`](ARCH-RESP-TO-PHASE_K2_23.md) — self-generated lifecycle playback, interactive studio, status/help, and content-strategy packet.
+- [`K2_23_CONTENT_NATIVE_STRATEGY.md`](K2_23_CONTENT_NATIVE_STRATEGY.md) — content-transform native backend strategy and implementation order.
+- [`K2_23_PLAYER_STUDIO_RESULTS.md`](K2_23_PLAYER_STUDIO_RESULTS.md) — public-demo player/studio UI foundation results.
+- [`K2_23_CONTENT_TYPEWRITER_NATIVE_RESULTS.md`](K2_23_CONTENT_TYPEWRITER_NATIVE_RESULTS.md) — first native content-stage implementation results.
+- [`PHASE_K2_23_PLAYER_STUDIO_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_23_PLAYER_STUDIO_STATUS_MEMO_TO_ARCHITECT.md) — results-first architect memo with explicit next blockers.
+- [`PHASE_K2_23_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_23_REVIEW_AND_DESLOP_REPORT.md) — formal review finding closure, AI de-slop actions, and verification evidence.
+
+
 ## Validator and recipe artifacts
 
 - [`../../crates/tui-vfx-contract-cli/`](../../crates/tui-vfx-contract-cli/) — contract-only canonical v3.1 recipe validator CLI with recursive `validate-recipe` report schema `v3.1.validator.report.1`.
@@ -305,4 +367,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.34.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.43.0</VERS> -->

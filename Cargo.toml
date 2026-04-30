@@ -21,6 +21,7 @@ members = [
     "crates/tui-vfx-contract",
     "crates/tui-vfx-contract-cli",
     "crates/tui-vfx-player",
+    "crates/tui-vfx-player-backend-compositor",
     "crates/tui-vfx-player-cli",
     "crates/tui-vfx-player-ui",
     "crates/tui-vfx-next",
@@ -51,6 +52,7 @@ tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.11.0" }
 tui-vfx-contract = { path = "crates/tui-vfx-contract", version = "0.11.0" }
 tui-vfx-contract-cli = { path = "crates/tui-vfx-contract-cli", version = "0.11.0" }
 tui-vfx-player = { path = "crates/tui-vfx-player", version = "0.11.0" }
+tui-vfx-player-backend-compositor = { path = "crates/tui-vfx-player-backend-compositor", version = "0.11.0" }
 tui-vfx-player-cli = { path = "crates/tui-vfx-player-cli", version = "0.11.0" }
 tui-vfx-player-ui = { path = "crates/tui-vfx-player-ui", version = "0.11.0" }
 tui-vfx-core = { path = "crates/tui-vfx-core", version = "0.11.0" }

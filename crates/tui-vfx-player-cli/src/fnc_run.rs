@@ -10,11 +10,15 @@ use crate::{
     fnc_run_implementation_readiness::run_implementation_readiness,
     fnc_run_inventory_recipes::run_inventory_recipes, fnc_run_migration_gap::run_migration_gap,
     fnc_run_migration_mapping_batch::run_migration_mapping_batch,
+    fnc_run_play_backend::run_play_backend,
     fnc_run_primitive_adapter_gap::run_primitive_adapter_gap,
     fnc_run_primitive_field_coverage::run_primitive_field_coverage,
+    fnc_run_render_backend::run_render_backend,
+    fnc_run_render_backend_timeline::run_render_backend_timeline,
     fnc_run_render_frame::run_render_frame, fnc_run_render_frame_diff::run_render_frame_diff,
     fnc_run_render_ir::run_render_ir, fnc_run_render_recipe::run_render_recipe,
     fnc_run_render_timeline::run_render_timeline, fnc_run_schema_readiness::run_schema_readiness,
+    fnc_run_studio_snapshot::run_studio_snapshot,
 };
 
 /// Run the player CLI and return the process exit code.
@@ -42,6 +46,9 @@ fn is_known_command(command: &str) -> bool {
         "render-recipe"
             | "render-frame"
             | "render-ir"
+            | "render-backend"
+            | "render-backend-timeline"
+            | "play-backend"
             | "inventory-recipes"
             | "migration-gap"
             | "migration-mapping-batch"
@@ -53,6 +60,7 @@ fn is_known_command(command: &str) -> bool {
             | "render-frame-diff"
             | "implementation-readiness"
             | "control-catalog"
+            | "studio-snapshot"
     )
 }
 
@@ -61,6 +69,9 @@ fn dispatch_command(command: &str, options: CliOptions) -> Result<(), String> {
         "render-recipe" => run_render_recipe(options),
         "render-frame" => run_render_frame(options),
         "render-ir" => run_render_ir(options),
+        "render-backend" => run_render_backend(options),
+        "render-backend-timeline" => run_render_backend_timeline(options),
+        "play-backend" => run_play_backend(options),
         "inventory-recipes" => run_inventory_recipes(options),
         "migration-gap" => run_migration_gap(options),
         "migration-mapping-batch" => run_migration_mapping_batch(options),
@@ -72,6 +83,7 @@ fn dispatch_command(command: &str, options: CliOptions) -> Result<(), String> {
         "render-frame-diff" => run_render_frame_diff(options),
         "implementation-readiness" => run_implementation_readiness(options),
         "control-catalog" => run_control_catalog(options),
+        "studio-snapshot" => run_studio_snapshot(options),
         _ => unreachable!("command already validated"),
     }
 }

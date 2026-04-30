@@ -17,14 +17,18 @@ mod fnc_run_implementation_readiness;
 mod fnc_run_inventory_recipes;
 mod fnc_run_migration_gap;
 mod fnc_run_migration_mapping_batch;
+mod fnc_run_play_backend;
 mod fnc_run_primitive_adapter_gap;
 mod fnc_run_primitive_field_coverage;
+mod fnc_run_render_backend;
+mod fnc_run_render_backend_timeline;
 mod fnc_run_render_frame;
 mod fnc_run_render_frame_diff;
 mod fnc_run_render_ir;
 mod fnc_run_render_recipe;
 mod fnc_run_render_timeline;
 mod fnc_run_schema_readiness;
+mod fnc_run_studio_snapshot;
 mod fnc_validate_migration_gap_options;
 
 fn main() {

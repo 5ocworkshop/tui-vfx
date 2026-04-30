@@ -9,6 +9,8 @@ use std::{
     fs,
     path::PathBuf,
     process::{Command, Output},
+    thread,
+    time::{Duration, Instant},
 };
 
 const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 144;
@@ -67,6 +69,752 @@ fn test_fnc_cli_renders_single_recipe_render_ir_json() {
             .iter()
             .any(|warning| warning["code"] == "parallelGraphValueConflict")
     );
+}
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("shaders/primitives/shader_linear_gradient_apply_to_both.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--format"),
+            str_arg("json"),
+        ],
+        "render-backend compositor player cli",
+    );
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.renderBackend.1");
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugShaderLinearGradientApplyToBoth");
+    assert!(report["backendHash"].as_u64().expect("backend hash") > 0);
+    assert!(
+        report["nonDefaultStyledCells"]
+            .as_u64()
+            .expect("styled cell count")
+            > 0
+    );
+    assert!(
+        report["styledCells"]
+            .as_array()
+            .expect("styled cells")
+            .iter()
+            .any(|cell| cell["foreground"]
+                .as_str()
+                .unwrap_or("")
+                .starts_with("rgba("))
+    );
+}
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_native_metadata_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("shaders/primitives/shader_linear_gradient_apply_to_both.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+        ],
+        "render-backend native compositor player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringAttempted"], true);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecNonEmpty"], true);
+    assert_eq!(report["sourceRenderMode"], "sourceOnly");
+    assert_eq!(report["nativeSourceIsolated"], true);
+    assert!(report["loweredNodeCount"].as_u64().unwrap() > 0);
+    assert!(
+        report["loweredEffectIds"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!("shader.linearGradient"))
+    );
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|diagnostic| diagnostic["code"] == "nativeCompositionSpecApplied")
+    );
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|diagnostic| diagnostic["code"] != "playerIrAlreadyResolved")
+    );
+}
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_native_simple_filter_families_json() {
+    for (recipe, effect_id, expected_filter_count) in [
+        ("filters/filter_invert.json", "filter.invert", 3),
+        ("filters/filter_greyscale.json", "filter.greyscale", 1),
+        (
+            "filters/filter_fade_to_canvas_canvas_color_binding.json",
+            "filter.fadeToCanvas",
+            1,
+        ),
+        (
+            "filters/filter_vignette_side_pair.json",
+            "filter.vignette",
+            1,
+        ),
+        ("filters/filter_crt.json", "filter.crt", 1),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+            ],
+            "render-backend native simple filter family player cli",
+        );
+
+        assert_eq!(report["backend"], "compositor", "{recipe}");
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
+        assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"]["filters"], expected_filter_count,
+            "{recipe}"
+        );
+        assert!(
+            report["loweredEffectIds"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!(effect_id)),
+            "{recipe}"
+        );
+        assert!(
+            report["diagnostics"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_native_content_typewriter_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("content/content_typewriter.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase-t"),
+            str_arg("0.5"),
+        ],
+        "render-backend native content typewriter player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugContentTypewriter");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringAttempted"], true);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["sourceRenderMode"], "sourceOnly");
+    assert_eq!(report["nativeSourceIsolated"], true);
+    assert_eq!(report["compositionSpecSummary"]["contentStages"], 1);
+    assert!(
+        report["loweredEffectIds"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!("content.typewriter"))
+    );
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect")
+    );
+    assert!(
+        report["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row.as_str().unwrap_or("").contains('▌'))
+    );
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_content_typewriter_with_unsupported_input_json() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-native-typewriter-unsupported");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create temp typewriter fixture root");
+    let recipe_path = temp_root.join("content_typewriter_unsupported.json");
+    fs::write(
+        &recipe_path,
+        serde_json::to_string_pretty(&unsupported_content_typewriter_recipe())
+            .expect("serialize unsupported typewriter recipe"),
+    )
+    .expect("write unsupported typewriter recipe");
+
+    let output = run_player_cli(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path.display().to_string(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+        ],
+        "render-backend native unsupported content typewriter player cli",
+    );
+
+    assert!(!output.status.success());
+    assert!(stderr(&output).contains("unsupportedNativeEffect"));
+}
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_ir_resolved_metadata_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("shaders/primitives/shader_linear_gradient_apply_to_both.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("ir-resolved"),
+            str_arg("--format"),
+            str_arg("json"),
+        ],
+        "render-backend ir-resolved compositor player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["compositionMode"], "irResolved");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringAttempted"], false);
+    assert_eq!(report["sourceRenderMode"], "postEffectIr");
+    assert_eq!(report["nativeSourceIsolated"], false);
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|diagnostic| diagnostic["code"] == "playerIrAlreadyResolved")
+    );
+}
+
+#[test]
+fn test_fnc_cli_render_backend_timeline_native_hash_changes() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend-timeline"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_wipe.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--samples"),
+            str_arg("5"),
+        ],
+        "render-backend-timeline native player cli",
+    );
+
+    let samples = report["samples"].as_array().expect("samples");
+    assert_eq!(samples.len(), 5);
+    assert!(
+        samples
+            .iter()
+            .all(|sample| sample["compositionMode"] == "native"
+                && sample["fallbackUsed"] == false
+                && sample["sourceRenderMode"] == "sourceOnly"
+                && sample["nativeSourceIsolated"] == true)
+    );
+    let hashes = samples
+        .iter()
+        .map(|sample| sample["backendHash"].as_u64().expect("backend hash"))
+        .collect::<std::collections::BTreeSet<_>>();
+    assert!(
+        hashes.len() > 1,
+        "native timeline should change backend hashes"
+    );
+}
+
+#[test]
+fn test_fnc_cli_studio_snapshot_native_mutation_changes_backend_hash() {
+    let report = player_cli_json(
+        vec![
+            str_arg("studio-snapshot"),
+            str_arg("--recipe"),
+            recipe_path("filters/filter_pill_button_progress_binding.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--set"),
+            str_arg("progress=0.25"),
+            str_arg("--json"),
+        ],
+        "studio-snapshot native player cli",
+    );
+
+    assert_ne!(report["beforeBackendHash"], report["afterBackendHash"]);
+    assert!(report["changedCells"].as_u64().unwrap() > 0);
+    assert_eq!(report["before"]["compositionMode"], "native");
+    assert_eq!(report["before"]["fallbackUsed"], false);
+    assert_eq!(report["after"]["compositionMode"], "native");
+    assert_eq!(report["after"]["fallbackUsed"], false);
+    assert!(
+        report["after"]["loweredEffectIds"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!("filter.pillButton"))
+    );
+}
+
+#[test]
+fn test_fnc_cli_studio_snapshot_descriptor_runtime_override_changes_backend_hash() {
+    let report = player_cli_json(
+        vec![
+            str_arg("studio-snapshot"),
+            str_arg("--recipe"),
+            recipe_path("filters/filter_pill_button_progress_binding.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--set"),
+            str_arg("effect:filter.pillButton:effectNode:activeColor=#ff0000"),
+            str_arg("--json"),
+        ],
+        "studio-snapshot descriptor runtime override player cli",
+    );
+
+    assert_ne!(report["beforeBackendHash"], report["afterBackendHash"]);
+    assert!(report["changedCells"].as_u64().unwrap() > 0);
+    assert_eq!(report["after"]["sourceRenderMode"], "sourceOnly");
+    assert_eq!(report["after"]["nativeSourceIsolated"], true);
+    assert!(
+        report["mutations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|mutation| mutation["targetKind"] == "runtimeInputOverride"
+                && mutation["runtimeInput"] == "effect:filter.pillButton:effectNode:activeColor")
+    );
+    assert!(
+        report["controls"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(
+                |control| control["id"] == "effect:filter.pillButton:effectNode:activeColor"
+                    && control["controlKind"] == "colorPicker"
+            )
+    );
+}
+
+#[test]
+fn test_fnc_cli_studio_snapshot_rejects_unknown_descriptor_runtime_override() {
+    let output = run_player_cli(
+        vec![
+            str_arg("studio-snapshot"),
+            str_arg("--recipe"),
+            recipe_path("filters/filter_pill_button_progress_binding.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--set"),
+            str_arg("bogus.control=1"),
+            str_arg("--json"),
+        ],
+        "studio-snapshot bogus runtime override player cli",
+    );
+
+    assert!(!output.status.success());
+    assert!(stderr(&output).contains("could not map studio control `bogus.control`"));
+}
+
+#[test]
+fn test_fnc_cli_studio_snapshot_source_runtime_override_counts_row_changes() {
+    let report = player_cli_json(
+        vec![
+            str_arg("studio-snapshot"),
+            str_arg("--recipe"),
+            recipe_path("baseline.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--set"),
+            str_arg("source:source.card:mainCard:message=SOURCE OVERRIDE"),
+            str_arg("--json"),
+        ],
+        "studio-snapshot source runtime override player cli",
+    );
+
+    assert_ne!(report["beforeBackendHash"], report["afterBackendHash"]);
+    assert!(report["changedCells"].as_u64().unwrap() > 0);
+    assert!(
+        report["mutations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|mutation| mutation["runtimeInput"] == "source:source.card:mainCard:message")
+    );
+    assert!(
+        report["after"]["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row.as_str().unwrap_or("").contains("SOURCE OVERRIDE"))
+    );
+}
+
+#[test]
+fn test_fnc_cli_studio_snapshot_valid_enum_override_reports_no_visual_change() {
+    let report = player_cli_json(
+        vec![
+            str_arg("studio-snapshot"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_wipe.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--set"),
+            str_arg("maskWipeEnter.direction=rightToLeft"),
+            str_arg("--json"),
+        ],
+        "studio-snapshot enum runtime override player cli",
+    );
+
+    assert_eq!(report["changedCells"], 0);
+    assert!(
+        report["studioDiagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|diagnostic| diagnostic["code"] == "studioMutationNoVisualChange")
+    );
+    assert!(
+        report["mutations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|mutation| mutation["runtimeInput"] == "effect:mask.wipe:maskWipeEnter:direction")
+    );
+}
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_ansi() {
+    let output = run_player_cli(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("filters/filter_tint.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--format"),
+            str_arg("ansi"),
+        ],
+        "render-backend ansi player cli",
+    );
+
+    assert!(output.status.success(), "stderr: {}", stderr(&output));
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\x1b[38;2;") || stdout.contains("\x1b[48;2;"));
+}
+
+#[test]
+fn test_fnc_cli_render_backend_timeline_preserves_sample_ms_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend-timeline"),
+            str_arg("--recipe"),
+            recipe_path("masks/mask_wipe.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--samples"),
+            str_arg("5"),
+            str_arg("--sample-ms"),
+            str_arg("250"),
+        ],
+        "render-backend-timeline sample-ms player cli",
+    );
+
+    assert_eq!(
+        report["schemaVersion"],
+        "v3.1.player.renderBackendTimeline.1"
+    );
+    assert_eq!(report["sampleMs"], 250);
+    let samples = report["samples"].as_array().expect("samples");
+    assert_eq!(samples.len(), 5);
+    assert_eq!(samples[0]["sample"]["phaseT"], 0.0);
+    assert_eq!(samples[4]["sample"]["phaseT"], 1.0);
+    let hashes = samples
+        .iter()
+        .map(|sample| sample["backendHash"].as_u64().expect("backend hash"))
+        .collect::<std::collections::BTreeSet<_>>();
+    assert!(
+        hashes.len() > 1,
+        "timeline should sample more than one output"
+    );
+}
+
+#[test]
+fn test_fnc_cli_studio_snapshot_mutation_changes_backend_hash() {
+    let report = player_cli_json(
+        vec![
+            str_arg("studio-snapshot"),
+            str_arg("--recipe"),
+            recipe_path("shaders/compositions/shader_border_sweep_position_binding.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--set"),
+            str_arg("sweep_progress=0.75"),
+            str_arg("--json"),
+        ],
+        "studio-snapshot player cli",
+    );
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.studioSnapshot.1");
+    assert_eq!(report["backend"], "compositor");
+    assert_ne!(report["beforeBackendHash"], report["afterBackendHash"]);
+    assert!(report["changedCells"].as_u64().expect("changed cells") > 0);
+    assert!(
+        report["controls"]
+            .as_array()
+            .expect("controls")
+            .iter()
+            .any(|control| control["inputName"] == "position"
+                || control["id"].as_str().unwrap_or("").contains("position"))
+    );
+    assert!(
+        report["mutations"]
+            .as_array()
+            .expect("mutations")
+            .iter()
+            .any(|mutation| mutation["signalId"] == "sweepPosition")
+    );
+}
+
+#[test]
+fn test_fnc_cli_play_backend_json_finishes_before_ci_timeout() {
+    let output = run_player_cli_with_timeout(
+        vec![
+            str_arg("play-backend"),
+            str_arg("--recipe"),
+            recipe_path("shaders/compositions/shader_border_sweep.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--frames"),
+            str_arg("3"),
+            str_arg("--fps"),
+            str_arg("5"),
+            str_arg("--duration-ms"),
+            str_arg("1000"),
+            str_arg("--no-clear"),
+        ],
+        "play-backend json player cli",
+        Duration::from_secs(10),
+    );
+
+    assert!(output.status.success(), "stderr: {}", stderr(&output));
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("playback json");
+    assert_eq!(report["schemaVersion"], "v3.1.player.backendPlayback.1");
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["format"], "json");
+    assert_eq!(report["fps"], 5);
+    assert_eq!(report["durationMs"], 1000);
+    let frames = report["frames"].as_array().expect("frames");
+    assert!(frames.len() >= 2);
+    assert!(frames.iter().all(|frame| {
+        frame["sample"]["sampleMs"].as_u64().is_some()
+            && frame["output"]["schemaVersion"] == "v3.1.player.renderBackend.1"
+            && frame["output"]["backend"] == "compositor"
+            && frame["output"]["backendHash"].as_u64().unwrap_or_default() > 0
+            && frame["output"]["nonDefaultStyledCells"]
+                .as_u64()
+                .unwrap_or_default()
+                > 0
+    }));
+    let hashes = frames
+        .iter()
+        .map(|frame| frame["output"]["backendHash"].as_u64().expect("hash"))
+        .collect::<std::collections::BTreeSet<_>>();
+    assert!(
+        hashes.len() > 1,
+        "playback should sample more than one output"
+    );
+}
+
+#[test]
+fn test_fnc_cli_play_backend_ansi_emits_compositor_color_without_clear_when_no_clear() {
+    let output = run_player_cli_with_timeout(
+        vec![
+            str_arg("play-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_fade_in_from_canvas.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--format"),
+            str_arg("ansi"),
+            str_arg("--fps"),
+            str_arg("4"),
+            str_arg("--duration-ms"),
+            str_arg("500"),
+            str_arg("--no-clear"),
+        ],
+        "play-backend ansi player cli",
+        Duration::from_secs(3),
+    );
+
+    assert!(output.status.success(), "stderr: {}", stderr(&output));
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\x1b[38;2;") || stdout.contains("\x1b[48;2;"));
+    assert!(stdout.contains("frame: 0"));
+    assert!(stdout.contains("frame: 1"));
+    assert!(stdout.contains("styled_cells=240"));
+    assert!(!stdout.contains("\x1b[2J"));
+    let hashes = stdout
+        .lines()
+        .filter_map(|line| line.split("backend_hash=").nth(1))
+        .filter_map(|suffix| suffix.split_whitespace().next())
+        .collect::<std::collections::BTreeSet<_>>();
+    assert!(
+        hashes.len() > 1,
+        "playback ANSI should include changing colored frames"
+    );
+}
+
+#[test]
+fn test_fnc_cli_play_backend_rejects_zero_fps() {
+    let output = run_player_cli(
+        vec![
+            str_arg("play-backend"),
+            str_arg("--recipe"),
+            recipe_path("baseline.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--fps"),
+            str_arg("0"),
+            str_arg("--duration-ms"),
+            str_arg("500"),
+        ],
+        "play-backend zero fps",
+    );
+
+    assert!(!output.status.success());
+    assert!(stderr(&output).contains("fps must be greater than 0"));
+}
+
+#[test]
+fn test_fnc_cli_play_backend_rejects_zero_duration() {
+    let output = run_player_cli(
+        vec![
+            str_arg("play-backend"),
+            str_arg("--recipe"),
+            recipe_path("baseline.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--fps"),
+            str_arg("4"),
+            str_arg("--duration-ms"),
+            str_arg("0"),
+        ],
+        "play-backend zero duration",
+    );
+
+    assert!(!output.status.success());
+    assert!(stderr(&output).contains("duration-ms must be greater than 0"));
 }
 
 #[test]
@@ -1425,6 +2173,33 @@ fn run_player_cli(args: Vec<String>, context: &str) -> Output {
         .unwrap_or_else(|error| panic!("run {context}: {error}"))
 }
 
+fn run_player_cli_with_timeout(args: Vec<String>, context: &str, timeout: Duration) -> Output {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_tui-vfx-player-cli"))
+        .args(args)
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap_or_else(|error| panic!("spawn {context}: {error}"));
+    let start = Instant::now();
+    loop {
+        if child
+            .try_wait()
+            .unwrap_or_else(|error| panic!("poll {context}: {error}"))
+            .is_some()
+        {
+            return child
+                .wait_with_output()
+                .unwrap_or_else(|error| panic!("collect {context}: {error}"));
+        }
+        if start.elapsed() > timeout {
+            let _ = child.kill();
+            let _ = child.wait();
+            panic!("{context} timed out after {timeout:?}");
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+}
+
 fn assert_gap_entry(
     report: &serde_json::Value,
     effect_id: &str,
@@ -1651,6 +2426,21 @@ fn unsupported_effect_recipe() -> serde_json::Value {
         .as_array_mut()
         .expect("order array")
         .push(serde_json::Value::String("missingAdapter".to_string()));
+    recipe
+}
+
+fn unsupported_content_typewriter_recipe() -> serde_json::Value {
+    let text = fs::read_to_string(debug_recipe_root().join("content/content_typewriter.json"))
+        .expect("read content typewriter fixture");
+    let mut recipe: serde_json::Value =
+        serde_json::from_str(&text).expect("content typewriter fixture parses");
+    recipe["graph"]["nodes"]["effectNode"]["inputs"]["unsupportedNativeField"] = serde_json::json!({
+        "kind": "literal",
+        "value": {
+            "kind": "string",
+            "value": "must stay unsupported"
+        }
+    });
     recipe
 }
 

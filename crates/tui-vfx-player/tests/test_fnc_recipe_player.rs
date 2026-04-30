@@ -96,6 +96,32 @@ fn test_fnc_player_render_ir_carries_rows_styles_provenance_and_graph_values() {
 }
 
 #[test]
+fn test_fnc_player_source_render_ir_excludes_recipe_graph_effects() {
+    let player = player();
+    let recipe = recipe(&v31_debug_recipe("filters/filter_tint.json"));
+    let post_effect = player.render_recipe_ir(&recipe, &PlayerSampleRequest::default());
+    let source_only = player.render_recipe_source_ir(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(source_only.schema_version, "v3.1.player.renderIr.1");
+    assert_eq!(source_only.status, PlayerStatus::Rendered);
+    assert_eq!(source_only.rows, post_effect.rows);
+    assert!(
+        post_effect
+            .styled_cells
+            .iter()
+            .any(|cell| cell.foreground != "defaultForeground"),
+        "post-effect IR should include filter tint styled evidence"
+    );
+    assert!(
+        source_only
+            .styled_cells
+            .iter()
+            .all(|cell| cell.foreground == "defaultForeground"),
+        "source-only IR must not include recipe-level filter tint styled evidence"
+    );
+}
+
+#[test]
 fn test_fnc_player_styled_visual_frame_carries_real_style_evidence() {
     let player = player();
     let recipe = recipe(&v31_debug_recipe("baseline.json"));

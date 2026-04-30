@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>K2.12 schema lock: parse offender-ledger output flag.</WCTX>
-// <CLOG>0.5.0: MINOR — add schema-readiness offender detail flag.
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Native compositor lowering: carry composition mode and fallback policy through CLI commands.</WCTX>
+// <CLOG>0.6.0: MINOR — add composition-mode and fail-on-fallback options.
+// 0.5.0: MINOR — add schema-readiness offender detail flag.
 // 0.4.0: MINOR — add migration mapping family filter.
 // 0.3.1: PATCH — collapse historical option metadata into latest-change context.</CLOG>
 
@@ -14,6 +15,14 @@ pub struct CliOptions {
     pub recursive: bool,
     /// Emit JSON reports.
     pub json: bool,
+    /// Selected render backend for backend-aware commands.
+    pub backend: String,
+    /// Selected output format for backend-aware commands.
+    pub format: String,
+    /// Selected backend composition mode for compositor-aware commands.
+    pub composition_mode: String,
+    /// Fail command execution if compositor backend falls back.
+    pub fail_on_fallback: bool,
     /// Recipe files or directories to render.
     pub paths: Vec<String>,
     /// Descriptor pack files to load.
@@ -42,10 +51,22 @@ pub struct CliOptions {
     pub include_blockers: bool,
     /// Number of timeline frames to sample.
     pub frames: usize,
+    /// Playback frames per second for live playback commands.
+    pub fps: u64,
+    /// Playback loop duration in milliseconds.
+    pub duration_ms: u64,
     /// Starting sample for frame-diff reports.
     pub from_sample_t: f64,
     /// Ending sample for frame-diff reports.
     pub to_sample_t: f64,
+    /// Number of backend timeline samples to render.
+    pub samples: usize,
+    /// Optional sample duration in milliseconds for timeline demos.
+    pub sample_ms: Option<u64>,
+    /// Scripted studio control assignments in key=value form.
+    pub sets: Vec<String>,
+    /// Suppress clear-screen markers between live playback frames.
+    pub no_clear: bool,
 }
 
 impl Default for CliOptions {
@@ -53,6 +74,10 @@ impl Default for CliOptions {
         Self {
             recursive: false,
             json: true,
+            backend: "styledCell".to_string(),
+            format: "json".to_string(),
+            composition_mode: "irResolved".to_string(),
+            fail_on_fallback: false,
             paths: Vec::new(),
             descriptor_packs: Vec::new(),
             descriptor_pack_dirs: Vec::new(),
@@ -67,11 +92,17 @@ impl Default for CliOptions {
             include_offenders: false,
             include_blockers: false,
             frames: 1,
+            fps: 12,
+            duration_ms: 1000,
             from_sample_t: 0.0,
             to_sample_t: 1.0,
+            samples: 1,
+            sample_ms: None,
+            sets: Vec::new(),
+            no_clear: false,
         }
     }
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/cls_cli_options.rs</FILE> - <DESC>Player CLI parsed option DTO</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

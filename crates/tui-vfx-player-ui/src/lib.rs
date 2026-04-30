@@ -7,11 +7,12 @@
 //!
 //! The UI crate owns browser navigation, presentation, and command handling only. Recipe loading,
 //! descriptor catalog validation, sampled frames, lifecycle trigger latching,
-//! and unsupported diagnostics stay in `tui-vfx-player`. It is not compositor-backed playback yet.
+//! backend-selected rendering, and unsupported diagnostics stay in `tui-vfx-player`.
 
 pub mod cls_cli_options;
 pub mod cls_player_ui_app;
 pub mod cls_player_ui_command;
+pub mod cls_player_ui_control;
 pub mod cls_player_ui_state;
 mod fnc_find_startup_recipe_path;
 pub mod fnc_handle_player_ui_key;
@@ -28,6 +29,7 @@ pub mod fnc_run_script;
 pub use cls_cli_options::CliOptions;
 pub use cls_player_ui_app::{PlayerUiApp, PlayerUiFocus};
 pub use cls_player_ui_command::PlayerUiCommand;
+pub use cls_player_ui_control::PlayerUiControl;
 pub use cls_player_ui_state::PlayerUiState;
 pub use fnc_handle_player_ui_key::handle_player_ui_key;
 pub use fnc_parse_cli_options::parse_cli_options;

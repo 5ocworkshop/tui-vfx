@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/cls_recipe_player.rs</FILE> - <DESC>Contract-native skeleton recipe player</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Player orchestration work: keep coordinator focused after adapter extraction.</WCTX>
-// <CLOG>0.2.0: PATCH — split scene, effect, and frame helpers into OFPF-sized modules.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Native compositor source isolation: expose a source-only render IR for backend adapters that apply effects natively.</WCTX>
+// <CLOG>0.3.0: MINOR — add source-only render IR that omits recipe-level graph effect adapters for native backends.
+// 0.2.0: PATCH — split scene, effect, and frame helpers into OFPF-sized modules.
 // 0.1.0: INIT — add supported primitive adapters and explicit unsupported diagnostics.</CLOG>
 
 use std::collections::BTreeMap;
@@ -27,6 +28,11 @@ impl RecipePlayer {
         Self { catalog }
     }
 
+    /// Borrow the descriptor catalog used by this player instance.
+    pub fn descriptor_catalog(&self) -> &DescriptorCatalog {
+        &self.catalog
+    }
+
     /// Render one canonical recipe sample into a stable frame report.
     pub fn render_recipe(
         &self,
@@ -44,6 +50,48 @@ impl RecipePlayer {
     ) -> PlayerRenderIrReport {
         let (report, graph_values) = self.render_recipe_with_graph_values(recipe, request);
         build_player_render_ir(recipe, request, report, graph_values)
+    }
+
+    /// Render one canonical recipe sample into source-only player IR.
+    ///
+    /// This preserves scene/source rendering and provenance while intentionally
+    /// skipping recipe-level graph effects. Native render backends use this as
+    /// their source substrate before applying graph effects through backend
+    /// native primitives.
+    pub fn render_recipe_source_ir(
+        &self,
+        recipe: &RecipeDocument,
+        request: &PlayerSampleRequest,
+    ) -> PlayerRenderIrReport {
+        let report = self.render_recipe_source_report(recipe, request);
+        build_player_render_ir(recipe, request, report, BTreeMap::new())
+    }
+
+    fn render_recipe_source_report(
+        &self,
+        recipe: &RecipeDocument,
+        request: &PlayerSampleRequest,
+    ) -> PlayerFrameReport {
+        if let Err(error) = recipe.validate_with_catalog(&self.catalog) {
+            return self.error_report(recipe, request, format!("{error:?}"));
+        }
+        let (rows, styled_grid, errors, warnings) = render_scene(recipe, request);
+        let status = if errors.is_empty() {
+            PlayerStatus::Rendered
+        } else {
+            PlayerStatus::Unsupported
+        };
+        let styled_grid = styled_grid.style_known().then_some(styled_grid);
+        let frame = build_player_frame(recipe, request, &rows, &errors, styled_grid);
+        PlayerFrameReport::from_frame_with_warnings(
+            recipe.id.as_str().to_string(),
+            frame,
+            status,
+            request,
+            false,
+            errors,
+            warnings,
+        )
     }
 
     fn render_recipe_with_graph_values(
@@ -119,4 +167,4 @@ impl RecipePlayer {
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_recipe_player.rs</FILE> - <DESC>Contract-native skeleton recipe player</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

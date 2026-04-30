@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse player CLI options</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
-// <WCTX>K2.12 schema lock: parse offender-ledger output flag.</WCTX>
-// <CLOG>0.5.0: MINOR — parse schema-readiness offender detail flag.
+// <VERS>VERSION: 0.6.0</VERS>
+// <WCTX>Native compositor lowering: parse composition mode and fallback policy.</WCTX>
+// <CLOG>0.6.0: MINOR — parse --composition-mode and --fail-on-fallback.
+// 0.5.0: MINOR — parse schema-readiness offender detail flag.
 // 0.4.0: MINOR — parse migration mapping family filter.
 // 0.3.1: PATCH — collapse historical parser metadata into latest-change context.</CLOG>
 
@@ -18,6 +19,12 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             "--recursive" | "-r" => options.recursive = true,
             "--json" => options.json = true,
             "--recipe" => options.paths.push(next_value(&mut args, "--recipe")?),
+            "--backend" => options.backend = next_value(&mut args, "--backend")?,
+            "--format" => options.format = next_value(&mut args, "--format")?,
+            "--composition-mode" => {
+                options.composition_mode = next_value(&mut args, "--composition-mode")?
+            }
+            "--fail-on-fallback" => options.fail_on_fallback = true,
             "--descriptor-pack" => options
                 .descriptor_packs
                 .push(next_value(&mut args, "--descriptor-pack")?),
@@ -35,6 +42,16 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             "--include-offenders" => options.include_offenders = true,
             "--include-blockers" => options.include_blockers = true,
             "--frames" => options.frames = parse_usize(&next_value(&mut args, "--frames")?)?,
+            "--fps" => options.fps = parse_u64(&next_value(&mut args, "--fps")?)?,
+            "--duration-ms" => {
+                options.duration_ms = parse_u64(&next_value(&mut args, "--duration-ms")?)?
+            }
+            "--samples" => options.samples = parse_usize(&next_value(&mut args, "--samples")?)?,
+            "--sample-ms" => {
+                options.sample_ms = Some(parse_u64(&next_value(&mut args, "--sample-ms")?)?)
+            }
+            "--set" => options.sets.push(next_value(&mut args, "--set")?),
+            "--no-clear" => options.no_clear = true,
             "--from-sample-t" => {
                 options.from_sample_t = parse_f64(&next_value(&mut args, "--from-sample-t")?)?
             }
@@ -44,6 +61,15 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             "--" => continue,
             value if value.starts_with("--recipe=") => {
                 options.paths.push(value["--recipe=".len()..].to_string());
+            }
+            value if value.starts_with("--backend=") => {
+                options.backend = value["--backend=".len()..].to_string();
+            }
+            value if value.starts_with("--format=") => {
+                options.format = value["--format=".len()..].to_string();
+            }
+            value if value.starts_with("--composition-mode=") => {
+                options.composition_mode = value["--composition-mode=".len()..].to_string();
             }
             value if value.starts_with("--descriptor-pack=") => options
                 .descriptor_packs
@@ -77,6 +103,21 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             }
             value if value.starts_with("--frames=") => {
                 options.frames = parse_usize(&value["--frames=".len()..])?;
+            }
+            value if value.starts_with("--fps=") => {
+                options.fps = parse_u64(&value["--fps=".len()..])?;
+            }
+            value if value.starts_with("--duration-ms=") => {
+                options.duration_ms = parse_u64(&value["--duration-ms=".len()..])?;
+            }
+            value if value.starts_with("--samples=") => {
+                options.samples = parse_usize(&value["--samples=".len()..])?;
+            }
+            value if value.starts_with("--sample-ms=") => {
+                options.sample_ms = Some(parse_u64(&value["--sample-ms=".len()..])?);
+            }
+            value if value.starts_with("--set=") => {
+                options.sets.push(value["--set=".len()..].to_string());
             }
             value if value.starts_with("--from-sample-t=") => {
                 options.from_sample_t = parse_f64(&value["--from-sample-t=".len()..])?;
@@ -118,5 +159,11 @@ fn parse_usize(value: &str) -> Result<usize, String> {
         .map_err(|_| format!("invalid cell count `{value}`"))
 }
 
+fn parse_u64(value: &str) -> Result<u64, String> {
+    value
+        .parse::<u64>()
+        .map_err(|_| format!("invalid integer `{value}`"))
+}
+
 // <FILE>crates/tui-vfx-player-cli/src/fnc_parse_cli_options.rs</FILE> - <DESC>Parse player CLI options</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

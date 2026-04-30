@@ -4,7 +4,10 @@
 // <CLOG>0.2.0: MINOR use raw mode, alternate screen, fast-fs navigation, and ratatui rendering.
 // 0.1.0: INIT — read command lines, mutate UI state, and re-render snapshots.</CLOG>
 
-use std::{io::stdout, time::Duration};
+use std::{
+    io::stdout,
+    time::{Duration, Instant},
+};
 
 use crossterm::{
     ExecutableCommand,
@@ -14,7 +17,7 @@ use crossterm::{
 use ratatui::{Terminal, backend::CrosstermBackend};
 use tokio::runtime::Builder;
 
-use crate::{PlayerUiApp, PlayerUiCommand, PlayerUiState, handle_player_ui_key, render_ratatui_ui};
+use crate::{PlayerUiApp, PlayerUiState, handle_player_ui_key, render_ratatui_ui};
 
 /// Run the raw terminal ratatui player UI loop.
 pub fn run_interactive(state: PlayerUiState) -> Result<(), String> {
@@ -34,8 +37,13 @@ async fn run_interactive_async(state: PlayerUiState) -> Result<(), String> {
     let _guard = TerminalGuard;
     let mut terminal =
         Terminal::new(CrosstermBackend::new(stdout())).map_err(|error| error.to_string())?;
-    let tick = Duration::from_millis(100);
+    let target_frame_time = Duration::from_millis(16);
+    let mut last_frame = Instant::now();
     loop {
+        let now = Instant::now();
+        let delta_ms = now.duration_since(last_frame).as_millis() as u64;
+        last_frame = now;
+        app.player.advance_time(delta_ms.max(1));
         terminal
             .draw(|frame| render_ratatui_ui(&mut app, frame))
             .map_err(|error| error.to_string())?;
@@ -44,15 +52,14 @@ async fn run_interactive_async(state: PlayerUiState) -> Result<(), String> {
             .map_err(|error| error.to_string())?
             .height
             .saturating_sub(4) as usize;
-        if event::poll(tick).map_err(|error| error.to_string())? {
-            if let Event::Key(key) = event::read().map_err(|error| error.to_string())?
-                && key.kind == KeyEventKind::Press
-                && !handle_player_ui_key(&mut app, key.code, viewport_height).await
-            {
-                break;
-            }
-        } else {
-            app.player.apply_command(PlayerUiCommand::Tick);
+        let frame_elapsed = last_frame.elapsed();
+        let poll_timeout = target_frame_time.saturating_sub(frame_elapsed);
+        if event::poll(poll_timeout).map_err(|error| error.to_string())?
+            && let Event::Key(key) = event::read().map_err(|error| error.to_string())?
+            && key.kind == KeyEventKind::Press
+            && !handle_player_ui_key(&mut app, key.code, viewport_height).await
+        {
+            break;
         }
     }
     Ok(())

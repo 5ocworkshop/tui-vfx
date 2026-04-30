@@ -2478,6 +2478,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tui-vfx-player-backend-compositor"
+version = "0.11.0"
+dependencies = [
+ "mixed-signals",
+ "serde_json",
+ "tui-vfx-compositor",
+ "tui-vfx-contract",
+ "tui-vfx-player",
+ "tui-vfx-style",
+ "tui-vfx-types",
+]
+
+[[package]]
 name = "tui-vfx-player-cli"
 version = "0.11.0"
 dependencies = [
@@ -2485,6 +2498,7 @@ dependencies = [
  "serde_json",
  "tui-vfx-contract",
  "tui-vfx-player",
+ "tui-vfx-player-backend-compositor",
 ]
 
 [[package]]
@@ -2498,6 +2512,7 @@ dependencies = [
  "tokio",
  "tui-vfx-contract",
  "tui-vfx-player",
+ "tui-vfx-player-backend-compositor",
 ]
 
 [[package]]

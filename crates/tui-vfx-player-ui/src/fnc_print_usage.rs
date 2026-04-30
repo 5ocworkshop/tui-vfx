@@ -6,7 +6,7 @@
 /// Print player UI usage to stderr.
 pub fn print_usage() {
     eprintln!(
-        "Usage: tui-vfx-player-ui [--descriptor-pack <file>] [--descriptor-pack-dir <dir>] [--recipes-root <dir>] [--recipe <recipe.json>] [--width <cells>] [--height <cells>] [--once] [--script <commands>] [--no-clear] [recipe.json]"
+        "Usage: tui-vfx-player-ui [--descriptor-pack <file>] [--descriptor-pack-dir <dir>] [--recipes-root <dir>] [--recipe <recipe.json>] [--backend textGrid|styledCell|compositor] [--width <cells>] [--height <cells>] [--once] [--script <commands>] [--no-clear] [recipe.json]"
     );
 }
 

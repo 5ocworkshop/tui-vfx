@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_sample_request.rs</FILE> - <DESC>Player sample request DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Player sampling work: carry graph-local values during topology execution.</WCTX>
-// <CLOG>0.2.0: MINOR — add graph value bus storage to player sample requests.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Player sampling work: carry graph-local values and runtime input overrides during execution.</WCTX>
+// <CLOG>0.3.0: MINOR — add runtime input overrides for descriptor-driven studio controls.
+// 0.2.0: MINOR — add graph value bus storage to player sample requests.
 // 0.1.0: INIT — add sampled frame request contract for RecipePlayer.</CLOG>
 
 use std::collections::BTreeMap;
@@ -25,6 +26,8 @@ pub struct PlayerSampleRequest {
     pub signals: BTreeMap<SignalId, Value>,
     /// Graph-local values available to node input resolution during player execution.
     pub graph_values: BTreeMap<GraphValueId, Value>,
+    /// Runtime overrides for descriptor-addressed source/effect inputs.
+    pub runtime_input_overrides: BTreeMap<String, Value>,
 }
 
 impl Default for PlayerSampleRequest {
@@ -37,9 +40,10 @@ impl Default for PlayerSampleRequest {
             height: None,
             signals: BTreeMap::new(),
             graph_values: BTreeMap::new(),
+            runtime_input_overrides: BTreeMap::new(),
         }
     }
 }
 
 // <FILE>crates/tui-vfx-player/src/cls_player_sample_request.rs</FILE> - <DESC>Player sample request DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

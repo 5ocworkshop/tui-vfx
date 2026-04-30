@@ -1,7 +1,11 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.17.0</VERS> -->
-<!-- <WCTX>Player render IR work: document render IR as the player-owned backend seam evidence object.</WCTX> -->
-<!-- <CLOG>0.17.0: MINOR — add implementation-readiness, control-catalog, content descriptor backlog, and player render backend vocabulary.
+<!-- <VERS>VERSION: 0.21.0</VERS> -->
+<!-- <WCTX>K2.21 source-isolated native playback: document source render mode and runtime input override controls.</WCTX> -->
+<!-- <CLOG>0.21.0: MINOR — add source render mode and runtime input override vocabulary.
+0.20.0: MINOR — add native compositor composition mode and generated studio control vocabulary.
+0.19.0: MINOR — add backend playback vocabulary.
+0.18.0: MINOR — add compositor backend adapter and studio snapshot command vocabulary.
+0.17.0: MINOR — add implementation-readiness, control-catalog, content descriptor backlog, and player render backend vocabulary.
 0.16.0: MINOR — add player render IR vocabulary and backend seam distinction.
 0.15.0: MINOR — add expected visual metadata and player warning vocabulary.
 0.14.0: MINOR — add schema-readiness dispositions, gradients, optional inputs, sampled fields, and built-in scopes.
@@ -170,6 +174,96 @@ Not the same as:
 
 Policy:
 : Backend seams may lower render IR, but player core must remain independent of UI/compositor internals until a deliberate integration packet owns that boundary.
+
+### Compositor Backend Adapter
+
+Definition:
+: A player render backend implementation, currently `tui-vfx-player-backend-compositor`, that consumes `PlayerRenderIrReport`, lowers it into `OwnedGrid`, `RoleMap`, and `SemanticScene`, calls the compositor pipeline, and returns `PlayerRenderBackendOutput`.
+
+Not the same as:
+: Direct recipe graph/effect-to-`CompositionSpec` lowering, a ratatui widget, a visual parity oracle, or a schema root.
+
+Policy:
+: Keep compositor-specific lowering outside `tui-vfx-player` and `tui-vfx-player-ui`. If the adapter consumes player-resolved styled IR instead of direct descriptor/effect lowering, it must report that limitation explicitly.
+
+
+### Backend Composition Mode
+
+Definition:
+: A player-owned backend option that selects whether the compositor backend should run the legacy player-IR-resolved path (`irResolved`), require direct graph/effect lowering into native backend instructions (`native`), or try native lowering with explicit fallback reporting (`auto`).
+
+Not the same as:
+: A recipe schema version, a lifecycle phase, or a transient work-packet label.
+
+Policy:
+: Native claims must include `fallbackUsed=false`, `nativeLoweringAttempted=true`, `nativeLoweringSucceeded=true`, and `compositionSpecNonEmpty=true` for recipes with lowerable graph nodes.
+
+### Native CompositionSpec Lowering
+
+Definition:
+: Backend-adapter work that maps canonical v3.1 recipe graph/effect nodes into compositor-native `CompositionSpec` fields such as filters, masks, samplers, shader layers, shadow, timing, and runtime parameters.
+
+Not the same as:
+: Player-resolved styled IR passing through the compositor, text-grid smoke rendering, or visual parity with the legacy recipe runtime.
+
+Policy:
+: Unsupported native nodes must emit structured diagnostics and must not silently fall back. Auto mode may fall back only when it reports `fallbackUsed=true`.
+
+### Generated Studio Control
+
+Definition:
+: A UI/studio control row derived from recipe/catalog/descriptor data, demonstrated for signal-backed node inputs and descriptor-addressed runtime input overrides.
+
+Not the same as:
+: A hard-coded per-recipe button, a future studio manifest schema, or a hand-authored GUI layout.
+
+Policy:
+: A generated control must identify its target kind, signal or runtime input address, input/effect context, value kind, and recommended control kind, then prove that mutation changes backend output when used as acceptance evidence.
+
+
+### Source Render Mode
+
+Definition:
+: Backend evidence that identifies whether a compositor render used post-effect player render IR (`postEffectIr`) or pre-effect source-only player render IR (`sourceOnly`) as its source substrate.
+
+Not the same as:
+: A recipe lifecycle phase, schema version, or proof-packet name.
+
+Policy:
+: Native compositor claims must use `sourceOnly` and `nativeSourceIsolated=true`; `irResolved` compatibility must remain explicit as `postEffectIr`.
+
+### Runtime Input Override
+
+Definition:
+: A studio/runtime assignment addressed to a descriptor input, such as `effect:filter.pillButton:effectNode:activeColor`, that changes preview execution without mutating the recipe document.
+
+Not the same as:
+: A declared host `SignalSpec`, a graph-local value bus entry, or a persistent recipe edit.
+
+Policy:
+: Runtime input overrides are an execution/studio affordance. They must be reported as runtime targets in studio evidence and must not be encoded into canonical recipe JSON as a compatibility alias.
+
+### Backend Playback
+
+Definition:
+: A player/backend command or UI loop that repeatedly samples a recipe over time, renders through a selected `PlayerRenderBackend`, and emits visible frames, such as `play-backend --backend compositor --format ansi`.
+
+Not the same as:
+: A static frame dump, a JSON timeline report, direct compositor-native `CompositionSpec` execution, or a visual parity oracle.
+
+Policy:
+: Backend playback must expose timing controls such as frame rate and duration, and must not claim compositor-native recipe execution while it is still consuming player-resolved render IR.
+
+### Studio Snapshot
+
+Definition:
+: A scripted player/studio evidence command that derives controls from descriptor/catalog/recipe data, applies control assignments such as `--set key=value`, renders before/after backend outputs, and reports changed hashes/cells.
+
+Not the same as:
+: A full generated studio GUI, a schema root, or a hand-authored recipe-specific control surface.
+
+Policy:
+: Studio snapshots may provide CLI aliases for demo ergonomics, but the underlying controls and mutation targets must remain grounded in descriptor/schema/recipe data.
 
 ### Frame
 
@@ -1642,4 +1736,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.16.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.21.0</VERS> -->

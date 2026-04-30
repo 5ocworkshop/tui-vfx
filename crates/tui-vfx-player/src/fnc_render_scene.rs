@@ -94,7 +94,8 @@ pub fn render_scene_with_source_asset_resolver(
         }
         match recipe.sources.get(&element.source) {
             Some(source) => {
-                let mut output = render_source(source, request, asset_resolver);
+                let mut output =
+                    render_source(element.source.as_str(), source, request, asset_resolver);
                 let mut source_rows = output.rows;
                 let mut local_grid = output.styled_grid;
                 let mut source_errors = output.errors;
@@ -239,16 +240,27 @@ fn layer_skipped_warning(runtime: &SceneElementRenderRuntime) -> PlayerWarning {
 }
 
 fn render_source(
+    source_instance_id: &str,
     source: &SourceSpec,
     request: &PlayerSampleRequest,
     asset_resolver: &dyn PlayerSourceAssetResolver,
 ) -> SourceRenderOutput {
     match source.source.as_str() {
-        "source.card" => source_rows(render_text_source(source, request, "message")),
-        "source.text" => source_rows(render_text_source(source, request, "text")),
-        "source.ansi" => render_ansi_source(source, request),
-        "source.image" => render_image_source(source, request, asset_resolver),
-        "source.procedural" => render_procedural_source(source, request),
+        "source.card" => source_rows(render_text_source(
+            source_instance_id,
+            source,
+            request,
+            "message",
+        )),
+        "source.text" => source_rows(render_text_source(
+            source_instance_id,
+            source,
+            request,
+            "text",
+        )),
+        "source.ansi" => render_ansi_source(source_instance_id, source, request),
+        "source.image" => render_image_source(source_instance_id, source, request, asset_resolver),
+        "source.procedural" => render_procedural_source(source_instance_id, source, request),
         source_id => SourceRenderOutput {
             rows: vec![],
             styled_grid: PlayerStyledGrid::blank(0, 0, false),
@@ -274,24 +286,25 @@ fn source_rows(rows: Vec<String>) -> SourceRenderOutput {
 }
 
 fn render_text_source(
+    source_instance_id: &str,
     source: &SourceSpec,
     request: &PlayerSampleRequest,
     text_input_id: &str,
 ) -> Vec<String> {
-    let text = resolve_text(
-        source.inputs.get(&SourceInputId::new(text_input_id)),
-        &request.signals,
-        "",
-    );
-    let width = resolve_integer(
-        source.inputs.get(&SourceInputId::new("width")),
-        &request.signals,
+    let text = resolve_source_text(source_instance_id, source, request, text_input_id, "");
+    let width = resolve_source_integer(
+        source_instance_id,
+        source,
+        request,
+        "width",
         fallback_width(&text),
     )
     .max(1) as usize;
-    let height = resolve_integer(
-        source.inputs.get(&SourceInputId::new("height")),
-        &request.signals,
+    let height = resolve_source_integer(
+        source_instance_id,
+        source,
+        request,
+        "height",
         fallback_height(&text),
     )
     .max(1) as usize;
@@ -302,18 +315,29 @@ fn render_text_source(
     rows
 }
 
-fn render_ansi_source(source: &SourceSpec, request: &PlayerSampleRequest) -> SourceRenderOutput {
-    let ansi_text = resolve_text(
-        source.inputs.get(&SourceInputId::new("ansiText")),
-        &request.signals,
-        "",
+fn render_ansi_source(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+) -> SourceRenderOutput {
+    let ansi_text = resolve_source_text(source_instance_id, source, request, "ansiText", "");
+    let width = source_width(
+        source_instance_id,
+        source,
+        request,
+        &strip_sgr_sequences(&ansi_text),
     );
-    let width = source_width(source, request, &strip_sgr_sequences(&ansi_text));
-    let height = source_height(source, request, &strip_sgr_sequences(&ansi_text));
+    let height = source_height(
+        source_instance_id,
+        source,
+        request,
+        &strip_sgr_sequences(&ansi_text),
+    );
     render_ansi_styled_text(&ansi_text, width, height)
 }
 
 fn render_image_source(
+    source_instance_id: &str,
     source: &SourceSpec,
     request: &PlayerSampleRequest,
     asset_resolver: &dyn PlayerSourceAssetResolver,
@@ -330,7 +354,7 @@ fn render_image_source(
         },
         PlayerSourceAssetResolution::MissingFallback { asset_id } => {
             let fallback = format!("[image fallback: {asset_id}]");
-            let rows = render_text_like_source(source, request, &fallback);
+            let rows = render_text_like_source(source_instance_id, source, request, &fallback);
             SourceRenderOutput {
                 styled_grid: PlayerStyledGrid::from_rows(&rows),
                 rows,
@@ -361,22 +385,21 @@ fn render_image_source(
 }
 
 fn render_procedural_source(
+    source_instance_id: &str,
     source: &SourceSpec,
     request: &PlayerSampleRequest,
 ) -> SourceRenderOutput {
-    let generator = resolve_text(
-        source.inputs.get(&SourceInputId::new("generator")),
-        &request.signals,
+    let generator = resolve_source_text(
+        source_instance_id,
+        source,
+        request,
+        "generator",
         "dots_spinner",
     );
-    let seed = resolve_integer(
-        source.inputs.get(&SourceInputId::new("seed")),
-        &request.signals,
-        0,
-    )
-    .max(0) as usize;
-    let width = source_width(source, request, &generator);
-    let height = source_height(source, request, &generator);
+    let seed =
+        resolve_source_integer(source_instance_id, source, request, "seed", 0).max(0) as usize;
+    let width = source_width(source_instance_id, source, request, &generator);
+    let height = source_height(source_instance_id, source, request, &generator);
     match render_registered_procedural_source(&generator, width, height, seed, request) {
         Some(rows) => source_rows(rows),
         None => SourceRenderOutput {
@@ -395,33 +418,143 @@ fn render_procedural_source(
 }
 
 fn render_text_like_source(
+    source_instance_id: &str,
     source: &SourceSpec,
     request: &PlayerSampleRequest,
     text: &str,
 ) -> Vec<String> {
     render_text_rows(
         text,
-        source_width(source, request, text),
-        source_height(source, request, text),
+        source_width(source_instance_id, source, request, text),
+        source_height(source_instance_id, source, request, text),
     )
 }
 
-fn source_width(source: &SourceSpec, request: &PlayerSampleRequest, text: &str) -> usize {
-    resolve_integer(
-        source.inputs.get(&SourceInputId::new("width")),
-        &request.signals,
+fn source_width(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+    text: &str,
+) -> usize {
+    resolve_source_integer(
+        source_instance_id,
+        source,
+        request,
+        "width",
         fallback_width(text),
     )
     .max(1) as usize
 }
 
-fn source_height(source: &SourceSpec, request: &PlayerSampleRequest, text: &str) -> usize {
-    resolve_integer(
-        source.inputs.get(&SourceInputId::new("height")),
-        &request.signals,
+fn source_height(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+    text: &str,
+) -> usize {
+    resolve_source_integer(
+        source_instance_id,
+        source,
+        request,
+        "height",
         fallback_height(text),
     )
     .max(1) as usize
+}
+
+fn resolve_source_text(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+    input_id: &str,
+    fallback: &str,
+) -> String {
+    match source_runtime_override(source_instance_id, source, request, input_id) {
+        Some(value) => value_to_text(value, fallback),
+        None => resolve_text(
+            source.inputs.get(&SourceInputId::new(input_id)),
+            &request.signals,
+            fallback,
+        ),
+    }
+}
+
+fn resolve_source_integer(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+    input_id: &str,
+    fallback: i64,
+) -> i64 {
+    match source_runtime_override(source_instance_id, source, request, input_id) {
+        Some(Value::Integer(value)) => *value,
+        Some(Value::Number(value)) => value.round() as i64,
+        Some(Value::String(value) | Value::Text(value) | Value::Enum(value)) => {
+            value.parse::<i64>().unwrap_or(fallback)
+        }
+        _ => resolve_integer(
+            source.inputs.get(&SourceInputId::new(input_id)),
+            &request.signals,
+            fallback,
+        ),
+    }
+}
+
+fn source_runtime_override<'a>(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &'a PlayerSampleRequest,
+    input_id: &str,
+) -> Option<&'a Value> {
+    let candidates = [
+        format!(
+            "source:{}:{}:{}",
+            source.source.as_str(),
+            source_instance_id,
+            input_id
+        ),
+        format!("{}.{}", source_instance_id, input_id),
+        format!("{}.{}", source.source.as_str(), input_id),
+        format!("source:{}:{}", source.source.as_str(), input_id),
+        input_id.to_string(),
+    ];
+    candidates
+        .iter()
+        .find_map(|candidate| request.runtime_input_overrides.get(candidate))
+        .or_else(|| {
+            let normalized_candidates = candidates
+                .iter()
+                .map(|candidate| normalize_runtime_key(candidate))
+                .collect::<Vec<_>>();
+            request
+                .runtime_input_overrides
+                .iter()
+                .find(|(override_key, _)| {
+                    let normalized_override = normalize_runtime_key(override_key);
+                    normalized_candidates
+                        .iter()
+                        .any(|candidate| candidate == &normalized_override)
+                })
+                .map(|(_, value)| value)
+        })
+}
+
+fn normalize_runtime_key(value: &str) -> String {
+    value
+        .chars()
+        .filter(|ch| ch.is_ascii_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+fn value_to_text(value: &Value, fallback: &str) -> String {
+    match value {
+        Value::Text(value) | Value::String(value) | Value::Enum(value) => value.clone(),
+        Value::Integer(value) => value.to_string(),
+        Value::Number(value) => value.to_string(),
+        Value::Boolean(value) => value.to_string(),
+        _ => fallback.to_string(),
+    }
 }
 
 fn render_text_rows(text: &str, width: usize, height: usize) -> Vec<String> {

@@ -20,7 +20,14 @@ pub struct TextGridRenderBackend;
 
 impl PlayerRenderBackend for TextGridRenderBackend {
     fn render(&self, input: &PlayerRenderIrReport) -> PlayerRenderBackendOutput {
-        PlayerRenderBackendOutput::new("textGrid", input.rows.clone(), vec![], vec![])
+        PlayerRenderBackendOutput::from_ir(
+            "textGrid",
+            input,
+            input.rows.clone(),
+            vec![],
+            vec![],
+            Default::default(),
+        )
     }
 }
 
@@ -42,7 +49,14 @@ impl PlayerRenderBackend for StyledCellRenderBackend {
         } else {
             vec![]
         };
-        PlayerRenderBackendOutput::new("styledCell", input.rows.clone(), styled_cells, diagnostics)
+        PlayerRenderBackendOutput::from_ir(
+            "styledCell",
+            input,
+            input.rows.clone(),
+            styled_cells,
+            diagnostics,
+            Default::default(),
+        )
     }
 }
 
