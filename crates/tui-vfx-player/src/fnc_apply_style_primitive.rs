@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_style_primitive.rs</FILE> - <DESC>Apply style primitives to player styled grids</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Player adapter style parity: preserve source color channels while applying recipe style primitives.</WCTX>
-// <CLOG>0.3.0: MINOR — preserve distinct source color channels for canvas-aware fade endpoints.</CLOG>
+// <CLOG>0.4.0: MINOR — preserve distinct source color channels while applying pulse endpoints.</CLOG>
 
 use tui_vfx_contract::{NodeSpec, ScopeSpec};
 
@@ -249,14 +249,53 @@ fn apply_pulse(node: &NodeSpec, request: &PlayerSampleRequest, styled_grid: &mut
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let clock = request.loop_t.unwrap_or(request.phase_t);
     let strength = ((clock * frequency * std::f64::consts::TAU).sin() * 0.5 + 0.5) as f32;
-    let pulsed_color = ResolvedColor::rgb(255, 255, 255).lerp(color, strength);
-    apply_style_to_scope(
-        node,
-        styled_grid,
-        Some(&apply_to),
-        Some(pulsed_color.rgba_label()),
-        None,
-    );
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let Some(existing) = styled_grid
+            .cells()
+            .iter()
+            .find(|cell| cell.x == x && cell.y == y)
+            .cloned()
+        else {
+            continue;
+        };
+        let foreground = if matches!(apply_to.as_str(), "foreground" | "both") {
+            pulse_endpoint_label(&existing.foreground, color, strength)
+        } else {
+            existing.foreground.clone()
+        };
+        let background = if matches!(apply_to.as_str(), "background" | "both") {
+            pulse_endpoint_label(&existing.background, color, strength)
+        } else {
+            existing.background.clone()
+        };
+        styled_grid.set_cell_style(
+            x,
+            y,
+            &foreground,
+            &background,
+            existing.modifiers,
+            existing.role,
+        );
+    }
+}
+
+fn pulse_endpoint_label(label: &str, pulse_color: ResolvedColor, strength: f32) -> String {
+    resolved_color_from_rgba_label(label)
+        .map(|color| {
+            ResolvedColor::new(
+                pulse_lerp_channel(color.r, pulse_color.r, strength),
+                pulse_lerp_channel(color.g, pulse_color.g, strength),
+                pulse_lerp_channel(color.b, pulse_color.b, strength),
+                pulse_lerp_channel(color.a, pulse_color.a, strength),
+            )
+            .rgba_label()
+        })
+        .unwrap_or_else(|| label.to_string())
+}
+
+fn pulse_lerp_channel(start: u8, end: u8, t: f32) -> u8 {
+    let t = t.clamp(0.0, 1.0);
+    (start as f32 * (1.0 - t) + end as f32 * t) as u8
 }
 
 fn apply_italic_window(
@@ -539,4 +578,4 @@ fn hue_to_rgb(p: f32, q: f32, mut t: f32) -> f32 {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_apply_style_primitive.rs</FILE> - <DESC>Apply style primitives to player styled grids</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

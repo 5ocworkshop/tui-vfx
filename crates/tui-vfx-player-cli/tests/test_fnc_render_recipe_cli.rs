@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.28.1</VERS>
+// <VERS>VERSION: 0.29.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.28.1: PATCH — name the V2 italic-window card-cell oracle count.</CLOG>
+// <CLOG>0.29.0: MINOR — assert pulse style parity preserves V2 source-channel modulation.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -1310,6 +1310,43 @@ fn test_fnc_cli_native_style_italic_window_matches_v2_deprecated_modifier_oracle
             "italic"
         ),
         V2_ITALIC_WINDOW_CARD_CELL_COUNT
+    );
+}
+
+#[test]
+fn test_fnc_cli_native_style_pulse_matches_v2_deprecated_channel_oracle_json() {
+    const V2_PULSE_CARD_CELL_COUNT: usize = 35 * 3;
+
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_pulse_runtime_frequency.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("dwell"),
+            str_arg("--phase-t"),
+            str_arg("0.25"),
+        ],
+        "render-backend native V2 deprecated pulse oracle player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 1);
+    assert_eq!(report["rows"][0], "╭─────────────────────────────────╮");
+    assert_eq!(report["rows"][1], "│STYLE TEST: Pulse Effect         │");
+    assert_eq!(
+        styled_cell_color_count(&report, "rgba(230,50,50,255)", "rgba(152,55,55,255)"),
+        V2_PULSE_CARD_CELL_COUNT
     );
 }
 
@@ -4681,7 +4718,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 639);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 635);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -5650,4 +5687,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.28.1</VERS>
+// <VERS>END OF VERSION: 0.29.0</VERS>

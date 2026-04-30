@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.66.0</VERS> -->
-<!-- <WCTX>v3.1 vertical migration validation process indexing.</WCTX> -->
-<!-- <CLOG>0.66.0: MINOR — add v3.1 vertical migration validation process.
+<!-- <VERS>VERSION: 0.67.0</VERS> -->
+<!-- <WCTX>v3.1 rendering boundary and vertical migration validation process indexing.</WCTX> -->
+<!-- <CLOG>0.67.0: MINOR — add v3.1 rendering boundary and lowering rules.
+0.66.0: MINOR — add v3.1 vertical migration validation process.
 0.65.0: MINOR — add K2.32 review and de-slop evidence.
 0.64.0: MINOR — add K2.32 shader native blocker results.
 0.63.0: MINOR — add K2.32 shader native blocker closure plan.
@@ -81,6 +82,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 
 - [`AGENT_BRIEFING.md`](AGENT_BRIEFING.md) — reusable briefing for agents working on clean-room kernel phases.
 - [`V31_VERTICAL_MIGRATION_VALIDATION_PROCESS.md`](V31_VERTICAL_MIGRATION_VALIDATION_PROCESS.md) — junior-agent procedure for V2 `_DEPRECATED_` to v3.1 vertical recipe migration validation.
+- [`V31_RENDERING_BOUNDARY_RULES.md`](V31_RENDERING_BOUNDARY_RULES.md) — formal v3.1 recipe-to-playback boundary, lowering ownership, compositor adapter decision rules, and ANSI flow diagrams.
 - [`PROJECT_KICKOFF.md`](PROJECT_KICKOFF.md) — original bounded Phase A kickoff prompt/spec.
 - [`DRAFT_CONTRACTS.md`](DRAFT_CONTRACTS.md) — broader directional contract discussion; context, not a single-phase implementation plan.
 
@@ -446,4 +448,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.66.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.67.0</VERS> -->

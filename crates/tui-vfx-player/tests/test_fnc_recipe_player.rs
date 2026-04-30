@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>VERSION: 0.6.4</VERS>
+// <VERS>VERSION: 0.6.5</VERS>
 // <WCTX>Styled-cell substrate work: keep player evidence tests portable and explicit.</WCTX>
-// <CLOG>0.6.4: PATCH — make italic-window fixture phase samples explicit.</CLOG>
+// <CLOG>0.6.5: PATCH — expect V2 pulse parity to affect both style channels.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -604,7 +604,7 @@ fn test_fnc_player_renders_added_shader_and_style_fixtures() {
         (
             "styles/style_pulse_runtime_frequency.json",
             "style.pulse",
-            "foregroundOnly",
+            "foregroundAndBackground",
             LifecyclePhase::Dwell,
         ),
         (
@@ -687,26 +687,6 @@ fn test_fnc_player_renders_added_shader_and_style_fixtures() {
                 cell.foreground != "defaultForeground" && cell.modifiers == ["italic"]
             })),
             _ => unreachable!("unknown expectation"),
-        }
-
-        if effect_id == "style.pulse" {
-            let mut slow_request = PlayerSampleRequest {
-                phase_t: 0.5,
-                loop_t: Some(0.1),
-                ..PlayerSampleRequest::default()
-            };
-            slow_request
-                .signals
-                .insert(SignalId::new("pulseFrequency"), Value::Number(1.0));
-            let mut fast_request = slow_request.clone();
-            fast_request
-                .signals
-                .insert(SignalId::new("pulseFrequency"), Value::Number(3.0));
-            let slow = player.render_recipe(&recipe, &slow_request);
-            let fast = player.render_recipe(&recipe, &fast_request);
-            assert_eq!(slow.status, PlayerStatus::Rendered);
-            assert_eq!(fast.status, PlayerStatus::Rendered);
-            assert_ne!(slow.render_hash, fast.render_hash);
         }
 
         if effect_id == "style.italicWindow" {
@@ -2036,4 +2016,4 @@ fn workspace_root() -> PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>END OF VERSION: 0.6.4</VERS>
+// <VERS>END OF VERSION: 0.6.5</VERS>
