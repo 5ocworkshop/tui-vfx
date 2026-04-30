@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.26.0</VERS>
+// <VERS>VERSION: 0.27.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.26.0: PATCH — remove backend-owned blinds mask source-stage rendering after mask.blinds moved to compositor MaskSpec.
+// <CLOG>0.27.0: PATCH — remove final backend-owned wipe/pathReveal mask source-stage rendering after pathReveal moved to compositor MaskSpec.
+// 0.26.0: remove backend-owned blinds mask source-stage rendering after mask.blinds moved to compositor MaskSpec.
 // 0.25.0: remove backend-owned iris mask source-stage rendering after mask.iris moved to compositor MaskSpec.
 // 0.24.0: remove backend-owned dissolve mask source-stage rendering after mask.dissolve moved to compositor MaskSpec.
 // 0.23.0: remove backend-owned diamond mask source-stage rendering after mask.diamond moved to compositor MaskSpec.
@@ -281,10 +282,6 @@ fn scene_ir_with_native_content_stages(
                 *width,
                 *height,
             ),
-            NativeContentStage::WipeMask {
-                direction,
-                soft_edge,
-            } => apply_wipe_mask_content_stage(&mut staged, direction, *soft_edge),
         }
     }
     for stage in &lowered_spec.style_stages {
@@ -1137,102 +1134,6 @@ fn fault_line_split(row_count: usize, seed: u64, split_bias: f64) -> usize {
     let base_split = (seed.wrapping_mul(31) % row_count as u64) as f64;
     (base_split + split_bias.clamp(-1.0, 1.0) * row_count as f64 * 0.3)
         .clamp(1.0, (row_count - 1) as f64) as usize
-}
-
-fn apply_wipe_mask_content_stage(
-    report: &mut PlayerRenderIrReport,
-    direction: &str,
-    soft_edge: bool,
-) {
-    let report_columns = report_width(report);
-    let report_rows = report_height(report);
-    let mut rows = dense_rows(report, report_columns, report_rows);
-    let Some(bounds) = non_blank_bounds(&rows) else {
-        report.rows = rows;
-        sync_styled_cells_to_rows(report);
-        return;
-    };
-    let reveal = report.phase_t.clamp(0.0, 1.0);
-    let width = bounds.width().max(1);
-    let height = bounds.height().max(1);
-    let horizontal_cutoff = wipe_cutoff(width, reveal, soft_edge);
-    let vertical_cutoff = wipe_cutoff(height, reveal, soft_edge);
-    for (y, row) in rows.iter_mut().enumerate() {
-        *row = row
-            .chars()
-            .enumerate()
-            .map(|(index, glyph)| {
-                if !bounds.contains(index, y) {
-                    return ' ';
-                }
-                let local_x = index - bounds.min_x;
-                let local_y = y - bounds.min_y;
-                if wipe_keeps_cell(
-                    local_x,
-                    local_y,
-                    width,
-                    height,
-                    horizontal_cutoff,
-                    vertical_cutoff,
-                    direction,
-                ) {
-                    glyph
-                } else {
-                    ' '
-                }
-            })
-            .collect();
-    }
-    report.rows = rows;
-    sync_styled_cells_to_rows(report);
-}
-
-#[derive(Clone, Copy, Debug)]
-struct ContentBounds {
-    min_x: usize,
-    max_x: usize,
-    min_y: usize,
-    max_y: usize,
-}
-
-impl ContentBounds {
-    fn width(self) -> usize {
-        self.max_x.saturating_sub(self.min_x) + 1
-    }
-
-    fn height(self) -> usize {
-        self.max_y.saturating_sub(self.min_y) + 1
-    }
-
-    fn contains(self, x: usize, y: usize) -> bool {
-        x >= self.min_x && x <= self.max_x && y >= self.min_y && y <= self.max_y
-    }
-}
-
-fn non_blank_bounds(rows: &[String]) -> Option<ContentBounds> {
-    let mut bounds: Option<ContentBounds> = None;
-    for (y, row) in rows.iter().enumerate() {
-        for (x, glyph) in row.chars().enumerate() {
-            if glyph == ' ' {
-                continue;
-            }
-            bounds = Some(match bounds {
-                Some(existing) => ContentBounds {
-                    min_x: existing.min_x.min(x),
-                    max_x: existing.max_x.max(x),
-                    min_y: existing.min_y.min(y),
-                    max_y: existing.max_y.max(y),
-                },
-                None => ContentBounds {
-                    min_x: x,
-                    max_x: x,
-                    min_y: y,
-                    max_y: y,
-                },
-            });
-        }
-    }
-    bounds
 }
 
 fn apply_modulo_columns_style_stage(
@@ -2559,103 +2460,6 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
     }
 }
 
-fn wipe_cutoff(width: usize, reveal: f64, soft_edge: bool) -> usize {
-    let mut scaled = width as f64 * reveal;
-    if soft_edge {
-        scaled += (width as f64 * 0.1).max(1.0);
-        scaled.floor() as usize
-    } else {
-        scaled.floor() as usize
-    }
-}
-
-fn wipe_keeps_cell(
-    x: usize,
-    y: usize,
-    width: usize,
-    height: usize,
-    horizontal_cutoff: usize,
-    vertical_cutoff: usize,
-    direction: &str,
-) -> bool {
-    match direction {
-        "rightToLeft" => x >= width.saturating_sub(horizontal_cutoff),
-        "horizontalCenterOut" | "horizontal_center_out" => {
-            horizontal_center_out_keeps_cell(x, width, horizontal_cutoff)
-        }
-        "horizontalEdgesIn" | "horizontal_edges_in" => {
-            horizontal_edges_in_keeps_cell(x, width, horizontal_cutoff)
-        }
-        "topToBottom" => y < vertical_cutoff,
-        "bottomToTop" => y >= height.saturating_sub(vertical_cutoff),
-        "outFromTopLeft" => {
-            x.saturating_add(y) <= horizontal_cutoff.saturating_add(vertical_cutoff)
-        }
-        "outFromTopRight" => {
-            width.saturating_sub(1).saturating_sub(x).saturating_add(y)
-                <= horizontal_cutoff.saturating_add(vertical_cutoff)
-        }
-        "outFromBottomLeft" => {
-            x.saturating_add(height.saturating_sub(1).saturating_sub(y))
-                <= horizontal_cutoff.saturating_add(vertical_cutoff)
-        }
-        "outFromBottomRight" => {
-            width
-                .saturating_sub(1)
-                .saturating_sub(x)
-                .saturating_add(height.saturating_sub(1).saturating_sub(y))
-                <= horizontal_cutoff.saturating_add(vertical_cutoff)
-        }
-        "inToTopLeft" => {
-            x.saturating_add(y)
-                >= width.saturating_add(height).saturating_sub(
-                    horizontal_cutoff
-                        .saturating_add(vertical_cutoff)
-                        .saturating_add(2),
-                )
-        }
-        "inToTopRight" => {
-            width.saturating_sub(1).saturating_sub(x).saturating_add(y)
-                >= width.saturating_add(height).saturating_sub(
-                    horizontal_cutoff
-                        .saturating_add(vertical_cutoff)
-                        .saturating_add(2),
-                )
-        }
-        "inToBottomLeft" => {
-            x.saturating_add(height.saturating_sub(1).saturating_sub(y))
-                >= width.saturating_add(height).saturating_sub(
-                    horizontal_cutoff
-                        .saturating_add(vertical_cutoff)
-                        .saturating_add(2),
-                )
-        }
-        "inToBottomRight" => {
-            width
-                .saturating_sub(1)
-                .saturating_sub(x)
-                .saturating_add(height.saturating_sub(1).saturating_sub(y))
-                >= width.saturating_add(height).saturating_sub(
-                    horizontal_cutoff
-                        .saturating_add(vertical_cutoff)
-                        .saturating_add(2),
-                )
-        }
-        _ => x < horizontal_cutoff,
-    }
-}
-
-fn horizontal_center_out_keeps_cell(x: usize, width: usize, cutoff: usize) -> bool {
-    let center_twice = width.saturating_sub(1);
-    let x_twice = x.saturating_mul(2);
-    x_twice.abs_diff(center_twice) <= cutoff.saturating_mul(2).saturating_sub(1)
-}
-
-fn horizontal_edges_in_keeps_cell(x: usize, width: usize, cutoff: usize) -> bool {
-    let edge_reveal = cutoff / 2;
-    x < edge_reveal || x >= width.saturating_sub(edge_reveal)
-}
-
 fn vignette_distance_from_center(x: usize, y: usize, width: usize, height: usize) -> f64 {
     let center_x = (width.saturating_sub(1)) as f64 / 2.0;
     let center_y = (height.saturating_sub(1)) as f64 / 2.0;
@@ -3064,4 +2868,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.26.0</VERS>
+// <VERS>END OF VERSION: 0.27.0</VERS>

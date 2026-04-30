@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.29.0</VERS>
+// <VERS>VERSION: 0.30.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.29.0: MINOR — lower mask.wipe and mask.wipeCorner into compositor MaskSpec::Wipe where exact directions exist.
+// <CLOG>0.30.0: MINOR — lower mask.pathReveal into compositor MaskSpec::PathReveal using structured path payloads.
+// 0.29.0: lower mask.wipe and mask.wipeCorner into compositor MaskSpec::Wipe where exact directions exist.
 // 0.28.0: lower mask.blinds into compositor MaskSpec::Blinds instead of source-stage player semantics.
 // 0.27.0: lower mask.iris into compositor MaskSpec::Iris instead of source-stage player semantics.
 // 0.26.0: lower mask.dissolve into compositor MaskSpec::Dissolve instead of source-stage player semantics.
@@ -24,8 +25,8 @@ use tui_vfx_compositor::{
     pipeline::{CompositionSpec, ShaderLayerSpec},
     types::{
         ApplyTo, Axis, BindableValue, CellularPattern, DitherMatrix, FilterSpec, HoverBarPosition,
-        IrisShape, MaskSpec, Orientation, PatternType, RadialOrigin, RippleCenter, SamplerSpec,
-        WipeDirection,
+        IrisShape, MaskSpec, Orientation, PatternType, RadialOrigin, RevealPathType, RippleCenter,
+        SamplerSpec, SpiralDirection, WipeDirection,
     },
 };
 use tui_vfx_contract::{NodeSpec, RecipeDocument, ScopeSpec, StructuredValue, Value, ValueSource};
@@ -161,8 +162,6 @@ pub enum NativeContentStage {
         width: usize,
         height: usize,
     },
-    /// Apply player-compatible wipe/path-reveal mask semantics to source rows.
-    WipeMask { direction: String, soft_edge: bool },
 }
 
 /// Native style transform stage owned by the compositor backend adapter.
@@ -678,7 +677,7 @@ fn lower_node_into_spec(
         "mask.dissolve" => lower_dissolve_mask(node, spec, request, warnings),
         "mask.iris" => lower_iris_mask(node, spec, request, warnings),
         "mask.none" => lower_none_mask(node, spec, warnings),
-        "mask.pathReveal" => lower_path_reveal_mask(node, content_stages, request, warnings),
+        "mask.pathReveal" => lower_path_reveal_mask(node, spec, request, warnings),
         "mask.radial" => lower_radial_mask(node, spec, request, warnings),
         "mask.wipeCorner" => lower_wipe_corner_mask(node, spec, request, warnings),
         "mask.materialize" | "mask.materializeCorner" => {
@@ -1544,28 +1543,23 @@ fn lower_none_mask(
 
 fn lower_path_reveal_mask(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) =
-        unsupported_native_content_reason(node, "mask.pathReveal", &["direction", "softEdge"])
+        unsupported_native_effect_reason(node, "mask.pathReveal", &["path", "softEdge"])
     {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    let direction = match strict_enum_input(
-        node,
-        request,
-        "direction",
-        "leftToRight",
-        SUPPORTED_WIPE_DIRECTIONS,
-        "mask.pathReveal",
-    ) {
-        Ok(direction) => direction,
-        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+
+    let Some(path) = path_reveal_input(node, request, "path") else {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `mask.pathReveal` must provide a structured `path` payload matching compositor RevealPathType.".to_string(),
+        };
     };
-    content_stages.push(NativeContentStage::WipeMask {
-        direction,
+    spec.masks.push(MaskSpec::PathReveal {
+        path,
         soft_edge: bool_input(node, request, "softEdge", false),
     });
     NodeLoweringOutcome::Lowered { warnings }
@@ -3759,6 +3753,36 @@ fn pattern_type_input(
     }
 }
 
+fn path_reveal_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Option<RevealPathType> {
+    let value = structured_input_json(node, request, key)?;
+    match value.get("type").and_then(serde_json::Value::as_str) {
+        Some("radial") => Some(RevealPathType::Radial {
+            start_angle: json_number(value.get("start_angle"))
+                .or_else(|| json_number(value.get("startAngle")))
+                .unwrap_or(0.0) as f32,
+            direction: spiral_direction_from_json(value.get("direction")),
+        }),
+        Some("spiral") => Some(RevealPathType::Spiral {
+            rotations: json_number(value.get("rotations")).unwrap_or(2.5) as f32,
+            direction: spiral_direction_from_json(value.get("direction")),
+        }),
+        _ => None,
+    }
+}
+
+fn spiral_direction_from_json(value: Option<&serde_json::Value>) -> SpiralDirection {
+    match value.and_then(serde_json::Value::as_str) {
+        Some("counterClockwise" | "counter_clockwise" | "CounterClockwise") => {
+            SpiralDirection::CounterClockwise
+        }
+        _ => SpiralDirection::Clockwise,
+    }
+}
+
 fn vignette_sides_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -3842,4 +3866,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.29.0</VERS>
+// <VERS>END OF VERSION: 0.30.0</VERS>

@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 0.8.0</VERS> -->
+<!-- <VERS>VERSION: 0.9.0</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>0.8.0: PATCH — mark mask.wipe and mask.wipeCorner lowering as compositor-owned where exact WipeDirection variants exist.
+<!-- <CLOG>0.9.0: PATCH — mark mask.pathReveal schema/lowerer cleanup as completed using structured RevealPathType payloads.
+0.8.0: mark mask.wipe and mask.wipeCorner lowering as compositor-owned where exact WipeDirection variants exist.
 0.7.0: mark mask.blinds lowerer/player-stage cleanup as completed for the sixth compositor-first slice.
 0.6.0: mark mask.iris lowerer/player-stage cleanup as completed for the fifth compositor-first slice.
 0.5.0: mark mask.dissolve lowerer/player-stage cleanup as completed for the fourth compositor-first slice.
@@ -62,10 +63,10 @@ First mask priorities:
 | `mask.dissolve` | `MaskSpec::Dissolve { seed, chunk_size }` | Done in fourth slice: lowerer emits `MaskSpec::Dissolve` and backend source-stage dissolve rendering was deleted. |
 | `mask.iris` | `MaskSpec::Iris { shape, soft_edge }` | Done in fifth slice: lowerer emits `MaskSpec::Iris` and backend source-stage iris/shape rendering was deleted. |
 | `mask.blinds` | `MaskSpec::Blinds { orientation, count }` | Done in sixth slice: lowerer emits `MaskSpec::Blinds` and backend source-stage blinds rendering was deleted. |
-| `mask.wipe` | `MaskSpec::Wipe { reveal, hide, direction, soft_edge }` | Done for direct wipe directions: lowerer emits `MaskSpec::Wipe`; source-stage wipe remains only for `mask.pathReveal` until true path payloads are represented. |
+| `mask.wipe` | `MaskSpec::Wipe { reveal, hide, direction, soft_edge }` | Done for direct wipe directions: lowerer emits `MaskSpec::Wipe`. |
 | `mask.wipeCorner` | `MaskSpec::Wipe { reveal: Corner*, soft_edge }` | Done for corner directions backed by compositor `WipeDirection` variants. |
+| `mask.pathReveal` | `MaskSpec::PathReveal { path, soft_edge }` | Done after descriptor/recipe schema cleanup: v3.1 now authors structured `RevealPathType` payloads and the final backend `WipeMask` source stage was deleted. |
 | `mask.noiseDither` | `MaskSpec::NoiseDither { seed, matrix, chunk_size }` | Verify descriptor exposes matrix/chunk size and lowerer maps without player semantics. |
-| `mask.pathReveal` | `MaskSpec::PathReveal { path, soft_edge }` | Verify descriptor can express V2 path payload, not just a wipe-like direction. |
 | `mask.centerWipeFadeModal` V2 recipe | likely `mask.wipe` + style fade | Missing from v3.1 hierarchy; migrate after direct mask mappings are clean. |
 
 ## Filter surface

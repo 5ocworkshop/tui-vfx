@@ -1630,7 +1630,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "█"
+              "value": "\u2588"
             },
             "range": null,
             "allowedValues": [],
@@ -2278,7 +2278,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "▌"
+              "value": "\u258c"
             },
             "range": null,
             "allowedValues": [],
@@ -3282,7 +3282,7 @@
             "kind": "string",
             "default": {
               "kind": "string",
-              "value": "•"
+              "value": "\u2022"
             },
             "range": null,
             "allowedValues": [],
@@ -7853,7 +7853,7 @@
     },
     "mask.pathReveal": {
       "id": "mask.pathReveal",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "displayName": "Path Reveal Mask",
       "category": "debug primitive",
       "domain": "mask",
@@ -7899,22 +7899,23 @@
         ]
       },
       "inputs": {
-        "direction": {
-          "displayName": "Direction",
-          "description": null,
+        "path": {
+          "displayName": "Path",
+          "description": "Structured compositor RevealPathType payload: {type: spiral, rotations, direction} or {type: radial, start_angle, direction}.",
           "value": {
-            "kind": "enum",
+            "kind": "structured",
             "default": {
-              "kind": "enum",
-              "value": "leftToRight"
+              "kind": "structured",
+              "value": {
+                "type": "spiral",
+                "rotations": 2.5,
+                "direction": "clockwise"
+              }
             },
             "range": null,
-            "allowedValues": [
-              "leftToRight",
-              "rightToLeft"
-            ],
+            "allowedValues": [],
             "unit": null,
-            "semantic": null
+            "semantic": "reveal-path"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
