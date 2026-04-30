@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.7.2</VERS>
+// <VERS>VERSION: 0.8.2</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.7.2: PATCH — reject unsupported vignette applyTo values in strict source-style lowering.
+// <CLOG>0.8.2: PATCH — share the supported wipe direction list between path-reveal and wipe-corner lowering.
+// 0.8.1: PATCH — align wipe-corner default direction with descriptor and player primitive defaults.
+// 0.8.0: MINOR — lower radial and wipe-corner masks through player-compatible source-owned stages.
+// 0.7.2: PATCH — reject unsupported vignette applyTo values in strict source-style lowering.
 // 0.7.1: PATCH — inline the single-use native mask unsupported-reason wrapper.
 // 0.7.0: MINOR — route non-isomorphic masks through source-owned content stages and reject unsupported enum values.
 // 0.6.1: PATCH — clarify vignette mixed-field lowering checks and sync metadata footer.
@@ -36,6 +39,21 @@ use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, ColorSpace, Gradient, LinearGradientApplyTo,
     LinearGradientShader, RevealWipeShader, SpatialShaderType, StyleRegion,
 };
+
+const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
+    "leftToRight",
+    "rightToLeft",
+    "topToBottom",
+    "bottomToTop",
+    "outFromTopLeft",
+    "outFromTopRight",
+    "outFromBottomLeft",
+    "outFromBottomRight",
+    "inToTopLeft",
+    "inToTopRight",
+    "inToBottomLeft",
+    "inToBottomRight",
+];
 
 /// Complete lowering result used by the compositor backend adapter.
 #[derive(Clone, Debug)]
@@ -135,6 +153,8 @@ pub enum NativeContentStage {
     DissolveMask { seed: u64, chunk_size: usize },
     /// Apply player-compatible iris mask semantics to source rows.
     IrisMask { shape: String, soft_edge: bool },
+    /// Apply player-compatible radial mask semantics to source rows.
+    RadialMask { soft_edge: bool },
     /// Apply player-compatible wipe/path-reveal mask semantics to source rows.
     WipeMask { direction: String, soft_edge: bool },
 }
@@ -526,6 +546,8 @@ fn lower_node_into_spec(
         "mask.iris" => lower_iris_mask(node, content_stages, request, warnings),
         "mask.none" => lower_none_mask(node, spec, warnings),
         "mask.pathReveal" => lower_path_reveal_mask(node, content_stages, request, warnings),
+        "mask.radial" => lower_radial_mask(node, content_stages, request, warnings),
+        "mask.wipeCorner" => lower_wipe_corner_mask(node, content_stages, request, warnings),
         "mask.materialize" | "mask.materializeCorner" => {
             lower_materialize_mask(node, spec, request, warnings)
         }
@@ -1360,21 +1382,64 @@ fn lower_path_reveal_mask(
         request,
         "direction",
         "leftToRight",
-        &[
-            "leftToRight",
-            "rightToLeft",
-            "topToBottom",
-            "bottomToTop",
-            "outFromTopLeft",
-            "outFromTopRight",
-            "outFromBottomLeft",
-            "outFromBottomRight",
-            "inToTopLeft",
-            "inToTopRight",
-            "inToBottomLeft",
-            "inToBottomRight",
-        ],
+        SUPPORTED_WIPE_DIRECTIONS,
         "mask.pathReveal",
+    ) {
+        Ok(direction) => direction,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    content_stages.push(NativeContentStage::WipeMask {
+        direction,
+        soft_edge: bool_input(node, request, "softEdge", false),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_radial_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "mask.radial", &["origin", "softEdge"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    if let Err(reason) = strict_enum_input(
+        node,
+        request,
+        "origin",
+        "center",
+        &["center"],
+        "mask.radial",
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    content_stages.push(NativeContentStage::RadialMask {
+        soft_edge: bool_input(node, request, "softEdge", true),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_wipe_corner_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "mask.wipeCorner", &["direction", "softEdge"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let direction = match strict_enum_input(
+        node,
+        request,
+        "direction",
+        "leftToRight",
+        SUPPORTED_WIPE_DIRECTIONS,
+        "mask.wipeCorner",
     ) {
         Ok(direction) => direction,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
@@ -2463,4 +2528,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.7.2</VERS>
+// <VERS>END OF VERSION: 0.8.2</VERS>

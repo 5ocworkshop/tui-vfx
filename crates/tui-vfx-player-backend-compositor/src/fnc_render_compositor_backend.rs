@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.7.0: MINOR — apply source-owned mask stages for player-compatible mask parity.
+// <CLOG>0.8.0: MINOR — apply source-owned radial and wipe-corner mask stages for player-compatible parity.
+// 0.7.0: MINOR — apply source-owned mask stages for player-compatible mask parity.
 // 0.6.1: PATCH — hoist stable cellular reveal threshold calculation and sync metadata footer.
 // 0.6.0: MINOR — apply source-owned vignette and cellular mask stages for non-isomorphic debug-recipe blockers.
 // 0.5.1: PATCH — simplify one-off filter styling helpers without changing rendered cells.
@@ -259,6 +260,9 @@ fn scene_ir_with_native_content_stages(
             }
             NativeContentStage::IrisMask { shape, soft_edge } => {
                 apply_iris_mask_content_stage(&mut staged, shape, *soft_edge)
+            }
+            NativeContentStage::RadialMask { soft_edge } => {
+                apply_shape_mask_content_stage(&mut staged, *soft_edge, SourceMaskShape::Circle)
             }
             NativeContentStage::WipeMask {
                 direction,
@@ -1983,4 +1987,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>
