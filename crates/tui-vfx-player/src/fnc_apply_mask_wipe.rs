@@ -12,7 +12,10 @@ use crate::{
 
 /// Apply a wipe mask to text-grid rows.
 pub(crate) fn apply_mask_wipe(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [String]) {
-    let reveal = request.phase_t.clamp(0.0, 1.0);
+    let reveal = eased_reveal(
+        request.phase_t.clamp(0.0, 1.0),
+        &resolve_effect_enum(node, request, "easing", "linear"),
+    );
     let direction = resolve_effect_enum(node, request, "direction", "leftToRight");
     let soft_edge = resolve_effect_bool(node, request, "softEdge", false);
     let height = rows.len().max(1);
@@ -31,6 +34,16 @@ pub(crate) fn apply_mask_wipe(node: &NodeSpec, request: &PlayerSampleRequest, ro
                 }
             })
             .collect();
+    }
+}
+
+fn eased_reveal(reveal: f64, easing: &str) -> f64 {
+    match easing {
+        "easeIn" => reveal * reveal,
+        "easeOut" => 1.0 - (1.0 - reveal) * (1.0 - reveal),
+        "easeInOut" if reveal < 0.5 => 2.0 * reveal * reveal,
+        "easeInOut" => 1.0 - (-2.0 * reveal + 2.0).powi(2) / 2.0,
+        _ => reveal,
     }
 }
 

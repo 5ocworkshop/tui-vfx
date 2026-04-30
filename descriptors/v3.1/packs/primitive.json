@@ -7820,6 +7820,29 @@
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
+        },
+        "easing": {
+          "displayName": "Easing",
+          "description": "Legacy easing alias consumed by bounded player evidence.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "linear"
+            },
+            "range": null,
+            "allowedValues": [
+              "linear",
+              "easeIn",
+              "easeOut",
+              "easeInOut"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
         }
       },
       "outputs": {},
@@ -8903,6 +8926,29 @@
               "background",
               "both"
             ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "color": {
+          "displayName": "Color",
+          "description": "Legacy color alias consumed as stripe color by bounded player evidence.",
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 255,
+                "g": 60,
+                "b": 80,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
             "unit": null,
             "semantic": null
           },
@@ -11056,6 +11102,29 @@
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
+        },
+        "easing": {
+          "displayName": "Easing",
+          "description": "Legacy easing alias consumed by bounded player evidence.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "linear"
+            },
+            "range": null,
+            "allowedValues": [
+              "linear",
+              "easeIn",
+              "easeOut",
+              "easeInOut"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
         }
       },
       "outputs": {},
@@ -11219,6 +11288,29 @@
             "allowedValues": [
               "rgb",
               "hct"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "easing": {
+          "displayName": "Easing",
+          "description": "Legacy easing alias consumed by bounded player evidence.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "linear"
+            },
+            "range": null,
+            "allowedValues": [
+              "linear",
+              "easeIn",
+              "easeOut",
+              "easeInOut"
             ],
             "unit": null,
             "semantic": null
@@ -12090,6 +12182,29 @@
               "background",
               "both"
             ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "pulseColor": {
+          "displayName": "Pulse Color",
+          "description": "Legacy pulse color alias consumed by bounded player evidence.",
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 255,
+                "g": 100,
+                "b": 220,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
             "unit": null,
             "semantic": null
           },

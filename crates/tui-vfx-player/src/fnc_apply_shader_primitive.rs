@@ -362,12 +362,8 @@ fn apply_barber_pole(
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
-    let stripe_color = resolve_effect_color(
-        node,
-        request,
-        "stripeColor",
-        ResolvedColor::rgb(255, 80, 80),
-    );
+    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(255, 80, 80));
+    let stripe_color = resolve_effect_color(node, request, "stripeColor", color);
     let background_color = resolve_effect_color(
         node,
         request,

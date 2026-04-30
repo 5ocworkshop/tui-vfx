@@ -33,6 +33,7 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             "--v31-root" => options.v31_root = Some(next_value(&mut args, "--v31-root")?),
             "--family" => options.family = Some(next_value(&mut args, "--family")?),
             "--include-offenders" => options.include_offenders = true,
+            "--include-blockers" => options.include_blockers = true,
             "--frames" => options.frames = parse_usize(&next_value(&mut args, "--frames")?)?,
             "--from-sample-t" => {
                 options.from_sample_t = parse_f64(&next_value(&mut args, "--from-sample-t")?)?

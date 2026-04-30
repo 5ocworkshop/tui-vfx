@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.33.0</VERS> -->
-<!-- <WCTX>K2.16 player render IR and debug-recipe backlog burn-down indexing.</WCTX> -->
-<!-- <CLOG>0.33.0: MINOR — add K2.17 descriptor/source burn-down reports, implementation-readiness, control catalog, holdbacks, docs gate, review, and architect memo artifacts.
+<!-- <VERS>VERSION: 0.34.0</VERS> -->
+<!-- <WCTX>K2.18 blocker closure indexing.</WCTX> -->
+<!-- <CLOG>0.34.0: MINOR — add K2.18 blocker ledger, closure reports, docs gate, status memo, and review/de-slop artifact.
+0.33.0: MINOR — add K2.17 descriptor/source burn-down reports, implementation-readiness, control catalog, holdbacks, docs gate, review, and architect memo artifacts.
 0.32.0: MINOR — add K2.16 player render IR, scene/source fidelity, backlog normalization, burn-down, docs-gate, holdback, review, and architect memo artifacts.
 0.31.0: MINOR — add K2.15 graph execution, fixture, source, docs-gate, holdback, and review artifacts.
 0.30.2: PATCH — add K2.14 descriptor/adapter migration reports and review/de-slop artifact.
@@ -162,6 +163,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_14_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_14_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop closure, and verification evidence for K2.14.
 - [`PHASE_K2_15_GRAPH_DESCRIPTOR_MIGRATION_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_15_GRAPH_DESCRIPTOR_MIGRATION_STATUS_MEMO_TO_ARCHITECT.md) — K2.15 graph execution integration, fixture additions, final counters, and architect blocker memo.
 - [`PHASE_K2_15_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_15_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop cleanup, and verification evidence for K2.15.
+- [`PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md) — K2.18 blocker closure status, final counters, signed holdbacks, and verification matrix.
+- [`PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop closure, and verification evidence for K2.18.
 - [`PHASE_K2_16_PLAYER_IR_BACKLOG_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_16_PLAYER_IR_BACKLOG_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md) — K2.16 player render IR, scene/source fidelity, 21-fixture burn-down, final counters, and architect blocker memo.
 - [`PHASE_K2_16_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_16_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop cleanup, and verification evidence for K2.16.
 - [`PHASE_K2_17_DESCRIPTOR_SOURCE_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_17_DESCRIPTOR_SOURCE_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md) — K2.17 descriptor/source burn-down, fixture growth, final counters, and architect blocker memo.
@@ -236,6 +239,17 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_15_HOLDBACK_REGISTER.md`](K2_15_HOLDBACK_REGISTER.md) — remaining holdbacks and high-level blockers.
 - [`K2_15_SCHEMA_API_DOCS_GATE.md`](K2_15_SCHEMA_API_DOCS_GATE.md) — docs/schema impact assessment and synchronization note.
 - [`K2_15_STUDIO_CONTROL_CATALOG_PREFLIGHT.md`](K2_15_STUDIO_CONTROL_CATALOG_PREFLIGHT.md) — studio-control/catalog preflight status after graph execution work.
+- [`K2_18_BLOCKER_LEDGER_REPORT.md`](K2_18_BLOCKER_LEDGER_REPORT.md) — path-level implementation-readiness ledger and K2.18 blocker disposition summary.
+- [`K2_18_BASELINE_AND_FINAL_COUNTERS.md`](K2_18_BASELINE_AND_FINAL_COUNTERS.md) — K2.18 before/after corpus, readiness, field coverage, and adapter counters.
+- [`K2_18_FIELD_COVERAGE_CLOSURE_REPORT.md`](K2_18_FIELD_COVERAGE_CLOSURE_REPORT.md) — field coverage blocker closure evidence.
+- [`K2_18_CONTENT_BACKLOG_CLOSURE_REPORT.md`](K2_18_CONTENT_BACKLOG_CLOSURE_REPORT.md) — content backlog closure and vocabulary guardrail evidence.
+- [`K2_18_SOURCE_BACKLOG_CLOSURE_REPORT.md`](K2_18_SOURCE_BACKLOG_CLOSURE_REPORT.md) — source backlog closure and source guardrail evidence.
+- [`K2_18_FILTER_MASK_SAMPLER_CLOSURE_REPORT.md`](K2_18_FILTER_MASK_SAMPLER_CLOSURE_REPORT.md) — filter/mask/sampler closure evidence.
+- [`K2_18_SHADER_STYLE_CLOSURE_REPORT.md`](K2_18_SHADER_STYLE_CLOSURE_REPORT.md) — shader/style closure evidence and fixture additions.
+- [`K2_18_GRAPH_RUNTIME_CLOSURE_REPORT.md`](K2_18_GRAPH_RUNTIME_CLOSURE_REPORT.md) — graph runtime closure evidence.
+- [`K2_18_SCENE_RUNTIME_CLOSURE_REPORT.md`](K2_18_SCENE_RUNTIME_CLOSURE_REPORT.md) — scene runtime closure evidence.
+- [`K2_18_HOLDBACK_SIGNOFF_REGISTER.md`](K2_18_HOLDBACK_SIGNOFF_REGISTER.md) — signed backend/deprecated/duplicate/oracle holdback summary.
+- [`K2_18_SCHEMA_API_DOCS_GATE.md`](K2_18_SCHEMA_API_DOCS_GATE.md) — K2.18 schema/API/docs impact and verification gate.
 - [`K2_16_BASELINE_AND_FINAL_COUNTERS.md`](K2_16_BASELINE_AND_FINAL_COUNTERS.md) — K2.16 before/after validation, render, field coverage, adapter, schema-readiness, and mapping counters.
 - [`K2_16_PLAYER_RENDER_IR_REPORT.md`](K2_16_PLAYER_RENDER_IR_REPORT.md) — player-owned render IR report shape, CLI evidence path, and API boundary.
 - [`K2_16_GRAPH_EXECUTOR_HARDENING_REPORT.md`](K2_16_GRAPH_EXECUTOR_HARDENING_REPORT.md) — graph executor diagnostics and guarded runtime-hardening evidence.
@@ -250,6 +264,23 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_16_STUDIO_CONTROL_CATALOG_REPORT.md`](K2_16_STUDIO_CONTROL_CATALOG_REPORT.md) — studio control catalog readiness and deferred GUI-control evidence.
 - [`K2_16_SCHEMA_API_DOCS_GATE.md`](K2_16_SCHEMA_API_DOCS_GATE.md) — schema, API, docs, rustdoc, and OFPF synchronization gate for K2.16.
 - [`TEMPLATE_INHERITANCE.md`](TEMPLATE_INHERITANCE.md) — scene/template composition guidance from architect discussion.
+
+
+### K2.18 blocker closure
+
+- [`K2_18_BLOCKER_LEDGER_REPORT.md`](K2_18_BLOCKER_LEDGER_REPORT.md) — path-level implementation closure ledger.
+- [`K2_18_BASELINE_AND_FINAL_COUNTERS.md`](K2_18_BASELINE_AND_FINAL_COUNTERS.md) — K2.17 baseline to K2.18 final gate counters.
+- [`K2_18_FIELD_COVERAGE_CLOSURE_REPORT.md`](K2_18_FIELD_COVERAGE_CLOSURE_REPORT.md) — field-coverage closure result.
+- [`K2_18_CONTENT_BACKLOG_CLOSURE_REPORT.md`](K2_18_CONTENT_BACKLOG_CLOSURE_REPORT.md) — content backlog closure/signoff result.
+- [`K2_18_SOURCE_BACKLOG_CLOSURE_REPORT.md`](K2_18_SOURCE_BACKLOG_CLOSURE_REPORT.md) — source backlog closure/signoff result.
+- [`K2_18_FILTER_MASK_SAMPLER_CLOSURE_REPORT.md`](K2_18_FILTER_MASK_SAMPLER_CLOSURE_REPORT.md) — filter/mask/sampler descriptor closure result.
+- [`K2_18_SHADER_STYLE_CLOSURE_REPORT.md`](K2_18_SHADER_STYLE_CLOSURE_REPORT.md) — shader/style descriptor closure result.
+- [`K2_18_GRAPH_RUNTIME_CLOSURE_REPORT.md`](K2_18_GRAPH_RUNTIME_CLOSURE_REPORT.md) — graph runtime closure result.
+- [`K2_18_SCENE_RUNTIME_CLOSURE_REPORT.md`](K2_18_SCENE_RUNTIME_CLOSURE_REPORT.md) — scene runtime closure result.
+- [`K2_18_HOLDBACK_SIGNOFF_REGISTER.md`](K2_18_HOLDBACK_SIGNOFF_REGISTER.md) — backend/oracle/duplicate/deprecated signoff register.
+- [`K2_18_SCHEMA_API_DOCS_GATE.md`](K2_18_SCHEMA_API_DOCS_GATE.md) — schema/API/docs verification gate.
+- [`PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md) — final blocker closure status memo.
+- [`PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md) — final review and de-slop evidence.
 
 ## Validator and recipe artifacts
 
@@ -273,4 +304,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.31.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.34.0</VERS> -->

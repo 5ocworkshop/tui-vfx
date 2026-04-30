@@ -11,7 +11,7 @@ use std::{
     process::{Command, Output},
 };
 
-const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 142;
+const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 144;
 
 #[test]
 fn test_fnc_cli_renders_single_recipe_frame_json() {
@@ -342,9 +342,10 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.schemaReadiness.1");
     assert_eq!(report["summary"]["totalLegacyRecords"], 603);
-    assert_eq!(report["summary"]["schemaBlockedRecords"], 99);
+    assert_eq!(report["summary"]["schemaBlockedRecords"], 103);
     assert_eq!(report["summary"]["sourceBlockedRecords"], 40);
-    assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 8);
+    assert_eq!(report["summary"]["descriptorBlockedRecords"], 78);
+    assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 0);
     assert_eq!(report["summary"]["unknownRecords"], 0);
     assert_eq!(report["summary"]["canDeclareSchemaReady"], true);
     assert_eq!(report["summary"]["unresolvedSchemaBlockers"], 0);
@@ -371,7 +372,7 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
             .as_array()
             .expect("blockers")
             .iter()
-            .any(|blocker| blocker["blockerKind"] == "fieldCoverage")
+            .all(|blocker| blocker["blockerKind"] != "fieldCoverage")
     );
 }
 
@@ -412,12 +413,13 @@ fn test_fnc_cli_maps_schema_readiness_blockers_json() {
             .any(|note| note.as_str().unwrap_or("").contains("source.text"))
     );
 
+    assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 0);
     assert!(
         report["blockers"]
             .as_array()
             .expect("blockers")
             .iter()
-            .any(|blocker| blocker["blockerKind"] == "fieldCoverage")
+            .all(|blocker| blocker["blockerKind"] != "fieldCoverage")
     );
 }
 
@@ -430,33 +432,32 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
     ]);
 
     let offenders = report["offenders"].as_array().expect("offenders");
-    assert_eq!(offenders.len(), 310);
+    assert_eq!(offenders.len(), 308);
     assert_eq!(report["summary"]["unresolvedSchemaBlockers"], 0);
     assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
     assert_eq!(report["summary"]["remainingOwnerDecisionCount"], 0);
     assert_eq!(report["summary"]["canDeclareSchemaReady"], true);
     assert_eq!(
         report["summary"]["dispositionCounts"]["acceptedSchema"],
-        227
+        225
     );
     assert_eq!(
         report["summary"]["dispositionCounts"]["descriptorBacklog"],
-        161
+        163
     );
     assert_eq!(
         offender_kind_counts(&report),
         BTreeMap::from([
             ("backendRenderer", 15),
             ("bindingSemantics", 21),
-            ("descriptorPack", 114),
-            ("fieldCoverage", 8),
+            ("descriptorPack", 116),
             ("guiHumanReview", 2),
             ("lifecycleSemantics", 1),
             ("motionTimingSemantics", 34),
             ("oracleOnly", 2),
             ("sceneSemantics", 24),
             ("sourceDescriptor", 47),
-            ("valueSourceSemantics", 42),
+            ("valueSourceSemantics", 46),
         ])
     );
     assert!(
@@ -508,7 +509,7 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
     assert!(
         offenders
             .iter()
-            .any(|offender| offender["blockerKind"] == "fieldCoverage")
+            .all(|offender| offender["blockerKind"] != "fieldCoverage")
     );
 
     let value_source =
@@ -614,7 +615,7 @@ fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
     }
     assert_eq!(report["summary"]["records"], 603);
     assert_eq!(report["summary"]["candidateReady"], 0);
-    assert_eq!(report["summary"]["schemaDecisionNeeded"], 99);
+    assert_eq!(report["summary"]["schemaDecisionNeeded"], 103);
 }
 
 #[test]
@@ -953,7 +954,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 217);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 230);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -1115,12 +1116,29 @@ fn test_fnc_cli_reports_implementation_readiness_disposition_first_json() {
     );
     assert_eq!(report["summary"]["candidateReady"], 0);
     assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
+    assert_eq!(report["summary"]["implementationBlocking"], 0);
+    assert_eq!(report["summary"]["canonicalExists"], 163);
+    assert_eq!(
+        report["summary"]["dispositionCounts"]["descriptorBacklogResolved"],
+        51
+    );
+    assert_eq!(
+        report["summary"]["dispositionCounts"]["sourceBacklogResolved"],
+        1
+    );
+    assert_eq!(
+        report["summary"]["dispositionCounts"]["graphRuntimeResolved"],
+        87
+    );
+    assert_eq!(
+        report["summary"]["dispositionCounts"]["sceneRuntimeResolved"],
+        16
+    );
     assert!(
         report["priorityQueues"]
             .as_array()
             .expect("priority queues")
-            .iter()
-            .any(|queue| queue["disposition"] == "contentBacklog")
+            .is_empty()
     );
 }
 

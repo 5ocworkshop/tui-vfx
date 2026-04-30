@@ -38,6 +38,8 @@ pub struct CliOptions {
     pub family: Option<String>,
     /// Include per-record schema-readiness offender rows.
     pub include_offenders: bool,
+    /// Accept path-level implementation blocker rows for implementation-readiness.
+    pub include_blockers: bool,
     /// Number of timeline frames to sample.
     pub frames: usize,
     /// Starting sample for frame-diff reports.
@@ -63,6 +65,7 @@ impl Default for CliOptions {
             v31_root: None,
             family: None,
             include_offenders: false,
+            include_blockers: false,
             frames: 1,
             from_sample_t: 0.0,
             to_sample_t: 1.0,

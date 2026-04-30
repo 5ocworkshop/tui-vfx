@@ -103,7 +103,13 @@ fn apply_fade(
 }
 
 fn apply_pulse(node: &NodeSpec, request: &PlayerSampleRequest, styled_grid: &mut PlayerStyledGrid) {
-    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(255, 80, 160));
+    let pulse_color = resolve_effect_color(
+        node,
+        request,
+        "pulseColor",
+        ResolvedColor::rgb(255, 80, 160),
+    );
+    let color = resolve_effect_color(node, request, "color", pulse_color);
     let frequency = resolve_effect_number(node, request, "frequency", 1.0).max(0.0);
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let clock = request.loop_t.unwrap_or(request.phase_t);
@@ -228,7 +234,8 @@ fn apply_style_to_scope(
 
 fn eased_phase(node: &NodeSpec, request: &PlayerSampleRequest) -> f32 {
     let phase = request.phase_t.clamp(0.0, 1.0) as f32;
-    match resolve_effect_enum(node, request, "ease", "linear").as_str() {
+    let easing = resolve_effect_enum(node, request, "easing", "linear");
+    match resolve_effect_enum(node, request, "ease", &easing).as_str() {
         "easeIn" => phase * phase,
         "easeOut" => 1.0 - (1.0 - phase) * (1.0 - phase),
         "easeInOut" => {
