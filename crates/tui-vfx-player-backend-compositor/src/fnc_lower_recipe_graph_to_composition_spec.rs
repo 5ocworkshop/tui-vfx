@@ -232,18 +232,6 @@ pub enum NativeStyleStage {
         progress: f64,
         direction: String,
     },
-    /// Apply player-compatible underline wipe filter styling.
-    UnderlineWipe {
-        underline_color: String,
-        background_color: String,
-        direction: String,
-        line_char: char,
-        row_offset: usize,
-        progress: f64,
-        gradient: bool,
-        glisten: f64,
-        apply_to: String,
-    },
     /// Apply player-compatible highlighter shader styling.
     Highlighter {
         color: String,
@@ -610,9 +598,7 @@ fn lower_node_into_spec(
         "filter.hoverBar" => lower_filter_hover_bar(node, spec, request, warnings),
         "filter.matrixRain" => lower_filter_matrix_rain(node, style_stages, request, warnings),
         "filter.subPixelBar" => lower_filter_sub_pixel_bar(node, style_stages, request, warnings),
-        "filter.underlineWipe" => {
-            lower_filter_underline_wipe(node, style_stages, request, warnings)
-        }
+        "filter.underlineWipe" => lower_filter_underline_wipe(node, spec, request, warnings),
         "filter.pillButton" => {
             let progress = number_signal_input(node, request, "progress", 0.75);
             spec.filters.push(FilterSpec::Tint {
@@ -2939,7 +2925,7 @@ fn lower_filter_sub_pixel_bar(
 
 fn lower_filter_underline_wipe(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2964,22 +2950,33 @@ fn lower_filter_underline_wipe(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::UnderlineWipe {
-        underline_color: color_label_from_config(color_alias_input(
-            node,
-            request,
-            &["underlineColor", "color"],
-            (120, 220, 255),
-        )),
-        background_color: color_label_input(node, request, "bgColor", (30, 30, 30)),
-        direction: enum_label_input(node, request, "direction", "leftToRight"),
+    if integer_input(node, request, "thickness", 1) != 1 {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `filter.underlineWipe` uses `thickness` other than 1, but compositor-native UnderlineWipe owns one underline row.".to_string(),
+        };
+    }
+    if !matches!(
+        enum_input(node, request, "applyTo"),
+        None | Some("foreground" | "fg")
+    ) {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `filter.underlineWipe` uses `applyTo` other than `foreground`, but compositor-native UnderlineWipe writes underline glyph foregrounds.".to_string(),
+        };
+    }
+
+    spec.filters.push(FilterSpec::UnderlineWipe {
+        direction: wipe_direction_input(node, request, "direction"),
+        color: color_alias_input(node, request, &["underlineColor", "color"], (120, 220, 255)),
+        bg_color: color_input(node, request, "bgColor").unwrap_or(ColorConfig::Rgb {
+            r: 30,
+            g: 30,
+            b: 30,
+        }),
         line_char: char_input(node, request, "lineChar", '—'),
-        row_offset: integer_input(node, request, "rowOffset", 0).max(0) as usize,
-        progress: resolved_number_input(node, request, "progress", request.ir.phase_t)
-            .clamp(0.0, 1.0),
+        row_offset: integer_input(node, request, "rowOffset", 0).max(0) as u16,
+        progress: BindableValue::from(number_signal_input(node, request, "progress", 0.0)),
         gradient: bool_input(node, request, "gradient", true),
-        glisten: resolved_number_input(node, request, "glisten", 1.0).clamp(0.0, 1.0),
-        apply_to: enum_label_input(node, request, "applyTo", "foreground"),
+        glisten: bool_input(node, request, "glisten", true),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
