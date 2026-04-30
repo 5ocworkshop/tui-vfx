@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.26.0</VERS>
+// <VERS>VERSION: 0.27.1</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.26.0: MINOR — assert canvas-aware style fades preserve source color channels without fallback.</CLOG>
+// <CLOG>0.27.1: PATCH — clarify the standard style fade V2 oracle cell-count assertion.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -1205,6 +1205,68 @@ fn test_fnc_cli_native_style_fades_preserve_canvas_color_endpoints_json() {
             styled_cell_color_count(&report, "rgba(255,255,255,255)", "rgba(255,255,255,255)"),
             0,
             "{recipe} must not flash through hardcoded white"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_native_style_fades_match_v2_deprecated_channel_oracle_json() {
+    const V2_STYLE_FADE_CARD_CELL_COUNT: usize = 35 * 3;
+
+    for (recipe, phase, expected_foreground, expected_background) in [
+        (
+            "styles/style_fade_in.json",
+            "enter",
+            "rgba(191,191,191,255)",
+            "rgba(30,45,60,255)",
+        ),
+        (
+            "styles/style_fade_out.json",
+            "exit",
+            "rgba(0,191,191,255)",
+            "rgba(15,45,60,255)",
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg("0.5"),
+            ],
+            "render-backend native standard style fade V2 deprecated oracle player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["compositionSpecSummary"]["filters"], 1, "{recipe}");
+        assert_eq!(
+            report["rows"][0], "╭─────────────────────────────────╮",
+            "{recipe}"
+        );
+        assert!(
+            report["rows"][1]
+                .as_str()
+                .expect("row")
+                .contains("STYLE TEST:"),
+            "{recipe} should preserve the V2 debug message"
+        );
+        assert_eq!(
+            styled_cell_color_count(&report, expected_foreground, expected_background),
+            V2_STYLE_FADE_CARD_CELL_COUNT,
+            "{recipe} should fade all 35x3 card cells while preserving distinct source foreground/background channels"
         );
     }
 }
@@ -4577,7 +4639,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 649);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 643);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -5524,4 +5586,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.26.0</VERS>
+// <VERS>END OF VERSION: 0.27.1</VERS>
