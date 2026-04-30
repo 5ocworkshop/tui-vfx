@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
+// <VERS>VERSION: 0.7.1</VERS>
 // <WCTX>Player UI: lock playback, drawer, wrapped recipe-summary, and local theme surface behavior for migrated primitive review.</WCTX>
-// <CLOG>0.7.0: MINOR — assert normal wrapped preview metadata keeps the snapshot anchor stable.
-// 0.6.0: MINOR — assert wrapped summary descriptions and Eichler-inspired canvas/panel surfaces.</CLOG>
+// <CLOG>0.7.1: PATCH — assert stable padded stats drawer hash layout.</CLOG>
 
 use std::{fs, path::PathBuf, process::Command};
 
@@ -352,6 +351,13 @@ fn test_fnc_ratatui_stats_drawer_starts_open_and_owns_rapid_stats() {
     assert!(rows.iter().any(|row| row.contains(" Stats ")));
     assert!(rows.iter().any(|row| row.contains("phase=Enter")));
     assert!(rows.iter().any(|row| row.contains("backend_hash=")));
+    assert!(rows.iter().any(|row| row.contains("hash=")
+        && !row.contains("backend_hash=")
+        && !row.contains("non_empty=")));
+    assert!(
+        rows.iter()
+            .any(|row| row.contains("backend_hash=") && !row.contains("native_source="))
+    );
 }
 
 #[test]
@@ -515,7 +521,7 @@ fn test_fnc_ratatui_canvas_and_panels_use_eichler_theme_surfaces() {
 }
 
 #[test]
-fn test_fnc_ratatui_stats_drawer_width_matches_widest_stats_line() {
+fn test_fnc_ratatui_stats_drawer_width_includes_hash_padding() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -543,7 +549,7 @@ fn test_fnc_ratatui_stats_drawer_width_matches_widest_stats_line() {
         .map(|line| line.chars().count())
         .max()
         .expect("stats lines")
-        + 2;
+        + 6;
 
     assert_eq!(140 - stats_left_edge + 1, expected_width);
 }
@@ -781,10 +787,8 @@ fn expected_stats_lines(app: &PlayerUiApp) -> Vec<String> {
                 .unwrap_or_else(|| "none".to_string()),
             app.player.elapsed_ms
         ),
-        format!(
-            "hash={} non_empty={}",
-            report.render_hash, report.non_empty_cells
-        ),
+        format!("hash={}", expected_hash_text(report.render_hash)),
+        format!("non_empty={}", report.non_empty_cells),
         format!(
             "backend={} mode={}",
             app.player.last_backend_output.backend, app.player.last_backend_output.composition_mode
@@ -795,11 +799,18 @@ fn expected_stats_lines(app: &PlayerUiApp) -> Vec<String> {
             app.player.last_backend_output.fallback_used
         ),
         format!(
-            "native_source={} backend_hash={}",
-            app.player.last_backend_output.native_source_isolated,
-            app.player.last_backend_output.backend_hash
+            "native_source={}",
+            app.player.last_backend_output.native_source_isolated
+        ),
+        format!(
+            "backend_hash={}",
+            expected_hash_text(app.player.last_backend_output.backend_hash)
         ),
     ]
+}
+
+fn expected_hash_text(value: u64) -> String {
+    format!("{value:>20}")
 }
 
 fn options(recipe_path: PathBuf) -> CliOptions {
@@ -871,4 +882,4 @@ fn stderr(output: &std::process::Output) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.7.1</VERS>

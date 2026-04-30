@@ -1,11 +1,15 @@
 // <FILE>crates/tui-vfx-player-ui/src/col_player_ui_stats_drawer.rs</FILE> - <DESC>Stats drawer presentation helpers for the player UI</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Player UI: keep rapidly changing playback/backend evidence out of the top status line.</WCTX>
-// <CLOG>0.2.0: MINOR — add Eichler-inspired color-coded stats drawer lines.</CLOG>
+// <CLOG>0.3.0: PATCH — reserve stable drawer width and isolate hash evidence lines.</CLOG>
 
 use ratatui::text::{Line, Span};
 
 use crate::{PlayerUiApp, cls_player_ui_theme::PlayerUiTheme};
+
+const PLAYER_UI_HASH_DECIMAL_WIDTH: usize = 20;
+const PLAYER_UI_STATS_DRAWER_BORDER_WIDTH: u16 = 2;
+const PLAYER_UI_STATS_DRAWER_WIDTH_PADDING: u16 = 4;
 
 /// Build the rapidly changing stats text shown in the right-side drawer.
 pub(crate) fn player_ui_stats_drawer_text_lines(app: &PlayerUiApp) -> Vec<String> {
@@ -24,10 +28,8 @@ pub(crate) fn player_ui_stats_drawer_text_lines(app: &PlayerUiApp) -> Vec<String
                 .unwrap_or_else(|| "none".to_string()),
             app.player.elapsed_ms
         ),
-        format!(
-            "hash={} non_empty={}",
-            report.render_hash, report.non_empty_cells
-        ),
+        format!("hash={}", format_player_ui_hash(report.render_hash)),
+        format!("non_empty={}", report.non_empty_cells),
         format!(
             "backend={} mode={}",
             app.player.last_backend_output.backend, app.player.last_backend_output.composition_mode
@@ -38,9 +40,12 @@ pub(crate) fn player_ui_stats_drawer_text_lines(app: &PlayerUiApp) -> Vec<String
             app.player.last_backend_output.fallback_used
         ),
         format!(
-            "native_source={} backend_hash={}",
-            app.player.last_backend_output.native_source_isolated,
-            app.player.last_backend_output.backend_hash
+            "native_source={}",
+            app.player.last_backend_output.native_source_isolated
+        ),
+        format!(
+            "backend_hash={}",
+            format_player_ui_hash(app.player.last_backend_output.backend_hash)
         ),
     ]
 }
@@ -81,8 +86,12 @@ pub(crate) fn player_ui_stats_drawer_lines(app: &PlayerUiApp) -> Vec<Line<'stati
         ]),
         Line::from(vec![
             Span::styled("hash=", theme.evidence_style()),
-            Span::styled(report.render_hash.to_string(), theme.evidence_style()),
-            Span::raw(" "),
+            Span::styled(
+                format_player_ui_hash(report.render_hash),
+                theme.evidence_style(),
+            ),
+        ]),
+        Line::from(vec![
             Span::styled("non_empty=", theme.metric_label_style()),
             Span::styled(
                 report.non_empty_cells.to_string(),
@@ -130,25 +139,30 @@ pub(crate) fn player_ui_stats_drawer_lines(app: &PlayerUiApp) -> Vec<Line<'stati
                     app.player.last_backend_output.native_source_isolated,
                 ),
             ),
-            Span::raw(" "),
+        ]),
+        Line::from(vec![
             Span::styled("backend_hash=", theme.evidence_style()),
             Span::styled(
-                app.player.last_backend_output.backend_hash.to_string(),
+                format_player_ui_hash(app.player.last_backend_output.backend_hash),
                 theme.evidence_style(),
             ),
         ]),
     ]
 }
 
-/// Return the exact drawer width: widest stats line plus left and right borders.
+/// Return the drawer width: widest stats line plus borders and jitter padding.
 pub(crate) fn player_ui_stats_drawer_width(app: &PlayerUiApp) -> u16 {
     player_ui_stats_drawer_text_lines(app)
         .iter()
         .map(|line| line.chars().count() as u16)
         .max()
         .unwrap_or(0)
-        .saturating_add(2)
+        .saturating_add(PLAYER_UI_STATS_DRAWER_BORDER_WIDTH + PLAYER_UI_STATS_DRAWER_WIDTH_PADDING)
+}
+
+fn format_player_ui_hash(value: u64) -> String {
+    format!("{value:>PLAYER_UI_HASH_DECIMAL_WIDTH$}")
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/col_player_ui_stats_drawer.rs</FILE> - <DESC>Stats drawer presentation helpers for the player UI</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>
