@@ -291,6 +291,52 @@
         }
       ]
     },
+    "DurationSpec": {
+      "description": "Canonical duration used by lifecycle and trigger contracts.",
+      "oneOf": [
+        {
+          "description": "Duration expressed as whole milliseconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "milliseconds"
+            },
+            "value": {
+              "description": "Non-negative millisecond count.",
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration expressed as finite seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "seconds"
+            },
+            "value": {
+              "description": "Non-negative finite seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
     "EffectCompletion": {
       "description": "Minimal completion category for descriptor lifecycle metadata.",
       "oneOf": [
@@ -741,6 +787,26 @@
       "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
       "type": "string"
     },
+    "LifecyclePhase": {
+      "description": "Named high-level interval in a recipe lifecycle.",
+      "oneOf": [
+        {
+          "description": "Initial appearance or setup interval.",
+          "type": "string",
+          "const": "enter"
+        },
+        {
+          "description": "Sustained interval that may be fixed or trigger-terminated.",
+          "type": "string",
+          "const": "dwell"
+        },
+        {
+          "description": "Final departure or teardown interval.",
+          "type": "string",
+          "const": "exit"
+        }
+      ]
+    },
     "NodeId": {
       "description": "Stable node identifier inside a canonical graph.",
       "type": "string",
@@ -807,6 +873,14 @@
       "description": "One effect node in a canonical v3.1 graph.",
       "type": "object",
       "properties": {
+        "activePhases": {
+          "description": "Optional lifecycle phases in which this node is active; empty means all phases.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/LifecyclePhase"
+          }
+        },
         "cellWritePolicy": {
           "description": "Optional cell write policy requested by this node.",
           "anyOf": [
@@ -963,6 +1037,146 @@
         "id",
         "value",
         "bindable"
+      ]
+    },
+    "PreviewLoopbackSpec": {
+      "description": "Preview/demo value provider for a host signal.\n\nA preview loopback is not trigger semantics and does not replace a host\nsignal. Hosts still win when they provide a runtime value. The loopback\nexists so deterministic players, documentation generators, and migration\nvalidators can replay a recipe without silently dropping authored demo\nbindings.",
+      "oneOf": [
+        {
+          "description": "Static typed preview value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "literal"
+            },
+            "value": {
+              "description": "Typed literal emitted when the host does not provide the signal.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Authored numeric static/literal loopback value.\n\nThis maps authored forms such as `loopback: 1.0`,\n`loopback: { \"static\": 1.0 }`, and `loopback: { \"literal\": 1.0 }`.\nThe player coerces the sampled number to the declared signal kind, so\ninteger/u16-style bindings round and clamp rather than silently dropping\nthe loopback.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "numericStatic"
+            },
+            "value": {
+              "description": "Numeric value emitted when the host does not provide the signal.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Authored numeric signal loopback expression.\n\nThis maps authored forms such as\n`loopback: { \"signal\": { \"type\": \"ramp\", ... } }`. The expression is\npreserved losslessly as descriptor-owned structured data while player\nadapters execute recognized deterministic signal shapes.",
+          "type": "object",
+          "properties": {
+            "expression": {
+              "description": "Curated signal expression payload.",
+              "$ref": "#/$defs/StructuredValue"
+            },
+            "fallback": {
+              "description": "Optional typed fallback when the expression cannot be sampled.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "numericSignal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expression"
+          ]
+        },
+        {
+          "description": "Numeric ramp preview value sampled over the active player phase.\n\nKept as a convenient v3.1-native shorthand; recipe migrations should prefer\n`numericSignal` when preserving the original signal declaration.",
+          "type": "object",
+          "properties": {
+            "duration": {
+              "description": "Authored ramp duration for tooling and player timing hints.",
+              "$ref": "#/$defs/DurationSpec"
+            },
+            "end": {
+              "description": "Numeric value at normalized phase progress one.",
+              "type": "number",
+              "format": "double"
+            },
+            "kind": {
+              "type": "string",
+              "const": "numericRamp"
+            },
+            "repeat": {
+              "description": "Whether preview playback should repeat after the authored duration.",
+              "type": "boolean"
+            },
+            "start": {
+              "description": "Numeric value at normalized phase progress zero.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end",
+            "duration",
+            "repeat"
+          ]
+        },
+        {
+          "description": "Legacy structured signal expression preserved from an authoring facade.\n\nThis is the lossless escape hatch for curated authored signal expressions\nwhose runtime sampler has not yet been promoted into this clean-room\ncontract crate. Player adapters may execute recognized shapes; otherwise\nthey fall back to the optional typed value.",
+          "type": "object",
+          "properties": {
+            "expression": {
+              "description": "Descriptor-owned signal expression payload.",
+              "$ref": "#/$defs/StructuredValue"
+            },
+            "fallback": {
+              "description": "Optional typed fallback when the expression cannot be sampled.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "const": "signalExpression"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expression"
+          ]
+        }
       ]
     },
     "Rect": {
@@ -1523,6 +1737,17 @@
           "description": "Stable host/runtime signal identifier.",
           "$ref": "#/$defs/SignalId"
         },
+        "previewLoopback": {
+          "description": "Optional deterministic preview/demo provider used only when the host does not supply the signal.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PreviewLoopbackSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "required": {
           "description": "Whether a host must provide this signal when no default is declared.",
           "type": "boolean"
@@ -1537,6 +1762,42 @@
         "id",
         "value",
         "required"
+      ]
+    },
+    "StructuredValue": {
+      "description": "JSON-compatible structured payload owned by a descriptor field.\n\nUse this only when the primitive owns a nested payload whose stable shape is\ndescriptor-specific, such as path lists, particle options, or glyph-style\nrule tables. Prefer narrower typed values whenever a field has scalar,\ncolor, gradient, duration, scope, or rect semantics.",
+      "anyOf": [
+        {
+          "description": "Explicit null.",
+          "type": "null"
+        },
+        {
+          "description": "Boolean leaf value.",
+          "type": "boolean"
+        },
+        {
+          "description": "Floating-point numeric leaf value.",
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "description": "String leaf value.",
+          "type": "string"
+        },
+        {
+          "description": "Ordered child values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        },
+        {
+          "description": "String-keyed object values.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        }
       ]
     },
     "Value": {
@@ -1786,6 +2047,25 @@
             "kind",
             "value"
           ]
+        },
+        {
+          "description": "Descriptor-owned structured JSON literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "structured"
+            },
+            "value": {
+              "description": "Structured JSON payload.",
+              "$ref": "#/$defs/StructuredValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
         }
       ]
     },
@@ -1856,6 +2136,11 @@
           "description": "Cell rectangle value.",
           "type": "string",
           "const": "rect"
+        },
+        {
+          "description": "Descriptor-owned structured JSON payload for fields whose shape is primitive-specific.",
+          "type": "string",
+          "const": "structured"
         }
       ]
     },

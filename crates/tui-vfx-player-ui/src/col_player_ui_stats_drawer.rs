@@ -14,15 +14,22 @@ const PLAYER_UI_STATS_DRAWER_WIDTH_PADDING: u16 = 4;
 /// Build the rapidly changing stats text shown in the right-side drawer.
 pub(crate) fn player_ui_stats_drawer_text_lines(app: &PlayerUiApp) -> Vec<String> {
     let report = app.player.report();
+    let sample = &app.player.last_backend_output.sample;
     vec![
         format!(
-            "loop_t={} elapsed={}ms",
-            app.player
-                .loop_t()
-                .map(|value| format!("{value:.2}"))
-                .unwrap_or_else(|| "none".to_string()),
-            app.player.elapsed_ms
+            "clock={} period={}",
+            sample.clock_mode,
+            sample
+                .clock_period_ms
+                .map(|value| format!("{value:.0}ms"))
+                .unwrap_or_else(|| "none".to_string())
         ),
+        format!(
+            "sample abs={} loop={}",
+            sample_absolute_label(app),
+            sample_loop_label(app)
+        ),
+        format!("loopback={}", loopback_status_label(app)),
         format!("hash={}", format_player_ui_hash(report.render_hash)),
         format!("non_empty={}", report.non_empty_cells),
         format!(
@@ -49,22 +56,31 @@ pub(crate) fn player_ui_stats_drawer_text_lines(app: &PlayerUiApp) -> Vec<String
 pub(crate) fn player_ui_stats_drawer_lines(app: &PlayerUiApp) -> Vec<Line<'static>> {
     let theme = PlayerUiTheme::eichler();
     let report = app.player.report();
+    let sample = &app.player.last_backend_output.sample;
     vec![
         Line::from(vec![
-            Span::styled("loop_t=", theme.metric_label_style()),
+            Span::styled("clock=", theme.metric_label_style()),
+            Span::styled(sample.clock_mode.clone(), theme.healthy_status_style()),
+            Span::raw(" "),
+            Span::styled("period=", theme.metric_label_style()),
             Span::styled(
-                app.player
-                    .loop_t()
-                    .map(|value| format!("{value:.2}"))
+                sample
+                    .clock_period_ms
+                    .map(|value| format!("{value:.0}ms"))
                     .unwrap_or_else(|| "none".to_string()),
                 theme.healthy_status_style(),
             ),
+        ]),
+        Line::from(vec![
+            Span::styled("abs=", theme.metric_label_style()),
+            Span::styled(sample_absolute_label(app), theme.healthy_status_style()),
             Span::raw(" "),
-            Span::styled("elapsed=", theme.metric_label_style()),
-            Span::styled(
-                format!("{}ms", app.player.elapsed_ms),
-                theme.metric_label_style(),
-            ),
+            Span::styled("loop=", theme.metric_label_style()),
+            Span::styled(sample_loop_label(app), theme.healthy_status_style()),
+        ]),
+        Line::from(vec![
+            Span::styled("loopback=", theme.metric_label_style()),
+            Span::styled(loopback_status_label(app), theme.healthy_status_style()),
         ]),
         Line::from(vec![
             Span::styled("hash=", theme.evidence_style()),
@@ -130,6 +146,47 @@ pub(crate) fn player_ui_stats_drawer_lines(app: &PlayerUiApp) -> Vec<Line<'stati
             ),
         ]),
     ]
+}
+
+fn sample_absolute_label(app: &PlayerUiApp) -> String {
+    app.player
+        .last_backend_output
+        .sample
+        .absolute_t_ms
+        .map(|value| format!("{value:.0}ms"))
+        .unwrap_or_else(|| format!("ui:{}ms", app.player.elapsed_ms))
+}
+
+fn sample_loop_label(app: &PlayerUiApp) -> String {
+    app.player
+        .last_backend_output
+        .sample
+        .loop_t
+        .map(|value| format!("{value:.2}"))
+        .unwrap_or_else(|| "none".to_string())
+}
+
+fn loopback_status_label(app: &PlayerUiApp) -> String {
+    let indicator_cells = app
+        .player
+        .last_backend_output
+        .styled_cells
+        .iter()
+        .filter(|cell| cell.role.as_deref() == Some("AuthoredLoopbackIndicator"))
+        .count();
+    let suppressed = app
+        .player
+        .report()
+        .warnings
+        .iter()
+        .filter(|warning| warning.code == "authoredLoopbackSuppressed")
+        .count();
+    match (indicator_cells > 0, suppressed) {
+        (true, 0) => "active".to_string(),
+        (true, count) => format!("active suppressed={count}"),
+        (false, 0) => "none".to_string(),
+        (false, count) => format!("suppressed={count}"),
+    }
 }
 
 /// Return the drawer width: widest stats line plus borders and jitter padding.

@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.29.0</VERS>
+// <VERS>VERSION: 0.30.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.29.0: MINOR — assert pulse style parity preserves V2 source-channel modulation.</CLOG>
+// <CLOG>0.30.0: MINOR — lock strict-native success for migrated filter parity recipes without claiming IR parity.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -13,6 +13,128 @@ use std::{
 };
 
 const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 146;
+
+#[test]
+fn test_fnc_cli_capture_cells_writes_dense_sqlite_rows_for_small_recipe() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-player-capture-cells-small");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("temp root");
+    let database_path = temp_root.join("capture.sqlite");
+
+    let output = run_player_cli(
+        vec![
+            str_arg("capture-cells"),
+            str_arg("--recipe"),
+            recipe_path("baseline.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--sqlite-output"),
+            database_path.display().to_string(),
+            str_arg("--frames"),
+            str_arg("2"),
+            str_arg("--width"),
+            str_arg("8"),
+            str_arg("--height"),
+            str_arg("4"),
+        ],
+        "capture-cells small recipe player cli",
+    );
+
+    assert!(output.status.success(), "stderr: {}", stderr(&output));
+    let report: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("capture cells summary json");
+    assert_eq!(report["schemaVersion"], "v3.1.player.cellCapture.1");
+    assert_eq!(report["frameCount"], 2);
+
+    let conn = rusqlite::Connection::open(&database_path).expect("capture sqlite");
+    let cell_count: i64 = conn
+        .query_row("select count(*) from player_capture_cells", [], |row| {
+            row.get(0)
+        })
+        .expect("cell count");
+    let expected_cell_count: i64 = conn
+        .query_row(
+            "select sum(width * height) from player_capture_frames",
+            [],
+            |row| row.get(0),
+        )
+        .expect("expected cell count");
+    let styled_count: i64 = conn
+        .query_row(
+            "select count(*) from player_capture_cells where foreground != 'defaultForeground' or background != 'transparent' or role is not null",
+            [],
+            |row| row.get(0),
+        )
+        .expect("styled count");
+    let glyphs: String = conn
+        .query_row(
+            "select group_concat(glyph, '') from player_capture_cells where frame_index = 0 order by row, col",
+            [],
+            |row| row.get(0),
+        )
+        .expect("glyph concat");
+
+    assert_eq!(report["cellCount"], expected_cell_count);
+    assert_eq!(cell_count, expected_cell_count);
+    assert!(
+        styled_count > 0,
+        "styled cells should retain style/role evidence"
+    );
+    assert!(
+        glyphs.contains("BASELIN"),
+        "dense capture should include text-grid glyphs, got {glyphs:?}"
+    );
+}
+
+#[test]
+fn test_fnc_cli_capture_cells_writes_procedural_recipe_metadata() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-player-capture-cells-procedural");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("temp root");
+    let database_path = temp_root.join("capture.sqlite");
+
+    let output = run_player_cli(
+        vec![
+            str_arg("capture-cells"),
+            str_arg("--recipe"),
+            recipe_path("sources/source_procedural_checkerboard.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--sqlite-output"),
+            database_path.display().to_string(),
+            str_arg("--frames"),
+            str_arg("1"),
+        ],
+        "capture-cells procedural recipe player cli",
+    );
+
+    assert!(output.status.success(), "stderr: {}", stderr(&output));
+
+    let conn = rusqlite::Connection::open(&database_path).expect("capture sqlite");
+    let cell_count: i64 = conn
+        .query_row("select count(*) from player_capture_cells", [], |row| {
+            row.get(0)
+        })
+        .expect("cell count");
+    let procedural_source_rows: i64 = conn
+        .query_row(
+            "select count(*) from player_capture_provenance where source_descriptor_id = 'source.procedural'",
+            [],
+            |row| row.get(0),
+        )
+        .expect("procedural provenance count");
+    let run_schema: String = conn
+        .query_row(
+            "select schema_version from player_capture_runs",
+            [],
+            |row| row.get(0),
+        )
+        .expect("run schema");
+
+    assert!(cell_count > 0);
+    assert_eq!(procedural_source_rows, 1);
+    assert_eq!(run_schema, "v3.1.player.cellCapture.sqlite.1");
+}
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() {
@@ -2991,6 +3113,100 @@ fn test_fnc_cli_renders_compositor_backend_native_one_off_content_filter_blocker
 }
 
 #[test]
+fn test_fnc_cli_renders_compositor_backend_native_migrated_filter_parity_recipes_json() {
+    for (recipe, recipe_id, effect_id, phase, summary_key, expected_stage_count) in [
+        (
+            "filters/filter_bracket_emphasis.json",
+            "debugFilterBracketEmphasis",
+            "filter.bracketEmphasis",
+            "dwell",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_bracket_emphasis_progress_binding.json",
+            "debugFilterBracketEmphasisProgressBinding",
+            "filter.bracketEmphasis",
+            "dwell",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_edge_grow_bottom_binding.json",
+            "debugFilterEdgeGrowBottomBinding",
+            "filter.edgeGrow",
+            "dwell",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_kitt_scanner_progress_binding.json",
+            "debugFilterKittScannerProgressBinding",
+            "filter.kittScanner",
+            "dwell",
+            "filters",
+            1,
+        ),
+        (
+            "filters/filter_pill_button.json",
+            "debugFilterPillButton",
+            "filter.pillButton",
+            "dwell",
+            "filters",
+            1,
+        ),
+        (
+            "filters/filter_underline_wipe_progress_binding.json",
+            "debugFilterUnderlineWipeProgressBinding",
+            "filter.underlineWipe",
+            "dwell",
+            "styleStages",
+            1,
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg("0.5"),
+            ],
+            "render-backend native migrated filter parity recipe player cli",
+        );
+
+        assert_eq!(report["backend"], "compositor", "{recipe}");
+        assert_eq!(report["recipeId"], recipe_id, "{recipe}");
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"][summary_key], expected_stage_count,
+            "{recipe}"
+        );
+        assert!(
+            report["loweredEffectIds"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!(effect_id)),
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
 fn test_fnc_cli_rejects_native_one_off_content_filter_blocker_unsupported_shapes_json() {
     for (effect_name, recipe_path_fragment, output_input_id) in [
         (
@@ -4641,23 +4857,48 @@ fn test_fnc_cli_reports_fixture_qc_for_fixture_corpus_json() {
     );
 
     assert_eq!(report["schemaVersion"], "v3.1.player.fixtureQcReport.1");
-    assert_eq!(
-        report["summary"]["totalRecipes"],
-        RECURSIVE_DEBUG_FIXTURE_COUNT
+    let total_recipes = report["summary"]["totalRecipes"]
+        .as_u64()
+        .expect("total recipe count");
+    assert!(total_recipes >= RECURSIVE_DEBUG_FIXTURE_COUNT as u64);
+    assert!(
+        report["summary"]["validated"]
+            .as_u64()
+            .expect("validated count")
+            < total_recipes,
+        "fixtures without parity metadata should no longer be counted as validated"
     );
-    assert_eq!(
-        report["summary"]["validated"],
-        RECURSIVE_DEBUG_FIXTURE_COUNT
+    assert!(
+        report["summary"]["validationErrors"]
+            .as_u64()
+            .expect("validation error count")
+            > 0,
+        "fixture-qc should fail fixtures that lack parity metadata"
     );
-    assert_eq!(report["summary"]["validationErrors"], 0);
-    assert_eq!(report["summary"]["rendered"], RECURSIVE_DEBUG_FIXTURE_COUNT);
+    assert!(
+        report["summary"]["rendered"]
+            .as_u64()
+            .expect("rendered count")
+            <= total_recipes,
+        "rendered count cannot exceed total recipes"
+    );
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["playerErrors"], 0);
     assert_eq!(report["summary"]["fieldCoverageUnhandled"], 0);
     assert_eq!(report["summary"]["adapterGapUnresolved"], 0);
     assert_eq!(report["summary"]["timelineSmokePassed"], true);
     assert_eq!(report["summary"]["diffSmokePassed"], true);
-    assert_eq!(report["summary"]["overallStatus"], "pass");
+    assert_eq!(report["summary"]["overallStatus"], "fail");
+    assert!(
+        report["errors"]
+            .as_array()
+            .expect("fixture-qc errors")
+            .iter()
+            .any(|error| error
+                .as_str()
+                .is_some_and(|message| message.contains("metadata.expectedVisual"))),
+        "fixture-qc should report missing expectedVisual parity metadata"
+    );
     assert_eq!(
         report["reports"]["render"]["schemaVersion"],
         "v3.1.player.run.1"

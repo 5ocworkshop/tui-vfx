@@ -65,6 +65,8 @@ pub struct CliOptions {
     pub sample_ms: Option<u64>,
     /// Scripted studio control assignments in key=value form.
     pub sets: Vec<String>,
+    /// SQLite database path for cell-capture output commands.
+    pub sqlite_output: Option<String>,
     /// Suppress clear-screen markers between live playback frames.
     pub no_clear: bool,
 }
@@ -99,6 +101,7 @@ impl Default for CliOptions {
             samples: 1,
             sample_ms: None,
             sets: Vec::new(),
+            sqlite_output: None,
             no_clear: false,
         }
     }

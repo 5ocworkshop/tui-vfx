@@ -25,6 +25,8 @@ pub struct PlayerRenderIrReport {
     pub phase_t: f64,
     /// Optional requested loop progress.
     pub loop_t: Option<f64>,
+    /// Recipe-clock interpretation used for this sample.
+    pub clock: PlayerRenderClockSample,
     /// Frame width in terminal cells.
     pub width: usize,
     /// Frame height in terminal cells.
@@ -67,6 +69,20 @@ pub struct PlayerRenderCell {
     pub modifiers: Vec<String>,
     /// Optional semantic role.
     pub role: Option<String>,
+}
+
+/// Recipe-clock sample metadata after player normalization.
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerRenderClockSample {
+    /// Recipe clock mode, or `unspecified` when the recipe has no lifecycle clock.
+    pub mode: String,
+    /// Loop period in milliseconds when the recipe clock is looping.
+    pub period_ms: Option<f64>,
+    /// Monotonic elapsed sample time in milliseconds when known.
+    pub absolute_t_ms: Option<f64>,
+    /// Loop-local progress after applying the recipe clock policy.
+    pub loop_t: Option<f64>,
 }
 
 /// Scene/source provenance for one placed recipe element.

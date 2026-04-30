@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>VERSION: 0.6.5</VERS>
+// <VERS>VERSION: 0.6.6</VERS>
 // <WCTX>Styled-cell substrate work: keep player evidence tests portable and explicit.</WCTX>
-// <CLOG>0.6.5: PATCH — expect V2 pulse parity to affect both style channels.</CLOG>
+// <CLOG>0.6.6: PATCH — assert vertical KittScanner varies by row rather than by column.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -14,8 +14,8 @@ use tui_vfx_contract::{
     RecipeDocument, SignalId, Value,
 };
 use tui_vfx_player::{
-    PlayerRenderBackend, PlayerSampleRequest, PlayerSession, PlayerStatus, PlayerStyledGrid,
-    RecipePlayer, StyledCellRenderBackend, TextGridRenderBackend,
+    PlayerLoopbackStrictness, PlayerRenderBackend, PlayerSampleRequest, PlayerSession,
+    PlayerStatus, PlayerStyledGrid, RecipePlayer, StyledCellRenderBackend, TextGridRenderBackend,
     build_visual_frame_from_styled_grid,
     fnc_render_scene::render_scene_with_source_asset_resolver,
     fnc_resolve_source_asset::{
@@ -441,6 +441,39 @@ fn filter_fixture_set_emits_styled_player_evidence() {
             "expected styled evidence for {relative}"
         );
     }
+}
+
+#[test]
+fn kitt_scanner_vertical_fixture_sweeps_by_row_not_column() {
+    let report = player().render_recipe(
+        &recipe(&v31_debug_recipe(
+            "filters/filter_kitt_scanner_vertical.json",
+        )),
+        &PlayerSampleRequest {
+            phase_t: 0.5,
+            loop_t: Some(0.25),
+            ..PlayerSampleRequest::default()
+        },
+    );
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert!(report.errors.is_empty());
+    let grid = report
+        .styled_grid
+        .expect("vertical KittScanner styled output");
+
+    let row_zero_foregrounds = foregrounds_at_row(&grid, 0);
+    let column_zero_foregrounds = foregrounds_at_column(&grid, 0);
+
+    assert_eq!(
+        row_zero_foregrounds.len(),
+        1,
+        "vertical KittScanner should keep a row color-uniform; foregrounds: {row_zero_foregrounds:?}"
+    );
+    assert!(
+        column_zero_foregrounds.len() > 1,
+        "vertical KittScanner should vary across rows; foregrounds: {column_zero_foregrounds:?}"
+    );
 }
 
 #[test]
@@ -1028,6 +1061,503 @@ fn scene_layer_visibility_binding_override_false_skips_layer() {
 }
 
 #[test]
+fn scene_layer_visibility_uses_preview_loopback_when_host_signal_missing() {
+    let mut value: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(v31_debug_recipe(
+            "scene/scene_layer_visibility_false_skips_layer.json",
+        ))
+        .expect("read visibility fixture"),
+    )
+    .expect("visibility json");
+    value["graph"]["signals"]["showPrimaryLayer"]["previewLoopback"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "boolean", "value": true }
+    });
+    let recipe = serde_json::from_value(value).expect("preview loopback recipe");
+
+    let report = player().render_recipe_ir(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert!(report.rows[0].contains("HIDDEN TOP"));
+    assert!(
+        report
+            .layers
+            .iter()
+            .any(|layer| layer.element_id == "hiddenElement" && layer.visible)
+    );
+}
+
+#[test]
+fn authored_loopback_indicator_marks_missing_host_signal_sample() {
+    let mut value = source_text_recipe_json("LOOPBACK OK");
+    value["graph"]["signals"]["demoLoopback"] = serde_json::json!({
+        "id": "demoLoopback",
+        "displayName": "Demo Loopback",
+        "description": "Test-only authored loopback signal.",
+        "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+        },
+        "previewLoopback": {
+            "kind": "literal",
+            "value": { "kind": "boolean", "value": true }
+        },
+        "required": false
+    });
+    let recipe = serde_json::from_value(value).expect("loopback indicator recipe");
+
+    let report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert!(
+        report.rows[0].ends_with("[LB]"),
+        "authored loopback usage should be visible in the top-right indicator row: {:?}",
+        report.rows
+    );
+}
+
+#[test]
+fn authored_loopback_indicator_is_suppressed_by_host_signal() {
+    let mut value = source_text_recipe_json("HOST VALUE");
+    value["graph"]["signals"]["demoLoopback"] = serde_json::json!({
+        "id": "demoLoopback",
+        "displayName": "Demo Loopback",
+        "description": "Test-only authored loopback signal.",
+        "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+        },
+        "previewLoopback": {
+            "kind": "literal",
+            "value": { "kind": "boolean", "value": true }
+        },
+        "required": false
+    });
+    let recipe = serde_json::from_value(value).expect("loopback indicator recipe");
+    let mut request = PlayerSampleRequest::default();
+    request
+        .signals
+        .insert(SignalId::new("demoLoopback"), Value::Boolean(false));
+
+    let report = player().render_recipe(&recipe, &request);
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert_eq!(report.rows[0].trim_end(), "HOST VALUE");
+    assert!(!report.rows[0].contains("[LB]"));
+}
+
+#[test]
+fn authored_loopback_strict_mode_records_intent_without_indicator_merge() {
+    let mut value = source_text_recipe_json("STRICT");
+    value["graph"]["signals"]["demoLoopback"] = serde_json::json!({
+        "id": "demoLoopback",
+        "displayName": "Demo Loopback",
+        "description": "Test-only authored loopback signal.",
+        "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+        },
+        "previewLoopback": {
+            "kind": "literal",
+            "value": { "kind": "boolean", "value": true }
+        },
+        "required": false
+    });
+    let recipe = serde_json::from_value(value).expect("loopback indicator recipe");
+    let request = PlayerSampleRequest {
+        loopback_strictness: PlayerLoopbackStrictness::Strict,
+        ..PlayerSampleRequest::default()
+    };
+
+    let report = player().render_recipe(&recipe, &request);
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert_eq!(report.rows[0].trim_end(), "STRICT");
+    assert!(report.warnings.iter().any(|warning| {
+        warning.code == "authoredLoopbackSuppressed" && warning.path.contains("demoLoopback")
+    }));
+}
+
+#[test]
+fn scene_anchor_placement_rule_centers_element_at_render_time() {
+    let mut value = source_text_recipe_json("HI");
+    value["scenes"][0]["width"] = serde_json::json!(6);
+    value["scenes"][0]["height"] = serde_json::json!(1);
+    value["scenes"][0]["elements"][0]["placementRule"] = serde_json::json!({
+        "kind": "anchor",
+        "anchor": "center",
+        "offsetRows": 0,
+        "offsetColumns": 0,
+        "siblingLayer": null,
+        "motion": null
+    });
+    let recipe = serde_json::from_value(value).expect("anchored scene recipe");
+
+    let report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert_eq!(report.rows[0], "  HI  ");
+}
+
+#[test]
+fn scene_overflow_wrap_places_out_of_bounds_cells_inside_scene() {
+    let mut value = source_text_recipe_json("ABC");
+    value["scenes"][0]["width"] = serde_json::json!(3);
+    value["scenes"][0]["height"] = serde_json::json!(1);
+    value["scenes"][0]["elements"][0]["placement"] = serde_json::json!({ "x": -1, "y": 0 });
+    value["scenes"][0]["elements"][0]["overflow"] = serde_json::json!("wrap");
+    let recipe = serde_json::from_value(value).expect("wrapped scene recipe");
+
+    let report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert_eq!(report.rows[0], "BCA");
+}
+
+#[test]
+fn madeira_flag_procedural_source_uses_authored_loopback_and_host_signal() {
+    let mut value: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(v31_debug_recipe("baseline.json")).expect("read baseline recipe"),
+    )
+    .expect("baseline json");
+    value["id"] = serde_json::json!("debugMadeiraFlagProcedural");
+    value["graph"]["signals"]["wave_speed"] = serde_json::json!({
+        "id": "wave_speed",
+        "displayName": "Wave speed",
+        "description": "Flag wave speed authored loopback.",
+        "value": {
+            "kind": "number",
+            "default": null,
+            "range": { "min": 0.0, "max": 4.0 },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "waveSpeed"
+        },
+        "previewLoopback": {
+            "kind": "numericSignal",
+            "expression": { "type": "ramp", "start": 0.5, "end": 2.0, "duration": 4.0 },
+            "fallback": { "kind": "number", "value": 1.0 }
+        },
+        "required": false
+    });
+    value["sources"]["mainCard"] = serde_json::json!({
+        "source": "source.procedural",
+        "inputs": {
+            "generator": { "kind": "literal", "value": { "kind": "string", "value": "braille_flag_field" } },
+            "width": { "kind": "literal", "value": { "kind": "integer", "value": 40 } },
+            "height": { "kind": "literal", "value": { "kind": "integer", "value": 17 } },
+            "params": {
+                "kind": "literal",
+                "value": {
+                    "kind": "structured",
+                    "value": {
+                        "layout": { "width_cells": 40, "flag_height_cells": 13, "overscan_rows": 2 },
+                        "wave": {
+                            "speed": { "binding": "wave_speed", "default": 1.0 },
+                            "primary_cycles": 8.0,
+                            "primary_rate": 2.4,
+                            "secondary_cycles": 15.0,
+                            "secondary_rate": 4.0,
+                            "secondary_scale": 0.3,
+                            "max_amplitude": 0.15
+                        },
+                        "asset": {
+                            "path": "/usr/projects/tui-vfx-recipes/recipes/madeira_flag/assets/base_flag_dots.json",
+                            "format": "tui-vfx.braille_flag_asset.v1"
+                        }
+                    }
+                }
+            }
+        },
+        "assets": {}
+    });
+    value["scenes"][0]["width"] = serde_json::json!(40);
+    value["scenes"][0]["height"] = serde_json::json!(17);
+    let recipe = serde_json::from_value(value).expect("madeira procedural recipe");
+    let request = PlayerSampleRequest {
+        loop_t: Some(0.5),
+        phase_t: 0.5,
+        ..PlayerSampleRequest::default()
+    };
+
+    let loopback_report = player().render_recipe(&recipe, &request);
+    let mut host_request = request.clone();
+    host_request
+        .signals
+        .insert(SignalId::new("wave_speed"), Value::Number(4.0));
+    let host_report = player().render_recipe(&recipe, &host_request);
+
+    assert_eq!(loopback_report.status, PlayerStatus::Rendered);
+    assert_eq!(host_report.status, PlayerStatus::Rendered);
+    assert!(
+        loopback_report
+            .rows
+            .iter()
+            .flat_map(|row| row.chars())
+            .any(|ch| ('\u{2800}'..='\u{28ff}').contains(&ch)),
+        "Madeira flag source should emit braille cells"
+    );
+    assert_ne!(
+        loopback_report.rows, host_report.rows,
+        "host-supplied wave_speed should win over authored loopback"
+    );
+}
+
+#[test]
+fn procedural_asset_ref_resolves_declared_asset_path_for_madeira_flag_source() {
+    let mut value: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(v31_debug_recipe("baseline.json")).expect("read baseline recipe"),
+    )
+    .expect("baseline json");
+    value["id"] = serde_json::json!("debugMadeiraFlagAssetRef");
+    value["assets"]["madeira_flag_base"] = serde_json::json!({
+        "id": "madeira_flag_base",
+        "kind": { "kind": "brailleDotfield" },
+        "format": "tui-vfx.braille_flag_asset.v1",
+        "locator": {
+            "kind": "path",
+            "path": "/usr/projects/tui-vfx-recipes/recipes/madeira_flag/assets/base_flag_dots.json"
+        },
+        "description": "Base Madeira flag dotfield artwork."
+    });
+    value["sources"]["mainCard"] = serde_json::json!({
+        "source": "source.procedural",
+        "inputs": {
+            "generator": { "kind": "literal", "value": { "kind": "string", "value": "braille_flag_field" } },
+            "width": { "kind": "literal", "value": { "kind": "integer", "value": 40 } },
+            "height": { "kind": "literal", "value": { "kind": "integer", "value": 17 } },
+            "params": {
+                "kind": "literal",
+                "value": {
+                    "kind": "structured",
+                    "value": {
+                        "layout": { "width_cells": 40, "flag_height_cells": 13, "overscan_rows": 2 },
+                        "wave": { "speed": 0.75 },
+                        "asset": {
+                            "id": "madeira_flag_base",
+                            "format": "tui-vfx.braille_flag_asset.v1"
+                        }
+                    }
+                }
+            }
+        },
+        "assets": {}
+    });
+    value["scenes"][0]["width"] = serde_json::json!(40);
+    value["scenes"][0]["height"] = serde_json::json!(17);
+    let recipe = serde_json::from_value(value).expect("asset ref procedural recipe");
+
+    let report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert!(report.errors.is_empty(), "{:?}", report.errors);
+    assert!(
+        report
+            .rows
+            .iter()
+            .flat_map(|row| row.chars())
+            .any(|ch| ('\u{2800}'..='\u{28ff}').contains(&ch)),
+        "asset ref should resolve to the Madeira braille flag dotfield"
+    );
+    let grid = report
+        .styled_grid
+        .expect("Madeira braille flag should carry styled color evidence");
+    assert!(
+        grid.cells()
+            .iter()
+            .filter(|cell| ('\u{2800}'..='\u{28ff}')
+                .contains(&cell.glyph.chars().next().unwrap_or(' ')))
+            .map(|cell| cell.foreground.as_str())
+            .any(|foreground| foreground.starts_with("rgba(")
+                && foreground != "rgba(255,255,255,255)"),
+        "Madeira flag braille cells should preserve asset palette/shading color detail; foregrounds: {:?}",
+        grid.cells()
+            .iter()
+            .filter(|cell| ('\u{2800}'..='\u{28ff}')
+                .contains(&cell.glyph.chars().next().unwrap_or(' ')))
+            .map(|cell| cell.foreground.as_str())
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn madeira_flag_full_scene_fixture_maps_source_bindings_assets_and_visibility() {
+    let recipe = recipe(&v31_debug_recipe(
+        "scene/scene_madeira_flag_full_scene.json",
+    ));
+
+    let loopback_report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
+    let mut host_request = PlayerSampleRequest::default();
+    host_request
+        .signals
+        .insert(SignalId::new("show_hint"), Value::Boolean(false));
+    host_request
+        .signals
+        .insert(SignalId::new("fireworks_enabled"), Value::Boolean(false));
+    host_request
+        .signals
+        .insert(SignalId::new("wave_speed"), Value::Number(4.0));
+    let host_report = player().render_recipe(&recipe, &host_request);
+
+    assert_eq!(loopback_report.status, PlayerStatus::Rendered);
+    assert_eq!(host_report.status, PlayerStatus::Rendered);
+    assert_eq!(
+        loopback_report.rows.len(),
+        24,
+        "Madeira scene should preserve the source recipe's 80x24 fullscreen layout"
+    );
+    assert!(
+        loopback_report
+            .rows
+            .iter()
+            .all(|row| row.chars().count() == 80),
+        "Madeira scene rows should preserve the source recipe's 80-column layout"
+    );
+    assert!(loopback_report.rows[0].ends_with("[LB]"));
+    assert!(
+        loopback_report.rows[19].contains("Feliz Ano Novo"),
+        "source sibling-relative placement puts greeting below the flag at row 19"
+    );
+    assert!(
+        loopback_report.rows[20].contains("Happy New Year From"),
+        "source sibling-relative placement puts subtext below the flag at row 20"
+    );
+    assert!(
+        loopback_report.rows[21].contains("Funchal, Madeira"),
+        "source sibling-relative placement puts location below the flag at row 21"
+    );
+    assert!(
+        loopback_report.rows[22].contains("Press Esc to return"),
+        "source sibling-relative placement puts hint below the flag at row 22"
+    );
+    assert!(!host_report.rows[0].contains("[LB]"));
+    assert!(
+        loopback_report
+            .rows
+            .iter()
+            .any(|row| row.contains("Press") && row.contains("Esc")),
+        "show_hint preview loopback should keep the hint text visible"
+    );
+    assert!(
+        !host_report
+            .rows
+            .iter()
+            .any(|row| row.contains("Press") && row.contains("Esc")),
+        "host show_hint=false should hide the hint layer"
+    );
+    assert_ne!(
+        loopback_report.rows, host_report.rows,
+        "host wave/fireworks/hint signals should materially change the full scene"
+    );
+    let grid = loopback_report
+        .styled_grid
+        .expect("full Madeira scene should carry styled procedural evidence");
+    let colored_scene_cells = grid
+        .cells()
+        .iter()
+        .filter(|cell| {
+            cell.foreground.starts_with("rgba(")
+                && cell.foreground != "rgba(255,255,255,255)"
+                && cell.role.as_deref() != Some("AuthoredLoopbackIndicator")
+        })
+        .count();
+    assert!(
+        colored_scene_cells > 20,
+        "Madeira full scene should preserve flag/fireworks/backdrop color detail, not only the loopback indicator; colored cells={colored_scene_cells}"
+    );
+    assert_cell_style_at_text(
+        &grid,
+        "Feliz",
+        "rgba(255,215,0,255)",
+        &["bold"],
+        "greeting text should preserve source gold/bold surface style",
+    );
+    assert_cell_style_at_text(
+        &grid,
+        "Funchal",
+        "rgba(0,191,255,255)",
+        &["bold"],
+        "location text should preserve source cyan/bold surface style",
+    );
+    assert_cell_style_at_text(
+        &grid,
+        "Press",
+        "rgba(150,150,150,255)",
+        &["dim"],
+        "hint text should preserve source grey/dim surface style",
+    );
+}
+
+#[test]
+fn madeira_flag_full_scene_uses_absolute_elapsed_time_for_wave_motion() {
+    let recipe = recipe(&v31_debug_recipe(
+        "scene/scene_madeira_flag_full_scene.json",
+    ));
+    let first = player().render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase_t: 0.0,
+            loop_t: Some(0.0),
+            absolute_t_ms: Some(0.0),
+            ..PlayerSampleRequest::default()
+        },
+    );
+    let later = player().render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase_t: 0.0,
+            loop_t: Some(0.0),
+            absolute_t_ms: Some(4_000.0),
+            ..PlayerSampleRequest::default()
+        },
+    );
+
+    assert_eq!(first.status, PlayerStatus::Rendered);
+    assert_eq!(later.status, PlayerStatus::Rendered);
+    assert_ne!(
+        first.rows, later.rows,
+        "Madeira flag/fireworks motion must advance from absolute elapsed time, not only normalized phase_t/loop_t"
+    );
+}
+
+#[test]
+fn scene_braille_flag_asset_token_preserves_source_centered_bbox() {
+    let recipe = recipe(&v31_debug_recipe(
+        "scene/scene_braille_flag_asset_token.json",
+    ));
+
+    let report = player().render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase_t: 0.0,
+            loop_t: Some(0.0),
+            absolute_t_ms: Some(0.0),
+            ..PlayerSampleRequest::default()
+        },
+    );
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert_eq!(braille_bbox(&report.rows), Some((1, 1, 40, 16, 549)));
+    assert_eq!(report.rows.len(), 17);
+    assert!(
+        report.rows.iter().all(|row| row.chars().count() == 42),
+        "asset-token scene must preserve the V3 fixture's 42x17 layout"
+    );
+}
+
+#[test]
 fn scene_skip_transparent_empty_preserves_lower_content() {
     let recipe = transparent_overlay_recipe();
     let report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
@@ -1533,54 +2063,25 @@ fn transparent_overlay_recipe() -> RecipeDocument {
 }
 
 fn source_text_recipe() -> RecipeDocument {
+    serde_json::from_value(source_text_recipe_json("HELLO TEXT")).expect("source.text recipe")
+}
+
+fn source_text_recipe_json(text: &str) -> serde_json::Value {
     let mut value: serde_json::Value = serde_json::from_str(
         &fs::read_to_string(v31_debug_recipe("baseline.json")).expect("read baseline recipe"),
     )
     .expect("baseline json");
     value["id"] = serde_json::json!("debugTextSource");
-    value["sourceDescriptors"] = serde_json::json!({
-        "source.text": {
-            "id": "source.text",
-            "version": "0.1.0",
-            "displayName": "Text Source",
-            "category": "debug",
-            "kind": { "kind": "text" },
-            "inputs": {
-                "text": {
-                    "displayName": "Text",
-                    "description": "Text rendered into a source-produced surface.",
-                    "value": {
-                        "kind": "text",
-                        "default": null,
-                        "range": null,
-                        "allowedValues": [],
-                        "unit": null,
-                        "semantic": null
-                    },
-                    "bindable": true,
-                    "runtimeMutability": "runtime"
-                }
-            },
-            "assets": {},
-            "output": {
-                "size": { "kind": "inputDriven" },
-                "roles": { "kind": "defaultRole", "role": "Text" }
-            },
-            "lifecycle": {
-                "deterministicWithSeed": true,
-                "timeAware": false,
-                "resizeAware": true
-            }
-        }
-    });
     value["sources"]["mainCard"] = serde_json::json!({
         "source": "source.text",
         "inputs": {
-            "text": { "kind": "literal", "value": { "kind": "text", "value": "HELLO TEXT" } }
+            "text": { "kind": "literal", "value": { "kind": "text", "value": text } },
+            "width": { "kind": "literal", "value": { "kind": "integer", "value": text.chars().count() } },
+            "height": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
         },
         "assets": {}
     });
-    serde_json::from_value(value).expect("source.text recipe")
+    value
 }
 
 fn source_card_chrome_recipe() -> RecipeDocument {
@@ -1674,6 +2175,76 @@ fn assert_no_foreground(grid: &PlayerStyledGrid, forbidden: &str) {
         grid.cells().iter().all(|cell| cell.foreground != forbidden),
         "did not expect foreground {forbidden}"
     );
+}
+
+fn braille_bbox(rows: &[String]) -> Option<(usize, usize, usize, usize, usize)> {
+    let points = rows
+        .iter()
+        .enumerate()
+        .flat_map(|(y, row)| {
+            row.chars().enumerate().filter_map(move |(x, ch)| {
+                ('\u{2800}'..='\u{28ff}').contains(&ch).then_some((x, y))
+            })
+        })
+        .collect::<Vec<_>>();
+    Some((
+        points.iter().map(|(x, _)| *x).min()?,
+        points.iter().map(|(_, y)| *y).min()?,
+        points.iter().map(|(x, _)| *x).max()?,
+        points.iter().map(|(_, y)| *y).max()?,
+        points.len(),
+    ))
+}
+
+fn assert_cell_style_at_text(
+    grid: &PlayerStyledGrid,
+    text_fragment: &str,
+    expected_foreground: &str,
+    expected_modifiers: &[&str],
+    message: &str,
+) {
+    let matching_cells = grid
+        .cells()
+        .iter()
+        .filter(|cell| text_fragment.contains(cell.glyph.as_str()))
+        .collect::<Vec<_>>();
+    assert!(
+        matching_cells
+            .iter()
+            .any(|cell| cell.foreground == expected_foreground
+                && expected_modifiers
+                    .iter()
+                    .all(|modifier| cell.modifiers.iter().any(|known| known == modifier))),
+        "{message}; matching styled cells: {:?}",
+        matching_cells
+            .iter()
+            .map(|cell| (&cell.glyph, &cell.foreground, &cell.modifiers))
+            .collect::<Vec<_>>()
+    );
+}
+
+fn foregrounds_at_row(grid: &PlayerStyledGrid, y: usize) -> Vec<&str> {
+    let mut foregrounds = grid
+        .cells()
+        .iter()
+        .filter(|cell| cell.y == y)
+        .map(|cell| cell.foreground.as_str())
+        .collect::<Vec<_>>();
+    foregrounds.sort_unstable();
+    foregrounds.dedup();
+    foregrounds
+}
+
+fn foregrounds_at_column(grid: &PlayerStyledGrid, x: usize) -> Vec<&str> {
+    let mut foregrounds = grid
+        .cells()
+        .iter()
+        .filter(|cell| cell.x == x)
+        .map(|cell| cell.foreground.as_str())
+        .collect::<Vec<_>>();
+    foregrounds.sort_unstable();
+    foregrounds.dedup();
+    foregrounds
 }
 
 struct SmokeImageResolver;

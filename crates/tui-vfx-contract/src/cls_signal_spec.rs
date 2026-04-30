@@ -3,7 +3,7 @@
 // <WCTX>New kernel Phase F2: declare host/runtime-provided signal contracts.</WCTX>
 // <CLOG>0.1.0: INIT — add signal id, metadata, value spec, requirement policy, and validation.</CLOG>
 
-use crate::{DescriptorValidationError, SignalId, ValueSpec};
+use crate::{DescriptorValidationError, PreviewLoopbackSpec, SignalId, ValueSpec};
 
 /// Host/runtime-provided signal contract.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
@@ -17,6 +17,9 @@ pub struct SignalSpec {
     pub description: Option<String>,
     /// Typed value contract, including any fallback default.
     pub value: ValueSpec,
+    /// Optional deterministic preview/demo provider used only when the host does not supply the signal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview_loopback: Option<PreviewLoopbackSpec>,
     /// Whether a host must provide this signal when no default is declared.
     pub required: bool,
 }
@@ -30,7 +33,11 @@ impl SignalSpec {
             });
         }
 
-        self.value.validate()
+        self.value.validate()?;
+        if let Some(loopback) = &self.preview_loopback {
+            loopback.validate_for_signal(&self.value)?;
+        }
+        Ok(())
     }
 }
 

@@ -164,6 +164,34 @@ fn test_fnc_ui_script_fires_event_dwell_trigger() {
 }
 
 #[test]
+fn test_fnc_ui_script_fires_integer_event_dwell_trigger() {
+    let mut state = PlayerUiState::load(&options(recipe_path(
+        "event_driven_dwell/integer_binding_demo.json",
+    )))
+    .expect("load ui state");
+
+    let output = run_script(&mut state, "t", false);
+
+    assert!(output.contains("dwell trigger fired; next sample moved to exit"));
+    assert!(output.contains("fired canonical signal `dismissCount`"));
+    assert!(output.contains("phase: Exit"));
+}
+
+#[test]
+fn test_fnc_ui_script_fires_text_event_dwell_trigger() {
+    let mut state = PlayerUiState::load(&options(recipe_path(
+        "event_driven_dwell/text_binding_demo.json",
+    )))
+    .expect("load ui state");
+
+    let output = run_script(&mut state, "t", false);
+
+    assert!(output.contains("dwell trigger fired; next sample moved to exit"));
+    assert!(output.contains("fired canonical signal `dismissReason`"));
+    assert!(output.contains("phase: Exit"));
+}
+
+#[test]
 fn test_fnc_ui_reports_styled_primitives_visibly() {
     let mut state = PlayerUiState::load(&options(recipe_path(
         "shaders/primitives/shader_linear_gradient.json",

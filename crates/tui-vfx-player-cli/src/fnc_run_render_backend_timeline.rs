@@ -36,7 +36,7 @@ pub fn run_render_backend_timeline(mut options: CliOptions) -> Result<(), String
             index as f64 / (samples - 1) as f64
         };
         options.loop_t = Some(options.phase_t);
-        options.sample_ms = None;
+        options.sample_ms = Some((options.phase_t * options.duration_ms as f64).round() as u64);
         outputs.push(render_backend_for_path(&options, path)?);
     }
 

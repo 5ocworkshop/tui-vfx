@@ -1,7 +1,8 @@
 <!-- <FILE>docs/tooling/INDEX.md</FILE> - <DESC>Tooling documentation index for tui-vfx and tui-vfx-recipes.</DESC> -->
-<!-- <VERS>VERSION: 0.2.6</VERS> -->
+<!-- <VERS>VERSION: 0.2.7</VERS> -->
 <!-- <WCTX>Make the V3 tooling hub a command-first start page that maps as-built command surfaces, schema/reference directories, and future player tooling PRD.</WCTX> -->
-<!-- <CLOG>0.2.6: add K2 player tooling validation PRD reference.
+<!-- <CLOG>0.2.7: add v3.1 player cell-capture SQLite command.
+0.2.6: add K2 player tooling validation PRD reference.
 0.2.5: add v3.1 schema/reference directory map.
 0.2.4: add recipe-side V3 generated-doc and rustdoc gate commands to the tooling map.</CLOG> -->
 
@@ -30,6 +31,7 @@ deeper guide when you need more detail.
 | Validation plus probe in one flow | `pipeline-validator --probe ... <recipe.json>` | as-built | Validator owns recipe parsing/rules; delegated output is structured probe evidence. |
 | Direct engine scene probe | `cargo run -q -p tui-vfx-probe --bin pipeline-probe -- --input <scene.json> ...` from `/usr/projects/tui-vfx` | engine-level | `ProbeSceneSpec`; not recipe-aware. |
 | Frame diff and SQLite xray | `recipe-probe --diff-to <t> --sqlite-query '<sql>' <recipe.json>` | diff/database | Reuse existing probe report/database shape. Do not invent a parallel diff format. |
+| Player dense frame/cell capture | `cargo run -q -p tui-vfx-player-cli -- capture-cells --recipe <v3.1-recipe.json> --descriptor-pack descriptors/v3.1/packs/primitive.json --sqlite-output <capture.sqlite> --frames <n>` | player/database | v3.1-owned dense playback cells for frame-by-frame and cell-by-cell parity localization. |
 | Unified lifecycle/trace evidence | `cargo run -q -p tui-vfx-trace -- --recipe <recipe.json> --format report` | trace | Headless recipe trace CLI for lifecycle/resolution/composition/pipeline evidence. |
 | Lightweight player summary / corpus readiness | `cargo run -q -p tui-vfx-horseman -- (--corpus <dir> | <recipe.json>) [--json]` | headless player | Packaged non-interactive summary surface. The command and package are both `tui-vfx-horseman`; do not document the discarded temporary player name. |
 | Human preview/browser | `cargo run --example demo -- [recipe.json]` | preview/player | Interactive ratatui browser and visual sign-off. |

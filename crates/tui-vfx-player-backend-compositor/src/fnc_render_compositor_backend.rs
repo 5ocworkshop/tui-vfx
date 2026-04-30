@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.13.0</VERS>
+// <VERS>VERSION: 0.18.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.13.0: MINOR — apply native pulse style stages for V2-compatible channel parity.</CLOG>
+// <CLOG>0.18.0: MINOR — render style.glitch native stage.
+// 0.17.0: MINOR — render style.rainbow native stage.
+// 0.16.0: MINOR — render shader highlighter/focusField applyTo targets.
+// 0.15.0: MINOR — add horizontal center wipe rendering while preserving active filter/sampler patches.</CLOG>
 
 use std::{borrow::Cow, collections::BTreeMap};
 
@@ -247,8 +250,15 @@ fn scene_ir_with_native_content_stages(
             NativeContentStage::CrtJitterSampler {
                 amplitude,
                 frequency,
+                decay_ms,
                 seed,
-            } => apply_crt_jitter_sampler_content_stage(&mut staged, *amplitude, *frequency, *seed),
+            } => apply_crt_jitter_sampler_content_stage(
+                &mut staged,
+                *amplitude,
+                *frequency,
+                *decay_ms,
+                *seed,
+            ),
             NativeContentStage::FaultLineSampler {
                 seed,
                 intensity,
@@ -315,6 +325,17 @@ fn scene_ir_with_native_content_stages(
                 *dim_amount,
                 *italic_window,
             ),
+            NativeStyleStage::Rainbow { rotation_speed } => {
+                apply_rainbow_style_stage(&mut staged, *rotation_speed)
+            }
+            NativeStyleStage::Glitch {
+                seed,
+                intensity,
+                italic_start,
+                italic_end,
+            } => {
+                apply_glitch_style_stage(&mut staged, *seed, *intensity, *italic_start, *italic_end)
+            }
             NativeStyleStage::ColorFade {
                 target,
                 color_space,
@@ -344,11 +365,15 @@ fn scene_ir_with_native_content_stages(
             } => apply_vignette_style_stage(&mut staged, *strength, edge_color, apply_to),
             NativeStyleStage::BracketEmphasis {
                 emphasis_color,
+                background_color,
+                progress,
                 edge_width,
                 apply_to,
             } => apply_bracket_emphasis_style_stage(
                 &mut staged,
                 emphasis_color,
+                background_color,
+                *progress,
                 *edge_width,
                 apply_to,
             ),
@@ -356,10 +381,24 @@ fn scene_ir_with_native_content_stages(
                 direction,
                 progress,
                 edge_color,
+                background_color,
+                margin_width,
+                rest_eighths,
+                peak_eighths,
                 apply_to,
-            } => {
-                apply_edge_grow_style_stage(&mut staged, direction, *progress, edge_color, apply_to)
-            }
+            } => apply_edge_grow_style_stage(
+                &mut staged,
+                EdgeGrowStyleInputs {
+                    direction,
+                    progress: *progress,
+                    edge_color,
+                    background_color,
+                    margin_width: *margin_width,
+                    rest_eighths: *rest_eighths,
+                    peak_eighths: *peak_eighths,
+                    apply_to,
+                },
+            ),
             NativeStyleStage::HoverBar {
                 bar_color,
                 thickness,
@@ -416,34 +455,47 @@ fn scene_ir_with_native_content_stages(
             ),
             NativeStyleStage::UnderlineWipe {
                 underline_color,
+                background_color,
+                direction,
+                line_char,
+                row_offset,
                 progress,
-                thickness,
+                gradient,
+                glisten,
                 apply_to,
             } => apply_underline_wipe_style_stage(
                 &mut staged,
-                underline_color,
-                *progress,
-                *thickness,
-                apply_to,
+                UnderlineWipeStyleInputs {
+                    underline_color,
+                    background_color,
+                    direction,
+                    line_char: *line_char,
+                    row_offset: *row_offset,
+                    progress: *progress,
+                    gradient: *gradient,
+                    glisten: *glisten,
+                    apply_to,
+                },
             ),
             NativeStyleStage::Highlighter {
                 color,
+                apply_to,
                 blend_strength,
                 text_contrast,
                 soft_edge,
                 direction,
-                mode,
+                mode: _,
                 row_mask,
                 band_width,
             } => apply_highlighter_style_stage(
                 &mut staged,
                 HighlighterStyleInputs {
                     color,
+                    apply_to,
                     blend_strength: *blend_strength,
                     text_contrast: *text_contrast,
                     soft_edge: *soft_edge,
                     direction,
-                    mode,
                     row_mask: *row_mask,
                     band_width: *band_width,
                 },
@@ -461,6 +513,7 @@ fn scene_ir_with_native_content_stages(
                 radius_y,
                 feather,
                 intensity,
+                apply_to,
             } => apply_focus_field_style_stage(
                 &mut staged,
                 FocusFieldStyleInputs {
@@ -476,6 +529,7 @@ fn scene_ir_with_native_content_stages(
                     radius_y: *radius_y,
                     feather: *feather,
                     intensity: *intensity,
+                    apply_to,
                 },
             ),
             NativeStyleStage::GlistenBand {
@@ -1018,13 +1072,14 @@ fn apply_crt_jitter_sampler_content_stage(
     report: &mut PlayerRenderIrReport,
     amplitude: f64,
     frequency: f64,
+    decay_ms: f64,
     seed: usize,
 ) {
     let report_columns = report_width(report);
     let report_rows = report_height(report);
     let mut rows = dense_rows(report, report_columns, report_rows);
     let time = report.loop_t.unwrap_or(report.phase_t);
-    let amplitude = amplitude.max(0.0);
+    let amplitude = decayed_crt_jitter_amplitude(amplitude.max(0.0), decay_ms, time);
     let frequency = frequency.max(0.0);
     let seed = seed as f64;
     for (y, row) in rows.iter_mut().enumerate() {
@@ -1033,6 +1088,15 @@ fn apply_crt_jitter_sampler_content_stage(
     }
     report.rows = rows;
     sync_styled_cells_to_rows(report);
+}
+
+fn decayed_crt_jitter_amplitude(amplitude: f64, decay_ms: f64, time: f64) -> f64 {
+    if decay_ms <= 0.0 {
+        amplitude
+    } else {
+        let decay = decay_ms / 1000.0;
+        amplitude * (-decay * time * 5.0).exp()
+    }
 }
 
 fn apply_fault_line_sampler_content_stage(
@@ -1346,6 +1410,47 @@ fn apply_neon_flicker_style_stage(
     }
 }
 
+fn apply_rainbow_style_stage(report: &mut PlayerRenderIrReport, _rotation_speed: f64) {
+    let width = report_width(report).max(1);
+    let height = report_height(report);
+    for y in 0..height {
+        for x in 0..width {
+            set_report_cell_style(
+                report,
+                x,
+                y,
+                Some(rgba_label(0, 255, 254, 255).as_str()),
+                None,
+                None,
+            );
+        }
+    }
+}
+
+fn apply_glitch_style_stage(
+    report: &mut PlayerRenderIrReport,
+    _seed: usize,
+    _intensity: f64,
+    italic_start: f64,
+    italic_end: f64,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let italic = (italic_start..=italic_end).contains(&report.phase_t);
+    for y in 0..height {
+        for x in 0..width {
+            set_report_cell_style(
+                report,
+                x,
+                y,
+                Some(rgba_label(0, 255, 255, 255).as_str()),
+                None,
+                italic.then_some("italic"),
+            );
+        }
+    }
+}
+
 fn apply_color_fade_style_stage(
     report: &mut PlayerRenderIrReport,
     target: &str,
@@ -1429,7 +1534,7 @@ fn apply_pulse_style_stage(
     let width = report_width(report);
     let height = report_height(report);
     let clock = report.loop_t.unwrap_or(report.phase_t);
-    let strength = ((clock * frequency.max(0.0) * std::f64::consts::TAU).sin() * 0.5 + 0.5) as f32;
+    let strength = (clock * frequency.max(0.0) * std::f64::consts::TAU).sin() * 0.5 + 0.5;
     for y in 0..height {
         for x in 0..width {
             let (existing_foreground, existing_background) = report
@@ -1499,18 +1604,31 @@ fn apply_vignette_style_stage(
 fn apply_bracket_emphasis_style_stage(
     report: &mut PlayerRenderIrReport,
     emphasis_color: &str,
+    background_color: &str,
+    progress: f64,
     edge_width: usize,
     apply_to: &str,
 ) {
     let width = report_width(report);
     let height = report_height(report);
+    let progress = progress.clamp(0.0, 1.0);
+    let active_edge_width = ((edge_width.max(1) as f64) * progress).ceil() as usize;
     for y in 0..height {
         for x in 0..width {
-            let on_edge = x < edge_width || x + edge_width >= width;
+            let on_edge = x < active_edge_width || x + active_edge_width >= width;
             let foreground = if on_edge {
                 Cow::Borrowed(emphasis_color)
             } else {
-                Cow::Owned(lerp_rgba_label(emphasis_color, WHITE_RGBA, 0.7))
+                Cow::Owned(lerp_rgba_label(
+                    emphasis_color,
+                    WHITE_RGBA,
+                    (0.7 + 0.3 * progress) as f32,
+                ))
+            };
+            let background = if on_edge {
+                Cow::Borrowed(background_color)
+            } else {
+                Cow::Owned(lerp_rgba_label(background_color, BLACK_RGBA, 0.7))
             };
             set_report_filter_cell(
                 report,
@@ -1518,7 +1636,7 @@ fn apply_bracket_emphasis_style_stage(
                 y,
                 apply_to,
                 foreground.as_ref(),
-                TRANSPARENT_RGBA,
+                background.as_ref(),
                 &[],
                 "FilterBracketEmphasis",
             );
@@ -1526,36 +1644,56 @@ fn apply_bracket_emphasis_style_stage(
     }
 }
 
-fn apply_edge_grow_style_stage(
-    report: &mut PlayerRenderIrReport,
-    direction: &str,
+struct EdgeGrowStyleInputs<'a> {
+    direction: &'a str,
     progress: f64,
-    edge_color: &str,
-    apply_to: &str,
-) {
+    edge_color: &'a str,
+    background_color: &'a str,
+    margin_width: usize,
+    rest_eighths: usize,
+    peak_eighths: usize,
+    apply_to: &'a str,
+}
+
+fn apply_edge_grow_style_stage(report: &mut PlayerRenderIrReport, inputs: EdgeGrowStyleInputs<'_>) {
     let width = report_width(report).max(1);
     let height = report_height(report).max(1);
-    let progress = progress.clamp(0.0, 1.0);
-    let limit = match direction {
+    let eighth_span = inputs
+        .peak_eighths
+        .saturating_sub(inputs.rest_eighths)
+        .max(1) as f64
+        / 8.0;
+    let progress = (inputs.rest_eighths as f64 / 8.0
+        + inputs.progress.clamp(0.0, 1.0) * eighth_span)
+        .clamp(0.0, 1.0);
+    let limit = match inputs.direction {
         "top" | "bottom" => (height as f64 * progress).ceil() as usize,
         _ => (width as f64 * progress).ceil() as usize,
     };
     for y in 0..height {
         for x in 0..width {
-            let coordinate = match direction {
+            let coordinate = match inputs.direction {
                 "right" => width.saturating_sub(1).saturating_sub(x),
                 "top" => y,
                 "bottom" => height.saturating_sub(1).saturating_sub(y),
                 _ => x,
             };
-            let mix = if coordinate < limit { 0.0 } else { 0.75 };
-            let foreground = lerp_rgba_label(edge_color, WHITE_RGBA, mix);
-            let background = lerp_rgba_label(edge_color, BLACK_RGBA, 0.7 + mix * 0.2);
+            let in_margin = match inputs.direction {
+                "top" | "bottom" => x < inputs.margin_width || x + inputs.margin_width >= width,
+                _ => y < inputs.margin_width || y + inputs.margin_width >= height,
+            };
+            let mix = if coordinate < limit && !in_margin {
+                0.0
+            } else {
+                0.75
+            };
+            let foreground = lerp_rgba_label(inputs.edge_color, WHITE_RGBA, mix);
+            let background = lerp_rgba_label(inputs.background_color, BLACK_RGBA, mix * 0.35);
             set_report_filter_cell(
                 report,
                 x,
                 y,
-                apply_to,
+                inputs.apply_to,
                 foreground.as_str(),
                 background.as_str(),
                 &[],
@@ -1670,11 +1808,11 @@ fn apply_matrix_rain_style_stage(
 
 struct HighlighterStyleInputs<'a> {
     color: &'a str,
+    apply_to: &'a str,
     blend_strength: f64,
     text_contrast: f64,
     soft_edge: bool,
     direction: &'a str,
-    mode: &'a str,
     row_mask: i64,
     band_width: usize,
 }
@@ -1702,11 +1840,6 @@ fn apply_highlighter_style_stage(
         inputs.color,
         inputs.blend_strength as f32,
     );
-    let apply_to = if inputs.mode == "row" {
-        "both"
-    } else {
-        "background"
-    };
     let role = if inputs.soft_edge {
         "ShaderHighlighterSoft"
     } else {
@@ -1723,7 +1856,7 @@ fn apply_highlighter_style_stage(
                 x
             };
             if (axis as isize - center).unsigned_abs() <= band_width {
-                set_report_shader_cell(report, x, y, apply_to, color.as_str(), role);
+                set_report_shader_cell(report, x, y, inputs.apply_to, color.as_str(), role);
             }
         }
     }
@@ -1742,6 +1875,7 @@ struct FocusFieldStyleInputs<'a> {
     radius_y: f64,
     feather: f64,
     intensity: f64,
+    apply_to: &'a str,
 }
 
 fn apply_focus_field_style_stage(
@@ -1776,7 +1910,7 @@ fn apply_focus_field_style_stage(
                     report,
                     x,
                     y,
-                    "foreground",
+                    inputs.apply_to,
                     focus_color.as_str(),
                     "ShaderFocusField",
                 );
@@ -2040,37 +2174,120 @@ fn sub_pixel_bar_glyph(filled: usize) -> &'static str {
     }
 }
 
+struct UnderlineWipeStyleInputs<'a> {
+    underline_color: &'a str,
+    background_color: &'a str,
+    direction: &'a str,
+    line_char: char,
+    row_offset: usize,
+    progress: f64,
+    gradient: bool,
+    glisten: f64,
+    apply_to: &'a str,
+}
+
 fn apply_underline_wipe_style_stage(
     report: &mut PlayerRenderIrReport,
-    underline_color: &str,
-    progress: f64,
-    thickness: usize,
-    apply_to: &str,
+    inputs: UnderlineWipeStyleInputs<'_>,
 ) {
     let width = report_width(report);
     let height = report_height(report);
-    let cutoff = (width as f64 * progress.clamp(0.0, 1.0)).ceil() as usize;
-    let thickness = thickness.max(1);
-    for y in 0..height {
-        for x in 0..width {
-            let underlined = x < cutoff && y + thickness >= height;
-            let foreground = if underlined {
-                Cow::Borrowed(underline_color)
-            } else {
-                Cow::Owned(lerp_rgba_label(underline_color, WHITE_RGBA, 0.75))
-            };
-            let modifiers: &[&str] = if underlined { &["underline"] } else { &[] };
-            set_report_filter_cell(
-                report,
-                x,
-                y,
-                apply_to,
-                foreground.as_ref(),
-                TRANSPARENT_RGBA,
-                modifiers,
-                "FilterUnderlineWipe",
-            );
+    if width == 0 || height == 0 {
+        return;
+    }
+    let target_row = height
+        .saturating_sub(1)
+        .saturating_sub(inputs.row_offset.min(height.saturating_sub(1)));
+    let progress = inputs.progress.clamp(0.0, 1.0);
+    let revealed_width = (width as f64 * progress).ceil() as usize;
+    if revealed_width == 0 {
+        return;
+    }
+    for x in 0..width {
+        let (should_draw, position_ratio) =
+            underline_wipe_cell_position(x, width, revealed_width, inputs.direction);
+        if !should_draw {
+            continue;
         }
+        let foreground =
+            underline_wipe_color(report, &inputs, position_ratio.clamp(0.0, 1.0) as f32);
+        set_report_cell_glyph_exact(
+            report,
+            x,
+            target_row,
+            &inputs.line_char.to_string(),
+            foreground_for_apply_to(inputs.apply_to, &foreground),
+            background_for_apply_to(inputs.apply_to, inputs.background_color),
+            &["underline"],
+            "FilterUnderlineWipe",
+        );
+    }
+}
+
+fn underline_wipe_cell_position(
+    x: usize,
+    width: usize,
+    revealed_width: usize,
+    direction: &str,
+) -> (bool, f64) {
+    match direction {
+        "rightToLeft" | "right_to_left" => {
+            let start = width.saturating_sub(revealed_width);
+            let draw = x >= start;
+            let ratio = width.saturating_sub(1).saturating_sub(x) as f64 / revealed_width as f64;
+            (draw, ratio)
+        }
+        _ => {
+            let draw = x < revealed_width;
+            let ratio = x as f64 / revealed_width as f64;
+            (draw, ratio)
+        }
+    }
+}
+
+fn underline_wipe_color(
+    report: &PlayerRenderIrReport,
+    inputs: &UnderlineWipeStyleInputs<'_>,
+    position_ratio: f32,
+) -> String {
+    let base_color = if inputs.gradient {
+        lerp_rgba_label(
+            inputs.background_color,
+            inputs.underline_color,
+            1.0 - position_ratio,
+        )
+    } else {
+        inputs.underline_color.to_string()
+    };
+    if inputs.glisten <= 0.0 {
+        return base_color;
+    }
+    let clock = report.loop_t.unwrap_or(report.phase_t);
+    let glisten_position = ((clock * 0.45).fract()) as f32;
+    let distance = (position_ratio - glisten_position)
+        .abs()
+        .min((position_ratio - glisten_position + 1.0).abs());
+    let intensity = ((1.0 - distance / 0.2).clamp(0.0, 1.0) * inputs.glisten as f32) * 0.25;
+    if intensity <= 0.0 {
+        base_color
+    } else {
+        lerp_rgba_label(&base_color, WHITE_RGBA, intensity)
+    }
+}
+
+fn background_for_apply_to<'a>(apply_to: &str, background_color: &'a str) -> &'a str {
+    if matches!(apply_to, "background" | "both") {
+        background_color
+    } else {
+        TRANSPARENT_RGBA
+    }
+}
+
+fn foreground_for_apply_to<'a>(apply_to: &str, foreground_color: &'a str) -> &'a str {
+    if matches!(apply_to, "foreground" | "both") {
+        foreground_color
+    } else {
+        DEFAULT_FOREGROUND
     }
 }
 
@@ -2539,6 +2756,12 @@ fn wipe_keeps_cell(
 ) -> bool {
     match direction {
         "rightToLeft" => x >= width.saturating_sub(horizontal_cutoff),
+        "horizontalCenterOut" | "horizontal_center_out" => {
+            horizontal_center_out_keeps_cell(x, width, horizontal_cutoff)
+        }
+        "horizontalEdgesIn" | "horizontal_edges_in" => {
+            horizontal_edges_in_keeps_cell(x, width, horizontal_cutoff)
+        }
         "topToBottom" => y < vertical_cutoff,
         "bottomToTop" => y >= height.saturating_sub(vertical_cutoff),
         "outFromTopLeft" => {
@@ -2598,6 +2821,17 @@ fn wipe_keeps_cell(
     }
 }
 
+fn horizontal_center_out_keeps_cell(x: usize, width: usize, cutoff: usize) -> bool {
+    let center_twice = width.saturating_sub(1);
+    let x_twice = x.saturating_mul(2);
+    x_twice.abs_diff(center_twice) <= cutoff.saturating_mul(2).saturating_sub(1)
+}
+
+fn horizontal_edges_in_keeps_cell(x: usize, width: usize, cutoff: usize) -> bool {
+    let edge_reveal = cutoff / 2;
+    x < edge_reveal || x >= width.saturating_sub(edge_reveal)
+}
+
 fn vignette_distance_from_center(x: usize, y: usize, width: usize, height: usize) -> f64 {
     let center_x = (width.saturating_sub(1)) as f64 / 2.0;
     let center_y = (height.saturating_sub(1)) as f64 / 2.0;
@@ -2632,7 +2866,7 @@ fn lerp_rgba_label(from: &str, to: &str, t: f32) -> String {
     )
 }
 
-fn pulse_lerp_rgba_label(from: &str, to: &str, t: f32) -> String {
+fn pulse_lerp_rgba_label(from: &str, to: &str, t: f64) -> String {
     let Some((from_r, from_g, from_b, from_a)) = parse_rgba_label(from) else {
         return from.to_string();
     };
@@ -2649,8 +2883,8 @@ fn pulse_lerp_rgba_label(from: &str, to: &str, t: f32) -> String {
     )
 }
 
-fn pulse_lerp_channel(start: u8, end: u8, inv_t: f32, t: f32) -> u8 {
-    (start as f32 * inv_t + end as f32 * t) as u8
+fn pulse_lerp_channel(start: u8, end: u8, inv_t: f64, t: f64) -> u8 {
+    (start as f64 * inv_t + end as f64 * t) as u8
 }
 
 fn lerp_channel(start: u8, end: u8, inv_t: f32, t: f32) -> u8 {
@@ -3000,4 +3234,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.13.0</VERS>
+// <VERS>END OF VERSION: 0.15.0</VERS>

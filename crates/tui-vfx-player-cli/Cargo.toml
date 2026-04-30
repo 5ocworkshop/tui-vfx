@@ -19,6 +19,7 @@ tui-vfx-player.workspace = true
 tui-vfx-player-backend-compositor.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+rusqlite = { version = "0.32", features = ["bundled"] }
 
 # <FILE>crates/tui-vfx-player-cli/Cargo.toml</FILE> - <DESC>Contract-native skeleton player CLI manifest</DESC>
 # <VERS>END OF VERSION: 0.1.0</VERS>

@@ -5,7 +5,8 @@
 
 use crate::{
     CellWritePolicy, ClipPolicy, ElementId, ElementPlacement, LayerId, RecipeElementPipeline,
-    RoleWritePolicy, SourceInstanceId,
+    RoleWritePolicy, SceneElementOverflowPolicy, SceneElementPlacementRule, SceneElementSurface,
+    SceneElementVisibility, SourceInstanceId, StructuredValue,
 };
 
 /// Scene element whose surface is produced by a declared source instance.
@@ -24,6 +25,21 @@ pub struct RecipeSceneElement {
     pub source: SourceInstanceId,
     /// Optional source-local or element-local pipeline reference.
     pub pipeline: Option<RecipeElementPipeline>,
+    /// Optional declarative placement rule preserving anchor, sibling-relative, and motion placement semantics.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub placement_rule: Option<SceneElementPlacementRule>,
+    /// Optional typed visibility policy for phase-aware or binding-backed layer visibility.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<SceneElementVisibility>,
+    /// Optional layer-local surface style and shadow envelope.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub surface: Option<SceneElementSurface>,
+    /// Optional overflow policy beyond simple scene-bound clipping.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub overflow: Option<SceneElementOverflowPolicy>,
+    /// Optional structured element motion payload preserved from scene authoring.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub motion: Option<StructuredValue>,
     /// Policy for local cells that land outside the final scene bounds.
     pub clip_policy: ClipPolicy,
     /// Policy for whether transparent empty local cells write or skip.

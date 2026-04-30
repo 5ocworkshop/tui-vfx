@@ -17,6 +17,7 @@ categories.workspace = true
 tui-vfx-contract.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+mixed-signals.workspace = true
 mcu-hct.workspace = true
 mcu-utils.workspace = true
 

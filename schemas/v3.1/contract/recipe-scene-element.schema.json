@@ -27,6 +27,28 @@
         }
       ]
     },
+    "motion": {
+      "description": "Optional structured element motion payload preserved from scene authoring.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/StructuredValue"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "overflow": {
+      "description": "Optional overflow policy beyond simple scene-bound clipping.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SceneElementOverflowPolicy"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "pipeline": {
       "description": "Optional source-local or element-local pipeline reference.",
       "anyOf": [
@@ -42,6 +64,17 @@
       "description": "Placement of the source-produced surface in scene coordinates.",
       "$ref": "#/$defs/ElementPlacement"
     },
+    "placementRule": {
+      "description": "Optional declarative placement rule preserving anchor, sibling-relative, and motion placement semantics.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SceneElementPlacementRule"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "roleWritePolicy": {
       "description": "Policy for how a written cell updates the final scene role channel.",
       "$ref": "#/$defs/RoleWritePolicy"
@@ -49,6 +82,28 @@
     "source": {
       "description": "Source instance that produces this element-local semantic surface.",
       "$ref": "#/$defs/SourceInstanceId"
+    },
+    "surface": {
+      "description": "Optional layer-local surface style and shadow envelope.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SceneElementSurface"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "visibility": {
+      "description": "Optional typed visibility policy for phase-aware or binding-backed layer visibility.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SceneElementVisibility"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "zIndex": {
       "description": "Z order; higher values compose later and appear above lower values.",
@@ -97,6 +152,47 @@
         }
       ]
     },
+    "Color": {
+      "description": "RGBA color with alpha channel for compositing.\n\nUnlike framework-specific color types, this includes an alpha channel\nto enable proper effect layering and transparency.",
+      "type": "object",
+      "properties": {
+        "a": {
+          "description": "Alpha channel (0=transparent, 255=opaque)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "b": {
+          "description": "Blue channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "g": {
+          "description": "Green channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "r": {
+          "description": "Red channel (0-255)",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ]
+    },
     "ElementId": {
       "description": "Stable scene element identity used by diagnostics and future recipe references.",
       "type": "string"
@@ -120,6 +216,48 @@
       "required": [
         "x",
         "y"
+      ]
+    },
+    "GradientSpec": {
+      "description": "Canonical gradient value for descriptor inputs.",
+      "type": "object",
+      "properties": {
+        "space": {
+          "description": "Color interpolation space, such as `rgb` or `hct`.",
+          "type": "string"
+        },
+        "stops": {
+          "description": "Ordered or author-provided gradient stops.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GradientStop"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "stops",
+        "space"
+      ]
+    },
+    "GradientStop": {
+      "description": "One color stop in a canonical gradient value.",
+      "type": "object",
+      "properties": {
+        "color": {
+          "description": "Color sampled at this stop.",
+          "$ref": "#/$defs/Color"
+        },
+        "position": {
+          "description": "Normalized stop position in the inclusive 0..1 range.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "color"
       ]
     },
     "GraphId": {
@@ -205,6 +343,11 @@
         }
       ]
     },
+    "GraphValueId": {
+      "description": "Stable value identifier published into a canonical graph-local value bus.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
     "GraphValueMergePolicy": {
       "description": "Policy for resolving graph value outputs produced by parallel branches.",
       "oneOf": [
@@ -228,10 +371,53 @@
       "description": "Optional scene layer identity used for grouping elements without a full layer graph.",
       "type": "string"
     },
+    "LifecyclePhase": {
+      "description": "Named high-level interval in a recipe lifecycle.",
+      "oneOf": [
+        {
+          "description": "Initial appearance or setup interval.",
+          "type": "string",
+          "const": "enter"
+        },
+        {
+          "description": "Sustained interval that may be fixed or trigger-terminated.",
+          "type": "string",
+          "const": "dwell"
+        },
+        {
+          "description": "Final departure or teardown interval.",
+          "type": "string",
+          "const": "exit"
+        }
+      ]
+    },
     "NodeId": {
       "description": "Stable node identifier inside a canonical graph.",
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "NumericRange": {
+      "description": "Optional inclusive numeric bounds for a value spec.",
+      "type": "object",
+      "properties": {
+        "max": {
+          "description": "Inclusive maximum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "min": {
+          "description": "Inclusive minimum value when present.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        }
+      },
+      "additionalProperties": false
     },
     "ParallelMergePolicy": {
       "description": "Policy for resolving channel writes produced by parallel graph branches.",
@@ -248,6 +434,11 @@
         }
       ]
     },
+    "ParameterId": {
+      "description": "Stable public recipe parameter identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
     "RecipeElementPipeline": {
       "description": "Optional element-local pipeline reference into the canonical graph.",
       "type": "object",
@@ -255,6 +446,17 @@
         "graph": {
           "description": "Graph that owns the nodes used by this element-local pipeline.",
           "$ref": "#/$defs/GraphId"
+        },
+        "timing": {
+          "description": "Optional element-local enter/exit timing envelope.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecipeElementPipelineTiming"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "topology": {
           "description": "Optional pipeline topology subset for this element.",
@@ -271,6 +473,104 @@
       "additionalProperties": false,
       "required": [
         "graph"
+      ]
+    },
+    "RecipeElementPipelineTiming": {
+      "description": "Element-local timing for scene layer pipeline effects.\n\nThese values are relative to the parent recipe timeline. They do not choose\na clock policy; the recipe lifecycle clock still owns sample-space\ninterpretation. Renderers use this envelope only to derive a local\n`phase_t` for element-local pipeline steps.",
+      "type": "object",
+      "properties": {
+        "enterEase": {
+          "description": "Element-local enter easing label preserved for backend/tooling parity.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enterMs": {
+          "description": "Element-local enter duration in milliseconds.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "enterOffsetMs": {
+          "description": "Offset from parent timeline start before the element enter effect begins.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "exitEase": {
+          "description": "Element-local exit easing label preserved for backend/tooling parity.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exitMs": {
+          "description": "Element-local exit duration in milliseconds.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "exitOffsetMs": {
+          "description": "Offset from parent exit timeline start before the element exit effect begins.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "Rect": {
+      "description": "Rectangle in cell coordinates.\n\nThis is the primary geometry type for defining effect regions.",
+      "type": "object",
+      "properties": {
+        "height": {
+          "description": "Rectangle height in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "width": {
+          "description": "Rectangle width in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "x": {
+          "description": "Left edge x coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "y": {
+          "description": "Top edge y coordinate in cells.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
       ]
     },
     "RoleTag": {
@@ -404,10 +704,1122 @@
         }
       ]
     },
+    "SceneAnchor": {
+      "description": "Named anchor point used to place an element inside a scene or sibling layer.",
+      "oneOf": [
+        {
+          "description": "Top-left corner.",
+          "type": "string",
+          "const": "topLeft"
+        },
+        {
+          "description": "Top edge centered horizontally.",
+          "type": "string",
+          "const": "topCenter"
+        },
+        {
+          "description": "Top-right corner.",
+          "type": "string",
+          "const": "topRight"
+        },
+        {
+          "description": "Left edge centered vertically.",
+          "type": "string",
+          "const": "centerLeft"
+        },
+        {
+          "description": "Center point.",
+          "type": "string",
+          "const": "center"
+        },
+        {
+          "description": "Right edge centered vertically.",
+          "type": "string",
+          "const": "centerRight"
+        },
+        {
+          "description": "Bottom-left corner.",
+          "type": "string",
+          "const": "bottomLeft"
+        },
+        {
+          "description": "Bottom edge centered horizontally.",
+          "type": "string",
+          "const": "bottomCenter"
+        },
+        {
+          "description": "Bottom-right corner.",
+          "type": "string",
+          "const": "bottomRight"
+        }
+      ]
+    },
+    "SceneElementOverflowPolicy": {
+      "description": "Policy for element-local cells that overflow the element's scene placement.",
+      "oneOf": [
+        {
+          "description": "Clip overflowing cells to the scene bounds.",
+          "type": "string",
+          "const": "clip"
+        },
+        {
+          "description": "Hide the entire element when any painted cell would overflow.",
+          "type": "string",
+          "const": "hide"
+        },
+        {
+          "description": "Wrap overflowing cells back inside the scene bounds.",
+          "type": "string",
+          "const": "wrap"
+        }
+      ]
+    },
+    "SceneElementPlacementRule": {
+      "description": "Declarative placement rule for a recipe scene element.\n\nThe existing `placement` field remains the resolved absolute fallback.\n`placementRule` carries richer scene authoring intent so players and validators\ncan reproduce anchor, sibling-relative, and motion-aware scenes without\nflattening those semantics out of the recipe tree.",
+      "oneOf": [
+        {
+          "description": "Place by an absolute target rectangle in scene coordinates.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "absolute"
+            },
+            "motion": {
+              "description": "Optional placement-motion payload preserved from scene authoring.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/StructuredValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "rect": {
+              "description": "Absolute target rectangle.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rect"
+          ]
+        },
+        {
+          "description": "Place relative to a scene anchor or an already-declared sibling layer.",
+          "type": "object",
+          "properties": {
+            "anchor": {
+              "description": "Anchor point used for placement.",
+              "$ref": "#/$defs/SceneAnchor"
+            },
+            "kind": {
+              "type": "string",
+              "const": "anchor"
+            },
+            "motion": {
+              "description": "Optional placement-motion payload preserved from scene authoring.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/StructuredValue"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "offsetColumns": {
+              "description": "Column offset applied after resolving the anchor.",
+              "type": "integer",
+              "format": "int32"
+            },
+            "offsetRows": {
+              "description": "Row offset applied after resolving the anchor.",
+              "type": "integer",
+              "format": "int32"
+            },
+            "siblingLayer": {
+              "description": "Optional sibling layer used as the anchor frame instead of the scene.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/LayerId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "anchor",
+            "offsetRows",
+            "offsetColumns"
+          ]
+        }
+      ]
+    },
+    "SceneElementSurface": {
+      "description": "Element-local surface styling envelope.\n\nThis is the canonical v3.1 home for authored layer base style and attached\nshadow details. The payloads are structured because the stable style and\nshadow vocabularies are still owned by their descriptor/runtime adapters.",
+      "type": "object",
+      "properties": {
+        "baseStyle": {
+          "description": "Optional base style applied before the element-local pipeline.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StructuredValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shadow": {
+          "description": "Optional attached shadow payload owned by this element surface.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StructuredValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "SceneElementVisibility": {
+      "description": "Visibility policy for one recipe scene element.",
+      "oneOf": [
+        {
+          "description": "Element is always visible.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "always"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Element is visible only for the listed lifecycle phases.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "phase"
+            },
+            "phases": {
+              "description": "Lifecycle phases where the element is visible.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/LifecyclePhase"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "phases"
+          ]
+        },
+        {
+          "description": "Element visibility is decided by evaluating a typed value source.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "predicate"
+            },
+            "predicate": {
+              "description": "Predicate that decides whether the element is visible.",
+              "$ref": "#/$defs/ValuePredicate"
+            },
+            "source": {
+              "description": "Source value used by the visibility predicate.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source",
+            "predicate"
+          ]
+        }
+      ]
+    },
+    "ScopeSpec": {
+      "description": "Minimal Phase A/B scope algebra.",
+      "oneOf": [
+        {
+          "description": "Match every in-bounds cell.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "all"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells with the requested role in the active role space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "role": {
+              "description": "Role required in the active role space.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role"
+          ]
+        },
+        {
+          "description": "Match a rectangle in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "rect": {
+              "description": "Rectangle to match in the active coordinate space.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rect"
+          ]
+        },
+        {
+          "description": "Match rows `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "rowRange"
+            },
+            "start": {
+              "description": "Inclusive start row in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match columns `[start, end)` in the active coordinate space.",
+          "type": "object",
+          "properties": {
+            "end": {
+              "description": "Exclusive end column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "columnRange"
+            },
+            "start": {
+              "description": "Inclusive start column in the active coordinate space.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "start",
+            "end"
+          ]
+        },
+        {
+          "description": "Match rows where `row % modulus == remainder`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "moduloRows"
+            },
+            "modulus": {
+              "description": "Positive modulus used to select rows.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "remainder": {
+              "description": "Remainder selected by the modulo expression.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulus",
+            "remainder"
+          ]
+        },
+        {
+          "description": "Match columns where `column % modulus == remainder`.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "moduloColumns"
+            },
+            "modulus": {
+              "description": "Positive modulus used to select columns.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            },
+            "remainder": {
+              "description": "Remainder selected by the modulo expression.",
+              "type": "integer",
+              "format": "uint",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "modulus",
+            "remainder"
+          ]
+        },
+        {
+          "description": "Match cells containing non-empty glyph content.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "nonEmpty"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match the outer perimeter band.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "outerBand"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Match cells that are not on the outer perimeter.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "inner"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "SignalId": {
+      "description": "Stable host/runtime signal identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
     "SourceInstanceId": {
       "description": "Stable recipe-local source instance identifier.",
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+    },
+    "StructuredValue": {
+      "description": "JSON-compatible structured payload owned by a descriptor field.\n\nUse this only when the primitive owns a nested payload whose stable shape is\ndescriptor-specific, such as path lists, particle options, or glyph-style\nrule tables. Prefer narrower typed values whenever a field has scalar,\ncolor, gradient, duration, scope, or rect semantics.",
+      "anyOf": [
+        {
+          "description": "Explicit null.",
+          "type": "null"
+        },
+        {
+          "description": "Boolean leaf value.",
+          "type": "boolean"
+        },
+        {
+          "description": "Floating-point numeric leaf value.",
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "description": "String leaf value.",
+          "type": "string"
+        },
+        {
+          "description": "Ordered child values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        },
+        {
+          "description": "String-keyed object values.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        }
+      ]
+    },
+    "Value": {
+      "description": "Canonical tagged literal value used by effect input specs.",
+      "oneOf": [
+        {
+          "description": "Explicit absence of a value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "null"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Boolean true/false literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "boolean"
+            },
+            "value": {
+              "description": "Boolean payload.",
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Signed integer literal without a fractional component.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "integer"
+            },
+            "value": {
+              "description": "Integer payload.",
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Floating-point numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "number"
+            },
+            "value": {
+              "description": "Number payload.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Short machine-facing string literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "string"
+            },
+            "value": {
+              "description": "String payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Human-facing text literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "text"
+            },
+            "value": {
+              "description": "Text payload.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "RGBA color literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "color"
+            },
+            "value": {
+              "description": "Color payload.",
+              "$ref": "#/$defs/Color"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Gradient stop payload.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "gradient"
+            },
+            "value": {
+              "description": "Gradient payload.",
+              "$ref": "#/$defs/GradientSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Duration literal expressed as seconds.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "duration"
+            },
+            "value": {
+              "description": "Duration payload in seconds.",
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Closed-set enum literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "enum"
+            },
+            "value": {
+              "description": "Selected enum value.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Semantic role literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "role"
+            },
+            "value": {
+              "description": "Role payload.",
+              "$ref": "#/$defs/RoleTag"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Surface scope literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "scope"
+            },
+            "value": {
+              "description": "Scope payload.",
+              "$ref": "#/$defs/ScopeSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Cell rectangle literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "rect"
+            },
+            "value": {
+              "description": "Rectangle payload.",
+              "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Descriptor-owned structured JSON literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "structured"
+            },
+            "value": {
+              "description": "Structured JSON payload.",
+              "$ref": "#/$defs/StructuredValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "ValuePredicate": {
+      "description": "Typed predicate evaluated against a lifecycle trigger value source.",
+      "oneOf": [
+        {
+          "description": "Source value must be boolean true.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "isTrue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source value must be boolean false.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "isFalse"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source value must be a non-zero integer, number, or duration.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "nonZero"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source value must be a non-empty string or text value.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "nonEmpty"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "description": "Source value must equal the typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "equals"
+            },
+            "value": {
+              "description": "Typed literal used for equality comparison.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value must not equal the typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "notEquals"
+            },
+            "value": {
+              "description": "Typed literal used for inequality comparison.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value must be greater than the typed numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "greaterThan"
+            },
+            "value": {
+              "description": "Typed numeric literal used as the exclusive lower bound.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value must be less than the typed numeric literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "lessThan"
+            },
+            "value": {
+              "description": "Typed numeric literal used as the exclusive upper bound.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Convenience level predicate with documented per-kind truthiness behavior.\n\nThe contract truth table is boolean true, integer non-zero, finite number\nnon-zero, string/text non-empty, color or gradient value present, and finite duration\nnon-zero. Null, enum, role, scope, and rect have no I0 truth rule.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "truthy"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    },
+    "ValueSource": {
+      "description": "Declarative source for a typed value.",
+      "oneOf": [
+        {
+          "description": "Source value is a typed literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "literal"
+            },
+            "value": {
+              "description": "Literal typed value.",
+              "$ref": "#/$defs/Value"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared public parameter.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the parameter is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced parameter id.",
+              "$ref": "#/$defs/ParameterId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "parameter"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from a declared host/runtime signal.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the signal is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced signal id.",
+              "$ref": "#/$defs/SignalId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "signal"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value comes from an earlier graph-local node output.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback literal when the value is unavailable at execution time.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "description": "Referenced graph-local value id.",
+              "$ref": "#/$defs/GraphValueId"
+            },
+            "kind": {
+              "type": "string",
+              "const": "graphValue"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ]
+        },
+        {
+          "description": "Source value maps a numeric source from one range to another.",
+          "type": "object",
+          "properties": {
+            "clamp": {
+              "description": "Whether values outside the input range should clamp before mapping.",
+              "type": "boolean"
+            },
+            "from": {
+              "description": "Nested numeric-compatible source to map.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "input": {
+              "description": "Inclusive input range for the nested source.",
+              "$ref": "#/$defs/NumericRange"
+            },
+            "kind": {
+              "type": "string",
+              "const": "map"
+            },
+            "output": {
+              "description": "Inclusive output range produced by the map.",
+              "$ref": "#/$defs/NumericRange"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "from",
+            "input",
+            "output",
+            "clamp"
+          ]
+        },
+        {
+          "description": "Source value samples a deterministic per-cell spatial field.",
+          "type": "object",
+          "properties": {
+            "fallback": {
+              "description": "Optional fallback value when the sampled field is unavailable.",
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "field": {
+              "description": "Canonical sampled field name, such as `surfaceAngleFrom`.",
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "sampledField"
+            },
+            "x": {
+              "description": "X coordinate source used by the sampled field.",
+              "$ref": "#/$defs/ValueSource"
+            },
+            "y": {
+              "description": "Y coordinate source used by the sampled field.",
+              "$ref": "#/$defs/ValueSource"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "field",
+            "x",
+            "y"
+          ]
+        }
+      ]
     }
   }
 }

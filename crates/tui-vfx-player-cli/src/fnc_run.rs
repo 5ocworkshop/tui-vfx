@@ -5,8 +5,8 @@
 
 use crate::{
     cls_cli_options::CliOptions, fnc_parse_cli_options::parse_cli_options,
-    fnc_print_usage::print_usage, fnc_run_control_catalog::run_control_catalog,
-    fnc_run_fixture_qc::run_fixture_qc,
+    fnc_print_usage::print_usage, fnc_run_capture_cells::run_capture_cells,
+    fnc_run_control_catalog::run_control_catalog, fnc_run_fixture_qc::run_fixture_qc,
     fnc_run_implementation_readiness::run_implementation_readiness,
     fnc_run_inventory_recipes::run_inventory_recipes, fnc_run_migration_gap::run_migration_gap,
     fnc_run_migration_mapping_batch::run_migration_mapping_batch,
@@ -49,6 +49,7 @@ fn is_known_command(command: &str) -> bool {
             | "render-backend"
             | "render-backend-timeline"
             | "play-backend"
+            | "capture-cells"
             | "inventory-recipes"
             | "migration-gap"
             | "migration-mapping-batch"
@@ -72,6 +73,7 @@ fn dispatch_command(command: &str, options: CliOptions) -> Result<(), String> {
         "render-backend" => run_render_backend(options),
         "render-backend-timeline" => run_render_backend_timeline(options),
         "play-backend" => run_play_backend(options),
+        "capture-cells" => run_capture_cells(options),
         "inventory-recipes" => run_inventory_recipes(options),
         "migration-gap" => run_migration_gap(options),
         "migration-mapping-batch" => run_migration_mapping_batch(options),

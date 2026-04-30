@@ -3,7 +3,7 @@
 // <WCTX>New kernel Phase H1: preserve source-local pipeline integration point without runtime execution.</WCTX>
 // <CLOG>0.1.0: INIT — add element-local graph/topology reference for future lowering.</CLOG>
 
-use crate::{GraphId, GraphStep};
+use crate::{GraphId, GraphStep, RecipeElementPipelineTiming};
 
 /// Optional element-local pipeline reference into the canonical graph.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
@@ -11,6 +11,9 @@ use crate::{GraphId, GraphStep};
 pub struct RecipeElementPipeline {
     /// Graph that owns the nodes used by this element-local pipeline.
     pub graph: GraphId,
+    /// Optional element-local enter/exit timing envelope.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timing: Option<RecipeElementPipelineTiming>,
     /// Optional pipeline topology subset for this element.
     pub topology: Option<GraphStep>,
 }

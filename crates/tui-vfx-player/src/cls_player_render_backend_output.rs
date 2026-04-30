@@ -86,6 +86,12 @@ pub struct PlayerRenderBackendSample {
     pub phase_t: f64,
     /// Optional requested loop progress.
     pub loop_t: Option<f64>,
+    /// Recipe clock mode used to interpret this sample.
+    pub clock_mode: String,
+    /// Recipe clock loop period in milliseconds when applicable.
+    pub clock_period_ms: Option<f64>,
+    /// Monotonic elapsed sample time in milliseconds when known.
+    pub absolute_t_ms: Option<f64>,
 }
 
 /// Player-owned render backend diagnostic.
@@ -118,6 +124,9 @@ impl PlayerRenderBackendOutput {
                 phase: "unknown".to_string(),
                 phase_t: 0.0,
                 loop_t: None,
+                clock_mode: "unspecified".to_string(),
+                clock_period_ms: None,
+                absolute_t_ms: None,
             },
             rows,
             non_default_styled_cells: styled_cells
@@ -172,6 +181,9 @@ impl PlayerRenderBackendOutput {
                 phase: format!("{:?}", input.phase),
                 phase_t: input.phase_t,
                 loop_t: input.loop_t,
+                clock_mode: input.clock.mode.clone(),
+                clock_period_ms: input.clock.period_ms,
+                absolute_t_ms: input.clock.absolute_t_ms,
             },
             rows,
             styled_cells,

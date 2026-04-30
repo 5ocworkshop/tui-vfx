@@ -8,8 +8,8 @@ use std::path::Path;
 use tui_vfx_contract::RecipeDocument;
 
 use crate::{
-    PlayerError, PlayerFrame, PlayerFrameReport, PlayerRenderIrReport, PlayerSampleRequest,
-    PlayerStatus, RecipePlayer, fnc_render_hash::render_hash,
+    PlayerError, PlayerFrame, PlayerFrameReport, PlayerRenderClockSample, PlayerRenderIrReport,
+    PlayerSampleRequest, PlayerStatus, RecipePlayer, fnc_render_hash::render_hash,
 };
 
 /// Render one canonical recipe JSON file into a player render IR report.
@@ -71,6 +71,12 @@ fn file_error(
         phase: report.phase,
         phase_t: report.phase_t,
         loop_t: report.loop_t,
+        clock: PlayerRenderClockSample {
+            mode: "unavailable".to_string(),
+            period_ms: None,
+            absolute_t_ms: request.absolute_t_ms,
+            loop_t: request.loop_t,
+        },
         width: report.width,
         height: report.height,
         render_hash: report.render_hash,

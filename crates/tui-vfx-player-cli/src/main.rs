@@ -12,6 +12,7 @@ mod fnc_print_render_report;
 mod fnc_print_usage;
 mod fnc_report_root;
 mod fnc_run;
+mod fnc_run_capture_cells;
 mod fnc_run_control_catalog;
 mod fnc_run_fixture_qc;
 mod fnc_run_implementation_readiness;

@@ -23,7 +23,7 @@ use tui_vfx_player_backend_compositor::render_compositor_backend_request;
 
 use crate::{
     CliOptions, PlayerUiCommand, PlayerUiControl,
-    fnc_player_ui_state_support::{cycle_phase, dwell_trigger_signal, read_recipe},
+    fnc_player_ui_state_support::{cycle_phase, dwell_trigger_fire_value, read_recipe},
 };
 
 /// Mutable state for one visual player UI session.
@@ -76,6 +76,7 @@ impl PlayerUiState {
         let request = PlayerSampleRequest {
             phase: LifecyclePhase::Enter,
             phase_t: 0.0,
+            absolute_t_ms: Some(0.0),
             width: options.width,
             height: options.height,
             ..PlayerSampleRequest::default()
@@ -144,6 +145,7 @@ impl PlayerUiState {
         self.request.phase = LifecyclePhase::Enter;
         self.request.phase_t = 0.0;
         self.request.loop_t = None;
+        self.request.absolute_t_ms = Some(0.0);
         self.elapsed_ms = 0;
         self.paused = false;
         self.controls = generated_controls(&self.recipe, self.player.descriptor_catalog());
@@ -326,7 +328,14 @@ impl PlayerUiState {
         }
         if self.last_report.dwell_terminated && self.request.phase == LifecyclePhase::Dwell {
             self.request.phase = LifecyclePhase::Exit;
-            self.message = "dwell trigger fired; next sample moved to exit".to_string();
+            self.message = if self.message.starts_with("fired canonical signal") {
+                format!(
+                    "dwell trigger fired; next sample moved to exit ({})",
+                    self.message
+                )
+            } else {
+                "dwell trigger fired; next sample moved to exit".to_string()
+            };
         }
     }
 
@@ -338,6 +347,7 @@ impl PlayerUiState {
         self.advance_lifecycle(delta_ms);
         let phase_duration_ms = current_phase_duration_ms(&self.recipe, self.request.phase);
         self.request.loop_t = Some(self.request.phase_t);
+        self.request.absolute_t_ms = Some(self.elapsed_ms as f64);
         self.message = format!(
             "advanced {:?} phase to {:.2} using phase duration {}ms",
             self.request.phase, self.request.phase_t, phase_duration_ms
@@ -374,6 +384,7 @@ impl PlayerUiState {
         self.motion_disabled = !self.motion_disabled;
         self.request.phase_t = 1.0;
         self.request.loop_t = None;
+        self.request.absolute_t_ms = (!self.motion_disabled).then_some(self.elapsed_ms as f64);
         self.message = if self.motion_disabled {
             "motion-disabled stable sample enabled"
         } else {
@@ -390,15 +401,14 @@ impl PlayerUiState {
     fn scrub(&mut self, delta: f64) {
         self.request.phase_t = (self.request.phase_t + delta).clamp(0.0, 1.0);
         self.request.loop_t = Some(self.request.phase_t);
+        self.request.absolute_t_ms = None;
         self.message = format!("sample_t set to {:.2}", self.request.phase_t);
     }
 
     fn fire_trigger(&mut self) {
-        match dwell_trigger_signal(&self.recipe) {
-            Some(signal) => {
-                self.request
-                    .signals
-                    .insert(signal.clone(), Value::Boolean(true));
+        match dwell_trigger_fire_value(&self.recipe) {
+            Some((signal, value)) => {
+                self.request.signals.insert(signal.clone(), value);
                 self.request.phase = LifecyclePhase::Dwell;
                 self.message = format!("fired canonical signal `{}`", signal.as_str());
             }

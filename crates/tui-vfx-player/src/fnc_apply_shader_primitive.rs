@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_shader_primitive.rs</FILE> - <DESC>Apply shader primitives to player styled grids</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>K2.13 field coverage closure: support gradient stops, applyTo, and direct border-sweep position.</WCTX>
-// <CLOG>0.2.0: MINOR — support canonical gradient, channel target, and position inputs.
+// <CLOG>0.3.0: MINOR — honor shader highlighter/focusField applyTo targets.
+// 0.2.0: MINOR — support canonical gradient, channel target, and position inputs.
 // 0.1.1: PATCH — remove duplicate shader-local RGBA label formatting.</CLOG>
 
 use tui_vfx_contract::{GradientSpec, NodeSpec};
@@ -173,6 +174,12 @@ fn apply_highlighter(
     let soft_edge = resolve_effect_enum(node, request, "softEdge", "true") != "false";
     let direction = resolve_effect_enum(node, request, "direction", "leftToRight");
     let mode = resolve_effect_enum(node, request, "mode", "band");
+    let apply_to = resolve_effect_enum(
+        node,
+        request,
+        "applyTo",
+        if mode == "row" { "both" } else { "background" },
+    );
     let row_mask = resolve_effect_integer(node, request, "rowMask", -1);
     let band_width = (resolve_effect_number(node, request, "bandWidth", 3.0).max(1.0)
         * (1.0 + if soft_edge { 0.5 } else { 0.0 })) as usize;
@@ -186,7 +193,6 @@ fn apply_highlighter(
         ResolvedColor::rgb(255, 255, 255),
         (text_contrast * 0.25) as f32,
     );
-    let apply_to = if mode == "row" { "both" } else { "background" };
     for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
         let axis = if matches!(direction.as_str(), "topToBottom" | "bottomToTop") {
             y
@@ -198,7 +204,7 @@ fn apply_highlighter(
         }
         if (axis as isize - center).unsigned_abs() <= band_width {
             let color = active_color.lerp(color, blend_strength as f32).rgba_label();
-            apply_shader_style(styled_grid, x, y, apply_to, &color);
+            apply_shader_style(styled_grid, x, y, &apply_to, &color);
         }
     }
 }
@@ -227,6 +233,7 @@ fn apply_focus_field(
     let radius_y = resolve_effect_number(node, request, "radiusY", radius_x).max(0.5);
     let feather = resolve_effect_number(node, request, "feather", 0.0).clamp(0.0, 1.0);
     let intensity = resolve_effect_number(node, request, "intensity", 1.0).clamp(0.0, 1.0) as f32;
+    let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let focus_color = color.lerp(ResolvedColor::rgb(255, 255, 255), (1.0 - intensity) * 0.25);
     for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
         let dx = (x as f64 - center_x).abs();
@@ -242,7 +249,7 @@ fn apply_focus_field(
             normalized.sqrt() <= 1.0 + feather
         };
         if inside {
-            apply_shader_style(styled_grid, x, y, "foreground", &focus_color.rgba_label());
+            apply_shader_style(styled_grid, x, y, &apply_to, &focus_color.rgba_label());
         }
     }
 }

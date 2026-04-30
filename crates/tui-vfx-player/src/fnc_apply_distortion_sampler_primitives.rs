@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_distortion_sampler_primitives.rs</FILE> - <DESC>Apply bounded distortion-sampler adapters to text-grid rows</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.3.1</VERS>
 // <WCTX>v3.1 descriptor/adapter migration: add honest distortion-sampler evidence.</WCTX>
-// <CLOG>0.3.0: MINOR — align shredder sampler with V2 stripeWidth/oddSpeed/evenSpeed dynamics.</CLOG>
+// <CLOG>0.3.1: PATCH — honor crtJitter decayMs in player distortion sampling.</CLOG>
 
 use tui_vfx_contract::NodeSpec;
 
@@ -154,11 +154,22 @@ fn apply_crt_sampler(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut 
 fn apply_crt_jitter_sampler(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [String]) {
     let amplitude = resolve_effect_number(node, request, "amplitude", 1.0).max(0.0);
     let frequency = resolve_effect_number(node, request, "frequency", 2.0).max(0.0);
+    let decay_ms = resolve_effect_number(node, request, "decayMs", 0.0).max(0.0);
     let seed = resolve_effect_integer(node, request, "seed", 13).max(0) as f64;
     let time = request.loop_t.unwrap_or(request.phase_t);
+    let amplitude = decayed_crt_jitter_amplitude(amplitude, decay_ms, time);
     for (y, row) in rows.iter_mut().enumerate() {
         let wave = ((time * frequency + y as f64 * 0.37 + seed * 0.01).sin() * amplitude).round();
         *row = shift_row(row, wave as i64);
+    }
+}
+
+fn decayed_crt_jitter_amplitude(amplitude: f64, decay_ms: f64, time: f64) -> f64 {
+    if decay_ms <= 0.0 {
+        amplitude
+    } else {
+        let decay = decay_ms / 1000.0;
+        amplitude * (-decay * time * 5.0).exp()
     }
 }
 
@@ -244,4 +255,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_apply_distortion_sampler_primitives.rs</FILE> - <DESC>Apply bounded distortion-sampler adapters to text-grid rows</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>

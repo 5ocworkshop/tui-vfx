@@ -9,6 +9,8 @@ use std::collections::BTreeMap;
 
 use tui_vfx_contract::{GraphValueId, LifecyclePhase, SignalId, Value};
 
+use crate::PlayerLoopbackStrictness;
+
 /// Request used to sample a single contract-native recipe frame.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlayerSampleRequest {
@@ -18,6 +20,13 @@ pub struct PlayerSampleRequest {
     pub phase_t: f64,
     /// Optional loop-local normalized progress when a future looping source needs it.
     pub loop_t: Option<f64>,
+    /// Optional monotonic elapsed sample time in milliseconds.
+    ///
+    /// This mirrors the timing contract used by the legacy authored-scene
+    /// playback path: normalized `phase_t`/`loop_t` remain playback-space
+    /// coordinates, while cadence-sensitive signal and procedural code reads
+    /// real elapsed time from this field.
+    pub absolute_t_ms: Option<f64>,
     /// Optional frame width override.
     pub width: Option<usize>,
     /// Optional frame height override.
@@ -28,6 +37,8 @@ pub struct PlayerSampleRequest {
     pub graph_values: BTreeMap<GraphValueId, Value>,
     /// Runtime overrides for descriptor-addressed source/effect inputs.
     pub runtime_input_overrides: BTreeMap<String, Value>,
+    /// Loopback merge strictness for authored preview/demo signal fallbacks.
+    pub loopback_strictness: PlayerLoopbackStrictness,
 }
 
 impl Default for PlayerSampleRequest {
@@ -36,11 +47,13 @@ impl Default for PlayerSampleRequest {
             phase: LifecyclePhase::Dwell,
             phase_t: 1.0,
             loop_t: None,
+            absolute_t_ms: None,
             width: None,
             height: None,
             signals: BTreeMap::new(),
             graph_values: BTreeMap::new(),
             runtime_input_overrides: BTreeMap::new(),
+            loopback_strictness: PlayerLoopbackStrictness::default(),
         }
     }
 }

@@ -556,6 +556,42 @@
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
     },
+    "StructuredValue": {
+      "description": "JSON-compatible structured payload owned by a descriptor field.\n\nUse this only when the primitive owns a nested payload whose stable shape is\ndescriptor-specific, such as path lists, particle options, or glyph-style\nrule tables. Prefer narrower typed values whenever a field has scalar,\ncolor, gradient, duration, scope, or rect semantics.",
+      "anyOf": [
+        {
+          "description": "Explicit null.",
+          "type": "null"
+        },
+        {
+          "description": "Boolean leaf value.",
+          "type": "boolean"
+        },
+        {
+          "description": "Floating-point numeric leaf value.",
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "description": "String leaf value.",
+          "type": "string"
+        },
+        {
+          "description": "Ordered child values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        },
+        {
+          "description": "String-keyed object values.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        }
+      ]
+    },
     "TriggerAction": {
       "description": "Lifecycle action requested when a trigger fires.",
       "oneOf": [
@@ -894,6 +930,25 @@
             "value": {
               "description": "Rectangle payload.",
               "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Descriptor-owned structured JSON literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "structured"
+            },
+            "value": {
+              "description": "Structured JSON payload.",
+              "$ref": "#/$defs/StructuredValue"
             }
           },
           "additionalProperties": false,

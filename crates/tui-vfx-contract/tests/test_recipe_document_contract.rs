@@ -14,9 +14,11 @@ use tui_vfx_contract::{
     CellWritePolicy, ClipPolicy, DescriptorValidationError, EffectId, EffectOutputId, ElementId,
     ElementPlacement, GraphId, GraphStep, GraphValueShape, NodeId, ParameterId, RecipeDocument,
     RecipeElementPipeline, RecipeId, RecipeMetadata, RecipeScene, RecipeSceneElement,
-    RoleWritePolicy, SceneId, SourceDescriptor, SourceId, SourceInputId, SourceInputSpec,
-    SourceInstanceId, SourceKind, SourceLifecycle, SourceOutputSize, SourceOutputSpec,
-    SourceRolePolicy, SourceSpec, Value, ValueKind, ValueSource,
+    RoleWritePolicy, SceneAnchor, SceneElementOverflowPolicy, SceneElementPlacementRule,
+    SceneElementSurface, SceneElementVisibility, SceneId, SourceDescriptor, SourceId,
+    SourceInputId, SourceInputSpec, SourceInstanceId, SourceKind, SourceLifecycle,
+    SourceOutputSize, SourceOutputSpec, SourceRolePolicy, SourceSpec, StructuredValue, Value,
+    ValueKind, ValuePredicate, ValueSource,
 };
 use tui_vfx_types::RoleTag;
 
@@ -117,10 +119,16 @@ fn scene_element() -> RecipeSceneElement {
         source: SourceInstanceId::new("heroText"),
         pipeline: Some(RecipeElementPipeline {
             graph: GraphId::new("heroFade"),
+            timing: None,
             topology: Some(GraphStep::Node {
                 node: NodeId::new("fadeIn"),
             }),
         }),
+        placement_rule: None,
+        visibility: None,
+        surface: None,
+        overflow: None,
+        motion: None,
         clip_policy: ClipPolicy::Clip,
         cell_write_policy: CellWritePolicy::WriteCell,
         role_write_policy: RoleWritePolicy::CopySampledSource,
@@ -490,6 +498,90 @@ fn recipe_rejects_duplicate_element_pipeline_node() {
         recipe.validate(),
         Err(DescriptorValidationError::DuplicateElementPipelineNode { node, .. })
             if node.as_str() == "fadeIn"
+    ));
+}
+
+#[test]
+fn recipe_accepts_v3_scene_extension_contracts() {
+    let mut recipe = valid_recipe();
+    recipe.graph.signals.insert(
+        tui_vfx_contract::SignalId::new("showHero"),
+        tui_vfx_contract::SignalSpec {
+            id: tui_vfx_contract::SignalId::new("showHero"),
+            display_name: Some("Show hero".to_string()),
+            description: None,
+            value: tui_vfx_contract::ValueSpec {
+                kind: ValueKind::Boolean,
+                default: Some(Value::Boolean(true)),
+                range: None,
+                allowed_values: vec![],
+                unit: None,
+                semantic: Some("visibility".to_string()),
+            },
+            preview_loopback: None,
+            required: false,
+        },
+    );
+    recipe.scenes[0].elements[0].placement_rule = Some(SceneElementPlacementRule::Anchor {
+        anchor: SceneAnchor::Center,
+        offset_rows: 1,
+        offset_columns: -2,
+        sibling_layer: None,
+        motion: None,
+    });
+    recipe.scenes[0].elements[0].visibility = Some(SceneElementVisibility::Predicate {
+        source: ValueSource::Signal {
+            id: tui_vfx_contract::SignalId::new("showHero"),
+            fallback: None,
+        },
+        predicate: ValuePredicate::IsTrue,
+    });
+    recipe.scenes[0].elements[0].surface = Some(SceneElementSurface {
+        base_style: Some(StructuredValue::Object(BTreeMap::new())),
+        shadow: Some(StructuredValue::Object(BTreeMap::new())),
+    });
+    recipe.scenes[0].elements[0].overflow = Some(SceneElementOverflowPolicy::Wrap);
+    recipe.scenes[0].elements[0].motion = Some(StructuredValue::Object(BTreeMap::from([(
+        "enter".to_string(),
+        StructuredValue::Object(BTreeMap::new()),
+    )])));
+
+    assert!(recipe.validate().is_ok());
+}
+
+#[test]
+fn recipe_rejects_unknown_signal_in_scene_visibility_predicate() {
+    let mut recipe = valid_recipe();
+    recipe.scenes[0].elements[0].visibility = Some(SceneElementVisibility::Predicate {
+        source: ValueSource::Signal {
+            id: tui_vfx_contract::SignalId::new("missingVisibilitySignal"),
+            fallback: None,
+        },
+        predicate: ValuePredicate::IsTrue,
+    });
+
+    assert!(matches!(
+        recipe.validate(),
+        Err(DescriptorValidationError::UnknownSignal { id })
+            if id.as_str() == "missingVisibilitySignal"
+    ));
+}
+
+#[test]
+fn recipe_rejects_scene_visibility_predicate_kind_mismatch() {
+    let mut recipe = valid_recipe();
+    recipe.scenes[0].elements[0].visibility = Some(SceneElementVisibility::Predicate {
+        source: ValueSource::Parameter {
+            id: ParameterId::new("title"),
+            fallback: None,
+        },
+        predicate: ValuePredicate::IsTrue,
+    });
+
+    assert!(matches!(
+        recipe.validate(),
+        Err(DescriptorValidationError::PredicateKindMismatch { predicate, actual })
+            if predicate == "isTrue" && actual == ValueKind::Text
     ));
 }
 

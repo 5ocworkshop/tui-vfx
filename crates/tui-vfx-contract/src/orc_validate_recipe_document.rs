@@ -116,6 +116,9 @@ fn validate_scene_element(
     if let Some(pipeline) = &element.pipeline {
         validate_element_pipeline(recipe, scene, element, pipeline)?;
     }
+    if let Some(visibility) = &element.visibility {
+        visibility.validate(&recipe.graph.parameters, &recipe.graph.signals)?;
+    }
     Ok(())
 }
 

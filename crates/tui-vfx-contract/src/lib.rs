@@ -79,8 +79,10 @@ pub mod cls_parameter_id;
 pub mod cls_parameter_spec;
 pub mod cls_phase_spec;
 pub mod cls_phase_timing;
+pub mod cls_preview_loopback_spec;
 pub mod cls_recipe_document;
 pub mod cls_recipe_element_pipeline;
+pub mod cls_recipe_element_pipeline_timing;
 pub mod cls_recipe_id;
 pub mod cls_recipe_metadata;
 pub mod cls_recipe_scene;
@@ -90,7 +92,12 @@ pub mod cls_role_write_policy;
 pub mod cls_role_write_policy_kind;
 pub mod cls_runtime_mutability;
 pub mod cls_scene;
+pub mod cls_scene_anchor;
 pub mod cls_scene_element;
+pub mod cls_scene_element_overflow_policy;
+pub mod cls_scene_element_placement_rule;
+pub mod cls_scene_element_surface;
+pub mod cls_scene_element_visibility;
 pub mod cls_scene_id;
 pub mod cls_scene_outcome;
 pub mod cls_scope_eval_input;
@@ -194,8 +201,10 @@ pub use cls_parameter_id::ParameterId;
 pub use cls_parameter_spec::ParameterSpec;
 pub use cls_phase_spec::PhaseSpec;
 pub use cls_phase_timing::PhaseTiming;
+pub use cls_preview_loopback_spec::PreviewLoopbackSpec;
 pub use cls_recipe_document::RecipeDocument;
 pub use cls_recipe_element_pipeline::RecipeElementPipeline;
+pub use cls_recipe_element_pipeline_timing::RecipeElementPipelineTiming;
 pub use cls_recipe_id::RecipeId;
 pub use cls_recipe_metadata::RecipeMetadata;
 pub use cls_recipe_scene::RecipeScene;
@@ -205,7 +214,12 @@ pub use cls_role_write_policy::RoleWritePolicy;
 pub use cls_role_write_policy_kind::RoleWritePolicyKind;
 pub use cls_runtime_mutability::RuntimeMutability;
 pub use cls_scene::Scene;
+pub use cls_scene_anchor::SceneAnchor;
 pub use cls_scene_element::SceneElement;
+pub use cls_scene_element_overflow_policy::SceneElementOverflowPolicy;
+pub use cls_scene_element_placement_rule::SceneElementPlacementRule;
+pub use cls_scene_element_surface::SceneElementSurface;
+pub use cls_scene_element_visibility::SceneElementVisibility;
 pub use cls_scene_id::SceneId;
 pub use cls_scene_outcome::SceneOutcome;
 pub use cls_scope_eval_input::ScopeEvalInput;
@@ -253,10 +267,12 @@ pub mod schema_roots {
         DwellPolicy, EffectDescriptor, EffectInputSpec, EffectOutputSpec, GradientSpec, GraphSpec,
         GraphStep, GraphValueId, GraphValueKind, GraphValueMergePolicy, GraphValueShape,
         LifecycleSpec, NodeOutputSource, NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec,
-        RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene, RecipeSceneElement,
-        Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor,
-        SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec, StructuredValue, Surface,
-        SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
+        PreviewLoopbackSpec, RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene,
+        RecipeSceneElement, Scene, SceneAnchor, SceneElement, SceneElementOverflowPolicy,
+        SceneElementPlacementRule, SceneElementSurface, SceneElementVisibility, SceneOutcome,
+        ScopeSpec, SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId,
+        SourceOutputSpec, SourceSpec, StructuredValue, Surface, SurfaceDiagnostic, TriggerSpec,
+        Value, ValuePredicate, ValueSource,
     };
     pub use crate::{DescriptorCatalog, DescriptorPack, DescriptorPackId, DescriptorPackRef};
 }

@@ -2472,6 +2472,7 @@ version = "0.11.0"
 dependencies = [
  "mcu-hct",
  "mcu-utils",
+ "mixed-signals",
  "serde",
  "serde_json",
  "tui-vfx-contract",
@@ -2494,6 +2495,7 @@ dependencies = [
 name = "tui-vfx-player-cli"
 version = "0.11.0"
 dependencies = [
+ "rusqlite",
  "serde",
  "serde_json",
  "tui-vfx-contract",

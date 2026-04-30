@@ -51,6 +51,9 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
                 options.sample_ms = Some(parse_u64(&next_value(&mut args, "--sample-ms")?)?)
             }
             "--set" => options.sets.push(next_value(&mut args, "--set")?),
+            "--sqlite-output" => {
+                options.sqlite_output = Some(next_value(&mut args, "--sqlite-output")?)
+            }
             "--no-clear" => options.no_clear = true,
             "--from-sample-t" => {
                 options.from_sample_t = parse_f64(&next_value(&mut args, "--from-sample-t")?)?
@@ -118,6 +121,9 @@ pub fn parse_cli_options(args: impl IntoIterator<Item = String>) -> Result<CliOp
             }
             value if value.starts_with("--set=") => {
                 options.sets.push(value["--set=".len()..].to_string());
+            }
+            value if value.starts_with("--sqlite-output=") => {
+                options.sqlite_output = Some(value["--sqlite-output=".len()..].to_string());
             }
             value if value.starts_with("--from-sample-t=") => {
                 options.from_sample_t = parse_f64(&value["--from-sample-t=".len()..])?;

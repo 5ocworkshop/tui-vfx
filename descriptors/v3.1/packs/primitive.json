@@ -413,7 +413,8 @@
             "semantic": "registeredGenerator"
           },
           "bindable": true,
-          "runtimeMutability": "phaseStart"
+          "runtimeMutability": "phaseStart",
+          "optional": false
         },
         "seed": {
           "displayName": "Seed",
@@ -445,7 +446,8 @@
             "semantic": null
           },
           "bindable": true,
-          "runtimeMutability": "compileTime"
+          "runtimeMutability": "compileTime",
+          "optional": false
         },
         "height": {
           "displayName": "Height",
@@ -462,7 +464,23 @@
             "semantic": null
           },
           "bindable": true,
-          "runtimeMutability": "compileTime"
+          "runtimeMutability": "compileTime",
+          "optional": false
+        },
+        "params": {
+          "displayName": "Params",
+          "description": "Structured authored parameter payload for registered procedural generators.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "proceduralParams"
+          },
+          "bindable": true,
+          "runtimeMutability": "runtime",
+          "optional": true
         }
       },
       "assets": {},
@@ -8079,7 +8097,9 @@
             "range": null,
             "allowedValues": [
               "leftToRight",
-              "rightToLeft"
+              "rightToLeft",
+              "horizontalCenterOut",
+              "horizontalEdgesIn"
             ],
             "unit": null,
             "semantic": null
@@ -8440,6 +8460,26 @@
             },
             "allowedValues": [],
             "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "decayMs": {
+          "displayName": "Decay Ms",
+          "description": "Optional V2-compatible jitter decay envelope in milliseconds; 0 preserves constant amplitude.",
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 0.0
+            },
+            "range": {
+              "min": 0,
+              "max": 5000
+            },
+            "allowedValues": [],
+            "unit": "milliseconds",
             "semantic": null
           },
           "bindable": true,
@@ -10023,6 +10063,28 @@
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Accepted legacy field with bounded player evidence.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "foreground"
+            },
+            "range": null,
+            "allowedValues": [
+              "foreground",
+              "background",
+              "both"
+            ],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
         }
       },
       "outputs": {},
@@ -10473,6 +10535,28 @@
               "max": 512
             },
             "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Accepted legacy field with bounded player evidence.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "background"
+            },
+            "range": null,
+            "allowedValues": [
+              "foreground",
+              "background",
+              "both"
+            ],
             "unit": null,
             "semantic": null
           },
@@ -12216,9 +12300,9 @@
             "default": {
               "kind": "color",
               "value": {
-                "r": 0,
-                "g": 255,
-                "b": 180,
+                "r": 255,
+                "g": 50,
+                "b": 150,
                 "a": 255
               }
             },
@@ -18665,7 +18749,7 @@
           "displayName": "Italic End",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "string",
+            "kind": "number",
             "default": null,
             "range": null,
             "allowedValues": [],
@@ -18680,7 +18764,7 @@
           "displayName": "Italic Start",
           "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
           "value": {
-            "kind": "string",
+            "kind": "number",
             "default": null,
             "range": null,
             "allowedValues": [],

@@ -39,7 +39,7 @@ pub fn run_play_backend(mut options: CliOptions) -> Result<(), String> {
             let (phase_t, loop_t) = sample_time_from_millis(elapsed_ms, options.duration_ms);
             options.phase_t = phase_t;
             options.loop_t = loop_t;
-            options.sample_ms = None;
+            options.sample_ms = Some(elapsed_ms);
             let output = render_backend_for_path(&options, path)?;
             frames.push(json!({
                 "frame": frame_index,
@@ -73,7 +73,7 @@ pub fn run_play_backend(mut options: CliOptions) -> Result<(), String> {
         let (phase_t, loop_t) = sample_time_from_millis(elapsed_ms, options.duration_ms);
         options.phase_t = phase_t;
         options.loop_t = loop_t;
-        options.sample_ms = None;
+        options.sample_ms = Some(elapsed_ms);
 
         let output = render_backend_for_path(&options, path)?;
         if !options.no_clear {

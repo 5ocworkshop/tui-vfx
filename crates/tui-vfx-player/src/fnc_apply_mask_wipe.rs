@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_mask_wipe.rs</FILE> - <DESC>Apply text-grid wipe mask</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Primitive adapter work: add field-aware wipe mask evidence.</WCTX>
-// <CLOG>0.1.0: INIT — add direction and soft-edge aware wipe mask.</CLOG>
+// <CLOG>0.2.0: MINOR — support V2 center-out and edges-in horizontal wipe evidence.</CLOG>
 
 use tui_vfx_contract::NodeSpec;
 
@@ -67,6 +67,12 @@ fn wipe_keeps_cell(
 ) -> bool {
     match direction {
         "rightToLeft" => x >= width.saturating_sub(horizontal_cutoff),
+        "horizontalCenterOut" | "horizontal_center_out" => {
+            horizontal_center_out_keeps_cell(x, width, horizontal_cutoff)
+        }
+        "horizontalEdgesIn" | "horizontal_edges_in" => {
+            horizontal_edges_in_keeps_cell(x, width, horizontal_cutoff)
+        }
         "topToBottom" => y < vertical_cutoff,
         "bottomToTop" => y >= height.saturating_sub(vertical_cutoff),
         "outFromTopLeft" => {
@@ -126,5 +132,16 @@ fn wipe_keeps_cell(
     }
 }
 
+fn horizontal_center_out_keeps_cell(x: usize, width: usize, cutoff: usize) -> bool {
+    let center_twice = width.saturating_sub(1);
+    let x_twice = x.saturating_mul(2);
+    x_twice.abs_diff(center_twice) <= cutoff.saturating_mul(2).saturating_sub(1)
+}
+
+fn horizontal_edges_in_keeps_cell(x: usize, width: usize, cutoff: usize) -> bool {
+    let edge_reveal = cutoff / 2;
+    x < edge_reveal || x >= width.saturating_sub(edge_reveal)
+}
+
 // <FILE>crates/tui-vfx-player/src/fnc_apply_mask_wipe.rs</FILE> - <DESC>Apply text-grid wipe mask</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

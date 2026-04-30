@@ -58,6 +58,7 @@ pub fn signal(id: &str, value: ValueSpec) -> SignalSpec {
         display_name: Some(id.to_string()),
         description: None,
         value,
+        preview_loopback: None,
         required: false,
     }
 }

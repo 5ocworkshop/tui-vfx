@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.14.0</VERS>
+// <VERS>VERSION: 0.20.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.14.0: MINOR — lower style.pulse through a source-owned native style stage.</CLOG>
+// <CLOG>0.20.0: MINOR — lower style.glitch V2 parity recipe natively.
+// 0.19.0: MINOR — lower style.rainbow V2 parity recipe natively.
+// 0.18.0: MINOR — lower shader applyTo for highlighter/focusField V2 parity.
+// 0.17.0: MINOR — align neon flicker default color with V2 style oracle while preserving active lowering patches.</CLOG>
 
 use std::collections::BTreeMap;
 
@@ -29,6 +32,8 @@ use tui_vfx_style::models::{
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
     "leftToRight",
     "rightToLeft",
+    "horizontalCenterOut",
+    "horizontalEdgesIn",
     "topToBottom",
     "bottomToTop",
     "outFromTopLeft",
@@ -135,6 +140,7 @@ pub enum NativeContentStage {
     CrtJitterSampler {
         amplitude: f64,
         frequency: f64,
+        decay_ms: f64,
         seed: usize,
     },
     /// Apply V2-compatible fault-line row displacement to source rows.
@@ -182,6 +188,15 @@ pub enum NativeStyleStage {
         dim_amount: f64,
         italic_window: bool,
     },
+    /// Apply V2-compatible rainbow foreground cycling.
+    Rainbow { rotation_speed: f64 },
+    /// Apply V2-compatible glitch foreground/italic styling.
+    Glitch {
+        seed: usize,
+        intensity: f64,
+        italic_start: f64,
+        italic_end: f64,
+    },
     /// Apply player-compatible color fade styling to existing foreground/background channels.
     ColorFade { target: String, color_space: String },
     /// Apply player-compatible HSL color shift styling to existing channels.
@@ -207,6 +222,8 @@ pub enum NativeStyleStage {
     /// Apply player-compatible bracket emphasis filter styling.
     BracketEmphasis {
         emphasis_color: String,
+        background_color: String,
+        progress: f64,
         edge_width: usize,
         apply_to: String,
     },
@@ -215,6 +232,10 @@ pub enum NativeStyleStage {
         direction: String,
         progress: f64,
         edge_color: String,
+        background_color: String,
+        margin_width: usize,
+        rest_eighths: usize,
+        peak_eighths: usize,
         apply_to: String,
     },
     /// Apply player-compatible hover bar filter styling.
@@ -251,13 +272,19 @@ pub enum NativeStyleStage {
     /// Apply player-compatible underline wipe filter styling.
     UnderlineWipe {
         underline_color: String,
+        background_color: String,
+        direction: String,
+        line_char: char,
+        row_offset: usize,
         progress: f64,
-        thickness: usize,
+        gradient: bool,
+        glisten: f64,
         apply_to: String,
     },
     /// Apply player-compatible highlighter shader styling.
     Highlighter {
         color: String,
+        apply_to: String,
         blend_strength: f64,
         text_contrast: f64,
         soft_edge: bool,
@@ -280,6 +307,7 @@ pub enum NativeStyleStage {
         radius_y: f64,
         feather: f64,
         intensity: f64,
+        apply_to: String,
     },
     /// Apply player-compatible glisten band shader styling.
     GlistenBand {
@@ -698,6 +726,8 @@ fn lower_node_into_spec(
         "style.italicWindow" => lower_style_italic_window(node, style_stages, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
+        "style.rainbow" => lower_style_rainbow(node, style_stages, request, warnings),
+        "style.glitch" => lower_style_glitch(node, style_stages, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
             reason: format!("Effect `{other}` is not yet supported by compositor-native lowering."),
         },
@@ -1673,7 +1703,7 @@ fn lower_crt_jitter_sampler(
     if let Some(reason) = unsupported_native_content_reason(
         node,
         "sampler.crtJitter",
-        &["amplitude", "frequency", "seed"],
+        &["amplitude", "frequency", "decayMs", "seed"],
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
@@ -1681,6 +1711,7 @@ fn lower_crt_jitter_sampler(
     content_stages.push(NativeContentStage::CrtJitterSampler {
         amplitude: number_input(node, request, "amplitude", 1.0).max(0.0),
         frequency: number_input(node, request, "frequency", 2.0).max(0.0),
+        decay_ms: number_input(node, request, "decayMs", 0.0).max(0.0),
         seed: integer_input(node, request, "seed", 13).max(0) as usize,
     });
     NodeLoweringOutcome::Lowered { warnings }
@@ -1979,14 +2010,60 @@ fn lower_style_neon_flicker(
     style_stages.push(NativeStyleStage::NeonFlicker {
         color: color_label_from_config(color_input(node, request, "color").unwrap_or(
             ColorConfig::Rgb {
-                r: 80,
-                g: 255,
-                b: 220,
+                r: 255,
+                g: 50,
+                b: 150,
             },
         )),
         stability: number_input(node, request, "stability", 0.7).clamp(0.0, 1.0),
         dim_amount: number_input(node, request, "dimAmount", 0.5).clamp(0.0, 1.0),
         italic_window: bool_input(node, request, "italicWindow", false),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_style_rainbow(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.rainbow",
+        &["rotationSpeed"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::Rainbow {
+        rotation_speed: number_input(node, request, "rotationSpeed", 1.0).max(0.0),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_style_glitch(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.glitch",
+        &["seed", "intensity", "italicStart", "italicEnd"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let italic_start = number_input(node, request, "italicStart", 0.0).clamp(0.0, 1.0);
+    style_stages.push(NativeStyleStage::Glitch {
+        seed: integer_input(node, request, "seed", 0).max(0) as usize,
+        intensity: number_input(node, request, "intensity", 0.5).clamp(0.0, 1.0),
+        italic_start,
+        italic_end: number_input(node, request, "italicEnd", 1.0).clamp(italic_start, 1.0),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -2103,6 +2180,7 @@ fn lower_highlighter_shader(
             "softEdge",
             "direction",
             "rowMask",
+            "applyTo",
         ],
         StyleScopeRequirement::All,
     ) {
@@ -2131,6 +2209,18 @@ fn lower_highlighter_shader(
         Ok(mode) => mode,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
+    let apply_to_default = if mode == "row" { "both" } else { "background" };
+    let apply_to = match strict_enum_input(
+        node,
+        request,
+        "applyTo",
+        apply_to_default,
+        &["foreground", "background", "both"],
+        "shader.highlighter",
+    ) {
+        Ok(apply_to) => apply_to,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
     let soft_edge = match strict_enum_input(
         node,
         request,
@@ -2153,6 +2243,7 @@ fn lower_highlighter_shader(
                 b: 90,
             },
         )),
+        apply_to,
         blend_strength: resolved_number_input(node, request, "blendStrength", 1.0).clamp(0.0, 1.0),
         text_contrast: resolved_number_input(node, request, "textContrast", 0.0).clamp(0.0, 1.0),
         soft_edge,
@@ -2187,6 +2278,7 @@ fn lower_focus_field_shader(
             "rectWidth",
             "rectX",
             "rectY",
+            "applyTo",
         ],
         StyleScopeRequirement::All,
     ) {
@@ -2239,6 +2331,17 @@ fn lower_focus_field_shader(
         radius_y,
         feather: resolved_number_input(node, request, "feather", 0.0).clamp(0.0, 1.0),
         intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0),
+        apply_to: match strict_enum_input(
+            node,
+            request,
+            "applyTo",
+            "foreground",
+            &["foreground", "background", "both"],
+            "shader.focusField",
+        ) {
+            Ok(apply_to) => apply_to,
+            Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+        },
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -2511,14 +2614,29 @@ fn lower_filter_bracket_emphasis(
     if let Some(reason) = unsupported_style_stage_reason(
         node,
         "filter.bracketEmphasis",
-        &["emphasisColor", "edgeWidth", "applyTo"],
+        &[
+            "emphasisColor",
+            "color",
+            "bgColor",
+            "progress",
+            "edgeWidth",
+            "applyTo",
+        ],
         StyleScopeRequirement::All,
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
     style_stages.push(NativeStyleStage::BracketEmphasis {
-        emphasis_color: color_label_input(node, request, "emphasisColor", (255, 210, 90)),
+        emphasis_color: color_label_from_config(color_alias_input(
+            node,
+            request,
+            &["emphasisColor", "color"],
+            (255, 210, 90),
+        )),
+        background_color: color_label_input(node, request, "bgColor", (20, 30, 50)),
+        progress: resolved_number_input(node, request, "progress", request.ir.phase_t)
+            .clamp(0.0, 1.0),
         edge_width: integer_input(node, request, "edgeWidth", 1).max(0) as usize,
         apply_to: enum_label_input(node, request, "applyTo", "foreground"),
     });
@@ -2569,7 +2687,17 @@ fn lower_filter_edge_grow(
     if let Some(reason) = unsupported_style_stage_reason(
         node,
         "filter.edgeGrow",
-        &["direction", "progress", "edgeColor", "applyTo"],
+        &[
+            "direction",
+            "progress",
+            "edgeColor",
+            "fillColor",
+            "bgColor",
+            "marginWidth",
+            "restEighths",
+            "peakEighths",
+            "applyTo",
+        ],
         StyleScopeRequirement::All,
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
@@ -2577,8 +2705,18 @@ fn lower_filter_edge_grow(
 
     style_stages.push(NativeStyleStage::EdgeGrow {
         direction: enum_label_input(node, request, "direction", "left"),
-        progress: number_input(node, request, "progress", request.ir.phase_t).clamp(0.0, 1.0),
-        edge_color: color_label_input(node, request, "edgeColor", (255, 120, 80)),
+        progress: resolved_number_input(node, request, "progress", request.ir.phase_t)
+            .clamp(0.0, 1.0),
+        edge_color: color_label_from_config(color_alias_input(
+            node,
+            request,
+            &["edgeColor", "fillColor"],
+            (255, 120, 80),
+        )),
+        background_color: color_label_input(node, request, "bgColor", (0, 0, 0)),
+        margin_width: integer_input(node, request, "marginWidth", 0).max(0) as usize,
+        rest_eighths: integer_input(node, request, "restEighths", 0).clamp(0, 8) as usize,
+        peak_eighths: integer_input(node, request, "peakEighths", 8).clamp(0, 8) as usize,
         apply_to: enum_label_input(node, request, "applyTo", "both"),
     });
     NodeLoweringOutcome::Lowered { warnings }
@@ -2727,16 +2865,39 @@ fn lower_filter_underline_wipe(
     if let Some(reason) = unsupported_style_stage_reason(
         node,
         "filter.underlineWipe",
-        &["underlineColor", "progress", "thickness", "applyTo"],
+        &[
+            "underlineColor",
+            "color",
+            "bgColor",
+            "direction",
+            "lineChar",
+            "rowOffset",
+            "progress",
+            "gradient",
+            "glisten",
+            "thickness",
+            "applyTo",
+        ],
         StyleScopeRequirement::All,
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
     style_stages.push(NativeStyleStage::UnderlineWipe {
-        underline_color: color_label_input(node, request, "underlineColor", (120, 220, 255)),
-        progress: number_input(node, request, "progress", request.ir.phase_t).clamp(0.0, 1.0),
-        thickness: integer_input(node, request, "thickness", 1).max(1) as usize,
+        underline_color: color_label_from_config(color_alias_input(
+            node,
+            request,
+            &["underlineColor", "color"],
+            (120, 220, 255),
+        )),
+        background_color: color_label_input(node, request, "bgColor", (30, 30, 30)),
+        direction: enum_label_input(node, request, "direction", "leftToRight"),
+        line_char: char_input(node, request, "lineChar", '—'),
+        row_offset: integer_input(node, request, "rowOffset", 0).max(0) as usize,
+        progress: resolved_number_input(node, request, "progress", request.ir.phase_t)
+            .clamp(0.0, 1.0),
+        gradient: bool_input(node, request, "gradient", true),
+        glisten: resolved_number_input(node, request, "glisten", 1.0).clamp(0.0, 1.0),
         apply_to: enum_label_input(node, request, "applyTo", "foreground"),
     });
     NodeLoweringOutcome::Lowered { warnings }
@@ -3459,4 +3620,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.14.0</VERS>
+// <VERS>END OF VERSION: 0.17.0</VERS>

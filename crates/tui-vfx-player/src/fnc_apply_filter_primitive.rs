@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_filter_primitive.rs</FILE> - <DESC>Apply styled filter primitives to player styled grids</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
+// <VERS>VERSION: 0.1.2</VERS>
 // <WCTX>Player adapter de-slop: reuse centralized RGBA report labels.</WCTX>
-// <CLOG>0.1.1: PATCH — remove duplicate filter-local RGBA label formatting.</CLOG>
+// <CLOG>0.1.2: PATCH — honor KittScanner axis in styled-player evidence.</CLOG>
 
 use tui_vfx_contract::NodeSpec;
 
@@ -509,17 +509,23 @@ fn apply_kitt_scanner_filter(
     let speed = resolve_effect_number(node, request, "speed", 1.0).max(0.0);
     let scanner_width = resolve_effect_integer(node, request, "width", 3).max(1) as usize;
     let apply_to = resolve_effect_enum(node, request, "applyTo", "both");
-    let width = styled_grid.width().max(1);
-    let span = width.saturating_sub(1).max(1);
+    let axis = resolve_effect_enum(node, request, "axis", "horizontal");
+    let sweep_extent = if is_vertical_axis(&axis) {
+        styled_grid.height().max(1)
+    } else {
+        styled_grid.width().max(1)
+    };
+    let span = sweep_extent.saturating_sub(1).max(1);
     let sweep = ((request.loop_t.unwrap_or(request.phase_t) * speed).fract() * (span * 2) as f64)
         .round() as usize;
-    let center_x = if sweep <= span {
+    let center = if sweep <= span {
         sweep
     } else {
         span * 2 - sweep
     };
     for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
-        let distance = x.abs_diff(center_x);
+        let coordinate = if is_vertical_axis(&axis) { y } else { x };
+        let distance = coordinate.abs_diff(center);
         let mix = (distance as f32 / scanner_width as f32).clamp(0.0, 1.0);
         let foreground = scan.lerp(trail, mix).rgba_label();
         let background = trail.lerp(ResolvedColor::rgb(0, 0, 0), mix).rgba_label();
@@ -533,6 +539,10 @@ fn apply_kitt_scanner_filter(
             "FilterKittScanner",
         );
     }
+}
+
+fn is_vertical_axis(axis: &str) -> bool {
+    matches!(axis, "vertical" | "y" | "Y")
 }
 
 fn apply_underline_wipe_filter(
@@ -824,4 +834,4 @@ fn vignette_corner_distance(width: usize, height: usize) -> f64 {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_apply_filter_primitive.rs</FILE> - <DESC>Apply styled filter primitives to player styled grids</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.1.2</VERS>

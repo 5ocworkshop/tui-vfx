@@ -160,6 +160,7 @@ fn signal(id: &str, value: ValueSpec) -> SignalSpec {
         display_name: None,
         description: None,
         value,
+        preview_loopback: None,
         required: false,
     }
 }

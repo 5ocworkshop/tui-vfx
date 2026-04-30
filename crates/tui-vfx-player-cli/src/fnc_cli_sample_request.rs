@@ -17,6 +17,7 @@ pub fn cli_sample_request(options: &CliOptions) -> PlayerSampleRequest {
         phase: options.phase,
         phase_t,
         loop_t,
+        absolute_t_ms: options.sample_ms.map(|sample_ms| sample_ms as f64),
         width: options.width,
         height: options.height,
         ..PlayerSampleRequest::default()

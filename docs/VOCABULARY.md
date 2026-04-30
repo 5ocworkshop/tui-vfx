@@ -1,7 +1,9 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.25.0</VERS> -->
+<!-- <VERS>VERSION: 0.27.0</VERS> -->
 <!-- <WCTX>v3.1 native backend vocabulary: document deterministic cell evidence for V2-to-v3.1 parity checks.</WCTX> -->
-<!-- <CLOG>0.25.0: MINOR — add color-channel class evidence vocabulary for style primitive parity.
+<!-- <CLOG>0.27.0: MINOR — distinguish authored-loopback indicator and parity tooling gates from smoke-render evidence.
+0.26.0: MINOR — define authored loopback and enriched scene/procedural player vocabulary.
+0.25.0: MINOR — add color-channel class evidence vocabulary for style primitive parity.
 0.24.0: MINOR — add styled-cell glyph evidence vocabulary for glyph-changing primitive parity.
 0.23.0: MINOR — add backend letter-cell evidence vocabulary for legacy-oracle comparisons.
 0.22.0: MINOR — clarify native backend source content/style stages as part of native lowering evidence.
@@ -124,6 +126,55 @@ Definition:
 
 Policy:
 : Trigger latch state belongs in the session, not in `RecipeDocument`. Resetting a session clears sampled/latch state without mutating the recipe.
+
+### Authored Loopback
+
+Definition:
+: A recipe-owned fallback value or signal expression attached to a host signal so deterministic previews can render when the host has not supplied that signal. Host-supplied values always win.
+
+Owns / owned by:
+: `SignalSpec.previewLoopback` owns the canonical contract field. The player samples it into `PlayerSampleRequest.signals` before scene/source/graph rendering.
+
+Not the same as:
+: A trigger, event, parameter store, graph value, or production host wiring. Loopback is preview/demo fallback data with explicit host-precedence semantics.
+
+Policy:
+: Use product vocabulary such as authored loopback, signal loopback, and preview loopback in v3.1 code. Do not name v3.1 functions after older source-path vocabulary.
+
+### Authored Loopback Indicator
+
+Definition:
+: A compact player-visible marker that appears when an explicit `previewLoopback` supplied a missing host signal for the sampled frame.
+
+Policy:
+: The indicator is evidence that the preview is loopback-driven, not host-driven. A host-supplied signal suppresses the indicator for that signal. Ordinary signal defaults are not enough to show the indicator; migrated demo loopbacks that must be visible should use `previewLoopback`.
+
+Not the same as:
+: A parity proof. The indicator proves that a loopback fired in the player; it does not prove that the migrated recipe matches the source recipe visually or semantically.
+
+### Vertical Parity Gate
+
+Definition:
+: The hard migration acceptance standard for one recipe: source/deprecated recipe comparison, canonical v3.1 representation, player/backend render evidence, field coverage, lowering gap closure, and human-readable expected visual evidence must all agree.
+
+Policy:
+: `fixture-qc` and render smoke tests are necessary but not sufficient. A recipe is `PASS` only after the vertical validation process proves source parity; otherwise it is `FAIL` or `BLOCKED` with exact lowering/schema/tooling requests.
+
+### Scene Placement Rule
+
+Definition:
+: An optional scene element rule that preserves anchor, sibling-relative, absolute-rect, and motion-aware placement intent while keeping `placement` as a resolved absolute fallback.
+
+Policy:
+: Use `placementRule` only when richer placement semantics add value. Do not flatten anchor/sibling intent out of migrated scene recipes when player/runtime support exists.
+
+### Procedural Params
+
+Definition:
+: Structured source-local parameters consumed by a registered procedural source generator such as `braille_flag_field` or `ballistic_fireworks`.
+
+Policy:
+: `source.procedural.params` is descriptor-owned structured data. It may contain authored binding leaves that resolve through host signals and authored loopbacks before generator sampling.
 
 
 ### Player Render IR

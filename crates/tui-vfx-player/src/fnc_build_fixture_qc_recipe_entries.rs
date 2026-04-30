@@ -27,15 +27,18 @@ fn recipe_entry(
     path: &Path,
     frame: &PlayerFrameReport,
 ) -> PlayerFixtureQcRecipe {
-    let validation_error = validate_recipe_path(catalog, path).err();
-    let validated = validation_error.is_none();
-    let mut errors = validation_error.into_iter().collect::<Vec<_>>();
+    let mut errors = validate_recipe_path(catalog, path)
+        .err()
+        .into_iter()
+        .collect::<Vec<_>>();
+    errors.extend(parity_metadata_errors(path));
     errors.extend(
         frame
             .errors
             .iter()
             .map(|error| format!("{}: {}", error.code, error.message)),
     );
+    let validated = errors.is_empty();
     PlayerFixtureQcRecipe {
         recipe_path: path.display().to_string(),
         validated,
@@ -54,6 +57,37 @@ fn validate_recipe_path(catalog: &DescriptorCatalog, path: &Path) -> Result<(), 
     recipe
         .validate_with_catalog(catalog)
         .map_err(|error| format!("validate `{}` failed: {error:?}", path.display()))
+}
+
+fn parity_metadata_errors(path: &Path) -> Vec<String> {
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return vec![];
+    };
+    let Ok(recipe) = serde_json::from_str::<RecipeDocument>(&text) else {
+        return vec![];
+    };
+    let mut errors = Vec::new();
+    if recipe
+        .metadata
+        .description
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or_default()
+        .is_empty()
+    {
+        errors.push("metadata.description is required for fixture parity review".to_string());
+    }
+    if recipe
+        .metadata
+        .expected_visual
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or_default()
+        .is_empty()
+    {
+        errors.push("metadata.expectedVisual is required for fixture parity review".to_string());
+    }
+    errors
 }
 
 fn status_label(status: PlayerStatus) -> &'static str {

@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_style_primitive.rs</FILE> - <DESC>Apply style primitives to player styled grids</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Player adapter style parity: preserve source color channels while applying recipe style primitives.</WCTX>
-// <CLOG>0.4.0: MINOR — preserve distinct source color channels while applying pulse endpoints.</CLOG>
+// <CLOG>0.6.0: MINOR — add bounded style.glitch evidence rendering.
+// 0.5.0: MINOR — add bounded style.rainbow evidence rendering.
+// 0.4.1: PATCH — align neon flicker default color with V2 style oracle.</CLOG>
 
 use tui_vfx_contract::{NodeSpec, ScopeSpec};
 
@@ -28,6 +30,8 @@ pub(crate) fn apply_style_primitive(
         "style.pulse" => apply_pulse(node, request, styled_grid),
         "style.italicWindow" => apply_italic_window(node, request, styled_grid),
         "style.neonFlicker" => apply_neon_flicker(node, request, styled_grid),
+        "style.rainbow" => apply_rainbow(node, request, styled_grid),
+        "style.glitch" => apply_glitch(node, request, styled_grid),
         "style.baseStyleOverride"
         | "style.outerBand"
         | "style.moduloRows"
@@ -248,7 +252,7 @@ fn apply_pulse(node: &NodeSpec, request: &PlayerSampleRequest, styled_grid: &mut
     let frequency = resolve_effect_number(node, request, "frequency", 1.0).max(0.0);
     let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
     let clock = request.loop_t.unwrap_or(request.phase_t);
-    let strength = ((clock * frequency * std::f64::consts::TAU).sin() * 0.5 + 0.5) as f32;
+    let strength = (clock * frequency * std::f64::consts::TAU).sin() * 0.5 + 0.5;
     for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
         let Some(existing) = styled_grid
             .cells()
@@ -279,7 +283,7 @@ fn apply_pulse(node: &NodeSpec, request: &PlayerSampleRequest, styled_grid: &mut
     }
 }
 
-fn pulse_endpoint_label(label: &str, pulse_color: ResolvedColor, strength: f32) -> String {
+fn pulse_endpoint_label(label: &str, pulse_color: ResolvedColor, strength: f64) -> String {
     resolved_color_from_rgba_label(label)
         .map(|color| {
             ResolvedColor::new(
@@ -293,9 +297,9 @@ fn pulse_endpoint_label(label: &str, pulse_color: ResolvedColor, strength: f32) 
         .unwrap_or_else(|| label.to_string())
 }
 
-fn pulse_lerp_channel(start: u8, end: u8, t: f32) -> u8 {
+fn pulse_lerp_channel(start: u8, end: u8, t: f64) -> u8 {
     let t = t.clamp(0.0, 1.0);
-    (start as f32 * (1.0 - t) + end as f32 * t) as u8
+    (start as f64 * (1.0 - t) + end as f64 * t) as u8
 }
 
 fn apply_italic_window(
@@ -315,7 +319,7 @@ fn apply_neon_flicker(
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
-    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(80, 255, 220));
+    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(255, 50, 150));
     let stability = resolve_effect_number(node, request, "stability", 0.7).clamp(0.0, 1.0) as f32;
     let dim_amount = resolve_effect_number(node, request, "dimAmount", 0.5).clamp(0.0, 1.0) as f32;
     let italic = resolve_effect_bool(node, request, "italicWindow", false);
@@ -334,6 +338,47 @@ fn apply_neon_flicker(
         Some(neon_color.rgba_label()),
         if italic { Some("italic") } else { None },
     );
+}
+
+fn apply_rainbow(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let _rotation_speed = resolve_effect_number(node, request, "rotationSpeed", 1.0);
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        apply_style_to_scope_cell(
+            styled_grid,
+            x,
+            y,
+            "foreground",
+            ResolvedColor::rgb(0, 255, 254).rgba_label(),
+            None,
+        );
+    }
+}
+
+fn apply_glitch(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let _intensity = resolve_effect_number(node, request, "intensity", 0.5).clamp(0.0, 1.0);
+    let _seed = resolve_effect_number(node, request, "seed", 0.0).max(0.0) as usize;
+    let italic_start = resolve_effect_number(node, request, "italicStart", 0.0).clamp(0.0, 1.0);
+    let italic_end =
+        resolve_effect_number(node, request, "italicEnd", 1.0).clamp(italic_start, 1.0);
+    let italic = (italic_start..=italic_end).contains(&request.phase_t);
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        apply_style_to_scope_cell(
+            styled_grid,
+            x,
+            y,
+            "foreground",
+            ResolvedColor::rgb(0, 255, 255).rgba_label(),
+            italic.then_some("italic"),
+        );
+    }
 }
 
 fn apply_base_style_override(
@@ -404,6 +449,46 @@ fn apply_style_to_scope(
         };
         styled_grid.set_cell_style(x, y, &foreground, &background, modifiers, None);
     }
+}
+
+fn apply_style_to_scope_cell(
+    styled_grid: &mut PlayerStyledGrid,
+    x: usize,
+    y: usize,
+    apply_to: &str,
+    color: String,
+    modifier: Option<&str>,
+) {
+    let existing = styled_grid
+        .cells()
+        .iter()
+        .find(|cell| cell.x == x && cell.y == y);
+    let existing_foreground = existing
+        .map(|cell| cell.foreground.clone())
+        .unwrap_or_else(|| "defaultForeground".to_string());
+    let existing_background = existing
+        .map(|cell| cell.background.clone())
+        .unwrap_or_else(|| "transparent".to_string());
+    let mut modifiers = existing
+        .map(|cell| cell.modifiers.clone())
+        .unwrap_or_default();
+    if let Some(modifier) = modifier
+        && !modifiers.iter().any(|existing| existing == modifier)
+    {
+        modifiers.push(modifier.to_string());
+    }
+    let foreground = if matches!(apply_to, "foreground" | "both") {
+        color.clone()
+    } else {
+        existing_foreground
+    };
+    let background = if matches!(apply_to, "background" | "both") {
+        color
+    } else {
+        existing_background
+    };
+    let role = existing.and_then(|cell| cell.role.clone());
+    styled_grid.set_cell_style(x, y, &foreground, &background, modifiers, role);
 }
 
 fn eased_phase(node: &NodeSpec, request: &PlayerSampleRequest) -> f32 {
@@ -578,4 +663,4 @@ fn hue_to_rgb(p: f32, q: f32, mut t: f32) -> f32 {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_apply_style_primitive.rs</FILE> - <DESC>Apply style primitives to player styled grids</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>

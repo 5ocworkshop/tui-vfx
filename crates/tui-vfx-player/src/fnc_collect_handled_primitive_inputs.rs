@@ -1,7 +1,11 @@
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.7.1</VERS>
 // <WCTX>v3.1 descriptor/adapter migration: track player-handled primitive field coverage.</WCTX>
-// <CLOG>0.5.0: MINOR — mark shredder sampler speed/stripe fields as handled.
+// <CLOG>0.7.1: PATCH — mark procedural params handled by the player adapter.
+// 0.7.0: MINOR — mark style.glitch fields handled after lowering support.
+// 0.6.0: MINOR — mark rainbow and shader applyTo fields handled after lowering support.
+// 0.5.1: PATCH — mark sampler.crtJitter decayMs as handled.
+// 0.5.0: MINOR — mark shredder sampler speed/stripe fields as handled.
 // 0.4.0: MINOR — add handled shader gradient/applyTo/position fields.
 // 0.3.0: MINOR — add handled fields for source.text fixture coverage.</CLOG>
 
@@ -25,7 +29,7 @@ pub(crate) fn collect_handled_primitive_inputs(
         "source.text" => fields(["text", "width", "height"]),
         "source.ansi" => fields(["ansiText", "width", "height"]),
         "source.image" => fields(["asset", "width", "height", "fallbackGlyph"]),
-        "source.procedural" => fields(["generator", "width", "height", "seed"]),
+        "source.procedural" => fields(["generator", "width", "height", "seed", "params"]),
         "filter.dim" => fields(["factor", "applyTo"]),
         "filter.tint" => fields(["color", "strength", "applyTo"]),
         "filter.invert" => fields(["applyTo"]),
@@ -180,13 +184,15 @@ pub(crate) fn collect_handled_primitive_inputs(
         "sampler.faultLine" => fields(["offset", "seed", "intensity", "splitBias"]),
         "sampler.radialTwist" => fields(["strength"]),
         "sampler.crt" => fields(["curvature", "scanlineStrength", "jitter"]),
-        "sampler.crtJitter" => fields(["amplitude", "frequency", "seed"]),
+        "sampler.crtJitter" => fields(["amplitude", "frequency", "decayMs", "seed"]),
         "style.colorFade" => fields(["colorSpace", "target"]),
         "style.colorShift" => fields(["hueShift", "saturationShift", "lightnessShift"]),
         "style.fadeIn" | "style.fadeOut" => fields(["from", "to", "ease", "easing", "applyTo"]),
         "style.pulse" => fields(["color", "pulseColor", "frequency", "applyTo"]),
         "style.italicWindow" => fields(["start", "end"]),
         "style.neonFlicker" => fields(["color", "dimAmount", "italicWindow", "stability"]),
+        "style.rainbow" => fields(["rotationSpeed"]),
+        "style.glitch" => fields(["seed", "intensity", "italicStart", "italicEnd"]),
         "style.baseStyleOverride" => fields(["foreground", "background"]),
         "style.outerBand"
         | "style.moduloRows"
@@ -213,6 +219,7 @@ pub(crate) fn collect_handled_primitive_inputs(
             "softEdge",
             "direction",
             "rowMask",
+            "applyTo",
         ]),
         "shader.focusField" => fields([
             "color",
@@ -228,6 +235,7 @@ pub(crate) fn collect_handled_primitive_inputs(
             "rectWidth",
             "rectX",
             "rectY",
+            "applyTo",
         ]),
         "shader.glistenBand" => fields([
             "color",
@@ -255,6 +263,7 @@ pub(crate) fn collect_handled_primitive_inputs(
             "backgroundColor",
             "color",
             "gapWidth",
+            "speed",
             "stripeColor",
             "stripeWidth",
         ]),
@@ -326,4 +335,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.5.1</VERS>

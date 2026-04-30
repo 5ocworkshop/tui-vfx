@@ -5,11 +5,13 @@
 
 use std::collections::BTreeMap;
 
-use tui_vfx_contract::{CellWritePolicy, GraphValueId, RecipeDocument, Value};
+use tui_vfx_contract::{
+    CellWritePolicy, ClockMode, DurationSpec, GraphValueId, RecipeDocument, Value,
+};
 
 use crate::{
-    PlayerFrameReport, PlayerRenderCell, PlayerRenderGraphValueSnapshot, PlayerRenderIrReport,
-    PlayerRenderLayer, PlayerRenderProvenance, PlayerSampleRequest,
+    PlayerFrameReport, PlayerRenderCell, PlayerRenderClockSample, PlayerRenderGraphValueSnapshot,
+    PlayerRenderIrReport, PlayerRenderLayer, PlayerRenderProvenance, PlayerSampleRequest,
     fnc_render_scene::scene_element_render_runtime,
 };
 
@@ -98,6 +100,7 @@ pub fn build_player_render_ir(
         phase: frame_report.phase,
         phase_t: frame_report.phase_t,
         loop_t: frame_report.loop_t,
+        clock: clock_sample(recipe, request),
         width: frame_report.width,
         height: frame_report.height,
         render_hash: frame_report.render_hash,
@@ -109,6 +112,34 @@ pub fn build_player_render_ir(
         graph_values,
         errors: frame_report.errors,
         warnings: frame_report.warnings,
+    }
+}
+
+fn clock_sample(recipe: &RecipeDocument, request: &PlayerSampleRequest) -> PlayerRenderClockSample {
+    let Some(lifecycle) = recipe.lifecycle.as_ref() else {
+        return PlayerRenderClockSample {
+            mode: "unspecified".to_string(),
+            period_ms: None,
+            absolute_t_ms: request.absolute_t_ms,
+            loop_t: request.loop_t,
+        };
+    };
+    let (mode, period_ms) = match lifecycle.clock.mode {
+        ClockMode::Looping => ("looping", lifecycle.clock.period.as_ref().map(duration_ms)),
+        ClockMode::Monotonic => ("monotonic", None),
+    };
+    PlayerRenderClockSample {
+        mode: mode.to_string(),
+        period_ms,
+        absolute_t_ms: request.absolute_t_ms,
+        loop_t: request.loop_t,
+    }
+}
+
+fn duration_ms(duration: &DurationSpec) -> f64 {
+    match duration {
+        DurationSpec::Milliseconds { value } => *value as f64,
+        DurationSpec::Seconds { value } => value * 1000.0,
     }
 }
 

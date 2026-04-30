@@ -7,8 +7,9 @@
 // 0.1.0: INIT — add scene traversal, source rendering, and grid blitting helpers.</CLOG>
 
 use tui_vfx_contract::{
-    BindingTarget, CellWritePolicy, ParameterId, RecipeDocument, RecipeSceneElement, SourceInputId,
-    SourceSpec, Value,
+    AssetId, AssetLocator, AssetSpec, BindingTarget, CellWritePolicy, ParameterId, RecipeDocument,
+    RecipeElementPipelineTiming, RecipeSceneElement, SceneAnchor, SceneElementOverflowPolicy,
+    SceneElementPlacementRule, SourceInputId, SourceSpec, Value, ValuePredicate,
 };
 
 use crate::{
@@ -82,6 +83,7 @@ pub fn render_scene_with_source_asset_resolver(
     let mut elements = scene.elements.iter().enumerate().collect::<Vec<_>>();
     elements.sort_by_key(|(declaration_index, element)| (element.z_index, *declaration_index));
     let runtime_results = scene_element_render_runtime(recipe, request);
+    let mut placed_layers = std::collections::BTreeMap::new();
     for (_, element) in elements {
         let Some(runtime) = runtime_results
             .iter()
@@ -95,16 +97,23 @@ pub fn render_scene_with_source_asset_resolver(
         }
         match recipe.sources.get(&element.source) {
             Some(source) => {
-                let mut output =
-                    render_source(element.source.as_str(), source, request, asset_resolver);
+                let mut output = render_source(
+                    recipe,
+                    element.source.as_str(),
+                    source,
+                    request,
+                    asset_resolver,
+                );
                 let mut source_rows = output.rows;
                 let mut local_grid = output.styled_grid;
                 let mut source_errors = output.errors;
                 warnings.append(&mut output.warnings);
+                apply_scene_element_surface(element, &mut local_grid);
                 if let Some(pipeline) = &element.pipeline
                     && let Some(topology) = &pipeline.topology
                 {
-                    let mut local_request = request.clone();
+                    let mut local_request =
+                        element_pipeline_request(request, pipeline.timing.as_ref());
                     apply_graph_step_effects(
                         recipe,
                         None,
@@ -116,20 +125,51 @@ pub fn render_scene_with_source_asset_resolver(
                         &mut warnings,
                     );
                 }
+                let (placement_x, placement_y) = resolve_scene_element_placement(
+                    width,
+                    height,
+                    element,
+                    &source_rows,
+                    &placed_layers,
+                );
+                if element_overflow_hides(
+                    element,
+                    width,
+                    height,
+                    &source_rows,
+                    placement_x,
+                    placement_y,
+                ) {
+                    warnings.push(scene_element_overflow_hidden_warning(element));
+                    continue;
+                }
                 blit_rows(
                     &mut grid,
                     &source_rows,
-                    element.placement.x,
-                    element.placement.y,
+                    placement_x,
+                    placement_y,
                     element.cell_write_policy,
+                    element.overflow,
                 );
                 blit_styles(
                     &mut styled_grid,
                     &local_grid,
-                    element.placement.x,
-                    element.placement.y,
+                    placement_x,
+                    placement_y,
                     element.cell_write_policy,
+                    element.overflow,
                 );
+                if let Some(layer) = &element.layer {
+                    placed_layers.insert(
+                        layer.clone(),
+                        PlacedElementBounds {
+                            x: placement_x,
+                            y: placement_y,
+                            width: source_width_from_rows(&source_rows),
+                            height: source_rows.len() as i32,
+                        },
+                    );
+                }
                 errors.append(&mut source_errors);
             }
             None => errors.push(PlayerError::new(
@@ -147,6 +187,38 @@ pub fn render_scene_with_source_asset_resolver(
     let rows = grid_to_rows(&grid);
     styled_grid.sync_glyphs_from_rows(&rows);
     (rows, styled_grid, errors, warnings)
+}
+
+fn element_pipeline_request(
+    request: &PlayerSampleRequest,
+    timing: Option<&RecipeElementPipelineTiming>,
+) -> PlayerSampleRequest {
+    let Some(timing) = timing else {
+        return request.clone();
+    };
+    let mut local = request.clone();
+    match request.phase {
+        tui_vfx_contract::LifecyclePhase::Enter => {
+            if let Some(duration_ms) = timing.enter_ms.filter(|duration| *duration > 0) {
+                let elapsed_ms = request
+                    .absolute_t_ms
+                    .unwrap_or_else(|| request.phase_t.clamp(0.0, 1.0) * duration_ms as f64);
+                let local_elapsed = elapsed_ms - timing.enter_offset_ms.unwrap_or_default() as f64;
+                local.phase_t = (local_elapsed / duration_ms as f64).clamp(0.0, 1.0);
+            }
+        }
+        tui_vfx_contract::LifecyclePhase::Exit => {
+            if let Some(duration_ms) = timing.exit_ms.filter(|duration| *duration > 0) {
+                let elapsed_ms = request
+                    .absolute_t_ms
+                    .unwrap_or_else(|| request.phase_t.clamp(0.0, 1.0) * duration_ms as f64);
+                let local_elapsed = elapsed_ms - timing.exit_offset_ms.unwrap_or_default() as f64;
+                local.phase_t = (local_elapsed / duration_ms as f64).clamp(0.0, 1.0);
+            }
+        }
+        tui_vfx_contract::LifecyclePhase::Dwell => {}
+    }
+    local
 }
 
 /// Resolve scene element visibility and skip decisions without rendering sources.
@@ -179,6 +251,19 @@ fn scene_element_visible(
     request: &PlayerSampleRequest,
     element: &RecipeSceneElement,
 ) -> bool {
+    if let Some(visibility) = &element.visibility {
+        return match visibility {
+            tui_vfx_contract::SceneElementVisibility::Always => true,
+            tui_vfx_contract::SceneElementVisibility::Phase { phases } => {
+                phases.iter().any(|phase| phase == &request.phase)
+            }
+            tui_vfx_contract::SceneElementVisibility::Predicate { source, predicate } => {
+                resolve_value_source(source, &request.signals)
+                    .as_ref()
+                    .is_some_and(|value| value_matches_predicate(value, predicate))
+            }
+        };
+    }
     visibility_parameter_candidates(element)
         .into_iter()
         .find_map(|id| resolve_visibility_parameter(recipe, request, &id))
@@ -227,6 +312,46 @@ fn boolean_value(value: Value) -> Option<bool> {
     }
 }
 
+fn value_matches_predicate(value: &Value, predicate: &ValuePredicate) -> bool {
+    match predicate {
+        ValuePredicate::IsTrue => matches!(value, Value::Boolean(true)),
+        ValuePredicate::IsFalse => matches!(value, Value::Boolean(false)),
+        ValuePredicate::NonZero => numeric_value(value).is_some_and(|value| value != 0.0),
+        ValuePredicate::NonEmpty => match value {
+            Value::String(value) | Value::Text(value) => !value.is_empty(),
+            _ => false,
+        },
+        ValuePredicate::Equals { value: expected } => value == expected,
+        ValuePredicate::NotEquals { value: expected } => value != expected,
+        ValuePredicate::GreaterThan { value: expected } => numeric_value(value)
+            .zip(numeric_value(expected))
+            .is_some_and(|(actual, expected)| actual > expected),
+        ValuePredicate::LessThan { value: expected } => numeric_value(value)
+            .zip(numeric_value(expected))
+            .is_some_and(|(actual, expected)| actual < expected),
+        ValuePredicate::Truthy => value_truthy(value),
+    }
+}
+
+fn numeric_value(value: &Value) -> Option<f64> {
+    match value {
+        Value::Integer(value) => Some(*value as f64),
+        Value::Number(value) | Value::Duration(value) => Some(*value),
+        _ => None,
+    }
+}
+
+fn value_truthy(value: &Value) -> bool {
+    match value {
+        Value::Boolean(value) => *value,
+        Value::Integer(value) => *value != 0,
+        Value::Number(value) | Value::Duration(value) => value.is_finite() && *value != 0.0,
+        Value::String(value) | Value::Text(value) => !value.is_empty(),
+        Value::Color(_) | Value::Gradient(_) => true,
+        _ => false,
+    }
+}
+
 fn layer_skipped_warning(runtime: &SceneElementRenderRuntime) -> PlayerWarning {
     PlayerWarning::new(
         "sceneLayerSkipped",
@@ -240,7 +365,122 @@ fn layer_skipped_warning(runtime: &SceneElementRenderRuntime) -> PlayerWarning {
     )
 }
 
+#[derive(Clone, Copy)]
+struct PlacedElementBounds {
+    x: i32,
+    y: i32,
+    width: i32,
+    height: i32,
+}
+
+fn resolve_scene_element_placement(
+    scene_width: usize,
+    scene_height: usize,
+    element: &RecipeSceneElement,
+    rows: &[String],
+    placed_layers: &std::collections::BTreeMap<tui_vfx_contract::LayerId, PlacedElementBounds>,
+) -> (i32, i32) {
+    match &element.placement_rule {
+        Some(SceneElementPlacementRule::Absolute { rect, .. }) => (rect.x as i32, rect.y as i32),
+        Some(SceneElementPlacementRule::Anchor {
+            anchor,
+            offset_rows,
+            offset_columns,
+            sibling_layer,
+            ..
+        }) => {
+            let source_width = source_width_from_rows(rows);
+            let source_height = rows.len() as i32;
+            let sibling_bounds = sibling_layer
+                .as_ref()
+                .and_then(|layer| placed_layers.get(layer))
+                .copied();
+            if let Some(sibling) = sibling_bounds {
+                return (
+                    sibling.x + *offset_columns,
+                    sibling.y + sibling.height + *offset_rows,
+                );
+            }
+            let frame = PlacedElementBounds {
+                x: 0,
+                y: 0,
+                width: scene_width as i32,
+                height: scene_height as i32,
+            };
+            let (x, y) = anchor_position(*anchor, frame, source_width, source_height);
+            (x + *offset_columns, y + *offset_rows)
+        }
+        None => (element.placement.x, element.placement.y),
+    }
+}
+
+fn anchor_position(
+    anchor: SceneAnchor,
+    frame: PlacedElementBounds,
+    source_width: i32,
+    source_height: i32,
+) -> (i32, i32) {
+    let left = frame.x;
+    let center_x = frame.x + (frame.width - source_width) / 2;
+    let right = frame.x + frame.width - source_width;
+    let top = frame.y;
+    let visual_center_y = frame.y + frame.height * 45 / 100;
+    let center_y = visual_center_y - source_height / 2;
+    let bottom = frame.y + frame.height - source_height;
+    match anchor {
+        SceneAnchor::TopLeft => (left, top),
+        SceneAnchor::TopCenter => (center_x, top),
+        SceneAnchor::TopRight => (right, top),
+        SceneAnchor::CenterLeft => (left, center_y),
+        SceneAnchor::Center => (center_x, center_y),
+        SceneAnchor::CenterRight => (right, center_y),
+        SceneAnchor::BottomLeft => (left, bottom),
+        SceneAnchor::BottomCenter => (center_x, bottom),
+        SceneAnchor::BottomRight => (right, bottom),
+    }
+}
+
+fn source_width_from_rows(rows: &[String]) -> i32 {
+    rows.iter()
+        .map(|row| row.chars().count())
+        .max()
+        .unwrap_or(0) as i32
+}
+
+fn element_overflow_hides(
+    element: &RecipeSceneElement,
+    scene_width: usize,
+    scene_height: usize,
+    rows: &[String],
+    dx: i32,
+    dy: i32,
+) -> bool {
+    if element.overflow != Some(SceneElementOverflowPolicy::Hide) {
+        return false;
+    }
+    rows.iter().enumerate().any(|(source_y, row)| {
+        row.chars().enumerate().any(|(source_x, ch)| {
+            let x = dx + source_x as i32;
+            let y = dy + source_y as i32;
+            ch != ' ' && (x < 0 || y < 0 || x as usize >= scene_width || y as usize >= scene_height)
+        })
+    })
+}
+
+fn scene_element_overflow_hidden_warning(element: &RecipeSceneElement) -> PlayerWarning {
+    PlayerWarning::new(
+        "sceneLayerOverflowHidden",
+        format!("scenes[0].elements.{}", element.id.as_str()),
+        format!(
+            "Scene element `{}` was hidden because overflow policy is hide",
+            element.id.as_str()
+        ),
+        Some("Use clip or wrap overflow when out-of-bounds content should remain visible."),
+    )
+}
+
 fn render_source(
+    recipe: &RecipeDocument,
     source_instance_id: &str,
     source: &SourceSpec,
     request: &PlayerSampleRequest,
@@ -256,7 +496,9 @@ fn render_source(
         )),
         "source.ansi" => render_ansi_source(source_instance_id, source, request),
         "source.image" => render_image_source(source_instance_id, source, request, asset_resolver),
-        "source.procedural" => render_procedural_source(source_instance_id, source, request),
+        "source.procedural" => {
+            render_procedural_source(recipe, source_instance_id, source, request)
+        }
         source_id => SourceRenderOutput {
             rows: vec![],
             styled_grid: PlayerStyledGrid::blank(0, 0, false),
@@ -483,6 +725,98 @@ fn source_rows(rows: Vec<String>) -> SourceRenderOutput {
     }
 }
 
+fn apply_scene_element_surface(element: &RecipeSceneElement, styled_grid: &mut PlayerStyledGrid) {
+    let Some(surface) = &element.surface else {
+        return;
+    };
+    let Some(base_style) = &surface.base_style else {
+        return;
+    };
+    let base_style = structured_to_json(base_style);
+    let foreground = color_label_from_json(base_style.get("foreground"));
+    let background = color_label_from_json(base_style.get("background"));
+    let added_modifiers = string_array_from_json(
+        base_style
+            .get("addedModifiers")
+            .or_else(|| base_style.get("added_modifiers")),
+    );
+    let removed_modifiers = string_array_from_json(
+        base_style
+            .get("removedModifiers")
+            .or_else(|| base_style.get("removed_modifiers")),
+    );
+    if foreground.is_none() && background.is_none() && added_modifiers.is_empty() {
+        return;
+    }
+    for cell in styled_grid.cells().to_vec() {
+        if cell.glyph == " " {
+            continue;
+        }
+        let mut modifiers = cell.modifiers.clone();
+        modifiers.retain(|modifier| !removed_modifiers.iter().any(|removed| removed == modifier));
+        for modifier in &added_modifiers {
+            if !modifiers.iter().any(|known| known == modifier) {
+                modifiers.push(modifier.clone());
+            }
+        }
+        let foreground = foreground
+            .as_deref()
+            .unwrap_or(cell.foreground.as_str())
+            .to_string();
+        let background = background
+            .as_deref()
+            .unwrap_or(cell.background.as_str())
+            .to_string();
+        styled_grid.set_cell_style(
+            cell.x,
+            cell.y,
+            &foreground,
+            &background,
+            modifiers,
+            cell.role.clone(),
+        );
+    }
+}
+
+fn color_label_from_json(value: Option<&serde_json::Value>) -> Option<String> {
+    let value = value?;
+    Some(
+        ResolvedColor::new(
+            json_u8(value, "r")?,
+            json_u8(value, "g")?,
+            json_u8(value, "b")?,
+            json_u8(value, "a").unwrap_or(255),
+        )
+        .rgba_label(),
+    )
+}
+
+fn json_u8(value: &serde_json::Value, key: &str) -> Option<u8> {
+    let value = value.get(key)?;
+    value
+        .as_u64()
+        .and_then(|value| u8::try_from(value).ok())
+        .or_else(|| {
+            value
+                .as_f64()
+                .filter(|value| (0.0..=255.0).contains(value))
+                .map(|value| value.round() as u8)
+        })
+}
+
+fn string_array_from_json(value: Option<&serde_json::Value>) -> Vec<String> {
+    value
+        .and_then(serde_json::Value::as_array)
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(serde_json::Value::as_str)
+                .map(ToOwned::to_owned)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 fn render_text_source(
     source_instance_id: &str,
     source: &SourceSpec,
@@ -583,6 +917,7 @@ fn render_image_source(
 }
 
 fn render_procedural_source(
+    recipe: &RecipeDocument,
     source_instance_id: &str,
     source: &SourceSpec,
     request: &PlayerSampleRequest,
@@ -598,8 +933,16 @@ fn render_procedural_source(
         resolve_source_integer(source_instance_id, source, request, "seed", 0).max(0) as usize;
     let width = source_width(source_instance_id, source, request, &generator);
     let height = source_height(source_instance_id, source, request, &generator);
-    match render_registered_procedural_source(&generator, width, height, seed, request) {
-        Some(rows) => source_rows(rows),
+    let params = resolve_source_structured(source_instance_id, source, request, "params")
+        .map(|value| resolve_authored_param_bindings(value, request, &recipe.assets))
+        .unwrap_or(serde_json::Value::Null);
+    match render_registered_procedural_source(&generator, width, height, seed, request, &params) {
+        Some(rendered) => SourceRenderOutput {
+            rows: rendered.rows,
+            styled_grid: rendered.styled_grid,
+            errors: vec![],
+            warnings: vec![],
+        },
         None => SourceRenderOutput {
             rows: vec![],
             styled_grid: PlayerStyledGrid::blank(0, 0, false),
@@ -612,6 +955,125 @@ fn render_procedural_source(
             )],
             warnings: vec![],
         },
+    }
+}
+
+fn resolve_source_structured(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+    input_id: &str,
+) -> Option<serde_json::Value> {
+    match source_runtime_override(source_instance_id, source, request, input_id) {
+        Some(Value::Structured(value)) => Some(structured_to_json(value)),
+        _ => source
+            .inputs
+            .get(&SourceInputId::new(input_id))
+            .and_then(|source| resolve_value_source(source, &request.signals))
+            .and_then(|value| match value {
+                Value::Structured(value) => Some(structured_to_json(&value)),
+                _ => None,
+            }),
+    }
+}
+
+fn resolve_authored_param_bindings(
+    value: serde_json::Value,
+    request: &PlayerSampleRequest,
+    assets: &std::collections::BTreeMap<AssetId, AssetSpec>,
+) -> serde_json::Value {
+    match value {
+        serde_json::Value::Array(values) => serde_json::Value::Array(
+            values
+                .into_iter()
+                .map(|value| resolve_authored_param_bindings(value, request, assets))
+                .collect(),
+        ),
+        serde_json::Value::Object(mut object) => {
+            if let Some(binding) = object.get("binding").and_then(serde_json::Value::as_str) {
+                let resolved = request
+                    .signals
+                    .get(&tui_vfx_contract::SignalId::new(binding))
+                    .map(contract_value_to_json)
+                    .unwrap_or_else(|| object.remove("default").unwrap_or(serde_json::Value::Null));
+                if let Some(gate) = object.get("gate").and_then(serde_json::Value::as_object)
+                    && let Some(bool_value) = resolved.as_bool()
+                {
+                    return gate
+                        .get(if bool_value { "true" } else { "false" })
+                        .cloned()
+                        .unwrap_or(resolved);
+                }
+                resolved
+            } else {
+                if let Some(resolved) = resolve_asset_param_object(&object, assets) {
+                    return resolved;
+                }
+                serde_json::Value::Object(
+                    object
+                        .into_iter()
+                        .map(|(key, value)| {
+                            (key, resolve_authored_param_bindings(value, request, assets))
+                        })
+                        .collect(),
+                )
+            }
+        }
+        value => value,
+    }
+}
+
+fn resolve_asset_param_object(
+    object: &serde_json::Map<String, serde_json::Value>,
+    assets: &std::collections::BTreeMap<AssetId, AssetSpec>,
+) -> Option<serde_json::Value> {
+    let id = object.get("id").and_then(serde_json::Value::as_str)?;
+    let asset = assets.get(&AssetId::new(id))?;
+    let AssetLocator::Path { path } = &asset.locator else {
+        return None;
+    };
+    let mut resolved = object.clone();
+    resolved.insert("path".to_string(), serde_json::Value::String(path.clone()));
+    Some(serde_json::Value::Object(resolved))
+}
+
+fn contract_value_to_json(value: &Value) -> serde_json::Value {
+    match value {
+        Value::Null => serde_json::Value::Null,
+        Value::Boolean(value) => serde_json::Value::Bool(*value),
+        Value::Integer(value) => serde_json::json!(value),
+        Value::Number(value) | Value::Duration(value) => serde_json::json!(value),
+        Value::String(value) | Value::Text(value) | Value::Enum(value) => {
+            serde_json::Value::String(value.clone())
+        }
+        Value::Color(value) => serde_json::json!({
+            "type": "rgb",
+            "r": value.r,
+            "g": value.g,
+            "b": value.b
+        }),
+        Value::Structured(value) => structured_to_json(value),
+        _ => serde_json::Value::Null,
+    }
+}
+
+fn structured_to_json(value: &tui_vfx_contract::StructuredValue) -> serde_json::Value {
+    match value {
+        tui_vfx_contract::StructuredValue::Null => serde_json::Value::Null,
+        tui_vfx_contract::StructuredValue::Boolean(value) => serde_json::Value::Bool(*value),
+        tui_vfx_contract::StructuredValue::Number(value) => serde_json::json!(value),
+        tui_vfx_contract::StructuredValue::String(value) => {
+            serde_json::Value::String(value.clone())
+        }
+        tui_vfx_contract::StructuredValue::Array(values) => {
+            serde_json::Value::Array(values.iter().map(structured_to_json).collect())
+        }
+        tui_vfx_contract::StructuredValue::Object(values) => serde_json::Value::Object(
+            values
+                .iter()
+                .map(|(key, value)| (key.clone(), structured_to_json(value)))
+                .collect(),
+        ),
     }
 }
 
@@ -1001,24 +1463,31 @@ fn blit_rows(
     dx: i32,
     dy: i32,
     cell_write_policy: CellWritePolicy,
+    overflow: Option<SceneElementOverflowPolicy>,
 ) {
     for (source_y, row) in rows.iter().enumerate() {
         let y = dy + source_y as i32;
-        if y < 0 || y as usize >= grid.len() {
+        let Some(y) = overflow_coordinate(y, grid.len(), overflow) else {
             continue;
-        }
-        blit_row(&mut grid[y as usize], row, dx, cell_write_policy);
+        };
+        blit_row(&mut grid[y], row, dx, cell_write_policy, overflow);
     }
 }
 
-fn blit_row(destination: &mut [char], row: &str, dx: i32, cell_write_policy: CellWritePolicy) {
+fn blit_row(
+    destination: &mut [char],
+    row: &str,
+    dx: i32,
+    cell_write_policy: CellWritePolicy,
+    overflow: Option<SceneElementOverflowPolicy>,
+) {
     for (source_x, ch) in row.chars().enumerate() {
         let x = dx + source_x as i32;
-        if x >= 0
-            && (x as usize) < destination.len()
-            && (ch != ' ' || cell_write_policy == CellWritePolicy::WriteCell)
-        {
-            destination[x as usize] = ch;
+        let Some(x) = overflow_coordinate(x, destination.len(), overflow) else {
+            continue;
+        };
+        if ch != ' ' || cell_write_policy == CellWritePolicy::WriteCell {
+            destination[x] = ch;
         }
     }
 }
@@ -1029,6 +1498,7 @@ fn blit_styles(
     x_offset: i32,
     y_offset: i32,
     cell_write_policy: CellWritePolicy,
+    overflow: Option<SceneElementOverflowPolicy>,
 ) {
     if !source.style_known() {
         return;
@@ -1039,16 +1509,35 @@ fn blit_styles(
         }
         let x = x_offset + cell.x as i32;
         let y = y_offset + cell.y as i32;
-        if x >= 0 && y >= 0 && destination.contains(x as usize, y as usize) {
-            destination.set_cell_style(
-                x as usize,
-                y as usize,
-                &cell.foreground,
-                &cell.background,
-                cell.modifiers.clone(),
-                cell.role.clone(),
-            );
-        }
+        let Some(x) = overflow_coordinate(x, destination.width(), overflow) else {
+            continue;
+        };
+        let Some(y) = overflow_coordinate(y, destination.height(), overflow) else {
+            continue;
+        };
+        destination.set_cell_style(
+            x,
+            y,
+            &cell.foreground,
+            &cell.background,
+            cell.modifiers.clone(),
+            cell.role.clone(),
+        );
+    }
+}
+
+fn overflow_coordinate(
+    value: i32,
+    extent: usize,
+    overflow: Option<SceneElementOverflowPolicy>,
+) -> Option<usize> {
+    if extent == 0 {
+        return None;
+    }
+    match overflow {
+        Some(SceneElementOverflowPolicy::Wrap) => Some(value.rem_euclid(extent as i32) as usize),
+        _ if value >= 0 && (value as usize) < extent => Some(value as usize),
+        _ => None,
     }
 }
 

@@ -50,8 +50,10 @@ pub mod cls_player_warning;
 mod cls_primitive_field_descriptor_coverage;
 pub mod cls_recipe_player;
 mod cls_resolved_color;
+pub mod enum_player_loopback_strictness;
 mod fnc_aggregate_player_inventory_effects;
 mod fnc_aggregate_player_inventory_sources;
+mod fnc_apply_authored_loopback_indicator;
 mod fnc_apply_content_primitive;
 mod fnc_apply_distortion_sampler_primitives;
 mod fnc_apply_filter_primitive;
@@ -59,6 +61,7 @@ pub mod fnc_apply_graph_effects;
 mod fnc_apply_mask_checkers;
 mod fnc_apply_mask_dissolve;
 mod fnc_apply_mask_wipe;
+mod fnc_apply_preview_loopbacks;
 mod fnc_apply_sampler_ripple;
 mod fnc_apply_sampler_sine_wave;
 mod fnc_apply_shader_primitive;
@@ -194,8 +197,8 @@ pub use cls_player_render_backend_output::{
 pub use cls_player_render_backend_request::PlayerRenderBackendRequest;
 pub use cls_player_render_composition_mode::PlayerRenderCompositionMode;
 pub use cls_player_render_ir::{
-    PlayerRenderCell, PlayerRenderGraphValueSnapshot, PlayerRenderIrReport, PlayerRenderLayer,
-    PlayerRenderProvenance,
+    PlayerRenderCell, PlayerRenderClockSample, PlayerRenderGraphValueSnapshot,
+    PlayerRenderIrReport, PlayerRenderLayer, PlayerRenderProvenance,
 };
 pub use cls_player_run_report::PlayerRunReport;
 pub use cls_player_sample_request::PlayerSampleRequest;
@@ -215,6 +218,7 @@ pub use cls_player_visual_frame_report::PlayerVisualFrameReport;
 pub use cls_player_warning::PlayerWarning;
 pub(crate) use cls_primitive_field_descriptor_coverage::PrimitiveFieldDescriptorCoverage;
 pub use cls_recipe_player::RecipePlayer;
+pub use enum_player_loopback_strictness::PlayerLoopbackStrictness;
 pub use fnc_build_control_catalog_report::build_control_catalog_report;
 pub use fnc_build_fixture_qc_report::build_fixture_qc_report;
 pub use fnc_build_frame_diff_report::build_frame_diff_report;

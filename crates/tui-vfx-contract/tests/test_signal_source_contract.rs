@@ -6,8 +6,8 @@
 use std::collections::BTreeMap;
 
 use tui_vfx_contract::{
-    DescriptorValidationError, NumericRange, ParameterId, ParameterSpec, SignalId, SignalSpec,
-    Value, ValueKind, ValueSource, ValueSpec,
+    DescriptorValidationError, DurationSpec, NumericRange, ParameterId, ParameterSpec,
+    PreviewLoopbackSpec, SignalId, SignalSpec, Value, ValueKind, ValueSource, ValueSpec,
 };
 
 fn ratio_value_spec(default: Value) -> ValueSpec {
@@ -51,6 +51,7 @@ fn signal(id: &str, value: ValueSpec) -> SignalSpec {
         display_name: Some(id.to_string()),
         description: None,
         value,
+        preview_loopback: None,
         required: false,
     }
 }
@@ -122,6 +123,51 @@ fn signal_fallback_must_match_signal_kind() {
         Err(DescriptorValidationError::ValueKindMismatch {
             expected: ValueKind::Number,
             actual: ValueKind::Text
+        })
+    ));
+}
+
+#[test]
+fn signal_preview_loopback_literal_validates_against_signal_kind() {
+    let mut spec = signal("demoProgress", ratio_value_spec(Value::Number(0.0)));
+    spec.preview_loopback = Some(PreviewLoopbackSpec::Literal {
+        value: Value::Number(0.75),
+    });
+
+    assert!(spec.validate().is_ok());
+}
+
+#[test]
+fn signal_preview_loopback_rejects_literal_kind_mismatch() {
+    let mut spec = signal("demoProgress", ratio_value_spec(Value::Number(0.0)));
+    spec.preview_loopback = Some(PreviewLoopbackSpec::Literal {
+        value: Value::Text("wrong".to_string()),
+    });
+
+    assert!(matches!(
+        spec.validate(),
+        Err(DescriptorValidationError::ValueKindMismatch {
+            expected: ValueKind::Number,
+            actual: ValueKind::Text
+        })
+    ));
+}
+
+#[test]
+fn numeric_preview_loopback_ramp_requires_numeric_signal_kind() {
+    let mut spec = signal("demoTitle", text_value_spec("READY"));
+    spec.preview_loopback = Some(PreviewLoopbackSpec::NumericRamp {
+        start: 0.0,
+        end: 1.0,
+        duration: DurationSpec::Milliseconds { value: 800 },
+        repeat: true,
+    });
+
+    assert!(matches!(
+        spec.validate(),
+        Err(DescriptorValidationError::ValueKindMismatch {
+            expected: ValueKind::Text,
+            actual: ValueKind::Number
         })
     ));
 }

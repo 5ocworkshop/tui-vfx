@@ -4,6 +4,14 @@
   "description": "One effect node in a canonical v3.1 graph.",
   "type": "object",
   "properties": {
+    "activePhases": {
+      "description": "Optional lifecycle phases in which this node is active; empty means all phases.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/LifecyclePhase"
+      }
+    },
     "cellWritePolicy": {
       "description": "Optional cell write policy requested by this node.",
       "anyOf": [
@@ -200,6 +208,26 @@
     "InternedRoleName": {
       "description": "Opaque interned name for a `RoleTag::Custom` variant.\n\nA newtype wrapper around `InternedString` so custom role names are\ndistinct at the type level from other interned identifiers\n(`LayerId`, `RecipeId`). Foreign code can read the inner name via\n`as_str()` but cannot accidentally substitute a `LayerId` for a role\nname or vice versa.",
       "type": "string"
+    },
+    "LifecyclePhase": {
+      "description": "Named high-level interval in a recipe lifecycle.",
+      "oneOf": [
+        {
+          "description": "Initial appearance or setup interval.",
+          "type": "string",
+          "const": "enter"
+        },
+        {
+          "description": "Sustained interval that may be fixed or trigger-terminated.",
+          "type": "string",
+          "const": "dwell"
+        },
+        {
+          "description": "Final departure or teardown interval.",
+          "type": "string",
+          "const": "exit"
+        }
+      ]
     },
     "NodeId": {
       "description": "Stable node identifier inside a canonical graph.",
@@ -679,6 +707,42 @@
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
     },
+    "StructuredValue": {
+      "description": "JSON-compatible structured payload owned by a descriptor field.\n\nUse this only when the primitive owns a nested payload whose stable shape is\ndescriptor-specific, such as path lists, particle options, or glyph-style\nrule tables. Prefer narrower typed values whenever a field has scalar,\ncolor, gradient, duration, scope, or rect semantics.",
+      "anyOf": [
+        {
+          "description": "Explicit null.",
+          "type": "null"
+        },
+        {
+          "description": "Boolean leaf value.",
+          "type": "boolean"
+        },
+        {
+          "description": "Floating-point numeric leaf value.",
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "description": "String leaf value.",
+          "type": "string"
+        },
+        {
+          "description": "Ordered child values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        },
+        {
+          "description": "String-keyed object values.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StructuredValue"
+          }
+        }
+      ]
+    },
     "Value": {
       "description": "Canonical tagged literal value used by effect input specs.",
       "oneOf": [
@@ -919,6 +983,25 @@
             "value": {
               "description": "Rectangle payload.",
               "$ref": "#/$defs/Rect"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ]
+        },
+        {
+          "description": "Descriptor-owned structured JSON literal.",
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "structured"
+            },
+            "value": {
+              "description": "Structured JSON payload.",
+              "$ref": "#/$defs/StructuredValue"
             }
           },
           "additionalProperties": false,

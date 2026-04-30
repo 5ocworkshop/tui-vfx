@@ -1,7 +1,8 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.39.0</VERS> -->
+<!-- <VERS>VERSION: 1.40.0</VERS> -->
 <!-- <WCTX>V3.1 docs indexing: add first parallel migration lane results.</WCTX> -->
-<!-- <CLOG>1.39.0: add first v3.1 parallel migration lane results.
+<!-- <CLOG>1.40.0: add v3.1 player dense cell-capture SQLite guide.
+1.39.0: add first v3.1 parallel migration lane results.
 1.38.0: add reusable v3.1 parallel migration agent briefing.
 1.37.0: add v3.1 rendering boundary and lowering rules.
 1.36.0: add K2.5 styled primitive evidence and player tooling PRD references.
@@ -158,6 +159,7 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [design/tui-vfx-v3-schema-draft.json](design/tui-vfx-v3-schema-draft.json) — Annotated draft V3 schema; strip `#` comment lines to get valid canonical example JSON.
 - [design/tui-vfx-v3-outstanding-master-list.md](design/tui-vfx-v3-outstanding-master-list.md) — Master outstanding V3 work list, including the final-only V2 retirement gate.
 - [tooling/INDEX.md](tooling/INDEX.md) — Tooling hub for V3 preview, probe/database/frame diff, resize adapter, and edge ingestion workflows.
+- [tooling/player-cell-capture-sqlite.md](tooling/player-cell-capture-sqlite.md) — v3.1 player-owned dense SQLite frame/cell capture for deterministic playback parity localization.
 
 ## V3.1 schema and related directories
 
