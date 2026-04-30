@@ -15,7 +15,7 @@
 // 0.16.0: MINOR — render shader highlighter/focusField applyTo targets.
 // 0.15.0: MINOR — add horizontal center wipe rendering while preserving active filter/sampler patches.</CLOG>
 
-use std::{borrow::Cow, collections::BTreeMap};
+use std::collections::BTreeMap;
 
 use serde_json::json;
 use tui_vfx_compositor::pipeline::{CompositionSpec, render_pipeline_with_spec};
@@ -327,20 +327,6 @@ fn scene_ir_with_native_content_stages(
                 edge_color,
                 apply_to,
             } => apply_vignette_style_stage(&mut staged, *strength, edge_color, apply_to),
-            NativeStyleStage::BracketEmphasis {
-                emphasis_color,
-                background_color,
-                progress,
-                edge_width,
-                apply_to,
-            } => apply_bracket_emphasis_style_stage(
-                &mut staged,
-                emphasis_color,
-                background_color,
-                *progress,
-                *edge_width,
-                apply_to,
-            ),
             NativeStyleStage::HoverBar {
                 bar_color,
                 thickness,
@@ -1242,49 +1228,6 @@ fn apply_vignette_style_stage(
                 background.as_str(),
                 &[],
                 "FilterVignette",
-            );
-        }
-    }
-}
-
-fn apply_bracket_emphasis_style_stage(
-    report: &mut PlayerRenderIrReport,
-    emphasis_color: &str,
-    background_color: &str,
-    progress: f64,
-    edge_width: usize,
-    apply_to: &str,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let progress = progress.clamp(0.0, 1.0);
-    let active_edge_width = ((edge_width.max(1) as f64) * progress).ceil() as usize;
-    for y in 0..height {
-        for x in 0..width {
-            let on_edge = x < active_edge_width || x + active_edge_width >= width;
-            let foreground = if on_edge {
-                Cow::Borrowed(emphasis_color)
-            } else {
-                Cow::Owned(lerp_rgba_label(
-                    emphasis_color,
-                    WHITE_RGBA,
-                    (0.7 + 0.3 * progress) as f32,
-                ))
-            };
-            let background = if on_edge {
-                Cow::Borrowed(background_color)
-            } else {
-                Cow::Owned(lerp_rgba_label(background_color, BLACK_RGBA, 0.7))
-            };
-            set_report_filter_cell(
-                report,
-                x,
-                y,
-                apply_to,
-                foreground.as_ref(),
-                background.as_ref(),
-                &[],
-                "FilterBracketEmphasis",
             );
         }
     }

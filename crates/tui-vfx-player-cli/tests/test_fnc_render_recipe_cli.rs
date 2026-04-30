@@ -1918,6 +1918,52 @@ fn test_fnc_cli_native_style_color_shift_matches_v2_deprecated_letter_cell_oracl
 }
 
 #[test]
+fn test_fnc_cli_lowers_bracket_emphasis_filter_to_compositor_filter_not_style_stage_json() {
+    for recipe in [
+        "filters/filter_bracket_emphasis.json",
+        "filters/filter_bracket_emphasis_progress_binding.json",
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg("dwell"),
+                str_arg("--phase-t"),
+                str_arg("0.35"),
+            ],
+            "render-backend native bracket-emphasis filter compositor lowering player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(report["compositionSpecSummary"]["filters"], 1, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"]["styleStages"], 0,
+            "{recipe}"
+        );
+        assert!(
+            report["loweredEffectIds"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!("filter.bracketEmphasis")),
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
 fn test_fnc_cli_lowers_edge_grow_filter_to_compositor_filter_not_style_stage_json() {
     for (recipe, phase) in [
         ("filters/filter_edge_grow_left.json", "enter"),

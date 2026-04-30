@@ -201,14 +201,6 @@ pub enum NativeStyleStage {
         edge_color: String,
         apply_to: String,
     },
-    /// Apply player-compatible bracket emphasis filter styling.
-    BracketEmphasis {
-        emphasis_color: String,
-        background_color: String,
-        progress: f64,
-        edge_width: usize,
-        apply_to: String,
-    },
     /// Apply player-compatible hover bar filter styling.
     HoverBar {
         bar_color: String,
@@ -612,9 +604,7 @@ fn lower_node_into_spec(
         "filter.crt" => lower_crt(node, spec, request, warnings),
         "filter.patternFill" => lower_pattern_fill(node, spec, request, warnings),
         "filter.kittScanner" => lower_kitt_scanner(node, spec, request, warnings),
-        "filter.bracketEmphasis" => {
-            lower_filter_bracket_emphasis(node, style_stages, request, warnings)
-        }
+        "filter.bracketEmphasis" => lower_filter_bracket_emphasis(node, spec, request, warnings),
         "filter.dotIndicator" => lower_filter_dot_indicator(node, spec, request, warnings),
         "filter.edgeGrow" => lower_filter_edge_grow(node, spec, request, warnings),
         "filter.hoverBar" => lower_filter_hover_bar(node, spec, request, warnings),
@@ -2673,7 +2663,7 @@ fn lower_radar_shader(
 
 fn lower_filter_bracket_emphasis(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2687,24 +2677,38 @@ fn lower_filter_bracket_emphasis(
             "progress",
             "edgeWidth",
             "applyTo",
+            "left",
+            "right",
         ],
         StyleScopeRequirement::All,
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::BracketEmphasis {
-        emphasis_color: color_label_from_config(color_alias_input(
-            node,
-            request,
-            &["emphasisColor", "color"],
-            (255, 210, 90),
-        )),
-        background_color: color_label_input(node, request, "bgColor", (20, 30, 50)),
-        progress: resolved_number_input(node, request, "progress", request.ir.phase_t)
-            .clamp(0.0, 1.0),
-        edge_width: integer_input(node, request, "edgeWidth", 1).max(0) as usize,
-        apply_to: enum_label_input(node, request, "applyTo", "foreground"),
+    if integer_input(node, request, "edgeWidth", 1) != 1 {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `filter.bracketEmphasis` uses `edgeWidth` other than 1, but compositor-native BracketEmphasis owns one bracket cell per side.".to_string(),
+        };
+    }
+    if !matches!(
+        enum_input(node, request, "applyTo"),
+        None | Some("foreground" | "fg")
+    ) {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `filter.bracketEmphasis` uses `applyTo` other than `foreground`, but compositor-native BracketEmphasis writes bracket glyph foregrounds.".to_string(),
+        };
+    }
+
+    spec.filters.push(FilterSpec::BracketEmphasis {
+        left: char_input(node, request, "left", '['),
+        right: char_input(node, request, "right", ']'),
+        color: color_alias_input(node, request, &["emphasisColor", "color"], (255, 210, 90)),
+        bg_color: color_input(node, request, "bgColor").unwrap_or(ColorConfig::Rgb {
+            r: 20,
+            g: 30,
+            b: 50,
+        }),
+        progress: BindableValue::from(number_signal_input(node, request, "progress", 1.0)),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
