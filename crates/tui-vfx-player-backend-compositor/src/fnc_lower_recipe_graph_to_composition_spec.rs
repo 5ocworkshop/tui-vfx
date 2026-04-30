@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.25.0</VERS>
+// <VERS>VERSION: 0.26.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.25.0: MINOR — lower mask.diamond into compositor MaskSpec::Diamond instead of source-stage player semantics.
+// <CLOG>0.26.0: MINOR — lower mask.dissolve into compositor MaskSpec::Dissolve instead of source-stage player semantics.
+// 0.25.0: lower mask.diamond into compositor MaskSpec::Diamond instead of source-stage player semantics.
 // 0.24.0: lower mask.radial into compositor MaskSpec::Radial instead of source-stage player semantics.
 // 0.23.0: lower mask.cellular into compositor MaskSpec::Cellular instead of source-stage player semantics.
 // 0.22.0: lower all-scope structured style.spatial radar payloads natively.
@@ -158,8 +159,6 @@ pub enum NativeContentStage {
     },
     /// Apply player-compatible blinds mask semantics to source rows.
     BlindsMask { orientation: String, count: usize },
-    /// Apply player-compatible dissolve mask semantics to source rows.
-    DissolveMask { seed: u64, chunk_size: usize },
     /// Apply player-compatible iris mask semantics to source rows.
     IrisMask { shape: String, soft_edge: bool },
     /// Apply player-compatible wipe/path-reveal mask semantics to source rows.
@@ -676,7 +675,7 @@ fn lower_node_into_spec(
         "mask.blinds" => lower_blinds_mask(node, content_stages, request, warnings),
         "mask.cellular" => lower_cellular_mask(node, spec, request, warnings),
         "mask.diamond" => lower_diamond_mask(node, spec, request, warnings),
-        "mask.dissolve" => lower_dissolve_mask(node, content_stages, request, warnings),
+        "mask.dissolve" => lower_dissolve_mask(node, spec, request, warnings),
         "mask.iris" => lower_iris_mask(node, content_stages, request, warnings),
         "mask.none" => lower_none_mask(node, spec, warnings),
         "mask.pathReveal" => lower_path_reveal_mask(node, content_stages, request, warnings),
@@ -1478,18 +1477,18 @@ fn lower_diamond_mask(
 
 fn lower_dissolve_mask(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) =
-        unsupported_native_content_reason(node, "mask.dissolve", &["seed", "chunkSize"])
+        unsupported_native_effect_reason(node, "mask.dissolve", &["seed", "chunkSize"])
     {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    content_stages.push(NativeContentStage::DissolveMask {
+    spec.masks.push(MaskSpec::Dissolve {
         seed: integer_input(node, request, "seed", 42).max(0) as u64,
-        chunk_size: integer_input(node, request, "chunkSize", 1).max(1) as usize,
+        chunk_size: integer_input(node, request, "chunkSize", 1).max(1) as u8,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3821,4 +3820,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.25.0</VERS>
+// <VERS>END OF VERSION: 0.26.0</VERS>

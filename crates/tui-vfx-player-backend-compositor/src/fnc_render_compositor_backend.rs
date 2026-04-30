@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.23.0</VERS>
+// <VERS>VERSION: 0.24.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.23.0: PATCH — remove backend-owned diamond mask source-stage rendering after mask.diamond moved to compositor MaskSpec.
+// <CLOG>0.24.0: PATCH — remove backend-owned dissolve mask source-stage rendering after mask.dissolve moved to compositor MaskSpec.
+// 0.23.0: remove backend-owned diamond mask source-stage rendering after mask.diamond moved to compositor MaskSpec.
 // 0.22.0: remove backend-owned radial mask source-stage rendering after mask.radial moved to compositor MaskSpec.
 // 0.21.0: remove backend-owned cellular mask source-stage rendering after mask.cellular moved to compositor MaskSpec.
 // 0.20.0: brighten cell-scoped focused-row gradients at the targeted cell.
@@ -280,9 +281,6 @@ fn scene_ir_with_native_content_stages(
             ),
             NativeContentStage::BlindsMask { orientation, count } => {
                 apply_blinds_mask_content_stage(&mut staged, orientation, *count)
-            }
-            NativeContentStage::DissolveMask { seed, chunk_size } => {
-                apply_dissolve_mask_content_stage(&mut staged, *seed, *chunk_size)
             }
             NativeContentStage::IrisMask { shape, soft_edge } => {
                 apply_iris_mask_content_stage(&mut staged, shape, *soft_edge)
@@ -1163,35 +1161,6 @@ fn apply_blinds_mask_content_stage(
             .enumerate()
             .map(|(x, glyph)| {
                 if blinds_keeps_cell(x, y, width, height, count, orientation, reveal) {
-                    glyph
-                } else {
-                    ' '
-                }
-            })
-            .collect();
-    }
-    report.rows = rows;
-    sync_styled_cells_to_rows(report);
-}
-
-fn apply_dissolve_mask_content_stage(
-    report: &mut PlayerRenderIrReport,
-    seed: u64,
-    chunk_size: usize,
-) {
-    let report_columns = report_width(report);
-    let report_rows = report_height(report);
-    let mut rows = dense_rows(report, report_columns, report_rows);
-    let chunk_size = chunk_size.max(1);
-    let reveal_threshold = report.phase_t.clamp(0.0, 1.0);
-    for (y, row) in rows.iter_mut().enumerate() {
-        *row = row
-            .chars()
-            .enumerate()
-            .map(|(x, glyph)| {
-                if glyph == ' '
-                    || dissolve_cell_noise(seed, x / chunk_size, y / chunk_size) <= reveal_threshold
-                {
                     glyph
                 } else {
                     ' '
@@ -2718,15 +2687,6 @@ fn source_mask_spotlight_distance(
     }
 }
 
-fn dissolve_cell_noise(seed: u64, x: usize, y: usize) -> f64 {
-    let mut hash = seed ^ 0xcbf2_9ce4_8422_2325u64;
-    for value in [x as u64, y as u64] {
-        hash ^= value.wrapping_mul(0x9e37_79b9_7f4a_7c15);
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    (hash % 10_000) as f64 / 9_999.0
-}
-
 fn wipe_cutoff(width: usize, reveal: f64, soft_edge: bool) -> usize {
     let mut scaled = width as f64 * reveal;
     if soft_edge {
@@ -3232,4 +3192,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.23.0</VERS>
+// <VERS>END OF VERSION: 0.24.0</VERS>
