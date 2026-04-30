@@ -8873,6 +8873,66 @@
         ]
       },
       "inputs": {
+        "stripeWidth": {
+          "displayName": "Stripe Width",
+          "description": "Width in cells of each vertical shredder strip.",
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 4
+            },
+            "range": {
+              "min": 1,
+              "max": 64
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": "stripe-width"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "oddSpeed": {
+          "displayName": "Odd Strip Speed",
+          "description": "Vertical speed multiplier for odd-indexed shredder strips.",
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": 3.0
+            },
+            "range": {
+              "min": -16.0,
+              "max": 16.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "strip-speed"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "evenSpeed": {
+          "displayName": "Even Strip Speed",
+          "description": "Vertical speed multiplier for even-indexed shredder strips.",
+          "value": {
+            "kind": "number",
+            "default": {
+              "kind": "number",
+              "value": -2.0
+            },
+            "range": {
+              "min": -16.0,
+              "max": 16.0
+            },
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "strip-speed"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
         "sliceWidth": {
           "displayName": "Slice Width",
           "description": null,

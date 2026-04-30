@@ -1766,17 +1766,30 @@ fn lower_shredder_sampler(
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
-    if let Some(reason) =
-        unsupported_native_effect_reason(node, "sampler.shredder", &["sliceWidth", "offset"])
-    {
+    if let Some(reason) = unsupported_native_effect_reason(
+        node,
+        "sampler.shredder",
+        &[
+            "sliceWidth",
+            "offset",
+            "stripeWidth",
+            "oddSpeed",
+            "evenSpeed",
+        ],
+    ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
+    let default_stripe_width = if node_has_input(node, "sliceWidth") {
+        integer_input(node, request, "sliceWidth", 2)
+    } else {
+        4
+    };
     spec.push_sampler(SamplerSpec::Shredder {
-        stripe_width: positive_u16_input(node, request, "sliceWidth", 2),
-        odd_speed: SignalOrFloat::Static(3.0),
-        even_speed: SignalOrFloat::Static(1.0),
-        offset: Some(clamped_i16_input(node, request, "offset", 1)),
+        stripe_width: positive_u16_input(node, request, "stripeWidth", default_stripe_width),
+        odd_speed: number_signal_input(node, request, "oddSpeed", 3.0),
+        even_speed: number_signal_input(node, request, "evenSpeed", -2.0),
+        offset: optional_i16_input(node, request, "offset"),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -2921,15 +2934,6 @@ fn resolved_integer_input(
             _ => None,
         })
         .unwrap_or(default)
-}
-
-fn clamped_i16_input(
-    node: &NodeSpec,
-    request: &PlayerRenderBackendRequest,
-    key: &str,
-    default: i64,
-) -> i16 {
-    integer_input(node, request, key, default).clamp(i16::MIN as i64, i16::MAX as i64) as i16
 }
 
 fn positive_u8_input(

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>K2.13 field coverage closure: mark gradient, applyTo, and position as player-handled.</WCTX>
-// <CLOG>0.4.0: MINOR — add handled shader gradient/applyTo/position fields.
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>v3.1 descriptor/adapter migration: track player-handled primitive field coverage.</WCTX>
+// <CLOG>0.5.0: MINOR — mark shredder sampler speed/stripe fields as handled.
+// 0.4.0: MINOR — add handled shader gradient/applyTo/position fields.
 // 0.3.0: MINOR — add handled fields for source.text fixture coverage.</CLOG>
 
 use std::collections::BTreeSet;
@@ -169,7 +170,13 @@ pub(crate) fn collect_handled_primitive_inputs(
         "mask.diamond" => fields(["softEdge"]),
         "sampler.sineWave" => fields(["axis", "amplitude", "frequency", "speed", "phaseOffset"]),
         "sampler.ripple" => fields(["amplitude", "center", "speed", "wavelength"]),
-        "sampler.shredder" => fields(["sliceWidth", "offset"]),
+        "sampler.shredder" => fields([
+            "sliceWidth",
+            "offset",
+            "stripeWidth",
+            "oddSpeed",
+            "evenSpeed",
+        ]),
         "sampler.faultLine" => fields(["offset", "seed", "intensity", "splitBias"]),
         "sampler.radialTwist" => fields(["strength"]),
         "sampler.crt" => fields(["curvature", "scanlineStrength", "jitter"]),
@@ -319,4 +326,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_collect_handled_primitive_inputs.rs</FILE> - <DESC>Collect player-handled primitive input fields</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
+// <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>Player UI: lock playback, drawer, wrapped recipe-summary, and local theme surface behavior for migrated primitive review.</WCTX>
-// <CLOG>0.6.0: MINOR — assert wrapped summary descriptions and Eichler-inspired canvas/panel surfaces.</CLOG>
+// <CLOG>0.7.0: MINOR — assert normal wrapped preview metadata keeps the snapshot anchor stable.
+// 0.6.0: MINOR — assert wrapped summary descriptions and Eichler-inspired canvas/panel surfaces.</CLOG>
 
 use std::{fs, path::PathBuf, process::Command};
 
@@ -438,6 +439,47 @@ fn test_fnc_ratatui_preview_summary_wraps_long_recipe_description() {
 }
 
 #[test]
+fn test_fnc_ratatui_preview_summary_keeps_snapshot_anchor_for_normal_description_wraps() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut short_state =
+        PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load short ui state");
+    short_state.recipe.metadata.description = Some("Short stable preview summary.".to_string());
+    let mut wrapped_state =
+        PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load wrapped ui state");
+    wrapped_state.recipe.metadata.description = Some(
+        "Normal player guidance should wrap across the fixed summary allowance without moving the \
+         playback surface up or down as terminal width changes the line breaks."
+            .to_string(),
+    );
+    let mut short_app = runtime
+        .block_on(PlayerUiApp::new(short_state))
+        .expect("short player ui app");
+    short_app.stats_drawer_open = false;
+    let mut wrapped_app = runtime
+        .block_on(PlayerUiApp::new(wrapped_state))
+        .expect("wrapped player ui app");
+    wrapped_app.stats_drawer_open = false;
+    let mut short_terminal = Terminal::new(TestBackend::new(92, 28)).expect("short terminal");
+    let mut wrapped_terminal = Terminal::new(TestBackend::new(92, 28)).expect("wrapped terminal");
+
+    short_terminal
+        .draw(|frame| render_ratatui_ui(&mut short_app, frame))
+        .expect("short ratatui draw");
+    wrapped_terminal
+        .draw(|frame| render_ratatui_ui(&mut wrapped_app, frame))
+        .expect("wrapped ratatui draw");
+
+    assert_eq!(
+        row_index_containing(&short_terminal, " Player snapshot "),
+        row_index_containing(&wrapped_terminal, " Player snapshot "),
+        "normal wrapped metadata should not bob the playback surface"
+    );
+}
+
+#[test]
 fn test_fnc_ratatui_canvas_and_panels_use_eichler_theme_surfaces() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -679,6 +721,12 @@ fn test_fnc_ratatui_studio_keyboard_mutation_changes_source_control() {
     );
 }
 
+fn row_index_containing(terminal: &Terminal<TestBackend>, needle: &str) -> Option<usize> {
+    terminal_rows(terminal)
+        .iter()
+        .position(|row| row.contains(needle))
+}
+
 fn terminal_rows(terminal: &Terminal<TestBackend>) -> Vec<String> {
     let buffer = terminal.backend().buffer();
     let area = *buffer.area();
@@ -823,4 +871,4 @@ fn stderr(output: &std::process::Output) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

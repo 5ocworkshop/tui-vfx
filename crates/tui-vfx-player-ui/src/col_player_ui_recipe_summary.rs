@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/col_player_ui_recipe_summary.rs</FILE> - <DESC>Recipe summary presentation helpers for the player UI</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Player UI presentation: wrap long recipe descriptions in a bounded summary panel.</WCTX>
-// <CLOG>0.1.0: INIT — build styled recipe-summary lines and estimate wrapped panel height.</CLOG>
+// <CLOG>0.2.0: MINOR — keep normal preview metadata in a fixed-height summary allowance.
+// 0.1.0: INIT — build styled recipe-summary lines and estimate wrapped panel height.</CLOG>
 
 use ratatui::{
     text::{Line, Span},
@@ -9,6 +10,11 @@ use ratatui::{
 };
 
 use crate::{PlayerUiState, cls_player_ui_theme::PlayerUiTheme};
+
+const COMPACT_RECIPE_SUMMARY_HEIGHT: u16 = 5;
+const NORMAL_RECIPE_SUMMARY_HEIGHT: u16 = 9;
+const MAXIMUM_RECIPE_SUMMARY_HEIGHT: u16 = 12;
+const PLAYBACK_AND_DIAGNOSTICS_ALLOWANCE: u16 = 8;
 
 /// Build the preview summary lines with labels that wrap inside the panel.
 pub(crate) fn player_ui_recipe_summary_lines(
@@ -51,30 +57,42 @@ pub(crate) fn player_ui_recipe_summary_height(
     available_height: u16,
 ) -> u16 {
     if available_height <= 12 {
-        return 5.min(available_height);
+        return COMPACT_RECIPE_SUMMARY_HEIGHT.min(available_height);
     }
     let inner_width = available_width.saturating_sub(2).max(24) as usize;
-    let metadata = &state.recipe.metadata;
-    let mut text_rows = 3;
-    text_rows += wrapped_rows(
-        "description: ",
-        metadata.description.as_deref().unwrap_or("<none>"),
-        inner_width,
-    );
-    if let Some(expected_visual) = metadata
-        .expected_visual
-        .as_deref()
-        .filter(|value| !value.trim().is_empty())
-    {
-        text_rows += wrapped_rows("expected: ", expected_visual, inner_width);
-    }
-    let desired = (text_rows as u16).saturating_add(2).clamp(7, 11);
-    desired.min(available_height.saturating_sub(8).max(5))
+    let content_height = recipe_summary_content_rows(state, inner_width).saturating_add(2);
+    let desired_height = if content_height <= NORMAL_RECIPE_SUMMARY_HEIGHT as usize {
+        NORMAL_RECIPE_SUMMARY_HEIGHT
+    } else {
+        (content_height as u16).clamp(NORMAL_RECIPE_SUMMARY_HEIGHT, MAXIMUM_RECIPE_SUMMARY_HEIGHT)
+    };
+    desired_height.min(
+        available_height
+            .saturating_sub(PLAYBACK_AND_DIAGNOSTICS_ALLOWANCE)
+            .max(COMPACT_RECIPE_SUMMARY_HEIGHT),
+    )
 }
 
 /// Ratatui wrap policy for the summary panel.
 pub(crate) fn player_ui_recipe_summary_wrap() -> Wrap {
     Wrap { trim: false }
+}
+
+fn recipe_summary_content_rows(state: &PlayerUiState, inner_width: usize) -> usize {
+    let metadata = &state.recipe.metadata;
+    let title = metadata.title.as_deref().unwrap_or("<untitled>");
+    let description = metadata.description.as_deref().unwrap_or("<none>");
+    let mut rows = wrapped_rows("title: ", title, inner_width)
+        + wrapped_rows("description: ", description, inner_width)
+        + 1;
+    if let Some(expected_visual) = metadata
+        .expected_visual
+        .as_deref()
+        .filter(|value| !value.trim().is_empty())
+    {
+        rows += wrapped_rows("expected: ", expected_visual, inner_width);
+    }
+    rows
 }
 
 fn labeled_line(label: &'static str, value: &str, theme: PlayerUiTheme) -> Line<'static> {
@@ -105,4 +123,4 @@ fn wrapped_rows(prefix: &str, value: &str, width: usize) -> usize {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/col_player_ui_recipe_summary.rs</FILE> - <DESC>Recipe summary presentation helpers for the player UI</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

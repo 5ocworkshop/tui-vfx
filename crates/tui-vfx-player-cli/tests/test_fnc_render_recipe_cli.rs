@@ -1319,6 +1319,143 @@ fn test_fnc_cli_native_sampler_faultline_matches_v2_deprecated_rows_json() {
 }
 
 #[test]
+fn test_fnc_cli_native_sampler_shredder_matches_v2_deprecated_rows_json() {
+    for (phase, expected_sampler_count, expected_styled_color_count, expected_rows) in [
+        (
+            "enter",
+            1,
+            60,
+            [
+                "│",
+                "│       ────    ────    ────",
+                "╰───                            ────",
+                "",
+                "            ────    ────    ────",
+            ],
+        ),
+        (
+            "dwell",
+            0,
+            200,
+            [
+                "╭──────────────────────────────────────╮",
+                "│SAMPLER TEST: Shredder Effect         │",
+                "│                                      │",
+                "│                                      │",
+                "╰──────────────────────────────────────╯",
+            ],
+        ),
+        (
+            "exit",
+            1,
+            6,
+            ["╰──                                 ───", "", "", "", ""],
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path("samplers/sampler_shredder.json"),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg("0.5"),
+            ],
+            "render-backend native V2 deprecated sampler shredder oracle player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{phase}");
+        assert_eq!(report["fallbackUsed"], false, "{phase}");
+        assert_eq!(
+            report["compositionSpecSummary"]["samplers"], expected_sampler_count,
+            "{phase}"
+        );
+        assert_eq!(report["rows"].as_array().expect("rows").len(), 5, "{phase}");
+        for (index, expected_row) in expected_rows.iter().enumerate() {
+            assert_eq!(report["rows"][index], *expected_row, "{phase} row {index}");
+        }
+        assert_eq!(
+            styled_cell_color_count(&report, "rgba(255,0,0,255)", "rgba(50,15,15,255)"),
+            expected_styled_color_count,
+            "{phase}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_native_sampler_shredder_uses_descriptor_defaults_when_fields_omitted_json() {
+    let mut recipe: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(debug_recipe_root().join("samplers/sampler_shredder.json"))
+            .expect("read shredder recipe"),
+    )
+    .expect("parse shredder recipe");
+    for field in ["stripeWidth", "oddSpeed", "evenSpeed"] {
+        recipe["graph"]["nodes"]["shredderEnter"]["inputs"]
+            .as_object_mut()
+            .expect("enter inputs")
+            .remove(field);
+    }
+    let temp_root = std::env::temp_dir().join("tui-vfx-shredder-descriptor-defaults");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create shredder defaults temp root");
+    let temp_recipe_path = temp_root.join("sampler_shredder_defaults.json");
+    fs::write(
+        &temp_recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize shredder defaults recipe"),
+    )
+    .expect("write shredder defaults recipe");
+
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            temp_recipe_path.display().to_string(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.5"),
+        ],
+        "render-backend native shredder descriptor defaults player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(
+        report["rows"],
+        serde_json::json!([
+            "│",
+            "│       ────    ────    ────",
+            "╰───                            ────",
+            "",
+            "            ────    ────    ────"
+        ])
+    );
+    assert_eq!(
+        styled_cell_color_count(&report, "rgba(255,0,0,255)", "rgba(50,15,15,255)"),
+        60
+    );
+}
+
+#[test]
 fn test_fnc_cli_native_sub_pixel_bar_matches_v2_deprecated_glyph_oracle_json() {
     let report = player_cli_json(
         vec![
@@ -2145,7 +2282,11 @@ fn test_fnc_cli_rejects_native_exact_effect_blocker_subset_unsupported_shapes_js
             "origin",
         ),
         ("noise_dither", "masks/mask_noise_dither.json", "seed"),
-        ("shredder", "samplers/sampler_shredder.json", "sliceWidth"),
+        (
+            "shredder",
+            "samplers/sampler_shredder_slice_width_stride.json",
+            "sliceWidth",
+        ),
         (
             "radial_twist",
             "samplers/sampler_radial_twist_v3.json",
@@ -4380,7 +4521,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 652);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 655);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -5300,6 +5441,19 @@ fn styled_cell_count(
                 && cell["foreground"] == foreground
                 && cell["background"] == background
         })
+        .count()
+}
+
+fn styled_cell_color_count(
+    report: &serde_json::Value,
+    foreground: &str,
+    background: &str,
+) -> usize {
+    report["styledCells"]
+        .as_array()
+        .expect("styled cells array")
+        .iter()
+        .filter(|cell| cell["foreground"] == foreground && cell["background"] == background)
         .count()
 }
 
