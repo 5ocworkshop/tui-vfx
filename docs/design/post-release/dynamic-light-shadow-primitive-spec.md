@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/post-release/dynamic-light-shadow-primitive-spec.md</FILE> - <DESC>Post-release specification for a grid-aware Light primitive in tui-vfx-shadow that derives per-element shadow offsets from a global directional or positional light source, providing the canonical data type and projection math reused by gtd-factory's elevation-aware shadow build, the Madeira flag's surface-normal lighting, and any future tui-vfx consumer that needs coordinated dynamic shadows or surface shading.</DESC> -->
-<!-- <VERS>VERSION: 0.1.0-draft</VERS> -->
+<!-- <VERS>VERSION: 0.2.1-draft</VERS> -->
 <!-- <WCTX>Capture the post-release Light primitive at the tui-vfx layer where grid awareness, shadow rendering, and surface-shader signal seams already live, so a single canonical Light type drives both shadow offset projection and procedural surface lighting (e.g. the Madeira flag) instead of two parallel ad hoc light models.</WCTX>
-<!-- <CLOG>0.1.0-draft: initial post-release spec for a tui-vfx-shadow Light enum (Directional + Positional), pure project_light_to_offset projection math, equivalence proof, clamps, runtime reuse story for the Madeira flag's existing light_x/light_y signals, downstream integration contract for gtd-factory, acceptance criteria, and open questions.</CLOG> -->
+<!-- <CLOG>0.2.1-draft: extend §10 with two Doom/Quake-era perf-enabler items — static light-field bake (Quake 1996 lightmap pattern: precompute per-cell direction/brightness once at scene-load when the `Light` is static, falling back to the analytic path for dynamic lights, biggest payoff for surface shaders like the Madeira flag where every cell would otherwise trig-and-multiply per frame) and shared distance-attenuation LUT (Doom 1993 colormap pattern: a single `(distance, elevation)`-keyed table drives both shadow falloff and the `weather-ambient-field-spec.md` fog/depth-cue, so atmospheric fade and light falloff stay mathematically coherent and one mechanism produces both effects). No v1 API change; both items are deferred enhancements that compose with the v0.2.0 dual-quantization signature.</CLOG> -->
 
 # Dynamic Light primitive for tui-vfx-shadow
 
@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-Add a small grid-aware **`Light`** primitive at the `tui-vfx-shadow` layer plus the pure projection math that turns a `(Light, element_height, element_center)` triple into a `(offset_x, offset_y)` cell pair for the existing `ShadowConfig`.
+Add a small grid-aware **`Light`** primitive at the `tui-vfx-shadow` layer plus the pure projection math that turns a `(Light, element_height, element_center)` triple into a continuous sub-cell `(offset_x, offset_y)` pair (with a `quantize_offset` adapter for renderers that consume integer cells) for the existing `ShadowConfig`.
 
 This is the canonical place for the math because tui-vfx is already the grid-aware layer:
 
@@ -32,16 +32,16 @@ Everything that should react to "where is the light" lives here. Putting `Light`
 ```text
                     Light  ─── pure data
                      │
-                     ├─── project_light_to_offset(light, level, element_center) ─┐
-                     │                                                           │
-element height ──────┘                                                           ▼
-                                                                  ShadowConfig.with_offset(...)
-element center ───────────────────────────────────────────────────────────       │
-                                                                                 ▼
-                                                                  existing render_shadow path
+                     ├─── project_light_to_offset(light, level, element_center) → (f32, f32) ─┐
+                     │                                                                        │
+element height ──────┘                                                                        ├─→ Braille renderer (sub-cell, no quantization)
+                                                                                              │
+element center ─────────────────────────────────                                              └─→ quantize_offset → ShadowConfig.with_offset → rect/solid renderer
 ```
 
-The primitive is a pure value plus a pure function. No state. No allocations. Callers (gtd-factory's `shadow_def_to_config`, the flag shader, anything else) consult a `Light` they own and call `project_light_to_offset` to get an `[i8; 2]` they can hand to the existing `ShadowConfig::with_offset`.
+The primitive is a pure value plus a pure function. No state. No allocations. Mathematically this is the planar-shadow projection family (Blinn-style), in the ray-casting lineage that separates shadow visibility from primary visibility; the directional/positional split is the standard "light at infinity vs. point light" distinction (§4.1 captures the limit). The math runs in continuous (`f32`) space; a separate `quantize_offset` adapter rounds to integer cells for renderers that need it, so the Braille renderer (which already speaks sub-cell) skips the adapter entirely — keeping aliasing at the output device rather than the geometry layer.
+
+Callers (gtd-factory's `shadow_def_to_config`, the flag shader, anything else) consult a `Light` they own and call `project_light_to_offset` to get an `(f32, f32)` sub-cell offset; cell-quantizing renderers pipe through `quantize_offset` to get the `(i8, i8)` they hand to the existing `ShadowConfig::with_offset`.
 
 For surface shaders (the flag), the same `Light` exposes a normalized 2D direction via a `light.direction_at(point)` accessor — directional returns a fixed `(dx, dy)`; positional returns the unit vector from the surface point toward the light. This lets the flag's existing `shading.light_x` / `shading.light_y` floats become `Light::direction_at` calls without changing the shader's lighting math.
 
@@ -77,6 +77,15 @@ pub struct PositionalLight {
     /// the tallest element height the caller will project; clamped at the
     /// projection site to avoid singularities.
     pub light_z: f32,
+    /// Effective light radius in cell-equivalent units. Reserved for the
+    /// future stochastic shadow sampler (§10), which will jitter N rays
+    /// across a disc of this radius to produce soft penumbras (Cook 1984
+    /// area-light framework). v1's `project_light_to_offset` ignores this
+    /// field; the field is reserved here so adding the sampler later does
+    /// not require a schema bump on already-authored JSON. Default 0.0 =
+    /// ideal point light.
+    #[serde(default)]
+    pub radius: f32,
     pub intensity: f32,
     pub color_tint: Option<ColorTint>,
 }
@@ -97,26 +106,29 @@ Themes/consumers that want directional behaviour write a `Directional`; those th
 ## 5. Projection math
 
 ```rust
-/// Project a Light onto a per-element shadow offset, given the element's
-/// elevation (level, in cell-equivalent height units) and screen-space
-/// center (in cell coordinates). Pure; no allocation.
+/// Project a Light onto a per-element sub-cell shadow offset, given the
+/// element's elevation (level, in cell-equivalent height units) and
+/// screen-space center (in cell coordinates). Pure; no allocation. Returns
+/// continuous `(f32, f32)` offsets so renderers that support sub-cell
+/// positions (Braille) can consume the result directly; cell-quantizing
+/// renderers (rect, solid) pipe the result through `quantize_offset`.
 pub fn project_light_to_offset(
     light: &Light,
     level: i8,
     element_center: (f32, f32),
-) -> (i8, i8) {
+) -> (f32, f32) {
     match light {
         Light::Directional(d) => project_directional(d, level),
         Light::Positional(p) => project_positional(p, level, element_center),
     }
 }
 
-fn project_directional(light: &DirectionalLight, level: i8) -> (i8, i8) {
+fn project_directional(light: &DirectionalLight, level: i8) -> (f32, f32) {
     let pitch_rad = light.pitch_deg.clamp(MIN_PITCH_DEG, MAX_PITCH_DEG).to_radians();
     let length_scale = (1.0 / pitch_rad.tan()).clamp(MIN_LENGTH_SCALE, MAX_LENGTH_SCALE);
     let az_rad = light.azimuth_deg.to_radians();
-    let dx = (az_rad.cos() * length_scale * level as f32).round() as i8;
-    let dy = (az_rad.sin() * length_scale * level as f32).round() as i8;
+    let dx = az_rad.cos() * length_scale * level as f32;
+    let dy = az_rad.sin() * length_scale * level as f32;
     (dx, dy)
 }
 
@@ -124,15 +136,24 @@ fn project_positional(
     light: &PositionalLight,
     level: i8,
     element_center: (f32, f32),
-) -> (i8, i8) {
+) -> (f32, f32) {
     let h = level as f32;
     // light_z must exceed h to avoid singularity; clamp to a small positive
     // value if the caller hands us garbage.
     let denom = (light.light_z - h).max(MIN_LIGHT_Z_GAP);
     let scale = (h / denom).clamp(-MAX_LENGTH_SCALE, MAX_LENGTH_SCALE);
-    let dx = ((element_center.0 - light.light_x) * scale).round() as i8;
-    let dy = ((element_center.1 - light.light_y) * scale).round() as i8;
+    let dx = (element_center.0 - light.light_x) * scale;
+    let dy = (element_center.1 - light.light_y) * scale;
     (dx, dy)
+}
+
+/// Round a sub-cell offset to integer cells. Renderers that consume
+/// `[i8; 2]` offsets (rect, solid) call this once on the projection result
+/// before handing it to `ShadowConfig::with_offset`. The Braille renderer
+/// consumes sub-cell offsets directly and does not call this. Pure; no
+/// allocation.
+pub fn quantize_offset(offset: (f32, f32)) -> (i8, i8) {
+    (offset.0.round() as i8, offset.1.round() as i8)
 }
 
 const MIN_PITCH_DEG: f32 = 5.0;
@@ -222,7 +243,9 @@ A reasonable v1 of this primitive delivers all of:
 2. **Both kinds verified.** Unit tests cover: directional with overhead pitch (offset → 0), grazing pitch (offset clamped), all four cardinal azimuths (correct sign on dx/dy); positional with element directly under light (offset → 0), element far horizontally (offset large in correct direction), element opposite side of light (offset sign flipped), `light_z ≤ level` (clamped, finite output).
 3. **Equivalence sanity.** A test asserts that as `light_z → very large` along a fixed direction, positional output approaches directional output for a representative grid of `(level, element_center)` pairs (within rounding tolerance).
 4. **Reusable from a procedural shader.** The Madeira flag is migrated to consume `Light::direction_at` and the existing comparison test (`compare_shading_modes_across_cycle` in `tui-vfx-recipes` commit `ce3b95d`) continues to pass with no qualitative change to the per-cell brightness table.
-5. **Reusable from a shadow renderer.** A small example or test shows `ShadowConfig::with_offset(project_light_to_offset(&light, level, center))` producing visually correct shadows for two elevations under one shared light, in both directional and positional modes.
+5. **Reusable from a shadow renderer (both quantization paths).** A small example or test shows:
+   - *Cell-quantized path*: `ShadowConfig::with_offset(quantize_offset(project_light_to_offset(&light, level, center)))` producing visually correct shadows under the rect and solid renderers, for two elevations under one shared light, in both directional and positional modes.
+   - *Sub-cell path*: the Braille renderer consuming `project_light_to_offset(...)` directly, with smooth shadow movement when `light.azimuth_deg` (directional) or `light.light_x` (positional) is animated through small fractional-cell increments — confirming the §9.4 sub-cell promotion delivers the angular-smoothness payoff that motivated it.
 6. **Cheap.** Per-element per-frame cost is two trig ops + a few multiplies (directional) or a subtract + divide + a few multiplies (positional). Both should benchmark below 1 µs per call on a representative dev machine.
 
 ## 9. Open questions
@@ -230,21 +253,24 @@ A reasonable v1 of this primitive delivers all of:
 1. **Where should `Light` live within tui-vfx-shadow?** As a top-level export of the `tui-vfx-shadow` crate, or in a new `tui-vfx-shadow::light` submodule? Initial preference: submodule, mirroring `tui-vfx-shadow::renderers`.
 2. **Should `direction_at` go on `Light` itself or on a thin wrapper?** Putting it on `Light` is convenient but slightly couples the primitive to surface-shader use cases. Wrapper is cleaner but adds a hop. Initial preference: on `Light`, since the cost is one `match` and the convenience is large.
 3. **Does the primitive own `ColorTint` or just reference an opaque type?** The `color_tint: Option<ColorTint>` field is currently a stub. tui-vfx-shadow already has a `Color` type for the shadow color itself; we'd reuse that or define a sibling `ColorTint` for warm/cool shifts. Defer until a consumer needs it.
-4. **Sub-cell precision via the Braille renderer.** The projection function returns `(i8, i8)` cell offsets. A future variant could return `(f32, f32)` sub-cell offsets that the Braille renderer consumes natively, enabling smooth angular animation. Out of scope for v1; capture in §10.
+4. **Sub-cell precision via the Braille renderer.** *Resolved 0.2.0-draft.* The projection function returns `(f32, f32)` sub-cell offsets; a separate `quantize_offset` adapter rounds for cell-quantizing renderers. Reasoning: aliasing is a structural property of the sample layer, not a polish concern (Cook 1984 / Whitted 1980 both got anti-aliasing for free by keeping sample positions continuous and quantizing only at the output device — the Appel-pen-plotter pattern). The Braille renderer already supports sub-cell input (§11), so the alternative — staying at `(i8, i8)` — would have meant burning the renderer's existing sub-cell capability. Cost of the change: one extra `quantize_offset` call in cell-quantizing render paths and a `.round() as i8` removed from the projection function.
 5. **Should `Light` be `#[repr(C)]` for FFI/recording?** Probably not yet; revisit if a recording or trace tool needs it.
 6. **Migration story for the flag.** Hard cutover (rewrite the recipe), soft (accept both shapes for one release), or gated (recipe schema bump)? Decided in the flag's own follow-up commit.
+7. **`Ray`-shaped accessor for future indirect/area-light consumers.** Should `Light::ray_to(surface_point) -> Ray { origin, direction, length }` eventually replace the standalone `direction_at` accessor? The Whitted/Kajiya lineage treats lights, eye rays, shadow rays, and bounce rays as one parameterized primitive (origin + direction + length), and any future consumer that needs inverse-square attenuation or one-bounce indirect (§10's "light-aware glow") will want the `length` term. Initial preference: defer to a future revision; v1 ships `direction_at` only since no current consumer needs `length`. The `Ray` shape lands cleanly when the first consumer requires it; until then the simpler accessor stays and `direction_at` is the public surface.
 
 ## 10. Future extensions (deferred)
 
-- **Sub-cell offset path.** Return `(f32, f32)` from a sibling `project_light_to_subcell_offset` and route through the Braille renderer for smooth angular transitions.
+- **Stochastic shadow sampling for area lights (Cook 1984).** A future `project_light_to_offset_samples(light, level, center, n) -> Vec<(f32, f32)>` jitters N offsets sampled across a disc of radius `light.radius` around the positional light (or an angular cone for directional); the renderer composites them for soft penumbras. The `radius` field is reserved in v1 (§4) so adding the sampler is API-additive and does not break in-flight JSON. Cell-quantizing renderers can approximate by averaging `quantize_offset` of each sample; the Braille renderer composites at sub-cell precision for genuine soft shadows.
 - **Multiple lights with weighted blend.** Add a `LightSet` that sums per-light contributions. Useful for hero/showcase surfaces, expensive in the general case.
 - **Element-on-element occlusion.** Real cast shadows from one element onto another. Two architectural options pre-evaluated in the gt-design PRD; unchanged here.
 - **Light-aware glow.** The existing `glow_border` shadow technique could brighten the light-facing edge of an element under positional light. Composes naturally with this primitive.
+- **Static light-field bake (Quake 1996 lightmap pattern).** When a `Light` is known to be static for the lifetime of a scene, a future `Light::bake(grid_extent: (u16, u16)) -> CachedLightField` can precompute per-cell direction and brightness once at scene-load time, with `direction_at` falling back to the analytic path when no cache exists. Only dynamic light deltas (cursor-tracked positional lights, animated azimuths) recompute per frame; the baked field is reused. The win is most pronounced for surface shaders (the Madeira flag) where every cell would otherwise trig-and-multiply per frame; the win for shadow projection is smaller because `project_light_to_offset` already runs only per-element. Composes with the LUT item below — the cache can store baked attenuation alongside baked direction.
+- **Shared distance-attenuation LUT (Doom 1993 colormap pattern).** A future `AttenuationTable` keyed by `(distance, elevation)` and consulted at the cell level can replace per-cell analytic falloff with a table read. The same table can drive the `weather-ambient-field-spec.md` fog/depth-cue pass, so atmospheric fade and light falloff are mathematically consistent — the Doom trick that gave the engine its mood "for free" by making one mechanism produce both effects. Worth coordinating the table shape with the ambient-field spec before either lands so the two specs share a single attenuation primitive rather than landing parallel implementations.
 
 ## 11. Relationship to other tui-vfx work
 
 - **`tui-vfx-shadow`'s existing `ShadowConfig`** — this primitive feeds offsets into the existing `with_offset` method; nothing about `ShadowConfig` changes.
-- **The Braille shadow renderer (`renderers/cls_braille.rs`)** — already supports sub-cell offsets, which positions us for §10's sub-cell extension without new renderer work.
+- **The Braille shadow renderer (`renderers/cls_braille.rs`)** — already supports sub-cell offsets, which the v1 `(f32, f32)` projection signature feeds directly with no quantization step. Cell-quantizing renderers (rect, solid) wrap the result in `quantize_offset` (§5). When the §10 stochastic sampler lands, the Braille renderer is the natural composite target for genuine soft penumbras at sub-cell precision.
 - **The Madeira flag shading dispatcher (`cls_braille_flag_field.rs` ≥ 0.6.0)** — first proving consumer for `Light::direction_at`. The reusability comment introduced in commit `cc399c5` already names the seam where this primitive lands.
 - **`tui-vfx-v1-dramatic-color-shadow-plan.md`** (gt-design plans) — composes. That plan addresses shadow color/saturation; this primitive addresses shadow direction/length. Both can land independently; together they make shadows that point coherently AND look richer.
 
@@ -269,4 +295,4 @@ These belong in the implementation plan that follows this spec.
 5. **Hand off to the gt-design integration PRD** for the SSOT/factory wiring.
 
 <!-- <FILE>docs/design/post-release/dynamic-light-shadow-primitive-spec.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.1.0-draft</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.1-draft</VERS> -->

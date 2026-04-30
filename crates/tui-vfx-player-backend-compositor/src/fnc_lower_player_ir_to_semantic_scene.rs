@@ -243,7 +243,7 @@ fn modifier_labels(modifiers: Modifiers) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use tui_vfx_contract::LifecyclePhase;
-    use tui_vfx_player::{PlayerRenderIrReport, PlayerStatus};
+    use tui_vfx_player::{PlayerRenderClockSample, PlayerRenderIrReport, PlayerStatus};
     use tui_vfx_types::Grid;
 
     use super::*;
@@ -258,6 +258,12 @@ mod tests {
             phase: LifecyclePhase::Dwell,
             phase_t: 1.0,
             loop_t: None,
+            clock: PlayerRenderClockSample {
+                mode: "fixed".to_string(),
+                period_ms: None,
+                absolute_t_ms: None,
+                loop_t: None,
+            },
             width: 2,
             height: 1,
             render_hash: 1,

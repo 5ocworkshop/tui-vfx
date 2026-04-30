@@ -1,12 +1,13 @@
 // <FILE>crates/tui-vfx-player/src/fnc_apply_shader_primitive.rs</FILE> - <DESC>Apply shader primitives to player styled grids</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.5.0</VERS>
 // <WCTX>Player shader parity: support gradient stops, applyTo, and direct border-sweep position.</WCTX>
-// <CLOG>0.4.0: MINOR — bridge structured style.spatial shader payloads for migrated style fixtures.
+// <CLOG>0.5.0: MINOR — brighten cell-scoped focused-row gradients at the targeted cell.
+// 0.4.0: MINOR — bridge structured style.spatial shader payloads for migrated style fixtures.
 // 0.3.0: MINOR — honor shader highlighter/focusField applyTo targets.
 // 0.2.0: MINOR — support canonical gradient, channel target, and position inputs.
 // 0.1.1: PATCH — remove duplicate shader-local RGBA label formatting.</CLOG>
 
-use tui_vfx_contract::{GradientSpec, NodeSpec};
+use tui_vfx_contract::{GradientSpec, NodeSpec, ScopeSpec};
 
 use crate::{
     PlayerSampleRequest, PlayerStyledGrid,
@@ -498,9 +499,14 @@ fn apply_structured_focused_row_gradient(
     let selected_y = selected_row
         .map(|row| row.clamp(0.0, max_y))
         .unwrap_or_else(|| selected_row_ratio.clamp(0.0, 1.0) * max_y);
+    let cell_scope_targets_one_cell = matches!(node.scope.as_ref(), Some(ScopeSpec::Cell { .. }));
     for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid, request) {
         let distance = (y as f64 - selected_y).abs();
-        let strength = (1.0 - distance / falloff_distance).clamp(0.0, 1.0) as f32;
+        let strength = if cell_scope_targets_one_cell {
+            1.0
+        } else {
+            (1.0 - distance / falloff_distance).clamp(0.0, 1.0) as f32
+        };
         let color = dim.lerp(bright, strength);
         apply_shader_style(styled_grid, x, y, &apply_to, &color.rgba_label());
     }

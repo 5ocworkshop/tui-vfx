@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.18.0</VERS>
+// <VERS>VERSION: 0.20.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.18.0: MINOR — render style.glitch native stage.
+// <CLOG>0.20.0: MINOR — brighten cell-scoped focused-row gradients at the targeted cell.
+// 0.19.0: MINOR — render cell-scoped style.spatial focused row gradients.
+// 0.18.0: MINOR — render style.glitch native stage.
 // 0.17.0: MINOR — render style.rainbow native stage.
 // 0.16.0: MINOR — render shader highlighter/focusField applyTo targets.
 // 0.15.0: MINOR — add horizontal center wipe rendering while preserving active filter/sampler patches.</CLOG>
@@ -336,6 +338,21 @@ fn scene_ir_with_native_content_stages(
             } => {
                 apply_glitch_style_stage(&mut staged, *seed, *intensity, *italic_start, *italic_end)
             }
+            NativeStyleStage::SpatialFocusedRowGradient {
+                x,
+                y,
+                bright_color,
+                apply_to,
+                ..
+            } => apply_spatial_focused_row_gradient_style_stage(
+                &mut staged,
+                SpatialFocusedRowGradientInputs {
+                    x: *x,
+                    y: *y,
+                    bright_color,
+                    apply_to,
+                },
+            ),
             NativeStyleStage::ColorFade {
                 target,
                 color_space,
@@ -1449,6 +1466,30 @@ fn apply_glitch_style_stage(
             );
         }
     }
+}
+
+struct SpatialFocusedRowGradientInputs<'a> {
+    x: usize,
+    y: usize,
+    bright_color: &'a str,
+    apply_to: &'a str,
+}
+
+fn apply_spatial_focused_row_gradient_style_stage(
+    report: &mut PlayerRenderIrReport,
+    inputs: SpatialFocusedRowGradientInputs<'_>,
+) {
+    if inputs.x >= report_width(report) || inputs.y >= report_height(report) {
+        return;
+    }
+    set_report_shader_cell(
+        report,
+        inputs.x,
+        inputs.y,
+        inputs.apply_to,
+        inputs.bright_color,
+        "ShaderFocusedRowGradient",
+    );
 }
 
 fn apply_color_fade_style_stage(
@@ -3189,7 +3230,7 @@ fn styled_cells_from_scene(scene: &tui_vfx_types::SemanticScene) -> Vec<PlayerRe
 #[cfg(test)]
 mod tests {
     use tui_vfx_contract::LifecyclePhase;
-    use tui_vfx_player::{PlayerRenderIrReport, PlayerStatus};
+    use tui_vfx_player::{PlayerRenderClockSample, PlayerRenderIrReport, PlayerStatus};
 
     use super::*;
 
@@ -3203,6 +3244,12 @@ mod tests {
             phase: LifecyclePhase::Dwell,
             phase_t: 0.5,
             loop_t: Some(0.5),
+            clock: PlayerRenderClockSample {
+                mode: "fixed".to_string(),
+                period_ms: None,
+                absolute_t_ms: None,
+                loop_t: Some(0.5),
+            },
             width: 1,
             height: 1,
             render_hash: 7,

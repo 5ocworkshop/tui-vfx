@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.20.0</VERS>
+// <VERS>VERSION: 0.22.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.20.0: MINOR — lower style.glitch V2 parity recipe natively.
+// <CLOG>0.22.0: MINOR — lower all-scope structured style.spatial radar payloads natively.
+// 0.21.0: MINOR — lower cell-scoped style.spatial focused row gradients natively.
+// 0.20.0: MINOR — lower style.glitch V2 parity recipe natively.
 // 0.19.0: MINOR — lower style.rainbow V2 parity recipe natively.
 // 0.18.0: MINOR — lower shader applyTo for highlighter/focusField V2 parity.
 // 0.17.0: MINOR — align neon flicker default color with V2 style oracle while preserving active lowering patches.</CLOG>
@@ -18,7 +20,7 @@ use tui_vfx_compositor::{
         PatternType, RadialOrigin, RippleCenter, SamplerSpec, WipeDirection,
     },
 };
-use tui_vfx_contract::{NodeSpec, RecipeDocument, Value, ValueSource};
+use tui_vfx_contract::{NodeSpec, RecipeDocument, ScopeSpec, StructuredValue, Value, ValueSource};
 use tui_vfx_player::{
     PlayerRenderBackendCompositionEvidence, PlayerRenderBackendDiagnostic,
     PlayerRenderBackendRequest, PlayerRenderCompositionMode, PlayerRenderIrReport,
@@ -196,6 +198,16 @@ pub enum NativeStyleStage {
         intensity: f64,
         italic_start: f64,
         italic_end: f64,
+    },
+    /// Apply structured focused-row-gradient spatial styling to a resolved single cell.
+    SpatialFocusedRowGradient {
+        x: usize,
+        y: usize,
+        bright_color: String,
+        dim_color: String,
+        selected_row_ratio: f64,
+        falloff_distance: f64,
+        apply_to: String,
     },
     /// Apply player-compatible color fade styling to existing foreground/background channels.
     ColorFade { target: String, color_space: String },
@@ -728,6 +740,7 @@ fn lower_node_into_spec(
         "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
         "style.rainbow" => lower_style_rainbow(node, style_stages, request, warnings),
         "style.glitch" => lower_style_glitch(node, style_stages, request, warnings),
+        "style.spatial" => lower_style_spatial(node, style_stages, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
             reason: format!("Effect `{other}` is not yet supported by compositor-native lowering."),
         },
@@ -2068,6 +2081,94 @@ fn lower_style_glitch(
     NodeLoweringOutcome::Lowered { warnings }
 }
 
+fn lower_style_spatial(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    let Some(shader) = structured_input_json(node, request, "shader") else {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `style.spatial` requires a structured `shader` payload for compositor-native style-stage lowering.".to_string(),
+        };
+    };
+    match shader.get("type").and_then(serde_json::Value::as_str) {
+        Some("focused_row_gradient") => {
+            lower_style_spatial_focused_row_gradient(node, style_stages, request, warnings, &shader)
+        }
+        Some("radar") => lower_style_spatial_radar(node, style_stages, warnings, &shader),
+        _ => NodeLoweringOutcome::Unsupported {
+            reason: "Effect `style.spatial` currently supports only structured `focused_row_gradient` and `radar` payloads in compositor-native style-stage lowering.".to_string(),
+        },
+    }
+}
+
+fn lower_style_spatial_focused_row_gradient(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+    shader: &serde_json::Value,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.spatial",
+        &["shader"],
+        StyleScopeRequirement::Cell,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let Some((x, y)) = cell_scope_coordinates(node, request) else {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `style.spatial` requires a resolvable single-cell scope for compositor-native focused-row-gradient lowering.".to_string(),
+        };
+    };
+
+    style_stages.push(NativeStyleStage::SpatialFocusedRowGradient {
+        x,
+        y,
+        bright_color: json_color_label(shader.get("bright_color"), (255, 180, 80)),
+        dim_color: json_color_label(shader.get("dim_color"), (20, 20, 35)),
+        selected_row_ratio: json_number(shader.get("selected_row_ratio")).unwrap_or(0.5),
+        falloff_distance: json_number(shader.get("falloff_distance"))
+            .unwrap_or(1.0)
+            .max(0.01),
+        apply_to: shader
+            .get("apply_to")
+            .or_else(|| shader.get("applyTo"))
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("background")
+            .to_ascii_lowercase(),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_style_spatial_radar(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+    shader: &serde_json::Value,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.spatial",
+        &["shader"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let tail_length_radians = json_number(shader.get("tail_length"))
+        .or_else(|| json_number(shader.get("tailLength")))
+        .unwrap_or(std::f64::consts::FRAC_PI_2);
+    style_stages.push(NativeStyleStage::Radar {
+        color: json_color_label(shader.get("color"), (80, 255, 160)),
+        speed: json_number(shader.get("speed")).unwrap_or(1.0).max(0.0),
+        tail_length: (tail_length_radians / std::f64::consts::TAU).clamp(0.01, 1.0),
+        apply_to: "foreground".to_string(),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
 fn lower_style_color_fade(
     node: &NodeSpec,
     style_stages: &mut Vec<NativeStyleStage>,
@@ -2905,6 +3006,7 @@ fn lower_filter_underline_wipe(
 
 enum StyleScopeRequirement {
     All,
+    Cell,
     ModuloColumns,
 }
 
@@ -2932,11 +3034,9 @@ fn unsupported_style_stage_reason(
         ));
     }
     match (&scope_requirement, node.scope.as_ref()) {
-        (StyleScopeRequirement::All, None | Some(tui_vfx_contract::ScopeSpec::All)) => None,
-        (
-            StyleScopeRequirement::ModuloColumns,
-            Some(tui_vfx_contract::ScopeSpec::ModuloColumns { .. }),
-        ) => None,
+        (StyleScopeRequirement::All, None | Some(ScopeSpec::All)) => None,
+        (StyleScopeRequirement::Cell, Some(ScopeSpec::Cell { .. })) => None,
+        (StyleScopeRequirement::ModuloColumns, Some(ScopeSpec::ModuloColumns { .. })) => None,
         _ => Some(format!(
             "Effect `{effect_id}` uses a scope that is not yet supported by the compositor-native style stage without dropping authored semantics."
         )),
@@ -2945,7 +3045,7 @@ fn unsupported_style_stage_reason(
 
 fn modulo_columns_scope(node: &NodeSpec) -> Option<(usize, usize)> {
     match node.scope.as_ref()? {
-        tui_vfx_contract::ScopeSpec::ModuloColumns { modulus, remainder } if *modulus > 0 => {
+        ScopeSpec::ModuloColumns { modulus, remainder } if *modulus > 0 => {
             Some((*modulus, *remainder))
         }
         _ => None,
@@ -3286,6 +3386,96 @@ fn strict_enum_input(
     Err(format!(
         "Effect `{effect_id}` uses `{key}` value `{value}` that has no compositor-backend native stage equivalent without dropping authored semantics."
     ))
+}
+
+fn structured_input_json(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Option<serde_json::Value> {
+    resolved_input_value(node, request, key).and_then(|value| match value {
+        Value::Structured(value) => Some(structured_value_to_json(&value)),
+        _ => None,
+    })
+}
+
+fn structured_value_to_json(value: &StructuredValue) -> serde_json::Value {
+    match value {
+        StructuredValue::Null => serde_json::Value::Null,
+        StructuredValue::Boolean(value) => serde_json::Value::Bool(*value),
+        StructuredValue::Number(value) => serde_json::json!(value),
+        StructuredValue::String(value) => serde_json::Value::String(value.clone()),
+        StructuredValue::Array(values) => {
+            serde_json::Value::Array(values.iter().map(structured_value_to_json).collect())
+        }
+        StructuredValue::Object(values) => serde_json::Value::Object(
+            values
+                .iter()
+                .map(|(key, value)| (key.clone(), structured_value_to_json(value)))
+                .collect(),
+        ),
+    }
+}
+
+fn cell_scope_coordinates(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> Option<(usize, usize)> {
+    let ScopeSpec::Cell { x, y } = node.scope.as_ref()? else {
+        return None;
+    };
+    Some((
+        resolve_scope_coordinate(x, request)?,
+        resolve_scope_coordinate(y, request)?,
+    ))
+}
+
+fn resolve_scope_coordinate(
+    source: &ValueSource,
+    request: &PlayerRenderBackendRequest,
+) -> Option<usize> {
+    match resolve_value_source_with_graph_values(
+        source,
+        &request.sample.signals,
+        &request.sample.graph_values,
+    )? {
+        Value::Integer(value) => usize::try_from(value).ok(),
+        Value::Number(value) if value.is_finite() && value >= 0.0 => Some(value.round() as usize),
+        _ => None,
+    }
+}
+
+fn json_color_label(value: Option<&serde_json::Value>, default_rgb: (u8, u8, u8)) -> String {
+    let Some(value) = value else {
+        return format!(
+            "rgba({},{},{},{})",
+            default_rgb.0, default_rgb.1, default_rgb.2, 255
+        );
+    };
+    let r = value.get("r").and_then(serde_json::Value::as_u64);
+    let g = value.get("g").and_then(serde_json::Value::as_u64);
+    let b = value.get("b").and_then(serde_json::Value::as_u64);
+    let a = value
+        .get("a")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(255);
+    match (r, g, b) {
+        (Some(r), Some(g), Some(b)) => format!(
+            "rgba({},{},{},{})",
+            r.min(255),
+            g.min(255),
+            b.min(255),
+            a.min(255)
+        ),
+        _ => format!(
+            "rgba({},{},{},{})",
+            default_rgb.0, default_rgb.1, default_rgb.2, 255
+        ),
+    }
+}
+
+fn json_number(value: Option<&serde_json::Value>) -> Option<f64> {
+    value.and_then(serde_json::Value::as_f64)
 }
 
 fn color_input(
