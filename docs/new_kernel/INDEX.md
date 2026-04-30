@@ -95,6 +95,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_K2_13.md`](ARCH-RESP-TO-PHASE_K2_13.md) — Phase K2.13 extension memo with additional schema-settlement and high-confidence migration-unblocker steps folded into the K2.13 work packet.
 - [`ARCH-RESP-TO-PHASE_K2_16.md`](ARCH-RESP-TO-PHASE_K2_16.md) — Phase K2.16 response and player render IR, scene/source fidelity, and backlog burn-down packet.
 - [`ARCH-RESP-TO-PHASE_K2_17.md`](ARCH-RESP-TO-PHASE_K2_17.md) — K2.17 descriptor/source burn-down, implementation-readiness, and control-catalog packet.
+- [`ARCH-RESP-TO-PHASE_K2_18.md`](ARCH-RESP-TO-PHASE_K2_18.md) — K2.18 blocker closure sprint packet.
 
 ## Status and memo artifacts
 
