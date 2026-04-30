@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 0.9.0</VERS> -->
+<!-- <VERS>VERSION: 1.0.0</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>0.9.0: PATCH — mark mask.pathReveal schema/lowerer cleanup as completed using structured RevealPathType payloads.
+<!-- <CLOG>1.0.0: mark sampler.crt and sampler.crtJitter as compositor-owned SamplerSpec lowerings and record source-stage deletion.
+0.9.0: PATCH — mark mask.pathReveal schema/lowerer cleanup as completed using structured RevealPathType payloads.
 0.8.0: mark mask.wipe and mask.wipeCorner lowering as compositor-owned where exact WipeDirection variants exist.
 0.7.0: mark mask.blinds lowerer/player-stage cleanup as completed for the sixth compositor-first slice.
 0.6.0: mark mask.iris lowerer/player-stage cleanup as completed for the fifth compositor-first slice.
@@ -138,6 +139,18 @@ Descriptor gap / extra:
 sampler.none exists as compositor no-op but is not currently a descriptor effect id.
 sampler.spatialSignal exists in descriptor vocabulary without a direct `SamplerSpec` variant.
 ```
+
+Sampler migration status:
+
+| v3.1 id | Compositor target | Current action |
+| --- | --- | --- |
+| `sampler.sineWave` | `SamplerSpec::SineWave` | Already compositor-native. |
+| `sampler.ripple` | `SamplerSpec::Ripple` | Already compositor-native. |
+| `sampler.crt` | `SamplerSpec::Crt { scanline_strength, jitter, curvature }` | Done: lowerer emits `SamplerSpec::Crt`; backend `NativeContentStage::CrtSampler` and source-row implementation were deleted. |
+| `sampler.crtJitter` | `SamplerSpec::CrtJitter { intensity, speed_hz, decay_ms }` | Done: lowerer maps authored `amplitude`/`frequency`/`decayMs` to compositor fields; backend `NativeContentStage::CrtJitterSampler` and source-row implementation were deleted. |
+| `sampler.faultLine` | `SamplerSpec::FaultLine` | Partially compositor-native when v3.1 authors fixed `offset`; dynamic source-stage path remains and should be migrated next. |
+| `sampler.shredder` | `SamplerSpec::Shredder` | Already compositor-native. |
+| `sampler.radialTwist` | `SamplerSpec::RadialTwist` | Already compositor-native. |
 
 ## Shader/style surface
 

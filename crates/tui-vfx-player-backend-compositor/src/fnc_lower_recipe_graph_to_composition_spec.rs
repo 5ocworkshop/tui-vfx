@@ -141,19 +141,6 @@ pub enum NativeContentStage {
     GlitchShift { amount: usize, seed: usize },
     /// Shift source rows between authored start/end columns.
     SlideShift { start_col: i64, end_col: i64 },
-    /// Apply player-compatible CRT bow, jitter, and scanline semantics to source rows.
-    CrtSampler {
-        curvature: f64,
-        scanline_strength: f64,
-        jitter: f64,
-    },
-    /// Apply player-compatible CRT jitter row shifting to source rows.
-    CrtJitterSampler {
-        amplitude: f64,
-        frequency: f64,
-        decay_ms: f64,
-        seed: usize,
-    },
     /// Apply V2-compatible fault-line row displacement to source rows.
     FaultLineSampler {
         seed: u64,
@@ -703,8 +690,8 @@ fn lower_node_into_spec(
             });
             NodeLoweringOutcome::Lowered { warnings }
         }
-        "sampler.crt" => lower_crt_sampler(node, content_stages, request, warnings),
-        "sampler.crtJitter" => lower_crt_jitter_sampler(node, content_stages, request, warnings),
+        "sampler.crt" => lower_crt_sampler(node, spec, request, warnings),
+        "sampler.crtJitter" => lower_crt_jitter_sampler(node, spec, request, warnings),
         "sampler.faultLine" => {
             lower_fault_line_sampler(node, spec, content_stages, request, warnings)
         }
@@ -1699,7 +1686,7 @@ fn lower_noise_dither_mask(
 
 fn lower_crt_sampler(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -1711,17 +1698,21 @@ fn lower_crt_sampler(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    content_stages.push(NativeContentStage::CrtSampler {
-        curvature: number_input(node, request, "curvature", 0.4).clamp(0.0, 1.0),
-        scanline_strength: number_input(node, request, "scanlineStrength", 0.35).clamp(0.0, 1.0),
-        jitter: number_input(node, request, "jitter", 0.0).max(0.0),
+    spec.push_sampler(SamplerSpec::Crt {
+        scanline_strength: SignalOrFloat::Static(
+            number_input(node, request, "scanlineStrength", 0.35).clamp(0.0, 1.0) as f32,
+        ),
+        jitter: SignalOrFloat::Static(number_input(node, request, "jitter", 0.0).max(0.0) as f32),
+        curvature: SignalOrFloat::Static(
+            number_input(node, request, "curvature", 0.4).clamp(0.0, 1.0) as f32,
+        ),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
 
 fn lower_crt_jitter_sampler(
     node: &NodeSpec,
-    content_stages: &mut Vec<NativeContentStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -1733,11 +1724,14 @@ fn lower_crt_jitter_sampler(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    content_stages.push(NativeContentStage::CrtJitterSampler {
-        amplitude: number_input(node, request, "amplitude", 1.0).max(0.0),
-        frequency: number_input(node, request, "frequency", 2.0).max(0.0),
-        decay_ms: number_input(node, request, "decayMs", 0.0).max(0.0),
-        seed: integer_input(node, request, "seed", 13).max(0) as usize,
+    spec.push_sampler(SamplerSpec::CrtJitter {
+        intensity: SignalOrFloat::Static(
+            number_input(node, request, "amplitude", 1.0).max(0.0) as f32
+        ),
+        speed_hz: SignalOrFloat::Static(
+            number_input(node, request, "frequency", 2.0).max(0.0) as f32
+        ),
+        decay_ms: number_input(node, request, "decayMs", 0.0).max(0.0) as u64,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }

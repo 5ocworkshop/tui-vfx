@@ -381,7 +381,7 @@ fn test_fnc_cli_rejects_native_target_shader_invalid_enum_values_json() {
 }
 
 #[test]
-fn test_fnc_cli_renders_compositor_backend_native_crt_sampler_blockers_json() {
+fn test_fnc_cli_lowers_crt_samplers_to_compositor_samplers_not_source_stage_json() {
     for (recipe, recipe_id, effect_id) in [
         (
             "samplers/sampler_crt.json",
@@ -402,8 +402,9 @@ fn test_fnc_cli_renders_compositor_backend_native_crt_sampler_blockers_json() {
             "render-backend native CRT sampler blockers player cli",
         );
 
+        assert_eq!(report["compositionSpecSummary"]["samplers"], 1, "{recipe}");
         assert_eq!(
-            report["compositionSpecSummary"]["contentStages"], 1,
+            report["compositionSpecSummary"]["contentStages"], 0,
             "{recipe}"
         );
     }
@@ -496,10 +497,15 @@ fn test_fnc_cli_renders_native_crt_sampler_with_clamped_numeric_values_json() {
     fs::create_dir_all(&temp_root).expect("create temp clamped CRT fixture root");
     let mut recipe =
         unsupported_native_effect_shape_recipe("samplers/sampler_crt.json", None, None, None);
-    let inputs = &mut recipe["graph"]["nodes"]["effectNode"]["inputs"];
-    inputs["curvature"] = literal_number_input(-1.0);
-    inputs["scanlineStrength"] = literal_number_input(2.0);
-    inputs["jitter"] = literal_number_input(-3.0);
+    for node in recipe["graph"]["nodes"]
+        .as_object_mut()
+        .expect("graph nodes object")
+        .values_mut()
+    {
+        node["inputs"]["curvature"] = literal_number_input(-1.0);
+        node["inputs"]["scanlineStrength"] = literal_number_input(2.0);
+        node["inputs"]["jitter"] = literal_number_input(-3.0);
+    }
     let recipe_path = temp_root.join("crt_clamped_values.json");
     fs::write(
         &recipe_path,
@@ -527,10 +533,15 @@ fn test_fnc_cli_renders_native_crt_jitter_sampler_with_clamped_numeric_values_js
         None,
         None,
     );
-    let inputs = &mut recipe["graph"]["nodes"]["effectNode"]["inputs"];
-    inputs["amplitude"] = literal_number_input(-2.0);
-    inputs["frequency"] = literal_number_input(-3.0);
-    inputs["seed"] = literal_integer_input(-7);
+    for node in recipe["graph"]["nodes"]
+        .as_object_mut()
+        .expect("graph nodes object")
+        .values_mut()
+    {
+        node["inputs"]["amplitude"] = literal_number_input(-2.0);
+        node["inputs"]["frequency"] = literal_number_input(-3.0);
+        node["inputs"]["seed"] = literal_integer_input(-7);
+    }
     let recipe_path = temp_root.join("crt_jitter_clamped_values.json");
     fs::write(
         &recipe_path,
@@ -3048,118 +3059,115 @@ fn test_fnc_cli_rejects_native_exact_effect_blocker_subset_unsupported_shapes_js
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_vignette_filter_json() {
-    for (recipe, recipe_id, effect_id, summary_key, expected_stage_count) in [(
+    let (recipe, recipe_id, effect_id, summary_key, expected_stage_count) = (
         "filters/filter_vignette.json",
         "debugFilterVignette",
         "filter.vignette",
         "filters",
         1,
-    )] {
-        let report = player_cli_json(
-            vec![
-                str_arg("render-backend"),
-                str_arg("--recipe"),
-                recipe_path(recipe),
-                str_arg("--descriptor-pack"),
-                descriptor_pack_path(),
-                str_arg("--backend"),
-                str_arg("compositor"),
-                str_arg("--composition-mode"),
-                str_arg("native"),
-                str_arg("--fail-on-fallback"),
-                str_arg("--format"),
-                str_arg("json"),
-                str_arg("--phase"),
-                str_arg("enter"),
-                str_arg("--phase-t"),
-                str_arg("0.35"),
-            ],
-            "render-backend native vignette mask blockers player cli",
-        );
+    );
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path(recipe),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native vignette mask blockers player cli",
+    );
 
-        assert_eq!(report["backend"], "compositor", "{recipe}");
-        assert_eq!(report["recipeId"], recipe_id, "{recipe}");
-        assert_eq!(report["compositionMode"], "native", "{recipe}");
-        assert_eq!(report["fallbackUsed"], false, "{recipe}");
-        assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
-        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
-        assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
-        assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
-        assert_eq!(
-            report["compositionSpecSummary"][summary_key], expected_stage_count,
-            "{recipe}"
-        );
-        assert!(
-            report["loweredEffectIds"]
-                .as_array()
-                .unwrap()
-                .contains(&serde_json::json!(effect_id)),
-            "{recipe}"
-        );
-        assert!(
-            report["diagnostics"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
-            "{recipe}"
-        );
-    }
+    assert_eq!(report["backend"], "compositor", "{recipe}");
+    assert_eq!(report["recipeId"], recipe_id, "{recipe}");
+    assert_eq!(report["compositionMode"], "native", "{recipe}");
+    assert_eq!(report["fallbackUsed"], false, "{recipe}");
+    assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
+    assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+    assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
+    assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
+    assert_eq!(
+        report["compositionSpecSummary"][summary_key], expected_stage_count,
+        "{recipe}"
+    );
+    assert!(
+        report["loweredEffectIds"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!(effect_id)),
+        "{recipe}"
+    );
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
+        "{recipe}"
+    );
 }
 
 #[test]
 fn test_fnc_cli_rejects_native_iris_mask_invalid_shape_json() {
-    for (effect_name, recipe_path_fragment, input_id, invalid_value) in
-        [("iris", "masks/mask_iris.json", "shape", "triangle")]
-    {
-        let temp_root = std::env::temp_dir().join(format!(
-            "tui-vfx-native-{effect_name}-{input_id}-invalid-enum"
-        ));
-        let _ = fs::remove_dir_all(&temp_root);
-        fs::create_dir_all(&temp_root).expect("create temp invalid enum fixture root");
-        let recipe = unsupported_native_effect_shape_recipe(
-            recipe_path_fragment,
-            Some((input_id, unsupported_native_enum_value(invalid_value))),
-            None,
-            None,
-        );
-        let recipe_path = temp_root.join(format!("{effect_name}_{input_id}_invalid_enum.json"));
-        fs::write(
-            &recipe_path,
-            serde_json::to_string_pretty(&recipe).expect("serialize invalid enum recipe"),
-        )
-        .expect("write invalid enum recipe");
+    let (effect_name, recipe_path_fragment, input_id, invalid_value) =
+        ("iris", "masks/mask_iris.json", "shape", "triangle");
+    let temp_root = std::env::temp_dir().join(format!(
+        "tui-vfx-native-{effect_name}-{input_id}-invalid-enum"
+    ));
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create temp invalid enum fixture root");
+    let recipe = unsupported_native_effect_shape_recipe(
+        recipe_path_fragment,
+        Some((input_id, unsupported_native_enum_value(invalid_value))),
+        None,
+        None,
+    );
+    let recipe_path = temp_root.join(format!("{effect_name}_{input_id}_invalid_enum.json"));
+    fs::write(
+        &recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize invalid enum recipe"),
+    )
+    .expect("write invalid enum recipe");
 
-        let output = run_player_cli(
-            vec![
-                str_arg("render-backend"),
-                str_arg("--recipe"),
-                recipe_path.display().to_string(),
-                str_arg("--descriptor-pack"),
-                descriptor_pack_path(),
-                str_arg("--backend"),
-                str_arg("compositor"),
-                str_arg("--composition-mode"),
-                str_arg("native"),
-                str_arg("--fail-on-fallback"),
-                str_arg("--format"),
-                str_arg("json"),
-                str_arg("--phase"),
-                str_arg("enter"),
-            ],
-            "render-backend native invalid enum vignette mask blocker player cli",
-        );
+    let output = run_player_cli(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path.display().to_string(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+        ],
+        "render-backend native invalid enum vignette mask blocker player cli",
+    );
 
-        assert!(
-            !output.status.success(),
-            "{effect_name}/{input_id} invalid enum unexpectedly succeeded"
-        );
-        assert!(
-            stderr(&output).contains("unsupportedNativeEffect"),
-            "{effect_name}/{input_id} stderr: {}",
-            stderr(&output)
-        );
-    }
+    assert!(
+        !output.status.success(),
+        "{effect_name}/{input_id} invalid enum unexpectedly succeeded"
+    );
+    assert!(
+        stderr(&output).contains("unsupportedNativeEffect"),
+        "{effect_name}/{input_id} stderr: {}",
+        stderr(&output)
+    );
 }
 
 #[test]
@@ -6078,23 +6086,22 @@ fn unsupported_native_effect_shape_recipe(
         .expect("read effect fixture");
     let mut recipe: serde_json::Value = serde_json::from_str(&text).expect("effect fixture parses");
     let graph_nodes = recipe["graph"]["nodes"]
-        .as_object()
+        .as_object_mut()
         .expect("graph nodes object");
-    let target_node_id = graph_nodes
-        .keys()
-        .find(|node_id| node_id.as_str() == "effectNode")
-        .or_else(|| graph_nodes.keys().next())
-        .cloned()
-        .expect("at least one graph node");
-    let target_node = &mut recipe["graph"]["nodes"][target_node_id.as_str()];
-    if let Some((key, value)) = unsupported_input {
-        target_node["inputs"][key] = value;
-    }
-    if let Some(outputs) = outputs {
-        target_node["outputs"] = outputs;
-    }
-    if let Some(scope) = scope {
-        target_node["scope"] = scope;
+    let target_node_ids = graph_nodes.keys().cloned().collect::<Vec<_>>();
+    for target_node_id in target_node_ids {
+        let target_node = graph_nodes
+            .get_mut(target_node_id.as_str())
+            .expect("target node exists");
+        if let Some((key, value)) = &unsupported_input {
+            target_node["inputs"][key] = value.clone();
+        }
+        if let Some(outputs) = &outputs {
+            target_node["outputs"] = outputs.clone();
+        }
+        if let Some(scope) = &scope {
+            target_node["scope"] = scope.clone();
+        }
     }
     recipe
 }
