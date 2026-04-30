@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 1.1.0</VERS> -->
+<!-- <VERS>VERSION: 1.2.0</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>1.1.0: mark sampler.faultLine as fully compositor-owned and record source-stage deletion.
+<!-- <CLOG>1.2.0: mark filter.edgeGrow as compositor-owned and record style-stage deletion.
+1.1.0: mark sampler.faultLine as fully compositor-owned and record source-stage deletion.
 1.0.1: PATCH — record that legacy player pathReveal no longer aliases structured paths to direction wipes.
 1.0.0: mark sampler.crt and sampler.crtJitter as compositor-owned SamplerSpec lowerings and record source-stage deletion.
 0.9.0: PATCH — mark mask.pathReveal schema/lowerer cleanup as completed using structured RevealPathType payloads.
@@ -121,6 +122,12 @@ Descriptor gaps observed from inventory:
 filter.glyphTimeline exists in compositor but is not currently in the v3.1 primitive descriptor pack.
 filter.none exists as compositor no-op but is not currently a descriptor effect id.
 ```
+
+Filter migration status:
+
+| v3.1 id | Compositor target | Current action |
+| --- | --- | --- |
+| `filter.edgeGrow` | `FilterSpec::EdgeGrow { rest_eighths, peak_eighths, edge, fill_color, bg_color, progress, margin_width }` | Done: lowerer emits `FilterSpec::EdgeGrow` for static and binding recipes; backend `NativeStyleStage::EdgeGrow` and style mutation helper were deleted. |
 
 ## Sampler surface
 

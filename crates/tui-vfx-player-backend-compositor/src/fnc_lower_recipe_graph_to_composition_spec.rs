@@ -209,17 +209,6 @@ pub enum NativeStyleStage {
         edge_width: usize,
         apply_to: String,
     },
-    /// Apply player-compatible edge grow filter styling.
-    EdgeGrow {
-        direction: String,
-        progress: f64,
-        edge_color: String,
-        background_color: String,
-        margin_width: usize,
-        rest_eighths: usize,
-        peak_eighths: usize,
-        apply_to: String,
-    },
     /// Apply player-compatible hover bar filter styling.
     HoverBar {
         bar_color: String,
@@ -627,7 +616,7 @@ fn lower_node_into_spec(
             lower_filter_bracket_emphasis(node, style_stages, request, warnings)
         }
         "filter.dotIndicator" => lower_filter_dot_indicator(node, spec, request, warnings),
-        "filter.edgeGrow" => lower_filter_edge_grow(node, style_stages, request, warnings),
+        "filter.edgeGrow" => lower_filter_edge_grow(node, spec, request, warnings),
         "filter.hoverBar" => lower_filter_hover_bar(node, spec, request, warnings),
         "filter.matrixRain" => lower_filter_matrix_rain(node, style_stages, request, warnings),
         "filter.subPixelBar" => lower_filter_sub_pixel_bar(node, style_stages, request, warnings),
@@ -2757,7 +2746,7 @@ fn lower_filter_dot_indicator(
 
 fn lower_filter_edge_grow(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2780,21 +2769,32 @@ fn lower_filter_edge_grow(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::EdgeGrow {
-        direction: enum_label_input(node, request, "direction", "left"),
-        progress: resolved_number_input(node, request, "progress", request.ir.phase_t)
-            .clamp(0.0, 1.0),
-        edge_color: color_label_from_config(color_alias_input(
+    if !matches!(
+        enum_input(node, request, "applyTo"),
+        None | Some("both" | "all")
+    ) {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `filter.edgeGrow` uses `applyTo` other than `both`, but compositor-native EdgeGrow owns both foreground and background channels together.".to_string(),
+        };
+    }
+
+    spec.filters.push(FilterSpec::EdgeGrow {
+        rest_eighths: integer_input(node, request, "restEighths", 0).clamp(0, 8) as u8,
+        peak_eighths: integer_input(node, request, "peakEighths", 8).clamp(0, 8) as u8,
+        edge: if node_has_input(node, "edge") {
+            hover_bar_position_input(node, request, "edge")
+        } else {
+            hover_bar_position_input(node, request, "direction")
+        },
+        fill_color: color_alias_input(
             node,
             request,
-            &["edgeColor", "fillColor"],
+            &["edgeColor", "fillColor", "color"],
             (255, 120, 80),
-        )),
-        background_color: color_label_input(node, request, "bgColor", (0, 0, 0)),
-        margin_width: integer_input(node, request, "marginWidth", 0).max(0) as usize,
-        rest_eighths: integer_input(node, request, "restEighths", 0).clamp(0, 8) as usize,
-        peak_eighths: integer_input(node, request, "peakEighths", 8).clamp(0, 8) as usize,
-        apply_to: enum_label_input(node, request, "applyTo", "both"),
+        ),
+        bg_color: color_alias_input(node, request, &["bgColor", "unfilledColor"], (0, 0, 0)),
+        progress: BindableValue::from(number_signal_input(node, request, "progress", 0.0)),
+        margin_width: integer_input(node, request, "marginWidth", 0).clamp(0, 255) as u8,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }

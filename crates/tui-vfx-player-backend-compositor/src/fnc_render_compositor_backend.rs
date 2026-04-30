@@ -341,28 +341,6 @@ fn scene_ir_with_native_content_stages(
                 *edge_width,
                 apply_to,
             ),
-            NativeStyleStage::EdgeGrow {
-                direction,
-                progress,
-                edge_color,
-                background_color,
-                margin_width,
-                rest_eighths,
-                peak_eighths,
-                apply_to,
-            } => apply_edge_grow_style_stage(
-                &mut staged,
-                EdgeGrowStyleInputs {
-                    direction,
-                    progress: *progress,
-                    edge_color,
-                    background_color,
-                    margin_width: *margin_width,
-                    rest_eighths: *rest_eighths,
-                    peak_eighths: *peak_eighths,
-                    apply_to,
-                },
-            ),
             NativeStyleStage::HoverBar {
                 bar_color,
                 thickness,
@@ -1307,65 +1285,6 @@ fn apply_bracket_emphasis_style_stage(
                 background.as_ref(),
                 &[],
                 "FilterBracketEmphasis",
-            );
-        }
-    }
-}
-
-struct EdgeGrowStyleInputs<'a> {
-    direction: &'a str,
-    progress: f64,
-    edge_color: &'a str,
-    background_color: &'a str,
-    margin_width: usize,
-    rest_eighths: usize,
-    peak_eighths: usize,
-    apply_to: &'a str,
-}
-
-fn apply_edge_grow_style_stage(report: &mut PlayerRenderIrReport, inputs: EdgeGrowStyleInputs<'_>) {
-    let width = report_width(report).max(1);
-    let height = report_height(report).max(1);
-    let eighth_span = inputs
-        .peak_eighths
-        .saturating_sub(inputs.rest_eighths)
-        .max(1) as f64
-        / 8.0;
-    let progress = (inputs.rest_eighths as f64 / 8.0
-        + inputs.progress.clamp(0.0, 1.0) * eighth_span)
-        .clamp(0.0, 1.0);
-    let limit = match inputs.direction {
-        "top" | "bottom" => (height as f64 * progress).ceil() as usize,
-        _ => (width as f64 * progress).ceil() as usize,
-    };
-    for y in 0..height {
-        for x in 0..width {
-            let coordinate = match inputs.direction {
-                "right" => width.saturating_sub(1).saturating_sub(x),
-                "top" => y,
-                "bottom" => height.saturating_sub(1).saturating_sub(y),
-                _ => x,
-            };
-            let in_margin = match inputs.direction {
-                "top" | "bottom" => x < inputs.margin_width || x + inputs.margin_width >= width,
-                _ => y < inputs.margin_width || y + inputs.margin_width >= height,
-            };
-            let mix = if coordinate < limit && !in_margin {
-                0.0
-            } else {
-                0.75
-            };
-            let foreground = lerp_rgba_label(inputs.edge_color, WHITE_RGBA, mix);
-            let background = lerp_rgba_label(inputs.background_color, BLACK_RGBA, mix * 0.35);
-            set_report_filter_cell(
-                report,
-                x,
-                y,
-                inputs.apply_to,
-                foreground.as_str(),
-                background.as_str(),
-                &[],
-                "FilterEdgeGrow",
             );
         }
     }
