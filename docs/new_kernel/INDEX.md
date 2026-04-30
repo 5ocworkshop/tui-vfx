@@ -1,7 +1,9 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.43.0</VERS> -->
-<!-- <WCTX>K2.23 public-demo player/studio closure, review, and status indexing.</WCTX> -->
-<!-- <CLOG>0.43.0: MINOR — add K2.23 status memo and review/de-slop report.
+<!-- <VERS>VERSION: 0.45.0</VERS> -->
+<!-- <WCTX>K2.24 native content-stage/lifecycle closure indexing.</WCTX> -->
+<!-- <CLOG>0.45.0: MINOR — add K2.24 review/de-slop report.
+0.44.0: MINOR — add K2.24 packet, content-stage results, and lifecycle clock results.
+0.43.0: MINOR — add K2.23 status memo and review/de-slop report.
 0.42.0: MINOR — add K2.23 player/studio and content typewriter results.
 0.41.0: MINOR — add K2.23 public-demo player/studio packet.
 0.40.0: MINOR — add K2.22 status memo and review/de-slop report.
@@ -344,6 +346,13 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_23_PLAYER_STUDIO_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_23_PLAYER_STUDIO_STATUS_MEMO_TO_ARCHITECT.md) — results-first architect memo with explicit next blockers.
 - [`PHASE_K2_23_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_23_REVIEW_AND_DESLOP_REPORT.md) — formal review finding closure, AI de-slop actions, and verification evidence.
 
+### K2.24 native content stages and lifecycle clock
+
+- [`ARCH-RESP-TO-PHASE_K2_24.md`](ARCH-RESP-TO-PHASE_K2_24.md) — self-generated content split-flap/odometer and lifecycle clock packet.
+- [`K2_24_CONTENT_STAGE_RESULTS.md`](K2_24_CONTENT_STAGE_RESULTS.md) — strict native split-flap/odometer content-stage results and coverage movement.
+- [`K2_24_LIFECYCLE_CLOCK_RESULTS.md`](K2_24_LIFECYCLE_CLOCK_RESULTS.md) — lifecycle-duration-aware UI ticking result.
+- [`PHASE_K2_24_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_24_REVIEW_AND_DESLOP_REPORT.md) — formal review pass, AI de-slop actions, and verification evidence.
+
 
 ## Validator and recipe artifacts
 
@@ -367,4 +376,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.43.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.45.0</VERS> -->

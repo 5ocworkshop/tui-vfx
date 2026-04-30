@@ -51,6 +51,25 @@ pub enum NativeContentStage {
         cursor_wake: TypewriterCursorWake,
         wake_cells: usize,
     },
+    /// Flip unresolved source glyphs through a split-flap character set.
+    SplitFlap {
+        settle: f64,
+        cascade: f64,
+        speed: f64,
+        cycles: f64,
+        charset: String,
+        tile_width: usize,
+        tile_height: usize,
+        jitter: f64,
+    },
+    /// Roll source glyphs from a prior message into the target source message.
+    Odometer {
+        direction: String,
+        travel: String,
+        from_message: String,
+        tile_width: usize,
+        tile_height: usize,
+    },
 }
 
 /// Cursor wake behavior for native typewriter content.
@@ -255,6 +274,8 @@ fn lower_node_into_spec(
     let effect = node.effect.as_str();
     match effect {
         "content.typewriter" => lower_content_typewriter(node, request, content_stages, warnings),
+        "content.splitFlap" => lower_content_split_flap(node, request, content_stages, warnings),
+        "content.odometer" => lower_content_odometer(node, request, content_stages, warnings),
         "filter.tint" => {
             spec.filters.push(FilterSpec::Tint {
                 color: color_input(node, request, "color").unwrap_or(ColorConfig::White),
@@ -367,41 +388,131 @@ fn lower_content_typewriter(
 }
 
 fn unsupported_typewriter_reason(node: &NodeSpec) -> Option<String> {
-    const SUPPORTED_INPUTS: &[&str] = &[
-        "speed",
-        "speedVariance",
-        "cursorCharacter",
-        "cursorWake",
-        "wakeCells",
-    ];
+    unsupported_native_content_reason(
+        node,
+        "content.typewriter",
+        &[
+            "speed",
+            "speedVariance",
+            "cursorCharacter",
+            "cursorWake",
+            "wakeCells",
+        ],
+    )
+}
 
+fn lower_content_split_flap(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(
+        node,
+        "content.splitFlap",
+        &[
+            "settle",
+            "cascade",
+            "speed",
+            "cycles",
+            "charset",
+            "tileWidth",
+            "tileHeight",
+            "jitter",
+        ],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::SplitFlap {
+        settle: number_input(node, request, "settle", 1.0).clamp(0.0, 1.0),
+        cascade: number_input(node, request, "cascade", 0.0).clamp(0.0, 1.0),
+        speed: number_input(node, request, "speed", 1.0).max(0.0),
+        cycles: number_input(node, request, "cycles", 1.0).max(0.0),
+        charset: enum_input(node, request, "charset")
+            .unwrap_or("blocks")
+            .to_string(),
+        tile_width: native_content_tile_size(node, request, "tileWidth"),
+        tile_height: native_content_tile_size(node, request, "tileHeight"),
+        jitter: number_input(node, request, "jitter", 0.0).clamp(0.0, 1.0),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_odometer(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(
+        node,
+        "content.odometer",
+        &[
+            "direction",
+            "travel",
+            "fromMessage",
+            "tileWidth",
+            "tileHeight",
+        ],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::Odometer {
+        direction: enum_input(node, request, "direction")
+            .unwrap_or("up")
+            .to_string(),
+        travel: enum_input(node, request, "travel")
+            .unwrap_or("axis")
+            .to_string(),
+        from_message: enum_input(node, request, "fromMessage")
+            .unwrap_or("")
+            .to_string(),
+        tile_width: native_content_tile_size(node, request, "tileWidth"),
+        tile_height: native_content_tile_size(node, request, "tileHeight"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn native_content_tile_size(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    input_id: &str,
+) -> usize {
+    integer_input(node, request, input_id, 1).max(1) as usize
+}
+
+fn unsupported_native_content_reason(
+    node: &NodeSpec,
+    effect_id: &str,
+    supported_inputs: &[&str],
+) -> Option<String> {
     let unsupported_inputs = node
         .inputs
         .keys()
         .map(|key| key.as_str())
-        .filter(|key| !SUPPORTED_INPUTS.contains(key))
+        .filter(|key| !supported_inputs.contains(key))
         .collect::<Vec<_>>();
     if !unsupported_inputs.is_empty() {
         return Some(format!(
-            "Effect `content.typewriter` uses input(s) `{}` that have no compositor-backend native content-stage equivalent without dropping authored semantics.",
+            "Effect `{effect_id}` uses input(s) `{}` that have no compositor-backend native content-stage equivalent without dropping authored semantics.",
             unsupported_inputs.join("`, `")
         ));
     }
 
     if !node.outputs.is_empty() {
-        return Some(
-            "Effect `content.typewriter` declares graph outputs that the compositor-backend native content stage cannot publish without dropping authored semantics."
-                .to_string(),
-        );
+        return Some(format!(
+            "Effect `{effect_id}` declares graph outputs that the compositor-backend native content stage cannot publish without dropping authored semantics."
+        ));
     }
 
     if let Some(scope) = &node.scope
         && !matches!(scope, tui_vfx_contract::ScopeSpec::All)
     {
-        return Some(
-            "Effect `content.typewriter` uses a non-all scope that is not yet supported by the compositor-backend native content stage without dropping authored semantics."
-                .to_string(),
-        );
+        return Some(format!(
+            "Effect `{effect_id}` uses a non-all scope that is not yet supported by the compositor-backend native content stage without dropping authored semantics."
+        ));
     }
 
     None

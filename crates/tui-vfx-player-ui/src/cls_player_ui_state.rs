@@ -9,8 +9,8 @@
 use std::path::PathBuf;
 
 use tui_vfx_contract::{
-    DescriptorCatalog, EffectDescriptor, LifecyclePhase, RecipeDocument, SourceDescriptor, Value,
-    ValueKind, ValueSource, ValueSpec,
+    DescriptorCatalog, DurationSpec, DwellPolicy, EffectDescriptor, LifecyclePhase, PhaseTiming,
+    RecipeDocument, SourceDescriptor, Value, ValueKind, ValueSource, ValueSpec,
 };
 use tui_vfx_player::{
     PlayerFrameReport, PlayerRenderBackend, PlayerRenderBackendOptions, PlayerRenderBackendOutput,
@@ -333,9 +333,13 @@ impl PlayerUiState {
             return;
         }
         self.elapsed_ms = self.elapsed_ms.saturating_add(delta_ms);
-        self.request.phase_t = ((self.elapsed_ms % 1000) as f64) / 1000.0;
+        let phase_duration_ms = current_phase_duration_ms(&self.recipe, self.request.phase);
+        self.request.phase_t = phase_fraction(self.elapsed_ms, phase_duration_ms);
         self.request.loop_t = Some(self.request.phase_t);
-        self.message = format!("advanced elapsed time to {}ms", self.elapsed_ms);
+        self.message = format!(
+            "advanced elapsed time to {}ms using {:?} phase duration {}ms",
+            self.elapsed_ms, self.request.phase, phase_duration_ms
+        );
     }
 
     fn toggle_pause(&mut self) {
@@ -378,6 +382,49 @@ impl PlayerUiState {
             None => self.message = "recipe has no signal-backed dwell trigger".to_string(),
         }
     }
+}
+
+fn current_phase_duration_ms(recipe: &RecipeDocument, phase: LifecyclePhase) -> u64 {
+    recipe
+        .lifecycle
+        .as_ref()
+        .and_then(|lifecycle| {
+            lifecycle
+                .phases
+                .iter()
+                .find(|phase_spec| phase_spec.phase == phase)
+        })
+        .and_then(|phase_spec| phase_timing_duration_ms(&phase_spec.timing))
+        .filter(|duration| *duration > 0)
+        .unwrap_or(1000)
+}
+
+fn phase_timing_duration_ms(timing: &PhaseTiming) -> Option<u64> {
+    match timing {
+        PhaseTiming::Fixed { duration } => Some(duration_ms(duration)),
+        PhaseTiming::Dwell { policy } => dwell_policy_duration_ms(policy),
+    }
+}
+
+fn dwell_policy_duration_ms(policy: &DwellPolicy) -> Option<u64> {
+    match policy {
+        DwellPolicy::Fixed { duration } => Some(duration_ms(duration)),
+        DwellPolicy::Until { max_duration, .. } => max_duration.as_ref().map(duration_ms),
+    }
+}
+
+fn duration_ms(duration: &DurationSpec) -> u64 {
+    match duration {
+        DurationSpec::Milliseconds { value } => *value,
+        DurationSpec::Seconds { value } => (*value * 1000.0).round().max(0.0) as u64,
+    }
+}
+
+fn phase_fraction(elapsed_ms: u64, phase_duration_ms: u64) -> f64 {
+    if phase_duration_ms == 0 {
+        return 1.0;
+    }
+    ((elapsed_ms % phase_duration_ms) as f64) / (phase_duration_ms as f64)
 }
 
 fn recipe_signal_fallback(recipe: &RecipeDocument, control: &PlayerUiControl) -> Option<Value> {

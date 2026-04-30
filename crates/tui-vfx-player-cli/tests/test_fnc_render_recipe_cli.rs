@@ -314,6 +314,233 @@ fn test_fnc_cli_rejects_native_content_typewriter_with_unsupported_input_json() 
 }
 
 #[test]
+fn test_fnc_cli_renders_compositor_backend_native_split_flap_and_odometer_json() {
+    for (recipe, recipe_id, effect_id) in [
+        (
+            "content/content_split_flap_ambient_board.json",
+            "debugContentSplitFlapAmbientBoard",
+            "content.splitFlap",
+        ),
+        (
+            "content/content_split_flap_cascade.json",
+            "debugContentSplitFlapCascade",
+            "content.splitFlap",
+        ),
+        (
+            "content/content_split_flap_arrivals_board.json",
+            "debugContentSplitFlapArrivalsBoard",
+            "content.splitFlap",
+        ),
+        (
+            "content/content_split_flap.json",
+            "debugContentSplitFlap",
+            "content.splitFlap",
+        ),
+        (
+            "content/content_split_flap_authentic_timing.json",
+            "debugContentSplitFlapAuthenticTiming",
+            "content.splitFlap",
+        ),
+        (
+            "content/content_odometer_cell_roll_diagonal.json",
+            "debugContentOdometerCellRollDiagonal",
+            "content.odometer",
+        ),
+        (
+            "content/content_odometer.json",
+            "debugContentOdometer",
+            "content.odometer",
+        ),
+        (
+            "content/content_odometer_3x3_count_bindable.json",
+            "debugContentOdometer3x3CountBindable",
+            "content.odometer",
+        ),
+        (
+            "content/content_odometer_cell_roll_down.json",
+            "debugContentOdometerCellRollDown",
+            "content.odometer",
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase-t"),
+                str_arg("0.25"),
+            ],
+            "render-backend native content split-flap/odometer player cli",
+        );
+
+        assert_eq!(report["backend"], "compositor", "{recipe}");
+        assert_eq!(report["recipeId"], recipe_id, "{recipe}");
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
+        assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"]["contentStages"], 1,
+            "{recipe}"
+        );
+        assert!(
+            report["loweredEffectIds"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!(effect_id)),
+            "{recipe}"
+        );
+        assert!(
+            report["diagnostics"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_split_flap_and_odometer_unsupported_content_shapes_json() {
+    for (effect_name, mutation_name, recipe) in [
+        (
+            "split_flap",
+            "unsupported_input",
+            unsupported_content_recipe(
+                "content/content_split_flap.json",
+                Some(("unsupportedNativeField", unsupported_native_input())),
+                None,
+                None,
+            ),
+        ),
+        (
+            "split_flap",
+            "unsupported_output",
+            unsupported_content_recipe(
+                "content/content_split_flap.json",
+                None,
+                Some(serde_json::json!({
+                    "debugOutput": {
+                        "source": {
+                            "kind": "input",
+                            "id": "settle"
+                        }
+                    }
+                })),
+                None,
+            ),
+        ),
+        (
+            "split_flap",
+            "unsupported_scope",
+            unsupported_content_recipe(
+                "content/content_split_flap.json",
+                None,
+                None,
+                Some(serde_json::json!({
+                    "kind": "rowRange",
+                    "start": 0,
+                    "end": 1
+                })),
+            ),
+        ),
+        (
+            "odometer",
+            "unsupported_input",
+            unsupported_content_recipe(
+                "content/content_odometer.json",
+                Some(("unsupportedNativeField", unsupported_native_input())),
+                None,
+                None,
+            ),
+        ),
+        (
+            "odometer",
+            "unsupported_output",
+            unsupported_content_recipe(
+                "content/content_odometer.json",
+                None,
+                Some(serde_json::json!({
+                    "debugOutput": {
+                        "source": {
+                            "kind": "input",
+                            "id": "direction"
+                        }
+                    }
+                })),
+                None,
+            ),
+        ),
+        (
+            "odometer",
+            "unsupported_scope",
+            unsupported_content_recipe(
+                "content/content_odometer.json",
+                None,
+                None,
+                Some(serde_json::json!({
+                    "kind": "rowRange",
+                    "start": 0,
+                    "end": 1
+                })),
+            ),
+        ),
+    ] {
+        let temp_root = std::env::temp_dir().join(format!(
+            "tui-vfx-native-{effect_name}-{mutation_name}-unsupported"
+        ));
+        let _ = fs::remove_dir_all(&temp_root);
+        fs::create_dir_all(&temp_root).expect("create temp unsupported content fixture root");
+        let recipe_path = temp_root.join(format!("{effect_name}_{mutation_name}.json"));
+        fs::write(
+            &recipe_path,
+            serde_json::to_string_pretty(&recipe).expect("serialize unsupported content recipe"),
+        )
+        .expect("write unsupported content recipe");
+
+        let output = run_player_cli(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path.display().to_string(),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+            ],
+            "render-backend native unsupported split-flap/odometer player cli",
+        );
+
+        assert!(
+            !output.status.success(),
+            "{effect_name}/{mutation_name} unexpectedly succeeded"
+        );
+        assert!(
+            stderr(&output).contains("unsupportedNativeEffect"),
+            "{effect_name}/{mutation_name} stderr: {}",
+            stderr(&output)
+        );
+    }
+}
+
+#[test]
 fn test_fnc_cli_renders_compositor_backend_ir_resolved_metadata_json() {
     let report = player_cli_json(
         vec![
@@ -2442,6 +2669,38 @@ fn unsupported_content_typewriter_recipe() -> serde_json::Value {
         }
     });
     recipe
+}
+
+fn unsupported_content_recipe(
+    relative_recipe_path: &str,
+    unsupported_input: Option<(&str, serde_json::Value)>,
+    outputs: Option<serde_json::Value>,
+    scope: Option<serde_json::Value>,
+) -> serde_json::Value {
+    let text = fs::read_to_string(debug_recipe_root().join(relative_recipe_path))
+        .expect("read content fixture");
+    let mut recipe: serde_json::Value =
+        serde_json::from_str(&text).expect("content fixture parses");
+    if let Some((key, value)) = unsupported_input {
+        recipe["graph"]["nodes"]["effectNode"]["inputs"][key] = value;
+    }
+    if let Some(outputs) = outputs {
+        recipe["graph"]["nodes"]["effectNode"]["outputs"] = outputs;
+    }
+    if let Some(scope) = scope {
+        recipe["graph"]["nodes"]["effectNode"]["scope"] = scope;
+    }
+    recipe
+}
+
+fn unsupported_native_input() -> serde_json::Value {
+    serde_json::json!({
+        "kind": "literal",
+        "value": {
+            "kind": "string",
+            "value": "must stay unsupported"
+        }
+    })
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>

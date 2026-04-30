@@ -104,6 +104,17 @@ fn test_fnc_ui_binary_renders_baseline_once() {
 }
 
 #[test]
+fn test_fnc_ui_tick_uses_recipe_lifecycle_phase_duration() {
+    let mut state =
+        PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+
+    let output = run_script(&mut state, "tick", false);
+
+    assert!(output.contains("sample_t: 0.02"));
+    assert_eq!(state.phase_t(), 0.02);
+}
+
+#[test]
 fn test_fnc_ui_script_fires_event_dwell_trigger() {
     let mut state = PlayerUiState::load(&options(recipe_path(
         "event_driven_dwell/bool_binding_demo.json",

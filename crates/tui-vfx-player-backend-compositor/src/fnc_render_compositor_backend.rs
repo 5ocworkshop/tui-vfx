@@ -159,6 +159,40 @@ fn scene_ir_with_native_content_stages(
                 *cursor_wake,
                 *wake_cells,
             ),
+            NativeContentStage::SplitFlap {
+                settle,
+                cascade,
+                speed,
+                cycles,
+                charset,
+                tile_width,
+                tile_height,
+                jitter,
+            } => apply_split_flap_content_stage(
+                &mut staged,
+                *settle,
+                *cascade,
+                *speed,
+                *cycles,
+                charset,
+                *tile_width,
+                *tile_height,
+                *jitter,
+            ),
+            NativeContentStage::Odometer {
+                direction,
+                travel,
+                from_message,
+                tile_width,
+                tile_height,
+            } => apply_odometer_content_stage(
+                &mut staged,
+                direction,
+                travel,
+                from_message,
+                *tile_width,
+                *tile_height,
+            ),
         }
     }
     staged
@@ -175,32 +209,8 @@ fn apply_typewriter_content_stage(
     let visible_fraction = (report.phase_t
         * (speed.max(0.0) + speed_variance.clamp(0.0, 1.0) * report.phase_t))
         .clamp(0.0, 1.0);
-    let width = report
-        .width
-        .max(
-            report
-                .rows
-                .iter()
-                .map(|row| row.chars().count())
-                .max()
-                .unwrap_or(0),
-        )
-        .max(
-            report
-                .styled_cells
-                .iter()
-                .map(|cell| cell.x + 1)
-                .max()
-                .unwrap_or(0),
-        );
-    let height = report.height.max(report.rows.len()).max(
-        report
-            .styled_cells
-            .iter()
-            .map(|cell| cell.y + 1)
-            .max()
-            .unwrap_or(0),
-    );
+    let width = report_width(report);
+    let height = report_height(report);
     let mut rows = dense_rows(report, width, height);
     let total = rows.iter().map(|row| row.chars().count()).sum::<usize>();
     let visible = (total as f64 * visible_fraction).round() as usize;
@@ -242,19 +252,110 @@ fn apply_typewriter_content_stage(
     }
 
     report.rows = rows;
-    let row_chars = report
-        .rows
-        .iter()
-        .map(|row| row.chars().collect::<Vec<_>>())
-        .collect::<Vec<_>>();
-    for cell in &mut report.styled_cells {
-        cell.glyph = row_chars
-            .get(cell.y)
-            .and_then(|row| row.get(cell.x))
-            .copied()
-            .unwrap_or(' ')
-            .to_string();
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_split_flap_content_stage(
+    report: &mut PlayerRenderIrReport,
+    settle: f64,
+    cascade: f64,
+    speed: f64,
+    cycles: f64,
+    charset: &str,
+    tile_width: usize,
+    tile_height: usize,
+    jitter: f64,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let mut rows = dense_rows(report, width, height);
+    let cascade = cascade.clamp(0.0, 1.0);
+    let threshold =
+        (report.phase_t * settle.clamp(0.0, 1.0) * speed.max(0.0) + cascade * 0.1).clamp(0.0, 1.0);
+    let glyphs = split_flap_charset(charset);
+    let tile_width = tile_width.max(1);
+    let tile_height = tile_height.max(1);
+    let cycles = cycles.max(0.0);
+    let jitter = jitter.clamp(0.0, 1.0);
+
+    for (y, row) in rows.iter_mut().enumerate() {
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                let tile_offset = ((x / tile_width) + (y / tile_height)) as f64 * cascade * 0.08;
+                let cell_progress = (threshold - tile_offset
+                    + jitter * cell_threshold(x, y) * 0.05)
+                    .clamp(0.0, 1.0);
+                if glyph == ' ' || cell_progress >= 1.0 {
+                    glyph
+                } else if cycles > 0.0 {
+                    let index =
+                        ((cell_progress * cycles * glyphs.len() as f64).floor() as usize + x + y)
+                            % glyphs.len();
+                    glyphs[index]
+                } else {
+                    '▣'
+                }
+            })
+            .collect();
     }
+
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_odometer_content_stage(
+    report: &mut PlayerRenderIrReport,
+    direction: &str,
+    travel: &str,
+    from_message: &str,
+    tile_width: usize,
+    tile_height: usize,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let mut rows = dense_rows(report, width, height);
+    let progress = report.phase_t.clamp(0.0, 1.0);
+    if from_message.is_empty() {
+        apply_glitch_shift_rows(&mut rows, 1, 3);
+        report.rows = rows;
+        sync_styled_cells_to_rows(report);
+        return;
+    }
+
+    let from_rows = normalized_rows(from_message, rows.len());
+    let row_count = rows.len();
+    let tile_width = tile_width.max(1);
+    let tile_height = tile_height.max(1);
+    let reveal_threshold = odometer_reveal_threshold(travel);
+    for (y, row) in rows.iter_mut().enumerate() {
+        let target = row.chars().collect::<Vec<_>>();
+        let source = from_rows
+            .get(y)
+            .map(|value| value.chars().collect::<Vec<_>>())
+            .unwrap_or_default();
+        let travel_span = odometer_travel_span(travel, target.len().max(source.len()), row_count);
+        *row = target
+            .iter()
+            .enumerate()
+            .map(|(x, target_glyph)| {
+                let source_glyph = source.get(x).copied().unwrap_or(' ');
+                let tile_delay = ((x / tile_width) + (y / tile_height)) as f64 * 0.04 * travel_span;
+                let cell_progress = (progress - tile_delay).clamp(0.0, 1.0);
+                if cell_progress >= reveal_threshold {
+                    *target_glyph
+                } else if direction == "down" || direction == "left" {
+                    previous_digit(source_glyph)
+                } else {
+                    source_glyph
+                }
+            })
+            .collect();
+    }
+
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
 }
 
 fn dense_rows(report: &PlayerRenderIrReport, width: usize, height: usize) -> Vec<String> {
@@ -277,6 +378,118 @@ fn dense_rows(report: &PlayerRenderIrReport, width: usize, height: usize) -> Vec
     rows.into_iter()
         .map(|row| row.into_iter().collect::<String>())
         .collect()
+}
+
+fn sync_styled_cells_to_rows(report: &mut PlayerRenderIrReport) {
+    let row_chars = report
+        .rows
+        .iter()
+        .map(|row| row.chars().collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+    for cell in &mut report.styled_cells {
+        cell.glyph = row_chars
+            .get(cell.y)
+            .and_then(|row| row.get(cell.x))
+            .copied()
+            .unwrap_or(' ')
+            .to_string();
+    }
+}
+
+fn report_width(report: &PlayerRenderIrReport) -> usize {
+    report
+        .width
+        .max(
+            report
+                .rows
+                .iter()
+                .map(|row| row.chars().count())
+                .max()
+                .unwrap_or(0),
+        )
+        .max(
+            report
+                .styled_cells
+                .iter()
+                .map(|cell| cell.x + 1)
+                .max()
+                .unwrap_or(0),
+        )
+}
+
+fn report_height(report: &PlayerRenderIrReport) -> usize {
+    report.height.max(report.rows.len()).max(
+        report
+            .styled_cells
+            .iter()
+            .map(|cell| cell.y + 1)
+            .max()
+            .unwrap_or(0),
+    )
+}
+
+fn split_flap_charset(charset_name: &str) -> Vec<char> {
+    match charset_name {
+        "digits" => "0123456789".chars().collect(),
+        "binary" => "01".chars().collect(),
+        "alphanumeric" => "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".chars().collect(),
+        _ => "▣▤▥▦▧▨".chars().collect(),
+    }
+}
+
+fn normalized_rows(text: &str, expected: usize) -> Vec<String> {
+    let mut rows = text.lines().map(str::to_string).collect::<Vec<_>>();
+    rows.resize(expected, String::new());
+    rows
+}
+
+fn odometer_travel_span(travel: &str, width: usize, height: usize) -> f64 {
+    match travel {
+        "fullClear" | "full_clear" => width.max(height).max(1) as f64,
+        "cells" => 2.0,
+        _ => 1.0,
+    }
+}
+
+fn odometer_reveal_threshold(travel: &str) -> f64 {
+    match travel {
+        "fullClear" | "full_clear" => 0.75,
+        "cells" => 0.6,
+        _ => 0.5,
+    }
+}
+
+fn previous_digit(glyph: char) -> char {
+    match glyph {
+        '0' => '9',
+        '1'..='9' => char::from_u32(glyph as u32 - 1).unwrap_or(glyph),
+        _ => glyph,
+    }
+}
+
+fn apply_glitch_shift_rows(rows: &mut [String], amount: usize, seed: usize) {
+    for (y, row) in rows.iter_mut().enumerate() {
+        if row.is_empty() || !(y + seed).is_multiple_of(2) {
+            continue;
+        }
+        *row = rotate_row(row, amount.min(row.chars().count().saturating_sub(1)));
+    }
+}
+
+fn rotate_row(row: &str, offset: usize) -> String {
+    let chars = row.chars().collect::<Vec<_>>();
+    let width = chars.len();
+    if width == 0 {
+        return String::new();
+    }
+    chars[offset..]
+        .iter()
+        .chain(chars[..offset].iter())
+        .collect::<String>()
+}
+
+fn cell_threshold(x: usize, y: usize) -> f64 {
+    ((x * 37 + y * 17) % 100) as f64 / 99.0
 }
 
 fn scene_ir_for_request(
