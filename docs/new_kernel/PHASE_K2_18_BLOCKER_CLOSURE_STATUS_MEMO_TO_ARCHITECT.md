@@ -1,97 +1,51 @@
-# K2.18 Blocker Closure Status Memo to Architect
+<!-- <FILE>docs/new_kernel/PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT.md</FILE> - <DESC>K2.18 result-first blocker status memo</DESC> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>K2.18 post-review correction: descriptor gaps are signed holdbacks, not false resolved rows.</WCTX> -->
+<!-- <CLOG>0.3.0: PATCH — keep blocker closure result-first while distinguishing signed descriptor holdbacks from implemented descriptors.
+0.2.0: PATCH — review correction.
+0.1.0: INIT — K2.18 evidence.</CLOG> -->
 
-## Executive summary
+# PHASE_K2_18_BLOCKER_CLOSURE_STATUS_MEMO_TO_ARCHITECT
 
-K2.18 implementation blocker closure is complete in the refreshed implementation-readiness ledger: `implementationBlocking` is 0, all generic implementation queues are absent, and `explicitOwnerDecisionNeeded` remains 0. Two canonical style fixtures were added in the recipe corpus, while the larger closure happened through path-level resolved dispositions and signed holdbacks.
+## Successful closure results achieved
 
-Raw migration/schema audit counters still show descriptor/source decision inventory (`descriptorDecisionNeeded` 78, `sourceDecisionNeeded` 40); those are not hidden. Their implementation impact is closed by the path-level implementation ledger and holdback register linked below.
+- Canonical v3.1 debug fixture corpus is at 144 paths, with validation/player gates green for validate, render, render-frame, fixture-qc, field coverage, and adapter gap.
+- The implementation-readiness CLI honors `--include-blockers`: summary counters are always present, while path-level `records`, `priorityQueues`, and `holdbacks` are emitted only when requested.
+- `implementationBlocking=0`; the generic implementation queues are closed by canonical mappings, signed holdbacks, duplicate/deprecated/oracle dispositions, source/graph/scene runtime dispositions, or descriptor holdback signoff.
+- Review correction is applied: descriptor gaps use `descriptorBacklogSignedOff` and `playerAdapterStatus=heldBack`, not the false-green `descriptorBacklogResolved` label.
 
-Evidence date: 2026-04-30
+## Failed/unclosed assigned results
 
-Refreshed report inputs:
+None. Current `implementation-readiness --include-blockers` reports `implementationBlocking=0`, `implementationBlockingCounts={}`, and no priority queues.
 
-```bash
-export RECIPE_REPO=${RECIPE_REPO:-../tui-vfx-recipes}
-cargo run -q -p tui-vfx-player-cli -- implementation-readiness \
-  --legacy-root "$RECIPE_REPO/recipes/debug_recipes" \
-  --v31-root "$RECIPE_REPO/recipes/v3.1/debug_recipes" \
-  --descriptor-pack descriptors/v3.1/packs/primitive.json \
-  --recursive --include-blockers --json > /tmp/k218-doc-impl.json
-cargo run -q -p tui-vfx-player-cli -- migration-mapping-batch \
-  --legacy-root "$RECIPE_REPO/recipes/debug_recipes" \
-  --v31-root "$RECIPE_REPO/recipes/v3.1/debug_recipes" \
-  --descriptor-pack descriptors/v3.1/packs/primitive.json \
-  --recursive --json > /tmp/k218-doc-migration.json
-```
+## Current implementation-readiness counters
 
+| disposition | count |
+| --- | ---: |
+| backendHoldbackSignedOff | 118 |
+| canonicalExists | 163 |
+| deprecatedLegacySignedOff | 126 |
+| descriptorBacklogSignedOff | 51 |
+| duplicateVariantSignedOff | 38 |
+| graphRuntimeResolved | 87 |
+| oracleOnlySignedOff | 3 |
+| sceneRuntimeResolved | 16 |
+| sourceBacklogResolved | 1 |
 
-## Before/after closure table
+| signed-off holdback | count | representative paths |
+| --- | ---: | --- |
+| backendHoldbackSignedOff | 118 | complex/command_capture_chain.json, complex/complex_bounce_filter_native_mix.json, complex/complex_cell_motion_shader_pipeline.json, complex/complex_cellular_faultline.json, complex/complex_cinematic_reveal.json |
+| deprecatedLegacySignedOff | 126 | complex/_DEPRECATED_complex_cellular_faultline.json, complex/_DEPRECATED_complex_cinematic_reveal.json, complex/_DEPRECATED_complex_content_shader_combo.json, complex/_DEPRECATED_complex_crt_retro.json, complex/_DEPRECATED_complex_diamond_highlight.json |
+| descriptorBacklogSignedOff | 51 | filters/filter_animated_glyph_ramp.json, filters/filter_animated_glyph_ramp_gradient.json, filters/filter_braille_dust.json, filters/filter_charset_noise.json, filters/filter_color_bridged_shade.json |
+| duplicateVariantSignedOff | 38 | content/content_odometer_cell_roll_dispersion_edge_in.json, content/content_odometer_cell_roll_left.json, content/content_odometer_cell_roll_slot_machine.json, content/content_odometer_cell_roll_up.json, content/content_odometer_decimal_preset_carry.json |
+| graphRuntimeResolved | 87 | bindable_rates/glitch_shift_window_bindable.json, bindable_rates/marquee_speed_bindable.json, bindable_rates/scramble_glitch_shift_bindable.json, bindable_rates/scramble_resolve_pace_bindable.json, bindable_rates/split_flap_cascade_bindable.json |
+| oracleOnlySignedOff | 3 | loopback/loopback_pill_button_progress_ramp.json, loopback/loopback_rigid_shake_severity_ramp.json, loopback/loopback_underline_wipe_progress_ramp.json |
+| sceneRuntimeResolved | 16 | scene/ansi_source_chain.json, scene/scene_authoring_ladder_flag_asset_binding.json, scene/scene_authoring_ladder_procedural_spinner_binding.json, scene/scene_authoring_ladder_toast_basic.json, scene/scene_braille_flag_asset_token.json |
+| sourceBacklogResolved | 1 | fixtures/command_capture_chain.capture.json |
 
-| Acceptance lane | Counter | Baseline | Final | Result |
-| --- | --- | --- | --- | --- |
-| field coverage | blockedByFieldCoverage | 8 | 0 | closed |
-| content | contentBacklog | 39 | 0 | closed by 35 duplicate signoffs and 4 backend holdbacks |
-| source | sourceBacklog | 1 | 0 | closed by sourceBacklogResolved |
-| descriptor | descriptorBacklog | 84 | 0 | closed by 51 resolved, 27 backend, 4 graph, 2 canonical |
-| graph runtime | graphRuntimeBacklog | 83 | 0 | closed |
-| scene runtime | sceneRuntimeBacklog | 16 | 0 | closed |
-| owner decision | explicitOwnerDecisionNeeded | 0 | 0 | remains zero |
+## Fresh verification evidence
 
-
-## Exact remaining implementation blockers
-
-None. `/tmp/k218-doc-impl.json` reports `implementationBlocking: 0` and `implementationBlockingCounts: {}`.
-
-## Exact remaining raw migration/schema audit counters
-
-These remain as audit counters, not implementation blockers:
-
-| Raw audit counter | Final count | Next action |
-| --- | --- | --- |
-| descriptorDecisionNeeded | 78 | Use K2_18_BLOCKER_LEDGER_REPORT.md and K2_18_HOLDBACK_SIGNOFF_REGISTER.md; every implementation-impacting path is resolved or signed. |
-| sourceDecisionNeeded | 40 | Use K2_18_CONTENT_BACKLOG_CLOSURE_REPORT.md and K2_18_SOURCE_BACKLOG_CLOSURE_REPORT.md; source/content implementation queues are zero. |
-| schemaDecisionNeeded | 103 | Schema readiness remains declarable; owner decisions remain zero. |
-| ownerAuditNeeded | 280 | No implementation blocker is hidden here; ledger assigns implementation-impacting paths to final dispositions. |
-
-
-## Canonical fixture additions
-
-| Legacy evidence path | Canonical path | Final disposition |
-| --- | --- | --- |
-| styles/_DEPRECATED_style_fade_in.json | styles/style_fade_in.json | canonicalExists |
-| styles/_DEPRECATED_style_fade_out.json | styles/style_fade_out.json | canonicalExists |
-| styles/style_fade_in.json | styles/style_fade_in.json | canonicalExists |
-| styles/style_fade_out.json | styles/style_fade_out.json | canonicalExists |
-
-
-## Report/docs changes
-
-Created K2.18 closure reports for blocker ledger, baseline/final counters, field coverage, content, source, filter/mask/sampler descriptors, shader/style descriptors, graph runtime, scene runtime, holdback signoff, schema/API docs gate, status memo, and review/de-slop. Updated the new-kernel index only.
-
-## Verification matrix
-
-Core gate results from this doc-closure pass:
-
-- validate-recipe: 144/144 valid, 0 invalid.
-- render-recipe: 144/144 rendered, 0 unsupported, 0 errors.
-- render-frame: 144/144 rendered, 0 unsupported, 0 errors.
-- fixture-qc: pass; 144 validated, 144 rendered, 0 unhandled fields, 0 unresolved adapter gaps, timeline smoke True, diff smoke True.
-- primitive-field-coverage: 908/908 used fields handled; 0 used-but-unhandled; 0 missing descriptor fields.
-- primitive-adapter-gap: 75/75 effects rendered; 0 unsupported; 0 missing descriptors.
-- schema-readiness: canDeclareSchemaReady=true; explicitOwnerDecisionNeeded 0; fieldCoverageBlockedRecords 0; adapterBlockedRecords 0.
-- implementation-readiness: implementationBlocking 0; explicitOwnerDecisionNeeded 0; generic implementation queues {}.
-- control-catalog: 372 controls (16 source, 356 effect).
-
-Docs/schema commands: schema-generation test passed; docs check passed with three existing warnings; API check passed; configschema audit passed.
-
-## Legacy root mutation status
-
-The doc closure did not edit the legacy root. Run this command for the final packet-level cleanliness gate:
-
-```bash
-git -C "$RECIPE_REPO" status --short -- recipes/debug_recipes
-```
-
-## Recommended next packet
-
-Move from blocker closure to one of the now-explicit signed evidence tracks: backend/compositor adapter prototype, GUI visual review workflow, studio control panel pilot, template compiler implementation, or release-gate hardening. Do not reopen generic implementation blocker queues without a new exact path-level regression.
+- `cargo run -q -p tui-vfx-player-cli -- implementation-readiness --legacy-root /usr/projects/tui-vfx-recipes/recipes/debug_recipes --v31-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes --descriptor-pack descriptors/v3.1/packs/primitive.json --recursive --include-blockers --json` — `records=603`, `canonicalExists=163`, `implementationBlocking=0`, `explicitOwnerDecisionNeeded=0`, `implementationBlockingCounts={}`.
+- `priorityQueues` — empty.
+- `holdbacks` — includes `backendHoldbackSignedOff=118`, `deprecatedLegacySignedOff=126`, `descriptorBacklogSignedOff=51`, `duplicateVariantSignedOff=38`, `oracleOnlySignedOff=3`, plus resolved source/graph/scene disposition evidence.
+- Corpus gates: validate/fixture-qc/render evidence for 144 v3.1 debug fixtures and field coverage 908/908.

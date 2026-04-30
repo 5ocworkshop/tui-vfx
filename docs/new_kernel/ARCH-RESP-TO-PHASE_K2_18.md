@@ -61,7 +61,7 @@ This packet should not merely add fixtures. It should **resolve each blocker pat
 
 ```text
 canonicalExists
-descriptorBacklogResolved
+descriptorBacklogSignedOff
 contentBacklogResolved
 sourceBacklogResolved
 graphRuntimeResolved

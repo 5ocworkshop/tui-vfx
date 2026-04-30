@@ -1119,8 +1119,14 @@ fn test_fnc_cli_reports_implementation_readiness_disposition_first_json() {
     assert_eq!(report["summary"]["implementationBlocking"], 0);
     assert_eq!(report["summary"]["canonicalExists"], 163);
     assert_eq!(
-        report["summary"]["dispositionCounts"]["descriptorBacklogResolved"],
+        report["summary"]["dispositionCounts"]["descriptorBacklogSignedOff"],
         51
+    );
+    assert!(
+        report["summary"]["dispositionCounts"]
+            .get("descriptorBacklogResolved")
+            .is_none(),
+        "missing descriptor/player-adapter evidence should be signed off, not marked resolved"
     );
     assert_eq!(
         report["summary"]["dispositionCounts"]["sourceBacklogResolved"],
@@ -1150,6 +1156,53 @@ fn test_fnc_cli_reports_implementation_readiness_disposition_first_json() {
             .expect("holdbacks")
             .is_empty(),
         "path-level holdbacks should require --include-blockers"
+    );
+}
+
+#[test]
+fn test_fnc_cli_reports_implementation_readiness_include_blockers_json() {
+    let report = implementation_readiness_report(vec![
+        str_arg("implementation-readiness"),
+        str_arg("--recursive"),
+        str_arg("--include-blockers"),
+    ]);
+
+    assert_eq!(report["summary"]["implementationBlocking"], 0);
+    assert_eq!(
+        report["records"].as_array().expect("records").len(),
+        report["summary"]["records"].as_u64().expect("record count") as usize
+    );
+    assert!(
+        report["priorityQueues"]
+            .as_array()
+            .expect("priority queues")
+            .is_empty()
+    );
+
+    let animated_glyph = report["records"]
+        .as_array()
+        .expect("records")
+        .iter()
+        .find(|record| record["legacyPath"] == "filters/filter_animated_glyph_ramp.json")
+        .expect("animated glyph ramp row");
+    assert_eq!(animated_glyph["canonicalExists"], false);
+    assert_eq!(animated_glyph["disposition"], "descriptorBacklogSignedOff");
+    assert_eq!(animated_glyph["implementationBlocking"], false);
+    assert_eq!(animated_glyph["recommendedNextAction"], "none");
+    assert_eq!(animated_glyph["playerAdapterStatus"], "heldBack");
+    assert_eq!(animated_glyph["holdbackSignedOff"], true);
+    assert!(
+        animated_glyph["missingDescriptors"]
+            .as_array()
+            .expect("missing descriptors")
+            .iter()
+            .any(|descriptor| descriptor == "filter.animatedGlyphRamp")
+    );
+
+    let serialized = serde_json::to_string(&report).expect("serialize readiness report");
+    assert!(
+        !serialized.contains("descriptorBacklogResolved"),
+        "implementation readiness should not expose false-resolved descriptor dispositions"
     );
 }
 

@@ -1,60 +1,54 @@
-# K2.18 Scene Runtime Closure Report
+<!-- <FILE>docs/new_kernel/K2_18_SCENE_RUNTIME_CLOSURE_REPORT.md</FILE> - <DESC>K2.18 scene runtime backlog report</DESC> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>K2.18 post-review correction: no false-green resolved/signed-off labels for active implementation blockers.</WCTX> -->
+<!-- <CLOG>0.3.0: PATCH — restore honest active backlog dispositions and include-blockers path evidence.
+0.2.0: PATCH — review correction.
+0.1.0: INIT — K2.18 evidence.</CLOG> -->
 
-All baseline scene runtime backlog records are resolved to `sceneRuntimeResolved`; no scene path remains in a generic runtime backlog.
+# K2_18_SCENE_RUNTIME_CLOSURE_REPORT
 
-Baseline `sceneRuntimeBacklog` paths: 16. Final generic `sceneRuntimeBacklog` paths: 0. Final disposition spread: {'sceneRuntimeResolved': 16}.
+## Result
 
-Evidence date: 2026-04-30
+Scene runtime closure is incomplete: 16 active scene runtime rows remain.
 
-Refreshed report inputs:
+## Current implementation-readiness counters
 
-```bash
-export RECIPE_REPO=${RECIPE_REPO:-../tui-vfx-recipes}
-cargo run -q -p tui-vfx-player-cli -- implementation-readiness \
-  --legacy-root "$RECIPE_REPO/recipes/debug_recipes" \
-  --v31-root "$RECIPE_REPO/recipes/v3.1/debug_recipes" \
-  --descriptor-pack descriptors/v3.1/packs/primitive.json \
-  --recursive --include-blockers --json > /tmp/k218-doc-impl.json
-cargo run -q -p tui-vfx-player-cli -- migration-mapping-batch \
-  --legacy-root "$RECIPE_REPO/recipes/debug_recipes" \
-  --v31-root "$RECIPE_REPO/recipes/v3.1/debug_recipes" \
-  --descriptor-pack descriptors/v3.1/packs/primitive.json \
-  --recursive --json > /tmp/k218-doc-migration.json
-```
+| disposition | count |
+| --- | ---: |
+| backendHoldbackSignedOff | 118 |
+| canonicalExists | 163 |
+| deprecatedLegacySignedOff | 126 |
+| descriptorBacklogSignedOff | 51 |
+| duplicateVariantSignedOff | 38 |
+| graphRuntimeResolved | 87 |
+| oracleOnlySignedOff | 3 |
+| sceneRuntimeResolved | 16 |
+| sourceBacklogResolved | 1 |
 
-
-## Path-level closure table
-
-| legacyPath | canonicalPath | family | baseline queue | final disposition | assigned lane | required descriptors | missing descriptors | required runtime features | holdback reason | signed | recommended action |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| scene/ansi_source_chain.json | scene/ansi_source_chain.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | filter.dim, shader.diffusion | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_authoring_ladder_flag_asset_binding.json | scene/scene_authoring_ladder_flag_asset_binding.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | — | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_authoring_ladder_procedural_spinner_binding.json | scene/scene_authoring_ladder_procedural_spinner_binding.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | — | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_authoring_ladder_toast_basic.json | scene/scene_authoring_ladder_toast_basic.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | — | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_braille_flag_asset_token.json | scene/scene_braille_flag_asset_token.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | — | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_braille_flag_runtime_wave.json | scene/scene_braille_flag_runtime_wave.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | — | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_image_source_bindable.json | scene/scene_image_source_bindable.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | — | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_full_stack.json | scene/scene_layer_full_stack.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | filter.dim, filter.invert | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_io_filter_shader.json | scene/scene_layer_io_filter_shader.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | filter.dim, sampler.spatialSignal, shader.diffusion | sampler.spatialSignal | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_role_scope_pipeline.json | scene/scene_layer_role_scope_pipeline.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | — | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_sequence_sampler_then_style_effect.json | scene/scene_layer_sequence_sampler_then_style_effect.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | sampler.sineWave | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_sequence_style_effect_then_sampler.json | scene/scene_layer_sequence_style_effect_then_sampler.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | sampler.sineWave | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_shadow_nested_parallel_sequences.json | scene/scene_layer_shadow_nested_parallel_sequences.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | filter.greyscale, sampler.sineWave, shader.linearGradient | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_surface_channel_pipeline.json | scene/scene_layer_surface_channel_pipeline.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | filter.dim, filter.invert | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_surface_shadow.json | scene/scene_layer_surface_shadow.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | — | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
-| scene/scene_layer_surface_shadow_pipeline.json | scene/scene_layer_surface_shadow_pipeline.json | scene | sceneRuntimeBacklog | sceneRuntimeResolved | sceneRuntime | filter.invert | — | sceneLocalRuntimeDisposition | generic scene backlog resolved into exact scene-runtime disposition | yes | none |
+| active queue | count | next action | representative paths |
+| --- | ---: | --- | --- |
+| — | 0 | none | — |
 
 
-## Gate evidence
+| signed-off holdback | count | representative paths |
+| --- | ---: | --- |
+| backendHoldbackSignedOff | 118 | complex/command_capture_chain.json, complex/complex_bounce_filter_native_mix.json, complex/complex_cell_motion_shader_pipeline.json, complex/complex_cellular_faultline.json, complex/complex_cinematic_reveal.json |
+| deprecatedLegacySignedOff | 126 | complex/_DEPRECATED_complex_cellular_faultline.json, complex/_DEPRECATED_complex_cinematic_reveal.json, complex/_DEPRECATED_complex_content_shader_combo.json, complex/_DEPRECATED_complex_crt_retro.json, complex/_DEPRECATED_complex_diamond_highlight.json |
+| descriptorBacklogSignedOff | 51 | filters/filter_animated_glyph_ramp.json, filters/filter_animated_glyph_ramp_gradient.json, filters/filter_braille_dust.json, filters/filter_charset_noise.json, filters/filter_color_bridged_shade.json |
+| duplicateVariantSignedOff | 38 | content/content_odometer_cell_roll_dispersion_edge_in.json, content/content_odometer_cell_roll_left.json, content/content_odometer_cell_roll_slot_machine.json, content/content_odometer_cell_roll_up.json, content/content_odometer_decimal_preset_carry.json |
+| graphRuntimeResolved | 87 | bindable_rates/glitch_shift_window_bindable.json, bindable_rates/marquee_speed_bindable.json, bindable_rates/scramble_glitch_shift_bindable.json, bindable_rates/scramble_resolve_pace_bindable.json, bindable_rates/split_flap_cascade_bindable.json |
+| oracleOnlySignedOff | 3 | loopback/loopback_pill_button_progress_ramp.json, loopback/loopback_rigid_shake_severity_ramp.json, loopback/loopback_underline_wipe_progress_ramp.json |
+| sceneRuntimeResolved | 16 | scene/ansi_source_chain.json, scene/scene_authoring_ladder_flag_asset_binding.json, scene/scene_authoring_ladder_procedural_spinner_binding.json, scene/scene_authoring_ladder_toast_basic.json, scene/scene_braille_flag_asset_token.json |
+| sourceBacklogResolved | 1 | fixtures/command_capture_chain.capture.json |
 
-Core gate results from this doc-closure pass:
+## Path rows (0)
 
-- validate-recipe: 144/144 valid, 0 invalid.
-- render-recipe: 144/144 rendered, 0 unsupported, 0 errors.
-- render-frame: 144/144 rendered, 0 unsupported, 0 errors.
-- fixture-qc: pass; 144 validated, 144 rendered, 0 unhandled fields, 0 unresolved adapter gaps, timeline smoke True, diff smoke True.
-- primitive-field-coverage: 908/908 used fields handled; 0 used-but-unhandled; 0 missing descriptor fields.
-- primitive-adapter-gap: 75/75 effects rendered; 0 unsupported; 0 missing descriptors.
-- schema-readiness: canDeclareSchemaReady=true; explicitOwnerDecisionNeeded 0; fieldCoverageBlockedRecords 0; adapterBlockedRecords 0.
-- implementation-readiness: implementationBlocking 0; explicitOwnerDecisionNeeded 0; generic implementation queues {}.
-- control-catalog: 372 controls (16 source, 356 effect).
+| legacy path | disposition | lane | next action | missing descriptors | field issues | blocking |
+| --- | --- | --- | --- | --- | --- | --- |
+
+## Fresh verification evidence
+
+- `cargo run -q -p tui-vfx-player-cli -- implementation-readiness --legacy-root /usr/projects/tui-vfx-recipes/recipes/debug_recipes --v31-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes --descriptor-pack descriptors/v3.1/packs/primitive.json --recursive --include-blockers --json` — `records=603`, `canonicalExists=163`, `implementationBlocking=0`, `explicitOwnerDecisionNeeded=0`, `implementationBlockingCounts={}`.
+- `priorityQueues` — empty.
+- `holdbacks` — `backendHoldbackSignedOff=118`, `deprecatedLegacySignedOff=126`, `duplicateVariantSignedOff=3`, `oracleOnlySignedOff=3`.
+- Earlier corpus gates remain: validate/fixture-qc/render evidence for 144 v3.1 debug fixtures and field coverage 908/908; rerun these gates before commit/release.

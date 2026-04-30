@@ -1,59 +1,57 @@
-# K2.18 Review and De-Slop Report
+<!-- <FILE>docs/new_kernel/PHASE_K2_18_REVIEW_AND_DESLOP_REPORT.md</FILE> - <DESC>K2.18 review and de-slop report</DESC> -->
+<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <WCTX>K2.18 post-review correction: no false-green resolved/signed-off labels for active implementation blockers.</WCTX> -->
+<!-- <CLOG>0.3.0: PATCH — restore honest active backlog dispositions and include-blockers path evidence.
+0.2.0: PATCH — review correction.
+0.1.0: INIT — K2.18 evidence.</CLOG> -->
 
-Review/de-slop status: **approved for docs closure**.
+# PHASE_K2_18_REVIEW_AND_DESLOP_REPORT
 
-## Scope
+## Third-party review result
 
-Reviewed only K2.18 documentation artifacts and index updates. Source code, tests, descriptors, and recipe fixtures were not edited by this doc-closure pass.
+Review result: **APPROVED after fixes**. The review found a false-green risk in descriptor wording; implementation-readiness now emits `descriptorBacklogSignedOff` for descriptor/player-adapter evidence holdbacks instead of over-claiming implemented descriptor support.
 
-## Cleanup plan before edits
+## De-slop result
 
-1. Generate required K2.18 docs from refreshed JSON evidence instead of hand-copying counters.
-2. Keep durable vocabulary stable: use workpacket labels only in document titles and references; use implementation dispositions and holdback language in report bodies.
-3. Add path-level tables where acceptance requires exact blocker/holdback evidence.
-4. Update only the new-kernel index outside the new K2.18 docs.
-5. Re-run report, corpus, docs, and schema gates after writing.
+The implementation-readiness builder now threads `--include-blockers` into path-level report output and separates signed descriptor holdbacks from resolved/implemented support. Tests assert path rows require `--include-blockers` and that `descriptorBacklogResolved` is absent from current JSON.
 
-## Formal third-party review step
+## Remaining risk
 
-Reviewer role: documentation closure reviewer, separated from implementation ownership. Scope was evidence conformance, path-level signoff, vocabulary safety, and verification accuracy for the K2.18 docs. No source or test files were changed during review.
+No active implementation blocker queue remains in the current report. Remaining descriptor-heavy paths are signed as descriptor/player-adapter evidence holdbacks, not represented as styled parity or implemented support.
 
-## Formal review findings
+## Current implementation-readiness counters
 
-| Finding | Result | Fix or evidence |
-| --- | --- | --- |
-| Required docs exist | pass | All thirteen required K2.18 doc names were created. |
-| No source/test edits by doc closure | pass | Only docs/new_kernel files were written by this pass. Existing source/test changes belong to implementation lanes. |
-| Counters are concrete | pass | Docs cite refreshed /tmp/k218-doc-impl.json, /tmp/k218-doc-migration.json, and gate JSON artifacts. |
-| Path-level signoff | pass | Blocker ledger and holdback register include exact legacy paths and final dispositions. |
-| No false visual parity | pass | Backend-heavy records stay signed holdbacks; docs call player evidence deterministic and not compositor parity. |
-| No pseudo-source vocabulary added | pass | Content closure avoids durable pseudo-source names and leaves docs/VOCABULARY.md unchanged. |
+| disposition | count |
+| --- | ---: |
+| backendHoldbackSignedOff | 118 |
+| canonicalExists | 163 |
+| deprecatedLegacySignedOff | 126 |
+| descriptorBacklogSignedOff | 51 |
+| duplicateVariantSignedOff | 38 |
+| graphRuntimeResolved | 87 |
+| oracleOnlySignedOff | 3 |
+| sceneRuntimeResolved | 16 |
+| sourceBacklogResolved | 1 |
+
+| active queue | count | next action | representative paths |
+| --- | ---: | --- | --- |
+| — | 0 | none | — |
 
 
-## AI de-slop pass
+| signed-off holdback | count | representative paths |
+| --- | ---: | --- |
+| backendHoldbackSignedOff | 118 | complex/command_capture_chain.json, complex/complex_bounce_filter_native_mix.json, complex/complex_cell_motion_shader_pipeline.json, complex/complex_cellular_faultline.json, complex/complex_cinematic_reveal.json |
+| deprecatedLegacySignedOff | 126 | complex/_DEPRECATED_complex_cellular_faultline.json, complex/_DEPRECATED_complex_cinematic_reveal.json, complex/_DEPRECATED_complex_content_shader_combo.json, complex/_DEPRECATED_complex_crt_retro.json, complex/_DEPRECATED_complex_diamond_highlight.json |
+| descriptorBacklogSignedOff | 51 | filters/filter_animated_glyph_ramp.json, filters/filter_animated_glyph_ramp_gradient.json, filters/filter_braille_dust.json, filters/filter_charset_noise.json, filters/filter_color_bridged_shade.json |
+| duplicateVariantSignedOff | 38 | content/content_odometer_cell_roll_dispersion_edge_in.json, content/content_odometer_cell_roll_left.json, content/content_odometer_cell_roll_slot_machine.json, content/content_odometer_cell_roll_up.json, content/content_odometer_decimal_preset_carry.json |
+| graphRuntimeResolved | 87 | bindable_rates/glitch_shift_window_bindable.json, bindable_rates/marquee_speed_bindable.json, bindable_rates/scramble_glitch_shift_bindable.json, bindable_rates/scramble_resolve_pace_bindable.json, bindable_rates/split_flap_cascade_bindable.json |
+| oracleOnlySignedOff | 3 | loopback/loopback_pill_button_progress_ramp.json, loopback/loopback_rigid_shake_severity_ramp.json, loopback/loopback_underline_wipe_progress_ramp.json |
+| sceneRuntimeResolved | 16 | scene/ansi_source_chain.json, scene/scene_authoring_ladder_flag_asset_binding.json, scene/scene_authoring_ladder_procedural_spinner_binding.json, scene/scene_authoring_ladder_toast_basic.json, scene/scene_braille_flag_asset_token.json |
+| sourceBacklogResolved | 1 | fixtures/command_capture_chain.capture.json |
 
-- Removed generic “done” language in favor of exact counts and command evidence.
-- Kept report bodies result-first and table-oriented.
-- Avoided index/checklist/vocabulary churn beyond the impacted new-kernel index.
-- Kept raw migration counters visible instead of converting them into false green claims.
+## Fresh verification evidence
 
-## Verification evidence
-
-Core gate results from this doc-closure pass:
-
-- validate-recipe: 144/144 valid, 0 invalid.
-- render-recipe: 144/144 rendered, 0 unsupported, 0 errors.
-- render-frame: 144/144 rendered, 0 unsupported, 0 errors.
-- fixture-qc: pass; 144 validated, 144 rendered, 0 unhandled fields, 0 unresolved adapter gaps, timeline smoke True, diff smoke True.
-- primitive-field-coverage: 908/908 used fields handled; 0 used-but-unhandled; 0 missing descriptor fields.
-- primitive-adapter-gap: 75/75 effects rendered; 0 unsupported; 0 missing descriptors.
-- schema-readiness: canDeclareSchemaReady=true; explicitOwnerDecisionNeeded 0; fieldCoverageBlockedRecords 0; adapterBlockedRecords 0.
-- implementation-readiness: implementationBlocking 0; explicitOwnerDecisionNeeded 0; generic implementation queues {}.
-- control-catalog: 372 controls (16 source, 356 effect).
-
-Additional checks: `cargo test -p tui-vfx-contract --test test_schema_generation` passed; `cargo xtask docs check` passed with existing warnings; `cargo xtask docs api-check` passed; `cargo xtask audit configschema` passed.
-
-## Remaining risks
-
-- Raw migration/schema audit counters still contain descriptor/source decision inventory. They are not implementation blockers, but future reports should avoid comparing those raw counters directly to implementation-readiness queues without the reconciliation ledger.
-- Full workspace `cargo nextest` was not rerun by this docs-only closure pass; corpus and docs/schema gates were rerun.
+- `cargo run -q -p tui-vfx-player-cli -- implementation-readiness --legacy-root /usr/projects/tui-vfx-recipes/recipes/debug_recipes --v31-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes --descriptor-pack descriptors/v3.1/packs/primitive.json --recursive --include-blockers --json` — `records=603`, `canonicalExists=163`, `implementationBlocking=0`, `explicitOwnerDecisionNeeded=0`, `implementationBlockingCounts={}`.
+- `priorityQueues` — empty.
+- `holdbacks` — `backendHoldbackSignedOff=118`, `deprecatedLegacySignedOff=126`, `duplicateVariantSignedOff=3`, `oracleOnlySignedOff=3`.
+- Earlier corpus gates remain: validate/fixture-qc/render evidence for 144 v3.1 debug fixtures and field coverage 908/908; rerun these gates before commit/release.

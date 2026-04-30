@@ -243,7 +243,7 @@ fn descriptor_disposition(record: &crate::PlayerMigrationMappingRecord) -> &'sta
     if descriptor_needs_backend(record) {
         "backendHoldbackSignedOff"
     } else {
-        "descriptorBacklogResolved"
+        "descriptorBacklogSignedOff"
     }
 }
 
@@ -322,7 +322,7 @@ fn recommended_next_action_for(disposition: &str) -> &'static str {
         "canonicalExists" => "none",
         "candidateReady" => "createCanonicalFixture",
         "descriptorBacklog" => "extendDescriptorPack",
-        "descriptorBacklogResolved" => "none",
+        "descriptorBacklogResolved" | "descriptorBacklogSignedOff" => "none",
         "contentBacklog" => "addContentDescriptorAndAdapter",
         "contentBacklogResolved" => "none",
         "sourceBacklog" => "addSourceDescriptorOrResolver",
@@ -348,10 +348,11 @@ fn player_adapter_status_for(disposition: &str) -> &'static str {
         "canonicalExists"
         | "candidateReady"
         | "contentBacklogResolved"
-        | "descriptorBacklogResolved"
         | "graphRuntimeResolved"
         | "sceneRuntimeResolved"
         | "sourceBacklogResolved" => "covered",
+        "descriptorBacklogResolved" => "covered",
+        "descriptorBacklogSignedOff" => "heldBack",
         "adapterBacklog" | "contentBacklog" | "descriptorBacklog" | "sourceBacklog" => "needed",
         _ => "notApplicable",
     }
@@ -382,10 +383,11 @@ fn holdback_signed_off(disposition: &str) -> bool {
             | "oracleOnlySignedOff"
             | "duplicateVariantSignedOff"
             | "deprecatedLegacySignedOff"
-            | "graphRuntimeResolved"
-            | "sceneRuntimeResolved"
             | "sourceBacklogResolved"
             | "descriptorBacklogResolved"
+            | "descriptorBacklogSignedOff"
+            | "graphRuntimeResolved"
+            | "sceneRuntimeResolved"
     )
 }
 
@@ -407,7 +409,10 @@ fn assigned_lane_for(
             "content"
         }
         "sourceBacklog" | "sourceBacklogResolved" => "source",
-        "descriptorBacklog" | "descriptorBacklogResolved" | "backendHoldbackSignedOff"
+        "descriptorBacklog"
+        | "descriptorBacklogResolved"
+        | "descriptorBacklogSignedOff"
+        | "backendHoldbackSignedOff"
             if matches!(
                 record.legacy_family.as_str(),
                 "filters" | "masks" | "samplers" | "shaders" | "styles"
@@ -452,7 +457,7 @@ fn required_runtime_features(
     disposition: &str,
 ) -> Vec<String> {
     let mut features = Vec::new();
-    if disposition == "graphRuntimeResolved" || disposition == "graphRuntimeBacklog" {
+    if disposition == "graphRuntimeBacklog" {
         if record
             .candidate_blockers
             .iter()
@@ -463,11 +468,14 @@ fn required_runtime_features(
             features.push("runtimeDataModelDisposition".to_string());
         }
     }
-    if disposition == "sceneRuntimeResolved" || disposition == "sceneRuntimeBacklog" {
+    if disposition == "sceneRuntimeBacklog" {
         features.push("sceneLocalRuntimeDisposition".to_string());
     }
     if disposition == "backendHoldbackSignedOff" {
         features.push("futurePlayerRenderBackendEvidence".to_string());
+    }
+    if disposition == "descriptorBacklogSignedOff" {
+        features.push("futureDescriptorAdapterEvidence".to_string());
     }
     features
 }
@@ -508,6 +516,22 @@ fn holdback_reason_for(record: &crate::PlayerMigrationMappingRecord, disposition
         }
         "descriptorBacklogResolved" => {
             "descriptor backlog resolved to exact descriptor path disposition".to_string()
+        }
+        "descriptorBacklogSignedOff" => {
+            if !record.missing_descriptor_ids.is_empty() {
+                format!(
+                    "descriptor/player-adapter evidence required for {} before fixture parity claims",
+                    record.missing_descriptor_ids.join(", ")
+                )
+            } else if !record.unsupported_input_fields.is_empty() {
+                format!(
+                    "descriptor/player-adapter evidence required for authored fields: {}",
+                    record.unsupported_input_fields.join(", ")
+                )
+            } else {
+                "descriptor/player-adapter evidence required before fixture parity claims"
+                    .to_string()
+            }
         }
         _ => String::new(),
     }
