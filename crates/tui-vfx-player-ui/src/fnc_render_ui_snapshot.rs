@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render visual player state to terminal text</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Player UI: display shared backend parity evidence in the same visual shell used for manual review.</WCTX>
-// <CLOG>0.3.0: MINOR — include FPS/frame-time and black-canvas presentation state.
+// <CLOG>0.4.0: PATCH — include black-canvas and globally routed playback shortcuts in text help.
+// 0.3.0: MINOR — include FPS/frame-time and black-canvas presentation state.
 // 0.2.0: MINOR — show backend letter-cell evidence in UI snapshots.
 // 0.1.0: INIT — add bordered frame, metadata, diagnostics, and help rendering.</CLOG>
 
@@ -102,7 +103,7 @@ pub fn render_ui_snapshot(state: &PlayerUiState, clear: bool) -> String {
     if state.show_help {
         out.push_str(help_text());
     } else {
-        out.push_str("\ncommands: q quit | ? help | space pause | r reset | m motion | [ ] phase | left/right scrub | t trigger\n");
+        out.push_str("\ncommands: q quit | ? help | space pause | r reload | m motion | [ ] phase | left/right scrub | s studio | b black bg | t trigger\n");
     }
     out
 }
@@ -199,8 +200,8 @@ fn rgb_from_label(label: &str) -> Option<(u8, u8, u8)> {
 }
 
 fn help_text() -> &'static str {
-    "\nhelp:\n  q       quit\n  ?       toggle help\n  space   pause/resume\n  r       reload active recipe JSON from disk and reset player session\n  m       motion-disabled stable sample\n  [ / ]   previous/next phase\n  left    sample_t - 0.05\n  right   sample_t + 0.05\n  t       fire canonical signal-backed dwell trigger\n  tick    advance elapsed time when unpaused\n"
+    "\nhelp:\n  q       quit\n  ?       toggle help\n  space   pause/resume (global; works from help overlay)\n  r       reload active recipe JSON from disk and reset player session (global; notice appears in status)\n  m       motion-disabled stable sample (global; works from help overlay)\n  s       toggle studio controls pane\n  b       toggle black/default player canvas (global; works from help overlay)\n  [ / ]   previous/next phase (global; works from help overlay)\n  left    sample_t - 0.05\n  right   sample_t + 0.05\n  t       fire canonical signal-backed dwell trigger (global; works from help overlay)\n  tick    advance elapsed time when unpaused\n"
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render visual player state to terminal text</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

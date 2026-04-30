@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the visual player shell</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Player UI playback: start in enter phase and advance through lifecycle phases so migrated enter/exit effects visibly animate.</WCTX>
-// <CLOG>0.4.0: MINOR — track FPS/frame time and black-canvas presentation state.
+// <CLOG>0.6.0: MINOR — adjust selected studio sliders by one unit for keyboard left/right.
+// 0.5.1: PATCH — expand the studio preview canvas when source width/height controls outgrow the recipe scene.
+// 0.5.0: MINOR — expose mouse-driven studio control adjustment while preserving descriptor typing.
+// 0.4.0: MINOR — track FPS/frame time and black-canvas presentation state.
 // 0.3.0: MINOR — advance UI playback through enter, dwell, and exit phases instead of ticking one static phase.
 // 0.2.0: MINOR — generate rich effect/source controls with current values and mutation target metadata.
 // 0.1.2: PATCH — make generated control target selection explicit without changing control ids.
@@ -229,6 +232,7 @@ impl PlayerUiState {
             );
         }
         self.update_control_current_value(&control.id, &value);
+        self.expand_studio_canvas_for_control(&control, &value);
         self.render();
         Ok(())
     }
@@ -245,6 +249,43 @@ impl PlayerUiState {
         }
     }
 
+    /// Apply a mouse-derived normalized slider position to a studio control.
+    pub fn adjust_studio_control_from_ratio(&mut self, index: usize, ratio: f64) {
+        let Some(control) = self.controls.get(index).cloned() else {
+            self.message = "studio has no descriptor-derived controls".to_string();
+            return;
+        };
+        let Some(value) = mouse_value_for_control(&control, ratio) else {
+            self.mutate_studio_control_interactively(index);
+            return;
+        };
+        match self.set_control_value(&control.id, value) {
+            Ok(()) => {
+                self.message = format!("mouse-adjusted studio control `{}`", control.label);
+            }
+            Err(error) => self.message = error,
+        }
+    }
+
+    /// Adjust a numeric studio slider by signed whole units.
+    pub fn adjust_studio_control_by_units(&mut self, index: usize, delta: i64) {
+        let Some(control) = self.controls.get(index).cloned() else {
+            self.message = "studio has no descriptor-derived controls".to_string();
+            return;
+        };
+        let current = self.effective_control_value(&control);
+        let Some(value) = stepped_value_for_control(&control, current.as_ref(), delta) else {
+            self.message = format!("studio control `{}` is not a slider", control.label);
+            return;
+        };
+        match self.set_control_value(&control.id, value) {
+            Ok(()) => {
+                self.message = format!("adjusted studio control `{}` by {delta}", control.label);
+            }
+            Err(error) => self.message = error,
+        }
+    }
+
     fn update_control_current_value(&mut self, control_id: &str, value: &Value) {
         if let Some(control) = self
             .controls
@@ -252,6 +293,36 @@ impl PlayerUiState {
             .find(|control| control.id == control_id)
         {
             control.current_value = Some(value_to_json(value));
+        }
+    }
+
+    fn expand_studio_canvas_for_control(&mut self, control: &PlayerUiControl, value: &Value) {
+        if control.source_kind != "sourceInput" {
+            return;
+        }
+        let Some(extent) = integer_extent(value) else {
+            return;
+        };
+        match control.input_name.as_str() {
+            "width" => {
+                let base = self
+                    .recipe
+                    .scenes
+                    .first()
+                    .map(|scene| scene.width)
+                    .unwrap_or(0);
+                self.request.width = Some(base.max(extent));
+            }
+            "height" => {
+                let base = self
+                    .recipe
+                    .scenes
+                    .first()
+                    .map(|scene| scene.height)
+                    .unwrap_or(0);
+                self.request.height = Some(base.max(extent));
+            }
+            _ => {}
         }
     }
 
@@ -301,6 +372,7 @@ impl PlayerUiState {
             }
             PlayerUiCommand::ToggleMotionDisabled => self.toggle_motion_disabled(),
             PlayerUiCommand::ToggleBlackCanvas => self.toggle_black_canvas(),
+            PlayerUiCommand::ToggleStudio => self.toggle_studio(),
             PlayerUiCommand::PreviousPhase => self.cycle_phase(-1),
             PlayerUiCommand::NextPhase => self.cycle_phase(1),
             PlayerUiCommand::ScrubBackward => self.scrub(-0.05),
@@ -423,6 +495,16 @@ impl PlayerUiState {
             "black player canvas enabled"
         } else {
             "default player canvas restored"
+        }
+        .to_string();
+    }
+
+    fn toggle_studio(&mut self) {
+        self.studio = !self.studio;
+        self.message = if self.studio {
+            "studio controls enabled"
+        } else {
+            "studio controls hidden"
         }
         .to_string();
     }
@@ -652,6 +734,65 @@ fn clamp_number(value: f64, control: &PlayerUiControl) -> f64 {
     value
         .max(range.min.unwrap_or(f64::NEG_INFINITY))
         .min(range.max.unwrap_or(f64::INFINITY))
+}
+
+fn integer_extent(value: &Value) -> Option<usize> {
+    match value {
+        Value::Integer(value) => (*value > 0).then_some(*value as usize),
+        Value::Number(value) | Value::Duration(value) => {
+            value.is_finite().then_some(value.round().max(1.0) as usize)
+        }
+        _ => None,
+    }
+}
+
+fn stepped_value_for_control(
+    control: &PlayerUiControl,
+    current: Option<&Value>,
+    delta: i64,
+) -> Option<Value> {
+    match control.value_kind.as_str() {
+        "integer" => {
+            let current = match current {
+                Some(Value::Integer(value)) => *value,
+                Some(Value::Number(value)) | Some(Value::Duration(value)) => value.round() as i64,
+                _ => 0,
+            };
+            Some(Value::Integer(clamp_integer(
+                current.saturating_add(delta),
+                control,
+            )))
+        }
+        "duration" => Some(Value::Duration(clamp_number(
+            numeric_control_value(current).unwrap_or(0.0) + delta as f64,
+            control,
+        ))),
+        "number" => Some(Value::Number(clamp_number(
+            numeric_control_value(current).unwrap_or(0.0) + delta as f64,
+            control,
+        ))),
+        _ => None,
+    }
+}
+
+fn numeric_control_value(value: Option<&Value>) -> Option<f64> {
+    match value {
+        Some(Value::Integer(value)) => Some(*value as f64),
+        Some(Value::Number(value)) | Some(Value::Duration(value)) => Some(*value),
+        _ => None,
+    }
+}
+
+fn mouse_value_for_control(control: &PlayerUiControl, ratio: f64) -> Option<Value> {
+    let range = control.range?;
+    let (min, max) = range.min.zip(range.max).filter(|(min, max)| max > min)?;
+    let value = min + (max - min) * ratio.clamp(0.0, 1.0);
+    match control.value_kind.as_str() {
+        "integer" => Some(Value::Integer(clamp_integer(value.round() as i64, control))),
+        "duration" => Some(Value::Duration(clamp_number(value, control))),
+        "number" => Some(Value::Number(clamp_number(value, control))),
+        _ => None,
+    }
 }
 
 fn render_backend_output(
@@ -926,4 +1067,4 @@ fn normalize_key(value: &str) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the visual player shell</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

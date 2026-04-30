@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.5.2</VERS>
 // <WCTX>Player UI: provide themed browser, preview, studio, and quiet stats surfaces over player frame reports.</WCTX>
-// <CLOG>0.4.0: MINOR — show FPS in the preview title and honor black-canvas mode.
+// <CLOG>0.5.1: PATCH — scope black-canvas mode to the playback virtual canvas rather than the whole UI shell.
+// 0.5.2: PATCH — let studio mode dedicate horizontal space to preview plus controls instead of keeping the browser pane open.
+// 0.5.0: PATCH — surface player status messages as a top-line notice so reload/command feedback is visible.
+// 0.4.0: MINOR — show FPS in the preview title and honor black-canvas mode.
 // 0.3.1: PATCH — show color-coded phase/sample timing in the snapshot title.</CLOG>
 
 use ratatui::{
@@ -29,7 +32,7 @@ use crate::{
 
 /// Render the full interactive player UI frame.
 pub fn render_ratatui_ui(app: &mut PlayerUiApp, frame: &mut Frame<'_>) {
-    let theme = player_ui_theme(app.player.black_canvas_enabled());
+    let theme = player_ui_theme();
     frame.render_widget(Block::default().style(theme.canvas_style()), frame.area());
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -47,13 +50,8 @@ pub fn render_ratatui_ui(app: &mut PlayerUiApp, frame: &mut Frame<'_>) {
     }
 }
 
-fn player_ui_theme(black_canvas: bool) -> PlayerUiTheme {
-    let theme = PlayerUiTheme::eichler();
-    if black_canvas {
-        theme.with_black_canvas()
-    } else {
-        theme
-    }
+fn player_ui_theme() -> PlayerUiTheme {
+    PlayerUiTheme::eichler()
 }
 
 fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect, theme: PlayerUiTheme) {
@@ -67,22 +65,29 @@ fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect, theme: Pl
     } else {
         "Ctrl+Left open stats"
     };
-    let text = Line::from(vec![
-        Span::styled(
-            "tui-vfx player ",
-            theme
-                .chrome_style()
-                .fg(Color::Rgb(80, 220, 205))
-                .add_modifier(Modifier::BOLD),
+    let mut spans = vec![Span::styled(
+        "tui-vfx player ",
+        theme
+            .chrome_style()
+            .fg(Color::Rgb(80, 220, 205))
+            .add_modifier(Modifier::BOLD),
+    )];
+    if !app.player.message.is_empty() {
+        spans.push(Span::styled("| notice=", theme.label_style()));
+        spans.push(Span::styled(
+            app.player.message.clone(),
+            theme.healthy_status_style(),
+        ));
+        spans.push(Span::styled(" | ", theme.chrome_style()));
+    }
+    spans.extend([Span::styled(
+        format!(
+            "focus={focus} root={} | {drawer_hint}",
+            app.browser_root.display()
         ),
-        Span::styled(
-            format!(
-                "focus={focus} root={} | {drawer_hint}",
-                app.browser_root.display()
-            ),
-            theme.chrome_style(),
-        ),
-    ]);
+        theme.chrome_style(),
+    )]);
+    let text = Line::from(spans);
     frame.render_widget(Paragraph::new(text).style(theme.chrome_style()), area);
 }
 
@@ -109,15 +114,10 @@ fn render_main_body(
     if app.player.studio {
         let panes = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Percentage(28),
-                Constraint::Percentage(47),
-                Constraint::Percentage(25),
-            ])
+            .constraints([Constraint::Percentage(66), Constraint::Percentage(34)])
             .split(area);
-        render_player_browser(app, frame, panes[0]);
-        render_preview(&app.player, frame, panes[1], theme);
-        render_studio_controls(app, frame, panes[2]);
+        render_preview(&app.player, frame, panes[0], theme);
+        render_studio_controls(app, frame, panes[1]);
     } else {
         let panes = Layout::default()
             .direction(Direction::Horizontal)
@@ -144,6 +144,7 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect, them
             Constraint::Length(5),
         ])
         .split(area);
+    let playback_canvas_style = playback_canvas_style(state.black_canvas_enabled(), theme);
     frame.render_widget(
         Paragraph::new(player_ui_recipe_summary_lines(state, active, motion))
             .style(theme.elevated_panel_style())
@@ -158,16 +159,19 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect, them
         sections[0],
     );
     frame.render_widget(
-        Paragraph::new(backend_preview_lines(&state.last_backend_output))
-            .block(
-                Block::default()
-                    .title(player_snapshot_title(state, theme))
-                    .borders(Borders::ALL)
-                    .border_style(theme.elevated_border_style())
-                    .style(theme.elevated_panel_style()),
-            )
-            .style(theme.elevated_panel_style())
-            .wrap(Wrap { trim: false }),
+        Paragraph::new(backend_preview_lines(
+            &state.last_backend_output,
+            state.black_canvas_enabled(),
+        ))
+        .block(
+            Block::default()
+                .title(player_snapshot_title(state, theme))
+                .borders(Borders::ALL)
+                .border_style(theme.elevated_border_style())
+                .style(playback_canvas_style),
+        )
+        .style(playback_canvas_style)
+        .wrap(Wrap { trim: false }),
         sections[1],
     );
     frame.render_widget(
@@ -187,6 +191,14 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect, them
     );
 }
 
+fn playback_canvas_style(black_canvas: bool, theme: PlayerUiTheme) -> Style {
+    if black_canvas {
+        theme.elevated_panel_style().bg(Color::Black)
+    } else {
+        theme.elevated_panel_style()
+    }
+}
+
 fn player_snapshot_title(state: &PlayerUiState, theme: PlayerUiTheme) -> Line<'static> {
     Line::from(vec![
         Span::styled(" Player Snapshot │ ", theme.title_style()),
@@ -204,7 +216,10 @@ fn player_snapshot_title(state: &PlayerUiState, theme: PlayerUiTheme) -> Line<'s
     ])
 }
 
-fn backend_preview_lines(output: &PlayerRenderBackendOutput) -> Vec<Line<'static>> {
+fn backend_preview_lines(
+    output: &PlayerRenderBackendOutput,
+    black_canvas: bool,
+) -> Vec<Line<'static>> {
     let width = output
         .rows
         .iter()
@@ -230,7 +245,7 @@ fn backend_preview_lines(output: &PlayerRenderBackendOutput) -> Vec<Line<'static
     if width == 0 || height == 0 {
         return vec![Line::from("")];
     }
-    let mut cells = vec![preview_cell(' '); width * height];
+    let mut cells = vec![preview_cell(' ', black_canvas); width * height];
     for (y, row) in output.rows.iter().enumerate() {
         for (x, ch) in row.chars().enumerate() {
             if x < width && y < height {
@@ -271,11 +286,13 @@ impl From<&PlayerRenderCell> for PreviewCell {
     }
 }
 
-fn preview_cell(glyph: char) -> PreviewCell {
-    PreviewCell {
-        glyph,
-        style: Style::default(),
-    }
+fn preview_cell(glyph: char, black_canvas: bool) -> PreviewCell {
+    let style = if black_canvas {
+        Style::default().bg(Color::Black)
+    } else {
+        Style::default()
+    };
+    PreviewCell { glyph, style }
 }
 
 fn style_from_player_cell(cell: &PlayerRenderCell) -> Style {
@@ -334,17 +351,17 @@ fn diagnostic_lines(state: &PlayerUiState) -> Vec<Line<'static>> {
 fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect, theme: PlayerUiTheme) {
     let text = match app.focus {
         PlayerUiFocus::Browser => {
-            "Tab preview | ↑/↓ j/k move | Enter/Right open | Left parent | b black bg | Ctrl+←/→ stats | q quit | ? help"
+            "Tab preview | ↑/↓ j/k move | Enter/Right open | Left parent | Space pause | r reload | [ ] phase | s studio | b black bg | Ctrl+←/→ stats | q quit | ? help"
         }
         PlayerUiFocus::Preview => {
             if app.player.studio {
-                "Tab studio | Space pause | r reload | [ ] phase | ←/→ scrub | b black bg | Ctrl+←/→ stats | q quit | ? help"
+                "Tab studio | Space pause | r reload | [ ] phase | ←/→ scrub | s studio | b black bg | Ctrl+←/→ stats | q quit | ? help"
             } else {
-                "Tab browser | Space pause | r reload | [ ] phase | ←/→ scrub | b black bg | Ctrl+←/→ stats | q quit | ? help"
+                "Tab browser | Space pause | r reload | [ ] phase | ←/→ scrub | s studio | b black bg | Ctrl+←/→ stats | q quit | ? help"
             }
         }
         PlayerUiFocus::Studio => {
-            "Tab browser | ↑/↓ j/k select control | Enter/e mutate selected | b black bg | Ctrl+←/→ stats | q quit | ? help"
+            "Tab browser | ↑/↓ j/k select | Enter/e mutate | Space pause | r reload | [ ] phase | s studio | b black bg | Ctrl+←/→ stats | q quit | ? help"
         }
     };
     frame.render_widget(
@@ -359,4 +376,4 @@ fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect, theme: Pl
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>END OF VERSION: 0.3.1</VERS>
+// <VERS>END OF VERSION: 0.5.2</VERS>

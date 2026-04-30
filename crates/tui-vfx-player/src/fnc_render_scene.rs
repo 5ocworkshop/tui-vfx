@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/fnc_render_scene.rs</FILE> - <DESC>Render recipe scenes into player-owned rows and styled cells</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
+// <VERS>VERSION: 0.4.1</VERS>
 // <WCTX>Scene rendering carries element-local pipeline style evidence into the player surface.</WCTX>
-// <CLOG>0.4.0: MINOR — carry bounded ANSI SGR styled-cell evidence and source resolver seams.
+// <CLOG>0.4.1: PATCH — render source.card plain borders with single-line box-drawing glyphs.
+// 0.4.0: MINOR — carry bounded ANSI SGR styled-cell evidence and source resolver seams.
 // 0.3.0: MINOR — preserve local pipeline styled-cell evidence when placing scene elements.
 // 0.2.0: PATCH — distinguish source.card message input from source.text text input.
 // 0.1.0: INIT — add scene traversal, source rendering, and grid blitting helpers.</CLOG>
@@ -576,12 +577,12 @@ impl CardBorder {
     fn for_style(style: &str) -> Option<Self> {
         match style {
             "plain" => Some(Self {
-                top_left: '+',
-                top_right: '+',
-                bottom_left: '+',
-                bottom_right: '+',
-                horizontal: '-',
-                vertical: '|',
+                top_left: '┌',
+                top_right: '┐',
+                bottom_left: '└',
+                bottom_right: '┘',
+                horizontal: '─',
+                vertical: '│',
             }),
             "rounded" => Some(Self {
                 top_left: '╭',
@@ -1566,4 +1567,4 @@ fn missing_scene_error() -> PlayerError {
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_render_scene.rs</FILE> - <DESC>Render recipe scenes into player-owned rows and styled cells</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.4.1</VERS>

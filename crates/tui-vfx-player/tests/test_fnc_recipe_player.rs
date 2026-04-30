@@ -11,7 +11,7 @@ use std::{
 
 use tui_vfx_contract::{
     DescriptorCatalog, DescriptorPack, DescriptorPackId, GraphValueId, LifecyclePhase,
-    RecipeDocument, SignalId, Value,
+    RecipeDocument, SignalId, SourceInputId, SourceInstanceId, Value, ValueSource,
 };
 use tui_vfx_player::{
     PlayerLoopbackStrictness, PlayerRenderBackend, PlayerSampleRequest, PlayerSession,
@@ -83,6 +83,28 @@ fn source_card_fixture_renders_surface_chrome_and_roles() {
             .iter()
             .any(|cell| cell.background == "rgba(50,20,50,255)")
     );
+}
+
+#[test]
+fn source_card_plain_border_uses_single_line_box_drawing_glyphs() {
+    let mut recipe = source_card_chrome_recipe();
+    recipe
+        .sources
+        .get_mut(&SourceInstanceId::new("mainCard"))
+        .expect("mainCard source")
+        .inputs
+        .insert(
+            SourceInputId::new("borderStyle"),
+            serde_json::from_value::<ValueSource>(enum_source("plain"))
+                .expect("plain border value source"),
+        );
+
+    let report = player().render_recipe(&recipe, &PlayerSampleRequest::default());
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert_eq!(report.rows[0].trim_end(), "┌────────┐");
+    assert_eq!(report.rows[1].trim_end(), "│CARD    │");
+    assert_eq!(report.rows[2].trim_end(), "└────────┘");
 }
 
 #[test]

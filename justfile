@@ -214,11 +214,19 @@ example-pipeline-effects:
 
 # Run the K1 ratatui inspection UI on a canonical v3.1 recipe
 player-ui recipe="/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json":
-    cargo run -p tui-vfx-player-ui -- "{{recipe}}"
+    cargo run -p tui-vfx-player-ui -- --descriptor-pack descriptors/v3.1/packs/primitive.json --recipes-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes "{{recipe}}"
 
 # Render one K1 inspection snapshot and exit for quick terminal smoke checks
 player-ui-once recipe="/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json":
-    cargo run -p tui-vfx-player-ui -- --once --no-clear "{{recipe}}"
+    cargo run -p tui-vfx-player-ui -- --descriptor-pack descriptors/v3.1/packs/primitive.json --recipes-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes --once --no-clear "{{recipe}}"
+
+# Run the K1 ratatui inspection UI with descriptor-derived studio controls visible
+player-ui-studio recipe="/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json":
+    cargo run -p tui-vfx-player-ui -- --descriptor-pack descriptors/v3.1/packs/primitive.json --recipes-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes --studio "{{recipe}}"
+
+# Render one studio-enabled K1 inspection snapshot and exit for quick terminal smoke checks
+player-ui-studio-once recipe="/usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes/baseline.json":
+    cargo run -p tui-vfx-player-ui -- --descriptor-pack descriptors/v3.1/packs/primitive.json --recipes-root /usr/projects/tui-vfx-recipes/recipes/v3.1/debug_recipes --studio --once --no-clear "{{recipe}}"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAINTENANCE

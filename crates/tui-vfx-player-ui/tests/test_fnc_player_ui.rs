@@ -3,14 +3,19 @@
 // <WCTX>Player UI: lock playback, drawer, wrapped recipe-summary, and local theme surface behavior for migrated primitive review.</WCTX>
 // <CLOG>0.7.2: PATCH — assert phase/sample timing lives in the snapshot title.</CLOG>
 
-use std::{fs, path::PathBuf, process::Command};
+use std::{
+    fs,
+    path::PathBuf,
+    process::Command,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use ratatui::{Terminal, backend::TestBackend, style::Color};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+use ratatui::{Terminal, backend::TestBackend, layout::Rect, style::Color};
 use tui_vfx_player_ui::{
     CliOptions, PlayerUiApp, PlayerUiFocus, PlayerUiState, handle_player_ui_key,
-    handle_player_ui_key_event, parse_cli_options, render_ratatui_ui, render_ui_snapshot,
-    run_script,
+    handle_player_ui_key_event, handle_player_ui_mouse_event, parse_cli_options, render_ratatui_ui,
+    render_ui_snapshot, run_script,
 };
 
 #[test]
@@ -562,6 +567,29 @@ fn test_fnc_ratatui_canvas_and_panels_use_eichler_theme_surfaces() {
 }
 
 #[test]
+fn test_fnc_ratatui_recipe_summary_shows_active_filename() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let mut terminal = Terminal::new(TestBackend::new(120, 30)).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(
+        rows.contains("file: baseline.json"),
+        "recipe summary should identify the active filename:\n{rows}"
+    );
+}
+
+#[test]
 fn test_fnc_ratatui_stats_drawer_width_includes_hash_padding() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -660,7 +688,194 @@ fn test_fnc_ratatui_b_key_toggles_black_canvas_without_playback_change() {
 }
 
 #[test]
-fn test_fnc_ratatui_black_canvas_changes_window_canvas_color() {
+fn test_fnc_ratatui_documented_playback_keys_work_outside_preview_focus() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Browser;
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char(' '), 10)));
+    assert!(
+        app.player.paused,
+        "Space should pause even when browser has focus"
+    );
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char(']'), 10)));
+    assert_eq!(
+        format!("{:?}", app.player.phase()),
+        "Dwell",
+        "] should advance phase even when browser has focus"
+    );
+
+    app.focus = PlayerUiFocus::Studio;
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('['), 10)));
+    assert_eq!(
+        format!("{:?}", app.player.phase()),
+        "Enter",
+        "[ should rewind phase even when studio has focus"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_help_overlay_dispatches_documented_playback_commands() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.player.show_help = true;
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('b'), 10)));
+
+    assert!(!app.player.show_help);
+    assert!(
+        app.player.black_canvas_enabled(),
+        "b from the help overlay should toggle the black canvas instead of only dismissing help"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_s_key_toggles_studio_pane_at_runtime() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    assert!(!app.player.studio);
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('s'), 10)));
+
+    assert!(app.player.studio);
+    assert_eq!(app.player.message, "studio controls enabled");
+    let mut terminal = Terminal::new(TestBackend::new(150, 30)).expect("terminal");
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("studio ratatui draw");
+    assert!(
+        terminal_rows(&terminal)
+            .join("\n")
+            .contains("Studio controls")
+    );
+
+    app.focus = PlayerUiFocus::Preview;
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Tab, 10)));
+    assert_eq!(app.focus, PlayerUiFocus::Studio);
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('s'), 10)));
+
+    assert!(!app.player.studio);
+    assert_eq!(app.focus, PlayerUiFocus::Preview);
+    assert_eq!(app.player.message, "studio controls hidden");
+}
+
+#[test]
+fn test_fnc_ratatui_help_overlay_s_toggles_studio_pane() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.player.show_help = true;
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('s'), 10)));
+
+    assert!(!app.player.show_help);
+    assert!(app.player.studio);
+    assert_eq!(app.player.message, "studio controls enabled");
+}
+
+#[test]
+fn test_fnc_ratatui_help_overlay_r_reload_is_documented_and_shows_notice() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let root = isolated_recipe_browser_root();
+    let recipe = root.join("baseline.json");
+    let state =
+        PlayerUiState::load(&options_with_root(recipe.clone(), root)).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.player.show_help = true;
+    let text = fs::read_to_string(&recipe).expect("read isolated recipe");
+    fs::write(
+        &recipe,
+        text.replace("BASELINE TEST - No Effects", "RELOADED FROM HELP R"),
+    )
+    .expect("mutate isolated recipe");
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('r'), 10)));
+
+    assert!(!app.player.show_help);
+    assert!(app.player.message.contains("reloaded active recipe JSON"));
+
+    let mut terminal = Terminal::new(TestBackend::new(150, 30)).expect("terminal");
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(rows.contains("RELOADED FROM HELP R"));
+    assert!(rows.contains("notice=reloaded active recipe JSON"));
+}
+
+#[test]
+fn test_fnc_ratatui_help_lists_black_canvas_toggle() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.player.show_help = true;
+    let mut terminal = Terminal::new(TestBackend::new(110, 30)).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(
+        rows.contains("b black"),
+        "help overlay should list the black-canvas toggle"
+    );
+    assert!(
+        rows.contains("s studio"),
+        "help overlay should list the runtime studio toggle"
+    );
+    assert!(
+        rows.contains("r reload"),
+        "help overlay should document that r reloads from disk"
+    );
+    assert!(
+        rows.contains("Studio: click selects"),
+        "help overlay should document studio mouse controls"
+    );
+    assert!(
+        rows.contains("Space, r, b"),
+        "help overlay should document r as an active help-overlay command"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_black_canvas_changes_playback_virtual_canvas_only() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -678,6 +893,8 @@ fn test_fnc_ratatui_black_canvas_changes_window_canvas_color() {
         terminal.backend().buffer()[(0, 0)].bg,
         Color::Rgb(16, 22, 28)
     );
+    let default_virtual_canvas = cell_background_below_text(&terminal, " Player Snapshot ", 4, 3);
+    assert_ne!(default_virtual_canvas, Some(Color::Black));
 
     app.player
         .apply_command(tui_vfx_player_ui::PlayerUiCommand::ToggleBlackCanvas);
@@ -685,7 +902,52 @@ fn test_fnc_ratatui_black_canvas_changes_window_canvas_color() {
         .draw(|frame| render_ratatui_ui(&mut app, frame))
         .expect("black canvas ratatui draw");
 
-    assert_eq!(terminal.backend().buffer()[(0, 0)].bg, Color::Black);
+    assert_eq!(
+        terminal.backend().buffer()[(0, 0)].bg,
+        Color::Rgb(16, 22, 28),
+        "black-canvas mode must not recolor the whole player shell"
+    );
+    assert_eq!(
+        { cell_background_below_text(&terminal, " Player Snapshot ", 4, 3) },
+        Some(Color::Black),
+        "black-canvas mode should recolor the playback virtual canvas"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_b_key_shows_notice_without_recoloring_ui_panels() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let mut terminal = Terminal::new(TestBackend::new(150, 30)).expect("terminal");
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('b'), 10)));
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("black canvas ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(rows.contains("notice=black player canvas enabled"));
+    assert_eq!(
+        terminal.backend().buffer()[(0, 0)].bg,
+        Color::Rgb(16, 22, 28),
+        "black-canvas mode must leave the player shell canvas alone"
+    );
+    assert_eq!(
+        cell_background_below_text(&terminal, " Player Snapshot ", 4, 3),
+        Some(Color::Black),
+        "black-canvas mode should affect the playback virtual canvas"
+    );
+    assert_ne!(
+        cell_background_at_text(&terminal, " Browser ", 1),
+        Some(Color::Black),
+        "black-canvas mode is intentionally not applied to browser chrome"
+    );
 }
 
 #[test]
@@ -772,7 +1034,7 @@ fn test_fnc_ratatui_help_overlay_dismisses_non_quit_input_without_state_mutation
     let before_hash = app.player.last_backend_output.backend_hash;
     let before_message = app.player.message.clone();
 
-    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('r'), 10)));
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('x'), 10)));
 
     assert!(!app.player.show_help);
     assert_eq!(app.player.elapsed_ms, before_elapsed);
@@ -789,6 +1051,67 @@ fn test_fnc_ratatui_help_overlay_dismisses_non_quit_input_without_state_mutation
     assert!(!app.player.show_help);
     app.player.show_help = true;
     assert!(!runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('q'), 10)));
+}
+
+#[test]
+fn test_fnc_ratatui_help_overlay_does_not_scrub_with_arrow_keys() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.player.show_help = true;
+    app.player
+        .apply_command(tui_vfx_player_ui::PlayerUiCommand::ScrubForward);
+    let before_phase_t = app.player.phase_t();
+    let before_message = app.player.message.clone();
+    app.player.show_help = true;
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Left, 10)));
+
+    assert!(!app.player.show_help);
+    assert_eq!(app.player.phase_t(), before_phase_t);
+    assert_eq!(app.player.message, before_message);
+}
+
+#[test]
+fn test_fnc_ratatui_r_key_reloads_globally_and_shows_notice() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let root = isolated_recipe_browser_root();
+    let recipe = root.join("baseline.json");
+    let state =
+        PlayerUiState::load(&options_with_root(recipe.clone(), root)).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Browser;
+    let before_hash = app.player.last_backend_output.backend_hash;
+    let text = fs::read_to_string(&recipe).expect("read isolated recipe");
+    fs::write(
+        &recipe,
+        text.replace("BASELINE TEST - No Effects", "RELOADED FROM GLOBAL R"),
+    )
+    .expect("mutate isolated recipe");
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('r'), 10)));
+
+    assert_ne!(before_hash, app.player.last_backend_output.backend_hash);
+    assert!(app.player.message.contains("reloaded active recipe JSON"));
+
+    let mut terminal = Terminal::new(TestBackend::new(150, 30)).expect("terminal");
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(rows.contains("RELOADED FROM GLOBAL R"));
+    assert!(rows.contains("notice=reloaded active recipe JSON"));
 }
 
 #[test]
@@ -810,6 +1133,28 @@ fn test_fnc_ui_reset_command_reloads_active_recipe_from_disk() {
     assert_ne!(before_hash, state.last_backend_output.backend_hash);
     assert!(output.contains("RELOADED FROM DISK"));
     assert!(output.contains("reloaded active recipe JSON from disk"));
+}
+
+#[test]
+fn test_fnc_ui_snapshot_command_summary_calls_r_reload() {
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+
+    let output = render_ui_snapshot(&state, false);
+
+    assert!(output.contains("r reload"));
+    assert!(!output.contains("r reset"));
+}
+
+#[test]
+fn test_fnc_ui_script_toggles_studio_command() {
+    let mut state =
+        PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+
+    let output = run_script(&mut state, "s", false);
+
+    assert!(state.studio);
+    assert!(output.contains("Controls"));
+    assert!(output.contains("studio controls enabled"));
 }
 
 #[test]
@@ -861,6 +1206,334 @@ fn test_fnc_ratatui_studio_keyboard_mutation_changes_source_control() {
     );
 }
 
+#[test]
+fn test_fnc_ratatui_studio_left_right_adjust_selected_slider_by_one() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut options = options(recipe_path("baseline.json"));
+    options.studio = true;
+    let state = PlayerUiState::load(&options).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Studio;
+    app.studio_control_index = app
+        .player
+        .controls
+        .iter()
+        .position(|control| {
+            control.source_instance_id.as_deref() == Some("mainCard")
+                && control.input_name == "width"
+        })
+        .expect("source width control");
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Right, 10)));
+    assert_eq!(
+        app.player.controls[app.studio_control_index]
+            .current_value
+            .as_ref()
+            .and_then(|value| value.get("value"))
+            .and_then(|value| value.as_i64()),
+        Some(36)
+    );
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Left, 10)));
+    assert_eq!(
+        app.player.controls[app.studio_control_index]
+            .current_value
+            .as_ref()
+            .and_then(|value| value.get("value"))
+            .and_then(|value| value.as_i64()),
+        Some(35)
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_studio_controls_draw_ranged_numeric_slider() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut options = options(recipe_path(
+        "filters/filter_kitt_scanner_progress_binding.json",
+    ));
+    options.studio = true;
+    let state = PlayerUiState::load(&options).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Studio;
+    app.stats_drawer_open = false;
+    app.studio_control_index = app
+        .player
+        .controls
+        .iter()
+        .position(|control| control.range.is_some())
+        .expect("ranged studio control");
+    let control_label = app.player.controls[app.studio_control_index].label.clone();
+    let mut terminal = Terminal::new(TestBackend::new(150, 30)).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(
+        rows.contains(&control_label),
+        "selected ranged control should be visible:\n{rows}"
+    );
+    assert!(
+        rows.contains("range"),
+        "slider should show min/max context:\n{rows}"
+    );
+    assert!(
+        rows.contains("━") && rows.contains("●"),
+        "slider should draw a filled gauge with thumb:\n{rows}"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_studio_controls_draw_toggle_enum_and_color_affordances() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut tint_options = options(recipe_path("filters/filter_tint.json"));
+    tint_options.studio = true;
+    let state = PlayerUiState::load(&tint_options).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Studio;
+    app.stats_drawer_open = false;
+    let mut terminal = Terminal::new(TestBackend::new(170, 34)).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(
+        rows.contains("opts"),
+        "enum controls should render compact options:\n{rows}"
+    );
+    assert!(
+        rows.contains("▣") && rows.contains("#"),
+        "color controls should render a swatch and color label:\n{rows}"
+    );
+
+    let mut boolean_options = options(recipe_path("masks/mask_wipe_right_to_left.json"));
+    boolean_options.studio = true;
+    let boolean_state = PlayerUiState::load(&boolean_options).expect("load boolean ui state");
+    let mut boolean_app = runtime
+        .block_on(PlayerUiApp::new(boolean_state))
+        .expect("boolean player ui app");
+    boolean_app.focus = PlayerUiFocus::Studio;
+    boolean_app.stats_drawer_open = false;
+    boolean_app.studio_control_index = boolean_app
+        .player
+        .controls
+        .iter()
+        .position(|control| control.value_kind == "boolean")
+        .expect("boolean studio control");
+    let mut boolean_terminal = Terminal::new(TestBackend::new(150, 30)).expect("boolean terminal");
+
+    boolean_terminal
+        .draw(|frame| render_ratatui_ui(&mut boolean_app, frame))
+        .expect("boolean ratatui draw");
+    let boolean_rows = terminal_rows(&boolean_terminal).join("\n");
+
+    assert!(
+        boolean_rows.contains("toggle") && boolean_rows.contains("ON"),
+        "boolean controls should render a toggle state:\n{boolean_rows}"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_studio_controls_keep_selected_row_visible() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut options = options(recipe_path("filters/filter_tint.json"));
+    options.studio = true;
+    let state = PlayerUiState::load(&options).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Studio;
+    app.stats_drawer_open = false;
+    app.studio_control_index = app.player.controls.len().saturating_sub(1);
+    let selected_label = app.player.controls[app.studio_control_index].label.clone();
+    let mut terminal = Terminal::new(TestBackend::new(120, 14)).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(
+        rows.contains(&selected_label),
+        "selected studio control should be scrolled into view:\n{rows}"
+    );
+    assert!(
+        rows.contains("▶"),
+        "selected row marker should remain visible:\n{rows}"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_mouse_click_adjusts_visible_studio_slider() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut options = options(recipe_path(
+        "filters/filter_kitt_scanner_progress_binding.json",
+    ));
+    options.studio = true;
+    let state = PlayerUiState::load(&options).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Preview;
+    app.stats_drawer_open = false;
+    app.studio_control_index = 0;
+
+    assert!(handle_player_ui_mouse_event(
+        &mut app,
+        MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column: 146,
+            row: 3,
+            modifiers: KeyModifiers::NONE,
+        },
+        Rect::new(0, 0, 150, 30),
+    ));
+
+    assert_eq!(app.focus, PlayerUiFocus::Studio);
+    assert_eq!(app.studio_control_index, 1);
+    assert!(
+        app.player.message.contains("mouse-adjusted studio control"),
+        "message was: {}",
+        app.player.message
+    );
+    let adjusted_value = app.player.controls[1]
+        .current_value
+        .as_ref()
+        .and_then(|value| value.get("value"))
+        .and_then(|value| value.as_f64())
+        .expect("numeric control value");
+    assert!(
+        adjusted_value > 0.8,
+        "right-edge mouse click should move slider toward max, got {adjusted_value}"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_mouse_click_toggles_visible_studio_boolean() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut options = options(recipe_path(
+        "filters/filter_kitt_scanner_progress_binding.json",
+    ));
+    options.studio = true;
+    let state = PlayerUiState::load(&options).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Preview;
+    app.stats_drawer_open = false;
+    app.studio_control_index = 0;
+
+    assert!(handle_player_ui_mouse_event(
+        &mut app,
+        MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column: 114,
+            row: 6,
+            modifiers: KeyModifiers::NONE,
+        },
+        Rect::new(0, 0, 150, 30),
+    ));
+
+    assert_eq!(app.focus, PlayerUiFocus::Studio);
+    assert_eq!(app.studio_control_index, 4);
+    assert!(
+        app.player.message.contains("PowerlineMode")
+            || app
+                .player
+                .message
+                .contains("effect:filter.kittScanner:effectNode:powerlineMode"),
+        "message was: {}",
+        app.player.message
+    );
+}
+
+#[test]
+fn test_fnc_player_ui_source_width_control_expands_studio_preview_canvas() {
+    let mut options = options(recipe_path("baseline.json"));
+    options.studio = true;
+    let mut state = PlayerUiState::load(&options).expect("load ui state");
+
+    state
+        .set_control_value(
+            "source:source.card:mainCard:width",
+            tui_vfx_contract::Value::Integer(80),
+        )
+        .expect("set source width control");
+
+    assert!(
+        state
+            .last_backend_output
+            .rows
+            .iter()
+            .any(|row| row.len() >= 80),
+        "studio source width changes should not be clipped by the original scene canvas"
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_studio_layout_gives_expanded_preview_room() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut options = options(recipe_path("baseline.json"));
+    options.studio = true;
+    let mut state = PlayerUiState::load(&options).expect("load ui state");
+    state
+        .set_control_value(
+            "source:source.card:mainCard:width",
+            tui_vfx_contract::Value::Integer(80),
+        )
+        .expect("set source width control");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.focus = PlayerUiFocus::Studio;
+    app.stats_drawer_open = false;
+    let mut terminal = Terminal::new(TestBackend::new(150, 30)).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal).join("\n");
+
+    assert!(
+        !rows.contains(" Browser "),
+        "studio mode should trade the browser pane for wider preview/control panes:\n{rows}"
+    );
+    assert!(
+        rows.contains("╮"),
+        "expanded source card should have enough preview room to show its right border:\n{rows}"
+    );
+}
+
 fn row_index_containing(terminal: &Terminal<TestBackend>, needle: &str) -> Option<usize> {
     terminal_rows(terminal)
         .iter()
@@ -900,6 +1573,22 @@ fn cell_background_at_text(
     let row_index = rows.iter().position(|row| row.contains(needle))?;
     let byte_index = rows[row_index].find(needle)?;
     let column = rows[row_index][..byte_index].chars().count() + character_offset;
+    let buffer = terminal.backend().buffer();
+    let area = *buffer.area();
+    Some(buffer[(column as u16, area.y + row_index as u16)].bg)
+}
+
+fn cell_background_below_text(
+    terminal: &Terminal<TestBackend>,
+    needle: &str,
+    row_offset: usize,
+    character_offset: usize,
+) -> Option<Color> {
+    let rows = terminal_rows(terminal);
+    let title_row = rows.iter().position(|row| row.contains(needle))?;
+    let row_index = title_row + row_offset;
+    let byte_index = rows[title_row].find(needle)?;
+    let column = rows[title_row][..byte_index].chars().count() + character_offset;
     let buffer = terminal.backend().buffer();
     let area = *buffer.area();
     Some(buffer[(column as u16, area.y + row_index as u16)].bg)
@@ -965,9 +1654,11 @@ fn options_with_root(recipe_path: PathBuf, recipes_root: PathBuf) -> CliOptions 
 }
 
 fn isolated_recipe_browser_root() -> PathBuf {
+    static NEXT_ROOT_ID: AtomicUsize = AtomicUsize::new(0);
     let root = std::env::temp_dir().join(format!(
-        "tui-vfx-player-ui-browser-focus-{}",
-        std::process::id()
+        "tui-vfx-player-ui-browser-focus-{}-{}",
+        std::process::id(),
+        NEXT_ROOT_ID.fetch_add(1, Ordering::Relaxed)
     ));
     let _ = fs::remove_dir_all(&root);
     fs::create_dir_all(&root).expect("create isolated recipe browser root");

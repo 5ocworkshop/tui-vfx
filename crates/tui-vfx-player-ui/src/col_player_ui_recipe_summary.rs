@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/col_player_ui_recipe_summary.rs</FILE> - <DESC>Recipe summary presentation helpers for the player UI</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Player UI presentation: wrap long recipe descriptions in a bounded summary panel.</WCTX>
-// <CLOG>0.2.0: MINOR — keep normal preview metadata in a fixed-height summary allowance.
+// <CLOG>0.3.0: MINOR — show the active recipe filename in the summary panel.
+// 0.2.0: MINOR — keep normal preview metadata in a fixed-height summary allowance.
 // 0.1.0: INIT — build styled recipe-summary lines and estimate wrapped panel height.</CLOG>
 
 use ratatui::{
@@ -24,12 +25,20 @@ pub(crate) fn player_ui_recipe_summary_lines(
 ) -> Vec<Line<'static>> {
     let theme = PlayerUiTheme::eichler();
     let metadata = &state.recipe.metadata;
+    let filename = state
+        .recipe_path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or("<unknown>");
     let title = metadata.title.as_deref().unwrap_or("<untitled>");
     let description = metadata.description.as_deref().unwrap_or("<none>");
-    let mut lines = vec![
-        labeled_line("title", title, theme),
-        labeled_line("description", description, theme),
-    ];
+    let mut lines = vec![Line::from(vec![
+        Span::styled("file: ", theme.label_style()),
+        Span::styled(filename.to_string(), theme.body_style()),
+        Span::styled(" · title: ", theme.label_style()),
+        Span::styled(title.to_string(), theme.body_style()),
+    ])];
+    lines.push(labeled_line("description", description, theme));
     if let Some(expected_visual) = metadata
         .expected_visual
         .as_deref()
@@ -80,9 +89,14 @@ pub(crate) fn player_ui_recipe_summary_wrap() -> Wrap {
 
 fn recipe_summary_content_rows(state: &PlayerUiState, inner_width: usize) -> usize {
     let metadata = &state.recipe.metadata;
+    let filename = state
+        .recipe_path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or("<unknown>");
     let title = metadata.title.as_deref().unwrap_or("<untitled>");
     let description = metadata.description.as_deref().unwrap_or("<none>");
-    let mut rows = wrapped_rows("title: ", title, inner_width)
+    let mut rows = wrapped_rows(&format!("file: {filename} · title: "), title, inner_width)
         + wrapped_rows("description: ", description, inner_width)
         + 1;
     if let Some(expected_visual) = metadata
@@ -123,4 +137,4 @@ fn wrapped_rows(prefix: &str, value: &str, width: usize) -> usize {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/col_player_ui_recipe_summary.rs</FILE> - <DESC>Recipe summary presentation helpers for the player UI</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

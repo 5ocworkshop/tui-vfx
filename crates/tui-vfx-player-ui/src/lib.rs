@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/lib.rs</FILE> - <DESC>Contract-native visual player UI exports</DESC>
-// <VERS>VERSION: 0.5.0</VERS>
+// <VERS>VERSION: 0.6.0</VERS>
 // <WCTX>Player UI: expose ratatui visual shell, keyboard routing, snapshot rendering, and presentation helpers.</WCTX>
-// <CLOG>0.5.0: MINOR — add focused browser and studio-control render modules.</CLOG>
+// <CLOG>0.6.0: MINOR — expose mouse routing for interactive studio controls.
+// 0.5.0: MINOR — add focused browser and studio-control render modules.</CLOG>
 
 //! Basic ratatui inspection shell layered on contract-native player snapshots.
 //!
@@ -37,7 +38,9 @@ pub use cls_player_ui_app::{PlayerUiApp, PlayerUiFocus};
 pub use cls_player_ui_command::PlayerUiCommand;
 pub use cls_player_ui_control::PlayerUiControl;
 pub use cls_player_ui_state::PlayerUiState;
-pub use fnc_handle_player_ui_key::{handle_player_ui_key, handle_player_ui_key_event};
+pub use fnc_handle_player_ui_key::{
+    handle_player_ui_key, handle_player_ui_key_event, handle_player_ui_mouse_event,
+};
 pub use fnc_parse_cli_options::parse_cli_options;
 pub use fnc_render_ratatui_ui::render_ratatui_ui;
 pub use fnc_render_ui_snapshot::render_ui_snapshot;
@@ -45,4 +48,4 @@ pub use fnc_run::run;
 pub use fnc_run_script::run_script;
 
 // <FILE>crates/tui-vfx-player-ui/src/lib.rs</FILE> - <DESC>Contract-native visual player UI exports</DESC>
-// <VERS>END OF VERSION: 0.5.0</VERS>
+// <VERS>END OF VERSION: 0.6.0</VERS>

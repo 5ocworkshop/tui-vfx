@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_theme.rs</FILE> - <DESC>Eichler-inspired player UI theme primitives</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.3.1</VERS>
 // <WCTX>Player UI presentation: keep GT-design-inspired colors and surface hierarchy local without depending on gt-design.</WCTX>
-// <CLOG>0.3.0: MINOR — allow player canvas to toggle to black for contrast checks.
+// <CLOG>0.3.1: PATCH — keep black-canvas rendering scoped to the player snapshot renderer.
+// 0.3.0: MINOR — allow player canvas to toggle to black for contrast checks.
 // 0.2.0: MINOR — expose canvas, panel, border, text, and focus styles for the full player/studio shell.</CLOG>
 
 use ratatui::style::{Color, Modifier, Style};
@@ -40,12 +41,6 @@ impl PlayerUiTheme {
             surface_high: Color::Rgb(68, 84, 98),
             surface_highest: Color::Rgb(68, 84, 98),
         }
-    }
-
-    /// Return this palette with the whole-canvas background forced to black.
-    pub(crate) fn with_black_canvas(mut self) -> Self {
-        self.canvas = Color::Black;
-        self
     }
 
     /// Whole-canvas background style.
@@ -204,4 +199,4 @@ impl PlayerUiTheme {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_theme.rs</FILE> - <DESC>Eichler-inspired player UI theme primitives</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>

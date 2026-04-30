@@ -1,7 +1,10 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_help.rs</FILE> - <DESC>Render ratatui player UI help overlay</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.3.1</VERS>
 // <WCTX>New kernel Phase K1: keep help overlay separate so the main renderer stays small.</WCTX>
-// <CLOG>0.1.0: INIT — render centered K1 keybinding help modal.</CLOG>
+// <CLOG>0.3.1: PATCH — document studio slider arrow adjustment.
+// 0.3.0: MINOR — document studio mouse click/drag controls.
+// 0.2.0: PATCH — list global playback shortcuts, including the black-canvas toggle, so the overlay matches live key handling.
+// 0.1.0: INIT — render centered K1 keybinding help modal.</CLOG>
 
 use ratatui::{
     Frame,
@@ -15,11 +18,13 @@ pub(crate) fn render_ratatui_help(frame: &mut Frame<'_>) {
     frame.render_widget(Clear, area);
     frame.render_widget(
         Paragraph::new(vec![
-            "Global: q quit, ? help, Tab switch focus".into(),
+            "Global: q quit, ? help, Tab switch focus, s studio, b black bg".into(),
+            "Global playback: Space pause/resume, r reload, [/] phase, m motion-disabled, t trigger".into(),
             "Browser: j/k or arrows move, Enter/Right open, Left parent".into(),
             "Browser: R refresh from disk, . hidden files".into(),
-            "Preview: Space pause/resume, r reset, m motion-disabled".into(),
-            "Preview: [/] phase, Left/Right scrub sample_t, t trigger dwell signal".into(),
+            "Preview: Left/Right scrub sample_t".into(),
+            "Studio: click selects; drag/click slider adjusts; Left/Right changes slider by 1".into(),
+            "Help overlay: Esc closes; Space, r, b, [ ], m, t still execute".into(),
         ])
         .block(Block::default().title(" Help ").borders(Borders::ALL))
         .wrap(Wrap { trim: true }),
@@ -47,4 +52,4 @@ fn centered_rect(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_help.rs</FILE> - <DESC>Render ratatui player UI help overlay</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>
