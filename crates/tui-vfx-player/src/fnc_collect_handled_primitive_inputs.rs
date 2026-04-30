@@ -161,7 +161,7 @@ pub(crate) fn collect_handled_primitive_inputs(
         "mask.none" => BTreeSet::new(),
         "mask.wipe" => fields(["direction", "softEdge", "easing"]),
         "mask.wipeCorner" => fields(["direction", "softEdge"]),
-        "mask.pathReveal" => fields(["direction", "softEdge"]),
+        "mask.pathReveal" => fields(["path", "softEdge"]),
         "mask.checkers" => fields(["cellSize"]),
         "mask.cellular" => fields(["cellSize", "seed", "threshold"]),
         "mask.dissolve" => fields(["chunkSize", "seed"]),

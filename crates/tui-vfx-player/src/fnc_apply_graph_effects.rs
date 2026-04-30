@@ -348,7 +348,7 @@ fn apply_node(
             apply_sampler_sine_wave(node, request, rows);
             true
         }
-        "mask.wipe" | "mask.pathReveal" | "mask.wipeCorner" => {
+        "mask.wipe" | "mask.wipeCorner" => {
             apply_mask_wipe(node, request, rows);
             true
         }

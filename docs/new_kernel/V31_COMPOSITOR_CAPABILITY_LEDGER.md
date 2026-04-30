@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
+<!-- <VERS>VERSION: 1.0.1</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>1.0.0: mark sampler.crt and sampler.crtJitter as compositor-owned SamplerSpec lowerings and record source-stage deletion.
+<!-- <CLOG>1.0.1: PATCH — record that legacy player pathReveal no longer aliases structured paths to direction wipes.
+1.0.0: mark sampler.crt and sampler.crtJitter as compositor-owned SamplerSpec lowerings and record source-stage deletion.
 0.9.0: PATCH — mark mask.pathReveal schema/lowerer cleanup as completed using structured RevealPathType payloads.
 0.8.0: mark mask.wipe and mask.wipeCorner lowering as compositor-owned where exact WipeDirection variants exist.
 0.7.0: mark mask.blinds lowerer/player-stage cleanup as completed for the sixth compositor-first slice.
@@ -69,6 +70,11 @@ First mask priorities:
 | `mask.pathReveal` | `MaskSpec::PathReveal { path, soft_edge }` | Done after descriptor/recipe schema cleanup: v3.1 now authors structured `RevealPathType` payloads and the final backend `WipeMask` source stage was deleted. |
 | `mask.noiseDither` | `MaskSpec::NoiseDither { seed, matrix, chunk_size }` | Verify descriptor exposes matrix/chunk size and lowerer maps without player semantics. |
 | `mask.centerWipeFadeModal` V2 recipe | likely `mask.wipe` + style fade | Missing from v3.1 hierarchy; migrate after direct mask mappings are clean. |
+
+Legacy player boundary note: `mask.pathReveal` must not be aliased to the old `mask.wipe`
+player adapter. If a non-compositor render path samples a structured path-reveal recipe before
+being routed through compositor-native rendering, it should report an unsupported adapter rather
+than silently defaulting to `direction = leftToRight`.
 
 ## Filter surface
 

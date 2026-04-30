@@ -3179,7 +3179,7 @@ fn test_fnc_cli_rejects_native_vignette_mask_blocker_unsupported_shapes_json() {
         ("dissolve", "masks/mask_dissolve.json", "seed"),
         ("iris", "masks/mask_iris.json", "shape"),
         ("none", "masks/mask_none.json", "debugOutput"),
-        ("path_reveal", "masks/mask_path_reveal.json", "direction"),
+        ("path_reveal", "masks/mask_path_reveal.json", "path"),
     ] {
         for (mutation_name, recipe) in [
             (
