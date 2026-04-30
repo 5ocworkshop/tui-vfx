@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.14.0</VERS>
+// <VERS>VERSION: 0.15.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.14.0: MINOR — add residual style/content strict-native success and unsupported-shape regressions.
+// <CLOG>0.15.0: MINOR — add one-off content/filter strict-native parity and unsupported-shape regressions.
+// 0.14.0: MINOR — add residual style/content strict-native success and unsupported-shape regressions.
 // 0.13.0: MINOR — add offender-ledger regressions and update recursive fixture count.
 // 0.12.0: MINOR — add schema-readiness CLI regression coverage.</CLOG>
 
@@ -1012,6 +1013,265 @@ fn test_fnc_cli_rejects_native_exact_effect_blocker_subset_unsupported_shapes_js
                     str_arg("json"),
                 ],
                 "render-backend native unsupported exact effect blocker subset player cli",
+            );
+
+            assert!(
+                !output.status.success(),
+                "{effect_name}/{mutation_name} unexpectedly succeeded"
+            );
+            assert!(
+                stderr(&output).contains("unsupportedNativeEffect"),
+                "{effect_name}/{mutation_name} stderr: {}",
+                stderr(&output)
+            );
+        }
+    }
+}
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_native_one_off_content_filter_blockers_json() {
+    for (recipe, recipe_id, effect_id, summary_key, expected_stage_count) in [
+        (
+            "content/content_slide_shift.json",
+            "debugContentSlideShift",
+            "content.slideShift",
+            "contentStages",
+            1,
+        ),
+        (
+            "filters/filter_bracket_emphasis.json",
+            "debugFilterBracketEmphasis",
+            "filter.bracketEmphasis",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_dot_indicator.json",
+            "debugFilterDotIndicator",
+            "filter.dotIndicator",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_edge_grow_left.json",
+            "debugFilterEdgeGrowLeft",
+            "filter.edgeGrow",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_hover_bar.json",
+            "debugFilterHoverBar",
+            "filter.hoverBar",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_matrix_rain_speed_profile.json",
+            "debugFilterMatrixRainSpeedProfile",
+            "filter.matrixRain",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_sub_pixel_bar.json",
+            "debugFilterSubPixelBar",
+            "filter.subPixelBar",
+            "styleStages",
+            1,
+        ),
+        (
+            "filters/filter_underline_wipe.json",
+            "debugFilterUnderlineWipe",
+            "filter.underlineWipe",
+            "styleStages",
+            1,
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase-t"),
+                str_arg("0.35"),
+            ],
+            "render-backend native one-off content filter blockers player cli",
+        );
+
+        assert_eq!(report["backend"], "compositor", "{recipe}");
+        assert_eq!(report["recipeId"], recipe_id, "{recipe}");
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
+        assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"][summary_key], expected_stage_count,
+            "{recipe}"
+        );
+        assert!(
+            report["loweredEffectIds"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!(effect_id)),
+            "{recipe}"
+        );
+        assert!(
+            report["diagnostics"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
+            "{recipe}"
+        );
+
+        let ir_resolved_report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("ir-resolved"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase-t"),
+                str_arg("0.35"),
+            ],
+            "render-backend ir-resolved one-off content filter parity player cli",
+        );
+        assert_eq!(report["rows"], ir_resolved_report["rows"], "{recipe}");
+        assert_eq!(
+            report["styledCells"], ir_resolved_report["styledCells"],
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_one_off_content_filter_blocker_unsupported_shapes_json() {
+    for (effect_name, recipe_path_fragment, output_input_id) in [
+        (
+            "slide_shift",
+            "content/content_slide_shift.json",
+            "startCol",
+        ),
+        (
+            "bracket_emphasis",
+            "filters/filter_bracket_emphasis.json",
+            "emphasisColor",
+        ),
+        (
+            "dot_indicator",
+            "filters/filter_dot_indicator.json",
+            "activeColor",
+        ),
+        (
+            "edge_grow",
+            "filters/filter_edge_grow_left.json",
+            "direction",
+        ),
+        ("hover_bar", "filters/filter_hover_bar.json", "barColor"),
+        (
+            "matrix_rain",
+            "filters/filter_matrix_rain_speed_profile.json",
+            "speedMultiplier",
+        ),
+        (
+            "sub_pixel_bar",
+            "filters/filter_sub_pixel_bar.json",
+            "barColor",
+        ),
+        (
+            "underline_wipe",
+            "filters/filter_underline_wipe.json",
+            "underlineColor",
+        ),
+    ] {
+        for (mutation_name, recipe) in [
+            (
+                "unsupported_input",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    Some(("unsupportedNativeField", unsupported_native_input())),
+                    None,
+                    None,
+                ),
+            ),
+            (
+                "unsupported_output",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    None,
+                    Some(serde_json::json!({
+                        "debugOutput": {
+                            "source": {
+                                "kind": "input",
+                                "id": output_input_id
+                            }
+                        }
+                    })),
+                    None,
+                ),
+            ),
+            (
+                "unsupported_scope",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    None,
+                    None,
+                    Some(serde_json::json!({
+                        "kind": "rowRange",
+                        "start": 0,
+                        "end": 1
+                    })),
+                ),
+            ),
+        ] {
+            let temp_root = std::env::temp_dir().join(format!(
+                "tui-vfx-native-{effect_name}-{mutation_name}-unsupported"
+            ));
+            let _ = fs::remove_dir_all(&temp_root);
+            fs::create_dir_all(&temp_root)
+                .expect("create temp unsupported one-off content filter fixture root");
+            let recipe_path = temp_root.join(format!("{effect_name}_{mutation_name}.json"));
+            fs::write(
+                &recipe_path,
+                serde_json::to_string_pretty(&recipe)
+                    .expect("serialize unsupported one-off content filter recipe"),
+            )
+            .expect("write unsupported one-off content filter recipe");
+
+            let output = run_player_cli(
+                vec![
+                    str_arg("render-backend"),
+                    str_arg("--recipe"),
+                    recipe_path.display().to_string(),
+                    str_arg("--descriptor-pack"),
+                    descriptor_pack_path(),
+                    str_arg("--backend"),
+                    str_arg("compositor"),
+                    str_arg("--composition-mode"),
+                    str_arg("native"),
+                    str_arg("--fail-on-fallback"),
+                    str_arg("--format"),
+                    str_arg("json"),
+                ],
+                "render-backend native unsupported one-off content filter blocker player cli",
             );
 
             assert!(
@@ -3472,4 +3732,4 @@ fn unsupported_native_input() -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.14.0</VERS>
+// <VERS>END OF VERSION: 0.15.0</VERS>

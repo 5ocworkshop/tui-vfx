@@ -1,7 +1,9 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.53.0</VERS> -->
-<!-- <WCTX>K2.28 one-off content/filter native blocker packet indexing.</WCTX> -->
-<!-- <CLOG>0.53.0: MINOR — add K2.28 one-off content/filter native blocker packet.
+<!-- <VERS>VERSION: 0.55.0</VERS> -->
+<!-- <WCTX>K2.28 one-off content/filter native blocker review indexing.</WCTX> -->
+<!-- <CLOG>0.55.0: MINOR — add K2.28 one-off content/filter review/de-slop report.
+0.54.0: MINOR — add K2.28 one-off content/filter native blocker results.
+0.53.0: MINOR — add K2.28 one-off content/filter native blocker packet.
 0.52.0: MINOR — add K2.27 residual style/content results and review/de-slop report.
 0.51.0: MINOR — add K2.27 residual style/content native blocker packet.
 0.50.0: MINOR — add K2.26 review/de-slop report.
@@ -382,6 +384,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 ### K2.28 one-off content/filter native blockers
 
 - [`ARCH-RESP-TO-PHASE_K2_28.md`](ARCH-RESP-TO-PHASE_K2_28.md) — self-generated packet for current top one-off content/filter debug-recipe native fallbacks.
+- [`K2_28_ONE_OFF_CONTENT_FILTER_RESULTS.md`](K2_28_ONE_OFF_CONTENT_FILTER_RESULTS.md) — strict-native one-off content/filter blocker closure results and coverage movement.
+- [`PHASE_K2_28_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_28_REVIEW_AND_DESLOP_REPORT.md) — formal review, AI de-slop, and review-finding closure evidence.
 
 
 ## Validator and recipe artifacts
@@ -406,4 +410,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.53.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.55.0</VERS> -->

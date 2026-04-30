@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.4.0: MINOR — add source-only native content/style stages for residual style and content debug-recipe blockers.
+// <VERS>VERSION: 0.5.1</VERS>
+// <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
+// <CLOG>0.5.1: PATCH — tune one-off filter native lowering metadata without changing native output.
+// 0.5.0: MINOR — add source-only native content/filter style stages for one-off debug-recipe blockers.
+// 0.4.0: MINOR — add source-only native content/style stages for residual style and content debug-recipe blockers.
 // 0.3.0: MINOR — add strict native lowering for the current shader/filter/mask/sampler debug-recipe blocker set.
 // 0.2.2: PATCH — de-duplicate unsupported-native diagnostics and signed offset clamping helpers.
 // 0.2.1: PATCH — pass native lowering counts directly when building evidence.
@@ -112,6 +114,8 @@ pub enum NativeContentStage {
     },
     /// Shift alternating source rows.
     GlitchShift { amount: usize, seed: usize },
+    /// Shift source rows between authored start/end columns.
+    SlideShift { start_col: i64, end_col: i64 },
 }
 
 /// Native style transform stage owned by the compositor backend adapter.
@@ -130,6 +134,64 @@ pub enum NativeStyleStage {
         stability: f64,
         dim_amount: f64,
         italic_window: bool,
+    },
+    /// Apply player-compatible bracket emphasis filter styling.
+    BracketEmphasis {
+        emphasis_color: String,
+        edge_width: usize,
+        apply_to: String,
+    },
+    /// Apply player-compatible dot indicator filter styling.
+    DotIndicator {
+        active_color: String,
+        inactive_color: String,
+        period: usize,
+        apply_to: String,
+    },
+    /// Apply player-compatible edge grow filter styling.
+    EdgeGrow {
+        direction: String,
+        progress: f64,
+        edge_color: String,
+        apply_to: String,
+    },
+    /// Apply player-compatible hover bar filter styling.
+    HoverBar {
+        bar_color: String,
+        thickness: usize,
+        position: f64,
+        apply_to: String,
+    },
+    /// Apply player-compatible matrix rain filter styling.
+    MatrixRain {
+        speed_multiplier: f64,
+        speed_min: f64,
+        speed_max: f64,
+        glyph_change_hz: f64,
+        density: f64,
+        seed: f64,
+        trail_min: f64,
+        trail_max: f64,
+        affect: String,
+        chars: String,
+        mode: String,
+        preset: String,
+        head_color: String,
+        tail_color: String,
+    },
+    /// Apply player-compatible sub-pixel bar filter styling.
+    SubPixelBar {
+        bar_color: String,
+        offset: f64,
+        width: usize,
+        apply_to: String,
+    },
+    /// Apply player-compatible underline wipe filter styling.
+    UnderlineWipe {
+        underline_color: String,
+        progress: f64,
+        thickness: usize,
+        apply_to: String,
     },
 }
 
@@ -361,6 +423,7 @@ fn lower_node_into_spec(
         "content.scrambleGlitchShift" => {
             lower_content_scramble_glitch_shift(node, request, content_stages, warnings)
         }
+        "content.slideShift" => lower_content_slide_shift(node, request, content_stages, warnings),
         "filter.tint" => {
             spec.filters.push(FilterSpec::Tint {
                 color: color_input(node, request, "color").unwrap_or(ColorConfig::White),
@@ -394,6 +457,17 @@ fn lower_node_into_spec(
         "filter.crt" => lower_crt(node, spec, request, warnings),
         "filter.patternFill" => lower_pattern_fill(node, spec, request, warnings),
         "filter.kittScanner" => lower_kitt_scanner(node, spec, request, warnings),
+        "filter.bracketEmphasis" => {
+            lower_filter_bracket_emphasis(node, style_stages, request, warnings)
+        }
+        "filter.dotIndicator" => lower_filter_dot_indicator(node, style_stages, request, warnings),
+        "filter.edgeGrow" => lower_filter_edge_grow(node, style_stages, request, warnings),
+        "filter.hoverBar" => lower_filter_hover_bar(node, style_stages, request, warnings),
+        "filter.matrixRain" => lower_filter_matrix_rain(node, style_stages, request, warnings),
+        "filter.subPixelBar" => lower_filter_sub_pixel_bar(node, style_stages, request, warnings),
+        "filter.underlineWipe" => {
+            lower_filter_underline_wipe(node, style_stages, request, warnings)
+        }
         "filter.pillButton" => {
             let progress = number_signal_input(node, request, "progress", 0.75);
             spec.filters.push(FilterSpec::Tint {
@@ -817,6 +891,25 @@ fn lower_content_scramble_glitch_shift(
     content_stages.push(NativeContentStage::GlitchShift {
         amount: integer_input(node, request, "amount", 1).max(0) as usize,
         seed,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_slide_shift(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "content.slideShift", &["startCol", "endCol"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::SlideShift {
+        start_col: integer_input(node, request, "startCol", -4),
+        end_col: integer_input(node, request, "endCol", 0),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -1344,6 +1437,202 @@ fn lower_style_neon_flicker(
     NodeLoweringOutcome::Lowered { warnings }
 }
 
+fn lower_filter_bracket_emphasis(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "filter.bracketEmphasis",
+        &["emphasisColor", "edgeWidth", "applyTo"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::BracketEmphasis {
+        emphasis_color: color_label_input(node, request, "emphasisColor", (255, 210, 90)),
+        edge_width: integer_input(node, request, "edgeWidth", 1).max(0) as usize,
+        apply_to: enum_label_input(node, request, "applyTo", "foreground"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_filter_dot_indicator(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "filter.dotIndicator",
+        &["activeColor", "inactiveColor", "period", "applyTo"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::DotIndicator {
+        active_color: color_label_input(node, request, "activeColor", (100, 255, 180)),
+        inactive_color: color_label_input(node, request, "inactiveColor", (30, 60, 55)),
+        period: integer_input(node, request, "period", 3).max(1) as usize,
+        apply_to: enum_label_input(node, request, "applyTo", "foreground"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_filter_edge_grow(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "filter.edgeGrow",
+        &["direction", "progress", "edgeColor", "applyTo"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::EdgeGrow {
+        direction: enum_label_input(node, request, "direction", "left"),
+        progress: number_input(node, request, "progress", request.ir.phase_t).clamp(0.0, 1.0),
+        edge_color: color_label_input(node, request, "edgeColor", (255, 120, 80)),
+        apply_to: enum_label_input(node, request, "applyTo", "both"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_filter_hover_bar(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "filter.hoverBar",
+        &["barColor", "thickness", "position", "applyTo"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::HoverBar {
+        bar_color: color_label_input(node, request, "barColor", (80, 190, 255)),
+        thickness: integer_input(node, request, "thickness", 1).max(1) as usize,
+        position: number_input(node, request, "position", request.ir.phase_t).clamp(0.0, 1.0),
+        apply_to: enum_label_input(node, request, "applyTo", "background"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_filter_matrix_rain(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "filter.matrixRain",
+        &[
+            "speedMultiplier",
+            "speedMin",
+            "speedMax",
+            "speed",
+            "glyphChangeHz",
+            "density",
+            "seed",
+            "trailMin",
+            "trailMax",
+            "affect",
+            "chars",
+            "mode",
+            "preset",
+            "headColor",
+            "tailColor",
+        ],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let speed_min = number_input(node, request, "speedMin", 0.0).max(0.0);
+    let speed_default = number_input(node, request, "speed", 1.0);
+    let trail_min = integer_input(node, request, "trailMin", 2).max(0) as f64;
+    style_stages.push(NativeStyleStage::MatrixRain {
+        speed_multiplier: number_input(node, request, "speedMultiplier", 1.0).max(0.0),
+        speed_min,
+        speed_max: number_input(node, request, "speedMax", speed_default).max(speed_min),
+        glyph_change_hz: number_input(node, request, "glyphChangeHz", 8.0).max(0.0),
+        density: number_input(node, request, "density", 0.5).clamp(0.0, 1.0),
+        seed: integer_input(node, request, "seed", 1).max(0) as f64,
+        trail_min,
+        trail_max: (integer_input(node, request, "trailMax", 8) as f64).max(trail_min),
+        affect: enum_label_input(node, request, "affect", "foreground"),
+        chars: enum_label_input(node, request, "chars", "01"),
+        mode: enum_label_input(node, request, "mode", "rain"),
+        preset: enum_label_input(node, request, "preset", "default"),
+        head_color: color_label_input(node, request, "headColor", (40, 255, 80)),
+        tail_color: color_label_input(node, request, "tailColor", (20, 120, 40)),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_filter_sub_pixel_bar(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "filter.subPixelBar",
+        &["barColor", "offset", "width", "applyTo"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::SubPixelBar {
+        bar_color: color_label_input(node, request, "barColor", (255, 170, 40)),
+        offset: number_input(node, request, "offset", request.ir.phase_t).clamp(0.0, 1.0),
+        width: integer_input(node, request, "width", 2).max(1) as usize,
+        apply_to: enum_label_input(node, request, "applyTo", "both"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_filter_underline_wipe(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "filter.underlineWipe",
+        &["underlineColor", "progress", "thickness", "applyTo"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::UnderlineWipe {
+        underline_color: color_label_input(node, request, "underlineColor", (120, 220, 255)),
+        progress: number_input(node, request, "progress", request.ir.phase_t).clamp(0.0, 1.0),
+        thickness: integer_input(node, request, "thickness", 1).max(1) as usize,
+        apply_to: enum_label_input(node, request, "applyTo", "foreground"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
 enum StyleScopeRequirement {
     All,
     ModuloColumns,
@@ -1621,6 +1910,17 @@ fn enum_input<'a>(
     })
 }
 
+fn enum_label_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: &str,
+) -> String {
+    enum_input(node, request, key)
+        .unwrap_or(default)
+        .to_string()
+}
+
 fn color_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -1631,6 +1931,19 @@ fn color_input(
         Value::String(value) | Value::Text(value) => color_config_from_hex(value),
         _ => None,
     })
+}
+
+fn color_label_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default_rgb: (u8, u8, u8),
+) -> String {
+    color_label_from_config(color_input(node, request, key).unwrap_or(ColorConfig::Rgb {
+        r: default_rgb.0,
+        g: default_rgb.1,
+        b: default_rgb.2,
+    }))
 }
 
 fn color_config_from_hex(value: &str) -> Option<ColorConfig> {
@@ -1900,4 +2213,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.1</VERS>

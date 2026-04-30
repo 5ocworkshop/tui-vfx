@@ -1,13 +1,15 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.4.0: MINOR — apply source-only native style stages and residual content stages before compositor rendering.
+// <VERS>VERSION: 0.5.1</VERS>
+// <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
+// <CLOG>0.5.1: PATCH — simplify one-off filter styling helpers without changing rendered cells.
+// 0.5.0: MINOR — apply one-off content/filter native stages with player-compatible styled-cell parity.
+// 0.4.0: MINOR — apply source-only native style stages and residual content stages before compositor rendering.
 // 0.3.1: PATCH — consolidate repeated composition metadata population without changing emitted keys.
 // 0.3.0: MINOR — route native compositor requests through source-only IR unless auto mode explicitly falls back.
 // 0.2.0: MINOR — add request-based render path for native/auto/irResolved composition modes.
 // 0.1.0: INIT — implement PlayerRenderBackend over SemanticScene lowering and backend output collection.</CLOG>
 
-use std::collections::BTreeMap;
+use std::{borrow::Cow, collections::BTreeMap};
 
 use serde_json::json;
 use tui_vfx_compositor::pipeline::{CompositionSpec, render_pipeline_with_spec};
@@ -235,6 +237,9 @@ fn scene_ir_with_native_content_stages(
             NativeContentStage::GlitchShift { amount, seed } => {
                 apply_glitch_shift_content_stage(&mut staged, *amount, *seed)
             }
+            NativeContentStage::SlideShift { start_col, end_col } => {
+                apply_slide_shift_content_stage(&mut staged, *start_col, *end_col)
+            }
         }
     }
     for stage in &lowered_spec.style_stages {
@@ -262,6 +267,96 @@ fn scene_ir_with_native_content_stages(
                 *stability,
                 *dim_amount,
                 *italic_window,
+            ),
+            NativeStyleStage::BracketEmphasis {
+                emphasis_color,
+                edge_width,
+                apply_to,
+            } => apply_bracket_emphasis_style_stage(
+                &mut staged,
+                emphasis_color,
+                *edge_width,
+                apply_to,
+            ),
+            NativeStyleStage::DotIndicator {
+                active_color,
+                inactive_color,
+                period,
+                apply_to,
+            } => apply_dot_indicator_style_stage(
+                &mut staged,
+                active_color,
+                inactive_color,
+                *period,
+                apply_to,
+            ),
+            NativeStyleStage::EdgeGrow {
+                direction,
+                progress,
+                edge_color,
+                apply_to,
+            } => {
+                apply_edge_grow_style_stage(&mut staged, direction, *progress, edge_color, apply_to)
+            }
+            NativeStyleStage::HoverBar {
+                bar_color,
+                thickness,
+                position,
+                apply_to,
+            } => {
+                apply_hover_bar_style_stage(&mut staged, bar_color, *thickness, *position, apply_to)
+            }
+            NativeStyleStage::MatrixRain {
+                speed_multiplier,
+                speed_min,
+                speed_max,
+                glyph_change_hz,
+                density,
+                seed,
+                trail_min,
+                trail_max,
+                affect,
+                chars,
+                mode,
+                preset,
+                head_color,
+                tail_color,
+            } => apply_matrix_rain_style_stage(
+                &mut staged,
+                MatrixRainStyleInputs {
+                    speed_multiplier: *speed_multiplier,
+                    speed_min: *speed_min,
+                    speed_max: *speed_max,
+                    glyph_change_hz: *glyph_change_hz,
+                    density: *density,
+                    seed: *seed,
+                    trail_min: *trail_min,
+                    trail_max: *trail_max,
+                    affect,
+                    chars,
+                    mode,
+                    preset,
+                    head_color,
+                    tail_color,
+                },
+            ),
+            NativeStyleStage::SubPixelBar {
+                bar_color,
+                offset,
+                width,
+                apply_to,
+            } => apply_sub_pixel_bar_style_stage(&mut staged, bar_color, *offset, *width, apply_to),
+            NativeStyleStage::UnderlineWipe {
+                underline_color,
+                progress,
+                thickness,
+                apply_to,
+            } => apply_underline_wipe_style_stage(
+                &mut staged,
+                underline_color,
+                *progress,
+                *thickness,
+                apply_to,
             ),
         }
     }
@@ -660,6 +755,23 @@ fn apply_glitch_shift_content_stage(report: &mut PlayerRenderIrReport, amount: u
     sync_styled_cells_to_rows(report);
 }
 
+fn apply_slide_shift_content_stage(
+    report: &mut PlayerRenderIrReport,
+    start_col: i64,
+    end_col: i64,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let progress = report.phase_t.clamp(0.0, 1.0);
+    let offset = (start_col as f64 + (end_col - start_col) as f64 * progress).round() as isize;
+    for row in &mut rows {
+        *row = shift_row(row, offset);
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
 fn apply_modulo_columns_style_stage(
     report: &mut PlayerRenderIrReport,
     modulus: usize,
@@ -710,6 +822,276 @@ fn apply_neon_flicker_style_stage(
     }
 }
 
+fn apply_bracket_emphasis_style_stage(
+    report: &mut PlayerRenderIrReport,
+    emphasis_color: &str,
+    edge_width: usize,
+    apply_to: &str,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    for y in 0..height {
+        for x in 0..width {
+            let on_edge = x < edge_width || x + edge_width >= width;
+            let foreground = if on_edge {
+                Cow::Borrowed(emphasis_color)
+            } else {
+                Cow::Owned(lerp_rgba_label(emphasis_color, WHITE_RGBA, 0.7))
+            };
+            set_report_filter_cell(
+                report,
+                x,
+                y,
+                apply_to,
+                foreground.as_ref(),
+                TRANSPARENT_RGBA,
+                &[],
+                "FilterBracketEmphasis",
+            );
+        }
+    }
+}
+
+fn apply_dot_indicator_style_stage(
+    report: &mut PlayerRenderIrReport,
+    active_color: &str,
+    inactive_color: &str,
+    period: usize,
+    apply_to: &str,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let period = period.max(1);
+    let phase_offset =
+        ((report.loop_t.unwrap_or(report.phase_t) * period as f64).floor() as usize) % period;
+    for y in 0..height {
+        for x in 0..width {
+            let foreground = if (x + y + phase_offset).is_multiple_of(period) {
+                active_color
+            } else {
+                inactive_color
+            };
+            set_report_filter_cell(
+                report,
+                x,
+                y,
+                apply_to,
+                foreground,
+                TRANSPARENT_RGBA,
+                &[],
+                "FilterDotIndicator",
+            );
+        }
+    }
+}
+
+fn apply_edge_grow_style_stage(
+    report: &mut PlayerRenderIrReport,
+    direction: &str,
+    progress: f64,
+    edge_color: &str,
+    apply_to: &str,
+) {
+    let width = report_width(report).max(1);
+    let height = report_height(report).max(1);
+    let progress = progress.clamp(0.0, 1.0);
+    let limit = match direction {
+        "top" | "bottom" => (height as f64 * progress).ceil() as usize,
+        _ => (width as f64 * progress).ceil() as usize,
+    };
+    for y in 0..height {
+        for x in 0..width {
+            let coordinate = match direction {
+                "right" => width.saturating_sub(1).saturating_sub(x),
+                "top" => y,
+                "bottom" => height.saturating_sub(1).saturating_sub(y),
+                _ => x,
+            };
+            let mix = if coordinate < limit { 0.0 } else { 0.75 };
+            let foreground = lerp_rgba_label(edge_color, WHITE_RGBA, mix);
+            let background = lerp_rgba_label(edge_color, BLACK_RGBA, 0.7 + mix * 0.2);
+            set_report_filter_cell(
+                report,
+                x,
+                y,
+                apply_to,
+                foreground.as_str(),
+                background.as_str(),
+                &[],
+                "FilterEdgeGrow",
+            );
+        }
+    }
+}
+
+fn apply_hover_bar_style_stage(
+    report: &mut PlayerRenderIrReport,
+    bar_color: &str,
+    thickness: usize,
+    position: f64,
+    apply_to: &str,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let thickness = thickness.max(1);
+    let position = position.clamp(0.0, 1.0);
+    let center_y = ((height.saturating_sub(1)) as f64 * position).round() as usize;
+    for y in 0..height {
+        for x in 0..width {
+            let distance = y.abs_diff(center_y);
+            let mix = if distance < thickness { 0.0 } else { 0.8 };
+            let foreground = lerp_rgba_label(bar_color, WHITE_RGBA, 0.4 + mix * 0.3);
+            let background = lerp_rgba_label(bar_color, BLACK_RGBA, mix);
+            set_report_filter_cell(
+                report,
+                x,
+                y,
+                apply_to,
+                foreground.as_str(),
+                background.as_str(),
+                &[],
+                "FilterHoverBar",
+            );
+        }
+    }
+}
+
+struct MatrixRainStyleInputs<'a> {
+    speed_multiplier: f64,
+    speed_min: f64,
+    speed_max: f64,
+    glyph_change_hz: f64,
+    density: f64,
+    seed: f64,
+    trail_min: f64,
+    trail_max: f64,
+    affect: &'a str,
+    chars: &'a str,
+    mode: &'a str,
+    preset: &'a str,
+    head_color: &'a str,
+    tail_color: &'a str,
+}
+
+fn apply_matrix_rain_style_stage(
+    report: &mut PlayerRenderIrReport,
+    inputs: MatrixRainStyleInputs<'_>,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let speed = ((inputs.speed_min + inputs.speed_max.max(inputs.speed_min)) * 0.5)
+        * inputs.speed_multiplier.max(0.0);
+    let trail = ((inputs.trail_min + inputs.trail_max.max(inputs.trail_min)) * 0.5).max(1.0);
+    let text_factor = (inputs.chars.chars().count() as f64
+        + inputs.mode.len() as f64
+        + inputs.preset.len() as f64
+        + inputs.seed)
+        % 7.0;
+    let density = inputs.density.clamp(0.0, 1.0);
+    let level = (100.0
+        + ((report.phase_t * speed
+            + inputs.glyph_change_hz.max(0.0) * 0.01
+            + density
+            + text_factor * 0.01)
+            / trail)
+            .fract()
+            * 155.0) as u8;
+    let color = lerp_rgba_label(
+        lerp_rgba_label(
+            inputs.head_color,
+            inputs.tail_color,
+            (1.0 - density as f32).clamp(0.0, 1.0),
+        )
+        .as_str(),
+        rgba_label(40, level, 80, 255).as_str(),
+        0.5,
+    );
+    let background = if inputs.affect == "background" || inputs.affect == "both" {
+        rgba_label(0, level / 3, 0, 255)
+    } else {
+        TRANSPARENT_RGBA.to_string()
+    };
+    for y in 0..height {
+        for x in 0..width {
+            set_report_filter_cell(
+                report,
+                x,
+                y,
+                "foreground",
+                color.as_str(),
+                background.as_str(),
+                &[],
+                "FilterMatrixRain",
+            );
+        }
+    }
+}
+
+fn apply_sub_pixel_bar_style_stage(
+    report: &mut PlayerRenderIrReport,
+    bar_color: &str,
+    offset: f64,
+    bar_width: usize,
+    apply_to: &str,
+) {
+    let width = report_width(report).max(1);
+    let height = report_height(report);
+    let start = ((width.saturating_sub(1)) as f64 * offset.clamp(0.0, 1.0)).round() as usize;
+    let bar_width = bar_width.max(1);
+    for y in 0..height {
+        for x in 0..width {
+            let distance = x.abs_diff(start);
+            let mix = (distance as f32 / bar_width as f32).clamp(0.0, 1.0);
+            let foreground = lerp_rgba_label(bar_color, WHITE_RGBA, mix * 0.7);
+            let background = lerp_rgba_label(bar_color, BLACK_RGBA, 0.5 + mix * 0.45);
+            set_report_filter_cell(
+                report,
+                x,
+                y,
+                apply_to,
+                foreground.as_str(),
+                background.as_str(),
+                &[],
+                "FilterSubPixelBar",
+            );
+        }
+    }
+}
+
+fn apply_underline_wipe_style_stage(
+    report: &mut PlayerRenderIrReport,
+    underline_color: &str,
+    progress: f64,
+    thickness: usize,
+    apply_to: &str,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let cutoff = (width as f64 * progress.clamp(0.0, 1.0)).ceil() as usize;
+    let thickness = thickness.max(1);
+    for y in 0..height {
+        for x in 0..width {
+            let underlined = x < cutoff && y + thickness >= height;
+            let foreground = if underlined {
+                Cow::Borrowed(underline_color)
+            } else {
+                Cow::Owned(lerp_rgba_label(underline_color, WHITE_RGBA, 0.75))
+            };
+            let modifiers: &[&str] = if underlined { &["underline"] } else { &[] };
+            set_report_filter_cell(
+                report,
+                x,
+                y,
+                apply_to,
+                foreground.as_ref(),
+                TRANSPARENT_RGBA,
+                modifiers,
+                "FilterUnderlineWipe",
+            );
+        }
+    }
+}
+
 fn set_report_cell_style(
     report: &mut PlayerRenderIrReport,
     x: usize,
@@ -747,11 +1129,79 @@ fn set_report_cell_style(
         x,
         y,
         glyph,
-        foreground: foreground.unwrap_or("defaultForeground").to_string(),
-        background: background.unwrap_or("transparent").to_string(),
+        foreground: foreground.unwrap_or(DEFAULT_FOREGROUND).to_string(),
+        background: background.unwrap_or(TRANSPARENT_RGBA).to_string(),
         modifiers: modifier.into_iter().map(str::to_string).collect(),
         role: None,
     });
+}
+
+fn set_report_filter_cell(
+    report: &mut PlayerRenderIrReport,
+    x: usize,
+    y: usize,
+    apply_to: &str,
+    foreground: &str,
+    background: &str,
+    modifiers: &[&str],
+    role: &str,
+) {
+    let foreground = if matches!(apply_to, "foreground" | "both") {
+        foreground
+    } else {
+        DEFAULT_FOREGROUND
+    };
+    let background = if matches!(apply_to, "background" | "both") {
+        background
+    } else {
+        TRANSPARENT_RGBA
+    };
+    set_report_cell_exact(report, x, y, foreground, background, modifiers, Some(role));
+}
+
+fn set_report_cell_exact(
+    report: &mut PlayerRenderIrReport,
+    x: usize,
+    y: usize,
+    foreground: &str,
+    background: &str,
+    modifiers: &[&str],
+    role: Option<&str>,
+) {
+    if let Some(cell) = report
+        .styled_cells
+        .iter_mut()
+        .find(|cell| cell.x == x && cell.y == y)
+    {
+        cell.foreground = foreground.to_string();
+        cell.background = background.to_string();
+        cell.modifiers = modifier_labels(modifiers);
+        cell.role = role.map(str::to_string);
+        return;
+    }
+
+    let glyph = report
+        .rows
+        .get(y)
+        .and_then(|row| row.chars().nth(x))
+        .unwrap_or(' ')
+        .to_string();
+    report.styled_cells.push(PlayerRenderCell {
+        x,
+        y,
+        glyph,
+        foreground: foreground.to_string(),
+        background: background.to_string(),
+        modifiers: modifier_labels(modifiers),
+        role: role.map(str::to_string),
+    });
+}
+
+fn modifier_labels(modifiers: &[&str]) -> Vec<String> {
+    modifiers
+        .iter()
+        .map(|modifier| (*modifier).to_string())
+        .collect()
 }
 
 fn dense_rows(report: &PlayerRenderIrReport, width: usize, height: usize) -> Vec<String> {
@@ -884,6 +1334,24 @@ fn rotate_row(row: &str, offset: usize) -> String {
         .collect::<String>()
 }
 
+fn shift_row(row: &str, offset: isize) -> String {
+    let chars = row.chars().collect::<Vec<_>>();
+    if chars.is_empty() {
+        return String::new();
+    }
+    let width = chars.len() as isize;
+    (0..width)
+        .map(|x| {
+            let source = x - offset;
+            if (0..width).contains(&source) {
+                chars[source as usize]
+            } else {
+                ' '
+            }
+        })
+        .collect()
+}
+
 fn cell_threshold(x: usize, y: usize) -> f64 {
     ((x * 37 + y * 17) % 100) as f64 / 99.0
 }
@@ -894,6 +1362,36 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
         "rightToLeft" | "right_to_left" => width.saturating_sub(x + 1) as f64 / width.max(1) as f64,
         _ => cell_threshold(x + seed, y),
     }
+}
+
+const DEFAULT_FOREGROUND: &str = "defaultForeground";
+const TRANSPARENT_RGBA: &str = "transparent";
+const WHITE_RGBA: &str = "rgba(255,255,255,255)";
+const BLACK_RGBA: &str = "rgba(0,0,0,255)";
+
+fn lerp_rgba_label(from: &str, to: &str, t: f32) -> String {
+    let Some((from_r, from_g, from_b, from_a)) = parse_rgba_label(from) else {
+        return from.to_string();
+    };
+    let Some((to_r, to_g, to_b, to_a)) = parse_rgba_label(to) else {
+        return from.to_string();
+    };
+    let t = t.clamp(0.0, 1.0);
+    let inv_t = 1.0 - t;
+    rgba_label(
+        lerp_channel(from_r, to_r, inv_t, t),
+        lerp_channel(from_g, to_g, inv_t, t),
+        lerp_channel(from_b, to_b, inv_t, t),
+        lerp_channel(from_a, to_a, inv_t, t),
+    )
+}
+
+fn lerp_channel(start: u8, end: u8, inv_t: f32, t: f32) -> u8 {
+    (start as f32 * inv_t + end as f32 * t + 0.5) as u8
+}
+
+fn rgba_label(r: u8, g: u8, b: u8, a: u8) -> String {
+    format!("rgba({r},{g},{b},{a})")
 }
 
 fn dimmed_rgba_label(label: &str, strength: f64) -> String {
@@ -1110,4 +1608,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.1</VERS>
