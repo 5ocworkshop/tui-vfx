@@ -82,7 +82,10 @@ mod tests {
         // delta_y = 0 (Distortion only displaces along x).
         let sampler = Distortion;
         let out = sampler.sample(&VfxCellContext::new(5, 10, 16, 16, 0, 0, 1.0));
-        assert!(out.source.is_some(), "expected a source coord at this input");
+        assert!(
+            out.source.is_some(),
+            "expected a source coord at this input"
+        );
         assert_ne!(out.delta_x, 0, "Distortion at y=10, t=1.0 must displace x");
         assert_eq!(out.delta_y, 0, "Distortion never displaces y");
         // Delta sign and magnitude must match the source-coord shift.

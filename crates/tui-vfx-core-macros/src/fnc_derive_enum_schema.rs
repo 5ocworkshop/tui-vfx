@@ -4,7 +4,7 @@
 // <CLOG>0.3.0: MAJOR — replace stub body with live lib.rs version. Signature changed from `derive_enum_schema(ident, e)` to `derive_enum_schema(ident, e, attrs)`. Adds top-level + per-variant description/json_value emission, per-field json_key, /// doc comment integration. 0.2.0: stub.</CLOG>
 
 use quote::quote;
-use syn::{spanned::Spanned, Attribute, DataEnum, Fields};
+use syn::{Attribute, DataEnum, Fields, spanned::Spanned};
 
 use crate::fnc_apply_rename_all::apply_rename_all;
 use crate::fnc_extract_doc_comments::extract_doc_comments;

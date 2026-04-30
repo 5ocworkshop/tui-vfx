@@ -31,6 +31,9 @@ pub(crate) fn apply_shader_primitive(
         "shader.focusField" => apply_focus_field(node, request, styled_grid),
         "shader.glistenBand" => apply_glisten_band(node, request, styled_grid),
         "shader.wayfindingNode" => apply_wayfinding_node(node, request, styled_grid),
+        "shader.barberPole" => apply_barber_pole(node, request, styled_grid),
+        "shader.diffusion" => apply_diffusion(node, request, styled_grid),
+        "shader.radar" => apply_radar(node, request, styled_grid),
         _ => return false,
     }
     true
@@ -351,6 +354,99 @@ fn apply_border_sweep(
             vec!["bold".to_string()],
             Some("Border".to_string()),
         );
+    }
+}
+
+fn apply_barber_pole(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let stripe_color = resolve_effect_color(
+        node,
+        request,
+        "stripeColor",
+        ResolvedColor::rgb(255, 80, 80),
+    );
+    let background_color = resolve_effect_color(
+        node,
+        request,
+        "backgroundColor",
+        ResolvedColor::rgb(40, 10, 20),
+    );
+    let stripe_width = resolve_effect_integer(node, request, "stripeWidth", 3).max(1) as usize;
+    let gap_width =
+        resolve_effect_integer(node, request, "gapWidth", stripe_width as i64).max(1) as usize;
+    let angle = resolve_effect_number(node, request, "angleDeg", 45.0).to_radians();
+    let speed = resolve_effect_number(node, request, "speed", 0.0);
+    let apply_to = resolve_effect_enum(node, request, "applyTo", "background");
+    let period = stripe_width + gap_width;
+    let phase_offset = (request.loop_t.unwrap_or(request.phase_t) * speed * period as f64).round();
+
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let projection = x as f64 * angle.cos() + y as f64 * angle.sin() + phase_offset;
+        let position = projection.rem_euclid(period as f64) as usize;
+        let color = if position < stripe_width {
+            stripe_color
+        } else {
+            background_color
+        };
+        apply_shader_style(styled_grid, x, y, &apply_to, &color.rgba_label());
+    }
+}
+
+fn apply_diffusion(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    styled_grid: &mut PlayerStyledGrid,
+) {
+    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(80, 180, 255));
+    let center_x = resolve_effect_number(
+        node,
+        request,
+        "centerX",
+        styled_grid.width().saturating_sub(1) as f64 / 2.0,
+    );
+    let center_y = resolve_effect_number(
+        node,
+        request,
+        "centerY",
+        styled_grid.height().saturating_sub(1) as f64 / 2.0,
+    );
+    let radius = resolve_effect_number(node, request, "radius", 8.0).max(0.5);
+    let intensity = resolve_effect_number(node, request, "intensity", 1.0).clamp(0.0, 1.0) as f32;
+    let apply_to = resolve_effect_enum(node, request, "applyTo", "background");
+
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let distance = ((x as f64 - center_x).powi(2) + (y as f64 - center_y).powi(2)).sqrt();
+        let falloff = (1.0 - distance / radius).clamp(0.0, 1.0) as f32;
+        if falloff > 0.0 {
+            let diffused_color =
+                ResolvedColor::rgb(0, 0, 0).lerp(color, (falloff * intensity).clamp(0.0, 1.0));
+            apply_shader_style(styled_grid, x, y, &apply_to, &diffused_color.rgba_label());
+        }
+    }
+}
+
+fn apply_radar(node: &NodeSpec, request: &PlayerSampleRequest, styled_grid: &mut PlayerStyledGrid) {
+    let color = resolve_effect_color(node, request, "color", ResolvedColor::rgb(80, 255, 160));
+    let speed = resolve_effect_number(node, request, "speed", 1.0).max(0.0);
+    let tail_length = resolve_effect_number(node, request, "tailLength", 0.25).clamp(0.01, 1.0);
+    let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
+    let center_x = styled_grid.width().saturating_sub(1) as f64 / 2.0;
+    let center_y = styled_grid.height().saturating_sub(1) as f64 / 2.0;
+    let sweep = (request.loop_t.unwrap_or(request.phase_t) * speed).fract();
+
+    for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
+        let angle = ((y as f64 - center_y).atan2(x as f64 - center_x) + std::f64::consts::TAU)
+            % std::f64::consts::TAU;
+        let position = angle / std::f64::consts::TAU;
+        let distance_behind = (sweep - position).rem_euclid(1.0);
+        if distance_behind <= tail_length {
+            let strength = (1.0 - distance_behind / tail_length) as f32;
+            let radar_color = ResolvedColor::rgb(0, 0, 0).lerp(color, strength);
+            apply_shader_style(styled_grid, x, y, &apply_to, &radar_color.rgba_label());
+        }
     }
 }
 

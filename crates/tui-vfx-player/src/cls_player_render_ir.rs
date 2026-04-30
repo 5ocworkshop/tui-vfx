@@ -39,6 +39,8 @@ pub struct PlayerRenderIrReport {
     pub styled_cells: Vec<PlayerRenderCell>,
     /// Scene/source/layer provenance for placed scene elements.
     pub provenance: Vec<PlayerRenderProvenance>,
+    /// Runtime layer visibility and skip decisions.
+    pub layers: Vec<PlayerRenderLayer>,
     /// Graph value snapshot after graph execution.
     pub graph_values: Vec<PlayerRenderGraphValueSnapshot>,
     /// Hard player errors and unsupported adapter diagnostics.
@@ -89,6 +91,28 @@ pub struct PlayerRenderProvenance {
     pub z_index: i32,
     /// Authored cell write policy.
     pub cell_write_policy: String,
+    /// Whether this element was rendered into the final scene.
+    pub rendered: bool,
+    /// Machine-readable reason when the element was skipped.
+    pub skip_reason: Option<String>,
+}
+
+/// Runtime render result for one scene element/layer entry.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerRenderLayer {
+    /// Scene id that owns the element.
+    pub scene_id: String,
+    /// Element id inside the scene.
+    pub element_id: String,
+    /// Optional lightweight layer id.
+    pub layer_id: Option<String>,
+    /// Whether the visibility predicate allowed rendering.
+    pub visible: bool,
+    /// Whether the player skipped render and placement for this element.
+    pub skipped: bool,
+    /// Machine-readable reason when skipped.
+    pub skip_reason: Option<String>,
 }
 
 /// Graph value snapshot after player graph execution.

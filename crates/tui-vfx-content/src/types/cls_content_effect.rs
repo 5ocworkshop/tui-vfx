@@ -814,10 +814,9 @@ mod tests {
 
     #[test]
     fn binding_arm_resolves_from_runtime_params() {
-        let effect: ContentEffect = serde_json::from_str(
-            r#"{"type":"typewriter","speed_variance":{"binding":"jitter"}}"#,
-        )
-        .expect("parse");
+        let effect: ContentEffect =
+            serde_json::from_str(r#"{"type":"typewriter","speed_variance":{"binding":"jitter"}}"#)
+                .expect("parse");
         let ContentEffect::Typewriter { speed_variance, .. } = effect else {
             panic!("expected Typewriter");
         };
@@ -825,7 +824,9 @@ mod tests {
         let sig = SignalContext::default();
         let mut params = ShaderRuntimeParams::new();
         params.insert("jitter", 0.33_f32);
-        let v = speed_variance.evaluate(0.0, &sig, &params).expect("evaluate");
+        let v = speed_variance
+            .evaluate(0.0, &sig, &params)
+            .expect("evaluate");
         assert!((v - 0.33).abs() < 1e-6);
     }
 

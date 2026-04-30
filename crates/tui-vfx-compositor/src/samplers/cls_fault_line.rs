@@ -4,8 +4,8 @@
 // <CLOG>2.2.0: sample() now returns SamplerOutput; displacing branch carries delta_x; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
-use tui_vfx_types::VfxCellContext;
 use std::hash::{Hash, Hasher};
+use tui_vfx_types::VfxCellContext;
 
 /// Fault line displacement effect - splits content horizontally with offset.
 ///

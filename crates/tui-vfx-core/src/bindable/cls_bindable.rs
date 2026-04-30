@@ -191,10 +191,8 @@ where
 #[derive(Debug, Deserialize)]
 #[serde(
     untagged,
-    bound(
-        deserialize = "T: Deserialize<'de> + Clone + PartialEq + 'static, \
-                       S: Deserialize<'de> + Clone + PartialEq + 'static"
-    )
+    bound(deserialize = "T: Deserialize<'de> + Clone + PartialEq + 'static, \
+                       S: Deserialize<'de> + Clone + PartialEq + 'static")
 )]
 enum VfxBindableRepr<T, S>
 where

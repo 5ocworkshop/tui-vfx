@@ -20,14 +20,9 @@ pub(crate) fn legacy_descriptor_id(kind: &str, effect_type: &str) -> Option<Stri
     Some(effect)
 }
 
-/// Build a source descriptor candidate from legacy content effect evidence.
-pub(crate) fn source_id_for_content_effect(effect_type: &str) -> String {
-    match effect_type {
-        "marquee" => "source.marqueeText".to_string(),
-        "split_flap" => "source.splitFlapText".to_string(),
-        "typewriter" => "source.typewriterText".to_string(),
-        value => format!("source.{}", lower_camel(value)),
-    }
+/// Build a content descriptor candidate from legacy content effect evidence.
+pub(crate) fn content_descriptor_id_for_content_effect(effect_type: &str) -> String {
+    format!("content.{}", lower_camel(effect_type))
 }
 
 /// Normalize legacy snake_case fields to v3.1-style lower camel case.

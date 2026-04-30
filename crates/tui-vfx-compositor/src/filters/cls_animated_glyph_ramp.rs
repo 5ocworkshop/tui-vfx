@@ -376,7 +376,10 @@ mod tests {
         assert_eq!(cell.fg, rgb(255, 0, 0));
         // At t=1/9 (cycles=3, so 1/9 * 3 = 1/3, floor(1/3 * 3) = 1): index 1
         cell.ch = '⣿';
-        ramp.apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0 / 9.0));
+        ramp.apply(
+            &mut cell,
+            &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0 / 9.0),
+        );
         assert_eq!(cell.ch, 'B');
         assert_eq!(cell.fg, rgb(0, 255, 0));
     }
@@ -448,7 +451,10 @@ mod tests {
         let mut space = make_cell(' ');
         let mut braille_blank = make_cell('\u{2800}');
         ramp.apply(&mut space, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
-        ramp.apply(&mut braille_blank, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        ramp.apply(
+            &mut braille_blank,
+            &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0),
+        );
         assert_eq!(space.ch, ' ');
         assert_eq!(braille_blank.ch, '\u{2800}');
     }

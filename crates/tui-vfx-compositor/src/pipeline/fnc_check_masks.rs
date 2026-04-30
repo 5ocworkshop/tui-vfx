@@ -56,10 +56,8 @@ pub(crate) fn check_prepared_masks(
         MaskCombineMode::All => masks.iter().all(|mask| mask.is_visible(ctx)),
         MaskCombineMode::Any => masks.iter().any(|mask| mask.is_visible(ctx)),
         MaskCombineMode::Blend { .. } => {
-            let results: SmallVec<[bool; 2]> = masks
-                .iter()
-                .map(|mask| mask.is_visible(ctx))
-                .collect();
+            let results: SmallVec<[bool; 2]> =
+                masks.iter().map(|mask| mask.is_visible(ctx)).collect();
             combine_results(&results, combine_mode)
         }
     }

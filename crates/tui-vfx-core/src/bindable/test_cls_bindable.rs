@@ -85,7 +85,10 @@ fn static_f32_constructor_produces_literal() {
 #[test]
 fn default_is_literal_t_default() {
     assert_eq!(VfxBindableU16::default(), VfxBindable::Literal(0));
-    assert_eq!(VfxBindableString::default(), VfxBindable::Literal(String::new()));
+    assert_eq!(
+        VfxBindableString::default(),
+        VfxBindable::Literal(String::new())
+    );
     assert_eq!(VfxBindableValue::default(), VfxBindable::Literal(0.0));
 }
 

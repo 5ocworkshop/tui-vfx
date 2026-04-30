@@ -4,9 +4,9 @@
 // <CLOG>3.3.0: sample() now returns SamplerOutput; center short-circuit uses passthrough(); displacing branch carries full x/y deltas; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
-use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::RippleCenter;
 use mixed_signals::prelude::{Normalized, Remap, Signal, SignalExt, Sine};
+use tui_vfx_types::VfxCellContext;
 
 /// Circular ripple distortion emanating from a configurable center point.
 ///

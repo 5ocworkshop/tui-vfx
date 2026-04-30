@@ -234,8 +234,7 @@ mod tests {
 
     #[test]
     fn displacement_magnitude_is_euclidean() {
-        let ctx = VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0)
-            .with_sampler_resolution(3, 4);
+        let ctx = VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0).with_sampler_resolution(3, 4);
         assert!((ctx.displacement_magnitude() - 5.0).abs() < f32::EPSILON);
     }
 
@@ -250,8 +249,7 @@ mod tests {
 
     #[test]
     fn negative_resolved_coords_supported() {
-        let ctx = VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0)
-            .with_sampler_resolution(-3, -7);
+        let ctx = VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0).with_sampler_resolution(-3, -7);
         assert_eq!(ctx.resolved_x, -3);
         assert_eq!(ctx.resolved_y, -7);
     }

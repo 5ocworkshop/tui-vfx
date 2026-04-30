@@ -114,7 +114,9 @@ mod tests {
         assert!(even_result.source.is_some());
         assert!(odd_result.source.is_some());
 
-        if let (Some((_, even_src_y)), Some((_, odd_src_y))) = (even_result.source, odd_result.source) {
+        if let (Some((_, even_src_y)), Some((_, odd_src_y))) =
+            (even_result.source, odd_result.source)
+        {
             assert!(odd_src_y <= even_src_y);
         }
     }
@@ -132,7 +134,9 @@ mod tests {
         let even_result = shredder.sample(&ctx_at(0, 5, 20, 10, 0.3));
         let odd_result = shredder.sample(&ctx_at(2, 5, 20, 10, 0.3));
 
-        if let (Some((_, even_src_y)), Some((_, odd_src_y))) = (even_result.source, odd_result.source) {
+        if let (Some((_, even_src_y)), Some((_, odd_src_y))) =
+            (even_result.source, odd_result.source)
+        {
             let diff = even_src_y.abs_diff(odd_src_y);
             assert!(diff > 0);
         }

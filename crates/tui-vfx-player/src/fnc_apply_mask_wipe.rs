@@ -15,14 +15,16 @@ pub(crate) fn apply_mask_wipe(node: &NodeSpec, request: &PlayerSampleRequest, ro
     let reveal = request.phase_t.clamp(0.0, 1.0);
     let direction = resolve_effect_enum(node, request, "direction", "leftToRight");
     let soft_edge = resolve_effect_bool(node, request, "softEdge", false);
-    for row in rows {
+    let height = rows.len().max(1);
+    let vertical_cutoff = wipe_cutoff(height, reveal, soft_edge);
+    for (y, row) in rows.iter_mut().enumerate() {
         let width = row.chars().count();
         let cutoff = wipe_cutoff(width, reveal, soft_edge);
         *row = row
             .chars()
             .enumerate()
             .map(|(index, ch)| {
-                if wipe_keeps_cell(index, width, cutoff, &direction) {
+                if wipe_keeps_cell(index, y, width, height, cutoff, vertical_cutoff, &direction) {
                     ch
                 } else {
                     ' '
@@ -41,11 +43,73 @@ fn wipe_cutoff(width: usize, reveal: f64, soft_edge: bool) -> usize {
     }
 }
 
-fn wipe_keeps_cell(index: usize, width: usize, cutoff: usize, direction: &str) -> bool {
+fn wipe_keeps_cell(
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
+    horizontal_cutoff: usize,
+    vertical_cutoff: usize,
+    direction: &str,
+) -> bool {
     match direction {
-        "rightToLeft" => index >= width.saturating_sub(cutoff),
-        "topToBottom" | "bottomToTop" => index < cutoff,
-        _ => index < cutoff,
+        "rightToLeft" => x >= width.saturating_sub(horizontal_cutoff),
+        "topToBottom" => y < vertical_cutoff,
+        "bottomToTop" => y >= height.saturating_sub(vertical_cutoff),
+        "outFromTopLeft" => {
+            x.saturating_add(y) <= horizontal_cutoff.saturating_add(vertical_cutoff)
+        }
+        "outFromTopRight" => {
+            width.saturating_sub(1).saturating_sub(x).saturating_add(y)
+                <= horizontal_cutoff.saturating_add(vertical_cutoff)
+        }
+        "outFromBottomLeft" => {
+            x.saturating_add(height.saturating_sub(1).saturating_sub(y))
+                <= horizontal_cutoff.saturating_add(vertical_cutoff)
+        }
+        "outFromBottomRight" => {
+            width
+                .saturating_sub(1)
+                .saturating_sub(x)
+                .saturating_add(height.saturating_sub(1).saturating_sub(y))
+                <= horizontal_cutoff.saturating_add(vertical_cutoff)
+        }
+        "inToTopLeft" => {
+            x.saturating_add(y)
+                >= width.saturating_add(height).saturating_sub(
+                    horizontal_cutoff
+                        .saturating_add(vertical_cutoff)
+                        .saturating_add(2),
+                )
+        }
+        "inToTopRight" => {
+            width.saturating_sub(1).saturating_sub(x).saturating_add(y)
+                >= width.saturating_add(height).saturating_sub(
+                    horizontal_cutoff
+                        .saturating_add(vertical_cutoff)
+                        .saturating_add(2),
+                )
+        }
+        "inToBottomLeft" => {
+            x.saturating_add(height.saturating_sub(1).saturating_sub(y))
+                >= width.saturating_add(height).saturating_sub(
+                    horizontal_cutoff
+                        .saturating_add(vertical_cutoff)
+                        .saturating_add(2),
+                )
+        }
+        "inToBottomRight" => {
+            width
+                .saturating_sub(1)
+                .saturating_sub(x)
+                .saturating_add(height.saturating_sub(1).saturating_sub(y))
+                >= width.saturating_add(height).saturating_sub(
+                    horizontal_cutoff
+                        .saturating_add(vertical_cutoff)
+                        .saturating_add(2),
+                )
+        }
+        _ => x < horizontal_cutoff,
     }
 }
 

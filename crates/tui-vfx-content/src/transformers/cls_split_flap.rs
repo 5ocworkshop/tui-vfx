@@ -821,7 +821,10 @@ mod tests {
 
     #[test]
     fn bare_constructor_preserves_defaults() {
-        let x = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.2));
+        let x = SplitFlap::new(
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.2),
+        );
         assert_eq!(x.jitter, 0.0);
         assert_eq!(x.charset, SplitFlapCharset::Alpha);
         assert!(!x.settle_overshoot);
@@ -1066,7 +1069,10 @@ mod tests {
     fn solari_preset_cycles_near_one_for_1500ms() {
         let p = SplitFlap::solari_preset(1500.0);
         let VfxBindable::Literal(cycles) = p.cycles else {
-            panic!("solari_preset must produce a Literal cycles, got {:?}", p.cycles);
+            panic!(
+                "solari_preset must produce a Literal cycles, got {:?}",
+                p.cycles
+            );
         };
         assert!((cycles - 1.02).abs() < 0.2, "got cycles={cycles}");
     }
@@ -1508,9 +1514,15 @@ mod tests {
     fn dispersion_legacy_matches_cascade_behavior() {
         // Legacy dispersion + cascade > 0 must produce the same output
         // as pre-3.2.0 code with the same cascade value.
-        let legacy = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.05));
-        let explicit = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.05))
-            .with_dispersion(SplitFlapDispersion::Legacy);
+        let legacy = SplitFlap::new(
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.05),
+        );
+        let explicit = SplitFlap::new(
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.05),
+        )
+        .with_dispersion(SplitFlapDispersion::Legacy);
         for t in [0.1, 0.3, 0.5, 0.7, 1.0] {
             assert_eq!(
                 legacy.transform("HELLO", t, &tctx()),
@@ -1524,8 +1536,11 @@ mod tests {
     fn dispersion_simultaneous_lands_all_columns_together() {
         // Simultaneous => all columns have delay=0 => all at same
         // char_progress => all settle simultaneously.
-        let sf = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.5))
-            .with_dispersion(SplitFlapDispersion::Simultaneous);
+        let sf = SplitFlap::new(
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.5),
+        )
+        .with_dispersion(SplitFlapDispersion::Simultaneous);
         assert_eq!(sf.transform("HELLO", 1.0, &tctx()), "HELLO");
         // At t close to 1.0 but not quite, all chars should be "in progress"
         // (not yet settled) at the same rate — their glyphs should be
@@ -1542,8 +1557,11 @@ mod tests {
     fn dispersion_authentic_ignores_authentic_timing_field() {
         // dispersion: Authentic must enable Solari timing regardless of
         // the authentic_timing field's value.
-        let sf = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.0))
-            .with_dispersion(SplitFlapDispersion::Authentic);
+        let sf = SplitFlap::new(
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.0),
+        )
+        .with_dispersion(SplitFlapDispersion::Authentic);
         // At progress=0.1, a short-distance char should have settled but
         // a long-distance char should still be rotating.
         let r = sf.transform("AZ", 0.1, &tctx());
@@ -1559,8 +1577,11 @@ mod tests {
     fn dispersion_random_is_deterministic() {
         // Random dispersion uses FNV hash, so same target must produce
         // same output across runs.
-        let sf = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.02))
-            .with_dispersion(SplitFlapDispersion::Random);
+        let sf = SplitFlap::new(
+            VfxBindableValue::Literal(1.0),
+            VfxBindableValue::Literal(0.02),
+        )
+        .with_dispersion(SplitFlapDispersion::Random);
         assert_eq!(
             sf.transform("BOARDING", 0.5, &tctx()),
             sf.transform("BOARDING", 0.5, &tctx())
@@ -1646,8 +1667,11 @@ mod tests {
             SplitFlapDispersion::EdgeIn,
             SplitFlapDispersion::Shuffled,
         ] {
-            let sf = SplitFlap::new(VfxBindableValue::Literal(1.0), VfxBindableValue::Literal(0.05))
-                .with_dispersion(disp);
+            let sf = SplitFlap::new(
+                VfxBindableValue::Literal(1.0),
+                VfxBindableValue::Literal(0.05),
+            )
+            .with_dispersion(disp);
             assert_eq!(
                 sf.transform("FLIGHT 721", 1.0, &tctx()),
                 "FLIGHT 721",

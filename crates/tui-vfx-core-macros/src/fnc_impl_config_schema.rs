@@ -5,7 +5,7 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{spanned::Spanned, Data, DeriveInput};
+use syn::{Data, DeriveInput, spanned::Spanned};
 
 use crate::fnc_derive_enum_schema::derive_enum_schema;
 use crate::fnc_derive_struct_schema::derive_struct_schema;

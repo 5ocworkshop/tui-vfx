@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract-cli/tests/test_fnc_validate_recipe_descriptor_packs.rs</FILE> - <DESC>Validate descriptor-pack recipe CLI behavior</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>K2.12 source fixture: keep descriptor-pack validation counts aligned with v3.1 corpus.</WCTX>
-// <CLOG>0.3.0: MINOR — update canonical fixture count after source.text fixture addition.
+// <CLOG>0.4.0: MINOR — update canonical fixture count after descriptor/source burn-down.
+// 0.3.0: MINOR — update canonical fixture count after source.text fixture addition.
 // 0.2.0: MINOR — update canonical fixture count after simple mask additions.
 // 0.1.0: INIT — cover pack file/dir loading, missing pack, unknown effect, and duplicate descriptor diagnostics.</CLOG>
 
@@ -13,7 +14,7 @@ use support::{
     recipe_root, remove_temp, run_failure_args, run_success, write_json,
 };
 
-const CANONICAL_RECIPE_COUNT: i64 = 88;
+const CANONICAL_RECIPE_COUNT: i64 = 142;
 
 #[test]
 fn validates_canonical_recipe_directory_with_descriptor_pack() {

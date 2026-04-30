@@ -4,8 +4,8 @@
 // <CLOG>1.2.0: sample() now returns SamplerOutput; displacing branch carries delta_y; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
-use tui_vfx_types::VfxCellContext;
 use std::f32::consts::TAU;
+use tui_vfx_types::VfxCellContext;
 
 /// Bouncing vertical displacement sampler.
 ///
@@ -103,9 +103,18 @@ mod tests {
     fn test_bounce_zero_amplitude_identity() {
         let sampler = Bounce::new(0.0, 4.0, 0.5);
         // With zero amplitude, no displacement should occur
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)).source, Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)).source, Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)).source, Some((5, 7)));
+        assert_eq!(
+            sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)).source,
+            Some((5, 7))
+        );
+        assert_eq!(
+            sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)).source,
+            Some((5, 7))
+        );
+        assert_eq!(
+            sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)).source,
+            Some((5, 7))
+        );
     }
 
     #[test]

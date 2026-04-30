@@ -4,7 +4,7 @@
 // <CLOG>0.3.0: MAJOR — replace stub body with live lib.rs version. Signature changed from `derive_struct_schema(ident, s)` to `derive_struct_schema(ident, s, attrs)`. Adds top-level description/json_name emission, per-field json_key emission, /// doc comment integration. 0.2.0: stub.</CLOG>
 
 use quote::quote;
-use syn::{spanned::Spanned, Attribute, DataStruct, Fields};
+use syn::{Attribute, DataStruct, Fields, spanned::Spanned};
 
 use crate::fnc_apply_rename_all::apply_rename_all;
 use crate::fnc_extract_doc_comments::extract_doc_comments;

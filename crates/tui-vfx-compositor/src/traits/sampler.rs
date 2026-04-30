@@ -46,7 +46,11 @@ impl SamplerOutput {
     /// destination cell should not read any source.
     #[inline]
     pub fn no_displacement() -> Self {
-        Self { source: None, delta_x: 0, delta_y: 0 }
+        Self {
+            source: None,
+            delta_x: 0,
+            delta_y: 0,
+        }
     }
 
     /// Pass-through output — read from `(local_x, local_y)` with zero

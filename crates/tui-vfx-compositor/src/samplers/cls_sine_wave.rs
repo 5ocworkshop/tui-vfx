@@ -4,9 +4,9 @@
 // <CLOG>3.3.0: sample() now returns SamplerOutput; displacing branches carry axis delta; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
-use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::Axis;
 use mixed_signals::prelude::{Normalized, Remap, Signal, SignalExt, Sine};
+use tui_vfx_types::VfxCellContext;
 
 /// Sinusoidal wave distortion sampler.
 ///
@@ -110,9 +110,18 @@ mod tests {
     fn test_sine_wave_zero_amplitude_identity() {
         let sampler = SineWave::new(0.0, 1.0, 1.0, Axis::X, 0.0);
         // With zero amplitude, no displacement should occur
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)).source, Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)).source, Some((5, 7)));
-        assert_eq!(sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)).source, Some((5, 7)));
+        assert_eq!(
+            sampler.sample(&ctx_at(5, 7, 10, 10, 0.0)).source,
+            Some((5, 7))
+        );
+        assert_eq!(
+            sampler.sample(&ctx_at(5, 7, 10, 10, 0.5)).source,
+            Some((5, 7))
+        );
+        assert_eq!(
+            sampler.sample(&ctx_at(5, 7, 10, 10, 1.0)).source,
+            Some((5, 7))
+        );
     }
 
     #[test]

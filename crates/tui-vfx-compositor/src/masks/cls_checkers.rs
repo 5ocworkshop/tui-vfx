@@ -35,11 +35,7 @@ impl Mask for Checkers {
         let bx = ctx.local_x / self.cell_size;
         let by = ctx.local_y / self.cell_size;
         let is_even = (bx + by).is_multiple_of(2);
-        if is_even {
-            ctx.t > 0.25
-        } else {
-            ctx.t > 0.75
-        }
+        if is_even { ctx.t > 0.25 } else { ctx.t > 0.75 }
     }
 }
 

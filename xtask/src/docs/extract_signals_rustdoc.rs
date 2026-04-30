@@ -259,12 +259,8 @@ pub fn extract() -> Result<SignalsRustdocData> {
                     continue;
                 }
 
-                data.by_family
-                    .entry(family)
-                    .or_default()
-                    .push(doc.clone());
-                data.by_discriminant
-                    .insert(doc.discriminant.clone(), doc);
+                data.by_family.entry(family).or_default().push(doc.clone());
+                data.by_discriminant.insert(doc.discriminant.clone(), doc);
             }
         }
     }
@@ -281,8 +277,7 @@ pub fn extract() -> Result<SignalsRustdocData> {
                 .entry(SignalFamily::Spatial)
                 .or_default()
                 .push(doc.clone());
-            data.by_discriminant
-                .insert(doc.discriminant.clone(), doc);
+            data.by_discriminant.insert(doc.discriminant.clone(), doc);
         }
     }
 
@@ -386,7 +381,11 @@ fn collect_doc_lines_before(lines: &[&str], target_idx: usize) -> Vec<String> {
     while j >= 0 {
         let line = lines[j as usize].trim();
         if line.starts_with("///") {
-            let content = line.strip_prefix("///").unwrap_or("").trim_start().to_string();
+            let content = line
+                .strip_prefix("///")
+                .unwrap_or("")
+                .trim_start()
+                .to_string();
             doc.push(content);
             j -= 1;
         } else {
@@ -450,7 +449,11 @@ fn collect_fields(lines: &[&str], struct_idx: usize) -> Vec<SignalFieldDoc> {
         }
 
         if trimmed.starts_with("///") {
-            let content = trimmed.strip_prefix("///").unwrap_or("").trim_start().to_string();
+            let content = trimmed
+                .strip_prefix("///")
+                .unwrap_or("")
+                .trim_start()
+                .to_string();
             pending_doc.push(content);
             continue;
         }
@@ -460,7 +463,9 @@ fn collect_fields(lines: &[&str], struct_idx: usize) -> Vec<SignalFieldDoc> {
         let field_line = if let Some(rest) = trimmed.strip_prefix("pub ") {
             // Drop `(crate)` or similar visibility qualifiers.
             let rest = if rest.starts_with('(') {
-                rest.split_once(')').map_or(rest, |(_, after)| after).trim_start()
+                rest.split_once(')')
+                    .map_or(rest, |(_, after)| after)
+                    .trim_start()
             } else {
                 rest
             };
@@ -560,16 +565,51 @@ mod tests {
 
         // Known non-test-fixture Signal-impl struct names from the packet's audit.
         let known_primitives: &[&str] = &[
-            "Sine", "Triangle", "Square", "Sawtooth", "Ramp", "Step", "Pulse",
-            "Constant", "Keyframes", "PhaseSine", "PhaseAccumulator",
-            "Adsr", "Impact", "LinearEnvelope", "LinearDecay", "ExponentialDecay",
-            "DampedSpring", "BouncingDrop", "FrictionDecay", "SimplePendulum",
-            "CircularOrbit", "BallisticTrajectory", "PointAttractor",
-            "PerlinNoise", "WhiteNoise", "SpatialNoise",
-            "SeededRandom", "GaussianNoise", "PoissonNoise", "CorrelatedNoise",
-            "PinkNoise", "PerCharacterNoise", "StudentTNoise", "ImpulseNoise",
-            "Add", "Multiply", "Mix", "WeightedMix", "VcaCentered", "FrequencyMod",
-            "Clamp", "Quantize", "Remap", "Invert", "Abs",
+            "Sine",
+            "Triangle",
+            "Square",
+            "Sawtooth",
+            "Ramp",
+            "Step",
+            "Pulse",
+            "Constant",
+            "Keyframes",
+            "PhaseSine",
+            "PhaseAccumulator",
+            "Adsr",
+            "Impact",
+            "LinearEnvelope",
+            "LinearDecay",
+            "ExponentialDecay",
+            "DampedSpring",
+            "BouncingDrop",
+            "FrictionDecay",
+            "SimplePendulum",
+            "CircularOrbit",
+            "BallisticTrajectory",
+            "PointAttractor",
+            "PerlinNoise",
+            "WhiteNoise",
+            "SpatialNoise",
+            "SeededRandom",
+            "GaussianNoise",
+            "PoissonNoise",
+            "CorrelatedNoise",
+            "PinkNoise",
+            "PerCharacterNoise",
+            "StudentTNoise",
+            "ImpulseNoise",
+            "Add",
+            "Multiply",
+            "Mix",
+            "WeightedMix",
+            "VcaCentered",
+            "FrequencyMod",
+            "Clamp",
+            "Quantize",
+            "Remap",
+            "Invert",
+            "Abs",
         ];
 
         let catalog: HashSet<&str> = data
@@ -614,7 +654,10 @@ mod tests {
         let data = extract().expect("extraction failed");
         let sine = data.by_discriminant.get("sine").expect("sine not found");
         assert!(!sine.summary.is_empty(), "Sine should have a summary");
-        assert!(!sine.fields.is_empty(), "Sine should have documented fields");
+        assert!(
+            !sine.fields.is_empty(),
+            "Sine should have documented fields"
+        );
         let has_frequency = sine.fields.iter().any(|f| f.name == "frequency");
         assert!(has_frequency, "Sine should have a `frequency` field");
     }

@@ -168,7 +168,10 @@ mod tests {
 
         // Cell at x=8 in width=10 (0.8) should NOT be shaded (right of 0.5)
         let mut right_cell = make_cell();
-        filter.apply(&mut right_cell, &VfxCellContext::new(8, 0, 10, 1, 0, 0, 0.0));
+        filter.apply(
+            &mut right_cell,
+            &VfxCellContext::new(8, 0, 10, 1, 0, 0, 0.0),
+        );
         assert_eq!(right_cell.ch, 'A'); // Original character preserved
     }
 
@@ -216,7 +219,10 @@ mod tests {
         filter.apply(&mut far_left, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 0.0));
 
         let mut near_scanner = make_cell();
-        filter.apply(&mut near_scanner, &VfxCellContext::new(4, 0, 10, 1, 0, 0, 0.0));
+        filter.apply(
+            &mut near_scanner,
+            &VfxCellContext::new(4, 0, 10, 1, 0, 0, 0.0),
+        );
 
         // Both should be shaded
         assert_eq!(far_left.ch, SHADE_LIGHT);

@@ -826,7 +826,12 @@ mod tests {
 
     #[test]
     fn apply_to_background_writes_bg_only() {
-        let frames = vec![Frame::new(Some('X'), Some(rgb(99, 0, 0)), Some(rgb(0, 99, 0)), 5)];
+        let frames = vec![Frame::new(
+            Some('X'),
+            Some(rgb(99, 0, 0)),
+            Some(rgb(0, 99, 0)),
+            5,
+        )];
         let tl = GlyphTimeline::new(
             frames,
             TimelineTrigger::Immediate,

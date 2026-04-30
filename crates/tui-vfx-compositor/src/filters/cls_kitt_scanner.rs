@@ -354,10 +354,16 @@ mod tests {
         // At t=1.5 (1.5 beats), sin(3π/2)=-1 → position = 0.0 (left edge)
 
         let mut cell_center = make_cell();
-        filter.apply(&mut cell_center, &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0));
+        filter.apply(
+            &mut cell_center,
+            &VfxCellContext::new(5, 0, 10, 1, 0, 0, 0.0),
+        );
 
         let mut cell_right = make_cell();
-        filter.apply(&mut cell_right, &VfxCellContext::new(9, 0, 10, 1, 0, 0, 0.5));
+        filter.apply(
+            &mut cell_right,
+            &VfxCellContext::new(9, 0, 10, 1, 0, 0, 0.5),
+        );
 
         let mut cell_left = make_cell();
         filter.apply(&mut cell_left, &VfxCellContext::new(0, 0, 10, 1, 0, 0, 1.5));
@@ -672,7 +678,10 @@ mod tests {
         // Center row, far-left column: should brighten because the vertical
         // band is at the row midpoint and x is irrelevant.
         let mut center_row = make_cell();
-        filter.apply(&mut center_row, &VfxCellContext::new(0, 5, 20, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut center_row,
+            &VfxCellContext::new(0, 5, 20, 10, 0, 0, 0.0),
+        );
         assert_ne!(
             center_row.fg,
             Color::rgb(100, 100, 100),
@@ -686,7 +695,10 @@ mod tests {
 
         // Bottom row: outside the band — must not brighten.
         let mut bottom_row = make_cell();
-        filter.apply(&mut bottom_row, &VfxCellContext::new(0, 9, 20, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut bottom_row,
+            &VfxCellContext::new(0, 9, 20, 10, 0, 0, 0.0),
+        );
         assert_eq!(
             bottom_row.fg,
             Color::rgb(100, 100, 100),

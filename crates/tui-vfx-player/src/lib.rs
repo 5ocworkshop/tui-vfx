@@ -12,12 +12,14 @@
 mod cls_legacy_migration_mapping_evidence;
 mod cls_legacy_migration_mapping_evidence_collector;
 mod cls_migration_mapping_record_classification;
+pub mod cls_player_control_catalog_report;
 pub mod cls_player_error;
 pub mod cls_player_fixture_qc_report;
 pub mod cls_player_frame;
 pub mod cls_player_frame_diff_report;
 pub mod cls_player_frame_report;
 pub mod cls_player_frame_timeline_report;
+pub mod cls_player_implementation_readiness_report;
 pub mod cls_player_inventory_effect;
 pub mod cls_player_inventory_recipe;
 pub mod cls_player_inventory_report;
@@ -29,6 +31,7 @@ pub mod cls_player_primitive_adapter_gap_entry;
 pub mod cls_player_primitive_adapter_gap_report;
 pub mod cls_player_primitive_adapter_gap_summary;
 pub mod cls_player_primitive_field_coverage;
+pub mod cls_player_render_backend_output;
 pub mod cls_player_render_ir;
 pub mod cls_player_run_report;
 pub mod cls_player_sample_request;
@@ -60,6 +63,7 @@ mod fnc_apply_shader_primitive;
 mod fnc_apply_simple_mask_primitives;
 mod fnc_apply_style_primitive;
 mod fnc_apply_styled_primitive;
+pub mod fnc_build_control_catalog_report;
 mod fnc_build_fixture_qc_messages;
 mod fnc_build_fixture_qc_recipe_entries;
 pub mod fnc_build_fixture_qc_report;
@@ -67,6 +71,7 @@ mod fnc_build_fixture_qc_reports;
 mod fnc_build_fixture_qc_summary;
 pub mod fnc_build_frame_diff_report;
 pub mod fnc_build_frame_timeline_report;
+pub mod fnc_build_implementation_readiness_report;
 mod fnc_build_legacy_migration_mapping_summary;
 mod fnc_build_migration_gap_family;
 pub mod fnc_build_migration_gap_report;
@@ -114,14 +119,17 @@ pub mod fnc_load_descriptor_catalog;
 mod fnc_load_primitive_field_descriptor_coverage;
 mod fnc_player_inventory_adapter_status;
 mod fnc_player_inventory_file_error;
+pub mod fnc_player_render_backend;
 pub mod fnc_primitive_adapter_gap_paths;
 mod fnc_recommend_migration_queue;
 pub mod fnc_render_hash;
+mod fnc_render_procedural_source;
 pub mod fnc_render_recipe_file;
 pub mod fnc_render_recipe_file_ir;
 pub mod fnc_render_scene;
 pub mod fnc_render_visual_frame_paths;
 mod fnc_resolve_effect_input;
+pub mod fnc_resolve_source_asset;
 pub mod fnc_resolve_value_source;
 mod fnc_scan_primitive_field_recipe;
 mod fnc_schema_readiness_blocker_kind;
@@ -139,6 +147,9 @@ mod fnc_summarize_visual_frames;
 pub(crate) use cls_legacy_migration_mapping_evidence::LegacyMigrationMappingEvidence;
 pub(crate) use cls_legacy_migration_mapping_evidence_collector::LegacyMigrationMappingEvidenceCollector;
 pub(crate) use cls_migration_mapping_record_classification::MigrationMappingRecordClassification;
+pub use cls_player_control_catalog_report::{
+    PlayerControlCatalogControl, PlayerControlCatalogReport, PlayerControlCatalogSummary,
+};
 pub use cls_player_error::PlayerError;
 pub use cls_player_fixture_qc_report::{
     PlayerFixtureQcRecipe, PlayerFixtureQcReport, PlayerFixtureQcReports, PlayerFixtureQcSummary,
@@ -147,6 +158,11 @@ pub use cls_player_frame::PlayerFrame;
 pub use cls_player_frame_diff_report::{PlayerFrameDiffCell, PlayerFrameDiffReport};
 pub use cls_player_frame_report::PlayerFrameReport;
 pub use cls_player_frame_timeline_report::PlayerFrameTimelineReport;
+pub use cls_player_implementation_readiness_report::{
+    PlayerImplementationReadinessHoldback, PlayerImplementationReadinessQueue,
+    PlayerImplementationReadinessRecord, PlayerImplementationReadinessReport,
+    PlayerImplementationReadinessSummary,
+};
 pub use cls_player_inventory_effect::PlayerInventoryEffect;
 pub use cls_player_inventory_recipe::PlayerInventoryRecipe;
 pub use cls_player_inventory_report::PlayerInventoryReport;
@@ -167,8 +183,12 @@ pub use cls_player_primitive_field_coverage::{
     PlayerPrimitiveFieldCoverageInstance, PlayerPrimitiveFieldCoverageRecipe,
     PlayerPrimitiveFieldCoverageReport, PlayerPrimitiveFieldCoverageSummary,
 };
+pub use cls_player_render_backend_output::{
+    PlayerRenderBackendDiagnostic, PlayerRenderBackendOutput,
+};
 pub use cls_player_render_ir::{
-    PlayerRenderCell, PlayerRenderGraphValueSnapshot, PlayerRenderIrReport, PlayerRenderProvenance,
+    PlayerRenderCell, PlayerRenderGraphValueSnapshot, PlayerRenderIrReport, PlayerRenderLayer,
+    PlayerRenderProvenance,
 };
 pub use cls_player_run_report::PlayerRunReport;
 pub use cls_player_sample_request::PlayerSampleRequest;
@@ -188,9 +208,11 @@ pub use cls_player_visual_frame_report::PlayerVisualFrameReport;
 pub use cls_player_warning::PlayerWarning;
 pub(crate) use cls_primitive_field_descriptor_coverage::PrimitiveFieldDescriptorCoverage;
 pub use cls_recipe_player::RecipePlayer;
+pub use fnc_build_control_catalog_report::build_control_catalog_report;
 pub use fnc_build_fixture_qc_report::build_fixture_qc_report;
 pub use fnc_build_frame_diff_report::build_frame_diff_report;
 pub use fnc_build_frame_timeline_report::build_frame_timeline_report;
+pub use fnc_build_implementation_readiness_report::build_implementation_readiness_report;
 pub use fnc_build_migration_gap_report::build_migration_gap_report;
 pub use fnc_build_migration_mapping_batch_report::build_migration_mapping_batch_report;
 pub use fnc_build_primitive_adapter_gap_report::build_primitive_adapter_gap_report;
@@ -209,6 +231,9 @@ pub use fnc_inventory_recipe_file::inventory_recipe_file;
 pub use fnc_inventory_recipe_paths::inventory_recipe_paths;
 pub use fnc_load_descriptor_catalog::{
     DescriptorPackReport, LoadedDescriptorCatalog, load_descriptor_catalog,
+};
+pub use fnc_player_render_backend::{
+    PlayerRenderBackend, StyledCellRenderBackend, TextGridRenderBackend,
 };
 pub use fnc_primitive_adapter_gap_paths::primitive_adapter_gap_paths;
 pub use fnc_render_recipe_file::render_recipe_file;

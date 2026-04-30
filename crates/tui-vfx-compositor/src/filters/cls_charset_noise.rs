@@ -254,7 +254,10 @@ mod tests {
         let mut results = std::collections::HashSet::new();
         for t_ms in (0..10000).step_by(200) {
             let mut cell = make_cell('⣿');
-            filter.apply(&mut cell, &VfxCellContext::new(3, 3, 10, 10, 0, 0, t_ms as f64));
+            filter.apply(
+                &mut cell,
+                &VfxCellContext::new(3, 3, 10, 10, 0, 0, t_ms as f64),
+            );
             results.insert(cell.ch);
         }
         assert!(

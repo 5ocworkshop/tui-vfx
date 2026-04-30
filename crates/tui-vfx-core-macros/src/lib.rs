@@ -4,7 +4,7 @@
 // <CLOG>1.0.0: MAJOR — replace 659-line inline body with `mod` declarations for 14 OFPF-prefixed siblings (col_clean_number, col_is_option_type, col_to_snake_case, fnc_apply_rename_all, fnc_derive_enum_schema, fnc_derive_struct_schema, fnc_extract_doc_comments, fnc_field_meta_tokens, fnc_impl_config_schema, fnc_parse_config_attrs, fnc_parse_scalar_lit, fnc_parse_serde_attrs, fnc_scalar_lit_from_lit, fnc_scalar_lit_to_scalar_value) plus types. The proc-macro entry `derive_config_schema` stays in lib.rs (proc-macro-derive entries must be in the proc-macro crate's root) but delegates to fnc_impl_config_schema::impl_config_schema. 0.4.2: collapse nested if-let chains in extract_doc_comments and is_option_type to satisfy clippy::collapsible_if under -D warnings.</CLOG>
 
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{DeriveInput, parse_macro_input};
 
 mod col_clean_number;
 mod col_is_option_type;

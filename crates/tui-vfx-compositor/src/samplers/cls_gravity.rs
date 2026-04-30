@@ -4,8 +4,8 @@
 // <CLOG>1.2.0: sample() now returns SamplerOutput; displacing branches carry axis delta; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
-use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::Axis;
+use tui_vfx_types::VfxCellContext;
 
 /// Gravity displacement sampler.
 ///

@@ -9,12 +9,14 @@ use tui_vfx_contract::{CellWritePolicy, GraphValueId, RecipeDocument, Value};
 
 use crate::{
     PlayerFrameReport, PlayerRenderCell, PlayerRenderGraphValueSnapshot, PlayerRenderIrReport,
-    PlayerRenderProvenance,
+    PlayerRenderLayer, PlayerRenderProvenance, PlayerSampleRequest,
+    fnc_render_scene::scene_element_render_runtime,
 };
 
 /// Build a render IR report from an existing frame report plus graph and recipe metadata.
 pub fn build_player_render_ir(
     recipe: &RecipeDocument,
+    request: &PlayerSampleRequest,
     frame_report: PlayerFrameReport,
     graph_values: BTreeMap<GraphValueId, Value>,
 ) -> PlayerRenderIrReport {
@@ -37,6 +39,7 @@ pub fn build_player_render_ir(
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
+    let layer_results = scene_element_render_runtime(recipe, request);
     let provenance = recipe
         .scenes
         .first()
@@ -46,6 +49,9 @@ pub fn build_player_render_ir(
                 .iter()
                 .map(|element| {
                     let source = recipe.sources.get(&element.source);
+                    let runtime = layer_results
+                        .iter()
+                        .find(|runtime| runtime.element_id == element.id.as_str());
                     PlayerRenderProvenance {
                         scene_id: scene.id.as_str().to_string(),
                         element_id: element.id.as_str().to_string(),
@@ -58,11 +64,24 @@ pub fn build_player_render_ir(
                         z_index: element.z_index,
                         cell_write_policy: cell_write_policy_label(element.cell_write_policy)
                             .to_string(),
+                        rendered: runtime.is_none_or(|runtime| !runtime.skipped),
+                        skip_reason: runtime.and_then(|runtime| runtime.skip_reason.clone()),
                     }
                 })
                 .collect::<Vec<_>>()
         })
         .unwrap_or_default();
+    let layers = layer_results
+        .into_iter()
+        .map(|runtime| PlayerRenderLayer {
+            scene_id: runtime.scene_id,
+            element_id: runtime.element_id,
+            layer_id: runtime.layer_id,
+            visible: runtime.visible,
+            skipped: runtime.skipped,
+            skip_reason: runtime.skip_reason,
+        })
+        .collect::<Vec<_>>();
     let graph_values = graph_values
         .into_iter()
         .map(|(id, value)| PlayerRenderGraphValueSnapshot {
@@ -86,6 +105,7 @@ pub fn build_player_render_ir(
         rows: frame_report.rows,
         styled_cells,
         provenance,
+        layers,
         graph_values,
         errors: frame_report.errors,
         warnings: frame_report.warnings,

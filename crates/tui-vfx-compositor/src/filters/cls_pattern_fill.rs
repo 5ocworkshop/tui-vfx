@@ -208,14 +208,20 @@ mod tests {
         let mut cell_with_content = Cell::default();
         cell_with_content.ch = 'X';
 
-        filter.apply(&mut cell_with_content, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
+        filter.apply(
+            &mut cell_with_content,
+            &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0),
+        );
         assert_eq!(cell_with_content.ch, 'X');
 
         // Empty cell should be filled
         let mut empty_cell = Cell::default();
         empty_cell.ch = ' ';
 
-        filter.apply(&mut empty_cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0));
+        filter.apply(
+            &mut empty_cell,
+            &VfxCellContext::new(0, 0, 10, 10, 0, 0, 1.0),
+        );
         assert_eq!(empty_cell.ch, '.');
     }
 

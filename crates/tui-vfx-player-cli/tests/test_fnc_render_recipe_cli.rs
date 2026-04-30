@@ -11,7 +11,7 @@ use std::{
     process::{Command, Output},
 };
 
-const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 88;
+const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 142;
 
 #[test]
 fn test_fnc_cli_renders_single_recipe_frame_json() {
@@ -186,8 +186,8 @@ fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
     assert_eq!(report["summary"]["rendered"], RECURSIVE_DEBUG_FIXTURE_COUNT);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
-    assert_eq!(report["summary"]["descriptorEffectIds"], 45);
-    assert_eq!(report["summary"]["representedEffectIds"], 45);
+    assert_eq!(report["summary"]["descriptorEffectIds"], 75);
+    assert_eq!(report["summary"]["representedEffectIds"], 75);
     assert_eq!(report["summary"]["unrepresentedEffectIds"], 0);
     assert_eq!(report["summary"]["unsupportedEffectIds"], 0);
 }
@@ -197,8 +197,8 @@ fn test_fnc_cli_reports_primitive_adapter_gap_json() {
     let report = primitive_adapter_gap_report();
 
     assert_eq!(report["schemaVersion"], "v3.1.player.primitiveAdapterGap.1");
-    assert_eq!(report["summary"]["totalEffects"], 45);
-    assert_eq!(report["summary"]["rendered"], 45);
+    assert_eq!(report["summary"]["totalEffects"], 75);
+    assert_eq!(report["summary"]["rendered"], 75);
     assert_eq!(report["summary"]["stillUnsupported"], 0);
     assert_eq!(report["summary"]["blockedByStyledCellSubstrate"], 0);
     assert_eq!(report["summary"]["blockedBySemanticDecision"], 0);
@@ -279,7 +279,7 @@ fn test_fnc_cli_reports_migration_gap_family_status_json() {
     let complex = find_family(&report, "complex");
 
     assert_eq!(filters["legacyCount"], 98);
-    assert_eq!(filters["v31Count"], 13);
+    assert_eq!(filters["v31Count"], 25);
     assert_eq!(filters["coverage"], "partial");
     assert_eq!(filters["status"], "adapterExpansionReady");
     assert!(
@@ -328,8 +328,8 @@ fn test_fnc_cli_reports_migration_mapping_batch_masks_json() {
     assert_eq!(blinds["requiredInputFields"][1], "orientation");
 
     let cellular = find_mapping_record(&report, "masks/mask_cellular.json");
-    assert_eq!(cellular["status"], "descriptorDecisionNeeded");
-    assert_eq!(cellular["recommendation"], "deferForDescriptorDecision");
+    assert_eq!(cellular["status"], "canonicalExists");
+    assert_eq!(cellular["recommendation"], "skipAsDuplicateVariant");
 
     let radial_square = find_mapping_record(&report, "masks/mask_radial_square.json");
     assert_eq!(radial_square["status"], "duplicateOrVariant");
@@ -342,9 +342,9 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.schemaReadiness.1");
     assert_eq!(report["summary"]["totalLegacyRecords"], 603);
-    assert_eq!(report["summary"]["schemaBlockedRecords"], 91);
-    assert_eq!(report["summary"]["sourceBlockedRecords"], 61);
-    assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 0);
+    assert_eq!(report["summary"]["schemaBlockedRecords"], 99);
+    assert_eq!(report["summary"]["sourceBlockedRecords"], 40);
+    assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 8);
     assert_eq!(report["summary"]["unknownRecords"], 0);
     assert_eq!(report["summary"]["canDeclareSchemaReady"], true);
     assert_eq!(report["summary"]["unresolvedSchemaBlockers"], 0);
@@ -371,7 +371,7 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
             .as_array()
             .expect("blockers")
             .iter()
-            .all(|blocker| blocker["blockerKind"] != "fieldCoverage")
+            .any(|blocker| blocker["blockerKind"] == "fieldCoverage")
     );
 }
 
@@ -402,7 +402,14 @@ fn test_fnc_cli_maps_schema_readiness_blockers_json() {
             .as_array()
             .expect("notes")
             .iter()
-            .any(|note| note.as_str().unwrap_or("").contains("source.scramble"))
+            .any(|note| note.as_str().unwrap_or("").contains("content.scramble"))
+    );
+    assert!(
+        source["notes"]
+            .as_array()
+            .expect("notes")
+            .iter()
+            .any(|note| note.as_str().unwrap_or("").contains("source.text"))
     );
 
     assert!(
@@ -410,7 +417,7 @@ fn test_fnc_cli_maps_schema_readiness_blockers_json() {
             .as_array()
             .expect("blockers")
             .iter()
-            .all(|blocker| blocker["blockerKind"] != "fieldCoverage")
+            .any(|blocker| blocker["blockerKind"] == "fieldCoverage")
     );
 }
 
@@ -423,32 +430,33 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
     ]);
 
     let offenders = report["offenders"].as_array().expect("offenders");
-    assert_eq!(offenders.len(), 352);
+    assert_eq!(offenders.len(), 310);
     assert_eq!(report["summary"]["unresolvedSchemaBlockers"], 0);
     assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
     assert_eq!(report["summary"]["remainingOwnerDecisionCount"], 0);
     assert_eq!(report["summary"]["canDeclareSchemaReady"], true);
     assert_eq!(
         report["summary"]["dispositionCounts"]["acceptedSchema"],
-        169
+        227
     );
     assert_eq!(
         report["summary"]["dispositionCounts"]["descriptorBacklog"],
-        219
+        161
     );
     assert_eq!(
         offender_kind_counts(&report),
         BTreeMap::from([
             ("backendRenderer", 15),
-            ("bindingSemantics", 22),
-            ("descriptorPack", 151),
+            ("bindingSemantics", 21),
+            ("descriptorPack", 114),
+            ("fieldCoverage", 8),
             ("guiHumanReview", 2),
             ("lifecycleSemantics", 1),
             ("motionTimingSemantics", 34),
             ("oracleOnly", 2),
             ("sceneSemantics", 24),
-            ("sourceDescriptor", 68),
-            ("valueSourceSemantics", 33),
+            ("sourceDescriptor", 47),
+            ("valueSourceSemantics", 42),
         ])
     );
     assert!(
@@ -494,12 +502,13 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
     assert_eq!(source["recommendedDisposition"], "descriptorBacklog");
     assert_eq!(source["schemaBlocking"], false);
     assert_eq!(source["schemaReadinessBlocking"], false);
-    assert_json_array_contains(&source["requiredSourceIds"], "source.scramble");
+    assert_json_array_contains(&source["requiredSourceIds"], "source.text");
+    assert_json_array_contains(&source["requiredDescriptorIds"], "content.scramble");
 
     assert!(
         offenders
             .iter()
-            .all(|offender| offender["blockerKind"] != "fieldCoverage")
+            .any(|offender| offender["blockerKind"] == "fieldCoverage")
     );
 
     let value_source =
@@ -605,7 +614,7 @@ fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
     }
     assert_eq!(report["summary"]["records"], 603);
     assert_eq!(report["summary"]["candidateReady"], 0);
-    assert_eq!(report["summary"]["schemaDecisionNeeded"], 91);
+    assert_eq!(report["summary"]["schemaDecisionNeeded"], 99);
 }
 
 #[test]
@@ -668,7 +677,7 @@ fn test_fnc_cli_reports_migration_mapping_batch_content_source_decisions_json() 
             .as_array()
             .expect("required sources")
             .iter()
-            .any(|source| source == "source.marqueeText")
+            .any(|source| source == "source.text")
     );
 
     let deprecated = find_mapping_record(&report, "content/_DEPRECATED_content_marquee.json");
@@ -944,7 +953,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 57);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 217);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -1087,6 +1096,134 @@ fn test_fnc_cli_frame_diff_reports_styled_cell_changes_json() {
     );
 }
 
+#[test]
+fn test_fnc_cli_reports_implementation_readiness_disposition_first_json() {
+    let report = implementation_readiness_report(vec![
+        str_arg("implementation-readiness"),
+        str_arg("--recursive"),
+    ]);
+
+    assert_eq!(
+        report["schemaVersion"],
+        "v3.1.player.implementationReadiness.1"
+    );
+    assert!(
+        report["summary"]
+            .as_object()
+            .expect("summary")
+            .contains_key("dispositionCounts")
+    );
+    assert_eq!(report["summary"]["candidateReady"], 0);
+    assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
+    assert!(
+        report["priorityQueues"]
+            .as_array()
+            .expect("priority queues")
+            .iter()
+            .any(|queue| queue["disposition"] == "contentBacklog")
+    );
+}
+
+#[test]
+fn test_fnc_cli_reports_implementation_readiness_uses_content_vocabulary_json() {
+    let report = implementation_readiness_report(vec![
+        str_arg("implementation-readiness"),
+        str_arg("--recursive"),
+    ]);
+
+    let serialized = serde_json::to_string(&report).expect("serialize readiness report");
+    for stale in [
+        "source.typewriterText",
+        "source.odometer",
+        "source.splitFlapText",
+    ] {
+        assert!(
+            !serialized.contains(stale),
+            "implementation readiness should not expose stale source/content label {stale}"
+        );
+    }
+
+    assert!(
+        report["records"]
+            .as_array()
+            .expect("records")
+            .iter()
+            .any(|record| record["requiredContentDescriptors"]
+                .as_array()
+                .expect("content descriptors")
+                .iter()
+                .any(|descriptor| descriptor == "content.odometer"
+                    || descriptor == "content.splitFlap"
+                    || descriptor == "content.typewriter"))
+    );
+}
+
+#[test]
+fn test_fnc_cli_reports_control_catalog_descriptor_controls_json() {
+    let report = control_catalog_report(vec![str_arg("control-catalog")]);
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.controlCatalog.1");
+    let angle = find_control(&report, "effect:shader.linearGradient:angleDeg");
+    assert_eq!(angle["sourceKind"], "descriptorInput");
+    assert_eq!(angle["descriptorId"], "shader.linearGradient");
+    assert_eq!(angle["inputName"], "angleDeg");
+    assert_eq!(angle["valueKind"], "number");
+    assert_eq!(angle["controlKind"], "slider");
+    assert_eq!(angle["range"]["min"], 0.0);
+    assert_eq!(angle["range"]["max"], 360.0);
+    assert_eq!(angle["unit"], "degrees");
+    assert_eq!(angle["bindable"], true);
+
+    let direction = find_control(&report, "effect:mask.wipe:direction");
+    assert_eq!(direction["controlKind"], "select");
+    assert_json_array_contains(&direction["allowedValues"], "leftToRight");
+
+    let color = find_control(&report, "effect:shader.linearGradient:startColor");
+    assert_eq!(color["controlKind"], "colorPicker");
+
+    let gradient = find_control(&report, "effect:shader.linearGradient:gradient");
+    assert_eq!(gradient["controlKind"], "gradientEditor");
+    assert_eq!(gradient["optional"], true);
+}
+
+#[test]
+fn test_fnc_cli_reports_recipe_aware_control_catalog_json() {
+    let report = control_catalog_report(vec![
+        str_arg("control-catalog"),
+        str_arg("--recipe"),
+        recipe_path("shaders/primitives/shader_linear_gradient.json"),
+    ]);
+
+    assert_eq!(report["schemaVersion"], "v3.1.player.controlCatalog.1");
+    assert!(report["controls"].as_array().expect("controls").iter().any(
+        |control| control["descriptorId"] == "shader.linearGradient"
+            && !control["usedBy"].as_array().expect("usedBy").is_empty()
+            && !control["nodeId"].is_null()
+    ));
+}
+
+fn implementation_readiness_report(mut args: Vec<String>) -> serde_json::Value {
+    args.extend([
+        str_arg("--legacy-root"),
+        legacy_debug_recipe_root_path(),
+        str_arg("--v31-root"),
+        debug_recipe_root_path(),
+        str_arg("--descriptor-pack"),
+        descriptor_pack_path(),
+        str_arg("--json"),
+    ]);
+    player_cli_json(args, "implementation readiness player cli")
+}
+
+fn control_catalog_report(mut args: Vec<String>) -> serde_json::Value {
+    args.extend([
+        str_arg("--descriptor-pack"),
+        descriptor_pack_path(),
+        str_arg("--json"),
+    ]);
+    player_cli_json(args, "control catalog player cli")
+}
+
 fn inventory_report(mut args: Vec<String>) -> serde_json::Value {
     args.extend([
         str_arg("--descriptor-pack"),
@@ -1215,6 +1352,15 @@ fn assert_gap_entry(
 
     assert_eq!(entry["outcome"], expected_outcome);
     assert_eq!(entry["adapterClass"], expected_adapter_class);
+}
+
+fn find_control<'a>(report: &'a serde_json::Value, id: &str) -> &'a serde_json::Value {
+    report["controls"]
+        .as_array()
+        .expect("controls")
+        .iter()
+        .find(|control| control["id"] == id)
+        .expect("control entry")
 }
 
 fn find_source<'a>(report: &'a serde_json::Value, id: &str) -> &'a serde_json::Value {

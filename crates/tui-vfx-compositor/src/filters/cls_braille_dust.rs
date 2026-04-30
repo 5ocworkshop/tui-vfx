@@ -252,12 +252,18 @@ mod tests {
 
         // Cell with content should not be modified
         let mut cell_with_content = Cell::new('X');
-        dust.apply(&mut cell_with_content, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
+        dust.apply(
+            &mut cell_with_content,
+            &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5),
+        );
         assert_eq!(cell_with_content.ch, 'X');
 
         // Empty cell should be filled
         let mut empty_cell = Cell::default();
-        dust.apply(&mut empty_cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5));
+        dust.apply(
+            &mut empty_cell,
+            &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.5),
+        );
         assert_ne!(empty_cell.ch, ' ');
     }
 
@@ -272,13 +278,19 @@ mod tests {
         for y in 0..100 {
             for x in 0..100 {
                 let mut low_cell = Cell::default();
-                low_dust.apply(&mut low_cell, &VfxCellContext::new(x, y, 100, 100, 0, 0, 0.5));
+                low_dust.apply(
+                    &mut low_cell,
+                    &VfxCellContext::new(x, y, 100, 100, 0, 0, 0.5),
+                );
                 if low_cell.ch != ' ' {
                     low_count += 1;
                 }
 
                 let mut high_cell = Cell::default();
-                high_dust.apply(&mut high_cell, &VfxCellContext::new(x, y, 100, 100, 0, 0, 0.5));
+                high_dust.apply(
+                    &mut high_cell,
+                    &VfxCellContext::new(x, y, 100, 100, 0, 0, 0.5),
+                );
                 if high_cell.ch != ' ' {
                     high_count += 1;
                 }

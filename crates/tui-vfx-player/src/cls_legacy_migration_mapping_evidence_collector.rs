@@ -11,7 +11,8 @@ use crate::{
     LegacyMigrationMappingEvidence,
     fnc_build_legacy_migration_mapping_summary::build_legacy_migration_mapping_summary,
     fnc_legacy_migration_mapping_names::{
-        canonical_legacy_field, legacy_descriptor_id, lower_camel, source_id_for_content_effect,
+        canonical_legacy_field, content_descriptor_id_for_content_effect, legacy_descriptor_id,
+        lower_camel,
     },
 };
 
@@ -90,10 +91,9 @@ impl LegacyMigrationMappingEvidenceCollector {
             && let Some(Value::Object(effect)) = content.get("effect")
             && let Some(content_type) = effect.get("type").and_then(Value::as_str)
         {
-            self.add_source(
-                &source_id_for_content_effect(content_type),
-                &lower_camel(content_type),
-            );
+            self.descriptors
+                .insert(content_descriptor_id_for_content_effect(content_type));
+            self.add_source("source.text", &lower_camel(content_type));
         }
     }
 

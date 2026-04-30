@@ -87,7 +87,11 @@ mod tests {
     }
 
     fn grid(width: u16, height: u16, cells: Vec<Cell>) -> ProbeGridSpec {
-        ProbeGridSpec { width, height, cells }
+        ProbeGridSpec {
+            width,
+            height,
+            cells,
+        }
     }
 
     /// All cells empty → all Background.
@@ -112,13 +116,21 @@ mod tests {
         // 3-wide, 1-tall: [text, blank, text]
         let spec = grid(3, 1, vec![text_cell('A'), empty_cell(), text_cell('Z')]);
         let roles = infer_roles_from_grid(&spec);
-        assert_eq!(roles.get((0, 0)), Some(RoleTag::Text), "first cell should be Text");
+        assert_eq!(
+            roles.get((0, 0)),
+            Some(RoleTag::Text),
+            "first cell should be Text"
+        );
         assert_eq!(
             roles.get((1, 0)),
             Some(RoleTag::Background),
             "blank cell should be Background"
         );
-        assert_eq!(roles.get((2, 0)), Some(RoleTag::Text), "third cell should be Text");
+        assert_eq!(
+            roles.get((2, 0)),
+            Some(RoleTag::Text),
+            "third cell should be Text"
+        );
     }
 
     /// Space character with non-zero alpha → Background (colored spaces are

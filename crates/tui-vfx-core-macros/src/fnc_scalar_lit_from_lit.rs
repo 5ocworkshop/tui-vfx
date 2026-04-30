@@ -15,7 +15,10 @@ pub(crate) fn scalar_lit_from_lit(lit: &Lit) -> syn::Result<ScalarLit> {
         Lit::Str(s) => Ok(ScalarLit::String(s.value())),
         Lit::Int(i) => Ok(ScalarLit::Number(clean_number(i.base10_digits()))),
         Lit::Float(f) => Ok(ScalarLit::Number(clean_number(f.base10_digits()))),
-        other => Err(syn::Error::new(other.span(), "Unsupported literal for #[config]")),
+        other => Err(syn::Error::new(
+            other.span(),
+            "Unsupported literal for #[config]",
+        )),
     }
 }
 

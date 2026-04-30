@@ -65,15 +65,12 @@ pub fn merge(rustdoc: SignalsRustdocData, toml: SignalsManifest) -> Result<Merge
         let editorial = toml.signals.get(&doc.discriminant).cloned();
         let example_json = build_example_json(doc);
         let display_discriminant = doc.discriminant.clone();
-        by_family
-            .entry(doc.family)
-            .or_default()
-            .push(MergedSignal {
-                display_discriminant,
-                doc: doc.clone(),
-                editorial,
-                example_json,
-            });
+        by_family.entry(doc.family).or_default().push(MergedSignal {
+            display_discriminant,
+            doc: doc.clone(),
+            editorial,
+            example_json,
+        });
     }
 
     // Sort each family's signals alphabetically by discriminant for deterministic output.
@@ -171,8 +168,8 @@ fn build_example_json(doc: &SignalDoc) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{extract_signals_rustdoc, parse_signals_toml};
+    use super::*;
 
     #[test]
     fn merge_produces_core_12_in_order() {
@@ -194,11 +191,26 @@ mod tests {
         let merged = merge(rustdoc, toml).expect("merge failed");
 
         let families: Vec<SignalFamily> = merged.by_family.keys().copied().collect();
-        assert!(families.contains(&SignalFamily::Oscillator), "Oscillator family missing");
-        assert!(families.contains(&SignalFamily::Envelope), "Envelope family missing");
-        assert!(families.contains(&SignalFamily::Noise), "Noise family missing");
-        assert!(families.contains(&SignalFamily::Composition), "Composition family missing");
-        assert!(families.contains(&SignalFamily::Processing), "Processing family missing");
+        assert!(
+            families.contains(&SignalFamily::Oscillator),
+            "Oscillator family missing"
+        );
+        assert!(
+            families.contains(&SignalFamily::Envelope),
+            "Envelope family missing"
+        );
+        assert!(
+            families.contains(&SignalFamily::Noise),
+            "Noise family missing"
+        );
+        assert!(
+            families.contains(&SignalFamily::Composition),
+            "Composition family missing"
+        );
+        assert!(
+            families.contains(&SignalFamily::Processing),
+            "Processing family missing"
+        );
     }
 }
 

@@ -4,8 +4,8 @@
 // <CLOG>1.3.0: sample() now returns SamplerOutput; displacing branch carries full x/y deltas; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
-use tui_vfx_types::VfxCellContext;
 use mixed_signals::prelude::{Signal, SignalContext, SpatialCoordinateSignal};
+use tui_vfx_types::VfxCellContext;
 
 /// CRT monitor screen distortion sampler.
 ///
@@ -107,7 +107,9 @@ mod tests {
         let sampler = CrtSampler::default();
         // Zero dimensions should return passthrough
         assert_eq!(
-            sampler.sample(&VfxCellContext::new(5, 5, 0, 0, 0, 0, 0.0)).source,
+            sampler
+                .sample(&VfxCellContext::new(5, 5, 0, 0, 0, 0, 0.0))
+                .source,
             Some((5, 5))
         );
     }

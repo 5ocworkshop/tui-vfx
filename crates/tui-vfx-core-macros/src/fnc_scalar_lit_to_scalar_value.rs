@@ -18,4 +18,3 @@ pub(crate) fn scalar_lit_to_scalar_value(lit: &ScalarLit) -> proc_macro2::TokenS
 
 // <FILE>tui-vfx-core-macros/src/fnc_scalar_lit_to_scalar_value.rs</FILE> - <DESC>ScalarLit → tui_vfx_core::ScalarValue token form</DESC>
 // <VERS>END OF VERSION: 0.2.0 - 2026-04-28</VERS>
-

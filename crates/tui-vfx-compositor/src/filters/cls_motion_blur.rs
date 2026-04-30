@@ -224,11 +224,17 @@ mod tests {
 
         // Left edge (x=0) should be dimmer
         let mut cell_left = make_cell();
-        filter.apply(&mut cell_left, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut cell_left,
+            &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0),
+        );
 
         // Right edge (x=9) should be brighter (within bright zone)
         let mut cell_right = make_cell();
-        filter.apply(&mut cell_right, &VfxCellContext::new(9, 5, 10, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut cell_right,
+            &VfxCellContext::new(9, 5, 10, 10, 0, 0, 0.0),
+        );
 
         assert!(
             cell_left.fg.r < cell_right.fg.r,
@@ -242,11 +248,17 @@ mod tests {
 
         // Right edge (x=9) should be dimmer
         let mut cell_right = make_cell();
-        filter.apply(&mut cell_right, &VfxCellContext::new(9, 5, 10, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut cell_right,
+            &VfxCellContext::new(9, 5, 10, 10, 0, 0, 0.0),
+        );
 
         // Left edge (x=0) should be brighter
         let mut cell_left = make_cell();
-        filter.apply(&mut cell_left, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut cell_left,
+            &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0),
+        );
 
         assert!(
             cell_right.fg.r < cell_left.fg.r,
@@ -264,7 +276,10 @@ mod tests {
 
         // Bottom edge (y=9) should be brighter
         let mut cell_bottom = make_cell();
-        filter.apply(&mut cell_bottom, &VfxCellContext::new(5, 9, 10, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut cell_bottom,
+            &VfxCellContext::new(5, 9, 10, 10, 0, 0, 0.0),
+        );
 
         assert!(
             cell_top.fg.r < cell_bottom.fg.r,
@@ -278,7 +293,10 @@ mod tests {
 
         // Bottom edge (y=9) should be dimmer
         let mut cell_bottom = make_cell();
-        filter.apply(&mut cell_bottom, &VfxCellContext::new(5, 9, 10, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut cell_bottom,
+            &VfxCellContext::new(5, 9, 10, 10, 0, 0, 0.0),
+        );
 
         // Top edge (y=0) should be brighter
         let mut cell_top = make_cell();
@@ -314,7 +332,10 @@ mod tests {
         // x=0 in 10-wide: position = 0, fully in trail
         // Test at position 0 (fully in trail zone)
         low_decay.apply(&mut cell_low, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
-        high_decay.apply(&mut cell_high, &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0));
+        high_decay.apply(
+            &mut cell_high,
+            &VfxCellContext::new(0, 5, 10, 10, 0, 0, 0.0),
+        );
 
         // At position 0, normalized_trail_pos = 0, so 0^decay = 0 for any decay
         // Both should be completely black at position 0
@@ -326,7 +347,10 @@ mod tests {
         let mut cell_low = make_cell();
         let mut cell_high = make_cell();
         low_decay.apply(&mut cell_low, &VfxCellContext::new(1, 5, 20, 10, 0, 0, 0.0));
-        high_decay.apply(&mut cell_high, &VfxCellContext::new(1, 5, 20, 10, 0, 0, 0.0));
+        high_decay.apply(
+            &mut cell_high,
+            &VfxCellContext::new(1, 5, 20, 10, 0, 0, 0.0),
+        );
 
         // At position ~0.053, trail_start=0.1, normalized=0.53
         // low_decay: 0.53^1.0 = 0.53

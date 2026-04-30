@@ -29,10 +29,10 @@ use tui_vfx_compositor::pipeline::orc_render_pipeline::render_pipeline;
 use tui_vfx_compositor::traits::cls_inspection_sink_bridge::{
     InspectionSinkBridge, TraceFrameContext,
 };
+use tui_vfx_compositor::types::ShadowSpec;
 use tui_vfx_compositor::types::cls_filter_spec::FilterSpec;
 use tui_vfx_compositor::types::cls_mask_spec::MaskSpec;
 use tui_vfx_compositor::types::cls_sampler_spec::SamplerSpec;
-use tui_vfx_compositor::types::ShadowSpec;
 use tui_vfx_debug::inspection::{
     PipelineSkipReason, PipelineStageKind, TraceEvent, TraceFilter, TraceSink,
 };
@@ -113,7 +113,8 @@ fn shadow_path_role_text_on_all_background_emits_stage_skipped_for_shader() {
     let options = shadow_options_with_text_scoped_shader(&shader);
 
     let sink = Arc::new(TraceSink::new(TraceFilter::accept_all()));
-    let ctx = TraceFrameContext::new(0, 0).with_recipe_id(RecipeId::from("focused_row_btop_with_shadow"));
+    let ctx =
+        TraceFrameContext::new(0, 0).with_recipe_id(RecipeId::from("focused_row_btop_with_shadow"));
     let mut bridge = InspectionSinkBridge::from_trace_sink(sink.clone(), ctx);
 
     // ── Act ────────────────────────────────────────────────────────────
@@ -200,10 +201,11 @@ fn shadow_path_role_text_on_all_background_emits_stage_skipped_for_shader() {
             )
         });
     if let TraceEvent::StageSkipped {
-        reason: PipelineSkipReason::ScopeMatchedZeroCells {
-            predicate,
-            role_histogram,
-        },
+        reason:
+            PipelineSkipReason::ScopeMatchedZeroCells {
+                predicate,
+                role_histogram,
+            },
         ..
     } = shader_skipped
     {

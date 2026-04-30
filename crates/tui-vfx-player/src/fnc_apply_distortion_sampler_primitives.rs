@@ -19,6 +19,8 @@ pub(crate) fn apply_distortion_sampler_primitive(
         "sampler.shredder" => apply_shredder(node, request, rows),
         "sampler.faultLine" => apply_fault_line(node, request, rows),
         "sampler.radialTwist" => apply_radial_twist(node, request, rows),
+        "sampler.crt" => apply_crt_sampler(node, request, rows),
+        "sampler.crtJitter" => apply_crt_jitter_sampler(node, request, rows),
         _ => return false,
     }
     true
@@ -51,6 +53,37 @@ fn apply_radial_twist(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut
     }
 }
 
+fn apply_crt_sampler(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [String]) {
+    let curvature = resolve_effect_number(node, request, "curvature", 0.4).clamp(0.0, 1.0);
+    let scanline_strength =
+        resolve_effect_number(node, request, "scanlineStrength", 0.35).clamp(0.0, 1.0);
+    let jitter = resolve_effect_number(node, request, "jitter", 0.0).max(0.0);
+    let center = rows.len() as f64 / 2.0;
+    for (y, row) in rows.iter_mut().enumerate() {
+        let bow = ((y as f64 - center) * curvature * request.phase_t).round() as i64;
+        let time_jitter = ((request.loop_t.unwrap_or(request.phase_t) * 10.0 + y as f64).sin()
+            * jitter)
+            .round() as i64;
+        let shifted = shift_row(row, bow + time_jitter);
+        if scanline_strength > 0.0 && y % 2 == 1 {
+            *row = drop_every_nth_glyph(&shifted, scanline_strength);
+        } else {
+            *row = shifted;
+        }
+    }
+}
+
+fn apply_crt_jitter_sampler(node: &NodeSpec, request: &PlayerSampleRequest, rows: &mut [String]) {
+    let amplitude = resolve_effect_number(node, request, "amplitude", 1.0).max(0.0);
+    let frequency = resolve_effect_number(node, request, "frequency", 2.0).max(0.0);
+    let seed = resolve_effect_integer(node, request, "seed", 13).max(0) as f64;
+    let time = request.loop_t.unwrap_or(request.phase_t);
+    for (y, row) in rows.iter_mut().enumerate() {
+        let wave = ((time * frequency + y as f64 * 0.37 + seed * 0.01).sin() * amplitude).round();
+        *row = shift_row(row, wave as i64);
+    }
+}
+
 fn shift_chunks(row: &str, chunk_width: usize, offset: i64) -> String {
     row.chars()
         .collect::<Vec<_>>()
@@ -75,6 +108,20 @@ fn shift_row(row: &str, offset: i64) -> String {
         }
     }
     shifted.into_iter().collect()
+}
+
+fn drop_every_nth_glyph(row: &str, scanline_strength: f64) -> String {
+    let interval = if scanline_strength >= 0.66 {
+        3
+    } else if scanline_strength >= 0.33 {
+        5
+    } else {
+        8
+    };
+    row.chars()
+        .enumerate()
+        .map(|(index, glyph)| if index % interval == 0 { ' ' } else { glyph })
+        .collect()
 }
 
 // <FILE>crates/tui-vfx-player/src/fnc_apply_distortion_sampler_primitives.rs</FILE> - <DESC>Apply bounded distortion-sampler adapters to text-grid rows</DESC>

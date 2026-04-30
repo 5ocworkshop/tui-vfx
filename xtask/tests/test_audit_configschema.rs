@@ -62,10 +62,7 @@ fn run_audit(workspace_root: &Path) -> anyhow::Result<()> {
 #[test]
 fn unjustified_impl_in_new_file_warns_in_warn_only_mode() {
     let fixture = make_fixture(&[("crates/foo/src/lib.rs", UNJUSTIFIED_IMPL)]);
-    write_baseline(
-        fixture.path(),
-        "schema_version = 1\n",
-    );
+    write_baseline(fixture.path(), "schema_version = 1\n");
 
     // In warn-only mode this exits 0 (not Err).
     let result = run_audit(fixture.path());

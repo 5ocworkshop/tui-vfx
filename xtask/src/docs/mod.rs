@@ -75,7 +75,10 @@ pub fn generate() -> Result<()> {
     gen_api::generate_and_write(&api_data, &api_toml)?;
 
     // API_SIGNALS_REFERENCE.md (separate pipeline: mixed-signals rustdoc + signals.toml)
-    println!("  {} Extracting Signal-impl rustdoc from mixed-signals...", "→".dimmed());
+    println!(
+        "  {} Extracting Signal-impl rustdoc from mixed-signals...",
+        "→".dimmed()
+    );
     let signal_data = extract_signals_rustdoc::extract()?;
     println!("  {} Parsing signals.toml...", "→".dimmed());
     let signal_toml = parse_signals_toml::parse()?;
@@ -301,7 +304,10 @@ pub fn api_scaffold(write: bool) -> Result<()> {
 pub fn signals() -> Result<()> {
     println!("{}", "Generating API_SIGNALS_REFERENCE.md...".bold());
 
-    println!("  {} Extracting Signal-impl rustdoc from mixed-signals...", "→".dimmed());
+    println!(
+        "  {} Extracting Signal-impl rustdoc from mixed-signals...",
+        "→".dimmed()
+    );
     let signal_data = extract_signals_rustdoc::extract()?;
 
     println!("  {} Parsing signals.toml...", "→".dimmed());
@@ -316,7 +322,12 @@ pub fn signals() -> Result<()> {
     println!("  {} Generating API_SIGNALS_REFERENCE.md...", "→".dimmed());
     gen_signals_markdown::generate(&merged)?;
 
-    println!("{}", "✓ API_SIGNALS_REFERENCE.md generated successfully".green().bold());
+    println!(
+        "{}",
+        "✓ API_SIGNALS_REFERENCE.md generated successfully"
+            .green()
+            .bold()
+    );
     Ok(())
 }
 
@@ -325,7 +336,10 @@ pub fn signals() -> Result<()> {
 /// Runs the same pipeline as `signals()` but compares output to the existing
 /// file instead of writing. Returns an error if the file would change.
 pub fn signals_check() -> Result<()> {
-    println!("{}", "Checking API_SIGNALS_REFERENCE.md freshness...".bold());
+    println!(
+        "{}",
+        "Checking API_SIGNALS_REFERENCE.md freshness...".bold()
+    );
 
     let signal_data = extract_signals_rustdoc::extract()?;
     let toml_data = parse_signals_toml::parse()?;
@@ -333,10 +347,12 @@ pub fn signals_check() -> Result<()> {
     let merged = merge_signals::merge(signal_data, toml_data)?;
     let expected = gen_signals_markdown::render(&merged)?;
 
-    let current = fs::read_to_string("docs/generated/API_SIGNALS_REFERENCE.md")
-        .unwrap_or_default();
+    let current = fs::read_to_string("docs/generated/API_SIGNALS_REFERENCE.md").unwrap_or_default();
     if expected == current {
-        println!("{}", "✓ API_SIGNALS_REFERENCE.md is up-to-date".green().bold());
+        println!(
+            "{}",
+            "✓ API_SIGNALS_REFERENCE.md is up-to-date".green().bold()
+        );
         Ok(())
     } else {
         bail!(

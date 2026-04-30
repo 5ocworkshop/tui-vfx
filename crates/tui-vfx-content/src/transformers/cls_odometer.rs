@@ -10,13 +10,13 @@ use crate::mechanical::{
     paired_grids, resolve_mechanical_cycle_with_context, roll_cycle_window, roll_grid_window,
     route_between, settle_sample_for, tile_progress_for, tile_rects,
 };
-use tui_vfx_style::traits::ShaderRuntimeParams;
 use crate::traits::{TextTransformer, TransformContext};
 use crate::types::{
     MechanicalCascadePolicy, MechanicalContentSource, MechanicalCycleConfig, OdometerDirection,
     OdometerTravel,
 };
 use std::borrow::Cow;
+use tui_vfx_style::traits::ShaderRuntimeParams;
 use tui_vfx_types::{Grid, OwnedGrid};
 
 #[derive(Debug, Clone)]
@@ -133,12 +133,9 @@ impl Odometer {
         // Resolve the cycle once. Recipe-load-time validation is the
         // user-facing surface; runtime defensively falls back to the
         // legacy path if resolution fails.
-        let Ok(cycle) = resolve_mechanical_cycle_with_context(
-            &cfg.source,
-            tile,
-            &registry,
-            runtime_params,
-        ) else {
+        let Ok(cycle) =
+            resolve_mechanical_cycle_with_context(&cfg.source, tile, &registry, runtime_params)
+        else {
             return self.roll_legacy_pair(target, progress, tile);
         };
 

@@ -21,12 +21,12 @@ use super::orc_pipeline_observability::{
 };
 use crate::pipeline::cls_composition_options::ShaderWithRegion;
 use crate::traits::pipeline_inspector::CompositorInspector;
-use tui_vfx_debug::inspection::PipelineStageKind;
 use mixed_signals::traits::Phase;
 use smallvec::SmallVec;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::sync::Arc;
+use tui_vfx_debug::inspection::PipelineStageKind;
 use tui_vfx_shadow::{ShadowCompositeMode, render_shadow};
 use tui_vfx_style::models::StyleRegion;
 use tui_vfx_style::traits::ShaderContext;
@@ -162,8 +162,12 @@ pub fn render_pipeline(
     });
     let prepared_masks = prepare_masks(options.masks.as_ref());
     let loop_t = timing.effective_loop_t();
-    let prepare_ctx =
-        PrepareContext::new(loop_t, options.runtime_params.as_ref(), width as u16, height as u16);
+    let prepare_ctx = PrepareContext::new(
+        loop_t,
+        options.runtime_params.as_ref(),
+        width as u16,
+        height as u16,
+    );
     let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
 
     // Dispatch to inspected or non-inspected loop
@@ -345,8 +349,12 @@ fn render_pipeline_with_shadow(
     let effective_sampler_specs = options.effective_samplers();
     let samplers = prepare_samplers(options.t, effective_sampler_specs.as_ref());
     let loop_t = timing.effective_loop_t();
-    let prepare_ctx =
-        PrepareContext::new(loop_t, options.runtime_params.as_ref(), width as u16, height as u16);
+    let prepare_ctx = PrepareContext::new(
+        loop_t,
+        options.runtime_params.as_ref(),
+        width as u16,
+        height as u16,
+    );
     let prepared_filters = prepare_filters(options.filters.as_ref(), &prepare_ctx);
     let shader_t = timing.shader_t();
     // Arc-wrap the source role map once so per-cell ShaderContext cloning
@@ -784,9 +792,7 @@ fn render_pipeline_with_shadow(
     // Emit StageFinished for every Sampler/Mask/Shader/Filter stage that
     // emit_per_stage_entered registered above. Skipped shaders short-circuit
     // inside emit_per_stage_finished so the pair is not double-counted.
-    if let (Some(insp), Some(block)) =
-        (inspector, element_stage_block.as_ref())
-    {
+    if let (Some(insp), Some(block)) = (inspector, element_stage_block.as_ref()) {
         emit_per_stage_finished(insp, block);
     }
     // ────────────────────────────────────────────────────────────────────

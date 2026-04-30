@@ -83,7 +83,7 @@ pub fn render(merged: &MergedSignals) -> Result<String> {
          construction in engine code. The **Core 12** list at the top is the \
          recommended starting point. Per-family sections below document every \
          signal primitive available through `SignalSpec` JSON deserialization \
-         and through direct construction.\n\n"
+         and through direct construction.\n\n",
     );
 
     out.push_str("---\n\n");
@@ -130,7 +130,7 @@ fn render_core_12(out: &mut String, core_12: &[MergedSignal]) {
     out.push_str("## Core 12 — start here\n\n");
     out.push_str(
         "The twelve highest-leverage signals for recipe authoring. \
-         Pick from this list first; everything else is in the per-family sections below.\n\n"
+         Pick from this list first; everything else is in the per-family sections below.\n\n",
     );
 
     out.push_str("| # | Signal | One-line summary | JSON type |\n");
@@ -213,9 +213,7 @@ fn render_signal_entry(out: &mut String, signal: &MergedSignal) {
         out.push_str(&signal.doc.summary);
         out.push('\n');
     }
-    if !signal.doc.description.is_empty()
-        && signal.doc.description != signal.doc.summary
-    {
+    if !signal.doc.description.is_empty() && signal.doc.description != signal.doc.summary {
         out.push('\n');
         // Remaining description lines after the summary.
         let rest: String = signal
@@ -236,7 +234,11 @@ fn render_signal_entry(out: &mut String, signal: &MergedSignal) {
         out.push_str("| Field | Type | Description |\n");
         out.push_str("|-------|------|-------------|\n");
         for field in &signal.doc.fields {
-            let doc = if field.doc.is_empty() { "—" } else { &field.doc };
+            let doc = if field.doc.is_empty() {
+                "—"
+            } else {
+                &field.doc
+            };
             out.push_str(&format!(
                 "| `{}` | `{}` | {} |\n",
                 field.name, field.ty, doc
@@ -282,8 +284,8 @@ fn ordered_families() -> Vec<SignalFamily> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::{extract_signals_rustdoc, merge_signals, parse_signals_toml};
+    use super::*;
 
     fn make_merged() -> MergedSignals {
         let rustdoc = extract_signals_rustdoc::extract().expect("extraction failed");
@@ -309,8 +311,14 @@ mod tests {
     fn render_contains_family_sections() {
         let merged = make_merged();
         let output = render(&merged).expect("render failed");
-        assert!(output.contains("## Oscillators"), "should have Oscillators section");
-        assert!(output.contains("## Envelopes"), "should have Envelopes section");
+        assert!(
+            output.contains("## Oscillators"),
+            "should have Oscillators section"
+        );
+        assert!(
+            output.contains("## Envelopes"),
+            "should have Envelopes section"
+        );
         assert!(output.contains("## Physics"), "should have Physics section");
     }
 

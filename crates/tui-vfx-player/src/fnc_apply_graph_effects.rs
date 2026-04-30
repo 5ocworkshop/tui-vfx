@@ -24,8 +24,8 @@ use crate::{
     fnc_apply_sampler_ripple::apply_sampler_ripple,
     fnc_apply_sampler_sine_wave::apply_sampler_sine_wave,
     fnc_apply_simple_mask_primitives::{
-        apply_mask_blinds, apply_mask_diamond, apply_mask_iris, apply_mask_materialize,
-        apply_mask_radial,
+        apply_mask_blinds, apply_mask_cellular, apply_mask_diamond, apply_mask_iris,
+        apply_mask_materialize, apply_mask_radial,
     },
     fnc_apply_styled_primitive::apply_styled_primitive,
     fnc_resolve_value_source::resolve_value_source_with_graph_values,
@@ -301,7 +301,15 @@ fn apply_node(
         | "filter.fadeToCanvas"
         | "filter.patternFill"
         | "filter.crt"
-        | "filter.matrixRain" => {
+        | "filter.matrixRain"
+        | "filter.vignette"
+        | "filter.bracketEmphasis"
+        | "filter.dotIndicator"
+        | "filter.edgeGrow"
+        | "filter.hoverBar"
+        | "filter.kittScanner"
+        | "filter.underlineWipe"
+        | "filter.subPixelBar" => {
             apply_filter_primitive(node, request, styled_grid);
             false
         }
@@ -311,7 +319,16 @@ fn apply_node(
         | "content.splitFlap"
         | "content.wrapIndicator"
         | "content.scramble"
-        | "content.morph" => {
+        | "content.morph"
+        | "content.redact"
+        | "content.mirror"
+        | "content.numeric"
+        | "content.dissolve"
+        | "content.odometer"
+        | "content.cellMotion"
+        | "content.slideShift"
+        | "content.glitchShift"
+        | "content.scrambleGlitchShift" => {
             apply_content_primitive(node, request, rows);
             true
         }
@@ -319,8 +336,12 @@ fn apply_node(
             apply_sampler_sine_wave(node, request, rows);
             true
         }
-        "mask.wipe" | "mask.pathReveal" => {
+        "mask.wipe" | "mask.pathReveal" | "mask.wipeCorner" => {
             apply_mask_wipe(node, request, rows);
+            true
+        }
+        "mask.cellular" => {
+            apply_mask_cellular(node, request, rows);
             true
         }
         "mask.checkers" => {
@@ -339,7 +360,7 @@ fn apply_node(
             apply_mask_radial(node, request, rows);
             true
         }
-        "mask.materialize" => {
+        "mask.materialize" | "mask.materializeCorner" => {
             apply_mask_materialize(node, request, rows);
             true
         }
@@ -355,7 +376,11 @@ fn apply_node(
             apply_sampler_ripple(node, request, rows);
             true
         }
-        "sampler.shredder" | "sampler.faultLine" | "sampler.radialTwist" => {
+        "sampler.shredder"
+        | "sampler.faultLine"
+        | "sampler.radialTwist"
+        | "sampler.crt"
+        | "sampler.crtJitter" => {
             apply_distortion_sampler_primitive(node, request, rows);
             true
         }

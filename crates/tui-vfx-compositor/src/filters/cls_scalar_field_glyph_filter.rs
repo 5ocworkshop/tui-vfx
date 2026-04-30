@@ -5,7 +5,9 @@
 // <CLOG>0.4.1: migrate apply signature to &VfxCellContext; extract x/y/width/height/t from ctx fields.</CLOG>
 
 use mixed_signals::traits::{Signal, SignalContext};
-use tui_vfx_types::{Cell, Color, VfxCellContext, glyph::GlyphEncoder, glyph::sample_eight_subcells};
+use tui_vfx_types::{
+    Cell, Color, VfxCellContext, glyph::GlyphEncoder, glyph::sample_eight_subcells,
+};
 
 use crate::traits::filter::Filter;
 

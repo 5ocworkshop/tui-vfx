@@ -136,9 +136,7 @@ fn main() -> Result<()> {
                 .unwrap_or(Path::new("."))
                 .to_path_buf();
                 // Resolve to canonical path so strip_prefix works correctly.
-                let workspace_root = workspace_root
-                    .canonicalize()
-                    .unwrap_or(workspace_root);
+                let workspace_root = workspace_root.canonicalize().unwrap_or(workspace_root);
                 audit::audit_configschema(&workspace_root)
             }
         },

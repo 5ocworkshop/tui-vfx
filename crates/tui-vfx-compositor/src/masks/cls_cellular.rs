@@ -132,8 +132,7 @@ impl Mask for Cellular {
             CellularPattern::Hexagonal => {
                 // Hexagonal grid pattern
                 let cell_size =
-                    ((ctx.width.max(ctx.height) as f32) / (self.cell_count as f32).sqrt())
-                        .max(1.0);
+                    ((ctx.width.max(ctx.height) as f32) / (self.cell_count as f32).sqrt()).max(1.0);
 
                 // Calculate hex grid coordinates
                 let hex_x = (ctx.local_x as f32 / cell_size) as i32;
@@ -143,8 +142,7 @@ impl Mask for Cellular {
                 let effective_x = if hex_y % 2 == 0 { hex_x } else { hex_x + 1 };
 
                 // Use hash of hex coordinates for reveal order
-                let order_hash =
-                    hash_value(self.seed, (effective_x as u64) << 16, hex_y as u64);
+                let order_hash = hash_value(self.seed, (effective_x as u64) << 16, hex_y as u64);
                 let order = order_hash as f32 / u64::MAX as f32;
 
                 order < progress

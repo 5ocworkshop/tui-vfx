@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.32.0</VERS> -->
+<!-- <VERS>VERSION: 0.33.0</VERS> -->
 <!-- <WCTX>K2.16 player render IR and debug-recipe backlog burn-down indexing.</WCTX> -->
-<!-- <CLOG>0.32.0: MINOR — add K2.16 player render IR, scene/source fidelity, backlog normalization, burn-down, docs-gate, holdback, review, and architect memo artifacts.
+<!-- <CLOG>0.33.0: MINOR — add K2.17 descriptor/source burn-down reports, implementation-readiness, control catalog, holdbacks, docs gate, review, and architect memo artifacts.
+0.32.0: MINOR — add K2.16 player render IR, scene/source fidelity, backlog normalization, burn-down, docs-gate, holdback, review, and architect memo artifacts.
 0.31.0: MINOR — add K2.15 graph execution, fixture, source, docs-gate, holdback, and review artifacts.
 0.30.2: PATCH — add K2.14 descriptor/adapter migration reports and review/de-slop artifact.
 0.30.1: PATCH — add K2.13 schema decision burn-down reports and review/de-slop artifact.
@@ -92,6 +93,7 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`ARCH-RESP-TO-PHASE_K2_12.md`](ARCH-RESP-TO-PHASE_K2_12.md) — Phase K2.12 response and K2.13 schema decision/offender burn-down packet.
 - [`ARCH-RESP-TO-PHASE_K2_13.md`](ARCH-RESP-TO-PHASE_K2_13.md) — Phase K2.13 extension memo with additional schema-settlement and high-confidence migration-unblocker steps folded into the K2.13 work packet.
 - [`ARCH-RESP-TO-PHASE_K2_16.md`](ARCH-RESP-TO-PHASE_K2_16.md) — Phase K2.16 response and player render IR, scene/source fidelity, and backlog burn-down packet.
+- [`ARCH-RESP-TO-PHASE_K2_17.md`](ARCH-RESP-TO-PHASE_K2_17.md) — K2.17 descriptor/source burn-down, implementation-readiness, and control-catalog packet.
 
 ## Status and memo artifacts
 
@@ -162,6 +164,8 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`PHASE_K2_15_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_15_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop cleanup, and verification evidence for K2.15.
 - [`PHASE_K2_16_PLAYER_IR_BACKLOG_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_16_PLAYER_IR_BACKLOG_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md) — K2.16 player render IR, scene/source fidelity, 21-fixture burn-down, final counters, and architect blocker memo.
 - [`PHASE_K2_16_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_16_REVIEW_AND_DESLOP_REPORT.md) — formal review, anti-slop cleanup, and verification evidence for K2.16.
+- [`PHASE_K2_17_DESCRIPTOR_SOURCE_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md`](PHASE_K2_17_DESCRIPTOR_SOURCE_BURN_DOWN_STATUS_MEMO_TO_ARCHITECT.md) — K2.17 descriptor/source burn-down, fixture growth, final counters, and architect blocker memo.
+- [`PHASE_K2_17_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_17_REVIEW_AND_DESLOP_REPORT.md) — K2.17 formal review, anti-slop cleanup, and verification evidence.
 
 ## Supporting artifacts
 
@@ -198,6 +202,18 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_13_SOURCE_CONTENT_DECISION_REPORT.md`](K2_13_SOURCE_CONTENT_DECISION_REPORT.md) — K2.13 source/content split, source descriptor placeholders, and command-capture holdback.
 - [`K2_13_RUNTIME_DYNAMISM_DECISION_REPORT.md`](K2_13_RUNTIME_DYNAMISM_DECISION_REPORT.md) — K2.13 parameter/signal/graph-value/binding and sampled-field value-source decision.
 - [`K2_13_SCENE_ELEMENT_LAYER_DECISION_REPORT.md`](K2_13_SCENE_ELEMENT_LAYER_DECISION_REPORT.md) — K2.13 scene/element/layer schema disposition and composition rules.
+- [`K2_17_BASELINE_AND_FINAL_COUNTERS.md`](K2_17_BASELINE_AND_FINAL_COUNTERS.md) — K2.17 baseline/final corpus and backlog counters.
+- [`K2_17_IMPLEMENTATION_READINESS_REPORT.md`](K2_17_IMPLEMENTATION_READINESS_REPORT.md) — K2.17 disposition-first implementation-readiness report.
+- [`K2_17_BACKLOG_DISPOSITION_REPAIR_REPORT.md`](K2_17_BACKLOG_DISPOSITION_REPAIR_REPORT.md) — K2.17 backlog vocabulary and disposition repair notes.
+- [`K2_17_CONTENT_DESCRIPTOR_ADAPTER_TRANCHE_REPORT.md`](K2_17_CONTENT_DESCRIPTOR_ADAPTER_TRANCHE_REPORT.md) — K2.17 content descriptor/adapter/fixture tranche.
+- [`K2_17_SOURCE_FIDELITY_TRANCHE_REPORT.md`](K2_17_SOURCE_FIDELITY_TRANCHE_REPORT.md) — K2.17 ANSI/image/procedural source fidelity tranche.
+- [`K2_17_FILTER_MASK_SAMPLER_TRANCHE_REPORT.md`](K2_17_FILTER_MASK_SAMPLER_TRANCHE_REPORT.md) — K2.17 filter, mask, and sampler tranche.
+- [`K2_17_SHADER_STYLE_TRANCHE_REPORT.md`](K2_17_SHADER_STYLE_TRANCHE_REPORT.md) — K2.17 shader and style tranche.
+- [`K2_17_SCENE_LAYER_RUNTIME_CLOSURE_REPORT.md`](K2_17_SCENE_LAYER_RUNTIME_CLOSURE_REPORT.md) — K2.17 scene/layer visibility runtime closure.
+- [`K2_17_RENDER_BACKEND_SEAM_REPORT.md`](K2_17_RENDER_BACKEND_SEAM_REPORT.md) — K2.17 player render-backend seam report.
+- [`K2_17_STUDIO_CONTROL_CATALOG_REPORT.md`](K2_17_STUDIO_CONTROL_CATALOG_REPORT.md) — K2.17 descriptor-derived control catalog report.
+- [`K2_17_HOLDBACK_REGISTER.md`](K2_17_HOLDBACK_REGISTER.md) — K2.17 explicit holdbacks and missed preferred thresholds.
+- [`K2_17_SCHEMA_API_DOCS_GATE.md`](K2_17_SCHEMA_API_DOCS_GATE.md) — K2.17 schema/API/docs gate report.
 - [`K2_13_MOTION_SCOPE_DECISION_REPORT.md`](K2_13_MOTION_SCOPE_DECISION_REPORT.md) — K2.13 motion/easing and built-in scope vocabulary decisions.
 - [`K2_13_FIELD_COVERAGE_CLOSURE_REPORT.md`](K2_13_FIELD_COVERAGE_CLOSURE_REPORT.md) — K2.13 gradient/applyTo/position field coverage closure report.
 - [`K2_13_COMPLEX_GRAPH_IO_DECISION_REPORT.md`](K2_13_COMPLEX_GRAPH_IO_DECISION_REPORT.md) — K2.13 complex graph I/O and sequence/parallel disposition report.

@@ -5,7 +5,9 @@
 
 use crate::{
     cls_cli_options::CliOptions, fnc_parse_cli_options::parse_cli_options,
-    fnc_print_usage::print_usage, fnc_run_fixture_qc::run_fixture_qc,
+    fnc_print_usage::print_usage, fnc_run_control_catalog::run_control_catalog,
+    fnc_run_fixture_qc::run_fixture_qc,
+    fnc_run_implementation_readiness::run_implementation_readiness,
     fnc_run_inventory_recipes::run_inventory_recipes, fnc_run_migration_gap::run_migration_gap,
     fnc_run_migration_mapping_batch::run_migration_mapping_batch,
     fnc_run_primitive_adapter_gap::run_primitive_adapter_gap,
@@ -49,6 +51,8 @@ fn is_known_command(command: &str) -> bool {
             | "fixture-qc"
             | "render-timeline"
             | "render-frame-diff"
+            | "implementation-readiness"
+            | "control-catalog"
     )
 }
 
@@ -66,6 +70,8 @@ fn dispatch_command(command: &str, options: CliOptions) -> Result<(), String> {
         "fixture-qc" => run_fixture_qc(options),
         "render-timeline" => run_render_timeline(options),
         "render-frame-diff" => run_render_frame_diff(options),
+        "implementation-readiness" => run_implementation_readiness(options),
+        "control-catalog" => run_control_catalog(options),
         _ => unreachable!("command already validated"),
     }
 }

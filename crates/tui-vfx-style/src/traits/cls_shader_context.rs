@@ -462,8 +462,8 @@ mod tests {
 
     #[test]
     fn with_sampler_resolution_threads_delta_into_inner_cell() {
-        let ctx = ShaderContext::new(3, 5, 16, 16, 0, 0, 0.0, None, None)
-            .with_sampler_resolution(2, -1);
+        let ctx =
+            ShaderContext::new(3, 5, 16, 16, 0, 0, 0.0, None, None).with_sampler_resolution(2, -1);
         // Direct access via the inner bundle.
         assert_eq!(ctx.cell.resolved_x, 5);
         assert_eq!(ctx.cell.resolved_y, 4);

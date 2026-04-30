@@ -277,7 +277,10 @@ mod tests {
 
         // (1,1) → parity even → bg
         let mut even_diag = cell_with('A');
-        filter.apply(&mut even_diag, &VfxCellContext::new(1, 1, 10, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut even_diag,
+            &VfxCellContext::new(1, 1, 10, 10, 0, 0, 0.0),
+        );
         assert_eq!(
             even_diag.bg,
             Color::rgb(28, 28, 28),
@@ -377,7 +380,10 @@ mod tests {
         );
 
         let mut diag_even = cell_with('█');
-        filter.apply(&mut diag_even, &VfxCellContext::new(1, 1, 10, 10, 0, 0, 0.0));
+        filter.apply(
+            &mut diag_even,
+            &VfxCellContext::new(1, 1, 10, 10, 0, 0, 0.0),
+        );
         assert_eq!(
             diag_even.fg,
             Color::rgb(200, 200, 200),

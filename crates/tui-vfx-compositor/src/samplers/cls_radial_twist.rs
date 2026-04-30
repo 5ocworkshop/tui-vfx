@@ -4,9 +4,9 @@
 // <CLOG>0.3.0: sample() now returns SamplerOutput; displacing branch carries full x/y deltas; out-of-bounds returns no_displacement().</CLOG>
 
 use crate::traits::sampler::{Sampler, SamplerOutput};
-use tui_vfx_types::VfxCellContext;
 use crate::types::cls_sampler_spec::RippleCenter;
 use mixed_signals::math::radial_twist_warp;
+use tui_vfx_types::VfxCellContext;
 
 /// Center-weighted radial coordinate twist.
 ///
@@ -86,7 +86,9 @@ mod tests {
     fn zero_twist_is_identity() {
         let sampler = RadialTwist::new(0.0, RippleCenter::Center, 0.1);
         assert_eq!(
-            sampler.sample(&VfxCellContext::new(3, 4, 20, 10, 0, 0, 1.0)).source,
+            sampler
+                .sample(&VfxCellContext::new(3, 4, 20, 10, 0, 0, 1.0))
+                .source,
             Some((3, 4))
         );
     }
@@ -102,7 +104,9 @@ mod tests {
     fn center_cell_remains_finite() {
         let sampler = RadialTwist::new(8.0, RippleCenter::Center, 0.1);
         assert_eq!(
-            sampler.sample(&VfxCellContext::new(10, 5, 20, 10, 0, 0, 1.0)).source,
+            sampler
+                .sample(&VfxCellContext::new(10, 5, 20, 10, 0, 0, 1.0))
+                .source,
             Some((10, 5))
         );
     }

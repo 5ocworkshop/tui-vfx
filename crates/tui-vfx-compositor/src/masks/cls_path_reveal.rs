@@ -4,9 +4,9 @@
 // <CLOG>1.2.0: MINOR — is_visible signature updated to &VfxCellContext; local_x/local_y/width/height/t replace positional params.</CLOG>
 
 use crate::traits::mask::Mask;
-use tui_vfx_types::VfxCellContext;
 use mixed_signals::prelude::{Signal, SignalContext, SurfaceAngleSignal, SurfaceDistanceSignal};
 use std::f32::consts::{PI, TAU};
+use tui_vfx_types::VfxCellContext;
 
 /// Direction for spiral reveals.
 #[derive(

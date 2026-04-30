@@ -5,11 +5,11 @@
 
 use mixed_signals::prelude::SignalContext;
 use tui_vfx_content::traits::TransformContext;
-use tui_vfx_core::bindable::VfxBindableValue;
 use tui_vfx_content::transformers::get_transformer;
 use tui_vfx_content::types::{
     ContentEffect, ScrambleCharset, SlideShiftFlowMode, SlideShiftLineMode,
 };
+use tui_vfx_core::bindable::VfxBindableValue;
 use tui_vfx_style::traits::ShaderRuntimeParams;
 
 static CTX_PARTS: std::sync::OnceLock<(SignalContext, ShaderRuntimeParams)> =

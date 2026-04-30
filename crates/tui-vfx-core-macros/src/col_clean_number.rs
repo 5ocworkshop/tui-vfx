@@ -9,4 +9,3 @@ pub(crate) fn clean_number(digits: &str) -> String {
 
 // <FILE>tui-vfx-core-macros/src/col_clean_number.rs</FILE> - <DESC>Pure leaf helper: strip underscore digit separators</DESC>
 // <VERS>END OF VERSION: 0.2.0 - 2026-04-28</VERS>
-

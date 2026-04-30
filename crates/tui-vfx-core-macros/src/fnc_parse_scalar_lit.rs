@@ -3,7 +3,7 @@
 // <WCTX>Macro crate hygiene cleanup US-012 — promote from abandoned-refactor stub to live module. Body matches lib.rs:93-114 verbatim.</WCTX>
 // <CLOG>0.2.0: MAJOR — promote from abandoned-refactor stub to live module. Body unchanged. Reachable from lib.rs in US-013.</CLOG>
 
-use syn::{spanned::Spanned, Expr, Lit};
+use syn::{Expr, Lit, spanned::Spanned};
 
 use crate::col_clean_number::clean_number;
 use crate::fnc_scalar_lit_from_lit::scalar_lit_from_lit;
@@ -34,4 +34,3 @@ pub(crate) fn parse_scalar_lit(expr: &Expr) -> syn::Result<ScalarLit> {
 
 // <FILE>tui-vfx-core-macros/src/fnc_parse_scalar_lit.rs</FILE> - <DESC>Parse syn::Expr → ScalarLit</DESC>
 // <VERS>END OF VERSION: 0.2.0 - 2026-04-28</VERS>
-

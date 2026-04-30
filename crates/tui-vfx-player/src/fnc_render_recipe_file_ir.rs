@@ -78,6 +78,7 @@ fn file_error(
         rows: report.rows,
         styled_cells: vec![],
         provenance: vec![],
+        layers: vec![],
         graph_values: vec![],
         errors: report.errors,
         warnings: report.warnings,

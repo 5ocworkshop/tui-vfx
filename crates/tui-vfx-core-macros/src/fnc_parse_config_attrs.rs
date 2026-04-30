@@ -54,4 +54,3 @@ pub(crate) fn parse_config_attrs(attrs: &[Attribute]) -> syn::Result<ConfigAttr>
 
 // <FILE>tui-vfx-core-macros/src/fnc_parse_config_attrs.rs</FILE> - <DESC>Parse #[config(...)] → ConfigAttr</DESC>
 // <VERS>END OF VERSION: 0.2.0 - 2026-04-28</VERS>
-

@@ -139,8 +139,21 @@ mod tests {
         // At t=0 decay_factor = exp(0) = 1.0; effective_intensity = 0.7
         // With seed=42, row y=5 at time_slot 0 produces a known noise value
         // We verify structure: delta_y is always 0 (jitter is horizontal only)
-        let jitter = CrtJitter { intensity: 0.7, speed_hz: 1.0, decay: 0.0, seed: 42 };
-        let out = jitter.sample(&VfxCellContext::new(20, 5, TEST_WIDTH, TEST_HEIGHT, 0, 0, 0.0));
+        let jitter = CrtJitter {
+            intensity: 0.7,
+            speed_hz: 1.0,
+            decay: 0.0,
+            seed: 42,
+        };
+        let out = jitter.sample(&VfxCellContext::new(
+            20,
+            5,
+            TEST_WIDTH,
+            TEST_HEIGHT,
+            0,
+            0,
+            0.0,
+        ));
         // delta_y must always be 0 since jitter only displaces x
         assert_eq!(out.delta_y, 0);
         if let Some((src_x, _)) = out.source {

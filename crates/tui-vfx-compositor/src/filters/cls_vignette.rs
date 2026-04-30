@@ -281,7 +281,10 @@ mod tests {
         );
         let mut bottom_right = top_left;
         vignette.apply(&mut top_left, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
-        vignette.apply(&mut bottom_right, &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0));
+        vignette.apply(
+            &mut bottom_right,
+            &VfxCellContext::new(9, 9, 10, 10, 0, 0, 0.0),
+        );
         assert_ne!(top_left.fg, Color::rgb(100, 100, 100));
         assert_eq!(bottom_right.fg, Color::rgb(100, 100, 100));
     }

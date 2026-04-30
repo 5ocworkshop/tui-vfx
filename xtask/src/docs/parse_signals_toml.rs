@@ -67,8 +67,8 @@ pub fn parse() -> Result<SignalsManifest> {
         .parent()
         .expect("CARGO_MANIFEST_DIR (xtask/) always has a parent (workspace root)")
         .join("docs/templates/signals.toml");
-    let contents = fs::read_to_string(&path)
-        .with_context(|| format!("Failed to read {}", path.display()))?;
+    let contents =
+        fs::read_to_string(&path).with_context(|| format!("Failed to read {}", path.display()))?;
     toml::from_str(&contents).with_context(|| "Failed to parse docs/templates/signals.toml")
 }
 
@@ -79,7 +79,10 @@ mod tests {
     #[test]
     fn signals_toml_parses_successfully() {
         let manifest = parse().expect("signals.toml should parse without error");
-        assert!(!manifest.meta.version.is_empty(), "meta.version should be set");
+        assert!(
+            !manifest.meta.version.is_empty(),
+            "meta.version should be set"
+        );
         assert_eq!(
             manifest.core_12.order.len(),
             12,
@@ -102,7 +105,10 @@ mod tests {
     #[test]
     fn editorial_entries_have_recipe_hints() {
         let manifest = parse().expect("signals.toml should parse");
-        let sine = manifest.signals.get("sine").expect("sine entry should exist");
+        let sine = manifest
+            .signals
+            .get("sine")
+            .expect("sine entry should exist");
         assert!(
             sine.recipe_hint.is_some(),
             "sine editorial entry should have a recipe_hint"
@@ -115,8 +121,8 @@ mod tests {
 
     #[test]
     fn unknown_signal_in_toml_fails_validation() {
-        use super::super::validate_signals;
         use super::super::extract_signals_rustdoc::{SignalDoc, SignalFamily, SignalsRustdocData};
+        use super::super::validate_signals;
 
         let mut data = SignalsRustdocData::default();
         data.by_discriminant.insert(
@@ -132,7 +138,8 @@ mod tests {
         );
 
         let mut toml = SignalsManifest::default();
-        toml.signals.insert("not_a_real_signal".into(), SignalEntry::default());
+        toml.signals
+            .insert("not_a_real_signal".into(), SignalEntry::default());
 
         let err = validate_signals::validate(&data, &toml)
             .expect_err("validation should fail for unknown signal");

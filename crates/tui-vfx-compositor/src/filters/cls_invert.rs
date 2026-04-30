@@ -77,7 +77,8 @@ mod tests {
             Color::TRANSPARENT,
             Modifiers::NONE,
         );
-        Invert::new(ApplyTo::Foreground).apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        Invert::new(ApplyTo::Foreground)
+            .apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::BLACK);
         assert_eq!(cell.bg, Color::TRANSPARENT); // Unchanged
     }
@@ -90,7 +91,8 @@ mod tests {
             Color::rgb(50, 60, 70),
             Modifiers::NONE,
         );
-        Invert::new(ApplyTo::Foreground).apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        Invert::new(ApplyTo::Foreground)
+            .apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::rgb(50, 60, 70));
         assert_eq!(cell.bg, Color::rgb(50, 60, 70)); // Unchanged
     }
@@ -103,7 +105,8 @@ mod tests {
             Color::rgb(1, 2, 3),
             Modifiers::NONE,
         );
-        Invert::new(ApplyTo::Background).apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
+        Invert::new(ApplyTo::Background)
+            .apply(&mut cell, &VfxCellContext::new(0, 0, 10, 10, 0, 0, 0.0));
         assert_eq!(cell.fg, Color::TRANSPARENT); // Unchanged
         assert_eq!(cell.bg, Color::WHITE);
     }

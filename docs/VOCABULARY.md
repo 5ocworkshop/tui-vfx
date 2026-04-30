@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.16.0</VERS> -->
+<!-- <VERS>VERSION: 0.17.0</VERS> -->
 <!-- <WCTX>Player render IR work: document render IR as the player-owned backend seam evidence object.</WCTX> -->
-<!-- <CLOG>0.16.0: MINOR — add player render IR vocabulary and backend seam distinction.
+<!-- <CLOG>0.17.0: MINOR — add implementation-readiness, control-catalog, content descriptor backlog, and player render backend vocabulary.
+0.16.0: MINOR — add player render IR vocabulary and backend seam distinction.
 0.15.0: MINOR — add expected visual metadata and player warning vocabulary.
 0.14.0: MINOR — add schema-readiness dispositions, gradients, optional inputs, sampled fields, and built-in scopes.
 0.13.0: MINOR — add schema-readiness offender, declaration, and holdback vocabulary.
@@ -130,6 +131,45 @@ Not the same as:
 
 Policy:
 : Keep render IR player-owned. Do not make `tui-vfx-player-ui` construct compositor internals, and do not use render IR to claim visual parity without backend/oracle evidence.
+
+
+### Implementation Readiness Report
+
+Definition:
+: A disposition-first player report that translates migration mapping evidence into concrete implementation queues such as content backlog, descriptor backlog, graph runtime backlog, scene runtime backlog, fixture authoring backlog, and true source backlog. Current report schema label is `v3.1.player.implementationReadiness.1`.
+
+Policy:
+: This report must not hide work behind vague owner-decision language when the next action is implementable. Field coverage records belong in descriptor or adapter backlog, and legacy content effects belong in content descriptor backlog.
+
+### Content Descriptor Backlog
+
+Definition:
+: Legacy content-effect work that needs a `content.*` descriptor, player content adapter, or canonical content fixture.
+
+Not the same as:
+: A source descriptor. Old evidence names such as typewriter text, split-flap text, odometer text, and scramble text are content-effect descriptors plus normal text/card source evidence, not new durable `source.*Text` concepts.
+
+Policy:
+: Use readable `content.*` descriptor names for effect semantics and reserve `source.*` names for material providers such as text, card, ANSI, image, or procedural sources.
+
+### Control Catalog
+
+Definition:
+: A descriptor-derived catalog of editable source/effect controls, including value kind, range, allowed values, bindability, runtime mutability, defaults, and optional recipe usage. Current report schema label is `v3.1.player.controlCatalog.1`.
+
+Policy:
+: The catalog reflects accepted descriptors. It is not a GUI schema lock and must not introduce legacy aliases just to satisfy old recipe spelling.
+
+### Player Render Backend
+
+Definition:
+: A player-core seam that consumes player render IR and produces deterministic backend output such as text-grid or styled-cell evidence.
+
+Not the same as:
+: The compositor, a UI widget, a ratatui buffer, or a visual parity oracle.
+
+Policy:
+: Backend seams may lower render IR, but player core must remain independent of UI/compositor internals until a deliberate integration packet owns that boundary.
 
 ### Frame
 

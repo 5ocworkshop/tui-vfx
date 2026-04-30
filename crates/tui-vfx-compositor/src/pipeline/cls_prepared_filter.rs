@@ -16,6 +16,7 @@ use crate::filters::cls_edge_grow::EdgeGrow;
 use crate::filters::cls_fade_to_canvas::FadeToCanvas;
 use crate::filters::cls_glisten_sweep::GlistenSweep;
 use crate::filters::cls_glyph_style::{GlyphStyle, GlyphStyleRule as GlyphStyleRuleImpl};
+use crate::filters::cls_glyph_timeline::GlyphTimeline;
 use crate::filters::cls_greyscale::Greyscale;
 use crate::filters::cls_hover_bar::HoverBar;
 use crate::filters::cls_interlace_curtain::InterlaceCurtain;
@@ -37,7 +38,6 @@ use crate::filters::cls_subcell_light::{
     SubcellLightRenderMode as ImplSubcellLightRenderMode,
 };
 use crate::filters::cls_tint::Tint;
-use crate::filters::cls_glyph_timeline::GlyphTimeline;
 use crate::filters::cls_underline_wipe::UnderlineWipe;
 use crate::filters::cls_vignette::Vignette;
 use crate::traits::filter::Filter;
@@ -540,11 +540,9 @@ pub(crate) fn prepare_filter(
                 WavefrontAxis as ImplAxis, WavefrontTriggerConfig as ImplWavefront,
             };
             use crate::types::cls_filter_spec::{
-                GlyphTimelineApplyTo as SpecApplyTo, GlyphTimelineAffect as SpecAffect,
-                GlyphTimelineCompletion as SpecCompletion,
-                GlyphTimelineLaneAxis as SpecLaneAxis,
-                GlyphTimelineTriggerSpec as SpecTrigger,
-                GlyphTimelineWavefrontAxis as SpecAxis,
+                GlyphTimelineAffect as SpecAffect, GlyphTimelineApplyTo as SpecApplyTo,
+                GlyphTimelineCompletion as SpecCompletion, GlyphTimelineLaneAxis as SpecLaneAxis,
+                GlyphTimelineTriggerSpec as SpecTrigger, GlyphTimelineWavefrontAxis as SpecAxis,
             };
             use std::sync::Arc;
             use tui_vfx_style::schedules::{
@@ -637,9 +635,7 @@ pub(crate) fn prepare_filter(
                         speed_seed: *speed_seed,
                         fps: *fps,
                         direction_seed: *direction_seed,
-                        jitter: jitter
-                            .as_ref()
-                            .map(|j| (j.seed, j.amount_seconds)),
+                        jitter: jitter.as_ref().map(|j| (j.seed, j.amount_seconds)),
                     };
                     let trigger_times = Arc::new(poisson_burst_schedule(
                         prepare_ctx.width,

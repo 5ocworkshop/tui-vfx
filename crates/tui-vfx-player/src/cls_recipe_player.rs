@@ -43,7 +43,7 @@ impl RecipePlayer {
         request: &PlayerSampleRequest,
     ) -> PlayerRenderIrReport {
         let (report, graph_values) = self.render_recipe_with_graph_values(recipe, request);
-        build_player_render_ir(recipe, report, graph_values)
+        build_player_render_ir(recipe, request, report, graph_values)
     }
 
     fn render_recipe_with_graph_values(

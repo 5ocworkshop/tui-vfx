@@ -3,7 +3,7 @@
 // <WCTX>Packet 1.9.A — ConfigSchema justification lint</WCTX>
 // <CLOG>1.0.0: initial implementation — warn-only mode per Q2 default; promote-to-fail date 2026-07-01</CLOG>
 
-use super::fnc_find_justification::{find_justification, Justification};
+use super::fnc_find_justification::{Justification, find_justification};
 use super::fnc_load_baseline::load_baseline;
 use super::fnc_scan_file_for_impls::scan_file_for_impls;
 use anyhow::{Context, Result};
@@ -68,7 +68,10 @@ pub fn audit_configschema(workspace_root: &Path) -> Result<()> {
     /// hard-fail mode per the schedule in `docs/CONFIGSCHEMA_JUSTIFICATION.md`.
     const WARN_ONLY: bool = true;
 
-    println!("{}", "Auditing hand-written impl ConfigSchema for X blocks...".bold());
+    println!(
+        "{}",
+        "Auditing hand-written impl ConfigSchema for X blocks...".bold()
+    );
 
     let baseline_path = workspace_root.join(BASELINE_PATH);
     let baseline = load_baseline(&baseline_path)?;
@@ -79,10 +82,8 @@ pub fn audit_configschema(workspace_root: &Path) -> Result<()> {
     let mut warnings: Vec<Diagnostic> = Vec::new();
 
     for file_path in rust_files {
-        let source =
-            std::fs::read_to_string(&file_path).with_context(|| {
-                format!("Failed to read {}", file_path.display())
-            })?;
+        let source = std::fs::read_to_string(&file_path)
+            .with_context(|| format!("Failed to read {}", file_path.display()))?;
 
         let source_lines: Vec<&str> = source.lines().collect();
         let hits = scan_file_for_impls(&source);
@@ -201,7 +202,12 @@ pub fn audit_configschema(workspace_root: &Path) -> Result<()> {
     }
 
     if warnings.is_empty() && failures.is_empty() {
-        println!("{}", "✓ All impl ConfigSchema for X blocks are justified or baselined.".green().bold());
+        println!(
+            "{}",
+            "✓ All impl ConfigSchema for X blocks are justified or baselined."
+                .green()
+                .bold()
+        );
     } else if !failures.is_empty() {
         println!(
             "\n{} {} unjustified or misconfigured impl(s) found.",

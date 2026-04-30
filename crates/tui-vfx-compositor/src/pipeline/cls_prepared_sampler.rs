@@ -15,9 +15,9 @@ use crate::samplers::cls_shredder::Shredder;
 use crate::samplers::cls_sine_wave::SineWave;
 use crate::traits::sampler::{Sampler, SamplerOutput};
 use crate::types::cls_sampler_spec::SamplerSpec;
-use tui_vfx_types::VfxCellContext;
 use mixed_signals::traits::SignalContext;
 use smallvec::SmallVec;
+use tui_vfx_types::VfxCellContext;
 
 pub(crate) enum PreparedSampler {
     None,
@@ -377,9 +377,8 @@ mod tests {
         // The downstream-stage ctx, built by the orchestrator pattern,
         // carries `resolved_x = local_x + delta1_x + delta2_x` and
         // `resolved_y = local_y + delta1_y + delta2_y`.
-        let downstream =
-            VfxCellContext::new(local_x, local_y, width, height, 0, 0, t)
-                .with_sampler_resolution(outcome.delta_x, outcome.delta_y);
+        let downstream = VfxCellContext::new(local_x, local_y, width, height, 0, 0, t)
+            .with_sampler_resolution(outcome.delta_x, outcome.delta_y);
         assert_eq!(downstream.resolved_x, local_x as i32 + expect_acc_dx);
         assert_eq!(downstream.resolved_y, local_y as i32 + expect_acc_dy);
     }
