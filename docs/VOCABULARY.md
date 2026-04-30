@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.21.0</VERS> -->
-<!-- <WCTX>K2.21 source-isolated native playback: document source render mode and runtime input override controls.</WCTX> -->
-<!-- <CLOG>0.21.0: MINOR — add source render mode and runtime input override vocabulary.
+<!-- <VERS>VERSION: 0.22.0</VERS> -->
+<!-- <WCTX>v3.1 native backend vocabulary: document backend-owned source stages alongside CompositionSpec lowering.</WCTX> -->
+<!-- <CLOG>0.22.0: MINOR — clarify native backend source content/style stages as part of native lowering evidence.
+0.21.0: MINOR — add source render mode and runtime input override vocabulary.
 0.20.0: MINOR — add native compositor composition mode and generated studio control vocabulary.
 0.19.0: MINOR — add backend playback vocabulary.
 0.18.0: MINOR — add compositor backend adapter and studio snapshot command vocabulary.
@@ -201,13 +202,13 @@ Policy:
 ### Native CompositionSpec Lowering
 
 Definition:
-: Backend-adapter work that maps canonical v3.1 recipe graph/effect nodes into compositor-native `CompositionSpec` fields such as filters, masks, samplers, shader layers, shadow, timing, and runtime parameters.
+: Backend-adapter work that maps canonical v3.1 recipe graph/effect nodes into compositor-native `CompositionSpec` fields such as filters, masks, samplers, shader layers, shadow, timing, runtime parameters, and backend-owned source content/style stages for effects that must mutate the source grid before compositor rendering.
 
 Not the same as:
-: Player-resolved styled IR passing through the compositor, text-grid smoke rendering, or visual parity with the legacy recipe runtime.
+: Player-resolved styled IR passing through the compositor, text-grid smoke rendering, visual parity with the legacy recipe runtime, or a schema-level effect model change.
 
 Policy:
-: Unsupported native nodes must emit structured diagnostics and must not silently fall back. Auto mode may fall back only when it reports `fallbackUsed=true`.
+: Unsupported native nodes must emit structured diagnostics and must not silently fall back. Source content/style stages are valid native evidence only when they preserve `sourceOnly`, `nativeSourceIsolated=true`, and strict unsupported-shape diagnostics. Auto mode may fall back only when it reports `fallbackUsed=true`.
 
 ### Generated Studio Control
 
@@ -1736,4 +1737,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.21.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.22.0</VERS> -->

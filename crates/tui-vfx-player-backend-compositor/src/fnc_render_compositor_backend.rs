@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.3.1</VERS>
-// <WCTX>Native compositor source isolation: render native requests from source-only IR and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.3.1: PATCH — consolidate repeated composition metadata population without changing emitted keys.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style stages, and keep IR-resolved compatibility separate.</WCTX>
+// <CLOG>0.4.0: MINOR — apply source-only native style stages and residual content stages before compositor rendering.
+// 0.3.1: PATCH — consolidate repeated composition metadata population without changing emitted keys.
 // 0.3.0: MINOR — route native compositor requests through source-only IR unless auto mode explicitly falls back.
 // 0.2.0: MINOR — add request-based render path for native/auto/irResolved composition modes.
 // 0.1.0: INIT — implement PlayerRenderBackend over SemanticScene lowering and backend output collection.</CLOG>
@@ -22,7 +23,7 @@ use crate::{
         lower_player_ir_to_semantic_scene, player_cell_from_compositor_cell,
     },
     fnc_lower_recipe_graph_to_composition_spec::{
-        LoweredCompositionSpec, NativeContentStage, TypewriterCursorWake,
+        LoweredCompositionSpec, NativeContentStage, NativeStyleStage, TypewriterCursorWake,
         lower_player_ir_to_composition_spec,
     },
 };
@@ -121,6 +122,10 @@ pub fn render_compositor_backend_request(
         "nativeContentStages".to_string(),
         json!(lowered_spec.content_stages.len()),
     );
+    backend_metadata.insert(
+        "nativeStyleStages".to_string(),
+        json!(lowered_spec.style_stages.len()),
+    );
     mirror_evidence_into_metadata(&mut backend_metadata, &lowered_spec.evidence);
 
     PlayerRenderBackendOutput::from_ir(
@@ -138,7 +143,9 @@ fn scene_ir_with_native_content_stages(
     scene_ir: &PlayerRenderIrReport,
     lowered_spec: &LoweredCompositionSpec,
 ) -> PlayerRenderIrReport {
-    if lowered_spec.content_stages.is_empty() || lowered_spec.evidence.fallback_used {
+    if (lowered_spec.content_stages.is_empty() && lowered_spec.style_stages.is_empty())
+        || lowered_spec.evidence.fallback_used
+    {
         return scene_ir.clone();
     }
 
@@ -210,6 +217,52 @@ fn scene_ir_with_native_content_stages(
             NativeContentStage::WrapIndicator { every } => {
                 apply_wrap_indicator_content_stage(&mut staged, *every)
             }
+            NativeContentStage::Redact { symbol, reveal } => {
+                apply_redact_content_stage(&mut staged, *symbol, *reveal)
+            }
+            NativeContentStage::Mirror { axis } => apply_mirror_content_stage(&mut staged, axis),
+            NativeContentStage::Numeric {
+                value,
+                decimals,
+                prefix,
+                suffix,
+            } => apply_numeric_content_stage(&mut staged, *value, *decimals, prefix, suffix),
+            NativeContentStage::Dissolve {
+                replacement,
+                direction,
+                seed,
+            } => apply_dissolve_content_stage(&mut staged, *replacement, direction, *seed),
+            NativeContentStage::GlitchShift { amount, seed } => {
+                apply_glitch_shift_content_stage(&mut staged, *amount, *seed)
+            }
+        }
+    }
+    for stage in &lowered_spec.style_stages {
+        match stage {
+            NativeStyleStage::ModuloColumns {
+                modulus,
+                remainder,
+                foreground,
+                background,
+            } => apply_modulo_columns_style_stage(
+                &mut staged,
+                *modulus,
+                *remainder,
+                foreground,
+                background,
+            ),
+            NativeStyleStage::NeonFlicker {
+                color,
+                stability,
+                dim_amount,
+                italic_window,
+            } => apply_neon_flicker_style_stage(
+                &mut staged,
+                color,
+                *stability,
+                *dim_amount,
+                *italic_window,
+            ),
         }
     }
     staged
@@ -519,6 +572,188 @@ fn apply_wrap_indicator_content_stage(report: &mut PlayerRenderIrReport, every: 
     sync_styled_cells_to_rows(report);
 }
 
+fn apply_redact_content_stage(report: &mut PlayerRenderIrReport, symbol: char, reveal: f64) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let reveal = reveal.clamp(0.0, 1.0);
+    for (y, row) in rows.iter_mut().enumerate() {
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                if glyph == ' ' || cell_threshold(x, y) < reveal {
+                    glyph
+                } else {
+                    symbol
+                }
+            })
+            .collect();
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_mirror_content_stage(report: &mut PlayerRenderIrReport, axis: &str) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    if axis == "vertical" {
+        rows.reverse();
+    } else {
+        for row in &mut rows {
+            *row = row.chars().rev().collect();
+        }
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_numeric_content_stage(
+    report: &mut PlayerRenderIrReport,
+    value: f64,
+    decimals: usize,
+    prefix: &str,
+    suffix: &str,
+) {
+    let report_rows = report_height(report).max(1);
+    let mut rows = vec![String::new(); report_rows];
+    rows[0] = format!("{prefix}{value:.decimals$}{suffix}");
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_dissolve_content_stage(
+    report: &mut PlayerRenderIrReport,
+    replacement: char,
+    direction: &str,
+    seed: usize,
+) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    let progress = report.phase_t.clamp(0.0, 1.0);
+    for (y, row) in rows.iter_mut().enumerate() {
+        let width = row.chars().count().max(1);
+        *row = row
+            .chars()
+            .enumerate()
+            .map(|(x, glyph)| {
+                if glyph == ' ' || dissolve_threshold(x, y, width, seed, direction) > progress {
+                    replacement
+                } else {
+                    glyph
+                }
+            })
+            .collect();
+    }
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_glitch_shift_content_stage(report: &mut PlayerRenderIrReport, amount: usize, seed: usize) {
+    let report_columns = report_width(report);
+    let report_rows = report_height(report);
+    let mut rows = dense_rows(report, report_columns, report_rows);
+    apply_glitch_shift_rows(&mut rows, amount, seed);
+    report.rows = rows;
+    sync_styled_cells_to_rows(report);
+}
+
+fn apply_modulo_columns_style_stage(
+    report: &mut PlayerRenderIrReport,
+    modulus: usize,
+    remainder: usize,
+    foreground: &str,
+    background: &str,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let modulus = modulus.max(1);
+    for y in 0..height {
+        for x in 0..width {
+            if x % modulus == remainder {
+                set_report_cell_style(report, x, y, Some(foreground), Some(background), None);
+            }
+        }
+    }
+}
+
+fn apply_neon_flicker_style_stage(
+    report: &mut PlayerRenderIrReport,
+    color: &str,
+    stability: f64,
+    dim_amount: f64,
+    italic_window: bool,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let clock = report.loop_t.unwrap_or(report.phase_t);
+    let flicker = (clock * 37.0).sin() * 0.5 + 0.5;
+    let active_strength = if flicker <= stability {
+        1.0
+    } else {
+        1.0 - dim_amount
+    };
+    let foreground = dimmed_rgba_label(color, active_strength);
+    for y in 0..height {
+        for x in 0..width {
+            set_report_cell_style(
+                report,
+                x,
+                y,
+                Some(foreground.as_str()),
+                None,
+                italic_window.then_some("italic"),
+            );
+        }
+    }
+}
+
+fn set_report_cell_style(
+    report: &mut PlayerRenderIrReport,
+    x: usize,
+    y: usize,
+    foreground: Option<&str>,
+    background: Option<&str>,
+    modifier: Option<&str>,
+) {
+    if let Some(cell) = report
+        .styled_cells
+        .iter_mut()
+        .find(|cell| cell.x == x && cell.y == y)
+    {
+        if let Some(foreground) = foreground {
+            cell.foreground = foreground.to_string();
+        }
+        if let Some(background) = background {
+            cell.background = background.to_string();
+        }
+        if let Some(modifier) = modifier
+            && !cell.modifiers.iter().any(|existing| existing == modifier)
+        {
+            cell.modifiers.push(modifier.to_string());
+        }
+        return;
+    }
+
+    let glyph = report
+        .rows
+        .get(y)
+        .and_then(|row| row.chars().nth(x))
+        .unwrap_or(' ')
+        .to_string();
+    report.styled_cells.push(PlayerRenderCell {
+        x,
+        y,
+        glyph,
+        foreground: foreground.unwrap_or("defaultForeground").to_string(),
+        background: background.unwrap_or("transparent").to_string(),
+        modifiers: modifier.into_iter().map(str::to_string).collect(),
+        role: None,
+    });
+}
+
 fn dense_rows(report: &PlayerRenderIrReport, width: usize, height: usize) -> Vec<String> {
     let mut rows = (0..height)
         .map(|y| {
@@ -651,6 +886,39 @@ fn rotate_row(row: &str, offset: usize) -> String {
 
 fn cell_threshold(x: usize, y: usize) -> f64 {
     ((x * 37 + y * 17) % 100) as f64 / 99.0
+}
+
+fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: &str) -> f64 {
+    match direction {
+        "leftToRight" | "left_to_right" => x as f64 / width.max(1) as f64,
+        "rightToLeft" | "right_to_left" => width.saturating_sub(x + 1) as f64 / width.max(1) as f64,
+        _ => cell_threshold(x + seed, y),
+    }
+}
+
+fn dimmed_rgba_label(label: &str, strength: f64) -> String {
+    let Some((r, g, b, a)) = parse_rgba_label(label) else {
+        return label.to_string();
+    };
+    let strength = strength.clamp(0.0, 1.0);
+    format!(
+        "rgba({},{},{},{})",
+        (r as f64 * strength).round() as u8,
+        (g as f64 * strength).round() as u8,
+        (b as f64 * strength).round() as u8,
+        a
+    )
+}
+
+fn parse_rgba_label(label: &str) -> Option<(u8, u8, u8, u8)> {
+    let inner = label.strip_prefix("rgba(")?.strip_suffix(')')?;
+    let mut parts = inner.split(',').map(str::trim);
+    Some((
+        parts.next()?.parse().ok()?,
+        parts.next()?.parse().ok()?,
+        parts.next()?.parse().ok()?,
+        parts.next()?.parse().ok()?,
+    ))
 }
 
 fn scramble_glyph(index: usize, charset: &[char]) -> char {
@@ -842,4 +1110,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.3.1</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

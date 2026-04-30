@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec content with honest fallback diagnostics.</WCTX>
-// <CLOG>0.3.0: MINOR — add strict native lowering for the current shader/filter/mask/sampler debug-recipe blocker set.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style work with honest fallback diagnostics.</WCTX>
+// <CLOG>0.4.0: MINOR — add source-only native content/style stages for residual style and content debug-recipe blockers.
+// 0.3.0: MINOR — add strict native lowering for the current shader/filter/mask/sampler debug-recipe blocker set.
 // 0.2.2: PATCH — de-duplicate unsupported-native diagnostics and signed offset clamping helpers.
 // 0.2.1: PATCH — pass native lowering counts directly when building evidence.
 // 0.2.0: MINOR — add native/auto/irResolved lowering modes for filter, mask, sampler, shader, and style debug-recipes.
@@ -36,6 +37,8 @@ pub struct LoweredCompositionSpec {
     pub spec: CompositionSpec,
     /// Source-content transforms applied before compositor effects while staying source-only.
     pub content_stages: Vec<NativeContentStage>,
+    /// Source-style transforms applied before compositor effects while staying source-only.
+    pub style_stages: Vec<NativeStyleStage>,
     /// Backend diagnostics describing lowering decisions.
     pub diagnostics: Vec<PlayerRenderBackendDiagnostic>,
     /// Evidence fields copied onto the player backend output.
@@ -90,6 +93,44 @@ pub enum NativeContentStage {
     Scramble { seed: usize, charset: String },
     /// Mark wrapping rows with an end-of-line indicator.
     WrapIndicator { every: usize },
+    /// Redact unresolved source glyphs with a symbol.
+    Redact { symbol: char, reveal: f64 },
+    /// Mirror source rows horizontally or vertically.
+    Mirror { axis: String },
+    /// Replace the source grid with a formatted numeric value.
+    Numeric {
+        value: f64,
+        decimals: usize,
+        prefix: String,
+        suffix: String,
+    },
+    /// Dissolve source glyphs toward a replacement character.
+    Dissolve {
+        replacement: char,
+        direction: String,
+        seed: usize,
+    },
+    /// Shift alternating source rows.
+    GlitchShift { amount: usize, seed: usize },
+}
+
+/// Native style transform stage owned by the compositor backend adapter.
+#[derive(Clone, Debug, PartialEq)]
+pub enum NativeStyleStage {
+    /// Apply foreground/background colors to modulo-selected columns.
+    ModuloColumns {
+        modulus: usize,
+        remainder: usize,
+        foreground: String,
+        background: String,
+    },
+    /// Apply deterministic neon flicker styling.
+    NeonFlicker {
+        color: String,
+        stability: f64,
+        dim_amount: f64,
+        italic_window: bool,
+    },
 }
 
 /// Cursor wake behavior for native typewriter content.
@@ -150,6 +191,7 @@ fn lower_ir_resolved_composition_spec(input: &PlayerRenderIrReport) -> LoweredCo
         },
         spec,
         content_stages: Vec::new(),
+        style_stages: Vec::new(),
         diagnostics,
     }
 }
@@ -164,6 +206,7 @@ fn lower_auto_composition_spec(request: &PlayerRenderBackendRequest) -> LoweredC
     let fallback = lower_ir_resolved_composition_spec(&request.ir);
     lowered.spec = fallback.spec;
     lowered.content_stages = Vec::new();
+    lowered.style_stages = Vec::new();
     lowered.evidence.composition_mode = "auto".to_string();
     lowered.evidence.fallback_used = true;
     lowered.evidence.native_lowering_attempted = true;
@@ -188,6 +231,7 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
     };
     spec.preserve_unfilled = true;
     let mut content_stages = Vec::new();
+    let mut style_stages = Vec::new();
 
     let mut diagnostics = Vec::new();
     let mut lowered_effect_ids = Vec::new();
@@ -213,6 +257,7 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
             request,
             &mut spec,
             &mut content_stages,
+            &mut style_stages,
         ) {
             NodeLoweringOutcome::Lowered { warnings } => {
                 lowered_node_count += 1;
@@ -248,7 +293,7 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
     }
 
     let composition_spec_non_empty = composition_spec_non_empty(&spec);
-    let native_stage_non_empty = !content_stages.is_empty();
+    let native_stage_non_empty = !content_stages.is_empty() || !style_stages.is_empty();
     let native_lowering_succeeded = unlowered_node_count == 0;
     LoweredCompositionSpec {
         evidence: PlayerRenderBackendCompositionEvidence {
@@ -264,12 +309,14 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
             composition_spec_summary: composition_spec_summary_with_content_stages(
                 &spec,
                 content_stages.len(),
+                style_stages.len(),
             ),
             source_render_mode: "sourceOnly".to_string(),
             native_source_isolated: true,
         },
         spec,
         content_stages,
+        style_stages,
         diagnostics,
     }
 }
@@ -289,6 +336,7 @@ fn lower_node_into_spec(
     request: &PlayerRenderBackendRequest,
     spec: &mut CompositionSpec,
     content_stages: &mut Vec<NativeContentStage>,
+    style_stages: &mut Vec<NativeStyleStage>,
 ) -> NodeLoweringOutcome {
     let warnings = ignored_policy_warnings(node);
     let effect = node.effect.as_str();
@@ -302,6 +350,16 @@ fn lower_node_into_spec(
         "content.scramble" => lower_content_scramble(node, request, content_stages, warnings),
         "content.wrapIndicator" => {
             lower_content_wrap_indicator(node, request, content_stages, warnings)
+        }
+        "content.redact" => lower_content_redact(node, request, content_stages, warnings),
+        "content.mirror" => lower_content_mirror(node, request, content_stages, warnings),
+        "content.numeric" => lower_content_numeric(node, request, content_stages, warnings),
+        "content.dissolve" => lower_content_dissolve(node, request, content_stages, warnings),
+        "content.glitchShift" => {
+            lower_content_glitch_shift(node, request, content_stages, warnings)
+        }
+        "content.scrambleGlitchShift" => {
+            lower_content_scramble_glitch_shift(node, request, content_stages, warnings)
         }
         "filter.tint" => {
             spec.filters.push(FilterSpec::Tint {
@@ -390,6 +448,8 @@ fn lower_node_into_spec(
         "shader.revealWipe" => lower_reveal_wipe(node, spec, request, warnings),
         "shader.borderSweep" => lower_border_sweep(recipe, node, spec, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
+        "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
+        "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
             reason: format!("Effect `{other}` is not yet supported by compositor-native lowering."),
         },
@@ -613,6 +673,150 @@ fn lower_content_wrap_indicator(
 
     content_stages.push(NativeContentStage::WrapIndicator {
         every: integer_input(node, request, "every", 1).max(1) as usize,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_redact(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "content.redact", &["symbol", "reveal"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::Redact {
+        symbol: enum_input(node, request, "symbol")
+            .unwrap_or("█")
+            .chars()
+            .next()
+            .unwrap_or('█'),
+        reveal: number_input(node, request, "reveal", request.ir.phase_t).clamp(0.0, 1.0),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_mirror(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(node, "content.mirror", &["axis"]) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::Mirror {
+        axis: enum_input(node, request, "axis")
+            .unwrap_or("horizontal")
+            .to_string(),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_numeric(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(
+        node,
+        "content.numeric",
+        &["value", "decimals", "prefix", "suffix"],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::Numeric {
+        value: number_input(node, request, "value", request.ir.phase_t),
+        decimals: integer_input(node, request, "decimals", 0).clamp(0, 9) as usize,
+        prefix: enum_input(node, request, "prefix")
+            .unwrap_or("")
+            .to_string(),
+        suffix: enum_input(node, request, "suffix")
+            .unwrap_or("")
+            .to_string(),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_dissolve(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(
+        node,
+        "content.dissolve",
+        &["replacement", "direction", "seed"],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let replacement = match enum_input(node, request, "replacement").unwrap_or("space") {
+        "dot" => '·',
+        "block" => '█',
+        value => value.chars().next().unwrap_or(' '),
+    };
+    content_stages.push(NativeContentStage::Dissolve {
+        replacement,
+        direction: enum_input(node, request, "direction")
+            .unwrap_or("random")
+            .to_string(),
+        seed: integer_input(node, request, "seed", 0).max(0) as usize,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_glitch_shift(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "content.glitchShift", &["amount", "seed"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    content_stages.push(NativeContentStage::GlitchShift {
+        amount: integer_input(node, request, "amount", 1).max(0) as usize,
+        seed: integer_input(node, request, "seed", 3).max(0) as usize,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_content_scramble_glitch_shift(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    content_stages: &mut Vec<NativeContentStage>,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_native_content_reason(
+        node,
+        "content.scrambleGlitchShift",
+        &["seed", "charset", "amount"],
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let seed = integer_input(node, request, "seed", 7).max(0) as usize;
+    content_stages.push(NativeContentStage::Scramble {
+        seed,
+        charset: enum_input(node, request, "charset")
+            .unwrap_or("#%&?+*")
+            .to_string(),
+    });
+    content_stages.push(NativeContentStage::GlitchShift {
+        amount: integer_input(node, request, "amount", 1).max(0) as usize,
+        seed,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -1072,6 +1276,123 @@ fn lower_style_fade(
     NodeLoweringOutcome::Lowered { warnings }
 }
 
+fn lower_style_modulo_columns(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    let supported_inputs = ["foreground", "background"];
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.moduloColumns",
+        &supported_inputs,
+        StyleScopeRequirement::ModuloColumns,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let Some((modulus, remainder)) = modulo_columns_scope(node) else {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `style.moduloColumns` requires a modulo-columns scope for compositor-native style-stage lowering.".to_string(),
+        };
+    };
+    style_stages.push(NativeStyleStage::ModuloColumns {
+        modulus,
+        remainder,
+        foreground: color_label_from_config(
+            color_input(node, request, "foreground").unwrap_or(ColorConfig::Cyan),
+        ),
+        background: color_label_from_config(color_input(node, request, "background").unwrap_or(
+            ColorConfig::Rgb {
+                r: 15,
+                g: 40,
+                b: 55,
+            },
+        )),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_style_neon_flicker(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.neonFlicker",
+        &["color", "stability", "dimAmount", "italicWindow"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::NeonFlicker {
+        color: color_label_from_config(color_input(node, request, "color").unwrap_or(
+            ColorConfig::Rgb {
+                r: 80,
+                g: 255,
+                b: 220,
+            },
+        )),
+        stability: number_input(node, request, "stability", 0.7).clamp(0.0, 1.0),
+        dim_amount: number_input(node, request, "dimAmount", 0.5).clamp(0.0, 1.0),
+        italic_window: bool_input(node, request, "italicWindow", false),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+enum StyleScopeRequirement {
+    All,
+    ModuloColumns,
+}
+
+fn unsupported_style_stage_reason(
+    node: &NodeSpec,
+    effect_id: &str,
+    supported_inputs: &[&str],
+    scope_requirement: StyleScopeRequirement,
+) -> Option<String> {
+    let unsupported_inputs = node
+        .inputs
+        .keys()
+        .map(|key| key.as_str())
+        .filter(|key| !supported_inputs.contains(key))
+        .collect::<Vec<_>>();
+    if !unsupported_inputs.is_empty() {
+        return Some(format!(
+            "Effect `{effect_id}` uses input(s) `{}` that have no compositor-native style-stage equivalent without dropping authored semantics.",
+            unsupported_inputs.join("`, `"),
+        ));
+    }
+    if !node.outputs.is_empty() {
+        return Some(format!(
+            "Effect `{effect_id}` declares graph outputs that the compositor-native style stage cannot publish without dropping authored semantics."
+        ));
+    }
+    match (&scope_requirement, node.scope.as_ref()) {
+        (StyleScopeRequirement::All, None | Some(tui_vfx_contract::ScopeSpec::All)) => None,
+        (
+            StyleScopeRequirement::ModuloColumns,
+            Some(tui_vfx_contract::ScopeSpec::ModuloColumns { .. }),
+        ) => None,
+        _ => Some(format!(
+            "Effect `{effect_id}` uses a scope that is not yet supported by the compositor-native style stage without dropping authored semantics."
+        )),
+    }
+}
+
+fn modulo_columns_scope(node: &NodeSpec) -> Option<(usize, usize)> {
+    match node.scope.as_ref()? {
+        tui_vfx_contract::ScopeSpec::ModuloColumns { modulus, remainder } if *modulus > 0 => {
+            Some((*modulus, *remainder))
+        }
+        _ => None,
+    }
+}
+
 fn ignored_policy_warnings(node: &NodeSpec) -> Vec<PlayerRenderBackendDiagnostic> {
     let mut warnings = Vec::new();
     if node.cell_write_policy.is_some() {
@@ -1323,6 +1644,15 @@ fn color_config_from_hex(value: &str) -> Option<ColorConfig> {
     Some(ColorConfig::Rgb { r, g, b })
 }
 
+fn color_label_from_config(color: ColorConfig) -> String {
+    let color = tui_vfx_types::Color::from(color);
+    if color.a == 0 {
+        "transparent".to_string()
+    } else {
+        format!("rgba({},{},{},{})", color.r, color.g, color.b, color.a)
+    }
+}
+
 fn gradient_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -1529,15 +1859,17 @@ fn lerp_u8(from: u8, to: u8, progress: f64) -> u8 {
 }
 
 fn composition_spec_summary(spec: &CompositionSpec) -> BTreeMap<String, serde_json::Value> {
-    composition_spec_summary_with_content_stages(spec, 0)
+    composition_spec_summary_with_content_stages(spec, 0, 0)
 }
 
 fn composition_spec_summary_with_content_stages(
     spec: &CompositionSpec,
     content_stage_count: usize,
+    style_stage_count: usize,
 ) -> BTreeMap<String, serde_json::Value> {
     BTreeMap::from([
         ("contentStages".to_string(), json!(content_stage_count)),
+        ("styleStages".to_string(), json!(style_stage_count)),
         (
             "samplers".to_string(),
             json!(spec.effective_samplers().len()),
@@ -1568,4 +1900,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
