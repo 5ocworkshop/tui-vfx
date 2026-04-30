@@ -379,8 +379,9 @@ fn test_fnc_ratatui_stats_drawer_starts_open_and_owns_rapid_stats() {
     assert!(rows.iter().any(|row| row.contains(" Stats ")));
     assert!(rows.iter().any(|row| row.contains("phase=Enter")));
     assert!(
-        rows.iter()
-            .any(|row| row.contains("Player Snapshot (phase=Enter sample_t=0.00)"))
+        rows.iter().any(
+            |row| row.contains("Player Snapshot │ 0.0 FPS (0.0ms) (phase=Enter sample_t=0.00)")
+        )
     );
     assert!(rows.iter().any(|row| row.contains("backend_hash=")));
     assert!(rows.iter().any(|row| row.contains("hash=")
@@ -624,6 +625,99 @@ fn test_fnc_ratatui_stats_drawer_ctrl_arrows_toggle_without_playback_change() {
     assert!(app.stats_drawer_open);
     assert_eq!(app.player.phase_t(), before_phase_t);
     assert_eq!(app.player.last_backend_output.backend_hash, before_hash);
+}
+
+#[test]
+fn test_fnc_ui_script_toggles_black_canvas_command() {
+    let mut state =
+        PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+
+    let output = run_script(&mut state, "b,b", false);
+
+    assert!(output.contains("black_canvas: true"));
+    assert!(output.contains("black_canvas: false"));
+    assert!(!state.black_canvas_enabled());
+}
+
+#[test]
+fn test_fnc_ratatui_b_key_toggles_black_canvas_without_playback_change() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let before_phase_t = app.player.phase_t();
+    let before_hash = app.player.last_backend_output.backend_hash;
+
+    assert!(runtime.block_on(handle_player_ui_key(&mut app, KeyCode::Char('b'), 10)));
+
+    assert!(app.player.black_canvas_enabled());
+    assert_eq!(app.player.phase_t(), before_phase_t);
+    assert_eq!(app.player.last_backend_output.backend_hash, before_hash);
+}
+
+#[test]
+fn test_fnc_ratatui_black_canvas_changes_window_canvas_color() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let mut terminal = Terminal::new(TestBackend::new(110, 30)).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("default ratatui draw");
+    assert_eq!(
+        terminal.backend().buffer()[(0, 0)].bg,
+        Color::Rgb(16, 22, 28)
+    );
+
+    app.player
+        .apply_command(tui_vfx_player_ui::PlayerUiCommand::ToggleBlackCanvas);
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("black canvas ratatui draw");
+
+    assert_eq!(terminal.backend().buffer()[(0, 0)].bg, Color::Black);
+}
+
+#[test]
+fn test_fnc_ratatui_snapshot_title_shows_fps_in_demo_location() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut state =
+        PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    state.advance_time(16);
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    app.stats_drawer_open = false;
+    let mut terminal = Terminal::new(TestBackend::new(110, 30)).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal);
+
+    assert!(
+        rows.iter()
+            .any(|row| row.contains("Player Snapshot │ 62.5 FPS (16.0ms)")),
+        "snapshot title should put FPS immediately after title like demo.rs:
+{}",
+        rows.join(
+            "
+"
+        )
+    );
 }
 
 #[test]

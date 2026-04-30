@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_handle_player_ui_key.rs</FILE> - <DESC>Handle ratatui player UI keys</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Player UI: route keyboard input across browser, preview, studio, and presentation drawers.</WCTX>
-// <CLOG>0.3.0: MINOR — add Ctrl+Arrow stats drawer toggles without changing playback commands.</CLOG>
+// <CLOG>0.4.0: MINOR — add global black-canvas toggle key.
+// 0.3.0: MINOR — add Ctrl+Arrow stats drawer toggles without changing playback commands.</CLOG>
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
@@ -46,6 +47,7 @@ pub async fn handle_player_ui_key_event(
     match key.code {
         KeyCode::Char('q') => false,
         KeyCode::Char('?') => app.player.apply_command(PlayerUiCommand::Help),
+        KeyCode::Char('b') => app.player.apply_command(PlayerUiCommand::ToggleBlackCanvas),
         KeyCode::Tab => {
             app.focus = next_focus(app.focus, app.player.studio);
             true
@@ -108,6 +110,7 @@ fn handle_preview_key(app: &mut PlayerUiApp, code: KeyCode) -> bool {
         KeyCode::Char(' ') => PlayerUiCommand::TogglePause,
         KeyCode::Char('r') => PlayerUiCommand::Reset,
         KeyCode::Char('m') => PlayerUiCommand::ToggleMotionDisabled,
+        KeyCode::Char('b') => PlayerUiCommand::ToggleBlackCanvas,
         KeyCode::Char('[') => PlayerUiCommand::PreviousPhase,
         KeyCode::Char(']') => PlayerUiCommand::NextPhase,
         KeyCode::Left | KeyCode::Char('h') => PlayerUiCommand::ScrubBackward,

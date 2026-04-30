@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render visual player state to terminal text</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Player UI: display shared backend parity evidence in the same visual shell used for manual review.</WCTX>
-// <CLOG>0.2.0: MINOR — show backend letter-cell evidence in UI snapshots.
+// <CLOG>0.3.0: MINOR — include FPS/frame-time and black-canvas presentation state.
+// 0.2.0: MINOR — show backend letter-cell evidence in UI snapshots.
 // 0.1.0: INIT — add bordered frame, metadata, diagnostics, and help rendering.</CLOG>
 
 use crate::PlayerUiState;
@@ -16,7 +17,7 @@ pub fn render_ui_snapshot(state: &PlayerUiState, clear: bool) -> String {
     out.push_str("tui-vfx contract-native player UI\n");
     out.push_str(&format!("recipe: {}\n", state.recipe_path.display()));
     out.push_str(&format!(
-        "phase: {:?}  sample_t: {:.2}  loop_t: {}  paused: {}  motion_disabled: {}\n",
+        "phase: {:?}  sample_t: {:.2}  loop_t: {}  paused: {}  motion_disabled: {}  black_canvas: {}  fps: {:.1}  frame_ms: {:.1}\n",
         state.phase(),
         state.phase_t(),
         state
@@ -24,7 +25,10 @@ pub fn render_ui_snapshot(state: &PlayerUiState, clear: bool) -> String {
             .map(|value| format!("{value:.2}"))
             .unwrap_or_else(|| "none".to_string()),
         state.paused,
-        state.motion_disabled
+        state.motion_disabled,
+        state.black_canvas_enabled(),
+        state.fps(),
+        state.frame_time_ms()
     ));
     out.push_str(&format!(
         "status: {:?}  render_hash: {}  backend: {}  composition_mode: {}  fallback_used: {}  source_render_mode: {}  native_source_isolated: {}  native_lowering_attempted: {}  native_lowering_succeeded: {}  composition_spec_non_empty: {}  lowered_nodes: {}  unlowered_nodes: {}  backend_hash: {}  non_empty_cells: {}  styled_cells: {}  letter_cells: {}  elapsed_ms: {}\n",

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>VERSION: 0.3.1</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Player UI: provide themed browser, preview, studio, and quiet stats surfaces over player frame reports.</WCTX>
-// <CLOG>0.3.1: PATCH — show color-coded phase/sample timing in the snapshot title.</CLOG>
+// <CLOG>0.4.0: MINOR — show FPS in the preview title and honor black-canvas mode.
+// 0.3.1: PATCH — show color-coded phase/sample timing in the snapshot title.</CLOG>
 
 use ratatui::{
     Frame,
@@ -28,7 +29,7 @@ use crate::{
 
 /// Render the full interactive player UI frame.
 pub fn render_ratatui_ui(app: &mut PlayerUiApp, frame: &mut Frame<'_>) {
-    let theme = PlayerUiTheme::eichler();
+    let theme = player_ui_theme(app.player.black_canvas_enabled());
     frame.render_widget(Block::default().style(theme.canvas_style()), frame.area());
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -38,16 +39,24 @@ pub fn render_ratatui_ui(app: &mut PlayerUiApp, frame: &mut Frame<'_>) {
             Constraint::Length(2),
         ])
         .split(frame.area());
-    render_status(app, frame, chunks[0]);
-    render_body(app, frame, chunks[1]);
-    render_footer(app, frame, chunks[2]);
+    render_status(app, frame, chunks[0], theme);
+    render_body(app, frame, chunks[1], theme);
+    render_footer(app, frame, chunks[2], theme);
     if app.player.show_help {
         render_ratatui_help(frame);
     }
 }
 
-fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
+fn player_ui_theme(black_canvas: bool) -> PlayerUiTheme {
     let theme = PlayerUiTheme::eichler();
+    if black_canvas {
+        theme.with_black_canvas()
+    } else {
+        theme
+    }
+}
+
+fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect, theme: PlayerUiTheme) {
     let focus = match app.focus {
         PlayerUiFocus::Browser => "browser",
         PlayerUiFocus::Preview => "preview",
@@ -77,21 +86,26 @@ fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
     frame.render_widget(Paragraph::new(text).style(theme.chrome_style()), area);
 }
 
-fn render_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
+fn render_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect, theme: PlayerUiTheme) {
     if app.stats_drawer_open {
         let drawer_width = player_ui_stats_drawer_width(app);
         let panes = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([Constraint::Min(0), Constraint::Length(drawer_width)])
             .split(area);
-        render_main_body(app, frame, panes[0]);
+        render_main_body(app, frame, panes[0], theme);
         render_stats_drawer(app, frame, panes[1]);
     } else {
-        render_main_body(app, frame, area);
+        render_main_body(app, frame, area, theme);
     }
 }
 
-fn render_main_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
+fn render_main_body(
+    app: &mut PlayerUiApp,
+    frame: &mut Frame<'_>,
+    area: Rect,
+    theme: PlayerUiTheme,
+) {
     if app.player.studio {
         let panes = Layout::default()
             .direction(Direction::Horizontal)
@@ -102,7 +116,7 @@ fn render_main_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
             ])
             .split(area);
         render_player_browser(app, frame, panes[0]);
-        render_preview(&app.player, frame, panes[1]);
+        render_preview(&app.player, frame, panes[1], theme);
         render_studio_controls(app, frame, panes[2]);
     } else {
         let panes = Layout::default()
@@ -110,12 +124,11 @@ fn render_main_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
             .constraints([Constraint::Percentage(34), Constraint::Percentage(66)])
             .split(area);
         render_player_browser(app, frame, panes[0]);
-        render_preview(&app.player, frame, panes[1]);
+        render_preview(&app.player, frame, panes[1], theme);
     }
 }
 
-fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect) {
-    let theme = PlayerUiTheme::eichler();
+fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect, theme: PlayerUiTheme) {
     let active = if state.paused { "paused" } else { "playing" };
     let motion = if state.motion_disabled {
         "motion-disabled"
@@ -176,7 +189,12 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect) {
 
 fn player_snapshot_title(state: &PlayerUiState, theme: PlayerUiTheme) -> Line<'static> {
     Line::from(vec![
-        Span::styled(" Player Snapshot (", theme.title_style()),
+        Span::styled(" Player Snapshot │ ", theme.title_style()),
+        Span::styled(
+            format!("{:.1} FPS ({:.1}ms)", state.fps(), state.frame_time_ms()),
+            Style::default().fg(Color::Cyan),
+        ),
+        Span::styled(" (", theme.title_style()),
         Span::styled("phase=", theme.label_style()),
         Span::styled(format!("{:?}", state.phase()), theme.title_style()),
         Span::raw(" "),
@@ -313,21 +331,20 @@ fn diagnostic_lines(state: &PlayerUiState) -> Vec<Line<'static>> {
         .collect()
 }
 
-fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
-    let theme = PlayerUiTheme::eichler();
+fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect, theme: PlayerUiTheme) {
     let text = match app.focus {
         PlayerUiFocus::Browser => {
-            "Tab preview | ↑/↓ j/k move | Enter/Right open | Left parent | Ctrl+←/→ stats | q quit | ? help"
+            "Tab preview | ↑/↓ j/k move | Enter/Right open | Left parent | b black bg | Ctrl+←/→ stats | q quit | ? help"
         }
         PlayerUiFocus::Preview => {
             if app.player.studio {
-                "Tab studio | Space pause | r reload | [ ] phase | ←/→ scrub | Ctrl+←/→ stats | q quit | ? help"
+                "Tab studio | Space pause | r reload | [ ] phase | ←/→ scrub | b black bg | Ctrl+←/→ stats | q quit | ? help"
             } else {
-                "Tab browser | Space pause | r reload | [ ] phase | ←/→ scrub | Ctrl+←/→ stats | q quit | ? help"
+                "Tab browser | Space pause | r reload | [ ] phase | ←/→ scrub | b black bg | Ctrl+←/→ stats | q quit | ? help"
             }
         }
         PlayerUiFocus::Studio => {
-            "Tab browser | ↑/↓ j/k select control | Enter/e mutate selected | Ctrl+←/→ stats | q quit | ? help"
+            "Tab browser | ↑/↓ j/k select control | Enter/e mutate selected | b black bg | Ctrl+←/→ stats | q quit | ? help"
         }
     };
     frame.render_widget(

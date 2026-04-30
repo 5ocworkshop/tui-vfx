@@ -1,13 +1,14 @@
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the visual player shell</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.4.0</VERS>
 // <WCTX>Player UI playback: start in enter phase and advance through lifecycle phases so migrated enter/exit effects visibly animate.</WCTX>
-// <CLOG>0.3.0: MINOR — advance UI playback through enter, dwell, and exit phases instead of ticking one static phase.
+// <CLOG>0.4.0: MINOR — track FPS/frame time and black-canvas presentation state.
+// 0.3.0: MINOR — advance UI playback through enter, dwell, and exit phases instead of ticking one static phase.
 // 0.2.0: MINOR — generate rich effect/source controls with current values and mutation target metadata.
 // 0.1.2: PATCH — make generated control target selection explicit without changing control ids.
 // 0.1.1: PATCH — keep metadata footer at the physical end of the source file.
 // 0.1.0: INIT — load recipe/catalog, sample player frames, and mutate UI controls.</CLOG>
 
-use std::path::PathBuf;
+use std::{collections::VecDeque, path::PathBuf};
 
 use tui_vfx_contract::{
     DescriptorCatalog, DurationSpec, DwellPolicy, EffectDescriptor, LifecyclePhase, PhaseTiming,
@@ -58,6 +59,9 @@ pub struct PlayerUiState {
     pub message: String,
     /// Whether help should be visible.
     pub show_help: bool,
+    /// Whether the player window canvas should use a black background.
+    pub black_canvas: bool,
+    frame_stats: PlayerUiFrameStats,
     /// Most recent player frame report.
     pub last_report: PlayerFrameReport,
     /// Most recent backend output derived from player render IR.
@@ -118,6 +122,8 @@ impl PlayerUiState {
             elapsed_ms: 0,
             message: "loaded canonical v3.1 recipe through player".to_string(),
             show_help: false,
+            black_canvas: false,
+            frame_stats: PlayerUiFrameStats::default(),
             last_report,
             last_backend_output,
         })
@@ -167,6 +173,21 @@ impl PlayerUiState {
     /// Return optional loop_t.
     pub fn loop_t(&self) -> Option<f64> {
         self.request.loop_t
+    }
+
+    /// Return whether the player window canvas is currently forced to black.
+    pub fn black_canvas_enabled(&self) -> bool {
+        self.black_canvas
+    }
+
+    /// Return the current rolling frames-per-second estimate.
+    pub fn fps(&self) -> f64 {
+        self.frame_stats.fps()
+    }
+
+    /// Return the most recent frame time in milliseconds.
+    pub fn frame_time_ms(&self) -> f64 {
+        self.frame_stats.frame_time_ms()
     }
 
     /// Return a borrowed latest report.
@@ -279,6 +300,7 @@ impl PlayerUiState {
                 }
             }
             PlayerUiCommand::ToggleMotionDisabled => self.toggle_motion_disabled(),
+            PlayerUiCommand::ToggleBlackCanvas => self.toggle_black_canvas(),
             PlayerUiCommand::PreviousPhase => self.cycle_phase(-1),
             PlayerUiCommand::NextPhase => self.cycle_phase(1),
             PlayerUiCommand::ScrubBackward => self.scrub(-0.05),
@@ -296,7 +318,9 @@ impl PlayerUiState {
         if self.show_help {
             return;
         }
-        self.tick(delta_ms.max(1));
+        let delta_ms = delta_ms.max(1);
+        self.frame_stats.record_frame_delta(delta_ms);
+        self.tick(delta_ms);
         self.render();
     }
 
@@ -393,6 +417,16 @@ impl PlayerUiState {
         .to_string();
     }
 
+    fn toggle_black_canvas(&mut self) {
+        self.black_canvas = !self.black_canvas;
+        self.message = if self.black_canvas {
+            "black player canvas enabled"
+        } else {
+            "default player canvas restored"
+        }
+        .to_string();
+    }
+
     fn cycle_phase(&mut self, delta: i32) {
         self.request.phase = cycle_phase(self.request.phase, delta);
         self.message = format!("phase set to {:?}", self.request.phase);
@@ -414,6 +448,37 @@ impl PlayerUiState {
             }
             None => self.message = "recipe has no signal-backed dwell trigger".to_string(),
         }
+    }
+}
+
+#[derive(Debug, Default)]
+struct PlayerUiFrameStats {
+    frame_deltas_ms: VecDeque<u64>,
+    cached_fps: f64,
+    frame_time_ms: f64,
+}
+
+impl PlayerUiFrameStats {
+    const WINDOW_SIZE: usize = 60;
+
+    fn record_frame_delta(&mut self, delta_ms: u64) {
+        self.frame_time_ms = delta_ms as f64;
+        self.frame_deltas_ms.push_front(delta_ms.max(1));
+        while self.frame_deltas_ms.len() > Self::WINDOW_SIZE {
+            self.frame_deltas_ms.pop_back();
+        }
+        let total_ms: u64 = self.frame_deltas_ms.iter().copied().sum();
+        if total_ms > 0 {
+            self.cached_fps = self.frame_deltas_ms.len() as f64 * 1000.0 / total_ms as f64;
+        }
+    }
+
+    fn fps(&self) -> f64 {
+        self.cached_fps
+    }
+
+    fn frame_time_ms(&self) -> f64 {
+        self.frame_time_ms
     }
 }
 

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_command.rs</FILE> - <DESC>Visual player UI command vocabulary</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>New kernel Phase K1: model simplified demo-inspired keybindings.</WCTX>
-// <CLOG>0.1.0: INIT — add pause, reset, motion, phase, scrub, trigger, help, tick, and quit commands.</CLOG>
+// <CLOG>0.2.0: MINOR — add black-canvas presentation toggle command.
+// 0.1.0: INIT — add pause, reset, motion, phase, scrub, trigger, help, tick, and quit commands.</CLOG>
 
 /// One visual player command parsed from a key or line token.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -16,6 +17,8 @@ pub enum PlayerUiCommand {
     Reset,
     /// Toggle motion-disabled stable sample mode.
     ToggleMotionDisabled,
+    /// Toggle the player window canvas between default and black.
+    ToggleBlackCanvas,
     /// Cycle to the previous lifecycle phase.
     PreviousPhase,
     /// Cycle to the next lifecycle phase.
@@ -41,6 +44,7 @@ impl PlayerUiCommand {
             " " | "space" | "pause" => Some(Self::TogglePause),
             "r" | "reset" | "reload" => Some(Self::Reset),
             "m" | "motion" => Some(Self::ToggleMotionDisabled),
+            "b" | "black" | "black-canvas" | "background" => Some(Self::ToggleBlackCanvas),
             "[" | "prev" | "left-phase" => Some(Self::PreviousPhase),
             "]" | "next" | "right-phase" => Some(Self::NextPhase),
             "left" | "h" | "-" => Some(Self::ScrubBackward),
