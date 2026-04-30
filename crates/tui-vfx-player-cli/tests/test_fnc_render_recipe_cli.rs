@@ -1918,6 +1918,52 @@ fn test_fnc_cli_native_style_color_shift_matches_v2_deprecated_letter_cell_oracl
 }
 
 #[test]
+fn test_fnc_cli_lowers_fault_line_sampler_to_compositor_sampler_not_source_stage_json() {
+    for recipe in [
+        "samplers/sampler_faultline.json",
+        "samplers/sampler_faultline_offset_positive.json",
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
+                str_arg("--phase-t"),
+                str_arg("0.35"),
+            ],
+            "render-backend native fault-line sampler compositor lowering player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(report["compositionSpecSummary"]["samplers"], 1, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"]["contentStages"], 0,
+            "{recipe}"
+        );
+        assert!(
+            report["loweredEffectIds"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!("sampler.faultLine")),
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
 fn test_fnc_cli_native_sampler_faultline_matches_v2_deprecated_rows_json() {
     for (phase, expected_sampler_count, expected_letter_cells, expected_rows) in [
         (

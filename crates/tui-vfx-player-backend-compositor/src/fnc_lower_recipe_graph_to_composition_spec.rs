@@ -141,14 +141,6 @@ pub enum NativeContentStage {
     GlitchShift { amount: usize, seed: usize },
     /// Shift source rows between authored start/end columns.
     SlideShift { start_col: i64, end_col: i64 },
-    /// Apply V2-compatible fault-line row displacement to source rows.
-    FaultLineSampler {
-        seed: u64,
-        intensity: f64,
-        split_bias: f64,
-        width: usize,
-        height: usize,
-    },
 }
 
 /// Native style transform stage owned by the compositor backend adapter.
@@ -692,9 +684,7 @@ fn lower_node_into_spec(
         }
         "sampler.crt" => lower_crt_sampler(node, spec, request, warnings),
         "sampler.crtJitter" => lower_crt_jitter_sampler(node, spec, request, warnings),
-        "sampler.faultLine" => {
-            lower_fault_line_sampler(node, spec, content_stages, request, warnings)
-        }
+        "sampler.faultLine" => lower_fault_line_sampler(node, spec, request, warnings),
         "sampler.radialTwist" => lower_radial_twist_sampler(node, spec, request, warnings),
         "sampler.shredder" => lower_shredder_sampler(node, spec, request, warnings),
         "shader.linearGradient" => lower_linear_gradient(node, spec, request, warnings),
@@ -1739,7 +1729,6 @@ fn lower_crt_jitter_sampler(
 fn lower_fault_line_sampler(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
-    content_stages: &mut Vec<NativeContentStage>,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -1751,33 +1740,14 @@ fn lower_fault_line_sampler(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    if let Some(offset) = optional_i16_input(node, request, "offset") {
-        spec.push_sampler(SamplerSpec::FaultLine {
-            seed: 0,
-            intensity: SignalOrFloat::Static(1.0),
-            split_bias: 0.0,
-            offset: Some(offset),
-        });
-    } else {
-        spec.push_sampler(SamplerSpec::None);
-        content_stages.push(NativeContentStage::FaultLineSampler {
-            seed: integer_input(node, request, "seed", 0).max(0) as u64,
-            intensity: number_input(node, request, "intensity", 1.0).max(0.0),
-            split_bias: number_input(node, request, "splitBias", 0.0).clamp(-1.0, 1.0),
-            width: request
-                .recipe
-                .scenes
-                .first()
-                .map(|scene| scene.width)
-                .unwrap_or(request.source_ir.width),
-            height: request
-                .recipe
-                .scenes
-                .first()
-                .map(|scene| scene.height)
-                .unwrap_or(request.source_ir.height),
-        });
-    }
+    spec.push_sampler(SamplerSpec::FaultLine {
+        seed: integer_input(node, request, "seed", 0).max(0) as u64,
+        intensity: SignalOrFloat::Static(
+            number_input(node, request, "intensity", 1.0).max(0.0) as f32
+        ),
+        split_bias: number_input(node, request, "splitBias", 0.0).clamp(-1.0, 1.0) as f32,
+        offset: optional_i16_input(node, request, "offset"),
+    });
     NodeLoweringOutcome::Lowered { warnings }
 }
 

@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 1.0.1</VERS> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>1.0.1: PATCH — record that legacy player pathReveal no longer aliases structured paths to direction wipes.
+<!-- <CLOG>1.1.0: mark sampler.faultLine as fully compositor-owned and record source-stage deletion.
+1.0.1: PATCH — record that legacy player pathReveal no longer aliases structured paths to direction wipes.
 1.0.0: mark sampler.crt and sampler.crtJitter as compositor-owned SamplerSpec lowerings and record source-stage deletion.
 0.9.0: PATCH — mark mask.pathReveal schema/lowerer cleanup as completed using structured RevealPathType payloads.
 0.8.0: mark mask.wipe and mask.wipeCorner lowering as compositor-owned where exact WipeDirection variants exist.
@@ -154,7 +155,7 @@ Sampler migration status:
 | `sampler.ripple` | `SamplerSpec::Ripple` | Already compositor-native. |
 | `sampler.crt` | `SamplerSpec::Crt { scanline_strength, jitter, curvature }` | Done: lowerer emits `SamplerSpec::Crt`; backend `NativeContentStage::CrtSampler` and source-row implementation were deleted. |
 | `sampler.crtJitter` | `SamplerSpec::CrtJitter { intensity, speed_hz, decay_ms }` | Done: lowerer maps authored `amplitude`/`frequency`/`decayMs` to compositor fields; backend `NativeContentStage::CrtJitterSampler` and source-row implementation were deleted. |
-| `sampler.faultLine` | `SamplerSpec::FaultLine` | Partially compositor-native when v3.1 authors fixed `offset`; dynamic source-stage path remains and should be migrated next. |
+| `sampler.faultLine` | `SamplerSpec::FaultLine { seed, intensity, split_bias, offset }` | Done: lowerer emits `SamplerSpec::FaultLine` for both dynamic and fixed-offset recipes; backend `NativeContentStage::FaultLineSampler` and source-row implementation were deleted. |
 | `sampler.shredder` | `SamplerSpec::Shredder` | Already compositor-native. |
 | `sampler.radialTwist` | `SamplerSpec::RadialTwist` | Already compositor-native. |
 
