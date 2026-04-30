@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/cls_value_kind.rs</FILE> - <DESC>Closed effect input value kind vocabulary</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>K2.13 schema decision burn-down: add gradient to the closed value kind vocabulary.</WCTX>
-// <CLOG>0.2.0: MINOR — add gradient value kind.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Vertical recipe parity: carry structured primitive payload details through migration.</WCTX>
+// <CLOG>0.3.0: MINOR — add structured value kind for descriptor-owned JSON payload fields.
+// 0.2.0: MINOR — add gradient value kind.
 // 0.1.0: INIT — add closed ValueKind enum for schema-backed effect inputs.</CLOG>
 
 /// Closed v3.1 vocabulary for typed effect input values.
@@ -36,7 +37,9 @@ pub enum ValueKind {
     Scope,
     /// Cell rectangle value.
     Rect,
+    /// Descriptor-owned structured JSON payload for fields whose shape is primitive-specific.
+    Structured,
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_value_kind.rs</FILE> - <DESC>Closed effect input value kind vocabulary</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

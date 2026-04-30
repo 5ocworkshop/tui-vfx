@@ -12,7 +12,15 @@ pub(crate) fn collect_handled_primitive_inputs(
     _used: &BTreeSet<String>,
 ) -> BTreeSet<String> {
     match descriptor_id {
-        "source.card" => fields(["message", "width", "height"]),
+        "source.card" => fields([
+            "message",
+            "width",
+            "height",
+            "foreground",
+            "background",
+            "borderStyle",
+            "borderTrim",
+        ]),
         "source.text" => fields(["text", "width", "height"]),
         "source.ansi" => fields(["ansiText", "width", "height"]),
         "source.image" => fields(["asset", "width", "height", "fallbackGlyph"]),
@@ -30,7 +38,7 @@ pub(crate) fn collect_handled_primitive_inputs(
             "edgeWidth",
             "glisten",
         ]),
-        "filter.fadeToCanvas" => fields(["canvasColor", "amount", "strength"]),
+        "filter.fadeToCanvas" => fields(["canvasColor", "amount", "strength", "applyTo"]),
         "filter.patternFill" => fields(["pattern", "density"]),
         "filter.crt" => fields(["intensity", "glow", "scanlineStrength"]),
         "filter.matrixRain" => fields([
@@ -249,6 +257,7 @@ pub(crate) fn collect_handled_primitive_inputs(
             "color",
             "intensity",
             "radius",
+            "source",
         ]),
         "shader.radar" => fields(["applyTo", "color", "speed", "tailLength"]),
         "content.typewriter" => fields([

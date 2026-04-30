@@ -48,26 +48,6 @@ pub(crate) fn classify_migration_mapping_effect_record(
     ) {
         return classification;
     }
-    if family == "masks" {
-        return with_blocker(
-            "descriptorDecisionNeeded",
-            "deferForDescriptorDecision",
-            input_fields,
-            "mask fixture expansion deferred",
-            "high",
-            "remaining legacy mask records need owner review to keep the masks report stable",
-        );
-    }
-    if !value_source_decision_fields.is_empty() {
-        return build_migration_mapping_record_classification(
-            "schemaDecisionNeeded",
-            "deferForSchemaDecision",
-            value_source_decision_fields,
-            &migration_mapping_blocker("valueSourceOrSignalDecision"),
-            "high",
-            "legacy input values need value-source or signal semantics review before migration",
-        );
-    }
     if !candidate_ready_family(family) {
         return with_blocker(
             "notYetClassified",
@@ -82,14 +62,33 @@ pub(crate) fn classify_migration_mapping_effect_record(
         "candidateReady",
         "createCanonicalFixture",
         &[],
-        &[],
+        &accepted_runtime_blockers(value_source_decision_fields),
         "medium",
-        "descriptor-backed legacy recipe appears ready for bounded fixture authoring",
+        candidate_ready_note(value_source_decision_fields),
     )
 }
 
+fn accepted_runtime_blockers(value_source_decision_fields: &[String]) -> Vec<String> {
+    if value_source_decision_fields.is_empty() {
+        vec![]
+    } else {
+        migration_mapping_blocker("valueSourceOrSignalAccepted")
+    }
+}
+
+fn candidate_ready_note(value_source_decision_fields: &[String]) -> &'static str {
+    if value_source_decision_fields.is_empty() {
+        "descriptor-backed legacy recipe appears ready for bounded fixture authoring"
+    } else {
+        "legacy dynamic input values map to accepted ValueSource signal, parameter, map, graph-value, or literal semantics"
+    }
+}
+
 fn candidate_ready_family(family: &str) -> bool {
-    matches!(family, "filters" | "samplers" | "shaders" | "styles")
+    matches!(
+        family,
+        "content" | "filters" | "masks" | "samplers" | "shaders" | "styles"
+    )
 }
 fn with_blocker(
     status: &str,

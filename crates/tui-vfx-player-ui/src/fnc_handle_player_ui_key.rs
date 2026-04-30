@@ -1,10 +1,9 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_handle_player_ui_key.rs</FILE> - <DESC>Handle ratatui player UI keys</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>K2.23 UI foundation: intercept help overlay input and route studio control keys.</WCTX>
-// <CLOG>0.2.0: MINOR — make help modal dismiss-on-input and add studio focus mutation keys.
-// 0.1.0: INIT — route crossterm keys into fast-fs browser actions or K0 player commands.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Player UI: route keyboard input across browser, preview, studio, and presentation drawers.</WCTX>
+// <CLOG>0.3.0: MINOR — add Ctrl+Arrow stats drawer toggles without changing playback commands.</CLOG>
 
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use crate::{PlayerUiApp, PlayerUiCommand, PlayerUiFocus};
 
@@ -14,10 +13,37 @@ pub async fn handle_player_ui_key(
     code: KeyCode,
     viewport_height: usize,
 ) -> bool {
+    handle_player_ui_key_event(
+        app,
+        KeyEvent::new(code, KeyModifiers::NONE),
+        viewport_height,
+    )
+    .await
+}
+
+/// Handle a full crossterm key event, including modifiers for presentation toggles.
+pub async fn handle_player_ui_key_event(
+    app: &mut PlayerUiApp,
+    key: KeyEvent,
+    viewport_height: usize,
+) -> bool {
     if app.player.show_help {
-        return handle_help_overlay_key(app, code);
+        return handle_help_overlay_key(app, key.code);
     }
-    match code {
+    if key.modifiers.contains(KeyModifiers::CONTROL) {
+        match key.code {
+            KeyCode::Right => {
+                app.stats_drawer_open = false;
+                return true;
+            }
+            KeyCode::Left => {
+                app.stats_drawer_open = true;
+                return true;
+            }
+            _ => {}
+        }
+    }
+    match key.code {
         KeyCode::Char('q') => false,
         KeyCode::Char('?') => app.player.apply_command(PlayerUiCommand::Help),
         KeyCode::Tab => {
@@ -25,9 +51,9 @@ pub async fn handle_player_ui_key(
             true
         }
         _ => match app.focus {
-            PlayerUiFocus::Browser => handle_browser_key(app, code, viewport_height).await,
-            PlayerUiFocus::Preview => handle_preview_key(app, code),
-            PlayerUiFocus::Studio => handle_studio_key(app, code),
+            PlayerUiFocus::Browser => handle_browser_key(app, key.code, viewport_height).await,
+            PlayerUiFocus::Preview => handle_preview_key(app, key.code),
+            PlayerUiFocus::Studio => handle_studio_key(app, key.code),
         },
     }
 }
@@ -119,4 +145,4 @@ fn move_studio_cursor(app: &mut PlayerUiApp, delta: isize) {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_handle_player_ui_key.rs</FILE> - <DESC>Handle ratatui player UI keys</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

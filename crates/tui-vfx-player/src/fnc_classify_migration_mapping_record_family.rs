@@ -10,35 +10,35 @@ use crate::{
     },
 };
 
-/// Return family-first classification when a family is schema/source/backend gated.
+/// Return family-first classification when a family has an explicit migration disposition.
 pub(crate) fn classify_migration_mapping_record_family(
     family: &str,
     input_fields: &[String],
 ) -> Option<MigrationMappingRecordClassification> {
     let result = match family {
-        "content" | "fixtures" => build(
-            "sourceDecisionNeeded",
-            "addSourceDescriptor",
-            input_fields,
-            "source descriptor decision",
-            "high",
-            "legacy source/content authoring needs source descriptor review",
-        ),
         "scene" => build(
-            "schemaDecisionNeeded",
-            "deferForSchemaDecision",
-            input_fields,
-            "scene/schema decision",
+            "candidateReady",
+            "createCanonicalFixture",
+            &[],
+            "scene source/layer schema accepted",
             "high",
-            "legacy scene/layer authoring needs schema and source-placement review",
+            "scene/layer authoring maps to source.scene plus scene elements and layer visibility",
+        ),
+        "fixtures" => build(
+            "candidateReady",
+            "createCanonicalFixture",
+            &[],
+            "source-only fixture schema accepted",
+            "high",
+            "command-capture artifacts map to source.commandCaptureArtifact without executing commands during render",
         ),
         "signals" | "easings" | "motion_routes" | "bindable_rates" | "event_driven_dwell" => build(
-            "schemaDecisionNeeded",
-            "deferForSchemaDecision",
-            input_fields,
-            "runtime data-model decision",
+            "candidateReady",
+            "createCanonicalFixture",
+            &[],
+            "runtime schema accepted",
             "high",
-            "legacy timing, signal, motion, or binding semantics need schema review",
+            "runtime, timing, signal, and binding semantics map to lifecycle, bindings, active phases, and element-local motion metadata",
         ),
         "loopback" => build(
             "ownerAuditNeeded",

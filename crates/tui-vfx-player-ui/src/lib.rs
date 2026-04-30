@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/src/lib.rs</FILE> - <DESC>Contract-native visual player UI exports</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Player UI: expose ratatui visual shell over player reports.</WCTX>
-// <CLOG>0.1.0: INIT — export CLI parsing, app state, command handling, and snapshot rendering.</CLOG>
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Player UI: expose ratatui visual shell, keyboard routing, and snapshot rendering.</WCTX>
+// <CLOG>0.3.0: MINOR — add local Eichler-inspired player theme module.</CLOG>
 
 //! Basic ratatui inspection shell layered on contract-native player snapshots.
 //!
@@ -14,6 +14,8 @@ pub mod cls_player_ui_app;
 pub mod cls_player_ui_command;
 pub mod cls_player_ui_control;
 pub mod cls_player_ui_state;
+mod cls_player_ui_theme;
+mod col_player_ui_stats_drawer;
 mod fnc_find_startup_recipe_path;
 pub mod fnc_handle_player_ui_key;
 pub mod fnc_parse_cli_options;
@@ -21,6 +23,7 @@ mod fnc_player_ui_state_support;
 pub mod fnc_print_usage;
 mod fnc_render_ratatui_help;
 pub mod fnc_render_ratatui_ui;
+mod fnc_render_stats_drawer;
 pub mod fnc_render_ui_snapshot;
 pub mod fnc_run;
 pub mod fnc_run_interactive;
@@ -31,7 +34,7 @@ pub use cls_player_ui_app::{PlayerUiApp, PlayerUiFocus};
 pub use cls_player_ui_command::PlayerUiCommand;
 pub use cls_player_ui_control::PlayerUiControl;
 pub use cls_player_ui_state::PlayerUiState;
-pub use fnc_handle_player_ui_key::handle_player_ui_key;
+pub use fnc_handle_player_ui_key::{handle_player_ui_key, handle_player_ui_key_event};
 pub use fnc_parse_cli_options::parse_cli_options;
 pub use fnc_render_ratatui_ui::render_ratatui_ui;
 pub use fnc_render_ui_snapshot::render_ui_snapshot;
@@ -39,4 +42,4 @@ pub use fnc_run::run;
 pub use fnc_run_script::run_script;
 
 // <FILE>crates/tui-vfx-player-ui/src/lib.rs</FILE> - <DESC>Contract-native visual player UI exports</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

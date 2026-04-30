@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    CellWritePolicy, EffectId, EffectInputId, GraphValueId, NodeId, NodeOutputSpec,
+    CellWritePolicy, EffectId, EffectInputId, GraphValueId, LifecyclePhase, NodeId, NodeOutputSpec,
     RoleWritePolicy, ScopeSpec, ValueSource,
 };
 
@@ -26,6 +26,9 @@ pub struct NodeSpec {
     #[serde(default)]
     #[schemars(transform = add_graph_value_key_pattern)]
     pub outputs: BTreeMap<GraphValueId, NodeOutputSpec>,
+    /// Optional lifecycle phases in which this node is active; empty means all phases.
+    #[serde(default)]
+    pub active_phases: Vec<LifecyclePhase>,
     /// Optional scope limiting where this node applies.
     pub scope: Option<ScopeSpec>,
     /// Optional cell write policy requested by this node.

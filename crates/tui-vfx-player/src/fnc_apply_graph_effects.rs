@@ -162,9 +162,20 @@ fn execute_node_id(
         ));
         return;
     };
+    if !node_active_for_request(node, request) {
+        return;
+    }
     push_graph_value_input_diagnostics(recipe, catalog, node, request, errors);
     apply_node(node, request, rows, styled_grid, errors);
     publish_node_outputs(node, request, errors);
+}
+
+fn node_active_for_request(node: &NodeSpec, request: &PlayerSampleRequest) -> bool {
+    node.active_phases.is_empty()
+        || node
+            .active_phases
+            .iter()
+            .any(|phase| phase == &request.phase)
 }
 
 fn push_graph_value_input_diagnostics(
@@ -282,6 +293,7 @@ fn value_kind_label(kind: ValueKind) -> &'static str {
         ValueKind::Role => "role",
         ValueKind::Scope => "scope",
         ValueKind::Rect => "rect",
+        ValueKind::Structured => "structured",
     }
 }
 

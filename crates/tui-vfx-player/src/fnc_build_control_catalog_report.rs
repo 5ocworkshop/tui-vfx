@@ -227,6 +227,7 @@ fn control_kind(value: &ValueSpec) -> &'static str {
         ValueKind::Enum => "select",
         ValueKind::Color => "colorPicker",
         ValueKind::Gradient => "gradientEditor",
+        ValueKind::Structured => "structuredJsonEditor",
         ValueKind::Text | ValueKind::String => "textInput",
         _ => "valueInput",
     }
@@ -247,6 +248,7 @@ fn value_kind_label(kind: ValueKind) -> &'static str {
         ValueKind::Role => "role",
         ValueKind::Scope => "scope",
         ValueKind::Rect => "rect",
+        ValueKind::Structured => "structured",
     }
 }
 

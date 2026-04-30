@@ -203,6 +203,7 @@ pub fn node(id: &str, effect: &str, inputs: BTreeMap<EffectInputId, ValueSource>
         effect: EffectId::new(effect),
         inputs,
         outputs: BTreeMap::new(),
+        active_phases: vec![],
         scope: Some(ScopeSpec::All),
         cell_write_policy: Some(CellWritePolicy::WriteCell),
         role_write_policy: None,

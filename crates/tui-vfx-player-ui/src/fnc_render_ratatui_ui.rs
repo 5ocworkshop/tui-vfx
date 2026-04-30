@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Player UI: provide demo.rs-like browser plus preview panes over player frame reports.</WCTX>
-// <CLOG>0.1.0: INIT — render fast-fs browser, player snapshot, status, diagnostics, and help.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Player UI: provide browser, preview panes, and a quiet stats drawer over player frame reports.</WCTX>
+// <CLOG>0.2.0: MINOR — move rapidly updating stats into a right-side drawer.</CLOG>
 
 use ratatui::{
     Frame,
@@ -13,7 +13,9 @@ use ratatui::{
 use tui_vfx_player::{PlayerRenderBackendOutput, PlayerRenderCell};
 
 use crate::{
-    PlayerUiApp, PlayerUiFocus, PlayerUiState, fnc_render_ratatui_help::render_ratatui_help,
+    PlayerUiApp, PlayerUiFocus, PlayerUiState,
+    col_player_ui_stats_drawer::player_ui_stats_drawer_width,
+    fnc_render_ratatui_help::render_ratatui_help, fnc_render_stats_drawer::render_stats_drawer,
 };
 
 /// Render the full interactive player UI frame.
@@ -21,7 +23,7 @@ pub fn render_ratatui_ui(app: &mut PlayerUiApp, frame: &mut Frame<'_>) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(2),
+            Constraint::Length(1),
             Constraint::Min(5),
             Constraint::Length(2),
         ])
@@ -35,48 +37,46 @@ pub fn render_ratatui_ui(app: &mut PlayerUiApp, frame: &mut Frame<'_>) {
 }
 
 fn render_status(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
-    let report = app.player.report();
     let focus = match app.focus {
         PlayerUiFocus::Browser => "browser",
         PlayerUiFocus::Preview => "preview",
         PlayerUiFocus::Studio => "studio",
     };
-    let text = vec![
-        Line::from(vec![
-            Span::styled(
-                "tui-vfx player ",
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::raw(format!(
-                "focus={focus} root={} ",
-                app.browser_root.display()
-            )),
-        ]),
-        Line::from(format!(
-            "phase={:?} sample_t={:.2} loop_t={} hash={} backend={} mode={} source={} fallback={} native_source={} backend_hash={} non_empty={} elapsed={}ms",
-            app.player.phase(),
-            app.player.phase_t(),
-            app.player
-                .loop_t()
-                .map(|value| format!("{value:.2}"))
-                .unwrap_or_else(|| "none".to_string()),
-            report.render_hash,
-            app.player.last_backend_output.backend,
-            app.player.last_backend_output.composition_mode,
-            app.player.last_backend_output.source_render_mode,
-            app.player.last_backend_output.fallback_used,
-            app.player.last_backend_output.native_source_isolated,
-            app.player.last_backend_output.backend_hash,
-            report.non_empty_cells,
-            app.player.elapsed_ms
+    let drawer_hint = if app.stats_drawer_open {
+        "Ctrl+Right close stats"
+    } else {
+        "Ctrl+Left open stats"
+    };
+    let text = Line::from(vec![
+        Span::styled(
+            "tui-vfx player ",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::raw(format!(
+            "focus={focus} root={} | {drawer_hint}",
+            app.browser_root.display()
         )),
-    ];
+    ]);
     frame.render_widget(Paragraph::new(text), area);
 }
 
 fn render_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
+    if app.stats_drawer_open {
+        let drawer_width = player_ui_stats_drawer_width(app);
+        let panes = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Min(0), Constraint::Length(drawer_width)])
+            .split(area);
+        render_main_body(app, frame, panes[0]);
+        render_stats_drawer(app, frame, panes[1]);
+    } else {
+        render_main_body(app, frame, area);
+    }
+}
+
+fn render_main_body(app: &mut PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
     if app.player.studio {
         let panes = Layout::default()
             .direction(Direction::Horizontal)
@@ -137,7 +137,7 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect) {
     let sections = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),
+            Constraint::Length(6),
             Constraint::Min(5),
             Constraint::Length(5),
         ])
@@ -149,15 +149,8 @@ fn render_preview(state: &PlayerUiState, frame: &mut Frame<'_>, area: Rect) {
         "motion"
     };
     frame.render_widget(
-        Paragraph::new(vec![
-            Line::from(format!("recipe: {}", state.recipe_path.display())),
-            Line::from(format!(
-                "status: {:?}  backend={}  {active}  {motion}",
-                state.report().status,
-                state.last_backend_output.backend
-            )),
-        ])
-        .block(Block::default().title(" Preview ").borders(Borders::ALL)),
+        Paragraph::new(preview_context_lines(state, active, motion))
+            .block(Block::default().title(" Preview ").borders(Borders::ALL)),
         sections[0],
     );
     frame.render_widget(
@@ -217,6 +210,30 @@ fn render_studio_controls(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) 
             .wrap(Wrap { trim: false }),
         area,
     );
+}
+
+fn preview_context_lines(state: &PlayerUiState, active: &str, motion: &str) -> Vec<Line<'static>> {
+    let metadata = &state.recipe.metadata;
+    vec![
+        Line::from(format!("recipe: {}", state.recipe_path.display())),
+        Line::from(format!(
+            "title: {}",
+            metadata.title.as_deref().unwrap_or("<untitled>")
+        )),
+        Line::from(format!(
+            "description: {}",
+            metadata.description.as_deref().unwrap_or("<none>")
+        )),
+        Line::from(format!(
+            "expected: {}",
+            metadata.expected_visual.as_deref().unwrap_or("<none>")
+        )),
+        Line::from(format!(
+            "status: {:?}  backend={}  {active}  {motion}",
+            state.report().status,
+            state.last_backend_output.backend
+        )),
+    ]
 }
 
 fn backend_preview_lines(output: &PlayerRenderBackendOutput) -> Vec<Line<'static>> {
@@ -349,17 +366,17 @@ fn diagnostic_lines(state: &PlayerUiState) -> Vec<Line<'static>> {
 fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
     let text = match app.focus {
         PlayerUiFocus::Browser => {
-            "Tab preview | ↑/↓ j/k move | Enter/Right open | Left parent | R refresh | q quit | ? help"
+            "Tab preview | ↑/↓ j/k move | Enter/Right open | Left parent | Ctrl+←/→ stats | q quit | ? help"
         }
         PlayerUiFocus::Preview => {
             if app.player.studio {
-                "Tab studio | Space pause | r reload | m motion | [ ] phase | ←/→ scrub | t trigger | q quit | ? help"
+                "Tab studio | Space pause | r reload | [ ] phase | ←/→ scrub | Ctrl+←/→ stats | q quit | ? help"
             } else {
-                "Tab browser | Space pause | r reload | m motion | [ ] phase | ←/→ scrub | t trigger | q quit | ? help"
+                "Tab browser | Space pause | r reload | [ ] phase | ←/→ scrub | Ctrl+←/→ stats | q quit | ? help"
             }
         }
         PlayerUiFocus::Studio => {
-            "Tab browser | ↑/↓ j/k select control | Enter/e mutate selected | r reload | q quit | ? help"
+            "Tab browser | ↑/↓ j/k select control | Enter/e mutate selected | Ctrl+←/→ stats | q quit | ? help"
         }
     };
     frame.render_widget(
@@ -369,4 +386,4 @@ fn render_footer(app: &PlayerUiApp, frame: &mut Frame<'_>, area: Rect) {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ratatui_ui.rs</FILE> - <DESC>Render ratatui player UI</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

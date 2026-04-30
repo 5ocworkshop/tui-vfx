@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
+// <VERS>VERSION: 0.6.1</VERS>
 // <WCTX>Styled-cell substrate work: keep player evidence tests portable and explicit.</WCTX>
-// <CLOG>0.6.0: MINOR — require K2.5 styled primitive adapters to emit real styled-cell evidence.
+// <CLOG>0.6.1: PATCH — keep style-hash evidence valid after source card style parity migration.
+// 0.6.0: MINOR — require K2.5 styled primitive adapters to emit real styled-cell evidence.
 // 0.5.1: PATCH — clarify styled-grid proof naming and recipe repo override.
 // 0.5.0: MINOR — assert styled-cell visual frames can carry non-default style evidence.
 // 0.4.0: MINOR — assert newly supported text-grid adapters produce player row evidence.
@@ -16,8 +17,8 @@ use std::{
 };
 
 use tui_vfx_contract::{
-    DescriptorCatalog, DescriptorPack, DescriptorPackId, GraphValueId, RecipeDocument, SignalId,
-    Value,
+    DescriptorCatalog, DescriptorPack, DescriptorPackId, GraphValueId, LifecyclePhase,
+    RecipeDocument, SignalId, Value,
 };
 use tui_vfx_player::{
     PlayerRenderBackend, PlayerSampleRequest, PlayerSession, PlayerStatus, PlayerStyledGrid,
@@ -52,6 +53,184 @@ fn test_fnc_player_renders_source_text_from_text_input() {
     assert_eq!(report.status, PlayerStatus::Rendered);
     assert!(report.non_empty_cells > 0);
     assert_eq!(report.rows[0].trim_end(), "HELLO TEXT");
+}
+
+#[test]
+fn source_card_fixture_renders_surface_chrome_and_roles() {
+    let report = player().render_recipe(
+        &source_card_chrome_recipe(),
+        &PlayerSampleRequest::default(),
+    );
+
+    assert_eq!(report.status, PlayerStatus::Rendered);
+    assert_eq!(report.rows[0].trim_end(), "╭────────╮");
+    assert_eq!(report.rows[1].trim_end(), "│CARD    │");
+    assert_eq!(report.rows[2].trim_end(), "╰────────╯");
+    let grid = report
+        .styled_grid
+        .expect("card chrome styled-cell evidence");
+    assert!(
+        grid.cells()
+            .iter()
+            .any(|cell| cell.role.as_deref() == Some("Border"))
+    );
+    assert!(
+        grid.cells()
+            .iter()
+            .any(|cell| cell.role.as_deref() == Some("Background"))
+    );
+    assert!(
+        grid.cells()
+            .iter()
+            .any(|cell| cell.role.as_deref() == Some("Text"))
+    );
+    assert_any_foreground(&grid, "rgba(255,0,255,255)");
+    assert!(
+        grid.cells()
+            .iter()
+            .any(|cell| cell.background == "rgba(50,20,50,255)")
+    );
+}
+
+#[test]
+fn filter_tint_matches_v2_deprecated_oracle_colors_by_phase() {
+    let player = player();
+    let recipe = recipe(&v31_debug_recipe("filters/filter_tint.json"));
+    let enter = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase: LifecyclePhase::Enter,
+            phase_t: 1.0,
+            ..PlayerSampleRequest::default()
+        },
+    );
+    let dwell = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase: LifecyclePhase::Dwell,
+            phase_t: 1.0,
+            ..PlayerSampleRequest::default()
+        },
+    );
+    let exit = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase: LifecyclePhase::Exit,
+            phase_t: 1.0,
+            ..PlayerSampleRequest::default()
+        },
+    );
+
+    for report in [&enter, &dwell, &exit] {
+        assert_eq!(report.status, PlayerStatus::Rendered);
+        assert_eq!(
+            report.rows[0].trim_end(),
+            "╭─────────────────────────────────╮"
+        );
+        assert_eq!(
+            report.rows[1].trim_end(),
+            "│FILTER TEST: Tint Effect         │"
+        );
+        assert_eq!(
+            report.rows[2].trim_end(),
+            "╰─────────────────────────────────╯"
+        );
+    }
+
+    assert_letter_color_count(
+        &enter.styled_grid.expect("enter styled grid"),
+        "rgba(255,193,173,255)",
+        "rgba(126,64,44,255)",
+        20,
+    );
+    assert_letter_color_count(
+        &dwell.styled_grid.expect("dwell styled grid"),
+        "rgba(255,255,255,255)",
+        "rgba(40,40,40,255)",
+        20,
+    );
+    assert_letter_color_count(
+        &exit.styled_grid.expect("exit styled grid"),
+        "rgba(132,162,255,255)",
+        "rgba(46,76,169,255)",
+        20,
+    );
+}
+
+#[test]
+fn basic_filter_primitives_match_v2_deprecated_oracle_colors_by_phase() {
+    assert_filter_phase_colors(
+        "filters/filter_dim.json",
+        "│FILTER TEST: Dim Effect          │",
+        [
+            (
+                LifecyclePhase::Enter,
+                "rgba(179,179,179,255)",
+                "rgba(42,42,56,255)",
+                19,
+            ),
+            (
+                LifecyclePhase::Dwell,
+                "rgba(255,255,255,255)",
+                "rgba(60,60,80,255)",
+                19,
+            ),
+            (
+                LifecyclePhase::Exit,
+                "rgba(128,128,128,255)",
+                "rgba(60,60,80,255)",
+                19,
+            ),
+        ],
+    );
+    assert_filter_phase_colors(
+        "filters/filter_invert.json",
+        "│FILTER TEST: Invert Effect       │",
+        [
+            (
+                LifecyclePhase::Enter,
+                "rgba(20,40,60,255)",
+                "rgba(0,255,255,255)",
+                22,
+            ),
+            (
+                LifecyclePhase::Dwell,
+                "rgba(0,255,255,255)",
+                "rgba(20,40,60,255)",
+                22,
+            ),
+            (
+                LifecyclePhase::Exit,
+                "rgba(20,40,60,255)",
+                "rgba(20,40,60,255)",
+                22,
+            ),
+        ],
+    );
+    assert_filter_phase_colors(
+        "filters/filter_greyscale.json",
+        "│GREYSCALE                       │",
+        [
+            (
+                LifecyclePhase::Enter,
+                "rgba(255,100,100,255)",
+                "rgba(20,60,180,255)",
+                9,
+            ),
+            (
+                LifecyclePhase::Dwell,
+                "rgba(168,137,137,255)",
+                "rgba(54,62,86,255)",
+                9,
+            ),
+            (
+                LifecyclePhase::Exit,
+                "rgba(255,100,100,255)",
+                "rgba(20,60,180,255)",
+                9,
+            ),
+        ],
+    );
 }
 
 #[test]
@@ -99,8 +278,13 @@ fn test_fnc_player_render_ir_carries_rows_styles_provenance_and_graph_values() {
 fn test_fnc_player_source_render_ir_excludes_recipe_graph_effects() {
     let player = player();
     let recipe = recipe(&v31_debug_recipe("filters/filter_tint.json"));
-    let post_effect = player.render_recipe_ir(&recipe, &PlayerSampleRequest::default());
-    let source_only = player.render_recipe_source_ir(&recipe, &PlayerSampleRequest::default());
+    let request = PlayerSampleRequest {
+        phase: LifecyclePhase::Enter,
+        phase_t: 1.0,
+        ..PlayerSampleRequest::default()
+    };
+    let post_effect = player.render_recipe_ir(&recipe, &request);
+    let source_only = player.render_recipe_source_ir(&recipe, &request);
 
     assert_eq!(source_only.schema_version, "v3.1.player.renderIr.1");
     assert_eq!(source_only.status, PlayerStatus::Rendered);
@@ -116,8 +300,16 @@ fn test_fnc_player_source_render_ir_excludes_recipe_graph_effects() {
         source_only
             .styled_cells
             .iter()
-            .all(|cell| cell.foreground == "defaultForeground"),
+            .all(|cell| cell.role.as_deref() != Some("FilterTint")),
         "source-only IR must not include recipe-level filter tint styled evidence"
+    );
+    assert!(
+        source_only
+            .styled_cells
+            .iter()
+            .any(|cell| cell.foreground == "rgba(255,255,255,255)"
+                && cell.background == "rgba(40,40,40,255)"),
+        "source-only IR should preserve source.card base chrome styles"
     );
 }
 
@@ -161,6 +353,7 @@ fn test_fnc_player_dissolve_adapter_changes_row_evidence_by_phase() {
     let hidden = player.render_recipe(
         &recipe,
         &PlayerSampleRequest {
+            phase: LifecyclePhase::Enter,
             phase_t: 0.0,
             ..PlayerSampleRequest::default()
         },
@@ -308,6 +501,68 @@ fn mask_and_sampler_fixture_set_changes_row_evidence() {
             "expected hash evidence change for {relative}"
         );
     }
+}
+
+#[test]
+fn mask_checkers_vertical_slice_preserves_card_chrome_and_phase_gating() {
+    let player = player();
+    let recipe = recipe(&v31_debug_recipe("masks/mask_checkers.json"));
+    let dwell = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase: LifecyclePhase::Dwell,
+            phase_t: 0.5,
+            ..PlayerSampleRequest::default()
+        },
+    );
+    let enter = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase: LifecyclePhase::Enter,
+            phase_t: 0.5,
+            ..PlayerSampleRequest::default()
+        },
+    );
+    let exit = player.render_recipe(
+        &recipe,
+        &PlayerSampleRequest {
+            phase: LifecyclePhase::Exit,
+            phase_t: 0.5,
+            ..PlayerSampleRequest::default()
+        },
+    );
+
+    assert_eq!(dwell.status, PlayerStatus::Rendered);
+    assert_eq!(enter.status, PlayerStatus::Rendered);
+    assert_eq!(exit.status, PlayerStatus::Rendered);
+    assert_eq!(
+        dwell.rows[0].trim_end(),
+        "╭─────────────────────────────────╮"
+    );
+    assert!(dwell.rows[1].contains("MASK TEST: Checkers Effect"));
+    assert_eq!(
+        dwell.rows[2].trim_end(),
+        "╰─────────────────────────────────╯"
+    );
+    assert_ne!(
+        enter.rows, dwell.rows,
+        "enter phase should apply the enter checkers mask"
+    );
+    assert_ne!(
+        exit.rows, dwell.rows,
+        "exit phase should apply the exit checkers mask"
+    );
+    assert_ne!(
+        enter.rows, exit.rows,
+        "enter and exit masks should keep their distinct cell sizes"
+    );
+    let grid = dwell.styled_grid.expect("card chrome styled cells");
+    assert_any_foreground(&grid, "rgba(255,0,255,255)");
+    assert!(
+        grid.cells()
+            .iter()
+            .any(|cell| cell.background == "rgba(50,20,50,255)")
+    );
 }
 
 #[test]
@@ -486,14 +741,19 @@ fn test_fnc_player_style_evidence_changes_hash_without_row_changes() {
     plain_value["graph"]["nodes"] = serde_json::json!({});
     plain_value["graph"]["order"] = serde_json::json!([]);
     let plain_recipe = serde_json::from_value(plain_value).expect("plain style recipe");
-    let request = PlayerSampleRequest::default();
+    let request = PlayerSampleRequest {
+        phase: LifecyclePhase::Enter,
+        phase_t: 0.5,
+        ..PlayerSampleRequest::default()
+    };
     let styled = player.render_recipe(&styled_recipe, &request);
     let plain = player.render_recipe(&plain_recipe, &request);
 
     assert_eq!(styled.rows, plain.rows);
     assert_ne!(styled.render_hash, plain.render_hash);
     assert!(styled.styled_grid.is_some());
-    assert!(plain.styled_grid.is_none());
+    assert!(plain.styled_grid.is_some());
+    assert_ne!(styled.styled_grid, plain.styled_grid);
 }
 
 #[test]
@@ -869,7 +1129,7 @@ fn graph_sequence_value_output_is_consumed_by_later_node() {
     assert!(report.errors.is_empty());
     assert!(report.warnings.is_empty());
     let grid = report.styled_grid.expect("styled graph output");
-    assert_any_foreground(&grid, "rgba(255,38,38,255)");
+    assert_any_foreground(&grid, "rgba(222,6,6,255)");
 }
 
 #[test]
@@ -924,7 +1184,7 @@ fn graph_parallel_branch_value_is_visible_after_join() {
 
     assert_eq!(report.status, PlayerStatus::Rendered);
     let grid = report.styled_grid.expect("styled graph output");
-    assert_any_foreground(&grid, "rgba(64,255,64,255)");
+    assert_any_foreground(&grid, "rgba(16,207,16,255)");
 }
 
 #[test]
@@ -1340,6 +1600,81 @@ fn source_text_recipe() -> RecipeDocument {
     serde_json::from_value(value).expect("source.text recipe")
 }
 
+fn source_card_chrome_recipe() -> RecipeDocument {
+    let mut value: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(v31_debug_recipe("baseline.json")).expect("read baseline recipe"),
+    )
+    .expect("baseline json");
+    let pack: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(descriptor_pack_path()).expect("pack json"))
+            .expect("descriptor pack json");
+    value["id"] = serde_json::json!("debugCardChromeSource");
+    value["sourceDescriptors"]["source.card"] = pack["sourceDescriptors"]["source.card"].clone();
+    value["sources"]["mainCard"]["inputs"] = serde_json::json!({
+        "message": { "kind": "literal", "value": { "kind": "text", "value": "CARD" } },
+        "width": { "kind": "literal", "value": { "kind": "integer", "value": 10 } },
+        "height": { "kind": "literal", "value": { "kind": "integer", "value": 3 } },
+        "foreground": color_source(255, 0, 255),
+        "background": color_source(50, 20, 50),
+        "borderStyle": enum_source("rounded"),
+        "borderTrim": enum_source("none")
+    });
+    serde_json::from_value(value).expect("source.card chrome recipe")
+}
+
+fn assert_filter_phase_colors(
+    recipe_relative: &str,
+    expected_body_row: &str,
+    phase_expectations: [(LifecyclePhase, &str, &str, usize); 3],
+) {
+    let player = player();
+    let recipe = recipe(&v31_debug_recipe(recipe_relative));
+    for (phase, expected_foreground, expected_background, expected_count) in phase_expectations {
+        let report = player.render_recipe(
+            &recipe,
+            &PlayerSampleRequest {
+                phase,
+                phase_t: 1.0,
+                ..PlayerSampleRequest::default()
+            },
+        );
+        assert_eq!(report.status, PlayerStatus::Rendered);
+        assert_eq!(report.rows[1].trim_end(), expected_body_row);
+        assert_letter_color_count(
+            &report.styled_grid.expect("phase styled grid"),
+            expected_foreground,
+            expected_background,
+            expected_count,
+        );
+    }
+}
+
+fn assert_letter_color_count(
+    grid: &PlayerStyledGrid,
+    expected_foreground: &str,
+    expected_background: &str,
+    expected_count: usize,
+) {
+    let actual_count = grid
+        .cells()
+        .iter()
+        .filter(|cell| cell.glyph.chars().next().is_some_and(char::is_alphanumeric))
+        .filter(|cell| {
+            cell.foreground == expected_foreground && cell.background == expected_background
+        })
+        .count();
+    assert_eq!(
+        actual_count,
+        expected_count,
+        "expected {expected_count} alphanumeric cells with fg={expected_foreground} bg={expected_background}; actual styled cells: {:?}",
+        grid.cells()
+            .iter()
+            .filter(|cell| cell.glyph.chars().next().is_some_and(char::is_alphanumeric))
+            .map(|cell| (&cell.glyph, &cell.foreground, &cell.background))
+            .collect::<Vec<_>>()
+    );
+}
+
 fn assert_any_foreground(grid: &PlayerStyledGrid, expected: &str) {
     assert!(
         grid.cells().iter().any(|cell| cell.foreground == expected),
@@ -1698,4 +2033,4 @@ fn workspace_root() -> PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player/tests/test_fnc_recipe_player.rs</FILE> - <DESC>Contract-native skeleton player regression tests</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.6.1</VERS>

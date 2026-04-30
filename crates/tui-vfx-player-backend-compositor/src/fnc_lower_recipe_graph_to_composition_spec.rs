@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.10.0</VERS>
+// <VERS>VERSION: 0.11.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.10.0: MINOR — lower current shader blockers through source-owned player-compatible style stages.
+// <CLOG>0.11.0: MINOR — lower style.colorFade through source-owned player-compatible style stages.
+// 0.10.0: MINOR — lower current shader blockers through source-owned player-compatible style stages.
 // 0.9.0: MINOR — lower CRT samplers through source-owned player-compatible content stages.
 // 0.8.2: PATCH — share the supported wipe direction list between path-reveal and wipe-corner lowering.
 // 0.8.1: PATCH — align wipe-corner default direction with descriptor and player primitive defaults.
@@ -28,8 +29,8 @@ use tui_vfx_compositor::types::cls_filter_spec::{ScannerAxis, ScannerMotionMode,
 use tui_vfx_compositor::{
     pipeline::{CompositionSpec, ShaderLayerSpec},
     types::{
-        ApplyTo, Axis, BindableValue, DitherMatrix, FilterSpec, MaskSpec, PatternType,
-        RadialOrigin, RippleCenter, SamplerSpec, WipeDirection,
+        ApplyTo, Axis, BindableValue, DitherMatrix, FilterSpec, HoverBarPosition, MaskSpec,
+        PatternType, RadialOrigin, RippleCenter, SamplerSpec, WipeDirection,
     },
 };
 use tui_vfx_contract::{NodeSpec, RecipeDocument, Value, ValueSource};
@@ -191,6 +192,8 @@ pub enum NativeStyleStage {
         dim_amount: f64,
         italic_window: bool,
     },
+    /// Apply player-compatible color fade styling to existing foreground/background channels.
+    ColorFade { target: String, color_space: String },
     /// Apply player-compatible vignette filter styling.
     Vignette {
         strength: f64,
@@ -201,13 +204,6 @@ pub enum NativeStyleStage {
     BracketEmphasis {
         emphasis_color: String,
         edge_width: usize,
-        apply_to: String,
-    },
-    /// Apply player-compatible dot indicator filter styling.
-    DotIndicator {
-        active_color: String,
-        inactive_color: String,
-        period: usize,
         apply_to: String,
     },
     /// Apply player-compatible edge grow filter styling.
@@ -243,10 +239,10 @@ pub enum NativeStyleStage {
     },
     /// Apply player-compatible sub-pixel bar filter styling.
     SubPixelBar {
-        bar_color: String,
-        offset: f64,
-        width: usize,
-        apply_to: String,
+        filled_color: String,
+        unfilled_color: String,
+        progress: f64,
+        direction: String,
     },
     /// Apply player-compatible underline wipe filter styling.
     UnderlineWipe {
@@ -448,6 +444,19 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
             continue;
         };
 
+        if !node_active_for_backend_request(node, request) {
+            diagnostics.push(PlayerRenderBackendDiagnostic {
+                code: "nativeNodeSkippedByPhase".to_string(),
+                path: format!("graph.nodes.{}.activePhases", node.id.as_str()),
+                message: format!(
+                    "Skipped `{}` because it is not active during the sampled {:?} phase.",
+                    node.effect.as_str(),
+                    request.ir.phase
+                ),
+            });
+            continue;
+        }
+
         match lower_node_into_spec(
             &request.recipe,
             node,
@@ -516,6 +525,14 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
         style_stages,
         diagnostics,
     }
+}
+
+fn node_active_for_backend_request(node: &NodeSpec, request: &PlayerRenderBackendRequest) -> bool {
+    node.active_phases.is_empty()
+        || node
+            .active_phases
+            .iter()
+            .any(|phase| phase == &request.ir.phase)
 }
 
 enum NodeLoweringOutcome {
@@ -595,9 +612,9 @@ fn lower_node_into_spec(
         "filter.bracketEmphasis" => {
             lower_filter_bracket_emphasis(node, style_stages, request, warnings)
         }
-        "filter.dotIndicator" => lower_filter_dot_indicator(node, style_stages, request, warnings),
+        "filter.dotIndicator" => lower_filter_dot_indicator(node, spec, request, warnings),
         "filter.edgeGrow" => lower_filter_edge_grow(node, style_stages, request, warnings),
-        "filter.hoverBar" => lower_filter_hover_bar(node, style_stages, request, warnings),
+        "filter.hoverBar" => lower_filter_hover_bar(node, spec, request, warnings),
         "filter.matrixRain" => lower_filter_matrix_rain(node, style_stages, request, warnings),
         "filter.subPixelBar" => lower_filter_sub_pixel_bar(node, style_stages, request, warnings),
         "filter.underlineWipe" => {
@@ -612,15 +629,7 @@ fn lower_node_into_spec(
             });
             NodeLoweringOutcome::Lowered { warnings }
         }
-        "mask.wipe" => {
-            spec.masks.push(MaskSpec::Wipe {
-                reveal: Some(wipe_direction_input(node, request, "direction")),
-                hide: None,
-                direction: None,
-                soft_edge: bool_input(node, request, "softEdge", false),
-            });
-            NodeLoweringOutcome::Lowered { warnings }
-        }
+        "mask.wipe" => lower_wipe_mask(node, content_stages, request, warnings),
         "mask.checkers" => {
             spec.masks.push(MaskSpec::Checkers {
                 cell_size: integer_input(node, request, "cellSize", 2).max(1) as u16,
@@ -676,6 +685,7 @@ fn lower_node_into_spec(
         "shader.barberPole" => lower_barber_pole_shader(node, style_stages, request, warnings),
         "shader.diffusion" => lower_diffusion_shader(node, style_stages, request, warnings),
         "shader.radar" => lower_radar_shader(node, style_stages, request, warnings),
+        "style.colorFade" => lower_style_color_fade(node, style_stages, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
@@ -1494,6 +1504,35 @@ fn lower_path_reveal_mask(
     NodeLoweringOutcome::Lowered { warnings }
 }
 
+fn lower_wipe_mask(
+    node: &NodeSpec,
+    content_stages: &mut Vec<NativeContentStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) =
+        unsupported_native_content_reason(node, "mask.wipe", &["direction", "softEdge"])
+    {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let direction = match strict_enum_input(
+        node,
+        request,
+        "direction",
+        "leftToRight",
+        SUPPORTED_WIPE_DIRECTIONS,
+        "mask.wipe",
+    ) {
+        Ok(direction) => direction,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    content_stages.push(NativeContentStage::WipeMask {
+        direction,
+        soft_edge: bool_input(node, request, "softEdge", false),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
 fn lower_radial_mask(
     node: &NodeSpec,
     content_stages: &mut Vec<NativeContentStage>,
@@ -1878,6 +1917,28 @@ fn lower_style_neon_flicker(
     NodeLoweringOutcome::Lowered { warnings }
 }
 
+fn lower_style_color_fade(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "style.colorFade",
+        &["target", "colorSpace"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    style_stages.push(NativeStyleStage::ColorFade {
+        target: color_label_input(node, request, "target", (255, 200, 50)),
+        color_space: enum_label_input(node, request, "colorSpace", "rgb"),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
 fn lower_highlighter_shader(
     node: &NodeSpec,
     style_stages: &mut Vec<NativeStyleStage>,
@@ -2211,6 +2272,7 @@ fn lower_diffusion_shader(
             "color",
             "intensity",
             "radius",
+            "source",
         ],
         StyleScopeRequirement::All,
     ) {
@@ -2319,24 +2381,35 @@ fn lower_filter_bracket_emphasis(
 
 fn lower_filter_dot_indicator(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) = unsupported_style_stage_reason(
         node,
         "filter.dotIndicator",
-        &["activeColor", "inactiveColor", "period", "applyTo"],
+        &[
+            "activeColor",
+            "inactiveColor",
+            "period",
+            "applyTo",
+            "progress",
+            "bgColor",
+            "color",
+            "indicatorChar",
+            "position",
+        ],
         StyleScopeRequirement::All,
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::DotIndicator {
-        active_color: color_label_input(node, request, "activeColor", (100, 255, 180)),
-        inactive_color: color_label_input(node, request, "inactiveColor", (30, 60, 55)),
-        period: integer_input(node, request, "period", 3).max(1) as usize,
-        apply_to: enum_label_input(node, request, "applyTo", "foreground"),
+    spec.filters.push(FilterSpec::DotIndicator {
+        indicator_char: char_input(node, request, "indicatorChar", '•'),
+        position: hover_bar_position_input(node, request, "position"),
+        color: color_alias_input(node, request, &["color", "activeColor"], (100, 150, 200)),
+        bg_color: color_alias_input(node, request, &["bgColor", "inactiveColor"], (30, 30, 30)),
+        progress: BindableValue::from(number_signal_input(node, request, "progress", 1.0)),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -2367,24 +2440,47 @@ fn lower_filter_edge_grow(
 
 fn lower_filter_hover_bar(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
     if let Some(reason) = unsupported_style_stage_reason(
         node,
         "filter.hoverBar",
-        &["barColor", "thickness", "position", "applyTo"],
+        &[
+            "barColor",
+            "bgColor",
+            "baseEighths",
+            "maxEighths",
+            "marginWidth",
+            "position",
+            "progress",
+        ],
         StyleScopeRequirement::All,
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::HoverBar {
-        bar_color: color_label_input(node, request, "barColor", (80, 190, 255)),
-        thickness: integer_input(node, request, "thickness", 1).max(1) as usize,
-        position: number_input(node, request, "position", request.ir.phase_t).clamp(0.0, 1.0),
-        apply_to: enum_label_input(node, request, "applyTo", "background"),
+    spec.filters.push(FilterSpec::HoverBar {
+        base_eighths: number_input(node, request, "baseEighths", 4.0)
+            .round()
+            .clamp(0.0, 8.0) as u8,
+        max_eighths: number_input(node, request, "maxEighths", 12.0)
+            .round()
+            .clamp(0.0, 16.0) as u8,
+        position: hover_bar_position_input(node, request, "position"),
+        bar_color: color_input(node, request, "barColor").unwrap_or(ColorConfig::Rgb {
+            r: 100,
+            g: 150,
+            b: 200,
+        }),
+        bg_color: color_input(node, request, "bgColor").unwrap_or(ColorConfig::Rgb {
+            r: 30,
+            g: 30,
+            b: 30,
+        }),
+        progress: BindableValue::from(number_signal_input(node, request, "progress", 0.0)),
+        margin_width: integer_input(node, request, "marginWidth", 2).clamp(1, 2) as u8,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -2451,17 +2547,27 @@ fn lower_filter_sub_pixel_bar(
     if let Some(reason) = unsupported_style_stage_reason(
         node,
         "filter.subPixelBar",
-        &["barColor", "offset", "width", "applyTo"],
+        &[
+            "barColor",
+            "offset",
+            "width",
+            "applyTo",
+            "progress",
+            "direction",
+            "filledColor",
+            "unfilledColor",
+            "animated",
+        ],
         StyleScopeRequirement::All,
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
     style_stages.push(NativeStyleStage::SubPixelBar {
-        bar_color: color_label_input(node, request, "barColor", (255, 170, 40)),
-        offset: number_input(node, request, "offset", request.ir.phase_t).clamp(0.0, 1.0),
-        width: integer_input(node, request, "width", 2).max(1) as usize,
-        apply_to: enum_label_input(node, request, "applyTo", "both"),
+        filled_color: color_label_input(node, request, "filledColor", (100, 220, 255)),
+        unfilled_color: color_label_input(node, request, "unfilledColor", (30, 40, 50)),
+        progress: number_input(node, request, "progress", request.ir.phase_t).clamp(0.0, 1.0),
+        direction: enum_label_input(node, request, "direction", "horizontal"),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -2826,6 +2932,33 @@ fn enum_label_input(
         .to_string()
 }
 
+fn text_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: &str,
+) -> String {
+    input_value(node, request, key)
+        .and_then(|value| match value {
+            Value::Enum(value) | Value::String(value) | Value::Text(value) => Some(value.clone()),
+            _ => None,
+        })
+        .unwrap_or_else(|| default.to_string())
+}
+
+fn char_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: char,
+) -> char {
+    let fallback = default.to_string();
+    text_input(node, request, key, &fallback)
+        .chars()
+        .next()
+        .unwrap_or(default)
+}
+
 fn strict_enum_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -2880,6 +3013,21 @@ fn color_label_input(
     }))
 }
 
+fn color_alias_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    keys: &[&str],
+    default_rgb: (u8, u8, u8),
+) -> ColorConfig {
+    keys.iter()
+        .find_map(|key| color_input(node, request, key))
+        .unwrap_or(ColorConfig::Rgb {
+            r: default_rgb.0,
+            g: default_rgb.1,
+            b: default_rgb.2,
+        })
+}
+
 fn color_config_from_hex(value: &str) -> Option<ColorConfig> {
     let hex = value.strip_prefix('#')?;
     if hex.len() != 6 {
@@ -2931,6 +3079,19 @@ fn apply_to_input(node: &NodeSpec, request: &PlayerRenderBackendRequest, key: &s
         Some("foreground" | "fg") => ApplyTo::Foreground,
         Some("background" | "bg") => ApplyTo::Background,
         _ => ApplyTo::Both,
+    }
+}
+
+fn hover_bar_position_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> HoverBarPosition {
+    match enum_input(node, request, key) {
+        Some("right") => HoverBarPosition::Right,
+        Some("top") => HoverBarPosition::Top,
+        Some("bottom") => HoverBarPosition::Bottom,
+        _ => HoverBarPosition::Left,
     }
 }
 
@@ -3147,4 +3308,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.8.2</VERS>
+// <VERS>END OF VERSION: 0.11.0</VERS>

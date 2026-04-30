@@ -95,6 +95,13 @@ impl LegacyMigrationMappingEvidenceCollector {
                 .insert(content_descriptor_id_for_content_effect(content_type));
             self.add_source("source.text", &lower_camel(content_type));
         }
+        if let Some(Value::Object(content)) = object.get("content")
+            && content.contains_key("glyph_emitters")
+        {
+            self.descriptors
+                .insert(content_descriptor_id_for_content_effect("glyph_particles"));
+            self.add_source("source.text", "glyphParticles");
+        }
     }
 
     fn collect_signal_or_binding_key(&mut self, key: &str) {

@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_app.rs</FILE> - <DESC>Ratatui app state with fast-fs browser</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>Player UI: mirror demo.rs navigation by using fast_fs::nav while keeping rendering in the player crate.</WCTX>
-// <CLOG>0.1.1: PATCH — keep browser focus after recipe selection.
-// 0.1.0: INIT — add browser/list state wrapper for the contract-native player UI.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Player UI: mirror demo.rs navigation while tracking lightweight presentation state.</WCTX>
+// <CLOG>0.2.0: MINOR — add default-open stats drawer presentation state.</CLOG>
 
 use std::path::{Path, PathBuf};
 
@@ -36,6 +35,8 @@ pub struct PlayerUiApp {
     pub browser_root: PathBuf,
     /// Selected studio control row for keyboard mutation.
     pub studio_control_index: usize,
+    /// Whether the rapidly changing stats drawer is visible.
+    pub stats_drawer_open: bool,
 }
 
 impl PlayerUiApp {
@@ -58,6 +59,7 @@ impl PlayerUiApp {
             player,
             browser_root,
             studio_control_index,
+            stats_drawer_open: true,
         })
     }
 
@@ -121,7 +123,7 @@ fn browser_root_for(recipe_path: &Path) -> PathBuf {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_app.rs</FILE> - <DESC>Ratatui app state with fast-fs browser</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>
 
 fn default_studio_control_index(player: &PlayerUiState) -> usize {
     player

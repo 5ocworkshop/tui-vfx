@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_run_interactive.rs</FILE> - <DESC>Run ratatui visual player interaction loop</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>New kernel Phase K1: replace line-mode shell with demo.rs-style ratatui/crossterm loop and fast-fs browsing.</WCTX>
-// <CLOG>0.2.0: MINOR use raw mode, alternate screen, fast-fs navigation, and ratatui rendering.
-// 0.1.0: INIT — read command lines, mutate UI state, and re-render snapshots.</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Player UI: run the raw-mode ratatui event loop with browser, playback, and presentation keys.</WCTX>
+// <CLOG>0.2.1: PATCH — pass full key events so Ctrl+Arrow drawer toggles are visible.</CLOG>
 
 use std::{
     io::stdout,
@@ -17,7 +16,7 @@ use crossterm::{
 use ratatui::{Terminal, backend::CrosstermBackend};
 use tokio::runtime::Builder;
 
-use crate::{PlayerUiApp, PlayerUiState, handle_player_ui_key, render_ratatui_ui};
+use crate::{PlayerUiApp, PlayerUiState, handle_player_ui_key_event, render_ratatui_ui};
 
 /// Run the raw terminal ratatui player UI loop.
 pub fn run_interactive(state: PlayerUiState) -> Result<(), String> {
@@ -57,7 +56,7 @@ async fn run_interactive_async(state: PlayerUiState) -> Result<(), String> {
         if event::poll(poll_timeout).map_err(|error| error.to_string())?
             && let Event::Key(key) = event::read().map_err(|error| error.to_string())?
             && key.kind == KeyEventKind::Press
-            && !handle_player_ui_key(&mut app, key.code, viewport_height).await
+            && !handle_player_ui_key_event(&mut app, key, viewport_height).await
         {
             break;
         }
@@ -75,4 +74,4 @@ impl Drop for TerminalGuard {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_run_interactive.rs</FILE> - <DESC>Run ratatui visual player interaction loop</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

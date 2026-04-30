@@ -15,6 +15,7 @@ use crate::{
     PlayerError, PlayerSampleRequest, PlayerStyledGrid, PlayerWarning,
     fnc_apply_graph_effects::apply_graph_step_effects,
     fnc_render_procedural_source::render_registered_procedural_source,
+    fnc_resolve_effect_input::ResolvedColor,
     fnc_resolve_source_asset::{
         MissingSourceAssetResolver, PlayerSourceAssetRequest, PlayerSourceAssetResolution,
         PlayerSourceAssetResolver, resolve_image_source_asset_id,
@@ -246,12 +247,7 @@ fn render_source(
     asset_resolver: &dyn PlayerSourceAssetResolver,
 ) -> SourceRenderOutput {
     match source.source.as_str() {
-        "source.card" => source_rows(render_text_source(
-            source_instance_id,
-            source,
-            request,
-            "message",
-        )),
+        "source.card" => render_card_source(source_instance_id, source, request),
         "source.text" => source_rows(render_text_source(
             source_instance_id,
             source,
@@ -274,6 +270,208 @@ fn render_source(
             warnings: vec![],
         },
     }
+}
+
+fn render_card_source(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+) -> SourceRenderOutput {
+    if !card_chrome_inputs_present(source) {
+        return source_rows(render_text_source(
+            source_instance_id,
+            source,
+            request,
+            "message",
+        ));
+    }
+    let text = resolve_source_text(source_instance_id, source, request, "message", "");
+    let width = source_width(source_instance_id, source, request, &text);
+    let height = source_height(source_instance_id, source, request, &text);
+    let border_style =
+        resolve_source_enum(source_instance_id, source, request, "borderStyle", "none");
+    let border = CardBorder::for_style(border_style.as_str());
+    let foreground = resolve_source_color(
+        source_instance_id,
+        source,
+        request,
+        "foreground",
+        ResolvedColor::rgb(255, 255, 255),
+    )
+    .rgba_label();
+    let background = resolve_source_color(
+        source_instance_id,
+        source,
+        request,
+        "background",
+        ResolvedColor::new(0, 0, 0, 0),
+    )
+    .rgba_label();
+    if let Some(border) = border {
+        render_bordered_card(&text, width, height, border, &foreground, &background)
+    } else {
+        render_plain_card(&text, width, height, &foreground, &background)
+    }
+}
+
+fn card_chrome_inputs_present(source: &SourceSpec) -> bool {
+    ["foreground", "background", "borderStyle", "borderTrim"]
+        .into_iter()
+        .any(|input| source.inputs.contains_key(&SourceInputId::new(input)))
+}
+
+#[derive(Clone, Copy)]
+struct CardBorder {
+    top_left: char,
+    top_right: char,
+    bottom_left: char,
+    bottom_right: char,
+    horizontal: char,
+    vertical: char,
+}
+
+impl CardBorder {
+    fn for_style(style: &str) -> Option<Self> {
+        match style {
+            "plain" => Some(Self {
+                top_left: '+',
+                top_right: '+',
+                bottom_left: '+',
+                bottom_right: '+',
+                horizontal: '-',
+                vertical: '|',
+            }),
+            "rounded" => Some(Self {
+                top_left: '╭',
+                top_right: '╮',
+                bottom_left: '╰',
+                bottom_right: '╯',
+                horizontal: '─',
+                vertical: '│',
+            }),
+            "double" => Some(Self {
+                top_left: '╔',
+                top_right: '╗',
+                bottom_left: '╚',
+                bottom_right: '╝',
+                horizontal: '═',
+                vertical: '║',
+            }),
+            _ => None,
+        }
+    }
+}
+
+fn render_bordered_card(
+    text: &str,
+    width: usize,
+    height: usize,
+    border: CardBorder,
+    foreground: &str,
+    background: &str,
+) -> SourceRenderOutput {
+    let mut rows = vec![" ".repeat(width); height];
+    let mut styled_grid = PlayerStyledGrid::blank(width, height, true);
+    if width == 1 || height == 1 {
+        return render_plain_card(text, width, height, foreground, background);
+    }
+    rows[0] = format!(
+        "{}{}{}",
+        border.top_left,
+        std::iter::repeat_n(border.horizontal, width.saturating_sub(2)).collect::<String>(),
+        border.top_right
+    );
+    rows[height - 1] = format!(
+        "{}{}{}",
+        border.bottom_left,
+        std::iter::repeat_n(border.horizontal, width.saturating_sub(2)).collect::<String>(),
+        border.bottom_right
+    );
+    for row in rows.iter_mut().take(height.saturating_sub(1)).skip(1) {
+        *row = format!(
+            "{}{}{}",
+            border.vertical,
+            " ".repeat(width.saturating_sub(2)),
+            border.vertical
+        );
+    }
+    for (index, line) in text.lines().take(height.saturating_sub(2)).enumerate() {
+        let y = index + 1;
+        replace_inner_text(&mut rows[y], line, 1, width.saturating_sub(2));
+    }
+    style_card_cells(&mut styled_grid, &rows, foreground, background, true);
+    SourceRenderOutput {
+        rows,
+        styled_grid,
+        errors: vec![],
+        warnings: vec![],
+    }
+}
+
+fn render_plain_card(
+    text: &str,
+    width: usize,
+    height: usize,
+    foreground: &str,
+    background: &str,
+) -> SourceRenderOutput {
+    let rows = render_text_rows(text, width, height);
+    let mut styled_grid = PlayerStyledGrid::blank(width, height, true);
+    style_card_cells(&mut styled_grid, &rows, foreground, background, false);
+    SourceRenderOutput {
+        rows,
+        styled_grid,
+        errors: vec![],
+        warnings: vec![],
+    }
+}
+
+fn style_card_cells(
+    styled_grid: &mut PlayerStyledGrid,
+    rows: &[String],
+    foreground: &str,
+    background: &str,
+    bordered: bool,
+) {
+    styled_grid.sync_glyphs_from_rows(rows);
+    for y in 0..styled_grid.height() {
+        for x in 0..styled_grid.width() {
+            let role =
+                if bordered && is_border_cell(x, y, styled_grid.width(), styled_grid.height()) {
+                    "Border"
+                } else if glyph_at(rows, x, y).is_some_and(|glyph| glyph != ' ') {
+                    "Text"
+                } else {
+                    "Background"
+                };
+            styled_grid.set_cell_style(
+                x,
+                y,
+                foreground,
+                background,
+                vec![],
+                Some(role.to_string()),
+            );
+        }
+    }
+}
+
+fn is_border_cell(x: usize, y: usize, width: usize, height: usize) -> bool {
+    x == 0 || y == 0 || x + 1 == width || y + 1 == height
+}
+
+fn glyph_at(rows: &[String], x: usize, y: usize) -> Option<char> {
+    rows.get(y)?.chars().nth(x)
+}
+
+fn replace_inner_text(row: &mut String, value: &str, start: usize, width: usize) {
+    let mut chars = row.chars().collect::<Vec<_>>();
+    for (offset, ch) in value.chars().take(width).enumerate() {
+        if let Some(slot) = chars.get_mut(start + offset) {
+            *slot = ch;
+        }
+    }
+    *row = chars.into_iter().collect();
 }
 
 fn source_rows(rows: Vec<String>) -> SourceRenderOutput {
@@ -497,6 +695,40 @@ fn resolve_source_integer(
             &request.signals,
             fallback,
         ),
+    }
+}
+
+fn resolve_source_enum(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+    input_id: &str,
+    fallback: &str,
+) -> String {
+    match source_runtime_override(source_instance_id, source, request, input_id) {
+        Some(Value::Enum(value) | Value::String(value) | Value::Text(value)) => value.clone(),
+        _ => resolve_source_text(source_instance_id, source, request, input_id, fallback),
+    }
+}
+
+fn resolve_source_color(
+    source_instance_id: &str,
+    source: &SourceSpec,
+    request: &PlayerSampleRequest,
+    input_id: &str,
+    fallback: ResolvedColor,
+) -> ResolvedColor {
+    match source_runtime_override(source_instance_id, source, request, input_id) {
+        Some(Value::Color(value)) => ResolvedColor::new(value.r, value.g, value.b, value.a),
+        _ => source
+            .inputs
+            .get(&SourceInputId::new(input_id))
+            .and_then(|source| resolve_value_source(source, &request.signals))
+            .and_then(|value| match value {
+                Value::Color(value) => Some(ResolvedColor::new(value.r, value.g, value.b, value.a)),
+                _ => None,
+            })
+            .unwrap_or(fallback),
     }
 }
 

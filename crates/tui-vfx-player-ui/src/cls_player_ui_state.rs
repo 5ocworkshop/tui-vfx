@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the visual player shell</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Descriptor-driven studio controls: expose rich recipe-aware effect and source input metadata.</WCTX>
-// <CLOG>0.2.0: MINOR — generate rich effect/source controls with current values and mutation target metadata.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Player UI playback: start in enter phase and advance through lifecycle phases so migrated enter/exit effects visibly animate.</WCTX>
+// <CLOG>0.3.0: MINOR — advance UI playback through enter, dwell, and exit phases instead of ticking one static phase.
+// 0.2.0: MINOR — generate rich effect/source controls with current values and mutation target metadata.
 // 0.1.2: PATCH — make generated control target selection explicit without changing control ids.
 // 0.1.1: PATCH — keep metadata footer at the physical end of the source file.
 // 0.1.0: INIT — load recipe/catalog, sample player frames, and mutate UI controls.</CLOG>
@@ -73,6 +74,8 @@ impl PlayerUiState {
         let player = RecipePlayer::new(catalog.clone());
         let session = PlayerSession::new();
         let request = PlayerSampleRequest {
+            phase: LifecyclePhase::Enter,
+            phase_t: 0.0,
             width: options.width,
             height: options.height,
             ..PlayerSampleRequest::default()
@@ -138,8 +141,8 @@ impl PlayerUiState {
         self.session.reset();
         self.request.signals.clear();
         self.request.runtime_input_overrides.clear();
-        self.request.phase = LifecyclePhase::Dwell;
-        self.request.phase_t = 1.0;
+        self.request.phase = LifecyclePhase::Enter;
+        self.request.phase_t = 0.0;
         self.request.loop_t = None;
         self.elapsed_ms = 0;
         self.paused = false;
@@ -332,14 +335,34 @@ impl PlayerUiState {
             self.message = "stable sample".to_string();
             return;
         }
-        self.elapsed_ms = self.elapsed_ms.saturating_add(delta_ms);
+        self.advance_lifecycle(delta_ms);
         let phase_duration_ms = current_phase_duration_ms(&self.recipe, self.request.phase);
-        self.request.phase_t = phase_fraction(self.elapsed_ms, phase_duration_ms);
         self.request.loop_t = Some(self.request.phase_t);
         self.message = format!(
-            "advanced elapsed time to {}ms using {:?} phase duration {}ms",
-            self.elapsed_ms, self.request.phase, phase_duration_ms
+            "advanced {:?} phase to {:.2} using phase duration {}ms",
+            self.request.phase, self.request.phase_t, phase_duration_ms
         );
+    }
+
+    fn advance_lifecycle(&mut self, delta_ms: u64) {
+        self.elapsed_ms = self.elapsed_ms.saturating_add(delta_ms);
+        let mut remaining_ms = delta_ms;
+        loop {
+            let phase_duration_ms = current_phase_duration_ms(&self.recipe, self.request.phase);
+            let phase_elapsed_ms = (self.request.phase_t * phase_duration_ms as f64).round() as u64;
+            let next_elapsed_ms = phase_elapsed_ms.saturating_add(remaining_ms);
+            if next_elapsed_ms < phase_duration_ms {
+                self.request.phase_t = phase_fraction(next_elapsed_ms, phase_duration_ms);
+                return;
+            }
+
+            remaining_ms = next_elapsed_ms.saturating_sub(phase_duration_ms);
+            self.request.phase = next_playback_phase(self.request.phase);
+            self.request.phase_t = 0.0;
+            if remaining_ms == 0 {
+                return;
+            }
+        }
     }
 
     fn toggle_pause(&mut self) {
@@ -424,7 +447,15 @@ fn phase_fraction(elapsed_ms: u64, phase_duration_ms: u64) -> f64 {
     if phase_duration_ms == 0 {
         return 1.0;
     }
-    ((elapsed_ms % phase_duration_ms) as f64) / (phase_duration_ms as f64)
+    (elapsed_ms.min(phase_duration_ms) as f64) / (phase_duration_ms as f64)
+}
+
+fn next_playback_phase(phase: LifecyclePhase) -> LifecyclePhase {
+    match phase {
+        LifecyclePhase::Enter => LifecyclePhase::Dwell,
+        LifecyclePhase::Dwell => LifecyclePhase::Exit,
+        LifecyclePhase::Exit => LifecyclePhase::Enter,
+    }
 }
 
 fn recipe_signal_fallback(recipe: &RecipeDocument, control: &PlayerUiControl) -> Option<Value> {
@@ -778,6 +809,7 @@ fn control_kind(value: &ValueSpec) -> &'static str {
         ValueKind::Enum => "select",
         ValueKind::Color => "colorPicker",
         ValueKind::Gradient => "gradientEditor",
+        ValueKind::Structured => "structuredJsonEditor",
         ValueKind::Text | ValueKind::String => "textInput",
         _ => "valueInput",
     }
@@ -806,6 +838,7 @@ fn value_kind_label(kind: ValueKind) -> &'static str {
         ValueKind::Role => "role",
         ValueKind::Scope => "scope",
         ValueKind::Rect => "rect",
+        ValueKind::Structured => "structured",
     }
 }
 
@@ -818,4 +851,4 @@ fn normalize_key(value: &str) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/cls_player_ui_state.rs</FILE> - <DESC>State for the visual player shell</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

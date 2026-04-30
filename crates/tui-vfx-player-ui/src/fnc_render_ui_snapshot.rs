@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render visual player state to terminal text</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Player UI: display player frame rows and diagnostics in a visual shell.</WCTX>
-// <CLOG>0.1.0: INIT — add bordered frame, metadata, diagnostics, and help rendering.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>Player UI: display shared backend parity evidence in the same visual shell used for manual review.</WCTX>
+// <CLOG>0.2.0: MINOR — show backend letter-cell evidence in UI snapshots.
+// 0.1.0: INIT — add bordered frame, metadata, diagnostics, and help rendering.</CLOG>
 
 use crate::PlayerUiState;
 
@@ -26,7 +27,7 @@ pub fn render_ui_snapshot(state: &PlayerUiState, clear: bool) -> String {
         state.motion_disabled
     ));
     out.push_str(&format!(
-        "status: {:?}  render_hash: {}  backend: {}  composition_mode: {}  fallback_used: {}  source_render_mode: {}  native_source_isolated: {}  native_lowering_attempted: {}  native_lowering_succeeded: {}  composition_spec_non_empty: {}  lowered_nodes: {}  unlowered_nodes: {}  backend_hash: {}  non_empty_cells: {}  styled_cells: {}  elapsed_ms: {}\n",
+        "status: {:?}  render_hash: {}  backend: {}  composition_mode: {}  fallback_used: {}  source_render_mode: {}  native_source_isolated: {}  native_lowering_attempted: {}  native_lowering_succeeded: {}  composition_spec_non_empty: {}  lowered_nodes: {}  unlowered_nodes: {}  backend_hash: {}  non_empty_cells: {}  styled_cells: {}  letter_cells: {}  elapsed_ms: {}\n",
         report.status,
         report.render_hash,
         state.last_backend_output.backend,
@@ -42,6 +43,10 @@ pub fn render_ui_snapshot(state: &PlayerUiState, clear: bool) -> String {
         state.last_backend_output.backend_hash,
         report.non_empty_cells,
         state.last_backend_output.non_default_styled_cells,
+        state
+            .last_backend_output
+            .letter_cell_evidence
+            .letter_cell_count,
         state.elapsed_ms
     ));
     out.push_str(&format!("message: {}\n", state.message));
@@ -194,4 +199,4 @@ fn help_text() -> &'static str {
 }
 
 // <FILE>crates/tui-vfx-player-ui/src/fnc_render_ui_snapshot.rs</FILE> - <DESC>Render visual player state to terminal text</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

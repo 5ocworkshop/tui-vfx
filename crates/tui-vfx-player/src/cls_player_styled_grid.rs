@@ -69,6 +69,27 @@ impl PlayerStyledGrid {
         }
     }
 
+    /// Set both glyph and style evidence for one cell when it exists.
+    pub fn set_cell_glyph_and_style(
+        &mut self,
+        x: usize,
+        y: usize,
+        glyph: &str,
+        foreground: &str,
+        background: &str,
+        modifiers: Vec<String>,
+        role: Option<String>,
+    ) {
+        if let Some(cell) = self.cell_mut(x, y) {
+            cell.glyph = glyph.to_string();
+            cell.foreground = foreground.to_string();
+            cell.background = background.to_string();
+            cell.modifiers = modifiers;
+            cell.role = role;
+            self.style_known = true;
+        }
+    }
+
     /// Sync glyph evidence after a text-grid adapter mutates compact rows.
     pub fn sync_glyphs_from_rows(&mut self, rows: &[String]) {
         for (y, row) in rows.iter().enumerate() {

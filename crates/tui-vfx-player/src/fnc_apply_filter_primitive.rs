@@ -10,7 +10,7 @@ use crate::{
     fnc_collect_styled_grid_scope_cells::collect_styled_grid_scope_cells,
     fnc_resolve_effect_input::{
         ResolvedColor, resolve_effect_color, resolve_effect_enum, resolve_effect_integer,
-        resolve_effect_number,
+        resolve_effect_number, resolve_effect_text,
     },
 };
 
@@ -46,15 +46,13 @@ fn apply_dim_filter(
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
-    let factor = resolve_effect_number(node, request, "factor", 0.5).clamp(0.0, 1.0);
-    let level = ((255.0 * factor) + 0.5) as u8;
-    apply_filter_style(
+    let factor = resolve_effect_number(node, request, "factor", 0.5).clamp(0.0, 1.0) as f32;
+    apply_cell_color_filter(
         node,
         styled_grid,
         &resolve_effect_enum(node, request, "applyTo", "both"),
-        ResolvedColor::rgb(level, level, level).rgba_label(),
-        "transparent".to_string(),
-        Some("FilterDim".to_string()),
+        "FilterDim",
+        |color| scale_color(color, 1.0 - factor),
     );
 }
 fn apply_tint_filter(
@@ -64,44 +62,86 @@ fn apply_tint_filter(
 ) {
     let tint = resolve_effect_color(node, request, "color", ResolvedColor::rgb(255, 180, 80));
     let strength = resolve_effect_number(node, request, "strength", 0.5).clamp(0.0, 1.0) as f32;
-    let color = ResolvedColor::rgb(255, 255, 255).lerp(tint, strength);
-    apply_filter_style(
-        node,
-        styled_grid,
-        &resolve_effect_enum(node, request, "applyTo", "both"),
-        color.rgba_label(),
-        color.lerp(ResolvedColor::rgb(0, 0, 0), 0.65).rgba_label(),
-        Some("FilterTint".to_string()),
-    );
+    let apply_to = resolve_effect_enum(node, request, "applyTo", "both");
+    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid);
+    for (x, y) in coordinates {
+        let Some(cell) = styled_grid
+            .cells()
+            .iter()
+            .find(|cell| cell.x == x && cell.y == y)
+            .cloned()
+        else {
+            continue;
+        };
+        let foreground = if matches!(apply_to.as_str(), "foreground" | "both") {
+            parse_rgba_label(&cell.foreground, ResolvedColor::rgb(255, 255, 255))
+                .lerp(tint, strength)
+                .rgba_label()
+        } else {
+            cell.foreground.clone()
+        };
+        let background = if matches!(apply_to.as_str(), "background" | "both") {
+            parse_rgba_label(&cell.background, ResolvedColor::rgb(0, 0, 0))
+                .lerp(tint, strength)
+                .rgba_label()
+        } else {
+            cell.background.clone()
+        };
+        styled_grid.set_cell_style(
+            x,
+            y,
+            &foreground,
+            &background,
+            cell.modifiers.clone(),
+            Some("FilterTint".to_string()),
+        );
+    }
 }
 fn apply_invert_filter(
     node: &NodeSpec,
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
-    apply_filter_style(
-        node,
-        styled_grid,
-        &resolve_effect_enum(node, request, "applyTo", "both"),
-        "rgba(0,0,0,255)".to_string(),
-        "rgba(255,255,255,255)".to_string(),
-        Some("FilterInvert".to_string()),
-    );
+    let apply_to = resolve_effect_enum(node, request, "applyTo", "both");
+    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid);
+    for (x, y) in coordinates {
+        let Some(cell) = styled_grid
+            .cells()
+            .iter()
+            .find(|cell| cell.x == x && cell.y == y)
+            .cloned()
+        else {
+            continue;
+        };
+        let old_foreground = parse_rgba_label(&cell.foreground, ResolvedColor::rgb(255, 255, 255));
+        let old_background = parse_rgba_label(&cell.background, ResolvedColor::rgb(0, 0, 0));
+        let (foreground, background) = match apply_to.as_str() {
+            "foreground" => (old_background.rgba_label(), cell.background.clone()),
+            "background" => (cell.foreground.clone(), old_foreground.rgba_label()),
+            _ => (old_background.rgba_label(), old_foreground.rgba_label()),
+        };
+        styled_grid.set_cell_style(
+            x,
+            y,
+            &foreground,
+            &background,
+            cell.modifiers.clone(),
+            Some("FilterInvert".to_string()),
+        );
+    }
 }
 fn apply_greyscale_filter(
     node: &NodeSpec,
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
-    let strength = resolve_effect_number(node, request, "strength", 1.0).clamp(0.0, 1.0);
-    let level = ((255.0 * (1.0 - strength * 0.5)) + 0.5) as u8;
-    apply_filter_style(
+    let strength = resolve_effect_number(node, request, "strength", 1.0).clamp(0.0, 1.0) as f32;
+    apply_cell_color_filter(
         node,
         styled_grid,
         &resolve_effect_enum(node, request, "applyTo", "both"),
-        ResolvedColor::rgb(level, level, level).rgba_label(),
-        ResolvedColor::rgb(level / 4, level / 4, level / 4).rgba_label(),
-        Some("FilterGreyscale".to_string()),
+        "FilterGreyscale",
+        |color| greyscale_color(color, strength),
     );
 }
 
@@ -339,36 +379,50 @@ fn apply_dot_indicator_filter(
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
-    let active = resolve_effect_color(
+    let indicator_char = resolve_effect_text(node, request, "indicatorChar", "•")
+        .chars()
+        .next()
+        .unwrap_or('•')
+        .to_string();
+    let position = resolve_effect_enum(node, request, "position", "left");
+    let color = resolve_effect_color_alias(
         node,
         request,
-        "activeColor",
-        ResolvedColor::rgb(100, 255, 180),
+        &["activeColor", "color"],
+        ResolvedColor::rgb(100, 150, 200),
     );
-    let inactive = resolve_effect_color(
+    let background = resolve_effect_color_alias(
         node,
         request,
-        "inactiveColor",
-        ResolvedColor::rgb(30, 60, 55),
+        &["inactiveColor", "bgColor"],
+        ResolvedColor::rgb(30, 30, 30),
     );
-    let period = resolve_effect_integer(node, request, "period", 3).max(1) as usize;
-    let phase_offset =
-        ((request.loop_t.unwrap_or(request.phase_t) * period as f64).floor() as usize) % period;
-    let apply_to = resolve_effect_enum(node, request, "applyTo", "foreground");
+    let progress = resolve_effect_number(node, request, "progress", 1.0).clamp(0.0, 1.0) as f32;
+    if progress <= 0.0 {
+        return;
+    }
+    let foreground = background.lerp(color, progress).rgba_label();
+    let background = background.rgba_label();
+    let width = styled_grid.width().max(1);
+    let height = styled_grid.height().max(1);
     for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
-        let color = if (x + y + phase_offset).is_multiple_of(period) {
-            active
-        } else {
-            inactive
+        let is_target = match position.as_str() {
+            "right" => x == width.saturating_sub(1),
+            "top" => y == 0 && x == width / 2,
+            "bottom" => y == height.saturating_sub(1) && x == width / 2,
+            _ => x == 0,
         };
-        set_filter_cell(
-            styled_grid,
+        if !is_target {
+            continue;
+        };
+        styled_grid.set_cell_glyph_and_style(
             x,
             y,
-            &apply_to,
-            color.rgba_label(),
-            "transparent".to_string(),
-            "FilterDotIndicator",
+            &indicator_char,
+            &foreground,
+            &background,
+            vec![],
+            Some("FilterDotIndicator".to_string()),
         );
     }
 }
@@ -530,30 +584,156 @@ fn apply_sub_pixel_bar_filter(
     request: &PlayerSampleRequest,
     styled_grid: &mut PlayerStyledGrid,
 ) {
-    let color = resolve_effect_color(node, request, "barColor", ResolvedColor::rgb(255, 170, 40));
-    let offset = resolve_effect_number(node, request, "offset", request.phase_t).clamp(0.0, 1.0);
-    let bar_width = resolve_effect_integer(node, request, "width", 2).max(1) as usize;
-    let apply_to = resolve_effect_enum(node, request, "applyTo", "both");
+    let filled_color = resolve_effect_color(
+        node,
+        request,
+        "filledColor",
+        ResolvedColor::rgb(100, 220, 255),
+    );
+    let unfilled_color = resolve_effect_color(
+        node,
+        request,
+        "unfilledColor",
+        ResolvedColor::rgb(30, 40, 50),
+    );
+    let progress =
+        resolve_effect_number(node, request, "progress", request.phase_t).clamp(0.0, 1.0);
+    let direction = resolve_effect_enum(node, request, "direction", "horizontal");
     let width = styled_grid.width().max(1);
-    let start = ((width.saturating_sub(1)) as f64 * offset).round() as usize;
+    let height = styled_grid.height().max(1);
+    let horizontal = !matches!(
+        direction.as_str(),
+        "vertical" | "topToBottom" | "bottomToTop"
+    );
+    let total_subcells = if horizontal { width } else { height }.saturating_mul(8);
+    let filled_subcells = (total_subcells as f64 * progress).ceil() as usize;
     for (x, y) in collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid) {
-        let distance = x.abs_diff(start);
-        let mix = (distance as f32 / bar_width as f32).clamp(0.0, 1.0);
-        let foreground = color
-            .lerp(ResolvedColor::rgb(255, 255, 255), mix * 0.7)
-            .rgba_label();
-        let background = color
-            .lerp(ResolvedColor::rgb(0, 0, 0), 0.5 + mix * 0.45)
-            .rgba_label();
-        set_filter_cell(
-            styled_grid,
+        let coordinate = if horizontal { x } else { y };
+        let filled = filled_subcells
+            .saturating_sub(coordinate.saturating_mul(8))
+            .min(8);
+        let glyph = sub_pixel_bar_glyph(filled);
+        let foreground = if filled == 0 {
+            unfilled_color
+        } else {
+            filled_color
+        };
+        styled_grid.set_cell_glyph_and_style(
             x,
             y,
-            &apply_to,
-            foreground,
-            background,
-            "FilterSubPixelBar",
+            glyph,
+            &foreground.rgba_label(),
+            &unfilled_color.rgba_label(),
+            vec![],
+            Some("FilterSubPixelBar".to_string()),
         );
+    }
+}
+
+fn sub_pixel_bar_glyph(filled: usize) -> &'static str {
+    match filled {
+        0 => " ",
+        1 => "▏",
+        2 => "▎",
+        3 => "▍",
+        4 => "▌",
+        5 => "▋",
+        6 => "▊",
+        7 => "▉",
+        _ => "█",
+    }
+}
+
+fn apply_cell_color_filter(
+    node: &NodeSpec,
+    styled_grid: &mut PlayerStyledGrid,
+    apply_to: &str,
+    role: &str,
+    transform: impl Fn(ResolvedColor) -> ResolvedColor,
+) {
+    let coordinates = collect_styled_grid_scope_cells(node.scope.as_ref(), styled_grid);
+    for (x, y) in coordinates {
+        let Some(cell) = styled_grid
+            .cells()
+            .iter()
+            .find(|cell| cell.x == x && cell.y == y)
+            .cloned()
+        else {
+            continue;
+        };
+        let foreground = if matches!(apply_to, "foreground" | "both") {
+            transform(parse_rgba_label(
+                &cell.foreground,
+                ResolvedColor::rgb(255, 255, 255),
+            ))
+            .rgba_label()
+        } else {
+            cell.foreground.clone()
+        };
+        let background = if matches!(apply_to, "background" | "both") {
+            transform(parse_rgba_label(
+                &cell.background,
+                ResolvedColor::rgb(0, 0, 0),
+            ))
+            .rgba_label()
+        } else {
+            cell.background.clone()
+        };
+        styled_grid.set_cell_style(
+            x,
+            y,
+            &foreground,
+            &background,
+            cell.modifiers.clone(),
+            Some(role.to_string()),
+        );
+    }
+}
+
+fn resolve_effect_color_alias(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    input_ids: &[&str],
+    fallback: ResolvedColor,
+) -> ResolvedColor {
+    input_ids.iter().fold(fallback, |current, input_id| {
+        resolve_effect_color(node, request, input_id, current)
+    })
+}
+
+fn scale_color(color: ResolvedColor, factor: f32) -> ResolvedColor {
+    let factor = factor.clamp(0.0, 1.0);
+    ResolvedColor::new(
+        (color.r as f32 * factor).round() as u8,
+        (color.g as f32 * factor).round() as u8,
+        (color.b as f32 * factor).round() as u8,
+        color.a,
+    )
+}
+
+fn greyscale_color(color: ResolvedColor, strength: f32) -> ResolvedColor {
+    let strength = strength.clamp(0.0, 1.0);
+    let grey =
+        (0.299 * color.r as f32 + 0.587 * color.g as f32 + 0.114 * color.b as f32).round() as u8;
+    color.lerp(ResolvedColor::rgb(grey, grey, grey), strength)
+}
+
+fn parse_rgba_label(label: &str, fallback: ResolvedColor) -> ResolvedColor {
+    let Some(body) = label
+        .strip_prefix("rgba(")
+        .and_then(|value| value.strip_suffix(')'))
+    else {
+        return fallback;
+    };
+    let mut channels = body.split(',').map(str::trim).map(str::parse::<u8>);
+    match (
+        channels.next(),
+        channels.next(),
+        channels.next(),
+        channels.next(),
+    ) {
+        (Some(Ok(r)), Some(Ok(g)), Some(Ok(b)), Some(Ok(a))) => ResolvedColor::new(r, g, b, a),
+        _ => fallback,
     }
 }
 

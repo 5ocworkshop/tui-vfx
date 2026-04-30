@@ -1,7 +1,10 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.22.0</VERS> -->
-<!-- <WCTX>v3.1 native backend vocabulary: document backend-owned source stages alongside CompositionSpec lowering.</WCTX> -->
-<!-- <CLOG>0.22.0: MINOR — clarify native backend source content/style stages as part of native lowering evidence.
+<!-- <VERS>VERSION: 0.25.0</VERS> -->
+<!-- <WCTX>v3.1 native backend vocabulary: document deterministic cell evidence for V2-to-v3.1 parity checks.</WCTX> -->
+<!-- <CLOG>0.25.0: MINOR — add color-channel class evidence vocabulary for style primitive parity.
+0.24.0: MINOR — add styled-cell glyph evidence vocabulary for glyph-changing primitive parity.
+0.23.0: MINOR — add backend letter-cell evidence vocabulary for legacy-oracle comparisons.
+0.22.0: MINOR — clarify native backend source content/style stages as part of native lowering evidence.
 0.21.0: MINOR — add source render mode and runtime input override vocabulary.
 0.20.0: MINOR — add native compositor composition mode and generated studio control vocabulary.
 0.19.0: MINOR — add backend playback vocabulary.
@@ -209,6 +212,39 @@ Not the same as:
 
 Policy:
 : Unsupported native nodes must emit structured diagnostics and must not silently fall back. Source content/style stages are valid native evidence only when they preserve `sourceOnly`, `nativeSourceIsolated=true`, and strict unsupported-shape diagnostics. Auto mode may fall back only when it reports `fallbackUsed=true`.
+
+### Backend Letter-Cell Evidence
+
+Definition:
+: Deterministic render-backend evidence that counts visible alphanumeric recipe cells and groups them by background color and foreground/background color pair. Current JSON field is `letterCellEvidence`.
+
+Not the same as:
+: A screenshot, an accessibility tree, a full frame database, or a subjective visual approval.
+
+Policy:
+: Use letter-cell evidence as the first scripted comparison layer between V2 `_DEPRECATED_` diagnostic tooling and V3.1 player/backend output. It should remain backend-neutral and deterministic so CLI, TUI, studio, and downstream API consumers can prove they are using the same rendered pathway before richer frame-by-frame SQLite exports are added.
+
+### Styled-Cell Glyph Evidence
+
+Definition:
+: Deterministic render-backend evidence from `styledCells` that compares exact glyph, foreground color, background color, modifiers, role, and coordinates for cells changed by a primitive.
+
+Not the same as:
+: Letter-cell evidence, which intentionally ignores non-alphanumeric glyphs, or a subjective screenshot comparison.
+
+Policy:
+: Use styled-cell glyph evidence when a primitive changes bullets, border glyphs, indicator cells, or other non-alphanumeric symbols. `filter.dotIndicator` is the first V2-to-v3.1 parity case: its oracle is three amber `•` glyphs on the left edge, not a periodic color field.
+
+### Color-Channel Class Evidence
+
+Definition:
+: Deterministic render-backend evidence that compares the exact foreground/background color pair counts for visible recipe text cells. Current JSON path is `letterCellEvidence.foregroundBackgroundClassCounts`.
+
+Not the same as:
+: Glyph evidence, full styled-cell coordinates, or a screenshot. It proves color-channel parity for visible alphanumeric cells only.
+
+Policy:
+: Use color-channel class evidence for style primitives that preserve glyphs but change foreground and background colors. `style.colorFade` uses this evidence to prove the V2 RGB enter midpoint and HSL exit midpoint are preserved through native v3.1 playback.
 
 ### Generated Studio Control
 
@@ -1737,4 +1773,4 @@ It means future additions are additive capabilities, not corrections to basic co
 ```
 
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>END OF VERSION: 0.22.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.25.0</VERS> -->

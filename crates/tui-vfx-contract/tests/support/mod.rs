@@ -117,6 +117,7 @@ pub fn base_node(source: ValueSource) -> NodeSpec {
         effect: EffectId::new("terminal.opacity"),
         inputs: BTreeMap::from([(EffectInputId::new("amount"), source)]),
         outputs: BTreeMap::new(),
+        active_phases: vec![],
         scope: Some(ScopeSpec::All),
         cell_write_policy: Some(CellWritePolicy::WriteCell),
         role_write_policy: Some(RoleWritePolicy::PreserveDestination),

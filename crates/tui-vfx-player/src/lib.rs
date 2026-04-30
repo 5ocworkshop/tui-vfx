@@ -189,7 +189,7 @@ pub use cls_player_primitive_field_coverage::{
 pub use cls_player_render_backend_options::PlayerRenderBackendOptions;
 pub use cls_player_render_backend_output::{
     PlayerRenderBackendCompositionEvidence, PlayerRenderBackendDiagnostic,
-    PlayerRenderBackendOutput,
+    PlayerRenderBackendLetterCellEvidence, PlayerRenderBackendOutput,
 };
 pub use cls_player_render_backend_request::PlayerRenderBackendRequest;
 pub use cls_player_render_composition_mode::PlayerRenderCompositionMode;

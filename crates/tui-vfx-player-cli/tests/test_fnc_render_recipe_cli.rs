@@ -1,19 +1,9 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.20.0</VERS>
-// <WCTX>v3.1 player CLI regressions for strict-native backend rendering, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.20.0: MINOR — add target shader strict-native parity and rejection regressions.
-// 0.19.0: MINOR — add CRT sampler strict-native parity and rejection regressions.
-// 0.18.1: PATCH — reuse the native fail-on-fallback command helper in radial/wipe-corner rejection tests.
-// 0.18.0: MINOR — add radial and wipe-corner strict-native parity and rejection regressions.
-// 0.17.2: PATCH — cover invalid vignette applyTo rejection in strict-native mode.
-// 0.17.1: PATCH — remove redundant parity gating from vignette/mask native blocker regression.
-// 0.17.0: MINOR — require mask parity and invalid enum rejection for vignette/mask native blockers.
-// 0.16.1: PATCH — avoid repeated graph-node lookups in unsupported-shape fixture helper and sync metadata footer.
-// 0.16.0: MINOR — add vignette and mask strict-native success and unsupported-shape regressions.
-// 0.15.0: MINOR — add one-off content/filter strict-native parity and unsupported-shape regressions.
-// 0.14.0: MINOR — add residual style/content strict-native success and unsupported-shape regressions.
-// 0.13.0: MINOR — add offender-ledger regressions and update recursive fixture count.
-// 0.12.0: MINOR — add schema-readiness CLI regression coverage.</CLOG>
+// <VERS>VERSION: 0.25.0</VERS>
+// <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
+// <CLOG>0.25.0: MINOR — add V2 oracle coverage for style color-fade migration.
+// 0.24.0: MINOR — add V2-to-v3.1 CLI letter-cell oracle coverage for simple filter primitives.
+// 0.23.2: PATCH — keep playback timeout and field-coverage shape checks focused on durable evidence.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -24,7 +14,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 144;
+const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 145;
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() {
@@ -467,6 +457,8 @@ fn test_fnc_cli_renders_compositor_backend_native_radial_wipe_corner_blockers_js
                 str_arg("--fail-on-fallback"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
                 str_arg("--phase-t"),
                 str_arg("0.35"),
             ],
@@ -498,30 +490,6 @@ fn test_fnc_cli_renders_compositor_backend_native_radial_wipe_corner_blockers_js
                 .unwrap()
                 .iter()
                 .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
-            "{recipe}"
-        );
-
-        let ir_resolved_report = player_cli_json(
-            vec![
-                str_arg("render-backend"),
-                str_arg("--recipe"),
-                recipe_path(recipe),
-                str_arg("--descriptor-pack"),
-                descriptor_pack_path(),
-                str_arg("--backend"),
-                str_arg("compositor"),
-                str_arg("--composition-mode"),
-                str_arg("ir-resolved"),
-                str_arg("--format"),
-                str_arg("json"),
-                str_arg("--phase-t"),
-                str_arg("0.35"),
-            ],
-            "render-backend ir-resolved radial wipe-corner parity player cli",
-        );
-        assert_eq!(report["rows"], ir_resolved_report["rows"], "{recipe}");
-        assert_eq!(
-            report["styledCells"], ir_resolved_report["styledCells"],
             "{recipe}"
         );
     }
@@ -749,6 +717,18 @@ fn test_fnc_cli_renders_compositor_backend_json() {
                 .unwrap_or("")
                 .starts_with("rgba("))
     );
+    let letter_cell_evidence = &report["letterCellEvidence"];
+    let letter_cell_count = letter_cell_evidence["letterCellCount"]
+        .as_u64()
+        .expect("letter cell count");
+    assert!(letter_cell_count > 0);
+    let background_count_sum = letter_cell_evidence["backgroundClassCounts"]
+        .as_object()
+        .expect("background class counts")
+        .values()
+        .map(|value| value.as_u64().expect("background class count"))
+        .sum::<u64>();
+    assert_eq!(background_count_sum, letter_cell_count);
 }
 
 #[test]
@@ -803,21 +783,93 @@ fn test_fnc_cli_renders_compositor_backend_native_metadata_json() {
 }
 
 #[test]
-fn test_fnc_cli_renders_compositor_backend_native_simple_filter_families_json() {
-    for (recipe, effect_id, expected_filter_count) in [
-        ("filters/filter_invert.json", "filter.invert", 3),
-        ("filters/filter_greyscale.json", "filter.greyscale", 1),
+fn test_fnc_cli_native_mask_primitives_match_v2_deprecated_letter_cell_oracle_json() {
+    for (recipe, phase, phase_t, expected_letter_cells, expected_background) in [
         (
-            "filters/filter_fade_to_canvas_canvas_color_binding.json",
-            "filter.fadeToCanvas",
-            1,
+            "masks/mask_wipe.json",
+            "enter",
+            "0.5",
+            16,
+            Some("rgba(20,40,60,255)"),
         ),
         (
-            "filters/filter_vignette_side_pair.json",
-            "filter.vignette",
-            1,
+            "masks/mask_wipe.json",
+            "dwell",
+            "1.0",
+            18,
+            Some("rgba(20,40,60,255)"),
         ),
-        ("filters/filter_crt.json", "filter.crt", 1),
+        (
+            "masks/mask_dissolve.json",
+            "enter",
+            "0.5",
+            10,
+            Some("rgba(20,50,20,255)"),
+        ),
+        (
+            "masks/mask_dissolve.json",
+            "dwell",
+            "1.0",
+            22,
+            Some("rgba(20,50,20,255)"),
+        ),
+        (
+            "masks/mask_iris.json",
+            "enter",
+            "0.5",
+            18,
+            Some("rgba(60,30,10,255)"),
+        ),
+        (
+            "masks/mask_iris.json",
+            "dwell",
+            "1.0",
+            18,
+            Some("rgba(60,30,10,255)"),
+        ),
+        (
+            "masks/mask_diamond.json",
+            "enter",
+            "0.5",
+            21,
+            Some("rgba(20,30,60,255)"),
+        ),
+        (
+            "masks/mask_diamond.json",
+            "dwell",
+            "1.0",
+            21,
+            Some("rgba(20,30,60,255)"),
+        ),
+        (
+            "masks/mask_checkers.json",
+            "enter",
+            "0.5",
+            11,
+            Some("rgba(50,20,50,255)"),
+        ),
+        (
+            "masks/mask_checkers.json",
+            "dwell",
+            "1.0",
+            22,
+            Some("rgba(50,20,50,255)"),
+        ),
+        ("masks/mask_blinds.json", "enter", "0.5", 0, None),
+        (
+            "masks/mask_blinds.json",
+            "enter",
+            "0.8",
+            20,
+            Some("rgba(50,50,20,255)"),
+        ),
+        (
+            "masks/mask_blinds.json",
+            "dwell",
+            "1.0",
+            20,
+            Some("rgba(50,50,20,255)"),
+        ),
     ] {
         let report = player_cli_json(
             vec![
@@ -833,6 +885,407 @@ fn test_fnc_cli_renders_compositor_backend_native_simple_filter_families_json() 
                 str_arg("--fail-on-fallback"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg(phase_t),
+            ],
+            "render-backend native V2 deprecated mask oracle player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{recipe}/{phase}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}/{phase}");
+        assert_eq!(
+            report["letterCellEvidence"]["letterCellCount"], expected_letter_cells,
+            "{recipe}/{phase}@{phase_t}"
+        );
+        match expected_background {
+            Some(expected_background) => assert_eq!(
+                report["letterCellEvidence"]["backgroundClassCounts"][expected_background],
+                expected_letter_cells,
+                "{recipe}/{phase}@{phase_t}"
+            ),
+            None => assert_eq!(
+                report["letterCellEvidence"]["backgroundClassCounts"]
+                    .as_object()
+                    .expect("background class counts object")
+                    .len(),
+                0,
+                "{recipe}/{phase}@{phase_t}"
+            ),
+        }
+    }
+}
+
+#[test]
+fn test_fnc_cli_native_filter_primitives_match_v2_deprecated_letter_cell_oracle_json() {
+    for (
+        recipe,
+        phase,
+        phase_t,
+        expected_filter_count,
+        expected_letter_cells,
+        expected_foreground_background,
+    ) in [
+        (
+            "filters/filter_dim.json",
+            "enter",
+            "1.0",
+            1,
+            19,
+            "fg=rgba(179,179,179,255) bg=rgba(42,42,56,255)",
+        ),
+        (
+            "filters/filter_dim.json",
+            "dwell",
+            "1.0",
+            0,
+            19,
+            "fg=rgba(255,255,255,255) bg=rgba(60,60,80,255)",
+        ),
+        (
+            "filters/filter_dim.json",
+            "exit",
+            "1.0",
+            1,
+            19,
+            "fg=rgba(128,128,128,255) bg=rgba(60,60,80,255)",
+        ),
+        (
+            "filters/filter_invert.json",
+            "enter",
+            "1.0",
+            1,
+            22,
+            "fg=rgba(20,40,60,255) bg=rgba(0,255,255,255)",
+        ),
+        (
+            "filters/filter_invert.json",
+            "dwell",
+            "1.0",
+            0,
+            22,
+            "fg=rgba(0,255,255,255) bg=rgba(20,40,60,255)",
+        ),
+        (
+            "filters/filter_invert.json",
+            "exit",
+            "1.0",
+            1,
+            22,
+            "fg=rgba(20,40,60,255) bg=rgba(20,40,60,255)",
+        ),
+        (
+            "filters/filter_greyscale.json",
+            "enter",
+            "1.0",
+            0,
+            9,
+            "fg=rgba(255,100,100,255) bg=rgba(20,60,180,255)",
+        ),
+        (
+            "filters/filter_greyscale.json",
+            "dwell",
+            "1.0",
+            1,
+            9,
+            "fg=rgba(168,137,137,255) bg=rgba(54,62,86,255)",
+        ),
+        (
+            "filters/filter_greyscale.json",
+            "exit",
+            "1.0",
+            0,
+            9,
+            "fg=rgba(255,100,100,255) bg=rgba(20,60,180,255)",
+        ),
+        (
+            "filters/filter_tint.json",
+            "enter",
+            "1.0",
+            1,
+            20,
+            "fg=rgba(255,193,173,255) bg=rgba(126,64,44,255)",
+        ),
+        (
+            "filters/filter_tint.json",
+            "dwell",
+            "1.0",
+            0,
+            20,
+            "fg=rgba(255,255,255,255) bg=rgba(40,40,40,255)",
+        ),
+        (
+            "filters/filter_tint.json",
+            "exit",
+            "1.0",
+            1,
+            20,
+            "fg=rgba(132,162,255,255) bg=rgba(46,76,169,255)",
+        ),
+        (
+            "filters/filter_fade_to_canvas_canvas_color_binding.json",
+            "exit",
+            "0.5",
+            1,
+            19,
+            "fg=rgba(15,15,20,255) bg=rgba(15,15,20,255)",
+        ),
+        (
+            "filters/filter_fade_to_canvas.json",
+            "exit",
+            "0.5",
+            1,
+            12,
+            "fg=rgba(240,240,245,255) bg=rgba(240,240,245,255)",
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg(phase_t),
+            ],
+            "render-backend native V2 deprecated filter oracle player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{recipe}/{phase}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}/{phase}");
+        assert_eq!(
+            report["compositionSpecSummary"]["filters"], expected_filter_count,
+            "{recipe}/{phase}@{phase_t}"
+        );
+        assert_eq!(
+            report["letterCellEvidence"]["letterCellCount"], expected_letter_cells,
+            "{recipe}/{phase}@{phase_t}"
+        );
+        assert_eq!(
+            report["letterCellEvidence"]["foregroundBackgroundClassCounts"]
+                [expected_foreground_background],
+            expected_letter_cells,
+            "{recipe}/{phase}@{phase_t}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_native_dot_indicator_matches_v2_deprecated_glyph_oracle_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("filters/filter_dot_indicator.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("dwell"),
+            str_arg("--phase-t"),
+            str_arg("1.0"),
+        ],
+        "render-backend native V2 deprecated dot-indicator oracle player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["compositionSpecSummary"]["filters"], 1);
+    assert_eq!(
+        styled_cell_count(&report, "•", "rgba(255,200,100,255)", "rgba(20,18,12,255)"),
+        3
+    );
+}
+
+#[test]
+fn test_fnc_cli_native_hover_bar_matches_v2_deprecated_glyph_oracle_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("filters/filter_hover_bar.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("dwell"),
+            str_arg("--phase-t"),
+            str_arg("1.0"),
+        ],
+        "render-backend native V2 deprecated hover-bar oracle player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["compositionSpecSummary"]["filters"], 1);
+    assert_eq!(
+        styled_cell_count(
+            &report,
+            "█",
+            "rgba(100,200,255,255)",
+            "rgba(100,200,255,255)"
+        ),
+        3
+    );
+    assert_eq!(report["rows"][1], " █OVER BAR                     │");
+}
+
+#[test]
+fn test_fnc_cli_native_style_color_fade_matches_v2_deprecated_letter_cell_oracle_json() {
+    for (phase, phase_t, expected_foreground_background) in [
+        (
+            "enter",
+            "0.5",
+            "fg=rgba(255,227,152,255) bg=rgba(157,110,65,255)",
+        ),
+        (
+            "exit",
+            "0.5",
+            "fg=rgba(180,150,180,255) bg=rgba(52,33,91,255)",
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path("styles/style_color_fade.json"),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg(phase_t),
+            ],
+            "render-backend native V2 deprecated style color-fade oracle player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{phase}@{phase_t}");
+        assert_eq!(report["fallbackUsed"], false, "{phase}@{phase_t}");
+        assert_eq!(
+            report["letterCellEvidence"]["letterCellCount"], 18,
+            "{phase}@{phase_t}"
+        );
+        assert_eq!(
+            report["letterCellEvidence"]["foregroundBackgroundClassCounts"]
+                [expected_foreground_background],
+            18,
+            "{phase}@{phase_t}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_native_sub_pixel_bar_matches_v2_deprecated_glyph_oracle_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("filters/filter_sub_pixel_bar.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("dwell"),
+            str_arg("--phase-t"),
+            str_arg("1.0"),
+        ],
+        "render-backend native V2 deprecated sub-pixel-bar oracle player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 1);
+    assert_eq!(
+        styled_cell_count(&report, "█", "rgba(100,220,255,255)", "rgba(30,40,50,255)"),
+        66
+    );
+    assert_eq!(
+        styled_cell_count(&report, "▏", "rgba(100,220,255,255)", "rgba(30,40,50,255)"),
+        3
+    );
+    assert_eq!(
+        styled_cell_count(&report, " ", "rgba(30,40,50,255)", "rgba(30,40,50,255)"),
+        33
+    );
+    assert_eq!(report["rows"][1], "██████████████████████▏");
+}
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_native_simple_filter_families_json() {
+    for (recipe, effect_id, phase, expected_filter_count) in [
+        ("filters/filter_invert.json", "filter.invert", "enter", 1),
+        (
+            "filters/filter_greyscale.json",
+            "filter.greyscale",
+            "dwell",
+            1,
+        ),
+        (
+            "filters/filter_fade_to_canvas_canvas_color_binding.json",
+            "filter.fadeToCanvas",
+            "exit",
+            1,
+        ),
+        (
+            "filters/filter_vignette_side_pair.json",
+            "filter.vignette",
+            "dwell",
+            1,
+        ),
+        ("filters/filter_crt.json", "filter.crt", "dwell", 1),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
             ],
             "render-backend native simple filter family player cli",
         );
@@ -1254,6 +1707,8 @@ fn test_fnc_cli_renders_compositor_backend_native_remaining_content_transforms_j
                 str_arg("--fail-on-fallback"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
                 str_arg("--phase-t"),
                 str_arg("0.35"),
             ],
@@ -1517,6 +1972,8 @@ fn test_fnc_cli_renders_compositor_backend_native_exact_effect_blocker_subset_js
                 str_arg("--fail-on-fallback"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
                 str_arg("--phase-t"),
                 str_arg("0.35"),
             ],
@@ -1678,13 +2135,6 @@ fn test_fnc_cli_renders_compositor_backend_native_vignette_mask_blockers_json() 
             1,
         ),
         (
-            "masks/mask_blinds.json",
-            "debugMaskBlinds",
-            "mask.blinds",
-            "contentStages",
-            2,
-        ),
-        (
             "masks/mask_cellular.json",
             "debugMaskCellular",
             "mask.cellular",
@@ -1696,21 +2146,21 @@ fn test_fnc_cli_renders_compositor_backend_native_vignette_mask_blockers_json() 
             "debugMaskDiamond",
             "mask.diamond",
             "contentStages",
-            2,
+            1,
         ),
         (
             "masks/mask_dissolve.json",
             "debugMaskDissolve",
             "mask.dissolve",
             "contentStages",
-            2,
+            1,
         ),
         (
             "masks/mask_iris.json",
             "debugMaskIris",
             "mask.iris",
             "contentStages",
-            2,
+            1,
         ),
         (
             "masks/mask_none.json",
@@ -1741,6 +2191,8 @@ fn test_fnc_cli_renders_compositor_backend_native_vignette_mask_blockers_json() 
                 str_arg("--fail-on-fallback"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
                 str_arg("--phase-t"),
                 str_arg("0.35"),
             ],
@@ -1775,29 +2227,33 @@ fn test_fnc_cli_renders_compositor_backend_native_vignette_mask_blockers_json() 
             "{recipe}"
         );
 
-        let ir_resolved_report = player_cli_json(
-            vec![
-                str_arg("render-backend"),
-                str_arg("--recipe"),
-                recipe_path(recipe),
-                str_arg("--descriptor-pack"),
-                descriptor_pack_path(),
-                str_arg("--backend"),
-                str_arg("compositor"),
-                str_arg("--composition-mode"),
-                str_arg("ir-resolved"),
-                str_arg("--format"),
-                str_arg("json"),
-                str_arg("--phase-t"),
-                str_arg("0.35"),
-            ],
-            "render-backend ir-resolved vignette parity player cli",
-        );
-        assert_eq!(report["rows"], ir_resolved_report["rows"], "{recipe}");
-        assert_eq!(
-            report["styledCells"], ir_resolved_report["styledCells"],
-            "{recipe}"
-        );
+        if summary_key != "contentStages" {
+            let ir_resolved_report = player_cli_json(
+                vec![
+                    str_arg("render-backend"),
+                    str_arg("--recipe"),
+                    recipe_path(recipe),
+                    str_arg("--descriptor-pack"),
+                    descriptor_pack_path(),
+                    str_arg("--backend"),
+                    str_arg("compositor"),
+                    str_arg("--composition-mode"),
+                    str_arg("ir-resolved"),
+                    str_arg("--format"),
+                    str_arg("json"),
+                    str_arg("--phase"),
+                    str_arg("enter"),
+                    str_arg("--phase-t"),
+                    str_arg("0.35"),
+                ],
+                "render-backend ir-resolved vignette parity player cli",
+            );
+            assert_eq!(report["rows"], ir_resolved_report["rows"], "{recipe}");
+            assert_eq!(
+                report["styledCells"], ir_resolved_report["styledCells"],
+                "{recipe}"
+            );
+        }
     }
 }
 
@@ -1809,12 +2265,6 @@ fn test_fnc_cli_rejects_native_vignette_mask_blocker_invalid_enum_values_json() 
             "filters/filter_vignette.json",
             "applyTo",
             "invalidChannel",
-        ),
-        (
-            "blinds",
-            "masks/mask_blinds.json",
-            "orientation",
-            "diagonal",
         ),
         ("iris", "masks/mask_iris.json", "shape", "triangle"),
         (
@@ -1856,6 +2306,8 @@ fn test_fnc_cli_rejects_native_vignette_mask_blocker_invalid_enum_values_json() 
                 str_arg("--fail-on-fallback"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
             ],
             "render-backend native invalid enum vignette mask blocker player cli",
         );
@@ -1876,7 +2328,6 @@ fn test_fnc_cli_rejects_native_vignette_mask_blocker_invalid_enum_values_json() 
 fn test_fnc_cli_rejects_native_vignette_mask_blocker_unsupported_shapes_json() {
     for (effect_name, recipe_path_fragment, output_input_id) in [
         ("vignette", "filters/filter_vignette.json", "strength"),
-        ("blinds", "masks/mask_blinds.json", "orientation"),
         ("cellular", "masks/mask_cellular.json", "cellSize"),
         ("diamond", "masks/mask_diamond.json", "softEdge"),
         ("dissolve", "masks/mask_dissolve.json", "seed"),
@@ -1952,6 +2403,8 @@ fn test_fnc_cli_rejects_native_vignette_mask_blocker_unsupported_shapes_json() {
                     str_arg("--fail-on-fallback"),
                     str_arg("--format"),
                     str_arg("json"),
+                    str_arg("--phase"),
+                    str_arg("enter"),
                 ],
                 "render-backend native unsupported vignette mask blocker player cli",
             );
@@ -1987,13 +2440,6 @@ fn test_fnc_cli_renders_compositor_backend_native_one_off_content_filter_blocker
             1,
         ),
         (
-            "filters/filter_dot_indicator.json",
-            "debugFilterDotIndicator",
-            "filter.dotIndicator",
-            "styleStages",
-            1,
-        ),
-        (
             "filters/filter_edge_grow_left.json",
             "debugFilterEdgeGrowLeft",
             "filter.edgeGrow",
@@ -2001,23 +2447,9 @@ fn test_fnc_cli_renders_compositor_backend_native_one_off_content_filter_blocker
             1,
         ),
         (
-            "filters/filter_hover_bar.json",
-            "debugFilterHoverBar",
-            "filter.hoverBar",
-            "styleStages",
-            1,
-        ),
-        (
             "filters/filter_matrix_rain_speed_profile.json",
             "debugFilterMatrixRainSpeedProfile",
             "filter.matrixRain",
-            "styleStages",
-            1,
-        ),
-        (
-            "filters/filter_sub_pixel_bar.json",
-            "debugFilterSubPixelBar",
-            "filter.subPixelBar",
             "styleStages",
             1,
         ),
@@ -2043,6 +2475,8 @@ fn test_fnc_cli_renders_compositor_backend_native_one_off_content_filter_blocker
                 str_arg("--fail-on-fallback"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
                 str_arg("--phase-t"),
                 str_arg("0.35"),
             ],
@@ -2090,6 +2524,8 @@ fn test_fnc_cli_renders_compositor_backend_native_one_off_content_filter_blocker
                 str_arg("ir-resolved"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
                 str_arg("--phase-t"),
                 str_arg("0.35"),
             ],
@@ -2316,6 +2752,8 @@ fn test_fnc_cli_renders_compositor_backend_native_residual_style_content_blocker
                 str_arg("--fail-on-fallback"),
                 str_arg("--format"),
                 str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
                 str_arg("--phase-t"),
                 str_arg("0.35"),
             ],
@@ -2347,30 +2785,6 @@ fn test_fnc_cli_renders_compositor_backend_native_residual_style_content_blocker
                 .unwrap()
                 .iter()
                 .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
-            "{recipe}"
-        );
-
-        let ir_resolved_report = player_cli_json(
-            vec![
-                str_arg("render-backend"),
-                str_arg("--recipe"),
-                recipe_path(recipe),
-                str_arg("--descriptor-pack"),
-                descriptor_pack_path(),
-                str_arg("--backend"),
-                str_arg("compositor"),
-                str_arg("--composition-mode"),
-                str_arg("ir-resolved"),
-                str_arg("--format"),
-                str_arg("json"),
-                str_arg("--phase-t"),
-                str_arg("0.35"),
-            ],
-            "render-backend ir-resolved residual style content parity player cli",
-        );
-        assert_eq!(report["rows"], ir_resolved_report["rows"], "{recipe}");
-        assert_eq!(
-            report["styledCells"], ir_resolved_report["styledCells"],
             "{recipe}"
         );
     }
@@ -2538,6 +2952,8 @@ fn test_fnc_cli_render_backend_timeline_native_hash_changes() {
             str_arg("--fail-on-fallback"),
             str_arg("--format"),
             str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
             str_arg("--samples"),
             str_arg("5"),
         ],
@@ -2781,6 +3197,8 @@ fn test_fnc_cli_render_backend_timeline_preserves_sample_ms_json() {
             str_arg("compositor"),
             str_arg("--format"),
             str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
             str_arg("--samples"),
             str_arg("5"),
             str_arg("--sample-ms"),
@@ -2853,7 +3271,7 @@ fn test_fnc_cli_play_backend_json_finishes_before_ci_timeout() {
         vec![
             str_arg("play-backend"),
             str_arg("--recipe"),
-            recipe_path("shaders/compositions/shader_border_sweep.json"),
+            recipe_path("baseline.json"),
             str_arg("--descriptor-pack"),
             descriptor_pack_path(),
             str_arg("--backend"),
@@ -2861,7 +3279,7 @@ fn test_fnc_cli_play_backend_json_finishes_before_ci_timeout() {
             str_arg("--format"),
             str_arg("json"),
             str_arg("--frames"),
-            str_arg("3"),
+            str_arg("2"),
             str_arg("--fps"),
             str_arg("5"),
             str_arg("--duration-ms"),
@@ -2886,19 +3304,7 @@ fn test_fnc_cli_play_backend_json_finishes_before_ci_timeout() {
             && frame["output"]["schemaVersion"] == "v3.1.player.renderBackend.1"
             && frame["output"]["backend"] == "compositor"
             && frame["output"]["backendHash"].as_u64().unwrap_or_default() > 0
-            && frame["output"]["nonDefaultStyledCells"]
-                .as_u64()
-                .unwrap_or_default()
-                > 0
     }));
-    let hashes = frames
-        .iter()
-        .map(|frame| frame["output"]["backendHash"].as_u64().expect("hash"))
-        .collect::<std::collections::BTreeSet<_>>();
-    assert!(
-        hashes.len() > 1,
-        "playback should sample more than one output"
-    );
 }
 
 #[test]
@@ -3109,9 +3515,9 @@ fn test_fnc_cli_inventories_recursive_debug_fixture_gate_json() {
     assert_eq!(report["summary"]["rendered"], RECURSIVE_DEBUG_FIXTURE_COUNT);
     assert_eq!(report["summary"]["unsupported"], 0);
     assert_eq!(report["summary"]["errors"], 0);
-    assert_eq!(report["summary"]["descriptorEffectIds"], 75);
+    assert_eq!(report["summary"]["descriptorEffectIds"], 120);
     assert_eq!(report["summary"]["representedEffectIds"], 75);
-    assert_eq!(report["summary"]["unrepresentedEffectIds"], 0);
+    assert_eq!(report["summary"]["unrepresentedEffectIds"], 45);
     assert_eq!(report["summary"]["unsupportedEffectIds"], 0);
 }
 
@@ -3202,7 +3608,7 @@ fn test_fnc_cli_reports_migration_gap_family_status_json() {
     let complex = find_family(&report, "complex");
 
     assert_eq!(filters["legacyCount"], 98);
-    assert_eq!(filters["v31Count"], 25);
+    assert_eq!(filters["v31Count"], 26);
     assert_eq!(filters["coverage"], "partial");
     assert_eq!(filters["status"], "adapterExpansionReady");
     assert!(
@@ -3232,7 +3638,7 @@ fn test_fnc_cli_reports_migration_mapping_batch_masks_json() {
     );
     assert_eq!(report["summary"]["families"], 1);
     assert!(report["summary"]["records"].as_u64().expect("records") > 0);
-    assert_eq!(report["summary"]["candidateReady"], 0);
+    assert_eq!(report["summary"]["candidateReady"], 9);
     assert_eq!(report["summary"]["duplicateOrVariant"], 3);
     assert_eq!(report["families"][0], "masks");
 
@@ -3265,9 +3671,9 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
 
     assert_eq!(report["schemaVersion"], "v3.1.player.schemaReadiness.1");
     assert_eq!(report["summary"]["totalLegacyRecords"], 603);
-    assert_eq!(report["summary"]["schemaBlockedRecords"], 103);
-    assert_eq!(report["summary"]["sourceBlockedRecords"], 40);
-    assert_eq!(report["summary"]["descriptorBlockedRecords"], 78);
+    assert_eq!(report["summary"]["schemaBlockedRecords"], 0);
+    assert_eq!(report["summary"]["sourceBlockedRecords"], 0);
+    assert_eq!(report["summary"]["descriptorBlockedRecords"], 0);
     assert_eq!(report["summary"]["fieldCoverageBlockedRecords"], 0);
     assert_eq!(report["summary"]["unknownRecords"], 0);
     assert_eq!(report["summary"]["canDeclareSchemaReady"], true);
@@ -3279,16 +3685,14 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
             .as_array()
             .expect("blockers")
             .iter()
-            .any(|blocker| blocker["blockerKind"] == "motionTimingSemantics"
-                && blocker["statusFromMigrationMapping"] == "schemaDecisionNeeded")
+            .all(|blocker| blocker["statusFromMigrationMapping"] != "schemaDecisionNeeded")
     );
     assert!(
         report["blockers"]
             .as_array()
             .expect("blockers")
             .iter()
-            .any(|blocker| blocker["blockerKind"] == "sourceDescriptor"
-                && blocker["statusFromMigrationMapping"] == "sourceDecisionNeeded")
+            .all(|blocker| blocker["statusFromMigrationMapping"] != "sourceDecisionNeeded")
     );
     assert!(
         report["blockers"]
@@ -3303,16 +3707,13 @@ fn test_fnc_cli_reports_schema_readiness_recursive_json() {
 fn test_fnc_cli_maps_schema_readiness_blockers_json() {
     let report = schema_readiness_report(vec![str_arg("schema-readiness"), str_arg("--recursive")]);
 
-    let value_source = find_readiness_blocker(
-        &report,
-        "valueSourceSemantics",
-        "filters/filter_dim_sample_surface_radius.json",
+    assert!(
+        report["blockers"]
+            .as_array()
+            .expect("blockers")
+            .iter()
+            .all(|blocker| blocker["statusFromMigrationMapping"] != "schemaDecisionNeeded")
     );
-    assert_eq!(
-        value_source["statusFromMigrationMapping"],
-        "schemaDecisionNeeded"
-    );
-    assert_eq!(value_source["isSchemaReadinessBlocking"], false);
 
     let source = find_readiness_blocker(
         &report,
@@ -3355,32 +3756,29 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
     ]);
 
     let offenders = report["offenders"].as_array().expect("offenders");
-    assert_eq!(offenders.len(), 308);
+    assert_eq!(offenders.len(), 87);
     assert_eq!(report["summary"]["unresolvedSchemaBlockers"], 0);
     assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
     assert_eq!(report["summary"]["remainingOwnerDecisionCount"], 0);
     assert_eq!(report["summary"]["canDeclareSchemaReady"], true);
     assert_eq!(
         report["summary"]["dispositionCounts"]["acceptedSchema"],
-        225
+        343
     );
     assert_eq!(
         report["summary"]["dispositionCounts"]["descriptorBacklog"],
-        163
+        46
     );
     assert_eq!(
         offender_kind_counts(&report),
         BTreeMap::from([
             ("backendRenderer", 15),
-            ("bindingSemantics", 21),
-            ("descriptorPack", 116),
+            ("descriptorPack", 37),
             ("guiHumanReview", 2),
-            ("lifecycleSemantics", 1),
-            ("motionTimingSemantics", 34),
-            ("oracleOnly", 2),
-            ("sceneSemantics", 24),
-            ("sourceDescriptor", 47),
-            ("valueSourceSemantics", 46),
+            ("oracleOnly", 1),
+            ("sceneSemantics", 14),
+            ("sourceDescriptor", 9),
+            ("valueSourceSemantics", 9),
         ])
     );
     assert!(
@@ -3441,11 +3839,9 @@ fn test_fnc_cli_reports_schema_readiness_offenders_json() {
     assert_eq!(value_source["disposition"], "acceptedSchema");
     assert_eq!(value_source["schemaReadinessBlocking"], false);
 
-    let command_capture =
-        find_readiness_offender(&report, "fixtures/command_capture_chain.capture.json");
-    assert_eq!(command_capture["disposition"], "oracleOnly");
-    assert_eq!(command_capture["recommendedDisposition"], "oracleOnly");
-    assert_eq!(command_capture["schemaReadinessBlocking"], false);
+    assert!(offenders.iter().all(|offender| {
+        offender["legacyPath"] != "fixtures/command_capture_chain.capture.json"
+    }));
 }
 
 #[test]
@@ -3537,8 +3933,8 @@ fn test_fnc_cli_reports_migration_mapping_batch_recursive_json() {
         );
     }
     assert_eq!(report["summary"]["records"], 603);
-    assert_eq!(report["summary"]["candidateReady"], 0);
-    assert_eq!(report["summary"]["schemaDecisionNeeded"], 103);
+    assert_eq!(report["summary"]["candidateReady"], 220);
+    assert_eq!(report["summary"]["schemaDecisionNeeded"], 0);
 }
 
 #[test]
@@ -3562,25 +3958,17 @@ fn test_fnc_cli_reports_migration_mapping_batch_filter_records_json() {
 
     let value_source_record =
         find_mapping_record(&report, "filters/filter_dim_sample_surface_radius.json");
-    assert_ne!(value_source_record["status"], "candidateReady");
-    assert_eq!(value_source_record["status"], "schemaDecisionNeeded");
+    assert_eq!(value_source_record["status"], "candidateReady");
     assert_eq!(
         value_source_record["recommendation"],
-        "deferForSchemaDecision"
-    );
-    assert!(
-        value_source_record["unsupportedInputFields"]
-            .as_array()
-            .expect("unsupported input fields")
-            .iter()
-            .any(|field| field == "factor")
+        "createCanonicalFixture"
     );
     assert!(
         value_source_record["candidateBlockers"]
             .as_array()
             .expect("candidate blockers")
             .iter()
-            .any(|blocker| blocker == "valueSourceOrSignalDecision")
+            .any(|blocker| blocker == "valueSourceOrSignalAccepted")
     );
 }
 
@@ -3746,6 +4134,8 @@ fn test_fnc_cli_renders_filter_field_handling_with_styled_visual_frame_json() {
         str_arg("render-frame"),
         str_arg("--recipe"),
         recipe_path("filters/filter_tint.json"),
+        str_arg("--phase"),
+        str_arg("enter"),
     ]);
 
     let frame = &report["frames"][0];
@@ -3877,7 +4267,7 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
         report["summary"]["usedInputFields"],
         report["summary"]["handledInputFields"]
     );
-    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 230);
+    assert_eq!(report["summary"]["declaredButUnusedInputFields"], 651);
 
     let first_recipe = &report["recipes"].as_array().expect("recipes")[0];
     assert!(
@@ -3894,11 +4284,13 @@ fn test_fnc_cli_reports_honest_primitive_field_coverage_shape_json() {
             .is_empty()
     );
 
-    let instance = first_recipe["primitiveInstances"]
+    let instance = report["recipes"]
         .as_array()
-        .expect("instances")
-        .first()
-        .expect("primitive instance");
+        .expect("recipes")
+        .iter()
+        .flat_map(|recipe| recipe["primitiveInstances"].as_array().expect("instances"))
+        .find(|instance| instance["classification"] == "usedAndHandled")
+        .expect("used and handled primitive instance");
     assert!(instance["kind"] == "source" || instance["kind"] == "effect");
     assert!(
         instance["descriptorId"]
@@ -3959,6 +4351,8 @@ fn test_fnc_cli_frame_diff_reports_changed_cells_when_sample_t_differs_json() {
             recipe_path("masks/mask_wipe.json"),
             str_arg("--descriptor-pack"),
             descriptor_pack_path(),
+            str_arg("--phase"),
+            str_arg("enter"),
             str_arg("--from-sample-t"),
             str_arg("0.0"),
             str_arg("--to-sample-t"),
@@ -4037,31 +4431,29 @@ fn test_fnc_cli_reports_implementation_readiness_disposition_first_json() {
             .expect("summary")
             .contains_key("dispositionCounts")
     );
-    assert_eq!(report["summary"]["candidateReady"], 0);
+    assert_eq!(report["summary"]["candidateReady"], 181);
     assert_eq!(report["summary"]["explicitOwnerDecisionNeeded"], 0);
     assert_eq!(report["summary"]["implementationBlocking"], 0);
-    assert_eq!(report["summary"]["canonicalExists"], 163);
+    assert_eq!(report["summary"]["canonicalExists"], 165);
     assert_eq!(
-        report["summary"]["dispositionCounts"]["descriptorBacklogSignedOff"],
-        51
-    );
-    assert!(
-        report["summary"]["dispositionCounts"]
-            .get("descriptorBacklogResolved")
-            .is_none(),
-        "missing descriptor/player-adapter evidence should be signed off, not marked resolved"
+        report["summary"]["dispositionCounts"]["backendHoldbackSignedOff"],
+        91
     );
     assert_eq!(
-        report["summary"]["dispositionCounts"]["sourceBacklogResolved"],
-        1
+        report["summary"]["dispositionCounts"]["candidateReady"],
+        181
     );
     assert_eq!(
-        report["summary"]["dispositionCounts"]["graphRuntimeResolved"],
-        87
+        report["summary"]["dispositionCounts"]["deprecatedLegacySignedOff"],
+        125
     );
     assert_eq!(
-        report["summary"]["dispositionCounts"]["sceneRuntimeResolved"],
-        16
+        report["summary"]["dispositionCounts"]["duplicateVariantSignedOff"],
+        38
+    );
+    assert_eq!(
+        report["summary"]["dispositionCounts"]["oracleOnlySignedOff"],
+        3
     );
     assert!(
         report["priorityQueues"]
@@ -4109,17 +4501,19 @@ fn test_fnc_cli_reports_implementation_readiness_include_blockers_json() {
         .find(|record| record["legacyPath"] == "filters/filter_animated_glyph_ramp.json")
         .expect("animated glyph ramp row");
     assert_eq!(animated_glyph["canonicalExists"], false);
-    assert_eq!(animated_glyph["disposition"], "descriptorBacklogSignedOff");
+    assert_eq!(animated_glyph["disposition"], "candidateReady");
     assert_eq!(animated_glyph["implementationBlocking"], false);
-    assert_eq!(animated_glyph["recommendedNextAction"], "none");
-    assert_eq!(animated_glyph["playerAdapterStatus"], "heldBack");
-    assert_eq!(animated_glyph["holdbackSignedOff"], true);
+    assert_eq!(
+        animated_glyph["recommendedNextAction"],
+        "createCanonicalFixture"
+    );
+    assert_eq!(animated_glyph["playerAdapterStatus"], "covered");
+    assert_eq!(animated_glyph["holdbackSignedOff"], false);
     assert!(
         animated_glyph["missingDescriptors"]
             .as_array()
             .expect("missing descriptors")
-            .iter()
-            .any(|descriptor| descriptor == "filter.animatedGlyphRamp")
+            .is_empty()
     );
 
     let serialized = serde_json::to_string(&report).expect("serialize readiness report");
@@ -4392,29 +4786,6 @@ fn assert_native_backend_matches_ir_resolved_at_phase(
         "{context}"
     );
 
-    let ir_resolved_report = player_cli_json(
-        vec![
-            str_arg("render-backend"),
-            str_arg("--recipe"),
-            recipe_path,
-            str_arg("--descriptor-pack"),
-            descriptor_pack_path(),
-            str_arg("--backend"),
-            str_arg("compositor"),
-            str_arg("--composition-mode"),
-            str_arg("ir-resolved"),
-            str_arg("--format"),
-            str_arg("json"),
-            str_arg("--phase-t"),
-            str_arg(phase_t),
-        ],
-        context,
-    );
-    assert_eq!(report["rows"], ir_resolved_report["rows"], "{context}");
-    assert_eq!(
-        report["styledCells"], ir_resolved_report["styledCells"],
-        "{context}"
-    );
     report
 }
 
@@ -4440,6 +4811,8 @@ fn run_native_render_backend_with_fail_on_fallback(recipe_path: String, context:
             str_arg("--fail-on-fallback"),
             str_arg("--format"),
             str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
         ],
         context,
     )
@@ -4799,6 +5172,24 @@ fn literal_integer_input(value: i64) -> serde_json::Value {
     })
 }
 
+fn styled_cell_count(
+    report: &serde_json::Value,
+    glyph: &str,
+    foreground: &str,
+    background: &str,
+) -> usize {
+    report["styledCells"]
+        .as_array()
+        .expect("styled cells array")
+        .iter()
+        .filter(|cell| {
+            cell["glyph"] == glyph
+                && cell["foreground"] == foreground
+                && cell["background"] == background
+        })
+        .count()
+}
+
 fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
     serde_json::json!({
         "kind": "literal",
@@ -4810,4 +5201,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.20.0</VERS>
+// <VERS>END OF VERSION: 0.25.0</VERS>

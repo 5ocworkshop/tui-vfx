@@ -111,6 +111,7 @@ pub mod cls_source_output_size;
 pub mod cls_source_output_spec;
 pub mod cls_source_role_policy;
 pub mod cls_source_spec;
+pub mod cls_structured_value;
 pub mod cls_surface;
 pub mod cls_surface_diagnostic;
 pub mod cls_surface_diagnostic_code;
@@ -225,6 +226,7 @@ pub use cls_source_output_size::SourceOutputSize;
 pub use cls_source_output_spec::SourceOutputSpec;
 pub use cls_source_role_policy::SourceRolePolicy;
 pub use cls_source_spec::SourceSpec;
+pub use cls_structured_value::StructuredValue;
 pub use cls_surface::Surface;
 pub use cls_surface_diagnostic::SurfaceDiagnostic;
 pub use cls_surface_diagnostic_code::SurfaceDiagnosticCode;
@@ -253,7 +255,7 @@ pub mod schema_roots {
         LifecycleSpec, NodeOutputSource, NodeOutputSpec, NodeSpec, ParameterSpec, PhaseSpec,
         RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene, RecipeSceneElement,
         Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec, SourceDescriptor,
-        SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec, Surface,
+        SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec, StructuredValue, Surface,
         SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
     };
     pub use crate::{DescriptorCatalog, DescriptorPack, DescriptorPackId, DescriptorPackRef};

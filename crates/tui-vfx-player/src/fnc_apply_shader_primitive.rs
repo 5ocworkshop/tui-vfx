@@ -553,6 +553,7 @@ mod tests {
                 ),
             ]),
             outputs: BTreeMap::new(),
+            active_phases: vec![],
             scope: None,
             cell_write_policy: None,
             role_write_policy: None,

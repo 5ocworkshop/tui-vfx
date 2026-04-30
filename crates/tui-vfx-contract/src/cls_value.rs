@@ -1,12 +1,13 @@
 // <FILE>crates/tui-vfx-contract/src/cls_value.rs</FILE> - <DESC>Tagged effect input literal value DTO</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>K2.13 schema decision burn-down: add typed gradient literals.</WCTX>
-// <CLOG>0.2.0: MINOR — add gradient literal payload.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>Vertical recipe parity: preserve descriptor-owned structured payload details.</WCTX>
+// <CLOG>0.3.0: MINOR — add structured JSON literal payload.
+// 0.2.0: MINOR — add gradient literal payload.
 // 0.1.0: INIT — add strict tagged Value enum with schema-backed payloads.</CLOG>
 
 use tui_vfx_types::{Color, Rect, RoleTag};
 
-use crate::{GradientSpec, ScopeSpec, ValueKind};
+use crate::{GradientSpec, ScopeSpec, StructuredValue, ValueKind};
 
 /// Canonical tagged literal value used by effect input specs.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
@@ -79,6 +80,11 @@ pub enum Value {
         /// Rectangle payload.
         Rect,
     ),
+    /// Descriptor-owned structured JSON literal.
+    Structured(
+        /// Structured JSON payload.
+        StructuredValue,
+    ),
 }
 
 impl Value {
@@ -98,6 +104,7 @@ impl Value {
             Self::Role(_) => ValueKind::Role,
             Self::Scope(_) => ValueKind::Scope,
             Self::Rect(_) => ValueKind::Rect,
+            Self::Structured(_) => ValueKind::Structured,
         }
     }
 
@@ -120,4 +127,4 @@ impl Value {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_value.rs</FILE> - <DESC>Tagged effect input literal value DTO</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

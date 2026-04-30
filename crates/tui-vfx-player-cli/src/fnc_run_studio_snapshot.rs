@@ -1,11 +1,9 @@
 // <FILE>crates/tui-vfx-player-cli/src/fnc_run_studio_snapshot.rs</FILE> - <DESC>Run studio-snapshot CLI command</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>v3.1 studio control pilot: derive controls from descriptors/recipe data and prove scripted control changes affect rendering.</WCTX>
-// <CLOG>0.2.0: MINOR — validate runtime override targets against recipe source/effect inputs and count row changes.
-// 0.1.1: PATCH — isolate studio assignment parsing from mutation target routing.
-// 0.1.0: INIT — render before/after backend snapshots for signal-backed control assignments.</CLOG>
+// <CLOG>0.3.0: MINOR — move changed-cell counting into its own function file.</CLOG>
 
-use std::{collections::BTreeMap, path::Path};
+use std::path::Path;
 
 use serde_json::json;
 use tui_vfx_contract::{RecipeDocument, SignalId, Value};
@@ -18,6 +16,7 @@ use crate::{
     cls_cli_options::CliOptions,
     fnc_cli_sample_request::cli_sample_request,
     fnc_collect_cli_recipe_paths::collect_cli_recipe_paths,
+    fnc_count_studio_snapshot_changed_cells::count_studio_snapshot_changed_cells,
     fnc_run_render_backend::{backend_options, validate_backend_output},
 };
 
@@ -74,7 +73,7 @@ pub fn run_studio_snapshot(options: CliOptions) -> Result<(), String> {
         after_source_ir,
         backend_options,
     )?;
-    let changed_cells = count_changed_cells(&before, &after);
+    let changed_cells = count_studio_snapshot_changed_cells(&before, &after);
     let studio_diagnostics = studio_mutation_diagnostics(&mutations, changed_cells);
     let before = before.with_changed_cells(changed_cells);
     let after = after.with_changed_cells(changed_cells);
@@ -358,45 +357,5 @@ fn parse_control_value(value: &str) -> Value {
     Value::String(value.to_string())
 }
 
-fn count_changed_cells(
-    before: &PlayerRenderBackendOutput,
-    after: &PlayerRenderBackendOutput,
-) -> usize {
-    let before_cells = cell_map(before);
-    let after_cells = cell_map(after);
-    let mut keys = before_cells
-        .keys()
-        .chain(after_cells.keys())
-        .collect::<Vec<_>>();
-    keys.sort();
-    keys.dedup();
-    keys.into_iter()
-        .filter(|key| before_cells.get(key) != after_cells.get(key))
-        .count()
-}
-
-fn cell_map(output: &PlayerRenderBackendOutput) -> BTreeMap<(usize, usize), String> {
-    let mut cells = BTreeMap::new();
-    for (y, row) in output.rows.iter().enumerate() {
-        for (x, glyph) in row.chars().enumerate() {
-            cells.insert((x, y), format!("{glyph}|transparent|transparent||"));
-        }
-    }
-    for cell in &output.styled_cells {
-        cells.insert(
-            (cell.x, cell.y),
-            format!(
-                "{}|{}|{}|{}|{}",
-                cell.glyph,
-                cell.foreground,
-                cell.background,
-                cell.modifiers.join(","),
-                cell.role.clone().unwrap_or_default()
-            ),
-        );
-    }
-    cells
-}
-
 // <FILE>crates/tui-vfx-player-cli/src/fnc_run_studio_snapshot.rs</FILE> - <DESC>Run studio-snapshot CLI command</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

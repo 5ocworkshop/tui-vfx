@@ -66,6 +66,91 @@
           },
           "bindable": true,
           "runtimeMutability": "compileTime"
+        },
+        "foreground": {
+          "displayName": "Foreground",
+          "description": "Foreground color applied to source.card text and border cells.",
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 255,
+                "g": 255,
+                "b": 255,
+                "a": 255
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "foreground-color"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "background": {
+          "displayName": "Background",
+          "description": "Background color applied to the source.card surface.",
+          "value": {
+            "kind": "color",
+            "default": {
+              "kind": "color",
+              "value": {
+                "r": 0,
+                "g": 0,
+                "b": 0,
+                "a": 0
+              }
+            },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "background-color"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "borderStyle": {
+          "displayName": "Border Style",
+          "description": "Border glyph family generated around the source.card surface.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "none"
+            },
+            "range": null,
+            "allowedValues": [
+              "none",
+              "plain",
+              "rounded",
+              "double"
+            ],
+            "unit": null,
+            "semantic": "border-style"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "borderTrim": {
+          "displayName": "Border Trim",
+          "description": "Border trim policy preserved from legacy debug card chrome.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "none"
+            },
+            "range": null,
+            "allowedValues": [
+              "none"
+            ],
+            "unit": null,
+            "semantic": "border-trim"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
         }
       },
       "assets": {},
@@ -374,6 +459,178 @@
             },
             "allowedValues": [],
             "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        }
+      },
+      "assets": {},
+      "output": {
+        "size": {
+          "kind": "inputDriven"
+        },
+        "roles": {
+          "kind": "generated"
+        }
+      },
+      "lifecycle": {
+        "deterministicWithSeed": true,
+        "timeAware": false,
+        "resizeAware": true
+      }
+    },
+    "source.scene": {
+      "id": "source.scene",
+      "version": "0.1.0",
+      "displayName": "Scene Layer Source",
+      "category": "scene",
+      "kind": {
+        "kind": "sceneLayer"
+      },
+      "inputs": {
+        "sceneId": {
+          "displayName": "Scene Id",
+          "description": "Scene or layer source identifier carried from legacy scene authoring.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "scene-id"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "layerId": {
+          "displayName": "Layer Id",
+          "description": "Optional layer identifier for nested scene/layer references.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "layer-id"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "width": {
+          "displayName": "Width",
+          "description": "Scene source width in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 35
+            },
+            "range": {
+              "min": 1.0,
+              "max": 512.0
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        },
+        "height": {
+          "displayName": "Height",
+          "description": "Scene source height in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 3
+            },
+            "range": {
+              "min": 1.0,
+              "max": 512.0
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        }
+      },
+      "assets": {},
+      "output": {
+        "size": {
+          "kind": "inputDriven"
+        },
+        "roles": {
+          "kind": "generated"
+        }
+      },
+      "lifecycle": {
+        "deterministicWithSeed": true,
+        "timeAware": false,
+        "resizeAware": true
+      }
+    },
+    "source.commandCaptureArtifact": {
+      "id": "source.commandCaptureArtifact",
+      "version": "0.1.0",
+      "displayName": "Command Capture Artifact Source",
+      "category": "debug fixture",
+      "kind": {
+        "kind": "commandCapture"
+      },
+      "inputs": {
+        "artifact": {
+          "displayName": "Artifact",
+          "description": "Offline command-capture artifact id or path; the player must not execute commands while rendering.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "artifact-id"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart"
+        },
+        "width": {
+          "displayName": "Width",
+          "description": "Artifact source width in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 80
+            },
+            "range": {
+              "min": 1.0,
+              "max": 512.0
+            },
+            "allowedValues": [],
+            "unit": "cells",
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "compileTime"
+        },
+        "height": {
+          "displayName": "Height",
+          "description": "Artifact source height in terminal cells.",
+          "value": {
+            "kind": "integer",
+            "default": {
+              "kind": "integer",
+              "value": 24
+            },
+            "range": {
+              "min": 1.0,
+              "max": 512.0
+            },
+            "allowedValues": [],
+            "unit": "cells",
             "semantic": null
           },
           "bindable": true,
@@ -2817,8 +3074,8 @@
           "optional": true
         },
         "bgColor": {
-          "displayName": "BgColor",
-          "description": "Accepted legacy color alias with bounded player evidence.",
+          "displayName": "Background Color",
+          "description": "Legacy background color used as the progress-blend source for the indicator glyph.",
           "value": {
             "kind": "color",
             "default": {
@@ -2840,8 +3097,8 @@
           "optional": true
         },
         "color": {
-          "displayName": "Color",
-          "description": "Accepted legacy color alias with bounded player evidence.",
+          "displayName": "Indicator Color",
+          "description": "Legacy foreground color used as the progress-blend target for the indicator glyph.",
           "value": {
             "kind": "color",
             "default": {
@@ -2979,28 +3236,30 @@
         },
         "position": {
           "displayName": "Position",
-          "description": "Accepted legacy field with bounded player evidence.",
+          "description": "Indicator edge where the dot marker is drawn; preserved from legacy DotIndicator recipe semantics.",
           "value": {
-            "kind": "integer",
+            "kind": "enum",
             "default": {
-              "kind": "integer",
-              "value": 0
+              "kind": "enum",
+              "value": "left"
             },
-            "range": {
-              "min": 0,
-              "max": 999
-            },
-            "allowedValues": [],
+            "range": null,
+            "allowedValues": [
+              "left",
+              "right",
+              "top",
+              "bottom"
+            ],
             "unit": null,
-            "semantic": null
+            "semantic": "edge-position"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
         },
         "indicatorChar": {
-          "displayName": "IndicatorChar",
-          "description": "Accepted legacy field with bounded player evidence.",
+          "displayName": "Indicator Character",
+          "description": "Single glyph drawn at the selected indicator edge.",
           "value": {
             "kind": "string",
             "default": {
@@ -3524,6 +3783,28 @@
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Foreground/background channels affected by the fade-to-canvas operation.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "both"
+            },
+            "range": null,
+            "allowedValues": [
+              "both",
+              "foreground",
+              "background"
+            ],
+            "unit": null,
+            "semantic": "style-channel"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
         }
       },
       "outputs": {},
@@ -3724,20 +4005,22 @@
         },
         "position": {
           "displayName": "Position",
-          "description": null,
+          "description": "Indicator edge where the hover bar is drawn; preserved from legacy HoverBar semantics.",
           "value": {
-            "kind": "number",
+            "kind": "enum",
             "default": {
-              "kind": "number",
-              "value": 0.5
+              "kind": "enum",
+              "value": "left"
             },
-            "range": {
-              "min": 0,
-              "max": 1
-            },
-            "allowedValues": [],
+            "range": null,
+            "allowedValues": [
+              "left",
+              "right",
+              "top",
+              "bottom"
+            ],
             "unit": null,
-            "semantic": null
+            "semantic": "edge-position"
           },
           "bindable": true,
           "runtimeMutability": "phaseStart"
@@ -3785,7 +4068,7 @@
           "optional": true
         },
         "bgColor": {
-          "displayName": "BgColor",
+          "displayName": "Background Color",
           "description": "Accepted legacy color alias with bounded player evidence.",
           "value": {
             "kind": "color",
@@ -3946,7 +4229,7 @@
           "optional": true
         },
         "marginWidth": {
-          "displayName": "MarginWidth",
+          "displayName": "Margin Width",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "integer",
@@ -3967,7 +4250,7 @@
           "optional": true
         },
         "baseEighths": {
-          "displayName": "BaseEighths",
+          "displayName": "Base Eighths",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -3988,7 +4271,7 @@
           "optional": true
         },
         "maxEighths": {
-          "displayName": "MaxEighths",
+          "displayName": "Max Eighths",
           "description": "Accepted legacy field with bounded player evidence.",
           "value": {
             "kind": "number",
@@ -9276,6 +9559,30 @@
           "bindable": true,
           "runtimeMutability": "phaseStart",
           "optional": true
+        },
+        "source": {
+          "displayName": "Source",
+          "description": "Legacy diffusion origin selector accepted for migration parity; center maps to the existing centerX/centerY defaults.",
+          "value": {
+            "kind": "enum",
+            "default": {
+              "kind": "enum",
+              "value": "center"
+            },
+            "range": null,
+            "allowedValues": [
+              "center",
+              "topLeft",
+              "topRight",
+              "bottomLeft",
+              "bottomRight"
+            ],
+            "unit": null,
+            "semantic": "diffusion-source"
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
         }
       },
       "outputs": {},
@@ -10903,7 +11210,8 @@
             "range": null,
             "allowedValues": [
               "rgb",
-              "hct"
+              "hct",
+              "hsl"
             ],
             "unit": null,
             "semantic": "color-interpolation-space"
@@ -12203,6 +12511,6321 @@
                 "a": 255
               }
             },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "content.glyphCascade": {
+      "id": "content.glyphCascade",
+      "version": "0.1.0",
+      "displayName": "Glyph Cascade",
+      "category": "debug primitive migration",
+      "domain": "contentTransform",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "alphabet": {
+          "displayName": "Alphabet",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "direction": {
+          "displayName": "Direction",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "mode": {
+          "displayName": "Mode",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "pattern": {
+          "displayName": "Pattern",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "content.glyphParticles": {
+      "id": "content.glyphParticles",
+      "version": "0.1.0",
+      "displayName": "Glyph Particles",
+      "category": "debug primitive migration",
+      "domain": "contentTransform",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "colorPalette": {
+          "displayName": "Color Palette",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "concurrency": {
+          "displayName": "Concurrency",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "glyphPalette": {
+          "displayName": "Glyph Palette",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "lifetimeMs": {
+          "displayName": "Lifetime Ms",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "motion": {
+          "displayName": "Motion",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "onComplete": {
+          "displayName": "On Complete",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "origin": {
+          "displayName": "Origin",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "spawnCount": {
+          "displayName": "Spawn Count",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.animatedGlyphRamp": {
+      "id": "filter.animatedGlyphRamp",
+      "version": "0.1.0",
+      "displayName": "Animated Glyph Ramp",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "affect": {
+          "displayName": "Affect",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "colorGradient": {
+          "displayName": "Color Gradient",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "colors": {
+          "displayName": "Colors",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "cyclesPerSecond": {
+          "displayName": "Cycles Per Second",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "ease": {
+          "displayName": "Ease",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "glyphs": {
+          "displayName": "Glyphs",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "phaseOffsetXMs": {
+          "displayName": "Phase Offset X Ms",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "phaseOffsetYMs": {
+          "displayName": "Phase Offset Y Ms",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.brailleDust": {
+      "id": "filter.brailleDust",
+      "version": "0.1.0",
+      "displayName": "Braille Dust",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "density": {
+          "displayName": "Density",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "drift": {
+          "displayName": "Drift",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "hz": {
+          "displayName": "Hz",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "pattern": {
+          "displayName": "Pattern",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.charsetNoise": {
+      "id": "filter.charsetNoise",
+      "version": "0.1.0",
+      "displayName": "Charset Noise",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "affect": {
+          "displayName": "Affect",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "chars": {
+          "displayName": "Chars",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "hz": {
+          "displayName": "Hz",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "jitter": {
+          "displayName": "Jitter",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.colorBridgedShade": {
+      "id": "filter.colorBridgedShade",
+      "version": "0.1.0",
+      "displayName": "Color Bridged Shade",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "bgColor": {
+          "displayName": "Bg Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "fgColor": {
+          "displayName": "Fg Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "opacity": {
+          "displayName": "Opacity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.glistenSweep": {
+      "id": "filter.glistenSweep",
+      "version": "0.1.0",
+      "displayName": "Glisten Sweep",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "bandWidth": {
+          "displayName": "Band Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "boost": {
+          "displayName": "Boost",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "boostSeparatorBg": {
+          "displayName": "Boost Separator Bg",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "powerlineMode": {
+          "displayName": "Powerline Mode",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "progress": {
+          "displayName": "Progress",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.glyphStyle": {
+      "id": "filter.glyphStyle",
+      "version": "0.1.0",
+      "displayName": "Glyph Style",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "rules": {
+          "displayName": "Rules",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.interlaceCurtain": {
+      "id": "filter.interlaceCurtain",
+      "version": "0.1.0",
+      "displayName": "Interlace Curtain",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "density": {
+          "displayName": "Density",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "dimFactor": {
+          "displayName": "Dim Factor",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "scrollSpeed": {
+          "displayName": "Scroll Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.motionBlur": {
+      "id": "filter.motionBlur",
+      "version": "0.1.0",
+      "displayName": "Motion Blur",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "direction": {
+          "displayName": "Direction",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "opacityDecay": {
+          "displayName": "Opacity Decay",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "trailLength": {
+          "displayName": "Trail Length",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.rigidShake": {
+      "id": "filter.rigidShake",
+      "version": "0.1.0",
+      "displayName": "Rigid Shake",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "baseEighths": {
+          "displayName": "Base Eighths",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "bgColor": {
+          "displayName": "Bg Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "damping": {
+          "displayName": "Damping",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "dampingScale": {
+          "displayName": "Damping Scale",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "elementColor": {
+          "displayName": "Element Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "innerWidth": {
+          "displayName": "Inner Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "marginWidth": {
+          "displayName": "Margin Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "maxEighths": {
+          "displayName": "Max Eighths",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "numShakes": {
+          "displayName": "Num Shakes",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "numShakesBinding": {
+          "displayName": "Num Shakes Binding",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "pauseDuration": {
+          "displayName": "Pause Duration",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "shakePeriod": {
+          "displayName": "Shake Period",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.scalarFieldGlyph": {
+      "id": "filter.scalarFieldGlyph",
+      "version": "0.1.0",
+      "displayName": "Scalar Field Glyph",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "encoder": {
+          "displayName": "Encoder",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "onlyBlank": {
+          "displayName": "Only Blank",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "sampler": {
+          "displayName": "Sampler",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "threshold": {
+          "displayName": "Threshold",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.shadeScanner": {
+      "id": "filter.shadeScanner",
+      "version": "0.1.0",
+      "displayName": "Shade Scanner",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "bps": {
+          "displayName": "Bps",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "progress": {
+          "displayName": "Progress",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "shadeColor": {
+          "displayName": "Shade Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.subCellShake": {
+      "id": "filter.subCellShake",
+      "version": "0.1.0",
+      "displayName": "Sub Cell Shake",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "amplitude": {
+          "displayName": "Amplitude",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "bgColor": {
+          "displayName": "Bg Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "edgeOnly": {
+          "displayName": "Edge Only",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "filledColor": {
+          "displayName": "Filled Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "frequency": {
+          "displayName": "Frequency",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "filter.subcellLight": {
+      "id": "filter.subcellLight",
+      "version": "0.1.0",
+      "displayName": "Subcell Light",
+      "category": "debug primitive migration",
+      "domain": "frameFilter",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "litColor": {
+          "displayName": "Lit Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "onlyBlank": {
+          "displayName": "Only Blank",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "renderMode": {
+          "displayName": "Render Mode",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "sampleFrom": {
+          "displayName": "Sample From",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "temporalDitherHz": {
+          "displayName": "Temporal Dither Hz",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "threshold": {
+          "displayName": "Threshold",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "unlitColor": {
+          "displayName": "Unlit Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "edgeFirmness": {
+          "displayName": "EdgeFirmness",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "softness": {
+          "displayName": "Softness",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "sampler.bounce": {
+      "id": "sampler.bounce",
+      "version": "0.1.0",
+      "displayName": "Bounce",
+      "category": "debug primitive migration",
+      "domain": "coordinateSampler",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "amplitude": {
+          "displayName": "Amplitude",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "phaseSpread": {
+          "displayName": "Phase Spread",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "sampler.gravity": {
+      "id": "sampler.gravity",
+      "version": "0.1.0",
+      "displayName": "Gravity",
+      "category": "debug primitive migration",
+      "domain": "coordinateSampler",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "acceleration": {
+          "displayName": "Acceleration",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "axis": {
+          "displayName": "Axis",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "terminalVelocity": {
+          "displayName": "Terminal Velocity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "sampler.pendulum": {
+      "id": "sampler.pendulum",
+      "version": "0.1.0",
+      "displayName": "Pendulum",
+      "category": "debug primitive migration",
+      "domain": "coordinateSampler",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "amplitude": {
+          "displayName": "Amplitude",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "axis": {
+          "displayName": "Axis",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "phaseSpread": {
+          "displayName": "Phase Spread",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "sampler.spatialSignal": {
+      "id": "sampler.spatialSignal",
+      "version": "0.1.0",
+      "displayName": "Spatial Signal",
+      "category": "debug primitive migration",
+      "domain": "coordinateSampler",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "emitsHint": {
+          "displayName": "Emits Hint",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "signal": {
+          "displayName": "Signal",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.affordanceWake": {
+      "id": "shader.affordanceWake",
+      "version": "0.1.0",
+      "displayName": "Affordance Wake",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "peakIntensity": {
+          "displayName": "Peak Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "progress": {
+          "displayName": "Progress",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "radius": {
+          "displayName": "Radius",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "zone": {
+          "displayName": "Zone",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.bevel": {
+      "id": "shader.bevel",
+      "version": "0.1.0",
+      "displayName": "Bevel",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "edgeWidth": {
+          "displayName": "Edge Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "highlightIntensity": {
+          "displayName": "Highlight Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "lightDirection": {
+          "displayName": "Light Direction",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "shadowIntensity": {
+          "displayName": "Shadow Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.chromaticEdge": {
+      "id": "shader.chromaticEdge",
+      "version": "0.1.0",
+      "displayName": "Chromatic Edge",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "edgeWidth": {
+          "displayName": "Edge Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "horizontal": {
+          "displayName": "Horizontal",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.coloredOverlay": {
+      "id": "shader.coloredOverlay",
+      "version": "0.1.0",
+      "displayName": "Colored Overlay",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "pattern": {
+          "displayName": "Pattern",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.concealedLight": {
+      "id": "shader.concealedLight",
+      "version": "0.1.0",
+      "displayName": "Concealed Light",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "edgeWidth": {
+          "displayName": "Edge Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "source": {
+          "displayName": "Source",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "sourceCutoff": {
+          "displayName": "Source Cutoff",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "spread": {
+          "displayName": "Spread",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.cursor": {
+      "id": "shader.cursor",
+      "version": "0.1.0",
+      "displayName": "Cursor",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "mode": {
+          "displayName": "Mode",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "primary": {
+          "displayName": "Primary",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "tint": {
+          "displayName": "Tint",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "trail": {
+          "displayName": "Trail",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.edgeSheen": {
+      "id": "shader.edgeSheen",
+      "version": "0.1.0",
+      "displayName": "Edge Sheen",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "bandWidth": {
+          "displayName": "Band Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "cornerBoost": {
+          "displayName": "Corner Boost",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "edgeWidth": {
+          "displayName": "Edge Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.focusedRowGradient": {
+      "id": "shader.focusedRowGradient",
+      "version": "0.1.0",
+      "displayName": "Focused Row Gradient",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "brightColor": {
+          "displayName": "Bright Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "dimColor": {
+          "displayName": "Dim Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "falloffDistance": {
+          "displayName": "Falloff Distance",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "selectedRow": {
+          "displayName": "Selected Row",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "selectedRowRatio": {
+          "displayName": "Selected Row Ratio",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.fractionalStripeOverlay": {
+      "id": "shader.fractionalStripeOverlay",
+      "version": "0.1.0",
+      "displayName": "Fractional Stripe Overlay",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "alpha": {
+          "displayName": "Alpha",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "edgeSelection": {
+          "displayName": "Edge Selection",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "edgeWidthEighths": {
+          "displayName": "Edge Width Eighths",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "glyphPool": {
+          "displayName": "Glyph Pool",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "phaseAlignment": {
+          "displayName": "Phase Alignment",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.glitchLines": {
+      "id": "shader.glitchLines",
+      "version": "0.1.0",
+      "displayName": "Glitch Lines",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "flashChance": {
+          "displayName": "Flash Chance",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "maxLines": {
+          "displayName": "Max Lines",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "pulseColor": {
+          "displayName": "Pulse Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "pulseSpeed": {
+          "displayName": "Pulse Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.neonFlicker": {
+      "id": "shader.neonFlicker",
+      "version": "0.1.0",
+      "displayName": "Neon Flicker",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "dimAmount": {
+          "displayName": "Dim Amount",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "segment": {
+          "displayName": "Segment",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "stability": {
+          "displayName": "Stability",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.orbit": {
+      "id": "shader.orbit",
+      "version": "0.1.0",
+      "displayName": "Orbit",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "dotCount": {
+          "displayName": "Dot Count",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.pulseWave": {
+      "id": "shader.pulseWave",
+      "version": "0.1.0",
+      "displayName": "Pulse Wave",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "direction": {
+          "displayName": "Direction",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "frequency": {
+          "displayName": "Frequency",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "wavelength": {
+          "displayName": "Wavelength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.radialSpiral": {
+      "id": "shader.radialSpiral",
+      "version": "0.1.0",
+      "displayName": "Radial Spiral",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "arms": {
+          "displayName": "Arms",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "blendStrength": {
+          "displayName": "Blend Strength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "radialFrequency": {
+          "displayName": "Radial Frequency",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "radialPower": {
+          "displayName": "Radial Power",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.reflect": {
+      "id": "shader.reflect",
+      "version": "0.1.0",
+      "displayName": "Reflect",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.stochasticSparkle": {
+      "id": "shader.stochasticSparkle",
+      "version": "0.1.0",
+      "displayName": "Stochastic Sparkle",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "brightnessBoost": {
+          "displayName": "Brightness Boost",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "noiseType": {
+          "displayName": "Noise Type",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "sparkleDensity": {
+          "displayName": "Sparkle Density",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.subCellShake": {
+      "id": "shader.subCellShake",
+      "version": "0.1.0",
+      "displayName": "Sub Cell Shake",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "amplitude": {
+          "displayName": "Amplitude",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "axis": {
+          "displayName": "Axis",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "chromatic": {
+          "displayName": "Chromatic",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "edgeOnly": {
+          "displayName": "Edge Only",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "edgeWidth": {
+          "displayName": "Edge Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "frequency": {
+          "displayName": "Frequency",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.terminalFire": {
+      "id": "shader.terminalFire",
+      "version": "0.1.0",
+      "displayName": "Terminal Fire",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "aspect": {
+          "displayName": "Aspect",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "baseWidth": {
+          "displayName": "Base Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "blueCoreStrength": {
+          "displayName": "Blue Core Strength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "cooling": {
+          "displayName": "Cooling",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "density": {
+          "displayName": "Density",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "flickerStrength": {
+          "displayName": "Flicker Strength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "minWidth": {
+          "displayName": "Min Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "mode": {
+          "displayName": "Mode",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "palette": {
+          "displayName": "Palette",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "riseSpeed": {
+          "displayName": "Rise Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "smokeStrength": {
+          "displayName": "Smoke Strength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "sparks": {
+          "displayName": "Sparks",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "boolean",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "turbulence": {
+          "displayName": "Turbulence",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "whiteCoreStrength": {
+          "displayName": "White Core Strength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "wind": {
+          "displayName": "Wind",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.terminalWater": {
+      "id": "shader.terminalWater",
+      "version": "0.1.0",
+      "displayName": "Terminal Water",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "amplitude": {
+          "displayName": "Amplitude",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "applyTo": {
+          "displayName": "Apply To",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "deepColor": {
+          "displayName": "Deep Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "diffuse": {
+          "displayName": "Diffuse",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "directionDeg": {
+          "displayName": "Direction Deg",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "foam": {
+          "displayName": "Foam",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "foamColor": {
+          "displayName": "Foam Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "fresnel": {
+          "displayName": "Fresnel",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "glintAngleDeg": {
+          "displayName": "Glint Angle Deg",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "glintSpeed": {
+          "displayName": "Glint Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "glintStrength": {
+          "displayName": "Glint Strength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "glintWidth": {
+          "displayName": "Glint Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "layers": {
+          "displayName": "Layers",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "mode": {
+          "displayName": "Mode",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "normalStrength": {
+          "displayName": "Normal Strength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "shallowColor": {
+          "displayName": "Shallow Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "shininess": {
+          "displayName": "Shininess",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "specular": {
+          "displayName": "Specular",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "steepness": {
+          "displayName": "Steepness",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "wavelength": {
+          "displayName": "Wavelength",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.tracePath": {
+      "id": "shader.tracePath",
+      "version": "0.1.0",
+      "displayName": "Trace Path",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "junctionBoost": {
+          "displayName": "Junction Boost",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "junctionGlow": {
+          "displayName": "Junction Glow",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "paths": {
+          "displayName": "Paths",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "structured",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "tailLength": {
+          "displayName": "Tail Length",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "tailMode": {
+          "displayName": "Tail Mode",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "thickness": {
+          "displayName": "Thickness",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "verticalWeight": {
+          "displayName": "Vertical Weight",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "shader.tracePropagation": {
+      "id": "shader.tracePropagation",
+      "version": "0.1.0",
+      "displayName": "Trace Propagation",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "color": {
+          "displayName": "Color",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "gridSpacing": {
+          "displayName": "Grid Spacing",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "lineWidth": {
+          "displayName": "Line Width",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "origin": {
+          "displayName": "Origin",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "speed": {
+          "displayName": "Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "tailLength": {
+          "displayName": "Tail Length",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "style.colorShift": {
+      "id": "style.colorShift",
+      "version": "0.1.0",
+      "displayName": "Color Shift",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "hueShift": {
+          "displayName": "Hue Shift",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "lightnessShift": {
+          "displayName": "Lightness Shift",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "saturationShift": {
+          "displayName": "Saturation Shift",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "style.glitch": {
+      "id": "style.glitch",
+      "version": "0.1.0",
+      "displayName": "Glitch",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "intensity": {
+          "displayName": "Intensity",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "italicEnd": {
+          "displayName": "Italic End",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "italicStart": {
+          "displayName": "Italic Start",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "seed": {
+          "displayName": "Seed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "style.rainbow": {
+      "id": "style.rainbow",
+      "version": "0.1.0",
+      "displayName": "Rainbow",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "rotationSpeed": {
+          "displayName": "Rotation Speed",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "number",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "style.rigidShakeStyle": {
+      "id": "style.rigidShakeStyle",
+      "version": "0.1.0",
+      "displayName": "Rigid Shake Style",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "numShakes": {
+          "displayName": "Num Shakes",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "string",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "pauseDuration": {
+          "displayName": "Pause Duration",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        },
+        "shakePeriod": {
+          "displayName": "Shake Period",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "integer",
+            "default": null,
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": null
+          },
+          "bindable": true,
+          "runtimeMutability": "phaseStart",
+          "optional": true
+        }
+      },
+      "outputs": {},
+      "lifecycle": {
+        "completion": "instant",
+        "resettable": true,
+        "seekable": true,
+        "deterministicWithSeed": true
+      }
+    },
+    "style.spatial": {
+      "id": "style.spatial",
+      "version": "0.1.0",
+      "displayName": "Spatial",
+      "category": "debug primitive migration",
+      "domain": "cellShader",
+      "cellAccess": {
+        "reads": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ],
+        "writes": [
+          "glyph",
+          "foreground",
+          "background",
+          "modifiers",
+          "modifierAlpha",
+          "role"
+        ]
+      },
+      "scopeSupport": {
+        "kinds": [
+          "all",
+          "role"
+        ],
+        "coordinateSpaces": [
+          "destinationLocal",
+          "sampledSource"
+        ],
+        "roleSpaces": [
+          "sampledSource",
+          "destination"
+        ]
+      },
+      "writeSupport": {
+        "cellPolicies": [
+          "writeCell",
+          "skipTransparentEmpty"
+        ],
+        "rolePolicies": [
+          "preserveDestination",
+          "copySampledSource"
+        ]
+      },
+      "inputs": {
+        "shader": {
+          "displayName": "Shader",
+          "description": "Accepted legacy debug-recipe field preserved for v3.1 migration parity.",
+          "value": {
+            "kind": "color",
+            "default": null,
             "range": null,
             "allowedValues": [],
             "unit": null,

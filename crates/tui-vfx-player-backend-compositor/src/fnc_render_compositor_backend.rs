@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.10.1</VERS>
+// <VERS>VERSION: 0.11.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.10.1: PATCH — compute wayfinding node cell positions directly instead of materializing a temporary grid vector.
+// <CLOG>0.11.0: MINOR — apply native style color-fade stages with V2-compatible color interpolation.
+// 0.10.1: PATCH — compute wayfinding node cell positions directly instead of materializing a temporary grid vector.
 // 0.10.0: MINOR — apply source-owned shader style stages for player-compatible parity.
 // 0.9.0: MINOR — apply source-owned CRT sampler stages for player-compatible parity.
 // 0.8.0: MINOR — apply source-owned radial and wipe-corner mask stages for player-compatible parity.
@@ -314,6 +315,10 @@ fn scene_ir_with_native_content_stages(
                 *dim_amount,
                 *italic_window,
             ),
+            NativeStyleStage::ColorFade {
+                target,
+                color_space,
+            } => apply_color_fade_style_stage(&mut staged, target, color_space),
             NativeStyleStage::Vignette {
                 strength,
                 edge_color,
@@ -327,18 +332,6 @@ fn scene_ir_with_native_content_stages(
                 &mut staged,
                 emphasis_color,
                 *edge_width,
-                apply_to,
-            ),
-            NativeStyleStage::DotIndicator {
-                active_color,
-                inactive_color,
-                period,
-                apply_to,
-            } => apply_dot_indicator_style_stage(
-                &mut staged,
-                active_color,
-                inactive_color,
-                *period,
                 apply_to,
             ),
             NativeStyleStage::EdgeGrow {
@@ -392,11 +385,17 @@ fn scene_ir_with_native_content_stages(
                 },
             ),
             NativeStyleStage::SubPixelBar {
-                bar_color,
-                offset,
-                width,
-                apply_to,
-            } => apply_sub_pixel_bar_style_stage(&mut staged, bar_color, *offset, *width, apply_to),
+                filled_color,
+                unfilled_color,
+                progress,
+                direction,
+            } => apply_sub_pixel_bar_style_stage(
+                &mut staged,
+                filled_color,
+                unfilled_color,
+                *progress,
+                direction,
+            ),
             NativeStyleStage::UnderlineWipe {
                 underline_color,
                 progress,
@@ -1068,8 +1067,7 @@ fn apply_blinds_mask_content_stage(
             .chars()
             .enumerate()
             .map(|(x, glyph)| {
-                let band = blinds_band(x, y, width, height, count, orientation);
-                if (band + 1) as f64 / count as f64 <= reveal {
+                if blinds_keeps_cell(x, y, width, height, count, orientation, reveal) {
                     glyph
                 } else {
                     ' '
@@ -1127,15 +1125,15 @@ fn apply_shape_mask_content_stage(
     let report_columns = report_width(report);
     let report_rows = report_height(report);
     let mut rows = dense_rows(report, report_columns, report_rows);
-    let reveal = source_mask_reveal_threshold(report.phase_t, soft_edge);
     let height = rows.len().max(1);
     for (y, row) in rows.iter_mut().enumerate() {
         let width = row.chars().count().max(1);
+        let reveal_radius = source_mask_spotlight_radius(report.phase_t, width, height, soft_edge);
         *row = row
             .chars()
             .enumerate()
             .map(|(x, glyph)| {
-                if source_mask_normalized_distance(x, y, width, height, shape) <= reveal {
+                if source_mask_spotlight_distance(x, y, width, height, shape) < reveal_radius {
                     glyph
                 } else {
                     ' '
@@ -1155,17 +1153,35 @@ fn apply_wipe_mask_content_stage(
     let report_columns = report_width(report);
     let report_rows = report_height(report);
     let mut rows = dense_rows(report, report_columns, report_rows);
+    let Some(bounds) = non_blank_bounds(&rows) else {
+        report.rows = rows;
+        sync_styled_cells_to_rows(report);
+        return;
+    };
     let reveal = report.phase_t.clamp(0.0, 1.0);
-    let height = rows.len().max(1);
+    let width = bounds.width().max(1);
+    let height = bounds.height().max(1);
+    let horizontal_cutoff = wipe_cutoff(width, reveal, soft_edge);
     let vertical_cutoff = wipe_cutoff(height, reveal, soft_edge);
     for (y, row) in rows.iter_mut().enumerate() {
-        let width = row.chars().count();
-        let cutoff = wipe_cutoff(width, reveal, soft_edge);
         *row = row
             .chars()
             .enumerate()
             .map(|(index, glyph)| {
-                if wipe_keeps_cell(index, y, width, height, cutoff, vertical_cutoff, direction) {
+                if !bounds.contains(index, y) {
+                    return ' ';
+                }
+                let local_x = index - bounds.min_x;
+                let local_y = y - bounds.min_y;
+                if wipe_keeps_cell(
+                    local_x,
+                    local_y,
+                    width,
+                    height,
+                    horizontal_cutoff,
+                    vertical_cutoff,
+                    direction,
+                ) {
                     glyph
                 } else {
                     ' '
@@ -1175,6 +1191,54 @@ fn apply_wipe_mask_content_stage(
     }
     report.rows = rows;
     sync_styled_cells_to_rows(report);
+}
+
+#[derive(Clone, Copy, Debug)]
+struct ContentBounds {
+    min_x: usize,
+    max_x: usize,
+    min_y: usize,
+    max_y: usize,
+}
+
+impl ContentBounds {
+    fn width(self) -> usize {
+        self.max_x.saturating_sub(self.min_x) + 1
+    }
+
+    fn height(self) -> usize {
+        self.max_y.saturating_sub(self.min_y) + 1
+    }
+
+    fn contains(self, x: usize, y: usize) -> bool {
+        x >= self.min_x && x <= self.max_x && y >= self.min_y && y <= self.max_y
+    }
+}
+
+fn non_blank_bounds(rows: &[String]) -> Option<ContentBounds> {
+    let mut bounds: Option<ContentBounds> = None;
+    for (y, row) in rows.iter().enumerate() {
+        for (x, glyph) in row.chars().enumerate() {
+            if glyph == ' ' {
+                continue;
+            }
+            bounds = Some(match bounds {
+                Some(existing) => ContentBounds {
+                    min_x: existing.min_x.min(x),
+                    max_x: existing.max_x.max(x),
+                    min_y: existing.min_y.min(y),
+                    max_y: existing.max_y.max(y),
+                },
+                None => ContentBounds {
+                    min_x: x,
+                    max_x: x,
+                    min_y: y,
+                    max_y: y,
+                },
+            });
+        }
+    }
+    bounds
 }
 
 fn apply_modulo_columns_style_stage(
@@ -1223,6 +1287,41 @@ fn apply_neon_flicker_style_stage(
                 None,
                 italic_window.then_some("italic"),
             );
+        }
+    }
+}
+
+fn apply_color_fade_style_stage(
+    report: &mut PlayerRenderIrReport,
+    target: &str,
+    color_space: &str,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let progress = report.phase_t.clamp(0.0, 1.0) as f32;
+    for y in 0..height {
+        for x in 0..width {
+            let (existing_foreground, existing_background) = report
+                .styled_cells
+                .iter()
+                .find(|cell| cell.x == x && cell.y == y)
+                .map(|cell| (cell.foreground.clone(), cell.background.clone()))
+                .unwrap_or_else(|| (DEFAULT_FOREGROUND.to_string(), TRANSPARENT_RGBA.to_string()));
+            let foreground = legacy_color_fade_label(
+                existing_foreground.as_str(),
+                target,
+                progress,
+                color_space,
+            )
+            .unwrap_or(existing_foreground);
+            let background = legacy_color_fade_label(
+                existing_background.as_str(),
+                target,
+                progress,
+                color_space,
+            )
+            .unwrap_or(existing_background);
+            set_report_cell_style(report, x, y, Some(&foreground), Some(&background), None);
         }
     }
 }
@@ -1282,39 +1381,6 @@ fn apply_bracket_emphasis_style_stage(
                 TRANSPARENT_RGBA,
                 &[],
                 "FilterBracketEmphasis",
-            );
-        }
-    }
-}
-
-fn apply_dot_indicator_style_stage(
-    report: &mut PlayerRenderIrReport,
-    active_color: &str,
-    inactive_color: &str,
-    period: usize,
-    apply_to: &str,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let period = period.max(1);
-    let phase_offset =
-        ((report.loop_t.unwrap_or(report.phase_t) * period as f64).floor() as usize) % period;
-    for y in 0..height {
-        for x in 0..width {
-            let foreground = if (x + y + phase_offset).is_multiple_of(period) {
-                active_color
-            } else {
-                inactive_color
-            };
-            set_report_filter_cell(
-                report,
-                x,
-                y,
-                apply_to,
-                foreground,
-                TRANSPARENT_RGBA,
-                &[],
-                "FilterDotIndicator",
             );
         }
     }
@@ -1778,32 +1844,59 @@ fn apply_radar_style_stage(report: &mut PlayerRenderIrReport, inputs: RadarStyle
 
 fn apply_sub_pixel_bar_style_stage(
     report: &mut PlayerRenderIrReport,
-    bar_color: &str,
-    offset: f64,
-    bar_width: usize,
-    apply_to: &str,
+    filled_color: &str,
+    unfilled_color: &str,
+    progress: f64,
+    direction: &str,
 ) {
-    let width = report_width(report).max(1);
-    let height = report_height(report);
-    let start = ((width.saturating_sub(1)) as f64 * offset.clamp(0.0, 1.0)).round() as usize;
-    let bar_width = bar_width.max(1);
+    let width = report
+        .rows
+        .first()
+        .map(|row| row.chars().count())
+        .unwrap_or(0)
+        .max(1);
+    let height = report.rows.len();
+    let progress = progress.clamp(0.0, 1.0);
+    let horizontal = !matches!(direction, "vertical" | "topToBottom" | "bottomToTop");
+    let total_subcells = if horizontal { width } else { height }.saturating_mul(8);
+    let filled_subcells = (total_subcells as f64 * progress).ceil() as usize;
     for y in 0..height {
         for x in 0..width {
-            let distance = x.abs_diff(start);
-            let mix = (distance as f32 / bar_width as f32).clamp(0.0, 1.0);
-            let foreground = lerp_rgba_label(bar_color, WHITE_RGBA, mix * 0.7);
-            let background = lerp_rgba_label(bar_color, BLACK_RGBA, 0.5 + mix * 0.45);
-            set_report_filter_cell(
+            let coordinate = if horizontal { x } else { y };
+            let filled = filled_subcells
+                .saturating_sub(coordinate.saturating_mul(8))
+                .min(8);
+            let glyph = sub_pixel_bar_glyph(filled);
+            let foreground = if filled == 0 {
+                unfilled_color
+            } else {
+                filled_color
+            };
+            set_report_cell_glyph_exact(
                 report,
                 x,
                 y,
-                apply_to,
-                foreground.as_str(),
-                background.as_str(),
+                glyph,
+                foreground,
+                unfilled_color,
                 &[],
                 "FilterSubPixelBar",
             );
         }
+    }
+}
+
+fn sub_pixel_bar_glyph(filled: usize) -> &'static str {
+    match filled {
+        0 => " ",
+        1 => "▏",
+        2 => "▎",
+        3 => "▍",
+        4 => "▌",
+        5 => "▋",
+        6 => "▊",
+        7 => "▉",
+        _ => "█",
     }
 }
 
@@ -1979,6 +2072,54 @@ fn set_report_cell_exact(
         modifiers: modifier_labels(modifiers),
         role: role.map(str::to_string),
     });
+}
+
+fn set_report_cell_glyph_exact(
+    report: &mut PlayerRenderIrReport,
+    x: usize,
+    y: usize,
+    glyph: &str,
+    foreground: &str,
+    background: &str,
+    modifiers: &[&str],
+    role: &str,
+) {
+    replace_row_glyph(report, x, y, glyph);
+    if let Some(cell) = report
+        .styled_cells
+        .iter_mut()
+        .find(|cell| cell.x == x && cell.y == y)
+    {
+        cell.glyph = glyph.to_string();
+        cell.foreground = foreground.to_string();
+        cell.background = background.to_string();
+        cell.modifiers = modifier_labels(modifiers);
+        cell.role = Some(role.to_string());
+        return;
+    }
+    report.styled_cells.push(PlayerRenderCell {
+        x,
+        y,
+        glyph: glyph.to_string(),
+        foreground: foreground.to_string(),
+        background: background.to_string(),
+        modifiers: modifier_labels(modifiers),
+        role: Some(role.to_string()),
+    });
+}
+
+fn replace_row_glyph(report: &mut PlayerRenderIrReport, x: usize, y: usize, glyph: &str) {
+    let Some(row) = report.rows.get_mut(y) else {
+        return;
+    };
+    let mut glyphs = row.chars().collect::<Vec<_>>();
+    let Some(replacement) = glyph.chars().next() else {
+        return;
+    };
+    if let Some(cell) = glyphs.get_mut(x) {
+        *cell = replacement;
+        *row = glyphs.into_iter().collect();
+    }
 }
 
 fn modifier_labels(modifiers: &[&str]) -> Vec<String> {
@@ -2162,19 +2303,29 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
     }
 }
 
-fn blinds_band(
+fn blinds_keeps_cell(
     x: usize,
     y: usize,
     width: usize,
     height: usize,
     count: usize,
     orientation: &str,
-) -> usize {
-    if orientation == "vertical" {
-        (x * count / width).min(count.saturating_sub(1))
+    reveal: f64,
+) -> bool {
+    let position = if orientation == "vertical" {
+        x as f64
     } else {
-        (y * count / height).min(count.saturating_sub(1))
-    }
+        y as f64
+    };
+    let size = if orientation == "vertical" {
+        width as f64
+    } else {
+        height as f64
+    };
+    let blind_size = (size / count.max(1) as f64).max(1.0);
+    let blind_index = (position / blind_size).floor();
+    let position_in_blind = position - blind_index * blind_size;
+    position_in_blind < blind_size * reveal.clamp(0.0, 1.0)
 }
 
 #[derive(Clone, Copy)]
@@ -2183,28 +2334,27 @@ enum SourceMaskShape {
     Diamond,
 }
 
-fn source_mask_reveal_threshold(phase_t: f64, soft_edge: bool) -> f64 {
-    let reveal = phase_t.clamp(0.0, 1.0);
+fn source_mask_spotlight_radius(phase_t: f64, width: usize, height: usize, soft_edge: bool) -> f64 {
+    let max_radius = width.max(height) as f64;
+    let radius = max_radius * phase_t.clamp(0.0, 1.0);
     if soft_edge {
-        (reveal + 0.06).min(1.0)
+        radius + max_radius * 0.1
     } else {
-        reveal
+        radius
     }
 }
 
-fn source_mask_normalized_distance(
+fn source_mask_spotlight_distance(
     x: usize,
     y: usize,
     width: usize,
     height: usize,
     shape: SourceMaskShape,
 ) -> f64 {
-    let origin_x = width.saturating_sub(1) as f64 / 2.0;
-    let origin_y = height.saturating_sub(1) as f64 / 2.0;
-    let half_width = ((width.saturating_sub(1)) as f64 / 2.0).max(1.0);
-    let half_height = ((height.saturating_sub(1)) as f64 / 2.0).max(1.0);
-    let dx = (x as f64 - origin_x).abs() / half_width;
-    let dy = (y as f64 - origin_y).abs() / half_height;
+    let center_x = width as f64 / 2.0;
+    let center_y = height as f64 / 2.0;
+    let dx = (x as f64 - center_x).abs();
+    let dy = (y as f64 - center_y).abs();
     match shape {
         SourceMaskShape::Circle => dx.mul_add(dx, dy * dy).sqrt(),
         SourceMaskShape::Diamond => dx + dy,
@@ -2229,9 +2379,10 @@ fn dissolve_cell_noise(seed: u64, x: usize, y: usize) -> f64 {
 }
 
 fn wipe_cutoff(width: usize, reveal: f64, soft_edge: bool) -> usize {
-    let scaled = width as f64 * reveal;
+    let mut scaled = width as f64 * reveal;
     if soft_edge {
-        scaled.round() as usize
+        scaled += (width as f64 * 0.1).max(1.0);
+        scaled.floor() as usize
     } else {
         scaled.floor() as usize
     }
@@ -2372,6 +2523,115 @@ fn parse_rgba_label(label: &str) -> Option<(u8, u8, u8, u8)> {
         parts.next()?.parse().ok()?,
         parts.next()?.parse().ok()?,
     ))
+}
+
+fn legacy_color_fade_label(from: &str, target: &str, t: f32, color_space: &str) -> Option<String> {
+    let from = parse_rgba_label(from)?;
+    let target = parse_rgba_label(target)?;
+    let blended = if color_space.eq_ignore_ascii_case("hsl") {
+        legacy_hsl_rgba(from, target, t)
+    } else {
+        legacy_rgb_rgba(from, target, t)
+    };
+    Some(rgba_label(blended.0, blended.1, blended.2, blended.3))
+}
+
+fn legacy_rgb_rgba(from: (u8, u8, u8, u8), target: (u8, u8, u8, u8), t: f32) -> (u8, u8, u8, u8) {
+    let t = t.clamp(0.0, 1.0);
+    (
+        legacy_lerp_channel(from.0, target.0, t),
+        legacy_lerp_channel(from.1, target.1, t),
+        legacy_lerp_channel(from.2, target.2, t),
+        legacy_lerp_channel(from.3, target.3, t),
+    )
+}
+
+fn legacy_hsl_rgba(from: (u8, u8, u8, u8), target: (u8, u8, u8, u8), t: f32) -> (u8, u8, u8, u8) {
+    let t = t.clamp(0.0, 1.0);
+    let (start_hue, start_saturation, start_lightness) = rgb_to_hsl(from.0, from.1, from.2);
+    let (end_hue, end_saturation, end_lightness) = rgb_to_hsl(target.0, target.1, target.2);
+    let hue_delta = if end_hue - start_hue > 180.0 {
+        end_hue - start_hue - 360.0
+    } else if end_hue - start_hue < -180.0 {
+        end_hue - start_hue + 360.0
+    } else {
+        end_hue - start_hue
+    };
+    let hue = (start_hue + hue_delta * t).rem_euclid(360.0);
+    let saturation = start_saturation + (end_saturation - start_saturation) * t;
+    let lightness = start_lightness + (end_lightness - start_lightness) * t;
+    let (r, g, b) = hsl_to_rgb(hue, saturation, lightness);
+    (r, g, b, legacy_lerp_channel(from.3, target.3, t))
+}
+
+fn legacy_lerp_channel(start: u8, end: u8, t: f32) -> u8 {
+    (start as f32 + (end as f32 - start as f32) * t) as u8
+}
+
+fn rgb_to_hsl(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
+    let r = r as f32 / 255.0;
+    let g = g as f32 / 255.0;
+    let b = b as f32 / 255.0;
+    let max = r.max(g).max(b);
+    let min = r.min(g).min(b);
+    let lightness = (max + min) / 2.0;
+    if max == min {
+        return (0.0, 0.0, lightness);
+    }
+    let delta = max - min;
+    let saturation = if lightness > 0.5 {
+        delta / (2.0 - max - min)
+    } else {
+        delta / (max + min)
+    };
+    let hue = if max == r {
+        (g - b) / delta + if g < b { 6.0 } else { 0.0 }
+    } else if max == g {
+        (b - r) / delta + 2.0
+    } else {
+        (r - g) / delta + 4.0
+    };
+    (hue * 60.0, saturation, lightness)
+}
+
+fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (u8, u8, u8) {
+    if saturation == 0.0 {
+        let value = (lightness * 255.0) as u8;
+        return (value, value, value);
+    }
+    let q = if lightness < 0.5 {
+        lightness * (1.0 + saturation)
+    } else {
+        lightness + saturation - lightness * saturation
+    };
+    let p = 2.0 * lightness - q;
+    let r = hue_to_rgb(p, q, hue / 360.0 + 1.0 / 3.0);
+    let g = hue_to_rgb(p, q, hue / 360.0);
+    let b = hue_to_rgb(p, q, hue / 360.0 - 1.0 / 3.0);
+    (
+        (r * 255.0 + 0.0001) as u8,
+        (g * 255.0 + 0.0001) as u8,
+        (b * 255.0 + 0.0001) as u8,
+    )
+}
+
+fn hue_to_rgb(p: f32, q: f32, mut t: f32) -> f32 {
+    if t < 0.0 {
+        t += 1.0;
+    }
+    if t > 1.0 {
+        t -= 1.0;
+    }
+    if t < 1.0 / 6.0 {
+        return p + (q - p) * 6.0 * t;
+    }
+    if t < 1.0 / 2.0 {
+        return q;
+    }
+    if t < 2.0 / 3.0 {
+        return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
+    }
+    p
 }
 
 fn scramble_glyph(index: usize, charset: &[char]) -> char {
@@ -2563,4 +2823,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.10.1</VERS>
+// <VERS>END OF VERSION: 0.11.0</VERS>

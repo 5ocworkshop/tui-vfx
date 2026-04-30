@@ -63,6 +63,18 @@ pub(crate) fn resolve_effect_enum(
     }
 }
 
+pub(crate) fn resolve_effect_text(
+    node: &NodeSpec,
+    request: &PlayerSampleRequest,
+    input_id: &str,
+    fallback: &str,
+) -> String {
+    match resolve_effect_value(node, request, input_id) {
+        Some(Value::Enum(value) | Value::String(value) | Value::Text(value)) => value,
+        _ => fallback.to_string(),
+    }
+}
+
 pub(crate) fn resolve_effect_color(
     node: &NodeSpec,
     request: &PlayerSampleRequest,

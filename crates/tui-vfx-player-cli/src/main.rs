@@ -1,11 +1,12 @@
 // <FILE>crates/tui-vfx-player-cli/src/main.rs</FILE> - <DESC>Contract-native player CLI entrypoint</DESC>
-// <VERS>VERSION: 0.7.0</VERS>
+// <VERS>VERSION: 0.8.0</VERS>
 // <WCTX>K2.11 schema readiness: register blocker ledger command.</WCTX>
-// <CLOG>0.7.0: MINOR — register schema-readiness command runner module.</CLOG>
+// <CLOG>0.8.0: MINOR — register studio snapshot changed-cell counter module.</CLOG>
 
 mod cls_cli_options;
 mod fnc_cli_sample_request;
 mod fnc_collect_cli_recipe_paths;
+mod fnc_count_studio_snapshot_changed_cells;
 mod fnc_parse_cli_options;
 mod fnc_print_render_report;
 mod fnc_print_usage;
@@ -36,4 +37,4 @@ fn main() {
 }
 
 // <FILE>crates/tui-vfx-player-cli/src/main.rs</FILE> - <DESC>Contract-native player CLI entrypoint</DESC>
-// <VERS>END OF VERSION: 0.7.0</VERS>
+// <VERS>END OF VERSION: 0.8.0</VERS>

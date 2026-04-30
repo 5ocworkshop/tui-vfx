@@ -1,17 +1,16 @@
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>VERSION: 0.2.1</VERS>
-// <WCTX>New kernel player UI: lock one-shot, script, trigger, and rendered diagnostic behavior.</WCTX>
-// <CLOG>0.2.1: PATCH — lock browser focus startup and recipe-selection behavior.
-// 0.2.0: MINOR — expect styled primitive fixtures to render after adapter burn-down.
-// 0.1.0: INIT — add UI smoke tests over the player path.</CLOG>
+// <VERS>VERSION: 0.5.0</VERS>
+// <WCTX>Player UI: lock playback and drawer presentation behavior for migrated primitive review.</WCTX>
+// <CLOG>0.5.0: MINOR — assert Eichler-inspired stats drawer status colors.</CLOG>
 
 use std::{fs, path::PathBuf, process::Command};
 
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{Terminal, backend::TestBackend, style::Color};
 use tui_vfx_player_ui::{
-    CliOptions, PlayerUiApp, PlayerUiFocus, PlayerUiState, handle_player_ui_key, parse_cli_options,
-    render_ratatui_ui, render_ui_snapshot, run_script,
+    CliOptions, PlayerUiApp, PlayerUiFocus, PlayerUiState, handle_player_ui_key,
+    handle_player_ui_key_event, parse_cli_options, render_ratatui_ui, render_ui_snapshot,
+    run_script,
 };
 
 #[test]
@@ -110,8 +109,44 @@ fn test_fnc_ui_tick_uses_recipe_lifecycle_phase_duration() {
 
     let output = run_script(&mut state, "tick", false);
 
-    assert!(output.contains("sample_t: 0.02"));
-    assert_eq!(state.phase_t(), 0.02);
+    assert!(output.contains("sample_t: 0.10"));
+    assert_eq!(state.phase_t(), 0.1);
+}
+
+#[test]
+fn test_fnc_ui_native_player_starts_enter_mask_playback() {
+    let mut options = options(recipe_path("masks/mask_checkers.json"));
+    options.backend = "compositor".to_string();
+    options.composition_mode = "native".to_string();
+    options.fail_on_fallback = true;
+    let mut state = PlayerUiState::load(&options).expect("load ui state");
+
+    let output = run_script(
+        &mut state,
+        "tick,tick,tick,tick,tick,tick,tick,tick,tick,tick",
+        false,
+    );
+
+    assert!(output.contains("phase: Enter"));
+    assert_eq!(state.phase_t(), 0.5);
+    assert_eq!(state.last_backend_output.composition_mode, "native");
+    assert!(!state.last_backend_output.fallback_used);
+    assert_eq!(
+        state
+            .last_backend_output
+            .letter_cell_evidence
+            .letter_cell_count,
+        11
+    );
+    assert_eq!(
+        state
+            .last_backend_output
+            .letter_cell_evidence
+            .background_class_counts
+            .get("rgba(50,20,50,255)")
+            .copied(),
+        Some(11)
+    );
 }
 
 #[test]
@@ -288,6 +323,139 @@ fn test_fnc_ratatui_renderer_draws_compositor_styled_cells() {
 }
 
 #[test]
+fn test_fnc_ratatui_stats_drawer_starts_open_and_owns_rapid_stats() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut options = options(recipe_path(
+        "shaders/primitives/shader_linear_gradient_apply_to_both.json",
+    ));
+    options.backend = "compositor".to_string();
+    options.composition_mode = "native".to_string();
+    let state = PlayerUiState::load(&options).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let backend = TestBackend::new(140, 32);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal);
+
+    assert!(app.stats_drawer_open);
+    assert!(!rows[0].contains("phase="));
+    assert!(!rows[0].contains("backend_hash="));
+    assert!(rows.iter().any(|row| row.contains(" Stats ")));
+    assert!(rows.iter().any(|row| row.contains("phase=Enter")));
+    assert!(rows.iter().any(|row| row.contains("backend_hash=")));
+}
+
+#[test]
+fn test_fnc_ratatui_stats_drawer_uses_eichler_status_colors() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let mut options = options(recipe_path(
+        "shaders/primitives/shader_linear_gradient_apply_to_both.json",
+    ));
+    options.backend = "compositor".to_string();
+    options.composition_mode = "native".to_string();
+    let state = PlayerUiState::load(&options).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let backend = TestBackend::new(140, 32);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+
+    assert_eq!(
+        cell_foreground_at_text(&terminal, " Stats ", 1),
+        Some(Color::Rgb(80, 220, 205))
+    );
+    assert_eq!(
+        cell_foreground_at_text(&terminal, "fallback=false", "fallback=".chars().count()),
+        Some(Color::Rgb(80, 220, 205))
+    );
+    assert_eq!(
+        cell_foreground_at_text(&terminal, "backend_hash=", 0),
+        Some(Color::Rgb(255, 225, 80))
+    );
+}
+
+#[test]
+fn test_fnc_ratatui_stats_drawer_width_matches_widest_stats_line() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let backend = TestBackend::new(140, 32);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+
+    terminal
+        .draw(|frame| render_ratatui_ui(&mut app, frame))
+        .expect("ratatui draw");
+    let rows = terminal_rows(&terminal);
+    let stats_left_edge = rows
+        .iter()
+        .find_map(|row| {
+            row.find(" Stats ")
+                .map(|byte_index| row[..byte_index].chars().count())
+        })
+        .expect("stats drawer title");
+    let expected_width = expected_stats_lines(&app)
+        .iter()
+        .map(|line| line.chars().count())
+        .max()
+        .expect("stats lines")
+        + 2;
+
+    assert_eq!(140 - stats_left_edge + 1, expected_width);
+}
+
+#[test]
+fn test_fnc_ratatui_stats_drawer_ctrl_arrows_toggle_without_playback_change() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("tokio runtime");
+    let state = PlayerUiState::load(&options(recipe_path("baseline.json"))).expect("load ui state");
+    let mut app = runtime
+        .block_on(PlayerUiApp::new(state))
+        .expect("player ui app");
+    let before_phase_t = app.player.phase_t();
+    let before_hash = app.player.last_backend_output.backend_hash;
+
+    assert!(runtime.block_on(handle_player_ui_key_event(
+        &mut app,
+        KeyEvent::new(KeyCode::Right, KeyModifiers::CONTROL),
+        10,
+    )));
+    assert!(!app.stats_drawer_open);
+    assert_eq!(app.player.phase_t(), before_phase_t);
+    assert_eq!(app.player.last_backend_output.backend_hash, before_hash);
+
+    assert!(runtime.block_on(handle_player_ui_key_event(
+        &mut app,
+        KeyEvent::new(KeyCode::Left, KeyModifiers::CONTROL),
+        10,
+    )));
+    assert!(app.stats_drawer_open);
+    assert_eq!(app.player.phase_t(), before_phase_t);
+    assert_eq!(app.player.last_backend_output.backend_hash, before_hash);
+}
+
+#[test]
 fn test_fnc_ratatui_app_starts_with_browser_focus() {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -428,6 +596,67 @@ fn test_fnc_ratatui_studio_keyboard_mutation_changes_source_control() {
     );
 }
 
+fn terminal_rows(terminal: &Terminal<TestBackend>) -> Vec<String> {
+    let buffer = terminal.backend().buffer();
+    let area = *buffer.area();
+    buffer
+        .content()
+        .chunks(area.width as usize)
+        .map(|cells| cells.iter().map(|cell| cell.symbol()).collect::<String>())
+        .collect()
+}
+
+fn cell_foreground_at_text(
+    terminal: &Terminal<TestBackend>,
+    needle: &str,
+    character_offset: usize,
+) -> Option<Color> {
+    let rows = terminal_rows(terminal);
+    let row_index = rows.iter().position(|row| row.contains(needle))?;
+    let byte_index = rows[row_index].find(needle)?;
+    let column = rows[row_index][..byte_index].chars().count() + character_offset;
+    let buffer = terminal.backend().buffer();
+    let area = *buffer.area();
+    Some(buffer[(column as u16, area.y + row_index as u16)].fg)
+}
+
+fn expected_stats_lines(app: &PlayerUiApp) -> Vec<String> {
+    let report = app.player.report();
+    vec![
+        format!(
+            "phase={:?} sample_t={:.2}",
+            app.player.phase(),
+            app.player.phase_t()
+        ),
+        format!(
+            "loop_t={} elapsed={}ms",
+            app.player
+                .loop_t()
+                .map(|value| format!("{value:.2}"))
+                .unwrap_or_else(|| "none".to_string()),
+            app.player.elapsed_ms
+        ),
+        format!(
+            "hash={} non_empty={}",
+            report.render_hash, report.non_empty_cells
+        ),
+        format!(
+            "backend={} mode={}",
+            app.player.last_backend_output.backend, app.player.last_backend_output.composition_mode
+        ),
+        format!(
+            "source={} fallback={}",
+            app.player.last_backend_output.source_render_mode,
+            app.player.last_backend_output.fallback_used
+        ),
+        format!(
+            "native_source={} backend_hash={}",
+            app.player.last_backend_output.native_source_isolated,
+            app.player.last_backend_output.backend_hash
+        ),
+    ]
+}
+
 fn options(recipe_path: PathBuf) -> CliOptions {
     options_with_root(recipe_path, debug_recipe_root())
 }
@@ -497,4 +726,4 @@ fn stderr(output: &std::process::Output) -> String {
 }
 
 // <FILE>crates/tui-vfx-player-ui/tests/test_fnc_player_ui.rs</FILE> - <DESC>Visual player UI regression tests</DESC>
-// <VERS>END OF VERSION: 0.2.1</VERS>
+// <VERS>END OF VERSION: 0.5.0</VERS>

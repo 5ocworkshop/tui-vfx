@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player/src/cls_player_render_backend_output.rs</FILE> - <DESC>Player-owned render backend output DTO</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Native compositor source isolation: add source substrate evidence alongside native lowering coverage.</WCTX>
-// <CLOG>0.3.0: MINOR — add source render mode and native source isolation evidence.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Native compositor source isolation: add deterministic letter-cell evidence for legacy-oracle comparisons.</WCTX>
+// <CLOG>0.4.0: MINOR — expose alphanumeric cell color histograms for V2-to-v3.1 parity checks.
+// 0.3.0: MINOR — add source render mode and native source isolation evidence.
 // 0.2.0: MINOR — add explicit composition-mode/fallback/native-lowering fields and optional changed-cell evidence.
 // 0.1.0: INIT — add backend output and diagnostic DTOs consumed from PlayerRenderIrReport.</CLOG>
 
@@ -36,6 +37,8 @@ pub struct PlayerRenderBackendOutput {
     pub backend_hash: u64,
     /// Count of styled cells that carry non-default visual styling.
     pub non_default_styled_cells: usize,
+    /// Deterministic alphanumeric-cell evidence for legacy tooling comparisons.
+    pub letter_cell_evidence: PlayerRenderBackendLetterCellEvidence,
     /// Requested composition strategy reported by backend adapters.
     pub composition_mode: String,
     /// Whether the backend used fallback instead of the requested native path.
@@ -121,6 +124,7 @@ impl PlayerRenderBackendOutput {
                 .iter()
                 .filter(|cell| cell_has_non_default_style(cell))
                 .count(),
+            letter_cell_evidence: letter_cell_evidence_for(&styled_cells),
             styled_cells,
             render_hash: 0,
             backend_hash,
@@ -158,6 +162,7 @@ impl PlayerRenderBackendOutput {
             .filter(|cell| cell_has_non_default_style(cell))
             .count();
         let backend_hash = backend_hash_for(backend, &rows, &styled_cells);
+        let letter_cell_evidence = letter_cell_evidence_for(&styled_cells);
         Self {
             schema_version: "v3.1.player.renderBackend.1",
             backend,
@@ -173,6 +178,7 @@ impl PlayerRenderBackendOutput {
             render_hash: input.render_hash,
             backend_hash,
             non_default_styled_cells,
+            letter_cell_evidence,
             composition_mode: "irResolved".to_string(),
             fallback_used: false,
             native_lowering_attempted: false,
@@ -218,6 +224,18 @@ impl PlayerRenderBackendOutput {
         self.changed_cells = Some(changed_cells);
         self
     }
+}
+
+/// Deterministic color-class evidence for visible alphanumeric recipe cells.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerRenderBackendLetterCellEvidence {
+    /// Number of cells whose first glyph character is alphanumeric.
+    pub letter_cell_count: usize,
+    /// Background color counts across alphanumeric cells.
+    pub background_class_counts: BTreeMap<String, usize>,
+    /// Foreground/background color-pair counts across alphanumeric cells.
+    pub foreground_background_class_counts: BTreeMap<String, usize>,
 }
 
 /// Backend-native composition evidence attached to render output.
@@ -274,5 +292,29 @@ fn cell_has_non_default_style(cell: &PlayerRenderCell) -> bool {
         && cell.role.is_none())
 }
 
+fn letter_cell_evidence_for(
+    styled_cells: &[PlayerRenderCell],
+) -> PlayerRenderBackendLetterCellEvidence {
+    let mut evidence = PlayerRenderBackendLetterCellEvidence::default();
+    for cell in styled_cells {
+        let Some(glyph) = cell.glyph.chars().next() else {
+            continue;
+        };
+        if !glyph.is_alphanumeric() {
+            continue;
+        }
+        evidence.letter_cell_count += 1;
+        *evidence
+            .background_class_counts
+            .entry(cell.background.clone())
+            .or_insert(0) += 1;
+        *evidence
+            .foreground_background_class_counts
+            .entry(format!("fg={} bg={}", cell.foreground, cell.background))
+            .or_insert(0) += 1;
+    }
+    evidence
+}
+
 // <FILE>crates/tui-vfx-player/src/cls_player_render_backend_output.rs</FILE> - <DESC>Player-owned render backend output DTO</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>
