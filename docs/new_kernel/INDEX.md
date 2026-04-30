@@ -1,7 +1,10 @@
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>VERSION: 0.62.0</VERS> -->
-<!-- <WCTX>K2.31 CRT sampler review/de-slop evidence indexing.</WCTX> -->
-<!-- <CLOG>0.62.0: MINOR — add K2.31 review and de-slop evidence.
+<!-- <VERS>VERSION: 0.65.0</VERS> -->
+<!-- <WCTX>K2.32 shader native blocker review/de-slop indexing.</WCTX> -->
+<!-- <CLOG>0.65.0: MINOR — add K2.32 review and de-slop evidence.
+0.64.0: MINOR — add K2.32 shader native blocker results.
+0.63.0: MINOR — add K2.32 shader native blocker closure plan.
+0.62.0: MINOR — add K2.31 review and de-slop evidence.
 0.61.1: PATCH — use durable closure-plan wording for K2.31 index entries.
 0.61.0: MINOR — add K2.31 CRT sampler native blocker results.
 0.60.0: MINOR — add K2.31 CRT sampler native blocker closure plan.
@@ -413,6 +416,11 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - [`K2_31_CRT_SAMPLER_RESULTS.md`](K2_31_CRT_SAMPLER_RESULTS.md) — strict-native CRT sampler blocker closure results and coverage movement.
 - [`PHASE_K2_31_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_31_REVIEW_AND_DESLOP_REPORT.md) — formal review, AI de-slop, and post-cleanup verification evidence.
 
+### K2.32 shader native blockers
+
+- [`ARCH-RESP-TO-PHASE_K2_32.md`](ARCH-RESP-TO-PHASE_K2_32.md) — closure plan for current shader debug-recipe native fallbacks.
+- [`K2_32_SHADER_NATIVE_RESULTS.md`](K2_32_SHADER_NATIVE_RESULTS.md) — strict-native shader blocker closure results and coverage movement.
+- [`PHASE_K2_32_REVIEW_AND_DESLOP_REPORT.md`](PHASE_K2_32_REVIEW_AND_DESLOP_REPORT.md) — formal review, AI de-slop, and post-cleanup verification evidence.
 
 ## Validator and recipe artifacts
 
@@ -436,4 +444,4 @@ This directory tracks the clean-room kernel effort for proving the v3.1 contract
 - `.omx/plans/test-spec-new-kernel-phase-d0.md` — Phase D0 verification spec.
 
 <!-- <FILE>docs/new_kernel/INDEX.md</FILE> - <DESC>Index for clean-room new-kernel planning and status documents</DESC> -->
-<!-- <VERS>END OF VERSION: 0.62.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.65.0</VERS> -->

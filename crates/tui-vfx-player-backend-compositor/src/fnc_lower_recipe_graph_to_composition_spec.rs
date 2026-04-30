@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
+// <VERS>VERSION: 0.10.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.9.0: MINOR — lower CRT samplers through source-owned player-compatible content stages.
+// <CLOG>0.10.0: MINOR — lower current shader blockers through source-owned player-compatible style stages.
+// 0.9.0: MINOR — lower CRT samplers through source-owned player-compatible content stages.
 // 0.8.2: PATCH — share the supported wipe direction list between path-reveal and wipe-corner lowering.
 // 0.8.1: PATCH — align wipe-corner default direction with descriptor and player primitive defaults.
 // 0.8.0: MINOR — lower radial and wipe-corner masks through player-compatible source-owned stages.
@@ -35,6 +36,7 @@ use tui_vfx_contract::{NodeSpec, RecipeDocument, Value, ValueSource};
 use tui_vfx_player::{
     PlayerRenderBackendCompositionEvidence, PlayerRenderBackendDiagnostic,
     PlayerRenderBackendRequest, PlayerRenderCompositionMode, PlayerRenderIrReport,
+    fnc_resolve_value_source::resolve_value_source_with_graph_values,
 };
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, ColorSpace, Gradient, LinearGradientApplyTo,
@@ -251,6 +253,79 @@ pub enum NativeStyleStage {
         underline_color: String,
         progress: f64,
         thickness: usize,
+        apply_to: String,
+    },
+    /// Apply player-compatible highlighter shader styling.
+    Highlighter {
+        color: String,
+        blend_strength: f64,
+        text_contrast: f64,
+        soft_edge: bool,
+        direction: String,
+        mode: String,
+        row_mask: i64,
+        band_width: usize,
+    },
+    /// Apply player-compatible focus field shader styling.
+    FocusField {
+        color: String,
+        rect_x: f64,
+        rect_y: f64,
+        rect_width: f64,
+        rect_height: f64,
+        center_x: f64,
+        center_y: f64,
+        shape: String,
+        radius_x: f64,
+        radius_y: f64,
+        feather: f64,
+        intensity: f64,
+    },
+    /// Apply player-compatible glisten band shader styling.
+    GlistenBand {
+        color: String,
+        blend_strength: f64,
+        angle_deg: f64,
+        speed: f64,
+        head: f64,
+        tail: f64,
+        band_width: f64,
+        direction: String,
+    },
+    /// Apply player-compatible wayfinding node shader styling.
+    WayfindingNode {
+        current_index: usize,
+        nodes: usize,
+        previous_strength: f64,
+        future_strength: f64,
+        intensity: f64,
+        radius: usize,
+        active_color: String,
+    },
+    /// Apply player-compatible barber-pole shader styling.
+    BarberPole {
+        stripe_color: String,
+        background_color: String,
+        stripe_width: usize,
+        gap_width: usize,
+        angle_deg: f64,
+        speed: f64,
+        apply_to: String,
+    },
+    /// Apply player-compatible diffusion shader styling.
+    Diffusion {
+        color: String,
+        center_x: f64,
+        center_y: f64,
+        radius: f64,
+        intensity: f64,
+        apply_to: String,
+    },
+    /// Apply player-compatible radar shader styling.
+    Radar {
+        color: String,
+        speed: f64,
+        tail_length: f64,
         apply_to: String,
     },
 }
@@ -592,6 +667,15 @@ fn lower_node_into_spec(
         "shader.linearGradient" => lower_linear_gradient(node, spec, request, warnings),
         "shader.revealWipe" => lower_reveal_wipe(node, spec, request, warnings),
         "shader.borderSweep" => lower_border_sweep(recipe, node, spec, request, warnings),
+        "shader.highlighter" => lower_highlighter_shader(node, style_stages, request, warnings),
+        "shader.focusField" => lower_focus_field_shader(node, style_stages, request, warnings),
+        "shader.glistenBand" => lower_glisten_band_shader(node, style_stages, request, warnings),
+        "shader.wayfindingNode" => {
+            lower_wayfinding_node_shader(node, style_stages, request, warnings)
+        }
+        "shader.barberPole" => lower_barber_pole_shader(node, style_stages, request, warnings),
+        "shader.diffusion" => lower_diffusion_shader(node, style_stages, request, warnings),
+        "shader.radar" => lower_radar_shader(node, style_stages, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
@@ -1794,6 +1878,422 @@ fn lower_style_neon_flicker(
     NodeLoweringOutcome::Lowered { warnings }
 }
 
+fn lower_highlighter_shader(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "shader.highlighter",
+        &[
+            "color",
+            "bandWidth",
+            "blendStrength",
+            "textContrast",
+            "mode",
+            "softEdge",
+            "direction",
+            "rowMask",
+        ],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let direction = match strict_enum_input(
+        node,
+        request,
+        "direction",
+        "leftToRight",
+        &["leftToRight", "rightToLeft", "topToBottom", "bottomToTop"],
+        "shader.highlighter",
+    ) {
+        Ok(direction) => direction,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let mode = match strict_enum_input(
+        node,
+        request,
+        "mode",
+        "band",
+        &["band", "row", "centerOut"],
+        "shader.highlighter",
+    ) {
+        Ok(mode) => mode,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let soft_edge = match strict_enum_input(
+        node,
+        request,
+        "softEdge",
+        "true",
+        &["true", "false"],
+        "shader.highlighter",
+    ) {
+        Ok(soft_edge) => soft_edge != "false",
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+
+    let band_width = (resolved_number_input(node, request, "bandWidth", 3.0).max(1.0)
+        * (1.0 + if soft_edge { 0.5 } else { 0.0 })) as usize;
+    style_stages.push(NativeStyleStage::Highlighter {
+        color: color_label_from_config(resolved_color_input(node, request, "color").unwrap_or(
+            ColorConfig::Rgb {
+                r: 255,
+                g: 225,
+                b: 90,
+            },
+        )),
+        blend_strength: resolved_number_input(node, request, "blendStrength", 1.0).clamp(0.0, 1.0),
+        text_contrast: resolved_number_input(node, request, "textContrast", 0.0).clamp(0.0, 1.0),
+        soft_edge,
+        direction,
+        mode,
+        row_mask: resolved_integer_input(node, request, "rowMask", -1),
+        band_width,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_focus_field_shader(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "shader.focusField",
+        &[
+            "color",
+            "centerX",
+            "centerY",
+            "radius",
+            "intensity",
+            "radiusX",
+            "radiusY",
+            "shape",
+            "feather",
+            "rectHeight",
+            "rectWidth",
+            "rectX",
+            "rectY",
+        ],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+
+    let shape = match strict_enum_input(
+        node,
+        request,
+        "shape",
+        "circle",
+        &["circle", "ellipse", "rect"],
+        "shader.focusField",
+    ) {
+        Ok(shape) => shape,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let rect_x = resolved_number_input(node, request, "rectX", 0.0);
+    let rect_y = resolved_number_input(node, request, "rectY", 0.0);
+    let rect_width =
+        resolved_number_input(node, request, "rectWidth", request.source_ir.width as f64);
+    let rect_height =
+        resolved_number_input(node, request, "rectHeight", request.source_ir.height as f64);
+    let center_x = resolved_number_input(node, request, "centerX", rect_x + rect_width / 2.0);
+    let center_y = resolved_number_input(node, request, "centerY", rect_y + rect_height / 2.0);
+    let radius_x = resolved_number_input(
+        node,
+        request,
+        "radiusX",
+        resolved_number_input(node, request, "radius", 4.0),
+    )
+    .max(0.5);
+    let radius_y = resolved_number_input(node, request, "radiusY", radius_x).max(0.5);
+    style_stages.push(NativeStyleStage::FocusField {
+        color: color_label_from_config(resolved_color_input(node, request, "color").unwrap_or(
+            ColorConfig::Rgb {
+                r: 120,
+                g: 180,
+                b: 255,
+            },
+        )),
+        rect_x,
+        rect_y,
+        rect_width,
+        rect_height,
+        center_x,
+        center_y,
+        shape,
+        radius_x,
+        radius_y,
+        feather: resolved_number_input(node, request, "feather", 0.0).clamp(0.0, 1.0),
+        intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_glisten_band_shader(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "shader.glistenBand",
+        &[
+            "color",
+            "bandWidth",
+            "direction",
+            "blendStrength",
+            "angleDeg",
+            "head",
+            "speed",
+            "tail",
+        ],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let direction = match strict_enum_input(
+        node,
+        request,
+        "direction",
+        "leftToRight",
+        &["leftToRight", "rightToLeft"],
+        "shader.glistenBand",
+    ) {
+        Ok(direction) => direction,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    style_stages.push(NativeStyleStage::GlistenBand {
+        color: color_label_from_config(
+            resolved_color_input(node, request, "color").unwrap_or(ColorConfig::White),
+        ),
+        blend_strength: resolved_number_input(node, request, "blendStrength", 1.0).clamp(0.0, 1.0),
+        angle_deg: resolved_number_input(node, request, "angleDeg", 0.0),
+        speed: resolved_number_input(node, request, "speed", 1.0).max(0.0),
+        head: resolved_number_input(node, request, "head", 0.0).clamp(0.0, 1.0),
+        tail: resolved_number_input(node, request, "tail", 1.0).clamp(0.0, 1.0),
+        band_width: resolved_number_input(node, request, "bandWidth", 2.0).max(1.0),
+        direction,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_wayfinding_node_shader(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "shader.wayfindingNode",
+        &[
+            "currentIndex",
+            "activeColor",
+            "color",
+            "futureStrength",
+            "intensity",
+            "nodes",
+            "previousStrength",
+            "radius",
+        ],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    style_stages.push(NativeStyleStage::WayfindingNode {
+        current_index: resolved_integer_input(node, request, "currentIndex", 0).max(0) as usize,
+        nodes: resolved_integer_input(node, request, "nodes", 1).max(1) as usize,
+        previous_strength: resolved_number_input(node, request, "previousStrength", 0.3)
+            .clamp(0.0, 1.0),
+        future_strength: resolved_number_input(node, request, "futureStrength", 0.4)
+            .clamp(0.0, 1.0),
+        intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0),
+        radius: resolved_number_input(node, request, "radius", 1.0).max(0.0) as usize,
+        active_color: color_label_from_config(
+            resolved_color_input(node, request, "activeColor")
+                .or_else(|| resolved_color_input(node, request, "color"))
+                .unwrap_or(ColorConfig::Rgb {
+                    r: 80,
+                    g: 255,
+                    b: 160,
+                }),
+        ),
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_barber_pole_shader(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "shader.barberPole",
+        &[
+            "angleDeg",
+            "applyTo",
+            "backgroundColor",
+            "color",
+            "gapWidth",
+            "speed",
+            "stripeColor",
+            "stripeWidth",
+        ],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let apply_to = match strict_enum_input(
+        node,
+        request,
+        "applyTo",
+        "background",
+        &["foreground", "background", "both"],
+        "shader.barberPole",
+    ) {
+        Ok(apply_to) => apply_to,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let base_color = resolved_color_input(node, request, "color").unwrap_or(ColorConfig::Rgb {
+        r: 255,
+        g: 80,
+        b: 80,
+    });
+    style_stages.push(NativeStyleStage::BarberPole {
+        stripe_color: color_label_from_config(
+            resolved_color_input(node, request, "stripeColor").unwrap_or(base_color),
+        ),
+        background_color: color_label_from_config(
+            resolved_color_input(node, request, "backgroundColor").unwrap_or(ColorConfig::Rgb {
+                r: 40,
+                g: 10,
+                b: 20,
+            }),
+        ),
+        stripe_width: resolved_integer_input(node, request, "stripeWidth", 3).max(1) as usize,
+        gap_width: resolved_integer_input(
+            node,
+            request,
+            "gapWidth",
+            resolved_integer_input(node, request, "stripeWidth", 3),
+        )
+        .max(1) as usize,
+        angle_deg: resolved_number_input(node, request, "angleDeg", 45.0),
+        speed: resolved_number_input(node, request, "speed", 0.0),
+        apply_to,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_diffusion_shader(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "shader.diffusion",
+        &[
+            "applyTo",
+            "centerX",
+            "centerY",
+            "color",
+            "intensity",
+            "radius",
+        ],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let apply_to = match strict_enum_input(
+        node,
+        request,
+        "applyTo",
+        "background",
+        &["foreground", "background", "both"],
+        "shader.diffusion",
+    ) {
+        Ok(apply_to) => apply_to,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    style_stages.push(NativeStyleStage::Diffusion {
+        color: color_label_from_config(resolved_color_input(node, request, "color").unwrap_or(
+            ColorConfig::Rgb {
+                r: 80,
+                g: 180,
+                b: 255,
+            },
+        )),
+        center_x: resolved_number_input(
+            node,
+            request,
+            "centerX",
+            request.source_ir.width.saturating_sub(1) as f64 / 2.0,
+        ),
+        center_y: resolved_number_input(
+            node,
+            request,
+            "centerY",
+            request.source_ir.height.saturating_sub(1) as f64 / 2.0,
+        ),
+        radius: resolved_number_input(node, request, "radius", 8.0).max(0.5),
+        intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0),
+        apply_to,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn lower_radar_shader(
+    node: &NodeSpec,
+    style_stages: &mut Vec<NativeStyleStage>,
+    request: &PlayerRenderBackendRequest,
+    warnings: Vec<PlayerRenderBackendDiagnostic>,
+) -> NodeLoweringOutcome {
+    if let Some(reason) = unsupported_style_stage_reason(
+        node,
+        "shader.radar",
+        &["applyTo", "color", "speed", "tailLength"],
+        StyleScopeRequirement::All,
+    ) {
+        return NodeLoweringOutcome::Unsupported { reason };
+    }
+    let apply_to = match strict_enum_input(
+        node,
+        request,
+        "applyTo",
+        "foreground",
+        &["foreground", "background", "both"],
+        "shader.radar",
+    ) {
+        Ok(apply_to) => apply_to,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    style_stages.push(NativeStyleStage::Radar {
+        color: color_label_from_config(resolved_color_input(node, request, "color").unwrap_or(
+            ColorConfig::Rgb {
+                r: 80,
+                g: 255,
+                b: 160,
+            },
+        )),
+        speed: resolved_number_input(node, request, "speed", 1.0).max(0.0),
+        tail_length: resolved_number_input(node, request, "tailLength", 0.25).clamp(0.01, 1.0),
+        apply_to,
+    });
+    NodeLoweringOutcome::Lowered { warnings }
+}
+
 fn lower_filter_bracket_emphasis(
     node: &NodeSpec,
     style_stages: &mut Vec<NativeStyleStage>,
@@ -2081,6 +2581,26 @@ fn input_value<'a>(
     })
 }
 
+fn resolved_input_value(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Option<Value> {
+    runtime_override_value(node, request, key)
+        .cloned()
+        .or_else(|| {
+            node.inputs
+                .get(&tui_vfx_contract::EffectInputId::new(key))
+                .and_then(|source| {
+                    resolve_value_source_with_graph_values(
+                        source,
+                        &request.sample.signals,
+                        &request.sample.graph_values,
+                    )
+                })
+        })
+}
+
 fn runtime_override_value<'a>(
     node: &NodeSpec,
     request: &'a PlayerRenderBackendRequest,
@@ -2180,6 +2700,34 @@ fn integer_input(
     default: i64,
 ) -> i64 {
     input_value(node, request, key)
+        .and_then(|value| match value {
+            Value::Integer(value) => Some(*value),
+            Value::Number(value) => Some(*value as i64),
+            _ => None,
+        })
+        .unwrap_or(default)
+}
+
+fn resolved_number_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: f64,
+) -> f64 {
+    resolved_input_value(node, request, key)
+        .as_ref()
+        .and_then(Value::as_range_number)
+        .unwrap_or(default)
+}
+
+fn resolved_integer_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: i64,
+) -> i64 {
+    resolved_input_value(node, request, key)
+        .as_ref()
         .and_then(|value| match value {
             Value::Integer(value) => Some(*value),
             Value::Number(value) => Some(*value as i64),
@@ -2291,7 +2839,7 @@ fn strict_enum_input(
         return Ok(value.to_string());
     }
     Err(format!(
-        "Effect `{effect_id}` uses `{key}` value `{value}` that has no compositor-backend native content-stage equivalent without dropping authored semantics."
+        "Effect `{effect_id}` uses `{key}` value `{value}` that has no compositor-backend native stage equivalent without dropping authored semantics."
     ))
 }
 
@@ -2303,6 +2851,18 @@ fn color_input(
     input_value(node, request, key).and_then(|value| match value {
         Value::Color(color) => Some(ColorConfig::from(*color)),
         Value::String(value) | Value::Text(value) => color_config_from_hex(value),
+        _ => None,
+    })
+}
+
+fn resolved_color_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Option<ColorConfig> {
+    resolved_input_value(node, request, key).and_then(|value| match value {
+        Value::Color(color) => Some(ColorConfig::from(color)),
+        Value::String(value) | Value::Text(value) => color_config_from_hex(&value),
         _ => None,
     })
 }

@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.9.0</VERS>
+// <VERS>VERSION: 0.10.1</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.9.0: MINOR — apply source-owned CRT sampler stages for player-compatible parity.
+// <CLOG>0.10.1: PATCH — compute wayfinding node cell positions directly instead of materializing a temporary grid vector.
+// 0.10.0: MINOR — apply source-owned shader style stages for player-compatible parity.
+// 0.9.0: MINOR — apply source-owned CRT sampler stages for player-compatible parity.
 // 0.8.0: MINOR — apply source-owned radial and wipe-corner mask stages for player-compatible parity.
 // 0.7.0: MINOR — apply source-owned mask stages for player-compatible mask parity.
 // 0.6.1: PATCH — hoist stable cellular reveal threshold calculation and sync metadata footer.
@@ -406,6 +408,152 @@ fn scene_ir_with_native_content_stages(
                 *progress,
                 *thickness,
                 apply_to,
+            ),
+            NativeStyleStage::Highlighter {
+                color,
+                blend_strength,
+                text_contrast,
+                soft_edge,
+                direction,
+                mode,
+                row_mask,
+                band_width,
+            } => apply_highlighter_style_stage(
+                &mut staged,
+                HighlighterStyleInputs {
+                    color,
+                    blend_strength: *blend_strength,
+                    text_contrast: *text_contrast,
+                    soft_edge: *soft_edge,
+                    direction,
+                    mode,
+                    row_mask: *row_mask,
+                    band_width: *band_width,
+                },
+            ),
+            NativeStyleStage::FocusField {
+                color,
+                rect_x,
+                rect_y,
+                rect_width,
+                rect_height,
+                center_x,
+                center_y,
+                shape,
+                radius_x,
+                radius_y,
+                feather,
+                intensity,
+            } => apply_focus_field_style_stage(
+                &mut staged,
+                FocusFieldStyleInputs {
+                    color,
+                    rect_x: *rect_x,
+                    rect_y: *rect_y,
+                    rect_width: *rect_width,
+                    rect_height: *rect_height,
+                    center_x: *center_x,
+                    center_y: *center_y,
+                    shape,
+                    radius_x: *radius_x,
+                    radius_y: *radius_y,
+                    feather: *feather,
+                    intensity: *intensity,
+                },
+            ),
+            NativeStyleStage::GlistenBand {
+                color,
+                blend_strength,
+                angle_deg,
+                speed,
+                head,
+                tail,
+                band_width,
+                direction,
+            } => apply_glisten_band_style_stage(
+                &mut staged,
+                GlistenBandStyleInputs {
+                    color,
+                    blend_strength: *blend_strength,
+                    angle_deg: *angle_deg,
+                    speed: *speed,
+                    head: *head,
+                    tail: *tail,
+                    band_width: *band_width,
+                    direction,
+                },
+            ),
+            NativeStyleStage::WayfindingNode {
+                current_index,
+                nodes,
+                previous_strength,
+                future_strength,
+                intensity,
+                radius,
+                active_color,
+            } => apply_wayfinding_node_style_stage(
+                &mut staged,
+                WayfindingNodeStyleInputs {
+                    current_index: *current_index,
+                    nodes: *nodes,
+                    previous_strength: *previous_strength,
+                    future_strength: *future_strength,
+                    intensity: *intensity,
+                    radius: *radius,
+                    active_color,
+                },
+            ),
+            NativeStyleStage::BarberPole {
+                stripe_color,
+                background_color,
+                stripe_width,
+                gap_width,
+                angle_deg,
+                speed,
+                apply_to,
+            } => apply_barber_pole_style_stage(
+                &mut staged,
+                BarberPoleStyleInputs {
+                    stripe_color,
+                    background_color,
+                    stripe_width: *stripe_width,
+                    gap_width: *gap_width,
+                    angle_deg: *angle_deg,
+                    speed: *speed,
+                    apply_to,
+                },
+            ),
+            NativeStyleStage::Diffusion {
+                color,
+                center_x,
+                center_y,
+                radius,
+                intensity,
+                apply_to,
+            } => apply_diffusion_style_stage(
+                &mut staged,
+                DiffusionStyleInputs {
+                    color,
+                    center_x: *center_x,
+                    center_y: *center_y,
+                    radius: *radius,
+                    intensity: *intensity,
+                    apply_to,
+                },
+            ),
+            NativeStyleStage::Radar {
+                color,
+                speed,
+                tail_length,
+                apply_to,
+            } => apply_radar_style_stage(
+                &mut staged,
+                RadarStyleInputs {
+                    color,
+                    speed: *speed,
+                    tail_length: *tail_length,
+                    apply_to,
+                },
             ),
         }
     }
@@ -1314,6 +1462,320 @@ fn apply_matrix_rain_style_stage(
     }
 }
 
+struct HighlighterStyleInputs<'a> {
+    color: &'a str,
+    blend_strength: f64,
+    text_contrast: f64,
+    soft_edge: bool,
+    direction: &'a str,
+    mode: &'a str,
+    row_mask: i64,
+    band_width: usize,
+}
+
+fn apply_highlighter_style_stage(
+    report: &mut PlayerRenderIrReport,
+    inputs: HighlighterStyleInputs<'_>,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let band_width = inputs.band_width;
+    let span = if matches!(inputs.direction, "topToBottom" | "bottomToTop") {
+        height.max(1)
+    } else {
+        width.max(1)
+    };
+    let center = (report.phase_t.clamp(0.0, 1.0) * span as f64).round() as isize;
+    let active_color = lerp_rgba_label(
+        inputs.color,
+        WHITE_RGBA,
+        (inputs.text_contrast * 0.25) as f32,
+    );
+    let color = lerp_rgba_label(
+        active_color.as_str(),
+        inputs.color,
+        inputs.blend_strength as f32,
+    );
+    let apply_to = if inputs.mode == "row" {
+        "both"
+    } else {
+        "background"
+    };
+    let role = if inputs.soft_edge {
+        "ShaderHighlighterSoft"
+    } else {
+        "ShaderHighlighter"
+    };
+    for y in 0..height {
+        if inputs.row_mask >= 0 && y as i64 != inputs.row_mask {
+            continue;
+        }
+        for x in 0..width {
+            let axis = if matches!(inputs.direction, "topToBottom" | "bottomToTop") {
+                y
+            } else {
+                x
+            };
+            if (axis as isize - center).unsigned_abs() <= band_width {
+                set_report_shader_cell(report, x, y, apply_to, color.as_str(), role);
+            }
+        }
+    }
+}
+
+struct FocusFieldStyleInputs<'a> {
+    color: &'a str,
+    rect_x: f64,
+    rect_y: f64,
+    rect_width: f64,
+    rect_height: f64,
+    center_x: f64,
+    center_y: f64,
+    shape: &'a str,
+    radius_x: f64,
+    radius_y: f64,
+    feather: f64,
+    intensity: f64,
+}
+
+fn apply_focus_field_style_stage(
+    report: &mut PlayerRenderIrReport,
+    inputs: FocusFieldStyleInputs<'_>,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let focus_color = lerp_rgba_label(
+        inputs.color,
+        WHITE_RGBA,
+        ((1.0 - inputs.intensity) * 0.25) as f32,
+    );
+    for y in 0..height {
+        for x in 0..width {
+            let dx = (x as f64 - inputs.center_x).abs();
+            let dy = (y as f64 - inputs.center_y).abs();
+            let inside = if inputs.shape == "rect" {
+                x as f64 >= inputs.rect_x
+                    && y as f64 >= inputs.rect_y
+                    && x as f64 <= inputs.rect_x + inputs.rect_width
+                    && y as f64 <= inputs.rect_y + inputs.rect_height
+            } else {
+                let normalized = (dx / inputs.radius_x).mul_add(
+                    dx / inputs.radius_x,
+                    (dy / inputs.radius_y) * (dy / inputs.radius_y),
+                );
+                normalized.sqrt() <= 1.0 + inputs.feather
+            };
+            if inside {
+                set_report_shader_cell(
+                    report,
+                    x,
+                    y,
+                    "foreground",
+                    focus_color.as_str(),
+                    "ShaderFocusField",
+                );
+            }
+        }
+    }
+}
+
+struct GlistenBandStyleInputs<'a> {
+    color: &'a str,
+    blend_strength: f64,
+    angle_deg: f64,
+    speed: f64,
+    head: f64,
+    tail: f64,
+    band_width: f64,
+    direction: &'a str,
+}
+
+fn apply_glisten_band_style_stage(
+    report: &mut PlayerRenderIrReport,
+    inputs: GlistenBandStyleInputs<'_>,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let angle = inputs.angle_deg.to_radians();
+    let band_width = inputs.band_width.max(1.0) * (inputs.tail - inputs.head).abs().max(0.25);
+    let mut center = (report.phase_t * inputs.speed).fract();
+    if inputs.direction == "rightToLeft" {
+        center = 1.0 - center;
+    }
+    let max_x = width.saturating_sub(1).max(1) as f64;
+    let max_y = height.max(1) as f64;
+    let color = lerp_rgba_label(inputs.color, WHITE_RGBA, inputs.blend_strength as f32);
+    for y in 0..height {
+        for x in 0..width {
+            let nx = x as f64 / max_x;
+            let diagonal = (nx * angle.cos() + y as f64 * angle.sin() / max_y).fract();
+            if (diagonal - center).abs() <= band_width / max_x {
+                set_report_shader_cell(
+                    report,
+                    x,
+                    y,
+                    "foreground",
+                    color.as_str(),
+                    "ShaderGlistenBand",
+                );
+            }
+        }
+    }
+}
+
+struct WayfindingNodeStyleInputs<'a> {
+    current_index: usize,
+    nodes: usize,
+    previous_strength: f64,
+    future_strength: f64,
+    intensity: f64,
+    radius: usize,
+    active_color: &'a str,
+}
+
+fn apply_wayfinding_node_style_stage(
+    report: &mut PlayerRenderIrReport,
+    inputs: WayfindingNodeStyleInputs<'_>,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let cell_count = width * height;
+    if cell_count == 0 {
+        return;
+    }
+    let active_index = inputs.current_index % cell_count.min(inputs.nodes).max(1);
+    for offset in 0..=inputs.radius {
+        for (index, strength) in [
+            (
+                active_index.saturating_sub(offset),
+                inputs.previous_strength,
+            ),
+            (
+                (active_index + offset).min(cell_count - 1),
+                inputs.future_strength,
+            ),
+        ] {
+            let x = index % width;
+            let y = index / width;
+            let color = lerp_rgba_label(
+                inputs.active_color,
+                WHITE_RGBA,
+                (1.0 - strength * inputs.intensity).clamp(0.0, 1.0) as f32,
+            );
+            set_report_shader_cell(report, x, y, "both", color.as_str(), "ShaderWayfindingNode");
+        }
+    }
+}
+
+struct BarberPoleStyleInputs<'a> {
+    stripe_color: &'a str,
+    background_color: &'a str,
+    stripe_width: usize,
+    gap_width: usize,
+    angle_deg: f64,
+    speed: f64,
+    apply_to: &'a str,
+}
+
+fn apply_barber_pole_style_stage(
+    report: &mut PlayerRenderIrReport,
+    inputs: BarberPoleStyleInputs<'_>,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let period = inputs.stripe_width + inputs.gap_width;
+    let angle = inputs.angle_deg.to_radians();
+    let phase_offset =
+        (report.loop_t.unwrap_or(report.phase_t) * inputs.speed * period as f64).round();
+    for y in 0..height {
+        for x in 0..width {
+            let projection = x as f64 * angle.cos() + y as f64 * angle.sin() + phase_offset;
+            let position = projection.rem_euclid(period as f64) as usize;
+            let color = if position < inputs.stripe_width {
+                inputs.stripe_color
+            } else {
+                inputs.background_color
+            };
+            set_report_shader_cell(report, x, y, inputs.apply_to, color, "ShaderBarberPole");
+        }
+    }
+}
+
+struct DiffusionStyleInputs<'a> {
+    color: &'a str,
+    center_x: f64,
+    center_y: f64,
+    radius: f64,
+    intensity: f64,
+    apply_to: &'a str,
+}
+
+fn apply_diffusion_style_stage(
+    report: &mut PlayerRenderIrReport,
+    inputs: DiffusionStyleInputs<'_>,
+) {
+    let width = report_width(report);
+    let height = report_height(report);
+    for y in 0..height {
+        for x in 0..width {
+            let distance = ((x as f64 - inputs.center_x).powi(2)
+                + (y as f64 - inputs.center_y).powi(2))
+            .sqrt();
+            let falloff = (1.0 - distance / inputs.radius).clamp(0.0, 1.0) as f32;
+            if falloff > 0.0 {
+                let color = lerp_rgba_label(
+                    BLACK_RGBA,
+                    inputs.color,
+                    (falloff * inputs.intensity as f32).clamp(0.0, 1.0),
+                );
+                set_report_shader_cell(
+                    report,
+                    x,
+                    y,
+                    inputs.apply_to,
+                    color.as_str(),
+                    "ShaderDiffusion",
+                );
+            }
+        }
+    }
+}
+
+struct RadarStyleInputs<'a> {
+    color: &'a str,
+    speed: f64,
+    tail_length: f64,
+    apply_to: &'a str,
+}
+
+fn apply_radar_style_stage(report: &mut PlayerRenderIrReport, inputs: RadarStyleInputs<'_>) {
+    let width = report_width(report);
+    let height = report_height(report);
+    let center_x = width.saturating_sub(1) as f64 / 2.0;
+    let center_y = height.saturating_sub(1) as f64 / 2.0;
+    let sweep = (report.loop_t.unwrap_or(report.phase_t) * inputs.speed).fract();
+    for y in 0..height {
+        for x in 0..width {
+            let angle = ((y as f64 - center_y).atan2(x as f64 - center_x) + std::f64::consts::TAU)
+                % std::f64::consts::TAU;
+            let position = angle / std::f64::consts::TAU;
+            let distance_behind = (sweep - position).rem_euclid(1.0);
+            if distance_behind <= inputs.tail_length {
+                let strength = (1.0 - distance_behind / inputs.tail_length) as f32;
+                let color = lerp_rgba_label(BLACK_RGBA, inputs.color, strength);
+                set_report_shader_cell(
+                    report,
+                    x,
+                    y,
+                    inputs.apply_to,
+                    color.as_str(),
+                    "ShaderRadar",
+                );
+            }
+        }
+    }
+}
+
 fn apply_sub_pixel_bar_style_stage(
     report: &mut PlayerRenderIrReport,
     bar_color: &str,
@@ -1444,6 +1906,41 @@ fn set_report_filter_cell(
         TRANSPARENT_RGBA
     };
     set_report_cell_exact(report, x, y, foreground, background, modifiers, Some(role));
+}
+
+fn set_report_shader_cell(
+    report: &mut PlayerRenderIrReport,
+    x: usize,
+    y: usize,
+    apply_to: &str,
+    color: &str,
+    role: &str,
+) {
+    let (existing_foreground, existing_background) = report
+        .styled_cells
+        .iter()
+        .find(|cell| cell.x == x && cell.y == y)
+        .map(|cell| (cell.foreground.clone(), cell.background.clone()))
+        .unwrap_or_else(|| (DEFAULT_FOREGROUND.to_string(), TRANSPARENT_RGBA.to_string()));
+    let foreground = if matches!(apply_to, "foreground" | "both") {
+        color.to_string()
+    } else {
+        existing_foreground
+    };
+    let background = if matches!(apply_to, "background" | "both") {
+        color.to_string()
+    } else {
+        existing_background
+    };
+    set_report_cell_exact(
+        report,
+        x,
+        y,
+        foreground.as_str(),
+        background.as_str(),
+        &[],
+        Some(role),
+    );
 }
 
 fn set_report_cell_exact(
@@ -2066,4 +2563,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.8.0</VERS>
+// <VERS>END OF VERSION: 0.10.1</VERS>

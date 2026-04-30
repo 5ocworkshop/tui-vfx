@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.19.0</VERS>
+// <VERS>VERSION: 0.20.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.19.0: MINOR — add CRT sampler strict-native parity and rejection regressions.
+// <CLOG>0.20.0: MINOR — add target shader strict-native parity and rejection regressions.
+// 0.19.0: MINOR — add CRT sampler strict-native parity and rejection regressions.
 // 0.18.1: PATCH — reuse the native fail-on-fallback command helper in radial/wipe-corner rejection tests.
 // 0.18.0: MINOR — add radial and wipe-corner strict-native parity and rejection regressions.
 // 0.17.2: PATCH — cover invalid vignette applyTo rejection in strict-native mode.
@@ -24,6 +25,250 @@ use std::{
 };
 
 const RECURSIVE_DEBUG_FIXTURE_COUNT: i64 = 144;
+
+#[test]
+fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() {
+    for (recipe, recipe_id, effect_id) in [
+        (
+            "shaders/compositions/shader_focus_field_center_binding.json",
+            "debugShaderFocusFieldCenterBinding",
+            "shader.focusField",
+        ),
+        (
+            "shaders/compositions/shader_glisten_band_direction_blend_binding.json",
+            "debugShaderGlistenBandDirectionBlendBinding",
+            "shader.glistenBand",
+        ),
+        (
+            "shaders/compositions/shader_highlighter_runtime_bindings.json",
+            "debugShaderHighlighterRuntimeBindings",
+            "shader.highlighter",
+        ),
+        (
+            "shaders/compositions/shader_wayfinding_node_current_index_binding.json",
+            "debugShaderWayfindingNodeCurrentIndexBinding",
+            "shader.wayfindingNode",
+        ),
+        (
+            "shaders/primitives/shader_barber_pole.json",
+            "debugShaderBarberPole",
+            "shader.barberPole",
+        ),
+        (
+            "shaders/primitives/shader_diffusion_background.json",
+            "debugShaderDiffusionBackground",
+            "shader.diffusion",
+        ),
+        (
+            "shaders/primitives/shader_radar_sweep.json",
+            "debugShaderRadarSweep",
+            "shader.radar",
+        ),
+    ] {
+        let report = assert_native_backend_matches_ir_resolved_at_phase(
+            recipe_path(recipe),
+            recipe_id,
+            effect_id,
+            "0.35",
+            "render-backend native target shader blockers player cli",
+        );
+
+        assert_eq!(
+            report["compositionSpecSummary"]["styleStages"], 1,
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_target_shader_unsupported_shapes_json() {
+    for (effect_name, recipe_path_fragment, output_input_id) in [
+        (
+            "focus_field",
+            "shaders/compositions/shader_focus_field_center_binding.json",
+            "centerX",
+        ),
+        (
+            "glisten_band",
+            "shaders/compositions/shader_glisten_band_direction_blend_binding.json",
+            "direction",
+        ),
+        (
+            "highlighter",
+            "shaders/compositions/shader_highlighter_runtime_bindings.json",
+            "color",
+        ),
+        (
+            "wayfinding_node",
+            "shaders/compositions/shader_wayfinding_node_current_index_binding.json",
+            "currentIndex",
+        ),
+        (
+            "barber_pole",
+            "shaders/primitives/shader_barber_pole.json",
+            "applyTo",
+        ),
+        (
+            "diffusion",
+            "shaders/primitives/shader_diffusion_background.json",
+            "applyTo",
+        ),
+        (
+            "radar",
+            "shaders/primitives/shader_radar_sweep.json",
+            "applyTo",
+        ),
+    ] {
+        for (mutation_name, recipe) in [
+            (
+                "unsupported_input",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    Some(("unsupportedNativeField", unsupported_native_input())),
+                    None,
+                    None,
+                ),
+            ),
+            (
+                "unsupported_output",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    None,
+                    Some(serde_json::json!({
+                        "debugOutput": {
+                            "source": {
+                                "kind": "input",
+                                "id": output_input_id
+                            }
+                        }
+                    })),
+                    None,
+                ),
+            ),
+            (
+                "unsupported_scope",
+                unsupported_native_effect_shape_recipe(
+                    recipe_path_fragment,
+                    None,
+                    None,
+                    Some(serde_json::json!({
+                        "kind": "rowRange",
+                        "start": 0,
+                        "end": 1
+                    })),
+                ),
+            ),
+        ] {
+            let temp_root = std::env::temp_dir().join(format!(
+                "tui-vfx-native-{effect_name}-{mutation_name}-unsupported"
+            ));
+            let _ = fs::remove_dir_all(&temp_root);
+            fs::create_dir_all(&temp_root).expect("create temp unsupported shader fixture root");
+            let recipe_path = temp_root.join(format!("{effect_name}_{mutation_name}.json"));
+            fs::write(
+                &recipe_path,
+                serde_json::to_string_pretty(&recipe).expect("serialize unsupported shader recipe"),
+            )
+            .expect("write unsupported shader recipe");
+
+            let output = run_native_render_backend_with_fail_on_fallback(
+                recipe_path.display().to_string(),
+                "render-backend native unsupported shader player cli",
+            );
+
+            assert!(
+                !output.status.success(),
+                "{effect_name}/{mutation_name} unexpectedly succeeded"
+            );
+            assert!(
+                stderr(&output).contains("unsupportedNativeEffect"),
+                "{effect_name}/{mutation_name} stderr: {}",
+                stderr(&output)
+            );
+        }
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_native_target_shader_invalid_enum_values_json() {
+    for (effect_name, recipe_path_fragment, input_id, invalid_value) in [
+        (
+            "focus_field",
+            "shaders/compositions/shader_focus_field_center_binding.json",
+            "shape",
+            "triangle",
+        ),
+        (
+            "glisten_band",
+            "shaders/compositions/shader_glisten_band_direction_blend_binding.json",
+            "direction",
+            "diagonal",
+        ),
+        (
+            "highlighter_mode",
+            "shaders/compositions/shader_highlighter_runtime_bindings.json",
+            "mode",
+            "sparkle",
+        ),
+        (
+            "highlighter_direction",
+            "shaders/compositions/shader_highlighter_runtime_bindings.json",
+            "direction",
+            "diagonal",
+        ),
+        (
+            "barber_pole",
+            "shaders/primitives/shader_barber_pole.json",
+            "applyTo",
+            "invalidChannel",
+        ),
+        (
+            "diffusion",
+            "shaders/primitives/shader_diffusion_background.json",
+            "applyTo",
+            "invalidChannel",
+        ),
+        (
+            "radar",
+            "shaders/primitives/shader_radar_sweep.json",
+            "applyTo",
+            "invalidChannel",
+        ),
+    ] {
+        let temp_root = std::env::temp_dir().join(format!(
+            "tui-vfx-native-{effect_name}-{input_id}-invalid-enum"
+        ));
+        let _ = fs::remove_dir_all(&temp_root);
+        fs::create_dir_all(&temp_root).expect("create temp invalid shader enum fixture root");
+        let recipe = unsupported_native_effect_shape_recipe(
+            recipe_path_fragment,
+            Some((input_id, unsupported_native_enum_value(invalid_value))),
+            None,
+            None,
+        );
+        let recipe_path = temp_root.join(format!("{effect_name}_{input_id}_invalid_enum.json"));
+        fs::write(
+            &recipe_path,
+            serde_json::to_string_pretty(&recipe).expect("serialize invalid shader enum recipe"),
+        )
+        .expect("write invalid shader enum recipe");
+
+        let output = run_native_render_backend_with_fail_on_fallback(
+            recipe_path.display().to_string(),
+            "render-backend native invalid shader enum player cli",
+        );
+
+        assert!(
+            !output.status.success(),
+            "{effect_name}/{input_id} invalid enum unexpectedly succeeded"
+        );
+        assert!(
+            stderr(&output).contains("unsupportedNativeEffect"),
+            "{effect_name}/{input_id} stderr: {}",
+            stderr(&output)
+        );
+    }
+}
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_crt_sampler_blockers_json() {
@@ -4565,4 +4810,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.18.1</VERS>
+// <VERS>END OF VERSION: 0.20.0</VERS>
