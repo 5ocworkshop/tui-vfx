@@ -26,7 +26,7 @@ cargo run -q -p tui-vfx-player-cli -- migration-mapping-batch \
 Core gate results from this doc-closure pass:
 
 - validate-recipe: 144/144 valid, 0 invalid.
-- render-recipe: 144/144 rendered via the same canonical corpus count, 0 unsupported, 0 errors (the CLI emits the frame-shaped JSON report for this corpus in this working tree).
+- render-recipe: 144/144 rendered, 0 unsupported, 0 errors.
 - render-frame: 144/144 rendered, 0 unsupported, 0 errors.
 - fixture-qc: pass; 144 validated, 144 rendered, 0 unhandled fields, 0 unresolved adapter gaps, timeline smoke True, diff smoke True.
 - primitive-field-coverage: 908/908 used fields handled; 0 used-but-unhandled; 0 missing descriptor fields.

@@ -14,6 +14,10 @@ Reviewed only K2.18 documentation artifacts and index updates. Source code, test
 4. Update only the new-kernel index outside the new K2.18 docs.
 5. Re-run report, corpus, docs, and schema gates after writing.
 
+## Formal third-party review step
+
+Reviewer role: documentation closure reviewer, separated from implementation ownership. Scope was evidence conformance, path-level signoff, vocabulary safety, and verification accuracy for the K2.18 docs. No source or test files were changed during review.
+
 ## Formal review findings
 
 | Finding | Result | Fix or evidence |
@@ -38,7 +42,7 @@ Reviewed only K2.18 documentation artifacts and index updates. Source code, test
 Core gate results from this doc-closure pass:
 
 - validate-recipe: 144/144 valid, 0 invalid.
-- render-recipe: 144/144 rendered via the same canonical corpus count, 0 unsupported, 0 errors (the CLI emits the frame-shaped JSON report for this corpus in this working tree).
+- render-recipe: 144/144 rendered, 0 unsupported, 0 errors.
 - render-frame: 144/144 rendered, 0 unsupported, 0 errors.
 - fixture-qc: pass; 144 validated, 144 rendered, 0 unhandled fields, 0 unresolved adapter gaps, timeline smoke True, diff smoke True.
 - primitive-field-coverage: 908/908 used fields handled; 0 used-but-unhandled; 0 missing descriptor fields.
