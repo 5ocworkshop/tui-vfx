@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.45.0: MINOR — lower style.italicWindow into compositor ModifierWindowShader layers and remove backend style-stage emulation.
+// <CLOG>0.46.0: MINOR — lower style.moduloColumns into compositor LinearGradientShader layers scoped by StyleRegion::Modulo and remove backend style-stage emulation.
+// 0.45.0: MINOR — lower style.italicWindow into compositor ModifierWindowShader layers and remove backend style-stage emulation.
 // 0.44.0: MINOR — lower style.pulse into compositor PulseWaveShader layers and remove backend style-stage emulation.
 // 0.43.0: MINOR — lower style.glitch into compositor GlitchLinesShader layers and remove backend style-stage emulation.
 // 0.42.0: MINOR — lower style.neonFlicker into compositor NeonFlickerShader layers and remove backend style-stage emulation.
@@ -59,9 +60,9 @@ use tui_vfx_style::models::{
     FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader,
     GlistenDirection, GlitchLinesShader, Gradient, HighlighterApplyTo, HighlighterDirection,
     HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
-    LinearGradientShader, ModifierWindowShader, NeonFlickerShader, PulseWaveShader, RadarShader,
-    RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion, TextContrast, WaveDirection,
-    WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
+    LinearGradientShader, ModifierWindowShader, ModuloAxis, NeonFlickerShader, PulseWaveShader,
+    RadarShader, RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion, TextContrast,
+    WaveDirection, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -170,13 +171,6 @@ pub enum NativeContentStage {
 /// Native style transform stage owned by the compositor backend adapter.
 #[derive(Clone, Debug, PartialEq)]
 pub enum NativeStyleStage {
-    /// Apply foreground/background colors to modulo-selected columns.
-    ModuloColumns {
-        modulus: usize,
-        remainder: usize,
-        foreground: String,
-        background: String,
-    },
     /// Apply V2-compatible rainbow foreground cycling.
     Rainbow { rotation_speed: f64 },
     /// Apply player-compatible color fade styling to existing foreground/background channels.
@@ -547,7 +541,7 @@ fn lower_node_into_spec(
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
         "style.pulse" => lower_style_pulse(node, spec, request, warnings),
         "style.italicWindow" => lower_style_italic_window(node, spec, request, warnings),
-        "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
+        "style.moduloColumns" => lower_style_modulo_columns(node, spec, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, spec, request, warnings),
         "style.rainbow" => lower_style_rainbow(node, style_stages, request, warnings),
         "style.glitch" => lower_style_glitch(node, spec, request, warnings),
@@ -1759,7 +1753,7 @@ fn eased_style_progress(node: &NodeSpec, request: &PlayerRenderBackendRequest) -
 
 fn lower_style_modulo_columns(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -1778,21 +1772,60 @@ fn lower_style_modulo_columns(
             reason: "Effect `style.moduloColumns` requires a modulo-columns scope for compositor-native style-stage lowering.".to_string(),
         };
     };
-    style_stages.push(NativeStyleStage::ModuloColumns {
-        modulus,
-        remainder,
-        foreground: color_label_from_config(
-            color_input(node, request, "foreground").unwrap_or(ColorConfig::Cyan),
-        ),
-        background: color_label_from_config(color_input(node, request, "background").unwrap_or(
-            ColorConfig::Rgb {
-                r: 15,
-                g: 40,
-                b: 55,
-            },
-        )),
-    });
+    let (Ok(modulus), Ok(remainder)) = (u16::try_from(modulus), u16::try_from(remainder)) else {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `style.moduloColumns` scope modulus/remainder exceed compositor StyleRegion::Modulo u16 coordinate limits.".to_string(),
+        };
+    };
+    let region = StyleRegion::Modulo {
+        axis: ModuloAxis::Vertical,
+        modulus: BindableU16::from(modulus),
+        remainder: BindableU16::from(remainder),
+    };
+    let foreground = resolved_color_input(node, request, "foreground").unwrap_or(ColorConfig::Cyan);
+    let background =
+        resolved_color_input(node, request, "background").unwrap_or(ColorConfig::Rgb {
+            r: 15,
+            g: 40,
+            b: 55,
+        });
+
+    spec.shader_layers.push(solid_color_shader_layer(
+        foreground,
+        LinearGradientApplyTo::Foreground,
+        region.clone(),
+    ));
+    spec.shader_layers.push(solid_color_shader_layer(
+        background,
+        LinearGradientApplyTo::Background,
+        region,
+    ));
     NodeLoweringOutcome::Lowered { warnings }
+}
+
+/// Build a solid style fill with the existing spatial shader vocabulary.
+///
+/// The compositor IR does not currently expose a dedicated solid-color shader,
+/// so a two-stop LinearGradient with identical colors represents an intentional
+/// constant fill rather than positional gradient motion.
+fn solid_color_shader_layer(
+    color: ColorConfig,
+    apply_to: LinearGradientApplyTo,
+    region: StyleRegion,
+) -> ShaderLayerSpec {
+    let color = tui_vfx_types::Color::from(color);
+    ShaderLayerSpec {
+        shader: SpatialShaderType::LinearGradient(LinearGradientShader {
+            gradient: Gradient {
+                stops: vec![(0.0, color), (1.0, color)],
+                space: ColorSpace::Rgb,
+            },
+            angle_deg: 0.0,
+            apply_to,
+            intensity: 1.0,
+        }),
+        region,
+    }
 }
 
 fn lower_style_neon_flicker(

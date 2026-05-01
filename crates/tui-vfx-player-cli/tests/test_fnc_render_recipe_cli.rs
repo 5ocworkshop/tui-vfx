@@ -5021,15 +5021,15 @@ fn test_fnc_cli_renders_compositor_backend_native_residual_style_content_blocker
             "styles/style_modulo_columns_period.json",
             "debugStyleModuloColumnsPeriod",
             "style.moduloColumns",
-            "styleStages",
-            1,
+            "shaderLayers",
+            2,
         ),
         (
             "styles/style_modulo_vertical_every_fourth_column_offset.json",
             "debugStyleModuloVerticalEveryFourthColumnOffset",
             "style.moduloColumns",
-            "styleStages",
-            1,
+            "shaderLayers",
+            2,
         ),
         (
             "content/content_dissolve.json",
@@ -5108,6 +5108,43 @@ fn test_fnc_cli_renders_compositor_backend_native_residual_style_content_blocker
             report["compositionSpecSummary"][summary_key], expected_stage_count,
             "{recipe}"
         );
+        if effect_id == "style.moduloColumns" {
+            assert_eq!(
+                report["compositionSpecSummary"]["styleStages"], 0,
+                "style.moduloColumns must not leave effect logic in backend style stages: {recipe}"
+            );
+            let (modulus, expected_foreground, expected_background) =
+                if recipe.contains("every_fourth") {
+                    (4, "rgba(0,255,255,255)", "rgba(15,40,55,255)")
+                } else {
+                    (3, "rgba(80,220,255,255)", "rgba(10,25,40,255)")
+                };
+            let styled_cells = report["styledCells"]
+                .as_array()
+                .expect("styled cells array for style.moduloColumns");
+            let matching_selected_columns = styled_cells
+                .iter()
+                .filter(|cell| {
+                    cell["x"]
+                        .as_u64()
+                        .is_some_and(|x| x as usize % modulus == 1)
+                        && cell["foreground"] == expected_foreground
+                        && cell["background"] == expected_background
+                })
+                .count();
+            assert!(
+                matching_selected_columns > 0,
+                "style.moduloColumns must color selected x % {modulus} == 1 columns: {recipe}"
+            );
+            assert!(
+                styled_cells.iter().all(|cell| {
+                    cell["x"].as_u64().is_none_or(|x| x as usize % modulus == 1)
+                        || cell["foreground"] != expected_foreground
+                        || cell["background"] != expected_background
+                }),
+                "style.moduloColumns must not apply modulo colors outside selected columns: {recipe}"
+            );
+        }
         assert!(
             report["loweredEffectIds"]
                 .as_array()

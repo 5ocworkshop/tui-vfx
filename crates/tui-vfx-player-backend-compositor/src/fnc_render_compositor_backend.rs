@@ -261,18 +261,6 @@ fn scene_ir_with_native_content_stages(
     }
     for stage in &lowered_spec.style_stages {
         match stage {
-            NativeStyleStage::ModuloColumns {
-                modulus,
-                remainder,
-                foreground,
-                background,
-            } => apply_modulo_columns_style_stage(
-                &mut staged,
-                *modulus,
-                *remainder,
-                foreground,
-                background,
-            ),
             NativeStyleStage::Rainbow { rotation_speed } => {
                 apply_rainbow_style_stage(&mut staged, *rotation_speed)
             }
@@ -702,25 +690,6 @@ fn apply_slide_shift_content_stage(
     }
     report.rows = rows;
     sync_styled_cells_to_rows(report);
-}
-
-fn apply_modulo_columns_style_stage(
-    report: &mut PlayerRenderIrReport,
-    modulus: usize,
-    remainder: usize,
-    foreground: &str,
-    background: &str,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let modulus = modulus.max(1);
-    for y in 0..height {
-        for x in 0..width {
-            if x % modulus == remainder {
-                set_report_cell_style(report, x, y, Some(foreground), Some(background), None);
-            }
-        }
-    }
 }
 
 fn apply_rainbow_style_stage(report: &mut PlayerRenderIrReport, _rotation_speed: f64) {
