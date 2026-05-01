@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.35.0</VERS>
+// <VERS>VERSION: 0.36.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.35.0: MINOR — remove backend-owned wayfinding-node shader rendering after wayfindingNode moved to compositor ShaderLayerSpec.
+// <CLOG>0.36.0: MINOR — remove backend-owned barber-pole shader rendering after barberPole moved to compositor ShaderLayerSpec.
+// 0.35.0: MINOR — remove backend-owned wayfinding-node shader rendering after wayfindingNode moved to compositor ShaderLayerSpec.
 // 0.34.0: MINOR — remove backend-owned focus-field shader rendering after focusField moved to compositor ShaderLayerSpec.
 // 0.33.0: MINOR — remove backend-owned glisten-band shader rendering after glistenBand moved to compositor ShaderLayerSpec.
 // 0.32.0: MINOR — remove backend-owned highlighter shader rendering after highlighter moved to compositor ShaderLayerSpec.
@@ -330,26 +331,6 @@ fn scene_ir_with_native_content_stages(
             NativeStyleStage::ItalicWindow { start, end } => {
                 apply_italic_window_style_stage(&mut staged, *start, *end)
             }
-            NativeStyleStage::BarberPole {
-                stripe_color,
-                background_color,
-                stripe_width,
-                gap_width,
-                angle_deg,
-                speed,
-                apply_to,
-            } => apply_barber_pole_style_stage(
-                &mut staged,
-                BarberPoleStyleInputs {
-                    stripe_color,
-                    background_color,
-                    stripe_width: *stripe_width,
-                    gap_width: *gap_width,
-                    angle_deg: *angle_deg,
-                    speed: *speed,
-                    apply_to,
-                },
-            ),
             NativeStyleStage::Diffusion {
                 color,
                 center_x,
@@ -1013,40 +994,6 @@ fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64
     for y in 0..height {
         for x in 0..width {
             set_report_cell_style(report, x, y, None, None, Some("italic"));
-        }
-    }
-}
-
-struct BarberPoleStyleInputs<'a> {
-    stripe_color: &'a str,
-    background_color: &'a str,
-    stripe_width: usize,
-    gap_width: usize,
-    angle_deg: f64,
-    speed: f64,
-    apply_to: &'a str,
-}
-
-fn apply_barber_pole_style_stage(
-    report: &mut PlayerRenderIrReport,
-    inputs: BarberPoleStyleInputs<'_>,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let period = inputs.stripe_width + inputs.gap_width;
-    let angle = inputs.angle_deg.to_radians();
-    let phase_offset =
-        (report.loop_t.unwrap_or(report.phase_t) * inputs.speed * period as f64).round();
-    for y in 0..height {
-        for x in 0..width {
-            let projection = x as f64 * angle.cos() + y as f64 * angle.sin() + phase_offset;
-            let position = projection.rem_euclid(period as f64) as usize;
-            let color = if position < inputs.stripe_width {
-                inputs.stripe_color
-            } else {
-                inputs.background_color
-            };
-            set_report_shader_cell(report, x, y, inputs.apply_to, color, "ShaderBarberPole");
         }
     }
 }

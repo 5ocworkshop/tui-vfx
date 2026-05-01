@@ -671,7 +671,10 @@ impl From<&crate::models::v3::VfxStripeMotionShader> for SpatialShaderType {
                 speed: *speed,
                 stripe_width: *stripe_width,
                 gap_width: *gap_width,
+                angle_deg: 0.0,
                 color: *color,
+                background_color: None,
+                apply_to: Default::default(),
             }),
         }
     }

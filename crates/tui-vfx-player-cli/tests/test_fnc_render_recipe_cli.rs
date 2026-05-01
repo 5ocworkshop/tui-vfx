@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.38.0</VERS>
+// <VERS>VERSION: 0.39.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.38.0: MINOR — lock shader.wayfindingNode compositor shader-layer lowering.
+// <CLOG>0.39.0: MINOR — lock shader.barberPole compositor shader-layer lowering.
+// 0.38.0: MINOR — lock shader.wayfindingNode compositor shader-layer lowering.
 // 0.37.0: MINOR — lock shader.focusField compositor shader-layer lowering.
 // 0.36.0: MINOR — lock shader.glistenBand compositor shader-layer lowering.
 // 0.35.0: MINOR — lock shader.highlighter compositor shader-layer lowering.
@@ -146,31 +147,56 @@ fn test_fnc_cli_capture_cells_writes_procedural_recipe_metadata() {
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() {
-    for (recipe, recipe_id, effect_id) in [
-        (
-            "shaders/primitives/shader_barber_pole.json",
-            "debugShaderBarberPole",
-            "shader.barberPole",
-        ),
-        (
-            "shaders/primitives/shader_diffusion_background.json",
-            "debugShaderDiffusionBackground",
-            "shader.diffusion",
-        ),
-    ] {
-        let report = assert_native_backend_matches_ir_resolved_at_phase(
-            recipe_path(recipe),
-            recipe_id,
-            effect_id,
-            "0.35",
-            "render-backend native target shader blockers player cli",
-        );
+    let recipe = "shaders/primitives/shader_diffusion_background.json";
+    let report = assert_native_backend_matches_ir_resolved_at_phase(
+        recipe_path(recipe),
+        "debugShaderDiffusionBackground",
+        "shader.diffusion",
+        "0.35",
+        "render-backend native target shader blockers player cli",
+    );
 
-        assert_eq!(
-            report["compositionSpecSummary"]["styleStages"], 1,
-            "{recipe}"
-        );
-    }
+    assert_eq!(
+        report["compositionSpecSummary"]["styleStages"], 1,
+        "{recipe}"
+    );
+}
+
+#[test]
+fn test_fnc_cli_lowers_barber_pole_shader_to_compositor_shader_layer_not_style_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("shaders/primitives/shader_barber_pole.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native barber-pole shader compositor layer player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugShaderBarberPole");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["loweredEffectIds"],
+        serde_json::json!(["shader.barberPole"])
+    );
 }
 
 #[test]

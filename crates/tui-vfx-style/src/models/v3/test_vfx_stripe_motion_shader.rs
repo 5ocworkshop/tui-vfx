@@ -12,7 +12,10 @@ fn converts_barber_pole_into_v3_stripe_motion_surface() {
         speed: 1.5,
         stripe_width: 3,
         gap_width: 2,
+        angle_deg: 0.0,
         color: ColorConfig::Red,
+        background_color: None,
+        apply_to: Default::default(),
     };
 
     let converted = VfxStripeMotionShader::from(&legacy);

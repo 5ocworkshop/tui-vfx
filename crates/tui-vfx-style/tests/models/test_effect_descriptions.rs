@@ -58,7 +58,10 @@ fn test_spatial_shader_name_returns_nonempty() {
             speed: 1.0,
             stripe_width: 2,
             gap_width: 2,
+            angle_deg: 0.0,
             color: ColorConfig::Red,
+            background_color: None,
+            apply_to: Default::default(),
         }),
         SpatialShaderType::BorderSweep(BorderSweepShader {
             speed: 1.0,
@@ -120,7 +123,10 @@ fn test_spatial_shader_description_returns_nonempty() {
             speed: 1.0,
             stripe_width: 2,
             gap_width: 2,
+            angle_deg: 0.0,
             color: ColorConfig::Red,
+            background_color: None,
+            apply_to: Default::default(),
         }),
         SpatialShaderType::BorderSweep(BorderSweepShader {
             speed: 1.0,

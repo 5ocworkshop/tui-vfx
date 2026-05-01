@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.38.0</VERS>
+// <VERS>VERSION: 0.39.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.38.0: MINOR — lower shader.wayfindingNode into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// <CLOG>0.39.0: MINOR — lower shader.barberPole into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// 0.38.0: MINOR — lower shader.wayfindingNode into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.37.0: MINOR — lower shader.focusField into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.36.0: MINOR — lower shader.glistenBand into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.35.0: MINOR — lower shader.highlighter into compositor ShaderLayerSpec and reject unsupported textContrast blend weights.
@@ -47,12 +48,12 @@ use tui_vfx_player::{
     fnc_resolve_value_source::resolve_value_source_with_graph_values,
 };
 use tui_vfx_style::models::{
-    BorderSweepShader, ColorConfig, ColorSpace, FocusFieldApplyTo, FocusFieldShader,
-    FocusFieldShape, GlistenApplyTo, GlistenBandShader, GlistenDirection, Gradient,
-    HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
-    HighlighterShader, LinearGradientApplyTo, LinearGradientShader, RadarShader, RevealWipeShader,
-    SpatialShaderType, StyleRegion, TextContrast, WayfindingNode, WayfindingNodeApplyTo,
-    WayfindingNodeShader,
+    BarberPoleApplyTo, BarberPoleShader, BorderSweepShader, ColorConfig, ColorSpace,
+    FocusFieldApplyTo, FocusFieldShader, FocusFieldShape, GlistenApplyTo, GlistenBandShader,
+    GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
+    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
+    RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion, TextContrast, WayfindingNode,
+    WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -210,16 +211,6 @@ pub enum NativeStyleStage {
     },
     /// Apply player-compatible italic-window styling.
     ItalicWindow { start: f64, end: f64 },
-    /// Apply player-compatible barber-pole shader styling.
-    BarberPole {
-        stripe_color: String,
-        background_color: String,
-        stripe_width: usize,
-        gap_width: usize,
-        angle_deg: f64,
-        speed: f64,
-        apply_to: String,
-    },
     /// Apply player-compatible diffusion shader styling.
     Diffusion {
         color: String,
@@ -581,7 +572,7 @@ fn lower_node_into_spec(
         "shader.focusField" => lower_focus_field_shader(node, spec, request, warnings),
         "shader.glistenBand" => lower_glisten_band_shader(node, spec, request, warnings),
         "shader.wayfindingNode" => lower_wayfinding_node_shader(node, spec, request, warnings),
-        "shader.barberPole" => lower_barber_pole_shader(node, style_stages, request, warnings),
+        "shader.barberPole" => lower_barber_pole_shader(node, spec, request, warnings),
         "shader.diffusion" => lower_diffusion_shader(node, style_stages, request, warnings),
         "shader.radar" => lower_radar_shader(node, spec, request, warnings),
         "style.colorFade" => lower_style_color_fade(node, style_stages, request, warnings),
@@ -2311,7 +2302,7 @@ fn lower_glisten_band_shader(
     let color = resolved_color_input(node, request, "color").unwrap_or(ColorConfig::White);
     spec.shader_layers.push(ShaderLayerSpec {
         shader: SpatialShaderType::GlistenBand(GlistenBandShader {
-            speed: resolved_number_input(node, request, "speed", 1.0).max(0.0) as f32,
+            speed: resolved_number_input(node, request, "speed", 0.0).max(0.0) as f32,
             speed_binding: signal_source_id(node, "speed").map(|id| id.as_str().to_string()),
             band_width: match glisten_band_width_input(node, request) {
                 Ok(band_width) => band_width,
@@ -2401,7 +2392,7 @@ fn lower_wayfinding_node_shader(
 }
 fn lower_barber_pole_shader(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2422,14 +2413,7 @@ fn lower_barber_pole_shader(
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    let apply_to = match strict_enum_input(
-        node,
-        request,
-        "applyTo",
-        "background",
-        &["foreground", "background", "both"],
-        "shader.barberPole",
-    ) {
+    let apply_to = match barber_pole_apply_to_input(node, request) {
         Ok(apply_to) => apply_to,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
@@ -2438,32 +2422,34 @@ fn lower_barber_pole_shader(
         g: 80,
         b: 80,
     });
-    style_stages.push(NativeStyleStage::BarberPole {
-        stripe_color: color_label_from_config(
-            resolved_color_input(node, request, "stripeColor").unwrap_or(base_color),
-        ),
-        background_color: color_label_from_config(
-            resolved_color_input(node, request, "backgroundColor").unwrap_or(ColorConfig::Rgb {
-                r: 40,
-                g: 10,
-                b: 20,
-            }),
-        ),
-        stripe_width: resolved_integer_input(node, request, "stripeWidth", 3).max(1) as usize,
-        gap_width: resolved_integer_input(
-            node,
-            request,
-            "gapWidth",
-            resolved_integer_input(node, request, "stripeWidth", 3),
-        )
-        .max(1) as usize,
-        angle_deg: resolved_number_input(node, request, "angleDeg", 45.0),
-        speed: resolved_number_input(node, request, "speed", 0.0),
-        apply_to,
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::BarberPole(BarberPoleShader {
+            speed: resolved_number_input(node, request, "speed", 0.0).max(0.0) as f32,
+            stripe_width: resolved_u16_input(node, request, "stripeWidth", 3).max(1),
+            gap_width: resolved_u16_input(
+                node,
+                request,
+                "gapWidth",
+                resolved_u16_input(node, request, "stripeWidth", 3),
+            )
+            .max(1),
+            angle_deg: resolved_number_input(node, request, "angleDeg", 45.0) as f32,
+            color: resolved_color_input(node, request, "stripeColor").unwrap_or(base_color),
+            background_color: Some(
+                resolved_color_input(node, request, "backgroundColor").unwrap_or(
+                    ColorConfig::Rgb {
+                        r: 40,
+                        g: 10,
+                        b: 20,
+                    },
+                ),
+            ),
+            apply_to,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
-
 fn lower_diffusion_shader(
     node: &NodeSpec,
     style_stages: &mut Vec<NativeStyleStage>,
@@ -2553,7 +2539,7 @@ fn lower_radar_shader(
                 g: 255,
                 b: 160,
             }),
-            speed: resolved_number_input(node, request, "speed", 1.0).max(0.0) as f32,
+            speed: resolved_number_input(node, request, "speed", 0.0).max(0.0) as f32,
             tail_length: (resolved_number_input(node, request, "tailLength", 0.25).clamp(0.01, 1.0)
                 * std::f64::consts::TAU) as f32,
         }),
@@ -3708,6 +3694,20 @@ fn highlighter_direction_input(
         Some("bottomToTop" | "bottom_to_top") => Ok(HighlighterDirection::BottomUp),
         Some(value) => Err(format!(
             "Effect `shader.highlighter` uses `direction` value `{value}` that has no compositor-native HighlighterShader equivalent."
+        )),
+    }
+}
+
+fn barber_pole_apply_to_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> Result<BarberPoleApplyTo, String> {
+    match enum_input(node, request, "applyTo") {
+        Some("foreground") => Ok(BarberPoleApplyTo::Foreground),
+        Some("background") | None => Ok(BarberPoleApplyTo::Background),
+        Some("both") => Ok(BarberPoleApplyTo::Both),
+        Some(value) => Err(format!(
+            "Effect `shader.barberPole` uses `applyTo` value `{value}` that has no compositor-native BarberPoleShader equivalent."
         )),
     }
 }

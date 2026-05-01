@@ -45,7 +45,10 @@ fn lowers_barber_pole_into_composed_stripe_motion_family() {
         speed: 1.0,
         stripe_width: 2,
         gap_width: 2,
+        angle_deg: 0.0,
         color: ColorConfig::Red,
+        background_color: None,
+        apply_to: Default::default(),
     });
 
     assert!(matches!(

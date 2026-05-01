@@ -437,7 +437,10 @@ fn extract_shader_metadata() -> HashMap<String, EffectMetadata> {
             speed: 1.0,
             stripe_width: 2,
             gap_width: 2,
+            angle_deg: 0.0,
             color: ColorConfig::Blue,
+            background_color: None,
+            apply_to: Default::default(),
         }),
         SpatialShaderType::Radar(RadarShader {
             speed: 1.0,

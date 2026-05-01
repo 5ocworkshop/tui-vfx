@@ -90,7 +90,7 @@ pub use cls_affordance_wake_shader::{
     AffordanceWakeApplyTo, AffordanceWakeShader, AffordanceWakeZone,
 };
 pub use cls_ambient_occlusion_shader::{AOEdges, AmbientOcclusionShader};
-pub use cls_barber_pole_shader::BarberPoleShader;
+pub use cls_barber_pole_shader::{BarberPoleApplyTo, BarberPoleShader};
 pub use cls_bevel_shader::{BevelShader, LightDirection};
 pub use cls_bindable_string::BindableString;
 pub use cls_bindable_u16::BindableU16;

@@ -277,7 +277,10 @@ fn test_render_pipeline_with_spec_matches_grouped_v3_options_across_representati
         speed: 1.0,
         stripe_width: 2,
         gap_width: 2,
+        angle_deg: 0.0,
         color: ColorConfig::Red,
+        background_color: None,
+        apply_to: Default::default(),
     };
     assert_grouped_family_matches_legacy_runtime(
         stripe.clone(),

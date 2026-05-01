@@ -117,7 +117,10 @@ fn roundtrips_stripe_motion_family_back_to_legacy_shader() {
         speed: 1.0,
         stripe_width: 2,
         gap_width: 2,
+        angle_deg: 0.0,
         color: crate::models::ColorConfig::Red,
+        background_color: None,
+        apply_to: Default::default(),
     });
     let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
 
@@ -252,7 +255,10 @@ fn roundtrips_all_individual_spatial_shader_variants_back_to_legacy_shader() {
         speed: 1.0,
         stripe_width: 2,
         gap_width: 2,
+        angle_deg: 0.0,
         color: ColorConfig::Red,
+        background_color: None,
+        apply_to: Default::default(),
     }));
 }
 
