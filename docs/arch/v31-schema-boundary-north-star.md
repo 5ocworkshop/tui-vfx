@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/v31-schema-boundary-north-star.md</FILE> - <DESC>North-star architecture for schema-owned crate boundaries, data models, and primitive workflow responsibilities</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <VERS>VERSION: 0.7.0</VERS> -->
 <!-- <WCTX>Top-down v3.1 architecture discussion: validate recipes at load time, then pass canonical v3.1 structures through to compositor-next.</WCTX> -->
-<!-- <CLOG>0.6.0: MINOR — state the pure load-time validation and direct v3.1 pass-through compositor-next target; reject bridge/shim growth.
+<!-- <CLOG>0.7.0: MINOR — record typed transitions as a schema-audit candidate after vertical migration evidence.
+0.6.0: MINOR — state the pure load-time validation and direct v3.1 pass-through compositor-next target; reject bridge/shim growth.
 0.5.0: MINOR — distinguish presentation cadence, semantic update cadence, and absolute sample time in boundary model.
 0.4.0: MINOR — document source.indexedField as zero-schema from-scratch primitive validation case.
 0.3.0: MINOR — add descriptor/schema hindsight audit principle.
@@ -459,6 +460,8 @@ The purpose is schema hardening, not unbounded redesign. Accepted common concept
 
 Examples of concepts worth auditing include progress, apply-to routing, color channels, direction/axis/edge geometry, seed, density, speed/frequency, presentation cadence, semantic update cadence, absolute elapsed sample time, radius/falloff/feather, threshold, intensity, glyph sets, and bindability.
 
+Typed transitions are a named audit candidate. Classic transitions such as crossfade, wipe, iris, push, dissolve, morph, stippled, and braille may deserve first-class recipe/schema representation because they describe binary temporal A→B intent, not just a generic unary cell effect. The audit should preserve primitive-level implementations while evaluating whether author-facing typed transitions improve validation, theming, optimization, documentation, AI generation, and schema diet opportunities.
+
 ## Timing Boundary Rule
 
 Do not use `fps` as a catch-all schema concept. The boundary model should distinguish:
@@ -539,4 +542,4 @@ Validation proves every boundary.
 ```
 
 <!-- <FILE>docs/arch/v31-schema-boundary-north-star.md</FILE> - <DESC>North-star architecture for schema-owned crate boundaries, data models, and primitive workflow responsibilities</DESC> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.7.0</VERS> -->

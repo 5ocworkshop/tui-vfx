@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>VERSION: 1.0.0</VERS> -->
+<!-- <VERS>VERSION: 1.1.0</VERS> -->
 <!-- <WCTX>v3.1 north-star execution plan: validate recipes at load time, then pass canonical v3.1 structures through to copied compositor-next via vertical slices.</WCTX> -->
-<!-- <CLOG>1.0.0: MINOR — record shader.focusField as the fourth direct v3.1 slice and close the first two-agent parallel commit boundary.
+<!-- <CLOG>1.1.0: MINOR — add typed transitions to the deferred schema-audit/schema-diet list.
+1.0.0: MINOR — record shader.focusField as the fourth direct v3.1 slice and close the first two-agent parallel commit boundary.
 0.9.0: MINOR — record shader.glistenBand as the third direct v3.1 slice and first >500 LOC cohesion checkpoint.
 0.8.0: MINOR — record the shared loader/player-next path and second shader.highlighter vertical slice.
 0.7.0: MINOR — clarify the pure v3.1 target: load-time recipe validation, then direct canonical v3.1 flow to compositor-next with no bridge/shim investment.
@@ -554,6 +555,8 @@ Candidate common contracts:
 
 Timing/cadence is a required audit topic. Do not collapse it into `fps`: presentation cadence, semantic update cadence, and sample time are different contracts. The Madeira flag fixtures are the reference case because `source.procedural` flag/fireworks motion advances from absolute elapsed time, while authored loopback ramps also use elapsed time to honor their duration.
 
+Typed transitions are also a required audit discussion item. The migration should keep transition implementations at the primitive/runtime level, but the schema audit should evaluate promoting author-facing transitions to first-class typed recipe/schema citizens instead of requiring authors to hand-chain masks, blends, easing signals, and source A/B routing. Candidate transition names from the transition demo are `crossfade`, `wipe`, `iris`, `push`, `dissolve`, `morph`, `stippled`, and `braille`. The audit should evaluate authorability, load-time validation, compositor optimization/dirty-region hints, discoverability, documentation, theme override/re-skinning, AI authoring safety, versionability, scope composition, runtime bindings, duration/easing, focal/direction parameters, and whether the shape should be a descriptor family (`transition.iris`) or enum under a transition step.
+
 Deliverables:
 
 - `docs/arch/v31-primitive-schema-hindsight-audit.md` for human-readable findings and decisions.
@@ -1039,4 +1042,4 @@ Only resume broad recipe migration on signed-off primitives.
 ```
 
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>END OF VERSION: 1.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.1.0</VERS> -->

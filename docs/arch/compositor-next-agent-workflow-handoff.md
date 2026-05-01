@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.3.0</VERS> -->
+<!-- <VERS>VERSION: 0.4.0</VERS> -->
 <!-- <WCTX>Compositor-next execution handoff: warmed low-level coding agents implement vertical slices while the lead reviews, verifies, documents, and commits.</WCTX> -->
-<!-- <CLOG>0.3.0: MINOR — advance scoreboard after shader.focusField integration and pause with no active slice per user instruction.
+<!-- <CLOG>0.4.0: MINOR — add typed transitions as a deferred schema-audit discussion item.
+0.3.0: MINOR — advance scoreboard after shader.focusField integration and pause with no active slice per user instruction.
 0.2.0: MINOR — advance scoreboard after shader.glistenBand integration and note focusField as the remaining active worktree.
 0.1.0: INIT — document the repeatable two-agent vertical-slice workflow, scoreboard, active worktrees, review gates, and restart instructions.</CLOG> -->
 
@@ -426,6 +427,27 @@ Should v3.1 recipe loading/playback eventually live in:
 
 Current rule while deferred: keep one implementation of v3.1 acceptance logic.
 Do not duplicate loader rules in player-next, player-ui, or any bridge layer.
+
+## Schema Audit Discussion List
+
+Deferred topics to discuss and likely act on during the post-migration schema audit:
+
+1. **Typed transitions as recipe/schema citizens.** Keep transition kernels at the
+   primitive/runtime level, but consider elevating author-facing transitions into
+   typed schema entries such as `transition.crossfade`, `transition.wipe`,
+   `transition.iris`, `transition.push`, `transition.dissolve`,
+   `transition.morph`, `transition.stippled`, and `transition.braille`.
+   Rationale: authors, themes, validators, documentation, compositor dirty-region
+   hints, and AI generation all benefit from named transition intent instead of
+   forcing every recipe to assemble masks/signals/blends/easing chains by hand.
+   The audit should decide whether these are descriptor IDs, enum variants under
+   a transition descriptor family, or theme-token references to transition
+   descriptors. It should also decide how transition scope, duration/easing,
+   focal/direction parameters, runtime bindings, and A→B source semantics fit
+   without bloating the base primitive schema.
+
+Do not interrupt the current vertical primitive migration for this discussion;
+record evidence and revisit it when the schema audit/schema-diet pass begins.
 
 ## Active Queue
 
