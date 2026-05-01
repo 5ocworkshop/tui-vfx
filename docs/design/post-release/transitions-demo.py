@@ -1,7 +1,7 @@
 # <FILE>docs/design/post-release/transitions-demo.py</FILE> - <DESC>Six classic transition primitives (crossfade, wipe, iris, push, dissolve/scatter, morph) demonstrated by cycling between two scenes (Day / Night), with six Penner easing functions selectable orthogonally. Both scenes share the same mountain silhouette so the eye can anchor across the transition while the sky gradient, sun-or-moon, and stars-or-empty switch out. Each transition is a single per-cell function over two precomputed half-cell buffers (A and B); compositing back into the output is therefore trivially parallel and cell-local, which is why these are cheap at 60 Hz even with full-screen redraws. Wipe and Push accept a direction parameter (left, right, up, down, diagonal). Iris reveals from a configurable focal point. Morph implements a radial pinch warp combined with crossfade — both buffers are sampled at distorted coordinates that bulge maximally at progress=0.5 then settle back. Easing curves are applied to the raw progress value before it reaches the transition function, so any easing × any transition combination works.</DESC>
-# <VERS>VERSION: 0.4.0</VERS>
-# <WCTX>Add an eighth transition primitive — braille — that operates at the dot level (8 dots per terminal cell via U+2800..U+28FF) for 8× sub-cell particle density vs the existing cell-level transitions. Emits braille glyphs with fg=B-color and bg=A-color per cell, and exposes four sub-variants (dissolve / rain / typewriter / shimmer) cycled with the 'b' key, which also auto-selects the braille slot. Render path now dispatches between half-cell ▌ emit and per-cell glyph emit; scope composite handles the mixed case (per-cell braille inside rect, ▌-converted a_buf outside) for clean composition with the toast model.</WCTX>
-# <CLOG>0.4.0: add four braille variants — dissolve (per-dot noise threshold), rain (dots fill top-down with per-cell stagger), typewriter (dots reveal in reading order across all cells), shimmer (frame-rotating per-dot mask gives sparkle); single 'braille' slot (transition #8) with 'b' key cycling variant and auto-selecting slot if not active; new BRAILLE_NOISE grid (8 thresholds × W × SCENE_H) and _BRAILLE_BITS table for (dot_x, dot_y) → bit lookup. Adds _emit_per_cell(), _half_cell_to_per_cell(), and _scope_composite_braille() so braille works both at full-screen and inside the scope rect over a ▌-emitted surround. HEADER_H 6→7 and SCENE_H 12→11 to fit a Braille variant selector row in the header.</CLOG>
+# <VERS>VERSION: 0.4.1</VERS>
+# <WCTX>Fix '8' key not switching to the braille slot — the key-accept tuple was left at ("1"..."7") when TRANSITION_ORDER grew to 8 entries in v0.4.0, so the user could see "▶8:brail" in the header but pressing 8 was a silent no-op. Added "8" to the tuple; the existing idx < len(TRANSITION_ORDER) guard already supports it.</WCTX>
+# <CLOG>0.4.1: add "8" to the transition key-accept tuple in the main loop's input handler. v0.4.0 added the braille slot to TRANSITION_ORDER and rendered "▶8:brail" in the Type line, but left the input check at ("1"..."7"), so pressing 8 was silently ignored. The 'b' key still works to auto-select braille; this fix makes the 8 numeric key consistent with the other transitions.</CLOG>
 
 """
 Transitions demo — six classic primitives over two scenes.
@@ -1242,7 +1242,7 @@ def main():
                         break
                     if key in ("q", "Q"):
                         return
-                    if key in ("1", "2", "3", "4", "5", "6", "7"):
+                    if key in ("1", "2", "3", "4", "5", "6", "7", "8"):
                         idx = int(key) - 1
                         if idx < len(TRANSITION_ORDER):
                             state['transition'] = TRANSITION_ORDER[idx]
@@ -1387,4 +1387,4 @@ if __name__ == "__main__":
     main()
 
 # <FILE>docs/design/post-release/transitions-demo.py</FILE>
-# <VERS>END OF VERSION: 0.4.0</VERS>
+# <VERS>END OF VERSION: 0.4.1</VERS>
