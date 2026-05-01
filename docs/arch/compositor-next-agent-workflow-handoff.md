@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>Compositor-next execution handoff: warmed low-level coding agents implement vertical slices while the lead reviews, verifies, documents, and commits.</WCTX> -->
-<!-- <CLOG>0.5.0: MINOR — sign off shader.borderSweep and record active parallel slice queue.
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>Compositor-next execution handoff: paused parallel slice work is preserved while integrated v3.1 slices are corrected into OFPF-sized modules.</WCTX> -->
+<!-- <CLOG>0.6.0: MINOR — record OFPF structural correction checkpoint and preserved paused slice worktrees.
+0.5.0: MINOR — sign off shader.borderSweep and record active parallel slice queue.
 0.4.0: MINOR — add typed transitions as a deferred schema-audit discussion item.</CLOG> -->
 
 # Compositor-Next Agent Workflow Handoff
@@ -63,8 +64,8 @@ Human-facing progress banner:
 ║ v3.1 DIRECT MIGRATION SCOREBOARD                  ║
 ╠════════════════════════════════════════════════════╣
 ║ Signed:  5 / 120  █████░░░░░░░░░░░░░░░░░  4.2%   ║
-║ Active:  15 slices — parallel work in progress    ║
-║ Queue:   revealWipe review, then active slices    ║
+║ Active:  paused — do not merge slice worktrees    ║
+║ Queue:   fix OFPF structure, then resume slices    ║
 ╚════════════════════════════════════════════════════╝
 ```
 
@@ -213,24 +214,39 @@ style.rigidShakeStyle
 style.spatial
 ```
 
-## Current In-Flight Work
+## Current Paused Worktrees
 
-Two isolated worktrees were created from commit
-`58973cd52baae4b6add2ba84fc7406fd07b6cdc4`
-(`Add direct v3.1 highlighter and player-next path`):
+Parallel slice work is paused until the integrated compositor-next v3.1 code is
+back in OFPF-shaped files. Do **not** delete, prune, reset, overwrite, or merge
+these worktrees while performing the structural correction. They are preserved
+recovery material for later review.
 
-| Agent | Primitive | Worktree | Branch |
+Preserved slice worktrees:
+
+| Primitive | Worktree | Branch | Status |
 | --- | --- | --- | --- |
-| Zeno | `shader.focusField` | `/usr/projects/tui-vfx-slice-focus-field` | `slice/focus-field` — integrated; keep warm for next assignment after pause |
-| Tesla | `shader.glistenBand` | `/usr/projects/tui-vfx-slice-glisten-band` | `slice/glisten-band` — integrated; keep warm for next assignment after pause |
+| `shader.affordanceWake` | `/usr/projects/tui-vfx-slice-affordance-wake` | `slice/affordance-wake` | paused; not integrated |
+| `shader.barberPole` | `/usr/projects/tui-vfx-slice-barber-pole` | `slice/barber-pole` | paused; not integrated |
+| `shader.bevel` | `/usr/projects/tui-vfx-slice-bevel` | `slice/bevel` | paused; not integrated |
+| `shader.borderSweep` | `/usr/projects/tui-vfx-slice-border-sweep` | `slice/border-sweep` | historical worktree; primitive already signed on `master` |
+| `shader.chromaticEdge` | `/usr/projects/tui-vfx-slice-chromatic-edge` | `slice/chromatic-edge` | paused; not integrated |
+| `shader.coloredOverlay` | `/usr/projects/tui-vfx-slice-colored-overlay` | `slice/colored-overlay` | paused; not integrated |
+| `shader.concealedLight` | `/usr/projects/tui-vfx-slice-concealed-light` | `slice/concealed-light` | paused; not integrated |
+| `shader.cursor` | `/usr/projects/tui-vfx-slice-cursor` | `slice/cursor` | paused; not integrated |
+| `shader.diffusion` | `/usr/projects/tui-vfx-slice-diffusion` | `slice/diffusion` | paused; not integrated |
+| `shader.edgeSheen` | `/usr/projects/tui-vfx-slice-edge-sheen` | `slice/edge-sheen` | paused; not integrated |
+| `shader.focusField` | `/usr/projects/tui-vfx-slice-focus-field` | `slice/focus-field` | historical worktree; primitive already signed on `master` |
+| `shader.focusedRowGradient` | `/usr/projects/tui-vfx-slice-focused-row-gradient` | `slice/focused-row-gradient` | paused; not integrated |
+| `shader.fractionalStripeOverlay` | `/usr/projects/tui-vfx-slice-fractional-stripe-overlay` | `slice/fractional-stripe-overlay` | paused; not integrated |
+| `shader.glistenBand` | `/usr/projects/tui-vfx-slice-glisten-band` | `slice/glisten-band` | historical worktree; primitive already signed on `master` |
+| `shader.glitchLines` | `/usr/projects/tui-vfx-slice-glitch-lines` | `slice/glitch-lines` | paused; not integrated |
+| `shader.radar` | `/usr/projects/tui-vfx-slice-radar` | `slice/radar` | paused; not integrated |
+| `shader.revealWipe` | `/usr/projects/tui-vfx-slice-reveal-wipe` | `slice/reveal-wipe` | implementation material exists; blocked from integration until OFPF structure is corrected and diff is rebased/re-reviewed |
+| `shader.wayfindingNode` | `/usr/projects/tui-vfx-slice-wayfinding-node` | `slice/wayfinding-node` | paused; not integrated |
 
-If these Codex subagents are still available, keep them warm and feed follow-up
-slices to the same agents after their current work is reviewed and integrated.
-If they are gone, recreate fresh default/no-role `gpt-5.5` low agents using the
-worker prompt template below.
-
-If a warm agent shows confusion, merge drift, or repeated violations of the
-direct v3.1 constraints, stop reusing it and return to fresh agents per slice.
+Resume order after the structural correction is committed: review/rebase
+`shader.revealWipe` first, then inspect the paused slice worktrees one by one
+or relaunch grounded agents if the preserved branches are too stale.
 
 ## Operating Model
 
@@ -258,6 +274,52 @@ The lead should not do most implementation work when a slice can be assigned
 cleanly. The lead may still make narrow integration fixes, but the preferred
 pattern is to delegate coding and reserve lead attention for review, design
 coherence, de-slop, and verification.
+
+## OFPF Structure Rules for Direct v3.1 Code
+
+The direct v3.1 compositor-next path must follow the existing
+`tui-vfx-compositor/src/` style: small responsibility-named modules instead of
+large catch-all hubs. The former `src/v31/load.rs`, `src/v31/render.rs`, and
+monolithic `tests/test_v31_direct_recipe.rs` pattern was rejected.
+
+Current intended layout:
+
+```text
+crates/tui-vfx-compositor-next/src/v31/
+  cls_loaded_v31_recipe.rs
+  cls_v31_load_error.rs
+  validation/
+    col_direct_input.rs
+    fnc_validate_direct_source_inputs.rs
+    orc_validate_direct_render_contract.rs
+    shaders/fnc_validate_<primitive>_direct_inputs.rs
+  rendering/
+    cls_v31_frame.rs
+    cls_v31_render_error.rs
+    cls_v31_sample_context.rs
+    fnc_render_v31_recipe.rs
+    source/fnc_source_grid_from_inputs.rs
+    shaders/fnc_<primitive>_shader.rs
+
+crates/tui-vfx-compositor-next/tests/v31_direct_recipe/
+  support.rs
+  test_load_contract.rs
+  test_shader_<primitive>.rs
+```
+
+OFPF guardrails for future slices:
+
+- Do not add new primitive logic to a shared hub file.
+- Add one rendering module and one validation module per migrated primitive when
+  the primitive needs code.
+- Keep `fnc_render_v31_recipe.rs` and
+  `orc_validate_direct_render_contract.rs` as dispatch/orchestration surfaces
+  only.
+- Split any file approaching the project size guide rather than rationalizing a
+  growing hub. The normal target is about 300 LOC; anything above 500 LOC
+  requires an explicit cohesion justification before commit.
+- Keep tests split by contract/primitive so a failed primitive slice has an
+  obvious owner.
 
 ## Per-Slice Contract
 
@@ -332,9 +394,10 @@ Follow repo workflow:
   implementation.
 
 Suggested scope:
-- crates/tui-vfx-compositor-next/src/v31/load.rs
-- crates/tui-vfx-compositor-next/src/v31/render.rs
-- compositor-next direct recipe tests
+- one validation module under `crates/tui-vfx-compositor-next/src/v31/validation/shaders/`
+- one rendering module under `crates/tui-vfx-compositor-next/src/v31/rendering/shaders/`
+- narrow dispatch wiring in the validation/rendering orchestrators
+- one primitive test module under `crates/tui-vfx-compositor-next/tests/v31_direct_recipe/`
 - docs/signoff if needed
 
 Keep the change minimal and vertical:
@@ -448,12 +511,23 @@ Deferred topics to discuss and likely act on during the post-migration schema au
 Do not interrupt the current vertical primitive migration for this discussion;
 record evidence and revisit it when the schema audit/schema-diet pass begins.
 
-## Active Queue
+## Paused Queue
 
-Current active:
+Current queue is paused until the OFPF structural correction is committed on
+`master`. Do not dispatch more agents and do not merge preserved slice worktrees
+until that commit exists.
+
+First item to revisit after the correction:
 
 ```text
-shader.revealWipe — implementation complete; awaiting leader review/integration
+shader.revealWipe — implementation material exists in preserved worktree; needs
+rebased diff, OFPF-shaped files, right-to-left coverage, version/footer cleanup,
+and fresh architect/code review before integration.
+```
+
+Preserved paused slice candidates after `shader.revealWipe`:
+
+```text
 shader.barberPole
 shader.diffusion
 shader.radar
@@ -470,7 +544,7 @@ shader.fractionalStripeOverlay
 shader.glitchLines
 ```
 
-Recommended next queue after the current active lanes finish or are paused:
+Recommended later queue after the preserved lanes are reviewed or relaunched:
 
 1. `shader.neonFlicker`
 2. `shader.orbit`
@@ -501,9 +575,11 @@ git worktree list --porcelain
 ```
 
 5. If warm agents are still active, wait for their reports.
-6. If warm agents are not active, inspect the two slice worktrees manually and
-   either continue the branches or recreate fresh agents from `master`.
-7. Resume with lead review/integration, not broad implementation by the lead.
+6. Confirm the OFPF structural correction commit exists before reviewing any
+   paused slice worktree.
+7. Inspect preserved slice worktrees manually before relaunching agents; do not
+   delete or reset them as cleanup.
+8. Resume with lead review/integration, not broad implementation by the lead.
 
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.6.0</VERS> -->
