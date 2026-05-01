@@ -1,7 +1,7 @@
 # <FILE>docs/design/post-release/transitions-demo.py</FILE> - <DESC>Six classic transition primitives (crossfade, wipe, iris, push, dissolve/scatter, morph) demonstrated by cycling between two scenes (Day / Night), with six Penner easing functions selectable orthogonally. Both scenes share the same mountain silhouette so the eye can anchor across the transition while the sky gradient, sun-or-moon, and stars-or-empty switch out. Each transition is a single per-cell function over two precomputed half-cell buffers (A and B); compositing back into the output is therefore trivially parallel and cell-local, which is why these are cheap at 60 Hz even with full-screen redraws. Wipe and Push accept a direction parameter (left, right, up, down, diagonal). Iris reveals from a configurable focal point. Morph implements a radial pinch warp combined with crossfade — both buffers are sampled at distorted coordinates that bulge maximally at progress=0.5 then settle back. Easing curves are applied to the raw progress value before it reaches the transition function, so any easing × any transition combination works.</DESC>
-# <VERS>VERSION: 0.2.0</VERS>
-# <WCTX>Land cross-scene crossfades and the 60 Hz refresh-rate dither tricks: add a structurally-orthogonal plasma scene plus a scene-pair selector so crossfade has actual content to interpolate, add a 7th 'stippled' transition that uses a frame-rotating Bayer matrix to bypass RGB blending (eye integrates over time), and add a global temporal value-dither toggle that improves the 8-bit truecolor lerp precision visibly without changing semantics.</WCTX>
-# <CLOG>0.2.0: add render_plasma() — animated sum-of-sines × tri-channel sin palette, no horizon/mountains; SCENES dict and PAIRS tuple with 't' key cycling Day↔Night / Day↔Plasma / Night↔Plasma; trans_stippled() — frame-rotating Bayer-4 dither selects A or B per cell with no colour blending, the eye integrates over consecutive frames; module-global _FRAME_STATE plus 'h' toggle drives a sub-frame value dither inside _lerp() that swaps each channel between floor and ceil based on the same frame-shifted Bayer threshold, removing the banding that made integer-quantised lerps visible at slow durations; HEADER_H 5→6, SCENE_H 13→12 to fit the new Pair line; bumped TRANSITIONS to 7 (stippled added).</CLOG>
+# <VERS>VERSION: 0.2.1</VERS>
+# <WCTX>Fix the visible row-jump at the end of the morph transition by switching _sample_nn() from floor-based to round-based nearest-neighbour sampling; floor is unstable at integer y boundaries, causing cells whose warped y is "1.0 minus float-epsilon" through the morph to sample row 0 then snap to row 1 only at the exact final frame.</WCTX>
+# <CLOG>0.2.1: _sample_nn() switched from floor (int(x), int(y)) to round (int(x + 0.5), int(y + 0.5)) for nearest-neighbour sampling. Eliminates the visible "top line jumps up a line" at the end of the morph transition: with floor-NN, top-row cells sampled row 0 throughout the morph because their warped b_y was always 0.999… (just below 1.0 due to floating-point), then snapped to row 1 only at the exact final frame where bulge=0 and b_y=1.0 exactly. With round-NN, b_y in [0.5, 1.5) all rounds to 1, stable across the float wobble.</CLOG>
 
 """
 Transitions demo — six classic primitives over two scenes.
@@ -608,8 +608,15 @@ def trans_dissolve(a_buf, b_buf, p, params):
     return out
 
 def _sample_nn(buf, x, y):
-    ix = 0 if x < 0 else SUB_W - 1   if x >= SUB_W   else int(x)
-    iy = 0 if y < 0 else SCENE_H - 1 if y >= SCENE_H else int(y)
+    # Round-to-nearest, not floor: floor-NN is unstable at integer boundaries
+    # — for cells whose warped y lands at "1.0 minus float-epsilon" all through
+    # the morph, floor samples row 0, then at p=1 (where the warp is exactly 0)
+    # snaps to row 1. That snap reads as the top line "jumping up" right before
+    # the morph completes. Round-to-nearest stays stable through the full sweep.
+    ix = int(x + 0.5) if x >= 0 else 0
+    iy = int(y + 0.5) if y >= 0 else 0
+    if ix >= SUB_W:   ix = SUB_W - 1
+    if iy >= SCENE_H: iy = SCENE_H - 1
     return buf[iy][ix]
 
 def trans_morph(a_buf, b_buf, p, params):
@@ -1019,4 +1026,4 @@ if __name__ == "__main__":
     main()
 
 # <FILE>docs/design/post-release/transitions-demo.py</FILE>
-# <VERS>END OF VERSION: 0.2.0</VERS>
+# <VERS>END OF VERSION: 0.2.1</VERS>
