@@ -1,7 +1,7 @@
 # <FILE>docs/design/post-release/transitions-demo.py</FILE> - <DESC>Six classic transition primitives (crossfade, wipe, iris, push, dissolve/scatter, morph) demonstrated by cycling between two scenes (Day / Night), with six Penner easing functions selectable orthogonally. Both scenes share the same mountain silhouette so the eye can anchor across the transition while the sky gradient, sun-or-moon, and stars-or-empty switch out. Each transition is a single per-cell function over two precomputed half-cell buffers (A and B); compositing back into the output is therefore trivially parallel and cell-local, which is why these are cheap at 60 Hz even with full-screen redraws. Wipe and Push accept a direction parameter (left, right, up, down, diagonal). Iris reveals from a configurable focal point. Morph implements a radial pinch warp combined with crossfade — both buffers are sampled at distorted coordinates that bulge maximally at progress=0.5 then settle back. Easing curves are applied to the raw progress value before it reaches the transition function, so any easing × any transition combination works.</DESC>
-# <VERS>VERSION: 0.4.1</VERS>
-# <WCTX>Fix '8' key not switching to the braille slot — the key-accept tuple was left at ("1"..."7") when TRANSITION_ORDER grew to 8 entries in v0.4.0, so the user could see "▶8:brail" in the header but pressing 8 was a silent no-op. Added "8" to the tuple; the existing idx < len(TRANSITION_ORDER) guard already supports it.</WCTX>
-# <CLOG>0.4.1: add "8" to the transition key-accept tuple in the main loop's input handler. v0.4.0 added the braille slot to TRANSITION_ORDER and rendered "▶8:brail" in the Type line, but left the input check at ("1"..."7"), so pressing 8 was silently ignored. The 'b' key still works to auto-select braille; this fix makes the 8 numeric key consistent with the other transitions.</CLOG>
+# <VERS>VERSION: 0.4.2</VERS>
+# <WCTX>Smooth the brightness ramp at the tail of the braille transition: with bg held at A_mean throughout, even at mask=0xFF the cell reads as darker than fully-revealed B because the braille glyph leaves visible inter-dot spacing where the A bg bleeds through. Per-cell bg now lerps from A_mean toward B_mean based on dot population (0..8), so by mask=0xFF the cell is uniform B_mean — bleed eliminated, brightness pop gone.</WCTX>
+# <CLOG>0.4.2: per-cell bg in the four braille variants now lerps from A_mean toward B_mean by t = popcount(mask) / 8. At mask=0 (no dots on) bg=A; at mask=0xFF bg=B (matches fg, cell renders uniform); intermediate dot counts give a proportional brightness ramp aligned with each cell's fill progress. Boundary semantics preserved (p=0 → bg=A_mean, p=1 → fg=bg=B_mean for fully-on cells). Add _braille_bg_blend() helper used by all four variants.</CLOG>
 
 """
 Transitions demo — six classic primitives over two scenes.
@@ -797,6 +797,25 @@ def _cell_mean(buf, cx, cy):
     b = buf[cy][2 * cx + 1]
     return ((a[0] + b[0]) >> 1, (a[1] + b[1]) >> 1, (a[2] + b[2]) >> 1)
 
+def _braille_bg_blend(a_col, b_col, mask):
+    """Return the bg colour for a braille cell, lerped from A toward B based
+    on how many dots are 'on'. With bg held at A, even mask=0xFF (⣿, all
+    dots on) reads as darker than the fully-revealed B because the glyph
+    leaves visible inter-dot spacing where bg bleeds through. Lerping bg
+    toward fg as the population grows means by mask=0xFF the cell is
+    uniform B (fg=bg) and the bleed disappears."""
+    pop = bin(mask).count('1')
+    if pop == 0:
+        return a_col
+    if pop == 8:
+        return b_col
+    t = pop / 8.0
+    return (
+        int(a_col[0] + (b_col[0] - a_col[0]) * t + 0.5),
+        int(a_col[1] + (b_col[1] - a_col[1]) * t + 0.5),
+        int(a_col[2] + (b_col[2] - a_col[2]) * t + 0.5),
+    )
+
 # ----------------------------------------------------------------------------
 # Braille variants — return per-cell (glyph, fg, bg) buffers, not half-cell.
 # ----------------------------------------------------------------------------
@@ -815,7 +834,8 @@ def _trans_braille_dissolve(a_buf, b_buf, p, params):
             for dot_idx in range(8):
                 if p > thresh[dot_idx]:
                     mask |= (1 << dot_idx)
-            row.append((chr(0x2800 + mask), b_col, a_col))
+            bg = _braille_bg_blend(a_col, b_col, mask)
+            row.append((chr(0x2800 + mask), b_col, bg))
         out.append(row)
     return out
 
@@ -836,7 +856,8 @@ def _trans_braille_rain(a_buf, b_buf, p, params):
             for dot_y in range(fill_rows):
                 mask |= (1 << _BRAILLE_BITS[0][dot_y])
                 mask |= (1 << _BRAILLE_BITS[1][dot_y])
-            row.append((chr(0x2800 + mask), b_col, a_col))
+            bg = _braille_bg_blend(a_col, b_col, mask)
+            row.append((chr(0x2800 + mask), b_col, bg))
         out.append(row)
     return out
 
@@ -856,7 +877,8 @@ def _trans_braille_typewriter(a_buf, b_buf, p, params):
             mask = 0
             for k in range(n_in_cell):
                 mask |= (1 << _TYPEWRITER_BIT_ORDER[k])
-            row.append((chr(0x2800 + mask), b_col, a_col))
+            bg = _braille_bg_blend(a_col, b_col, mask)
+            row.append((chr(0x2800 + mask), b_col, bg))
         out.append(row)
     return out
 
@@ -878,7 +900,8 @@ def _trans_braille_shimmer(a_buf, b_buf, p, params):
                 t = thresh[(dot_idx + f) & 7]
                 if p > t:
                     mask |= (1 << dot_idx)
-            row.append((chr(0x2800 + mask), b_col, a_col))
+            bg = _braille_bg_blend(a_col, b_col, mask)
+            row.append((chr(0x2800 + mask), b_col, bg))
         out.append(row)
     return out
 
@@ -1387,4 +1410,4 @@ if __name__ == "__main__":
     main()
 
 # <FILE>docs/design/post-release/transitions-demo.py</FILE>
-# <VERS>END OF VERSION: 0.4.1</VERS>
+# <VERS>END OF VERSION: 0.4.2</VERS>
