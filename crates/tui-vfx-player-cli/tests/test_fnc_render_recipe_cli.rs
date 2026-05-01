@@ -5163,6 +5163,50 @@ fn test_fnc_cli_renders_compositor_backend_native_residual_style_content_blocker
     }
 }
 #[test]
+fn test_fnc_cli_native_style_color_fade_lowers_to_compositor_shader_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_color_fade.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.5"),
+        ],
+        "render-backend native style color fade player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugStyleColorFade");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["loweredEffectIds"],
+        serde_json::json!(["style.colorFade"])
+    );
+    assert_eq!(
+        report["styledCells"][0]["foreground"],
+        "rgba(255,227,152,255)"
+    );
+    assert_eq!(
+        report["styledCells"][0]["background"],
+        "rgba(157,110,65,255)"
+    );
+}
+
+#[test]
 fn test_fnc_cli_native_style_rainbow_lowers_to_compositor_shader_json() {
     let report = player_cli_json(
         vec![

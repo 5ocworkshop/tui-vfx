@@ -261,10 +261,6 @@ fn scene_ir_with_native_content_stages(
     }
     for stage in &lowered_spec.style_stages {
         match stage {
-            NativeStyleStage::ColorFade {
-                target,
-                color_space,
-            } => apply_color_fade_style_stage(&mut staged, target, color_space),
             NativeStyleStage::ColorShift {
                 hue_shift,
                 saturation_shift,
@@ -689,41 +685,6 @@ fn apply_slide_shift_content_stage(
     sync_styled_cells_to_rows(report);
 }
 
-fn apply_color_fade_style_stage(
-    report: &mut PlayerRenderIrReport,
-    target: &str,
-    color_space: &str,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let progress = report.phase_t.clamp(0.0, 1.0) as f32;
-    for y in 0..height {
-        for x in 0..width {
-            let (existing_foreground, existing_background) = report
-                .styled_cells
-                .iter()
-                .find(|cell| cell.x == x && cell.y == y)
-                .map(|cell| (cell.foreground.clone(), cell.background.clone()))
-                .unwrap_or_else(|| (DEFAULT_FOREGROUND.to_string(), TRANSPARENT_RGBA.to_string()));
-            let foreground = legacy_color_fade_label(
-                existing_foreground.as_str(),
-                target,
-                progress,
-                color_space,
-            )
-            .unwrap_or(existing_foreground);
-            let background = legacy_color_fade_label(
-                existing_background.as_str(),
-                target,
-                progress,
-                color_space,
-            )
-            .unwrap_or(existing_background);
-            set_report_cell_style(report, x, y, Some(&foreground), Some(&background), None);
-        }
-    }
-}
-
 fn apply_color_shift_style_stage(
     report: &mut PlayerRenderIrReport,
     hue_shift: f64,
@@ -984,17 +945,6 @@ fn parse_rgba_label(label: &str) -> Option<(u8, u8, u8, u8)> {
     ))
 }
 
-fn legacy_color_fade_label(from: &str, target: &str, t: f32, color_space: &str) -> Option<String> {
-    let from = parse_rgba_label(from)?;
-    let target = parse_rgba_label(target)?;
-    let blended = if color_space.eq_ignore_ascii_case("hsl") {
-        legacy_hsl_rgba(from, target, t)
-    } else {
-        legacy_rgb_rgba(from, target, t)
-    };
-    Some(rgba_label(blended.0, blended.1, blended.2, blended.3))
-}
-
 fn color_shift_label(
     label: &str,
     hue_shift: f32,
@@ -1009,38 +959,6 @@ fn color_shift_label(
         (lightness + lightness_shift).clamp(0.0, 1.0),
     );
     Some(rgba_label(r, g, b, a))
-}
-
-fn legacy_rgb_rgba(from: (u8, u8, u8, u8), target: (u8, u8, u8, u8), t: f32) -> (u8, u8, u8, u8) {
-    let t = t.clamp(0.0, 1.0);
-    (
-        legacy_lerp_channel(from.0, target.0, t),
-        legacy_lerp_channel(from.1, target.1, t),
-        legacy_lerp_channel(from.2, target.2, t),
-        legacy_lerp_channel(from.3, target.3, t),
-    )
-}
-
-fn legacy_hsl_rgba(from: (u8, u8, u8, u8), target: (u8, u8, u8, u8), t: f32) -> (u8, u8, u8, u8) {
-    let t = t.clamp(0.0, 1.0);
-    let (start_hue, start_saturation, start_lightness) = rgb_to_hsl(from.0, from.1, from.2);
-    let (end_hue, end_saturation, end_lightness) = rgb_to_hsl(target.0, target.1, target.2);
-    let hue_delta = if end_hue - start_hue > 180.0 {
-        end_hue - start_hue - 360.0
-    } else if end_hue - start_hue < -180.0 {
-        end_hue - start_hue + 360.0
-    } else {
-        end_hue - start_hue
-    };
-    let hue = (start_hue + hue_delta * t).rem_euclid(360.0);
-    let saturation = start_saturation + (end_saturation - start_saturation) * t;
-    let lightness = start_lightness + (end_lightness - start_lightness) * t;
-    let (r, g, b) = hsl_to_rgb(hue, saturation, lightness);
-    (r, g, b, legacy_lerp_channel(from.3, target.3, t))
-}
-
-fn legacy_lerp_channel(start: u8, end: u8, t: f32) -> u8 {
-    (start as f32 + (end as f32 - start as f32) * t) as u8
 }
 
 fn rgb_to_hsl(r: u8, g: u8, b: u8) -> (f32, f32, f32) {

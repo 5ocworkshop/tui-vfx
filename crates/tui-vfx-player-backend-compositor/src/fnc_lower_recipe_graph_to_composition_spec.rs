@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.47.0: MINOR — lower style.rainbow into compositor RainbowCycleShader layers and remove backend style-stage emulation.
+// <CLOG>0.48.0: MINOR — lower style.colorFade into compositor ColorFadeShader layers and remove backend style-stage emulation.
+// 0.47.0: MINOR — lower style.rainbow into compositor RainbowCycleShader layers and remove backend style-stage emulation.
 // 0.46.0: MINOR — lower style.moduloColumns into compositor LinearGradientShader layers scoped by StyleRegion::Modulo and remove backend style-stage emulation.
 // 0.45.0: MINOR — lower style.italicWindow into compositor ModifierWindowShader layers and remove backend style-stage emulation.
 // 0.44.0: MINOR — lower style.pulse into compositor PulseWaveShader layers and remove backend style-stage emulation.
@@ -57,13 +58,14 @@ use tui_vfx_player::{
 };
 use tui_vfx_style::models::{
     ApplyToColor, BarberPoleApplyTo, BarberPoleShader, BindableU16, BorderSweepShader, ColorConfig,
-    ColorSpace, DiffusionApplyTo, DiffusionShader, DiffusionSource, FocusFieldApplyTo,
-    FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader,
-    GlistenDirection, GlitchLinesShader, Gradient, HighlighterApplyTo, HighlighterDirection,
-    HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
-    LinearGradientShader, ModifierWindowShader, ModuloAxis, NeonFlickerShader, PulseWaveShader,
-    RadarShader, RainbowCycleShader, RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion,
-    TextContrast, WaveDirection, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
+    ColorFadeShader, ColorSpace, DiffusionApplyTo, DiffusionShader, DiffusionSource,
+    FocusFieldApplyTo, FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo,
+    GlistenBandShader, GlistenDirection, GlitchLinesShader, Gradient, HighlighterApplyTo,
+    HighlighterDirection, HighlighterMode, HighlighterRowMask, HighlighterShader,
+    LinearGradientApplyTo, LinearGradientShader, ModifierWindowShader, ModuloAxis,
+    NeonFlickerShader, PulseWaveShader, RadarShader, RainbowCycleShader, RevealWipeShader,
+    SegmentMode, SpatialShaderType, StyleRegion, TextContrast, WaveDirection, WayfindingNode,
+    WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -172,8 +174,6 @@ pub enum NativeContentStage {
 /// Native style transform stage owned by the compositor backend adapter.
 #[derive(Clone, Debug, PartialEq)]
 pub enum NativeStyleStage {
-    /// Apply player-compatible color fade styling to existing foreground/background channels.
-    ColorFade { target: String, color_space: String },
     /// Apply player-compatible HSL color shift styling to existing channels.
     ColorShift {
         hue_shift: f64,
@@ -535,7 +535,7 @@ fn lower_node_into_spec(
         "shader.barberPole" => lower_barber_pole_shader(node, spec, request, warnings),
         "shader.diffusion" => lower_diffusion_shader(node, spec, request, warnings),
         "shader.radar" => lower_radar_shader(node, spec, request, warnings),
-        "style.colorFade" => lower_style_color_fade(node, style_stages, request, warnings),
+        "style.colorFade" => lower_style_color_fade(node, spec, request, warnings),
         "style.colorShift" => lower_style_color_shift(node, style_stages, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
         "style.pulse" => lower_style_pulse(node, spec, request, warnings),
@@ -2144,7 +2144,7 @@ fn lower_style_spatial_radar(
 
 fn lower_style_color_fade(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2157,11 +2157,31 @@ fn lower_style_color_fade(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::ColorFade {
-        target: color_label_input(node, request, "target", (255, 200, 50)),
-        color_space: enum_label_input(node, request, "colorSpace", "rgb"),
+    let target = resolved_color_input(node, request, "target").unwrap_or(ColorConfig::Rgb {
+        r: 255,
+        g: 200,
+        b: 50,
+    });
+    let color_space = legacy_color_fade_space_from_input(enum_input(node, request, "colorSpace"));
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::ColorFade(ColorFadeShader {
+            target,
+            color_space,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
+}
+
+fn legacy_color_fade_space_from_input(value: Option<&str>) -> ColorSpace {
+    // V2/player colorFade treated only literal `hsl` as HSL; every other
+    // token, including the declared-but-not-yet-native `hct`, followed RGB.
+    // Preserve that oracle behavior until HCT is introduced as an explicit V3
+    // semantic rather than a migration-side surprise.
+    match value {
+        Some("hsl") => ColorSpace::Hsl,
+        _ => ColorSpace::Rgb,
+    }
 }
 
 fn lower_style_color_shift(
@@ -3492,17 +3512,6 @@ fn enum_input<'a>(
     })
 }
 
-fn enum_label_input(
-    node: &NodeSpec,
-    request: &PlayerRenderBackendRequest,
-    key: &str,
-    default: &str,
-) -> String {
-    enum_input(node, request, key)
-        .unwrap_or(default)
-        .to_string()
-}
-
 fn text_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -3629,19 +3638,6 @@ fn resolved_color_input(
     })
 }
 
-fn color_label_input(
-    node: &NodeSpec,
-    request: &PlayerRenderBackendRequest,
-    key: &str,
-    default_rgb: (u8, u8, u8),
-) -> String {
-    color_label_from_config(color_input(node, request, key).unwrap_or(ColorConfig::Rgb {
-        r: default_rgb.0,
-        g: default_rgb.1,
-        b: default_rgb.2,
-    }))
-}
-
 fn color_alias_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -3695,15 +3691,6 @@ fn color_config_from_hex(value: &str) -> Option<ColorConfig> {
     let g = u8::from_str_radix(&hex[2..4], 16).ok()?;
     let b = u8::from_str_radix(&hex[4..6], 16).ok()?;
     Some(ColorConfig::Rgb { r, g, b })
-}
-
-fn color_label_from_config(color: ColorConfig) -> String {
-    let color = tui_vfx_types::Color::from(color);
-    if color.a == 0 {
-        "transparent".to_string()
-    } else {
-        format!("rgba({},{},{},{})", color.r, color.g, color.b, color.a)
-    }
 }
 
 fn gradient_input(

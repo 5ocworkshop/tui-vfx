@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/cls_spatial_shader_type.rs</FILE> - <DESC>Enum of all spatial shaders with documentation methods</DESC>
-// <VERS>VERSION: 2.5.0</VERS>
+// <VERS>VERSION: 2.6.0</VERS>
 // <WCTX>Keep representative V3-authored shader payload normalization close to executable shader semantics so direct-V3 callers can stop carrying primitive-form alias rewrites and binding-object extraction themselves.</WCTX>
-// <CLOG>2.5.0: add RadialSpiral as an executable spatial shader backed by mixed-signals radial field math.
+// <CLOG>2.6.0: add ColorFade as an executable spatial shader for compositor-owned style.colorFade lowering.
+// 2.5.0: add RadialSpiral as an executable spatial shader backed by mixed-signals radial field math.
 // 2.4.0: add SpatialShaderType::try_from_v3_payload for engine-owned V3 shader payload normalization (primitive aliases, representative binding-object fields, and compatibility fallbacks).</CLOG>
 
 //! # Spatial Shader Types
@@ -107,7 +108,7 @@ use crate::models::{
     LinearGradientShader, VfxSpatialShaderFamily, cls_affordance_wake_shader::AffordanceWakeShader,
     cls_ambient_occlusion_shader::AmbientOcclusionShader, cls_barber_pole_shader::BarberPoleShader,
     cls_bevel_shader::BevelShader, cls_border_sweep_shader::BorderSweepShader,
-    cls_chromatic_edge_shader::ChromaticEdgeShader,
+    cls_chromatic_edge_shader::ChromaticEdgeShader, cls_color_fade_shader::ColorFadeShader,
     cls_concealed_light_shader::ConcealedLightShader, cls_cursor_shader::CursorShader,
     cls_diffusion_shader::DiffusionShader, cls_edge_sheen_shader::EdgeSheenShader,
     cls_focus_field_shader::FocusFieldShader,
@@ -192,6 +193,9 @@ pub enum SpatialShaderType {
     /// Timeline-driven rainbow foreground hue rotation.
     RainbowCycle(RainbowCycleShader),
 
+    /// Timeline-driven foreground/background color interpolation.
+    ColorFade(ColorFadeShader),
+
     /// Time-windowed text modifier application.
     ModifierWindow(ModifierWindowShader),
 
@@ -273,6 +277,7 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::NeonFlicker(s) => s.style_at(ctx, base),
             SpatialShaderType::PulseWave(s) => s.style_at(ctx, base),
             SpatialShaderType::RainbowCycle(s) => s.style_at(ctx, base),
+            SpatialShaderType::ColorFade(s) => s.style_at(ctx, base),
             SpatialShaderType::ModifierWindow(s) => s.style_at(ctx, base),
             SpatialShaderType::TerminalWater(s) => s.style_at(ctx, base),
             SpatialShaderType::TerminalFire(s) => s.style_at(ctx, base),
@@ -423,6 +428,7 @@ impl SpatialShaderType {
             SpatialShaderType::NeonFlicker(_) => "NeonFlicker",
             SpatialShaderType::PulseWave(_) => "PulseWave",
             SpatialShaderType::RainbowCycle(_) => "RainbowCycle",
+            SpatialShaderType::ColorFade(_) => "ColorFade",
             SpatialShaderType::ModifierWindow(_) => "ModifierWindow",
             SpatialShaderType::TerminalWater(_) => "TerminalWater",
             SpatialShaderType::TerminalFire(_) => "TerminalFire",
@@ -480,6 +486,7 @@ impl SpatialShaderType {
             }
             SpatialShaderType::PulseWave(_) => "Rippling color wave emanating from position",
             SpatialShaderType::RainbowCycle(_) => "Rainbow foreground hue rotation",
+            SpatialShaderType::ColorFade(_) => "Color fade toward target",
             SpatialShaderType::ModifierWindow(_) => "Text modifier during a time window",
             SpatialShaderType::TerminalFire(_) => {
                 "Emissive procedural flame/smoke field with rising turbulence, blue core, and sparks"
@@ -633,6 +640,10 @@ impl SpatialShaderType {
             SpatialShaderType::RainbowCycle(s) => {
                 vec![("rotation_speed", format!("{}", s.rotation_speed))]
             }
+            SpatialShaderType::ColorFade(s) => vec![
+                ("target", format!("{:?}", s.target)),
+                ("color_space", format!("{:?}", s.color_space)),
+            ],
             SpatialShaderType::ModifierWindow(s) => vec![
                 ("start", format!("{}", s.start)),
                 ("end", format!("{}", s.end)),

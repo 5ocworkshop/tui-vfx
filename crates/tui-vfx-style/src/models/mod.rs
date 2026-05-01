@@ -33,6 +33,7 @@ pub mod cls_blend_mode;
 pub mod cls_border_sweep_shader;
 pub mod cls_chromatic_edge_shader;
 pub mod cls_color_config;
+pub mod cls_color_fade_shader;
 pub mod cls_color_ramp;
 pub mod cls_color_space;
 pub mod cls_concealed_light_shader;
@@ -100,6 +101,7 @@ pub use cls_blend_mode::BlendMode;
 pub use cls_border_sweep_shader::BorderSweepShader;
 pub use cls_chromatic_edge_shader::ChromaticEdgeShader;
 pub use cls_color_config::ColorConfig;
+pub use cls_color_fade_shader::ColorFadeShader;
 pub use cls_color_ramp::{ColorRamp, ColorStop};
 pub use cls_color_space::ColorSpace;
 pub use cls_concealed_light_shader::{

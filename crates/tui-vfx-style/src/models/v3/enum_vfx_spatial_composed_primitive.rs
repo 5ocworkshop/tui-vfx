@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/v3/enum_vfx_spatial_composed_primitive.rs</FILE> - <DESC>Composed-primitive layer for V3 spatial shaders</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Decision 2 migration slice — make the composed-primitive layer explicit and expose a stable family label for runtime wiring and inspection once the grouped V3 family surfaces exist.</WCTX>
-// <CLOG>0.2.0: add family_label() for inspection/runtime seams while keeping the grouped composed surface stable.
+// <CLOG>0.3.0: add ColorFade composed primitive family for compositor-owned style.colorFade lowering.
+// 0.2.0: add family_label() for inspection/runtime seams while keeping the grouped composed surface stable.
 // 0.1.0: define the VfxSpatialComposedPrimitive enum over grouped composed-family V3 shader surfaces.</CLOG>
 
 //! Composed-primitive layer for V3 spatial shaders.
@@ -12,9 +13,9 @@
 //! primitives.
 
 use crate::models::v3::{
-    VfxCursorShader, VfxGuidanceCueShader, VfxMaterialLightShader, VfxModifierWindowShader,
-    VfxProgressEmphasisShader, VfxRainbowCycleShader, VfxStochasticTextureShader,
-    VfxStripeMotionShader, VfxTravelingBandShader,
+    VfxColorFadeShader, VfxCursorShader, VfxGuidanceCueShader, VfxMaterialLightShader,
+    VfxModifierWindowShader, VfxProgressEmphasisShader, VfxRainbowCycleShader,
+    VfxStochasticTextureShader, VfxStripeMotionShader, VfxTravelingBandShader,
 };
 use serde::{Deserialize, Serialize};
 
@@ -40,6 +41,8 @@ pub enum VfxSpatialComposedPrimitive {
     ModifierWindow(VfxModifierWindowShader),
     /// Rainbow foreground hue rotation composed family.
     RainbowCycle(VfxRainbowCycleShader),
+    /// Foreground/background color fade composed family.
+    ColorFade(VfxColorFadeShader),
 }
 
 impl VfxSpatialComposedPrimitive {
@@ -55,6 +58,7 @@ impl VfxSpatialComposedPrimitive {
             Self::StripeMotion(_) => "stripe_motion",
             Self::ModifierWindow(_) => "modifier_window",
             Self::RainbowCycle(_) => "rainbow_cycle",
+            Self::ColorFade(_) => "color_fade",
         }
     }
 }
