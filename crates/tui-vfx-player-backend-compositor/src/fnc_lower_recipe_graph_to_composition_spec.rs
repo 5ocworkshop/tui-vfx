@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.33.0</VERS>
+// <VERS>VERSION: 0.34.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.33.0: MINOR — reject vignette player-style-only fields and keep vignette/hoverBar on compositor FilterSpec paths.
+// <CLOG>0.34.0: MINOR — lower shader.radar and structured style.spatial radar into compositor ShaderLayerSpec, rejecting non-foreground applyTo.
+// 0.33.0: MINOR — reject vignette player-style-only fields and keep vignette/hoverBar on compositor FilterSpec paths.
 // 0.32.0: MINOR — lower filter.matrixRain into compositor FilterSpec::MatrixRain and reject non-native speed/channel semantics.
 // 0.31.0: MINOR — lower filter.subPixelBar into compositor FilterSpec::SubPixelBar and reject unsupported adapter-only aliases.
 // 0.30.0: MINOR — lower mask.pathReveal into compositor MaskSpec::PathReveal using structured path payloads.
@@ -43,7 +44,7 @@ use tui_vfx_player::{
 };
 use tui_vfx_style::models::{
     BorderSweepShader, ColorConfig, ColorSpace, Gradient, LinearGradientApplyTo,
-    LinearGradientShader, RevealWipeShader, SpatialShaderType, StyleRegion,
+    LinearGradientShader, RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -267,13 +268,6 @@ pub enum NativeStyleStage {
         center_y: f64,
         radius: f64,
         intensity: f64,
-        apply_to: String,
-    },
-    /// Apply player-compatible radar shader styling.
-    Radar {
-        color: String,
-        speed: f64,
-        tail_length: f64,
         apply_to: String,
     },
 }
@@ -632,7 +626,7 @@ fn lower_node_into_spec(
         }
         "shader.barberPole" => lower_barber_pole_shader(node, style_stages, request, warnings),
         "shader.diffusion" => lower_diffusion_shader(node, style_stages, request, warnings),
-        "shader.radar" => lower_radar_shader(node, style_stages, request, warnings),
+        "shader.radar" => lower_radar_shader(node, spec, request, warnings),
         "style.colorFade" => lower_style_color_fade(node, style_stages, request, warnings),
         "style.colorShift" => lower_style_color_shift(node, style_stages, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
@@ -642,7 +636,7 @@ fn lower_node_into_spec(
         "style.neonFlicker" => lower_style_neon_flicker(node, style_stages, request, warnings),
         "style.rainbow" => lower_style_rainbow(node, style_stages, request, warnings),
         "style.glitch" => lower_style_glitch(node, style_stages, request, warnings),
-        "style.spatial" => lower_style_spatial(node, style_stages, request, warnings),
+        "style.spatial" => lower_style_spatial(node, spec, style_stages, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
             reason: format!("Effect `{other}` is not yet supported by compositor-native lowering."),
         },
@@ -1964,6 +1958,7 @@ fn lower_style_glitch(
 
 fn lower_style_spatial(
     node: &NodeSpec,
+    spec: &mut CompositionSpec,
     style_stages: &mut Vec<NativeStyleStage>,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
@@ -1977,7 +1972,7 @@ fn lower_style_spatial(
         Some("focused_row_gradient") => {
             lower_style_spatial_focused_row_gradient(node, style_stages, request, warnings, &shader)
         }
-        Some("radar") => lower_style_spatial_radar(node, style_stages, warnings, &shader),
+        Some("radar") => lower_style_spatial_radar(node, spec, warnings, &shader),
         _ => NodeLoweringOutcome::Unsupported {
             reason: "Effect `style.spatial` currently supports only structured `focused_row_gradient` and `radar` payloads in compositor-native style-stage lowering.".to_string(),
         },
@@ -2026,7 +2021,7 @@ fn lower_style_spatial_focused_row_gradient(
 
 fn lower_style_spatial_radar(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
     shader: &serde_json::Value,
 ) -> NodeLoweringOutcome {
@@ -2041,11 +2036,13 @@ fn lower_style_spatial_radar(
     let tail_length_radians = json_number(shader.get("tail_length"))
         .or_else(|| json_number(shader.get("tailLength")))
         .unwrap_or(std::f64::consts::FRAC_PI_2);
-    style_stages.push(NativeStyleStage::Radar {
-        color: json_color_label(shader.get("color"), (80, 255, 160)),
-        speed: json_number(shader.get("speed")).unwrap_or(1.0).max(0.0),
-        tail_length: (tail_length_radians / std::f64::consts::TAU).clamp(0.01, 1.0),
-        apply_to: "foreground".to_string(),
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::Radar(RadarShader {
+            color: json_color_config(shader.get("color"), (80, 255, 160)),
+            speed: json_number(shader.get("speed")).unwrap_or(1.0).max(0.0) as f32,
+            tail_length: tail_length_radians.clamp(0.01, std::f64::consts::TAU) as f32,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -2549,7 +2546,7 @@ fn lower_diffusion_shader(
 
 fn lower_radar_shader(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2561,28 +2558,26 @@ fn lower_radar_shader(
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    let apply_to = match strict_enum_input(
-        node,
-        request,
-        "applyTo",
-        "foreground",
-        &["foreground", "background", "both"],
-        "shader.radar",
+    if !matches!(
+        enum_input(node, request, "applyTo"),
+        None | Some("foreground")
     ) {
-        Ok(apply_to) => apply_to,
-        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
-    };
-    style_stages.push(NativeStyleStage::Radar {
-        color: color_label_from_config(resolved_color_input(node, request, "color").unwrap_or(
-            ColorConfig::Rgb {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `shader.radar` uses `applyTo` other than `foreground`, but compositor-native RadarShader writes foreground only.".to_string(),
+        };
+    }
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::Radar(RadarShader {
+            color: resolved_color_input(node, request, "color").unwrap_or(ColorConfig::Rgb {
                 r: 80,
                 g: 255,
                 b: 160,
-            },
-        )),
-        speed: resolved_number_input(node, request, "speed", 1.0).max(0.0),
-        tail_length: resolved_number_input(node, request, "tailLength", 0.25).clamp(0.01, 1.0),
-        apply_to,
+            }),
+            speed: resolved_number_input(node, request, "speed", 1.0).max(0.0) as f32,
+            tail_length: (resolved_number_input(node, request, "tailLength", 0.25).clamp(0.01, 1.0)
+                * std::f64::consts::TAU) as f32,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3459,6 +3454,31 @@ fn json_color_label(value: Option<&serde_json::Value>, default_rgb: (u8, u8, u8)
     }
 }
 
+fn json_color_config(value: Option<&serde_json::Value>, default_rgb: (u8, u8, u8)) -> ColorConfig {
+    let Some(value) = value else {
+        return ColorConfig::Rgb {
+            r: default_rgb.0,
+            g: default_rgb.1,
+            b: default_rgb.2,
+        };
+    };
+    let r = value.get("r").and_then(serde_json::Value::as_u64);
+    let g = value.get("g").and_then(serde_json::Value::as_u64);
+    let b = value.get("b").and_then(serde_json::Value::as_u64);
+    match (r, g, b) {
+        (Some(r), Some(g), Some(b)) => ColorConfig::Rgb {
+            r: r.min(255) as u8,
+            g: g.min(255) as u8,
+            b: b.min(255) as u8,
+        },
+        _ => ColorConfig::Rgb {
+            r: default_rgb.0,
+            g: default_rgb.1,
+            b: default_rgb.2,
+        },
+    }
+}
+
 fn json_number(value: Option<&serde_json::Value>) -> Option<f64> {
     value.and_then(serde_json::Value::as_f64)
 }
@@ -3899,4 +3919,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.33.0</VERS>
+// <VERS>END OF VERSION: 0.34.0</VERS>

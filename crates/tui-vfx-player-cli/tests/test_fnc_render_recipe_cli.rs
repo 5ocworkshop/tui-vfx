@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.33.0</VERS>
+// <VERS>VERSION: 0.34.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.33.0: MINOR — lock vignette rejection for player-style-only fields after removing backend style-stage adapters.
+// <CLOG>0.34.0: MINOR — lock shader.radar compositor shader-layer lowering.
+// 0.33.0: MINOR — lock vignette rejection for player-style-only fields after removing backend style-stage adapters.
 // 0.32.0: MINOR — lock matrixRain compositor FilterSpec lowering and remove stale migrated-filter style-stage expectations.
 // 0.31.0: MINOR — lock subPixelBar compositor FilterSpec lowering and adapter-only rejection.
 // 0.30.0: MINOR — lock strict-native success for migrated filter parity recipes without claiming IR parity.</CLOG>
@@ -172,11 +173,6 @@ fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() 
             "debugShaderDiffusionBackground",
             "shader.diffusion",
         ),
-        (
-            "shaders/primitives/shader_radar_sweep.json",
-            "debugShaderRadarSweep",
-            "shader.radar",
-        ),
     ] {
         let report = assert_native_backend_matches_ir_resolved_at_phase(
             recipe_path(recipe),
@@ -189,6 +185,109 @@ fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() 
         assert_eq!(
             report["compositionSpecSummary"]["styleStages"], 1,
             "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_lowers_radar_shader_to_compositor_shader_layer_not_style_stage_json() {
+    for (recipe, recipe_id, effect_id, phase) in [
+        (
+            "shaders/primitives/shader_radar_sweep.json",
+            "debugShaderRadarSweep",
+            "shader.radar",
+            "enter",
+        ),
+        (
+            "styles/style_spatial_effect.json",
+            "debugStyleSpatialEffectV2Oracle",
+            "style.spatial",
+            "dwell",
+        ),
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg(phase),
+                str_arg("--phase-t"),
+                str_arg("0.35"),
+            ],
+            "render-backend native radar shader compositor layer player cli",
+        );
+
+        assert_eq!(report["backend"], "compositor", "{recipe}");
+        assert_eq!(report["recipeId"], recipe_id, "{recipe}");
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"]["shaderLayers"], 1,
+            "{recipe}"
+        );
+        assert_eq!(
+            report["compositionSpecSummary"]["styleStages"], 0,
+            "{recipe}"
+        );
+        assert_eq!(report["loweredEffectIds"], serde_json::json!([effect_id]));
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_radar_shader_non_foreground_apply_to_json() {
+    for value in ["background", "both"] {
+        let temp_root = std::env::temp_dir().join(format!("tui-vfx-native-radar-{value}"));
+        let _ = fs::remove_dir_all(&temp_root);
+        fs::create_dir_all(&temp_root).expect("create temp unsupported radar fixture root");
+        let recipe = unsupported_native_effect_shape_recipe(
+            "shaders/primitives/shader_radar_sweep.json",
+            Some(("applyTo", unsupported_native_enum_value(value))),
+            None,
+            None,
+        );
+        let recipe_path = temp_root.join(format!("radar_{value}.json"));
+        fs::write(
+            &recipe_path,
+            serde_json::to_string_pretty(&recipe).expect("serialize unsupported radar recipe"),
+        )
+        .expect("write unsupported radar recipe");
+
+        let output = run_player_cli(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path.display().to_string(),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
+            ],
+            "render-backend native unsupported radar player cli",
+        );
+
+        assert!(!output.status.success(), "{value} unexpectedly succeeded");
+        assert!(
+            stderr(&output).contains("unsupportedNativeEffect"),
+            "{value} stderr: {}",
+            stderr(&output)
         );
     }
 }
@@ -6713,4 +6812,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.33.0</VERS>
+// <VERS>END OF VERSION: 0.34.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.30.0</VERS>
+// <VERS>VERSION: 0.31.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.30.0: MINOR — remove backend-owned vignette/hoverBar style rendering after those filters use compositor FilterSpec paths.
+// <CLOG>0.31.0: MINOR — remove backend-owned radar shader rendering after radar moved to compositor ShaderLayerSpec.
+// 0.30.0: MINOR — remove backend-owned vignette/hoverBar style rendering after those filters use compositor FilterSpec paths.
 // 0.29.0: MINOR — remove backend-owned matrixRain style-stage rendering after matrixRain moved to compositor FilterSpec.
 // 0.28.0: MINOR — remove backend-owned subPixelBar style-stage rendering after subPixelBar moved to compositor FilterSpec.
 // 0.27.0: PATCH — remove final backend-owned wipe/pathReveal mask source-stage rendering after pathReveal moved to compositor MaskSpec.
@@ -457,20 +458,6 @@ fn scene_ir_with_native_content_stages(
                     center_y: *center_y,
                     radius: *radius,
                     intensity: *intensity,
-                    apply_to,
-                },
-            ),
-            NativeStyleStage::Radar {
-                color,
-                speed,
-                tail_length,
-                apply_to,
-            } => apply_radar_style_stage(
-                &mut staged,
-                RadarStyleInputs {
-                    color,
-                    speed: *speed,
-                    tail_length: *tail_length,
                     apply_to,
                 },
             ),
@@ -1398,41 +1385,6 @@ fn apply_diffusion_style_stage(
     }
 }
 
-struct RadarStyleInputs<'a> {
-    color: &'a str,
-    speed: f64,
-    tail_length: f64,
-    apply_to: &'a str,
-}
-
-fn apply_radar_style_stage(report: &mut PlayerRenderIrReport, inputs: RadarStyleInputs<'_>) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let center_x = width.saturating_sub(1) as f64 / 2.0;
-    let center_y = height.saturating_sub(1) as f64 / 2.0;
-    let sweep = (report.loop_t.unwrap_or(report.phase_t) * inputs.speed).fract();
-    for y in 0..height {
-        for x in 0..width {
-            let angle = ((y as f64 - center_y).atan2(x as f64 - center_x) + std::f64::consts::TAU)
-                % std::f64::consts::TAU;
-            let position = angle / std::f64::consts::TAU;
-            let distance_behind = (sweep - position).rem_euclid(1.0);
-            if distance_behind <= inputs.tail_length {
-                let strength = (1.0 - distance_behind / inputs.tail_length) as f32;
-                let color = lerp_rgba_label(BLACK_RGBA, inputs.color, strength);
-                set_report_shader_cell(
-                    report,
-                    x,
-                    y,
-                    inputs.apply_to,
-                    color.as_str(),
-                    "ShaderRadar",
-                );
-            }
-        }
-    }
-}
-
 fn set_report_cell_style(
     report: &mut PlayerRenderIrReport,
     x: usize,
@@ -2113,4 +2065,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.30.0</VERS>
+// <VERS>END OF VERSION: 0.31.0</VERS>
