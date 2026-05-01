@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_recipe.rs</FILE> - <DESC>Render a loaded v3.1 recipe through native compost modules</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Phase 1 keeps the recipe entrypoint thin and delegates scene/element orchestration.</WCTX>
-// <CLOG>0.2.0: MINOR — delegate scene rendering so all scene elements compose in paint order.
+// <VERS>VERSION: 0.3.0</VERS>
+// <WCTX>The recipe entrypoint stays thin and delegates scene rendering plus observability aggregation.</WCTX>
+// <CLOG>0.3.0: MINOR — carry diagnostics and trace events into Frame.
+// 0.2.0: MINOR — delegate scene rendering so all scene elements compose in paint order.
 // 0.1.1: PATCH — read scene element sourceInstance after the contract naming audit.</CLOG>
 
 use crate::LoadedRecipe;
@@ -19,7 +20,8 @@ pub fn render_recipe(loaded: &LoadedRecipe, sample: &SampleContext) -> Result<Fr
         .scenes
         .first()
         .ok_or_else(|| RenderError::Unsupported("recipe has no scene to render".to_string()))?;
-    let (grid, applied_effect_kinds) = render_scene(recipe, scene, sample)?;
+    let (grid, applied_effect_kinds, diagnostics, trace_events) =
+        render_scene(recipe, scene, sample)?;
 
     Ok(Frame {
         recipe_id: recipe.id.as_str().to_string(),
@@ -27,8 +29,10 @@ pub fn render_recipe(loaded: &LoadedRecipe, sample: &SampleContext) -> Result<Fr
         height: scene.height,
         grid,
         applied_effect_kinds,
+        diagnostics,
+        trace_events,
     })
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_recipe.rs</FILE> - <DESC>Render a loaded v3.1 recipe through native compost modules</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

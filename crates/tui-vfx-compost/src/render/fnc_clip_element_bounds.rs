@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_clip_element_bounds.rs</FILE> - <DESC>Clip element-local bounds into scene coordinates</DESC>
 // <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1 preserves signed placement origin while clipping negative and overflow cells.</WCTX>
+// <WCTX>Element clipping preserves signed placement origin while clipping negative and overflow cells.</WCTX>
 // <CLOG>0.1.0: INIT — add signed placement clipping helper.</CLOG>
 
 use tui_vfx_contract::ElementPlacement;

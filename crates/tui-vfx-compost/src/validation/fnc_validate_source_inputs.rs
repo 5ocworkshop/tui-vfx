@@ -1,12 +1,14 @@
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_source_inputs.rs</FILE> - <DESC>Validate native v3.1 source inputs for direct rendering</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Compost currently materializes literal source.card text/color inputs only and rejects unsupported source semantics at load time.</WCTX>
-// <CLOG>0.3.0: PATCH — enforce source.card descriptor dimension bounds during load validation.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Compost validates source.card inputs through the native runtime value resolver before materialization.</WCTX>
+// <CLOG>0.4.0: MINOR — route source ValueSource handling through the runtime value resolver.
+// 0.3.0: PATCH — enforce source.card descriptor dimension bounds during load validation.
 // 0.2.1: PATCH — centralize source.card constants and source input error construction.</CLOG>
 
-use tui_vfx_contract::{SourceInputId, SourceInstanceId, SourceSpec, Value, ValueSource};
+use tui_vfx_contract::{SourceInputId, SourceInstanceId, SourceSpec, Value};
 
 use crate::LoadError;
+use crate::runtime::{RuntimeContext, resolve_value_source};
 
 const REQUIRED_SOURCE_CARD_INPUTS: [&str; 5] =
     ["message", "width", "height", "foreground", "background"];
@@ -22,20 +24,15 @@ pub(crate) fn validate_source_inputs(
         return Err(LoadError::UnsupportedSourceDescriptor {
             source_id: source_id.as_str().to_string(),
             descriptor: source.source_descriptor.as_str().to_string(),
-            reason: "Phase 2 source materialization currently supports source.card only"
-                .to_string(),
+            reason: "source materialization currently supports source.card only".to_string(),
         });
     }
 
+    let context = RuntimeContext::load_time();
     for (input, value_source) in &source.inputs {
-        let ValueSource::Literal { value } = value_source else {
-            return Err(source_input_error(
-                source_id,
-                input.as_str(),
-                "native compost rendering currently accepts literal source inputs only",
-            ));
-        };
-        validate_source_card_input(source_id, input, value)?;
+        let value = resolve_value_source(value_source, &context)
+            .map_err(|error| source_input_error(source_id, input.as_str(), error.reason()))?;
+        validate_source_card_input(source_id, input, value.value())?;
     }
     for required in REQUIRED_SOURCE_CARD_INPUTS {
         if !source.inputs.contains_key(&SourceInputId::new(required)) {
@@ -64,7 +61,7 @@ fn validate_source_card_input(
             return Err(source_input_error(
                 source_id,
                 input.as_str(),
-                "source.card input is not supported by Phase 2 materialization",
+                "source.card input is not supported by current materialization",
             ));
         }
     };
@@ -100,4 +97,4 @@ fn source_input_error(
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_source_inputs.rs</FILE> - <DESC>Validate native v3.1 source inputs for direct rendering</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

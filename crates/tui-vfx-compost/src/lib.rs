@@ -12,6 +12,7 @@
 
 mod loader;
 mod render;
+mod runtime;
 mod shaders;
 mod source;
 mod validation;

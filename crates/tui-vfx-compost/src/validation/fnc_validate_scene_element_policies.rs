@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Phase 1 supports resolved placement, clip-only bounds handling, cell writes, and preserved destination roles.</WCTX>
-// <CLOG>0.3.0: PATCH — reject element-local graph timing until timing substrate executes it.
+// <VERS>VERSION: 0.4.0</VERS>
+// <WCTX>Element policy validation supports writeCell/skipTransparentEmpty cell writes and preserved destination roles.</WCTX>
+// <CLOG>0.4.0: MINOR — accept skipTransparentEmpty after cell write policy substrate lands.
+// 0.3.0: PATCH — reject element-local graph timing until timing substrate executes it.
 // 0.2.0: PATCH — reject deferred scene-element semantics instead of silently ignoring them.
 // 0.1.0: INIT — add scene element policy validation.</CLOG>
 
@@ -104,12 +105,8 @@ pub(crate) fn validate_scene_element_policies(
         );
     }
 
-    if element.cell_write_policy != CellWritePolicy::WriteCell {
-        return unsupported_policy(
-            element,
-            "cellWritePolicy",
-            "Phase 1 scene rendering currently supports writeCell only",
-        );
+    match element.cell_write_policy {
+        CellWritePolicy::WriteCell | CellWritePolicy::SkipTransparentEmpty => {}
     }
 
     match &element.role_write_policy {
@@ -140,4 +137,4 @@ fn unsupported_policy(
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.4.0</VERS>

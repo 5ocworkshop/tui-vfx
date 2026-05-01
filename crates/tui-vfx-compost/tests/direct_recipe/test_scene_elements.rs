@@ -1,8 +1,8 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
 // <VERS>VERSION: 0.3.3</VERS>
-// <WCTX>Phase 1 scene substrate: prove multi-element composition, z ordering, signed placement clipping, and strict policy rejection.</WCTX>
+// <WCTX>Scene substrate tests prove multi-element composition, z ordering, signed placement clipping, and strict policy rejection.</WCTX>
 // <CLOG>0.3.3: PATCH — keep scene test imports rustfmt-aligned.
-// 0.3.2: PATCH — keep vertical clipping fixture line-aware after Phase 2 source materialization.
+// 0.3.2: PATCH — keep vertical clipping fixture line-aware after source materialization.
 // 0.3.1: PATCH — assert graphBinding.timing diagnostic path explicitly.
 // 0.3.0: PATCH — add graph-binding timing rejection regression.
 // 0.2.1: PATCH — centralize repeated scene sizing and render fixture setup.

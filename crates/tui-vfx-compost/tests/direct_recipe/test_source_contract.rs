@@ -1,6 +1,6 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_source_contract.rs</FILE> - <DESC>Compost source substrate tests</DESC>
 // <VERS>VERSION: 0.2.1</VERS>
-// <WCTX>Phase 2 source substrate: source descriptors validate at load and materialization stays separate from scene dimensions.</WCTX>
+// <WCTX>Source substrate tests ensure source descriptors validate at load and materialization stays separate from scene dimensions.</WCTX>
 // <CLOG>0.2.1: PATCH — tighten source-input diagnostic assertions.
 // 0.2.0: PATCH — add source.card dimension bounds, literal shape, and multiline regressions.
 // 0.1.1: PATCH — name repeated source message fixture mutation.</CLOG>

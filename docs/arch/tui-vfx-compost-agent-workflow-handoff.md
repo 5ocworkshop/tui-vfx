@@ -1,7 +1,9 @@
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>VERSION: 0.13.0</VERS> -->
-<!-- <WCTX>tui-vfx-compost substrate Phase 2: source descriptor validation and materialization now have a native source.card seam.</WCTX> -->
-<!-- <CLOG>0.13.0: MINOR — record Phase 2 source substrate status.
+<!-- <VERS>VERSION: 0.15.0</VERS> -->
+<!-- <WCTX>tui-vfx-compost substrate Phases 3-7: effect stack, timing, write policy, runtime values, and observability are native seams.</WCTX> -->
+<!-- <CLOG>0.15.0: MINOR — record batched Phase 3-7 substrate status before primitive migration resumes.
+0.14.0: MINOR — record Phase 3 effect stack substrate status.
+0.13.0: MINOR — record Phase 2 source substrate status.
 0.12.8: PATCH — record graphBinding.timing rejection with deferred scene-element policies.
 0.12.7: PATCH — record strict Phase 1 deferred scene-element policy rejection.
 0.12.6: PATCH — record Phase 1 scene/element substrate status without changing primitive migration counters.
@@ -158,6 +160,11 @@ Substrate phase status:
 | Phase 0 — Native transition and motion checkpoint | Complete | `docs/arch/v31-native-transition-model.md` remains the controlling transition decision record. |
 | Phase 1 — Scene and element substrate | Complete | Native compost render orchestration now composes all scene elements in stable z-index/declaration paint order, preserves signed placement origin while clipping, and keeps the existing one-element `shader.linearGradient` smoke test green. |
 | Phase 2 — Source substrate | Complete | Native compost source validation now rejects unsupported source descriptors/runtime inputs at load time, and source materialization dispatches `source.card` before scene placement/clipping. |
+| Phase 3 — Effect stack substrate | Complete | Native compost now builds an ordered effect stack from graph binding/topology/order, exposes family slots for content/style/sampler/mask/shader/filter, rejects unsupported families at load time, and keeps `shader.linearGradient` as smoke-only executable support. |
+| Phase 4 — Timing and lifecycle substrate | Complete | `SampleContext` now carries phase, loop, and absolute clocks; `RenderTiming` resolves node timing; non-empty `activePhases` rejects at load time until lifecycle state can honor it. |
+| Phase 5 — Write, merge, and role policy substrate | Complete | Cell writes route through `writeCell`/`skipTransparentEmpty`; destination roles are explicitly preserved; parallel graph merge policies reject at load time until native surface/value merge support lands. |
+| Phase 6 — Runtime value resolver substrate | Complete | Graph/source validation now routes `ValueSource` handling through the native runtime resolver, supports literals, and rejects non-literal sources with consistent resolver diagnostics. |
+| Phase 7 — Observability and debuggability | Complete | `Frame` now carries native diagnostics and trace events identifying scene, element, stage index, and effect without legacy inspector surfaces. |
 
 Phase 1 behavior notes:
 
@@ -188,6 +195,65 @@ Phase 2 behavior notes:
   out-of-range card dimensions fail during `LoadedRecipe::load`.
 - `source.card` message materialization preserves line boundaries rather than
   flattening newline-separated text.
+
+Phase 3 behavior notes:
+
+- `build_effect_stack` adapts the mature compositor's staged family model to
+  canonical v3.1 graph data. It reads scene element graph binding topology,
+  graph topology, or graph order directly and records native `EffectStage`
+  entries without intermediate compatibility DTOs.
+- `EffectStack` exposes native family slots for `content.*`, `style.*`,
+  `sampler.*`, `mask.*`, `shader.*`, and `filter.*`. The current executable
+  path uses the shader slot only, matching the substrate-first rule that
+  primitives remain unsigned until their own slices are reworked.
+- `LoadedRecipe::load` rejects unsupported effect families with
+  `UnsupportedEffectFamily` diagnostics, so authored `content.*`, `style.*`,
+  `filter.*`, `mask.*`, and `sampler.*` nodes cannot silently no-op.
+- Multiple supported shader nodes retain deterministic authored order in
+  `Frame.applied_effect_kinds`; this remains render evidence, not primitive
+  migration credit.
+
+Phase 4 behavior notes:
+
+- `SampleContext` now carries `phase_t`, optional `loop_t`, and optional
+  `absolute_time_ms`. Public helpers expose effective loop and shader timing
+  without global clocks or presentation-FPS coupling.
+- `RenderTiming` mirrors the mature compositor timing bundle in compost-native
+  terms: normalized phase and loop clocks are clamped before node execution.
+- Node `activePhases` is rejected during `LoadedRecipe::load` until lifecycle
+  phase state is available, preventing silent no-op lifecycle gates.
+
+Phase 5 behavior notes:
+
+- Final destination mutation goes through `merge_element_surface`, which applies
+  canonical cell write policy before touching the destination grid and keeps
+  role write handling separate.
+- `skipTransparentEmpty` now preserves the destination cell and destination role
+  when an authored overlay samples an empty transparent cell.
+- `preserveDestination` remains the only accepted role policy. Source-role copy
+  and explicit role writes remain rejected until source role materialization
+  exists.
+- Parallel graph topology is rejected during load because native surface and
+  graph-value merge behavior is not implemented yet.
+
+Phase 6 behavior notes:
+
+- `runtime/resolve_value_source` is the single native resolver seam for
+  canonical `ValueSource` inputs.
+- Literal values resolve now; parameter, signal, graphValue, map, sampledField,
+  signalExpression, phaseProgress, and clock sources reject through one shared
+  diagnostic until their bindings are implemented.
+- Shader/source validation no longer performs local non-literal matching; it
+  delegates to the runtime resolver.
+
+Phase 7 behavior notes:
+
+- `Frame.diagnostics` explains skipped render work such as fully clipped scene
+  elements.
+- `Frame.trace_events` records scene id, element id, stage index, and effect id
+  for applied stages.
+- Observability is native frame evidence only; it does not introduce legacy
+  inspector or composition surfaces.
 
 ## Primitive Completion Tracker
 
@@ -879,4 +945,4 @@ git worktree list --porcelain
 8. Resume with lead review/integration, not broad implementation by the lead.
 
 <!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>END OF VERSION: 0.13.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.15.0</VERS> -->

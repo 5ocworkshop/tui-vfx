@@ -1,20 +1,30 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_scene.rs</FILE> - <DESC>Render one canonical recipe scene</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>Phase 1 scene orchestration owns destination allocation and element paint order.</WCTX>
-// <CLOG>0.1.0: INIT — add multi-element scene render orchestration.</CLOG>
+// <VERS>VERSION: 0.2.1</VERS>
+// <WCTX>Scene orchestration owns destination allocation, element paint order, and observability aggregation.</WCTX>
+// <CLOG>0.2.1: PATCH — name the scene render output tuple for clearer orchestration signatures.
+// 0.2.0: MINOR — aggregate element diagnostics and trace events.
+// 0.1.0: INIT — add multi-element scene render orchestration.</CLOG>
 
 use tui_vfx_contract::{RecipeDocument, RecipeScene};
 use tui_vfx_types::{OwnedGrid, RoleTag, SemanticScene};
 
 use crate::render::{
-    RenderError, SampleContext, render_scene_element, scene_elements_in_paint_order,
+    RenderDiagnostic, RenderError, RenderTraceEvent, SampleContext, render_scene_element,
+    scene_elements_in_paint_order, trace_applied_effects,
 };
+
+pub(crate) type SceneRenderOutput = (
+    SemanticScene,
+    Vec<String>,
+    Vec<RenderDiagnostic>,
+    Vec<RenderTraceEvent>,
+);
 
 pub(crate) fn render_scene(
     recipe: &RecipeDocument,
     scene: &RecipeScene,
     sample: &SampleContext,
-) -> Result<(SemanticScene, Vec<String>), RenderError> {
+) -> Result<SceneRenderOutput, RenderError> {
     if scene.elements.is_empty() {
         return Err(RenderError::Unsupported(
             "recipe scene has no element".to_string(),
@@ -26,14 +36,22 @@ pub(crate) fn render_scene(
         RoleTag::Background,
     );
     let mut applied_effect_kinds = Vec::new();
+    let mut diagnostics = Vec::new();
+    let mut trace_events = Vec::new();
 
     for element in scene_elements_in_paint_order(&scene.elements) {
-        let applied = render_scene_element(recipe, scene, element, sample, &mut grid)?;
-        applied_effect_kinds.extend(applied);
+        let outcome = render_scene_element(recipe, scene, element, sample, &mut grid)?;
+        trace_events.extend(trace_applied_effects(
+            scene,
+            element,
+            &outcome.applied_effect_kinds,
+        ));
+        applied_effect_kinds.extend(outcome.applied_effect_kinds);
+        diagnostics.extend(outcome.diagnostics);
     }
 
-    Ok((grid, applied_effect_kinds))
+    Ok((grid, applied_effect_kinds, diagnostics, trace_events))
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_scene.rs</FILE> - <DESC>Render one canonical recipe scene</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

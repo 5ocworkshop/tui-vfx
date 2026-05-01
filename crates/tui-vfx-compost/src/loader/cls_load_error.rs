@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-compost/src/loader/cls_load_error.rs</FILE> - <DESC>Native v3.1 recipe load diagnostics</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.7.0</VERS>
 // <WCTX>Load errors describe canonical v3.1 acceptance failures for currently supported substrate behavior.</WCTX>
-// <CLOG>0.3.0: MINOR — add source descriptor rejection diagnostics.
-// 0.2.0: MINOR — add scene element policy rejection diagnostics.</CLOG>
+// <CLOG>0.7.0: MINOR — add batched substrate rejection diagnostics.</CLOG>
 
 use std::error::Error;
 use std::fmt;
@@ -73,6 +72,50 @@ pub enum LoadError {
         /// Effect id.
         effect: String,
     },
+
+    /// The native renderer does not yet support this effect family.
+    UnsupportedEffectFamily {
+        /// Graph-local node id.
+        node_id: String,
+        /// Effect id.
+        effect: String,
+        /// Canonical effect family prefix.
+        family: String,
+        /// Human-readable reason.
+        reason: String,
+    },
+
+    /// A graph node timing/lifecycle field is currently unsupported.
+    UnsupportedNodeTiming {
+        /// Graph-local node id.
+        node_id: String,
+        /// Effect id.
+        effect: String,
+        /// Timing/lifecycle field.
+        field: String,
+        /// Human-readable reason.
+        reason: String,
+    },
+
+    /// A graph merge policy is currently unsupported by native compost rendering.
+    UnsupportedGraphMergePolicy {
+        /// Graph field containing the unsupported merge policy.
+        field: String,
+        /// Human-readable reason.
+        reason: String,
+    },
+
+    /// A node-local write policy is currently unsupported by native compost rendering.
+    UnsupportedNodeWritePolicy {
+        /// Graph-local node id.
+        node_id: String,
+        /// Effect id.
+        effect: String,
+        /// Node write policy field.
+        field: String,
+        /// Human-readable reason.
+        reason: String,
+    },
 }
 
 impl fmt::Display for LoadError {
@@ -124,6 +167,39 @@ impl fmt::Display for LoadError {
             Self::UnsupportedEffect { node_id, effect } => {
                 write!(formatter, "unsupported effect {node_id}: {effect}")
             }
+            Self::UnsupportedEffectFamily {
+                node_id,
+                effect,
+                family,
+                reason,
+            } => write!(
+                formatter,
+                "unsupported {family} effect family {node_id}: {effect}: {reason}"
+            ),
+            Self::UnsupportedNodeTiming {
+                node_id,
+                effect,
+                field,
+                reason,
+            } => write!(
+                formatter,
+                "unsupported node timing {node_id}.{field} for {effect}: {reason}"
+            ),
+            Self::UnsupportedGraphMergePolicy { field, reason } => {
+                write!(
+                    formatter,
+                    "unsupported graph merge policy {field}: {reason}"
+                )
+            }
+            Self::UnsupportedNodeWritePolicy {
+                node_id,
+                effect,
+                field,
+                reason,
+            } => write!(
+                formatter,
+                "unsupported node write policy {node_id}.{field} for {effect}: {reason}"
+            ),
         }
     }
 }
@@ -139,4 +215,4 @@ impl From<tui_vfx_contract::DescriptorValidationError> for LoadError {
 }
 
 // <FILE>crates/tui-vfx-compost/src/loader/cls_load_error.rs</FILE> - <DESC>Native v3.1 recipe load diagnostics</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.7.0</VERS>

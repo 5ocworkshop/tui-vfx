@@ -1,9 +1,7 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe.rs</FILE> - <DESC>Integration test harness for compost direct recipe tests</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
-// <WCTX>Expose OFPF-split direct recipe tests, including scene and source substrate coverage, through one integration target.</WCTX>
-// <CLOG>0.3.0: MINOR — add Phase 2 source substrate tests.
-// 0.2.0: MINOR — add Phase 1 scene element substrate tests.
-// 0.1.0: INIT — add direct_recipe integration test harness.</CLOG>
+// <VERS>VERSION: 0.8.1</VERS>
+// <WCTX>Expose OFPF-split direct recipe tests, including scene/source/effect-stack/timing/write/runtime/observability substrate coverage.</WCTX>
+// <CLOG>0.8.1: PATCH — cover node-local write policy rejection and final-cell skip policy.</CLOG>
 
 #[path = "direct_recipe/support.rs"]
 mod support;
@@ -17,5 +15,20 @@ mod test_scene_elements;
 #[path = "direct_recipe/test_source_contract.rs"]
 mod test_source_contract;
 
+#[path = "direct_recipe/test_effect_stack_contract.rs"]
+mod test_effect_stack_contract;
+
+#[path = "direct_recipe/test_timing_lifecycle.rs"]
+mod test_timing_lifecycle;
+
+#[path = "direct_recipe/test_write_merge_policy.rs"]
+mod test_write_merge_policy;
+
+#[path = "direct_recipe/test_runtime_values.rs"]
+mod test_runtime_values;
+
+#[path = "direct_recipe/test_render_observability.rs"]
+mod test_render_observability;
+
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe.rs</FILE> - <DESC>Integration test harness for compost direct recipe tests</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.8.1</VERS>

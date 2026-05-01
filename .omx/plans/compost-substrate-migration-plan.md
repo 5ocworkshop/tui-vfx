@@ -417,6 +417,37 @@ Acceptance:
 - Family slots are documented and wired only as native dispatch seams, not DTO
   adapters.
 
+#### Phase 3 mature reference study and adaptation plan
+
+Reference files studied before implementation:
+
+- `crates/tui-vfx-compositor/src/pipeline/cls_composition_options.rs`
+  carries ordered sampler, mask, filter, and shader collections in one render
+  options object.
+- `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs`
+  short-circuits a no-effect fast path, prepares family-specific runtime state,
+  then applies samplers, masks, filters, and shaders in deterministic authored
+  order.
+- `crates/tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs`
+  resolves an ordered sampler chain before cell sampling.
+- `crates/tui-vfx-compositor/src/pipeline/cls_prepared_mask.rs`
+  prepares mask variants behind a common visibility check.
+- `crates/tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs`
+  dispatches concrete filter variants through a family-local prepared enum.
+
+Migration plan for canonical v3.1 compost:
+
+- Introduce a native `EffectFamily`/`EffectStage`/`EffectStack` skeleton under
+  `tui-vfx-compost/src/render/` that records authored family slots without
+  importing mature compositor DTOs.
+- Build the stack from the selected graph binding topology, graph topology, or
+  graph order using the existing graph-step traversal helper so authored order
+  stays deterministic.
+- Keep `shader.linearGradient` as the only executable smoke shader for now.
+- Reject all unsupported `content.*`, `style.*`, `filter.*`, `mask.*`, and
+  `sampler.*` nodes during `LoadedRecipe::load` with family-specific
+  diagnostics until each family receives a signed native runtime implementation.
+
 ### Phase 4 — Timing and Lifecycle Substrate
 
 Goal: give primitives a reliable timing/lifecycle contract before more temporal
@@ -444,6 +475,36 @@ Acceptance:
   `absoluteTimeMs` without globals or presentation-FPS coupling.
 - `activePhases` is honored or rejected at load time until supported.
 - Loop timing behavior is tested before loop-dependent primitives use it.
+
+#### Phase 4 mature reference study and adaptation plan
+
+Reference files studied before implementation:
+
+- `crates/tui-vfx-compositor/src/pipeline/cls_composition_playback_timing.rs`
+  clamps normalized `t`/`loop_t`, exposes `effective_loop_t`, and feeds shader
+  progress from loop time when present.
+- `crates/tui-vfx-compositor/src/pipeline/cls_prepare_context.rs` bundles
+  per-frame loop time, runtime parameters, and canvas dimensions once per frame
+  so family preparation does not grow ad hoc argument lists.
+- `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs` derives
+  per-stage timing from the shared timing bundle: masks get mask progress,
+  shaders get shader progress, and filters get loop progress.
+- `crates/tui-vfx-contract/src/cls_recipe_element_graph_timing.rs` documents
+  that element-local graph timing derives local `phase_t`; Phase 1 already
+  rejects that policy until timing substrate owns it.
+- `crates/tui-vfx-contract/src/cls_node_spec.rs` carries `activePhases`, which
+  must not silently no-op in compost.
+
+Migration plan for canonical v3.1 compost:
+
+- Expand public `SampleContext` with `loop_t` and `absolute_time_ms`, keeping
+  normalized timing helpers explicit and independent of presentation frame rate.
+- Add a native `RenderTiming` bundle that mirrors the mature compositor timing
+  behavior without importing legacy composition surfaces.
+- Route executable shader smoke support through resolved node timing so future
+  loop-dependent primitives use one timing seam.
+- Reject non-empty node `activePhases` during `LoadedRecipe::load` until
+  lifecycle phase state is available to honor it.
 
 ### Phase 5 — Write, Merge, and Role Policy Substrate
 
@@ -473,6 +534,36 @@ Acceptance:
 - Transparent/empty cell behavior is deterministic.
 - Parallel graph merge policies are either implemented or rejected explicitly.
 - Role tags are preserved/updated according to canonical policy.
+
+#### Phase 5 mature reference study and adaptation plan
+
+Reference files studied before implementation:
+
+- `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs` writes final
+  cells only after sampling, masks, shaders, and filters finish, and skips
+  unfilled transparent cells when preserve-unfilled behavior is requested.
+- `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs` also records
+  role-channel writes separately from cell writes for shadow regions, then
+  re-borrows the semantic scene roles after cell writes complete.
+- `crates/tui-vfx-contract/src/cls_cell_write_policy.rs` defines
+  `writeCell` and `skipTransparentEmpty` as canonical cell-channel policies.
+- `crates/tui-vfx-contract/src/cls_role_write_policy.rs` defines
+  `preserveDestination`, `copySampledSource`, and `setExplicit`.
+- `crates/tui-vfx-contract/src/cls_parallel_merge_policy.rs` and
+  `cls_graph_value_merge_policy.rs` define the authored merge-policy choices
+  that compost must not silently flatten.
+
+Migration plan for canonical v3.1 compost:
+
+- Add a small cell-write decision seam that applies `writeCell` and
+  `skipTransparentEmpty` before destination mutation.
+- Keep `preserveDestination` as the only accepted role policy in this batch;
+  continue rejecting source-role copy and explicit-role writes until source role
+  materialization exists.
+- Route final scene mutation through one merge helper so later surface/parallel
+  work has a single destination write location.
+- Reject authored parallel graph topology during `LoadedRecipe::load` until
+  parallel surface and graph-value merge semantics are implemented.
 
 ### Phase 6 — Runtime Value Resolver Substrate
 
@@ -508,6 +599,31 @@ Acceptance:
   diagnostic path. Primitive implementations do not invent local value-source
   semantics.
 
+#### Phase 6 mature reference study and adaptation plan
+
+Reference files studied before implementation:
+
+- `crates/tui-vfx-compositor/src/pipeline/cls_prepare_context.rs` carries the
+  frame-local context needed to resolve dynamic fields once per frame.
+- `crates/tui-vfx-compositor/src/pipeline/cls_prepared_filter.rs` evaluates
+  bindable fields through a shared context instead of each call site inventing
+  timing or parameter plumbing.
+- `crates/tui-vfx-compositor/src/pipeline/cls_prepared_sampler.rs` prepares
+  sampler fields from the same signal context model before per-cell sampling.
+- `crates/tui-vfx-contract/src/cls_value_source.rs` defines the canonical
+  `ValueSource` variants compost must resolve or reject consistently.
+
+Migration plan for canonical v3.1 compost:
+
+- Introduce a native `runtime/` resolver module with `RuntimeContext`,
+  `ResolvedValue`, and `resolve_value_source`.
+- Support literal values immediately and reject parameter, signal, graphValue,
+  mapped, sampled-field, signal-expression, phase-progress, and clock sources
+  through one error path until runtime bindings exist.
+- Route graph-node validation helpers and source validation through the runtime
+  resolver so future primitive migrations consume resolved values from one
+  substrate instead of repeating `ValueSource` matching.
+
 ### Phase 7 — Observability and Debuggability
 
 Goal: preserve useful inspection/debug evidence without dragging in legacy
@@ -534,6 +650,26 @@ Acceptance:
 - Optional trace events can identify scene, element, stage, and primitive.
 - Observability does not require legacy `CompositionSpec` or old pipeline
   inspector types.
+
+#### Phase 7 mature reference study and adaptation plan
+
+Reference files studied before implementation:
+
+- `crates/tui-vfx-compositor/src/pipeline/orc_pipeline_observability.rs`
+  records stage/cell evidence separately from rendering logic.
+- `crates/tui-vfx-compositor/src/pipeline/orc_render_pipeline.rs` emits
+  stage-entered/stage-finished evidence around sampler/mask/shader/filter work.
+- `crates/tui-vfx-compositor/tests/test_inspection_sink_bridge.rs` shows why
+  scene/element/stage/effect identity must remain inspectable for debugging.
+
+Migration plan for canonical v3.1 compost:
+
+- Add small native `RenderDiagnostic` and `RenderTraceEvent` types to the
+  compost frame output.
+- Emit trace events from scene orchestration using canonical scene/element ids
+  and authored stage order.
+- Emit diagnostics for skipped fully clipped elements without introducing
+  inspector compatibility surfaces.
 
 ### Phase 8 — Primitive Migration Resume Gate
 

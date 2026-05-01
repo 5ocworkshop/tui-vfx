@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-compost/src/shaders/cls_linear_gradient_node.rs</FILE> - <DESC>Native linearGradient node wrapper</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>LinearGradientNode executes canonical v3.1 shader.linearGradient fields directly.</WCTX>
-// <CLOG>0.1.0: INIT — add linearGradient node wrapper.</CLOG>
+// <VERS>VERSION: 0.1.2</VERS>
+// <WCTX>LinearGradientNode executes canonical v3.1 shader.linearGradient fields directly and exposes its node for timing resolution.</WCTX>
+// <CLOG>0.1.2: PATCH — remove redundant effect-id accessor after constructor validation.
+// 0.1.1: PATCH — expose borrowed node for the timing seam.
+// 0.1.0: INIT — add linearGradient node wrapper.</CLOG>
 
 use tui_vfx_contract::NodeSpec;
 use tui_vfx_types::Style;
@@ -25,8 +27,8 @@ impl<'a> LinearGradientNode<'a> {
         }
     }
 
-    pub(crate) fn effect_id(&self) -> &str {
-        self.node.effect.as_str()
+    pub(crate) fn node(&self) -> &'a NodeSpec {
+        self.node
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -48,4 +50,4 @@ impl<'a> LinearGradientNode<'a> {
 }
 
 // <FILE>crates/tui-vfx-compost/src/shaders/cls_linear_gradient_node.rs</FILE> - <DESC>Native linearGradient node wrapper</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.2</VERS>
