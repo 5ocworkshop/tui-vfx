@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.32.0</VERS>
+// <VERS>VERSION: 0.33.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.32.0: MINOR — lock matrixRain compositor FilterSpec lowering and remove stale migrated-filter style-stage expectations.
+// <CLOG>0.33.0: MINOR — lock vignette rejection for player-style-only fields after removing backend style-stage adapters.
+// 0.32.0: MINOR — lock matrixRain compositor FilterSpec lowering and remove stale migrated-filter style-stage expectations.
 // 0.31.0: MINOR — lock subPixelBar compositor FilterSpec lowering and adapter-only rejection.
 // 0.30.0: MINOR — lock strict-native success for migrated filter parity recipes without claiming IR parity.</CLOG>
 
@@ -3569,6 +3570,90 @@ fn test_fnc_cli_renders_compositor_backend_native_vignette_filter_json() {
 }
 
 #[test]
+fn test_fnc_cli_rejects_vignette_player_style_only_semantics_json() {
+    for (mutation_name, input_id, value) in [
+        (
+            "edge_color",
+            "edgeColor",
+            serde_json::json!({
+                "kind": "literal",
+                "value": {
+                    "kind": "color",
+                    "value": {
+                        "r": 10,
+                        "g": 20,
+                        "b": 36,
+                        "a": 255
+                    }
+                }
+            }),
+        ),
+        (
+            "apply_to_background",
+            "applyTo",
+            unsupported_native_enum_value("background"),
+        ),
+        (
+            "apply_to_both",
+            "applyTo",
+            unsupported_native_enum_value("both"),
+        ),
+        (
+            "apply_to_foreground",
+            "applyTo",
+            unsupported_native_enum_value("foreground"),
+        ),
+    ] {
+        let temp_root =
+            std::env::temp_dir().join(format!("tui-vfx-native-vignette-{mutation_name}"));
+        let _ = fs::remove_dir_all(&temp_root);
+        fs::create_dir_all(&temp_root).expect("create temp unsupported vignette fixture root");
+        let recipe = unsupported_native_effect_shape_recipe(
+            "filters/filter_vignette.json",
+            Some((input_id, value)),
+            None,
+            None,
+        );
+        let recipe_path = temp_root.join(format!("{mutation_name}.json"));
+        fs::write(
+            &recipe_path,
+            serde_json::to_string_pretty(&recipe).expect("serialize unsupported vignette recipe"),
+        )
+        .expect("write unsupported vignette recipe");
+
+        let output = run_player_cli(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path.display().to_string(),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
+            ],
+            "render-backend native unsupported vignette player cli",
+        );
+
+        assert!(
+            !output.status.success(),
+            "{mutation_name} unexpectedly succeeded"
+        );
+        assert!(
+            stderr(&output).contains("unsupportedNativeEffect"),
+            "{mutation_name} stderr: {}",
+            stderr(&output)
+        );
+    }
+}
+
+#[test]
 fn test_fnc_cli_rejects_native_iris_mask_invalid_shape_json() {
     let (effect_name, recipe_path_fragment, input_id, invalid_value) =
         ("iris", "masks/mask_iris.json", "shape", "triangle");
@@ -6628,4 +6713,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.32.0</VERS>
+// <VERS>END OF VERSION: 0.33.0</VERS>

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.32.0</VERS>
+// <VERS>VERSION: 0.33.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.32.0: MINOR — lower filter.matrixRain into compositor FilterSpec::MatrixRain and reject non-native speed/channel semantics.
+// <CLOG>0.33.0: MINOR — reject vignette player-style-only fields and keep vignette/hoverBar on compositor FilterSpec paths.
+// 0.32.0: MINOR — lower filter.matrixRain into compositor FilterSpec::MatrixRain and reject non-native speed/channel semantics.
 // 0.31.0: MINOR — lower filter.subPixelBar into compositor FilterSpec::SubPixelBar and reject unsupported adapter-only aliases.
 // 0.30.0: MINOR — lower mask.pathReveal into compositor MaskSpec::PathReveal using structured path payloads.
 // 0.29.0: lower mask.wipe and mask.wipeCorner into compositor MaskSpec::Wipe where exact directions exist.
@@ -200,19 +201,6 @@ pub enum NativeStyleStage {
     },
     /// Apply player-compatible italic-window styling.
     ItalicWindow { start: f64, end: f64 },
-    /// Apply player-compatible vignette filter styling.
-    Vignette {
-        strength: f64,
-        edge_color: String,
-        apply_to: String,
-    },
-    /// Apply player-compatible hover bar filter styling.
-    HoverBar {
-        bar_color: String,
-        thickness: usize,
-        position: f64,
-        apply_to: String,
-    },
     /// Apply player-compatible highlighter shader styling.
     Highlighter {
         color: String,
@@ -569,7 +557,7 @@ fn lower_node_into_spec(
             NodeLoweringOutcome::Lowered { warnings }
         }
         "filter.fadeToCanvas" => lower_fade_to_canvas(node, spec, request, warnings),
-        "filter.vignette" => lower_vignette(node, spec, style_stages, request, warnings),
+        "filter.vignette" => lower_vignette(node, spec, request, warnings),
         "filter.crt" => lower_crt(node, spec, request, warnings),
         "filter.patternFill" => lower_pattern_fill(node, spec, request, warnings),
         "filter.kittScanner" => lower_kitt_scanner(node, spec, request, warnings),
@@ -1154,20 +1142,16 @@ fn lower_fade_to_canvas(
 fn lower_vignette(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
-    let source_style_inputs = ["edgeColor", "applyTo"];
-    let direct_filter_only_inputs = ["radius", "sides", "ditherAmount", "temporalDitherHz"];
+    let player_style_only_inputs = ["edgeColor", "applyTo"];
     let supported_inputs = [
         "strength",
         "radius",
         "sides",
         "ditherAmount",
         "temporalDitherHz",
-        "edgeColor",
-        "applyTo",
     ];
     if let Some(reason) = unsupported_style_stage_reason(
         node,
@@ -1178,40 +1162,15 @@ fn lower_vignette(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    let has_source_style_input = source_style_inputs
+    if let Some(input_id) = player_style_only_inputs
         .iter()
-        .any(|key| node_has_input(node, key));
-    if has_source_style_input {
-        if direct_filter_only_inputs
-            .iter()
-            .any(|key| node_has_input(node, key))
-        {
-            return NodeLoweringOutcome::Unsupported {
-                reason: "Effect `filter.vignette` cannot mix source-style-only fields with compositor FilterSpec-only fields without dropping authored semantics.".to_string(),
-            };
-        }
-        let edge_color = color_input(node, request, "edgeColor").unwrap_or(ColorConfig::Rgb {
-            r: 10,
-            g: 20,
-            b: 36,
-        });
-        let apply_to = match strict_enum_input(
-            node,
-            request,
-            "applyTo",
-            "both",
-            &["foreground", "background", "both"],
-            "filter.vignette",
-        ) {
-            Ok(apply_to) => apply_to,
-            Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+        .find(|key| node_has_input(node, key))
+    {
+        return NodeLoweringOutcome::Unsupported {
+            reason: format!(
+                "Effect `filter.vignette` uses player-style-only input `{input_id}` that has no compositor-native Vignette equivalent without dropping authored channel/color semantics."
+            ),
         };
-        style_stages.push(NativeStyleStage::Vignette {
-            strength: number_input(node, request, "strength", 0.6).clamp(0.0, 1.0),
-            edge_color: color_label_from_config(edge_color),
-            apply_to,
-        });
-        return NodeLoweringOutcome::Lowered { warnings };
     }
 
     spec.filters.push(FilterSpec::Vignette {
@@ -3940,4 +3899,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.32.0</VERS>
+// <VERS>END OF VERSION: 0.33.0</VERS>

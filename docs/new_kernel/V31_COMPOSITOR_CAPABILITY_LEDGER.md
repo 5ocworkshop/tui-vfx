@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 1.6.0</VERS> -->
+<!-- <VERS>VERSION: 1.7.0</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>1.6.0: mark filter.matrixRain as compositor-owned and record style-stage deletion.
+<!-- <CLOG>1.7.0: record vignette/hoverBar backend style-stage deletion and compositor-owned handling.
+1.6.0: mark filter.matrixRain as compositor-owned and record style-stage deletion.
 1.5.0: mark filter.subPixelBar as compositor-owned and record style-stage deletion.
 1.4.0: mark filter.underlineWipe as compositor-owned and record style-stage deletion.
 1.3.0: mark filter.bracketEmphasis as compositor-owned and record style-stage deletion.
@@ -136,6 +137,8 @@ Filter migration status:
 | `filter.underlineWipe` | `FilterSpec::UnderlineWipe { direction, color, bg_color, line_char, row_offset, progress, gradient, glisten }` | Done for current recipes: lowerer emits `FilterSpec::UnderlineWipe`; backend `NativeStyleStage::UnderlineWipe` and style mutation helper were deleted. Non-default `thickness` and non-foreground `applyTo` are rejected instead of emulated. |
 | `filter.subPixelBar` | `FilterSpec::SubPixelBar { progress, direction, filled_color, unfilled_color, animated }` | Done for current recipes: lowerer emits `FilterSpec::SubPixelBar`; backend `NativeStyleStage::SubPixelBar` and row-glyph mutation helper were deleted. Adapter-only aliases `offset`, `width`, `applyTo`, `barColor`, `bgColor`, `color`, `fillColor`, `left`, and `right` are rejected instead of emulated. Reverse directions that cannot be represented by compositor `SubPixelBarDirection` are rejected instead of silently normalized. |
 | `filter.matrixRain` | `FilterSpec::MatrixRain { mode, density, speed_multiplier, speed_min, speed_max, trail_min, trail_max, glyph_change_hz, seed, affect, preset, chars, head_color, tail_color }` | Done for current recipe: lowerer emits `FilterSpec::MatrixRain`; backend `NativeStyleStage::MatrixRain` and deterministic player style helper were deleted. Authored `chars` overrides `preset`, while omitted `chars` preserves the compositor preset. Adapter-only scalar `speed` and channel-only `affect` values without compositor equivalents are rejected instead of emulated. |
+| `filter.vignette` | `FilterSpec::Vignette { strength, radius, sides, dither_amount, temporal_dither_hz }` | Done for current recipes: lowerer emits `FilterSpec::Vignette`; backend `NativeStyleStage::Vignette` and style helper were deleted. Player-style-only `edgeColor`/`applyTo` inputs are rejected instead of emulated. |
+| `filter.hoverBar` | `FilterSpec::HoverBar { base_eighths, max_eighths, position, bar_color, bg_color, progress, margin_width }` | Done for current recipes: lowerer already emits `FilterSpec::HoverBar`; stale backend `NativeStyleStage::HoverBar` and style helper were deleted. |
 
 ## Sampler surface
 

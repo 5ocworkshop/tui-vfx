@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.29.0</VERS>
+// <VERS>VERSION: 0.30.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.29.0: MINOR — remove backend-owned matrixRain style-stage rendering after matrixRain moved to compositor FilterSpec.
+// <CLOG>0.30.0: MINOR — remove backend-owned vignette/hoverBar style rendering after those filters use compositor FilterSpec paths.
+// 0.29.0: MINOR — remove backend-owned matrixRain style-stage rendering after matrixRain moved to compositor FilterSpec.
 // 0.28.0: MINOR — remove backend-owned subPixelBar style-stage rendering after subPixelBar moved to compositor FilterSpec.
 // 0.27.0: PATCH — remove final backend-owned wipe/pathReveal mask source-stage rendering after pathReveal moved to compositor MaskSpec.
 // 0.26.0: remove backend-owned blinds mask source-stage rendering after mask.blinds moved to compositor MaskSpec.
@@ -323,19 +324,6 @@ fn scene_ir_with_native_content_stages(
             } => apply_pulse_style_stage(&mut staged, color, *frequency, apply_to),
             NativeStyleStage::ItalicWindow { start, end } => {
                 apply_italic_window_style_stage(&mut staged, *start, *end)
-            }
-            NativeStyleStage::Vignette {
-                strength,
-                edge_color,
-                apply_to,
-            } => apply_vignette_style_stage(&mut staged, *strength, edge_color, apply_to),
-            NativeStyleStage::HoverBar {
-                bar_color,
-                thickness,
-                position,
-                apply_to,
-            } => {
-                apply_hover_bar_style_stage(&mut staged, bar_color, *thickness, *position, apply_to)
             }
             NativeStyleStage::Highlighter {
                 color,
@@ -1135,68 +1123,6 @@ fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64
     }
 }
 
-fn apply_vignette_style_stage(
-    report: &mut PlayerRenderIrReport,
-    strength: f64,
-    edge_color: &str,
-    apply_to: &str,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let strength = strength.clamp(0.0, 1.0) as f32;
-    let max_distance = vignette_corner_distance(width, height).max(1.0);
-    for y in 0..height {
-        for x in 0..width {
-            let distance = vignette_distance_from_center(x, y, width, height);
-            let mix = ((distance / max_distance) as f32 * strength).clamp(0.0, 1.0);
-            let foreground = lerp_rgba_label(WHITE_RGBA, edge_color, mix);
-            let background = lerp_rgba_label(edge_color, BLACK_RGBA, 1.0 - mix);
-            set_report_filter_cell(
-                report,
-                x,
-                y,
-                apply_to,
-                foreground.as_str(),
-                background.as_str(),
-                &[],
-                "FilterVignette",
-            );
-        }
-    }
-}
-
-fn apply_hover_bar_style_stage(
-    report: &mut PlayerRenderIrReport,
-    bar_color: &str,
-    thickness: usize,
-    position: f64,
-    apply_to: &str,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let thickness = thickness.max(1);
-    let position = position.clamp(0.0, 1.0);
-    let center_y = ((height.saturating_sub(1)) as f64 * position).round() as usize;
-    for y in 0..height {
-        for x in 0..width {
-            let distance = y.abs_diff(center_y);
-            let mix = if distance < thickness { 0.0 } else { 0.8 };
-            let foreground = lerp_rgba_label(bar_color, WHITE_RGBA, 0.4 + mix * 0.3);
-            let background = lerp_rgba_label(bar_color, BLACK_RGBA, mix);
-            set_report_filter_cell(
-                report,
-                x,
-                y,
-                apply_to,
-                foreground.as_str(),
-                background.as_str(),
-                &[],
-                "FilterHoverBar",
-            );
-        }
-    }
-}
-
 struct HighlighterStyleInputs<'a> {
     color: &'a str,
     apply_to: &'a str,
@@ -1551,29 +1477,6 @@ fn set_report_cell_style(
     });
 }
 
-fn set_report_filter_cell(
-    report: &mut PlayerRenderIrReport,
-    x: usize,
-    y: usize,
-    apply_to: &str,
-    foreground: &str,
-    background: &str,
-    modifiers: &[&str],
-    role: &str,
-) {
-    let foreground = if matches!(apply_to, "foreground" | "both") {
-        foreground
-    } else {
-        DEFAULT_FOREGROUND
-    };
-    let background = if matches!(apply_to, "background" | "both") {
-        background
-    } else {
-        TRANSPARENT_RGBA
-    };
-    set_report_cell_exact(report, x, y, foreground, background, modifiers, Some(role));
-}
-
 fn set_report_shader_cell(
     report: &mut PlayerRenderIrReport,
     x: usize,
@@ -1812,18 +1715,6 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
         "rightToLeft" | "right_to_left" => width.saturating_sub(x + 1) as f64 / width.max(1) as f64,
         _ => cell_threshold(x + seed, y),
     }
-}
-
-fn vignette_distance_from_center(x: usize, y: usize, width: usize, height: usize) -> f64 {
-    let center_x = (width.saturating_sub(1)) as f64 / 2.0;
-    let center_y = (height.saturating_sub(1)) as f64 / 2.0;
-    let dx = x as f64 - center_x;
-    let dy = y as f64 - center_y;
-    dx.mul_add(dx, dy * dy).sqrt()
-}
-
-fn vignette_corner_distance(width: usize, height: usize) -> f64 {
-    vignette_distance_from_center(0, 0, width, height)
 }
 
 const DEFAULT_FOREGROUND: &str = "defaultForeground";
@@ -2222,4 +2113,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.29.0</VERS>
+// <VERS>END OF VERSION: 0.30.0</VERS>
