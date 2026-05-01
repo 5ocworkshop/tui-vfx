@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-contract/tests/test_recipe_document_contract.rs</FILE> - <DESC>Canonical recipe document validation tests</DESC>
-// <VERS>VERSION: 0.1.1</VERS>
-// <WCTX>New kernel Phase J2: keep recipe fixture builders current with descriptor pack refs.</WCTX>
-// <CLOG>0.1.1: PATCH — initialize empty descriptor pack refs in recipe test fixtures.
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>v3.1 pre-release scene vocabulary: keep recipe fixture builders current with scrollFactor.</WCTX>
+// <CLOG>0.2.0: MINOR — assert scrollFactor absent/present recipe scene element serde behavior.
+// 0.1.2: PATCH — initialize absent scrollFactor in recipe scene element test fixtures.
+// 0.1.1: PATCH — initialize empty descriptor pack refs in recipe test fixtures.
 // 0.1.0: INIT — lock recipe metadata, graph/source/asset/scene references, and element pipeline validation.</CLOG>
 
 mod support;
@@ -15,7 +17,7 @@ use tui_vfx_contract::{
     ElementPlacement, GraphId, GraphStep, GraphValueShape, NodeId, ParameterId, RecipeDocument,
     RecipeElementPipeline, RecipeId, RecipeMetadata, RecipeScene, RecipeSceneElement,
     RoleWritePolicy, SceneAnchor, SceneElementOverflowPolicy, SceneElementPlacementRule,
-    SceneElementSurface, SceneElementVisibility, SceneId, SourceDescriptor, SourceId,
+    SceneElementSurface, SceneElementVisibility, SceneId, ScrollFactor, SourceDescriptor, SourceId,
     SourceInputId, SourceInputSpec, SourceInstanceId, SourceKind, SourceLifecycle,
     SourceOutputSize, SourceOutputSpec, SourceRolePolicy, SourceSpec, StructuredValue, Value,
     ValueKind, ValuePredicate, ValueSource,
@@ -129,10 +131,40 @@ fn scene_element() -> RecipeSceneElement {
         surface: None,
         overflow: None,
         motion: None,
+        scroll_factor: None,
         clip_policy: ClipPolicy::Clip,
         cell_write_policy: CellWritePolicy::WriteCell,
         role_write_policy: RoleWritePolicy::CopySampledSource,
     }
+}
+
+#[test]
+fn scene_element_scroll_factor_is_optional_nullable_and_skipped_when_absent() {
+    let element = scene_element();
+    let json = serde_json::to_value(&element).expect("scene element serializes");
+
+    assert!(
+        json.get("scrollFactor").is_none(),
+        "absent scrollFactor should be skipped during serialization"
+    );
+
+    let parsed: RecipeSceneElement =
+        serde_json::from_value(json).expect("scene element without scrollFactor deserializes");
+    assert_eq!(parsed.scroll_factor, None);
+}
+
+#[test]
+fn scene_element_scroll_factor_round_trips_when_authored() {
+    let mut element = scene_element();
+    element.scroll_factor = Some(ScrollFactor { x: 0.5, y: 1.25 });
+
+    let json = serde_json::to_value(&element).expect("scene element serializes");
+    assert_eq!(json["scrollFactor"]["x"], serde_json::json!(0.5));
+    assert_eq!(json["scrollFactor"]["y"], serde_json::json!(1.25));
+
+    let parsed: RecipeSceneElement =
+        serde_json::from_value(json).expect("scene element with scrollFactor deserializes");
+    assert_eq!(parsed.scroll_factor, Some(ScrollFactor { x: 0.5, y: 1.25 }));
 }
 
 fn valid_recipe() -> RecipeDocument {
@@ -586,4 +618,4 @@ fn recipe_rejects_scene_visibility_predicate_kind_mismatch() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_recipe_document_contract.rs</FILE> - <DESC>Canonical recipe document validation tests</DESC>
-// <VERS>END OF VERSION: 0.1.1</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

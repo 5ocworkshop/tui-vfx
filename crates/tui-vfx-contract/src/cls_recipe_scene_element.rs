@@ -1,12 +1,13 @@
 // <FILE>crates/tui-vfx-contract/src/cls_recipe_scene_element.rs</FILE> - <DESC>Canonical recipe scene element source reference DTO</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
-// <WCTX>New kernel Phase H1: reference source-produced surfaces from recipe scenes.</WCTX>
-// <CLOG>0.1.0: INIT — add source-backed scene element shape for canonical recipes.</CLOG>
+// <VERS>VERSION: 0.2.0</VERS>
+// <WCTX>v3.1 pre-release scene vocabulary: reserve per-element scroll response metadata.</WCTX>
+// <CLOG>0.2.0: MINOR — add optional scrollFactor metadata for future scene-scroll/parallax backends.
+// 0.1.0: INIT — add source-backed scene element shape for canonical recipes.</CLOG>
 
 use crate::{
     CellWritePolicy, ClipPolicy, ElementId, ElementPlacement, LayerId, RecipeElementPipeline,
     RoleWritePolicy, SceneElementOverflowPolicy, SceneElementPlacementRule, SceneElementSurface,
-    SceneElementVisibility, SourceInstanceId, StructuredValue,
+    SceneElementVisibility, ScrollFactor, SourceInstanceId, StructuredValue,
 };
 
 /// Scene element whose surface is produced by a declared source instance.
@@ -40,6 +41,9 @@ pub struct RecipeSceneElement {
     /// Optional structured element motion payload preserved from scene authoring.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub motion: Option<StructuredValue>,
+    /// Optional per-element scene scroll/camera response factor reserved for future backends.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scroll_factor: Option<ScrollFactor>,
     /// Policy for local cells that land outside the final scene bounds.
     pub clip_policy: ClipPolicy,
     /// Policy for whether transparent empty local cells write or skip.
@@ -49,4 +53,4 @@ pub struct RecipeSceneElement {
 }
 
 // <FILE>crates/tui-vfx-contract/src/cls_recipe_scene_element.rs</FILE> - <DESC>Canonical recipe scene element source reference DTO</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

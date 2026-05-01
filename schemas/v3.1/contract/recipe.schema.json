@@ -2022,6 +2022,17 @@
           "description": "Policy for how a written cell updates the final scene role channel.",
           "$ref": "#/$defs/RoleWritePolicy"
         },
+        "scrollFactor": {
+          "description": "Optional per-element scene scroll/camera response factor reserved for future backends.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScrollFactor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "source": {
           "description": "Source instance that produces this element-local semantic surface.",
           "$ref": "#/$defs/SourceInstanceId"
@@ -2880,6 +2891,27 @@
         "kinds",
         "coordinateSpaces",
         "roleSpaces"
+      ]
+    },
+    "ScrollFactor": {
+      "description": "Per-element motion rate relative to a future scene-level scroll or camera signal.\n\nWhen present on a recipe scene element, `x` and `y` are axis-local multipliers\nfor future camera/scroll deltas. Absence means the element makes no explicit\nparallax commitment and existing backends keep current lockstep behavior.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "Horizontal multiplier relative to future scene/camera scroll deltas.",
+          "type": "number",
+          "format": "float"
+        },
+        "y": {
+          "description": "Vertical multiplier relative to future scene/camera scroll deltas.",
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
       ]
     },
     "SignalId": {

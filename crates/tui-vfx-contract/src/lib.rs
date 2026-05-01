@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>VERSION: 0.11.0</VERS>
-// <WCTX>New kernel Phase J2: expose descriptor pack and catalog vocabulary.</WCTX>
-// <CLOG>0.11.0: MINOR — export descriptor pack, pack ref, catalog, and catalog-aware validation.
+// <VERS>VERSION: 0.12.0</VERS>
+// <WCTX>v3.1 pre-release scene vocabulary: expose typed scroll-factor reservation.</WCTX>
+// <CLOG>0.12.0: MINOR — export ScrollFactor scene-element metadata and schema root.
+// 0.11.0: MINOR — export descriptor pack, pack ref, catalog, and catalog-aware validation.
 // 0.10.0: MINOR — export recipe lifecycle, clock, duration, phase, and trigger schema roots.
 // 0.9.0: MINOR — export canonical recipe document, recipe scene, source instance, and metadata schema roots.
 // 0.8.0: MINOR — export source descriptor, source spec, asset, and source output schema roots.
@@ -104,6 +105,7 @@ pub mod cls_scope_eval_input;
 pub mod cls_scope_kind;
 pub mod cls_scope_spec;
 pub mod cls_scope_support;
+pub mod cls_scroll_factor;
 pub mod cls_shift_sampler;
 pub mod cls_signal_id;
 pub mod cls_signal_spec;
@@ -226,6 +228,7 @@ pub use cls_scope_eval_input::ScopeEvalInput;
 pub use cls_scope_kind::ScopeKind;
 pub use cls_scope_spec::ScopeSpec;
 pub use cls_scope_support::ScopeSupport;
+pub use cls_scroll_factor::ScrollFactor;
 pub use cls_shift_sampler::ShiftSampler;
 pub use cls_signal_id::SignalId;
 pub use cls_signal_spec::SignalSpec;
@@ -270,7 +273,7 @@ pub mod schema_roots {
         PreviewLoopbackSpec, RecipeDocument, RecipeElementPipeline, RecipeMetadata, RecipeScene,
         RecipeSceneElement, Scene, SceneAnchor, SceneElement, SceneElementOverflowPolicy,
         SceneElementPlacementRule, SceneElementSurface, SceneElementVisibility, SceneOutcome,
-        ScopeSpec, SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId,
+        ScopeSpec, ScrollFactor, SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId,
         SourceOutputSpec, SourceSpec, StructuredValue, Surface, SurfaceDiagnostic, TriggerSpec,
         Value, ValuePredicate, ValueSource,
     };
@@ -278,4 +281,4 @@ pub mod schema_roots {
 }
 
 // <FILE>crates/tui-vfx-contract/src/lib.rs</FILE> - <DESC>Stable v3.1 contract DTO exports</DESC>
-// <VERS>END OF VERSION: 0.11.0</VERS>
+// <VERS>END OF VERSION: 0.12.0</VERS>

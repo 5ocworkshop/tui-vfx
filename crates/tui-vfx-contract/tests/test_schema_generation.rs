@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>VERSION: 0.11.0</VERS>
-// <WCTX>New kernel Phase J2: include descriptor pack and catalog schema roots.</WCTX>
-// <CLOG>0.11.0: MINOR — add descriptor pack, pack ref, and catalog schema fixtures.
+// <VERS>VERSION: 0.12.0</VERS>
+// <WCTX>v3.1 pre-release scene vocabulary: include scroll factor schema root.</WCTX>
+// <CLOG>0.12.0: MINOR — add ScrollFactor schema fixture for scene-element scroll metadata.
+// 0.11.0: MINOR — add descriptor pack, pack ref, and catalog schema fixtures.
 // 0.10.0: MINOR — add lifecycle/time/trigger schema fixtures.
 // 0.9.0: MINOR — add canonical recipe document schema fixtures.
 // 0.8.0: MINOR — add source and asset schema fixtures.
@@ -22,9 +23,9 @@ use tui_vfx_contract::{
     EffectDescriptor, EffectInputSpec, EffectOutputSpec, GraphSpec, GraphStep, GraphValueId,
     GraphValueKind, GraphValueMergePolicy, GraphValueShape, LifecycleSpec, NodeOutputSpec,
     NodeSpec, ParameterSpec, PhaseSpec, RecipeDocument, RecipeElementPipeline, RecipeMetadata,
-    RecipeScene, RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec, SignalSpec,
-    SourceDescriptor, SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec, Surface,
-    SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
+    RecipeScene, RecipeSceneElement, Scene, SceneElement, SceneOutcome, ScopeSpec, ScrollFactor,
+    SignalSpec, SourceDescriptor, SourceInputSpec, SourceInstanceId, SourceOutputSpec, SourceSpec,
+    Surface, SurfaceDiagnostic, TriggerSpec, Value, ValuePredicate, ValueSource,
 };
 
 fn schema_dir() -> PathBuf {
@@ -122,6 +123,10 @@ fn schema_roots() -> Vec<(&'static str, String)> {
         (
             "recipe-scene-element.schema.json",
             canonical_schema::<RecipeSceneElement>(),
+        ),
+        (
+            "scroll-factor.schema.json",
+            canonical_schema::<ScrollFactor>(),
         ),
         ("recipe.schema.json", canonical_schema::<RecipeDocument>()),
         ("graph.schema.json", canonical_schema::<GraphSpec>()),
@@ -297,6 +302,7 @@ fn recipe_schema_roots_are_current() {
     assert_schema_fixture_current::<RecipeElementPipeline>("recipe-element-pipeline.schema.json");
     assert_schema_fixture_current::<RecipeScene>("recipe-scene.schema.json");
     assert_schema_fixture_current::<RecipeSceneElement>("recipe-scene-element.schema.json");
+    assert_schema_fixture_current::<ScrollFactor>("scroll-factor.schema.json");
     assert_schema_fixture_current::<RecipeDocument>("recipe.schema.json");
 }
 
@@ -474,4 +480,4 @@ fn checked_in_contract_schemas_are_current() {
 }
 
 // <FILE>crates/tui-vfx-contract/tests/test_schema_generation.rs</FILE> - <DESC>Stable contract schema generation and staleness checks</DESC>
-// <VERS>END OF VERSION: 0.11.0</VERS>
+// <VERS>END OF VERSION: 0.12.0</VERS>

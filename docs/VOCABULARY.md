@@ -1,7 +1,8 @@
 <!-- <FILE>docs/VOCABULARY.md</FILE> - <DESC>Canonical v3.1 vocabulary for contract, schema, and recipe-shape discussions</DESC> -->
-<!-- <VERS>VERSION: 0.27.0</VERS> -->
-<!-- <WCTX>v3.1 native backend vocabulary: document deterministic cell evidence for V2-to-v3.1 parity checks.</WCTX> -->
-<!-- <CLOG>0.27.0: MINOR — distinguish authored-loopback indicator and parity tooling gates from smoke-render evidence.
+<!-- <VERS>VERSION: 0.28.0</VERS> -->
+<!-- <WCTX>v3.1 scene vocabulary: reserve typed per-element scroll response for future camera/parallax backends.</WCTX> -->
+<!-- <CLOG>0.28.0: MINOR — define Scroll Factor as typed recipe scene element metadata reserved for future camera/parallax backends.
+0.27.0: MINOR — distinguish authored-loopback indicator and parity tooling gates from smoke-render evidence.
 0.26.0: MINOR — define authored loopback and enriched scene/procedural player vocabulary.
 0.25.0: MINOR — add color-channel class evidence vocabulary for style primitive parity.
 0.24.0: MINOR — add styled-cell glyph evidence vocabulary for glyph-changing primitive parity.
@@ -167,6 +168,17 @@ Definition:
 
 Policy:
 : Use `placementRule` only when richer placement semantics add value. Do not flatten anchor/sibling intent out of migrated scene recipes when player/runtime support exists.
+
+### Scroll Factor
+
+Definition:
+: Optional `RecipeSceneElement.scrollFactor` metadata carrying per-axis multipliers for a future scene-level scroll or camera delta. `x` applies horizontally; `y` applies vertically.
+
+Policy:
+: `scrollFactor` is stable typed authoring vocabulary owned by `tui_vfx_contract::ScrollFactor`. It is optional and nullable in generated schemas, with no `default: null` annotation. Absence means the element makes no explicit scene-scroll commitment and current backends continue lockstep behavior.
+
+Not the same as:
+: Per-cell motion, placement motion, source-local animation, or a scene camera primitive. Current backends may preserve and ignore it until a later backend packet defines execution semantics.
 
 ### Procedural Params
 

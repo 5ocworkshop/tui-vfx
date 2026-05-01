@@ -1,7 +1,7 @@
 <!-- <FILE>docs/design/tui-vfx-v3-schema-overview.md</FILE> - <DESC>Formal narrative overview of the V3 schema: top-down tree structure, renderer philosophy, subtree guidance, and design rationale that should live outside the comment-stripped JSON schema draft.</DESC> -->
-<!-- <VERS>VERSION: 0.3.4</VERS> -->
-<!-- <WCTX>Keep the schema overview aligned with V3 vocabulary, distributed timing, metadata posture, border/title fields, and shadow snapshot renderer boundaries.</WCTX> -->
-<!-- <CLOG>0.3.4: document the first-slice per-cell motion schema homes and debug fixtures. 0.3.3: record that V3 shadow snapshots render through grid/scene-first APIs with ratatui as an adapter.</CLOG> -->
+<!-- <VERS>VERSION: 0.3.5</VERS> -->
+<!-- <WCTX>Keep the schema overview aligned with V3 vocabulary, distributed timing, scene scroll metadata, metadata posture, border/title fields, and shadow snapshot renderer boundaries.</WCTX> -->
+<!-- <CLOG>0.3.5: record that RecipeSceneElement.scrollFactor is typed scene-scroll metadata, not per-cell or placement motion. 0.3.4: document the first-slice per-cell motion schema homes and debug fixtures. 0.3.3: record that V3 shadow snapshots render through grid/scene-first APIs with ratatui as an adapter.</CLOG> -->
 
 # tui-vfx V3 Schema Overview
 
@@ -140,6 +140,12 @@ coordinate scopes, deterministic staggering, and placements such as `authored`,
 `origin`, `absolute`, and `offscreen`. Exact two-stage MiddleOut and one-layer
 Slice choreography need future multi-track or phase-internal sequencing; current
 fixtures use the documented first-slice forms.
+
+Scene-level scroll/camera response is a separate scene-element concern. Strict
+v3.1 reserves `RecipeSceneElement.scrollFactor` as typed `{ x, y }` metadata for
+future parallax/depth backends. It is not per-cell remapping, not placement
+choreography, and not a scene camera primitive; absence means no explicit
+commitment beyond current lockstep backend behavior.
 
 ### 2.2 Metadata posture
 
