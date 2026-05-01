@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.33.0</VERS>
+// <VERS>VERSION: 0.34.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.33.0: MINOR — remove backend-owned glisten-band shader rendering after glistenBand moved to compositor ShaderLayerSpec.
+// <CLOG>0.34.0: MINOR — remove backend-owned focus-field shader rendering after focusField moved to compositor ShaderLayerSpec.
+// 0.33.0: MINOR — remove backend-owned glisten-band shader rendering after glistenBand moved to compositor ShaderLayerSpec.
 // 0.32.0: MINOR — remove backend-owned highlighter shader rendering after highlighter moved to compositor ShaderLayerSpec.
 // 0.31.0: MINOR — remove backend-owned radar shader rendering after radar moved to compositor ShaderLayerSpec.
 // 0.30.0: MINOR — remove backend-owned vignette/hoverBar style rendering after those filters use compositor FilterSpec paths.
@@ -328,38 +329,6 @@ fn scene_ir_with_native_content_stages(
             NativeStyleStage::ItalicWindow { start, end } => {
                 apply_italic_window_style_stage(&mut staged, *start, *end)
             }
-            NativeStyleStage::FocusField {
-                color,
-                rect_x,
-                rect_y,
-                rect_width,
-                rect_height,
-                center_x,
-                center_y,
-                shape,
-                radius_x,
-                radius_y,
-                feather,
-                intensity,
-                apply_to,
-            } => apply_focus_field_style_stage(
-                &mut staged,
-                FocusFieldStyleInputs {
-                    color,
-                    rect_x: *rect_x,
-                    rect_y: *rect_y,
-                    rect_width: *rect_width,
-                    rect_height: *rect_height,
-                    center_x: *center_x,
-                    center_y: *center_y,
-                    shape,
-                    radius_x: *radius_x,
-                    radius_y: *radius_y,
-                    feather: *feather,
-                    intensity: *intensity,
-                    apply_to,
-                },
-            ),
             NativeStyleStage::WayfindingNode {
                 current_index,
                 nodes,
@@ -1063,63 +1032,6 @@ fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64
     for y in 0..height {
         for x in 0..width {
             set_report_cell_style(report, x, y, None, None, Some("italic"));
-        }
-    }
-}
-
-struct FocusFieldStyleInputs<'a> {
-    color: &'a str,
-    rect_x: f64,
-    rect_y: f64,
-    rect_width: f64,
-    rect_height: f64,
-    center_x: f64,
-    center_y: f64,
-    shape: &'a str,
-    radius_x: f64,
-    radius_y: f64,
-    feather: f64,
-    intensity: f64,
-    apply_to: &'a str,
-}
-
-fn apply_focus_field_style_stage(
-    report: &mut PlayerRenderIrReport,
-    inputs: FocusFieldStyleInputs<'_>,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let focus_color = lerp_rgba_label(
-        inputs.color,
-        WHITE_RGBA,
-        ((1.0 - inputs.intensity) * 0.25) as f32,
-    );
-    for y in 0..height {
-        for x in 0..width {
-            let dx = (x as f64 - inputs.center_x).abs();
-            let dy = (y as f64 - inputs.center_y).abs();
-            let inside = if inputs.shape == "rect" {
-                x as f64 >= inputs.rect_x
-                    && y as f64 >= inputs.rect_y
-                    && x as f64 <= inputs.rect_x + inputs.rect_width
-                    && y as f64 <= inputs.rect_y + inputs.rect_height
-            } else {
-                let normalized = (dx / inputs.radius_x).mul_add(
-                    dx / inputs.radius_x,
-                    (dy / inputs.radius_y) * (dy / inputs.radius_y),
-                );
-                normalized.sqrt() <= 1.0 + inputs.feather
-            };
-            if inside {
-                set_report_shader_cell(
-                    report,
-                    x,
-                    y,
-                    inputs.apply_to,
-                    focus_color.as_str(),
-                    "ShaderFocusField",
-                );
-            }
         }
     }
 }

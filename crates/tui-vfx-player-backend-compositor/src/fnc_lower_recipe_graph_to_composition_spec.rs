@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.36.0</VERS>
+// <VERS>VERSION: 0.37.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.36.0: MINOR — lower shader.glistenBand into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// <CLOG>0.37.0: MINOR — lower shader.focusField into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// 0.36.0: MINOR — lower shader.glistenBand into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.35.0: MINOR — lower shader.highlighter into compositor ShaderLayerSpec and reject unsupported textContrast blend weights.
 // 0.34.0: MINOR — lower shader.radar and structured style.spatial radar into compositor ShaderLayerSpec, rejecting non-foreground applyTo.
 // 0.33.0: MINOR — reject vignette player-style-only fields and keep vignette/hoverBar on compositor FilterSpec paths.
@@ -45,10 +46,11 @@ use tui_vfx_player::{
     fnc_resolve_value_source::resolve_value_source_with_graph_values,
 };
 use tui_vfx_style::models::{
-    BorderSweepShader, ColorConfig, ColorSpace, GlistenApplyTo, GlistenBandShader,
-    GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
-    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
-    RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion, TextContrast,
+    BorderSweepShader, ColorConfig, ColorSpace, FocusFieldApplyTo, FocusFieldShader,
+    FocusFieldShape, GlistenApplyTo, GlistenBandShader, GlistenDirection, Gradient,
+    HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
+    HighlighterShader, LinearGradientApplyTo, LinearGradientShader, RadarShader, RevealWipeShader,
+    SpatialShaderType, StyleRegion, TextContrast,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -206,22 +208,6 @@ pub enum NativeStyleStage {
     },
     /// Apply player-compatible italic-window styling.
     ItalicWindow { start: f64, end: f64 },
-    /// Apply player-compatible focus field shader styling.
-    FocusField {
-        color: String,
-        rect_x: f64,
-        rect_y: f64,
-        rect_width: f64,
-        rect_height: f64,
-        center_x: f64,
-        center_y: f64,
-        shape: String,
-        radius_x: f64,
-        radius_y: f64,
-        feather: f64,
-        intensity: f64,
-        apply_to: String,
-    },
     /// Apply player-compatible wayfinding node shader styling.
     WayfindingNode {
         current_index: usize,
@@ -600,7 +586,7 @@ fn lower_node_into_spec(
         "shader.revealWipe" => lower_reveal_wipe(node, spec, request, warnings),
         "shader.borderSweep" => lower_border_sweep(recipe, node, spec, request, warnings),
         "shader.highlighter" => lower_highlighter_shader(node, spec, request, warnings),
-        "shader.focusField" => lower_focus_field_shader(node, style_stages, request, warnings),
+        "shader.focusField" => lower_focus_field_shader(node, spec, request, warnings),
         "shader.glistenBand" => lower_glisten_band_shader(node, spec, request, warnings),
         "shader.wayfindingNode" => {
             lower_wayfinding_node_shader(node, style_stages, request, warnings)
@@ -2203,7 +2189,7 @@ fn lower_highlighter_shader(
 
 fn lower_focus_field_shader(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2231,67 +2217,75 @@ fn lower_focus_field_shader(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    let shape = match strict_enum_input(
-        node,
-        request,
-        "shape",
-        "circle",
-        &["circle", "ellipse", "rect"],
-        "shader.focusField",
-    ) {
+    let shape = match focus_field_shape_input(node, request) {
         Ok(shape) => shape,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
-    let rect_x = resolved_number_input(node, request, "rectX", 0.0);
-    let rect_y = resolved_number_input(node, request, "rectY", 0.0);
+    let rect_x = resolved_u16_input(node, request, "rectX", 0);
+    let rect_y = resolved_u16_input(node, request, "rectY", 0);
     let rect_width =
-        resolved_number_input(node, request, "rectWidth", request.source_ir.width as f64);
+        resolved_u16_input(node, request, "rectWidth", request.source_ir.width as u16).max(1);
     let rect_height =
-        resolved_number_input(node, request, "rectHeight", request.source_ir.height as f64);
-    let center_x = resolved_number_input(node, request, "centerX", rect_x + rect_width / 2.0);
-    let center_y = resolved_number_input(node, request, "centerY", rect_y + rect_height / 2.0);
-    let radius_x = resolved_number_input(
+        resolved_u16_input(node, request, "rectHeight", request.source_ir.height as u16).max(1);
+    let center_x = resolved_u16_input(
         node,
         request,
-        "radiusX",
-        resolved_number_input(node, request, "radius", 4.0),
-    )
-    .max(0.5);
-    let radius_y = resolved_number_input(node, request, "radiusY", radius_x).max(0.5);
-    style_stages.push(NativeStyleStage::FocusField {
-        color: color_label_from_config(resolved_color_input(node, request, "color").unwrap_or(
-            ColorConfig::Rgb {
+        "centerX",
+        rect_x.saturating_add(rect_width / 2),
+    );
+    let center_y = resolved_u16_input(
+        node,
+        request,
+        "centerY",
+        rect_y.saturating_add(rect_height / 2),
+    );
+    let radius = resolved_u16_input(node, request, "radius", 4).max(1);
+    let radius_x = resolved_u16_input(node, request, "radiusX", radius).max(1);
+    let radius_y = resolved_u16_input(node, request, "radiusY", radius_x).max(1);
+    let feather = (resolved_number_input(node, request, "feather", 0.0).clamp(0.0, 1.0)
+        * radius_x.max(radius_y) as f64)
+        .round()
+        .clamp(0.0, u8::MAX as f64) as u8;
+    let apply_to = match focus_field_apply_to_input(node, request) {
+        Ok(apply_to) => apply_to,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::FocusField(FocusFieldShader {
+            color: resolved_color_input(node, request, "color").unwrap_or(ColorConfig::Rgb {
                 r: 120,
                 g: 180,
                 b: 255,
-            },
-        )),
-        rect_x,
-        rect_y,
-        rect_width,
-        rect_height,
-        center_x,
-        center_y,
-        shape,
-        radius_x,
-        radius_y,
-        feather: resolved_number_input(node, request, "feather", 0.0).clamp(0.0, 1.0),
-        intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0),
-        apply_to: match strict_enum_input(
-            node,
-            request,
-            "applyTo",
-            "foreground",
-            &["foreground", "background", "both"],
-            "shader.focusField",
-        ) {
-            Ok(apply_to) => apply_to,
-            Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
-        },
+            }),
+            shape,
+            center_x,
+            center_y,
+            center_x_binding: signal_source_id(node, "centerX").map(|id| id.as_str().to_string()),
+            center_y_binding: signal_source_id(node, "centerY").map(|id| id.as_str().to_string()),
+            radius_x,
+            radius_y,
+            rect_x,
+            rect_y,
+            rect_width,
+            rect_height,
+            rect_x_binding: signal_source_id(node, "rectX").map(|id| id.as_str().to_string()),
+            rect_y_binding: signal_source_id(node, "rectY").map(|id| id.as_str().to_string()),
+            rect_width_binding: signal_source_id(node, "rectWidth")
+                .map(|id| id.as_str().to_string()),
+            rect_height_binding: signal_source_id(node, "rectHeight")
+                .map(|id| id.as_str().to_string()),
+            feather,
+            falloff: Default::default(),
+            intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0)
+                as f32,
+            apply_to,
+            pulse_speed: 0.0,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
-
 fn lower_glisten_band_shader(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
@@ -3707,6 +3701,42 @@ fn highlighter_direction_input(
             "Effect `shader.highlighter` uses `direction` value `{value}` that has no compositor-native HighlighterShader equivalent."
         )),
     }
+}
+
+fn focus_field_shape_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> Result<FocusFieldShape, String> {
+    match enum_input(node, request, "shape") {
+        Some("circle" | "ellipse") | None => Ok(FocusFieldShape::Ellipse),
+        Some("rect") => Ok(FocusFieldShape::Rect),
+        Some(value) => Err(format!(
+            "Effect `shader.focusField` uses `shape` value `{value}` that has no compositor-native FocusFieldShader equivalent."
+        )),
+    }
+}
+
+fn focus_field_apply_to_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> Result<FocusFieldApplyTo, String> {
+    match enum_input(node, request, "applyTo") {
+        Some("foreground") | None => Ok(FocusFieldApplyTo::Foreground),
+        Some("background") => Ok(FocusFieldApplyTo::Background),
+        Some("both") => Ok(FocusFieldApplyTo::Both),
+        Some(value) => Err(format!(
+            "Effect `shader.focusField` uses `applyTo` value `{value}` that has no compositor-native FocusFieldShader equivalent."
+        )),
+    }
+}
+
+fn resolved_u16_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: u16,
+) -> u16 {
+    resolved_integer_input(node, request, key, i64::from(default)).clamp(0, u16::MAX as i64) as u16
 }
 
 fn glisten_band_width_input(
