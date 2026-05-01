@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.31.0</VERS>
+// <VERS>VERSION: 0.32.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.31.0: MINOR — lock subPixelBar compositor FilterSpec lowering and adapter-only rejection.
+// <CLOG>0.32.0: MINOR — lock matrixRain compositor FilterSpec lowering and remove stale migrated-filter style-stage expectations.
+// 0.31.0: MINOR — lock subPixelBar compositor FilterSpec lowering and adapter-only rejection.
 // 0.30.0: MINOR — lock strict-native success for migrated filter parity recipes without claiming IR parity.</CLOG>
 
 use std::{
@@ -2070,6 +2071,117 @@ fn test_fnc_cli_rejects_sub_pixel_bar_adapter_only_semantics_json() {
 }
 
 #[test]
+fn test_fnc_cli_lowers_matrix_rain_filter_to_compositor_filter_not_style_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("filters/filter_matrix_rain_speed_profile.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native matrix-rain filter compositor lowering player cli",
+    );
+
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["filters"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["loweredEffectIds"],
+        serde_json::json!(["filter.matrixRain"])
+    );
+}
+
+#[test]
+fn test_fnc_cli_rejects_matrix_rain_adapter_only_semantics_json() {
+    for (mutation_name, input_id, value) in [
+        ("adapter_speed", "speed", literal_number_input(1.0)),
+        (
+            "background_affect",
+            "affect",
+            unsupported_native_enum_value("background"),
+        ),
+        (
+            "unknown_mode",
+            "mode",
+            unsupported_native_enum_value("diagonal"),
+        ),
+        (
+            "unknown_preset",
+            "preset",
+            serde_json::json!({
+                "kind": "literal",
+                "value": {
+                    "kind": "string",
+                    "value": "emoji"
+                }
+            }),
+        ),
+    ] {
+        let temp_root =
+            std::env::temp_dir().join(format!("tui-vfx-native-matrix-rain-{mutation_name}"));
+        let _ = fs::remove_dir_all(&temp_root);
+        fs::create_dir_all(&temp_root).expect("create temp unsupported matrix-rain fixture root");
+        let recipe = unsupported_native_effect_shape_recipe(
+            "filters/filter_matrix_rain_speed_profile.json",
+            Some((input_id, value)),
+            None,
+            None,
+        );
+        let recipe_path = temp_root.join(format!("{mutation_name}.json"));
+        fs::write(
+            &recipe_path,
+            serde_json::to_string_pretty(&recipe)
+                .expect("serialize unsupported matrix-rain recipe"),
+        )
+        .expect("write unsupported matrix-rain recipe");
+
+        let output = run_player_cli(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path.display().to_string(),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg("enter"),
+            ],
+            "render-backend native unsupported matrix-rain player cli",
+        );
+
+        assert!(
+            !output.status.success(),
+            "{mutation_name} unexpectedly succeeded"
+        );
+        assert!(
+            stderr(&output).contains("unsupportedNativeEffect"),
+            "{mutation_name} stderr: {}",
+            stderr(&output)
+        );
+    }
+}
+
+#[test]
 fn test_fnc_cli_lowers_underline_wipe_filter_to_compositor_filter_not_style_stage_json() {
     for (recipe, phase) in [
         ("filters/filter_underline_wipe.json", "enter"),
@@ -3609,119 +3721,88 @@ fn test_fnc_cli_rejects_native_vignette_mask_blocker_unsupported_shapes_json() {
 
 #[test]
 fn test_fnc_cli_renders_compositor_backend_native_one_off_content_filter_blockers_json() {
-    for (recipe, recipe_id, effect_id, summary_key, expected_stage_count) in [
-        (
-            "content/content_slide_shift.json",
-            "debugContentSlideShift",
-            "content.slideShift",
-            "contentStages",
-            1,
-        ),
-        (
-            "filters/filter_bracket_emphasis.json",
-            "debugFilterBracketEmphasis",
-            "filter.bracketEmphasis",
-            "styleStages",
-            1,
-        ),
-        (
-            "filters/filter_edge_grow_left.json",
-            "debugFilterEdgeGrowLeft",
-            "filter.edgeGrow",
-            "styleStages",
-            1,
-        ),
-        (
-            "filters/filter_matrix_rain_speed_profile.json",
-            "debugFilterMatrixRainSpeedProfile",
-            "filter.matrixRain",
-            "styleStages",
-            1,
-        ),
-        (
-            "filters/filter_underline_wipe.json",
-            "debugFilterUnderlineWipe",
-            "filter.underlineWipe",
-            "styleStages",
-            1,
-        ),
-    ] {
-        let report = player_cli_json(
-            vec![
-                str_arg("render-backend"),
-                str_arg("--recipe"),
-                recipe_path(recipe),
-                str_arg("--descriptor-pack"),
-                descriptor_pack_path(),
-                str_arg("--backend"),
-                str_arg("compositor"),
-                str_arg("--composition-mode"),
-                str_arg("native"),
-                str_arg("--fail-on-fallback"),
-                str_arg("--format"),
-                str_arg("json"),
-                str_arg("--phase"),
-                str_arg("enter"),
-                str_arg("--phase-t"),
-                str_arg("0.35"),
-            ],
-            "render-backend native one-off content filter blockers player cli",
-        );
+    let (recipe, recipe_id, effect_id, summary_key, expected_stage_count) = (
+        "content/content_slide_shift.json",
+        "debugContentSlideShift",
+        "content.slideShift",
+        "contentStages",
+        1,
+    );
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path(recipe),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native one-off content filter blockers player cli",
+    );
 
-        assert_eq!(report["backend"], "compositor", "{recipe}");
-        assert_eq!(report["recipeId"], recipe_id, "{recipe}");
-        assert_eq!(report["compositionMode"], "native", "{recipe}");
-        assert_eq!(report["fallbackUsed"], false, "{recipe}");
-        assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
-        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
-        assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
-        assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
-        assert_eq!(
-            report["compositionSpecSummary"][summary_key], expected_stage_count,
-            "{recipe}"
-        );
-        assert!(
-            report["loweredEffectIds"]
-                .as_array()
-                .unwrap()
-                .contains(&serde_json::json!(effect_id)),
-            "{recipe}"
-        );
-        assert!(
-            report["diagnostics"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
-            "{recipe}"
-        );
+    assert_eq!(report["backend"], "compositor", "{recipe}");
+    assert_eq!(report["recipeId"], recipe_id, "{recipe}");
+    assert_eq!(report["compositionMode"], "native", "{recipe}");
+    assert_eq!(report["fallbackUsed"], false, "{recipe}");
+    assert_eq!(report["nativeLoweringAttempted"], true, "{recipe}");
+    assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+    assert_eq!(report["sourceRenderMode"], "sourceOnly", "{recipe}");
+    assert_eq!(report["nativeSourceIsolated"], true, "{recipe}");
+    assert_eq!(
+        report["compositionSpecSummary"][summary_key], expected_stage_count,
+        "{recipe}"
+    );
+    assert!(
+        report["loweredEffectIds"]
+            .as_array()
+            .unwrap()
+            .contains(&serde_json::json!(effect_id)),
+        "{recipe}"
+    );
+    assert!(
+        report["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|diagnostic| diagnostic["code"] != "unsupportedNativeEffect"),
+        "{recipe}"
+    );
 
-        let ir_resolved_report = player_cli_json(
-            vec![
-                str_arg("render-backend"),
-                str_arg("--recipe"),
-                recipe_path(recipe),
-                str_arg("--descriptor-pack"),
-                descriptor_pack_path(),
-                str_arg("--backend"),
-                str_arg("compositor"),
-                str_arg("--composition-mode"),
-                str_arg("ir-resolved"),
-                str_arg("--format"),
-                str_arg("json"),
-                str_arg("--phase"),
-                str_arg("enter"),
-                str_arg("--phase-t"),
-                str_arg("0.35"),
-            ],
-            "render-backend ir-resolved one-off content filter parity player cli",
-        );
-        assert_eq!(report["rows"], ir_resolved_report["rows"], "{recipe}");
-        assert_eq!(
-            report["styledCells"], ir_resolved_report["styledCells"],
-            "{recipe}"
-        );
-    }
+    let ir_resolved_report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path(recipe),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("ir-resolved"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend ir-resolved one-off content filter parity player cli",
+    );
+    assert_eq!(report["rows"], ir_resolved_report["rows"], "{recipe}");
+    assert_eq!(
+        report["styledCells"], ir_resolved_report["styledCells"],
+        "{recipe}"
+    );
 }
 
 #[test]
@@ -3732,7 +3813,7 @@ fn test_fnc_cli_renders_compositor_backend_native_migrated_filter_parity_recipes
             "debugFilterBracketEmphasis",
             "filter.bracketEmphasis",
             "dwell",
-            "styleStages",
+            "filters",
             1,
         ),
         (
@@ -3740,7 +3821,7 @@ fn test_fnc_cli_renders_compositor_backend_native_migrated_filter_parity_recipes
             "debugFilterBracketEmphasisProgressBinding",
             "filter.bracketEmphasis",
             "dwell",
-            "styleStages",
+            "filters",
             1,
         ),
         (
@@ -3748,7 +3829,15 @@ fn test_fnc_cli_renders_compositor_backend_native_migrated_filter_parity_recipes
             "debugFilterEdgeGrowBottomBinding",
             "filter.edgeGrow",
             "dwell",
-            "styleStages",
+            "filters",
+            1,
+        ),
+        (
+            "filters/filter_matrix_rain_speed_profile.json",
+            "debugFilterMatrixRainSpeedProfile",
+            "filter.matrixRain",
+            "enter",
+            "filters",
             1,
         ),
         (
@@ -3772,7 +3861,7 @@ fn test_fnc_cli_renders_compositor_backend_native_migrated_filter_parity_recipes
             "debugFilterUnderlineWipeProgressBinding",
             "filter.underlineWipe",
             "dwell",
-            "styleStages",
+            "filters",
             1,
         ),
     ] {
@@ -6539,4 +6628,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.31.0</VERS>
+// <VERS>END OF VERSION: 0.32.0</VERS>

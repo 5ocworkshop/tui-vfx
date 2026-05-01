@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.28.0</VERS>
+// <VERS>VERSION: 0.29.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.28.0: MINOR — remove backend-owned subPixelBar style-stage rendering after subPixelBar moved to compositor FilterSpec.
+// <CLOG>0.29.0: MINOR — remove backend-owned matrixRain style-stage rendering after matrixRain moved to compositor FilterSpec.
+// 0.28.0: MINOR — remove backend-owned subPixelBar style-stage rendering after subPixelBar moved to compositor FilterSpec.
 // 0.27.0: PATCH — remove final backend-owned wipe/pathReveal mask source-stage rendering after pathReveal moved to compositor MaskSpec.
 // 0.26.0: remove backend-owned blinds mask source-stage rendering after mask.blinds moved to compositor MaskSpec.
 // 0.25.0: remove backend-owned iris mask source-stage rendering after mask.iris moved to compositor MaskSpec.
@@ -336,40 +337,6 @@ fn scene_ir_with_native_content_stages(
             } => {
                 apply_hover_bar_style_stage(&mut staged, bar_color, *thickness, *position, apply_to)
             }
-            NativeStyleStage::MatrixRain {
-                speed_multiplier,
-                speed_min,
-                speed_max,
-                glyph_change_hz,
-                density,
-                seed,
-                trail_min,
-                trail_max,
-                affect,
-                chars,
-                mode,
-                preset,
-                head_color,
-                tail_color,
-            } => apply_matrix_rain_style_stage(
-                &mut staged,
-                MatrixRainStyleInputs {
-                    speed_multiplier: *speed_multiplier,
-                    speed_min: *speed_min,
-                    speed_max: *speed_max,
-                    glyph_change_hz: *glyph_change_hz,
-                    density: *density,
-                    seed: *seed,
-                    trail_min: *trail_min,
-                    trail_max: *trail_max,
-                    affect,
-                    chars,
-                    mode,
-                    preset,
-                    head_color,
-                    tail_color,
-                },
-            ),
             NativeStyleStage::Highlighter {
                 color,
                 apply_to,
@@ -1225,77 +1192,6 @@ fn apply_hover_bar_style_stage(
                 background.as_str(),
                 &[],
                 "FilterHoverBar",
-            );
-        }
-    }
-}
-
-struct MatrixRainStyleInputs<'a> {
-    speed_multiplier: f64,
-    speed_min: f64,
-    speed_max: f64,
-    glyph_change_hz: f64,
-    density: f64,
-    seed: f64,
-    trail_min: f64,
-    trail_max: f64,
-    affect: &'a str,
-    chars: &'a str,
-    mode: &'a str,
-    preset: &'a str,
-    head_color: &'a str,
-    tail_color: &'a str,
-}
-
-fn apply_matrix_rain_style_stage(
-    report: &mut PlayerRenderIrReport,
-    inputs: MatrixRainStyleInputs<'_>,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let speed = ((inputs.speed_min + inputs.speed_max.max(inputs.speed_min)) * 0.5)
-        * inputs.speed_multiplier.max(0.0);
-    let trail = ((inputs.trail_min + inputs.trail_max.max(inputs.trail_min)) * 0.5).max(1.0);
-    let text_factor = (inputs.chars.chars().count() as f64
-        + inputs.mode.len() as f64
-        + inputs.preset.len() as f64
-        + inputs.seed)
-        % 7.0;
-    let density = inputs.density.clamp(0.0, 1.0);
-    let level = (100.0
-        + ((report.phase_t * speed
-            + inputs.glyph_change_hz.max(0.0) * 0.01
-            + density
-            + text_factor * 0.01)
-            / trail)
-            .fract()
-            * 155.0) as u8;
-    let color = lerp_rgba_label(
-        lerp_rgba_label(
-            inputs.head_color,
-            inputs.tail_color,
-            (1.0 - density as f32).clamp(0.0, 1.0),
-        )
-        .as_str(),
-        rgba_label(40, level, 80, 255).as_str(),
-        0.5,
-    );
-    let background = if inputs.affect == "background" || inputs.affect == "both" {
-        rgba_label(0, level / 3, 0, 255)
-    } else {
-        TRANSPARENT_RGBA.to_string()
-    };
-    for y in 0..height {
-        for x in 0..width {
-            set_report_filter_cell(
-                report,
-                x,
-                y,
-                "foreground",
-                color.as_str(),
-                background.as_str(),
-                &[],
-                "FilterMatrixRain",
             );
         }
     }
@@ -2326,4 +2222,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.28.0</VERS>
+// <VERS>END OF VERSION: 0.29.0</VERS>

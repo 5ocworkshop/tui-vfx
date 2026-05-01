@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.31.0</VERS>
+// <VERS>VERSION: 0.32.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.31.0: MINOR — lower filter.subPixelBar into compositor FilterSpec::SubPixelBar and reject unsupported adapter-only aliases.
+// <CLOG>0.32.0: MINOR — lower filter.matrixRain into compositor FilterSpec::MatrixRain and reject non-native speed/channel semantics.
+// 0.31.0: MINOR — lower filter.subPixelBar into compositor FilterSpec::SubPixelBar and reject unsupported adapter-only aliases.
 // 0.30.0: MINOR — lower mask.pathReveal into compositor MaskSpec::PathReveal using structured path payloads.
 // 0.29.0: lower mask.wipe and mask.wipeCorner into compositor MaskSpec::Wipe where exact directions exist.
 // 0.28.0: lower mask.blinds into compositor MaskSpec::Blinds instead of source-stage player semantics.
@@ -22,7 +23,8 @@ use std::collections::BTreeMap;
 use mixed_signals::types::SignalOrFloat;
 use serde_json::json;
 use tui_vfx_compositor::types::cls_filter_spec::{
-    ScannerAxis, ScannerMotionMode, SubPixelBarDirection, VignetteEdge,
+    MatrixRainAffect, MatrixRainCharsetPreset, MatrixRainMode, ScannerAxis, ScannerMotionMode,
+    SubPixelBarDirection, VignetteEdge,
 };
 use tui_vfx_compositor::{
     pipeline::{CompositionSpec, ShaderLayerSpec},
@@ -210,23 +212,6 @@ pub enum NativeStyleStage {
         thickness: usize,
         position: f64,
         apply_to: String,
-    },
-    /// Apply player-compatible matrix rain filter styling.
-    MatrixRain {
-        speed_multiplier: f64,
-        speed_min: f64,
-        speed_max: f64,
-        glyph_change_hz: f64,
-        density: f64,
-        seed: f64,
-        trail_min: f64,
-        trail_max: f64,
-        affect: String,
-        chars: String,
-        mode: String,
-        preset: String,
-        head_color: String,
-        tail_color: String,
     },
     /// Apply player-compatible highlighter shader styling.
     Highlighter {
@@ -592,7 +577,7 @@ fn lower_node_into_spec(
         "filter.dotIndicator" => lower_filter_dot_indicator(node, spec, request, warnings),
         "filter.edgeGrow" => lower_filter_edge_grow(node, spec, request, warnings),
         "filter.hoverBar" => lower_filter_hover_bar(node, spec, request, warnings),
-        "filter.matrixRain" => lower_filter_matrix_rain(node, style_stages, request, warnings),
+        "filter.matrixRain" => lower_filter_matrix_rain(node, spec, request, warnings),
         "filter.subPixelBar" => lower_filter_sub_pixel_bar(node, spec, request, warnings),
         "filter.underlineWipe" => lower_filter_underline_wipe(node, spec, request, warnings),
         "filter.pillButton" => {
@@ -2834,7 +2819,7 @@ fn lower_filter_hover_bar(
 
 fn lower_filter_matrix_rain(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2863,24 +2848,55 @@ fn lower_filter_matrix_rain(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    let speed_min = number_input(node, request, "speedMin", 0.0).max(0.0);
-    let speed_default = number_input(node, request, "speed", 1.0);
-    let trail_min = integer_input(node, request, "trailMin", 2).max(0) as f64;
-    style_stages.push(NativeStyleStage::MatrixRain {
-        speed_multiplier: number_input(node, request, "speedMultiplier", 1.0).max(0.0),
+    if node_has_input(node, "speed") {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `filter.matrixRain` uses adapter-only `speed`; compositor-native MatrixRain supports speedMultiplier plus speedMin/speedMax.".to_string(),
+        };
+    }
+    let affect = match matrix_rain_affect_input(node, request, "affect") {
+        Ok(affect) => affect,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let mode = match matrix_rain_mode_input(node, request, "mode") {
+        Ok(mode) => mode,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let preset = match matrix_rain_preset_input(node, request, "preset") {
+        Ok(preset) => preset,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+
+    let speed_min = number_input(node, request, "speedMin", 0.0).max(0.0) as f32;
+    let trail_min = integer_input(node, request, "trailMin", 2).max(0) as u16;
+    let trail_max = integer_input(node, request, "trailMax", 8).max(trail_min as i64) as u16;
+    spec.filters.push(FilterSpec::MatrixRain {
+        mode,
+        density: BindableValue::from(number_signal_input(node, request, "density", 0.5)),
+        speed_multiplier: BindableValue::from(number_signal_input(
+            node,
+            request,
+            "speedMultiplier",
+            1.0,
+        )),
         speed_min,
-        speed_max: number_input(node, request, "speedMax", speed_default).max(speed_min),
-        glyph_change_hz: number_input(node, request, "glyphChangeHz", 8.0).max(0.0),
-        density: number_input(node, request, "density", 0.5).clamp(0.0, 1.0),
-        seed: integer_input(node, request, "seed", 1).max(0) as f64,
+        speed_max: (number_input(node, request, "speedMax", 1.0) as f32).max(speed_min),
         trail_min,
-        trail_max: (integer_input(node, request, "trailMax", 8) as f64).max(trail_min),
-        affect: enum_label_input(node, request, "affect", "foreground"),
-        chars: enum_label_input(node, request, "chars", "01"),
-        mode: enum_label_input(node, request, "mode", "rain"),
-        preset: enum_label_input(node, request, "preset", "default"),
-        head_color: color_label_input(node, request, "headColor", (40, 255, 80)),
-        tail_color: color_label_input(node, request, "tailColor", (20, 120, 40)),
+        trail_max,
+        glyph_change_hz: number_input(node, request, "glyphChangeHz", 8.0).max(0.0) as f32,
+        seed: integer_input(node, request, "seed", 1).max(0) as u64,
+        affect,
+        preset,
+        chars: node_has_input(node, "chars").then(|| text_input(node, request, "chars", "01")),
+        head_color: color_input(node, request, "headColor").unwrap_or(ColorConfig::Rgb {
+            r: 40,
+            g: 255,
+            b: 80,
+        }),
+        tail_color: color_input(node, request, "tailColor").unwrap_or(ColorConfig::Rgb {
+            r: 20,
+            g: 120,
+            b: 40,
+        }),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3607,6 +3623,50 @@ fn hover_bar_position_input(
     }
 }
 
+fn matrix_rain_affect_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Result<MatrixRainAffect, String> {
+    match enum_input(node, request, key) {
+        Some("foreground") | None => Ok(MatrixRainAffect::All),
+        Some("onlyBlank" | "only_blank") => Ok(MatrixRainAffect::OnlyBlank),
+        Some(value) => Err(format!(
+            "Effect `filter.matrixRain` uses `affect` value `{value}` that has no compositor-native MatrixRain equivalent without dropping authored channel semantics."
+        )),
+    }
+}
+
+fn matrix_rain_mode_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Result<MatrixRainMode, String> {
+    match enum_input(node, request, key) {
+        Some("rain" | "modern") | None => Ok(MatrixRainMode::Modern),
+        Some("digital" | "classic") => Ok(MatrixRainMode::Classic),
+        Some(value) => Err(format!(
+            "Effect `filter.matrixRain` uses `mode` value `{value}` that has no compositor-native MatrixRain equivalent."
+        )),
+    }
+}
+
+fn matrix_rain_preset_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Result<MatrixRainCharsetPreset, String> {
+    match enum_input(node, request, key) {
+        Some("default" | "matrix") | None => Ok(MatrixRainCharsetPreset::Matrix),
+        Some("binary") => Ok(MatrixRainCharsetPreset::Binary),
+        Some("hex") => Ok(MatrixRainCharsetPreset::Hex),
+        Some("ascii") => Ok(MatrixRainCharsetPreset::Ascii),
+        Some(value) => Err(format!(
+            "Effect `filter.matrixRain` uses `preset` value `{value}` that has no compositor-native MatrixRain charset preset."
+        )),
+    }
+}
+
 fn sub_pixel_bar_direction_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -3880,4 +3940,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.31.0</VERS>
+// <VERS>END OF VERSION: 0.32.0</VERS>
