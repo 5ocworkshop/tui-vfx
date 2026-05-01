@@ -1,90 +1,87 @@
-<!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.10.2</VERS> -->
-<!-- <WCTX>Compositor-next execution handoff: pure v3.1 slices use exact write scopes in the existing repo; preserved worktrees are recovery artifacts, not a future copy pattern.</WCTX> -->
-<!-- <CLOG>0.10.2: PATCH — add missing content/style README anchors to cover all v3.1 effect families.
-0.10.1: PATCH — record README anchor directories for future shader/filter/mask/sampler slices.
-0.10.0: MINOR — record compost crate pivot: build a minimal v3.1-native skeleton first, then rename wrapper later if no consumers.
-0.9.0: MINOR — remove v31 from the intended directory forecast; compositor-next is v3.1-native, while old compositor is read-only reference.
-0.8.2: PATCH — add the concrete OFPF forecast tree that every primitive packet must include before coding.
-0.8.1: PATCH — add explicit broader-task anchor so resumed sessions keep the primitive-by-primitive v3.1 migration goal in view.
-0.8.0: MINOR — clarify subagent packets must not create per-slice repo/crate/worktree copies; preserved worktrees are temporary recovery artifacts.
-0.7.0: MINOR — add hard work-packet directive: pure v3.1 end-to-end, no CompositionSpec/legacy lowering adapters, halt on adapter attempts.
-0.6.0: MINOR — record OFPF structural correction checkpoint and preserved paused slice worktrees.
-0.5.0: MINOR — sign off shader.borderSweep and record active parallel slice queue.
-0.4.0: MINOR — add typed transitions as a deferred schema-audit discussion item.</CLOG> -->
+<!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
+<!-- <VERS>VERSION: 0.12.0</VERS> -->
+<!-- <WCTX>tui-vfx-compost clean-sheet build handoff: pure v3.1 end-to-end, exact write scopes, no runtime bridges, no copied crates.</WCTX> -->
+<!-- <CLOG>0.12.0: MINOR — retarget the handoff to the tui-vfx-compost clean-sheet pure v3.1 build, mark completed schema/structure work, and remove active target references to the abandoned copied-crate path.</CLOG> -->
 
-# Compositor-Next Agent Workflow Handoff
+# tui-vfx-compost Agent Workflow Handoff
 
-**HARD DIRECTIVE — PURE v3.1 END TO END:** The goal of compositor-next is a pure v3.1 system from recipe load through primitive execution. Work packets must migrate the robust/proven primitive logic into the same runtime file tree while lightly updating implementations to consume canonical v3.1 schema fields directly. Any attempt to adapt v3.1 into `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, legacy-shaped field names, bridge/shim DTOs, or transitional lowering layers is a failure. Halt immediately if a slice starts adding that kind of adapter. The same work is the opportunity to split large legacy files into OFPF-compliant, professionally named, size-guideline-respecting modules.
+**HARD DIRECTIVE — PURE v3.1 END TO END:** The current target is `tui-vfx-compost`, a clean-sheet pure v3.1 compositor crate. Work must bring over proven logic from `tui-vfx-compositor` only as read-only reference material, then adapt it to consume canonical v3.1 schema fields directly. Any attempt to adapt v3.1 into `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, legacy-shaped field names, bridge/shim DTOs, or transitional lowering layers is a failure. Halt immediately if work starts adding that kind of adapter. This build is also the opportunity to split large legacy files into OFPF-compliant, professionally named, size-guideline-respecting modules.
 
 
 ## Broader Task Anchor — Never Lose Sight Of This
 
-The broader task is the **compositor-next vertical migration for tui-vfx v3.1**.
-The goal is to build `tui-vfx-compositor-next` as the clean future compositor
+The broader task is the **tui-vfx-compost clean-sheet pure v3.1 compositor
+build**. The goal is to build `tui-vfx-compost` as the clean future compositor
 path where a v3.1 recipe is loaded, validated, represented as canonical v3.1
-state, and then rendered by compositor-next primitives directly.
+state, and then rendered by compost runtime code directly.
 
 ```text
 v3.1 recipe
   → recipe loader / validator
   → canonical loaded v3.1 structure
-  → compositor-next primitive execution
+  → tui-vfx-compost runtime execution
   → rendered output
 ```
 
-This means **v3.1 all the way through**. We are migrating existing, proven
-compositor primitives/effects into `tui-vfx-compositor-next` one vertical slice
-at a time. Each slice starts from robust existing behavior, preserves good
-rendering logic, lightly reshapes it to consume canonical v3.1 schema fields
-directly, validates at recipe load, proves the path with v3.1 tests, keeps the
-file layout OFPF-compliant and comparable to `tui-vfx-compositor/src/`, signs
-off the primitive, then repeats.
+This means **v3.1 all the way through**. We are not repairing the
+abandoned copied-crate path. We are building the clean crate shape in
+`tui-vfx-compost`, using `tui-vfx-compositor` as read-only reference for robust
+non-primitive runtime behavior and proven primitive logic.
+
+The immediate work order is:
+
+1. keep the v3.1 schema stable unless a real contract defect is proven;
+2. finish/verify the basic `tui-vfx-compost` crate structure;
+3. bring over the non-primitive compositor substrate from `tui-vfx-compositor`
+   into the clean compost layout, adapting it to pure canonical v3.1;
+4. then resume primitive slices on top of that substrate.
 
 The work is not a bridge, shim, legacy lowering layer, second data model, broad
-recipe migration, horizontal infrastructure project, or per-primitive repo/crate
+recipe migration, horizontal compatibility project, or per-primitive repo/crate
 copying exercise. The intended migration is:
 
 ```text
-existing hardened primitive logic
+existing hardened compositor behavior
         │
         ▼
-same conceptual primitive in compositor-next
+read-only reference from tui-vfx-compositor
+        │
+        ▼
+clean OFPF-shaped tui-vfx-compost modules
         │
         ▼
 updated to read v3.1 schema fields directly
         │
         ▼
-validated with a real v3.1 recipe slice
+validated with real canonical v3.1 recipe slices
 ```
 
 ## Purpose
 
-This document is the restart point for the current compositor-next execution
-workflow. If a session is interrupted, a fresh lead agent should read this file
+This document is the restart point for the current `tui-vfx-compost` clean-sheet execution workflow. If a session is interrupted, a fresh lead agent should read this file
 after the normal project orientation and then continue from the state recorded
 below.
 
-The work is **v3.1 direct compositor-next migration**, not generic V3 work.
+The work is **pure v3.1 direct compost construction**, not generic V3 work and not copied-crate repair.
 The target path is:
 
 ```text
 canonical v3.1 RecipeDocument
   → LoadedV31Recipe::load(...)
   → load-time descriptor/catalog/direct-render validation
-  → compositor-next primitive implementation reads v3.1 nodes/source directly
-  → robust copied primitive logic, renamed/reshaped to v3.1 schema fields
+  → tui-vfx-compost runtime implementation reads v3.1 nodes/source directly
+  → robust referenced runtime/primitive logic, reshaped to v3.1 schema fields
 ```
 
 No new bridge, shim, legacy-input, alias-acceptance, `CompositionSpec` lowering, `ShaderLayerSpec` lowering, `SpatialShaderType` adapter, or other transition layer should be added. If a work packet starts adding one, stop and report the packet as failed.
 
-## Compost Crate Pivot
+## Current Target Crate
 
-The current recovery direction is to build `tui-vfx-compost` as a clean
-crate-level staging ground instead of continuing to repair the copied
-`compositor-next` tree in place. `tui-vfx-compositor` remains read-only
-reference material. `tui-vfx-compost` should contain only the minimum native
-v3.1 infrastructure required to compile and run migrated slices:
+The current direction is to build `tui-vfx-compost` as the clean v3.1 compositor
+crate instead of continuing to repair abandoned copied-crate work. `tui-vfx-compositor`
+remains read-only reference material. `tui-vfx-compost` already has the basic
+family layout and first shader proof; the next step is to bring over the
+non-primitive runtime substrate needed for real scenes and rendering:
 
 ```text
 loader/      accepts canonical v3.1 recipes once
@@ -97,16 +94,14 @@ masks/       empty until first mask slice is migrated
 samplers/    empty until first sampler slice is migrated
 ```
 
-The first compost slice is `shader.linearGradient`. It proves load validation,
-source materialization, direct render orchestration, and one migrated shader
-without a `src/v31` path, legacy DTO lowering, or crate copies. The primitive
+The first compost primitive proof is `shader.linearGradient`. It proves load
+validation, source materialization, direct render orchestration, and one migrated
+shader without a `src/v31` path, legacy DTO lowering, or crate copies. The primitive
 family directories now include README anchors for future agents:
 `src/shaders/`, `src/filters/`, `src/masks/`, `src/samplers/`, `src/content/`, `src/styles/`, and the matching
 `src/validation/{filters,masks,samplers,content,styles}/` directories. Those READMEs define
-what belongs in each directory and show example OFPF file names. Once the crate
-shape is accepted and there are no external consumers, the package/wrapper can
-be renamed to the final compositor-next name later; that rename should be a
-Cargo/package/API wiring change, not another architecture migration.
+what belongs in each directory and show example OFPF file names. Any future crate/package rename must be a Cargo/package/API wiring change, not
+another architecture migration.
 
 ## Current Scoreboard
 
@@ -118,19 +113,24 @@ Current descriptor-effect count:
 120 v3.1 effect descriptors
 ```
 
-Signed direct compositor-next v3.1 primitives:
+Historical signed primitive proofs from earlier abandoned copied-crate work:
 
 ```text
 5 / 120
 ```
 
-Signed primitives:
+Historical signed primitive proofs from the abandoned copied-crate path:
 
 1. `shader.linearGradient`
 2. `shader.highlighter`
 3. `shader.glistenBand`
 4. `shader.focusField`
 5. `shader.borderSweep`
+
+Note: these are signed historical slices from the abandoned copied-crate path.
+For the current `tui-vfx-compost` path, `shader.linearGradient` is the first
+active primitive proof. The immediate next work is non-primitive substrate
+migration before more primitive fan-out.
 
 Remaining:
 
@@ -154,7 +154,7 @@ Human-facing progress banner:
 
 Source of truth: `descriptors/v3.1/packs/primitive.json` effect descriptors. Update this list in the same commit that signs off a primitive.
 
-Completed direct compositor-next v3.1 primitives:
+Completed/historical direct v3.1 primitive proofs:
 
 ```text
 shader.linearGradient
@@ -164,7 +164,7 @@ shader.focusField
 shader.borderSweep
 ```
 
-Outstanding direct compositor-next v3.1 primitives:
+Outstanding primitive descriptors for future compost migration:
 
 ```text
 [content]
@@ -297,8 +297,9 @@ style.spatial
 
 ## Current Paused Worktrees
 
-Parallel slice work is paused until the integrated compositor-next v3.1 code is
-back in OFPF-shaped files. Do **not** delete, prune, reset, overwrite, or merge
+Parallel slice work is paused. The preserved worktrees are recovery/reference
+material only; do not merge them until the clean `tui-vfx-compost` substrate is
+ready and each diff is re-reviewed against the current schema and file layout. Do **not** delete, prune, reset, overwrite, or merge
 these worktrees while performing the structural correction. They are preserved
 recovery material for later review. A leader-provided worktree is already enough
 isolation; agents must not create nested clones, nested worktrees, or copied
@@ -327,13 +328,14 @@ Preserved slice worktrees:
 | `shader.revealWipe` | `/usr/projects/tui-vfx-slice-reveal-wipe` | `slice/reveal-wipe` | implementation material exists; blocked from integration until OFPF structure is corrected and diff is rebased/re-reviewed |
 | `shader.wayfindingNode` | `/usr/projects/tui-vfx-slice-wayfinding-node` | `slice/wayfinding-node` | paused; not integrated |
 
-Resume order after the structural correction is committed: review/rebase
-`shader.revealWipe` first, then inspect the paused slice worktrees one by one
-or relaunch grounded agents if the preserved branches are too stale.
+Resume order after the compost substrate is ready: review/rebase
+`shader.revealWipe` first only if it still maps cleanly to the current compost
+layout; otherwise inspect the paused slice worktrees one by one or relaunch
+grounded agents if the preserved branches are too stale.
 
 ## Operating Model
 
-The user-approved execution model is:
+The user-approved execution model for future delegated slices is:
 
 ```text
 Lead agent
@@ -360,22 +362,22 @@ coherence, de-slop, and verification.
 
 ## OFPF Structure Rules for Direct v3.1 Code
 
-`tui-vfx-compositor` is **read-only reference material** for this migration. It
-is where workers inspect the hardened primitive logic and nearby file structure.
-Do not edit it during compositor-next migration slices.
+`tui-vfx-compositor` is **read-only reference material**. It is where we inspect
+the hardened non-primitive runtime logic, primitive logic, and nearby file
+structure. Do not edit it during compost work.
 
-`tui-vfx-compositor-next` is the v3.1-native compositor. Because the crate
-itself is the new v3.1 path, the intended final implementation tree must not put
-normal code under a `v31/` directory. A `v31/` directory makes v3.1 look like a
-mode, bridge, or temporary adapter; it will pollute future packet structure.
-Directory names should describe responsibilities, not the schema version.
+`tui-vfx-compost` is the clean-sheet pure v3.1 compositor crate. Because the
+crate itself is the v3.1 path, normal code must not live under a `v31/`
+directory. A versioned runtime directory makes v3.1 look like a mode, bridge, or
+temporary adapter; it will pollute future packet structure. Directory names
+should describe responsibilities, not schema versions.
 
-The compositor-next tree should stay proximate to `tui-vfx-compositor/src/`:
-copy/reference a primitive's proven logic from the same family directory, then
-lightly update it to read canonical v3.1 schema fields directly in
-`tui-vfx-compositor-next`. When a legacy file is too large or mixes
-responsibilities, this migration is the chance to split it into smaller
-OFPF-named modules with clear cohesion.
+The compost tree should stay conceptually proximate to `tui-vfx-compositor/src/`
+where that helps orientation, but it should not copy whole directories or carry
+legacy DTO structure forward. Bring over the minimum non-primitive runtime
+substrate needed for scenes, sources, render context, frame output, sampling,
+loop/procedural behavior, and pipeline orchestration, then adapt it to canonical
+v3.1 structures directly.
 
 The rejected pattern is any new layer that translates canonical v3.1 nodes into
 old compositor DTOs. Do not recreate a `v31/`, `rendering/`, `bridge/`,
@@ -385,7 +387,7 @@ old compositor DTOs. Do not recreate a `v31/`, `rendering/`, `bridge/`,
 Forecast OFPF file tree for every primitive packet:
 
 ```text
-# READ-ONLY REFERENCE — inspect only, never edit in compositor-next packets
+# READ-ONLY REFERENCE — inspect only, never edit in compost packets
 crates/tui-vfx-compositor/src/
   context/
   filters/cls_<filter_primitive>.rs
@@ -396,8 +398,8 @@ crates/tui-vfx-compositor/src/
   types/
   utils/
 
-# WRITE TARGET — v3.1-native compositor, no src/v31 directory in final layout
-crates/tui-vfx-compositor-next/src/
+# WRITE TARGET — clean-sheet v3.1 compost crate, no src/v31 directory
+crates/tui-vfx-compost/src/
   context/
     cls_compositor_ctx.rs                         # expected edit only if context contract changes
     mod.rs                                        # expected edit only for module wiring
@@ -485,12 +487,12 @@ crates/tui-vfx-compositor-next/src/
     fnc_<specific_helper>.rs                      # expected new only if reused and under OFPF size guidance
     mod.rs                                        # narrow export edit only
 
-crates/tui-vfx-compositor-next/tests/direct_recipe/
+crates/tui-vfx-compost/tests/direct_recipe/
   support.rs                                      # shared test helpers only
   test_load_contract.rs                           # general loader/strictness contract
   test_<family>_<primitive>.rs                    # one primitive contract/e2e test file per slice
 
-docs/arch/compositor-next-agent-workflow-handoff.md # expected edit for scoreboard/signoff only
+docs/arch/tui-vfx-compost-agent-workflow-handoff.md # expected edit for status/signoff only
 ```
 
 Packet authors must paste the relevant subset of this tree into every dispatched
@@ -500,7 +502,7 @@ outside the forecast subset, the agent must stop and report the proposed
 deviation before broad edits. The leader must reject work that invents a new
 top-level layout, adds a versioned path such as `src/v31/`, adds a `rendering/`
 adapter tree, expands hub files with primitive logic, edits
-`tui-vfx-compositor`, or creates files not explained by the packet tree.
+`tui-vfx-compositor`, edits copied-crate paths, or creates files not explained by the packet tree.
 
 OFPF guardrails for future slices:
 
@@ -520,7 +522,7 @@ OFPF guardrails for future slices:
 Every primitive slice must be vertical and complete before signoff. The worker report must list every created or edited file and identify whether it was edited-existing, new-authored, copied, moved, or generated:
 
 1. Inspect the v3.1 descriptor entry.
-2. Inspect existing copied compositor/style implementation.
+2. Inspect existing reference compositor/style implementation.
 3. Add or update a failing regression first.
 4. Observe RED when practical and record if the clean RED step is impossible.
 5. Implement the smallest direct v3.1 renderer/load-validation support.
@@ -545,13 +547,13 @@ tests, generated artifacts, hand-maintained docs, and signoff notes are updated.
 - `shader.focusField` geometry fields that land in compositor `u16` fields
   (`centerX`, `centerY`, `radius`) must be integer-valued numeric literals at load time;
   direct v3.1 must not silently narrow fractional descriptor-valid numbers.
-- `shader.focusField.applyTo` defaults to the descriptor/lowerer foreground behavior when
-  absent; tests should set `background` explicitly when asserting background color changes.
+- `shader.focusField.channelTarget` defaults to foreground behavior when absent;
+  tests should set `background` explicitly when asserting background color changes.
 
 - `LoadedV31Recipe::load` is the single acceptance point for direct v3.1
   execution.
-- `tui-vfx-player-next` must delegate to the same compositor-next v3.1 loader
-  and renderer. It must not own a second recipe-loader logic set.
+- `tui-vfx-player-next` or any future player path must delegate to the same
+  compost v3.1 loader and renderer. It must not own a second recipe-loader logic set.
 - Source inputs in the current direct renderer must all be literal, even when
   the first renderer ignores some styling inputs.
 - Effect inputs for supported direct primitives must all be literal.
@@ -560,10 +562,10 @@ tests, generated artifacts, hand-maintained docs, and signoff notes are updated.
 - Descriptor-valid-but-unsupported values should fail loudly at load time with
   `V31LoadError::UnsupportedDirectInput`.
 - Current `shader.highlighter` direct decisions:
-  - `mode`: supports `band`; rejects descriptor-valid `row` and `centerOut`
-    until direct compositor semantics exist.
-  - `applyTo`: supports `foreground`, `background`, `both`.
-  - `direction`: supports `leftToRight`, `rightToLeft`, `topToBottom`,
+  - `highlightMode`: supports `band`; rejects descriptor-valid `row` and
+    `centerOut` until direct compositor semantics exist.
+  - `channelTarget`: supports `foreground`, `background`, `both`.
+  - `sweepDirection`: supports `leftToRight`, `rightToLeft`, `topToBottom`,
     `bottomToTop`.
   - `textContrast`: supports only `0.0`/`TextContrast::Preserve`.
   - `rowMask`: non-negative integer maps to a single-row compositor range.
@@ -584,22 +586,25 @@ Follow repo workflow:
 - No `CompositionSpec`, `ShaderLayerSpec`, `SpatialShaderType`, or legacy-shaped lowering layer in the v3.1 path.
 - Validation happens at `LoadedV31Recipe::load`.
 - Primitive execution reads canonical v3.1 node/source fields directly.
-- Use OFPF tools to inspect descriptors and existing copied compositor/style
+- Use OFPF tools to inspect descriptors and existing reference compositor/style
   implementation.
 
 Expected file tree / file-name breakdown must be included in every dispatched primitive packet. The packet should list likely validation, primitive-runtime, test, and docs files, marking each as expected edit/new/generated/should-not-touch. Deviations from that tree must be reported before broad edits.
 
-Suggested scope:
-- one validation module under `crates/tui-vfx-compositor-next/src/v31/validation/shaders/`
-- one direct v3.1 primitive module in the same compositor-next runtime tree used by the copied primitive family
+Suggested scope for current compost work:
+- one validation module under `crates/tui-vfx-compost/src/validation/shaders/`
+- one direct v3.1 primitive module under `crates/tui-vfx-compost/src/shaders/`
 - narrow dispatch wiring only where unavoidable
-- one primitive test module under `crates/tui-vfx-compositor-next/tests/v31_direct_recipe/`
+- one primitive test module under `crates/tui-vfx-compost/tests/direct_recipe/`
 - docs/signoff if needed
+
+If work later moves to a future production crate name, preserve the
+same non-versioned family layout. Do not introduce `src/v31/` paths.
 
 Keep the change minimal and vertical:
 - Add a canonical v3.1 fixture/test for <PRIMITIVE_ID>.
 - Prove RED unsupported when practical.
-- Implement supported descriptor-canonical subset using existing copied behavior.
+- Implement supported descriptor-canonical subset using existing referenced behavior.
 - Reject unsupported descriptor-valid semantics at load with
   V31LoadError::UnsupportedDirectInput.
 - Validate every authored source/effect input remains literal.
@@ -646,13 +651,13 @@ At minimum, after integrating a slice:
 ```bash
 cargo fmt --check
 git diff --check
-cargo test -p tui-vfx-compositor-next --test test_v31_direct_recipe -- --nocapture
+cargo test -p tui-vfx-compost --test direct_recipe -- --nocapture
 cargo test -p tui-vfx-player-next --test player_next_v31 -- --nocapture
-cargo test -p tui-vfx-compositor-next --test test_old_compositor_parity
+cargo test -p tui-vfx-compost --test direct_recipe
 cargo test -p tui-vfx-player --test test_compositor_next_primitive_tree
-cargo test -p tui-vfx-compositor-next
+cargo test -p tui-vfx-compost
 cargo check -p tui-vfx-player-next
-cargo clippy -p tui-vfx-compositor-next --all-targets -- -D warnings
+cargo clippy -p tui-vfx-compost --all-targets -- -D warnings
 cargo clippy -p tui-vfx-player-next --all-targets -- -D warnings
 ```
 
@@ -669,8 +674,9 @@ Discussion checkpoint, 2026-05-01:
 - `tui-vfx-player-ui` is a development convenience shell, not an upstream
   runtime API. Upstream should not depend on `player-ui`.
 - `tui-vfx-player` and `tui-vfx-player-next` are headless/dev playback surfaces.
-  The current v3.1 SSOT is still `LoadedV31Recipe::load` in
-  `tui-vfx-compositor-next::v31`, with `tui-vfx-player-next` delegating to it.
+  The current v3.1 SSOT is still the active direct v3.1 loader entry point,
+  with any player-next path delegating to that same loader rather than owning
+  duplicate recipe acceptance logic.
 - We are deliberately deferring any crate-boundary extraction for a v3.1
   recipe-runtime/player-core crate so vertical primitive migration can continue.
 
@@ -686,26 +692,31 @@ Should v3.1 recipe loading/playback eventually live in:
 Current rule while deferred: keep one implementation of v3.1 acceptance logic.
 Do not duplicate loader rules in player-next, player-ui, or any bridge layer.
 
-## Schema Audit Discussion List
+## Schema Audit Status And Future Watchlist
 
-Deferred topics to discuss and likely act on during the post-migration schema audit:
+Completed schema-audit items:
 
-1. **Typed transitions as recipe/schema citizens.** Keep transition kernels at the
-   primitive/runtime level, but consider elevating author-facing transitions into
-   typed schema entries such as `transition.crossfade`, `transition.wipe`,
-   `transition.iris`, `transition.push`, `transition.dissolve`,
-   `transition.morph`, `transition.stippled`, and `transition.braille`.
-   Rationale: authors, themes, validators, documentation, compositor dirty-region
-   hints, and AI generation all benefit from named transition intent instead of
-   forcing every recipe to assemble masks/signals/blends/easing chains by hand.
-   The audit should decide whether these are descriptor IDs, enum variants under
-   a transition descriptor family, or theme-token references to transition
-   descriptors. It should also decide how transition scope, duration/easing,
-   focal/direction parameters, runtime bindings, and A→B source semantics fit
-   without bloating the base primitive schema.
+1. **Native transition model.** Typed transitions are now first-class v3.1
+   contract citizens with executable tracks, preserved author intent, required
+   interruption policy, and required reduced-motion policy. The authoritative
+   rationale and shape are in `docs/arch/v31-native-transition-model.md`.
+2. **Ambiguous field-name audit.** Canonical v3.1 contract schemas and primitive
+   descriptors no longer use broad ambiguous names such as `type`, `target`,
+   `source`, `progress`, `amount`, `mode`, `direction`, `motion`, `speed`,
+   `color`, `applyTo`, or `affect` except for narrow, documented allowlist cases.
 
-Do not interrupt the current vertical primitive migration for this discussion;
-record evidence and revisit it when the schema audit/schema-diet pass begins.
+Future schema-diet/watchlist items are allowed only after concrete example or
+primitive evidence:
+
+- canonicalize 10–15 representative v3.1 examples and note pain points;
+- consider whether typed signal expressions, shadow payloads, shared rhythm,
+  phase-variant inputs, or non-transition capability variants deserve promotion;
+- continue shrinking descriptor repetition without adding runtime bridges or
+  legacy aliases.
+
+Do not interrupt vertical primitive migration for speculative schema expansion.
+Record evidence and revisit only when canonical examples or compositor slices
+show a real contract defect.
 
 ## Paused Queue
 
@@ -760,7 +771,7 @@ committed primitive so work is not repeated.
 
 1. Run project orientation and fully read steering files required by this repo.
 2. Read:
-   - `docs/arch/compositor-next-vertical-implementation-plan.md`
+   - `docs/arch/tui-vfx-compost-vertical-implementation-plan.md`
    - `docs/arch/v31-schema-boundary-north-star.md`
    - `docs/arch/primitive-workbench-schema-driven-workflow.md`
    - this file
@@ -778,5 +789,5 @@ git worktree list --porcelain
    delete or reset them as cleanup, and do not create replacements by default.
 8. Resume with lead review/integration, not broad implementation by the lead.
 
-<!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>END OF VERSION: 0.10.2</VERS> -->
+<!-- <FILE>docs/arch/tui-vfx-compost-agent-workflow-handoff.md</FILE> - <DESC>Restartable workflow for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
+<!-- <VERS>END OF VERSION: 0.12.0</VERS> -->

@@ -1,32 +1,7 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.44.0</VERS> -->
-<!-- <WCTX>Compositor-next Phase 0: index current-state fence for vertical implementation.</WCTX> -->
-<!-- <CLOG>1.44.0: add compositor-next current-state fence.
-1.43.0: add clocks and timing architecture note.
-1.42.0: add compositor-next vertical implementation plan.
-1.41.0: add architecture hub and v3.1 schema-boundary/primitive-workbench north-star docs.
-1.40.0: add v3.1 player dense cell-capture SQLite guide.
-1.39.0: add first v3.1 parallel migration lane results.
-1.38.0: add reusable v3.1 parallel migration agent briefing.
-1.37.0: add v3.1 rendering boundary and lowering rules.
-1.36.0: add K2.5 styled primitive evidence and player tooling PRD references.
-1.35.0: add v3.1 schema and related directory map.
-1.34.0: note I0 lifecycle/time/trigger contract semantics and schema roots.
-1.33.0: note H1 vocabulary and canonical recipe document contract semantics.
-1.32.0: note H0 source and asset contract semantics.
-1.31.0: note G4 node output and graph value bus semantics.
-1.30.0: note G3 graph topology and channel-aware parallel merge.
-1.29.0: note G2 canonical graph execution proof.
-1.28.0: note G1 graph and node contract roots.
-1.27.0: note F2 value source, parameter, signal, and binding contract roots.
-1.26.0: note F1 typed value/input contract and schema roots.
-1.25.0: note E1 effect descriptor contract and schema root.
-1.24.0: note tui-vfx-contract ownership and schema path split.
-1.23.0: add v3.1 contract/engine boundary reference.
-1.22.0: add v3.1 template composition design reference.
-1.21.0: refresh clean-room v3.1 entries for Phase D1 scene composition.
-1.20.0: add clean-room v3.1 architecture/contract/checklist/new-kernel references.
-1.19.0: add API_SIGNALS_REFERENCE.md (renamed from SIGNALS_REFERENCE.md) under Generated with a one-line note pointing recipe authors at the recipe-side reference in tui-vfx-recipes.</CLOG> -->
+<!-- <VERS>VERSION: 1.48.0</VERS> -->
+<!-- <WCTX>tui-vfx-compost clean-sheet build: documentation index points to the active pure v3.1 compositor handoff.</WCTX> -->
+<!-- <CLOG>1.48.0: replace the copied-crate handoff entry with the tui-vfx-compost clean-sheet pure v3.1 build handoff.</CLOG> -->
 
 # Documentation Index
 
@@ -138,13 +113,15 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 ## V3 planning and tooling
 
 - [arch/INDEX.md](arch/INDEX.md) — Architecture hub for foundational v3.1 schema-boundary and primitive-workbench north-star docs.
-- [arch/compositor-next-vertical-implementation-plan.md](arch/compositor-next-vertical-implementation-plan.md) — Detailed plan for copying the hardened compositor into compositor-next, then migrating primitive-by-primitive through vertical schema/runtime/validation slices.
-- [arch/compositor-next-agent-workflow-handoff.md](arch/compositor-next-agent-workflow-handoff.md) — Restartable compositor-next execution handoff for warmed low-level coding agents, lead review/integration, active worktrees, scoreboard, and per-slice gates.
-- [arch/compositor-next-current-state-fence.md](arch/compositor-next-current-state-fence.md) — Phase 0 current-state fence separating pre-existing dirty/exploratory work from compositor-next-owned vertical implementation.
-- [arch/CLOCKS_AND_TIMING.md](arch/CLOCKS_AND_TIMING.md) — Architecture note separating current and proposed clocks/cadences: lifecycle clocks, phase timing, element timing, sample time, presentation FPS, semantic update cadence, and primitive motion parameters.
-- [arch/v31-schema-boundary-north-star.md](arch/v31-schema-boundary-north-star.md) — North-star architecture for schema-owned crate boundaries, data models, responsibilities, co-located primitive source trees, and validation discipline.
+- [arch/tui-vfx-tui-vfx-compost-vertical-implementation-plan.md](arch/tui-vfx-tui-vfx-compost-vertical-implementation-plan.md) — Formal implementation plan for the tui-vfx-compost clean-sheet pure v3.1 compositor build: stable schema, substrate-first runtime migration, then primitive slices.
+- [arch/tui-vfx-compost-agent-workflow-handoff.md](arch/tui-vfx-compost-agent-workflow-handoff.md) — Restartable tui-vfx-compost handoff for the clean-sheet pure v3.1 compositor build, completed schema/structure checkpoints, preserved recovery worktrees, exact write-scope rules, and future slice gates.
+- [arch/tui-vfx-compost-current-state-fence.md](arch/tui-vfx-compost-current-state-fence.md) — Current-state fence separating historical copied-crate/recovery artifacts from the active tui-vfx-compost clean-sheet v3.1 target.
+- [arch/CLOCKS_AND_TIMING.md](arch/CLOCKS_AND_TIMING.md) — Architecture note separating lifecycle clocks, phase timing, native transition timing/variants, sample time, presentation cadence, semantic update cadence, and primitive motion parameters.
+- [arch/v31-schema-boundary-north-star.md](arch/v31-schema-boundary-north-star.md) — North-star architecture for schema-owned crate boundaries, native transitions, data models, responsibilities, co-located primitive source trees, and validation discipline.
+- [arch/v31-native-transition-model.md](arch/v31-native-transition-model.md) — Official rationale and canonical shape for native v3.1 transitions, tracks, lifecycle alignment, reduced-motion policy, and recipe-oracle mapping rules.
+- [arch/v31-ai-authoring-prompt-guidance.md](arch/v31-ai-authoring-prompt-guidance.md) — Reusable prompt anchors and classification rules for AI-assisted v3.1 recipe authoring without app/design-system or legacy execution assumptions.
 - [arch/primitive-workbench-schema-driven-workflow.md](arch/primitive-workbench-schema-driven-workflow.md) — Draft Primitive Workbench workflow for schema-driven primitive scaffolding, generated assets, migration mappings, commonality extraction, and validation gates.
-- [VOCABULARY.md](VOCABULARY.md) — Canonical v3.1 human vocabulary, legacy/non-canonical term mapping, naming rules, deferrals, and change policy.
+- [VOCABULARY.md](VOCABULARY.md) — Canonical v3.1 human vocabulary, native transition track families, legacy/non-canonical term mapping, naming rules, deferrals, and change policy.
 - [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model, F1 typed input model, F2 declarative source/binding model, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 graph value-bus semantics, H0 source/asset/procedural source contracts, H1 canonical recipe document packaging, and I0 lifecycle/time/trigger contracts.
 - [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1/I0 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor/input/value-source/binding/graph/execution proof/topology/value-bus/source/asset/recipe/lifecycle model, and handoff guardrails.
 - [v3.1-surface-contract.md](v3.1-surface-contract.md) — Clean-room Phase A/B/C/D0/D1/D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1/I0 surface, sampling, pipeline, scene, descriptor/input/source/binding/graph/execution-proof, schema-reference, graph value-bus, source/asset/recipe document/lifecycle contracts, vocabulary, and contract/proof ownership.
@@ -216,4 +193,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.44.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.48.0</VERS> -->
