@@ -252,6 +252,8 @@ impl From<&crate::models::v3::VfxMaterialLightShader> for SpatialShaderType {
                 drift_amount,
             } => SpatialShaderType::Diffusion(DiffusionShader {
                 source: (*source).into(),
+                source_x: None,
+                source_y: None,
                 color: *color,
                 radius: *radius,
                 softness: *softness,

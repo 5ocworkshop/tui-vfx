@@ -8,9 +8,10 @@
 //! forever-flat primitive leaf.
 //!
 // <FILE>crates/tui-vfx-style/src/models/cls_diffusion_shader.rs</FILE> - <DESC>Soft diffusion shader for textile, paper, and frosted material light</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Move the reusable radial/corner diffusion geometry onto the shared mixed-signals surface-distance substrate while keeping diffusion-specific lighting semantics local.</WCTX>
-// <CLOG>0.2.0: use mixed-signals SurfaceDistanceSignal for center/corner source geometry and add regression coverage against the pre-refactor distance formulas.
+// <CLOG>0.3.0: add explicit source coordinates so v3.1 diffusion recipes can lower through compositor shader layers.
+// 0.2.0: use mixed-signals SurfaceDistanceSignal for center/corner source geometry and add regression coverage against the pre-refactor distance formulas.
 // 0.1.0: Add DiffusionShader with source geometry, softness, edge discipline, and optional low-amplitude breathing/drift modes</CLOG>
 
 use crate::models::{ColorConfig, ColorSpace, FalloffType};
@@ -71,7 +72,14 @@ pub enum DiffusionMode {
 pub struct DiffusionShader {
     #[serde(default)]
     pub source: DiffusionSource,
+    /// Optional explicit source X coordinate in local cells; overrides `source` geometry when paired with `source_y`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_x: Option<u16>,
+    /// Optional explicit source Y coordinate in local cells; overrides `source` geometry when paired with `source_x`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_y: Option<u16>,
     pub color: ColorConfig,
+    /// Radius in whole terminal cells.
     #[serde(default = "default_radius")]
     pub radius: u8,
     #[serde(default = "default_softness")]
@@ -116,6 +124,8 @@ impl Default for DiffusionShader {
     fn default() -> Self {
         Self {
             source: DiffusionSource::Center,
+            source_x: None,
+            source_y: None,
             color: ColorConfig::White,
             radius: default_radius(),
             softness: default_softness(),
@@ -136,6 +146,9 @@ impl DiffusionShader {
         let max_y = height.saturating_sub(1) as f32;
         let x = x as f32;
         let y = y as f32;
+        if let (Some(source_x), Some(source_y)) = (self.source_x, self.source_y) {
+            return ((x - source_x as f32).powi(2) + (y - source_y as f32).powi(2)).sqrt();
+        }
         let signal_ctx = SignalContext::new(0, 0)
             .with_dimensions(width, height)
             .with_cell_position(x as u16, y as u16);
@@ -172,11 +185,14 @@ impl DiffusionShader {
         let max_y = height.saturating_sub(1) as f32;
         let x = x as f32;
         let y = y as f32;
-
         let top = y;
         let bottom = max_y - y;
         let left = x;
         let right = max_x - x;
+
+        if self.source_x.is_some() && self.source_y.is_some() {
+            return top.min(bottom).min(left).min(right);
+        }
 
         match self.source {
             DiffusionSource::Center => top.min(bottom).min(left).min(right),
@@ -343,4 +359,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-style/src/models/cls_diffusion_shader.rs</FILE> - <DESC>Soft diffusion shader for textile, paper, and frosted material light</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

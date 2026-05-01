@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.39.0</VERS>
+// <VERS>VERSION: 0.40.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.39.0: MINOR — lock shader.barberPole compositor shader-layer lowering.
+// <CLOG>0.40.0: MINOR — lock shader.diffusion compositor shader-layer lowering.
+// 0.39.0: MINOR — lock shader.barberPole compositor shader-layer lowering.
 // 0.38.0: MINOR — lock shader.wayfindingNode compositor shader-layer lowering.
 // 0.37.0: MINOR — lock shader.focusField compositor shader-layer lowering.
 // 0.36.0: MINOR — lock shader.glistenBand compositor shader-layer lowering.
@@ -146,20 +147,129 @@ fn test_fnc_cli_capture_cells_writes_procedural_recipe_metadata() {
 }
 
 #[test]
-fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() {
-    let recipe = "shaders/primitives/shader_diffusion_background.json";
-    let report = assert_native_backend_matches_ir_resolved_at_phase(
-        recipe_path(recipe),
-        "debugShaderDiffusionBackground",
-        "shader.diffusion",
-        "0.35",
-        "render-backend native target shader blockers player cli",
+fn test_fnc_cli_lowers_diffusion_shader_to_compositor_shader_layer_not_style_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("shaders/primitives/shader_diffusion_background.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native diffusion shader compositor layer player cli",
     );
 
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugShaderDiffusionBackground");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
     assert_eq!(
-        report["compositionSpecSummary"]["styleStages"], 1,
-        "{recipe}"
+        report["loweredEffectIds"],
+        serde_json::json!(["shader.diffusion"])
     );
+}
+
+#[test]
+fn test_fnc_cli_lowers_diffusion_named_source_without_explicit_center_json() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-native-diffusion-named-source");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create temp diffusion named source fixture root");
+    let mut recipe = unsupported_native_effect_shape_recipe(
+        "shaders/primitives/shader_diffusion_background.json",
+        Some(("source", unsupported_native_enum_value("topLeft"))),
+        None,
+        None,
+    );
+    let inputs = recipe["graph"]["nodes"]["effectNode"]["inputs"]
+        .as_object_mut()
+        .expect("effect inputs object");
+    inputs.remove("centerX");
+    inputs.remove("centerY");
+    let recipe_path = temp_root.join("diffusion_named_source.json");
+    fs::write(
+        &recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize diffusion named source recipe"),
+    )
+    .expect("write diffusion named source recipe");
+
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path.display().to_string(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native diffusion named source compositor layer player cli",
+    );
+
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+}
+
+#[test]
+fn test_fnc_cli_rejects_diffusion_fractional_whole_cell_fields_json() {
+    for (input_id, value) in [("radius", 8.5), ("centerX", 20.25), ("centerY", 2.5)] {
+        let temp_root = std::env::temp_dir().join(format!(
+            "tui-vfx-native-diffusion-{input_id}-fractional-unsupported"
+        ));
+        let _ = fs::remove_dir_all(&temp_root);
+        fs::create_dir_all(&temp_root).expect("create temp diffusion fractional fixture root");
+        let recipe = unsupported_native_effect_shape_recipe(
+            "shaders/primitives/shader_diffusion_background.json",
+            Some((input_id, literal_number_input(value))),
+            None,
+            None,
+        );
+        let recipe_path = temp_root.join(format!("diffusion_{input_id}_fractional.json"));
+        fs::write(
+            &recipe_path,
+            serde_json::to_string_pretty(&recipe).expect("serialize diffusion fractional recipe"),
+        )
+        .expect("write diffusion fractional recipe");
+
+        let output = run_native_render_backend_with_fail_on_fallback(
+            recipe_path.display().to_string(),
+            "render-backend native diffusion fractional field player cli",
+        );
+
+        assert!(
+            !output.status.success(),
+            "diffusion {input_id} fractional value unexpectedly succeeded"
+        );
+        assert!(
+            stderr(&output).contains("unsupportedNativeEffect"),
+            "diffusion {input_id} stderr: {}",
+            stderr(&output)
+        );
+    }
 }
 
 #[test]

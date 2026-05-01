@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.39.0</VERS>
+// <VERS>VERSION: 0.40.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.39.0: MINOR — lower shader.barberPole into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// <CLOG>0.40.0: MINOR — lower shader.diffusion into compositor ShaderLayerSpec and remove backend style-stage emulation.
+// 0.39.0: MINOR — lower shader.barberPole into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.38.0: MINOR — lower shader.wayfindingNode into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.37.0: MINOR — lower shader.focusField into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.36.0: MINOR — lower shader.glistenBand into compositor ShaderLayerSpec and remove backend style-stage emulation.
@@ -49,11 +50,12 @@ use tui_vfx_player::{
 };
 use tui_vfx_style::models::{
     BarberPoleApplyTo, BarberPoleShader, BorderSweepShader, ColorConfig, ColorSpace,
-    FocusFieldApplyTo, FocusFieldShader, FocusFieldShape, GlistenApplyTo, GlistenBandShader,
-    GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
-    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
-    RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion, TextContrast, WayfindingNode,
-    WayfindingNodeApplyTo, WayfindingNodeShader,
+    DiffusionApplyTo, DiffusionShader, DiffusionSource, FocusFieldApplyTo, FocusFieldShader,
+    FocusFieldShape, GlistenApplyTo, GlistenBandShader, GlistenDirection, Gradient,
+    HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
+    HighlighterShader, LinearGradientApplyTo, LinearGradientShader, RadarShader, RevealWipeShader,
+    SpatialShaderType, StyleRegion, TextContrast, WayfindingNode, WayfindingNodeApplyTo,
+    WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -211,15 +213,6 @@ pub enum NativeStyleStage {
     },
     /// Apply player-compatible italic-window styling.
     ItalicWindow { start: f64, end: f64 },
-    /// Apply player-compatible diffusion shader styling.
-    Diffusion {
-        color: String,
-        center_x: f64,
-        center_y: f64,
-        radius: f64,
-        intensity: f64,
-        apply_to: String,
-    },
 }
 
 /// Cursor wake behavior for native typewriter content.
@@ -573,7 +566,7 @@ fn lower_node_into_spec(
         "shader.glistenBand" => lower_glisten_band_shader(node, spec, request, warnings),
         "shader.wayfindingNode" => lower_wayfinding_node_shader(node, spec, request, warnings),
         "shader.barberPole" => lower_barber_pole_shader(node, spec, request, warnings),
-        "shader.diffusion" => lower_diffusion_shader(node, style_stages, request, warnings),
+        "shader.diffusion" => lower_diffusion_shader(node, spec, request, warnings),
         "shader.radar" => lower_radar_shader(node, spec, request, warnings),
         "style.colorFade" => lower_style_color_fade(node, style_stages, request, warnings),
         "style.colorShift" => lower_style_color_shift(node, style_stages, request, warnings),
@@ -2452,7 +2445,7 @@ fn lower_barber_pole_shader(
 }
 fn lower_diffusion_shader(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2472,44 +2465,70 @@ fn lower_diffusion_shader(
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
-    let apply_to = match strict_enum_input(
-        node,
-        request,
-        "applyTo",
-        "background",
-        &["foreground", "background", "both"],
-        "shader.diffusion",
-    ) {
+    let apply_to = match diffusion_apply_to_input(node, request) {
         Ok(apply_to) => apply_to,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
-    style_stages.push(NativeStyleStage::Diffusion {
-        color: color_label_from_config(resolved_color_input(node, request, "color").unwrap_or(
-            ColorConfig::Rgb {
-                r: 80,
-                g: 180,
-                b: 255,
-            },
-        )),
-        center_x: resolved_number_input(
+    let source = match diffusion_source_input(node, request) {
+        Ok(source) => source,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    let (source_x, source_y) = if node_has_input(node, "centerX") || node_has_input(node, "centerY")
+    {
+        let x = match resolved_whole_u16_input(
             node,
             request,
             "centerX",
-            request.source_ir.width.saturating_sub(1) as f64 / 2.0,
-        ),
-        center_y: resolved_number_input(
+            request.source_ir.width.saturating_sub(1) as u16 / 2,
+            "shader.diffusion",
+        ) {
+            Ok(value) => value,
+            Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+        };
+        let y = match resolved_whole_u16_input(
             node,
             request,
             "centerY",
-            request.source_ir.height.saturating_sub(1) as f64 / 2.0,
-        ),
-        radius: resolved_number_input(node, request, "radius", 8.0).max(0.5),
-        intensity: resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0),
-        apply_to,
+            request.source_ir.height.saturating_sub(1) as u16 / 2,
+            "shader.diffusion",
+        ) {
+            Ok(value) => value,
+            Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+        };
+        (Some(x), Some(y))
+    } else {
+        (None, None)
+    };
+    let radius = match resolved_whole_u8_input(node, request, "radius", 8, "shader.diffusion") {
+        Ok(value) => value.max(1),
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::Diffusion(DiffusionShader {
+            source,
+            source_x,
+            source_y,
+            color: resolved_color_input(node, request, "color").unwrap_or(ColorConfig::Rgb {
+                r: 80,
+                g: 180,
+                b: 255,
+            }),
+            radius,
+            softness: 0.0,
+            edge_firmness: 0.0,
+            falloff: Default::default(),
+            intensity: SignalOrFloat::Static(
+                resolved_number_input(node, request, "intensity", 1.0).clamp(0.0, 1.0) as f32,
+            ),
+            apply_to,
+            mode: Default::default(),
+            drift_speed: 0.0,
+            drift_amount: 0.0,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
-
 fn lower_radar_shader(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
@@ -3694,6 +3713,72 @@ fn highlighter_direction_input(
         Some("bottomToTop" | "bottom_to_top") => Ok(HighlighterDirection::BottomUp),
         Some(value) => Err(format!(
             "Effect `shader.highlighter` uses `direction` value `{value}` that has no compositor-native HighlighterShader equivalent."
+        )),
+    }
+}
+
+fn resolved_whole_u16_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: u16,
+    effect_id: &str,
+) -> Result<u16, String> {
+    let value = resolved_number_input(node, request, key, f64::from(default));
+    if value.fract().abs() > f64::EPSILON {
+        return Err(format!(
+            "Effect `{effect_id}` uses fractional `{key}` value `{value}` but compositor-native lowering requires a whole-cell integer."
+        ));
+    }
+    Ok(value.clamp(0.0, u16::MAX as f64) as u16)
+}
+
+fn resolved_whole_u8_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+    default: u8,
+    effect_id: &str,
+) -> Result<u8, String> {
+    let value = resolved_number_input(node, request, key, f64::from(default));
+    if value.fract().abs() > f64::EPSILON {
+        return Err(format!(
+            "Effect `{effect_id}` uses fractional `{key}` value `{value}` but compositor-native lowering requires a whole-cell integer."
+        ));
+    }
+    Ok(value.clamp(0.0, u8::MAX as f64) as u8)
+}
+
+fn diffusion_apply_to_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> Result<DiffusionApplyTo, String> {
+    match enum_input(node, request, "applyTo") {
+        Some("foreground") => Ok(DiffusionApplyTo::Foreground),
+        Some("background") | None => Ok(DiffusionApplyTo::Background),
+        Some("both") => Ok(DiffusionApplyTo::Both),
+        Some(value) => Err(format!(
+            "Effect `shader.diffusion` uses `applyTo` value `{value}` that has no compositor-native DiffusionShader equivalent."
+        )),
+    }
+}
+
+fn diffusion_source_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+) -> Result<DiffusionSource, String> {
+    match enum_input(node, request, "source") {
+        Some("center") | None => Ok(DiffusionSource::Center),
+        Some("top") => Ok(DiffusionSource::Top),
+        Some("bottom") => Ok(DiffusionSource::Bottom),
+        Some("left") => Ok(DiffusionSource::Left),
+        Some("right") => Ok(DiffusionSource::Right),
+        Some("topLeft" | "top_left") => Ok(DiffusionSource::TopLeft),
+        Some("topRight" | "top_right") => Ok(DiffusionSource::TopRight),
+        Some("bottomLeft" | "bottom_left") => Ok(DiffusionSource::BottomLeft),
+        Some("bottomRight" | "bottom_right") => Ok(DiffusionSource::BottomRight),
+        Some(value) => Err(format!(
+            "Effect `shader.diffusion` uses `source` value `{value}` that has no compositor-native DiffusionShader equivalent."
         )),
     }
 }

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-style/tests/models/test_cls_diffusion_shader.rs</FILE> - <DESC>Integration tests for DiffusionShader</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.2.0</VERS>
 // <WCTX>Validate soft material-light diffusion behavior and distinctness from Glow</WCTX>
-// <CLOG>Initial tests for defaults, source geometry, softness, frame discipline, drift, and serde roundtrip</CLOG>
+// <CLOG>0.2.0: cover explicit source coordinates used by compositor-first v3.1 lowering.
+// 0.1.0: Initial tests for defaults, source geometry, softness, frame discipline, drift, and serde roundtrip</CLOG>
 
 use crate::common::{make_ctx, make_style};
 
@@ -55,6 +56,23 @@ fn top_source_is_directional() {
     let near_bottom = shader.style_at(&make_ctx(5, 7, 12, 8, 0.0), base);
     assert_ne!(near_top, base);
     assert_eq!(near_bottom, base);
+}
+
+#[test]
+fn explicit_source_coordinates_override_named_source_geometry() {
+    let shader = DiffusionShader {
+        source: DiffusionSource::TopLeft,
+        source_x: Some(8),
+        source_y: Some(3),
+        intensity: SignalOrFloat::Static(0.8),
+        radius: 4,
+        ..Default::default()
+    };
+    let base = make_style();
+    let explicit_center = shader.style_at(&make_ctx(8, 3, 12, 8, 0.0), base);
+    let named_source_corner = shader.style_at(&make_ctx(0, 0, 12, 8, 0.0), base);
+    assert_ne!(explicit_center, base);
+    assert_eq!(named_source_corner, base);
 }
 
 #[test]
@@ -159,4 +177,4 @@ fn signal_intensity_changes_with_context() {
 }
 
 // <FILE>crates/tui-vfx-style/tests/models/test_cls_diffusion_shader.rs</FILE> - <DESC>Integration tests for DiffusionShader</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.2.0</VERS>

@@ -17,6 +17,8 @@ use mixed_signals::types::SignalOrFloat;
 fn converts_diffusion_into_v3_material_light_surface() {
     let legacy = DiffusionShader {
         source: crate::models::DiffusionSource::BottomRight,
+        source_x: None,
+        source_y: None,
         color: ColorConfig::White,
         radius: 9,
         softness: 0.4,

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.36.0</VERS>
+// <VERS>VERSION: 0.37.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.36.0: MINOR — remove backend-owned barber-pole shader rendering after barberPole moved to compositor ShaderLayerSpec.
+// <CLOG>0.37.0: MINOR — remove backend-owned diffusion shader rendering after diffusion moved to compositor ShaderLayerSpec.
+// 0.36.0: MINOR — remove backend-owned barber-pole shader rendering after barberPole moved to compositor ShaderLayerSpec.
 // 0.35.0: MINOR — remove backend-owned wayfinding-node shader rendering after wayfindingNode moved to compositor ShaderLayerSpec.
 // 0.34.0: MINOR — remove backend-owned focus-field shader rendering after focusField moved to compositor ShaderLayerSpec.
 // 0.33.0: MINOR — remove backend-owned glisten-band shader rendering after glistenBand moved to compositor ShaderLayerSpec.
@@ -331,24 +332,6 @@ fn scene_ir_with_native_content_stages(
             NativeStyleStage::ItalicWindow { start, end } => {
                 apply_italic_window_style_stage(&mut staged, *start, *end)
             }
-            NativeStyleStage::Diffusion {
-                color,
-                center_x,
-                center_y,
-                radius,
-                intensity,
-                apply_to,
-            } => apply_diffusion_style_stage(
-                &mut staged,
-                DiffusionStyleInputs {
-                    color,
-                    center_x: *center_x,
-                    center_y: *center_y,
-                    radius: *radius,
-                    intensity: *intensity,
-                    apply_to,
-                },
-            ),
         }
     }
     staged
@@ -998,46 +981,6 @@ fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64
     }
 }
 
-struct DiffusionStyleInputs<'a> {
-    color: &'a str,
-    center_x: f64,
-    center_y: f64,
-    radius: f64,
-    intensity: f64,
-    apply_to: &'a str,
-}
-
-fn apply_diffusion_style_stage(
-    report: &mut PlayerRenderIrReport,
-    inputs: DiffusionStyleInputs<'_>,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    for y in 0..height {
-        for x in 0..width {
-            let distance = ((x as f64 - inputs.center_x).powi(2)
-                + (y as f64 - inputs.center_y).powi(2))
-            .sqrt();
-            let falloff = (1.0 - distance / inputs.radius).clamp(0.0, 1.0) as f32;
-            if falloff > 0.0 {
-                let color = lerp_rgba_label(
-                    BLACK_RGBA,
-                    inputs.color,
-                    (falloff * inputs.intensity as f32).clamp(0.0, 1.0),
-                );
-                set_report_shader_cell(
-                    report,
-                    x,
-                    y,
-                    inputs.apply_to,
-                    color.as_str(),
-                    "ShaderDiffusion",
-                );
-            }
-        }
-    }
-}
-
 fn set_report_cell_style(
     report: &mut PlayerRenderIrReport,
     x: usize,
@@ -1324,25 +1267,6 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
 
 const DEFAULT_FOREGROUND: &str = "defaultForeground";
 const TRANSPARENT_RGBA: &str = "transparent";
-const BLACK_RGBA: &str = "rgba(0,0,0,255)";
-
-fn lerp_rgba_label(from: &str, to: &str, t: f32) -> String {
-    let Some((from_r, from_g, from_b, from_a)) = parse_rgba_label(from) else {
-        return from.to_string();
-    };
-    let Some((to_r, to_g, to_b, to_a)) = parse_rgba_label(to) else {
-        return from.to_string();
-    };
-    let t = t.clamp(0.0, 1.0);
-    let inv_t = 1.0 - t;
-    rgba_label(
-        lerp_channel(from_r, to_r, inv_t, t),
-        lerp_channel(from_g, to_g, inv_t, t),
-        lerp_channel(from_b, to_b, inv_t, t),
-        lerp_channel(from_a, to_a, inv_t, t),
-    )
-}
-
 fn pulse_lerp_rgba_label(from: &str, to: &str, t: f64) -> String {
     let Some((from_r, from_g, from_b, from_a)) = parse_rgba_label(from) else {
         return from.to_string();
@@ -1362,10 +1286,6 @@ fn pulse_lerp_rgba_label(from: &str, to: &str, t: f64) -> String {
 
 fn pulse_lerp_channel(start: u8, end: u8, inv_t: f64, t: f64) -> u8 {
     (start as f64 * inv_t + end as f64 * t) as u8
-}
-
-fn lerp_channel(start: u8, end: u8, inv_t: f32, t: f32) -> u8 {
-    (start as f32 * inv_t + end as f32 * t + 0.5) as u8
 }
 
 fn rgba_label(r: u8, g: u8, b: u8, a: u8) -> String {
