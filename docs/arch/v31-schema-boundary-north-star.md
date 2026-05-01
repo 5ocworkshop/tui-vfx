@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/v31-schema-boundary-north-star.md</FILE> - <DESC>North-star architecture for schema-owned crate boundaries, data models, and primitive workflow responsibilities</DESC> -->
-<!-- <VERS>VERSION: 0.5.0</VERS> -->
-<!-- <WCTX>Top-down v3.1 architecture discussion: make schema-owned contracts the discipline for crate boundaries and downstream tooling.</WCTX> -->
-<!-- <CLOG>0.5.0: MINOR — distinguish presentation cadence, semantic update cadence, and absolute sample time in boundary model.
+<!-- <VERS>VERSION: 0.6.0</VERS> -->
+<!-- <WCTX>Top-down v3.1 architecture discussion: validate recipes at load time, then pass canonical v3.1 structures through to compositor-next.</WCTX> -->
+<!-- <CLOG>0.6.0: MINOR — state the pure load-time validation and direct v3.1 pass-through compositor-next target; reject bridge/shim growth.
+0.5.0: MINOR — distinguish presentation cadence, semantic update cadence, and absolute sample time in boundary model.
 0.4.0: MINOR — document source.indexedField as zero-schema from-scratch primitive validation case.
 0.3.0: MINOR — add descriptor/schema hindsight audit principle.
 0.2.0: MINOR — add co-located primitive source tree and commonality extraction principles.
@@ -20,11 +21,14 @@ This document is intentionally aspirational. It describes the direction we want 
 The boundary contract between crates should be one of:
 
 1. the canonical v3.1 schema;
-2. a declared subset/projection of the canonical v3.1 schema;
-3. schema plus explicit runtime sample context such as `phaseT`, `loopT`, absolute elapsed time, and runtime presentation cadence;
-4. a deliberately documented derived evidence/report contract.
+2. a load-validated canonical v3.1 in-memory model;
+3. a declared subset/projection of the canonical v3.1 schema;
+4. schema plus explicit runtime sample context such as `phaseT`, `loopT`, absolute elapsed time, and runtime presentation cadence;
+5. a deliberately documented derived evidence/report contract.
 
 Crates should not depend on arbitrary internal structs from other crates unless those structs are themselves the named boundary contract.
+
+The target compositor-next path is **load-time validation followed by direct v3.1 execution**: validate a `RecipeDocument` when it is loaded, normalize it into the canonical v3.1 in-memory structure, and then pass that structure plus sample context to `tui-vfx-compositor-next`. The v3.1 pathway does not support legacy inputs and must not grow bridge, shim, or compositor-shaped translation layers.
 
 In short:
 
@@ -43,7 +47,7 @@ Without disciplined boundaries:
 
 - recipe migration becomes ad hoc;
 - player and compositor concepts blur together;
-- lowering code becomes a pile of one-off field mappings;
+- translation code becomes a pile of one-off field mappings;
 - validation can accidentally prove smoke rendering instead of parity;
 - future primitives repeat the same boilerplate and mistakes.
 
@@ -90,24 +94,22 @@ With disciplined boundaries:
 ┌──────────────────┐   ┌───────────────────────┐
 │ Player / Runtime │   │ Migration / Tooling    │
 │                  │   │                       │
-│ consumes         │   │ consumes source        │
-│ Canonical Recipe │   │ recipes + descriptors  │
-│ + sample context │   │ emits canonical recipe │
+│ validates recipe │   │ consumes source        │
+│ at load time     │   │ recipes + descriptors  │
+│ samples context  │   │ emits canonical recipe │
 │ emits evidence   │   │ candidates + reports   │
 └────────┬─────────┘   └───────────┬───────────┘
          │                         │
-         │ player evidence /       │ canonical recipe candidates
-         │ backend request         │ validation reports
+         │ canonical v3.1 model +  │ canonical recipe candidates
+         │ sample context          │ validation reports
          ▼                         ▼
 ┌──────────────────────────────────────────────┐
-│        Backend / Compositor Boundary         │
+│      Compositor-Next Boundary Target         │
 │                                              │
-│  Explicit input contract, such as:           │
-│  - player render IR                          │
-│  - backend render request                    │
-│  - canonical recipe subset                   │
-│  - generated primitive DTOs                  │
-│  - documented composition request            │
+│  Pass through load-validated v3.1 structures │
+│  plus explicit runtime sample context.       │
+│  No legacy input, bridge, or shim layer      │
+│  is part of this pathway.                    │
 └───────────────────────┬──────────────────────┘
                         │
                         ▼
@@ -143,8 +145,7 @@ With disciplined boundaries:
 | --- | --- |
 | Recipe corpus → player | Canonical v3.1 `RecipeDocument` |
 | Descriptor pack → tools/workbench | Descriptor schema and descriptor pack JSON |
-| Player core → backend adapter | `PlayerRenderIrReport` and/or `PlayerRenderBackendRequest` |
-| Backend adapter → compositor | Documented compositor request, current `CompositionSpec`, or future generated v3.1 primitive DTOs |
+| Player load/runtime → compositor-next | Load-validated canonical v3.1 `RecipeDocument` / in-memory model plus explicit sample context |
 | Compositor/runtime → validation | Backend output, visual frame report, styled-cell evidence, diagnostics |
 | Legacy recipe corpus → migration tooling | Source recipe evidence plus explicit mapping report |
 | Migration tooling → recipe corpus | Canonical recipe candidate plus migration/evidence report |
@@ -202,9 +203,10 @@ Generated code should reduce hand-written inconsistency, not replace human seman
 
 Own sampled player evidence and backend inputs:
 
+- load-time validation of canonical v3.1 recipes;
 - sampled phase/time/signals;
 - absolute elapsed sample time for continuous procedural sources;
-- runtime presentation cadence when the player/backend needs it, kept separate from recipe semantics;
+- runtime presentation cadence when the player/runtime needs it, kept separate from recipe semantics;
 - resolved scenes/sources;
 - rows and styled cells;
 - graph value snapshots;
@@ -235,7 +237,7 @@ Own validation outputs:
 - visual frame reports;
 - fixture QC;
 - primitive field coverage;
-- adapter gap reports;
+- direct runtime-support gap reports;
 - migration mapping reports;
 - parity reports.
 
@@ -296,20 +298,26 @@ Not responsible for:
 - mutating canonical recipes during playback;
 - claiming visual parity without oracle/backend comparison evidence.
 
-### Backend Adapter Layer
+### Player → Compositor-Next Boundary
+
+Target status: direct v3.1 path.
 
 Responsible for:
 
-- translating player evidence or canonical graph subsets into backend requests;
-- reporting native/fallback behavior explicitly;
-- producing structured diagnostics for unsupported native nodes;
-- preserving backend boundary honesty.
+- accepting only load-validated canonical v3.1 recipe structures;
+- passing explicit sample context with the loaded structure;
+- producing structured diagnostics for unsupported v3.1 primitives or fields;
+- preserving boundary honesty without legacy fallback.
 
 Not responsible for:
 
+- accepting legacy or compositor-shaped inputs;
+- adding bridge/shim code to make old pathways look native;
 - silently falling back in strict-native mode;
-- reimplementing compositor-owned effects in the adapter;
+- reimplementing compositor-owned effects outside compositor-next;
 - hiding unsupported fields by dropping semantics.
+
+If the existing player/runtime path cannot satisfy this without expanding old translation code, create a stripped `player-next` path that removes non-v3.1 compatibility concerns rather than carrying them forward.
 
 ### Compositor / Runtime Layer
 
@@ -334,7 +342,7 @@ Responsible for:
 - mapping source recipe intent into canonical v3.1 recipes;
 - recording exact field mappings and decisions;
 - producing candidate recipe patches or reports;
-- classifying blockers as descriptor, adapter, backend, schema, tooling, or owner-decision work.
+- classifying blockers as descriptor, runtime, schema, tooling, or owner-decision work.
 
 Not responsible for:
 
@@ -348,8 +356,8 @@ Responsible for:
 
 - structural validation;
 - field coverage;
-- adapter/lowering coverage;
-- strict-native backend evidence;
+- direct runtime support coverage;
+- strict compositor-next evidence;
 - oracle comparison where applicable;
 - fixture QC;
 - explicit PASS/BLOCKED/FAIL evidence.
@@ -358,11 +366,11 @@ Not responsible for:
 
 - inferring visual parity from smoke output alone;
 - hiding missing implementation work;
-- treating unsupported adapters as success.
+- treating unsupported runtime paths as success.
 
 ## Co-Located Primitive Source Trees
 
-The preferred long-term organization is a co-located primitive source tree. Since the schema exists to define and protect primitive/source/recipe contracts, primitive-local schema and descriptor details should live next to generated assets, migration mappings, fixtures, tests, docs, and runtime adapter code.
+The preferred long-term organization is a co-located primitive source tree. Since the schema exists to define and protect primitive/source/recipe contracts, primitive-local schema and descriptor details should live next to generated assets, migration mappings, fixtures, tests, docs, and runtime code.
 
 Representative shape:
 
@@ -380,7 +388,7 @@ primitives/
         highlighter_control_catalog.json
       runtime/
         mod.rs
-        highlighter_shader_adapter.rs
+        highlighter_shader_runtime.rs
       fixtures/
         minimal.v31.json
         v2_parity.v31.json
@@ -455,7 +463,7 @@ Examples of concepts worth auditing include progress, apply-to routing, color ch
 
 Do not use `fps` as a catch-all schema concept. The boundary model should distinguish:
 
-- **presentation cadence**: how often a player/backend tries to draw frames;
+- **presentation cadence**: how often a player/runtime tries to draw frames;
 - **semantic update cadence**: how often a recipe/source/effect recomputes state when fixed-step behavior is desired;
 - **sample time**: the actual `phaseT`, optional `loopT`, and absolute elapsed time used for one deterministic sample.
 
@@ -479,24 +487,24 @@ A change should be questioned if it violates any of these rules:
 4. A backend drops a field without an explicit unsupported diagnostic.
 5. A migration rule adds a compatibility alias instead of mapping to canonical vocabulary.
 6. A validation report marks a recipe complete without vertical parity evidence.
-7. A player/backend adapter reimplements compositor-owned behavior instead of routing to the runtime primitive.
+7. Player-side code reimplements compositor-owned behavior instead of routing to the runtime primitive.
 8. Generated code overwrites human-owned semantic decisions.
 9. A pattern appears in 3 or more primitive implementations without being shared or explicitly ticketed.
 10. Primitive contract, generated outputs, migration rules, fixtures, and docs are scattered so the primitive lifecycle cannot be read as one unit.
 
 ## Relationship to Current Compositor-First Work
 
-The current compositor-first pathway can still fit this north star.
+The old compositor-first pathway remains useful as reference behavior and parity evidence, but it is not the architecture for new v3.1 work. New v3.1 compositor-next work should not add support to the current translation path.
 
-Today, the backend adapter often performs **Native CompositionSpec Lowering** from canonical v3.1 graph/effect nodes into existing compositor `CompositionSpec` fields. That is acceptable when it is explicit, tested, and honest about unsupported semantics.
+Target direction: create a v3.1-native compositor-next boundary. The recipe is validated when loaded; after that, the canonical v3.1 structure should pass through with explicit sample context to compositor-next-owned v3.1 runtime boundaries. If the current player/runtime path makes that awkward, copy and strip a `player-next` path rather than expanding translation code.
 
-Longer-term, the project may choose to move toward a more v3.1-native compositor boundary. In that model, the compositor/runtime would consume generated v3.1 primitive DTOs or a documented v3.1 compositor request directly, reducing one layer of manual mapping.
-
-Both approaches should obey the same north-star rule:
+The v3.1 path must obey this north-star rule:
 
 ```text
 The boundary is named.
-The contract is schema-owned or schema-derived.
+The recipe is validated at load time.
+The loaded canonical v3.1 structure passes through.
+No bridge, shim, or legacy-input support is added.
 Unsupported semantics fail loudly.
 Validation proves the path.
 ```
@@ -513,7 +521,7 @@ The north-star workflow should be tested not only by migrating existing primitiv
 2. Should generated Rust be checked in or generated at build time?
 3. What files are generated versus hand-owned for a primitive?
 4. How do generated files preserve hand-written semantic sections?
-5. Should the future compositor boundary remain `CompositionSpec`, evolve into generated v3.1 primitive DTOs, or support both during transition?
+5. What exact v3.1-native compositor-next entrypoint should replace compositor-shaped inputs?
 6. What is the canonical migration mapping table schema?
 7. How should CI detect descriptor/runtime drift?
 8. How should parity tooling distinguish schema support, player support, backend support, and visual parity in one report?
@@ -525,7 +533,7 @@ The schema defines the contract.
 Descriptors define primitive capabilities.
 Generated tooling derives repetitive surfaces.
 The player samples canonical recipes into evidence.
-The backend adapter translates only across named contracts.
+The player passes only load-validated canonical v3.1 contracts to compositor-next.
 The compositor/runtime owns final primitive behavior.
 Validation proves every boundary.
 ```

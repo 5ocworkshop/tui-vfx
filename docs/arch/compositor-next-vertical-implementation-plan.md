@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>VERSION: 0.6.0</VERS> -->
-<!-- <WCTX>v3.1 north-star execution plan: preserve hardened compositor behavior by copying first, then align a compositor-next crate to schema-driven primitive contracts through vertical slices.</WCTX> -->
-<!-- <CLOG>0.6.0: MINOR — elevate validation/tooling maturity to an early gate before broad primitive work.
+<!-- <VERS>VERSION: 0.7.0</VERS> -->
+<!-- <WCTX>v3.1 north-star execution plan: validate recipes at load time, then pass canonical v3.1 structures through to copied compositor-next via vertical slices.</WCTX> -->
+<!-- <CLOG>0.7.0: MINOR — clarify the pure v3.1 target: load-time recipe validation, then direct canonical v3.1 flow to compositor-next with no bridge/shim investment.
+0.6.0: MINOR — elevate validation/tooling maturity to an early gate before broad primitive work.
 0.5.0: MINOR — account for presentation/update cadence and absolute-time procedural sources in the schema audit.
 0.4.0: MINOR — add IndexedField source descriptor as first from-scratch workflow test.
 0.3.0: MINOR — add bounded descriptor/schema hindsight audit before workbench generation.
@@ -27,7 +28,9 @@ This plan assumes the direction documented in:
 
 Build a new schema-driven compositor runtime by **copying the hardened existing compositor code**, not rewriting it. The new crate, referred to here as `tui-vfx-compositor-next`, should preserve current behavior first, then progressively align primitive boundaries with v3.1 descriptor/schema contracts.
 
-The work must proceed in **vertical primitive slices**, not horizontal layers. Pick one primitive, drive it all the way from descriptor/schema through generated scaffolding, compositor-next runtime behavior, player/backend integration, fixtures, migration mapping, and parity validation, then sign it off before moving to the next primitive.
+The target data path is **validate on recipe load, then pass canonical v3.1 structures through directly**. Once a `RecipeDocument` is structurally valid and normalized into the canonical v3.1 in-memory model, runtime should pass that model plus explicit sample context to compositor-next. New work must not add bridge, shim, or legacy-input support layers; if the current player path cannot stay clean, create a stripped `player-next` path instead of carrying the old path forward.
+
+The work must proceed in **vertical primitive slices**, not horizontal layers. Pick one primitive, drive it all the way from descriptor/schema through generated scaffolding, compositor-next runtime behavior, player → compositor-next integration, fixtures, migration mapping, and parity validation, then sign it off before moving to the next primitive.
 
 This avoids the failure mode where broad horizontal work appears complete at one layer but integration issues are discovered much later.
 
@@ -35,12 +38,13 @@ This avoids the failure mode where broad horizontal work appears complete at one
 
 1. **Copy, do not rewrite.** Existing compositor behavior is hardened and valuable. `compositor-next` starts as a copied implementation with behavior parity tests.
 2. **Schema-driven boundaries.** Primitive inputs and public contracts should be descriptor/schema-owned or generated from descriptor/schema-owned data.
-3. **Vertical slices only.** Work one primitive end-to-end through every layer. Do not complete an entire horizontal layer for all primitives before integration.
-4. **Every primitive is signed off individually.** Do not prove one primitive and assume all others will behave the same.
-5. **No silent fallback.** Unsupported semantics must produce explicit diagnostics.
-6. **OFPF alignment is a real design constraint with judgment.** Around 300 LOC is the normal target because smaller files improve agent focus and reviewability. Files above 500 LOC should be split unless there is a strong written cohesion justification.
-7. **Commonality extraction is part of the work.** If the same primitive-internal pattern appears in 3 or more places, extract it or open an explicit extraction ticket.
-8. **Recipe migration waits for runtime confidence.** Broad recipe migration resumes only after the relevant primitive has passed its compositor-next vertical gate.
+3. **Validate once, then pass through directly.** Recipe validation belongs at load time. After a recipe is accepted as canonical v3.1, compositor-next should consume that loaded structure plus sample context directly. Do not add bridge/shim code to keep legacy or compositor-shaped inputs alive in the v3.1 path.
+4. **Vertical slices only.** Work one primitive end-to-end through every layer. Do not complete an entire horizontal layer for all primitives before integration.
+5. **Every primitive is signed off individually.** Do not prove one primitive and assume all others will behave the same.
+6. **No silent fallback.** Unsupported semantics must produce explicit diagnostics.
+7. **OFPF alignment is a real design constraint with judgment.** Around 300 LOC is the normal target because smaller files improve agent focus and reviewability. Files above 500 LOC should be split unless there is a strong written cohesion justification.
+8. **Commonality extraction is part of the work.** If the same primitive-internal pattern appears in 3 or more places, extract it or open an explicit extraction ticket.
+9. **Recipe migration waits for runtime confidence.** Broad recipe migration resumes only after the relevant primitive has passed its compositor-next vertical gate.
 
 ## Numbered Next Steps From Current State
 
@@ -74,8 +78,8 @@ This avoids the failure mode where broad horizontal work appears complete at one
 
 6. **Bring v3.1 validation tooling to first-class status before broad primitive work.**
    - Treat tooling as part of the product, not an afterthought after primitives are implemented.
-   - Baseline the current v3.1 tools against V2-era capabilities: structural validation, frame/timeline sampling, frame diff, per-cell capture, fixture QC, field coverage, adapter gaps, and oracle comparison.
-   - Keep `render-frame`, `render-timeline`, `render-frame-diff`, `capture-cells`, `fixture-qc`, `primitive-field-coverage`, `primitive-adapter-gap`, and migration reports in the early execution path.
+   - Baseline the current v3.1 tools against V2-era capabilities: structural validation, frame/timeline sampling, frame diff, per-cell capture, fixture QC, field coverage, direct runtime support gaps, and oracle comparison.
+   - Keep `render-frame`, `render-timeline`, `render-frame-diff`, `capture-cells`, `fixture-qc`, `primitive-field-coverage`, direct runtime-support reports, and migration reports in the early execution path.
    - Add or fix tooling before scaling a primitive family when validation cannot localize failures at least to recipe/frame/cell/primitive-field level.
 
 7. **Run a bounded descriptor/schema hindsight audit.**
@@ -86,7 +90,7 @@ This avoids the failure mode where broad horizontal work appears complete at one
 
 8. **Design one representative co-located primitive tree.**
    - Start with one shader primitive, likely `shader.highlighter` or `shader.focusField`.
-   - Include descriptor, generated assets, runtime adapter, fixtures, tests, docs, and migration mapping.
+   - Include descriptor, generated assets, compositor-next runtime module, fixtures, tests, docs, and migration mapping.
 
 9. **Build the Primitive Workbench MVP.**
    - Read descriptor/schema.
@@ -95,12 +99,12 @@ This avoids the failure mode where broad horizontal work appears complete at one
 
 10. **Wire one primitive end-to-end.**
    - Use existing compositor implementation.
-   - Replace ad hoc hand mapping with generated v3.1-derived input surface.
-   - Prove strict backend output still matches existing behavior.
+   - Replace ad hoc hand mapping with generated v3.1-derived input surfaces consumed directly by compositor-next.
+   - Prove strict compositor-next output still matches existing behavior.
 
 11. **Design timing/cadence semantics before broad primitive generation.**
     - Keep presentation frame rate separate from recipe semantics.
-    - Treat player/backend `fps` as a runtime playback control unless the schema audit accepts an optional presentation hint.
+    - Treat player/runtime `fps` as a runtime playback control unless the schema audit accepts an optional presentation hint.
     - Add or formalize a reusable update-clock/update-rate concept only when a primitive/source genuinely needs deterministic fixed-step sampling.
     - Preserve absolute elapsed time as a first-class runtime sample input for continuous procedural sources such as Madeira flag wave/fireworks generation.
     - Decide whether cadence can be inherited from recipe to scene element to source/effect, and document the fallback behavior.
@@ -114,9 +118,12 @@ This avoids the failure mode where broad horizontal work appears complete at one
     - Then filters, masks, samplers, and style effects.
     - Each primitive gets generated scaffolding, runtime wiring, parity validation, and signoff before the next primitive.
 
-14. **Update player/backend integration.**
-    - Player targets compositor-next through named v3.1-derived contracts.
-    - Current compositor backend remains available until compositor-next is proven.
+14. **Update player → compositor-next integration without bridges.**
+    - Recipe loading validates and normalizes canonical v3.1 once.
+    - Player/runtime passes the loaded canonical v3.1 structure plus explicit sample context directly to compositor-next-owned v3.1 entrypoints.
+    - Do not add new bridge, shim, or legacy-input support code to the old player/runtime path.
+    - If the existing player/runtime architecture forces translation work, copy the player into a stripped `player-next` path and remove non-v3.1 compatibility code there.
+    - Current compositor backend remains available separately until compositor-next is proven; it is not part of the new v3.1 pathway.
 
 15. **Only then resume recipe migration in owned slices.**
     - Migration becomes: V2 source recipe → v3.1 recipe → compositor-next native primitive.
@@ -170,7 +177,8 @@ CURRENT STATE
 │ emits fixture skeletons                      │
 │ emits migration skeletons                    │
 └───────────────────────┬──────────────────────┘
-                        │ humans fill behavior/adapters
+                        │ load-time validation,
+                        │ then v3.1 pass-through
                         ▼
 ┌──────────────────────────────────────────────┐
 │ compositor-next v3.1 primitive runtime       │
@@ -190,7 +198,7 @@ CURRENT STATE
 │ v2 oracle parity                             │
 │ fixture QC                                   │
 │ primitive field coverage                     │
-│ strict-native backend evidence               │
+│ strict compositor-next evidence               │
 └───────────────────────┬──────────────────────┘
                         │
                         ▼
@@ -213,7 +221,7 @@ Horizontal work means doing one layer across many primitives, for example:
 all descriptors → all generated structs → all runtime mappings → all fixtures → all validation
 ```
 
-This looks efficient but defers integration risk. Problems with value-source resolution, runtime defaults, compositor behavior, player/backend boundaries, or parity tooling may not appear until many primitives are partially converted.
+This looks efficient but defers integration risk. Problems with value-source resolution, runtime defaults, compositor behavior, player → compositor-next boundaries, or parity tooling may not appear until many primitives are partially converted.
 
 The required strategy is vertical:
 
@@ -274,7 +282,7 @@ CURRENT HARDENED RUNTIME
 │ migration skeletons                          │
 └───────────────────────┬──────────────────────┘
                         │
-                        │ human fills semantics / adapter body
+                        │ human fills compositor semantics
                         ▼
 ┌──────────────────────────────────────────────┐
 │ compositor-next runtime primitive            │
@@ -291,7 +299,7 @@ CURRENT HARDENED RUNTIME
 │ Evidence and signoff                         │
 │                                              │
 │ old compositor parity                        │
-│ strict compositor-next backend evidence      │
+│ strict compositor-next evidence      │
 │ fixture QC                                   │
 │ primitive field coverage                     │
 │ V2 oracle parity where applicable            │
@@ -325,12 +333,12 @@ Generate scaffold from descriptor
 Runtime behavior connected in compositor-next?
       │ no
       ├── reuse copied compositor behavior
-      ├── fill adapter/semantic body
+      ├── fill compositor semantic body
       └── extract common helpers when 3+ repetition appears
       ▼ yes
-Player/backend path can execute strict compositor-next?
+Player → compositor-next path can execute strict v3.1?
       │ no
-      ├── add named boundary integration
+      ├── add direct v3.1 boundary integration
       └── require explicit unsupported diagnostics
       ▼ yes
 Fixtures and migration mapping complete?
@@ -567,8 +575,8 @@ Current v3.1 tooling already includes these important surfaces:
 - `render-timeline` with schema `v3.1.player.frameTimeline.1`;
 - `render-frame-diff` with schema `v3.1.player.frameDiff.1`;
 - `capture-cells` SQLite output with schema `v3.1.player.cellCapture.sqlite.1`, including dense cells, frame timing, diagnostics, provenance, layers, and graph values;
-- `fixture-qc` for combined validation, render, field-coverage, adapter-gap, timeline, and diff smoke evidence;
-- `primitive-field-coverage`, `primitive-adapter-gap`, `migration-gap`, `migration-mapping-batch`, `schema-readiness`, and `implementation-readiness` reports.
+- `fixture-qc` for combined validation, render, field-coverage, direct runtime-support, timeline, and diff smoke evidence;
+- `primitive-field-coverage`, direct runtime-support gap, `migration-gap`, `migration-mapping-batch`, `schema-readiness`, and `implementation-readiness` reports.
 
 The early tooling gate must decide whether these are sufficient for the first vertical primitive. If not, tool gaps are first-class blockers for scaling, not optional polish.
 
@@ -577,7 +585,7 @@ Minimum acceptance criteria:
 1. One command sequence can validate a primitive fixture structurally, render it, sample a timeline, diff two samples, and capture dense per-cell evidence.
 2. Per-frame evidence includes sample timing (`phaseT`, `loopT`, absolute/sample milliseconds where applicable), dimensions, render hash, non-empty cell count, rows, sparse cells, diagnostics, and style-known/substrate provenance.
 3. Dense capture can answer row/column/glyph/style/role questions for every sampled frame and preserve scene/source/layer provenance when available.
-4. Reports distinguish structural validity, player rendering, backend/compositor execution, adapter support, field coverage, and parity/oracle status.
+4. Reports distinguish structural validity, player rendering, direct compositor-next execution, runtime support, field coverage, and parity/oracle status.
 5. Known limitations are documented before primitive scaling. In particular, `capture-cells --sample-ms` intentionally fixes all frames at one elapsed sample; omit `--sample-ms` when sweeping frames over `--duration-ms`.
 6. If v2-era tooling has a capability that v3.1 still lacks and that capability is needed to sign off the first primitive, implement the v3.1 equivalent before continuing the primitive family.
 
@@ -657,7 +665,7 @@ primitives/shader/highlighter/
 6. Add minimal fixture.
 7. Add V2 parity fixture if a source recipe exists.
 8. Add validation manifest.
-9. Add player/backend route to compositor-next for this primitive only.
+9. Add player → compositor-next direct v3.1 route for this primitive only.
 10. Run full vertical validation.
 11. Perform commonality extraction review.
 12. Sign off the primitive.
@@ -825,19 +833,22 @@ Acceptance criteria:
 - V2 parity evidence is deterministic.
 - Missing primitive support blocks the recipe honestly instead of being worked around.
 
-### Phase 10 — Transition Strategy
+### Phase 10 — Clean Cutover Strategy
 
-1. Keep the old compositor available while compositor-next matures.
-2. Add feature flag or backend selector for compositor-next.
-3. Use CI to run both old compositor and compositor-next tests during transition.
-4. Promote compositor-next only after a sufficient signed primitive set and recipe corpus slice pass parity.
-5. Retire old paths only after explicit owner approval.
+1. Keep the old compositor available while compositor-next matures, but do not route v3.1 work through old bridge/shim code.
+2. Add a clean runtime selector or `player-next` entrypoint only if it routes canonical v3.1 recipes directly into compositor-next-owned v3.1 boundaries.
+3. Validate at recipe load, then pass canonical v3.1 structures and explicit sample context into compositor-next.
+4. If old player/runtime code requires translation to progress, strip a copied `player-next` path instead of expanding that translation layer.
+5. Use CI to run old compositor tests and compositor-next tests side by side until cutover.
+6. Promote compositor-next only after a sufficient signed primitive set and recipe corpus slice pass parity.
+7. Retire old paths only after explicit owner approval.
 
 Acceptance criteria:
 
 - No forced migration to compositor-next before evidence exists.
 - Current working behavior remains available.
 - Cutover is explicit and reversible.
+- The v3.1 path validates at recipe load and passes canonical v3.1 through directly; bridge/shim code is not added to make legacy or compositor-shaped inputs work.
 
 ## Validation Gates
 
@@ -850,7 +861,7 @@ Each primitive must pass:
 3. Unit tests for input/accessor behavior.
 4. Unit tests for runtime primitive behavior where applicable.
 5. Old compositor vs compositor-next parity smoke.
-6. Player/backend strict compositor-next execution.
+6. Player → compositor-next strict v3.1 execution.
 7. Fixture QC.
 8. Timeline, frame-diff, and dense cell-capture evidence when visual behavior changes over time or needs localization.
 9. Primitive field coverage.
@@ -988,7 +999,7 @@ The MVP is done when:
 - one representative shader primitive is fully vertical-slice signed off;
 - one from-scratch source descriptor primitive (`source.indexedField`) is proven without schema changes;
 - Primitive Workbench can regenerate that primitive's boilerplate using accepted common schema concepts;
-- player/backend can execute that primitive through compositor-next strict mode;
+- player/runtime can execute that load-validated canonical v3.1 primitive through compositor-next strict mode;
 - old compositor behavior parity is proven for the copied path;
 - V2 oracle parity is proven for at least one migrated recipe using the primitive;
 - commonality extraction and OFPF review, including any >500 LOC cohesion justifications, are part of the signoff artifact;
