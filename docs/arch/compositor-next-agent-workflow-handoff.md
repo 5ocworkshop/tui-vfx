@@ -1,10 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-agent-workflow-handoff.md</FILE> - <DESC>Restartable agent workflow for compositor-next direct v3.1 vertical primitive slices</DESC> -->
-<!-- <VERS>VERSION: 0.4.0</VERS> -->
+<!-- <VERS>VERSION: 0.5.0</VERS> -->
 <!-- <WCTX>Compositor-next execution handoff: warmed low-level coding agents implement vertical slices while the lead reviews, verifies, documents, and commits.</WCTX> -->
-<!-- <CLOG>0.4.0: MINOR — add typed transitions as a deferred schema-audit discussion item.
-0.3.0: MINOR — advance scoreboard after shader.focusField integration and pause with no active slice per user instruction.
-0.2.0: MINOR — advance scoreboard after shader.glistenBand integration and note focusField as the remaining active worktree.
-0.1.0: INIT — document the repeatable two-agent vertical-slice workflow, scoreboard, active worktrees, review gates, and restart instructions.</CLOG> -->
+<!-- <CLOG>0.5.0: MINOR — sign off shader.borderSweep and record active parallel slice queue.
+0.4.0: MINOR — add typed transitions as a deferred schema-audit discussion item.</CLOG> -->
 
 # Compositor-Next Agent Workflow Handoff
 
@@ -41,7 +39,7 @@ Current descriptor-effect count:
 Signed direct compositor-next v3.1 primitives:
 
 ```text
-4 / 120
+5 / 120
 ```
 
 Signed primitives:
@@ -50,11 +48,12 @@ Signed primitives:
 2. `shader.highlighter`
 3. `shader.glistenBand`
 4. `shader.focusField`
+5. `shader.borderSweep`
 
 Remaining:
 
 ```text
-116 / 120
+115 / 120
 ```
 
 Human-facing progress banner:
@@ -63,9 +62,9 @@ Human-facing progress banner:
 ╔════════════════════════════════════════════════════╗
 ║ v3.1 DIRECT MIGRATION SCOREBOARD                  ║
 ╠════════════════════════════════════════════════════╣
-║ Signed:  4 / 120  ████░░░░░░░░░░░░░░░░░░  3.3%   ║
-║ Active:  0 slices — paused at commit boundary     ║
-║ Queue:   borderSweep, revealWipe                  ║
+║ Signed:  5 / 120  █████░░░░░░░░░░░░░░░░░  4.2%   ║
+║ Active:  15 slices — parallel work in progress    ║
+║ Queue:   revealWipe review, then active slices    ║
 ╚════════════════════════════════════════════════════╝
 ```
 
@@ -80,6 +79,7 @@ shader.linearGradient
 shader.highlighter
 shader.glistenBand
 shader.focusField
+shader.borderSweep
 ```
 
 Outstanding direct compositor-next v3.1 primitives:
@@ -167,7 +167,6 @@ sampler.spatialSignal
 
 [shader]
 shader.barberPole
-shader.borderSweep
 shader.diffusion
 shader.radar
 shader.revealWipe
@@ -454,19 +453,34 @@ record evidence and revisit it when the schema audit/schema-diet pass begins.
 Current active:
 
 ```text
-none — paused at the focusField commit boundary by user request
+shader.revealWipe — implementation complete; awaiting leader review/integration
+shader.barberPole
+shader.diffusion
+shader.radar
+shader.wayfindingNode
+shader.affordanceWake
+shader.bevel
+shader.chromaticEdge
+shader.coloredOverlay
+shader.concealedLight
+shader.cursor
+shader.edgeSheen
+shader.focusedRowGradient
+shader.fractionalStripeOverlay
+shader.glitchLines
 ```
 
-Recommended next queue, when the user signals it is time to resume:
+Recommended next queue after the current active lanes finish or are paused:
 
-1. `shader.borderSweep`
-2. `shader.revealWipe`
-3. Remaining shader primitives by complexity and migration demand
-4. Filters
-5. Masks
-6. Samplers
-7. Style effects
-8. Complex/composition primitives last
+1. `shader.neonFlicker`
+2. `shader.orbit`
+3. `shader.pulseWave`
+4. Remaining shader primitives by complexity and migration demand
+5. Filters
+6. Masks
+7. Samplers
+8. Style effects
+9. Complex/composition primitives last
 
 Keep the scoreboard and completed/outstanding primitive list updated after each
 committed primitive so work is not repeated.

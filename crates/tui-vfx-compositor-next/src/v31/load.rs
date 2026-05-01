@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compositor-next/src/v31/load.rs</FILE> - <DESC>Direct v3.1 recipe load validation</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>Validate canonical v3.1 recipes before direct compositor-next rendering.</WCTX>
-// <CLOG>0.1.0: INIT — add strict v3.1 and literal-input direct-render acceptance gates.</CLOG>
+// <CLOG>0.1.1: PATCH — add shader.borderSweep literal-input acceptance and position rejection.</CLOG>
 
 use tui_vfx_contract::{
     DescriptorCatalog, DescriptorValidationError, EffectInputId, NodeId, NodeSpec, RecipeDocument,
@@ -88,6 +88,7 @@ fn validate_direct_render_contract(recipe: &RecipeDocument) -> Result<(), V31Loa
             "shader.highlighter" => validate_highlighter_direct_inputs(node_id, node)?,
             "shader.glistenBand" => validate_glisten_band_direct_inputs(node_id, node)?,
             "shader.focusField" => validate_focus_field_direct_inputs(node_id, node)?,
+            "shader.borderSweep" => validate_border_sweep_direct_inputs(node_id, node)?,
             _ => {}
         }
     }
@@ -325,6 +326,27 @@ fn validate_focus_field_direct_inputs(
     Ok(())
 }
 
+fn validate_border_sweep_direct_inputs(
+    node_id: &NodeId,
+    node: &NodeSpec,
+) -> Result<(), V31LoadError> {
+    require_declared_inputs_literal(node_id, node)?;
+
+    require_color_input(node_id, node, "color")?;
+    require_number_input(node_id, node, "speed")?;
+    require_integer_input(node_id, node, "length")?;
+
+    if node.inputs.contains_key(&EffectInputId::new("position")) {
+        return Err(direct_input_error(
+            node_id,
+            node,
+            "position",
+            "shader.borderSweep position override is not supported by direct v3.1 rendering until compositor-next has a literal position path without runtime binding semantics.",
+        ));
+    }
+    Ok(())
+}
+
 fn require_declared_inputs_literal(node_id: &NodeId, node: &NodeSpec) -> Result<(), V31LoadError> {
     for input in node.inputs.keys() {
         literal_direct_value(node_id, node, input.as_str())?;
@@ -473,4 +495,4 @@ fn literal_direct_value<'a>(
 }
 
 // <FILE>crates/tui-vfx-compositor-next/src/v31/load.rs</FILE> - <DESC>Direct v3.1 recipe load validation</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>

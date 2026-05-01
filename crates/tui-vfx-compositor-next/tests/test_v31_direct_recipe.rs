@@ -1,8 +1,7 @@
 // <FILE>crates/tui-vfx-compositor-next/tests/test_v31_direct_recipe.rs</FILE> - <DESC>Pure v3.1 RecipeDocument to compositor-next rendering tests</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.2.1</VERS>
 // <WCTX>Compositor-next pure v3.1 path: verify load-validated canonical recipes enter compositor-next directly without transition-seam code.</WCTX>
-// <CLOG>0.2.0: MINOR add strict v3.1 load and canonical gradient-stop coverage.
-// 0.1.0: INIT add direct v3.1 linearGradient recipe render.</CLOG>
+// <CLOG>0.2.1: PATCH — add direct shader.borderSweep render and load-rejection coverage.</CLOG>
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -586,6 +585,121 @@ fn focus_field_recipe_value() -> serde_json::Value {
     recipe
 }
 
+fn border_sweep_recipe_value() -> serde_json::Value {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["id"] = serde_json::Value::String("compositorNextDirectBorderSweep".to_string());
+    recipe["sources"]["mainCard"]["inputs"]["message"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "text", "value": "ABCDE\nFGHIJ\nKLMNO" }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["width"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 5 }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["height"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 3 }
+    });
+    recipe["scenes"][0]["width"] = serde_json::Value::from(5);
+    recipe["scenes"][0]["height"] = serde_json::Value::from(3);
+    recipe["graph"]["nodes"]
+        .as_object_mut()
+        .expect("nodes object")
+        .remove("gradient");
+    recipe["graph"]["nodes"]["borderSweep"] = serde_json::json!({
+        "id": "borderSweep",
+        "effect": "shader.borderSweep",
+        "inputs": {
+            "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 0, "g": 255, "b": 255, "a": 255 } } },
+            "speed": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+            "length": { "kind": "literal", "value": { "kind": "integer", "value": 1 } }
+        },
+        "outputs": {},
+        "activePhases": [],
+        "scope": { "kind": "all" },
+        "cellWritePolicy": "writeCell",
+        "roleWritePolicy": { "kind": "preserveDestination" }
+    });
+    recipe["graph"]["order"] = serde_json::json!(["borderSweep"]);
+    recipe
+}
+
+#[test]
+fn load_validated_v31_border_sweep_renders_directly_in_compositor_next() {
+    let catalog = primitive_catalog();
+    let loaded = LoadedV31Recipe::load(recipe_from_value(border_sweep_recipe_value()), &catalog)
+        .expect("border sweep recipe validates at load time");
+    let frame = render_v31_recipe(&loaded, &V31SampleContext::default())
+        .expect("direct compositor-next render");
+
+    assert_eq!(frame.recipe_id, "compositorNextDirectBorderSweep");
+    assert_eq!(
+        frame.applied_effect_kinds,
+        vec!["shader.borderSweep".to_string()]
+    );
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().fg, Color::rgb(0, 255, 255));
+    assert_eq!(frame.grid.cell((1, 1)).unwrap().fg, Color::WHITE);
+}
+
+#[test]
+fn rejects_descriptor_valid_border_sweep_position_without_direct_support() {
+    let catalog = primitive_catalog();
+    let mut recipe = border_sweep_recipe_value();
+    recipe["graph"]["nodes"]["borderSweep"]["inputs"]["position"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "number", "value": 0.0 }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects unsupported border sweep position");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            effect,
+            input,
+            ..
+        } if effect == "shader.borderSweep" && input == "position"
+    ));
+}
+
+#[test]
+fn rejects_runtime_sourced_border_sweep_inputs_at_load_time() {
+    let catalog = primitive_catalog();
+    let mut recipe = border_sweep_recipe_value();
+    recipe["graph"]["parameters"]["borderSweepSpeed"] = serde_json::json!({
+        "id": "borderSweepSpeed",
+        "displayName": "Border Sweep Speed",
+        "description": null,
+        "value": {
+            "kind": "number",
+            "default": { "kind": "number", "value": 1.0 },
+            "range": { "min": 0.0, "max": null },
+            "allowedValues": [],
+            "unit": "loops-per-second",
+            "semantic": null
+        },
+        "bindable": true
+    });
+    recipe["graph"]["nodes"]["borderSweep"]["inputs"]["speed"] = serde_json::json!({
+        "kind": "parameter",
+        "id": "borderSweepSpeed",
+        "fallback": { "kind": "number", "value": 1.0 }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects runtime-sourced border sweep inputs");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            effect,
+            input,
+            ..
+        } if effect == "shader.borderSweep" && input == "speed"
+    ));
+}
+
 #[test]
 fn load_validated_v31_focus_field_renders_directly_in_compositor_next() {
     let catalog = primitive_catalog();
@@ -717,4 +831,4 @@ fn load_validated_v31_linear_gradient_renders_directly_in_compositor_next() {
 }
 
 // <FILE>crates/tui-vfx-compositor-next/tests/test_v31_direct_recipe.rs</FILE>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

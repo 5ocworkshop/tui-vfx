@@ -1,7 +1,7 @@
 // <FILE>crates/tui-vfx-compositor-next/src/v31/render.rs</FILE> - <DESC>Direct canonical v3.1 recipe rendering</DESC>
-// <VERS>VERSION: 0.1.0</VERS>
+// <VERS>VERSION: 0.1.1</VERS>
 // <WCTX>Render load-validated canonical v3.1 recipes through compositor-next without transition-seam code.</WCTX>
-// <CLOG>0.1.0: INIT — add direct shader.linearGradient rendering.</CLOG>
+// <CLOG>0.1.1: PATCH — render shader.borderSweep through compositor-next direct v3.1.</CLOG>
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -11,10 +11,11 @@ use tui_vfx_contract::{
     Value, ValueSource,
 };
 use tui_vfx_style::models::{
-    ColorConfig, ColorSpace, FocusFieldApplyTo, FocusFieldShader, FocusFieldShape, GlistenApplyTo,
-    GlistenBandShader, GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection,
-    HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
-    LinearGradientShader, SpatialShaderType, StyleRegion, TextContrast,
+    BorderSweepShader, ColorConfig, ColorSpace, FocusFieldApplyTo, FocusFieldShader,
+    FocusFieldShape, GlistenApplyTo, GlistenBandShader, GlistenDirection, Gradient,
+    HighlighterApplyTo, HighlighterDirection, HighlighterMode, HighlighterRowMask,
+    HighlighterShader, LinearGradientApplyTo, LinearGradientShader, SpatialShaderType, StyleRegion,
+    TextContrast,
 };
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid, RoleMap, RoleTag, SemanticScene};
 
@@ -196,6 +197,14 @@ fn append_node_to_composition(
             applied_effect_kinds.push(node.effect.as_str().to_string());
             Ok(())
         }
+        "shader.borderSweep" => {
+            spec.shader_layers.push(ShaderLayerSpec {
+                shader: SpatialShaderType::BorderSweep(border_sweep_shader(node)?),
+                region: StyleRegion::All,
+            });
+            applied_effect_kinds.push(node.effect.as_str().to_string());
+            Ok(())
+        }
         other => Err(V31RenderError::Unsupported(format!(
             "Direct v3.1 rendering does not support effect `{other}`."
         ))),
@@ -294,6 +303,17 @@ fn focus_field_shader(node: &NodeSpec) -> Result<FocusFieldShader, V31RenderErro
         intensity: optional_number_input_or(node, "intensity", 1.0).clamp(0.0, 1.0) as f32,
         apply_to: focus_field_apply_to_input(node, "applyTo")?,
         ..FocusFieldShader::default()
+    })
+}
+
+fn border_sweep_shader(node: &NodeSpec) -> Result<BorderSweepShader, V31RenderError> {
+    Ok(BorderSweepShader {
+        speed: number_input(node, "speed").max(0.0) as f32,
+        length: integer_input(node, "length")?.max(1) as u16,
+        color: ColorConfig::from(color_input(node, "color")?),
+        head: None,
+        tail: None,
+        position_binding: None,
     })
 }
 
@@ -556,4 +576,4 @@ fn source_grid_from_text(text: &str, width: usize, height: usize) -> OwnedGrid {
 }
 
 // <FILE>crates/tui-vfx-compositor-next/src/v31/render.rs</FILE> - <DESC>Direct canonical v3.1 recipe rendering</DESC>
-// <VERS>END OF VERSION: 0.1.0</VERS>
+// <VERS>END OF VERSION: 0.1.1</VERS>
