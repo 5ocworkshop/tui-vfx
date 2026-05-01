@@ -1,0 +1,22 @@
+# <FILE>crates/tui-vfx-player-next/Cargo.toml</FILE> - <DESC>Pure v3.1 player-next crate manifest</DESC>
+# <VERS>VERSION: 0.1.0</VERS>
+# <WCTX>Direct v3.1 visual end-to-end path that delegates load/render semantics to compositor-next.</WCTX>
+# <CLOG>0.1.0: INIT — add v3.1-only player-next crate without legacy compatibility dependencies.</CLOG>
+
+[package]
+name = "tui-vfx-player-next"
+description = "Pure v3.1 player-next vertical path for compositor-next visual testing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+tui-vfx-contract.workspace = true
+tui-vfx-compositor-next.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

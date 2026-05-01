@@ -1,7 +1,8 @@
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>VERSION: 0.14.0</VERS>
-# <WCTX>Compositor-next Phase 2 — add copied compositor-next crate as a workspace member/dependency.</WCTX>
-# <CLOG>0.14.0: MINOR add tui-vfx-compositor-next workspace member/dependency for copy-first compositor-next baseline.</CLOG>
+# <VERS>VERSION: 0.15.0</VERS>
+# <WCTX>Direct v3.1 path — add player-next as a pure v3.1 facade over compositor-next v31.</WCTX>
+# <CLOG>0.15.0: MINOR add tui-vfx-player-next workspace member/dependency for pure v3.1 visual testing.
+# 0.14.0: MINOR add tui-vfx-compositor-next workspace member/dependency for copy-first compositor-next baseline.</CLOG>
 
 [workspace]
 resolver = "3"
@@ -11,6 +12,7 @@ members = [
     "crates/tui-vfx-contract",
     "crates/tui-vfx-contract-cli",
     "crates/tui-vfx-player",
+    "crates/tui-vfx-player-next",
     "crates/tui-vfx-player-backend-compositor",
     "crates/tui-vfx-player-cli",
     "crates/tui-vfx-player-ui",
@@ -43,6 +45,7 @@ tui-vfx-types = { path = "crates/tui-vfx-types", version = "0.11.0" }
 tui-vfx-contract = { path = "crates/tui-vfx-contract", version = "0.11.0" }
 tui-vfx-contract-cli = { path = "crates/tui-vfx-contract-cli", version = "0.11.0" }
 tui-vfx-player = { path = "crates/tui-vfx-player", version = "0.11.0" }
+tui-vfx-player-next = { path = "crates/tui-vfx-player-next", version = "0.11.0" }
 tui-vfx-player-backend-compositor = { path = "crates/tui-vfx-player-backend-compositor", version = "0.11.0" }
 tui-vfx-player-cli = { path = "crates/tui-vfx-player-cli", version = "0.11.0" }
 tui-vfx-player-ui = { path = "crates/tui-vfx-player-ui", version = "0.11.0" }
@@ -78,7 +81,7 @@ tokio = { version = "1.48", features = ["rt", "time"] }
 rocketsplash-rt = "0.2.2"
 
 # <FILE>Cargo.toml</FILE> - <DESC>Workspace manifest for tui-vfx</DESC>
-# <VERS>END OF VERSION: 0.13.0</VERS>
+# <VERS>END OF VERSION: 0.15.0</VERS>
 # Example/demo workloads need meaningful optimization in dev too; otherwise
 # local cargo run / cargo test significantly under-represents real runtime
 # performance and makes the stack look slower than it is.

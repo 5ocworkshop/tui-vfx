@@ -175,6 +175,43 @@ fn rejects_runtime_sourced_linear_gradient_inputs_at_load_time() {
 }
 
 #[test]
+fn rejects_runtime_sourced_source_style_inputs_at_load_time() {
+    let catalog = primitive_catalog();
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["graph"]["parameters"]["foregroundColor"] = serde_json::json!({
+        "id": "foregroundColor",
+        "displayName": "Foreground Color",
+        "description": null,
+        "value": {
+            "kind": "color",
+            "default": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } },
+            "range": null,
+            "allowedValues": [],
+            "unit": null,
+            "semantic": "foreground"
+        },
+        "bindable": true
+    });
+    recipe["sources"]["mainCard"]["inputs"]["foreground"] = serde_json::json!({
+        "kind": "parameter",
+        "id": "foregroundColor",
+        "fallback": { "kind": "color", "value": { "r": 255, "g": 255, "b": 255, "a": 255 } }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects runtime-sourced source styling inputs");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedSourceInput {
+            source_id,
+            input,
+            ..
+        } if source_id == "mainCard" && input == "foreground"
+    ));
+}
+
+#[test]
 fn rejects_runtime_sourced_source_inputs_at_load_time() {
     let catalog = primitive_catalog();
     let mut recipe = linear_gradient_recipe_value();
@@ -256,6 +293,114 @@ fn load_validated_v31_linear_gradient_uses_canonical_gradient_stops() {
     assert_eq!(frame.grid.cell((0, 0)).unwrap().fg, Color::RED);
     assert_eq!(frame.grid.cell((1, 0)).unwrap().fg, Color::GREEN);
     assert_eq!(frame.grid.cell((2, 0)).unwrap().fg, Color::BLUE);
+}
+
+fn highlighter_recipe_value() -> serde_json::Value {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["id"] = serde_json::Value::String("compositorNextDirectHighlighter".to_string());
+    recipe["sources"]["mainCard"]["inputs"]["message"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "text", "value": "HELLO" }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["width"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 5 }
+    });
+    recipe["sources"]["mainCard"]["inputs"]["height"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "integer", "value": 1 }
+    });
+    recipe["scenes"][0]["width"] = serde_json::Value::from(5);
+    recipe["scenes"][0]["height"] = serde_json::Value::from(1);
+    recipe["graph"]["nodes"]
+        .as_object_mut()
+        .expect("nodes object")
+        .remove("gradient");
+    recipe["graph"]["nodes"]["highlighter"] = serde_json::json!({
+        "id": "highlighter",
+        "effect": "shader.highlighter",
+        "inputs": {
+            "color": { "kind": "literal", "value": { "kind": "color", "value": { "r": 255, "g": 0, "b": 0, "a": 255 } } },
+            "bandWidth": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+            "blendStrength": { "kind": "literal", "value": { "kind": "number", "value": 1.0 } },
+            "textContrast": { "kind": "literal", "value": { "kind": "number", "value": 0.0 } },
+            "mode": { "kind": "literal", "value": { "kind": "enum", "value": "band" } },
+            "softEdge": { "kind": "literal", "value": { "kind": "boolean", "value": false } },
+            "direction": { "kind": "literal", "value": { "kind": "enum", "value": "leftToRight" } },
+            "rowMask": { "kind": "literal", "value": { "kind": "integer", "value": 0 } },
+            "applyTo": { "kind": "literal", "value": { "kind": "enum", "value": "background" } }
+        },
+        "outputs": {},
+        "activePhases": [],
+        "scope": { "kind": "all" },
+        "cellWritePolicy": "writeCell",
+        "roleWritePolicy": { "kind": "preserveDestination" }
+    });
+    recipe["graph"]["order"] = serde_json::json!(["highlighter"]);
+    recipe
+}
+
+#[test]
+fn load_validated_v31_highlighter_renders_directly_in_compositor_next() {
+    let catalog = primitive_catalog();
+    let loaded = LoadedV31Recipe::load(recipe_from_value(highlighter_recipe_value()), &catalog)
+        .expect("highlighter recipe validates at load time");
+    let frame = render_v31_recipe(&loaded, &V31SampleContext::default())
+        .expect("direct compositor-next render");
+
+    assert_eq!(frame.recipe_id, "compositorNextDirectHighlighter");
+    assert_eq!(
+        frame.applied_effect_kinds,
+        vec!["shader.highlighter".to_string()]
+    );
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().bg, Color::RED);
+    assert_eq!(frame.grid.cell((4, 0)).unwrap().bg, Color::BLACK);
+}
+
+#[test]
+fn rejects_unsupported_highlighter_inputs_at_load_time() {
+    let catalog = primitive_catalog();
+    let mut recipe = highlighter_recipe_value();
+    recipe["graph"]["nodes"]["highlighter"]["inputs"]["textContrast"] = serde_json::json!({
+        "kind": "literal",
+        "value": { "kind": "number", "value": 0.5 }
+    });
+
+    let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+        .expect_err("direct v3.1 load rejects unsupported highlighter textContrast");
+
+    assert!(matches!(
+        err,
+        V31LoadError::UnsupportedDirectInput {
+            effect,
+            input,
+            ..
+        } if effect == "shader.highlighter" && input == "textContrast"
+    ));
+}
+
+#[test]
+fn rejects_descriptor_valid_highlighter_modes_without_direct_support() {
+    let catalog = primitive_catalog();
+    for unsupported_mode in ["row", "centerOut"] {
+        let mut recipe = highlighter_recipe_value();
+        recipe["graph"]["nodes"]["highlighter"]["inputs"]["mode"] = serde_json::json!({
+            "kind": "literal",
+            "value": { "kind": "enum", "value": unsupported_mode }
+        });
+
+        let err = LoadedV31Recipe::load(recipe_from_value(recipe), &catalog)
+            .expect_err("direct v3.1 load rejects unsupported highlighter modes");
+
+        assert!(matches!(
+            err,
+            V31LoadError::UnsupportedDirectInput {
+                effect,
+                input,
+                ..
+            } if effect == "shader.highlighter" && input == "mode"
+        ));
+    }
 }
 
 #[test]

@@ -11,8 +11,9 @@ use tui_vfx_contract::{
     Value, ValueSource,
 };
 use tui_vfx_style::models::{
-    ColorSpace, Gradient, LinearGradientApplyTo, LinearGradientShader, SpatialShaderType,
-    StyleRegion,
+    ColorConfig, ColorSpace, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
+    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
+    SpatialShaderType, StyleRegion, TextContrast,
 };
 use tui_vfx_types::{Cell, Color, Grid, OwnedGrid, RoleMap, RoleTag, SemanticScene};
 
@@ -170,6 +171,14 @@ fn append_node_to_composition(
             applied_effect_kinds.push(node.effect.as_str().to_string());
             Ok(())
         }
+        "shader.highlighter" => {
+            spec.shader_layers.push(ShaderLayerSpec {
+                shader: SpatialShaderType::Highlighter(highlighter_shader(node)?),
+                region: StyleRegion::All,
+            });
+            applied_effect_kinds.push(node.effect.as_str().to_string());
+            Ok(())
+        }
         other => Err(V31RenderError::Unsupported(format!(
             "Direct v3.1 rendering does not support effect `{other}`."
         ))),
@@ -202,6 +211,36 @@ fn gradient_input(node: &NodeSpec) -> Result<Gradient, V31RenderError> {
     Ok(Gradient {
         stops: vec![(0.0, start), (1.0, end)],
         space: color_space_input(node, "colorSpace")?,
+    })
+}
+
+fn highlighter_shader(node: &NodeSpec) -> Result<HighlighterShader, V31RenderError> {
+    let text_contrast = number_input(node, "textContrast");
+    if text_contrast > 0.0 {
+        return Err(V31RenderError::Unsupported(
+            "shader.highlighter textContrast values above 0.0 are not supported by direct v3.1 rendering."
+                .to_string(),
+        ));
+    }
+
+    Ok(HighlighterShader {
+        color: ColorConfig::from(color_input(node, "color")?),
+        apply_to: highlighter_apply_to_input(node, "applyTo")?,
+        text_contrast: TextContrast::Preserve,
+        mode: highlighter_mode_input(node, "mode")?,
+        band_width: number_input(node, "bandWidth").max(1.0) as u16,
+        soft_edge: if bool_input(node, "softEdge")? {
+            1.0
+        } else {
+            0.0
+        },
+        blend_strength: number_input(node, "blendStrength").clamp(0.0, 1.0) as f32,
+        blend_strength_binding: None,
+        speed: 1.0,
+        speed_binding: None,
+        direction: highlighter_direction_input(node, "direction")?,
+        direction_binding: None,
+        row_mask: highlighter_row_mask_input(node, "rowMask")?,
     })
 }
 
@@ -279,11 +318,31 @@ fn color_input(node: &NodeSpec, id: &str) -> Result<Color, V31RenderError> {
     }
 }
 
+fn bool_input(node: &NodeSpec, id: &str) -> Result<bool, V31RenderError> {
+    match literal_value(node, id)? {
+        Value::Boolean(value) => Ok(*value),
+        value => Err(V31RenderError::Unsupported(format!(
+            "Direct v3.1 rendering expected boolean input `{id}` but found `{:?}`.",
+            value.kind()
+        ))),
+    }
+}
+
 fn number_input(node: &NodeSpec, id: &str) -> f64 {
     literal_value(node, id)
         .ok()
         .and_then(Value::as_range_number)
         .expect("direct v3.1 load validates required numeric literals")
+}
+
+fn integer_input(node: &NodeSpec, id: &str) -> Result<i64, V31RenderError> {
+    match literal_value(node, id)? {
+        Value::Integer(value) => Ok(*value),
+        value => Err(V31RenderError::Unsupported(format!(
+            "Direct v3.1 rendering expected integer input `{id}` but found `{:?}`.",
+            value.kind()
+        ))),
+    }
 }
 
 fn color_space_input(node: &NodeSpec, id: &str) -> Result<ColorSpace, V31RenderError> {
@@ -315,6 +374,69 @@ fn apply_to_input(node: &NodeSpec, id: &str) -> Result<LinearGradientApplyTo, V3
         None => Err(V31RenderError::Unsupported(format!(
             "Direct v3.1 rendering expected enum input `{id}` for shader.linearGradient."
         ))),
+    }
+}
+
+fn highlighter_apply_to_input(
+    node: &NodeSpec,
+    id: &str,
+) -> Result<HighlighterApplyTo, V31RenderError> {
+    match literal_value(node, id)?.as_enum_value() {
+        Some("foreground") => Ok(HighlighterApplyTo::Foreground),
+        Some("background") => Ok(HighlighterApplyTo::Background),
+        Some("both") => Ok(HighlighterApplyTo::Both),
+        Some(value) => Err(V31RenderError::Unsupported(format!(
+            "shader.highlighter applyTo `{value}` is not supported by direct v3.1 rendering."
+        ))),
+        None => Err(V31RenderError::Unsupported(format!(
+            "Direct v3.1 rendering expected enum input `{id}` for shader.highlighter."
+        ))),
+    }
+}
+
+fn highlighter_mode_input(node: &NodeSpec, id: &str) -> Result<HighlighterMode, V31RenderError> {
+    match literal_value(node, id)?.as_enum_value() {
+        Some("band") => Ok(HighlighterMode::Band),
+        Some(value) => Err(V31RenderError::Unsupported(format!(
+            "shader.highlighter mode `{value}` is not supported by direct v3.1 rendering."
+        ))),
+        None => Err(V31RenderError::Unsupported(format!(
+            "Direct v3.1 rendering expected enum input `{id}` for shader.highlighter."
+        ))),
+    }
+}
+
+fn highlighter_direction_input(
+    node: &NodeSpec,
+    id: &str,
+) -> Result<HighlighterDirection, V31RenderError> {
+    match literal_value(node, id)?.as_enum_value() {
+        Some("leftToRight") => Ok(HighlighterDirection::Forward),
+        Some("rightToLeft") => Ok(HighlighterDirection::Reverse),
+        Some("topToBottom") => Ok(HighlighterDirection::TopDown),
+        Some("bottomToTop") => Ok(HighlighterDirection::BottomUp),
+        Some(value) => Err(V31RenderError::Unsupported(format!(
+            "shader.highlighter direction `{value}` is not supported by direct v3.1 rendering."
+        ))),
+        None => Err(V31RenderError::Unsupported(format!(
+            "Direct v3.1 rendering expected enum input `{id}` for shader.highlighter."
+        ))),
+    }
+}
+
+fn highlighter_row_mask_input(
+    node: &NodeSpec,
+    id: &str,
+) -> Result<HighlighterRowMask, V31RenderError> {
+    let row = integer_input(node, id)?;
+    if row >= 0 {
+        let row = row as u16;
+        Ok(HighlighterRowMask::Range {
+            start: row,
+            end: row,
+        })
+    } else {
+        Ok(HighlighterRowMask::AllRows)
     }
 }
 

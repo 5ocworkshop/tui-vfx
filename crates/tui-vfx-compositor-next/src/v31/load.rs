@@ -83,8 +83,10 @@ fn validate_direct_render_contract(recipe: &RecipeDocument) -> Result<(), V31Loa
         validate_direct_source_inputs(source_id, source)?;
     }
     for (node_id, node) in &recipe.graph.nodes {
-        if node.effect.as_str() == "shader.linearGradient" {
-            validate_linear_gradient_direct_inputs(node_id, node)?;
+        match node.effect.as_str() {
+            "shader.linearGradient" => validate_linear_gradient_direct_inputs(node_id, node)?,
+            "shader.highlighter" => validate_highlighter_direct_inputs(node_id, node)?,
+            _ => {}
         }
     }
     Ok(())
@@ -104,11 +106,10 @@ fn validate_direct_source_inputs(
             "Direct v3.1 rendering requires a literal message/text source input.",
         ));
     }
-    for input in ["message", "text", "width", "height"] {
-        if source.inputs.contains_key(&SourceInputId::new(input)) {
-            literal_source_input(source, input)
-                .map_err(|error| source_input_error(source_id, source, input, error.as_str()))?;
-        }
+    for input in source.inputs.keys() {
+        literal_source_input(source, input.as_str()).map_err(|error| {
+            source_input_error(source_id, source, input.as_str(), error.as_str())
+        })?;
     }
     for input in ["width", "height"] {
         if source.inputs.contains_key(&SourceInputId::new(input))
@@ -172,18 +173,7 @@ fn validate_linear_gradient_direct_inputs(
     node_id: &NodeId,
     node: &NodeSpec,
 ) -> Result<(), V31LoadError> {
-    for input in node.inputs.keys() {
-        literal_value(node, input.as_str()).map_err(|error| {
-            V31LoadError::UnsupportedDirectInput {
-                node_id: node_id.as_str().to_string(),
-                effect: node.effect.as_str().to_string(),
-                input: input.as_str().to_string(),
-                reason: match error {
-                    V31RenderError::Unsupported(reason) => reason,
-                },
-            }
-        })?;
-    }
+    require_declared_inputs_literal(node_id, node)?;
 
     require_literal_input(node_id, node, "angleDeg")?;
     require_literal_input(node_id, node, "intensity")?;
@@ -203,16 +193,182 @@ fn require_literal_input(
     node: &NodeSpec,
     input: &str,
 ) -> Result<(), V31LoadError> {
-    literal_value(node, input)
-        .map(|_| ())
-        .map_err(|error| V31LoadError::UnsupportedDirectInput {
-            node_id: node_id.as_str().to_string(),
-            effect: node.effect.as_str().to_string(),
-            input: input.to_string(),
-            reason: match error {
-                V31RenderError::Unsupported(reason) => reason,
-            },
+    literal_direct_value(node_id, node, input).map(|_| ())
+}
+
+fn validate_highlighter_direct_inputs(
+    node_id: &NodeId,
+    node: &NodeSpec,
+) -> Result<(), V31LoadError> {
+    require_declared_inputs_literal(node_id, node)?;
+
+    for input in [
+        "color",
+        "bandWidth",
+        "blendStrength",
+        "textContrast",
+        "mode",
+        "softEdge",
+        "direction",
+        "rowMask",
+        "applyTo",
+    ] {
+        require_literal_input(node_id, node, input)?;
+    }
+    require_color_input(node_id, node, "color")?;
+    require_number_input(node_id, node, "bandWidth")?;
+    require_number_input(node_id, node, "blendStrength")?;
+    let text_contrast = require_number_input(node_id, node, "textContrast")?;
+    if text_contrast > 0.0 {
+        return Err(direct_input_error(
+            node_id,
+            node,
+            "textContrast",
+            "shader.highlighter textContrast values above 0.0 are not supported by direct v3.1 rendering.",
+        ));
+    }
+    require_enum_value(node_id, node, "mode", &["band"])?;
+    require_bool_input(node_id, node, "softEdge")?;
+    require_enum_value(
+        node_id,
+        node,
+        "direction",
+        &["leftToRight", "rightToLeft", "topToBottom", "bottomToTop"],
+    )?;
+    require_integer_input(node_id, node, "rowMask")?;
+    require_enum_value(
+        node_id,
+        node,
+        "applyTo",
+        &["foreground", "background", "both"],
+    )?;
+    Ok(())
+}
+
+fn require_declared_inputs_literal(node_id: &NodeId, node: &NodeSpec) -> Result<(), V31LoadError> {
+    for input in node.inputs.keys() {
+        literal_direct_value(node_id, node, input.as_str())?;
+    }
+    Ok(())
+}
+
+fn require_color_input(node_id: &NodeId, node: &NodeSpec, input: &str) -> Result<(), V31LoadError> {
+    match literal_direct_value(node_id, node, input)? {
+        Value::Color(_) => Ok(()),
+        value => Err(direct_input_error(
+            node_id,
+            node,
+            input,
+            &format!(
+                "Direct v3.1 rendering expected color input `{input}` but found `{:?}`.",
+                value.kind()
+            ),
+        )),
+    }
+}
+
+fn require_number_input(
+    node_id: &NodeId,
+    node: &NodeSpec,
+    input: &str,
+) -> Result<f64, V31LoadError> {
+    literal_direct_value(node_id, node, input)?
+        .as_range_number()
+        .ok_or_else(|| {
+            direct_input_error(
+                node_id,
+                node,
+                input,
+                &format!("Direct v3.1 rendering expected numeric input `{input}`."),
+            )
         })
+}
+
+fn require_bool_input(node_id: &NodeId, node: &NodeSpec, input: &str) -> Result<(), V31LoadError> {
+    match literal_direct_value(node_id, node, input)? {
+        Value::Boolean(_) => Ok(()),
+        value => Err(direct_input_error(
+            node_id,
+            node,
+            input,
+            &format!(
+                "Direct v3.1 rendering expected boolean input `{input}` but found `{:?}`.",
+                value.kind()
+            ),
+        )),
+    }
+}
+
+fn require_integer_input(
+    node_id: &NodeId,
+    node: &NodeSpec,
+    input: &str,
+) -> Result<(), V31LoadError> {
+    match literal_direct_value(node_id, node, input)? {
+        Value::Integer(_) => Ok(()),
+        value => Err(direct_input_error(
+            node_id,
+            node,
+            input,
+            &format!(
+                "Direct v3.1 rendering expected integer input `{input}` but found `{:?}`.",
+                value.kind()
+            ),
+        )),
+    }
+}
+
+fn require_enum_value(
+    node_id: &NodeId,
+    node: &NodeSpec,
+    input: &str,
+    allowed: &[&str],
+) -> Result<(), V31LoadError> {
+    match literal_direct_value(node_id, node, input)?.as_enum_value() {
+        Some(value) if allowed.contains(&value) => Ok(()),
+        Some(value) => Err(direct_input_error(
+            node_id,
+            node,
+            input,
+            &format!(
+                "{} `{value}` is not supported by direct v3.1 rendering.",
+                node.effect.as_str()
+            ),
+        )),
+        None => Err(direct_input_error(
+            node_id,
+            node,
+            input,
+            &format!("Direct v3.1 rendering expected enum input `{input}`."),
+        )),
+    }
+}
+
+fn direct_input_error(
+    node_id: &NodeId,
+    node: &NodeSpec,
+    input: &str,
+    reason: &str,
+) -> V31LoadError {
+    V31LoadError::UnsupportedDirectInput {
+        node_id: node_id.as_str().to_string(),
+        effect: node.effect.as_str().to_string(),
+        input: input.to_string(),
+        reason: reason.to_string(),
+    }
+}
+
+fn literal_direct_value<'a>(
+    node_id: &NodeId,
+    node: &'a NodeSpec,
+    input: &str,
+) -> Result<&'a Value, V31LoadError> {
+    literal_value(node, input).map_err(|error| {
+        let reason = match &error {
+            V31RenderError::Unsupported(reason) => reason.as_str(),
+        };
+        direct_input_error(node_id, node, input, reason)
+    })
 }
 
 // <FILE>crates/tui-vfx-compositor-next/src/v31/load.rs</FILE> - <DESC>Direct v3.1 recipe load validation</DESC>

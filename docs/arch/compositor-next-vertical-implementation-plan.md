@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>VERSION: 0.7.0</VERS> -->
+<!-- <VERS>VERSION: 0.8.0</VERS> -->
 <!-- <WCTX>v3.1 north-star execution plan: validate recipes at load time, then pass canonical v3.1 structures through to copied compositor-next via vertical slices.</WCTX> -->
-<!-- <CLOG>0.7.0: MINOR — clarify the pure v3.1 target: load-time recipe validation, then direct canonical v3.1 flow to compositor-next with no bridge/shim investment.
+<!-- <CLOG>0.8.0: MINOR — record the shared loader/player-next path and second shader.highlighter vertical slice.
+0.7.0: MINOR — clarify the pure v3.1 target: load-time recipe validation, then direct canonical v3.1 flow to compositor-next with no bridge/shim investment.
 0.6.0: MINOR — elevate validation/tooling maturity to an early gate before broad primitive work.
 0.5.0: MINOR — account for presentation/update cadence and absolute-time procedural sources in the schema audit.
 0.4.0: MINOR — add IndexedField source descriptor as first from-scratch workflow test.
@@ -227,7 +228,7 @@ This looks efficient but defers integration risk. Problems with value-source res
 The required strategy is vertical:
 
 ```text
-one primitive → descriptor → generated code → runtime → backend → fixtures → migration → parity → signoff
+one primitive → descriptor → generated code → runtime → player-next/compositor-next → fixtures → migration → parity → signoff
 then next primitive
 ```
 
@@ -628,8 +629,9 @@ can prove the pure v3.1 load-validation → direct compositor-next route before
 larger primitives add field breadth. The initial slice intentionally validates
 literal-only direct inputs at recipe load time, supports the canonical v3.1
 `gradient` payload, and rejects unresolved runtime-sourced source/effect inputs
-before rendering. `shader.highlighter` remains a richer follow-up candidate
-after this direct path is stable.
+before rendering. The next slice then used `shader.highlighter` to prove the
+path against a richer existing shader with channel routing, direction, row mask,
+and unsupported semantic diagnostics.
 
 Why:
 
@@ -777,7 +779,7 @@ Repeat the full vertical slice for the next primitive.
 Recommended order:
 
 1. `shader.linearGradient` — signed off as the first direct v3.1 slice.
-2. `shader.highlighter`
+2. `shader.highlighter` — signed off as the second direct v3.1 slice and first player-next visual-test path consumer.
 3. `shader.focusField`
 4. `shader.glistenBand`
 5. `shader.borderSweep`
@@ -981,7 +983,7 @@ This keeps cleanup reviewable, prevents behavior drift from being hidden inside 
 ### Milestone D — First Signed Primitive
 
 - First shader primitive is end-to-end in compositor-next.
-- Strict backend execution works.
+- Strict player-next/compositor-next execution works.
 - Fixture QC and field coverage pass.
 - V2 parity is proven or exact blocker is recorded.
 - Commonality/OFPF review complete.
@@ -1027,7 +1029,7 @@ Copy the hardened compositor.
 Prove behavior parity.
 Audit descriptor/schema commonality before baking it into generators.
 Pick one existing primitive.
-Drive it vertically through schema, generated code, runtime, backend, fixtures, migration, validation, and signoff.
+Drive it vertically through schema, generated code, runtime, player-next/compositor-next execution, fixtures, migration, validation, and signoff.
 Extract common patterns when they recur.
 Repeat primitive by primitive.
 Then prove the workflow on one new from-scratch primitive: `source.indexedField`.
@@ -1035,4 +1037,4 @@ Only resume broad recipe migration on signed-off primitives.
 ```
 
 <!-- <FILE>docs/arch/compositor-next-vertical-implementation-plan.md</FILE> - <DESC>Detailed implementation plan for copied compositor-next and vertical primitive-by-primitive migration</DESC> -->
-<!-- <VERS>END OF VERSION: 0.4.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.8.0</VERS> -->

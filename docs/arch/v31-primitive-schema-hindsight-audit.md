@@ -1,7 +1,8 @@
 <!-- <FILE>docs/arch/v31-primitive-schema-hindsight-audit.md</FILE> - <DESC>Bounded hindsight audit of v3.1 primitive descriptor fields before compositor-next workbench generation</DESC> -->
-<!-- <VERS>VERSION: 0.1.0</VERS> -->
+<!-- <VERS>VERSION: 0.2.0</VERS> -->
 <!-- <WCTX>Compositor-next Phase 3.5: classify repeated descriptor/schema concepts before broad primitive scaffolding.</WCTX> -->
-<!-- <CLOG>0.1.0: INIT — add bounded primitive-field commonality audit for compositor-next and Primitive Workbench startup.</CLOG> -->
+<!-- <CLOG>0.2.0: MINOR — record highlighter direct-slice decisions after implementing the richer v3.1 shader path.
+0.1.0: INIT — add bounded primitive-field commonality audit for compositor-next and Primitive Workbench startup.</CLOG> -->
 
 # v3.1 Primitive Schema Hindsight Audit
 
@@ -63,9 +64,9 @@ Rejected collapse:
 
 - `fps` as a primitive semantic field. Presentation cadence is a player/backend control unless a future descriptor explicitly accepts a presentation hint.
 
-## First vertical slice: `shader.highlighter`
+## Follow-up vertical slice: `shader.highlighter`
 
-The first existing shader candidate remains `shader.highlighter`.
+`shader.highlighter` is now the richer follow-up shader after the initial `shader.linearGradient` direct path. It is the first slice that also proves the thin `player-next` facade can use the same load-validated v3.1 recipe acceptance path as compositor-next direct tests.
 
 Current descriptor inputs from `descriptors/v3.1/packs/primitive.json`:
 
@@ -81,13 +82,13 @@ Current descriptor inputs from `descriptors/v3.1/packs/primitive.json`:
 | `rowMask` | `integer` | owner-decision-needed; runtime model is structured/enum-like, descriptor kind should be reviewed before scaffold hardens it |
 | `applyTo` | `enum` | channel/style target helper after allowed values are read from descriptor |
 
-Highlighter pre-slice owner-decision items:
+Highlighter direct-slice decisions:
 
-1. Confirm whether `textContrast` should remain a `number` descriptor input or become an enum/structured descriptor matching runtime `TextContrast`.
-2. Confirm whether `rowMask` should remain `integer` or become an enum/structured descriptor matching runtime `HighlighterRowMask`.
-3. Attach semantics for `blendStrength`, `applyTo`, and `color` if generated workbench helpers are expected to classify them globally.
-
-These decisions should be made before generating checked-in highlighter scaffold. They do not block the baseline compositor-next copy or old-vs-next parity proof.
+1. `mode` accepts only canonical descriptor value `band` in the direct slice. Descriptor-valid `row` and `centerOut` fail with explicit load-time unsupported diagnostics until compositor-next implements their exact semantics.
+2. `textContrast` remains accepted only at the descriptor-valid literal value `0.0`; values above `0.0` are rejected at load time because the copied compositor-next direct path currently maps only to `TextContrast::Preserve`.
+3. `rowMask` remains an integer descriptor input for this slice; non-negative rows map to a single-row compositor range, and broader structured row-mask work remains a future descriptor decision.
+4. `blendStrength`, `applyTo`, `direction`, and `color` are handled locally from canonical descriptor values only; no legacy aliases are accepted in the direct v3.1 path.
+5. `player-next` intentionally owns no separate recipe loader. It delegates to the same compositor-next v3.1 load path so player visual tests and compositor direct tests share one acceptance logic set.
 
 ## Workbench inputs accepted now
 
@@ -115,8 +116,8 @@ Primitive Workbench must not yet generate a global `applyTo` helper or global ge
 
 | Item | Why it needs owner/design decision | Unblocks |
 | --- | --- | --- |
-| Highlighter `textContrast` descriptor kind | Current descriptor says `number`; runtime shape is enum/structured. Generated scaffold would harden the mismatch. | `shader.highlighter` generated input model |
-| Highlighter `rowMask` descriptor kind | Current descriptor says `integer`; runtime shape is enum/structured. Generated scaffold would harden the mismatch. | `shader.highlighter` field coverage and unsupported diagnostics |
+| Highlighter `textContrast` descriptor kind | Direct slice accepts only `0.0` and rejects unsupported compositor semantics at load time; broader enum/structured support remains a descriptor/runtime design decision. | future highlighter generated input model |
+| Highlighter `rowMask` descriptor kind | Direct slice maps non-negative integer rows to a single-row compositor range; broader structured row masks remain a descriptor/runtime design decision. | future highlighter field coverage and unsupported diagnostics |
 | Global `applyTo` semantics | Repeated field with family-specific target sets. | shared workbench channel-routing helper |
 | Timing `updateCadence` descriptor concept | Needed only if fixed-step semantics appear; should not be invented for every primitive. | future procedural/time-sensitive primitive work |
 
@@ -131,4 +132,4 @@ This audit satisfies the compositor-next Phase 3.5 gate for baseline and first-s
 - No compatibility aliases were introduced.
 
 <!-- <FILE>docs/arch/v31-primitive-schema-hindsight-audit.md</FILE> - <DESC>Bounded hindsight audit of v3.1 primitive descriptor fields before compositor-next workbench generation</DESC> -->
-<!-- <VERS>END OF VERSION: 0.1.0</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.0</VERS> -->
