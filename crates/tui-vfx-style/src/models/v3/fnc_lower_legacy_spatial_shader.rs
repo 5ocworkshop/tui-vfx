@@ -64,6 +64,9 @@ pub fn lower_legacy_spatial_shader(shader: &SpatialShaderType) -> VfxSpatialShad
         SpatialShaderType::ColorFade(shader) => VfxSpatialShaderFamily::ComposedPrimitive(
             VfxSpatialComposedPrimitive::ColorFade(shader.clone()),
         ),
+        SpatialShaderType::ColorShift(shader) => VfxSpatialShaderFamily::ComposedPrimitive(
+            VfxSpatialComposedPrimitive::ColorShift(shader.clone()),
+        ),
         SpatialShaderType::RadialSpiral(shader) => {
             VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
         }

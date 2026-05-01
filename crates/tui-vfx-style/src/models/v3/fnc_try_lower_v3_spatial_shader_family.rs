@@ -94,6 +94,9 @@ fn try_lower_composed(
         VfxSpatialComposedPrimitive::ColorFade(shader) => {
             Ok(SpatialShaderType::ColorFade(shader.clone()))
         }
+        VfxSpatialComposedPrimitive::ColorShift(shader) => {
+            Ok(SpatialShaderType::ColorShift(shader.clone()))
+        }
     }
 }
 

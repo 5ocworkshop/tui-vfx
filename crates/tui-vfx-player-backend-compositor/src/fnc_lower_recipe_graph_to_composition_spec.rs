@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.48.0: MINOR — lower style.colorFade into compositor ColorFadeShader layers and remove backend style-stage emulation.
+// <CLOG>0.49.0: MINOR — lower style.colorShift into compositor ColorShiftShader layers and remove backend style-stage emulation.
+// 0.48.0: MINOR — lower style.colorFade into compositor ColorFadeShader layers and remove backend style-stage emulation.
 // 0.47.0: MINOR — lower style.rainbow into compositor RainbowCycleShader layers and remove backend style-stage emulation.
 // 0.46.0: MINOR — lower style.moduloColumns into compositor LinearGradientShader layers scoped by StyleRegion::Modulo and remove backend style-stage emulation.
 // 0.45.0: MINOR — lower style.italicWindow into compositor ModifierWindowShader layers and remove backend style-stage emulation.
@@ -58,14 +59,14 @@ use tui_vfx_player::{
 };
 use tui_vfx_style::models::{
     ApplyToColor, BarberPoleApplyTo, BarberPoleShader, BindableU16, BorderSweepShader, ColorConfig,
-    ColorFadeShader, ColorSpace, DiffusionApplyTo, DiffusionShader, DiffusionSource,
-    FocusFieldApplyTo, FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo,
-    GlistenBandShader, GlistenDirection, GlitchLinesShader, Gradient, HighlighterApplyTo,
-    HighlighterDirection, HighlighterMode, HighlighterRowMask, HighlighterShader,
-    LinearGradientApplyTo, LinearGradientShader, ModifierWindowShader, ModuloAxis,
-    NeonFlickerShader, PulseWaveShader, RadarShader, RainbowCycleShader, RevealWipeShader,
-    SegmentMode, SpatialShaderType, StyleRegion, TextContrast, WaveDirection, WayfindingNode,
-    WayfindingNodeApplyTo, WayfindingNodeShader,
+    ColorFadeShader, ColorShiftShader, ColorSpace, DiffusionApplyTo, DiffusionShader,
+    DiffusionSource, FocusFieldApplyTo, FocusFieldShader, FocusFieldShape,
+    FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader, GlistenDirection,
+    GlitchLinesShader, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
+    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
+    ModifierWindowShader, ModuloAxis, NeonFlickerShader, PulseWaveShader, RadarShader,
+    RainbowCycleShader, RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion,
+    TextContrast, WaveDirection, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -92,8 +93,6 @@ pub struct LoweredCompositionSpec {
     pub spec: CompositionSpec,
     /// Source-content transforms applied before compositor effects while staying source-only.
     pub content_stages: Vec<NativeContentStage>,
-    /// Source-style transforms applied before compositor effects while staying source-only.
-    pub style_stages: Vec<NativeStyleStage>,
     /// Backend diagnostics describing lowering decisions.
     pub diagnostics: Vec<PlayerRenderBackendDiagnostic>,
     /// Evidence fields copied onto the player backend output.
@@ -171,17 +170,6 @@ pub enum NativeContentStage {
     SlideShift { start_col: i64, end_col: i64 },
 }
 
-/// Native style transform stage owned by the compositor backend adapter.
-#[derive(Clone, Debug, PartialEq)]
-pub enum NativeStyleStage {
-    /// Apply player-compatible HSL color shift styling to existing channels.
-    ColorShift {
-        hue_shift: f64,
-        saturation_shift: f64,
-        lightness_shift: f64,
-    },
-}
-
 /// Cursor wake behavior for native typewriter content.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TypewriterCursorWake {
@@ -240,7 +228,6 @@ fn lower_ir_resolved_composition_spec(input: &PlayerRenderIrReport) -> LoweredCo
         },
         spec,
         content_stages: Vec::new(),
-        style_stages: Vec::new(),
         diagnostics,
     }
 }
@@ -255,7 +242,6 @@ fn lower_auto_composition_spec(request: &PlayerRenderBackendRequest) -> LoweredC
     let fallback = lower_ir_resolved_composition_spec(&request.ir);
     lowered.spec = fallback.spec;
     lowered.content_stages = Vec::new();
-    lowered.style_stages = Vec::new();
     lowered.evidence.composition_mode = "auto".to_string();
     lowered.evidence.fallback_used = true;
     lowered.evidence.native_lowering_attempted = true;
@@ -280,7 +266,6 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
     };
     spec.preserve_unfilled = true;
     let mut content_stages = Vec::new();
-    let mut style_stages = Vec::new();
 
     let mut diagnostics = Vec::new();
     let mut lowered_effect_ids = Vec::new();
@@ -319,7 +304,6 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
             request,
             &mut spec,
             &mut content_stages,
-            &mut style_stages,
         ) {
             NodeLoweringOutcome::Lowered { warnings } => {
                 lowered_node_count += 1;
@@ -355,7 +339,7 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
     }
 
     let composition_spec_non_empty = composition_spec_non_empty(&spec);
-    let native_stage_non_empty = !content_stages.is_empty() || !style_stages.is_empty();
+    let native_stage_non_empty = !content_stages.is_empty();
     let native_lowering_succeeded = unlowered_node_count == 0;
     LoweredCompositionSpec {
         evidence: PlayerRenderBackendCompositionEvidence {
@@ -371,14 +355,12 @@ fn lower_native_composition_spec(request: &PlayerRenderBackendRequest) -> Lowere
             composition_spec_summary: composition_spec_summary_with_content_stages(
                 &spec,
                 content_stages.len(),
-                style_stages.len(),
             ),
             source_render_mode: "sourceOnly".to_string(),
             native_source_isolated: true,
         },
         spec,
         content_stages,
-        style_stages,
         diagnostics,
     }
 }
@@ -406,7 +388,6 @@ fn lower_node_into_spec(
     request: &PlayerRenderBackendRequest,
     spec: &mut CompositionSpec,
     content_stages: &mut Vec<NativeContentStage>,
-    style_stages: &mut Vec<NativeStyleStage>,
 ) -> NodeLoweringOutcome {
     let warnings = ignored_policy_warnings(node);
     let effect = node.effect.as_str();
@@ -536,7 +517,7 @@ fn lower_node_into_spec(
         "shader.diffusion" => lower_diffusion_shader(node, spec, request, warnings),
         "shader.radar" => lower_radar_shader(node, spec, request, warnings),
         "style.colorFade" => lower_style_color_fade(node, spec, request, warnings),
-        "style.colorShift" => lower_style_color_shift(node, style_stages, request, warnings),
+        "style.colorShift" => lower_style_color_shift(node, spec, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
         "style.pulse" => lower_style_pulse(node, spec, request, warnings),
         "style.italicWindow" => lower_style_italic_window(node, spec, request, warnings),
@@ -544,7 +525,7 @@ fn lower_node_into_spec(
         "style.neonFlicker" => lower_style_neon_flicker(node, spec, request, warnings),
         "style.rainbow" => lower_style_rainbow(node, spec, request, warnings),
         "style.glitch" => lower_style_glitch(node, spec, request, warnings),
-        "style.spatial" => lower_style_spatial(node, spec, style_stages, request, warnings),
+        "style.spatial" => lower_style_spatial(node, spec, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
             reason: format!("Effect `{other}` is not yet supported by compositor-native lowering."),
         },
@@ -1950,7 +1931,6 @@ fn lower_style_glitch(
 fn lower_style_spatial(
     node: &NodeSpec,
     spec: &mut CompositionSpec,
-    _style_stages: &mut Vec<NativeStyleStage>,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2186,7 +2166,7 @@ fn legacy_color_fade_space_from_input(value: Option<&str>) -> ColorSpace {
 
 fn lower_style_color_shift(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2199,10 +2179,13 @@ fn lower_style_color_shift(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::ColorShift {
-        hue_shift: number_input(node, request, "hueShift", 0.0),
-        saturation_shift: number_input(node, request, "saturationShift", 0.0),
-        lightness_shift: number_input(node, request, "lightnessShift", 0.0),
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::ColorShift(ColorShiftShader {
+            hue_shift: resolved_number_input(node, request, "hueShift", 0.0) as f32,
+            saturation_shift: resolved_number_input(node, request, "saturationShift", 0.0) as f32,
+            lightness_shift: resolved_number_input(node, request, "lightnessShift", 0.0) as f32,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -4216,17 +4199,16 @@ fn lerp_u8(from: u8, to: u8, progress: f64) -> u8 {
 }
 
 fn composition_spec_summary(spec: &CompositionSpec) -> BTreeMap<String, serde_json::Value> {
-    composition_spec_summary_with_content_stages(spec, 0, 0)
+    composition_spec_summary_with_content_stages(spec, 0)
 }
 
 fn composition_spec_summary_with_content_stages(
     spec: &CompositionSpec,
     content_stage_count: usize,
-    style_stage_count: usize,
 ) -> BTreeMap<String, serde_json::Value> {
     BTreeMap::from([
         ("contentStages".to_string(), json!(content_stage_count)),
-        ("styleStages".to_string(), json!(style_stage_count)),
+        ("styleStages".to_string(), json!(0)),
         (
             "samplers".to_string(),
             json!(spec.effective_samplers().len()),

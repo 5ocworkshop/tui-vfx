@@ -2809,7 +2809,8 @@ fn test_fnc_cli_native_style_color_shift_matches_v2_deprecated_letter_cell_oracl
 
     assert_eq!(report["compositionMode"], "native");
     assert_eq!(report["fallbackUsed"], false);
-    assert_eq!(report["compositionSpecSummary"]["styleStages"], 1);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
     assert_eq!(report["letterCellEvidence"]["letterCellCount"], 19);
     assert_eq!(
         report["letterCellEvidence"]["foregroundBackgroundClassCounts"]["fg=rgba(0,57,230,255) bg=rgba(26,18,106,255)"],
@@ -3509,20 +3510,24 @@ fn test_fnc_cli_native_sub_pixel_bar_matches_v2_deprecated_glyph_oracle_json() {
 
     assert_eq!(report["compositionMode"], "native");
     assert_eq!(report["fallbackUsed"], false);
-    assert_eq!(report["compositionSpecSummary"]["styleStages"], 1);
+    assert_eq!(report["compositionSpecSummary"]["filters"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
     assert_eq!(
         styled_cell_count(&report, "█", "rgba(100,220,255,255)", "rgba(30,40,50,255)"),
-        66
+        198
     );
     assert_eq!(
-        styled_cell_count(&report, "▏", "rgba(100,220,255,255)", "rgba(30,40,50,255)"),
+        styled_cell_count(&report, "▎", "rgba(100,220,255,255)", "rgba(30,40,50,255)"),
         3
     );
     assert_eq!(
         styled_cell_count(&report, " ", "rgba(30,40,50,255)", "rgba(30,40,50,255)"),
-        33
+        105
     );
-    assert_eq!(report["rows"][1], "██████████████████████▏");
+    assert_eq!(
+        report["rows"][1],
+        "██████████████████████████████████████████████████████████████████▎"
+    );
 }
 
 #[test]
@@ -5162,6 +5167,48 @@ fn test_fnc_cli_renders_compositor_backend_native_residual_style_content_blocker
         );
     }
 }
+#[test]
+fn test_fnc_cli_native_style_color_shift_lowers_to_compositor_shader_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_color_shift.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.5"),
+        ],
+        "render-backend native style color shift player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugStyleColorShift");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["loweredEffectIds"],
+        serde_json::json!(["style.colorShift"])
+    );
+    assert_eq!(report["styledCells"].as_array().unwrap().len(), 105);
+    assert_eq!(report["styledCells"][0]["foreground"], "rgba(0,57,230,255)");
+    assert_eq!(
+        report["styledCells"][0]["background"],
+        "rgba(26,18,106,255)"
+    );
+}
+
 #[test]
 fn test_fnc_cli_native_style_color_fade_lowers_to_compositor_shader_json() {
     let report = player_cli_json(

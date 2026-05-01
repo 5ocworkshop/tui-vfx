@@ -42,7 +42,7 @@ use crate::{
         lower_player_ir_to_semantic_scene, player_cell_from_compositor_cell,
     },
     fnc_lower_recipe_graph_to_composition_spec::{
-        LoweredCompositionSpec, NativeContentStage, NativeStyleStage, TypewriterCursorWake,
+        LoweredCompositionSpec, NativeContentStage, TypewriterCursorWake,
         lower_player_ir_to_composition_spec,
     },
 };
@@ -141,10 +141,7 @@ pub fn render_compositor_backend_request(
         "nativeContentStages".to_string(),
         json!(lowered_spec.content_stages.len()),
     );
-    backend_metadata.insert(
-        "nativeStyleStages".to_string(),
-        json!(lowered_spec.style_stages.len()),
-    );
+    backend_metadata.insert("nativeStyleStages".to_string(), json!(0));
     mirror_evidence_into_metadata(&mut backend_metadata, &lowered_spec.evidence);
 
     PlayerRenderBackendOutput::from_ir(
@@ -162,9 +159,7 @@ fn scene_ir_with_native_content_stages(
     scene_ir: &PlayerRenderIrReport,
     lowered_spec: &LoweredCompositionSpec,
 ) -> PlayerRenderIrReport {
-    if (lowered_spec.content_stages.is_empty() && lowered_spec.style_stages.is_empty())
-        || lowered_spec.evidence.fallback_used
-    {
+    if lowered_spec.content_stages.is_empty() || lowered_spec.evidence.fallback_used {
         return scene_ir.clone();
     }
 
@@ -257,20 +252,6 @@ fn scene_ir_with_native_content_stages(
             NativeContentStage::SlideShift { start_col, end_col } => {
                 apply_slide_shift_content_stage(&mut staged, *start_col, *end_col)
             }
-        }
-    }
-    for stage in &lowered_spec.style_stages {
-        match stage {
-            NativeStyleStage::ColorShift {
-                hue_shift,
-                saturation_shift,
-                lightness_shift,
-            } => apply_color_shift_style_stage(
-                &mut staged,
-                *hue_shift,
-                *saturation_shift,
-                *lightness_shift,
-            ),
         }
     }
     staged
@@ -685,89 +666,6 @@ fn apply_slide_shift_content_stage(
     sync_styled_cells_to_rows(report);
 }
 
-fn apply_color_shift_style_stage(
-    report: &mut PlayerRenderIrReport,
-    hue_shift: f64,
-    saturation_shift: f64,
-    lightness_shift: f64,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let progress = report.phase_t.clamp(0.0, 1.0);
-    let hue_shift = (hue_shift * progress) as f32;
-    let saturation_shift = (saturation_shift * progress) as f32;
-    let lightness_shift = (lightness_shift * progress) as f32;
-    for y in 0..height {
-        for x in 0..width {
-            let (existing_foreground, existing_background) = report
-                .styled_cells
-                .iter()
-                .find(|cell| cell.x == x && cell.y == y)
-                .map(|cell| (cell.foreground.clone(), cell.background.clone()))
-                .unwrap_or_else(|| (DEFAULT_FOREGROUND.to_string(), TRANSPARENT_RGBA.to_string()));
-            let foreground = color_shift_label(
-                existing_foreground.as_str(),
-                hue_shift,
-                saturation_shift,
-                lightness_shift,
-            )
-            .unwrap_or(existing_foreground);
-            let background = color_shift_label(
-                existing_background.as_str(),
-                hue_shift,
-                saturation_shift,
-                lightness_shift,
-            )
-            .unwrap_or(existing_background);
-            set_report_cell_style(report, x, y, Some(&foreground), Some(&background), None);
-        }
-    }
-}
-
-fn set_report_cell_style(
-    report: &mut PlayerRenderIrReport,
-    x: usize,
-    y: usize,
-    foreground: Option<&str>,
-    background: Option<&str>,
-    modifier: Option<&str>,
-) {
-    if let Some(cell) = report
-        .styled_cells
-        .iter_mut()
-        .find(|cell| cell.x == x && cell.y == y)
-    {
-        if let Some(foreground) = foreground {
-            cell.foreground = foreground.to_string();
-        }
-        if let Some(background) = background {
-            cell.background = background.to_string();
-        }
-        if let Some(modifier) = modifier
-            && !cell.modifiers.iter().any(|existing| existing == modifier)
-        {
-            cell.modifiers.push(modifier.to_string());
-        }
-        return;
-    }
-
-    let glyph = report
-        .rows
-        .get(y)
-        .and_then(|row| row.chars().nth(x))
-        .unwrap_or(' ')
-        .to_string();
-    report.styled_cells.push(PlayerRenderCell {
-        x,
-        y,
-        glyph,
-        foreground: foreground.unwrap_or(DEFAULT_FOREGROUND).to_string(),
-        background: background.unwrap_or(TRANSPARENT_RGBA).to_string(),
-        modifiers: modifier.into_iter().map(str::to_string).collect(),
-        role: None,
-    });
-}
-
 fn dense_rows(report: &PlayerRenderIrReport, width: usize, height: usize) -> Vec<String> {
     let mut rows = (0..height)
         .map(|y| {
@@ -926,105 +824,6 @@ fn dissolve_threshold(x: usize, y: usize, width: usize, seed: usize, direction: 
         "rightToLeft" | "right_to_left" => width.saturating_sub(x + 1) as f64 / width.max(1) as f64,
         _ => cell_threshold(x + seed, y),
     }
-}
-
-const DEFAULT_FOREGROUND: &str = "defaultForeground";
-const TRANSPARENT_RGBA: &str = "transparent";
-fn rgba_label(r: u8, g: u8, b: u8, a: u8) -> String {
-    format!("rgba({r},{g},{b},{a})")
-}
-
-fn parse_rgba_label(label: &str) -> Option<(u8, u8, u8, u8)> {
-    let inner = label.strip_prefix("rgba(")?.strip_suffix(')')?;
-    let mut parts = inner.split(',').map(str::trim);
-    Some((
-        parts.next()?.parse().ok()?,
-        parts.next()?.parse().ok()?,
-        parts.next()?.parse().ok()?,
-        parts.next()?.parse().ok()?,
-    ))
-}
-
-fn color_shift_label(
-    label: &str,
-    hue_shift: f32,
-    saturation_shift: f32,
-    lightness_shift: f32,
-) -> Option<String> {
-    let (r, g, b, a) = parse_rgba_label(label)?;
-    let (hue, saturation, lightness) = rgb_to_hsl(r, g, b);
-    let (r, g, b) = hsl_to_rgb(
-        (hue + hue_shift).rem_euclid(360.0),
-        (saturation + saturation_shift).clamp(0.0, 1.0),
-        (lightness + lightness_shift).clamp(0.0, 1.0),
-    );
-    Some(rgba_label(r, g, b, a))
-}
-
-fn rgb_to_hsl(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
-    let r = r as f32 / 255.0;
-    let g = g as f32 / 255.0;
-    let b = b as f32 / 255.0;
-    let max = r.max(g).max(b);
-    let min = r.min(g).min(b);
-    let lightness = (max + min) / 2.0;
-    if max == min {
-        return (0.0, 0.0, lightness);
-    }
-    let delta = max - min;
-    let saturation = if lightness > 0.5 {
-        delta / (2.0 - max - min)
-    } else {
-        delta / (max + min)
-    };
-    let hue = if max == r {
-        (g - b) / delta + if g < b { 6.0 } else { 0.0 }
-    } else if max == g {
-        (b - r) / delta + 2.0
-    } else {
-        (r - g) / delta + 4.0
-    };
-    (hue * 60.0, saturation, lightness)
-}
-
-fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (u8, u8, u8) {
-    if saturation == 0.0 {
-        let value = (lightness * 255.0) as u8;
-        return (value, value, value);
-    }
-    let q = if lightness < 0.5 {
-        lightness * (1.0 + saturation)
-    } else {
-        lightness + saturation - lightness * saturation
-    };
-    let p = 2.0 * lightness - q;
-    let r = hue_to_rgb(p, q, hue / 360.0 + 1.0 / 3.0);
-    let g = hue_to_rgb(p, q, hue / 360.0);
-    let b = hue_to_rgb(p, q, hue / 360.0 - 1.0 / 3.0);
-    (
-        (r * 255.0 + 0.0001) as u8,
-        (g * 255.0 + 0.0001) as u8,
-        (b * 255.0 + 0.0001) as u8,
-    )
-}
-
-fn hue_to_rgb(p: f32, q: f32, mut t: f32) -> f32 {
-    if t < 0.0 {
-        t += 1.0;
-    }
-    if t > 1.0 {
-        t -= 1.0;
-    }
-    if t < 1.0 / 6.0 {
-        return p + (q - p) * 6.0 * t;
-    }
-    if t < 1.0 / 2.0 {
-        return q;
-    }
-    if t < 2.0 / 3.0 {
-        return p + (q - p) * (2.0 / 3.0 - t) * 6.0;
-    }
-    p
 }
 
 fn scramble_glyph(index: usize, charset: &[char]) -> char {

@@ -10,6 +10,7 @@
 //! playback and downstream compatibility until the broader migration finishes.
 
 pub mod cls_vfx_color_fade_shader;
+pub mod cls_vfx_color_shift_shader;
 pub mod cls_vfx_cursor_shader;
 pub mod cls_vfx_edge_distortion_shader;
 pub mod cls_vfx_gradient_reveal_shader;
@@ -45,6 +46,7 @@ pub mod fnc_lower_legacy_spatial_shader;
 pub mod fnc_try_lower_v3_spatial_shader_family;
 
 pub use cls_vfx_color_fade_shader::VfxColorFadeShader;
+pub use cls_vfx_color_shift_shader::VfxColorShiftShader;
 pub use cls_vfx_cursor_shader::VfxCursorShader;
 pub use cls_vfx_edge_distortion_shader::VfxEdgeDistortionShader;
 pub use cls_vfx_gradient_reveal_shader::VfxGradientRevealShader;

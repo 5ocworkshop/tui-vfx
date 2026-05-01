@@ -6,8 +6,8 @@
 use crate::models::v3::{VfxSpatialShaderFamily, try_lower_v3_spatial_shader_family};
 use crate::models::{
     AffordanceWakeShader, AmbientOcclusionShader, BarberPoleShader, BevelShader, BorderSweepShader,
-    ChromaticEdgeShader, ColorConfig, ColorFadeShader, ConcealedLightShader, CursorShader,
-    DiffusionShader, EdgeSheenShader, FocusFieldShader, FocusedRowGradientShader,
+    ChromaticEdgeShader, ColorConfig, ColorFadeShader, ColorShiftShader, ConcealedLightShader,
+    CursorShader, DiffusionShader, EdgeSheenShader, FocusFieldShader, FocusedRowGradientShader,
     GlistenBandShader, GlitchLinesShader, GlowShader, Gradient, HighlighterShader,
     LinearGradientShader, ModifierWindowShader, NeonFlickerShader, OrbitShader, PulseWaveShader,
     RadarShader, RadialSpiralShader, RainbowCycleShader, ReflectShader, RevealWipeShader,
@@ -264,6 +264,11 @@ fn roundtrips_all_individual_spatial_shader_variants_back_to_legacy_shader() {
         rotation_speed: 1.5,
     }));
     assert_legacy_roundtrip(SpatialShaderType::ColorFade(ColorFadeShader::default()));
+    assert_legacy_roundtrip(SpatialShaderType::ColorShift(ColorShiftShader {
+        hue_shift: 45.0,
+        saturation_shift: 0.1,
+        lightness_shift: -0.1,
+    }));
     assert_legacy_roundtrip(SpatialShaderType::StochasticSparkle(
         StochasticSparkleShader::default(),
     ));
