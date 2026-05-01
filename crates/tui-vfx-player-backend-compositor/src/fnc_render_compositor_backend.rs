@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.27.0</VERS>
+// <VERS>VERSION: 0.28.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.27.0: PATCH — remove final backend-owned wipe/pathReveal mask source-stage rendering after pathReveal moved to compositor MaskSpec.
+// <CLOG>0.28.0: MINOR — remove backend-owned subPixelBar style-stage rendering after subPixelBar moved to compositor FilterSpec.
+// 0.27.0: PATCH — remove final backend-owned wipe/pathReveal mask source-stage rendering after pathReveal moved to compositor MaskSpec.
 // 0.26.0: remove backend-owned blinds mask source-stage rendering after mask.blinds moved to compositor MaskSpec.
 // 0.25.0: remove backend-owned iris mask source-stage rendering after mask.iris moved to compositor MaskSpec.
 // 0.24.0: remove backend-owned dissolve mask source-stage rendering after mask.dissolve moved to compositor MaskSpec.
@@ -368,18 +369,6 @@ fn scene_ir_with_native_content_stages(
                     head_color,
                     tail_color,
                 },
-            ),
-            NativeStyleStage::SubPixelBar {
-                filled_color,
-                unfilled_color,
-                progress,
-                direction,
-            } => apply_sub_pixel_bar_style_stage(
-                &mut staged,
-                filled_color,
-                unfilled_color,
-                *progress,
-                direction,
             ),
             NativeStyleStage::Highlighter {
                 color,
@@ -1622,64 +1611,6 @@ fn apply_radar_style_stage(report: &mut PlayerRenderIrReport, inputs: RadarStyle
     }
 }
 
-fn apply_sub_pixel_bar_style_stage(
-    report: &mut PlayerRenderIrReport,
-    filled_color: &str,
-    unfilled_color: &str,
-    progress: f64,
-    direction: &str,
-) {
-    let width = report
-        .rows
-        .first()
-        .map(|row| row.chars().count())
-        .unwrap_or(0)
-        .max(1);
-    let height = report.rows.len();
-    let progress = progress.clamp(0.0, 1.0);
-    let horizontal = !matches!(direction, "vertical" | "topToBottom" | "bottomToTop");
-    let total_subcells = if horizontal { width } else { height }.saturating_mul(8);
-    let filled_subcells = (total_subcells as f64 * progress).ceil() as usize;
-    for y in 0..height {
-        for x in 0..width {
-            let coordinate = if horizontal { x } else { y };
-            let filled = filled_subcells
-                .saturating_sub(coordinate.saturating_mul(8))
-                .min(8);
-            let glyph = sub_pixel_bar_glyph(filled);
-            let foreground = if filled == 0 {
-                unfilled_color
-            } else {
-                filled_color
-            };
-            set_report_cell_glyph_exact(
-                report,
-                x,
-                y,
-                glyph,
-                foreground,
-                unfilled_color,
-                &[],
-                "FilterSubPixelBar",
-            );
-        }
-    }
-}
-
-fn sub_pixel_bar_glyph(filled: usize) -> &'static str {
-    match filled {
-        0 => " ",
-        1 => "▏",
-        2 => "▎",
-        3 => "▍",
-        4 => "▌",
-        5 => "▋",
-        6 => "▊",
-        7 => "▉",
-        _ => "█",
-    }
-}
-
 fn set_report_cell_style(
     report: &mut PlayerRenderIrReport,
     x: usize,
@@ -1818,54 +1749,6 @@ fn set_report_cell_exact(
         modifiers: modifier_labels(modifiers),
         role: role.map(str::to_string),
     });
-}
-
-fn set_report_cell_glyph_exact(
-    report: &mut PlayerRenderIrReport,
-    x: usize,
-    y: usize,
-    glyph: &str,
-    foreground: &str,
-    background: &str,
-    modifiers: &[&str],
-    role: &str,
-) {
-    replace_row_glyph(report, x, y, glyph);
-    if let Some(cell) = report
-        .styled_cells
-        .iter_mut()
-        .find(|cell| cell.x == x && cell.y == y)
-    {
-        cell.glyph = glyph.to_string();
-        cell.foreground = foreground.to_string();
-        cell.background = background.to_string();
-        cell.modifiers = modifier_labels(modifiers);
-        cell.role = Some(role.to_string());
-        return;
-    }
-    report.styled_cells.push(PlayerRenderCell {
-        x,
-        y,
-        glyph: glyph.to_string(),
-        foreground: foreground.to_string(),
-        background: background.to_string(),
-        modifiers: modifier_labels(modifiers),
-        role: Some(role.to_string()),
-    });
-}
-
-fn replace_row_glyph(report: &mut PlayerRenderIrReport, x: usize, y: usize, glyph: &str) {
-    let Some(row) = report.rows.get_mut(y) else {
-        return;
-    };
-    let mut glyphs = row.chars().collect::<Vec<_>>();
-    let Some(replacement) = glyph.chars().next() else {
-        return;
-    };
-    if let Some(cell) = glyphs.get_mut(x) {
-        *cell = replacement;
-        *row = glyphs.into_iter().collect();
-    }
 }
 
 fn modifier_labels(modifiers: &[&str]) -> Vec<String> {
@@ -2443,4 +2326,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.27.0</VERS>
+// <VERS>END OF VERSION: 0.28.0</VERS>

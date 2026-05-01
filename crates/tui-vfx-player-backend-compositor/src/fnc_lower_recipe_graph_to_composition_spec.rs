@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.30.0</VERS>
+// <VERS>VERSION: 0.31.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.30.0: MINOR — lower mask.pathReveal into compositor MaskSpec::PathReveal using structured path payloads.
+// <CLOG>0.31.0: MINOR — lower filter.subPixelBar into compositor FilterSpec::SubPixelBar and reject unsupported adapter-only aliases.
+// 0.30.0: MINOR — lower mask.pathReveal into compositor MaskSpec::PathReveal using structured path payloads.
 // 0.29.0: lower mask.wipe and mask.wipeCorner into compositor MaskSpec::Wipe where exact directions exist.
 // 0.28.0: lower mask.blinds into compositor MaskSpec::Blinds instead of source-stage player semantics.
 // 0.27.0: lower mask.iris into compositor MaskSpec::Iris instead of source-stage player semantics.
@@ -20,7 +21,9 @@ use std::collections::BTreeMap;
 
 use mixed_signals::types::SignalOrFloat;
 use serde_json::json;
-use tui_vfx_compositor::types::cls_filter_spec::{ScannerAxis, ScannerMotionMode, VignetteEdge};
+use tui_vfx_compositor::types::cls_filter_spec::{
+    ScannerAxis, ScannerMotionMode, SubPixelBarDirection, VignetteEdge,
+};
 use tui_vfx_compositor::{
     pipeline::{CompositionSpec, ShaderLayerSpec},
     types::{
@@ -224,13 +227,6 @@ pub enum NativeStyleStage {
         preset: String,
         head_color: String,
         tail_color: String,
-    },
-    /// Apply player-compatible sub-pixel bar filter styling.
-    SubPixelBar {
-        filled_color: String,
-        unfilled_color: String,
-        progress: f64,
-        direction: String,
     },
     /// Apply player-compatible highlighter shader styling.
     Highlighter {
@@ -597,7 +593,7 @@ fn lower_node_into_spec(
         "filter.edgeGrow" => lower_filter_edge_grow(node, spec, request, warnings),
         "filter.hoverBar" => lower_filter_hover_bar(node, spec, request, warnings),
         "filter.matrixRain" => lower_filter_matrix_rain(node, style_stages, request, warnings),
-        "filter.subPixelBar" => lower_filter_sub_pixel_bar(node, style_stages, request, warnings),
+        "filter.subPixelBar" => lower_filter_sub_pixel_bar(node, spec, request, warnings),
         "filter.underlineWipe" => lower_filter_underline_wipe(node, spec, request, warnings),
         "filter.pillButton" => {
             let progress = number_signal_input(node, request, "progress", 0.75);
@@ -2891,7 +2887,7 @@ fn lower_filter_matrix_rain(
 
 fn lower_filter_sub_pixel_bar(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2899,26 +2895,63 @@ fn lower_filter_sub_pixel_bar(
         node,
         "filter.subPixelBar",
         &[
-            "barColor",
-            "offset",
-            "width",
-            "applyTo",
             "progress",
             "direction",
             "filledColor",
             "unfilledColor",
             "animated",
+            "offset",
+            "width",
+            "applyTo",
+            "barColor",
+            "bgColor",
+            "color",
+            "fillColor",
+            "left",
+            "right",
         ],
         StyleScopeRequirement::All,
     ) {
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    style_stages.push(NativeStyleStage::SubPixelBar {
-        filled_color: color_label_input(node, request, "filledColor", (100, 220, 255)),
-        unfilled_color: color_label_input(node, request, "unfilledColor", (30, 40, 50)),
-        progress: number_input(node, request, "progress", request.ir.phase_t).clamp(0.0, 1.0),
-        direction: enum_label_input(node, request, "direction", "horizontal"),
+    if [
+        "offset",
+        "width",
+        "applyTo",
+        "barColor",
+        "bgColor",
+        "color",
+        "fillColor",
+        "left",
+        "right",
+    ]
+    .iter()
+    .any(|key| node_has_input(node, key))
+    {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `filter.subPixelBar` uses player-adapter-only layout/color aliases; compositor-native SubPixelBar supports progress, direction, filledColor, unfilledColor, and animated.".to_string(),
+        };
+    }
+    let direction = match sub_pixel_bar_direction_input(node, request, "direction") {
+        Ok(direction) => direction,
+        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
+    };
+
+    spec.filters.push(FilterSpec::SubPixelBar {
+        progress: BindableValue::from(number_signal_input(node, request, "progress", 0.5)),
+        direction,
+        filled_color: color_input(node, request, "filledColor").unwrap_or(ColorConfig::Rgb {
+            r: 100,
+            g: 200,
+            b: 100,
+        }),
+        unfilled_color: color_input(node, request, "unfilledColor").unwrap_or(ColorConfig::Rgb {
+            r: 50,
+            g: 50,
+            b: 50,
+        }),
+        animated: bool_input(node, request, "animated", false),
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3574,6 +3607,22 @@ fn hover_bar_position_input(
     }
 }
 
+fn sub_pixel_bar_direction_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Result<SubPixelBarDirection, String> {
+    match enum_input(node, request, key) {
+        Some("horizontal" | "leftToRight" | "left_to_right") | None => {
+            Ok(SubPixelBarDirection::Horizontal)
+        }
+        Some("vertical" | "bottomToTop" | "bottom_to_top") => Ok(SubPixelBarDirection::Vertical),
+        Some(value) => Err(format!(
+            "Effect `filter.subPixelBar` uses `direction` value `{value}` that has no compositor-native SubPixelBar equivalent without dropping authored direction semantics."
+        )),
+    }
+}
+
 fn scanner_axis_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -3831,4 +3880,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.30.0</VERS>
+// <VERS>END OF VERSION: 0.31.0</VERS>

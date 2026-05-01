@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.30.0</VERS>
+// <VERS>VERSION: 0.31.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.30.0: MINOR — lock strict-native success for migrated filter parity recipes without claiming IR parity.</CLOG>
+// <CLOG>0.31.0: MINOR — lock subPixelBar compositor FilterSpec lowering and adapter-only rejection.
+// 0.30.0: MINOR — lock strict-native success for migrated filter parity recipes without claiming IR parity.</CLOG>
 
 use std::{
     collections::BTreeMap,
@@ -1915,6 +1916,157 @@ fn test_fnc_cli_native_style_color_shift_matches_v2_deprecated_letter_cell_oracl
         report["letterCellEvidence"]["foregroundBackgroundClassCounts"]["fg=rgba(0,57,230,255) bg=rgba(26,18,106,255)"],
         19
     );
+}
+
+#[test]
+fn test_fnc_cli_lowers_sub_pixel_bar_filter_to_compositor_filter_not_style_stage_json() {
+    for recipe in [
+        "filters/filter_sub_pixel_bar.json",
+        "filters/filter_sub_pixel_bar_progress_binding.json",
+    ] {
+        let report = player_cli_json(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path(recipe),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg("dwell"),
+                str_arg("--phase-t"),
+                str_arg("0.35"),
+            ],
+            "render-backend native sub-pixel-bar filter compositor lowering player cli",
+        );
+
+        assert_eq!(report["compositionMode"], "native", "{recipe}");
+        assert_eq!(report["fallbackUsed"], false, "{recipe}");
+        assert_eq!(report["nativeLoweringSucceeded"], true, "{recipe}");
+        assert_eq!(report["compositionSpecSummary"]["filters"], 1, "{recipe}");
+        assert_eq!(
+            report["compositionSpecSummary"]["styleStages"], 0,
+            "{recipe}"
+        );
+        assert_eq!(
+            report["loweredEffectIds"],
+            serde_json::json!(["filter.subPixelBar"]),
+            "{recipe}"
+        );
+    }
+}
+
+#[test]
+fn test_fnc_cli_rejects_sub_pixel_bar_adapter_only_semantics_json() {
+    for (mutation_name, input_id, value) in [
+        (
+            "reverse_direction",
+            "direction",
+            unsupported_native_enum_value("rightToLeft"),
+        ),
+        (
+            "legacy_color_alias",
+            "color",
+            serde_json::json!({
+                "kind": "literal",
+                "value": {
+                    "kind": "color",
+                    "value": {
+                        "r": 255,
+                        "g": 170,
+                        "b": 40,
+                        "a": 255
+                    }
+                }
+            }),
+        ),
+        (
+            "legacy_bar_color_alias",
+            "barColor",
+            serde_json::json!({
+                "kind": "literal",
+                "value": {
+                    "kind": "color",
+                    "value": {
+                        "r": 255,
+                        "g": 170,
+                        "b": 40,
+                        "a": 255
+                    }
+                }
+            }),
+        ),
+        (
+            "legacy_background_color_alias",
+            "bgColor",
+            serde_json::json!({
+                "kind": "literal",
+                "value": {
+                    "kind": "color",
+                    "value": {
+                        "r": 20,
+                        "g": 20,
+                        "b": 20,
+                        "a": 255
+                    }
+                }
+            }),
+        ),
+    ] {
+        let temp_root =
+            std::env::temp_dir().join(format!("tui-vfx-native-sub-pixel-bar-{mutation_name}"));
+        let _ = fs::remove_dir_all(&temp_root);
+        fs::create_dir_all(&temp_root).expect("create temp unsupported sub-pixel-bar fixture root");
+        let recipe = unsupported_native_effect_shape_recipe(
+            "filters/filter_sub_pixel_bar.json",
+            Some((input_id, value)),
+            None,
+            None,
+        );
+        let recipe_path = temp_root.join(format!("{mutation_name}.json"));
+        fs::write(
+            &recipe_path,
+            serde_json::to_string_pretty(&recipe)
+                .expect("serialize unsupported sub-pixel-bar recipe"),
+        )
+        .expect("write unsupported sub-pixel-bar recipe");
+
+        let output = run_player_cli(
+            vec![
+                str_arg("render-backend"),
+                str_arg("--recipe"),
+                recipe_path.display().to_string(),
+                str_arg("--descriptor-pack"),
+                descriptor_pack_path(),
+                str_arg("--backend"),
+                str_arg("compositor"),
+                str_arg("--composition-mode"),
+                str_arg("native"),
+                str_arg("--fail-on-fallback"),
+                str_arg("--format"),
+                str_arg("json"),
+                str_arg("--phase"),
+                str_arg("dwell"),
+            ],
+            "render-backend native unsupported sub-pixel-bar player cli",
+        );
+
+        assert!(
+            !output.status.success(),
+            "{mutation_name} unexpectedly succeeded"
+        );
+        assert!(
+            stderr(&output).contains("unsupportedNativeEffect"),
+            "{mutation_name} stderr: {}",
+            stderr(&output)
+        );
+    }
 }
 
 #[test]
@@ -6387,4 +6539,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.29.0</VERS>
+// <VERS>END OF VERSION: 0.31.0</VERS>
