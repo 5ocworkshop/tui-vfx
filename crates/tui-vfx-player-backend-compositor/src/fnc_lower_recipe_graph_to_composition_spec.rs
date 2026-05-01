@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>VERSION: 0.34.0</VERS>
+// <VERS>VERSION: 0.35.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.34.0: MINOR — lower shader.radar and structured style.spatial radar into compositor ShaderLayerSpec, rejecting non-foreground applyTo.
+// <CLOG>0.35.0: MINOR — lower shader.highlighter into compositor ShaderLayerSpec and reject unsupported textContrast blend weights.
+// 0.34.0: MINOR — lower shader.radar and structured style.spatial radar into compositor ShaderLayerSpec, rejecting non-foreground applyTo.
 // 0.33.0: MINOR — reject vignette player-style-only fields and keep vignette/hoverBar on compositor FilterSpec paths.
 // 0.32.0: MINOR — lower filter.matrixRain into compositor FilterSpec::MatrixRain and reject non-native speed/channel semantics.
 // 0.31.0: MINOR — lower filter.subPixelBar into compositor FilterSpec::SubPixelBar and reject unsupported adapter-only aliases.
@@ -43,8 +44,10 @@ use tui_vfx_player::{
     fnc_resolve_value_source::resolve_value_source_with_graph_values,
 };
 use tui_vfx_style::models::{
-    BorderSweepShader, ColorConfig, ColorSpace, Gradient, LinearGradientApplyTo,
+    BorderSweepShader, ColorConfig, ColorSpace, Gradient, HighlighterApplyTo, HighlighterDirection,
+    HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
     LinearGradientShader, RadarShader, RevealWipeShader, SpatialShaderType, StyleRegion,
+    TextContrast,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -202,18 +205,6 @@ pub enum NativeStyleStage {
     },
     /// Apply player-compatible italic-window styling.
     ItalicWindow { start: f64, end: f64 },
-    /// Apply player-compatible highlighter shader styling.
-    Highlighter {
-        color: String,
-        apply_to: String,
-        blend_strength: f64,
-        text_contrast: f64,
-        soft_edge: bool,
-        direction: String,
-        mode: String,
-        row_mask: i64,
-        band_width: usize,
-    },
     /// Apply player-compatible focus field shader styling.
     FocusField {
         color: String,
@@ -618,7 +609,7 @@ fn lower_node_into_spec(
         "shader.linearGradient" => lower_linear_gradient(node, spec, request, warnings),
         "shader.revealWipe" => lower_reveal_wipe(node, spec, request, warnings),
         "shader.borderSweep" => lower_border_sweep(recipe, node, spec, request, warnings),
-        "shader.highlighter" => lower_highlighter_shader(node, style_stages, request, warnings),
+        "shader.highlighter" => lower_highlighter_shader(node, spec, request, warnings),
         "shader.focusField" => lower_focus_field_shader(node, style_stages, request, warnings),
         "shader.glistenBand" => lower_glisten_band_shader(node, style_stages, request, warnings),
         "shader.wayfindingNode" => {
@@ -2143,7 +2134,7 @@ fn lower_style_italic_window(
 
 fn lower_highlighter_shader(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2166,70 +2157,56 @@ fn lower_highlighter_shader(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    let direction = match strict_enum_input(
-        node,
-        request,
-        "direction",
-        "leftToRight",
-        &["leftToRight", "rightToLeft", "topToBottom", "bottomToTop"],
-        "shader.highlighter",
-    ) {
-        Ok(direction) => direction,
-        Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
-    };
-    let mode = match strict_enum_input(
-        node,
-        request,
-        "mode",
-        "band",
-        &["band", "row", "centerOut"],
-        "shader.highlighter",
-    ) {
+    let mode = match highlighter_mode_input(node, request, "mode") {
         Ok(mode) => mode,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
-    let apply_to_default = if mode == "row" { "both" } else { "background" };
-    let apply_to = match strict_enum_input(
-        node,
-        request,
-        "applyTo",
-        apply_to_default,
-        &["foreground", "background", "both"],
-        "shader.highlighter",
-    ) {
+    let apply_to = match highlighter_apply_to_input(node, request, "applyTo") {
         Ok(apply_to) => apply_to,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
-    let soft_edge = match strict_enum_input(
-        node,
-        request,
-        "softEdge",
-        "true",
-        &["true", "false"],
-        "shader.highlighter",
-    ) {
-        Ok(soft_edge) => soft_edge != "false",
+    let direction = match highlighter_direction_input(node, request, "direction") {
+        Ok(direction) => direction,
         Err(reason) => return NodeLoweringOutcome::Unsupported { reason },
     };
+    let text_contrast = resolved_number_input(node, request, "textContrast", 0.0).clamp(0.0, 1.0);
+    if text_contrast > 0.0 {
+        return NodeLoweringOutcome::Unsupported {
+            reason: "Effect `shader.highlighter` uses numeric `textContrast`; compositor-native HighlighterShader supports structured text contrast modes, not player blend weights.".to_string(),
+        };
+    }
+    let row_mask = resolved_integer_input(node, request, "rowMask", -1);
+    let row_mask = if row_mask >= 0 {
+        HighlighterRowMask::Range {
+            start: row_mask as u16,
+            end: row_mask as u16,
+        }
+    } else {
+        HighlighterRowMask::AllRows
+    };
 
-    let band_width = (resolved_number_input(node, request, "bandWidth", 3.0).max(1.0)
-        * (1.0 + if soft_edge { 0.5 } else { 0.0 })) as usize;
-    style_stages.push(NativeStyleStage::Highlighter {
-        color: color_label_from_config(resolved_color_input(node, request, "color").unwrap_or(
-            ColorConfig::Rgb {
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::Highlighter(HighlighterShader {
+            color: resolved_color_input(node, request, "color").unwrap_or(ColorConfig::Rgb {
                 r: 255,
                 g: 225,
                 b: 90,
-            },
-        )),
-        apply_to,
-        blend_strength: resolved_number_input(node, request, "blendStrength", 1.0).clamp(0.0, 1.0),
-        text_contrast: resolved_number_input(node, request, "textContrast", 0.0).clamp(0.0, 1.0),
-        soft_edge,
-        direction,
-        mode,
-        row_mask: resolved_integer_input(node, request, "rowMask", -1),
-        band_width,
+            }),
+            apply_to,
+            text_contrast: TextContrast::Preserve,
+            mode,
+            band_width: resolved_number_input(node, request, "bandWidth", 3.0).max(1.0) as u16,
+            soft_edge: bool_input(node, request, "softEdge", true) as u8 as f32,
+            blend_strength: resolved_number_input(node, request, "blendStrength", 1.0)
+                .clamp(0.0, 1.0) as f32,
+            blend_strength_binding: None,
+            speed: 1.0,
+            speed_binding: None,
+            direction,
+            direction_binding: None,
+            row_mask,
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }
@@ -3685,6 +3662,53 @@ fn scanner_motion_mode_input(
     }
 }
 
+fn highlighter_apply_to_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Result<HighlighterApplyTo, String> {
+    match enum_input(node, request, key) {
+        Some("foreground" | "fg") => Ok(HighlighterApplyTo::Foreground),
+        Some("background" | "bg") | None => Ok(HighlighterApplyTo::Background),
+        Some("both") => Ok(HighlighterApplyTo::Both),
+        Some(value) => Err(format!(
+            "Effect `shader.highlighter` uses `applyTo` value `{value}` that has no compositor-native HighlighterShader equivalent."
+        )),
+    }
+}
+
+fn highlighter_mode_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Result<HighlighterMode, String> {
+    match enum_input(node, request, key) {
+        Some("band") | None => Ok(HighlighterMode::Band),
+        Some("fill") => Ok(HighlighterMode::Fill),
+        Some(value) => Err(format!(
+            "Effect `shader.highlighter` uses `mode` value `{value}` that has no compositor-native HighlighterShader equivalent."
+        )),
+    }
+}
+
+fn highlighter_direction_input(
+    node: &NodeSpec,
+    request: &PlayerRenderBackendRequest,
+    key: &str,
+) -> Result<HighlighterDirection, String> {
+    match enum_input(node, request, key) {
+        Some("leftToRight" | "left_to_right" | "forward") | None => {
+            Ok(HighlighterDirection::Forward)
+        }
+        Some("rightToLeft" | "right_to_left" | "reverse") => Ok(HighlighterDirection::Reverse),
+        Some("topToBottom" | "top_to_bottom") => Ok(HighlighterDirection::TopDown),
+        Some("bottomToTop" | "bottom_to_top") => Ok(HighlighterDirection::BottomUp),
+        Some(value) => Err(format!(
+            "Effect `shader.highlighter` uses `direction` value `{value}` that has no compositor-native HighlighterShader equivalent."
+        )),
+    }
+}
+
 fn normalized_boost_input(
     node: &NodeSpec,
     request: &PlayerRenderBackendRequest,
@@ -3919,4 +3943,4 @@ fn push_unique(values: &mut Vec<String>, value: String) {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
-// <VERS>END OF VERSION: 0.34.0</VERS>
+// <VERS>END OF VERSION: 0.35.0</VERS>

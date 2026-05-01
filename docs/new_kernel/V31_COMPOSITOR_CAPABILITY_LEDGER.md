@@ -1,7 +1,8 @@
 <!-- <FILE>docs/new_kernel/V31_COMPOSITOR_CAPABILITY_LEDGER.md</FILE> - <DESC>Compositor-first capability ledger for v3.1 recipe migration</DESC> -->
-<!-- <VERS>VERSION: 1.8.0</VERS> -->
+<!-- <VERS>VERSION: 1.9.0</VERS> -->
 <!-- <WCTX>Ralph compositor-first migration: inventory compositor-native primitives before changing v3.1 recipes or player boundaries.</WCTX> -->
-<!-- <CLOG>1.8.0: mark shader.radar as compositor shader-layer owned and record style-stage deletion.
+<!-- <CLOG>1.9.0: mark shader.highlighter as compositor shader-layer owned and record style-stage deletion.
+1.8.0: mark shader.radar as compositor shader-layer owned and record style-stage deletion.
 1.7.0: record vignette/hoverBar backend style-stage deletion and compositor-owned handling.
 1.6.0: mark filter.matrixRain as compositor-owned and record style-stage deletion.
 1.5.0: mark filter.subPixelBar as compositor-owned and record style-stage deletion.
@@ -225,6 +226,7 @@ Shader migration status:
 | v3.1 id | Compositor target | Current action |
 | --- | --- | --- |
 | `shader.radar` | `ShaderLayerSpec { shader: SpatialShaderType::Radar(RadarShader), region: StyleRegion::All }` | Done for current recipe and structured `style.spatial` radar payloads: lowerer emits a compositor shader layer; backend `NativeStyleStage::Radar` and style helper were deleted. Non-foreground `applyTo` on `shader.radar` is rejected instead of emulated. |
+| `shader.highlighter` | `ShaderLayerSpec { shader: SpatialShaderType::Highlighter(HighlighterShader), region: StyleRegion::All }` | Done for current recipe: lowerer emits a compositor shader layer; backend `NativeStyleStage::Highlighter` and style helper were deleted. Numeric player `textContrast` blend weights are rejected instead of being approximated as compositor `TextContrast` modes. |
 
 ## Boundary rule for this ledger
 

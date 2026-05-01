@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>VERSION: 0.31.0</VERS>
+// <VERS>VERSION: 0.32.0</VERS>
 // <WCTX>Native compositor source isolation: render native requests from source-only IR, including backend-owned content/style/filter stages, and keep IR-resolved compatibility separate.</WCTX>
-// <CLOG>0.31.0: MINOR — remove backend-owned radar shader rendering after radar moved to compositor ShaderLayerSpec.
+// <CLOG>0.32.0: MINOR — remove backend-owned highlighter shader rendering after highlighter moved to compositor ShaderLayerSpec.
+// 0.31.0: MINOR — remove backend-owned radar shader rendering after radar moved to compositor ShaderLayerSpec.
 // 0.30.0: MINOR — remove backend-owned vignette/hoverBar style rendering after those filters use compositor FilterSpec paths.
 // 0.29.0: MINOR — remove backend-owned matrixRain style-stage rendering after matrixRain moved to compositor FilterSpec.
 // 0.28.0: MINOR — remove backend-owned subPixelBar style-stage rendering after subPixelBar moved to compositor FilterSpec.
@@ -326,29 +327,6 @@ fn scene_ir_with_native_content_stages(
             NativeStyleStage::ItalicWindow { start, end } => {
                 apply_italic_window_style_stage(&mut staged, *start, *end)
             }
-            NativeStyleStage::Highlighter {
-                color,
-                apply_to,
-                blend_strength,
-                text_contrast,
-                soft_edge,
-                direction,
-                mode: _,
-                row_mask,
-                band_width,
-            } => apply_highlighter_style_stage(
-                &mut staged,
-                HighlighterStyleInputs {
-                    color,
-                    apply_to,
-                    blend_strength: *blend_strength,
-                    text_contrast: *text_contrast,
-                    soft_edge: *soft_edge,
-                    direction,
-                    row_mask: *row_mask,
-                    band_width: *band_width,
-                },
-            ),
             NativeStyleStage::FocusField {
                 color,
                 rect_x,
@@ -1106,62 +1084,6 @@ fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64
     for y in 0..height {
         for x in 0..width {
             set_report_cell_style(report, x, y, None, None, Some("italic"));
-        }
-    }
-}
-
-struct HighlighterStyleInputs<'a> {
-    color: &'a str,
-    apply_to: &'a str,
-    blend_strength: f64,
-    text_contrast: f64,
-    soft_edge: bool,
-    direction: &'a str,
-    row_mask: i64,
-    band_width: usize,
-}
-
-fn apply_highlighter_style_stage(
-    report: &mut PlayerRenderIrReport,
-    inputs: HighlighterStyleInputs<'_>,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let band_width = inputs.band_width;
-    let span = if matches!(inputs.direction, "topToBottom" | "bottomToTop") {
-        height.max(1)
-    } else {
-        width.max(1)
-    };
-    let center = (report.phase_t.clamp(0.0, 1.0) * span as f64).round() as isize;
-    let active_color = lerp_rgba_label(
-        inputs.color,
-        WHITE_RGBA,
-        (inputs.text_contrast * 0.25) as f32,
-    );
-    let color = lerp_rgba_label(
-        active_color.as_str(),
-        inputs.color,
-        inputs.blend_strength as f32,
-    );
-    let role = if inputs.soft_edge {
-        "ShaderHighlighterSoft"
-    } else {
-        "ShaderHighlighter"
-    };
-    for y in 0..height {
-        if inputs.row_mask >= 0 && y as i64 != inputs.row_mask {
-            continue;
-        }
-        for x in 0..width {
-            let axis = if matches!(inputs.direction, "topToBottom" | "bottomToTop") {
-                y
-            } else {
-                x
-            };
-            if (axis as isize - center).unsigned_abs() <= band_width {
-                set_report_shader_cell(report, x, y, inputs.apply_to, color.as_str(), role);
-            }
         }
     }
 }
@@ -2065,4 +1987,4 @@ mod tests {
 }
 
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_render_compositor_backend.rs</FILE> - <DESC>Render player IR through the compositor backend</DESC>
-// <VERS>END OF VERSION: 0.31.0</VERS>
+// <VERS>END OF VERSION: 0.32.0</VERS>

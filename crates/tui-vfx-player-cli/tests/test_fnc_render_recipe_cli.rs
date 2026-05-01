@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>VERSION: 0.34.0</VERS>
+// <VERS>VERSION: 0.35.0</VERS>
 // <WCTX>v3.1 player CLI regressions for strict-native backend rendering, legacy-oracle evidence, studio evidence, and schema readiness.</WCTX>
-// <CLOG>0.34.0: MINOR — lock shader.radar compositor shader-layer lowering.
+// <CLOG>0.35.0: MINOR — lock shader.highlighter compositor shader-layer lowering.
+// 0.34.0: MINOR — lock shader.radar compositor shader-layer lowering.
 // 0.33.0: MINOR — lock vignette rejection for player-style-only fields after removing backend style-stage adapters.
 // 0.32.0: MINOR — lock matrixRain compositor FilterSpec lowering and remove stale migrated-filter style-stage expectations.
 // 0.31.0: MINOR — lock subPixelBar compositor FilterSpec lowering and adapter-only rejection.
@@ -154,11 +155,6 @@ fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() 
             "shader.glistenBand",
         ),
         (
-            "shaders/compositions/shader_highlighter_runtime_bindings.json",
-            "debugShaderHighlighterRuntimeBindings",
-            "shader.highlighter",
-        ),
-        (
             "shaders/compositions/shader_wayfinding_node_current_index_binding.json",
             "debugShaderWayfindingNodeCurrentIndexBinding",
             "shader.wayfindingNode",
@@ -187,6 +183,92 @@ fn test_fnc_cli_renders_compositor_backend_native_target_shader_blockers_json() 
             "{recipe}"
         );
     }
+}
+
+#[test]
+fn test_fnc_cli_lowers_highlighter_shader_to_compositor_shader_layer_not_style_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("shaders/compositions/shader_highlighter_runtime_bindings.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native highlighter shader compositor layer player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugShaderHighlighterRuntimeBindings");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["loweredEffectIds"],
+        serde_json::json!(["shader.highlighter"])
+    );
+}
+
+#[test]
+fn test_fnc_cli_rejects_highlighter_player_text_contrast_weight_json() {
+    let temp_root = std::env::temp_dir().join("tui-vfx-native-highlighter-text-contrast");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).expect("create temp unsupported highlighter fixture root");
+    let recipe = unsupported_native_effect_shape_recipe(
+        "shaders/compositions/shader_highlighter_runtime_bindings.json",
+        Some(("textContrast", literal_number_input(0.5))),
+        None,
+        None,
+    );
+    let recipe_path = temp_root.join("highlighter_text_contrast.json");
+    fs::write(
+        &recipe_path,
+        serde_json::to_string_pretty(&recipe).expect("serialize unsupported highlighter recipe"),
+    )
+    .expect("write unsupported highlighter recipe");
+
+    let output = run_player_cli(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path.display().to_string(),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+        ],
+        "render-backend native unsupported highlighter player cli",
+    );
+
+    assert!(
+        !output.status.success(),
+        "textContrast unexpectedly succeeded"
+    );
+    assert!(
+        stderr(&output).contains("unsupportedNativeEffect"),
+        "textContrast stderr: {}",
+        stderr(&output)
+    );
 }
 
 #[test]
@@ -6812,4 +6894,4 @@ fn unsupported_native_enum_value(value: &str) -> serde_json::Value {
 }
 
 // <FILE>crates/tui-vfx-player-cli/tests/test_fnc_render_recipe_cli.rs</FILE> - <DESC>Player CLI regression tests</DESC>
-// <VERS>END OF VERSION: 0.34.0</VERS>
+// <VERS>END OF VERSION: 0.35.0</VERS>
