@@ -1,7 +1,7 @@
 <!-- <FILE>docs/arch/tui-vfx-compost-vertical-implementation-plan.md</FILE> - <DESC>Formal implementation plan for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>VERSION: 2.0.0</VERS> -->
+<!-- <VERS>VERSION: 2.0.1</VERS> -->
 <!-- <WCTX>tui-vfx-compost clean-sheet build: active plan is pure v3.1 substrate first, then primitive migration.</WCTX> -->
-<!-- <CLOG>2.0.0: MAJOR — replace the copied-crate migration plan with the tui-vfx-compost clean-sheet pure v3.1 substrate-first implementation plan.</CLOG> -->
+<!-- <CLOG>2.0.1: PATCH — remove the current-state fence from the resume checklist because phase fences must be regenerated at implementation start.</CLOG> -->
 
 # tui-vfx-compost Vertical Implementation Plan
 
@@ -314,13 +314,12 @@ If interrupted, read these documents before resuming:
 2. `steering/OFPF-TOOLS.md`
 3. `steering/ORCHESTRATION.md`
 4. `docs/arch/tui-vfx-compost-agent-workflow-handoff.md`
-5. `docs/arch/tui-vfx-compost-current-state-fence.md`
-6. this plan
-7. `docs/arch/v31-native-transition-model.md`
-8. `docs/arch/v31-schema-boundary-north-star.md`
+5. this plan
+6. `docs/arch/v31-native-transition-model.md`
+7. `docs/arch/v31-schema-boundary-north-star.md`
 
 Resume at the first incomplete phase. As of this version, the next incomplete
 phase is non-primitive substrate migration.
 
 <!-- <FILE>docs/arch/tui-vfx-compost-vertical-implementation-plan.md</FILE> - <DESC>Formal implementation plan for the tui-vfx-compost clean-sheet pure v3.1 compositor build</DESC> -->
-<!-- <VERS>END OF VERSION: 2.0.0</VERS> -->
+<!-- <VERS>END OF VERSION: 2.0.1</VERS> -->

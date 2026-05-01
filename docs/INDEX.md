@@ -1,7 +1,7 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.48.0</VERS> -->
-<!-- <WCTX>tui-vfx-compost clean-sheet build: documentation index points to the active pure v3.1 compositor handoff.</WCTX> -->
-<!-- <CLOG>1.48.0: replace the copied-crate handoff entry with the tui-vfx-compost clean-sheet pure v3.1 build handoff.</CLOG> -->
+<!-- <VERS>VERSION: 1.49.0</VERS> -->
+<!-- <WCTX>tui-vfx-compost docs: current-state fence removed because it must be regenerated at phase start.</WCTX> -->
+<!-- <CLOG>1.49.0: remove the compost current-state fence from the documentation index; it will be regenerated when implementation starts.</CLOG> -->
 
 # Documentation Index
 
@@ -115,7 +115,6 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [arch/INDEX.md](arch/INDEX.md) — Architecture hub for foundational v3.1 schema-boundary and primitive-workbench north-star docs.
 - [arch/tui-vfx-tui-vfx-compost-vertical-implementation-plan.md](arch/tui-vfx-tui-vfx-compost-vertical-implementation-plan.md) — Formal implementation plan for the tui-vfx-compost clean-sheet pure v3.1 compositor build: stable schema, substrate-first runtime migration, then primitive slices.
 - [arch/tui-vfx-compost-agent-workflow-handoff.md](arch/tui-vfx-compost-agent-workflow-handoff.md) — Restartable tui-vfx-compost handoff for the clean-sheet pure v3.1 compositor build, completed schema/structure checkpoints, preserved recovery worktrees, exact write-scope rules, and future slice gates.
-- [arch/tui-vfx-compost-current-state-fence.md](arch/tui-vfx-compost-current-state-fence.md) — Current-state fence separating historical copied-crate/recovery artifacts from the active tui-vfx-compost clean-sheet v3.1 target.
 - [arch/CLOCKS_AND_TIMING.md](arch/CLOCKS_AND_TIMING.md) — Architecture note separating lifecycle clocks, phase timing, native transition timing/variants, sample time, presentation cadence, semantic update cadence, and primitive motion parameters.
 - [arch/v31-schema-boundary-north-star.md](arch/v31-schema-boundary-north-star.md) — North-star architecture for schema-owned crate boundaries, native transitions, data models, responsibilities, co-located primitive source trees, and validation discipline.
 - [arch/v31-native-transition-model.md](arch/v31-native-transition-model.md) — Official rationale and canonical shape for native v3.1 transitions, tracks, lifecycle alignment, reduced-motion policy, and recipe-oracle mapping rules.
@@ -193,4 +192,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.48.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.49.0</VERS> -->
