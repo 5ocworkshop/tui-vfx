@@ -1,0 +1,54 @@
+[0m════════════════════════════════════════════════════════════════════════
+  ANSI techniques demo — block-character AA + stipple intermediate colors
+  A = warm orange (255, 140,  50)    B = cool blue ( 40,  80, 200)
+════════════════════════════════════════════════════════════════════════
+
+─── 1. Block-character anti-aliasing at a color boundary ─────────────────
+
+Hard edge (raw color jump, no anti-aliasing):
+  [48;2;255;140;50m            [48;2;40;80;200m            [0m
+  [48;2;255;140;50m            [48;2;40;80;200m            [0m
+  [48;2;255;140;50m            [48;2;40;80;200m            [0m
+
+Smoothed edge with ▓▒░ density transition (FG=A, BG=B):
+  [48;2;255;140;50m            [48;2;40;80;200m[38;2;255;140;50m▓▒░         [0m
+  [48;2;255;140;50m            [48;2;40;80;200m[38;2;255;140;50m▓▒░         [0m
+  [48;2;255;140;50m            [48;2;40;80;200m[38;2;255;140;50m▓▒░         [0m
+
+Vertical fade — pure A · ▓ · ▒ · ░ · pure B (FG=A, BG=B):
+  [48;2;255;140;50m            [0m
+  [48;2;40;80;200m[38;2;255;140;50m▓▓▓▓▓▓▓▓▓▓▓▓[0m
+  [48;2;40;80;200m[38;2;255;140;50m▒▒▒▒▒▒▒▒▒▒▒▒[0m
+  [48;2;40;80;200m[38;2;255;140;50m░░░░░░░░░░░░[0m
+  [48;2;40;80;200m            [0m
+
+─── 2. Stipple-pattern intermediate colors ───────────────────────────────
+
+  Pure A               [48;2;255;140;50m            [0m
+  ▓  (≈75% A, 25% B)   [48;2;40;80;200m[38;2;255;140;50m▓▓▓▓▓▓▓▓▓▓▓▓[0m
+  ▒  (≈50% A, 50% B)   [48;2;40;80;200m[38;2;255;140;50m▒▒▒▒▒▒▒▒▒▒▒▒[0m
+  ░  (≈25% A, 75% B)   [48;2;40;80;200m[38;2;255;140;50m░░░░░░░░░░░░[0m
+  Pure B               [48;2;40;80;200m            [0m
+
+  Truecolor midpoint reference (computed (A+B)/2):
+  Midpoint             [48;2;147;110;125m            [0m
+
+  Compare the ▒ row above to the midpoint row — perceptually similar,
+  but the ▒ version uses ONLY the two source colors A and B. 16-color
+  terminals faked colors they didn't have this way; with truecolor, the
+  same trick adds 1–2 effective bits of perceived range by spatially
+  dithering between exactly-displayable colors.
+
+─── Bonus: stipple gradient vs. truecolor gradient ───────────────────────
+
+  5-step gradient using only A, B, and density (no color interpolation):
+  [48;2;255;140;50m    [0m[48;2;40;80;200m[38;2;255;140;50m▓▓▓▓[0m[48;2;40;80;200m[38;2;255;140;50m▒▒▒▒[0m[48;2;40;80;200m[38;2;255;140;50m░░░░[0m[48;2;40;80;200m    [0m
+
+  5-step gradient using truecolor RGB interpolation:
+  [48;2;255;140;50m    [0m[48;2;201;125;87m    [0m[48;2;147;110;125m    [0m[48;2;93;95;162m    [0m[48;2;40;80;200m    [0m
+
+  At normal viewing distance the two rows should look very close.
+  Up close, the stipple version reveals its character-density pattern;
+  from a foot or two away, the eye averages each cell into an apparent
+  intermediate color for free.
+

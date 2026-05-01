@@ -1,11 +1,11 @@
 <!-- <FILE>docs/design/post-release/dynamic-light-shadow-primitive-spec.md</FILE> - <DESC>Post-release specification for a grid-aware Light primitive in tui-vfx-shadow that derives per-element shadow offsets from a global directional or positional light source, providing the canonical data type and projection math reused by gtd-factory's elevation-aware shadow build, the Madeira flag's surface-normal lighting, and any future tui-vfx consumer that needs coordinated dynamic shadows or surface shading.</DESC> -->
-<!-- <VERS>VERSION: 0.2.1-draft</VERS> -->
+<!-- <VERS>VERSION: 0.2.2-draft</VERS> -->
 <!-- <WCTX>Capture the post-release Light primitive at the tui-vfx layer where grid awareness, shadow rendering, and surface-shader signal seams already live, so a single canonical Light type drives both shadow offset projection and procedural surface lighting (e.g. the Madeira flag) instead of two parallel ad hoc light models.</WCTX>
-<!-- <CLOG>0.2.1-draft: extend §10 with two Doom/Quake-era perf-enabler items — static light-field bake (Quake 1996 lightmap pattern: precompute per-cell direction/brightness once at scene-load when the `Light` is static, falling back to the analytic path for dynamic lights, biggest payoff for surface shaders like the Madeira flag where every cell would otherwise trig-and-multiply per frame) and shared distance-attenuation LUT (Doom 1993 colormap pattern: a single `(distance, elevation)`-keyed table drives both shadow falloff and the `weather-ambient-field-spec.md` fog/depth-cue, so atmospheric fade and light falloff stay mathematically coherent and one mechanism produces both effects). No v1 API change; both items are deferred enhancements that compose with the v0.2.0 dual-quantization signature.</CLOG> -->
+<!-- <CLOG>0.2.2-draft: cross-reference the historical-graphics-techniques-addendum from §1 so future readers can locate the design-inspiration brainstorm (ANSI art, Amiga/C64 demoscene, Myst, Diablo, FFVII, Mode 7, Hypercard/Director/Flash compositing) that informs §10 and several sibling post-release specs. Metadata-only edit; no API or math changes.</CLOG> -->
 
 # Dynamic Light primitive for tui-vfx-shadow
 
-**Status: post-release project.** This is not release-blocking V3 work. Keep it as a deferred capability until the core V3 release gate, recipe migration, and as-built docs are stable. The companion downstream integration spec lives in gt-design at `docs/internal/specs/2026-04-30-dynamic-light-and-shadows-prd.md`.
+**Status: post-release project.** This is not release-blocking V3 work. Keep it as a deferred capability until the core V3 release gate, recipe migration, and as-built docs are stable. The companion downstream integration spec lives in gt-design at `docs/internal/specs/2026-04-30-dynamic-light-and-shadows-prd.md`. A design-inspiration addendum mining historical graphics-techniques (ANSI art, Amiga/C64 demoscene, Myst, Diablo, FFVII, Mode 7, Hypercard/Director/Flash compositing) lives alongside this spec at `historical-graphics-techniques-addendum.md` and motivates several of the §10 future-extensions items.
 
 ## 1. Purpose
 
@@ -295,4 +295,4 @@ These belong in the implementation plan that follows this spec.
 5. **Hand off to the gt-design integration PRD** for the SSOT/factory wiring.
 
 <!-- <FILE>docs/design/post-release/dynamic-light-shadow-primitive-spec.md</FILE> -->
-<!-- <VERS>END OF VERSION: 0.2.1-draft</VERS> -->
+<!-- <VERS>END OF VERSION: 0.2.2-draft</VERS> -->
