@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_recipe.rs</FILE> - <DESC>Render a loaded v3.1 recipe through native compost modules</DESC>
-// <VERS>VERSION: 0.3.0</VERS>
+// <VERS>VERSION: 0.3.1</VERS>
 // <WCTX>The recipe entrypoint stays thin and delegates scene rendering plus observability aggregation.</WCTX>
-// <CLOG>0.3.0: MINOR — carry diagnostics and trace events into Frame.
+// <CLOG>0.3.1: PATCH — use stable one-scene unsupported diagnostic wording.
+// 0.3.0: MINOR — carry diagnostics and trace events into Frame.
 // 0.2.0: MINOR — delegate scene rendering so all scene elements compose in paint order.
 // 0.1.1: PATCH — read scene element sourceInstance after the contract naming audit.</CLOG>
 
@@ -13,7 +14,7 @@ pub fn render_recipe(loaded: &LoadedRecipe, sample: &SampleContext) -> Result<Fr
     let recipe = loaded.recipe();
     if recipe.scenes.len() > 1 {
         return Err(RenderError::Unsupported(
-            "render_recipe currently supports one scene per sample".to_string(),
+            "render_recipe requires exactly one scene per sample".to_string(),
         ));
     }
     let scene = recipe
@@ -35,4 +36,4 @@ pub fn render_recipe(loaded: &LoadedRecipe, sample: &SampleContext) -> Result<Fr
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/fnc_render_recipe.rs</FILE> - <DESC>Render a loaded v3.1 recipe through native compost modules</DESC>
-// <VERS>END OF VERSION: 0.3.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>

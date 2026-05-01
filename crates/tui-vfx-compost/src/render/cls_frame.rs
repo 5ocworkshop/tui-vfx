@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/cls_frame.rs</FILE> - <DESC>Native rendered frame type</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.2.1</VERS>
 // <WCTX>Frame carries rendered output plus native diagnostics and trace evidence.</WCTX>
-// <CLOG>0.2.0: MINOR — add frame diagnostics and trace events for render observability.
+// <CLOG>0.2.1: PATCH — describe unsupported diagnostics without schedule language.
+// 0.2.0: MINOR — add frame diagnostics and trace events for render observability.
 // 0.1.0: INIT — add rendered frame type.</CLOG>
 
 use tui_vfx_types::SemanticScene;
@@ -21,11 +22,11 @@ pub struct Frame {
     pub grid: SemanticScene,
     /// Effects actually applied during rendering.
     pub applied_effect_kinds: Vec<String>,
-    /// Non-fatal diagnostics explaining skipped or deferred render work.
+    /// Non-fatal diagnostics explaining skipped or unsupported render work.
     pub diagnostics: Vec<RenderDiagnostic>,
     /// Structured trace events for applied render stages.
     pub trace_events: Vec<RenderTraceEvent>,
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/cls_frame.rs</FILE> - <DESC>Native rendered frame type</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.2.1</VERS>

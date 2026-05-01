@@ -1,7 +1,9 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_write_merge_policy.rs</FILE> - <DESC>Compost write and merge policy substrate tests</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
-// <WCTX>Write substrate tests cover final-cell skip behavior, node policy rejection, and explicit parallel merge rejection.</WCTX>
-// <CLOG>0.2.0: MINOR — cover final-cell skip policy and node-local policy rejection.</CLOG>
+// <VERS>VERSION: 0.3.1</VERS>
+// <WCTX>Write substrate tests cover final-cell skip behavior, role writes, node policy rejection, and explicit parallel merge rejection.</WCTX>
+// <CLOG>0.3.1: PATCH — name unsupported-policy tests with present capability language.
+// 0.3.0: MINOR — cover copied source roles and explicit role writes.
+// 0.2.0: MINOR — cover final-cell skip policy and node-local policy rejection.</CLOG>
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
 use tui_vfx_compost::{LoadError, LoadedRecipe, SampleContext, render_recipe};
@@ -76,7 +78,32 @@ fn skip_transparent_empty_cell_write_checks_final_effect_output() {
 }
 
 #[test]
-fn rejects_parallel_graph_merge_policy_until_surface_merge_exists() {
+fn copy_sampled_source_role_writes_generated_text_role() {
+    let mut recipe = linear_gradient_recipe_value();
+    recipe["scenes"][0]["elements"][0]["roleWritePolicy"] =
+        serde_json::json!({ "kind": "copySampledSource" });
+
+    let frame = render_recipe_value(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'A');
+    assert_eq!(frame.grid.role((0, 0)), Some(RoleTag::Text));
+}
+
+#[test]
+fn set_explicit_role_writes_requested_role() {
+    let mut recipe = linear_gradient_recipe_value();
+    let explicit_role = serde_json::to_value(RoleTag::Highlight).expect("serialize role");
+    recipe["scenes"][0]["elements"][0]["roleWritePolicy"] =
+        serde_json::json!({ "kind": "setExplicit", "role": explicit_role });
+
+    let frame = render_recipe_value(recipe);
+
+    assert_eq!(frame.grid.cell((0, 0)).unwrap().ch, 'A');
+    assert_eq!(frame.grid.role((0, 0)), Some(RoleTag::Highlight));
+}
+
+#[test]
+fn rejects_unsupported_parallel_graph_merge_policy() {
     let mut recipe = linear_gradient_recipe_value();
     recipe["graph"]["topology"] = serde_json::json!({
         "kind": "parallel",
@@ -95,7 +122,7 @@ fn rejects_parallel_graph_merge_policy_until_surface_merge_exists() {
 }
 
 #[test]
-fn rejects_node_local_write_policies_until_stage_precedence_exists() {
+fn rejects_unsupported_node_local_write_policy_precedence() {
     let mut role_recipe = linear_gradient_recipe_value();
     role_recipe["graph"]["nodes"]["gradient"]["roleWritePolicy"] =
         serde_json::json!({ "kind": "copySampledSource" });
@@ -134,4 +161,4 @@ fn rejects_node_local_write_policies_until_stage_precedence_exists() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_write_merge_policy.rs</FILE> - <DESC>Compost write and merge policy substrate tests</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.1</VERS>

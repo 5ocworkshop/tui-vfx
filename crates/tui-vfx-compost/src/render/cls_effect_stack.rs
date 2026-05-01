@@ -1,13 +1,14 @@
 // <FILE>crates/tui-vfx-compost/src/render/cls_effect_stack.rs</FILE> - <DESC>Ordered native effect stack for compost rendering</DESC>
-// <VERS>VERSION: 0.2.0</VERS>
+// <VERS>VERSION: 0.3.0</VERS>
 // <WCTX>Effect stacks carry element write policies alongside authored effect family slots.</WCTX>
-// <CLOG>0.2.0: MINOR — store cell and role write policies with the effect stack.
+// <CLOG>0.3.0: MINOR — report applied effects after lifecycle active-node filtering.
+// 0.2.0: MINOR — store cell and role write policies with the effect stack.
 // 0.1.1: PATCH — read applied effect kinds directly from stored stages and remove the unused raw-stage accessor.
 // 0.1.0: INIT — add ordered effect stage container and family-slot views.</CLOG>
 
 use tui_vfx_contract::{CellWritePolicy, RoleWritePolicy};
 
-use crate::render::{EffectFamily, EffectStage};
+use crate::render::{EffectFamily, EffectStage, SampleContext, is_node_active};
 
 #[derive(Clone, Debug)]
 pub(crate) struct EffectStack<'a> {
@@ -71,13 +72,14 @@ impl<'a> EffectStack<'a> {
             .filter(move |stage| stage.family() == family)
     }
 
-    pub(crate) fn applied_effect_kinds(&self) -> Vec<String> {
+    pub(crate) fn applied_effect_kinds(&self, sample: &SampleContext) -> Vec<String> {
         self.stages
             .iter()
+            .filter(|stage| is_node_active(stage.node(), sample))
             .map(|stage| stage.node().effect.as_str().to_string())
             .collect()
     }
 }
 
 // <FILE>crates/tui-vfx-compost/src/render/cls_effect_stack.rs</FILE> - <DESC>Ordered native effect stack for compost rendering</DESC>
-// <VERS>END OF VERSION: 0.2.0</VERS>
+// <VERS>END OF VERSION: 0.3.0</VERS>

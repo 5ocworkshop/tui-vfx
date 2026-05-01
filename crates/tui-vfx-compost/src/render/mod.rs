@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-compost/src/render/mod.rs</FILE> - <DESC>Native v3.1 render entrypoints and types</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
+// <VERS>VERSION: 0.6.1</VERS>
 // <WCTX>Render orchestration is split by recipe, scene, element, clip, effect-stack, and timing responsibilities.</WCTX>
-// <CLOG>0.6.0: MINOR — add native frame diagnostics and trace event observability.
+// <CLOG>0.6.1: PATCH — expose shader phase timing through the renamed render helper.
+// 0.6.0: MINOR — add native frame diagnostics and trace event observability.
 // 0.5.0: MINOR — add cell, role, and parallel-merge policy seams for native surface writes.
 // 0.4.0: MINOR — add native timing substrate.
 // 0.3.0: MINOR — add native effect stack substrate.
@@ -31,7 +32,7 @@ mod fnc_merge_parallel_surfaces;
 mod fnc_render_recipe;
 mod fnc_render_scene;
 mod fnc_render_scene_element;
-mod fnc_resolve_node_phase;
+mod fnc_resolve_shader_phase_t;
 mod orc_render_observability;
 
 pub use cls_frame::Frame;
@@ -58,8 +59,8 @@ pub(crate) use fnc_merge_element_surface::merge_element_surface;
 pub(crate) use fnc_merge_parallel_surfaces::has_parallel_surface_merge;
 pub(crate) use fnc_render_scene::render_scene;
 pub(crate) use fnc_render_scene_element::render_scene_element;
-pub(crate) use fnc_resolve_node_phase::resolve_node_phase;
+pub(crate) use fnc_resolve_shader_phase_t::resolve_shader_phase_t;
 pub(crate) use orc_render_observability::trace_applied_effects;
 
 // <FILE>crates/tui-vfx-compost/src/render/mod.rs</FILE> - <DESC>Native v3.1 render entrypoints and types</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.6.1</VERS>

@@ -1,12 +1,15 @@
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
-// <VERS>VERSION: 0.3.3</VERS>
-// <WCTX>Scene substrate tests prove multi-element composition, z ordering, signed placement clipping, and strict policy rejection.</WCTX>
-// <CLOG>0.3.3: PATCH — keep scene test imports rustfmt-aligned.
+// <VERS>VERSION: 0.4.2</VERS>
+// <WCTX>Scene substrate tests prove multi-element composition, z ordering, signed placement clipping, and strict unsupported-policy rejection.</WCTX>
+// <CLOG>0.4.2: PATCH — assert stable one-scene unsupported diagnostic wording.
+// 0.4.1: PATCH — use unsupported-policy language instead of schedule language in test names.
+// 0.4.0: MINOR — drop stale role-policy rejection now that role writes execute natively.
+// 0.3.3: PATCH — keep scene test imports rustfmt-aligned.
 // 0.3.2: PATCH — keep vertical clipping fixture line-aware after source materialization.
 // 0.3.1: PATCH — assert graphBinding.timing diagnostic path explicitly.
 // 0.3.0: PATCH — add graph-binding timing rejection regression.
 // 0.2.1: PATCH — centralize repeated scene sizing and render fixture setup.
-// 0.2.0: PATCH — add deferred scene-element policy rejection regressions.
+// 0.2.0: PATCH — add unsupported scene-element policy rejection regressions.
 // 0.1.0: INIT — add RED tests for canonical v3.1 scene element rendering.</CLOG>
 
 use crate::support::{linear_gradient_recipe_value, primitive_catalog, recipe_from_value};
@@ -255,30 +258,22 @@ fn rejects_multiple_scenes_instead_of_silently_dropping_later_scenes() {
 
     assert_eq!(
         err.to_string(),
-        "unsupported render shape: render_recipe currently supports one scene per sample"
+        "unsupported render shape: render_recipe requires exactly one scene per sample"
     );
 }
 
 #[test]
-fn rejects_deferred_role_write_policies_at_load_time() {
-    assert_rejects_element_policy(
-        "roleWritePolicy",
-        serde_json::json!({ "kind": "copySampledSource" }),
-    );
-}
-
-#[test]
-fn rejects_deferred_clip_warning_policy_at_load_time() {
+fn rejects_unsupported_clip_warning_policy_at_load_time() {
     assert_rejects_element_policy("clipPolicy", serde_json::json!("warn"));
 }
 
 #[test]
-fn rejects_deferred_overflow_policy_at_load_time() {
+fn rejects_unsupported_overflow_policy_at_load_time() {
     assert_rejects_element_policy("overflow", serde_json::json!("wrap"));
 }
 
 #[test]
-fn rejects_deferred_visibility_policy_at_load_time() {
+fn rejects_unsupported_visibility_policy_at_load_time() {
     assert_rejects_element_policy(
         "visibility",
         serde_json::json!({ "kind": "phase", "phases": ["enter"] }),
@@ -286,7 +281,7 @@ fn rejects_deferred_visibility_policy_at_load_time() {
 }
 
 #[test]
-fn rejects_deferred_surface_policy_at_load_time() {
+fn rejects_unsupported_surface_policy_at_load_time() {
     assert_rejects_element_policy(
         "surface",
         serde_json::json!({ "baseStyle": null, "shadow": null }),
@@ -294,12 +289,12 @@ fn rejects_deferred_surface_policy_at_load_time() {
 }
 
 #[test]
-fn rejects_deferred_scroll_factor_at_load_time() {
+fn rejects_unsupported_scroll_factor_at_load_time() {
     assert_rejects_element_policy("scrollFactor", serde_json::json!({ "x": 0.5, "y": 1.25 }));
 }
 
 #[test]
-fn rejects_deferred_graph_binding_timing_at_load_time() {
+fn rejects_unsupported_graph_binding_timing_at_load_time() {
     assert_rejects_element_policy_path(
         "graphBinding",
         "graphBinding.timing",
@@ -312,4 +307,4 @@ fn rejects_deferred_graph_binding_timing_at_load_time() {
 }
 
 // <FILE>crates/tui-vfx-compost/tests/direct_recipe/test_scene_elements.rs</FILE> - <DESC>Compost scene element substrate tests</DESC>
-// <VERS>END OF VERSION: 0.3.3</VERS>
+// <VERS>END OF VERSION: 0.4.2</VERS>

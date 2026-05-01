@@ -1,9 +1,11 @@
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
-// <VERS>VERSION: 0.4.0</VERS>
-// <WCTX>Element policy validation supports writeCell/skipTransparentEmpty cell writes and preserved destination roles.</WCTX>
-// <CLOG>0.4.0: MINOR — accept skipTransparentEmpty after cell write policy substrate lands.
+// <VERS>VERSION: 0.5.1</VERS>
+// <WCTX>Element policy validation supports writeCell/skipTransparentEmpty cell writes and native role writes.</WCTX>
+// <CLOG>0.5.1: PATCH — use capability-based unsupported-policy reasons instead of schedule language.
+// 0.5.0: MINOR — accept copied and explicit role writes after role policy execution lands.
+// 0.4.0: MINOR — accept skipTransparentEmpty after cell write policy substrate lands.
 // 0.3.0: PATCH — reject element-local graph timing until timing substrate executes it.
-// 0.2.0: PATCH — reject deferred scene-element semantics instead of silently ignoring them.
+// 0.2.0: PATCH — reject unsupported scene-element semantics instead of silently ignoring them.
 // 0.1.0: INIT — add scene element policy validation.</CLOG>
 
 use tui_vfx_contract::{
@@ -25,7 +27,7 @@ pub(crate) fn validate_scene_element_policies(
         return unsupported_policy(
             element,
             "graphBinding.timing",
-            "element-local graph timing is deferred until timing substrate",
+            "element-local graph timing requires native timing resolution",
         );
     }
 
@@ -33,7 +35,7 @@ pub(crate) fn validate_scene_element_policies(
         return unsupported_policy(
             element,
             "placementRule",
-            "declarative placement rules are deferred until placement resolution substrate",
+            "declarative placement rules require native placement resolution",
         );
     }
 
@@ -43,14 +45,14 @@ pub(crate) fn validate_scene_element_policies(
             return unsupported_policy(
                 element,
                 "visibility",
-                "phase visibility is deferred until lifecycle-aware scene rendering",
+                "phase visibility requires lifecycle-aware scene rendering",
             );
         }
         Some(SceneElementVisibility::Predicate { .. }) => {
             return unsupported_policy(
                 element,
                 "visibility",
-                "predicate visibility is deferred until runtime resolver integration",
+                "predicate visibility requires runtime resolver integration",
             );
         }
     }
@@ -59,7 +61,7 @@ pub(crate) fn validate_scene_element_policies(
         return unsupported_policy(
             element,
             "surface",
-            "element surface styling and shadow semantics are deferred until surface substrate",
+            "element surface styling and shadow semantics require native surface rendering",
         );
     }
 
@@ -69,14 +71,14 @@ pub(crate) fn validate_scene_element_policies(
             return unsupported_policy(
                 element,
                 "overflow",
-                "hide overflow is deferred until element overflow substrate",
+                "hide overflow requires native element overflow handling",
             );
         }
         Some(SceneElementOverflowPolicy::Wrap) => {
             return unsupported_policy(
                 element,
                 "overflow",
-                "wrap overflow is deferred until element overflow substrate",
+                "wrap overflow requires native element overflow handling",
             );
         }
     }
@@ -85,7 +87,7 @@ pub(crate) fn validate_scene_element_policies(
         return unsupported_policy(
             element,
             "placementMotion",
-            "placement motion is deferred until motion-aware scene rendering",
+            "placement motion requires motion-aware scene rendering",
         );
     }
 
@@ -93,7 +95,7 @@ pub(crate) fn validate_scene_element_policies(
         return unsupported_policy(
             element,
             "scrollFactor",
-            "scene scroll response is deferred until camera/scroll runtime resolution",
+            "scene scroll response requires camera/scroll runtime resolution",
         );
     }
 
@@ -101,7 +103,7 @@ pub(crate) fn validate_scene_element_policies(
         return unsupported_policy(
             element,
             "clipPolicy",
-            "warn clipping is deferred until element-aware diagnostics",
+            "warn clipping requires element-aware diagnostics",
         );
     }
 
@@ -110,17 +112,9 @@ pub(crate) fn validate_scene_element_policies(
     }
 
     match &element.role_write_policy {
-        RoleWritePolicy::PreserveDestination => Ok(()),
-        RoleWritePolicy::CopySampledSource => unsupported_policy(
-            element,
-            "roleWritePolicy",
-            "copySampledSource is deferred until role policy substrate",
-        ),
-        RoleWritePolicy::SetExplicit { .. } => unsupported_policy(
-            element,
-            "roleWritePolicy",
-            "setExplicit is deferred until role policy substrate",
-        ),
+        RoleWritePolicy::PreserveDestination
+        | RoleWritePolicy::CopySampledSource
+        | RoleWritePolicy::SetExplicit { .. } => Ok(()),
     }
 }
 
@@ -137,4 +131,4 @@ fn unsupported_policy(
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/fnc_validate_scene_element_policies.rs</FILE> - <DESC>Validate scene element policies supported by compost rendering</DESC>
-// <VERS>END OF VERSION: 0.4.0</VERS>
+// <VERS>END OF VERSION: 0.5.1</VERS>

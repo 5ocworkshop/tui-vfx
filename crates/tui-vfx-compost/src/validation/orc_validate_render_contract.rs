@@ -1,19 +1,24 @@
 // <FILE>crates/tui-vfx-compost/src/validation/orc_validate_render_contract.rs</FILE> - <DESC>Validate native direct-render contract at recipe load</DESC>
-// <VERS>VERSION: 0.6.0</VERS>
+// <VERS>VERSION: 0.7.1</VERS>
 // <WCTX>Validation dispatches supported native primitives, effect family slots, node timing, graph merge policy, and scene policies at load time.</WCTX>
-// <CLOG>0.6.0: MINOR — reject unsupported batched substrate semantics at load time.</CLOG>
+// <CLOG>0.7.1: PATCH — use capability-based unsupported graph/write policy reasons.
+// 0.7.0: MINOR — allow activePhases because lifecycle gating executes during render.
+// 0.6.0: MINOR — reject unsupported batched substrate semantics at load time.</CLOG>
 
 use tui_vfx_contract::RecipeDocument;
 
 use crate::LoadError;
-use crate::render::{EffectFamily, has_parallel_surface_merge, is_node_active};
+use crate::render::{EffectFamily, has_parallel_surface_merge};
 use crate::validation::shaders::validate_shader_inputs;
 
 use super::{validate_scene_element_policies, validate_source_inputs};
 
-const UNSUPPORTED_EFFECT_FAMILY_REASON: &str = "effect stack has a native family slot, but this effect has no signed runtime implementation yet";
-const UNSUPPORTED_PARALLEL_MERGE_REASON: &str = "parallel graph topology is deferred until native surface and graph-value merge semantics are implemented";
-const UNSUPPORTED_NODE_WRITE_POLICY_REASON: &str = "node-local write policy precedence is deferred until per-stage write policy execution is implemented";
+const UNSUPPORTED_EFFECT_FAMILY_REASON: &str =
+    "effect stack has a native family slot, but this effect has no signed runtime implementation";
+const UNSUPPORTED_PARALLEL_MERGE_REASON: &str =
+    "parallel graph topology requires native surface and graph-value merge semantics";
+const UNSUPPORTED_NODE_WRITE_POLICY_REASON: &str =
+    "node-local write policy precedence requires per-stage write policy execution";
 
 pub(crate) fn validate_render_contract(recipe: &RecipeDocument) -> Result<(), LoadError> {
     for (source_id, source) in &recipe.sources {
@@ -48,14 +53,6 @@ pub(crate) fn validate_render_contract(recipe: &RecipeDocument) -> Result<(), Lo
         let Some(node) = recipe.graph.nodes.get(node_id) else {
             continue;
         };
-        if !is_node_active(node) {
-            return Err(LoadError::UnsupportedNodeTiming {
-                node_id: node_id.as_str().to_string(),
-                effect: node.effect.as_str().to_string(),
-                field: "activePhases".to_string(),
-                reason: "timing substrate does not yet carry lifecycle phase state".to_string(),
-            });
-        }
         if node
             .cell_write_policy
             .is_some_and(|policy| policy != tui_vfx_contract::CellWritePolicy::WriteCell)
@@ -101,4 +98,4 @@ pub(crate) fn validate_render_contract(recipe: &RecipeDocument) -> Result<(), Lo
 }
 
 // <FILE>crates/tui-vfx-compost/src/validation/orc_validate_render_contract.rs</FILE> - <DESC>Validate native direct-render contract at recipe load</DESC>
-// <VERS>END OF VERSION: 0.6.0</VERS>
+// <VERS>END OF VERSION: 0.7.1</VERS>
