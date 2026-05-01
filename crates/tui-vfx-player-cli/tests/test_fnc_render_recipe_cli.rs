@@ -2542,7 +2542,8 @@ fn test_fnc_cli_native_style_italic_window_matches_v2_deprecated_modifier_oracle
 
     assert_eq!(report["compositionMode"], "native");
     assert_eq!(report["fallbackUsed"], false);
-    assert_eq!(report["compositionSpecSummary"]["styleStages"], 1);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
     assert_eq!(report["rows"][0], "╭─────────────────────────────────╮");
     assert_eq!(report["rows"][1], "│STYLE TEST: ItalicWindow         │");
     assert_eq!(
@@ -2553,6 +2554,40 @@ fn test_fnc_cli_native_style_italic_window_matches_v2_deprecated_modifier_oracle
             "italic"
         ),
         V2_ITALIC_WINDOW_CARD_CELL_COUNT
+    );
+
+    let inactive_report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_italic_window.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.9"),
+        ],
+        "render-backend native italic-window outside window player cli",
+    );
+    assert_eq!(inactive_report["fallbackUsed"], false);
+    assert_eq!(inactive_report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(inactive_report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        styled_cell_modifier_count(
+            &inactive_report,
+            "rgba(255,255,0,255)",
+            "rgba(50,40,20,255)",
+            "italic"
+        ),
+        0
     );
 }
 

@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.44.0: MINOR — lower style.pulse into compositor PulseWaveShader layers and remove backend style-stage emulation.
+// <CLOG>0.45.0: MINOR — lower style.italicWindow into compositor ModifierWindowShader layers and remove backend style-stage emulation.
+// 0.44.0: MINOR — lower style.pulse into compositor PulseWaveShader layers and remove backend style-stage emulation.
 // 0.43.0: MINOR — lower style.glitch into compositor GlitchLinesShader layers and remove backend style-stage emulation.
 // 0.42.0: MINOR — lower style.neonFlicker into compositor NeonFlickerShader layers and remove backend style-stage emulation.
 // 0.41.0: MINOR — lower focused-row-gradient style.spatial into compositor ShaderLayerSpec and remove backend style-stage emulation.
@@ -58,9 +59,9 @@ use tui_vfx_style::models::{
     FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader,
     GlistenDirection, GlitchLinesShader, Gradient, HighlighterApplyTo, HighlighterDirection,
     HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
-    LinearGradientShader, NeonFlickerShader, PulseWaveShader, RadarShader, RevealWipeShader,
-    SegmentMode, SpatialShaderType, StyleRegion, TextContrast, WaveDirection, WayfindingNode,
-    WayfindingNodeApplyTo, WayfindingNodeShader,
+    LinearGradientShader, ModifierWindowShader, NeonFlickerShader, PulseWaveShader, RadarShader,
+    RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion, TextContrast, WaveDirection,
+    WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -186,8 +187,6 @@ pub enum NativeStyleStage {
         saturation_shift: f64,
         lightness_shift: f64,
     },
-    /// Apply player-compatible italic-window styling.
-    ItalicWindow { start: f64, end: f64 },
 }
 
 /// Cursor wake behavior for native typewriter content.
@@ -547,7 +546,7 @@ fn lower_node_into_spec(
         "style.colorShift" => lower_style_color_shift(node, style_stages, request, warnings),
         "style.fadeIn" | "style.fadeOut" => lower_style_fade(node, spec, request, warnings),
         "style.pulse" => lower_style_pulse(node, spec, request, warnings),
-        "style.italicWindow" => lower_style_italic_window(node, style_stages, request, warnings),
+        "style.italicWindow" => lower_style_italic_window(node, spec, request, warnings),
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, spec, request, warnings),
         "style.rainbow" => lower_style_rainbow(node, style_stages, request, warnings),
@@ -2194,7 +2193,7 @@ fn lower_style_pulse(
 
 fn lower_style_italic_window(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -2207,9 +2206,16 @@ fn lower_style_italic_window(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    let start = number_input(node, request, "start", 0.0).clamp(0.0, 1.0);
-    let end = number_input(node, request, "end", 1.0).clamp(start, 1.0);
-    style_stages.push(NativeStyleStage::ItalicWindow { start, end });
+    let start = resolved_number_input(node, request, "start", 0.0).clamp(0.0, 1.0);
+    let end = resolved_number_input(node, request, "end", 1.0).clamp(start, 1.0);
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::ModifierWindow(ModifierWindowShader {
+            start: start as f32,
+            end: end as f32,
+            italic: true,
+        }),
+        region: StyleRegion::All,
+    });
     NodeLoweringOutcome::Lowered { warnings }
 }
 

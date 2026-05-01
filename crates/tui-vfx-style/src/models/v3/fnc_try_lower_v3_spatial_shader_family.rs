@@ -85,6 +85,9 @@ fn try_lower_composed(
         }
         VfxSpatialComposedPrimitive::Cursor(shader) => Ok(SpatialShaderType::from(shader)),
         VfxSpatialComposedPrimitive::StripeMotion(shader) => Ok(SpatialShaderType::from(shader)),
+        VfxSpatialComposedPrimitive::ModifierWindow(shader) => {
+            Ok(SpatialShaderType::ModifierWindow(shader.clone()))
+        }
     }
 }
 

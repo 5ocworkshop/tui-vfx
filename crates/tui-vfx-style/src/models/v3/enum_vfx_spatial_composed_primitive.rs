@@ -12,8 +12,9 @@
 //! primitives.
 
 use crate::models::v3::{
-    VfxCursorShader, VfxGuidanceCueShader, VfxMaterialLightShader, VfxProgressEmphasisShader,
-    VfxStochasticTextureShader, VfxStripeMotionShader, VfxTravelingBandShader,
+    VfxCursorShader, VfxGuidanceCueShader, VfxMaterialLightShader, VfxModifierWindowShader,
+    VfxProgressEmphasisShader, VfxStochasticTextureShader, VfxStripeMotionShader,
+    VfxTravelingBandShader,
 };
 use serde::{Deserialize, Serialize};
 
@@ -35,6 +36,8 @@ pub enum VfxSpatialComposedPrimitive {
     Cursor(VfxCursorShader),
     /// Stripe-motion composed family.
     StripeMotion(VfxStripeMotionShader),
+    /// Time-windowed text modifier composed family.
+    ModifierWindow(VfxModifierWindowShader),
 }
 
 impl VfxSpatialComposedPrimitive {
@@ -48,6 +51,7 @@ impl VfxSpatialComposedPrimitive {
             Self::StochasticTexture(_) => "stochastic_texture",
             Self::Cursor(_) => "cursor",
             Self::StripeMotion(_) => "stripe_motion",
+            Self::ModifierWindow(_) => "modifier_window",
         }
     }
 }

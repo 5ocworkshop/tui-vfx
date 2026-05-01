@@ -55,6 +55,9 @@ pub fn lower_legacy_spatial_shader(shader: &SpatialShaderType) -> VfxSpatialShad
         SpatialShaderType::PulseWave(shader) => {
             VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
         }
+        SpatialShaderType::ModifierWindow(shader) => VfxSpatialShaderFamily::ComposedPrimitive(
+            VfxSpatialComposedPrimitive::ModifierWindow(shader.clone()),
+        ),
         SpatialShaderType::RadialSpiral(shader) => {
             VfxSpatialShaderFamily::Primitive(VfxSpatialPrimitive::MotionField(shader.into()))
         }

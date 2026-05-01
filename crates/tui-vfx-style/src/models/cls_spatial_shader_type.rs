@@ -114,10 +114,10 @@ use crate::models::{
     cls_focused_row_gradient_shader::FocusedRowGradientShader,
     cls_glisten_band_shader::GlistenBandShader, cls_glitch_lines_shader::GlitchLinesShader,
     cls_glow_shader::GlowShader, cls_highlighter_shader::HighlighterShader,
-    cls_neon_flicker_shader::NeonFlickerShader, cls_orbit_shader::OrbitShader,
-    cls_pulse_wave_shader::PulseWaveShader, cls_radar_shader::RadarShader,
-    cls_radial_spiral_shader::RadialSpiralShader, cls_reflect_shader::ReflectShader,
-    cls_reveal_wipe_shader::RevealWipeShader,
+    cls_modifier_window_shader::ModifierWindowShader, cls_neon_flicker_shader::NeonFlickerShader,
+    cls_orbit_shader::OrbitShader, cls_pulse_wave_shader::PulseWaveShader,
+    cls_radar_shader::RadarShader, cls_radial_spiral_shader::RadialSpiralShader,
+    cls_reflect_shader::ReflectShader, cls_reveal_wipe_shader::RevealWipeShader,
     cls_stochastic_sparkle_shader::StochasticSparkleShader,
     cls_sub_cell_shake_shader::SubCellShakeShader, cls_terminal_fire_shader::TerminalFireShader,
     cls_terminal_water_shader::TerminalWaterShader, cls_trace_path_shader::TracePathShader,
@@ -187,6 +187,9 @@ pub enum SpatialShaderType {
 
     /// Rippling color wave emanating from position (attention).
     PulseWave(PulseWaveShader),
+
+    /// Time-windowed text modifier application.
+    ModifierWindow(ModifierWindowShader),
 
     /// Layered water/ocean field with ripples, wakes, foam, and glint.
     TerminalWater(TerminalWaterShader),
@@ -265,6 +268,7 @@ impl StyleShader for SpatialShaderType {
             SpatialShaderType::GlitchLines(s) => s.style_at(ctx, base),
             SpatialShaderType::NeonFlicker(s) => s.style_at(ctx, base),
             SpatialShaderType::PulseWave(s) => s.style_at(ctx, base),
+            SpatialShaderType::ModifierWindow(s) => s.style_at(ctx, base),
             SpatialShaderType::TerminalWater(s) => s.style_at(ctx, base),
             SpatialShaderType::TerminalFire(s) => s.style_at(ctx, base),
             SpatialShaderType::RadialSpiral(s) => s.style_at(ctx, base),
@@ -413,6 +417,7 @@ impl SpatialShaderType {
             SpatialShaderType::GlitchLines(_) => "GlitchLines",
             SpatialShaderType::NeonFlicker(_) => "NeonFlicker",
             SpatialShaderType::PulseWave(_) => "PulseWave",
+            SpatialShaderType::ModifierWindow(_) => "ModifierWindow",
             SpatialShaderType::TerminalWater(_) => "TerminalWater",
             SpatialShaderType::TerminalFire(_) => "TerminalFire",
             SpatialShaderType::RadialSpiral(_) => "RadialSpiral",
@@ -468,6 +473,7 @@ impl SpatialShaderType {
                 "Flickering neon sign effect with independent segments"
             }
             SpatialShaderType::PulseWave(_) => "Rippling color wave emanating from position",
+            SpatialShaderType::ModifierWindow(_) => "Text modifier during a time window",
             SpatialShaderType::TerminalFire(_) => {
                 "Emissive procedural flame/smoke field with rising turbulence, blue core, and sparks"
             }
@@ -616,6 +622,11 @@ impl SpatialShaderType {
                 ("direction", format!("{:?}", s.direction)),
                 ("wavelength", format!("{} cells", s.wavelength)),
                 ("color", format!("{:?}", s.color)),
+            ],
+            SpatialShaderType::ModifierWindow(s) => vec![
+                ("start", format!("{}", s.start)),
+                ("end", format!("{}", s.end)),
+                ("italic", format!("{}", s.italic)),
             ],
             SpatialShaderType::TerminalWater(s) => vec![
                 ("mode", format!("{:?}", s.mode)),

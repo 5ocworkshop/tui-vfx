@@ -290,9 +290,6 @@ fn scene_ir_with_native_content_stages(
                 *saturation_shift,
                 *lightness_shift,
             ),
-            NativeStyleStage::ItalicWindow { start, end } => {
-                apply_italic_window_style_stage(&mut staged, *start, *end)
-            }
         }
     }
     staged
@@ -813,19 +810,6 @@ fn apply_color_shift_style_stage(
             )
             .unwrap_or(existing_background);
             set_report_cell_style(report, x, y, Some(&foreground), Some(&background), None);
-        }
-    }
-}
-
-fn apply_italic_window_style_stage(report: &mut PlayerRenderIrReport, start: f64, end: f64) {
-    if !(start..=end).contains(&report.phase_t) {
-        return;
-    }
-    let width = report_width(report);
-    let height = report_height(report);
-    for y in 0..height {
-        for x in 0..width {
-            set_report_cell_style(report, x, y, None, None, Some("italic"));
         }
     }
 }

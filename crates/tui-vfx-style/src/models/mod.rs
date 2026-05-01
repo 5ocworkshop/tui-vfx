@@ -52,6 +52,7 @@ pub mod cls_gradient;
 pub mod cls_gradient_lut;
 pub mod cls_highlighter_shader;
 pub mod cls_linear_gradient_shader;
+pub mod cls_modifier_window_shader;
 pub mod cls_neon_flicker_shader;
 pub mod cls_noise_type;
 pub mod cls_orbit_shader;
@@ -124,6 +125,7 @@ pub use cls_highlighter_shader::{
     HighlighterShader, TextContrast,
 };
 pub use cls_linear_gradient_shader::{LinearGradientApplyTo, LinearGradientShader};
+pub use cls_modifier_window_shader::ModifierWindowShader;
 pub use cls_neon_flicker_shader::{NeonFlickerShader, SegmentMode};
 pub use cls_noise_type::NoiseType;
 pub use cls_orbit_shader::OrbitShader;

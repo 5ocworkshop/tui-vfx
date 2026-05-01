@@ -9,9 +9,10 @@ use crate::models::{
     ChromaticEdgeShader, ColorConfig, ConcealedLightShader, CursorShader, DiffusionShader,
     EdgeSheenShader, FocusFieldShader, FocusedRowGradientShader, GlistenBandShader,
     GlitchLinesShader, GlowShader, Gradient, HighlighterShader, LinearGradientShader,
-    NeonFlickerShader, OrbitShader, PulseWaveShader, RadarShader, RadialSpiralShader,
-    ReflectShader, RevealWipeShader, SpatialShaderType, StochasticSparkleShader,
-    SubCellShakeShader, TracePathShader, TracePropagationShader, WayfindingNodeShader,
+    ModifierWindowShader, NeonFlickerShader, OrbitShader, PulseWaveShader, RadarShader,
+    RadialSpiralShader, ReflectShader, RevealWipeShader, SpatialShaderType,
+    StochasticSparkleShader, SubCellShakeShader, TracePathShader, TracePropagationShader,
+    WayfindingNodeShader,
 };
 
 fn assert_legacy_roundtrip(legacy: SpatialShaderType) {
@@ -50,6 +51,18 @@ fn roundtrips_progress_emphasis_family_back_to_legacy_shader() {
 #[test]
 fn roundtrips_traveling_band_border_family_back_to_legacy_shader() {
     let legacy = SpatialShaderType::BorderSweep(BorderSweepShader::default());
+    let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
+
+    assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
+}
+
+#[test]
+fn roundtrips_modifier_window_family_back_to_legacy_shader() {
+    let legacy = SpatialShaderType::ModifierWindow(ModifierWindowShader {
+        start: 0.2,
+        end: 0.8,
+        italic: true,
+    });
     let family = VfxSpatialShaderFamily::from_legacy_spatial_shader(&legacy);
 
     assert_eq!(try_lower_v3_spatial_shader_family(&family).unwrap(), legacy);
