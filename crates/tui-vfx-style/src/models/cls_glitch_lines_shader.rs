@@ -1,7 +1,8 @@
 // <FILE>tui-vfx-style/src/models/cls_glitch_lines_shader.rs</FILE> - <DESC>Spatial glitch with random interference lines</DESC>
-// <VERS>VERSION: 1.8.0</VERS>
-// <WCTX>Adding screen coordinate context to shaders</WCTX>
-// <CLOG>Updated to use ShaderContext for screen-space effects</CLOG>
+// <VERS>VERSION: 1.9.0</VERS>
+// <WCTX>Compositor-owned v3.1 style.glitch lowering needs the edge-distortion shader to carry legacy style color and italic-window knobs without backend emulation.</WCTX>
+// <CLOG>1.9.0: add optional base-color and italic-window styling so v3.1 glitch style recipes can lower into compositor shader layers.
+// Updated to use ShaderContext for screen-space effects</CLOG>
 
 use crate::models::{ColorConfig, NoiseType};
 
@@ -16,11 +17,15 @@ fn default_pulse_speed() -> f32 {
 fn default_flash_hold() -> u32 {
     1
 }
+
+fn default_lines_enabled() -> bool {
+    true
+}
 use crate::models::ColorSpace;
 use crate::traits::{ShaderContext, StyleShader};
 use crate::utils::blend_colors;
 use serde::{Deserialize, Serialize};
-use tui_vfx_types::{Color, Style};
+use tui_vfx_types::{Color, Modifiers, Style};
 
 /// Spatial glitch shader that creates random horizontal interference lines.
 ///
@@ -50,6 +55,19 @@ pub struct GlitchLinesShader {
     /// Optional color to pulse towards (e.g., white for cyan→white→cyan)
     #[serde(default)]
     pub pulse_color: Option<ColorConfig>,
+    /// Optional foreground color to install before glitch styling.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_color: Option<ColorConfig>,
+    /// Optional normalized time at which italic styling begins.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub italic_start: Option<f32>,
+    /// Optional normalized time at which italic styling ends.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub italic_end: Option<f32>,
+    /// Whether row-level interference lines are enabled.
+    #[serde(default = "default_lines_enabled")]
+    #[config(default = true)]
+    pub lines_enabled: bool,
     /// Speed of the color pulse cycle (cycles per animation)
     #[serde(default = "default_pulse_speed")]
     #[config(default = 0.5)]
@@ -78,6 +96,10 @@ impl Default for GlitchLinesShader {
             speed: 1.0,
             flash_chance: 0.0,
             pulse_color: None,
+            base_color: None,
+            italic_start: None,
+            italic_end: None,
+            lines_enabled: true,
             pulse_speed: 0.5,
             italic_on_flash: false,
             flash_hold: 1,
@@ -175,14 +197,22 @@ impl StyleShader for GlitchLinesShader {
         let t = ctx.t as f32;
         let (y, height) = (ctx.local_y, ctx.height);
         let mut result = base;
+        if let Some(color) = self.base_color {
+            result.fg = Color::from(color);
+        }
+        if let (Some(start), Some(end)) = (self.italic_start, self.italic_end)
+            && (start..=end).contains(&t)
+        {
+            result.mods = result.mods.combine(Modifiers::italic());
+        }
 
         // Apply color pulse if configured
         if let Some(ref pulse_cfg) = self.pulse_color {
             let blend = self.pulse_blend(t);
             if blend > 0.0 {
                 let pulse_color: Color = (*pulse_cfg).into();
-                if base.fg != Color::TRANSPARENT {
-                    result.fg = blend_colors(base.fg, pulse_color, blend, ColorSpace::Rgb);
+                if result.fg != Color::TRANSPARENT {
+                    result.fg = blend_colors(result.fg, pulse_color, blend, ColorSpace::Rgb);
                 }
             }
         }
@@ -199,7 +229,7 @@ impl StyleShader for GlitchLinesShader {
         }
 
         // Apply underline to interference lines
-        if self.row_has_line(y, height, t) {
+        if self.lines_enabled && self.row_has_line(y, height, t) {
             result = result.underline();
         }
 
@@ -228,6 +258,10 @@ mod tests {
             speed: 1.0,
             flash_chance: 0.0,
             pulse_color: None,
+            base_color: None,
+            italic_start: None,
+            italic_end: None,
+            lines_enabled: true,
             pulse_speed: 0.5,
             italic_on_flash: false,
             flash_hold: 1,
@@ -261,6 +295,10 @@ mod tests {
             speed: 1.0,
             flash_chance: 0.0,
             pulse_color: None,
+            base_color: None,
+            italic_start: None,
+            italic_end: None,
+            lines_enabled: true,
             pulse_speed: 0.5,
             italic_on_flash: false,
             flash_hold: 1,
@@ -275,7 +313,23 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_base_color_and_italic_window_are_applied_before_glitch_lines() {
+        let shader = GlitchLinesShader {
+            intensity: 0.0,
+            base_color: Some(ColorConfig::Cyan),
+            italic_start: Some(0.3),
+            italic_end: Some(0.7),
+            ..GlitchLinesShader::default()
+        };
+        let ctx = ShaderContext::new(0, 0, 8, 4, 0, 0, 0.35, None, None);
+        let out = shader.style_at(&ctx, Style::default());
+
+        assert_eq!(out.fg, Color::from(ColorConfig::Cyan));
+        assert!(out.mods.italic);
+    }
 }
 
 // <FILE>tui-vfx-style/src/models/cls_glitch_lines_shader.rs</FILE> - <DESC>Spatial glitch with random interference lines</DESC>
-// <VERS>END OF VERSION: 1.8.0</VERS>
+// <VERS>END OF VERSION: 1.9.0</VERS>

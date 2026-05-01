@@ -276,14 +276,6 @@ fn scene_ir_with_native_content_stages(
             NativeStyleStage::Rainbow { rotation_speed } => {
                 apply_rainbow_style_stage(&mut staged, *rotation_speed)
             }
-            NativeStyleStage::Glitch {
-                seed,
-                intensity,
-                italic_start,
-                italic_end,
-            } => {
-                apply_glitch_style_stage(&mut staged, *seed, *intensity, *italic_start, *italic_end)
-            }
             NativeStyleStage::ColorFade {
                 target,
                 color_space,
@@ -751,30 +743,6 @@ fn apply_rainbow_style_stage(report: &mut PlayerRenderIrReport, _rotation_speed:
                 Some(rgba_label(0, 255, 254, 255).as_str()),
                 None,
                 None,
-            );
-        }
-    }
-}
-
-fn apply_glitch_style_stage(
-    report: &mut PlayerRenderIrReport,
-    _seed: usize,
-    _intensity: f64,
-    italic_start: f64,
-    italic_end: f64,
-) {
-    let width = report_width(report);
-    let height = report_height(report);
-    let italic = (italic_start..=italic_end).contains(&report.phase_t);
-    for y in 0..height {
-        for x in 0..width {
-            set_report_cell_style(
-                report,
-                x,
-                y,
-                Some(rgba_label(0, 255, 255, 255).as_str()),
-                None,
-                italic.then_some("italic"),
             );
         }
     }

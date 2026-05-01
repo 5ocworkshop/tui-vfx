@@ -1,7 +1,8 @@
 // <FILE>crates/tui-vfx-player-backend-compositor/src/fnc_lower_recipe_graph_to_composition_spec.rs</FILE> - <DESC>Lower player render requests into compositor CompositionSpec modes</DESC>
 // <VERS>VERSION: 0.41.0</VERS>
 // <WCTX>Native compositor lowering: map bounded v3.1 recipe graph effects into native CompositionSpec and source-stage content/style/filter work with honest fallback diagnostics.</WCTX>
-// <CLOG>0.42.0: MINOR — lower style.neonFlicker into compositor NeonFlickerShader layers and remove backend style-stage emulation.
+// <CLOG>0.43.0: MINOR — lower style.glitch into compositor GlitchLinesShader layers and remove backend style-stage emulation.
+// 0.42.0: MINOR — lower style.neonFlicker into compositor NeonFlickerShader layers and remove backend style-stage emulation.
 // 0.41.0: MINOR — lower focused-row-gradient style.spatial into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.40.0: MINOR — lower shader.diffusion into compositor ShaderLayerSpec and remove backend style-stage emulation.
 // 0.39.0: MINOR — lower shader.barberPole into compositor ShaderLayerSpec and remove backend style-stage emulation.
@@ -54,10 +55,11 @@ use tui_vfx_style::models::{
     ApplyToColor, BarberPoleApplyTo, BarberPoleShader, BindableU16, BorderSweepShader, ColorConfig,
     ColorSpace, DiffusionApplyTo, DiffusionShader, DiffusionSource, FocusFieldApplyTo,
     FocusFieldShader, FocusFieldShape, FocusedRowGradientShader, GlistenApplyTo, GlistenBandShader,
-    GlistenDirection, Gradient, HighlighterApplyTo, HighlighterDirection, HighlighterMode,
-    HighlighterRowMask, HighlighterShader, LinearGradientApplyTo, LinearGradientShader,
-    NeonFlickerShader, RadarShader, RevealWipeShader, SegmentMode, SpatialShaderType, StyleRegion,
-    TextContrast, WayfindingNode, WayfindingNodeApplyTo, WayfindingNodeShader,
+    GlistenDirection, GlitchLinesShader, Gradient, HighlighterApplyTo, HighlighterDirection,
+    HighlighterMode, HighlighterRowMask, HighlighterShader, LinearGradientApplyTo,
+    LinearGradientShader, NeonFlickerShader, RadarShader, RevealWipeShader, SegmentMode,
+    SpatialShaderType, StyleRegion, TextContrast, WayfindingNode, WayfindingNodeApplyTo,
+    WayfindingNodeShader,
 };
 
 const SUPPORTED_WIPE_DIRECTIONS: &[&str] = &[
@@ -175,13 +177,6 @@ pub enum NativeStyleStage {
     },
     /// Apply V2-compatible rainbow foreground cycling.
     Rainbow { rotation_speed: f64 },
-    /// Apply V2-compatible glitch foreground/italic styling.
-    Glitch {
-        seed: usize,
-        intensity: f64,
-        italic_start: f64,
-        italic_end: f64,
-    },
     /// Apply player-compatible color fade styling to existing foreground/background channels.
     ColorFade { target: String, color_space: String },
     /// Apply player-compatible HSL color shift styling to existing channels.
@@ -561,7 +556,7 @@ fn lower_node_into_spec(
         "style.moduloColumns" => lower_style_modulo_columns(node, style_stages, request, warnings),
         "style.neonFlicker" => lower_style_neon_flicker(node, spec, request, warnings),
         "style.rainbow" => lower_style_rainbow(node, style_stages, request, warnings),
-        "style.glitch" => lower_style_glitch(node, style_stages, request, warnings),
+        "style.glitch" => lower_style_glitch(node, spec, request, warnings),
         "style.spatial" => lower_style_spatial(node, spec, style_stages, request, warnings),
         other => NodeLoweringOutcome::Unsupported {
             reason: format!("Effect `{other}` is not yet supported by compositor-native lowering."),
@@ -1878,7 +1873,7 @@ fn lower_style_rainbow(
 
 fn lower_style_glitch(
     node: &NodeSpec,
-    style_stages: &mut Vec<NativeStyleStage>,
+    spec: &mut CompositionSpec,
     request: &PlayerRenderBackendRequest,
     warnings: Vec<PlayerRenderBackendDiagnostic>,
 ) -> NodeLoweringOutcome {
@@ -1891,12 +1886,33 @@ fn lower_style_glitch(
         return NodeLoweringOutcome::Unsupported { reason };
     }
 
-    let italic_start = number_input(node, request, "italicStart", 0.0).clamp(0.0, 1.0);
-    style_stages.push(NativeStyleStage::Glitch {
-        seed: integer_input(node, request, "seed", 0).max(0) as usize,
-        intensity: number_input(node, request, "intensity", 0.5).clamp(0.0, 1.0),
-        italic_start,
-        italic_end: number_input(node, request, "italicEnd", 1.0).clamp(italic_start, 1.0),
+    let italic_start = resolved_number_input(node, request, "italicStart", 0.0).clamp(0.0, 1.0);
+    spec.shader_layers.push(ShaderLayerSpec {
+        shader: SpatialShaderType::GlitchLines(GlitchLinesShader {
+            seed: resolved_integer_input(node, request, "seed", 0).max(0) as u64,
+            intensity: resolved_number_input(node, request, "intensity", 0.5).clamp(0.0, 1.0)
+                as f32,
+            max_lines: GlitchLinesShader::default().max_lines,
+            speed: 1.0,
+            flash_chance: 0.0,
+            pulse_color: None,
+            base_color: Some(ColorConfig::Rgb {
+                r: 0,
+                g: 255,
+                b: 255,
+            }),
+            italic_start: Some(italic_start as f32),
+            italic_end: Some(
+                resolved_number_input(node, request, "italicEnd", 1.0).clamp(italic_start, 1.0)
+                    as f32,
+            ),
+            lines_enabled: false,
+            pulse_speed: 0.5,
+            italic_on_flash: false,
+            flash_hold: 1,
+            noise_type: Default::default(),
+        }),
+        region: StyleRegion::All,
     });
     NodeLoweringOutcome::Lowered { warnings }
 }

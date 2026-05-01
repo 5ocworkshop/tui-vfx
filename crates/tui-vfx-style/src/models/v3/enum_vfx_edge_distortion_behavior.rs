@@ -12,6 +12,10 @@
 use crate::models::{ColorConfig, NoiseType};
 use serde::{Deserialize, Serialize};
 
+fn default_true() -> bool {
+    true
+}
+
 /// Axis policy for shake-style distortion.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, tui_vfx_core::ConfigSchema,
@@ -51,6 +55,19 @@ pub enum VfxEdgeDistortionBehavior {
         /// Optional pulse color.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pulse_color: Option<ColorConfig>,
+        /// Optional foreground color installed before glitch styling.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        base_color: Option<ColorConfig>,
+        /// Optional normalized time at which italic styling begins.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        italic_start: Option<f32>,
+        /// Optional normalized time at which italic styling ends.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        italic_end: Option<f32>,
+        /// Whether row-level interference lines are enabled.
+        #[serde(default = "default_true")]
+        #[config(default = true)]
+        lines_enabled: bool,
         /// Pulse speed.
         #[config(default = 0.5)]
         pulse_speed: f32,

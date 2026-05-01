@@ -18,6 +18,10 @@ fn converts_glitch_lines_into_v3_edge_distortion_surface() {
         speed: 1.5,
         flash_chance: 0.2,
         pulse_color: Some(ColorConfig::White),
+        base_color: Some(ColorConfig::Cyan),
+        italic_start: Some(0.3),
+        italic_end: Some(0.7),
+        lines_enabled: false,
         pulse_speed: 0.75,
         italic_on_flash: true,
         flash_hold: 3,
@@ -34,12 +38,48 @@ fn converts_glitch_lines_into_v3_edge_distortion_surface() {
             speed: 1.5,
             flash_chance: 0.2,
             pulse_color: Some(ColorConfig::White),
+            base_color: Some(ColorConfig::Cyan),
+            italic_start: Some(0.3),
+            italic_end: Some(0.7),
+            lines_enabled: false,
             pulse_speed: 0.75,
             italic_on_flash: true,
             flash_hold: 3,
             noise_type: NoiseType::Gaussian,
         }
     );
+}
+
+#[test]
+fn lowers_v3_glitch_lines_style_fields_back_to_legacy_shader() {
+    let grouped = VfxEdgeDistortionShader {
+        behavior: VfxEdgeDistortionBehavior::GlitchLines {
+            seed: 7,
+            intensity: 0.8,
+            max_lines: 9,
+            speed: 1.5,
+            flash_chance: 0.2,
+            pulse_color: Some(ColorConfig::White),
+            base_color: Some(ColorConfig::Cyan),
+            italic_start: Some(0.3),
+            italic_end: Some(0.7),
+            lines_enabled: false,
+            pulse_speed: 0.75,
+            italic_on_flash: true,
+            flash_hold: 3,
+            noise_type: NoiseType::Gaussian,
+        },
+    };
+
+    let lowered = SpatialShaderType::from(&grouped);
+    let SpatialShaderType::GlitchLines(shader) = lowered else {
+        panic!("expected GlitchLines shader");
+    };
+
+    assert_eq!(shader.base_color, Some(ColorConfig::Cyan));
+    assert_eq!(shader.italic_start, Some(0.3));
+    assert_eq!(shader.italic_end, Some(0.7));
+    assert!(!shader.lines_enabled);
 }
 
 #[test]

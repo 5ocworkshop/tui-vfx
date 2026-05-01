@@ -148,6 +148,97 @@ fn test_fnc_cli_capture_cells_writes_procedural_recipe_metadata() {
 }
 
 #[test]
+fn test_fnc_cli_lowers_glitch_style_to_compositor_shader_layer_not_style_stage_json() {
+    let report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_glitch.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.35"),
+        ],
+        "render-backend native glitch style compositor shader layer player cli",
+    );
+
+    assert_eq!(report["backend"], "compositor");
+    assert_eq!(report["recipeId"], "debugStyleGlitchV2Oracle");
+    assert_eq!(report["compositionMode"], "native");
+    assert_eq!(report["fallbackUsed"], false);
+    assert_eq!(report["nativeLoweringSucceeded"], true);
+    assert_eq!(report["compositionSpecSummary"]["shaderLayers"], 1);
+    assert_eq!(report["compositionSpecSummary"]["styleStages"], 0);
+    assert_eq!(
+        report["loweredEffectIds"],
+        serde_json::json!(["style.glitch"])
+    );
+    assert_eq!(
+        report["styledCells"][0]["foreground"],
+        "rgba(0,255,255,255)"
+    );
+    assert!(
+        report["styledCells"][0]["modifiers"]
+            .as_array()
+            .expect("modifiers array")
+            .contains(&serde_json::json!("italic"))
+    );
+    assert!(
+        report["styledCells"]
+            .as_array()
+            .expect("styled cells array")
+            .iter()
+            .all(|cell| !cell["modifiers"]
+                .as_array()
+                .expect("modifiers array")
+                .contains(&serde_json::json!("underline"))),
+        "style.glitch V2 oracle lowering must not add compositor glitch-line underlines"
+    );
+
+    let inactive_italic_report = player_cli_json(
+        vec![
+            str_arg("render-backend"),
+            str_arg("--recipe"),
+            recipe_path("styles/style_glitch.json"),
+            str_arg("--descriptor-pack"),
+            descriptor_pack_path(),
+            str_arg("--backend"),
+            str_arg("compositor"),
+            str_arg("--composition-mode"),
+            str_arg("native"),
+            str_arg("--fail-on-fallback"),
+            str_arg("--format"),
+            str_arg("json"),
+            str_arg("--phase"),
+            str_arg("enter"),
+            str_arg("--phase-t"),
+            str_arg("0.9"),
+        ],
+        "render-backend native glitch style compositor shader layer outside italic window player cli",
+    );
+    assert!(
+        inactive_italic_report["styledCells"]
+            .as_array()
+            .expect("styled cells array")
+            .iter()
+            .all(|cell| !cell["modifiers"]
+                .as_array()
+                .expect("modifiers array")
+                .contains(&serde_json::json!("italic"))),
+        "style.glitch italic window must end after italicEnd"
+    );
+}
+
+#[test]
 fn test_fnc_cli_lowers_neon_flicker_style_to_compositor_shader_layer_not_style_stage_json() {
     let report = player_cli_json(
         vec![
