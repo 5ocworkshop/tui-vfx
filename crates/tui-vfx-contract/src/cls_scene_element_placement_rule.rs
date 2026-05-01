@@ -21,6 +21,7 @@ pub enum SceneElementPlacementRule {
         /// Absolute target rectangle.
         rect: Rect,
         /// Optional placement-motion payload preserved from scene authoring.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         placement_motion: Option<StructuredValue>,
     },
     /// Place relative to a scene anchor or an already-declared sibling layer.
@@ -34,9 +35,14 @@ pub enum SceneElementPlacementRule {
         #[serde(rename = "offsetColumns")]
         offset_columns: i32,
         /// Optional sibling layer used as the anchor frame instead of the scene.
-        #[serde(rename = "siblingLayer")]
+        #[serde(
+            default,
+            rename = "siblingLayer",
+            skip_serializing_if = "Option::is_none"
+        )]
         sibling_layer: Option<LayerId>,
         /// Optional placement-motion payload preserved from scene authoring.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         placement_motion: Option<StructuredValue>,
     },
 }

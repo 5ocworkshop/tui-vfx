@@ -30,10 +30,13 @@ pub struct NodeSpec {
     #[serde(default)]
     pub active_phases: Vec<LifecyclePhase>,
     /// Optional scope limiting where this node applies.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scope: Option<ScopeSpec>,
     /// Optional cell write policy requested by this node.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cell_write_policy: Option<CellWritePolicy>,
     /// Optional role write policy requested by this node.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub role_write_policy: Option<RoleWritePolicy>,
 }
 

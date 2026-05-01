@@ -141,6 +141,63 @@ fn scene_element() -> RecipeSceneElement {
 }
 
 #[test]
+fn scene_extension_null_fields_accept_omission_or_explicit_null() {
+    let binding_omitted: RecipeElementGraphBinding = serde_json::from_value(serde_json::json!({
+        "graph": "heroFade"
+    }))
+    .expect("graph binding with omitted topology deserializes");
+    let binding_null: RecipeElementGraphBinding = serde_json::from_value(serde_json::json!({
+        "graph": "heroFade",
+        "topology": null
+    }))
+    .expect("graph binding with explicit null topology deserializes");
+    assert_eq!(binding_omitted, binding_null);
+
+    let surface_omitted: SceneElementSurface = serde_json::from_value(serde_json::json!({}))
+        .expect("surface with omitted optional fields deserializes");
+    let surface_null: SceneElementSurface = serde_json::from_value(serde_json::json!({
+        "baseStyle": null,
+        "shadow": null
+    }))
+    .expect("surface with explicit null optional fields deserializes");
+    assert_eq!(surface_omitted, surface_null);
+    assert_eq!(
+        serde_json::to_value(&surface_omitted).expect("surface serializes"),
+        serde_json::json!({})
+    );
+
+    let absolute: SceneElementPlacementRule = serde_json::from_value(serde_json::json!({
+        "kind": "absolute",
+        "rect": { "x": 4, "y": 15, "width": 36, "height": 2 }
+    }))
+    .expect("absolute placement rule with omitted motion deserializes");
+    assert_eq!(
+        serde_json::to_value(&absolute).expect("absolute placement rule serializes"),
+        serde_json::json!({
+            "kind": "absolute",
+            "rect": { "x": 4, "y": 15, "width": 36, "height": 2 }
+        })
+    );
+
+    let anchor: SceneElementPlacementRule = serde_json::from_value(serde_json::json!({
+        "kind": "anchor",
+        "anchor": "topLeft",
+        "offsetRows": 1,
+        "offsetColumns": 2
+    }))
+    .expect("anchor placement rule with omitted sibling and motion deserializes");
+    assert_eq!(
+        serde_json::to_value(&anchor).expect("anchor placement rule serializes"),
+        serde_json::json!({
+            "kind": "anchor",
+            "anchor": "topLeft",
+            "offsetRows": 1,
+            "offsetColumns": 2
+        })
+    );
+}
+
+#[test]
 fn scene_element_scroll_factor_is_optional_nullable_and_skipped_when_absent() {
     let element = scene_element();
     let json = serde_json::to_value(&element).expect("scene element serializes");

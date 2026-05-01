@@ -14,8 +14,10 @@ use crate::{ShadowSpec, StructuredValue};
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SceneElementSurface {
     /// Optional base style applied before graph-bound effects.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base_style: Option<StructuredValue>,
     /// Optional attached shadow payload owned by this element surface.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shadow: Option<ShadowSpec>,
 }
 

@@ -15,6 +15,7 @@ pub struct RecipeElementGraphBinding {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timing: Option<RecipeElementGraphTiming>,
     /// Optional graph-binding topology subset for this element.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub topology: Option<GraphStep>,
 }
 

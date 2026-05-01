@@ -1297,13 +1297,7 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "version",
-        "parameters",
-        "signals",
-        "bindings",
-        "effects",
-        "nodes",
-        "order"
+        "version"
       ]
     },
     "GraphStep": {

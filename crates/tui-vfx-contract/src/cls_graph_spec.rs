@@ -21,21 +21,28 @@ pub struct GraphSpec {
     /// Contract graph version string.
     pub version: String,
     /// Public parameters available to graph value sources and bindings.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[schemars(transform = add_parameter_key_pattern)]
     pub parameters: BTreeMap<ParameterId, ParameterSpec>,
     /// Host/runtime signals available to graph value sources.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[schemars(transform = add_signal_key_pattern)]
     pub signals: BTreeMap<SignalId, SignalSpec>,
     /// Declarative parameter-target bindings owned by this graph.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub bindings: Vec<BindingSpec>,
     /// Effect descriptors available to nodes in this graph.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub effects: BTreeMap<EffectId, EffectDescriptor>,
     /// Nodes keyed by stable graph-local node id.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[schemars(transform = add_node_key_pattern)]
     pub nodes: BTreeMap<NodeId, NodeSpec>,
     /// Deterministic node order by graph-local node id.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub order: Vec<NodeId>,
     /// Optional explicit topology. When omitted, `order` is a linear sequence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub topology: Option<GraphStep>,
 }
 

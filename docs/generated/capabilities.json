@@ -2587,7 +2587,7 @@
           },
           {
             "default": "Blue",
-            "doc": "stripe color",
+            "doc": "Color used for stripe cells.",
             "name": "color",
             "ty": "ColorConfig"
           }
@@ -2774,7 +2774,7 @@
           },
           {
             "default": "6 cells",
-            "doc": "maximum reach of the diffusion field in cells",
+            "doc": "Radius in whole terminal cells.",
             "name": "radius",
             "ty": "u8"
           },

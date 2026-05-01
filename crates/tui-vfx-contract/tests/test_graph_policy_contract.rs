@@ -8,10 +8,81 @@ mod support;
 
 use support::{base_graph, binding_to, literal_source, signal_source};
 use tui_vfx_contract::{
-    CellWritePolicy, DescriptorValidationError, GraphStep, NodeId, ParallelMergePolicy,
-    RoleWritePolicy, RoleWritePolicyKind, ScopeKind, ScopeSpec,
+    CellWritePolicy, DescriptorValidationError, GraphSpec, GraphStep, NodeId, NodeSpec,
+    ParallelMergePolicy, RoleWritePolicy, RoleWritePolicyKind, ScopeKind, ScopeSpec,
 };
 use tui_vfx_types::{Rect, RoleTag};
+
+#[test]
+fn graph_defaults_empty_collections_and_omits_topology() {
+    let graph: GraphSpec = serde_json::from_value(serde_json::json!({
+        "id": "emptyGraph",
+        "version": "3.1"
+    }))
+    .expect("graph with omitted empty collections deserializes");
+
+    let explicit_empty: GraphSpec = serde_json::from_value(serde_json::json!({
+        "id": "emptyGraph",
+        "version": "3.1",
+        "parameters": {},
+        "signals": {},
+        "bindings": [],
+        "effects": {},
+        "nodes": {},
+        "order": [],
+        "topology": null
+    }))
+    .expect("graph with explicit empty collections and null topology deserializes");
+
+    assert_eq!(graph, explicit_empty);
+    assert!(graph.parameters.is_empty());
+    assert!(graph.signals.is_empty());
+    assert!(graph.bindings.is_empty());
+    assert!(graph.effects.is_empty());
+    assert!(graph.nodes.is_empty());
+    assert!(graph.order.is_empty());
+    assert_eq!(graph.topology, None);
+
+    let json = serde_json::to_value(&graph).expect("graph serializes");
+    assert!(json.get("parameters").is_none());
+    assert!(json.get("signals").is_none());
+    assert!(json.get("bindings").is_none());
+    assert!(json.get("effects").is_none());
+    assert!(json.get("nodes").is_none());
+    assert!(json.get("order").is_none());
+    assert!(json.get("topology").is_none());
+}
+
+#[test]
+fn node_optional_scope_and_write_policies_accept_null_or_omission() {
+    let omitted: NodeSpec = serde_json::from_value(serde_json::json!({
+        "id": "fadeIn",
+        "effect": "terminal.opacity",
+        "inputs": {}
+    }))
+    .expect("node with omitted optional policies deserializes");
+
+    assert_eq!(omitted.scope, None);
+    assert_eq!(omitted.cell_write_policy, None);
+    assert_eq!(omitted.role_write_policy, None);
+
+    let explicit_null: NodeSpec = serde_json::from_value(serde_json::json!({
+        "id": "fadeIn",
+        "effect": "terminal.opacity",
+        "inputs": {},
+        "scope": null,
+        "cellWritePolicy": null,
+        "roleWritePolicy": null
+    }))
+    .expect("node with explicit null optional policies deserializes");
+
+    assert_eq!(omitted, explicit_null);
+
+    let json = serde_json::to_value(&omitted).expect("node serializes");
+    assert!(json.get("scope").is_none());
+    assert!(json.get("cellWritePolicy").is_none());
+    assert!(json.get("roleWritePolicy").is_none());
+}
 
 #[test]
 fn graph_rejects_unsupported_scope_for_effect() {
