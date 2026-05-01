@@ -1,7 +1,9 @@
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>VERSION: 1.40.0</VERS> -->
+<!-- <VERS>VERSION: 1.42.0</VERS> -->
 <!-- <WCTX>V3.1 docs indexing: add first parallel migration lane results.</WCTX> -->
-<!-- <CLOG>1.40.0: add v3.1 player dense cell-capture SQLite guide.
+<!-- <CLOG>1.42.0: add compositor-next vertical implementation plan.
+1.41.0: add architecture hub and v3.1 schema-boundary/primitive-workbench north-star docs.
+1.40.0: add v3.1 player dense cell-capture SQLite guide.
 1.39.0: add first v3.1 parallel migration lane results.
 1.38.0: add reusable v3.1 parallel migration agent briefing.
 1.37.0: add v3.1 rendering boundary and lowering rules.
@@ -133,6 +135,10 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 
 ## V3 planning and tooling
 
+- [arch/INDEX.md](arch/INDEX.md) — Architecture hub for foundational v3.1 schema-boundary and primitive-workbench north-star docs.
+- [arch/compositor-next-vertical-implementation-plan.md](arch/compositor-next-vertical-implementation-plan.md) — Detailed plan for copying the hardened compositor into compositor-next, then migrating primitive-by-primitive through vertical schema/runtime/validation slices.
+- [arch/v31-schema-boundary-north-star.md](arch/v31-schema-boundary-north-star.md) — North-star architecture for schema-owned crate boundaries, data models, responsibilities, co-located primitive source trees, and validation discipline.
+- [arch/primitive-workbench-schema-driven-workflow.md](arch/primitive-workbench-schema-driven-workflow.md) — Draft Primitive Workbench workflow for schema-driven primitive scaffolding, generated assets, migration mappings, commonality extraction, and validation gates.
 - [VOCABULARY.md](VOCABULARY.md) — Canonical v3.1 human vocabulary, legacy/non-canonical term mapping, naming rules, deferrals, and change policy.
 - [v3.1-architecture-overview.md](v3.1-architecture-overview.md) — Clean-room v3.1 contract-first architecture overview, scene composition stack, schema/reference path, D3 boundary, E0 physical split, and E1 descriptor model, F1 typed input model, F2 declarative source/binding model, G1 canonical graph container, G2 graph execution proof, G3 topology/channel-aware merge semantics, G4 graph value-bus semantics, H0 source/asset/procedural source contracts, H1 canonical recipe document packaging, and I0 lifecycle/time/trigger contracts.
 - [v3.1-contract-boundary.md](v3.1-contract-boundary.md) — D3/E0/E1/F1/F2/G1/G2/G3/G4/H0/H1/I0 classification of contract vocabulary, proof implementation, crate ownership, schema roots, descriptor/input/value-source/binding/graph/execution proof/topology/value-bus/source/asset/recipe/lifecycle model, and handoff guardrails.
@@ -205,4 +211,4 @@ Design spec: [design/tui-vfx-pipeline-observability.md](design/tui-vfx-pipeline-
 - [generated/effect_schemas.json](generated/effect_schemas.json) — Full ConfigSchema per effect
 
 <!-- <FILE>docs/INDEX.md</FILE> - <DESC>Documentation table of contents</DESC> -->
-<!-- <VERS>END OF VERSION: 1.39.0</VERS> -->
+<!-- <VERS>END OF VERSION: 1.42.0</VERS> -->
